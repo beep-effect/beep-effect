@@ -25,6 +25,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const repository = PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" });
 
 const ledgerRow = (
@@ -56,7 +58,7 @@ const ledgerRow = (
 describe("session ledger role", () => {
   it("decodes rows written before the role existed as role none", () => {
     const legacy = Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+      S.encodeUnknownResult(UnknownJson)({
         schemaVersion: "session-ledger/v1",
         repository,
         clone: "/work/beep-effect",

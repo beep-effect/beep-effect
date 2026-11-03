@@ -11,6 +11,8 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const base = {
   version: "1.0.0",
   path: "/repo/packages/utils",
@@ -227,11 +229,11 @@ describe("WorkspacePackage.dependencyVersion — inherited names are not depende
   // dependencyVersion did not, and it is typed Option<string> — so it would hand
   // back Option.some(<Function>) and lie about its own type.
   for (const inherited of ["constructor", "toString", "valueOf", "hasOwnProperty", "__proto__"]) {
-    it(`dependencyVersion(${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(inherited), identity)}) is none`, () => {
+    it(`dependencyVersion(${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(inherited), identity)}) is none`, () => {
       assertNone(pkg.dependencyVersion(inherited));
     });
 
-    it(`hasAnyDependencyOn(${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(inherited), identity)}) is false`, () => {
+    it(`hasAnyDependencyOn(${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(inherited), identity)}) is false`, () => {
       assert.isFalse(pkg.hasAnyDependencyOn(inherited));
     });
   }
@@ -267,9 +269,9 @@ describe("WorkspacePackage.manifestRecord", () => {
       pkg,
       S.encodeUnknownResult(WorkspacePackage),
       Result.getOrThrow,
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown)),
+      S.encodeUnknownResult(UnknownJson),
       Result.getOrThrowWith(identity),
-      S.decodeResult(S.fromJsonString(S.Unknown)),
+      S.decodeResult(UnknownJson),
       Result.getOrThrowWith(identity)
     );
     const decoded = Result.getOrThrow(S.decodeUnknownResult(WorkspacePackage)(wire));

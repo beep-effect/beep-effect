@@ -57,6 +57,8 @@ import {
 import type { KpiReading, PercentileRow } from "@/kpi/Schemas";
 import type { AttemptJournalPin, FleetManifestFacts } from "@/kpi/Sources";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const repoRoot = "../../..";
 const PlatformLive = Layer.mergeAll(BunFileSystem.layer, BunCrypto.layer);
 const KpiLive = Layer.provideMerge(CiOpsKpiLive, PlatformLive);
@@ -402,7 +404,7 @@ describe("@beep/ciops KPI reading", () => {
     Effect.gen(function* () {
       const row = (enqueued: number) =>
         Result.getOrThrowWith(
-          S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+          S.encodeUnknownResult(UnknownJson)({
             _tag: "admission-enqueued",
             nonce: "n-1",
             attemptId: "a-1",

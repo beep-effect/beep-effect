@@ -15,6 +15,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const ComponentDocument = S.Struct({
   metadata: S.Struct({ component: S.Record(S.String, S.Unknown) }),
 });
@@ -107,7 +109,7 @@ describe("Sbom.toJson", () => {
     // The one field whose JSON name differs from its TypeScript name. Emitting
     // `bomRef` produces a document that looks right and validates wrong.
     const json: unknown = Result.getOrThrowWith(
-      S.decodeResult(S.fromJsonString(S.Unknown))(Sbom.toJson(Sbom.generate({ root, components: [] }))),
+      S.decodeResult(UnknownJson)(Sbom.toJson(Sbom.generate({ root, components: [] }))),
       identity
     );
     assertTrue(S.is(ComponentDocument)(json));
@@ -118,7 +120,7 @@ describe("Sbom.toJson", () => {
   it("omits absent optional fields rather than emitting null", () => {
     const bare = Component.make({ type: "library", name: "bare" });
     const json: unknown = Result.getOrThrowWith(
-      S.decodeResult(S.fromJsonString(S.Unknown))(Sbom.toJson(Sbom.generate({ root: bare, components: [] }))),
+      S.decodeResult(UnknownJson)(Sbom.toJson(Sbom.generate({ root: bare, components: [] }))),
       identity
     );
     assertTrue(S.is(ComponentDocument)(json));
@@ -131,7 +133,7 @@ describe("Sbom.toJson", () => {
     // `licenses` is an array of single-key wrapper objects, not bare strings.
     const licensed = Component.make({ type: "library", name: "x", licenses: ["MIT"] });
     const json: unknown = Result.getOrThrowWith(
-      S.decodeResult(S.fromJsonString(S.Unknown))(Sbom.toJson(Sbom.generate({ root: licensed, components: [] }))),
+      S.decodeResult(UnknownJson)(Sbom.toJson(Sbom.generate({ root: licensed, components: [] }))),
       identity
     );
     assertTrue(S.is(ComponentDocument)(json));
@@ -148,10 +150,7 @@ describe("Sbom.toJson", () => {
         authors: [Contact.make({ name: "Dee", email: "dee@example.com" })],
       }),
     });
-    const json: unknown = Result.getOrThrowWith(
-      S.decodeResult(S.fromJsonString(S.Unknown))(Sbom.toJson(document)),
-      identity
-    );
+    const json: unknown = Result.getOrThrowWith(S.decodeResult(UnknownJson)(Sbom.toJson(document)), identity);
     assertTrue(S.is(MetadataDocument)(json));
     assert.strictEqual(json.metadata.supplier.name, "Acme");
     assert.strictEqual(json.metadata.authors[0]?.name, "Dee");

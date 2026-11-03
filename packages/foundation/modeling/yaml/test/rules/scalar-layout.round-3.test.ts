@@ -9,6 +9,8 @@ import * as Str from "effect/String";
 import * as YAML from "yaml";
 import { builtin, testRule, testRuleInference } from "./harness.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 describe("composed scalar blank-line fidelity", () => {
   for (const blankCount of [1, 3]) {
     for (const shape of ["mapping", "flow sequence", "block sequence"]) {
@@ -225,7 +227,7 @@ testRuleInference(builtin("indentation"), [
 
 describe("YAML indentation alphabet", () => {
   for (const prefix of ["\u00A0", "\u2003", "\uFEFF\uFEFF"]) {
-    it(`${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(prefix), identity)} is scalar content rather than an indentation vote`, () => {
+    it(`${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(prefix), identity)} is scalar content rather than an indentation vote`, () => {
       const input = `${prefix}hello\n`;
       const rule = builtin("indentation");
       assert.deepStrictEqual(

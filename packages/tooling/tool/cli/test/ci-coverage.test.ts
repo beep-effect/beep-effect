@@ -39,6 +39,8 @@ import * as Str from "effect/String";
 import { vi } from "vitest";
 import { parseCLI } from "vitest/node";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 // `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
 const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
 
@@ -52,7 +54,7 @@ const mocks = vi.hoisted(() => ({
   compare: vi.fn<typeof CoverageArtifacts.compareCoverageProducerArtifacts>(),
 }));
 
-const encode = S.encodeEffect(S.fromJsonString(S.Unknown));
+const encode = S.encodeEffect(UnknownJson);
 const layer = Layer.provideMerge(
   Git.layer,
   Layer.mergeAll(
@@ -1470,7 +1472,7 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
     { output: "1.4.3", exitCode: 0, truncated: true },
   ]) {
     it.effect(
-      `refuses invalid runtime provenance ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(invalidVersion), identityFunction)}`,
+      `refuses invalid runtime provenance ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(invalidVersion), identityFunction)}`,
       () =>
         Effect.gen(function* () {
           const { root } = yield* fixture();

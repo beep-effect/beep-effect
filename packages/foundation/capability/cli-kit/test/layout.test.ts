@@ -258,9 +258,7 @@ describe("flatten under hostile input: nothing can reassemble into a live sequen
           cases++;
           const found = problems(ctx, inlines);
           if (found.length > 0 && failures.length < 5)
-            failures.push(
-              `${label} ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(found), identity)}`
-            );
+            failures.push(`${label} ${Result.getOrThrowWith(S.encodeUnknownResult(Json)(found), identity)}`);
         };
         for (const one of upTo(3)) {
           check([Doc.text(one)], Result.getOrThrow(S.encodeUnknownResult(Json)([one])));
@@ -499,7 +497,7 @@ describe("wrapSpans", () => {
                 span.token ?? null,
                 span.link === undefined
                   ? null
-                  : Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(span.link), identity),
+                  : Result.getOrThrowWith(S.encodeUnknownResult(Json)(span.link), identity),
               ] as const
           )
         )

@@ -28,6 +28,8 @@ import * as Str from "effect/String";
 import { begin, block, end, id, lines, memoryFs, parse, parseFailure, section } from "./fixtures.ts";
 import type { Section, SectionDocument, SectionRenderError } from "@beep/managed-section";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 /** A `#`-style BEGIN marker carrying a raw attribute run. */
 const beginWith = (key: string, run: string) => `# --- BEGIN ${key} MANAGED SECTION ${run} ---`;
 
@@ -437,12 +439,12 @@ describe("attribute constraint review regressions", () => {
       assert.strictEqual(
         S.is(AttributeName)(name),
         expected,
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(name), identity)
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(name), identity)
       );
       assert.strictEqual(
         isValidAttributeName(name),
         expected,
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(name), identity)
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(name), identity)
       );
     }
   });
@@ -453,12 +455,12 @@ describe("attribute constraint review regressions", () => {
       assert.strictEqual(
         S.is(AttributeValue)(value),
         expected,
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity)
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity)
       );
       assert.strictEqual(
         isValidAttributeValue(value),
         expected,
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity)
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity)
       );
     }
   });

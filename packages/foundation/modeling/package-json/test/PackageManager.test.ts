@@ -17,6 +17,8 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const decode = S.decodeUnknownEffect(PackageManager.FromString);
 const encode = S.encodeUnknownEffect(PackageManager.FromString);
 
@@ -131,14 +133,12 @@ describe("PackageManager.FromString", () => {
 // with `semver.valid`. Reinstating that regex turns this whole block red.
 describe("PackageManager.FromString version rejection matrix", () => {
   const rejects = (input: string, why: string) =>
-    it.effect(
-      `rejects ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(input), identity)} — ${why}`,
-      () =>
-        Effect.gen(function* () {
-          const error = yield* Effect.flip(decode(input));
-          assert.strictEqual(error._tag, "SchemaError");
-          assert.include(String(error), "version", "the failure must name the component that failed");
-        })
+    it.effect(`rejects ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(input), identity)} — ${why}`, () =>
+      Effect.gen(function* () {
+        const error = yield* Effect.flip(decode(input));
+        assert.strictEqual(error._tag, "SchemaError");
+        assert.include(String(error), "version", "the failure must name the component that failed");
+      })
     );
 
   // Leading zeros on a numeric component are not SemVer 2.0.0 (§2).

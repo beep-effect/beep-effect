@@ -35,6 +35,8 @@ import {
 } from "./Drawings.measurements.schemas.ts";
 import type { CriticMeasurements } from "./Drawings.measurements.schemas.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const PT_PER_MM = 72 / 25.4;
 const SHADING_STROKE_PT = "0.567";
 // Path layers that carry the sheet's labels rather than the view.
@@ -253,7 +255,7 @@ export const strokeTableMarkdown = (input: {
     const extremes =
       A.length(lengths) === 0
         ? ""
-        : `\nShortest strokes: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(A.take(lengths, 5)), identity)}; longest: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(A.takeRight(lengths, 3)), identity)}.\n`;
+        : `\nShortest strokes: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(A.take(lengths, 5)), identity)}; longest: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(A.takeRight(lengths, 3)), identity)}.\n`;
     return A.join(
       [
         `\n## FIG ${figure.figure} (${figure.view}) — ${A.length(rows)} shading strokes; coverage ${figure.coverage}\n`,

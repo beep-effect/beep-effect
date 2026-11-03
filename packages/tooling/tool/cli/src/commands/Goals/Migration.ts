@@ -35,6 +35,10 @@ import {
 import type { GoalPhaseStatus } from "./Goals.schemas.ts";
 import type { GoalPacketRecord } from "./Inventory.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
+const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
+
 const $I = $RepoCliId.create("commands/Goals/Migration");
 
 /**
@@ -319,7 +323,7 @@ export const buildBackfillManifestText: {
       ...optionalProp("grandfatheredNote", O.fromUndefinedOr(backfill.grandfatheredNote)),
     },
   };
-  return `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }))(manifest), identity)}\n`;
+  return `${Result.getOrThrowWith(encodePrettyJson(manifest), identity)}\n`;
 });
 
 /**
@@ -460,9 +464,7 @@ const planSupersededByEdits = (manifest: Readonly<Record<string, unknown>>, edit
   const packetSlug = pipe(
     stringField(supersededBy.value, "packet"),
     O.map(slugFromPacketPath),
-    O.getOrElse(() =>
-      Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(supersededBy.value), identity)
-    )
+    O.getOrElse(() => Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(supersededBy.value), identity))
   );
   edit(["supersededBy"], packetSlug, `normalize object supersededBy -> "${packetSlug}"`);
   if (O.isSome(stringField(manifest, "supersededNote"))) {

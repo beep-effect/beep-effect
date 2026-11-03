@@ -9,6 +9,8 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 describe("@beep/utils Struct.dotGet", () => {
   it("supports data-first and data-last calls", () => {
     const source = { attributes: { name: "beep" }, kind: "example" } as const;
@@ -396,9 +398,7 @@ describe("@beep/utils Struct.fromEntries", () => {
 describe("@beep/utils Struct.deepMerge", () => {
   it("ignores prototype-control keys from JSON patches", () => {
     const patch = Result.getOrThrowWith(
-      S.decodeResult(S.fromJsonString(S.Unknown))(
-        '{"__proto__":{"polluted":true},"constructor":{"polluted":true},"safe":2}'
-      ),
+      S.decodeResult(UnknownJson)('{"__proto__":{"polluted":true},"constructor":{"polluted":true},"safe":2}'),
       identity
     ) as {
       readonly safe: number;

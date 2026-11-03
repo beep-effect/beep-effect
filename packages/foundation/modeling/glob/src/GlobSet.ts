@@ -32,6 +32,8 @@ import { isGuardExceeded } from "./internal/limits.ts";
 import { braceExpand, Minimatch } from "./internal/minimatch.ts";
 import type { GuardExceeded } from "./internal/limits.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const $I = $GlobId.create("GlobSet");
 
 // Strip exactly ONE leading bang: the set-level exclusion marker. A remaining
@@ -68,7 +70,7 @@ const allCompileUnderDefaults = (patterns: ReadonlyArray<string>): true | string
     firstGuardTrip(
       patterns,
       (pattern, guard) =>
-        `pattern ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(Str.slice(0, 64)(pattern)), identity)}: ${guard.message}`
+        `pattern ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(Str.slice(0, 64)(pattern)), identity)}: ${guard.message}`
     ),
     (): true | string => true
   );

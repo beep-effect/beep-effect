@@ -17,6 +17,8 @@ import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const isScalar: P.Predicate<unknown> = P.some([P.isNull, P.isNumber, P.isBoolean, P.isString]);
 
 type CanonicalEntry = readonly [key: string, entry: unknown];
@@ -33,7 +35,7 @@ const byKeyAscending = Order.mapInput(Order.String, ([key]: CanonicalEntry) => k
  */
 export const canonicalJson = (value: unknown): string => {
   if (isScalar(value)) {
-    return Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity);
+    return Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity);
   }
   if (A.isArray(value)) {
     return `[${A.join(A.map(value, canonicalJson), ",")}]`;
@@ -47,7 +49,7 @@ export const canonicalJson = (value: unknown): string => {
     A.map(
       entries,
       ([key, entry]) =>
-        `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(key), identity)}:${canonicalJson(entry)}`
+        `${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(key), identity)}:${canonicalJson(entry)}`
     ),
     ","
   )}}`;

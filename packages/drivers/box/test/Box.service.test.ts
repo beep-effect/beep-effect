@@ -40,6 +40,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const decodeBBoxCcgConfig = S.decodeEffect(B.BoxCcgConfig);
 const decodeBEventEventTypeField = S.decodeEffect(B.EventEventTypeField);
 const decodeBBoxGetZipDownloadContentPayloadOption = S.decodeOption(B.BoxGetZipDownloadContentPayload);
@@ -499,9 +501,9 @@ describe("@beep/box", () => {
 
     for (const error of [sdkFailure, schemaFailure]) {
       const renderedForms = [
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(encode(B.BoxError, error)), identity),
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(encode(B.BoxError, error)), identity),
         String(error),
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(error), identity),
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(error), identity),
         Cause.fail(error).pipe(Cause.pretty),
       ];
 
@@ -643,9 +645,7 @@ describe("@beep/box", () => {
           getUserMe: (_queryParams, _headersInput, _cancellationToken) =>
             Promise.resolve(
               Result.getOrThrowWith(
-                S.decodeResult(S.fromJsonString(S.Unknown))(
-                  `{"id":"user-id","type":"user","__proto__":{"polluted":true}}`
-                ),
+                S.decodeResult(UnknownJson)(`{"id":"user-id","type":"user","__proto__":{"polluted":true}}`),
                 identity
               )
             ),

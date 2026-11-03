@@ -34,6 +34,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const decodePackageJson2 = S.decodeEffect(PackageJson);
 const DependenciesHolder = S.Struct({ dependencies: PackageJson.fields.dependencies });
 const decodePackageJsonFieldsDependencies = S.decodeEffect(DependenciesHolder);
@@ -43,7 +45,7 @@ const encodePackageJsonFieldsDependencies = S.encodeEffect(DependenciesHolder);
 const encodePackageJsonFieldsPublishConfig = S.encodeEffect(PublishConfig);
 const isPackageJson = S.is(PackageJson);
 const isNoSuchFileError = S.is(NoSuchFileError);
-const decodeUnknownJsonString = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
+const decodeUnknownJsonString = S.decodeUnknownEffect(UnknownJson);
 
 const objectKeys = (value: unknown): ReadonlyArray<string> => (P.isObject(value) ? Struct.keys(value) : A.empty());
 
@@ -526,9 +528,9 @@ describe("PackageJson schema", () => {
 
       expect(text).toContain('"beep"');
       expect(text).toContain('"resolutions#"');
-      expect(
-        decodePackageJson(Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Unknown))(text), identity)).beep
-      ).toEqual({ family: "ecosystem" });
+      expect(decodePackageJson(Result.getOrThrowWith(S.decodeResult(UnknownJson)(text), identity)).beep).toEqual({
+        family: "ecosystem",
+      });
     });
 
     it.effect(

@@ -39,13 +39,15 @@ import * as TestConsole from "effect/testing/TestConsole";
 import { parseRunnerFile } from "./support/runnerFile.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const code = ["packages/a/src/index.ts"];
 const docs = ["docs/runbooks/ci.md", "goals/x/PLAN.md"];
 const event = (values: Partial<HeavyAdmissionEvent> = {}) =>
   HeavyAdmissionEvent.make({ eventName: "pull_request", labels: [], draft: false, changedPaths: code, ...values });
 const payload = (labels: ReadonlyArray<string>, draft = false, base = "main") =>
   Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    S.encodeUnknownResult(UnknownJson)({
       action: "synchronize",
       number: 1,
       pull_request: {

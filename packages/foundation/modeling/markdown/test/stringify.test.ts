@@ -50,6 +50,8 @@ import * as Str from "effect/String";
 import { renderHtml } from "./support/htmlWriter.ts";
 import type { PhrasingContent } from "@beep/markdown/MarkdownNode";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 /** A throwaway span. Stringify never reads offsets, only shapes. */
 const span = (): Position =>
   Position.make({
@@ -81,7 +83,7 @@ const reparses = (root: Root, expectType: string): void => {
   assert.strictEqual(
     reparsed.children[0]?.type,
     expectType,
-    `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(emitted), identity)}`
+    `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
   );
 };
 
@@ -129,7 +131,7 @@ const headerCells = (emitted: string): ReadonlyArray<TableCell> => {
   const first = Result.getOrThrow(Markdown.parseResult(emitted)).children[0];
   if (first?.type !== "table")
     assert.fail(
-      `expected a table, emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(emitted), identity)}`
+      `expected a table, emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
     );
   return first.children[0]?.children ?? [];
 };
@@ -457,7 +459,7 @@ describe("Markdown.stringify", () => {
       assert.deepStrictEqual(
         A.map(reparsed.children, (child) => child.type),
         ["list", "list"],
-        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(emitted), identity)}`
+        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
       );
     });
 
@@ -519,25 +521,25 @@ describe("Markdown.stringify", () => {
       const values = ["a|b", "a\\\\|b", "a\\\\\\\\|b", "\\\\|"];
       for (const [kind, make] of rawCells) {
         for (const value of values) {
-          it(`${kind} ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity)}`, () => {
+          it(`${kind} ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity)}`, () => {
             const node = make(value);
             const emitted = out(rootOf(twoCellTable(node, text("x"))));
             const cells = headerCells(emitted);
             assert.strictEqual(
               cells.length,
               2,
-              `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(emitted), identity)}`
+              `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
             );
             const [child] = cells[0]?.children ?? [];
             assert.strictEqual(
               child?.type,
               node.type,
-              `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(emitted), identity)}`
+              `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
             );
             assert.strictEqual(
               child !== undefined && "value" in child ? child.value : undefined,
               node.value,
-              `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(emitted), identity)}`
+              `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
             );
           });
         }
@@ -587,7 +589,7 @@ describe("Markdown.stringify", () => {
       assert.isTrue(
         firstParagraph?.type === "paragraph" &&
           A.some(firstParagraph.children, (child) => child.type === "footnoteReference"),
-        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(emitted), identity)}`
+        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
       );
     });
   });
@@ -748,18 +750,18 @@ describe("Markdown.stringify", () => {
       assert.strictEqual(
         p?.type,
         "paragraph",
-        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(emitted), identity)} became ${p?.type}`
+        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)} became ${p?.type}`
       );
       if (p?.type !== "paragraph") return;
       assert.deepStrictEqual(
         A.map(p.children, (child) => child.type),
         ["text"],
-        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(emitted), identity)} split into ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(A.map(p.children, (c) => c.type)), identity)}`
+        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)} split into ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(A.map(p.children, (c) => c.type)), identity)}`
       );
       const only = p.children[0];
       assert.isTrue(
         only?.type === "text" && only.value === expectHtmlText,
-        `round-trip: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(emitted), identity)}`
+        `round-trip: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
       );
     };
 
@@ -788,7 +790,7 @@ describe("Markdown.stringify", () => {
       assert.strictEqual(
         reparsed.children[0]?.type,
         "paragraph",
-        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(emitted), identity)}`
+        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
       );
     });
     it("www autolink literal shape survives as text content", () => {
@@ -801,7 +803,7 @@ describe("Markdown.stringify", () => {
       const p = reparsed.children[0];
       assert.isTrue(
         p?.type === "paragraph" && A.every(p.children, (child) => child.type === "text"),
-        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(emitted), identity)} must not re-parse as an autolink`
+        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)} must not re-parse as an autolink`
       );
     });
     it("scheme autolink literal shape survives as text content", () => {
@@ -810,7 +812,7 @@ describe("Markdown.stringify", () => {
       const p = reparsed.children[0];
       assert.isTrue(
         p?.type === "paragraph" && A.every(p.children, (child) => child.type === "text"),
-        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(emitted), identity)} must not re-parse as an autolink`
+        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)} must not re-parse as an autolink`
       );
     });
     it("keeps email-shaped plain text literal under gfm", () => {
@@ -845,13 +847,13 @@ describe("Markdown.stringify", () => {
       assert.strictEqual(
         block?.type,
         expectType,
-        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(emitted), identity)} became ${block?.type}`
+        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)} became ${block?.type}`
       );
       if (block?.type !== "paragraph" && block?.type !== "heading") assert.fail("unreachable");
       assert.deepStrictEqual(
         A.map(block.children, (child) => child.type),
         ["text"],
-        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(emitted), identity)} split into ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(A.map(block.children, (c) => c.type)), identity)}`
+        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)} split into ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(A.map(block.children, (c) => c.type)), identity)}`
       );
       const only = block.children[0];
       return only?.type === "text" ? only.value : "";

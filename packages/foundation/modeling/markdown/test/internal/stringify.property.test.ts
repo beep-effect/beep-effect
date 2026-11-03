@@ -18,6 +18,8 @@ import { renderHtml } from "../support/htmlWriter.ts";
 import { normalizeHtml } from "../support/normalizeHtml.ts";
 import { renderOracleHtml } from "../support/oracle.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const prose = Arbitrary.schema(S.String).pipe(
   Arbitrary.map(
     (value) =>
@@ -117,12 +119,12 @@ describe("text escaping against the reference implementation", () => {
       assert.strictEqual(
         oracle(emitted),
         normalizeHtml(renderHtml(tree)),
-        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(emitted), identity)}`
+        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
       );
       assert.strictEqual(
         ours(emitted),
         oracle(emitted),
-        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(emitted), identity)}`
+        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
       );
       return true;
     },
@@ -138,12 +140,12 @@ describe("text escaping against the reference implementation", () => {
       assert.deepStrictEqual(
         A.map(reparsed.children, (child) => child.type),
         ["paragraph"],
-        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(emitted), identity)}`
+        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
       );
       assert.strictEqual(
         ours(emitted),
         oracle(emitted),
-        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(emitted), identity)}`
+        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
       );
       return true;
     },

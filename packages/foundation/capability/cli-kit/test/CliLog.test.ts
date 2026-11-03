@@ -28,6 +28,10 @@ import type { CliLogFile, CliLoggerOptions } from "@beep/cli-kit";
 import type { AudienceKind } from "@beep/runtime-env";
 import type * as FileSystem from "effect/FileSystem";
 
+const decodeLogRecord = S.decodeResult(
+  S.fromJsonString(S.Struct({ level: S.String, message: S.Unknown, annotations: S.Record(S.String, S.Unknown) }))
+);
+
 const platformServices = Layer.mergeAll(
   Layer.mock(ChildProcessSpawner.ChildProcessSpawner, {}),
   MemoryFileSystem.layer,
@@ -111,12 +115,7 @@ const pretty = (lines: ReadonlyArray<string>): ReadonlyArray<string> =>
   A.filter(lines, (line) => /^\d\d:\d\d:\d\d\.\d{3} /.test(line));
 
 const json = (line: string): { level: string; message: unknown; annotations: Record<string, unknown> } =>
-  Result.getOrThrowWith(
-    S.decodeResult(
-      S.fromJsonString(S.Struct({ level: S.String, message: S.Unknown, annotations: S.Record(S.String, S.Unknown) }))
-    )(line),
-    identity
-  );
+  Result.getOrThrowWith(decodeLogRecord(line), identity);
 
 it.layer(platformServices, { timeout: "30 seconds" })((it) => {
   describe("CliLog.Level", () => {

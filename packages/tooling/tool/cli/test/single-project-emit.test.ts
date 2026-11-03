@@ -13,6 +13,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { PlatformError } from "effect/PlatformError";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 // A package's build may write only its own package directory. `tsc -b` is a
 // subgraph builder: it rebuilds every project in the tsconfig reference
 // closure, writing sibling packages' dist/tsbuildinfo outside Turbo's task
@@ -186,7 +188,7 @@ const deletesOwnEmit = (script: string): boolean => Str.includes("rm -rf dist")(
 const violatesSingleProjectEmit = (script: string): boolean => usesSubgraphBuilder(script) || deletesOwnEmit(script);
 
 const emitScriptsOf = (raw: string): ReadonlyArray<string> => {
-  const parsed = Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Unknown))(raw), identity) as {
+  const parsed = Result.getOrThrowWith(S.decodeResult(UnknownJson)(raw), identity) as {
     readonly scripts?: Readonly<Record<string, string>>;
   };
   return A.getSomes([O.fromNullishOr(parsed.scripts?.["beep:build"]), O.fromNullishOr(parsed.scripts?.["beep:check"])]);

@@ -12,6 +12,8 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const bootstrapUrl = new URL("../scripts/CreateKnowledgeMintApp.ts", import.meta.url).href;
 const PLACEHOLDER = Str.repeat(4096)("placeholder-only");
 
@@ -35,7 +37,7 @@ const harness = (conversionStatus: number, expectedStatus: number, expectedText:
 globalThis.fetch = async () => new Response(JSON.stringify({
   id: 123, slug: "beep-knowledge-mint-2", client_id: "fixture-client", pem: "${PLACEHOLDER}"
 }), { status: ${conversionStatus}, headers: { "content-type": "application/json" } });
-const { makeKnowledgeMintHandler } = await import(${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(bootstrapUrl), identity)});
+const { makeKnowledgeMintHandler } = await import(${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(bootstrapUrl), identity)});
 const Effect = await import("effect/Effect");
 const { FetchHttpClient } = await import("effect/http");
 const handle = makeKnowledgeMintHandler("fixture-state", JSON.stringify({ name: "beep-knowledge-mint" }));
@@ -47,7 +49,7 @@ if ((await get("http://localhost:8787/callback?code=fixture-code&state=wrong")).
 const callback = await get("http://127.0.0.1:8787/callback?code=fixture-code&state=fixture-state");
 const text = await callback.text();
 if (callback.status !== ${expectedStatus}) process.exit(93);
-if (!text.includes(${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(expectedText), identity)})) process.exit(94);
+if (!text.includes(${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(expectedText), identity)})) process.exit(94);
 if (text.includes("placeholder-only") || text.includes("fixture-client")) process.exit(95);
 if ((await get("http://localhost:8787/callback?code=fixture-code&state=fixture-state")).status !== 400) process.exit(96);
 process.exit(0);

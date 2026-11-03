@@ -48,6 +48,8 @@ import * as Str from "effect/String";
 import { recordedGithub } from "./support/YeetGithub.ts";
 import type { YeetReviewWindow } from "@beep/repo-cli/test/Yeet";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const decodePrCloseoutReport = S.decodeEffect(PrCloseoutReport);
 
 const HEAD_A = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -462,10 +464,7 @@ const capturedThreadsText = await NodeServices.layer.pipe(
 );
 
 const capturedThreadsPayload = () => {
-  const captured = Result.getOrThrowWith(
-    S.decodeResult(S.fromJsonString(S.Unknown))(capturedThreadsText),
-    identity
-  ) as {
+  const captured = Result.getOrThrowWith(S.decodeResult(UnknownJson)(capturedThreadsText), identity) as {
     readonly data: {
       readonly repository: {
         readonly pullRequest: {

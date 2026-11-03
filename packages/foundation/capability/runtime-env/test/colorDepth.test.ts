@@ -8,6 +8,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { envReadsOf, sourceOf } from "./support/sources.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const nodeDepth = (env: Record<string, string>): string => {
   const bits = NodeTty.WriteStream.prototype.getColorDepth.call(undefined, env);
   return bits === 1 ? "none" : bits === 4 ? "basic" : bits === 8 ? "256" : "truecolor";
@@ -74,7 +76,7 @@ const EXTRA_CASES: ReadonlyArray<Record<string, string>> = [
 describe("colorDepth", () => {
   for (const env of EXTRA_CASES) {
     it.skipIf(win32)(
-      `matches Node on a TTY for the extra row ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(env), identity)}`,
+      `matches Node on a TTY for the extra row ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(env), identity)}`,
       () => {
         assert.strictEqual(colorDepth(env, true), nodeDepth(env));
       }
@@ -91,7 +93,7 @@ describe("colorDepth", () => {
 
   for (const env of CASES) {
     it.skipIf(win32)(
-      `matches Node on a TTY for ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(env), identity)}`,
+      `matches Node on a TTY for ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(env), identity)}`,
       () => {
         assert.strictEqual(colorDepth(env, true), nodeDepth(env));
       }
@@ -165,7 +167,7 @@ describe("colorDepth", () => {
         assert.strictEqual(
           colorDepth(env, true),
           "truecolor",
-          Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(env), identity)
+          Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(env), identity)
         );
       }
     });

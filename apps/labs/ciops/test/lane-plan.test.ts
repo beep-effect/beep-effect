@@ -43,6 +43,8 @@ import {
 import { emitLanePlan, emitScheduleAbox } from "@/projection/Turtle";
 import type { CiOpsProjectionShape } from "@/projection/CiOpsProjection";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 // P2 Ruling 2: the lab pins the live 33-lane handoff by digest; counts always come from the decoded bytes.
 const pinnedHandoffSha256 = "705f3e754a51c6750529ccec1021293c82fce0994709a18906b863609a0a2198";
 const pinnedHandoffPath = "goals/time-to-certainty/research/gate-order-handoff.json";
@@ -69,7 +71,7 @@ const readHandoff = Effect.fn("LanePlanTest.readHandoff")(function* (path: strin
 
 const handoffJson = (overrides: Readonly<Record<string, unknown>>): string =>
   Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    S.encodeUnknownResult(UnknownJson)({
       schemaVersion: "gate-order-handoff/v1",
       scope: "pre-push:non-main",
       orderRule: "gate-order-lexicographic/v1",

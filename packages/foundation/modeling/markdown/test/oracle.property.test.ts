@@ -24,6 +24,10 @@ import { renderHtml } from "./support/htmlWriter.ts";
 import { normalizeHtml } from "./support/normalizeHtml.ts";
 import { renderOracleHtml } from "./support/oracle.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
+const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
+
 /**
  * Render with our stack; `undefined` if the parse tripped a hardening guard.
  *
@@ -223,7 +227,7 @@ const agreesWithOracle = (markdown: string): boolean => {
     assert.strictEqual(
       ours,
       oracle,
-      `disagreement on input:\n${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(markdown), identity)}`
+      `disagreement on input:\n${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(markdown), identity)}`
     );
   }
   return true;
@@ -251,7 +255,7 @@ describe("differential oracle: commonmark.js 0.31.2", () => {
     assert.deepStrictEqual(
       A.map(disagreements, (d) => d.example),
       [],
-      `differential disagreement on ${disagreements.length} corpus example(s): ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }))(disagreements.slice(0, 3)), identity)}`
+      `differential disagreement on ${disagreements.length} corpus example(s): ${Result.getOrThrowWith(encodePrettyJson(disagreements.slice(0, 3)), identity)}`
     );
   });
 
@@ -272,7 +276,7 @@ describe("differential oracle: commonmark.js 0.31.2", () => {
       assert.strictEqual(
         ours,
         oracle,
-        `disagreement on input:\n${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(markdown), identity)}`
+        `disagreement on input:\n${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(markdown), identity)}`
       );
       return true;
     },

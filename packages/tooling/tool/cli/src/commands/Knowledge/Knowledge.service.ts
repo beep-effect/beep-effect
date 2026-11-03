@@ -97,6 +97,8 @@ import type {
   KnowledgeRewriteRule,
 } from "./Knowledge.schemas.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const $I = $RepoCliId.create("commands/Knowledge/Knowledge.service");
 const KnowledgeRewriteRulesJson = S.fromJsonString(KnowledgeRewriteRules);
 
@@ -1154,9 +1156,9 @@ import * as Result from "effect/Result"
 import * as Stdio from "effect/Stdio"
 import * as Stream from "effect/Stream"
 import * as Command from "effect/cli/Command"
-import { rootCommand } from ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(rootCommandModule), identity)}
+import { rootCommand } from ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(rootCommandModule), identity)}
 
-const input = await Bun.file(${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(inputPath), identity)}).text()
+const input = await Bun.file(${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(inputPath), identity)}).text()
 // This file is scratch-owned. Its writer prepends one structural field to every row, making an empty
 // file zero commands and a prefix-only row the root command without trusting archive data.
 const commands = input === "" ? [] : input.split("\\n").map((line) => {
@@ -1214,7 +1216,7 @@ import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Stdio from "effect/Stdio"
 import * as Stream from "effect/Stream"
-import { buildPortfolioIndexContent } from ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(portfolioIndexModule), identity)}
+import { buildPortfolioIndexContent } from ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(portfolioIndexModule), identity)}
 const program = Effect.flatMap(buildPortfolioIndexContent("."), (content) =>
   Stdio.Stdio.pipe(Effect.flatMap((stdio) => Stream.make(content).pipe(Stream.run(stdio.stdout()))))
 )

@@ -8,6 +8,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { envReadsOf, sourceOf } from "./support/sources.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 // std-env 4.3.0 agent table (dist/index.mjs), in its declared order. AI_AGENT wins over all.
 const AGENTS: ReadonlyArray<readonly [string, Record<string, string>]> = [
   ["claude", { CLAUDECODE: "1" }],
@@ -30,7 +32,7 @@ const AGENTS: ReadonlyArray<readonly [string, Record<string, string>]> = [
 
 describe("detectAgent", () => {
   for (const [name, env] of AGENTS) {
-    it(`${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(env), identity)} → ${name}`, () =>
+    it(`${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(env), identity)} → ${name}`, () =>
       assert.deepStrictEqual(detectAgent(env), O.some(name)));
   }
   it("AI_AGENT wins and is lower-cased", () =>
@@ -105,7 +107,7 @@ describe("detectCi", () => {
   // variable and counts as CI, as in std-env. Whitespace is not trimmed (Config.Boolean does not trim either),
   // so a padded falsy spelling is an unknown value.
   for (const v of ["banana", "nope", " no", "no ", "falsey"]) {
-    it(`unknown CI=${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(v), identity)} → generic`, () =>
+    it(`unknown CI=${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(v), identity)} → generic`, () =>
       assert.deepStrictEqual(ci({ CI: v }), O.some("generic")));
   }
 });

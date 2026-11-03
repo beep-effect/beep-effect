@@ -24,14 +24,16 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { fixturePackageFiles, policyCliFixtureFiles, writeFixtureFiles } from "./support/PolicyCliFixture.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const platform = FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer));
 
 const rootManifest = (scripts: Readonly<Record<string, string>>) =>
-  `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "fixture", workspaces: ["packages/*"], scripts }), identity)}\n`;
+  `${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)({ name: "fixture", workspaces: ["packages/*"], scripts }), identity)}\n`;
 
 const turbo = (tasks: ReadonlyArray<string>) =>
   `${Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    S.encodeUnknownResult(UnknownJson)({
       tasks: {
         "//#lint:policy-fingerprint": { cache: true, outputs: [], inputs: [] },
         ...R.fromEntries(A.map(tasks, (task) => [task, { dependsOn: ["//#lint:policy-fingerprint"] }] as const)),

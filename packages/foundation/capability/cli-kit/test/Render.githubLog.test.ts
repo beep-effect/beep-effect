@@ -272,13 +272,13 @@ describe("Render.githubLog: document text cannot become a workflow command", () 
     for (const line of hostile) {
       assert.isTrue(
         isCommand(line),
-        `the oracle flags it first: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(line), identity)}`
+        `the oracle flags it first: ${Result.getOrThrowWith(S.encodeUnknownResult(Json)(line), identity)}`
       );
       const out = CommandNeutralizer.lines(line);
       assert.deepStrictEqual(
         A.filter(out, isCommand),
         [],
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(line), identity)
+        Result.getOrThrowWith(S.encodeUnknownResult(Json)(line), identity)
       );
       assert.strictEqual(pipe(out, A.join(""), Str.replaceAll("\u200B", "")), line, "only a zero-width space is added");
     }
@@ -287,7 +287,7 @@ describe("Render.githubLog: document text cannot become a workflow command", () 
       assert.deepStrictEqual(
         CommandNeutralizer.lines(bare),
         [bare],
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(bare), identity)
+        Result.getOrThrowWith(S.encodeUnknownResult(Json)(bare), identity)
       );
     }
   });
@@ -298,26 +298,20 @@ describe("Render.githubLog: document text cannot become a workflow command", () 
       assert.strictEqual(
         A.join(CommandNeutralizer.lines(once), "\n"),
         once,
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(text), identity)
+        Result.getOrThrowWith(S.encodeUnknownResult(Json)(text), identity)
       );
     }
   });
 
   it("the detector itself: it finds a command behind every .NET whitespace and not behind U+200B or BOM", () => {
     for (const ws of ["", " ", "\t", "\u00A0", "\u0085", "\u2003", "\u3000", "  \u00A0 "]) {
-      assert.isTrue(
-        isCommand(`${ws}::error::x`),
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(ws), identity)
-      );
-      assert.isTrue(
-        isCommand(`${ws}##[group]x`),
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(ws), identity)
-      );
+      assert.isTrue(isCommand(`${ws}::error::x`), Result.getOrThrowWith(S.encodeUnknownResult(Json)(ws), identity));
+      assert.isTrue(isCommand(`${ws}##[group]x`), Result.getOrThrowWith(S.encodeUnknownResult(Json)(ws), identity));
     }
     for (const prefix of ["\u200B", "\uFEFF", "x", "- "])
       assert.isFalse(
         isCommand(`${prefix}::error::x`),
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(prefix), identity)
+        Result.getOrThrowWith(S.encodeUnknownResult(Json)(prefix), identity)
       );
     assert.isFalse(isCommand("a :: b"));
     assert.isFalse(isCommand(": :error"));

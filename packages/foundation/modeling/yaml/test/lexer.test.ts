@@ -8,6 +8,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 describe("lexer", () => {
   describe("anchor and alias token spans", () => {
     const text = "a: &anc 1\nb: *anc\n";
@@ -61,7 +63,7 @@ describe("lexer", () => {
 
 describe("newline positions and scanner reset", () => {
   for (const newline of ["\r", "\r\n", "\n"]) {
-    it(`counts ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(newline), identity)} once and resets indentation`, () => {
+    it(`counts ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(newline), identity)} once and resets indentation`, () => {
       const source = `a:${newline}  b: 1${newline}  c: 2${newline}d: 3${newline}`;
       const keys = A.filter(lexAll(source), (token) => ["a", "b", "c", "d"].includes(token.value));
       assert.deepStrictEqual(
@@ -96,7 +98,7 @@ describe("newline positions and scanner reset", () => {
 
 describe("plain scalar trailing whitespace", () => {
   for (const source of ["hello  ", "a: hello \t", "hello  : value"]) {
-    it(`emits consumed whitespace separately for ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(source), identity)}`, () => {
+    it(`emits consumed whitespace separately for ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(source), identity)}`, () => {
       const tokens = lexAll(source);
       const scalar = O.getOrUndefined(A.findFirst(tokens, (token) => token.value === "hello"));
       assert.isDefined(scalar);

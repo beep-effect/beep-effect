@@ -14,6 +14,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const tree = (text: string): JsoncNode => Jsonc.parseTreeResult(text).pipe(Result.getOrThrow, O.getOrThrow);
 
 // A hand-built tree deeper than the walker cap: arrays wrapping one leaf.
@@ -322,10 +324,7 @@ describe("JsoncNode", () => {
       });
       assert.deepStrictEqual(
         deepArray(255).toValue(),
-        Result.getOrThrowWith(
-          S.decodeResult(S.fromJsonString(S.Unknown))(`${Str.repeat(255)("[")}1${Str.repeat(255)("]")}`),
-          identity
-        )
+        Result.getOrThrowWith(S.decodeResult(UnknownJson)(`${Str.repeat(255)("[")}1${Str.repeat(255)("]")}`), identity)
       );
       assert.strictEqual(leaf.children?.[0]?.toValue(), 1);
     });

@@ -29,6 +29,8 @@ import { escape as engineEscape, unescape as engineUnescape, GLOBSTAR, Minimatch
 import { Platform } from "./internal/types.ts";
 import type { EngineOptionsInput, ParseReturnFiltered } from "./internal/types.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const $I = $GlobId.create("GlobPattern");
 
 /**
@@ -126,7 +128,7 @@ export class GlobPatternError extends S.TaggedError<GlobPatternError, { readonly
    */
   override get message(): string {
     const shown = this.pattern.length > 64 ? `${Str.slice(0, 64)(this.pattern)}…` : this.pattern;
-    return `glob pattern ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(shown), identity)} rejected: ${this.reason} (limit ${this.limit}, actual ${this.actual})`;
+    return `glob pattern ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(shown), identity)} rejected: ${this.reason} (limit ${this.limit}, actual ${this.actual})`;
   }
 }
 

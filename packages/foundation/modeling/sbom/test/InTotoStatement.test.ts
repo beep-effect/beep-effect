@@ -21,6 +21,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const HEX = "6a13657ec19f43b1d7b95c2f0a1c1e5b8d4f7a206a13657ec19f43b1d7b95c2f";
 
 const ProvenanceStatementJson = S.Struct({
@@ -148,15 +150,12 @@ describe("InTotoStatement", () => {
     });
     const json = statement.toJson();
     assert.isFalse(Str.includes("\n")(json), "the DSSE payload is compact by default");
-    assert.deepStrictEqual<unknown>(
-      Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Unknown))(json), identity),
-      {
-        _type: IN_TOTO_STATEMENT_V1,
-        subject: [{ name: "pkg:npm/left-pad@1.0.0", digest: { sha256: HEX } }],
-        predicateType: "https://example.test/predicate/v1",
-        predicate,
-      }
-    );
+    assert.deepStrictEqual<unknown>(Result.getOrThrowWith(S.decodeResult(UnknownJson)(json), identity), {
+      _type: IN_TOTO_STATEMENT_V1,
+      subject: [{ name: "pkg:npm/left-pad@1.0.0", digest: { sha256: HEX } }],
+      predicateType: "https://example.test/predicate/v1",
+      predicate,
+    });
   });
 
   it("indents on request, for a statement written down for a human", () => {
@@ -191,10 +190,7 @@ describe("InTotoStatement", () => {
       predicateType: SlsaProvenance.predicateType,
       predicate: provenance,
     });
-    const parsed: unknown = Result.getOrThrowWith(
-      S.decodeResult(S.fromJsonString(S.Unknown))(statement.toJson()),
-      identity
-    );
+    const parsed: unknown = Result.getOrThrowWith(S.decodeResult(UnknownJson)(statement.toJson()), identity);
     assertTrue(S.is(ProvenanceStatementJson)(parsed));
     assert.strictEqual(parsed.predicateType, "https://slsa.dev/provenance/v1");
     assert.strictEqual(parsed.predicate.buildDefinition.buildType, SlsaProvenance.buildType);

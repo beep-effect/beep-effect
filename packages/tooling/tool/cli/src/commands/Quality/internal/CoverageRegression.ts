@@ -60,6 +60,8 @@ import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/GitExec.ts";
 import type { WorkspacePackageInfo } from "./QualityArtifactSupport.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const $I = $RepoCliId.create("commands/Quality/internal/CoverageRegression");
 
 /**
@@ -3954,12 +3956,12 @@ export const renderCoverageMeasuredRowProposals = (result: CoverageComparisonRes
       ...A.map(
         proposals,
         (proposal) =>
-          `  ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(proposal.packageName), identity)} ${O.match(
+          `  ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(proposal.packageName), identity)} ${O.match(
             proposal.filePath,
             {
               onNone: () => "totals",
               onSome: (filePath) =>
-                `files[${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(filePath), identity)}]`,
+                `files[${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(filePath), identity)}]`,
             }
           )}: ${Result.match(encodeCoverageFileBaseline(proposal.row), {
             onFailure: (error) => `[cannot encode measured row: ${error.message}]`,

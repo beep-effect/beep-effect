@@ -276,16 +276,14 @@ describe("Render.markdown: headings and paragraphs", () => {
           cases++;
           const parsed = Markdown.parseResult(Render.markdown([Doc.paragraph(text)], ctx));
           if (parsed._tag !== "Success") {
-            failures.push(
-              `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(text), identity)}: parse failed`
-            );
+            failures.push(`${Result.getOrThrowWith(S.encodeUnknownResult(Json)(text), identity)}: parse failed`);
             return;
           }
           const node = parsed.success;
           const ok = kids(node).length === 1 && kids(node)[0]?.type === "paragraph" && textOf(node) === expected;
           if (!ok && failures.length < 5)
             failures.push(
-              `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(text), identity)} -> ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(A.map(kids(node), (n) => n.type)), identity)}`
+              `${Result.getOrThrowWith(S.encodeUnknownResult(Json)(text), identity)} -> ${Result.getOrThrowWith(S.encodeUnknownResult(Json)(A.map(kids(node), (n) => n.type)), identity)}`
             );
         };
         for (const text of upTo(alphabet, 6)) check(text);
@@ -530,7 +528,7 @@ describe("Render.markdown: tables", () => {
         return got.length === 2 && got[0] === c && got[1] === "z"
           ? []
           : [
-              `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(c), identity)} -> ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(got), identity)}`,
+              `${Result.getOrThrowWith(S.encodeUnknownResult(Json)(c), identity)} -> ${Result.getOrThrowWith(S.encodeUnknownResult(Json)(got), identity)}`,
             ];
       });
       assert.deepStrictEqual(failures.slice(0, 5), []);
@@ -570,7 +568,7 @@ describe("Render.markdown: tables", () => {
             if (got?.length !== 1 || got[0] !== expected || !clean) {
               if (failures.length < 5)
                 failures.push(
-                  `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(cell), identity)} -> ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(got), identity)} ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(types), identity)}`
+                  `${Result.getOrThrowWith(S.encodeUnknownResult(Json)(cell), identity)} -> ${Result.getOrThrowWith(S.encodeUnknownResult(Json)(got), identity)} ${Result.getOrThrowWith(S.encodeUnknownResult(Json)(types), identity)}`
                 );
             }
           });

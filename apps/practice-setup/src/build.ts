@@ -28,6 +28,8 @@ import { BESIDE_BUNDLE_FILE } from "./bin.ts";
 import { SetupFailure } from "./Setup.errors.ts";
 import { GatewayBundleManifest } from "./Setup.models.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 /**
  * The generated entry module that embeds the bundle and starts the
  * bootstrapper with it.
@@ -61,10 +63,10 @@ export const embeddedEntrySource: {
     [
       `import bundle from "./${BESIDE_BUNDLE_FILE}" with { type: "file" };`,
       `import * as O from "effect/Option";`,
-      `import { main } from ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(`${srcImport}/bin.ts`), identity)};`,
-      `import { EmbeddedGateway } from ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(`${srcImport}/Setup.models.ts`), identity)};`,
+      `import { main } from ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(`${srcImport}/bin.ts`), identity)};`,
+      `import { EmbeddedGateway } from ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(`${srcImport}/Setup.models.ts`), identity)};`,
       "",
-      `main(O.some(EmbeddedGateway.make({ bundle, version: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(version), identity)} })));`,
+      `main(O.some(EmbeddedGateway.make({ bundle, version: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(version), identity)} })));`,
       "",
     ],
     "\n"

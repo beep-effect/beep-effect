@@ -81,6 +81,8 @@ import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import type { ScriptResult } from "@beep/commands/ScriptedSpawner";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 class SharedInternalsTestError extends S.TaggedError<SharedInternalsTestError, { readonly brand: unique symbol }>()(
   "SharedInternalsTestError",
   {
@@ -140,7 +142,7 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
       expect(SchemaFirstPolicySeverity.is.warn("warn")).toBe(true);
       expect(SchemaFirstPolicySeverity.is.warning("warning")).toBe(true);
       const warnLine = `${SchemaFirstPolicyIssuePrefix}${Result.getOrThrowWith(
-        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+        S.encodeUnknownResult(UnknownJson)({
           category: "schema-first-policy",
           ruleId: "native-runtime",
           severity: "warn",
@@ -158,7 +160,7 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
 
     it("decodes a line with severity and remediation omitted", () => {
       const bare = `${SchemaFirstPolicyIssuePrefix}${Result.getOrThrowWith(
-        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+        S.encodeUnknownResult(UnknownJson)({
           category: "schema-first-policy",
           ruleId: "r",
           file: "a.ts",

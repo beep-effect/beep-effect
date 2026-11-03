@@ -57,13 +57,15 @@ import {
 import { OipAtomProvider } from "@/runtime/OipAtomProvider";
 import { HeroClipMedia } from "../src/components/HeroVideo.tsx";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 class OipWebTestOperationError extends S.TaggedError<OipWebTestOperationError, { readonly brand: unique symbol }>()(
   "OipWebTestOperationError",
   { cause: S.Defect({ includeStack: true }) },
   { description: "A failed external operation in oip-web.test.tsx." }
 ) {}
 
-const encodeCapturedLogs = S.encodeEffect(S.fromJsonString(S.Unknown));
+const encodeCapturedLogs = S.encodeEffect(UnknownJson);
 
 const decodeUnknownContactSubmissionAcceptedExit = S.decodeUnknownExit(ContactSubmissionAccepted);
 const decodeUnknownContactSubmissionFormPayloadExit = S.decodeUnknownExit(ContactSubmissionFormPayload);
@@ -397,10 +399,7 @@ describe("@beep/oip-web", { concurrent: false }, () => {
   });
 
   it("publishes firm social profiles in JSON-LD, excludes the Discord invite, and keeps the personal LinkedIn on the Person", () => {
-    const json = Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))(makeJsonLdGraph(oipSiteContent)),
-      identity
-    );
+    const json = Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(makeJsonLdGraph(oipSiteContent)), identity);
 
     expect(json).toContain("https://www.instagram.com/oip.law/");
     expect(json).toContain("https://www.linkedin.com/company/oppold-ip-law");

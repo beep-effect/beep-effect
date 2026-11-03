@@ -26,6 +26,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import VENDORED_SCHEMA from "./fixtures/bom-1.6.SNAPSHOT.schema.json" with { type: "json" };
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const RequiredProperties = S.Struct({ required: S.String.pipe(S.Array, S.optionalKey) });
 const RequiredPropertyItems = S.Array(RequiredProperties);
 const JsonDefinition = S.Struct({
@@ -98,10 +100,7 @@ const ConformanceDocument = S.Struct({
 });
 
 const emitted = (): typeof ConformanceDocument.Type => {
-  const document: unknown = Result.getOrThrowWith(
-    S.decodeResult(S.fromJsonString(S.Unknown))(Sbom.toJson(fullDocument())),
-    identity
-  );
+  const document: unknown = Result.getOrThrowWith(S.decodeResult(UnknownJson)(Sbom.toJson(fullDocument())), identity);
   assertTrue(S.is(ConformanceDocument)(document));
   return document;
 };
@@ -205,10 +204,7 @@ const licensesOf = (...licenses: ReadonlyArray<string>): ReadonlyArray<Record<st
     root: Component.make({ type: "library", name: "x", licenses }),
     components: [],
   });
-  const emitted: unknown = Result.getOrThrowWith(
-    S.decodeResult(S.fromJsonString(S.Unknown))(Sbom.toJson(document)),
-    identity
-  );
+  const emitted: unknown = Result.getOrThrowWith(S.decodeResult(UnknownJson)(Sbom.toJson(document)), identity);
   assertTrue(S.is(LicenseDocument)(emitted));
   return emitted.metadata.component.licenses ?? [];
 };

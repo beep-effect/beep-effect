@@ -19,6 +19,8 @@ import * as S from "effect/Schema";
 import { optionalPulumiConfigFields } from "./internal/PulumiConfigSchema.ts";
 import { VercelAuthenticationDeploymentType } from "./Vercel.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const $I = $InfraId.create("OipWeb");
 
 const defaultAwsRegion = "us-east-1";
@@ -622,7 +624,7 @@ export const loadOipWebRuntimeSecrets = (): OipWebRuntimeSecrets => {
 const secureBucketPolicy = (bucket: aws.s3.Bucket): pulumi.Output<string> =>
   bucket.arn.apply((arn) =>
     Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+      S.encodeUnknownResult(UnknownJson)({
         Statement: [
           {
             Action: "s3:*",

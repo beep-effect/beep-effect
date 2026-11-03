@@ -10,6 +10,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import stringWidth from "string-width";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const OSC8 = "\u001b]8;;https://example.com\u0007link\u001b]8;;\u0007";
 
 /** 29 curated strings, labelled: ASCII, accents, CJK, emoji of every kind, ANSI, OSC-8, text and emoji presentation. */
@@ -125,7 +127,7 @@ describe("displayWidth against string-width", () => {
       let text = "";
       for (let j = 0; j < length; j++) text += atoms[Math.floor(next() * atoms.length)];
       if (displayWidth(text) !== stringWidth(text))
-        mismatches.push(Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(text), identity));
+        mismatches.push(Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(text), identity));
     }
     assert.deepStrictEqual(mismatches.slice(0, 5), []);
   });

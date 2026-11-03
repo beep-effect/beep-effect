@@ -79,6 +79,8 @@ import {
 import type { CriticPackRequest, CriticReport, CriticRoute, CriticRunRequest } from "./Drawings.critics.schemas.ts";
 import type { CriticPdfPage } from "./Drawings.measurements.schemas.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const $I = $RepoCliId.create("commands/Drawings/Drawings.critics");
 
 const decodeManifest = S.decodeEffect(S.fromJsonString(RenderManifest));
@@ -410,14 +412,14 @@ export const loopSummaryMarkdown = (input: {
     const findings = A.map(
       report.findings,
       (f) =>
-        `- **${f.id}** ${f.severity} ${f.scope} ${f.category} FIG ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(f.figures), identity)} — ${f.location} — ${f.observation} — basis: ${f.basis} — fix: ${f.proposedFix} (confidence ${f.confidence})`
+        `- **${f.id}** ${f.severity} ${f.scope} ${f.category} FIG ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(f.figures), identity)} — ${f.location} — ${f.observation} — basis: ${f.basis} — fix: ${f.proposedFix} (confidence ${f.confidence})`
     );
     const stances = A.map(report.priorAssessment, (p) => `  - on ${p.id}: ${p.stance} — ${p.note}`);
     const unassessed =
       A.length(report.couldNotAssess) === 0 ? [] : [`  - could_not_assess: ${A.join(report.couldNotAssess, " | ")}`];
     return A.join(
       [
-        `\n## ${report.reviewer} — verdict ${report.verdict} — blockers: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(report.blockers), identity)}\n`,
+        `\n## ${report.reviewer} — verdict ${report.verdict} — blockers: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(report.blockers), identity)}\n`,
         ...findings,
         ...stances,
         ...unassessed,
@@ -489,7 +491,7 @@ export const priorIdsMarkdown = (reports: ReadonlyArray<CriticReport>): string =
     "\n"
   );
 
-const parseJson = S.decodeUnknownOption(S.fromJsonString(S.Unknown));
+const parseJson = S.decodeUnknownOption(UnknownJson);
 
 const decodeClaudeResult = S.decodeUnknownOption(CriticClaudeResult);
 
@@ -646,9 +648,7 @@ export const extractReportText = (input: { readonly route: CriticRoute; readonly
         parseJson(input.text),
         O.flatMap((wrapper) =>
           field(wrapper, "structuredOutput").pipe(
-            O.map((structured) =>
-              Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(structured), identity)
-            ),
+            O.map((structured) => Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(structured), identity)),
             O.orElse(() => field(wrapper, "text").pipe(O.filter(P.isString), O.flatMap(outermost)))
           )
         ),
@@ -1019,7 +1019,7 @@ const makeService = Effect.fn("DrawingCritics.make")(function* () {
           svgFile: `render/${figure.svgFile}`,
           svg,
           coverage: Result.getOrThrowWith(
-            S.encodeUnknownResult(S.fromJsonString(S.Unknown))(O.getOrElse(figure.shadingCoverage, () => null)),
+            S.encodeUnknownResult(UnknownJson)(O.getOrElse(figure.shadingCoverage, () => null)),
             identity
           ),
         }))

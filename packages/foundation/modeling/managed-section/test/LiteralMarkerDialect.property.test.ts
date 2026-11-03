@@ -13,6 +13,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const runs = { arbitrary: fcRuns(100) };
 
 const dialect = LiteralMarkerDialect.make({
@@ -58,7 +60,7 @@ describe("SectionMarkers", () => {
     for (const input of refused)
       assertFalse(
         S.is(SectionMarkers)(input),
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(input), identity)
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(input), identity)
       );
   });
 });

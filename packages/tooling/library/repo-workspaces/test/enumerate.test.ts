@@ -12,18 +12,20 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const literals = Array.from({ length: 24 }, (_, index) => `packages/pkg-${index}`);
 
 const tree: Record<string, string> = {
   "/repo/package.json": Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", version: "1.0.0" }),
+    S.encodeUnknownResult(UnknownJson)({ name: "root", version: "1.0.0" }),
     identity
   ),
   ...R.fromEntries(
     A.map(literals, (literal, index) => [
       `/repo/${literal}/package.json`,
       Result.getOrThrowWith(
-        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: `@x/pkg-${index}`, version: "1.0.0" }),
+        S.encodeUnknownResult(UnknownJson)({ name: `@x/pkg-${index}`, version: "1.0.0" }),
         identity
       ),
     ])

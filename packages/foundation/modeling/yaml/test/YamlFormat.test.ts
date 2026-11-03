@@ -14,6 +14,8 @@ import * as Str from "effect/String";
 import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 import { fixtureText } from "./fixture-text.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const apply = (text: string, edits: ReadonlyArray<YamlEdit>) => YamlEdit.applyAll(text, edits);
 
 describe("YamlFormat", () => {
@@ -186,12 +188,12 @@ describe("YamlFormat", () => {
         assert.isAtLeast(
           documents.length,
           2,
-          `expected a multi-document stream: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(text), identity)}`
+          `expected a multi-document stream: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(text), identity)}`
         );
         for (let i = 1; i < documents.length; i++) {
           assert.isTrue(
             documents[i]?.hasDocumentStart === true || documents[i - 1]?.hasDocumentEnd === true,
-            `document ${i} of ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(text), identity)} has neither its own --- nor a predecessor ...`
+            `document ${i} of ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(text), identity)} has neither its own --- nor a predecessor ...`
           );
         }
       }

@@ -26,6 +26,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 // Module-local structural declarations of the browser surface this script
 // touches. They shadow any Node globals and erase at bundle time.
 
@@ -290,7 +292,7 @@ declare const decodeURIComponent: (value: string) => string;
   const flush = (): void => flushWith(false);
 
   const record = (event: { readonly [key: string]: unknown }): void => {
-    buffer[buffer.length] = Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(event), identity);
+    buffer[buffer.length] = Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(event), identity);
     if (buffer.length >= config.maxBatch) {
       flush();
     }

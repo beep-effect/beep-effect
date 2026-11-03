@@ -37,9 +37,7 @@ const makeRecordingCreate = (recorder: Recorder): CreateInspector => {
     send: (message) => {
       recorder.messages.push(
         Result.getOrThrowWith(
-          S.decodeResult(S.fromJsonString(S.Unknown))(
-            Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(message), identity)
-          ),
+          S.decodeResult(UnknownJson)(Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(message), identity)),
           identity
         ) as RecordedMessage
       );

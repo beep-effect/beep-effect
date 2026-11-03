@@ -60,6 +60,8 @@ import type { MaterializationPlan, ValidationRequirement } from "./Bootstrap.sch
 import type { ConflictRow, PlanRow, PreservationRow } from "./Bootstrap.ts";
 import type { GoalStatus } from "./Goals.schemas.ts";
 
+const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
+
 const decodeGoalSlug = S.decodeEffect(GoalSlug);
 
 const MANIFEST_RELATIVE_PATH = "ops/manifest.json";
@@ -234,7 +236,7 @@ const seededManifestPayload = (input: {
       status: "pending",
     })),
   };
-  return `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }))(document), identity)}\n`;
+  return `${Result.getOrThrowWith(encodePrettyJson(document), identity)}\n`;
 };
 
 const inferArchetype = (files: ReadonlyArray<PacketSnapshotFile>): PhaseArchetype => {

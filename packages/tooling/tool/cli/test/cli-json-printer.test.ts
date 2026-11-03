@@ -25,6 +25,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 describe("internal/cli/Json renderPrettyCommandJson", () => {
   it("pretty-formats a compact JSON payload with a trailing newline", () => {
     const rendered = renderPrettyCommandJson(`{"ok":true}`);
@@ -166,7 +168,7 @@ describe("internal/cli/Json printCommandJson", () => {
     const moduleUrl = new URL("../src/internal/cli/Json.ts", import.meta.url).href;
     const program = A.join(
       [
-        `import { printCommandJson } from ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(moduleUrl), identity)};`,
+        `import { printCommandJson } from ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(moduleUrl), identity)};`,
         'import * as Effect from "effect/Effect";',
         "const rawWrite = process.stdout.write.bind(process.stdout);",
         "process.stdout.write = (chunk, ...args) => {",
@@ -186,9 +188,7 @@ describe("internal/cli/Json printCommandJson", () => {
 
     expect(result.exitCode, `printCommandJson Bun child stderr: ${result.stderr.toString()}`).toBe(0);
     expect(result.stdout.byteLength).toBeGreaterThan(65_536);
-    expect(output).toBe(
-      `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(payload), identity)}\n`
-    );
+    expect(output).toBe(`${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(payload), identity)}\n`);
   });
 
   it.effect(

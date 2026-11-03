@@ -24,6 +24,8 @@ import * as TestClock from "effect/testing/TestClock";
 
 const Json = S.fromJsonString(S.Unknown);
 
+const decodeLogLevel = S.decodeResult(S.fromJsonString(S.Struct({ level: S.String })));
+
 const LEVEL_ENV = "TOOL_LOG_LEVEL";
 const FILE_ENV = "TOOL_LOG_FILE";
 const PATH = "/logs/diagnostics.ndjson";
@@ -179,11 +181,7 @@ describe("CliLog.layer file option", () => {
       // Identical to the stderr line for the same log call, byte for byte.
       assert.deepStrictEqual(lines, ndjson(h.err));
       assert.deepStrictEqual(
-        A.map(
-          lines,
-          (l) =>
-            Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Struct({ level: S.String })))(l), identity).level
-        ),
+        A.map(lines, (l) => Result.getOrThrowWith(decodeLogLevel(l), identity).level),
         ["DEBUG", "ERROR"]
       );
       assert.isTrue(Str.endsWith("\n")(h.file() ?? ""));

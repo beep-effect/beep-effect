@@ -58,6 +58,8 @@ import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RouteCensus, RouteCorpusReceipt, RoutePlan, RouteReplay } from "./Route.schemas.ts";
 import type { RouteCensusShape, RouteCorpusLoaded } from "./Route.service.ts";
 
+const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
+
 /**
  * Default corpus directory, relative to the repository root.
  *
@@ -132,9 +134,7 @@ const encodeJson = <Sch extends S.Top>(
   value: Sch["Type"]
 ): Effect.Effect<string, never, Sch["EncodingServices"]> =>
   S.encodeEffect(schema)(value).pipe(
-    Effect.map((encoded) =>
-      Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }))(encoded), identity)
-    ),
+    Effect.map((encoded) => Result.getOrThrowWith(encodePrettyJson(encoded), identity)),
     Effect.orDie
   );
 

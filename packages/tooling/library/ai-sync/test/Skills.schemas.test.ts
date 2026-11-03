@@ -26,7 +26,8 @@ describe("Skills.schemas", () => {
   it.effect("round-trips a snapshot whose fileCount matches its manifest", () =>
     Effect.gen(function* () {
       const snapshot = yield* decodeSkillSnapshot(snapshotInput(1));
-      const decoded = yield* decodeSkillSnapshot(yield* encodeSkillSnapshot(snapshot));
+      const encoded = yield* encodeSkillSnapshot(snapshot);
+      const decoded = yield* decodeSkillSnapshot(encoded);
       expect(decoded.fileCount).toBe(1);
       expect(S.is(SkillSnapshot)(decoded)).toBe(true);
     })

@@ -14,6 +14,8 @@ import { createMachine } from "xstate";
 import { inspectIntakeActor, statelyInspectEnabled } from "@/intake/Intake.inspection";
 import type { Inspector } from "@statelyai/sdk";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const { createInspector, calls, relay } = vi.hoisted(() => {
   const recorded: Array<{ readonly method: string; readonly id?: string }> = [];
   const relay = { accept: true };
@@ -25,7 +27,7 @@ const { createInspector, calls, relay } = vi.hoisted(() => {
         options: unknown
       ): Pick<Inspector, "actor" | "destroy" | "event" | "inspectorUrl" | "ready" | "snapshot" | "stop"> => {
         recorded.push({
-          method: `create:${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(options), identity)}`,
+          method: `create:${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(options), identity)}`,
         });
         const ready = relay.accept ? Promise.resolve() : Promise.reject(new Error("relay refused"));
         // The rejection is observed by the code under test; mark it handled so the runtime does not report it.

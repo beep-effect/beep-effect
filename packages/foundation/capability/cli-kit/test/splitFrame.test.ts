@@ -8,6 +8,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 /** The regular expression `splitFrame` replaced, kept here as the oracle for its exact behaviour. */
 const legacy = (raw: string): ReturnType<typeof splitFrame> => {
   const text = pipe(raw, Str.trim, Str.replace(/^at\s+/, ""));
@@ -52,12 +54,12 @@ describe("splitFrame", () => {
       const got = splitFrame(raw);
       const want = legacy(raw);
       if (
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(got), identity) !==
-          Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(want), identity) &&
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(got), identity) !==
+          Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(want), identity) &&
         differences.length < 5
       ) {
         differences.push(
-          `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(raw), identity)}: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(got), identity)} vs ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(want), identity)}`
+          `${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(raw), identity)}: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(got), identity)} vs ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(want), identity)}`
         );
       }
     }

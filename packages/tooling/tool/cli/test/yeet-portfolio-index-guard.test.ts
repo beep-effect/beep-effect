@@ -27,6 +27,8 @@ import * as Tuple from "effect/Tuple";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 
+const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
+
 const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
   Layer.provideMerge(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer))
 );
@@ -47,7 +49,7 @@ const runGitStatus = (cwd: string) => spawnGit(cwd, ["status", "--porcelain"]).p
 
 const goalManifest = (slug: string): string =>
   Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }))({
+    encodePrettyJson({
       schemaVersion: "initiative-manifest/v2",
       initiative: { id: slug, title: `Packet ${slug}`, status: "active", updated: "2026-08-16" },
       mission: `Mission for ${slug}.`,

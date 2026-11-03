@@ -122,7 +122,7 @@ it.layer(parserServices, { timeout: "30 seconds" })("scanAudience agrees with co
 
   for (const [argv, counted] of rejected) {
     it.effect(
-      `core rejects ${A.join(argv, " ")}; the scan counts only ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(counted), identity)}`,
+      `core rejects ${A.join(argv, " ")}; the scan counts only ${Result.getOrThrowWith(S.encodeUnknownResult(Json)(counted), identity)}`,
       () =>
         Effect.gen(function* () {
           const parsedBy1 = yield* parsedBy(argv);

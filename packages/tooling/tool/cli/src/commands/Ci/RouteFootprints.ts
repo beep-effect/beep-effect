@@ -26,6 +26,8 @@ import { CHANGE_ATOM_KIND_VALUES, CheckFootprint } from "./Route.schemas.ts";
 import type { CiLaneId } from "./CiLane.ts";
 import type { ChangeAtom, ChangeAtomKind, FootprintPropagation } from "./Route.schemas.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const unrefined = (
   lane: CiLaneId,
   propagation: FootprintPropagation,
@@ -130,7 +132,7 @@ export const routeFootprintList = (): ReadonlyArray<CheckFootprint> =>
  */
 export const routeFootprintCanonicalJson = (): string =>
   Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))(
+    S.encodeUnknownResult(UnknownJson)(
       A.map(routeFootprintList(), (footprint) => ({
         lane: footprint.lane,
         kinds: A.filter(CHANGE_ATOM_KIND_VALUES, (kind) => A.contains(footprint.kinds, kind)),

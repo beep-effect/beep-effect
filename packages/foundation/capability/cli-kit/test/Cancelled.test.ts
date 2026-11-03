@@ -17,6 +17,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const capturing = () => {
   const out: string[] = [];
   const err: string[] = [];
@@ -61,10 +63,7 @@ describe("Cancelled", () => {
 
   it("the exit-code marker is not an own enumerable property: a JSON dump or logger dump does not carry it", () => {
     const cancelled = Cancelled.make({ reason: "escape" });
-    assert.notInclude(
-      Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(cancelled), identity),
-      "errorExitCode"
-    );
+    assert.notInclude(Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(cancelled), identity), "errorExitCode");
     assert.notInclude(A.join(Struct.keys(cancelled), ","), "errorExitCode");
     // But core still finds it: `in` sees a prototype getter, and the code is read through it.
     assert.isTrue(Runtime.errorExitCode in cancelled);
@@ -136,10 +135,7 @@ describe("the fixed lines are the errors' own message", () => {
       _tag: "Cancelled",
       reason: "escape",
     });
-    assert.notInclude(
-      Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(decoded), identity),
-      CANCELLED
-    );
+    assert.notInclude(Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(decoded), identity), CANCELLED);
     assert.isTrue(Equal.equals(decoded, Cancelled.make({ reason: "escape" })));
     assert.notInclude(A.join(Struct.keys(NotInteractive.make()), ","), "message");
   });
@@ -167,10 +163,7 @@ describe("NotInteractive", () => {
 
   it("its exit-code marker is not an own enumerable property either", () => {
     const error = NotInteractive.make();
-    assert.notInclude(
-      Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(error), identity),
-      "errorExitCode"
-    );
+    assert.notInclude(Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(error), identity), "errorExitCode");
     assert.isTrue(Runtime.errorExitCode in error);
     assert.strictEqual(Runtime.getErrorExitCode(error), 64);
   });

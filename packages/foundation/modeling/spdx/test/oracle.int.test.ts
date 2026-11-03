@@ -6,6 +6,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import spdxParse from "spdx-expression-parse";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const oracleAccepts = (s: string): boolean => {
   try {
     spdxParse(s);
@@ -54,7 +56,7 @@ describe("differential oracle: @effected/spdx vs spdx-expression-parse", () => {
       assert.strictEqual(
         isValidExpression(s),
         oracleAccepts(s),
-        `expr ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(s), identity)}`
+        `expr ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(s), identity)}`
       );
     }
   });

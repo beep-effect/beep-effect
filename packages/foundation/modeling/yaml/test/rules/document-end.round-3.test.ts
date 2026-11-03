@@ -7,6 +7,8 @@ import * as S from "effect/Schema";
 import * as YAML from "yaml";
 import { builtin } from "./harness.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const rule = builtin("document-end");
 const required = YamlLintConfig.make({ rules: { "document-end": "error" } });
 const forbidden = YamlLintConfig.make({ rules: { "document-end": { present: false } } });
@@ -19,7 +21,7 @@ describe("document-end round-3 regressions", () => {
     { terminator: "\r\n\r", line: 2, insertion: "\n...\n" },
     { terminator: "\r\r\n", line: 2, insertion: "...\n" },
   ]) {
-    it(`EOF diagnostics and inference agree after ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(terminator), identity)}`, () => {
+    it(`EOF diagnostics and inference agree after ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(terminator), identity)}`, () => {
       const input = `a: 1${terminator}`;
       const diagnostics = YamlLint.run(input, [rule], required);
       assert.strictEqual(diagnostics.length, 1);

@@ -9,6 +9,8 @@ import { identity } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 /**
  * The payload is the real attack, not a sanitized stand-in: a `</script>` that
  * closes the JSON-LD block, followed by markup that runs. The trailing generic
@@ -93,7 +95,7 @@ describe("script embedding", () => {
 
   it("is lossless: the escaped body parses back to the original string", () => {
     const body = hostileGraph().toScriptBody();
-    const parsed: unknown = Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Unknown))(body), identity);
+    const parsed: unknown = Result.getOrThrowWith(S.decodeResult(UnknownJson)(body), identity);
     if (!S.is(ScriptDocument)(parsed)) assert.fail("expected a JSON-LD script document");
 
     assert.strictEqual(
@@ -114,10 +116,7 @@ describe("script embedding", () => {
   it("positive control: JSON.stringify of the same graph DOES carry the hazard", () => {
     const graph = hostileGraph();
 
-    const unsafe = Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))(graph.toJsonLd()),
-      identity
-    );
+    const unsafe = Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(graph.toJsonLd()), identity);
 
     assert.include(unsafe, "</script>", "the hazard must be real, or the escaping test proves nothing");
     assert.include(unsafe, "<img src=x", "the injected markup must be present in the unescaped form");
@@ -132,7 +131,7 @@ describe("script embedding", () => {
 
     assert.include(body, "Alice", "ordinary text must not be mangled");
     assert.deepStrictEqual(
-      Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Unknown))(body), identity),
+      Result.getOrThrowWith(S.decodeResult(UnknownJson)(body), identity),
       graph.toJsonLd(),
       "the body must parse back to the wire value"
     );
@@ -151,7 +150,7 @@ describe("script embedding", () => {
     const body = graph.toScriptBody();
 
     assert.notInclude(body, "<", "a typed scalar, an array member and a catch-all value must all be escaped");
-    const parsed: unknown = Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Unknown))(body), identity);
+    const parsed: unknown = Result.getOrThrowWith(S.decodeResult(UnknownJson)(body), identity);
     if (!S.is(ScriptDocument)(parsed)) assert.fail("expected a JSON-LD script document");
     const node = parsed["@graph"][0];
     assert.strictEqual(node?.name, "</script>");
@@ -213,7 +212,7 @@ describe("script embedding — idempotence, which a consumer now depends on", ()
   it("layering the consumer's pass still round-trips to the original value", () => {
     const doubled = consumerEscape(hostileGraph().toScriptBody());
 
-    const parsed: unknown = Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Unknown))(doubled), identity);
+    const parsed: unknown = Result.getOrThrowWith(S.decodeResult(UnknownJson)(doubled), identity);
     if (!S.is(ScriptDocument)(parsed)) assert.fail("expected a JSON-LD script document");
     assert.strictEqual(parsed["@graph"][0]?.description, HOSTILE_DESCRIPTION, "a layered pass must not corrupt values");
   });
@@ -228,7 +227,7 @@ describe("script embedding — property", () => {
       const body = graph.toScriptBody();
 
       assert.match(body, /^[^<>&]*$/u, `body must carry no < > & for seed ${seed}`);
-      const parsed: unknown = Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Unknown))(body), identity);
+      const parsed: unknown = Result.getOrThrowWith(S.decodeResult(UnknownJson)(body), identity);
       if (!S.is(ScriptDocument)(parsed)) assert.fail("expected a JSON-LD script document");
       assert.strictEqual(parsed["@graph"][0]?.description, description, `must round-trip for seed ${seed}`);
     }

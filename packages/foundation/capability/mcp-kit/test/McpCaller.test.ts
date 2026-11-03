@@ -20,10 +20,12 @@ import * as S from "effect/Schema";
 import { FixtureRegistrationsLive } from "./fixtures/FixtureHost.ts";
 import { StubMcpClientLayer } from "./fixtures/McpClient.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const anchorReport = (result: { readonly content: ReadonlyArray<unknown> }): string => {
   const [first] = result.content;
   return Result.getOrThrowWith(
-    S.decodeResult(S.fromJsonString(S.Unknown))((first as { readonly text: string }).text),
+    S.decodeResult(UnknownJson)((first as { readonly text: string }).text),
     identity
   ) as string;
 };

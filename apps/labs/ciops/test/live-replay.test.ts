@@ -62,6 +62,8 @@ import {
 } from "@/projection/Schemas";
 import type { LiveReplayReport } from "@/projection/Replay";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const repoRoot = "../../..";
 const pin = "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet";
 const aboxPath = "explorations/beep-ci-operational-ontology/ontology/extraction/s6/graphs/abox.ttl";
@@ -270,7 +272,7 @@ const legacyProtocol = O.some("legacy-origin-lock/v1");
 
 const ndjson = (rows: ReadonlyArray<Record<string, unknown>>): string =>
   A.join(
-    A.map(rows, (row) => Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(row), identity)),
+    A.map(rows, (row) => Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(row), identity)),
     "\n"
   );
 

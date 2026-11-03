@@ -50,6 +50,8 @@ import { parse as oracleParse, stringify as oracleStringify } from "smol-toml";
 import { readValid, readValidExpected, validCases } from "./corpus.ts";
 import { assertMatchesTagged } from "./e2e/taggedJson.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 // ── The canonicalizer ──────────────────────────────────────────────────────
 
 const MAX_SAFE_BIG = BigInt(Number.MAX_SAFE_INTEGER);
@@ -441,9 +443,6 @@ describe("corpus differential", () => {
 
 /** Where the oracle diverges, the corpus expectation decides: assert ours against it. */
 function assertOursAgainstCorpus(ours: unknown, relPath: string): void {
-  const expected: unknown = Result.getOrThrowWith(
-    S.decodeResult(S.fromJsonString(S.Unknown))(readValidExpected(relPath)),
-    identity
-  );
+  const expected: unknown = Result.getOrThrowWith(S.decodeResult(UnknownJson)(readValidExpected(relPath)), identity);
   assertMatchesTagged(ours, expected, "$");
 }

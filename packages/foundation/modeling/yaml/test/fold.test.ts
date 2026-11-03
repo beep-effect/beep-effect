@@ -16,6 +16,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { parse } from "yaml";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 /** Adapt an Option-returning renderer to its nullable reading for assertions. */
 const nullable =
   <Args extends ReadonlyArray<unknown>>(render: (...args: Args) => O.Option<string>) =>
@@ -63,7 +65,7 @@ describe("folded scalar more-indented transitions", () => {
   // The independent yaml parser resolves that output to " a\n\nb". YAML 1.2
   // already preserves a break following a more-indented line; no blank is needed.
   for (const value of [" a\nb", "\ta\nb", "a\n b\nc", " a\n\nb", "a\nb", "a\n\nb", " a\nb\n", " a\nb\n\n"]) {
-    it(`round-trips ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity)} through an independent parser`, () => {
+    it(`round-trips ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity)} through an independent parser`, () => {
       const rendered = O.getOrNull(renderBlockFolded(value, "  "));
       assert.strictEqual(parse(`${rendered}\n`), value);
     });

@@ -58,6 +58,8 @@ import { CurrentMcpCaller, CurrentMcpDispatchAnchor, McpCallerIdentity } from ".
 import type * as JsonSchema from "effect/JsonSchema";
 import type * as Tracer from "effect/Tracer";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 /**
  * Span attribute keys suppressed by default: the raw, undecoded tool call
  * parameters set by upstream `Toolkit.ts:263-265`.
@@ -366,7 +368,7 @@ const textContent = (encoded: unknown): CallToolResult["content"] =>
     : [
         {
           type: "text",
-          text: Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(encoded), identity),
+          text: Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(encoded), identity),
         },
       ];
 

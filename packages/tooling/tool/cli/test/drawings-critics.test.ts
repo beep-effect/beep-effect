@@ -719,12 +719,12 @@ const stuckHandle = ChildProcessSpawner.makeHandle({
 const stalledStderrPieces = ["reading render/pg-1.png\n", "reading render/fig-1.svg\n"];
 const stalledStderr = A.join(stalledStderrPieces, "");
 const stalledStdout = Result.getOrThrowWith(
-  S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+  S.encodeUnknownResult(UnknownJson)({
     type: "result",
     subtype: "success",
     is_error: false,
     result: Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+      S.encodeUnknownResult(UnknownJson)({
         reviewer: "claude-fable-5.1",
         verdict: "reject",
         blockers: [],
@@ -759,7 +759,7 @@ const stalledHandle = ChildProcessSpawner.makeHandle({
 });
 
 const opusReport = Result.getOrThrowWith(
-  S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+  S.encodeUnknownResult(UnknownJson)({
     reviewer: "claude-opus-5.5",
     verdict: "accept",
     blockers: [],
@@ -795,7 +795,7 @@ const seatOutput = (command: ChildProcess.StandardCommand): SeatOutput =>
       O.contains(flagValue(commandArgs(command), "--model"), "claude-output-capped")
         ? {
             stdout: Result.getOrThrowWith(
-              S.encodeUnknownResult(S.fromJsonString(S.Unknown))(outputCapEnvelope(OUTPUT_CAP_MESSAGE)),
+              S.encodeUnknownResult(UnknownJson)(outputCapEnvelope(OUTPUT_CAP_MESSAGE)),
               identity
             ),
             stderr: "",
@@ -803,7 +803,7 @@ const seatOutput = (command: ChildProcess.StandardCommand): SeatOutput =>
           }
         : {
             stdout: Result.getOrThrowWith(
-              S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+              S.encodeUnknownResult(UnknownJson)({
                 type: "result",
                 subtype: "success",
                 is_error: false,

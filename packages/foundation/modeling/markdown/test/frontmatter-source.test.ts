@@ -10,6 +10,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const split = FrontmatterSource.split;
 const join = FrontmatterSource.join;
 
@@ -176,7 +178,7 @@ describe("FrontmatterSource", () => {
         assert.strictEqual(
           join(split(source)),
           source,
-          Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(source), identity)
+          Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(source), identity)
         );
       }
     });

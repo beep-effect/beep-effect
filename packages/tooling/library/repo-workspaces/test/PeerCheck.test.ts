@@ -27,6 +27,8 @@ import * as Str from "effect/String";
 import { fixture } from "./support/fixtureText.ts";
 import type { PeerCheckOptions, UnsatisfiedPeer } from "@beep/repo-workspaces/PeerCheck";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const parse = (dir: string) => Lockfile.parse(fixture(`peers/${dir}/pnpm-lock.yaml`), { format: "pnpm" });
 
 /**
@@ -72,8 +74,8 @@ interface Row {
 
 const order = (rows: ReadonlyArray<Row>): ReadonlyArray<Row> =>
   [...rows].sort((a, b) =>
-    Str.localeCompare(Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(b), identity))(
-      Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(a), identity)
+    Str.localeCompare(Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(b), identity))(
+      Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(a), identity)
     )
   );
 

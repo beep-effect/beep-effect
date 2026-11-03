@@ -7,8 +7,10 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const canonicalPrimitive = (value: string | number | boolean | null): string =>
-  Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity);
+  Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity);
 
 const canonicalArray = (value: ReadonlyArray<unknown>): string => `[${pipe(value, A.map(canonicalJson), A.join(","))}]`;
 

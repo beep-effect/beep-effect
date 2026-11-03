@@ -21,10 +21,12 @@ import * as S from "effect/Schema";
 import { platform, platformWith } from "./support/fixtures.ts";
 import type { Tree } from "./support/fixtures.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const tree: Tree = {
   "/repo/pnpm-workspace.yaml": "packages:\n  - 'packages/*'\n",
   "/repo/package.json": Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", workspaces: ["apps/*"] }),
+    S.encodeUnknownResult(UnknownJson)({ name: "root", workspaces: ["apps/*"] }),
     identity
   ),
 };
@@ -45,7 +47,7 @@ describe("WorkspacePatterns.read — a pnpm-workspace.yaml with no packages key 
     platform({
       "/repo/pnpm-workspace.yaml": "onlyBuiltDependencies:\n  - esbuild\n",
       "/repo/package.json": Result.getOrThrowWith(
-        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", workspaces: ["apps/*"] }),
+        S.encodeUnknownResult(UnknownJson)({ name: "root", workspaces: ["apps/*"] }),
         identity
       ),
     }),
@@ -98,7 +100,7 @@ describe("WorkspacePatterns.read — an unreadable package.json", () => {
     platformWith({ unreadableFiles: ["/repo/package.json"] })({
       "/repo/pnpm-workspace.yaml": "onlyBuiltDependencies:\n  - esbuild\n",
       "/repo/package.json": Result.getOrThrowWith(
-        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", workspaces: ["apps/*"] }),
+        S.encodeUnknownResult(UnknownJson)({ name: "root", workspaces: ["apps/*"] }),
         identity
       ),
     }),
@@ -147,7 +149,7 @@ describe("WorkspacePatterns — a malformed `workspaces` field reads as no patte
   layer(
     platform({
       "/repo/package.json": Result.getOrThrowWith(
-        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", workspaces: 7 }),
+        S.encodeUnknownResult(UnknownJson)({ name: "root", workspaces: 7 }),
         identity
       ),
     }),
@@ -166,7 +168,7 @@ describe("WorkspacePatterns — a malformed `workspaces` field reads as no patte
   layer(
     platform({
       "/repo/package.json": Result.getOrThrowWith(
-        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+        S.encodeUnknownResult(UnknownJson)({
           name: "root",
           workspaces: { catalog: { effect: "4.0.0" } },
         }),
@@ -186,7 +188,7 @@ describe("WorkspacePatterns — a malformed `workspaces` field reads as no patte
   layer(
     platform({
       "/repo/package.json": Result.getOrThrowWith(
-        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", workspaces: ["packages/*", 42, null] }),
+        S.encodeUnknownResult(UnknownJson)({ name: "root", workspaces: ["packages/*", 42, null] }),
         identity
       ),
     }),

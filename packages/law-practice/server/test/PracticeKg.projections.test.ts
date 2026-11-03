@@ -95,6 +95,8 @@ import { OFFICE_ACTION_FIXTURE } from "./fixture.ts";
 import type { DuckDbShape } from "@beep/duckdb";
 import type { TestContext } from "@effect/vitest";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 class ConcurrentClaimsReader extends Context.Service<ConcurrentClaimsReader, DuckDbShape>()(
   "@beep/law-practice-server/test/PracticeKg.projections.test/ConcurrentClaimsReader"
 ) {}
@@ -102,7 +104,7 @@ class ConcurrentClaimsOptions extends Context.Service<ConcurrentClaimsOptions, P
   "@beep/law-practice-server/test/PracticeKg.projections.test/ConcurrentClaimsOptions"
 ) {}
 
-const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const encodeJson = S.encodeUnknownEffect(UnknownJson);
 const json = (value: unknown): Effect.Effect<string> => Effect.orDie(encodeJson(value));
 
 const isPracticeKgCandidateClaimsNotLoadedResult = S.is(PracticeKgCandidateClaimsNotLoadedResult);
@@ -214,7 +216,7 @@ const fixtureLanguageModel = Layer.effect(
       Effect.succeed([
         Response.makePart("text", {
           text: options.prompt.pipe(
-            S.encodeUnknownResult(S.fromJsonString(S.Unknown)),
+            S.encodeUnknownResult(UnknownJson),
             Result.getOrThrowWith(identity),
             Str.includes("without office action rejections")
           )

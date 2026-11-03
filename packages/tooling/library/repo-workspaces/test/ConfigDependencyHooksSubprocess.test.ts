@@ -51,7 +51,7 @@ const installed = R.fromEntries(
   A.flatMap(INSTALLED, (name) => [
     [
       `${ROOT}/node_modules/.pnpm-config/${name}/package.json`,
-      Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name, version: "1.0.0" }), identity),
+      Result.getOrThrowWith(S.encodeUnknownResult(JsonValue)({ name, version: "1.0.0" }), identity),
     ],
     [pnpmfileOf(name), "export const hooks = {};\n"],
   ])
@@ -59,7 +59,7 @@ const installed = R.fromEntries(
 
 /** A payload the subprocess protocol would print, framed as the final stdout line. */
 const emitted = (payload: unknown, noise = ""): string =>
-  `${noise}\n${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(payload), identity)}\n`;
+  `${noise}\n${Result.getOrThrowWith(S.encodeUnknownResult(JsonValue)(payload), identity)}\n`;
 
 /** The layer under test over a scripted spawner, plus the spawn log. */
 const harness = (script: Parameters<typeof ScriptedSpawner.make>[0]) => {

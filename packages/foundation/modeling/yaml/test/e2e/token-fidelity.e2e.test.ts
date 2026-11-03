@@ -25,6 +25,8 @@ import * as Str from "effect/String";
 import { loadAllTestCases } from "./support/suite.ts";
 import type { YamlToken } from "@beep/yaml";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const allCases = loadAllTestCases();
 
 /** Zero-based line/character of `offset` by direct scan. */
@@ -51,7 +53,7 @@ function checkTokenTiling(tc: CorpusCase, token: YamlToken, cursor: number): voi
   }
   if (token.offset > cursor && !/^[ \t\r]*$/.test(Str.slice(cursor, token.offset)(tc.yaml))) {
     assert.fail(
-      `[${tc.id}] ${token.kind}@${token.offset}: non-whitespace gap ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(Str.slice(cursor, token.offset)(tc.yaml)), identity)}`
+      `[${tc.id}] ${token.kind}@${token.offset}: non-whitespace gap ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(Str.slice(cursor, token.offset)(tc.yaml)), identity)}`
     );
   }
 }
@@ -106,7 +108,7 @@ describe("token position fidelity (yaml-test-suite corpus)", () => {
 
 describe("EOF source fidelity regressions", () => {
   for (const source of ["hello  ", "a: hello \t", "- hello  ", "hello  # comment", "a: hello  \r\nb: world  "]) {
-    it(`tiles token and CST spans through EOF for ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(source), identity)}`, () => {
+    it(`tiles token and CST spans through EOF for ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(source), identity)}`, () => {
       const tokens = Result.getOrThrow(YamlTokens.tokenize(source));
       let cursor = 0;
       for (const token of tokens) {

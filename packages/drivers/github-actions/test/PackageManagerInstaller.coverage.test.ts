@@ -20,8 +20,9 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 
-const refused = PlatformError.badArgument({ module: "FileSystem", method: "fixture", description: "refused" });
 const Json = S.fromJsonString(S.Unknown);
+
+const refused = PlatformError.badArgument({ module: "FileSystem", method: "fixture", description: "refused" });
 const pin = (spec: string) => Result.getOrThrow(PackageManagerPin.parseResult(spec));
 const nativeDependencies = { "@pnpm/exe.linux-x64": "12.0.0", "@pnpm/exe.win32-x64": "12.0.0" };
 
@@ -151,7 +152,7 @@ fails(
 );
 for (const bin of [42, {}, { pnpm: 42 }]) {
   fails(
-    `invalid bin declaration ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(bin), identity)}`,
+    `invalid bin declaration ${Result.getOrThrowWith(S.encodeUnknownResult(Json)(bin), identity)}`,
     { manifest: { bin } },
     "layoutUnexpected",
     "names no bin"
@@ -193,7 +194,7 @@ fails(
 );
 for (const packument of [{}, { dist: {} }, { dist: { integrity: 42 } }]) {
   fails(
-    `native integrity fails closed for ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(packument), identity)}`,
+    `native integrity fails closed for ${Result.getOrThrowWith(S.encodeUnknownResult(Json)(packument), identity)}`,
     { manifest: nativeManifest, files: nativeFiles, packument },
     "integrityMismatch",
     "@pnpm/exe.linux-x64/12.0.0"
@@ -227,7 +228,7 @@ for (const options of [
 ] satisfies ReadonlyArray<Fixture>) {
   it.layer(runtime(options), { timeout: "5 seconds" })((it) => {
     it.effect(
-      `cache reuse preserves manager bins ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(options), identity)}`,
+      `cache reuse preserves manager bins ${Result.getOrThrowWith(S.encodeUnknownResult(Json)(options), identity)}`,
       () =>
         Effect.gen(function* () {
           const installer = yield* PackageManagerInstaller;
@@ -331,7 +332,7 @@ for (const env of [
 ]) {
   it.layer(runtime({ spec: "bun@1.0.0", env }), { timeout: "5 seconds" })((it) => {
     it.effect(
-      `bun installs an executable for the resolved platform ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(env), identity)}`,
+      `bun installs an executable for the resolved platform ${Result.getOrThrowWith(S.encodeUnknownResult(Json)(env), identity)}`,
       () =>
         Effect.gen(function* () {
           const installer = yield* PackageManagerInstaller;

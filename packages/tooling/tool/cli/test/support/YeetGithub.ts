@@ -33,6 +33,8 @@ import type * as Context from "effect/Context";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 /** The repository every Yeet suite's GitHub calls act on. */
 const YEET_GITHUB_REPO = RepoRef.make({ owner: "beep-effect", repo: "beep-effect" });
 
@@ -64,7 +66,7 @@ export type GithubRoutes = (call: GithubCall) => GithubAnswer | undefined | Prom
 const repoPrefix = `/repos/${YEET_GITHUB_REPO.owner}/${YEET_GITHUB_REPO.repo}`;
 
 const bodyOf = (text: string): unknown =>
-  Str.isEmpty(text) ? undefined : Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Unknown))(text), identity);
+  Str.isEmpty(text) ? undefined : Result.getOrThrowWith(S.decodeResult(UnknownJson)(text), identity);
 
 const graphqlOf = (path: string, body: unknown): O.Option<string> =>
   path === "/graphql" && P.isObject(body) && P.hasProperty(body, "query") && P.isString(body.query)
@@ -76,10 +78,10 @@ const respond = (url: string, answer: GithubAnswer): Response => {
   const response =
     status === 204
       ? new Response(null, { status })
-      : new Response(
-          Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(answer.body ?? null), identity),
-          { status, headers: { "content-type": "application/json" } }
-        );
+      : new Response(Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(answer.body ?? null), identity), {
+          status,
+          headers: { "content-type": "application/json" },
+        });
   // octokit reads `response.url` back on paginated reads; a hand-built Response has none.
   Object.defineProperty(response, "url", { value: url });
   return response;
@@ -200,9 +202,7 @@ export const githubCallLine = (call: GithubCall): string =>
 // GitHub's, with recorded thread pages lifted into the kit's selection.
 
 const fieldText = (value: unknown): string =>
-  P.isString(value)
-    ? value
-    : Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity);
+  P.isString(value) ? value : Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity);
 
 const graphqlVariables = (call: GithubCall): Readonly<Record<string, unknown>> =>
   P.isObject(call.body) && P.hasProperty(call.body, "variables") && P.isObject(call.body.variables)
@@ -344,7 +344,7 @@ const kitThreadsFromLegacy = (payload: unknown): unknown => {
 };
 
 const parseJson = O.liftThrowable((text: string): unknown =>
-  Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Unknown))(text), identity)
+  Result.getOrThrowWith(S.decodeResult(UnknownJson)(text), identity)
 );
 
 /** What a recorded `gh` call printed, as GitHub's own answer. */

@@ -87,6 +87,8 @@ import type * as Digest from "effect/crypto/Digest";
 import type * as PlatformError from "effect/PlatformError";
 import type { MaterializationPlan } from "../Goals/Bootstrap.schemas.ts";
 
+const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
+
 const $I = $RepoCliId.create("commands/Explore/Graduate");
 
 const EXPLORATIONS_DIR = "explorations";
@@ -574,7 +576,7 @@ export const renderGraduatedManifest: {
                 links: { ...links, goals: A.appendAll(goals, edit.appendGoals) },
               },
             };
-            return `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }))(edited), identity)}\n`;
+            return `${Result.getOrThrowWith(encodePrettyJson(edited), identity)}\n`;
           })
         )
       )

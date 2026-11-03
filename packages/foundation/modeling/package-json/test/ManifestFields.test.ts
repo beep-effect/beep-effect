@@ -41,6 +41,8 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
+const Json = S.fromJsonString(S.Unknown);
+
 const base = { name: "@scope/pkg", version: "1.0.0" };
 
 // The four dependency maps and `scripts` decode with an empty default, so the
@@ -308,8 +310,6 @@ describe("ManifestFields property", () => {
   );
 });
 
-const Json = S.fromJsonString(S.Unknown);
-
 // Typing a field moves it out of `rest`, which changes the RAW schema-encode
 // key order (`{ ...rest, ...known }`). That order is not a contract: the
 // formatted output is, and `toJsonString` sorts by the canonical key order
@@ -317,7 +317,7 @@ const Json = S.fromJsonString(S.Unknown);
 // `PackageJsonFormat` text path, which never types a field.
 describe("ManifestFields formatted output", () => {
   const shuffled = Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    S.encodeUnknownResult(Json)({
       trustedDependencies: ["esbuild"],
       catalog: { effect: "4.0.0" },
       workspaces: ["packages/*"],

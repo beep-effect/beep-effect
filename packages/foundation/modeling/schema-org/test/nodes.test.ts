@@ -19,6 +19,8 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const ID = "https://example.com/#node";
 
 describe("node classes", () => {
@@ -180,17 +182,11 @@ describe("NodeRef", () => {
     // range admitted the C1 block, so `U+0085` and `U+0090` passed as legal
     // node ids and would have reached an emitted document.
     for (const id of ["nel\u0085here", "c1\u0090here", "\u009Fleading"]) {
-      assert.isFalse(
-        NodeRef.isValidId(id),
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(id), identity)
-      );
+      assert.isFalse(NodeRef.isValidId(id), Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(id), identity));
     }
     // C0 and DEL were already rejected and must stay rejected.
     for (const id of ["bell\u0007here", "del\u007Fhere"]) {
-      assert.isFalse(
-        NodeRef.isValidId(id),
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(id), identity)
-      );
+      assert.isFalse(NodeRef.isValidId(id), Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(id), identity));
     }
     // A legitimate id with astral characters is unaffected by the widening.
     assert.isTrue(NodeRef.isValidId("https://example.com/#\u{1F642}"));
@@ -213,7 +209,7 @@ describe("NodeRef", () => {
       assert.strictEqual(
         NodeRef.isValidId(id),
         schemaAccepts,
-        `predicate and schema must agree on ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(id), identity)}`
+        `predicate and schema must agree on ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(id), identity)}`
       );
     }
   });

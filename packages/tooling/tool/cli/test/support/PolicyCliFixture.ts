@@ -8,6 +8,8 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 /** One command group of a fixture CLI: `beep <group> [<leaf>]` and the specifiers its module imports. */
 export interface FixtureCommand {
   readonly group: string;
@@ -101,7 +103,7 @@ export const policyCliFixtureFiles = (commands: ReadonlyArray<FixtureCommand>): 
 
 /** A one-file workspace package `@beep/<name>` at `packages/<name>` exporting `value`. */
 export const fixturePackageFiles = (name: string): Record<string, string> => ({
-  [`packages/${name}/package.json`]: `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: `@beep/${name}`, exports: { ".": "./src/index.ts" } }), identity)}\n`,
+  [`packages/${name}/package.json`]: `${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)({ name: `@beep/${name}`, exports: { ".": "./src/index.ts" } }), identity)}\n`,
   [`packages/${name}/src/index.ts`]: "export const value = 1;\n",
 });
 

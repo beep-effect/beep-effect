@@ -36,6 +36,8 @@ import { renderOracleHtml } from "../../support/oracle.ts";
 import { inlineCorpus } from "./inlineCorpus.ts";
 import type { MarkdownDialect } from "@beep/markdown/Markdown";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 /** Our HTML for `markdown`, or `undefined` when a hardening guard tripped. */
 const renderOurs = (markdown: string): string | undefined => {
   const result = Markdown.parseResult(markdown, { dialect: "commonmark" });
@@ -53,7 +55,7 @@ const agreesWithOracle = (markdown: string): boolean => {
     assert.strictEqual(
       ours,
       renderOracle(markdown),
-      `disagreement on input:\n${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(markdown), identity)}`
+      `disagreement on input:\n${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(markdown), identity)}`
     );
   }
   return true;
@@ -170,7 +172,7 @@ const corpusDigest = (dialect: MarkdownDialect) =>
       const result = Markdown.parsePhrasingResult(source, { dialect });
       return Result.isFailure(result)
         ? "guard"
-        : Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(result.success), identity);
+        : Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(result.success), identity);
     });
     return crypto.subtle.digest("SHA-256", new TextEncoder().encode(A.join(outputs, "\u0000")));
   }).pipe(Effect.map((digest) => Hex.encode(new Uint8Array(digest))));

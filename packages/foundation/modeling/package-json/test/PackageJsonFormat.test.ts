@@ -17,6 +17,8 @@ import type { PackageFormatTextOptions, PackageJsonSyntaxError } from "@beep/pac
 
 const Json = S.fromJsonString(S.Unknown);
 
+const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
+
 const format = (source: string, options?: PackageFormatTextOptions.Encoded): string => {
   const result = PackageJsonFormat.formatToString(source, options);
   assertSuccess(result, Result.getOrThrow(result));
@@ -93,11 +95,8 @@ describe("PackageJsonFormat.sortValue (value in, value out)", () => {
 
   it("agrees with PackageJsonFormat.formatToString on ordering", () => {
     const value = { version: "1.0.0", scripts: { b: "2", a: "1" }, name: "p" };
-    const viaValue = `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }))(PackageJsonFormat.sortValue(value)), identity)}\n`;
-    assert.strictEqual(
-      format(Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity)),
-      viaValue
-    );
+    const viaValue = `${Result.getOrThrowWith(encodePrettyJson(PackageJsonFormat.sortValue(value)), identity)}\n`;
+    assert.strictEqual(format(Result.getOrThrowWith(S.encodeUnknownResult(Json)(value), identity)), viaValue);
   });
 });
 

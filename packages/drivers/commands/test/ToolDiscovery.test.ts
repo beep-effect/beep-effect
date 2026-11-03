@@ -21,6 +21,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { ScriptResult } from "@beep/commands/ScriptedSpawner";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 /** Builds each test layer under the program's scope, with fresh per-invocation state. */
 const withLayer =
   <R, E2, R2>(layer: Layer.Layer<R, E2, R2>) =>
@@ -220,10 +222,7 @@ describe("ToolDiscovery.resolve — version extraction", () => {
     Effect.gen(function* () {
       const tool = Tool.named("deno", { version: VersionJson.make({ flag: "info --json", path: "deno.version" }) });
       const resolved = yield* run(resolve(tool), () => ({
-        stdout: Result.getOrThrowWith(
-          S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ deno: { version: "1.44.0" } }),
-          identity
-        ),
+        stdout: Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)({ deno: { version: "1.44.0" } }), identity),
         exit: 0,
       })).effect;
       assertSome(resolved.version, "1.44.0");

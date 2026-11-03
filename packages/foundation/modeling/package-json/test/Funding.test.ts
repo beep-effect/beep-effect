@@ -30,6 +30,7 @@ import * as S from "effect/Schema";
 import { fixtureText } from "./support/fixtureText.ts";
 
 const Json = S.fromJsonString(S.Unknown);
+
 const JsonObject = S.fromJsonString(S.Record(S.String, S.Unknown));
 
 const decode = <A, I>(schema: S.Codec<A, I>, input: unknown) => S.decodeUnknownEffect(schema)(input);
@@ -354,7 +355,7 @@ describe("Funding — `url` is required", () => {
 
 describe("funding — the manifest tiers", () => {
   const fixture: unknown = Result.getOrThrowWith(
-    S.decodeResult(S.fromJsonString(S.Unknown))(fixtureText("package-json.input.json")),
+    S.decodeResult(Json)(fixtureText("package-json.input.json")),
     identity
   );
   assertTrue(P.isObject(fixture));

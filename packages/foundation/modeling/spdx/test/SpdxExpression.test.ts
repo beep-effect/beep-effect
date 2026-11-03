@@ -22,6 +22,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { SpdxExpression as SpdxExpressionAst } from "@beep/spdx/SpdxExpression";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 // A generative round-trip arbitrary built from the KNOWN SPDX id set, used
 // instead of `Arbitrary.schema(SpdxExpression.Schema)`. Native derivation runs
 // on the recursive union, but every leaf's `id`/`ref`/`exception` is a bare
@@ -108,7 +110,7 @@ describe("SpdxExpression", () => {
   }
   for (const s of INVALID) {
     it.effect(
-      `rejects ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(s), identity)} as a typed error`,
+      `rejects ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(s), identity)} as a typed error`,
       () =>
         Effect.gen(function* () {
           const exit = yield* Effect.exit(SpdxExpression.parse(s));
@@ -122,7 +124,7 @@ describe("SpdxExpression", () => {
           assert.isFalse(Cause.hasDies(exit.cause));
         })
     );
-    it(`invalidates ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(s), identity)} synchronously`, () =>
+    it(`invalidates ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(s), identity)} synchronously`, () =>
       assert.isFalse(isValidExpression(s)));
   }
   it.effect("fails invalid input with the typed InvalidSpdxExpressionError", () =>

@@ -312,7 +312,7 @@ describe("PackedInstall.run past the pack", () => {
         const dependencies = name === "@x/carrier" ? carrierDeps : {};
         return {
           stdout: Result.getOrThrowWith(
-            S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name, version: "1.0.0", dependencies }),
+            S.encodeUnknownResult(JsonValue)({ name, version: "1.0.0", dependencies }),
             identity
           ),
         };
@@ -435,7 +435,7 @@ describe("PackedInstall.run past the pack", () => {
           command === "tar" && args[1] === tarball
             ? {
                 stdout: Result.getOrThrowWith(
-                  S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: packedName, version: "1.0.0" }),
+                  S.encodeUnknownResult(JsonValue)({ name: packedName, version: "1.0.0" }),
                   identity
                 ),
               }
@@ -655,10 +655,7 @@ describe("PackedInstall.run past the pack", () => {
         ...overrides,
       };
       return {
-        stdout: Result.getOrThrowWith(
-          S.encodeUnknownResult(S.fromJsonString(S.Unknown))(manifests[args[1] ?? ""] ?? {}),
-          identity
-        ),
+        stdout: Result.getOrThrowWith(S.encodeUnknownResult(JsonValue)(manifests[args[1] ?? ""] ?? {}), identity),
       };
     });
   const WithRoot = (root: string) =>
@@ -1213,25 +1210,25 @@ describe("InstalledConsumer.binProvenance", () => {
   const SEED: MemoryFileSystemSeed = {
     // A named manifest AT the bound: a walk that passed the consumer directory would claim the orphan for it.
     [`${DIR}/package.json`]: Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "the-consumer", private: true }),
+      S.encodeUnknownResult(JsonValue)({ name: "the-consumer", private: true }),
       identity
     ),
     [`${NM}/@x/carrier/package.json`]: Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@x/carrier", version: "1.0.0" }),
+      S.encodeUnknownResult(JsonValue)({ name: "@x/carrier", version: "1.0.0" }),
       identity
     ),
     [`${NM}/@x/carrier/dist/package.json`]: Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ type: "module" }),
+      S.encodeUnknownResult(JsonValue)({ type: "module" }),
       identity
     ),
     [`${NM}/@x/carrier/dist/bin.js`]: "#!/usr/bin/env node\n",
     [`${NM}/@x/cli/package.json`]: Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@x/cli", version: "1.0.0" }),
+      S.encodeUnknownResult(JsonValue)({ name: "@x/cli", version: "1.0.0" }),
       identity
     ),
     [`${NM}/@x/cli/bin.js`]: "#!/usr/bin/env node\n",
     [`${NM}/@x/nulled/package.json`]: Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@x/nulled", version: "1.0.0" }),
+      S.encodeUnknownResult(JsonValue)({ name: "@x/nulled", version: "1.0.0" }),
       identity
     ),
     [`${NM}/@x/nulled/lib/package.json`]: "null",
@@ -1472,7 +1469,7 @@ describe("InstalledConsumer.carrierCommand and runCarrierBin", () => {
     });
   const SEED: MemoryFileSystemSeed = {
     [`${NM}/@x/carrier/package.json`]: Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+      S.encodeUnknownResult(JsonValue)({
         name: "@x/carrier",
         bin: { tool: "./dist/tool.js", gone: "./dist/gone.js" },
       }),
@@ -1481,7 +1478,7 @@ describe("InstalledConsumer.carrierCommand and runCarrierBin", () => {
     [`${NM}/@x/carrier/dist/tool.js`]: "#!/usr/bin/env node\n",
     // The front end won the .bin slot: a link to its bin, not the carrier's.
     [`${NM}/@x/cli/package.json`]: Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@x/cli", bin: { tool: "./bin.js" } }),
+      S.encodeUnknownResult(JsonValue)({ name: "@x/cli", bin: { tool: "./bin.js" } }),
       identity
     ),
     [`${NM}/@x/cli/bin.js`]: "#!/usr/bin/env node\n",

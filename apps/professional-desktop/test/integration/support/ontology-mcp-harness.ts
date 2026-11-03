@@ -34,6 +34,8 @@ import { makeOntologyMcpTransportLayer } from "../../../server/OntologyMcpTransp
 import { rpcSessionAuthorizationHeader } from "../../../server/RpcSessionAuth.ts";
 import type { EpistemicConfig } from "@beep/epistemic-config/server";
 import type { ExecutionDecisionRecord, ExecutionOutcomeRecord } from "@beep/epistemic-domain/values/ExecutionRecord";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 export const token = Redacted.make("ontology-mcp-http-test-token");
 export const allowedOrigin = "http://professional-desktop.beep.localhost:1355";
 const socketTransportConfig = Config.Boolean("BEEP_TEST_ONTOLOGY_MCP_SOCKET").pipe(Config.withDefault(false));
@@ -210,14 +212,14 @@ const unwrapServerSentEvents = (response: HttpClientResponse.HttpClientResponse)
           Str.isNonEmpty
         );
         const messages = A.map(payloads, (payload): unknown =>
-          Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Unknown))(payload), identity)
+          Result.getOrThrowWith(S.decodeResult(UnknownJson)(payload), identity)
         );
         const responses = A.filter(messages, P.hasProperty("id"));
         return HttpClientResponse.fromWeb(
           response.request,
           new Response(
             Result.getOrThrowWith(
-              S.encodeUnknownResult(S.fromJsonString(S.Unknown))(responses.length === 1 ? responses[0] : responses),
+              S.encodeUnknownResult(UnknownJson)(responses.length === 1 ? responses[0] : responses),
               identity
             ),
             {

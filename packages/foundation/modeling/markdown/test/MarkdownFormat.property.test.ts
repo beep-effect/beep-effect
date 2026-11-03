@@ -14,6 +14,8 @@ import * as Str from "effect/String";
 import { normalizeHtml } from "./support/normalizeHtml.ts";
 import { renderOracleHtml } from "./support/oracle.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const runs = { arbitrary: fcRuns(100) };
 const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
   it.effect.prop(
@@ -123,7 +125,7 @@ describe("MarkdownFormat against the reference implementation", () => {
       assert.strictEqual(
         oracle(formatted),
         oracle(source),
-        `source: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(source), identity)}\nformatted: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(formatted), identity)}`
+        `source: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(source), identity)}\nformatted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(formatted), identity)}`
       );
       return true;
     },

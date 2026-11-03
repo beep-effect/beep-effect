@@ -15,6 +15,8 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const tokensOf = (text: string): ReadonlyArray<YamlToken> => {
   const result = YamlTokens.tokenize(text);
   assertSuccess(result, Result.getOrThrow(result));
@@ -103,7 +105,7 @@ describe("YamlTokens", () => {
 
 describe("public token CR positions", () => {
   for (const newline of ["\r", "\r\n", "\n"]) {
-    it(`uses one line break for ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(newline), identity)}`, () => {
+    it(`uses one line break for ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(newline), identity)}`, () => {
       const source = `a: 1${newline}  b: 2${newline}c: 3${newline}`;
       const keys = A.filter(tokensOf(source), (token) => ["a", "b", "c"].includes(token.text));
       assert.deepStrictEqual(

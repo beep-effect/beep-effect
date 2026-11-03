@@ -60,6 +60,8 @@ import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import type { ParcelId } from "@beep/palantiri";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const decodeParcelCatalogJson = S.decodeEffect(S.fromJsonString(ParcelCatalog));
 const captureOutput = Effect.fnUntraced(function* <A, E, R>(effect: Effect.Effect<A, E, R>) {
   const current = yield* Console.Console;
@@ -167,8 +169,7 @@ const toolText = Effect.fnUntraced(function* (name: keyof typeof PalantiriToolki
   // The text content the MCP server sends: the encoded result as JSON.
   return O.match(final, {
     onNone: () => "",
-    onSome: (result) =>
-      Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(result.encodedResult), identity),
+    onSome: (result) => Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(result.encodedResult), identity),
   });
 });
 

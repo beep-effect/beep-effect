@@ -19,9 +19,9 @@ import { harness } from "./support/harness.ts";
 import type { GitHubFixtures, RecordedCall } from "@beep/github/GitHubClient";
 import type { SecretScope } from "@beep/github/RepositorySecret";
 
-const decodeSecretInfos = S.decodeResult(S.Array(SecretInfo));
-
 const JsonValue = S.fromJsonString(S.Unknown);
+
+const decodeSecretInfos = S.decodeResult(S.Array(SecretInfo));
 
 /** A base64 Curve25519 public key, so the seal has something real to work against. */
 const PUBLIC_KEY = { key: Base64.encode(new Uint8Array(32).fill(7)), key_id: "key-123" };
@@ -205,10 +205,7 @@ describe("the Redacted seam", () => {
     const value = Redacted.make("hunter2");
 
     assert.notInclude(String(value), "hunter2");
-    assert.notInclude(
-      Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ value }), identity),
-      "hunter2"
-    );
+    assert.notInclude(Result.getOrThrowWith(S.encodeUnknownResult(JsonValue)({ value }), identity), "hunter2");
     assert.notInclude(`${value}`, "hunter2");
     // And it is still readable where the code deliberately asks.
     assert.strictEqual(Redacted.value(value), "hunter2");

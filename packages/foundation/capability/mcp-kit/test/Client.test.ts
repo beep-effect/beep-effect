@@ -53,6 +53,8 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { fixtureHost } from "./fixtures/FixtureHost.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 // One JSON-RPC frame is exactly one wire line, so the kit's own codec builds
 // and reads the stub host's traffic instead of hand-rolled JSON.
 // Framing a stub's own traffic always codes, so a codec failure is a defect of
@@ -162,10 +164,10 @@ describe("layerProtocolHttp", () => {
     Effect.map(
       request.body._tag === "Uint8Array" ? Effect.succeed(request.body.body) : Effect.die("unexpected body"),
       (bytes) => {
-        const frame = Result.getOrThrowWith(
-          S.decodeResult(S.fromJsonString(S.Unknown))(new TextDecoder().decode(bytes)),
-          identity
-        ) as { readonly id: number; readonly method: string };
+        const frame = Result.getOrThrowWith(S.decodeResult(UnknownJson)(new TextDecoder().decode(bytes)), identity) as {
+          readonly id: number;
+          readonly method: string;
+        };
         const events = [
           { jsonrpc: "2.0", method: "notifications/progress", params: { progressToken: 1, progress: 1 } },
           {
@@ -183,8 +185,7 @@ describe("layerProtocolHttp", () => {
             A.join(
               A.map(
                 events,
-                (event) =>
-                  `data: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(event), identity)}\n\n`
+                (event) => `data: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(event), identity)}\n\n`
               ),
               ""
             ),
@@ -354,10 +355,7 @@ describe("layerProtocolHttp headers", () => {
         seen.push(request.headers);
         const sent =
           request.body._tag === "Uint8Array"
-            ? Result.getOrThrowWith(
-                S.decodeResult(S.fromJsonString(S.Unknown))(new TextDecoder().decode(request.body.body)),
-                identity
-              )
+            ? Result.getOrThrowWith(S.decodeResult(UnknownJson)(new TextDecoder().decode(request.body.body)), identity)
             : {};
         const frame = JsonRpcMessage.make({
           id: (sent as { readonly id: number }).id,
@@ -366,7 +364,7 @@ describe("layerProtocolHttp headers", () => {
         return Effect.succeed(
           HttpClientResponse.fromWeb(
             request,
-            new Response(Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(frame), identity), {
+            new Response(Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(frame), identity), {
               status: 200,
               headers: { "content-type": "application/json" },
             })

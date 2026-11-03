@@ -12,6 +12,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const FRONTMATTER_FENCE = /^---\s*$/m;
 
 /**
@@ -73,5 +75,5 @@ export const renderOnboardingSkillModule = (body: string): string => `/**
  * @category constants
  * @since 0.0.0
  */
-export const ONBOARDING_SKILL_BODY = ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(body), identity)};
+export const ONBOARDING_SKILL_BODY = ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(body), identity)};
 `;

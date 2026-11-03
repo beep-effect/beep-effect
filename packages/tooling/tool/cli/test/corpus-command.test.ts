@@ -82,6 +82,8 @@ import * as TestClock from "effect/testing/TestClock";
 import sharp from "sharp";
 import type * as PlatformError from "effect/PlatformError";
 
+const unknownJson = S.fromJsonString(S.Unknown);
+
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const decodeRestorationVerifyOptions = S.decodeEffect(RestorationVerifyOptions);
@@ -805,9 +807,7 @@ const exerciseEvidenceVariant = (
     RT.transformationSegmentReconciles(summary.family, summary, variant),
     `${summary.family}:${label}:transformationSegmentReconciles`
   ).toBe(expected.transformationSegmentReconciles);
-  const lines = A.map(variant, (record) =>
-    Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(record), identity)
-  );
+  const lines = A.map(variant, (record) => Result.getOrThrowWith(S.encodeUnknownResult(unknownJson)(record), identity));
   const segmentText = A.join(A.dropRight(lines, 2), "\n");
   const referenceHash = bytesToHex(sha256(utf8ToBytes(Str.isEmpty(segmentText) ? "" : `${segmentText}\n`)));
   expect(RT.strictEvidenceSha256(lines)).toBe(referenceHash);
@@ -1252,7 +1252,7 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus catalog", (it) => {
         destPath: string
       ): string =>
         Result.getOrThrowWith(
-          S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+          S.encodeUnknownResult(unknownJson)({
             destPath,
             mtimeEpoch: 1_700_000_000,
             mtimeIso: "2023-11-14T22:13:20Z",
@@ -1721,7 +1721,6 @@ const readProvenanceRecords = Effect.fn("CorpusTest.readProvenanceRecords")(func
 
 const decodeArchiveMoveManifestRecordJson = S.decodeUnknownEffect(S.fromJsonString(CorpusArchiveMoveManifestRecord));
 const encodeMailOccurrenceMembershipJson = S.encodeEffect(S.fromJsonString(MailOccurrenceMembership));
-const unknownJson = S.fromJsonString(S.Unknown);
 
 const readArchiveMoveManifestRecords = Effect.fn("CorpusTest.readArchiveMoveManifestRecords")(function* (
   manifestPath: string
@@ -1928,7 +1927,7 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus extract and salvage", (it
 
       const record = (relativePath: string, hash: string, sizeBytes: number, destPath: string): string =>
         Result.getOrThrowWith(
-          S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+          S.encodeUnknownResult(unknownJson)({
             destPath,
             mtimeEpoch: 1_700_000_000,
             mtimeIso: "2023-11-14T22:13:20Z",

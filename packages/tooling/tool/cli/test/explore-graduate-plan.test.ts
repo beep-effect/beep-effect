@@ -27,6 +27,8 @@ import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { expectReportedExit, temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
+const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
+
 const EXPLORATION = "graduation-fixture";
 const PROVENANCE = `explorations/${EXPLORATION}`;
 const DIGEST = Str.repeat(64)("0");
@@ -38,7 +40,7 @@ const runExploreCommand = Command.runWith(exploreCommand, { version: "0.0.0" });
 
 const manifestText = (status: string, stage: string, goals: ReadonlyArray<string> = []): string =>
   `${Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }))({
+    encodePrettyJson({
       schemaVersion: "exploration-manifest/v1",
       exploration: {
         slug: EXPLORATION,
@@ -79,7 +81,7 @@ const reasons = (plan: GraduationPlan) => A.map(plan.conflicts, (conflict) => co
 
 const childGoalManifest = (provenance?: string): string =>
   `${Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }))({
+    encodePrettyJson({
       schemaVersion: "initiative-manifest/v2",
       initiative: { id: "child", title: "Child" },
       ...(provenance === undefined ? {} : { provenance: { exploration: provenance, graduated: TODAY } }),

@@ -7,6 +7,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { commandLines, isCommand, isDotNetWhitespace, LINE_BREAK } from "./helpers/runnerCommands.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const ZWSP = String.fromCodePoint(0x200b);
 
 /** Every string up to `length` over `alphabet`, as a lazily built list. */
@@ -58,30 +60,17 @@ describe("CommandNeutralizer: the runner's two parsers", () => {
     ];
     for (const ch of whitespace) {
       const line = `${ch}::error::x`;
-      assert.isTrue(
-        isDotNetWhitespace(ch),
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(ch), identity)
-      );
-      assert.isTrue(
-        isCommand(line),
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(ch), identity)
-      );
+      assert.isTrue(isDotNetWhitespace(ch), Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(ch), identity));
+      assert.isTrue(isCommand(line), Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(ch), identity));
       const expected = ch === "\r" || ch === "\n" ? ["", `${ZWSP}::error::x`] : [`${ZWSP}${line}`];
       const out = CommandNeutralizer.lines(line);
-      assert.deepStrictEqual(
-        out,
-        expected,
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(ch), identity)
-      );
+      assert.deepStrictEqual(out, expected, Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(ch), identity));
       for (const outputLine of out)
-        assert.isFalse(
-          isCommand(outputLine),
-          Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(ch), identity)
-        );
+        assert.isFalse(isCommand(outputLine), Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(ch), identity));
       assert.strictEqual(
         CommandNeutralizer.text(line),
         A.join(expected, "\n"),
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(ch), identity)
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(ch), identity)
       );
     }
   });
@@ -96,16 +85,10 @@ describe("CommandNeutralizer: the runner's two parsers", () => {
       "##[group]x",
       "x##[y",
     ]) {
-      assert.isTrue(
-        isCommand(command),
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(command), identity)
-      );
+      assert.isTrue(isCommand(command), Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(command), identity));
     }
     for (const quiet of ["## Heading", "a :: b", ": :x", `${ZWSP}::x`, `##${ZWSP}[x`, "# [x]", "##", "#[x]", "﻿::x"]) {
-      assert.isFalse(
-        isCommand(quiet),
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(quiet), identity)
-      );
+      assert.isFalse(isCommand(quiet), Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(quiet), identity));
     }
   });
 
@@ -115,12 +98,9 @@ describe("CommandNeutralizer: the runner's two parsers", () => {
       assert.strictEqual(
         out,
         `${ZWSP}${line}`,
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(line), identity)
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(line), identity)
       );
-      assert.isFalse(
-        isCommand(out ?? ""),
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(line), identity)
-      );
+      assert.isFalse(isCommand(out ?? ""), Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(line), identity));
     }
   });
 
@@ -131,7 +111,7 @@ describe("CommandNeutralizer: the runner's two parsers", () => {
       assert.deepStrictEqual(
         CommandNeutralizer.lines(bare),
         [bare],
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(bare), identity)
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(bare), identity)
       );
     }
   });
@@ -154,7 +134,7 @@ describe("CommandNeutralizer: the runner's two parsers", () => {
       assert.strictEqual(
         CommandNeutralizer.text(once),
         once,
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(text), identity)
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(text), identity)
       );
     }
   });
@@ -177,7 +157,7 @@ describe("CommandNeutralizer: exhaustive over a small alphabet, judged by the in
       assert.deepStrictEqual(
         commandLines(CommandNeutralizer.text(text)),
         [],
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(text), identity)
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(text), identity)
       );
     }
   });
@@ -188,7 +168,7 @@ describe("CommandNeutralizer: exhaustive over a small alphabet, judged by the in
       assert.deepStrictEqual(
         out,
         Str.split(LINE_BREAK)(text),
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(text), identity)
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(text), identity)
       );
     }
   });
@@ -202,7 +182,7 @@ describe("CommandNeutralizer: exhaustive over a small alphabet, judged by the in
           assert.strictEqual(
             out[index],
             line,
-            Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(text), identity)
+            Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(text), identity)
           );
       });
     }
@@ -214,7 +194,7 @@ describe("CommandNeutralizer: exhaustive over a small alphabet, judged by the in
       assert.strictEqual(
         CommandNeutralizer.text(once),
         once,
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(text), identity)
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(text), identity)
       );
     }
   });
@@ -224,7 +204,7 @@ describe("CommandNeutralizer: exhaustive over a small alphabet, judged by the in
       assert.deepStrictEqual(
         commandLines(CommandNeutralizer.text(text)),
         [],
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(text), identity)
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(text), identity)
       );
     }
   });

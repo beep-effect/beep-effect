@@ -216,16 +216,18 @@ const makeGhRunner = Effect.fn("test.makeGhRunner")(function* (
         args,
         Effect.gen(function* () {
           const view = yield* Ref.getAndUpdate(views, (count) => count + 1);
-          const current = view === 0 ? initialBody : view === 1 ? freshBody : afterWrite(yield* Ref.get(written));
+          const current =
+            view === 0 ? initialBody : view === 1 ? freshBody : yield* Ref.get(written).pipe(Effect.map(afterWrite));
           return { exitCode: 0, output: encodeGhBody(current, freshUpdatedAt), truncated: false };
         })
       );
     }
     if (args[1] === "graphql") {
       const read = yield* Ref.getAndUpdate(historyReads, (count) => count + 1);
+      const writtenBodiesValue1 = yield* Ref.get(writtenBodies);
       return {
         exitCode: 0,
-        output: encodeGhBodyEdits(editHistory(yield* Ref.get(writtenBodies), read)),
+        output: encodeGhBodyEdits(editHistory(writtenBodiesValue1, read)),
         truncated: false,
       };
     }
@@ -813,7 +815,8 @@ describe("Yeet provenance footer splice", () => {
         }).pipe(runner.github.provide, Effect.provideService(ConfigProvider.ConfigProvider, provider));
         const rows = yield* registry.lookup(repository, 42);
         expect(rows[0]?.role).toBe("pushed");
-        expect(yield* Ref.get(runner.body)).toContain("yeet-provenance:start");
+        const bodyValue2 = yield* Ref.get(runner.body);
+        expect(bodyValue2).toContain("yeet-provenance:start");
       })
     );
   });
@@ -844,7 +847,8 @@ describe("Yeet provenance footer splice", () => {
           O.none(),
           ProvenanceStampOutcome.make({ status: "current", message: "current" })
         );
-        expect(yield* Ref.get(recorder)).toHaveLength(2);
+        const recorderValue3 = yield* Ref.get(recorder);
+        expect(recorderValue3).toHaveLength(2);
         const denied = captureGithub((_command, args) =>
           Effect.succeed(
             isDefaultBranchRead(args)
@@ -883,9 +887,12 @@ describe("Yeet provenance footer splice", () => {
           github.provide,
           Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ HOME: root, PWD: root }))
         );
-        expect(yield* Ref.get(argsSeen)).toContain("draft=true");
-        expect(yield* Ref.get(argsSeen)).toContain("base=main");
-        expect(yield* Ref.get(argsSeen)).toContain("head=beep-effect:feat/yeet-pr-resume-footer");
+        const argsSeenValue4 = yield* Ref.get(argsSeen);
+        expect(argsSeenValue4).toContain("draft=true");
+        const argsSeenValue5 = yield* Ref.get(argsSeen);
+        expect(argsSeenValue5).toContain("base=main");
+        const argsSeenValue6 = yield* Ref.get(argsSeen);
+        expect(argsSeenValue6).toContain("head=beep-effect:feat/yeet-pr-resume-footer");
         expect(result.created).toBe(true);
         assertSome(result.url, "https://github.com/beep-effect/beep-effect/pull/42");
       })
@@ -942,8 +949,10 @@ describe("Yeet provenance footer splice", () => {
           runner.github.provide,
           Effect.provideService(ConfigProvider.ConfigProvider, provider)
         );
-        expect(yield* registry.lookup(repository, 42)).toHaveLength(1);
-        expect(yield* Ref.get(runner.writes)).toBe(1);
+        const recordsBeforeFailure = yield* registry.lookup(repository, 42);
+        expect(recordsBeforeFailure).toHaveLength(1);
+        const writesValue8 = yield* Ref.get(runner.writes);
+        expect(writesValue8).toBe(1);
       })
     );
   });
@@ -967,7 +976,8 @@ describe("Yeet provenance footer splice", () => {
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, noLogin),
           Effect.provideService(ConfigProvider.ConfigProvider, provider)
         );
-        expect(yield* registry.lookup(repository, 42)).toHaveLength(1);
+        const recordsAfterFailure = yield* registry.lookup(repository, 42);
+        expect(recordsAfterFailure).toHaveLength(1);
         expect(outcome.status).toBe("skipped");
       })
     );
@@ -987,7 +997,8 @@ describe("Yeet provenance footer splice", () => {
         );
         yield* record;
         const runs = path.join(root, ".beep", "yeet", "runs");
-        const run = O.getOrThrow(A.head(yield* fs.readDirectory(runs)));
+        const runDirectories = yield* fs.readDirectory(runs);
+        const run = O.getOrThrow(A.head(runDirectories));
         const mirror = path.join(runs, run, "provenance.json");
         expect((yield* fs.stat(mirror)).mode & 0o777).toBe(0o600);
         expect((yield* fs.stat(path.dirname(mirror))).mode & 0o777).toBe(0o700);
@@ -999,8 +1010,10 @@ describe("Yeet provenance footer splice", () => {
         yield* fs.remove(mirror);
         yield* fs.symlink(external, mirror);
         yield* record;
-        expect(yield* fs.readFileString(external)).toBe("unrelated work\n");
-        expect(yield* fs.readLink(mirror)).toBe(external);
+        const externalText = yield* fs.readFileString(external);
+        expect(externalText).toBe("unrelated work\n");
+        const mirrorTarget = yield* fs.readLink(mirror);
+        expect(mirrorTarget).toBe(external);
       })
     );
   });
@@ -1029,8 +1042,10 @@ describe("Yeet provenance footer splice", () => {
               })
             ),
         }).pipe(runner.github.provide, Effect.provideService(ConfigProvider.ConfigProvider, provider));
-        expect(yield* registry.lookup(repository, 42)).toHaveLength(1);
-        expect(yield* Ref.get(runner.writes)).toBe(1);
+        const recordedSessions = yield* registry.lookup(repository, 42);
+        expect(recordedSessions).toHaveLength(1);
+        const writesValue14 = yield* Ref.get(runner.writes);
+        expect(writesValue14).toBe(1);
       })
     );
   });
@@ -1070,8 +1085,10 @@ describe("Yeet provenance footer splice", () => {
               _tag: "Failure",
               failure: { _tag: "CliReportedExit", exitCode: exit.exitCode, message: exit.summary },
             });
-          expect(yield* registry.lookup(repository, 42)).toHaveLength(1);
-          expect(yield* Ref.get(runner.writes)).toBe(1);
+          const rejectedSessions = yield* registry.lookup(repository, 42);
+          expect(rejectedSessions).toHaveLength(1);
+          const writesValue16 = yield* Ref.get(runner.writes);
+          expect(writesValue16).toBe(1);
         })
       );
     });

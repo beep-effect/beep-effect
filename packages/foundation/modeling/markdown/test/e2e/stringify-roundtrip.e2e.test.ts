@@ -29,6 +29,8 @@ import { renderHtml } from "../support/htmlWriter.ts";
 import { normalizeHtml } from "../support/normalizeHtml.ts";
 import type { SpecExample } from "../support/corpus.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 type Dialect = "commonmark" | "gfm";
 
 const roundTrip = (markdown: string, dialect: Dialect): { before: string; after: string; emitted: string } => {
@@ -60,7 +62,7 @@ const runCorpus = (
         assert.strictEqual(
           after,
           before,
-          `stringify round-trip diverged.\nsource:  ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(example.markdown), identity)}\nemitted: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(emitted), identity)}`
+          `stringify round-trip diverged.\nsource:  ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(example.markdown), identity)}\nemitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
         );
       });
     }

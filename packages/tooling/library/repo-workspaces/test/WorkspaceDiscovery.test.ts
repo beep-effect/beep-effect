@@ -26,6 +26,8 @@ import * as S from "effect/Schema";
 import { manifest, platform, platformWith, rootManifest } from "./support/fixtures.ts";
 import type { Tree } from "./support/fixtures.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 /** Discovery over a tree, rooted at `/repo`. */
 const discoveryOver = (
   tree: Tree,
@@ -164,7 +166,7 @@ const nested: Tree = {
   "/repo/packages/group/nested/package.json": manifest("@x/nested"),
   "/repo/packages/group/deeper/still/package.json": manifest("@x/deep"),
   "/repo/package.json": Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", version: "0.0.0" }),
+    S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0" }),
     identity
   ),
 };
@@ -200,7 +202,7 @@ describe("WorkspaceDiscovery — packages/** crosses segments (workspaces #62)",
 const withNodeModules: Tree = {
   "/repo/pnpm-workspace.yaml": "packages:\n  - 'packages/**'\n  - '!packages/private-*'\n",
   "/repo/package.json": Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", version: "0.0.0" }),
+    S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0" }),
     identity
   ),
   "/repo/packages/alpha/package.json": manifest("@x/alpha"),
@@ -502,7 +504,7 @@ describe("WorkspaceDiscovery — malformed input fails typed, never as a defect"
 const nameless: Tree = {
   "/repo/package.json": rootManifest(["packages/*"]),
   "/repo/packages/bad/package.json": Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ version: "1.0.0" }),
+    S.encodeUnknownResult(UnknownJson)({ version: "1.0.0" }),
     identity
   ),
 };
@@ -525,11 +527,11 @@ describe("WorkspaceDiscovery — a member without a name", () => {
 const versionless: Tree = {
   // The ordinary private-monorepo root: a name and `workspaces`, no `version`.
   "/repo/package.json": Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", private: true, workspaces: ["packages/*"] }),
+    S.encodeUnknownResult(UnknownJson)({ name: "root", private: true, workspaces: ["packages/*"] }),
     identity
   ),
   "/repo/packages/bare/package.json": Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@x/bare", private: true }),
+    S.encodeUnknownResult(UnknownJson)({ name: "@x/bare", private: true }),
     identity
   ),
   "/repo/packages/versioned/package.json": manifest("@x/versioned"),
@@ -595,7 +597,7 @@ describe("WorkspaceDiscovery — a manifest without a version is discovered (#47
 const emptyVersion: Tree = {
   "/repo/package.json": rootManifest(["packages/*"]),
   "/repo/packages/empty/package.json": Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@x/empty", version: "" }),
+    S.encodeUnknownResult(UnknownJson)({ name: "@x/empty", version: "" }),
     identity
   ),
   "/repo/packages/versioned/package.json": manifest("@x/versioned"),
@@ -644,7 +646,7 @@ describe("WorkspaceDiscovery — a version that is PRESENT but EMPTY", () => {
 const badVersion: Tree = {
   "/repo/package.json": rootManifest(["packages/*"]),
   "/repo/packages/bad/package.json": Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@x/bad", version: 42 }),
+    S.encodeUnknownResult(UnknownJson)({ name: "@x/bad", version: 42 }),
     identity
   ),
 };
@@ -671,7 +673,7 @@ describe("WorkspaceDiscovery — a version that is PRESENT but not a string", ()
 const oddVersion: Tree = {
   "/repo/package.json": rootManifest(["packages/*"]),
   "/repo/packages/odd/package.json": Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@x/odd", version: "not-semver" }),
+    S.encodeUnknownResult(UnknownJson)({ name: "@x/odd", version: "not-semver" }),
     identity
   ),
 };
@@ -713,7 +715,7 @@ describe("WorkspaceRoot — no marker anywhere", () => {
 const nestedCheckout: Tree = {
   "/outer/pnpm-workspace.yaml": "packages:\n  - 'pkgs/*'\n",
   "/outer/package.json": Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "outer-root", version: "0.0.0", private: true }),
+    S.encodeUnknownResult(UnknownJson)({ name: "outer-root", version: "0.0.0", private: true }),
     identity
   ),
   "/outer/pkgs/other/package.json": manifest("other"),
@@ -797,7 +799,7 @@ describe("WorkspaceRoot — the NEAREST root wins", () => {
     "/outer/package.json": rootManifest(["packages/*"]),
     "/outer/inner/pnpm-workspace.yaml": "packages:\n  - 'pkgs/*'\n",
     "/outer/inner/package.json": Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "inner", version: "0.0.0" }),
+      S.encodeUnknownResult(UnknownJson)({ name: "inner", version: "0.0.0" }),
       identity
     ),
     "/outer/inner/pkgs/a/package.json": manifest("@i/a"),
@@ -863,7 +865,7 @@ const wrongShape: Tree = {
   // Valid JSON, valid name and version, but `dependencies` is not a string map:
   // the tolerant decode's schema rejects it and raises a SchemaError.
   "/repo/packages/bad/package.json": Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    S.encodeUnknownResult(UnknownJson)({
       name: "@x/bad",
       version: "1.0.0",
       publishConfig: { access: 42 },
@@ -918,7 +920,7 @@ describe("WorkspaceDiscovery — a directory that cannot be read", () => {
 const unreadablePnpmWorkspace: Tree = {
   "/repo/pnpm-workspace.yaml": "packages:\n  - 'packages/*'\n",
   "/repo/package.json": Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", version: "0.0.0" }),
+    S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0" }),
     identity
   ),
   "/repo/packages/a/package.json": manifest("@x/a"),

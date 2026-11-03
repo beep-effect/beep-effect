@@ -9,6 +9,8 @@ import { identity, pipe } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const decodeAge = S.decodeEffect(Age);
 const decodeUnknownAge = S.decodeUnknownEffect(Age);
 const encodeAge = S.encodeEffect(Age);
@@ -38,7 +40,7 @@ describe("Age", () => {
         pipe(exit1, Exit.isFailure, (failed) =>
           assertTrue(
             failed,
-            `Invalid Age input: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity)}`
+            `Invalid Age input: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity)}`
           )
         );
       }

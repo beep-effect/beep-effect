@@ -25,6 +25,8 @@ import type {
   ReporterVocabularyRecord,
 } from "./CourtReporterVocabulary.model.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const compatibleChanges: ReadonlyArray<ArtifactDriftChangeKind> = [
   "addition",
   "aliasAddition",
@@ -113,14 +115,14 @@ const normalizeCourt = (record: CourtVocabularyRecord): NormalizedRecord => ({
     record.effectiveRanges,
     A.map(({ start, end }) =>
       Result.getOrThrowWith(
-        S.encodeUnknownResult(S.fromJsonString(S.Unknown))([normalizeOption(start), normalizeOption(end)]),
+        S.encodeUnknownResult(UnknownJson)([normalizeOption(start), normalizeOption(end)]),
         identity
       )
     ),
     normalizeStringSet
   ),
   semanticContent: Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))([
+    S.encodeUnknownResult(UnknownJson)([
       record.sourceId,
       record.name,
       normalizeOption(record.nameAbbreviation),
@@ -149,18 +151,14 @@ const normalizeReporter = (record: ReporterVocabularyRecord): NormalizedRecord =
     record.editions,
     A.map(({ abbreviation, start, end }) =>
       Result.getOrThrowWith(
-        S.encodeUnknownResult(S.fromJsonString(S.Unknown))([
-          abbreviation,
-          normalizeOption(start),
-          normalizeOption(end),
-        ]),
+        S.encodeUnknownResult(UnknownJson)([abbreviation, normalizeOption(start), normalizeOption(end)]),
         identity
       )
     ),
     normalizeStringSet
   ),
   semanticContent: Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))([
+    S.encodeUnknownResult(UnknownJson)([
       record.primaryAbbreviation,
       record.name,
       record.citeType,
@@ -328,7 +326,7 @@ const compareAliases = (
         "aliasAddition",
         subjectKind,
         [next.id],
-        `Alias ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(alias), identity)} was added.`
+        `Alias ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(alias), identity)} was added.`
       )
     ),
     ...A.map(removals, (alias) =>
@@ -336,7 +334,7 @@ const compareAliases = (
         "aliasRemoval",
         subjectKind,
         [next.id],
-        `Alias ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(alias), identity)} was removed.`
+        `Alias ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(alias), identity)} was removed.`
       )
     ),
   ];
@@ -522,7 +520,7 @@ const compareFamily = (
               "abbreviationReuse",
               subjectKind,
               owners,
-              `Alias ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(alias), identity)} became contextual because it names multiple identities.`
+              `Alias ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(alias), identity)} became contextual because it names multiple identities.`
             )
           )
         : O.none();

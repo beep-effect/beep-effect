@@ -21,6 +21,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type * as FileSystem from "effect/FileSystem";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 /** A virtual tree: absolute path → file contents. Directories are implied by their files. */
 export type Tree = Readonly<Record<string, string>>;
 
@@ -102,7 +104,7 @@ export const rootManifest: {
   (args) => A.isArray(args[0]),
   (patterns: ReadonlyArray<string>, extra: Record<string, unknown> = {}): string =>
     Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+      S.encodeUnknownResult(UnknownJson)({
         name: "root",
         version: "0.0.0",
         private: true,
@@ -120,8 +122,5 @@ export const manifest: {
 } = dual(
   (args) => typeof args[0] === "string",
   (name: string, fields: Record<string, unknown> = {}): string =>
-    Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name, version: "1.0.0", ...fields }),
-      identity
-    )
+    Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)({ name, version: "1.0.0", ...fields }), identity)
 );

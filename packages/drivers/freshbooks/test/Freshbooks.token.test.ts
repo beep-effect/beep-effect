@@ -29,6 +29,8 @@ import * as S from "effect/Schema";
 import type { FreshbooksError } from "@beep/freshbooks";
 import type * as HttpClientRequest from "effect/http/HttpClientRequest";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 /**
  * A mock FreshBooks OAuth token server that enforces single-use refresh
  * tokens: a refresh presenting anything other than the currently-valid refresh
@@ -54,10 +56,10 @@ const decodeBody = (request: HttpClientRequest.HttpClientRequest): Record<string
   if (body._tag !== "Uint8Array") {
     return {};
   }
-  return Result.getOrThrowWith(
-    S.decodeResult(S.fromJsonString(S.Unknown))(new TextDecoder().decode(body.body)),
-    identity
-  ) as Record<string, string>;
+  return Result.getOrThrowWith(S.decodeResult(UnknownJson)(new TextDecoder().decode(body.body)), identity) as Record<
+    string,
+    string
+  >;
 };
 
 const TokenServerLayer = (initialRefresh: string): Layer.Layer<TokenServer> =>

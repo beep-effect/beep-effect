@@ -8,6 +8,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { Block, Counter, Inline } from "@beep/cli-kit";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const isInlines = S.is(S.Array(DocModel.Inline));
 
 const isDocumentData = S.is(S.Union([DocModel.Inline, DocModel.Block, DocModel.Counter]));
@@ -428,10 +430,7 @@ describe("Doc: the reporter blocks are readonly schema-valid plain data", () => 
       Doc.counts({ layout: "inline", counters: [], suffix: "across 3 files" }),
     ];
     for (const node of nodes)
-      assert.isTrue(
-        isDocumentData(node),
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(node), identity)
-      );
+      assert.isTrue(isDocumentData(node), Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(node), identity));
     assert.deepStrictEqual(Doc.strong("a"), { _tag: "Strong", content: [{ _tag: "Text", value: "a" }] });
     assert.deepStrictEqual(Doc.em("a"), { _tag: "Emphasis", content: [{ _tag: "Text", value: "a" }] });
     assert.deepStrictEqual(Doc.file("/a.ts"), { _tag: "File", path: "/a.ts" });

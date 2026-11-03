@@ -11,6 +11,8 @@ import * as Str from "effect/String";
 import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 import type { NamedColor, Style, TokenName } from "@beep/cli-kit";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 describe("Token", () => {
   it("builds styles as data", () => {
     assert.deepStrictEqual(Token.hex("#e09a4e"), { fg: "#e09a4e" });
@@ -66,16 +68,13 @@ describe("Token.defaults and Token.resolve", () => {
   });
 
   it("an override replaces one token and leaves the rest, and never touches the defaults", () => {
-    const before = Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(Token.defaults), identity);
+    const before = Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(Token.defaults), identity);
     const overrides = { success: { fg: "#00ff00", bold: true } } as const;
     assert.deepStrictEqual(Token.resolve("success", overrides), overrides.success);
     for (const token of A.filter(TOKENS, (name) => name !== "success")) {
       assert.deepStrictEqual(Token.resolve(token, overrides), Token.defaults[token], token);
     }
-    assert.strictEqual(
-      Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(Token.defaults), identity),
-      before
-    );
+    assert.strictEqual(Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(Token.defaults), identity), before);
   });
 
   it("a name that is not a token, including an Object.prototype member, is the empty style", () => {
@@ -89,7 +88,7 @@ describe("Token.defaults and Token.resolve", () => {
       Token.resolve(
         "info",
         deliberatelyInvalid<Parameters<typeof Token.resolve>[1]>(
-          Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Unknown))('{"__proto__":{"fg":"red"}}'), identity)
+          Result.getOrThrowWith(S.decodeResult(UnknownJson)('{"__proto__":{"fg":"red"}}'), identity)
         )
       ),
       Token.defaults.info

@@ -42,6 +42,8 @@ import * as replicad from "replicad";
 import type { EdgeSet } from "@beep/occt";
 import type { StretchPiece } from "@beep/occt/internal/shading";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 type Segment = readonly [number, number, number, number];
 
 // A box with a wedge on top, a through hole, and a separate post in front:
@@ -355,7 +357,7 @@ describe("@beep/occt shading", () => {
               .pipe(Effect.map(A.map((v: EdgeSet) => [v.visible, v.hidden, v.shading])))
           ).pipe(
             Effect.flatMap((views) =>
-              sha256Of(Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(views), identity))
+              sha256Of(Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(views), identity))
             )
           );
         const result = yield* run((litThreshold) => ShadingPlan.make({ minPitch: 1, maxPitch: 3, litThreshold }));

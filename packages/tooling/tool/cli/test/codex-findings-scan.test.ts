@@ -5,6 +5,8 @@ import { identity } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const codesFor = (value: string): ReadonlyArray<string> =>
   A.dedupe(A.map(scanSensitiveText("surface", value), (hit) => hit.code));
 
@@ -131,9 +133,7 @@ describe("codex findings reject-scan traversal of untrusted payloads", () => {
     const described = describeSensitiveHits(hits);
 
     expect(hits.length).toBeGreaterThan(0);
-    expect(Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(hits), identity)).not.toContain(
-      secret
-    );
+    expect(Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(hits), identity)).not.toContain(secret);
     expect(A.join(described, " ")).not.toContain(secret);
     expect(described).toEqual(["payload.findings[0].title (secret-shaped-value)"]);
   });

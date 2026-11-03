@@ -45,6 +45,8 @@ import * as TestClock from "effect/testing/TestClock";
 import { commandArgs, scripted } from "./fixtures.ts";
 import type { ScriptResult } from "./fixtures.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const cwd = "/repo";
 
 /**
@@ -1053,7 +1055,7 @@ describe("Git", () => {
 
     for (const diffFilter of ["", "Q", "A-M", "ACMR "]) {
       it.effect(
-        `refuses diffFilter ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(diffFilter), identity)} before spawning`,
+        `refuses diffFilter ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(diffFilter), identity)} before spawning`,
         () =>
           Effect.gen(function* () {
             const program = Effect.gen(function* () {

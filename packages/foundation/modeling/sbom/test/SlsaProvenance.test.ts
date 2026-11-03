@@ -14,6 +14,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import FIXTURE from "./fixtures/actions-attest-provenance.json" with { type: "json" };
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 /** The claims the vendored fixture was transcribed for. */
 const claims = {
   serverUrl: "https://github.com",
@@ -37,9 +39,7 @@ const claims = {
 
 const asJson = (provenance: SlsaProvenance): unknown =>
   Result.getOrThrowWith(
-    S.decodeResult(S.fromJsonString(S.Unknown))(
-      Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(provenance), identity)
-    ),
+    S.decodeResult(UnknownJson)(Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(provenance), identity)),
     identity
   );
 

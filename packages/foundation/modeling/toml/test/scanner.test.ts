@@ -21,6 +21,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { TomlErrorCodeRaw } from "@beep/toml/internal/diagnostics";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 /** Assert `fn` throws a RawTomlError with `code` (and `offset`, when given). */
 function assertScanError(fn: () => unknown, code: TomlErrorCodeRaw, offset?: number): void {
   try {
@@ -43,7 +45,7 @@ function classifyInstance<T>(token: string, ctor: abstract new (...args: never[]
   const value = classifyValueToken(token, 0);
   if (!(value instanceof ctor)) {
     throw new Error(
-      `expected ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(token), identity)} to classify as a datetime instance`
+      `expected ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(token), identity)} to classify as a datetime instance`
     );
   }
   return value;
@@ -399,12 +401,12 @@ describe("scanner", () => {
         assert.strictEqual(
           result.value,
           value,
-          `token of ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(source), identity)}`
+          `token of ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(source), identity)}`
         );
         assert.strictEqual(
           result.end,
           end,
-          `end of ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(source), identity)}`
+          `end of ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(source), identity)}`
         );
       }
     });

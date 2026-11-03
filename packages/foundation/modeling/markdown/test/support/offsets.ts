@@ -8,6 +8,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 /** The UTF-16 offset of the first occurrence of `needle` in `source`; throws when it does not occur. */
 export const offsetOf: {
   (source: string, needle: string): number;
@@ -15,10 +17,7 @@ export const offsetOf: {
 } = dual(2, (source: string, needle: string): number =>
   O.getOrThrowWith(
     Str.indexOf(needle)(source),
-    () =>
-      new Error(
-        `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(needle), identity)} does not occur`
-      )
+    () => new Error(`${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(needle), identity)} does not occur`)
   )
 );
 
@@ -29,9 +28,6 @@ export const lastOffsetOf: {
 } = dual(2, (source: string, needle: string): number =>
   O.getOrThrowWith(
     Str.lastIndexOf(needle)(source),
-    () =>
-      new Error(
-        `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(needle), identity)} does not occur`
-      )
+    () => new Error(`${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(needle), identity)} does not occur`)
   )
 );

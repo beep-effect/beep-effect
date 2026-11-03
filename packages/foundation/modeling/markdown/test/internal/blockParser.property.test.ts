@@ -16,6 +16,8 @@ import { renderHtml } from "../support/htmlWriter.ts";
 import { normalizeHtml } from "../support/normalizeHtml.ts";
 import { renderOracleHtml } from "../support/oracle.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const runs = { arbitrary: fcRuns(100) };
 const Sample = S.Struct({
   words: S.Array(S.Literals(["alpha", "beta", "gamma", "delta"])),
@@ -168,7 +170,7 @@ describe("blockParser differential oracle: commonmark.js 0.31.2", () => {
         assert.strictEqual(
           ours,
           oracle,
-          `disagreement on input:\n${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(markdown), identity)}`
+          `disagreement on input:\n${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(markdown), identity)}`
         );
       }
       return true;

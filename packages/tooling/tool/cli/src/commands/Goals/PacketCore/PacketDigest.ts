@@ -28,6 +28,8 @@ import { isJsonRecord } from "../Inventory.ts";
 import { PacketEvent, PacketEventType } from "./PacketCore.schemas.ts";
 import type { PacketEventId } from "./PacketCore.schemas.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const $I = $RepoCliId.create("commands/Goals/PacketCore/PacketDigest");
 
 /**
@@ -49,7 +51,7 @@ export const PACKET_EVENT_SEQ_WIDTH = 5;
 // JSON.stringify is used ONLY on primitives here: string escaping must match
 // JSON exactly, and no schema codec expresses a key-sorted canonical form.
 const canonicalPrimitive = (value: string | number | boolean): string =>
-  Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity);
+  Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity);
 
 const isJsonPrimitive = (value: unknown): value is string | number | boolean =>
   P.isString(value) || P.isNumber(value) || P.isBoolean(value);

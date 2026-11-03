@@ -13,6 +13,8 @@ import * as Tracer from "effect/Tracer";
 import { fixtureLayer, tree } from "./support/fixtures.ts";
 import type { FixtureTree } from "./support/fixtures.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const EMPTY = "{}";
 
 layer(
@@ -475,7 +477,7 @@ describe("resolveExports", () => {
 
   it("skips a __proto__ condition key", () => {
     const exports = Result.getOrThrowWith(
-      S.decodeResult(S.fromJsonString(S.Unknown))('{".":{"__proto__":"./evil.json","default":"./safe.json"}}'),
+      S.decodeResult(UnknownJson)('{".":{"__proto__":"./evil.json","default":"./safe.json"}}'),
       identity
     );
     assert.deepStrictEqual(resolveExports(exports, "."), walked("./safe.json"));

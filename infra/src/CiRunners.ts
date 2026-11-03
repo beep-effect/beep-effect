@@ -62,6 +62,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { optionalPulumiConfigFields } from "./internal/PulumiConfigSchema.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const $I = $InfraId.create("CiRunners");
 
 const defaultAwsRegion = "us-east-1";
@@ -944,7 +946,7 @@ const renderCiRunnersReaperHandlerSource = (): string =>
   );
 
 const lambdaAssumeRolePolicy = Result.getOrThrowWith(
-  S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+  S.encodeUnknownResult(UnknownJson)({
     Statement: [
       {
         Action: "sts:AssumeRole",
@@ -960,7 +962,7 @@ const lambdaAssumeRolePolicy = Result.getOrThrowWith(
 );
 
 const flowLogsAssumeRolePolicy = Result.getOrThrowWith(
-  S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+  S.encodeUnknownResult(UnknownJson)({
     Statement: [
       {
         Action: "sts:AssumeRole",
@@ -978,7 +980,7 @@ const flowLogsAssumeRolePolicy = Result.getOrThrowWith(
 const reaperRolePolicyDocument = (logGroupArn: pulumi.Output<string>): pulumi.Output<string> =>
   logGroupArn.apply((arn) =>
     Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+      S.encodeUnknownResult(UnknownJson)({
         Statement: [
           {
             Action: "ec2:DescribeInstances",
@@ -1013,7 +1015,7 @@ const reaperRolePolicyDocument = (logGroupArn: pulumi.Output<string>): pulumi.Ou
 const flowLogsRolePolicyDocument = (logGroupArn: pulumi.Output<string>): pulumi.Output<string> =>
   logGroupArn.apply((arn) =>
     Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+      S.encodeUnknownResult(UnknownJson)({
         Statement: [
           {
             Action: ["logs:CreateLogStream", "logs:DescribeLogGroups", "logs:DescribeLogStreams", "logs:PutLogEvents"],

@@ -50,6 +50,8 @@ import { emitScheduleAbox } from "@/projection/Turtle";
 import type { CiOpsProjectionShape } from "@/projection/CiOpsProjection";
 import type { AdmissionPolicyParams, AdmissionWorkKind } from "@/projection/Schemas";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const aboxPath = "../../../explorations/beep-ci-operational-ontology/ontology/extraction/s6/graphs/abox.ttl";
@@ -92,7 +94,7 @@ const normalizePending = (
 
 const admittedLine = (nonce: string, kind: AdmissionWorkKind, weightTokens: number, admittedAtMillis: number): string =>
   Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    S.encodeUnknownResult(UnknownJson)({
       schemaVersion: "yeet-admission-journal/v1",
       _tag: "admission-admitted",
       nonce,
@@ -108,7 +110,7 @@ const admittedLine = (nonce: string, kind: AdmissionWorkKind, weightTokens: numb
 
 const releasedLine = (nonce: string, releasedAtMillis: number): string =>
   Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    S.encodeUnknownResult(UnknownJson)({
       schemaVersion: "yeet-admission-journal/v1",
       _tag: "admission-released",
       nonce,

@@ -62,10 +62,12 @@ import { provideSpawner } from "./support/ScriptedProcess.ts";
 import { legacyGhAnswer, legacyGhArgs, recordedGithub } from "./support/YeetGithub.ts";
 import type { GithubAnswer, GithubCall } from "./support/YeetGithub.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 // `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
 const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
 
-const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
+const encodeJson = flow(S.encodeUnknownResult(UnknownJson), Result.getOrThrow);
 
 // Recorded 2026-10-06 from merged PR #1459 (head 212fe39b4f): 16 required
 // contexts on main, all 33 check runs green, one ready_for_review event, the
@@ -1114,18 +1116,16 @@ const withLatest = (recorded: RecordedThreads, pageInfo: GhScript["threadsPageIn
 };
 
 const isFirstThreadPage = (call: GithubCall): boolean =>
-  !Str.includes('"after"')(
-    Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(call.body ?? {}), identity)
-  );
+  !Str.includes('"after"')(Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(call.body ?? {}), identity));
 
 // What the old `gh` call printed, as GitHub's own answer, with the recorded
 // payloads completed the way GitHub sends them.
 const recordedOutput = (script: GhScript, call: GithubCall, output: string): string =>
   O.isSome(call.graphql)
     ? Result.getOrThrowWith(
-        S.encodeUnknownResult(S.fromJsonString(S.Unknown))(
+        S.encodeUnknownResult(UnknownJson)(
           withLatest(
-            Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Unknown))(output), identity) as RecordedThreads,
+            Result.getOrThrowWith(S.decodeResult(UnknownJson)(output), identity) as RecordedThreads,
             isFirstThreadPage(call) ? script.threadsPageInfo : undefined
           )
         ),
@@ -1133,8 +1133,8 @@ const recordedOutput = (script: GhScript, call: GithubCall, output: string): str
       )
     : call.path === `{repo}/pulls/${pullFixture.number}`
       ? Result.getOrThrowWith(
-          S.encodeUnknownResult(S.fromJsonString(S.Unknown))(
-            S.decodeResult(S.fromJsonString(S.Unknown))(output).pipe(Result.getOrThrowWith(identity), restPull)
+          S.encodeUnknownResult(UnknownJson)(
+            S.decodeResult(UnknownJson)(output).pipe(Result.getOrThrowWith(identity), restPull)
           ),
           identity
         )
@@ -1152,7 +1152,7 @@ const githubAnswer = (script: GhScript, call: GithubCall, line: string): GithubA
 
 // The reviewer gate's REST calls arrive through `fetch`; each is recorded and answered as the
 // `gh api <path>` line it replaced, so one answer table serves both transports.
-const decodeAnswer = S.decodeResult(S.fromJsonString(S.Unknown));
+const decodeAnswer = S.decodeResult(UnknownJson);
 const scriptedGithub = (script: GhScript, calls: Ref.Ref<ReadonlyArray<string>>) =>
   githubFetch((call) => {
     const line = `gh api ${Str.slice(1)(call.url.pathname)}${call.url.search}`;

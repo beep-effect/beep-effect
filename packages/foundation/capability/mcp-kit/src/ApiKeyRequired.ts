@@ -31,6 +31,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { SourceAuthRegistration } from "./SourceAuth.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const $I = $McpKitId.create("ApiKeyRequired");
 
 class ApiKeyRequiredFailureParams extends S.Opaque<ApiKeyRequiredFailureParams, { readonly brand: unique symbol }>()(
@@ -228,10 +230,7 @@ export const translateApiKeyRequired = (payload: ToolHandlerPayload): O.Option<C
           content: [
             {
               type: "text",
-              text: Result.getOrThrowWith(
-                S.encodeUnknownResult(S.fromJsonString(S.Unknown))(payload.encodedResult),
-                identity
-              ),
+              text: Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(payload.encodedResult), identity),
             },
           ],
         })

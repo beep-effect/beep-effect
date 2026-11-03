@@ -25,6 +25,8 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const decodeAnnotationResult = S.decodeResult(Annotation);
 const decodeEnforcementResult = S.decodeResult(Enforcement);
 const decodeInvariantResult = S.decodeResult(Invariant);
@@ -254,7 +256,7 @@ describe("Conformance", () => {
       pipe(decodeUnknownInvariantResult(descriptor), Result.isFailure, (failed) =>
         assertTrue(
           failed,
-          `Invalid invariant descriptor ${index}: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(descriptor), identity)}`
+          `Invalid invariant descriptor ${index}: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(descriptor), identity)}`
         )
       );
     });
@@ -377,7 +379,7 @@ describe("Conformance", () => {
       pipe(decodeUnknownRevisionResult(revision), Result.isFailure, (failed) =>
         assertTrue(
           failed,
-          `Invalid revision ${index}: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(revision), identity)}`
+          `Invalid revision ${index}: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(revision), identity)}`
         )
       );
     });

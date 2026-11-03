@@ -26,6 +26,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const JsonObject = S.fromJsonString(S.Record(S.String, S.Unknown));
 
 const pkg = (name: string, fields: Record<string, Record<string, string>> = {}): WorkspacePackage =>
@@ -234,7 +236,7 @@ describe("installArgs", () => {
 describe("unresolvedSpecifiers", () => {
   it("lists workspace: and catalog: specifiers in runtime maps only", () => {
     const manifest = Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+      S.encodeUnknownResult(UnknownJson)({
         dependencies: { "@x/lib": "workspace:^", ajv: "^8.0.0" },
         peerDependencies: { effect: "catalog:effect:peers" },
         devDependencies: { "@x/tool": "workspace:*" },
@@ -251,7 +253,7 @@ describe("unresolvedSpecifiers", () => {
 
   it("also lists link: and relative file: specifiers, which name a path only the workspace has", () => {
     const manifest = Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+      S.encodeUnknownResult(UnknownJson)({
         dependencies: { a: "link:../a", b: "file:../b", c: "file:./c.tgz", d: "file:/abs/d.tgz", e: "^1.0.0" },
         optionalDependencies: { f: "file:f" },
       }),
@@ -273,9 +275,7 @@ describe("readPackedManifest", () => {
   it("reads the name and the bin names: a bin object's keys, a bin string's unscoped package name", () => {
     const read = (manifest: unknown) =>
       Result.map(
-        readPackedManifest(
-          Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(manifest), identity)
-        ),
+        readPackedManifest(Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(manifest), identity)),
         (m) => [m.name, m.bins]
       );
     assert.deepStrictEqual(
@@ -345,7 +345,7 @@ describe("fileOverridesOf", () => {
   it("skips __proto__ and keeps constructor and prototype as own entries of a prototype-free map", () => {
     // JSON.parse makes `__proto__` an own key, as a YAML parse of the workspace file can.
     const document: unknown = Result.getOrThrowWith(
-      S.decodeResult(S.fromJsonString(S.Unknown))(
+      S.decodeResult(UnknownJson)(
         '{"overrides":{"__proto__":"file:../evil","constructor":"file:../ctor","prototype":"file:../proto"}}'
       ),
       identity
@@ -379,7 +379,7 @@ describe("overridePath", () => {
 describe("binTargetOf", () => {
   it("finds a bin object's entry, or a bin string under the unscoped package name", () => {
     const object = Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+      S.encodeUnknownResult(UnknownJson)({
         name: "@x/carrier",
         bin: { tool: "./dist/tool.js", "tool-mcp": "./dist/mcp.js" },
       }),
@@ -389,7 +389,7 @@ describe("binTargetOf", () => {
     assert.isUndefined(binTargetOf(object, "carrier"));
     assert.isUndefined(binTargetOf(object, "toString"), "an inherited key is no bin");
     const string = Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@x/tool", bin: "./cli.js" }),
+      S.encodeUnknownResult(UnknownJson)({ name: "@x/tool", bin: "./cli.js" }),
       identity
     );
     assert.strictEqual(binTargetOf(string, "tool"), "./cli.js");
@@ -398,10 +398,7 @@ describe("binTargetOf", () => {
 
   it("a manifest without a bin, or not a JSON object, declares none", () => {
     assert.isUndefined(
-      binTargetOf(
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "x" }), identity),
-        "x"
-      )
+      binTargetOf(Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)({ name: "x" }), identity), "x")
     );
     assert.isUndefined(binTargetOf("[]", "x"));
     assert.isUndefined(binTargetOf("{ nope", "x"));

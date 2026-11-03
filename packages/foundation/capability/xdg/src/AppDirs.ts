@@ -24,6 +24,8 @@ import { NativeDirs } from "./NativeDirs.ts";
 import { currentPlatform, Xdg } from "./Xdg.ts";
 import type { XdgPaths, XdgPlatform } from "./Xdg.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const $I = $XdgId.create("AppDirs");
 
 /**
@@ -205,7 +207,7 @@ export class AppDirsOverrideError extends S.TaggedError<AppDirsOverrideError, { 
    * @since 0.0.0
    */
   override get message(): string {
-    return `AppDirs.layer: the ${this.directory} override must be an absolute path, received ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(this.path), identity)}`;
+    return `AppDirs.layer: the ${this.directory} override must be an absolute path, received ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(this.path), identity)}`;
   }
 }
 
@@ -555,7 +557,7 @@ const badNamespace = (namespace: string): AppDirsNamespaceError | undefined => {
   }
   if (!isNamespaceComponent(namespace)) {
     return AppDirsNamespaceError.make({
-      message: `AppDirs.layer: \`namespace\` must be a single path component, received ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(namespace), identity)}`,
+      message: `AppDirs.layer: \`namespace\` must be a single path component, received ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(namespace), identity)}`,
     });
   }
   return undefined;

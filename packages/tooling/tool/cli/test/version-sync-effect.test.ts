@@ -70,7 +70,7 @@ const encodeJson = S.encodeUnknownEffect(UnknownJson);
 
 import * as Arbitrary from "effect/Arbitrary";
 
-const decodeUnknownJson = S.decodeEffect(S.fromJsonString(S.Unknown));
+const decodeUnknownJson = S.decodeEffect(UnknownJson);
 const decodeBunVersionStateEffect = S.decodeEffect(BunVersionState);
 const encodeBunVersionStateEffect = S.encodeEffect(BunVersionState);
 
@@ -78,6 +78,8 @@ import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Result from "effect/Result";
+
+const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
 
 const PlatformLayer = Layer.mergeAll(MemoryFileSystem.layer, Path.layer);
 
@@ -1334,14 +1336,14 @@ const releaseCommitClient = (commits: Readonly<Record<string, string>>, requeste
         sha === undefined
           ? new Response(
               Result.getOrThrowWith(
-                S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ message: "No commit found for SHA" }),
+                S.encodeUnknownResult(UnknownJson)({ message: "No commit found for SHA" }),
                 identity
               ),
               { status: 404 }
             )
           : new Response(
               Result.getOrThrowWith(
-                S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ sha, commit: { message: "release" } }),
+                S.encodeUnknownResult(UnknownJson)({ sha, commit: { message: "release" } }),
                 identity
               ),
               {
@@ -1360,7 +1362,7 @@ const effectSourceManifest = (
   effectSource: O.Option<{ readonly version: string; readonly commit: string }>
 ) =>
   `${Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }))({
+    encodePrettyJson({
       name: "@beep/test-root",
       catalog: { effect, "@effect/vitest": effect },
       ...O.match(effectSource, { onNone: () => ({}), onSome: (source) => ({ config: { effectSource: source } }) }),

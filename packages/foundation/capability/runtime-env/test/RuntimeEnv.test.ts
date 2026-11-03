@@ -13,6 +13,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { deliberatelyInvalid } from "./support/deliberatelyInvalid.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const runtimeEnvJson = S.fromJsonString(RuntimeEnv);
 
 const withEnv = (env: Record<string, string>) =>
@@ -327,7 +329,7 @@ describe("RuntimeEnv.fromRecord", () => {
       timeout: "30 seconds",
     })((it) => {
       it.effect(
-        `equals what the layer reads from the same record: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(record), identity)}`,
+        `equals what the layer reads from the same record: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(record), identity)}`,
         () =>
           Effect.gen(function* () {
             const viaLayer = yield* CurrentRuntimeEnv;

@@ -15,6 +15,8 @@ import * as Str from "effect/String";
 import { Immer } from "immer";
 import type { SectionRenderError } from "@beep/managed-section";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const hashId = SectionId.make({ key: "example-tool", commentStyle: CommentStyle.hash });
 const htmlId = SectionId.make({ key: "example-tool", commentStyle: CommentStyle.html });
 
@@ -229,13 +231,13 @@ describe("SectionDialect review regressions", () => {
       assert.strictEqual(
         S.is(AttributeName)(name),
         accepted,
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(name), identity)
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(name), identity)
       );
       const result = SectionDialect.default.render(hashId.section("body", { [name]: "value" }));
       assert.strictEqual(
         Result.isSuccess(result),
         accepted,
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(name), identity)
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(name), identity)
       );
       if (Result.isFailure(result)) {
         assert.strictEqual(result.failure.reason, "invalidAttribute");

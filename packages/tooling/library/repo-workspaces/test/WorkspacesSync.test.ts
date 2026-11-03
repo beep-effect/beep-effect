@@ -38,6 +38,8 @@ import { hostPath } from "./support/hostPath.ts";
 import type { MemoryFileSystemHandle } from "@beep/memfs";
 import type { SyncFileSystem, WorkspacePackage, WorkspacesSyncOptions } from "@beep/repo-workspaces";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 /** Sync ops over a fresh memfs volume holding exactly `seed`. */
 const memOps = (seed: Readonly<Record<string, string>>): WorkspacesSyncOptions => ({
   fileSystem: MemoryFileSystem.makeSync(seed).sync,
@@ -48,11 +50,11 @@ describe("getWorkspacePackagesSync — hostile manifests", () => {
   const ops = memOps({
     "/repo/pnpm-workspace.yaml": "packages:\n  - 'packages/*'\n",
     "/repo/package.json": Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", version: "0.0.0", private: true }),
+      S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0", private: true }),
       identity
     ),
     "/repo/packages/good/package.json": Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@x/good", version: "1.0.0" }),
+      S.encodeUnknownResult(UnknownJson)({ name: "@x/good", version: "1.0.0" }),
       identity
     ),
     // The hostile manifests. Each is VALID JSON that does not decode to an
@@ -109,7 +111,7 @@ describe("findWorkspaceRootSync", () => {
       "/hostile/package.json": "null",
       "/hostile/pnpm-workspace.yaml": "packages:\n  - 'packages/*'\n",
       "/hostile/packages/a/package.json": Result.getOrThrowWith(
-        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@h/a", version: "1.0.0" }),
+        S.encodeUnknownResult(UnknownJson)({ name: "@h/a", version: "1.0.0" }),
         identity
       ),
     });
@@ -145,11 +147,11 @@ const treeOfDepth = (depth: number) => {
   return MemoryFileSystem.makeSync({
     "/repo/pnpm-workspace.yaml": "packages:\n  - 'packages/**'\n",
     "/repo/package.json": Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", version: "0.0.0" }),
+      S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0" }),
       identity
     ),
     [`/repo/packages/${segments}deep/package.json`]: Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@d/deep", version: "1.0.0" }),
+      S.encodeUnknownResult(UnknownJson)({ name: "@d/deep", version: "1.0.0" }),
       identity
     ),
   });
@@ -241,11 +243,11 @@ describe("getWorkspacePackagesSync over pure in-memory ops (no ambient Node fs)"
   const ops = memOps({
     "/repo/pnpm-workspace.yaml": "packages:\n  - 'packages/*'\n",
     "/repo/package.json": Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", version: "0.0.0", private: true }),
+      S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0", private: true }),
       identity
     ),
     "/repo/packages/a/package.json": Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+      S.encodeUnknownResult(UnknownJson)({
         name: "@mem/a",
         version: "2.0.0",
         scripts: { build: "tsc" },
@@ -253,7 +255,7 @@ describe("getWorkspacePackagesSync over pure in-memory ops (no ambient Node fs)"
       identity
     ),
     "/repo/packages/b/package.json": Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@mem/b", version: "3.0.0" }),
+      S.encodeUnknownResult(UnknownJson)({ name: "@mem/b", version: "3.0.0" }),
       identity
     ),
   });
@@ -285,15 +287,15 @@ describe("findWorkspaceRootSync — stopAt over a nested checkout", () => {
   const files: Record<string, string> = {
     "/outer/pnpm-workspace.yaml": "packages:\n  - 'pkgs/*'\n",
     "/outer/package.json": Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "outer-root", version: "0.0.0", private: true }),
+      S.encodeUnknownResult(UnknownJson)({ name: "outer-root", version: "0.0.0", private: true }),
       identity
     ),
     "/outer/pkgs/other/package.json": Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "other", version: "1.0.0" }),
+      S.encodeUnknownResult(UnknownJson)({ name: "other", version: "1.0.0" }),
       identity
     ),
     "/outer/checkout/package.json": Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "checkout", version: "1.0.0" }),
+      S.encodeUnknownResult(UnknownJson)({ name: "checkout", version: "1.0.0" }),
       identity
     ),
   };
@@ -355,19 +357,19 @@ describe("getWorkspacePackagesSync — exclusions", () => {
   const ops = memOps({
     "/repo/pnpm-workspace.yaml": "packages:\n  - 'packages/**'\n  - '!packages/private-*'\n",
     "/repo/package.json": Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", version: "0.0.0", private: true }),
+      S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0", private: true }),
       identity
     ),
     "/repo/packages/alpha/package.json": Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@mem/alpha", version: "1.0.0" }),
+      S.encodeUnknownResult(UnknownJson)({ name: "@mem/alpha", version: "1.0.0" }),
       identity
     ),
     "/repo/packages/private-thing/package.json": Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@mem/private", version: "1.0.0" }),
+      S.encodeUnknownResult(UnknownJson)({ name: "@mem/private", version: "1.0.0" }),
       identity
     ),
     "/repo/packages/private-thing/nested/package.json": Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@mem/nested", version: "1.0.0" }),
+      S.encodeUnknownResult(UnknownJson)({ name: "@mem/nested", version: "1.0.0" }),
       identity
     ),
   });
@@ -409,11 +411,11 @@ describe("WorkspacesSync with a win32 SyncPath", () => {
   const handle = MemoryFileSystem.makeSync({
     "/C:/repo/pnpm-workspace.yaml": "packages:\n  - 'packages/*'\n",
     "/C:/repo/package.json": Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", version: "0.0.0", private: true }),
+      S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0", private: true }),
       identity
     ),
     "/C:/repo/packages/a/package.json": Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@win/a", version: "1.0.0" }),
+      S.encodeUnknownResult(UnknownJson)({ name: "@win/a", version: "1.0.0" }),
       identity
     ),
   });

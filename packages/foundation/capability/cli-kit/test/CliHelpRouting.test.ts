@@ -22,6 +22,8 @@ import * as Stdio from "effect/Stdio";
 import * as Str from "effect/String";
 import * as Terminal from "effect/Terminal";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const platformServices = Layer.mergeAll(
   Layer.mock(ChildProcessSpawner.ChildProcessSpawner, {}),
   MemoryFileSystem.layer,
@@ -41,7 +43,7 @@ const platformServices = Layer.mergeAll(
 );
 
 const sub = Command.make("sub", { count: Flag.Int("count").pipe(Flag.withDefault(1)) }, ({ count }) =>
-  Console.log(Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ count }), identity))
+  Console.log(Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)({ count }), identity))
 );
 const app = Command.make("app").pipe(Command.withSubcommands([sub]));
 const HELP_MARK = "USAGE";

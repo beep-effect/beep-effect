@@ -19,6 +19,8 @@ import { intakeClient, intakeFile, workspaceId } from "./support/IntakeHarness.t
 import type { AnyStateMachine } from "xstate";
 import type { DocumentIntakeSnapshot } from "@/intake/DocumentIntake.machine";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 // `@xstate/test` 2.0.0-alpha.1 constrains its source to `ActorLogic<any, any, any>`,
 // which a machine declaring `schemas.emitted` does not satisfy.
 const intakeModel: AnyStateMachine = documentIntakeMachine;
@@ -105,7 +107,7 @@ describe("document intake statechart model", { concurrent: false }, () => {
           // `results` and the batch sequence grow without bound, so states are
           // merged by their position in the chart.
           serializeState: (snapshot) =>
-            Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(snapshot.value), identity),
+            Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(snapshot.value), identity),
           stopWhen: (snapshot) =>
             (snapshot as DocumentIntakeSnapshot).matches({ vault: { watching: { unconfigured: "picker" } } }),
           invariant: ({ snapshot }) => intakeInvariant(snapshot as DocumentIntakeSnapshot),

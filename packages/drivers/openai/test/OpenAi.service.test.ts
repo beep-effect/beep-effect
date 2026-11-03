@@ -33,6 +33,8 @@ import * as S from "effect/Schema";
 import type * as HttpClientError from "effect/http/HttpClientError";
 import type * as HttpClientRequest from "effect/http/HttpClientRequest";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 type TestRespond = (
@@ -117,7 +119,7 @@ const languageFixture = Layer.effectContext(
       return Effect.succeed(
         new Response(
           Result.getOrThrowWith(
-            S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+            S.encodeUnknownResult(UnknownJson)({
               created_at: 1,
               error: null,
               id: "resp_fixture",

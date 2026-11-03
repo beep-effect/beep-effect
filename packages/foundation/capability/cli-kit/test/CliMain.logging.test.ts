@@ -19,6 +19,8 @@ import * as Str from "effect/String";
 import * as Terminal from "effect/Terminal";
 import { isCommand, LINE_BREAK } from "./helpers/runnerCommands.ts";
 
+const Json = S.fromJsonString(S.Unknown);
+
 const platformServices = Layer.mergeAll(
   Layer.mock(ChildProcessSpawner.ChildProcessSpawner, {}),
   MemoryFileSystem.layer,
@@ -36,8 +38,6 @@ const platformServices = Layer.mergeAll(
     })
   )
 );
-
-const Json = S.fromJsonString(S.Unknown);
 
 const capturing = () => {
   const out: string[] = [];
@@ -180,7 +180,7 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
     const program = Effect.logDebug("handler ran");
     const isJson = (line: string): boolean => {
       try {
-        Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Unknown))(line), identity);
+        Result.getOrThrowWith(S.decodeResult(Json)(line), identity);
         return true;
       } catch {
         return false;
@@ -383,7 +383,7 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
   describe("CliRuntime.main: the audience-override warning is written exactly once, in the decided format", () => {
     const isJson = (line: string): boolean => {
       try {
-        Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Unknown))(line), identity);
+        Result.getOrThrowWith(S.decodeResult(Json)(line), identity);
         return true;
       } catch {
         return false;

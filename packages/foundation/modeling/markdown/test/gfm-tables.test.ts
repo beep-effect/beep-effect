@@ -21,6 +21,8 @@ import * as Str from "effect/String";
 import { lastOffsetOf, offsetOf } from "./support/offsets.ts";
 import type { PhrasingContent, Table, TableAlign } from "@beep/markdown/MarkdownNode";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 /** The first block of a source parsed under a dialect. */
 const firstBlock = (source: string, dialect: "commonmark" | "gfm" = "gfm") =>
   parseBlocks(source, { dialect: dialect }).root.children[0];
@@ -44,11 +46,11 @@ const sketchInline = (nodes: ReadonlyArray<PhrasingContent>): string =>
     A.map(nodes, (node) => {
       switch (node.type) {
         case "text":
-          return Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(node.value), identity);
+          return Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(node.value), identity);
         case "inlineCode":
-          return `code${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(node.value), identity)}`;
+          return `code${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(node.value), identity)}`;
         case "html":
-          return `html${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(node.value), identity)}`;
+          return `html${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(node.value), identity)}`;
         case "link":
           return `link(${node.url})[${sketchInline(node.children)}]`;
         case "linkReference":

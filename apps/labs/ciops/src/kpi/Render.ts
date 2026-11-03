@@ -31,8 +31,9 @@ import type {
   WindowSlice,
 } from "./Schemas.ts";
 
-const pretty = (encoded: unknown): string =>
-  `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }))(encoded), identity)}\n`;
+const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
+
+const pretty = (encoded: unknown): string => `${Result.getOrThrowWith(encodePrettyJson(encoded), identity)}\n`;
 
 /**
  * Renders the adoption table as its committed JSON bytes.

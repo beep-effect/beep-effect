@@ -18,6 +18,8 @@ import * as S from "effect/Schema";
 import type { MemoryFileSystemSeed } from "@beep/memfs/MemoryFileSystem";
 import type { FetchConfigDependency } from "@beep/repo-workspaces/internal/configDependencyFetch";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const ROOT = "/repo";
 
 /** A virtual volume over `seed`, counting every read the ladder makes. */
@@ -141,7 +143,7 @@ it.layer(
 for (const text of ["storeDir: [", "null", "storeDir: 42", 'storeDir: ""']) {
   it.layer(counted({ [`${ROOT}/node_modules/.modules.yaml`]: text }).layer, { timeout: "30 seconds" })((it) => {
     it.effect(
-      `malformed and unusable modules YAML contributes no store (${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(text), identity)})`,
+      `malformed and unusable modules YAML contributes no store (${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(text), identity)})`,
       () =>
         Effect.gen(function* () {
           const failure = yield* Effect.flip(

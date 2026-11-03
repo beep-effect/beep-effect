@@ -29,6 +29,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FigureNumber } from "./Drawings.review.schemas.ts";
 
+const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
+
 const $I = $RepoCliId.create("commands/Drawings/Drawings.critics.schemas");
 
 const CriticRouteBase = LiteralKit(["codex", "grok", "claude", "cursor"]);
@@ -452,7 +454,7 @@ export const encodeCriticReport = (report: CriticReport) => encodeCriticReportJs
  */
 export const criticReportJsonSchema = (): string =>
   Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }))(
+    encodePrettyJson(
       strictKeywords(
         S.toJsonSchemaDocument(CriticReport, { onExcessProperty: "error", referencePolicy: () => undefined }).schema
       )

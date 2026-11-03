@@ -44,6 +44,8 @@ import type * as PlatformError from "effect/PlatformError";
 import type { PlanMode, PlanOwnership, ValidationRequirement } from "./Bootstrap.schemas.ts";
 import type { CapabilitySlug } from "./Goals.schemas.ts";
 
+const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
+
 const decodeGoalSlug = S.decodeEffect(GoalSlug);
 const encodeUnknownMaterializationPlan = S.encodeUnknownEffect(MaterializationPlan);
 
@@ -143,8 +145,7 @@ export const archetypePhases = (archetype: PhaseArchetype): ReadonlyArray<Archet
 
 // Pretty-printed manifest bytes are the hashed file payload. Stringify stays in
 // this sync helper; no schema codec owns this exact two-space file layout.
-const renderPrettyJson = (value: unknown): string =>
-  `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }))(value), identity)}\n`;
+const renderPrettyJson = (value: unknown): string => `${Result.getOrThrowWith(encodePrettyJson(value), identity)}\n`;
 
 const manifestPayload = Effect.fnUntraced(function* (input: BootstrapInput) {
   const packetPath = `goals/${input.slug}`;

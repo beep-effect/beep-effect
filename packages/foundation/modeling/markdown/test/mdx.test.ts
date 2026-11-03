@@ -44,6 +44,8 @@ import * as HashMap from "effect/HashMap";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const ProjectedRecords = S.Array(S.Record(S.String, S.Unknown));
 const isRecords = S.is(ProjectedRecords);
 
@@ -395,7 +397,7 @@ describe("mdx nodes", () => {
           MdxJsxAttribute.make({
             name: "code",
             value: MdxJsxAttributeValueExpression.make({
-              value: Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(props), identity),
+              value: Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(props), identity),
             }),
           }),
         ])

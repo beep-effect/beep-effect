@@ -14,6 +14,8 @@ import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import type { IssueEntry, IssueTreeNode } from "@beep/cli-kit/internal/format";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const sample = S.Struct({ key: S.String, value: S.Json });
 it.effect("issue deduplication distinguishes a dotted key from the same displayed nested path", () =>
   Effect.gen(function* () {
@@ -89,10 +91,7 @@ it.effect.prop(
       const parsed = readTree(tree);
       const ordered = (values: ReadonlyArray<IssueEntry.Encoded>) =>
         A.map(values, (value) =>
-          Result.getOrThrowWith(
-            S.encodeUnknownResult(S.fromJsonString(S.Unknown))([value.path, value.message]),
-            identity
-          )
+          Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)([value.path, value.message]), identity)
         ).sort();
       assert.deepStrictEqual(ordered(parsed), ordered(input));
       assert.deepStrictEqual(issueTreeChildren(parsed), tree);

@@ -378,16 +378,10 @@ describe("GitHubToken", () => {
         (_input: Parameters<typeof globalThis.fetch>[0], init: Parameters<typeof globalThis.fetch>[1]) => {
           seen.push(new Headers(init?.headers).get("authorization"));
           return Promise.resolve(
-            new Response(
-              Result.getOrThrowWith(
-                S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ login: "acme" }),
-                identityFunction
-              ),
-              {
-                status: 200,
-                headers: { "content-type": "application/json" },
-              }
-            )
+            new Response(Result.getOrThrowWith(S.encodeUnknownResult(Json)({ login: "acme" }), identityFunction), {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            })
           );
         },
         { preconnect: () => {} }

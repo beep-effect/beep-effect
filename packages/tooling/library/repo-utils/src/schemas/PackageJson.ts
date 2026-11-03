@@ -40,6 +40,8 @@ import type { PackageFormatOptions } from "@beep/package-json/Package";
 import type * as Exit from "effect/Exit";
 import type { DomainError } from "../errors/index.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const $I = $RepoUtilsId.create("schemas/PackageJson");
 
 const strictDecodeOptions = { onExcessProperty: "error" as const };
@@ -970,7 +972,7 @@ export class PackageJson extends PackageManifest.extend<PackageJson>($I`PackageJ
     const encoded = Result.getOrThrowWith(S.encodeUnknownResult(PackageJson)(this), identity);
     return Result.getOrThrowWith(
       PackageJsonFormat.formatToString(
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(encoded), identity),
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(encoded), identity),
         options
       ),
       identity
@@ -1282,7 +1284,7 @@ export const encodePackageJsonPrettyEffect: (input: unknown) => Effect.Effect<st
     return yield* jsonStringifyPretty(validated);
   });
 
-const decodeUnknownFromJsonString = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
+const decodeUnknownFromJsonString = S.decodeUnknownEffect(UnknownJson);
 
 /**
  * Read a `package.json` file from disk and decode it into a strict `PackageJson`.

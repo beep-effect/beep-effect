@@ -53,6 +53,8 @@ import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as Path from "effect/Path";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const decodeUnknownYeetWatchEventJson = S.decodeUnknownEffect(S.fromJsonString(YeetWatchEvent));
 
 const contextFor = (repoRoot: string): RepoRunContext =>
@@ -98,7 +100,7 @@ const viewJson = (
   isCrossRepository = false
 ): string =>
   Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    S.encodeUnknownResult(UnknownJson)({
       headRefOid: headSha,
       id: "PR_watch",
       isCrossRepository,
@@ -128,7 +130,7 @@ interface CheckRowFixture {
 
 const checksJson = (rows: ReadonlyArray<CheckRowFixture>) =>
   Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))(
+    S.encodeUnknownResult(UnknownJson)(
       A.map(rows, (row) => ({
         bucket: row.bucket,
         description: row.description,
@@ -159,7 +161,7 @@ const threadsJson = (
   author = "author"
 ) =>
   Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    S.encodeUnknownResult(UnknownJson)({
       data: {
         node: {
           author: { login: author },
@@ -812,7 +814,7 @@ describe("collectYeetWatchSnapshot", () => {
           view: {
             exitCode: 0,
             output: Result.getOrThrowWith(
-              S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+              S.encodeUnknownResult(UnknownJson)({
                 headRefOid: "aaa111",
                 id: "PR_watch",
                 isDraft: false,
@@ -828,10 +830,7 @@ describe("collectYeetWatchSnapshot", () => {
           checks: { exitCode: 0, output: checksJson([]) },
           threads: {
             exitCode: 0,
-            output: Result.getOrThrowWith(
-              S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ data: { node: null } }),
-              identity
-            ),
+            output: Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)({ data: { node: null } }), identity),
           },
         },
       ],
@@ -1531,7 +1530,7 @@ describe("registration patience", () => {
 describe("comment rows and --until-event", () => {
   const issueCommentsJson = (comments: ReadonlyArray<{ readonly id: number; readonly createdAt: string }>) =>
     Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))([
+      S.encodeUnknownResult(UnknownJson)([
         A.map(comments, (comment) => ({
           body: `comment ${comment.id}`,
           created_at: comment.createdAt,

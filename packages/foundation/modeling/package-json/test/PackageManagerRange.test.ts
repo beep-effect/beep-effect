@@ -230,7 +230,7 @@ describe("PackageManagerRange.fromDevEngine", () => {
 describe("PackageManagerRange devEngines entry as a plain object", () => {
   it("accepts the encoded shape read straight off disk, with no DevEngine construction", () => {
     const raw: unknown = Result.getOrThrowWith(
-      S.decodeResult(S.fromJsonString(S.Unknown))('{"name":"pnpm","version":"^12.6.0","onFail":"download"}'),
+      S.decodeResult(UnknownJson)('{"name":"pnpm","version":"^12.6.0","onFail":"download"}'),
       identity
     );
     assertTrue(S.is(DevEngineEntry)(raw));
@@ -312,6 +312,8 @@ describe("PackageManagerRange operator, baseVersion and withVersion", () => {
 
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { $PackageJsonId } from "@beep/identity/packages";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 describe("PackageManagerRange.fromDevEngineResult property", () => {
   it.effect.prop(

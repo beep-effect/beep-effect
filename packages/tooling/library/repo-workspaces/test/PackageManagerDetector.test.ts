@@ -14,20 +14,19 @@ import * as S from "effect/Schema";
 import { platform } from "./support/fixtures.ts";
 import type { Tree } from "./support/fixtures.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const detectorOver = (tree: Tree) => PackageManagerDetector.layer.pipe(Layer.provideMerge(platform(tree)));
 
 const corepack = (spec: string) =>
   Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", version: "0.0.0", packageManager: spec }),
+    S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0", packageManager: spec }),
     identity
   );
 
 /** A root manifest carrying any combination of the two manager-declaring fields. */
 const manifestWith = (fields: Record<string, unknown>) =>
-  Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", version: "0.0.0", ...fields }),
-    identity
-  );
+  Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0", ...fields }), identity);
 
 describe("PackageManagerDetector — pnpm", () => {
   layer(
@@ -55,7 +54,7 @@ describe("PackageManagerDetector — pnpm with no corepack field", () => {
     detectorOver({
       "/repo/pnpm-workspace.yaml": "packages:\n  - 'packages/*'\n",
       "/repo/package.json": Result.getOrThrowWith(
-        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", version: "0.0.0" }),
+        S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0" }),
         identity
       ),
     }),
@@ -118,7 +117,7 @@ describe("PackageManagerDetector — a bun lockfile WITHOUT the corepack field",
     detectorOver({
       "/repo/bun.lock": "",
       "/repo/package.json": Result.getOrThrowWith(
-        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+        S.encodeUnknownResult(UnknownJson)({
           name: "root",
           version: "0.0.0",
           workspaces: ["packages/*"],
@@ -159,7 +158,7 @@ describe("PackageManagerDetector — npm", () => {
   layer(
     detectorOver({
       "/repo/package.json": Result.getOrThrowWith(
-        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+        S.encodeUnknownResult(UnknownJson)({
           name: "root",
           version: "0.0.0",
           workspaces: ["packages/*"],
@@ -189,7 +188,7 @@ describe("PackageManagerDetector — NO EVIDENCE AT ALL", () => {
   layer(
     detectorOver({
       "/repo/package.json": Result.getOrThrowWith(
-        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "solo", version: "1.0.0" }),
+        S.encodeUnknownResult(UnknownJson)({ name: "solo", version: "1.0.0" }),
         identity
       ),
     }),
@@ -258,7 +257,7 @@ describe("PackageManagerDetector — standalone pnpm repo with no manifest hint"
     detectorOver({
       "/repo/pnpm-lock.yaml": "lockfileVersion: '9.0'\n",
       "/repo/package.json": Result.getOrThrowWith(
-        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "solo", version: "1.0.0" }),
+        S.encodeUnknownResult(UnknownJson)({ name: "solo", version: "1.0.0" }),
         identity
       ),
     }),
@@ -282,7 +281,7 @@ describe("PackageManagerDetector — standalone npm repo", () => {
     detectorOver({
       "/repo/package-lock.json": "{}",
       "/repo/package.json": Result.getOrThrowWith(
-        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "solo", version: "1.0.0" }),
+        S.encodeUnknownResult(UnknownJson)({ name: "solo", version: "1.0.0" }),
         identity
       ),
     }),
@@ -339,7 +338,7 @@ describe("PackageManagerDetector — a STRAY yarn.lock in a standalone repo", ()
     detectorOver({
       "/repo/yarn.lock": "",
       "/repo/package.json": Result.getOrThrowWith(
-        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "solo", version: "1.0.0" }),
+        S.encodeUnknownResult(UnknownJson)({ name: "solo", version: "1.0.0" }),
         identity
       ),
     }),
@@ -446,7 +445,7 @@ describe("PackageManagerDetector — the workspace tier still wins", () => {
       "/repo/pnpm-workspace.yaml": "packages: []\n",
       "/repo/package-lock.json": "{}",
       "/repo/package.json": Result.getOrThrowWith(
-        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", version: "0.0.0" }),
+        S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0" }),
         identity
       ),
     }),
@@ -517,7 +516,7 @@ describe("PackageManagerDetector — a malformed corepack field", () => {
     detectorOver({
       "/repo/pnpm-workspace.yaml": "packages: []\n",
       "/repo/package.json": Result.getOrThrowWith(
-        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", version: "0.0.0", packageManager: "pnpm" }),
+        S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0", packageManager: "pnpm" }),
         identity
       ),
     }),

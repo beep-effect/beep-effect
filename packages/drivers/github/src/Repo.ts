@@ -22,6 +22,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const $I = $GithubId.create("Repo");
 
 /**
@@ -69,7 +71,7 @@ export class InvalidRepoRefError extends S.TaggedError<InvalidRepoRefError, { re
    * @since 0.0.0
    */
   override get message(): string {
-    return `not an owner/repo slug: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(this.input), identity)}`;
+    return `not an owner/repo slug: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(this.input), identity)}`;
   }
 }
 

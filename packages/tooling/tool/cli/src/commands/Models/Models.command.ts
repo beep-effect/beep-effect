@@ -59,6 +59,8 @@ import type { ModelsRecoveryReport } from "./Models.exchange.schemas.ts";
 import type { Locator, ModelsApplyMode, ModelsManifest } from "./Models.manifest.schemas.ts";
 import type { DriftFinding } from "./Models.report.schemas.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const encodeReport = S.encodeUnknownEffect(ModelsCheckReport);
 const encodeSnapshot = S.encodeUnknownEffect(CatalogSnapshot);
 
@@ -157,13 +159,10 @@ const renderFinding = (entry: DriftFinding): string =>
   `models: ${entry.kind} ${entry.targetId} [${entry.locator._tag}] ${entry.path}` +
   pipe(
     entry.current,
-    O.map(
-      (current) =>
-        ` current=${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(current), identity)}`
-    ),
+    O.map((current) => ` current=${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(current), identity)}`),
     O.getOrElse(() => "")
   ) +
-  ` expected=${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(entry.expected), identity)}`;
+  ` expected=${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(entry.expected), identity)}`;
 
 // An offline run leaves `diff` empty on purpose, so the counts would read as
 // "catalog stable" to an operator. Say which of the two it is.

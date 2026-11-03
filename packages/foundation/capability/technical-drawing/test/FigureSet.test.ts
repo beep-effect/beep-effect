@@ -69,6 +69,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { OutlineSeparation, ShadingPlan } from "@beep/technical-drawing";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 // A fake engine: every view projects a unit square, except that the "rear"
 // camera (eye +Y) projects the square shifted, so omission proofs can fail.
 const RenderManifestJson = S.fromJsonString(RenderManifest);
@@ -172,7 +174,7 @@ const cleanMetrics = (dpi: number, antiAliased: boolean) =>
 
 // the fake backend writes the fonts it was given as JSON, and a test reads them back
 const encodeSheetFonts = S.encodeEffect(S.fromJsonString(SheetFonts));
-const decodeJson = S.decodeEffect(S.fromJsonString(S.Unknown));
+const decodeJson = S.decodeEffect(UnknownJson);
 
 const fakeBackend = Layer.effect(
   PdfBackend,
@@ -228,7 +230,7 @@ const spec = (
   overlays: ReadonlyArray<Readonly<Record<string, unknown>>> = []
 ) =>
   Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    S.encodeUnknownResult(UnknownJson)({
       ...extra,
       title: "Synthetic block",
       // a spec without overlays leaves the key out, as specs written before overlay lines did

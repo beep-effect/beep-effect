@@ -11,6 +11,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const encodeBoxError = S.encodeResult(S.fromJsonString(B.BoxError));
 const encodeBoxApiFailureConflict = S.encodeResult(B.BoxApiFailureConflict);
 const decodeBoxApiFailureConflictOption = S.decodeUnknownOption(B.BoxApiFailureConflict);
@@ -214,11 +216,8 @@ describe("@beep/box conflict detail", () => {
       const error = B.BoxError.fromUnknown("uploads.uploadFile", sdkFailure(body));
       return [
         encodeBoxError(error).pipe(Result.getOrThrow),
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(error), identity),
-        Result.getOrThrowWith(
-          S.encodeUnknownResult(S.fromJsonString(S.Unknown))(B.BoxError.toDiagnostic(error)),
-          identity
-        ),
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(error), identity),
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(B.BoxError.toDiagnostic(error)), identity),
         String(error),
         error.message,
       ];

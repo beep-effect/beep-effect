@@ -11,6 +11,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { FileFormatFamily } from "@beep/file-processing/Strategy";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const decodePosixPath = S.decodeEffect(PosixPath);
 
 const textEncoder = new TextEncoder();
@@ -89,7 +91,7 @@ export const tikaRmetaResponse: {
   (args) => R.has(fixtureContent, args[0]),
   (format: TikaFixtureFormat, content: string = fixtureContent[format]): string =>
     Result.getOrThrowWith(
-      S.encodeUnknownResult(S.fromJsonString(S.Unknown))([
+      S.encodeUnknownResult(UnknownJson)([
         {
           "Content-Type": fixtureContentTypes[format],
           "dc:title": `${format} fixture`,

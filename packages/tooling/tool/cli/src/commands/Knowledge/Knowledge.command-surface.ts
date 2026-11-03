@@ -45,6 +45,8 @@ import type {
   SourceFile,
 } from "ts-morph";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const $I = $RepoCliId.create("commands/Knowledge/Knowledge.command-surface");
 
 const COMMAND_SOURCE_ROOT = "packages/tooling/tool/cli/src/commands";
@@ -1101,7 +1103,7 @@ import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Stdio from "effect/Stdio"
 import * as Stream from "effect/Stream"
-import { rootCommand } from ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(rootCommandModule), identity)}
+import { rootCommand } from ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(rootCommandModule), identity)}
 const project = (command) => ({
   name: command.name,
   alias: command.alias ?? null,

@@ -29,6 +29,8 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { fixtureText } from "./fixture-text.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const firstMap = (doc: YamlDocument): YamlMap => {
   assert.instanceOf(doc.contents, YamlMap);
   assert.ok(S.is(YamlMap)(doc.contents));
@@ -1155,7 +1157,7 @@ describe("comment fidelity (#127)", () => {
     }
 
     for (const input of inlineInputs) {
-      it(`idempotence + meaning preservation — ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(input), identity)}`, () => {
+      it(`idempotence + meaning preservation — ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(input), identity)}`, () => {
         const once = YamlFormat.formatToString(input);
         assert.strictEqual(YamlFormat.formatToString(once), once);
         assert.deepStrictEqual(

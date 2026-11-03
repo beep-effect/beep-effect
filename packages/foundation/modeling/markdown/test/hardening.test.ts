@@ -74,6 +74,8 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { renderHtml } from "./support/htmlWriter.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 // Vitest's threads pool runs this regression in Node, whose argument limit
 // rejects the former segment spread even though Bun accepts it.
 it.effect("retains positions when promoting a 150,000-line setext heading", () =>
@@ -356,7 +358,7 @@ describe("adversarial characters", () => {
       assert.notInclude(
         rendered,
         "\u0000",
-        `a NUL survived: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(source), identity)}`
+        `a NUL survived: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(source), identity)}`
       );
     }
   });
@@ -365,7 +367,7 @@ describe("adversarial characters", () => {
     for (const source of ["a\uD800b\n", "a\uDFFFb\n", "\uD800\n", "*\uD800*\n", "[\uD800](/u)\n"]) {
       assert.doesNotThrow(
         () => renderHtml(parseBlocks(source).root),
-        `failed for ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(source), identity)}`
+        `failed for ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(source), identity)}`
       );
     }
   });
@@ -381,7 +383,7 @@ describe("adversarial characters", () => {
     for (const source of ["`code", "[link](", "![img][", "<!-- comment", "***", "> ", "- ", "```"]) {
       assert.doesNotThrow(
         () => renderHtml(parseBlocks(source).root),
-        `failed for ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(source), identity)}`
+        `failed for ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(source), identity)}`
       );
     }
   });
@@ -392,7 +394,7 @@ describe("adversarial characters", () => {
       assert.strictEqual(
         root.children.length,
         0,
-        `failed for ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(source), identity)}`
+        `failed for ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(source), identity)}`
       );
     }
   });

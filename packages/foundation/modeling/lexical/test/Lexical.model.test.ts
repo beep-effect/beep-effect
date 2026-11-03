@@ -41,13 +41,15 @@ import * as SchemaAST from "effect/SchemaAST";
 import { createEditor } from "lexical";
 import type { SerializedTableCellNode } from "@lexical/table";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 // LexicalNode's strict decoders reject excess properties, as the retired statics did.
 const strictSemanticParseOptions = { onExcessProperty: "error" } satisfies SchemaAST.ParseOptions;
 const decodeStrictLexicalNodeResult = S.decodeUnknownResult(LexicalNode, strictSemanticParseOptions);
 const decodeStrictLexicalNodeOption = S.decodeUnknownOption(LexicalNode, strictSemanticParseOptions);
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
-const encodeJsonEffect = S.encodeEffect(S.fromJsonString(S.Unknown));
+const encodeJsonEffect = S.encodeEffect(UnknownJson);
 
 const decodeEditorStateWireFromJson = S.decodeEffect(EditorStateWireFromJson);
 const decodeEditorStateFromJsonResult = S.decodeResult(EditorStateFromJson, { onExcessProperty: "error" });
@@ -354,13 +356,10 @@ describe("Lexical.model", { concurrent: false }, () => {
   });
 
   it("round-trips through the JSON string codec", () => {
-    const json = Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(fixture), identity);
+    const json = Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(fixture), identity);
     const state = decoded(decodeEditorStateFromJsonResult(json));
     expect(
-      Result.getOrThrowWith(
-        S.decodeResult(S.fromJsonString(S.Unknown))(decoded(encodeEditorStateFromJsonResult(state))),
-        identity
-      )
+      Result.getOrThrowWith(S.decodeResult(UnknownJson)(decoded(encodeEditorStateFromJsonResult(state))), identity)
     ).toEqual(fixture);
   });
 

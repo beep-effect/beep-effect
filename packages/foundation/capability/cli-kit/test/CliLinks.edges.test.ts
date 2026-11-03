@@ -19,10 +19,10 @@ import * as Str from "effect/String";
 import { contextOf } from "./helpers/renderContext.ts";
 import type { CliLinksShape, EditorLinks, LinkTargetInput } from "@beep/cli-kit";
 
+const Json = S.fromJsonString(S.Unknown);
+
 /** A message part as `Array#join` writes it: a nullish part is empty. */
 const joinPart = (part: unknown): string => (P.isNullish(part) ? "" : String(part));
-
-const Json = S.fromJsonString(S.Unknown);
 
 const ESC = String.fromCharCode(0x1b);
 const BEL = String.fromCharCode(7);
@@ -185,7 +185,7 @@ describe("CliLinks.linker writes a URL as OSC 8 wants it: bytes outside 32 to 12
       for (const ch of written)
         assert.isTrue(
           O.exists(Str.charCodeAt(ch, 0), (code) => code >= 32 && code <= 126),
-          `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(url), identity)} -> ${written}`
+          `${Result.getOrThrowWith(S.encodeUnknownResult(Json)(url), identity)} -> ${written}`
         );
     }
   });

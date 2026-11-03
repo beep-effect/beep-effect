@@ -15,6 +15,8 @@ import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 /** Build the fixture graph in a scope that owns its acquired resources. */
 const provideLayer =
   <ROut, E, RIn>(layer: Layer.Layer<ROut, E, RIn>) =>
@@ -97,7 +99,7 @@ describe("Xdg", () => {
     // takes the absolute-only rule of the other variables, POSIX or Windows.
     for (const home of ["relative/home", "./home", " /home/ada", "~/ada", "C:relative"]) {
       it.effect(
-        `rejects a relative HOME ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(home), identity)} with XdgEnvError`,
+        `rejects a relative HOME ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(home), identity)} with XdgEnvError`,
         () =>
           Effect.gen(function* () {
             const error = yield* Effect.flip(Effect.void.pipe(provideLayer(env({ HOME: home }))));
@@ -111,7 +113,7 @@ describe("Xdg", () => {
 
     for (const home of ["/home/ada", "C:\\Users\\ada", "D:/Users/ada", "\\\\server\\home"]) {
       it.effect(
-        `keeps an absolute HOME ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(home), identity)} verbatim`,
+        `keeps an absolute HOME ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(home), identity)} verbatim`,
         () =>
           Effect.gen(function* () {
             const paths = yield* Xdg;
@@ -145,7 +147,7 @@ describe("Xdg", () => {
     for (const [variable, field] of posixDirectories) {
       for (const value of [" ", "relative", "~/dir", " /leading-space", "C:\\Users\\ada"]) {
         it.effect(
-          `ignores ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity)} in ${variable}`,
+          `ignores ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity)} in ${variable}`,
           () =>
             Effect.gen(function* () {
               const paths = yield* Xdg;

@@ -40,6 +40,8 @@ import type { CodexCaptureSource } from "./Findings.capture.schemas.ts";
 import type { CodexFindingRecord, CodexPacketPlan } from "./Findings.schemas.ts";
 import type { CodexCaptureMethod } from "./Findings.triage.schemas.ts";
 
+const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
+
 const $I = $RepoCliId.create("commands/Codex/Findings.packet");
 
 /**
@@ -85,8 +87,7 @@ const pendingIn = (phase: string): string => `_pending ${phase}_`;
 const VALIDATION_PHASE = "P2";
 const REMEDIATION_PHASE = "P4";
 
-const json = (value: unknown): string =>
-  `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }))(value), identity)}\n`;
+const json = (value: unknown): string => `${Result.getOrThrowWith(encodePrettyJson(value), identity)}\n`;
 
 const lines = (value: ReadonlyArray<string>): string => `${A.join(value, "\n")}\n`;
 

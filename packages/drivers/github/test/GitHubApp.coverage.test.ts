@@ -15,6 +15,8 @@ import * as Stream from "effect/Stream";
 import { scriptedFetch } from "./support/fixtures.ts";
 import type { Reply } from "./support/fixtures.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const key = await crypto.subtle.generateKey(
   { name: "RSASSA-PKCS1-v1_5", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" },
   true,
@@ -78,7 +80,7 @@ describe("GitHubApp uncovered contracts", () => {
   );
   for (const permissions of [null, ["read", 42], { contents: "write", invalid: 42 }]) {
     withApp(
-      `permissions normalize ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(permissions), identity)}`,
+      `permissions normalize ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(permissions), identity)}`,
       [minted(permissions)],
       (app) =>
         Effect.gen(function* () {
@@ -92,7 +94,7 @@ describe("GitHubApp uncovered contracts", () => {
   }
   for (const installations of [[], [{ id: 7, account: null }]]) {
     withApp(
-      `missing owner in ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(installations), identity)}`,
+      `missing owner in ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(installations), identity)}`,
       [{ status: 200, body: installations }],
       (app) =>
         Effect.gen(function* () {

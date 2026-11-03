@@ -15,6 +15,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { PhrasingContent } from "@beep/markdown/MarkdownNode";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 /** The phrasing children of a source that parses to a single leaf block. */
 const inlinesOf = (source: string, dialect: "commonmark" | "gfm" = "gfm"): ReadonlyArray<PhrasingContent> => {
   const [first] = parseBlocks(source, { dialect: dialect }).root.children;
@@ -31,11 +33,11 @@ const sketch = (nodes: ReadonlyArray<PhrasingContent>): string =>
     A.map(nodes, (node) => {
       switch (node.type) {
         case "text":
-          return Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(node.value), identity);
+          return Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(node.value), identity);
         case "inlineCode":
-          return `code${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(node.value), identity)}`;
+          return `code${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(node.value), identity)}`;
         case "html":
-          return `html${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(node.value), identity)}`;
+          return `html${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(node.value), identity)}`;
         case "link":
           return `link(${node.url})[${sketch(node.children)}]`;
         case "image":

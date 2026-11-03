@@ -18,6 +18,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { JsoncNode, JsoncPath } from "@beep/jsonc/JsoncNode";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const FORMATTING = { insertSpaces: true, tabSize: 2, eol: "\n" } as const;
 // The repository's Biome JSON line width.
 const JSON_LINE_WIDTH = 80;
@@ -46,7 +48,7 @@ const renderObject = (record: Readonly<Record<string, unknown>>, indent: string)
   const entries = R.toEntries(record);
   if (A.isReadonlyArrayEmpty(entries)) return "{}";
   const lines = A.map(entries, ([key, member], index) => {
-    const prefix = `${indent}  ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(key), identity)}: `;
+    const prefix = `${indent}  ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(key), identity)}: `;
     return `${prefix}${renderJson(member, `${indent}  `, prefix.length, trailingWidth(index, entries.length))}`;
   });
   return `{\n${A.join(lines, ",\n")}\n${indent}}`;
@@ -57,7 +59,7 @@ const renderObject = (record: Readonly<Record<string, unknown>>, indent: string)
 const renderJson = (value: unknown, indent: string, column: number, trailing: number): string => {
   if (A.isArray(value)) return renderArray(value, indent, column, trailing);
   if (P.isObject(value) && value !== null) return renderObject(value as Readonly<Record<string, unknown>>, indent);
-  return Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity);
+  return Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity);
 };
 
 /**

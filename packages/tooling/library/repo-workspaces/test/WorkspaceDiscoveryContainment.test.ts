@@ -23,13 +23,15 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { WorkspaceDiscoveryOptions } from "@beep/repo-workspaces";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 type Seed = Parameters<typeof MemoryFileSystem.layerWith>[0];
 
 const manifest = (name: string): string =>
-  Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name, version: "1.0.0" }), identity);
+  Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)({ name, version: "1.0.0" }), identity);
 const root = (patterns: ReadonlyArray<string>): string =>
   Result.getOrThrowWith(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    S.encodeUnknownResult(UnknownJson)({
       name: "root",
       version: "0.0.0",
       private: true,

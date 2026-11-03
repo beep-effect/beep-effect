@@ -42,6 +42,8 @@ import * as Str from "effect/String";
 import { micromark } from "micromark";
 import { gfm, gfmHtml } from "micromark-extension-gfm";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 // Node 26 exposes a configurable experimental `localStorage` getter even when
 // no `--localstorage-file` was supplied. Vitest consequently sees the property
 // as already present and does not install jsdom's working implementation, while
@@ -266,8 +268,7 @@ const bufferToArrayBuffer = (buffer: Buffer): ArrayBuffer => {
 
 const file = (path: string | URL): BunFileShim => ({
   arrayBuffer: async () => bufferToArrayBuffer(await NodeFSP.readFile(path)),
-  json: async () =>
-    Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Unknown))(await NodeFSP.readFile(path, "utf8")), identity),
+  json: async () => Result.getOrThrowWith(S.decodeResult(UnknownJson)(await NodeFSP.readFile(path, "utf8")), identity),
   text: () => NodeFSP.readFile(path, "utf8"),
 });
 
@@ -624,7 +625,7 @@ const parseJsonlChunk: BunTestShim["JSONL"]["parseChunk"] = (content) => {
       continue;
     }
     try {
-      values.push(Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Unknown))(line), identity));
+      values.push(Result.getOrThrowWith(S.decodeResult(UnknownJson)(line), identity));
       read += lineWithTerminatorLength;
     } catch (cause) {
       return {

@@ -35,6 +35,8 @@ import * as S from "effect/Schema";
 import { applyTagfilter, escapeXml, normalizeLabel, normalizeUri, renderHtml } from "../support/htmlWriter.ts";
 import { normalizeHtml } from "../support/normalizeHtml.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const p = Position.synthetic;
 
 /** A document wrapping the given flow children. */
@@ -916,7 +918,7 @@ describe("normalizeHtml", () => {
     ];
 
     for (const [input, expected] of cases) {
-      it(`normalizes ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(input), identity)}`, () => {
+      it(`normalizes ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(input), identity)}`, () => {
         assert.strictEqual(normalizeHtml(input), expected);
       });
     }

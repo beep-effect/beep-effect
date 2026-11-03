@@ -8,6 +8,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const VALID = { layers: [["app"], ["core"]], tooling: [], unconstrained: ["@e2e/*"] };
 
 describe("LayerPolicy.decode", () => {
@@ -76,10 +78,10 @@ describe("LayerPolicy.decode", () => {
 describe("LayerPolicy.load", () => {
   layer(
     MemoryFileSystem.layerWith({
-      "/repo/layers.json": Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(VALID), identity),
+      "/repo/layers.json": Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(VALID), identity),
       "/repo/broken.json": "{ not json",
       "/repo/foreign.json": Result.getOrThrowWith(
-        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ ...VALID, harness: ["@e2e/*"] }),
+        S.encodeUnknownResult(UnknownJson)({ ...VALID, harness: ["@e2e/*"] }),
         identity
       ),
     }),

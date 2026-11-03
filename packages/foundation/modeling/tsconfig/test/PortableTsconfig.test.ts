@@ -11,6 +11,8 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 describe("PortableTsconfig runtime models", () => {
   it("validates and decodes plain projection results and exact optional options", () => {
     const portable = PortableTsconfig.make({ strict: true });
@@ -282,9 +284,7 @@ describe("PortableTsconfig.make — from a bare CompilerOptions.Type", () => {
   it("output survives a JSON.stringify round-trip", () => {
     const portable = PortableTsconfig.make(fullOptionZoo);
     const roundTripped = Result.getOrThrowWith(
-      S.decodeResult(S.fromJsonString(S.Unknown))(
-        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(portable), identity)
-      ),
+      S.decodeResult(UnknownJson)(Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(portable), identity)),
       identity
     );
     assert.deepStrictEqual(roundTripped, portable);
@@ -394,7 +394,7 @@ describe("PortableTsconfig.make — the includeTypes opt-in", () => {
       const { compilerOptions } = PortableTsconfig.make(fullOptionZoo, options);
       assert.isFalse(
         "types" in compilerOptions,
-        `expected "types" dropped for ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(options), identity)}`
+        `expected "types" dropped for ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(options), identity)}`
       );
     }
   });

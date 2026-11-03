@@ -21,6 +21,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
+
 const $I = $PracticeClaudeModId.create("build-plugin");
 
 const PluginName = "oip-practice";
@@ -51,8 +53,7 @@ export class PluginBuildFailed extends S.TaggedError<PluginBuildFailed, { readon
   $I.annote("PluginBuildFailed", { description: "Bundling the plugin's hooks module failed." })
 ) {}
 
-const json = (value: unknown): string =>
-  `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }))(value), identity)}\n`;
+const json = (value: unknown): string => `${Result.getOrThrowWith(encodePrettyJson(value), identity)}\n`;
 
 const bundle = (entry: string, outfile: string) =>
   Effect.tryPromise({

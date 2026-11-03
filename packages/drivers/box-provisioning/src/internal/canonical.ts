@@ -18,6 +18,8 @@ import { BoxProvisioningPlan } from "../BoxProvisioningPlan.ts";
 import type * as SchemaIssue from "effect/SchemaIssue";
 import type { BoxLogicalKey } from "../BoxProvisioningIntent.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const decodeUnknownJson = S.decodeUnknownEffect(S.Json);
 
 type CanonicalEntry = readonly [key: string, value: unknown];
@@ -29,7 +31,7 @@ const utf8 = new TextEncoder();
 
 const canonicalJson = (value: unknown): string => {
   if (P.isNull(value) || P.isString(value) || P.isNumber(value) || P.isBoolean(value)) {
-    return Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity);
+    return Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity);
   }
   if (A.isArray(value)) {
     return `[${A.join(A.map(value, canonicalJson), ",")}]`;
@@ -40,7 +42,7 @@ const canonicalJson = (value: unknown): string => {
       A.map(
         entries,
         ([key, entry]) =>
-          `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(key), identity)}:${canonicalJson(entry)}`
+          `${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(key), identity)}:${canonicalJson(entry)}`
       ),
       ","
     )}}`;
