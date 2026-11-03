@@ -28,9 +28,11 @@ There is substantive reinvention of generic orchestration and serialization.
 The hard-stop process contract justifies a narrow owned backend and retirement
 policy. It does not justify implementing an independent worker framework.
 
-Prefer typed Effect RPC over a bounded one-job process transport, expose that
-backend through WorkerPlatform/WorkerRunnerPlatform, and use Effect transactions
-for atomic admission. Evaluate SchemaBinary before extending the private
+Prefer typed Effect RPC directly over the existing bounded one-job Effect
+Stream/Sink process transport, and use Effect transactions for atomic admission.
+The [stdio follow-up](2026-11-03-effect-stdio-rpc-follow-up.md) supersedes the
+initial recommendation to require WorkerPlatform/WorkerRunnerPlatform: those
+services are optional when the backend is already a backpressured byte stream. Evaluate SchemaBinary before extending the private
 JSON/base64 formats. Merely wrapping the current framework in Worker.makeUnsafe
 would be cosmetic; adopting the stock worker RPC pool unchanged would lose
 important ownership guarantees.
@@ -151,8 +153,10 @@ retrying acquisition. Never spawn a process or issue a single-use allocation
 capability inside a transaction that may retry.
 
 Use ChildProcessSpawner to acquire the exact child in an owned scope, with a
-separate retirement owner retaining the handle and native lease. Provide worker
-services over bounded stdio and typed RPC operations for HTML and regex. RPC
+separate retirement owner retaining the handle and native lease. Provide
+RpcClient.Protocol and RpcServer.Protocol directly over bounded stdio, using
+typed RPC operations for HTML and regex. Worker services are optional for a
+future message-oriented backend. RPC
 completion yields a candidate result; only full validation and successful
 retirement authorize publication. A timeout cannot be renewed by progress.
 Cancellation triggers hard termination and captured cleanup; unconfirmed cleanup
@@ -201,9 +205,14 @@ five-second finalizer as sufficient containment, not WorkerPlatform, typed RPC o
 upstream orchestration. Preserve its binding safety obligations. The initial
 2026-11-02 reuse review was incomplete and is supplemented by this audit.
 
-Make transactional admission and shared typed worker transport concrete goal
-work before extending the unfinished regex supervisor. Reconsider JSON/base64
+Transactional admission is implemented in f6c8c62a45. Make shared typed stdio RPC
+transport concrete goal work before extending the unfinished regex supervisor. Reconsider JSON/base64
 as an implementation choice, preserving all safety and fidelity duties.
 
 This audit records recommendations and evidence. It does not implement the
 migration, waive an obligation, or prove exhaustive parity for the final engine.
+
+The [stdio RPC follow-up](2026-11-03-effect-stdio-rpc-follow-up.md) also records
+existing makeProtocolStdio, its unconditional retries, socket alternatives and
+pre-run buffering in the Protocol.make convenience constructors. It corrects
+the transport recommendation without changing the safety/fidelity obligations.
