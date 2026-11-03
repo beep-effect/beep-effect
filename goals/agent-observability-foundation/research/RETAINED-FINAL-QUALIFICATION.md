@@ -221,3 +221,20 @@ Later checks cannot repair the missing historical readiness for PR2612. Draft
 state and a body reservation are coordination controls; shared unrestricted
 GitHub credentials can bypass them. Do not claim exclusive technical ownership
 without an enforced credential or server-side release boundary.
+
+## Corrective PR2644 source comparison
+
+[PR2644](https://github.com/beep-effect/beep-effect/pull/2644) is the held corrective
+final declaration. Its [comparison](../ops/history/owner-closeout-source-applicability-20261103.json)
+consumes accepted main `453364b0` through a normal merge. All selected bytes and
+membership match V3: 234/249, 82/84, 86/90 and 85/89. All V3 baseline values remain
+exact; PolicyRootFiles adds one identity at 95.23 branch coverage. The original
+ProofShadow 100 percent floors remain unchanged. This compares committed data;
+it does not remeasure the entire baseline.
+
+The accepted formatter, lint planning and Goals reader changes are outside
+that selected footprint. Their scope is explicit; final-head hosted checks
+remain necessary. Older component and backend executions retain their original
+heads. Current exact-root admission remains false, all seven real harnesses
+remain Unknown, and the recovery hold stays intact. The original PR2612 result
+is unsatisfied. PR2644 has no completion claim until actual acceptance occurs.

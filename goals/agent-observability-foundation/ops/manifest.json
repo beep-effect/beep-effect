@@ -21,7 +21,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Achieved only after final PR2612 is merged with final-head hosted checks and review/window requirements satisfied, a positive exact-head readiness verdict preserved before merge, and a canonical completion receipt actually verified for the accepted head.",
+    "statement": "Achieved only after final PR2644 is merged with final-head hosted checks and review/window requirements satisfied, a positive exact-head readiness verdict preserved before merge, and a canonical completion receipt actually verified for the accepted head.",
     "grandfathered": false,
     "pullRequests": [
       {
@@ -70,13 +70,25 @@
       },
       {
         "number": 2612,
+        "role": "supporting"
+      },
+      {
+        "number": 2635,
+        "role": "supporting"
+      },
+      {
+        "number": 2641,
+        "role": "supporting"
+      },
+      {
+        "number": 2644,
         "role": "final"
       }
     ],
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/fix_agent-observability-retained-final-6992b5095ab2/verdict.json",
+        "ref": ".beep/yeet/runs/fix_observability-owner-closeout-54404d5528fb/verdict.json",
         "gating": true
       },
       {
@@ -146,13 +158,13 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "Routine CI queues, failing checks, local admission refusals and publish/verify sequencing are autonomous repair or routing work. Keep the authoritative observer; do not pause merely because a blocker repeats. Escalate concrete missing authority or required operator input after authorized paths are exhausted."
   ],
-  "statusNote": "Final PR2612 remains reserved exclusively to this chat. Completion is unverified until its exact-head hosted checks, review, normal window, pre-merge readiness verdict, qualified merge and canonical receipt are observed. Accepted supporting repairs correct fixture timing and cleanup, coverage processor identity, merge-preview assertions and missing code-coverage identities. All original baseline values remain exact. Retained synthetic executions keep their original inputs and reviewed source deltas; current exact-source root admission is not established. Historical2364/2508/2578 results are unchanged. The recovery service and timer remain masked and inactive. All seven real-harness populations remain Unknown.",
+  "statusNote": "PR2612 merged without its declared pre-merge proof; the original canonical result is unsatisfied and remains preserved. PR2644 is the sole corrective final, held for this chat and not released to any competing merger. Completion remains unverified until final-head hosted checks, actual resolved review, the normal window, successfully finalized readiness, an archived positive exact-head verdict before strict owner merge, and actual verified canonical completion are observed. The new source comparison retains 234/249,82/84,86/90,85/89 selected matches; source equality is not complete transitive proof or fresh execution. All V3 baseline values remain exact with one measured PolicyRootFiles identity added. Current exact-root admission remains false. Historical2364/2508/2578/2612 results are unchanged. Recovery service and timer remain masked/inactive. All seven real-harness populations remain Unknown.",
   "resumeConditions": [
     "Explicit launch of this packet after dependency proof; refresh live state before changes."
   ],
   "dependencies": [],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2612
+    "finalPullRequest": 2644
   }
 }
