@@ -41,3 +41,8 @@ The checkpoint records the source digest and exact measured row. Fresh hosted
 checks and independent primary review still gate merge. This grants no cache
 qualification, signing activation or whole-goal acceptance. Reversal removes
 only this newly proposed identity; never replace the document wholesale.
+
+
+## Accepted-main reconciliation
+
+Accepted #2632 supplies a stronger measured file row: 98.05% lines, 94.82% statements, 93.47% branches and 88.46% functions. The merge preserves its complete baseline bytes and both sets of storage tests. The lower proposal above is historical source-bound evidence and is superseded for the current baseline. The remaining failure-boundary tests and the independent merge-preview regression remain in this PR. No new local verification is claimed; fresh hosted CI is required.

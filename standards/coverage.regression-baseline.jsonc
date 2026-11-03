@@ -32286,15 +32286,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.storage.ts": {
-          "lines": 96.11,
-          "statements": 86.2,
-          "branches": 80.43,
-          "functions": 73.07,
+          "lines": 98.05,
+          "statements": 94.82,
+          "branches": 93.47,
+          "functions": 88.46,
           "uncovered": {
-            "lines": 4,
-            "statements": 16,
-            "branches": 9,
-            "functions": 7
+            "lines": 2,
+            "statements": 6,
+            "branches": 3,
+            "functions": 3
           }
         },
         "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": {

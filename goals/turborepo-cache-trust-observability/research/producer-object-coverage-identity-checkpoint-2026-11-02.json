@@ -59,5 +59,25 @@
     "Protected producer, live R2, rotation/rollback, whole-goal representative observations and full adoption requirements."
   ],
   "qualificationOrProductionActivationChanged": false,
-  "wholeGoalAcceptanceChanged": false
+  "wholeGoalAcceptanceChanged": false,
+  "acceptedMainCoverageFollowthrough": {
+    "acceptedMain": "71bc36fcb49a3b274dfb7bf9d22b60988439e5cb",
+    "pullRequest": 2632,
+    "baselineEqualsAcceptedMainByteForByte": true,
+    "earlierProposalRetainedAsHistorical": true,
+    "acceptedFileRow": {
+      "lines": 98.05,
+      "statements": 94.82,
+      "branches": 93.47,
+      "functions": 88.46,
+      "uncovered": {
+        "lines": 2,
+        "statements": 6,
+        "branches": 3,
+        "functions": 3
+      }
+    },
+    "newLocalVerifyPublishFinalCheck": false,
+    "freshHostedProofRequired": true
+  }
 }

@@ -1029,3 +1029,6 @@ the prior closure, never by overwriting a newer baseline or the ledger.
   ordinary R2 service change is included.
 - Reverse by reverting this collector change and retaining inspection refusal;
   preserve prior observations, private credentials and the existing cache.
+
+
+- 2026-11-02: Consume accepted #2632 without changing any accepted coverage baseline byte. Preserve its stronger storage-file row and both test sets; retain the earlier lower proposal as historical evidence in the [reconciliation](research/producer-object-coverage-identity-review-2026-11-02.md). This adds no floor exception or qualification authority. Reversal must retain the accepted main baseline.
