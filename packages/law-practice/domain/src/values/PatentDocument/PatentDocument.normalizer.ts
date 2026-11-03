@@ -433,6 +433,26 @@ const claimReferencesFromMatch = (
     )
   );
 
+const parentReferenceExpression = (value: string): O.Option<string> =>
+  pipe(
+    Str.match(parentClaimExpressionPattern)(value),
+    O.map((match) => match[0]),
+    O.filter((expression) => {
+      const remainder = Str.slice(Str.length(expression))(value);
+      const descriptiveClause = A.head(A.fromIterable(Str.matchAll(transitionPattern)(remainder)));
+      const beforeClause = O.match(descriptiveClause, {
+        onNone: () => remainder,
+        onSome: (match) => Str.slice(0, O.getOrElse(O.fromUndefinedOr(match.index), constant(0)))(remainder),
+      });
+      // A subject/purpose boundary cannot hide another explicit parent
+      // before the descriptive clause: "and the above claim 24" is a list.
+      return (
+        O.isSome(Str.match(parentClaimBoundaryPattern)(remainder)) &&
+        O.isNone(Str.match(claimReferenceMarkerPattern)(beforeClause))
+      );
+    })
+  );
+
 const parentClaimNumbers = (preamble: string, currentClaimNumber: PosInt): O.Option<ReadonlyArray<PosInt>> =>
   pipe(
     Str.match(claimReferenceMarkerPattern)(preamble),
@@ -441,23 +461,12 @@ const parentClaimNumbers = (preamble: string, currentClaimNumber: PosInt): O.Opt
       onSome: (marker) => {
         const markerIndex = pipe(O.fromUndefinedOr(marker.index), O.getOrThrow);
         const value = Str.slice(Num.sum(markerIndex, Str.length(marker[0])))(preamble);
-        const expression = Str.match(parentClaimExpressionPattern)(value);
+        const expression = parentReferenceExpression(value);
         if (O.isNone(expression)) return O.none();
-        if (O.isNone(Str.match(parentClaimBoundaryPattern)(Str.slice(Str.length(expression.value[0]))(value))))
-          return O.none();
-        const remainder = Str.slice(Str.length(expression.value[0]))(value);
-        const descriptiveClause = A.head(A.fromIterable(Str.matchAll(transitionPattern)(remainder)));
-        const beforeClause = O.match(descriptiveClause, {
-          onNone: () => remainder,
-          onSome: (match) => Str.slice(0, O.getOrElse(O.fromUndefinedOr(match.index), constant(0)))(remainder),
-        });
-        // A subject/purpose boundary cannot hide another explicit parent
-        // before the descriptive clause: "and the above claim 24" is a list.
-        if (O.isSome(Str.match(claimReferenceMarkerPattern)(beforeClause))) return O.none();
         let expanded: ReadonlyArray<PosInt> = A.empty();
         let expandedCount = 0;
         let matched = false;
-        for (const match of Str.matchAll(claimReferencePattern)(expression.value[0])) {
+        for (const match of Str.matchAll(claimReferencePattern)(expression.value)) {
           matched = true;
           const references = claimReferencesFromMatch(match, currentClaimNumber);
           if (O.isNone(references)) return O.none();
