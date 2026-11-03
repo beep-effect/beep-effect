@@ -877,6 +877,17 @@
           "sha256": "2abbea2b157fef9e517cc1975a3cc68cab99a56730846ed2c0c033ab23dfb380",
           "termObserved": true
         }
+      },
+      "currentNativeSemanticObservation": {
+        "checkpoint": "boundaries-native-checkpoint-2026-11-03.json",
+        "report": "native-boundaries-controls-2026-11-03.json",
+        "driver": "native-boundaries-controls.py",
+        "caseKinds": 12,
+        "checks": 24,
+        "positive": 10,
+        "expectedNegative": 14,
+        "scope": "Declared and undeclared imports, relative package escapes, dependency/dependent tag allow/deny, package-name rules and transitive denials in network-isolated synthetic workspaces.",
+        "authority": "Synthetic native semantics only; Beep applicability, configuration, value and profile qualification remain pending."
       }
     },
     {

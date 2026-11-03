@@ -932,3 +932,18 @@ observed schema difference changed the matrix and next qualification work.
   Do not disable formatting, claim byte-identical public copies, or rerun a
   native experiment to repair publication metadata. The exact changed-report
   count comes from byte comparisons, not the hook's total formatted-file count.
+
+
+### 2026-11-03 — require specific negative diagnostics and final tool joins
+
+- Boundary fixture calibration initially checked the expected exit and package
+  witnesses. Preserve that observation, then require the specific undeclared
+  import, package escape, denylist or allowlist diagnostic for each negative.
+  A generic error must not satisfy a semantic refusal control.
+- Add final native/Bun/sandbox hash checks and owned-fixture cleanup checks
+  before publishing. Each driver change received a fresh bounded replay;
+  earlier reports were neither overwritten nor rebound to the later source.
+  The final 24-case replay passed in 6.251 seconds, with 13,808 retained stream
+  bytes, one released admission token and zero task executions.
+- Captured native daemon-option deprecation warnings remain explicit. The
+  experiment does not enable a checker over Beep or justify another CI job.

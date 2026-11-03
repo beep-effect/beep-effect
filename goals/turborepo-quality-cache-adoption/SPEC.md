@@ -838,3 +838,23 @@ cache traffic. Retain at most 16 MiB of compact publication evidence; preserve
 raw captures privately under their existing bounds. Stop on the first failure
 and retain partial evidence rather than repeating or overwriting it. This is
 native semantic evidence only; feature and tuple qualification remain separate.
+
+
+### Isolated native boundary-checker controls, 2026-11-03
+
+Use twelve disposable workspace shapes on both existing exact client pins to
+exercise declared/undeclared imports, relative package escapes, dependency and
+dependent tag rules, package-name rules and transitive denials. Reuse the
+captured availability driver's bounded collector and contained pin reader.
+Retain the one existing token, 60-second wrapper, 20-second subprocess,
+256-KiB per-command retained output, four-MiB aggregate raw and two-MiB compact
+report bounds. Isolate the network; provide no host secrets. Fixture-only
+offline lock generation ignores lifecycle scripts. Beep task bodies, quality
+suites and live configuration remain outside this experiment.
+
+Require the expected diagnostic class for negative outcomes, unchanged fixture
+inputs, source/tool hashes before and after execution, and removal of owned
+fixtures. Preserve earlier observations under their original driver bytes.
+This supplies synthetic semantics, not a real-repository adoption decision or
+a task/profile qualification. Reverse the registration through Git while
+retaining the observations; production settings need no rollback.

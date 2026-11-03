@@ -45,7 +45,8 @@
     "goals/turborepo-quality-cache-adoption/research/native-signature-key-controls.py",
     "goals/turborepo-quality-cache-adoption/research/native-global-configuration-controls.py",
     "goals/turborepo-quality-cache-adoption/research/signature-key-source-binding-controls.py",
-    "goals/turborepo-quality-cache-adoption/research/native-source-family-controls.py"
+    "goals/turborepo-quality-cache-adoption/research/native-source-family-controls.py",
+    "goals/turborepo-quality-cache-adoption/research/native-boundaries-controls.py"
   ],
   "researchReports": [
     "research/SOURCES.md",
@@ -172,7 +173,10 @@
     "research/native-source-replay-selection-2026-11-03.json",
     "research/native-source-replay-setup-2026-11-03.json",
     "research/native-source-replay-signature-2026-11-03.json",
-    "research/native-source-family-replay-2026-11-03.json"
+    "research/native-source-family-replay-2026-11-03.json",
+    "research/native-boundaries-controls.py",
+    "research/native-boundaries-controls-2026-11-03.json",
+    "research/boundaries-native-checkpoint-2026-11-03.json"
   ],
   "agentLaunchers": [
     {

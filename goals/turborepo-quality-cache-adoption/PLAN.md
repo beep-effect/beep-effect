@@ -848,3 +848,19 @@ This completes the repaired-driver native replay gap, not any feature/tuple or
 whole-goal acceptance. Missing-key role policy, actual signed transport and
 protected producer evidence, real consumer reviews, portability/concurrency
 qualification and representative observation windows remain open.
+
+
+### Native boundary-checker semantics, 2026-11-03
+
+`research/boundaries-native-checkpoint-2026-11-03.json` binds twelve fixture
+shapes on stable 2.11.10 and canary 2.11.11-canary.1: ten allowed outcomes and
+fourteen specific rejections across 24 native checks. Declared/undeclared
+imports, relative escapes, tag direction/allow/deny, package-name rules and
+transitive denials preserve fixture inputs and execute no tasks. The existing
+one-token admission was released; all 120 retained stream digests were joined.
+
+The new driver was uncommitted during execution; its captured digest binds the
+exact bytes published with the report. The execution base does not claim the
+new file already existed there. Prior narrower observations remain private.
+No live boundary setting or CI job is enabled. Real package-graph applicability,
+value and profile qualification remain open; all goal criteria remain unproven.
