@@ -186,11 +186,11 @@
       }
     },
     "@beep/box-provisioning": {
-      "reviewer": "Claude Opus 5.5 (perf-turbo-granularity, claude/perf-turbo-granularity-110eae)",
-      "reason": "Re-record input lists and policy-task fingerprint edges after quality audit M9, M10 and K3: package-root README/CHANGELOG/LICENSE leave transit, build, check and test hashes, test/** leaves build and transit (eleven test-compiling builds keep it), and the policy seals move to script-less @beep/repo-cli tasks with per-seal root-config routing. Commands, outputs, cache flags and environment are unchanged; no qualification is granted.",
+      "reviewer": "Codex GPT-6.1-Sol (PR 2637 CI repair)",
+      "reason": "Record seven Box provisioning dependency edges to the existing JSONC canonicalizer; commands, outputs, cache settings and qualification remain unchanged.",
       "basis": {
-        "path": "docs/reports/perf-turbo-granularity-cache-review-2026-11-02.md",
-        "sha256": "1da98f30c3c2545b941ca97f7e8bc5fcfad15810713ff25c9f92e2f2ec82fc28"
+        "path": "docs/reports/pr2637-box-jsonc-cache-review-2026-11-03.md",
+        "sha256": "0f8787edabc9d3cc9c32ca73f971724bb03a743aae3a106131d12b8b8e789add"
       }
     },
     "@beep/brand": {
@@ -17283,6 +17283,7 @@
         "dependencies": [
           "@beep/box#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build"
@@ -17340,6 +17341,7 @@
         "dependencies": [
           "@beep/box#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build"
@@ -17383,6 +17385,7 @@
         "dependencies": [
           "@beep/box#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build"
@@ -17508,6 +17511,7 @@
         "dependencies": [
           "@beep/box#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -17714,6 +17718,7 @@
         "dependencies": [
           "@beep/box#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit"
@@ -17760,6 +17765,7 @@
         "dependencies": [
           "@beep/box#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
@@ -17814,6 +17820,7 @@
         "dependencies": [
           "@beep/box#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build"

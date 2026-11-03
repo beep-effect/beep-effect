@@ -1042,7 +1042,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         expect(A.flatMap(scans, (args) => A.filter(args, Str.startsWith("/packages/example/")))).toEqual(
           A.map(changed, (file) => `/${file}`)
         );
-        expect(A.every(scans, (args) => A.last(args).pipe(O.contains(".")))).toBe(true);
+        expect(A.map(scans, (args) => A.last(args).pipe(O.getOrNull))).toEqual([".", "."]);
       })
     );
 
