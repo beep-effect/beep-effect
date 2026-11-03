@@ -1,6 +1,11 @@
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { ContentDigest, OperationId } from "@beep/file-processing/Artifact";
 import {
+  ClaimInputCollection,
+  ClaimInputInspectionReport,
+  ClaimInputRecord,
+} from "@beep/law-practice-domain/values/ClaimElement";
+import {
   normalizePatentApplicationDocument,
   normalizePatentClaims,
   PatentApplicationDocument,
@@ -876,6 +881,9 @@ const callToolText = Effect.fn("PracticeKgTest.callToolText")(function* (
 });
 
 const claimSelfCheckReviewResultJson = S.fromJsonString(ClaimSelfCheckReviewResult);
+const claimInputInspectionReportJson = S.fromJsonString(ClaimInputInspectionReport);
+const encodeClaimInspectionInput = S.encodeEffect(ClaimInputCollection);
+const decodeClaimInspectionReport = S.decodeEffect(claimInputInspectionReportJson);
 
 describe("practice KG projections", () => {
   describe("generates schema-valid fixture source rows", () => {
@@ -1166,6 +1174,59 @@ describe("practice KG projections", () => {
       ),
       { timeout: "2 minutes" }
     )((it) => {
+      it.effect(
+        "serves failure-preserving source inspection over MCP without fetching or storing candidates",
+        Effect.fnUntraced(function* () {
+          const texts = A.make(
+            "A fixture comprising a panel.",
+            "Unsupported fragment.",
+            "A fixture comprising a sensor.",
+            "Fixture of claim 2 wherein a relay."
+          );
+          const input = ClaimInputCollection.make({
+            sourceKey: "synthetic-local-ledger",
+            records: A.map(texts, (canonicalText, index) =>
+              ClaimInputRecord.cases.text.make({
+                sourceOrdinal: index + 1,
+                numberText: O.some(`${index + 1}`),
+                sourceText: canonicalText,
+                canonicalText,
+              })
+            ),
+          });
+          const before = yield* callToolText("kg_candidate_claims", {});
+          const wire = yield* encodeClaimInspectionInput(input);
+          const encoded = yield* callToolText("claim_inspect_input", wire);
+          const report = yield* decodeClaimInspectionReport(encoded);
+          expect(report.input).toStrictEqual(input);
+          expect(report.indexStatus).toBe("incomplete");
+          expect(A.map(report.records, ({ status }) => status)).toStrictEqual([
+            "partial",
+            "unchecked",
+            "partial",
+            "unchecked",
+          ]);
+          const unavailable = ClaimInputCollection.make({
+            sourceKey: "synthetic-all-unusable",
+            records: [
+              ClaimInputRecord.cases.unavailable.make({
+                sourceOrdinal: 1,
+                numberText: O.none(),
+                sourceText: "&broken;",
+                reason: "invalid-text",
+              }),
+            ],
+          });
+          const failedWire = yield* encodeClaimInspectionInput(unavailable);
+          const failedEncoded = yield* callToolText("claim_inspect_input", failedWire);
+          const failedReport = yield* decodeClaimInspectionReport(failedEncoded);
+          expect(failedReport.input).toStrictEqual(unavailable);
+          expect(A.map(failedReport.records, ({ status }) => status)).toStrictEqual(["unchecked"]);
+          const after = yield* callToolText("kg_candidate_claims", {});
+          expect(after).toBe(before);
+        })
+      );
+
       it.effect(
         "serves source-quoted advisory claim findings over MCP without storing candidates",
         Effect.fnUntraced(function* () {

@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import * as Toolkit from "effect/ai/Toolkit";
+import { ClaimInspectionTool } from "./ClaimInspection.tools.ts";
 import { ClaimSelfCheckTool } from "./ClaimSelfCheck.tools.ts";
 import {
   CorpusGetDocumentTool,
@@ -21,14 +22,14 @@ import {
 } from "./PracticeKg.tools.ts";
 
 /**
- * Complete twelve-tool read-only practice toolkit declaration.
+ * Complete thirteen-tool read-only practice toolkit declaration.
  *
  * **Example** (Count toolkit tools)
  *
  * ```ts
  * import { PracticeKgToolkit } from "@beep/law-practice-use-cases/server"
  *
- * console.log(Object.keys(PracticeKgToolkit.tools).length) // 12
+ * console.log(Object.keys(PracticeKgToolkit.tools).length) // 13
  * ```
  *
  * @category tools
@@ -44,6 +45,7 @@ export const PracticeKgToolkit = Toolkit.make(
   EmailSearchTool,
   KgCandidateClaimsTool,
   ClaimSelfCheckTool,
+  ClaimInspectionTool,
   KgProvenanceTool,
   KgMatterLookupTool,
   KgCorrespondentLookupTool

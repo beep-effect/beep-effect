@@ -6,6 +6,24 @@
  */
 
 /**
+ * Inspection acquisition and response failures.
+ * @category errors
+ * @since 0.0.0
+ */
+export * from "./ClaimInspection.errors.ts";
+/**
+ * Published inspection provenance models.
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./ClaimInspection.schemas.ts";
+/**
+ * Additive failure-preserving inspection service and provenance contract.
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./ClaimInspection.service.ts";
+/**
  * Claim self-check failures.
  *
  * @category errors

@@ -53,9 +53,14 @@ def diagnose(root, directory):
         fixture = root / "packages/law-practice/domain/test/fixtures/claim-element/positive" / family["familyId"]
         references = json.loads((fixture / "expected.json").read_text())
         report = json.loads((directory / f"{family['familyId']}.prediction.json").read_text())
-        predictions = report["report"]["trees"]
+        inspection = results["schemaVersion"] == "claim-input-inspection-evaluation/v1"
+        predictions = ([row["decomposition"]["tree"] for row in report["report"]["records"]
+                        if row["decomposition"]["status"] == "decomposed"]
+                       if inspection else report["report"]["trees"])
         reference_index, prediction_index = nodes(references), nodes(predictions)
-        canonical = {claim["claimNumber"]: claim["claimText"] for claim in report["claimSet"]["claims"]}
+        canonical_source = (json.loads((fixture / "claims.json").read_text())["claims"]
+                            if inspection else report["claimSet"]["claims"])
+        canonical = {claim["claimNumber"]: claim["claimText"] for claim in canonical_source}
         for score in family["claims"]:
             if score["strict"]:
                 counts["strict-match"] += 1
