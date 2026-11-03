@@ -37,6 +37,14 @@ const transitionPattern =
   /\b(consisting essentially of|consisting of|comprising|comprises|comprised of|including|includes|having|wherein|where|(?:(?:is|being)\s+)?characteri[sz]ed (?:in that|by(?: the fact that| the steps of)?)|in which(?: method)?)\b/giu;
 const claimReferenceMarkerPattern = /\bclaims?\b/iu;
 const claimReferencePattern = /(\d+)(?:\s*(?:-|–|—|through|thru|to)\s*(\d+))?/giu;
+// Only the contiguous claim-number expression belongs to the dependency list.
+// Later component identifiers in a defining clause are source text, not parents.
+const parentClaimExpressionPattern =
+  /^\s*\d+(?:\s*(?:-|–|—|through|thru|to)\s*\d+)?(?:\s*(?:,\s*(?:(?:and|or)\s+)?|(?:and\s*\/\s*or|as\s+well\s+as|and|or|claims?)\s+|&\s*)(?:claims?\s+)?\d+(?:\s*(?:-|–|—|through|thru|to)\s*\d+)?)*\b/iu;
+// A successful prefix is insufficient: unconsumed list syntax must not hide
+// a self/forward parent. Require an explicit descriptive boundary or the end.
+const parentClaimBoundaryPattern =
+  /^(?:\s*(?:above\b\s*)?[,;:]?\s*(?:and\s+)?(?:(?:wherein|where|in\s+which|(?:(?:is|being)\s+)?characteri[sz]ed|comprising|comprises|comprised|including|includes|having)\b|(?:for|in)\b(?!\s+(?:claims?\b|\d))|(?:said|the)\s+(?!claims?\b)[\p{L}])|\s*(?:above\b\s*)?(?:[,;:]?\s*and\b\s*)?[.,;:]?\s*$)/iu;
 const ambiguousLexicalTransition = LiteralKit(["including", "having"]);
 const isAmbiguousLexicalTransition = S.is(ambiguousLexicalTransition);
 const isOrderedList = S.is(Ol);
@@ -425,6 +433,26 @@ const claimReferencesFromMatch = (
     )
   );
 
+const parentReferenceExpression = (value: string): O.Option<string> =>
+  pipe(
+    Str.match(parentClaimExpressionPattern)(value),
+    O.map((match) => match[0]),
+    O.filter((expression) => {
+      const remainder = Str.slice(Str.length(expression))(value);
+      const descriptiveClause = Str.search(transitionPattern)(remainder);
+      const beforeClause = O.match(descriptiveClause, {
+        onNone: () => remainder,
+        onSome: (index) => Str.slice(0, index)(remainder),
+      });
+      // A subject/purpose boundary cannot hide another explicit parent
+      // before the descriptive clause: "and the above claim 24" is a list.
+      return (
+        O.isSome(Str.match(parentClaimBoundaryPattern)(remainder)) &&
+        O.isNone(Str.match(claimReferenceMarkerPattern)(beforeClause))
+      );
+    })
+  );
+
 const parentClaimNumbers = (preamble: string, currentClaimNumber: PosInt): O.Option<ReadonlyArray<PosInt>> =>
   pipe(
     Str.match(claimReferenceMarkerPattern)(preamble),
@@ -433,18 +461,18 @@ const parentClaimNumbers = (preamble: string, currentClaimNumber: PosInt): O.Opt
       onSome: (marker) => {
         const markerIndex = pipe(O.fromUndefinedOr(marker.index), O.getOrThrow);
         const value = Str.slice(Num.sum(markerIndex, Str.length(marker[0])))(preamble);
+        const expression = parentReferenceExpression(value);
+        if (O.isNone(expression)) return O.none();
         let expanded: ReadonlyArray<PosInt> = A.empty();
         let expandedCount = 0;
-        let matched = false;
-        for (const match of Str.matchAll(claimReferencePattern)(value)) {
-          matched = true;
+        for (const match of Str.matchAll(claimReferencePattern)(expression.value)) {
           const references = claimReferencesFromMatch(match, currentClaimNumber);
           if (O.isNone(references)) return O.none();
           expandedCount = Num.sum(expandedCount, A.length(references.value));
           if (expandedCount > MAX_PARENT_CLAIM_RANGE_CARDINALITY) return O.none();
           expanded = A.appendAll(expanded, references.value);
         }
-        return matched ? O.some(A.dedupe(expanded)) : O.none();
+        return O.some(A.dedupe(expanded));
       },
     })
   );

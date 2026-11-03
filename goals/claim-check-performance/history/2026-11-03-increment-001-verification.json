@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "claim-performance-increment-verification/v1",
+  "candidate": "reference-bounds-007",
+  "implementationDigest": "084340a10b78c48afaa78c571ae8a6fd56950669da72ea5d05f07f13084e77e8",
+  "retainedStrictMatches": 37,
+  "selectedClaims": 538,
+  "inputFailed": 43,
+  "baselineInputFailed": 58,
+  "protectedFilesExact": 1213,
+  "referenceLabelsChanged": false,
+  "previousResultsChanged": false,
+  "parserTests": {
+    "passed": 12,
+    "logSha256": "fc6a73ff9967d414aacf84e96c12df0e39285d12756d7898dfd5aa57affd6c16"
+  },
+  "numericalGateTests": {
+    "passed": 12
+  },
+  "packageVerification": {
+    "package": "@beep/law-practice-domain",
+    "audit": "pass",
+    "docgen": "pass",
+    "logSha256": "6a4482e64cc62ad2cd9fe561da96afe665c464cfd5fe22b0fd29737e0147ab25"
+  },
+  "review": {
+    "model": "gpt-6.1-sol",
+    "effort": "medium",
+    "roles": ["parser-correctness", "acceptance-protocol"],
+    "initialRequiredFindings": ["PARSER-001", "GATE-01"],
+    "finalRequiredFindings": 0,
+    "attorneyReviewClaimed": false
+  },
+  "goalComplete": false,
+  "sourcePoolQuery": {
+    "httpStatus": 200,
+    "requestedRows": 100,
+    "referenceQualificationClaimed": false
+  }
+}
