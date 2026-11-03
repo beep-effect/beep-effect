@@ -1,5 +1,14 @@
 # Citation Extraction Engine Plan
 
+Law metadata checkpoint (2026-11-03): the private compositor connects source
+context/captures, string helpers and year conversion under shared invocation
+accounting and a fresh Scope. The original helper supplies 128 mutations and
+156 regex routes. Twenty-two focused tests pass; both runtime smokes confirm
+thirteen child exits each, with budget, ownership, lifetime and deadline controls.
+Full hosted replay requires 156 exits per runtime. Superclass edition inference,
+other metadata families and public extraction remain open. See
+[law metadata evidence](history/evidence/2026-11-03-law-metadata.md).
+
 Composed text budget checkpoint (2026-11-03): an invocation-owned Effect Ref
 shares parent text reservations across receiving, slices, native context and
 metadata helpers. Word retention is checked before receiving copies. Twenty-two

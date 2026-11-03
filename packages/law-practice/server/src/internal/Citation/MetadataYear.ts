@@ -113,11 +113,16 @@ const parse = Effect.fn("Citation.parseMetadataYear")(function* (source: Citatio
   const value = yield* scan(source, start, end);
   return O.filter(value, (year) => !negative && year >= 1600 && year <= highest);
 });
-const CapturedYearBound = S.Int.check(S.isBetween({ minimum: 2, maximum: 10000 })).pipe(
-  $I.annoteSchema("CapturedYearBound", {
+/** Captured source calendar ceiling, not an invocation mode.
+ * @internal @category models @since 0.0.0
+ */
+export const CitationMetadataYearBound = S.Int.check(S.isBetween({ minimum: 2, maximum: 10000 })).pipe(
+  $I.annoteSchema("CitationMetadataYearBound", {
     description: "One more than a supported Python date year, captured by the installing engine.",
   })
 );
+/** @internal @category models @since 0.0.0 */
+export type CitationMetadataYearBound = typeof CitationMetadataYearBound.Type;
 /** Reinstall an already captured source year ceiling under a fresh invocation
  * budget. This private configuration is server data, never a raw request mode.
  * The normal constructor captures the calendar once and delegates here.
@@ -130,7 +135,7 @@ export const makeCitationMetadataYearFromBound = Effect.fn("Citation.makeMetadat
   const limits = yield* decodeCitationRegexPolicy(policy, () =>
     CitationMetadataYearFailure.make({ reason: "invalid-policy" })
   );
-  const highest = yield* S.decodeUnknownEffect(CapturedYearBound)(bound).pipe(
+  const highest = yield* S.decodeUnknownEffect(CitationMetadataYearBound)(bound).pipe(
     Effect.mapError(() => CitationMetadataYearFailure.make({ reason: "invalid-bound" }))
   );
   const timing = yield* makeCitationRegexTiming(limits, true);

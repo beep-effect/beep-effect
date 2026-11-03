@@ -25,6 +25,7 @@ const exhausted = () => CitationSafetyLimitExceeded.make({ operation: "extract",
 export class CitationTextBudget extends Context.Service<
   CitationTextBudget,
   {
+    readonly maximum: number;
     readonly reserve: (units: number) => Effect.Effect<void, CitationSafetyLimitExceeded>;
     readonly snapshot: Effect.Effect<number>;
   }
@@ -43,7 +44,7 @@ export const makeCitationTextBudget = Effect.fn("Citation.makeTextBudget")(funct
     );
     if (!accepted) return yield* exhausted();
   });
-  return CitationTextBudget.of({ reserve, snapshot: Ref.get(used) });
+  return CitationTextBudget.of({ maximum: limits.producedTextUtf16, reserve, snapshot: Ref.get(used) });
 });
 /** Capture an optional composed owner at installation, preserving standalone
  * stage policy behavior. Later caller contexts cannot replace this authority.

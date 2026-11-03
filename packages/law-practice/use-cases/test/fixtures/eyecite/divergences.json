@@ -96,7 +96,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexDescriptors.ts",
-          "sha256": "b31786e33213e5d56d21d4c88ecb43f86a58e9becfe05dd97c6efe9fa5661ef6"
+          "sha256": "f699e257cde8f7121968574d23e7c08e9e0def464827f67fdd9110a8d1a2cb20"
         },
         {
           "path": "packages/law-practice/server/test/CitationRegexDescriptors.test.ts",

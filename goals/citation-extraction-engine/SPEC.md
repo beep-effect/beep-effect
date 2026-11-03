@@ -548,6 +548,17 @@ instead of silently splitting delivery or weakening scope.
 
 ## Decision Log
 
+- **2026-11-03 law metadata composition:** return owned source-native field
+  updates under existing operation/native admission and one invocation budget.
+  Each call owns a fresh Scope; the captured dependency Context excludes the
+  outer Scope. Reuse an installed budget only when its ceiling is compatible;
+  otherwise make a fresh per-call owner. Authenticate exact source law/year
+  patterns and retain calendar state without a request mode. No partial patch
+  is returned on failure. Reversal removes this private compositor and restores
+  the descriptor copier's former private name; it reopens helper composition
+  and does not waive edition/public-engine duties. See
+  `history/evidence/2026-11-03-law-metadata.md`.
+
 - **2026-11-03 composed parent text budget:** use one invocation-owned Effect
   Ref reservation service for parent-owned text allocations, captured by stage
   factories. Allocation reservations survive caller transaction rollback and

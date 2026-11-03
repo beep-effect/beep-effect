@@ -63,6 +63,9 @@ corpus retains actual helper executions with explicit year-bound profiles.
 `MetadataStrings.ts` adapts clean_pin_cite and process_parenthetical, preserving
 native source-point scanning and delegating YEAR_REGEX to the existing worker.
 Its metadata-strings corpus retains actual source outputs and routing evidence.
+`LawMetadata.ts` composes the original add_law_metadata field updates, with
+source-native captures and source calendar behavior. Its law-metadata corpus
+retains actual FullLawCitation helper mutations and regex search routes.
 The nullable regex control corpus contains independently executed observations
 from CPython 3.11.15 re and regex 2023.12.25; it copies no regex implementation.
 `RegexV0Data.ts` additionally freezes observed regex 2023.12.25 V0 categories,

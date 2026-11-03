@@ -93,7 +93,10 @@ const ProfileType = S.toType(CitationRegexPatternProfile);
 const sameProfile = S.toEquivalence(CitationRegexPatternProfile);
 const fail = (reason: CitationRegexDescriptorFailure["reason"]) => CitationRegexDescriptorFailure.make({ reason });
 const key = (digest: string, flags: number) => `${flags}:${digest}`;
-const copyDescriptor = (descriptor: CitationRegexPatternDescriptor) =>
+/** Copy descriptor data without sharing the mutable name record.
+ * @internal @category operations @since 0.0.0
+ */
+export const copyCitationRegexDescriptor = (descriptor: CitationRegexPatternDescriptor) =>
   CitationRegexPatternDescriptor.make({
     ...descriptor,
     profile: CitationRegexPatternProfile.make({ ...descriptor.profile, names: { ...descriptor.profile.names } }),
@@ -127,7 +130,7 @@ export const makeCitationRegexDescriptorRegistry = Effect.fn("Citation.makeRegex
   for (const descriptor of bindings) {
     const identity = key(descriptor.patternSha256, descriptor.flags);
     if (MutableHashMap.has(installed, identity)) return yield* fail("invalid-bindings");
-    MutableHashMap.set(installed, identity, copyDescriptor(descriptor));
+    MutableHashMap.set(installed, identity, copyCitationRegexDescriptor(descriptor));
   }
   const bind = Effect.fn("Citation.bindRegexDescriptor")(function* (nativePattern: unknown, flagsInput: unknown) {
     const flags = yield* S.decodeUnknownEffect(CitationRegexProgram.fields.sourceFlags)(flagsInput).pipe(
@@ -149,7 +152,7 @@ export const makeCitationRegexDescriptorRegistry = Effect.fn("Citation.makeRegex
       Effect.mapError(() => fail("profile-mismatch"))
     );
     if (!sameProfile(profile, descriptor.profile)) return yield* fail("profile-mismatch");
-    return { descriptor: copyDescriptor(descriptor), program, prepared };
+    return { descriptor: copyCitationRegexDescriptor(descriptor), program, prepared };
   }, timed);
   return { engine: compiler.engine, bind };
 });
