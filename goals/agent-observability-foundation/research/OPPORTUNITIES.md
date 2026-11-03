@@ -405,3 +405,7 @@ Metric and gate adapters should retain total/returned counts, pagination state
 and observation scope. A missing record is not a zero, a pass or proof of
 complete coverage. Consumers should prove response completeness before making
 whole-population claims, and revalidate the current head at the actual gate.
+
+## 2026-11-03: enforce final merge reservations
+
+PR2649 merged while coverage was still running and before positive exact-head readiness was retained. Its canonical outcome is unknown. A written reservation and masked unit names did not cover the shared command wrapper, native direct-client merges, or scripts that interpreted an intermediate `GATE-MET` line as permission for a REST fallback. The operator directed a coordination repair and a fresh final checkpoint. The repair must enforce reservations at every maintained workstation merge entry point, remove the fallback, preserve denial evidence, and keep direct GitHub website access as an explicit separate authority boundary. No readiness may be reconstructed retrospectively.
