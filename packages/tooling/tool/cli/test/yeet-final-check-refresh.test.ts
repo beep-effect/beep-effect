@@ -380,6 +380,19 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       })
     );
 
+    it.effect("fails closed when the inventory read exceeds the kit's output bound", () =>
+      Effect.gen(function* () {
+        const { repoRoot } = yield* makeMergedLane();
+        // 2 findings of 9 MB each: past the kit's 16 MiB output bound, so the read fails.
+        yield* writeFile(repoRoot, EFFECT_VITEST, effectVitestInventory(["exception", "exception"], "EV", 9_000_000));
+        const finalHead = yield* commitAll(repoRoot, "lane: oversized inventory");
+        const verdict = yield* refreshAt(repoRoot, finalHead);
+        assertTrue(verdict._tag === "refused");
+        expect(verdict.reason).toBe("effect-vitest-status-drift");
+        expect(verdict.detail).toContain(finalHead);
+      })
+    );
+
     it.effect("passes an effect-vitest refresh that keeps the lane's status counts", () =>
       Effect.gen(function* () {
         const { repoRoot } = yield* makeMergedLane();
