@@ -27,7 +27,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { renderPrettyCommandJson } from "../../../internal/cli/Json.ts";
-import { runGitOutput } from "./GitExec.ts";
+import { runGitOutput } from "../../../internal/repo-run/index.ts";
+import { yeetGitOutputErrorAdapter } from "./GitErrorAdapter.ts";
 import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -1324,7 +1325,10 @@ const findCodexSession = Effect.fn("PrProvenance.findCodexSession")(function* (h
 const detectGitPaths = Effect.fn("PrProvenance.detectGitPaths")(function* (cwd: string) {
   const path = yield* Path.Path;
   const [common, checkout] = yield* Effect.all(
-    [runGitOutput(cwd, ["rev-parse", "--git-common-dir"]), runGitOutput(cwd, ["rev-parse", "--show-toplevel"])],
+    [
+      runGitOutput(cwd, ["rev-parse", "--git-common-dir"], yeetGitOutputErrorAdapter),
+      runGitOutput(cwd, ["rev-parse", "--show-toplevel"], yeetGitOutputErrorAdapter),
+    ],
     { concurrency: 2 }
   );
   const checkoutPath = path.resolve(Str.trim(checkout));
@@ -1526,11 +1530,11 @@ export const detectPrProvenanceFromPaths = Effect.fn("PrProvenance.detectFromPat
   const path = yield* Path.Path;
   const environment = yield* readDetectionEnvironment();
   const harness = classifyHarness(environment);
-  const workspaceOverride = yield* runGitOutput(checkoutPath, ["config", "--get", "beep.workspace.label"]).pipe(
-    Effect.map(Str.trim),
-    Effect.option,
-    Effect.map(O.flatMap(decodePrProvenanceLabel))
-  );
+  const workspaceOverride = yield* runGitOutput(
+    checkoutPath,
+    ["config", "--get", "beep.workspace.label"],
+    yeetGitOutputErrorAdapter
+  ).pipe(Effect.map(Str.trim), Effect.option, Effect.map(O.flatMap(decodePrProvenanceLabel)));
   const workspace = O.getOrElse(workspaceOverride, () => labelFromBasename(path, clonePath));
   const evidence = yield* readSessionEvidence(harness, environment, checkoutPath);
   const sessionWorkspace = yield* detectSessionWorkspace(path, evidence.sessionHome, workspace);

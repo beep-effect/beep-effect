@@ -6,6 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
+import { shellQuote } from "@beep/repo-utils/Shell";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -24,7 +25,6 @@ import {
   AiMetricsScoreWeights,
   AiMetricsTool,
 } from "./models.ts";
-import { shellQuote } from "./shell.ts";
 import { AiMetricsSourceDiscoveryResult, AiMetricsSourceStatus } from "./source-discovery.ts";
 
 const $I = $RepoAiMetricsId.create("install");

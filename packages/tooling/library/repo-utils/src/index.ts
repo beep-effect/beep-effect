@@ -197,6 +197,11 @@ export {
   toLiteralArgs,
 } from "./ProcessArgs.ts";
 /**
+ * @category utilities
+ * @since 0.0.0
+ */
+export { shellQuote } from "./Shell.ts";
+/**
  * @category schemas
  * @since 0.0.0
  */

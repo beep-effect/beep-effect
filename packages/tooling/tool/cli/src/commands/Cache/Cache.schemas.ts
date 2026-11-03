@@ -309,54 +309,6 @@ export class CacheWarmReceipt extends S.Opaque<CacheWarmReceipt, { readonly bran
 ) {}
 
 /**
- * Cache command failure safe to render at the CLI boundary.
- *
- * **Example** (Create a typed command failure)
- *
- * ```ts
- * import { CacheCommandError } from "@beep/repo-cli/commands/Cache"
- *
- * console.log(CacheCommandError.make({ message: "cache probe failed" })._tag) // "CacheCommandError"
- * ```
- *
- * @category errors
- * @since 0.0.0
- */
-export class CacheCommandError extends S.TaggedError<CacheCommandError, { readonly brand: unique symbol }>(
-  $I`CacheCommandError`
-)(
-  "CacheCommandError",
-  { message: S.String, cause: S.optionalKey(S.Defect({ includeStack: true })) },
-  $I.annoteError<CacheCommandError>("CacheCommandError", {
-    description: "A cache command precondition or subprocess failure.",
-  })
-) {
-  /**
-   * Map an unknown failure into a cache command error.
-   *
-   * @param message - Human-readable failure context.
-   * @param cause - Optional underlying failure.
-   * @returns A typed cache command error.
-   */
-  static readonly new = (message: string, cause?: unknown): CacheCommandError =>
-    cause === undefined ? CacheCommandError.make({ message }) : CacheCommandError.make({ message, cause });
-
-  /**
-   * Map an Effect error into a cache command error with context.
-   *
-   * @param message - Human-readable failure context.
-   * @returns A transform mapping an Effect error into a cache command error.
-   */
-  static readonly mapError =
-    (message: string) =>
-    <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-      effect.pipe(
-        Effect.mapError((cause) => (isCacheCommandError(cause) ? cause : CacheCommandError.new(message, cause)))
-      );
-}
-const isCacheCommandError = S.is(CacheCommandError);
-
-/**
  * JSON codec for dashboard reports.
  *
  * **Example** (Inspect the dashboard codec)

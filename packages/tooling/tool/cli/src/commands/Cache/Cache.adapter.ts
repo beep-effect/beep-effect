@@ -23,8 +23,8 @@ import { OutputBound, runCapturedStreams } from "../../internal/process/index.ts
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { CacheAdapterHostEvent, CacheProducerAdapterReceipt } from "./Cache.adapter.schemas.ts";
 import { readCacheDependencyMaterialization } from "./Cache.dependencies.ts";
+import { CacheCommandError } from "./Cache.errors.ts";
 import { hashCacheExperimentExecutable, makePrivateSupervisorStorage, requireCacheLinuxX64 } from "./Cache.evidence.ts";
-import { CacheCommandError } from "./Cache.schemas.ts";
 import type { CacheSignedPilotRequest } from "./Cache.pilot.signed.schemas.ts";
 import type { CacheProducerUploadRuntime } from "./Cache.workflow.schemas.ts";
 import type { CacheProducerUploadApproval } from "./Cache.workflow.upload.schemas.ts";

@@ -15,7 +15,6 @@ export {
   cacheTaskSelectionArgs,
   collectCacheCensus,
   collectCacheTaskSelection,
-  isCacheTaskInspectionArg,
   resolveCacheTurboBinary,
 } from "./Cache.census.ts";
 /**
@@ -201,6 +200,13 @@ export {
  */
 export { attachCacheEntrypointReview } from "./Cache.entrypoints.ts";
 /**
+ * Public cache command error.
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export { CacheCommandError } from "./Cache.errors.ts";
+/**
  * Local fixture observation records shared by the pilot and conformance runners.
  *
  * @category schemas
@@ -325,7 +331,7 @@ export {
 export { CacheProtocolObservation } from "./Cache.protocol.schemas.ts";
 export { validateCacheProtocolExecution, validateCacheProtocolObservation } from "./Cache.protocol.ts";
 /**
- * Execute tasks with a runtime-owned identity.
+ * Route ordinary Turbo steps through the cache runtime.
  *
  * @category commands
  * @since 0.0.0
@@ -333,9 +339,15 @@ export { validateCacheProtocolExecution, validateCacheProtocolObservation } from
 export {
   assertCacheRuntimeKeyUnspecified,
   cacheRuntimeStep,
-  resolveCacheSigningPosture,
-  runCacheRuntimeTasks,
-} from "./Cache.runtime.ts";
+  isCacheTaskInspectionArg,
+} from "./Cache.runtime.step.ts";
+/**
+ * Execute tasks with a runtime-owned identity.
+ *
+ * @category commands
+ * @since 0.0.0
+ */
+export { resolveCacheSigningPosture, runCacheRuntimeTasks } from "./Cache.runtime.ts";
 /**
  * Public cache command schemas and errors.
  *
@@ -351,7 +363,6 @@ export {
   CacheCensusReport,
   CacheCensusSource,
   CacheCensusWorkspace,
-  CacheCommandError,
   CacheComputationConfiguration,
   CacheDashboardReport,
   CacheDashboardReportJson,

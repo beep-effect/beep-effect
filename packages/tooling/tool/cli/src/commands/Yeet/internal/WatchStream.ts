@@ -43,12 +43,12 @@ import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { YeetCheckOutcome, YeetSettleReason } from "./CheckOutcome.ts";
-import { yeetCommentExcerpt } from "./MonitorComments.ts";
+import { yeetCommentExcerpt } from "./MonitorComments.schemas.ts";
 import { YeetHeadRed } from "./MonitorPolicy.ts";
 import { YeetReviewThreadStateTag } from "./ReviewThreadState.ts";
-import { YeetSettleVerdict, yeetSettleCensusRequires } from "./Settle.ts";
+import { YeetSettleVerdict, yeetSettleCensusRequires } from "./Settle.schemas.ts";
 import { mergeReadyCriterionHolds, YeetMergeReadyCriteria, YeetMergeReadyCriterion } from "./Verdict.ts";
-import type { YeetMonitorThreadComment } from "./MonitorComments.ts";
+import type { YeetMonitorThreadComment } from "./MonitorComments.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/WatchStream");
 

@@ -19,7 +19,7 @@ import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import { YeetAttemptTerminationReason } from "../../../internal/repo-run/AttemptTerminationJournal.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
-import { DEFAULT_YEET_PACKET_DIR } from "./Planner.ts";
+import { DEFAULT_YEET_PACKET_DIR } from "./Planner.schemas.ts";
 import { YeetReviewerKind } from "./ReviewLane.schemas.ts";
 import { YeetFailureKind, YeetLaneStatus, YeetOutcome } from "./Verdict.ts";
 

@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { shellQuote } from "@beep/repo-ai-metrics";
+import { shellQuote } from "@beep/repo-utils/Shell";
 import { A } from "@beep/utils";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";

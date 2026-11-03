@@ -17,8 +17,8 @@ import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Header } from "tar";
+import { CacheCommandError } from "./Cache.errors.ts";
 import { CacheSignedPilotArchive, CacheSignedPilotCaptureControl } from "./Cache.pilot.signed.schemas.ts";
-import { CacheCommandError } from "./Cache.schemas.ts";
 import type { CachePilotLogInput, CacheSignedPilotLogInput } from "./Cache.pilot.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.pilot.capture");

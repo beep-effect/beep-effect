@@ -38,6 +38,7 @@ import {
   safeOriginBranchFromBase,
 } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
+import { yeetGitOutputErrorAdapter } from "./GitErrorAdapter.ts";
 import type { GitShape } from "@beep/git/Git";
 import type { GitInvocation } from "@beep/git/GitCommand";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -46,101 +47,6 @@ import type { RunFoldedStdoutOptions } from "../../../internal/process/StepExec.
 import type { GitCommandErrorAdapter, GitKitError, RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/GitExec");
-
-/**
- * The wording a {@link yeetGitErrorAdapter} folds git failures into.
- *
- * **Details**
- *
- * `spawnFailure` is a fixed message for a run git never reached; when it is absent the message is
- * `Failed to run <command line>.`. A non-zero exit renders `<command line> <nonZeroExit> <code>.`, and
- * a truncated run `<command line> <truncated>`, carrying `truncatedExitCode` when one is set.
- *
- * **Example** (Describe the strict reader wording)
- *
- * ```ts
- * import { YeetGitErrorWording } from "@beep/repo-cli/test/Yeet"
- *
- * const wording = YeetGitErrorWording.make({
- *   spawnFailure: "Failed to read the working-tree status.",
- *   nonZeroExit: "exited with code",
- *   truncated: "produced more output than the capture bound.",
- * })
- * console.log(wording.nonZeroExit) // exited with code
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class YeetGitErrorWording extends S.Opaque<YeetGitErrorWording, { readonly brand: unique symbol }>()(
-  S.Struct({
-    spawnFailure: S.optionalKey(S.String),
-    nonZeroExit: S.String,
-    truncated: S.String,
-    truncatedExitCode: S.optionalKey(S.Finite),
-  }).pipe(
-    $I.annoteSchema("YeetGitErrorWording", {
-      description: "Message text Yeet renders for a git run that failed to spawn, exited non-zero or was truncated.",
-    })
-  )
-) {}
-
-/**
- * Build a `GitCommandErrorAdapter` that folds every git failure into `YeetCommandError` with the
- * given wording.
- *
- * **Details**
- *
- * Yeet keeps two historical wordings. The bounded capture renders
- * `<command line> failed with exit code <n>.`, and the strict readers in Settle render
- * `<command line> exited with code <n>.`. Both share this shape and differ only in their
- * {@link YeetGitErrorWording} (repo-cli-gh-git-consolidation W2b, SPEC D-11).
- *
- * **Example** (Build the strict reader adapter)
- *
- * ```ts
- * import { YeetGitErrorWording, yeetGitErrorAdapter } from "@beep/repo-cli/test/Yeet"
- * import * as O from "effect/Option"
- *
- * const adapter = yeetGitErrorAdapter(
- *   YeetGitErrorWording.make({ nonZeroExit: "exited with code", truncated: "produced more output than the capture bound." })
- * )
- * console.log(O.isSome(adapter.onTruncated)) // true
- * ```
- *
- * @param wording - The message text for each failure kind.
- * @returns The adapter for `adaptGitKitError` or the bounded capture.
- * @category execution
- * @since 0.0.0
- */
-export const yeetGitErrorAdapter = (wording: YeetGitErrorWording): GitCommandErrorAdapter<YeetCommandError> => ({
-  onSpawnFailure: (commandLine) =>
-    YeetCommandError.new(O.getOrElse(O.fromUndefinedOr(wording.spawnFailure), () => `Failed to run ${commandLine}.`)),
-  onNonZeroExit: ({ commandLine, exitCode }) =>
-    YeetCommandError.make({
-      message: `${commandLine} ${wording.nonZeroExit} ${exitCode}.`,
-      command: commandLine,
-      exitCode,
-    }),
-  onTruncated: O.some((commandLine) =>
-    YeetCommandError.make({
-      message: `${commandLine} ${wording.truncated}`,
-      command: commandLine,
-      ...O.match(O.fromUndefinedOr(wording.truncatedExitCode), {
-        onNone: () => ({}),
-        onSome: (exitCode) => ({ exitCode }),
-      }),
-    })
-  ),
-});
-
-const gitErrorAdapter = yeetGitErrorAdapter(
-  YeetGitErrorWording.make({
-    nonZeroExit: "failed with exit code",
-    truncated: "output exceeded the repo-run capture limit.",
-    truncatedExitCode: 1,
-  })
-);
 
 /**
  * Fold a `Git` member's typed error into Yeet's historical `YeetCommandError` wording.
@@ -175,7 +81,7 @@ const gitErrorAdapter = yeetGitErrorAdapter(
  * @since 0.0.0
  */
 export const yeetGitKitError = (invocation: GitInvocation): ((error: GitKitError) => YeetCommandError) =>
-  adaptGitKitError(invocation, gitErrorAdapter);
+  adaptGitKitError(invocation, yeetGitOutputErrorAdapter);
 
 /**
  * Run Git with Yeet's historical bounded-output error wording.
@@ -198,7 +104,7 @@ export const runGitOutput = Effect.fn("Yeet.runGitOutput")(function* (
   repoRoot: string,
   args: ReadonlyArray<string>
 ): Effect.fn.Return<string, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
-  return yield* runSharedGitOutput(repoRoot, args, gitErrorAdapter);
+  return yield* runSharedGitOutput(repoRoot, args, yeetGitOutputErrorAdapter);
 });
 
 /**
@@ -232,7 +138,7 @@ export const runGitFoldedStdout = Effect.fn("Yeet.runGitFoldedStdout")(function*
   args: ReadonlyArray<string>,
   fold: RunFoldedStdoutOptions["fold"]
 ): Effect.fn.Return<string, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  return yield* runSharedGitFoldedStdout(repoRoot, args, gitErrorAdapter, fold);
+  return yield* runSharedGitFoldedStdout(repoRoot, args, yeetGitOutputErrorAdapter, fold);
 });
 
 /**
@@ -260,7 +166,7 @@ export const runGitPathList = Effect.fn("Yeet.runGitPathList")(function* (
   YeetCommandError,
   ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
-  return yield* runSharedGitPathList(repoRoot, args, gitErrorAdapter);
+  return yield* runSharedGitPathList(repoRoot, args, yeetGitOutputErrorAdapter);
 });
 
 /**
@@ -287,7 +193,7 @@ export const collectStagedPublishPaths = Effect.fn("Yeet.collectStagedPublishPat
   YeetCommandError,
   ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
-  return yield* collectStagedPaths(repoRoot, gitErrorAdapter);
+  return yield* collectStagedPaths(repoRoot, yeetGitOutputErrorAdapter);
 });
 
 /**
@@ -314,7 +220,7 @@ export const collectUnstagedTrackedPaths = Effect.fn("Yeet.collectUnstagedTracke
   YeetCommandError,
   ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
-  return yield* collectUnstagedPaths(repoRoot, gitErrorAdapter);
+  return yield* collectUnstagedPaths(repoRoot, yeetGitOutputErrorAdapter);
 });
 
 /**
@@ -341,7 +247,7 @@ export const collectUntrackedPaths = Effect.fn("Yeet.collectUntrackedPaths")(fun
   YeetCommandError,
   ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
-  return yield* collectGitUntrackedPaths(repoRoot, gitErrorAdapter);
+  return yield* collectGitUntrackedPaths(repoRoot, yeetGitOutputErrorAdapter);
 });
 
 /**
@@ -480,13 +386,13 @@ export const refreshBaseRef = Effect.fn("Yeet.refreshBaseRef")(function* (
     const refspec = `refs/heads/${safeBranch}:refs/remotes/origin/${safeBranch}`;
     yield* git
       .fetch(repoRoot, { remote: "origin", ref: refspec })
-      .pipe(Effect.mapError(adaptGitKitError(GitCommand.fetch("origin", refspec), gitErrorAdapter)));
+      .pipe(Effect.mapError(adaptGitKitError(GitCommand.fetch("origin", refspec), yeetGitOutputErrorAdapter)));
     return;
   }
 
   yield* git
     .revParse(repoRoot, base)
-    .pipe(Effect.mapError(adaptGitKitError(GitCommand.revParse(base), gitErrorAdapter)));
+    .pipe(Effect.mapError(adaptGitKitError(GitCommand.revParse(base), yeetGitOutputErrorAdapter)));
 });
 
 /**
@@ -550,7 +456,7 @@ export const currentYeetBranch = Effect.fn("Yeet.currentYeetBranch")(function* (
   YeetCommandError,
   ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
-  return yield* currentBranch(repoRoot, gitErrorAdapter, "abbrev-ref").pipe(Effect.map(Str.trim));
+  return yield* currentBranch(repoRoot, yeetGitOutputErrorAdapter, "abbrev-ref").pipe(Effect.map(Str.trim));
 });
 
 /**
@@ -591,7 +497,7 @@ export const currentCommitSha = Effect.fn("Yeet.currentCommitSha")(function* (
   const git = yield* Git;
   return yield* git
     .revParse(context.repoRoot, "HEAD")
-    .pipe(Effect.mapError(adaptGitKitError(GitCommand.revParse("HEAD"), gitErrorAdapter)));
+    .pipe(Effect.mapError(adaptGitKitError(GitCommand.revParse("HEAD"), yeetGitOutputErrorAdapter)));
 });
 
 /**

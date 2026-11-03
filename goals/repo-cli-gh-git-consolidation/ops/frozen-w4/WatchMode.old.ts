@@ -55,6 +55,7 @@ import {
   yeetReviewWindowDue,
   yeetReviewWindowElapsed,
 } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewWindow.ts";
+import { YeetSettleVerdict } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/Settle.schemas.ts";
 import {
   deriveSettleVerdict,
   readYeetChangedPaths,
@@ -65,7 +66,6 @@ import {
   YeetRulesetRequiredContexts,
   YeetSettleCheck,
   YeetSettleInput,
-  YeetSettleVerdict,
   yeetBaseConflictFor,
   yeetGatedFamiliesFor,
   yeetSettleClockReset,
