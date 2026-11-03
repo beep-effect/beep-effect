@@ -2101,3 +2101,13 @@ The first credential-free candidate build failed at Rust host build scripts with
 Add a noninteractive compiler/binutils prerequisite and retain actual host tool
 identities in the manifest. Keep the failed run, skipped artifact and successful
 cleanup as evidence; only retry after the reviewed source repair lands.
+### Decouple capability checks from a short-lived management login, 2026-11-03
+
+The existing grant harness combines current management-policy inspection with
+actual storage operations. The saved storage roles can remain usable after an
+attended management login needs renewal. Reuse its exact source-pinned storage
+block with saved storage references, preserving the original policy checks and
+explicitly withholding a current-policy claim. The first retained-driver call
+refused the shared evidence directory's mode before storage work; a dedicated
+mode-0700 output directory then passed. Keep that refusal and require explicit
+private output preparation, rather than weakening the guard.

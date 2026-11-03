@@ -565,3 +565,20 @@ production qualification.
   root configuration and reviewed CI caller source.
 - These are synthetic task-selection plans and comment-correction evidence,
   not real Beep execution, performance, qualification or hosted acceptance.
+
+
+### Prune global-file copying, 2026-11-02
+
+- Installed Turbo 2.11.10 `reference/prune.mdx` and `reference/configuration.mdx`
+  document the optional copy behavior and Docker trees. Their exact hashes and
+  source-census selection rules are retained in the
+  [applicability review](prune-global-feature-review.json).
+- [The driver](native-prune-global-controls.py) verifies exact stable and current
+  canary binary/version pins and reuses the existing bounded streaming collectors.
+  [Sixteen offline cases](native-prune-global-controls.json) cover both layouts,
+  flag states and output modes; no host repository, network, task or lifecycle
+  execution enters the fixture. Frozen installs and a direct file reader test
+  input presence, not build correctness.
+- [Three refusal controls](prune-driver-controls.json) reject optimized Python,
+  wrong native pins and report overwrite before additional native capture.
+  The passing report is unchanged. No production configuration is enabled.

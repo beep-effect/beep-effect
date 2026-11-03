@@ -147,6 +147,10 @@
     "research/ordinary-canary-signed-observation-2026-11-02.json",
     "research/ordinary-native-matrix-checkpoint-2026-11-02.json",
     "research/worker-git-startup-checkpoint-2026-11-02.json",
+    "research/saved-trial-storage-grants.py",
+    "research/saved-storage-grants-observation-2026-11-03.json",
+    "research/saved-storage-driver-controls-2026-11-03.json",
+    "research/saved-storage-grants-checkpoint-2026-11-03.json",
     "research/protected-producer-workflow-preparation-2026-11-03.json",
     "research/protected-producer-workflow-preparation-2026-11-03.md",
     "research/candidate-host-compiler-failure-2026-11-03.json"

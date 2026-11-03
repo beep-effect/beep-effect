@@ -669,6 +669,29 @@ protected producer provenance, current-main qualification or production rollout.
 - [ziglang 0.14.1 metadata](https://pypi.org/pypi/ziglang/0.14.1/json) publishes the matching Linux x86_64 wheel SHA-256 `6eb9d4d759b292c83810dbee2e9e8e3fbfbf01d864e6e9811bae711fd74e1c2f` and no package dependencies. These content pins address [the review finding](https://github.com/beep-effect/beep-effect/pull/2643#discussion_r4450530140); real CI installation remains unexecuted.
 
 
+### Saved trial storage capabilities, 2026-11-03
+
+- [The retained driver](saved-trial-storage-grants.py) hashes and extracts only
+  the disposable-object block from the accepted `trial-grants.py` source. No
+  management-policy check is bypassed or reclassified; that original command
+  remains intact. Four storage-only references come through the approved `op`
+  wrapper, with endpoint/bucket configuration and no client artifact key/bearer.
+- [The actual observation](saved-storage-grants-observation-2026-11-03.json)
+  records writer upload, exact reader read, reader write/delete denials and
+  complete owned-object cleanup. It binds the executed driver and reused source.
+  [Five refusal controls](saved-storage-driver-controls-2026-11-03.json) preserve
+  the passing observation and create no storage intent.
+- [The checkpoint](saved-storage-grants-checkpoint-2026-11-03.json) scopes this
+  evidence to current storage operations. It does not renew management-policy,
+  native signed restore, producer provenance, tenant isolation or qualification.
+- Reproduction uses a private reference file containing the four role-specific
+  storage environment fields plus endpoint/bucket; run the driver under that
+  approved `op run` wrapper with pinned boto3 and a new `--output` file in a
+  mode-0700 directory outside the checkout. Never pass secret values as arguments
+  or repeat a probe whose private intent exists. Inspect/clean its exact owned
+  keys first if the observation is incomplete.
+
+
 ### Closed protected producer workflow, 2026-11-03
 
 - [Preparation record](protected-producer-workflow-preparation-2026-11-03.json)
