@@ -15,6 +15,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -22,7 +23,6 @@ import { dual, flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { newestPerKey } from "../../internal/state/JsonLinesStore.ts";
 import { PrRepository } from "../Yeet/internal/Provenance.ts";
 

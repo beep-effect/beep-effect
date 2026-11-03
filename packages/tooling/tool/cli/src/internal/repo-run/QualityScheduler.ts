@@ -88,8 +88,8 @@ import {
 } from "./RunScope.schemas.ts";
 import { enterRunScope, readRunScopeTelemetry, runScopeUnitName, stopRunScopeForReap } from "./RunScope.ts";
 import { admissionRootFor, perUserRuntimeRoot } from "./RuntimeRoot.ts";
+import type { UUID } from "@beep/repo-cli-kit/schema/Uuid";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { UUID } from "../schema/Uuid.ts";
 import type { AdmissionJournalLeaseEvicted, AdmissionJournalTicketEvicted } from "./AdmissionJournal.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/QualityScheduler");

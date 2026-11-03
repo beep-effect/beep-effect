@@ -9,6 +9,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { workspaceManifests } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { TsconfigLoader } from "@beep/repo-tsconfig/TsconfigLoader";
 import { readPackageJsonFile, toSortedRecord } from "@beep/repo-utils";
 import * as A from "effect/Array";
@@ -23,7 +25,6 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
-import { workspaceManifests } from "../../internal/RepoWorkspaces.ts";
 import { workspaceDependentOwners } from "./internal/CoverageScope.ts";
 import { testTsgoPrograms } from "./internal/TestTsgoPrograms.ts";
 import { QualityScriptCommandError } from "./Quality.errors.ts";

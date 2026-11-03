@@ -8,6 +8,7 @@
 import * as NodeURL from "node:url";
 import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { $RepoCliId } from "@beep/identity/packages";
+import { createRepoTsMorphProject } from "@beep/repo-cli-kit/tsmorph/index";
 import { extractFencedCodeBlockDetails } from "@beep/repo-docgen/Core";
 import { jsonParse } from "@beep/repo-utils/JsonUtils";
 import { readPackageJsonFile } from "@beep/repo-utils/schemas/PackageJson";
@@ -29,7 +30,6 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
-import { createRepoTsMorphProject } from "../../internal/tsmorph/index.ts";
 import { scriptFences } from "./internal/TypeScriptFences.ts";
 import { EffectImportRulesConfigurationError, EffectImportRulesPersistenceError } from "./Laws.errors.ts";
 import type { FencedCodeBlockDetail } from "@beep/repo-docgen/Core";

@@ -5,14 +5,14 @@
  * @since 0.0.0
  */
 
+import { renderTruncatedLines } from "@beep/repo-cli-kit/artifacts/index";
+import { CliReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
 import { A, Str } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import { flow, identity } from "effect/Function";
 import * as O from "effect/Option";
-import { renderTruncatedLines } from "../../internal/artifacts/index.ts";
-import { CliReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import {
   renderSchemaFirstPolicyFindingLine,
   renderSchemaFirstScannedFilesLine,

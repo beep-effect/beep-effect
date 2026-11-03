@@ -17,6 +17,7 @@
 
 import * as NodeOS from "node:os";
 import { $RepoCliId } from "@beep/identity/packages";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { sha256Hex } from "@beep/repo-utils/Sha256Hex";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
@@ -45,7 +46,6 @@ import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { resolveWorkstationStateDir } from "../../internal/state/WorkstationState.ts";
 import { AccountsError } from "./Accounts.errors.ts";
 import {

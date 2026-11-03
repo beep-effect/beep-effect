@@ -5,6 +5,9 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { appendContainedFileString, readContainedFileStringNoFollow } from "@beep/repo-cli-kit/cli/FsGuards";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
+import { UUID } from "@beep/repo-cli-kit/schema/Uuid";
 import { findRepoRoot } from "@beep/repo-utils";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -19,10 +22,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { appendContainedFileString, readContainedFileStringNoFollow } from "../../internal/cli/FsGuards.ts";
 import { repoRunArtifactId } from "../../internal/repo-run/RepoRunArtifacts.ts";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
-import { UUID } from "../../internal/schema/Uuid.ts";
 import { resolveProofLedgerLocation } from "../Yeet/internal/ArtifactPaths.ts";
 import { deriveYeetMergeReady } from "../Yeet/internal/MergeReadiness.policy.ts";
 import { ProofJobRecord } from "../Yeet/internal/ProofJob.ts";
@@ -63,8 +63,8 @@ import {
 } from "./Goals.schemas.ts";
 import { listGoalPackets, parseGoalManifestText } from "./Inventory.ts";
 import { canonicalJsonText, sha256Hex } from "./PacketCore/PacketDigest.ts";
+import type { FsGuardError } from "@beep/repo-cli-kit/cli/FsGuards";
 import type * as FileSystem from "effect/FileSystem";
-import type { FsGuardError } from "../../internal/cli/FsGuards.ts";
 import type { GoalCompletionEvidenceVerdict, GoalCompletionOutcome, GoalPullRequestRef } from "./Goals.schemas.ts";
 import type { GoalPacketRecord } from "./Inventory.ts";
 

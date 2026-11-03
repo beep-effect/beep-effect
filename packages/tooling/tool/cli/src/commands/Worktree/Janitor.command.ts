@@ -13,6 +13,7 @@
  * @since 0.0.0
  */
 
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import { jsonStringifyPretty } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
 import { getSomesStruct } from "@beep/utils/Option";
@@ -25,7 +26,6 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { printLines } from "../../internal/cli/Printer.ts";
 import { FleetMirrorService, FleetMirrorServiceLive } from "./Fleet.service.ts";
 import { ResidueReapClass, ResidueReapReport } from "./internal/ResidueReap.schemas.ts";
 import { runResidueReap } from "./internal/ResidueReap.ts";

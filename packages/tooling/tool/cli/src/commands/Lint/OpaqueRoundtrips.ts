@@ -4,6 +4,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -19,7 +20,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { Project, ts } from "ts-morph";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { runGitPathList } from "../../internal/repo-run/GitExec.ts";
 
 const $I = $RepoCliId.create("commands/Lint/OpaqueRoundtrips");

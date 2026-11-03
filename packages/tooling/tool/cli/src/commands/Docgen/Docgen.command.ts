@@ -8,6 +8,9 @@
  * @since 0.0.0
  */
 
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { jsonFlag } from "@beep/repo-cli-kit/cli/Flags";
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import { DomainError, findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { renderBiomeJson } from "@beep/repo-utils/schemas/BiomeJson";
 import { A } from "@beep/utils";
@@ -22,9 +25,6 @@ import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { jsonFlag } from "../../internal/cli/Flags.ts";
-import { printLines } from "../../internal/cli/Printer.ts";
 import { reportDocgenCommandError } from "./Docgen.errors.ts";
 import {
   defaultAnalysisPath,

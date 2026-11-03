@@ -14,6 +14,8 @@ import {
 } from "@beep/file-processing/Artifact";
 import { ExportArchiveOperation, FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { makePffexportFileProcessingEngine, PffexportEngineConfig } from "@beep/libpff";
+import { OutputBound, runCaptured } from "@beep/repo-cli-kit/process/StepExec";
+import { PosInt } from "@beep/repo-cli-kit/schema/PosInt";
 import { Sha256Hex } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import * as O from "@beep/utils/Option";
@@ -30,8 +32,6 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { OutputBound, runCaptured } from "../../../internal/process/StepExec.ts";
-import { PosInt } from "../../../internal/schema/PosInt.ts";
 import { CorpusCommandError } from "../Corpus.errors.ts";
 import { classifyRecycleBinName, parseRecycleBinMetadata } from "../Corpus.recyclebin.ts";
 import {
@@ -57,10 +57,10 @@ import {
   withRestorationWriterClaim,
 } from "./Restoration.ts";
 import type { ArchiveExportResult } from "@beep/file-processing/Extraction";
+import type { CapturedStep } from "@beep/repo-cli-kit/process/StepExec";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { CapturedStep } from "../../../internal/process/StepExec.ts";
 import type {
   ArchiveLedgerRecord,
   MailRestorationScope,

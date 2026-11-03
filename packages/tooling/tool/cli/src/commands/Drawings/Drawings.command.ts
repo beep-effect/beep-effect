@@ -11,6 +11,7 @@
 import { M365 } from "@beep/m365";
 import { PdfTools } from "@beep/pdf-tools";
 import { isRequiredSeverity } from "@beep/qa-capture/QaInventory.schemas";
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import {
   ConfirmationSource,
   EmailAddress,
@@ -34,7 +35,6 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { printLines } from "../../internal/cli/Printer.ts";
 import { CriticPackRequest, CriticRunRequest } from "./Drawings.critics.schemas.ts";
 import {
   criticRunLine,

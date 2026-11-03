@@ -17,6 +17,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { InkCoverageRequest, PageTextRequest, PdfPageRef, PdfTools } from "@beep/pdf-tools";
+import { isWithinRoot } from "@beep/repo-cli-kit/PathContainment";
 import { Sha256Hex } from "@beep/schema";
 import { RenderManifest, sha256Hex } from "@beep/technical-drawing";
 import { A, O } from "@beep/utils";
@@ -30,7 +31,6 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { isWithinRoot } from "../../internal/PathContainment.ts";
 import { DrawingsCommandError } from "./Drawings.errors.ts";
 import {
   annotationNotes,

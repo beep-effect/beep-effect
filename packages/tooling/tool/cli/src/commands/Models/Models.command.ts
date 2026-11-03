@@ -14,6 +14,9 @@
  */
 
 import { CatalogSnapshot } from "@beep/ai-sync/ModelCatalog.schemas";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { writeContainedFileString } from "@beep/repo-cli-kit/cli/FsGuards";
+import { formatJsonValue } from "@beep/repo-cli-kit/cli/Json";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, O, pipe, Str } from "@beep/utils";
 import * as Config from "effect/Config";
@@ -27,9 +30,6 @@ import * as Match from "effect/Match";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { writeContainedFileString } from "../../internal/cli/FsGuards.ts";
-import { formatJsonValue } from "../../internal/cli/Json.ts";
 import { ModelsApply, ModelsApplyLive } from "./Models.apply.service.ts";
 import { ModelsCatalogOptions } from "./Models.catalog.service.ts";
 import { ModelsCommandError } from "./Models.errors.ts";

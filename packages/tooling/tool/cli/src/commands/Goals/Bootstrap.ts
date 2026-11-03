@@ -13,6 +13,7 @@
  * @since 0.0.0
  */
 
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
@@ -24,7 +25,6 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import {
   BootstrapInput,
   GoalSlug,

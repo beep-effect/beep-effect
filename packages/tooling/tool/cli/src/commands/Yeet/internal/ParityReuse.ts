@@ -22,6 +22,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { formatCommandLine } from "@beep/repo-cli-kit/process/StepExec";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { LiteralKit } from "@beep/schema";
 import { HostProcessArchitecture, HostProcessPlatform } from "@beep/utils";
 import * as A from "effect/Array";
@@ -35,8 +37,6 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { formatCommandLine } from "../../../internal/process/StepExec.ts";
-import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { CI_LOCAL_DEFAULT_LANES, ciLocalStepsForTesting } from "../../Ci/CiLane.ts";
 import { laneProofVirtualTreeSha } from "../../Quality/internal/LaneProofReuse.ts";
 import { GithubCheckLaneRunStatus } from "../../Quality/Quality.schemas.ts";

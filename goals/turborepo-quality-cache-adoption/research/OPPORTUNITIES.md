@@ -785,6 +785,20 @@ The source-only replay and three early collector refusals remain separate from
 repository quality or native behavior proof.
 
 
+### Aggregate client pins hid a canary-only feature, 2026-11-03
+
+The matrix's aggregate pins still named 2.11.9-canary.1 while later feature-local
+experiments had frozen 2.11.11-canary.1. Fresh SRI-verified published package
+inspection found a concrete inventory gap: `hashFilePermissions` is declared
+only by the current canary, increasing its future-flag surface to 15 versus
+stable's 14. Assuming the stable list covered both clients missed this flag.
+
+Preserve historical source/version envelopes and add current-pair availability
+separately. Inventory the union of both published schemas; check unsupported
+stable cases as negatives rather than silently dropping canary-only features.
+Do not enable a hash-changing flag or transplant earlier semantic results.
+Source review initially asserted parity and stopped before publication; the
+observed schema difference changed the matrix and next qualification work.
 ### 2026-11-03 — keep native population distinct from package counts
 
 - Evidence: accepted `fae5b2098c` removes T3, adds Party and replaces root

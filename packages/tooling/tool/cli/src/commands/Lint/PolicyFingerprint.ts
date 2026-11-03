@@ -35,6 +35,9 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { LINT_POLICY_SUBCOMMANDS } from "@beep/repo-cli-kit/cli/LintRouting";
+import { workspaceDirectories } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { FsUtils, findRepoRoot, GlobOptions } from "@beep/repo-utils";
 import { normalizePath } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
@@ -51,9 +54,6 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { LINT_POLICY_SUBCOMMANDS } from "../../internal/cli/LintRouting.ts";
-import { workspaceDirectories } from "../../internal/RepoWorkspaces.ts";
 import { QualityTaskName } from "../Quality/Quality.schemas.ts";
 import { makePolicyGraph, renderClosureInputs } from "./internal/PolicyFingerprintGraph.ts";
 import { insertAfterOwned, modifyJson, renderJsonDocument } from "./internal/PolicyFingerprintJson.ts";

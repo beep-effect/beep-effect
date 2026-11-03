@@ -9,13 +9,13 @@
  * @since 0.0.0
  */
 
+import { isLabsWorkspacePath } from "@beep/repo-cli-kit/cli/Labs/index";
 import { DomainError } from "@beep/repo-utils";
 import { A } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
-import { isLabsWorkspacePath } from "../../../internal/cli/Labs/index.ts";
 import { CreatePackageIdentityRegistration } from "./IdentityRegistration.ts";
 import { LabIdentitySegment } from "./LabIdentitySegment.ts";
 

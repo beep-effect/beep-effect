@@ -12,11 +12,11 @@ import {
   AiMetricsTool,
   AiMetricsTranscriptSource,
 } from "@beep/repo-ai-metrics";
+import { aiMetricsDataRootEnvVar, aiMetricsDataRootFlag as dataRootFlag, jsonFlag } from "@beep/repo-cli-kit/cli/Flags";
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import { pipe } from "effect/Function";
-import { aiMetricsDataRootEnvVar, aiMetricsDataRootFlag as dataRootFlag, jsonFlag } from "../../internal/cli/Flags.ts";
-import { printLines } from "../../internal/cli/Printer.ts";
 import { runAiMetricsProgram } from "./AIMetrics.errors.ts";
 import { defaultP7MirrorRemoteRoot, defaultP7MirrorSshHost } from "./AIMetrics.schemas.ts";
 import { makeForwarderRunProgram, makeForwarderTimerProgram, makeOtlpExportProgram } from "./internal/Forwarder.ts";

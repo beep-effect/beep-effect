@@ -7,6 +7,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { formatJsonc, writeArtifact } from "@beep/repo-cli-kit/artifacts/index";
+import { runCaptured } from "@beep/repo-cli-kit/process/index";
+import { createRepoTsMorphProject } from "@beep/repo-cli-kit/tsmorph/index";
 import { findRepoRoot } from "@beep/repo-utils";
 import { FsUtils, GlobOptions } from "@beep/repo-utils/FsUtils";
 import { A, Str } from "@beep/utils";
@@ -28,9 +31,6 @@ import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import { Project } from "ts-morph";
-import { formatJsonc, writeArtifact } from "../../../internal/artifacts/index.ts";
-import { runCaptured } from "../../../internal/process/index.ts";
-import { createRepoTsMorphProject } from "../../../internal/tsmorph/index.ts";
 import { SchemaParityCodemodError } from "../Lint.errors.ts";
 import {
   SchemaParityCodemodFacetCount,

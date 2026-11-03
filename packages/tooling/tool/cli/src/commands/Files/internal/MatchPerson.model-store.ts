@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { PosInt } from "@beep/repo-cli-kit/schema/PosInt";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -25,7 +26,6 @@ import * as P from "effect/Predicate";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
-import { PosInt } from "../../../internal/schema/PosInt.ts";
 import { canonicalizeFileTargetPath } from "./FileTransaction.ts";
 import { MatchPersonError } from "./MatchPerson.errors.ts";
 import type { MatchPersonModelAcquisitionError, MatchPersonModelIntegrityError } from "./MatchPerson.errors.ts";

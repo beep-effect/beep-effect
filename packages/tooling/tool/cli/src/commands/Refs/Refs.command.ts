@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { resolveOperatorPath, resolveUnitBunPath } from "@beep/repo-cli-kit/systemd/index";
 import { findRepoRoot } from "@beep/repo-utils";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
@@ -15,7 +16,6 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import { resolveOperatorPath, resolveUnitBunPath } from "../../internal/systemd/index.ts";
 import { ReferenceWorkspaceError } from "./Refs.errors.ts";
 import { RefsRefreshStatus } from "./Refs.schemas.ts";
 import { ReferenceWorkspace, ReferenceWorkspaceLive, referenceWorkspaceLayer } from "./Refs.service.ts";

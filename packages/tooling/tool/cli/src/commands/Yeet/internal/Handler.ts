@@ -6,6 +6,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { printCommandJson } from "@beep/repo-cli-kit/cli/Json";
+import { UUID } from "@beep/repo-cli-kit/schema/Uuid";
 import { findRepoRoot } from "@beep/repo-utils";
 import { GitObjectId } from "@beep/schema/Conformance";
 import * as O from "@beep/utils/Option";
@@ -25,7 +27,6 @@ import * as Path from "effect/Path";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { printCommandJson } from "../../../internal/cli/Json.ts";
 import { GhPrView } from "../../../internal/github/index.ts";
 import {
   AdmissionRequest,
@@ -42,7 +43,6 @@ import {
   withQualityAdmission,
 } from "../../../internal/repo-run/index.ts";
 import { processIdentityStatus } from "../../../internal/repo-run/ProcessIdentity.ts";
-import { UUID } from "../../../internal/schema/Uuid.ts";
 import { CiLocalStepPlan } from "../../Ci/CiLane.ts";
 import {
   FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH,

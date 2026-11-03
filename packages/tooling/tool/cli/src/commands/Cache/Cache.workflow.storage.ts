@@ -4,6 +4,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { readContainedFileBytesNoFollow } from "@beep/repo-cli-kit/cli/FsGuards";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { Sha256HexFromBytes } from "@beep/schema";
 import * as BunHttpClient from "@effect/platform-bun/BunHttpClient";
 import * as A from "effect/Array";
@@ -18,8 +21,6 @@ import * as Path from "effect/Path";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
-import { readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { cacheProducerObservationMaxBytes } from "./Cache.acceptance.store.ts";
 import { classifyCacheConformanceStatus, readCacheConformanceReply } from "./Cache.conformance.wire.ts";
 import { CacheCommandError } from "./Cache.errors.ts";

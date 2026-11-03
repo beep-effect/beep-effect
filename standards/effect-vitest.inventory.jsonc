@@ -1648,7 +1648,8 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The test exercises makePgliteSqlTestLayer environment precedence and invalid URL selection with a per-operation ConfigProvider, which bounds that input to one provision. Owner: @beep/test-utils. Exit: retire when EV002 recognises a provision paired with a per-operation ConfigProvider layer (#1855 wave 8 register)."
     },
     {
       "id": "EV002:packages/tooling/test-kit/test-utils/test/SqlTest.offline.test.ts:179:provideScopedLayer@8#1",
@@ -1691,7 +1692,8 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The test exercises makePgliteSqlTestLayer environment precedence and invalid URL selection with a per-operation ConfigProvider, which bounds that input to one provision. Owner: @beep/test-utils. Exit: retire when EV002 recognises a provision paired with a per-operation ConfigProvider layer (#1855 wave 8 register)."
     },
     {
       "id": "EV002:packages/tooling/test-kit/test-utils/test/SqlTest.offline.test.ts:194:provideScopedLayer@10#1",
@@ -6147,6 +6149,116 @@
       "reason": "NodeServices serves only the assertions over real checked-in generated artifacts, safety policy and turbo config; the three synthetic filesystem cases already use MemoryFileSystem. Owner: @beep/ai-sync. Exit: retire when the committed-artifact assertions run as a lint over the checkout."
     },
     {
+      "id": "EV010:packages/tooling/library/repo-cli-kit/test/cli-kits.test.ts:27:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli-kit",
+      "file": "packages/tooling/library/repo-cli-kit/test/cli-kits.test.ts",
+      "line": 27,
+      "endLine": 27,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The hashFileSha256 large-file case streams 64 chunks from a real file and proves it never reads the file whole; on MemoryFileSystem its 64 appends are quadratic and timed out at 300 s on hosted Test Unit (#2250). Owner: @beep/repo-cli. Exit: retire when MemoryFileSystem appends in linear time or the case streams a seeded file."
+    },
+    {
+      "id": "EV010:packages/tooling/library/repo-cli-kit/test/package-scripts.policy.test.ts:10:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli-kit",
+      "file": "packages/tooling/library/repo-cli-kit/test/package-scripts.policy.test.ts",
+      "line": 10,
+      "endLine": 10,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "FsUtilsLive traverses the workspace with native SharedGlob, so MemoryFileSystem alone would change discovery semantics (goals/effect-vitest-canon/research/cli-package-scripts-policy-proof.json). Owner: @beep/repo-cli. Exit: retire when SharedGlob runs over the Effect FileSystem."
+    },
+    {
+      "id": "EV010:packages/tooling/library/repo-cli-kit/test/step-capture-lifecycle.test.ts:22:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli-kit",
+      "file": "packages/tooling/library/repo-cli-kit/test/step-capture-lifecycle.test.ts",
+      "line": 22,
+      "endLine": 22,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The live blocks spawn real echo, sh and nested bun -e children and read /proc/<pid>/stat process groups. Memory trial (#1855 wave 8): 4 of 22 fail (Service not found: ChildProcessSpawner); with NodeChildProcessSpawner over memory, the cross-process nested process-group test still fails, hanging past its 14.75 s watchdog in three of three runs. Owner: @beep/repo-cli. Exit: retire when EV010 recognises excludeTestServices blocks whose subject is a real child process (#1855 wave 8 register)."
+    },
+    {
+      "id": "EV010:packages/tooling/library/repo-cli-kit/test/step-capture-lifecycle.test.ts:23:@effect/platform-node/NodeFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli-kit",
+      "file": "packages/tooling/library/repo-cli-kit/test/step-capture-lifecycle.test.ts",
+      "line": 23,
+      "endLine": 23,
+      "symbol": "@effect/platform-node/NodeFileSystem",
+      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "withAdmissionWorkloadBinding publishes the workload record through a real shell. #1875 wave 9 memory trial: 17 pass and the five admission tests fail (yeet-admission-workload: No such file or directory). Owner: @beep/repo-cli. Exit: retire when the admission binding writes its workload record through the provided FileSystem instead of a shell (#1855 wave 8 register)."
+    },
+    {
+      "id": "EV010:packages/tooling/library/repo-cli-kit/test/stream-console.test.ts:16:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli-kit",
+      "file": "packages/tooling/library/repo-cli-kit/test/stream-console.test.ts",
+      "line": 16,
+      "endLine": 16,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "One test of 28 runs src/internal/cli/Stdout.ts in a bun child to observe real stdout. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when that case moves to its own block and the import no longer serves the in-process cases."
+    },
+    {
       "id": "EV010:packages/tooling/library/repo-utils/test/FsUtils.test.ts:6:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -7049,28 +7161,6 @@
       "reason": "The test reads committed sources at path.join(findRepoRoot(), relative) to pin the rerun contract. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the pinned sources are passed as fixture text instead of read from the checkout."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/cli-kits.test.ts:35:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cli-kits.test.ts",
-      "line": 35,
-      "endLine": 35,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The hashFileSha256 large-file case streams 64 chunks from a real file and proves it never reads the file whole; on MemoryFileSystem its 64 appends are quadratic and timed out at 300 s on hosted Test Unit (#2250). Owner: @beep/repo-cli. Exit: retire when MemoryFileSystem appends in linear time or the case streams a seeded file."
-    },
-    {
       "id": "EV010:packages/tooling/tool/cli/test/commitlint-config.test.ts:4:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -7642,13 +7732,13 @@
       "reason": "A real platform boundary verifies subprocess, symlink, permission and physical-file behavior that memory cannot model (repository-simplification-confidence lane C). Owner: @beep/repo-cli. Exit: retire when the rewrite cases run behind a scripted spawner on a memory volume that models links and modes."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/knowledge-refs.test.ts:32:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/knowledge-refs.test.ts:33:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/knowledge-refs.test.ts",
-      "line": 32,
-      "endLine": 32,
+      "line": 33,
+      "endLine": 33,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
@@ -7860,28 +7950,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The prefix check reads the real checkout at findRepoRoot() through FsUtilsLive. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the check runs over a seeded workspace volume."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/package-scripts.policy.test.ts:11:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/package-scripts.policy.test.ts",
-      "line": 11,
-      "endLine": 11,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "FsUtilsLive traverses the workspace with native SharedGlob, so MemoryFileSystem alone would change discovery semantics (goals/effect-vitest-canon/research/cli-package-scripts-policy-proof.json). Owner: @beep/repo-cli. Exit: retire when SharedGlob runs over the Effect FileSystem."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/process-attachment.test.ts:21:@effect/platform-node@0#1",
@@ -8366,94 +8434,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The committed skills-provenance lock and the checkout root (import.meta.url) are inputs, and relock links .agents/skills. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the lock is seeded into memory and the root is injected."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts:16:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts",
-      "line": 16,
-      "endLine": 16,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The live blocks spawn real echo, sh and nested bun -e children and read /proc/<pid>/stat process groups. Memory trial (#1855 wave 8): 4 of 22 fail (Service not found: ChildProcessSpawner); with NodeChildProcessSpawner over memory, the cross-process nested process-group test still fails, hanging past its 14.75 s watchdog in three of three runs. Owner: @beep/repo-cli. Exit: retire when EV010 recognises excludeTestServices blocks whose subject is a real child process (#1855 wave 8 register)."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts:17:@effect/platform-node/NodeFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts",
-      "line": 17,
-      "endLine": 17,
-      "symbol": "@effect/platform-node/NodeFileSystem",
-      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "withAdmissionWorkloadBinding publishes the workload record through a real shell. #1875 wave 9 memory trial: 17 pass and the five admission tests fail (yeet-admission-workload: No such file or directory). Owner: @beep/repo-cli. Exit: retire when the admission binding writes its workload record through the provided FileSystem instead of a shell (#1855 wave 8 register)."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/step-git-exec.test.ts:42:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/step-git-exec.test.ts",
-      "line": 42,
-      "endLine": 42,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The test runs real git over scratch repositories. #1875 wave 7 memory trial (H4): fails with posix_spawn 'git' against a directory that exists only in memory. Owner: @beep/repo-cli. Exit: retire when EV010 recognises real-git suites as a native-process subject (#1855 wave 8 register)."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/stream-console.test.ts:16:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/stream-console.test.ts",
-      "line": 16,
-      "endLine": 16,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "One test of 28 runs src/internal/cli/Stdout.ts in a bun child to observe real stdout. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when that case moves to its own block and the import no longer serves the in-process cases."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:36:@effect/platform-node@0#1",
@@ -9422,6 +9402,50 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The hoisted mock controls the plain findRepoRoot module function that command dispatch calls; it is not a Context.Service, and the selection resets and real-child cases keep both boundaries (goals/effect-vitest-canon/research/cli-lint-workers-package-proof.json). Owner: @beep/repo-cli. Exit: retire when lint dispatch resolves the repository root through an injected service (#1855 wave 8 register)."
+    },
+    {
+      "id": "EV012:packages/tooling/tool/cli/test/lint-workers.test.ts:45:vi.mock@0#1",
+      "lens": "resource",
+      "ruleId": "EV012",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
+      "line": 45,
+      "endLine": 52,
+      "symbol": "vi.mock",
+      "occurrence": "v2:b7c489c4949e1b0b213af2591fb31eeaf0b0c84a3f17fba5eb93ec56cbcc5829",
+      "class": "unproven-module-mock-review",
+      "evidence": "vi.mock(\"@beep/repo-cli-kit/process/StepExec\", (importOriginal) => importOriginal<typeof StepExec>().then((original) => ({ ...original, runToExit: execution, runCaptured: (options: Parameters<typeof S",
+      "replacement": {
+        "primitive": "Layer.mock",
+        "sketch": "Review mock provenance: Layer.mock requires a real service key; unknown module/codec subject mocks are not mechanically service-replaceable. Layer.mock: Use for effect-service-mock-candidate judgments (EV012, candidate class effect-service-mock-candidate) when an Effect service is the actual dependency."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The hoisted mock replaces runToExit and the oxlint branch of runCaptured so lint dispatch tests assert the worker command lines without spawning oxlint; every other capture runs the original implementation."
+    },
+    {
+      "id": "EV012:packages/tooling/tool/cli/test/lint-workers.test.ts:54:vi.mock@0#1",
+      "lens": "resource",
+      "ruleId": "EV012",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
+      "line": 54,
+      "endLine": 61,
+      "symbol": "vi.mock",
+      "occurrence": "v2:fe1afdd438cd742893aeee77949dc94fbfe76682e63630801d2802b789e09bc0",
+      "class": "unproven-module-mock-review",
+      "evidence": "vi.mock(\"@beep/repo-cli-kit/cli/EnvConfig\", (importOriginal) => importOriginal<object>().then((original) => ({ ...original, readTurboCacheEnvironmentSync: () => readTurboCacheEnvironment({}), canUseTu",
+      "replacement": {
+        "primitive": "Layer.mock",
+        "sketch": "Review mock provenance: Layer.mock requires a real service key; unknown module/codec subject mocks are not mechanically service-replaceable. Layer.mock: Use for effect-service-mock-candidate judgments (EV012, candidate class effect-service-mock-candidate) when an Effect service is the actual dependency."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The hoisted mock stubs the ambient Turbo secret-session and environment-health probes so dispatch tests own process execution without reading the operator's 1Password or Turbo environment."
     }
   ]
 }

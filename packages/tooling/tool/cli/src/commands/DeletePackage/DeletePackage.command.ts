@@ -7,6 +7,18 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { FrontmatterSource, FrontmatterSourceBlock, FrontmatterSourceSplit } from "@beep/markdown/FrontmatterSource";
+import { isCi } from "@beep/repo-cli-kit/cli/EnvConfig";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { applyJsoncModification, JsoncModification } from "@beep/repo-cli-kit/cli/Jsonc";
+import {
+  decodeLabManifestJson,
+  isLabsWorkspacePath,
+  LAB_MANIFEST_FILENAME,
+  RETIRED_REGISTRY_PATH,
+  readRetiredPackageNames,
+} from "@beep/repo-cli-kit/cli/Labs/index";
+import { runToExit } from "@beep/repo-cli-kit/process/index";
+import { workspaceDirectories } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { DomainError, decodePackageJsonEffect, findRepoRoot } from "@beep/repo-utils";
 import { normalizePath } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
@@ -25,18 +37,6 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { isCi } from "../../internal/cli/EnvConfig.ts";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { applyJsoncModification, JsoncModification } from "../../internal/cli/Jsonc.ts";
-import {
-  decodeLabManifestJson,
-  isLabsWorkspacePath,
-  LAB_MANIFEST_FILENAME,
-  RETIRED_REGISTRY_PATH,
-  readRetiredPackageNames,
-} from "../../internal/cli/Labs/index.ts";
-import { runToExit } from "../../internal/process/index.ts";
-import { workspaceDirectories } from "../../internal/RepoWorkspaces.ts";
 import { CreatePackageIdentityRegistration } from "../CreatePackage/internal/IdentityRegistration.ts";
 import { LabIdentitySegment } from "../CreatePackage/internal/LabIdentitySegment.ts";
 import { ChangesetGraphError, changesetPackageReferencesFromText } from "../Quality/ChangesetGraph.ts";

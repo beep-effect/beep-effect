@@ -5,6 +5,8 @@
  * @since 0.0.0
  */
 
+import { concatBytes } from "@beep/repo-cli-kit/cli/Bytes";
+import { hashFileSha256 as hashFileSha256Hex } from "@beep/repo-cli-kit/cli/FsGuards";
 import { A, Str } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Digest from "effect/crypto/Digest";
@@ -19,8 +21,6 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import sharp from "sharp";
-import { concatBytes } from "../../../internal/cli/Bytes.ts";
-import { hashFileSha256 as hashFileSha256Hex } from "../../../internal/cli/FsGuards.ts";
 import { FilesCommandError, formatPlatformError, PlatformErrorOptions } from "../Files.errors.ts";
 import { isSupportedMetadataImageExtension, normalizeBareExtension } from "../Files.media.ts";
 import {

@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { bytesEqual } from "@beep/repo-cli-kit/cli/FsGuards";
 import { Sha256Hex } from "@beep/schema";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
@@ -22,7 +23,6 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { bytesEqual } from "../../../internal/cli/FsGuards.ts";
 import { CorpusCommandError } from "../Corpus.errors.ts";
 import {
   ArchiveLedgerRecord,

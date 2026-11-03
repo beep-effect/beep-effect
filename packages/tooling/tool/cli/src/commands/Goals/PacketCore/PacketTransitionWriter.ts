@@ -22,6 +22,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
 import { LiteralKit } from "@beep/schema";
 import { A, O, pipe } from "@beep/utils";
 import * as Context from "effect/Context";
@@ -32,7 +33,6 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { optionalProp } from "../../../internal/cli/OptionRecord.ts";
 import { PacketStreamError } from "./PacketCore.errors.ts";
 import {
   PacketDerivedState,

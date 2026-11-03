@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { nearestRank } from "@beep/repo-cli-kit/stats/NearestRank";
 import { MimeType, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { O } from "@beep/utils";
 import * as A from "effect/Array";
@@ -27,7 +28,6 @@ import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { nearestRank } from "../../internal/stats/NearestRank.ts";
 import {
   CacheConformanceBackendResult,
   CacheConformanceExchange,

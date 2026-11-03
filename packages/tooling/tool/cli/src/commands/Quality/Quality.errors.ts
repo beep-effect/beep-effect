@@ -5,14 +5,14 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { commandErrorFields, messageWithCause } from "@beep/repo-cli-kit/cli/CommandErrorFields";
+import { OpaqueDefect } from "@beep/repo-cli-kit/schema/OpaqueDefect";
 import { Err } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
-import { commandErrorFields, messageWithCause } from "../../internal/cli/CommandErrorFields.ts";
-import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 
 // The cause-first constructors below take an optional trailing context, so arity alone cannot tell
 // `new(cause, message)` from the curried `new(message, context)`: `dual(3, ...)` read every two-argument

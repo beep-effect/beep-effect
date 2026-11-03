@@ -5,6 +5,8 @@
  * @since 0.0.0
  */
 
+import { workspaceDirectories } from "@beep/repo-cli-kit/RepoWorkspaces";
+import { mentionsToken } from "@beep/repo-cli-kit/WholeToken";
 import { DomainError, TSMorphService } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -15,8 +17,6 @@ import * as HashMap from "effect/HashMap";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import { Project, SyntaxKind } from "ts-morph";
-import { workspaceDirectories } from "../../../internal/RepoWorkspaces.ts";
-import { mentionsToken } from "../../../internal/WholeToken.ts";
 import { toIdentityAccessorName, typedIdentityExportBlock } from "./IdentityExportBlock.ts";
 import type { CallExpression, SourceFile, VariableDeclaration } from "ts-morph";
 

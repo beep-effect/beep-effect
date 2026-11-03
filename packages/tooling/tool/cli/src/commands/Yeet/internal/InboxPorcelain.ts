@@ -24,6 +24,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { readStdinDocument } from "@beep/repo-cli-kit/cli/Stdin";
 import { findRepoRoot } from "@beep/repo-utils";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -33,7 +34,6 @@ import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { readStdinDocument } from "../../../internal/cli/Stdin.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import {
   renderYeetAckResolution,

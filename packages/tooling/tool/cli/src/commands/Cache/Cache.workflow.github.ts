@@ -8,6 +8,7 @@ import { GitHubClient } from "@beep/github/GitHubClient";
 import { GitHubContent } from "@beep/github/GitHubContent";
 import { Repo } from "@beep/github/Repo";
 import { $RepoCliId } from "@beep/identity/packages";
+import { OutputBound, runCaptured } from "@beep/repo-cli-kit/process/index";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import * as A from "effect/Array";
@@ -22,7 +23,6 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { GithubClientRequest, layerGithubClientFor, selectGithubIdentity } from "../../internal/github/index.ts";
-import { OutputBound, runCaptured } from "../../internal/process/index.ts";
 import { CacheCommandError } from "./Cache.errors.ts";
 import { CacheProducerBinding } from "./Cache.producer.schemas.ts";
 import {

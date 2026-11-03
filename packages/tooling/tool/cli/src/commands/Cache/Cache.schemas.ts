@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import {
   CacheActivationProjection,
   CachePolicyBaselineReview,
@@ -15,7 +16,6 @@ import {
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { CacheCensusEntrypointReview } from "./Cache.entrypoints.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.schemas");

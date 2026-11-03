@@ -17,6 +17,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Argument from "effect/cli/Argument";
@@ -33,8 +35,6 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import { BootstrapInput } from "../Goals/Bootstrap.schemas.ts";
 import { compileMaterializationPlan, planTodayFlag, reportCompiledPlan, resolveToday } from "../Goals/Bootstrap.ts";
 import { GoalPlanInputError, GoalPlanOperationalError } from "../Goals/Goals.errors.ts";

@@ -20,6 +20,8 @@ import {
   OutlookItemRef,
   OutlookItemRefFromInput,
 } from "@beep/m365";
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
+import { isWithinRoot } from "@beep/repo-cli-kit/PathContainment";
 import { EmailString } from "@beep/schema";
 import { Sha256HexFromBytes } from "@beep/schema/Sha256";
 import * as A from "effect/Array";
@@ -39,8 +41,6 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { printLines } from "../../internal/cli/Printer.ts";
-import { isWithinRoot } from "../../internal/PathContainment.ts";
 import { DrawingIntakeError, DrawingsCommandError } from "./Drawings.errors.ts";
 import {
   IntakeAttachment,

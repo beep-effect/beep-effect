@@ -4,13 +4,14 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { resolveRunMode } from "@beep/repo-cli-kit/cli/RunMode";
 import { findRepoRoot } from "@beep/repo-utils";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { resolveRunMode } from "../../internal/cli/RunMode.ts";
 import { handleVersionSync } from "./internal/Handler.ts";
 import { checkBunRuntimeVersion } from "./VersionSync.runtime.ts";
 import { VersionSyncOptions } from "./VersionSync.schemas.ts";

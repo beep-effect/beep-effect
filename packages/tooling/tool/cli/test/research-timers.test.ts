@@ -1,29 +1,15 @@
 import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { researchCommand, runResearchInstallTimers } from "@beep/repo-cli/commands/Research";
-import {
-  parseSystemdUnit,
-  readInstalledSystemdUnit,
-  resolveOperatorPath,
-  resolveSystemdBunPath,
-  SystemdBunCandidate,
-  SystemdInstalledUnit,
-  SystemdUnitDirective,
-  SystemdUnitPath,
-  systemdEnvironmentFile,
-  systemdUnitDirective,
-  systemdUserUnitDir,
-  unquoteSystemdArgument,
-} from "@beep/repo-cli/test/Systemd";
+import { SystemdUnitPath } from "@beep/repo-cli/test/Systemd";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
-import { assertNone, assertSome, assertSuccess, strictEqual } from "@effect/vitest/utils";
+import { assertSome, assertSuccess, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -106,48 +92,6 @@ const fixture = Effect.fn("ResearchTimersTest.fixture")(function* () {
 layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestServices: true, timeout: "30 seconds" })(
   "Research timers",
   (it) => {
-    it.effect(
-      "resolves the units' Bun through the mise shim, then a standalone Bun, then this executable",
-      Effect.fn(function* () {
-        const { fs, path, home, touch } = yield* fixture();
-        const shim = path.join(home, ".local", "share", "mise", "shims", "bun");
-        const standalone = path.join(home, ".bun", "bin", "bun");
-        expect(SystemdBunCandidate.literals).toEqual([".local/share/mise/shims/bun", ".bun/bin/bun"]);
-        // Neither candidate: the running executable is the fallback.
-        const resolvedSystemdBunPath = yield* resolveSystemdBunPath(home);
-        expect(resolvedSystemdBunPath).toBe(process.execPath);
-        yield* Effect.forEach([shim, standalone], touch);
-        // Both executable: the shim wins because it follows the repo's pinned Bun.
-        const resolvedSystemdBunPath1 = yield* resolveSystemdBunPath(home);
-        expect(resolvedSystemdBunPath1).toBe(shim);
-        // A leftover without execute permission is skipped, not pinned.
-        yield* fs.chmod(shim, 0o644);
-        const resolvedSystemdBunPath2 = yield* resolveSystemdBunPath(home);
-        expect(resolvedSystemdBunPath2).toBe(standalone);
-        // So is a directory sitting where the executable should be.
-        yield* fs.remove(standalone);
-        yield* fs.makeDirectory(standalone);
-        const resolvedSystemdBunPath3 = yield* resolveSystemdBunPath(home);
-        expect(resolvedSystemdBunPath3).toBe(process.execPath);
-        // A candidate this user cannot even reach is skipped rather than failing
-        // the install, so an uninstall is never blocked by the probe either.
-        yield* fs.remove(standalone, { recursive: true });
-        yield* touch(shim);
-        yield* fs.chmod(path.dirname(shim), 0o000);
-        const unreachable = yield* resolveSystemdBunPath(home).pipe(
-          Effect.ensuring(Effect.orDie(fs.chmod(path.dirname(shim), 0o755)))
-        );
-        expect(unreachable).toBe(process.execPath);
-        // Operator pins expand `~/` against HOME and otherwise resolve as typed.
-        expect(resolveOperatorPath("~/tools/bun", home, path.resolve)).toBe(path.join(home, "tools", "bun"));
-        expect(resolveOperatorPath("/usr/bin/bun", home, path.resolve)).toBe("/usr/bin/bun");
-        expect(resolveOperatorPath("tools/bun", home, path.resolve)).toBe(path.resolve("tools/bun"));
-        // The data-last form takes the typed path alone, so it composes in a pipe.
-        expect(resolveOperatorPath(home, path.resolve)("~/tools/bun")).toBe(path.join(home, "tools", "bun"));
-        expect(pipe("/usr/bin/bun", resolveOperatorPath(home, path.resolve))).toBe("/usr/bin/bun");
-      })
-    );
-
     it.effect(
       "writes both unit pairs with the Bun path quoted for systemd and enables the timers",
       Effect.fn(function* () {
@@ -418,67 +362,6 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
         })
       );
     });
-    it.effect(
-      "parses systemd directives in order and supports data-first and data-last readers",
-      Effect.fn(function* () {
-        const text =
-          "[Unit]\n# Description=ignored\n; ignored=yes\n\n Description=  daily job  \n[Service]\nWorkingDirectory= /clone \nEnvironment=FIRST=one\nEnvironment=SECOND=two\n";
-        const expected = SystemdInstalledUnit.make({
-          fileName: "test.service",
-          directives: [
-            SystemdUnitDirective.make({ key: "Description", value: "daily job" }),
-            SystemdUnitDirective.make({ key: "WorkingDirectory", value: "/clone" }),
-            SystemdUnitDirective.make({ key: "Environment", value: "FIRST=one" }),
-            SystemdUnitDirective.make({ key: "Environment", value: "SECOND=two" }),
-          ],
-        });
-        const unit = parseSystemdUnit(text, "test.service");
-        expect(unit).toEqual(expected);
-        expect(pipe(text, parseSystemdUnit("test.service"))).toEqual(expected);
-        assertSome(systemdUnitDirective(unit, "Environment"), "FIRST=one");
-        assertSome(pipe(unit, systemdUnitDirective("WorkingDirectory")), "/clone");
-        assertNone(systemdUnitDirective(unit, "Missing"));
-        assertNone(pipe(unit, systemdUnitDirective("Missing")));
-      })
-    );
-
-    it.effect(
-      "unquotes systemd arguments and strips optional environment-file dashes",
-      Effect.fn(function* () {
-        expect(unquoteSystemdArgument('"/opt/bun 1/bin/bun"')).toBe("/opt/bun 1/bin/bun");
-        expect(unquoteSystemdArgument("/usr/bin/bun")).toBe("/usr/bin/bun");
-        expect(unquoteSystemdArgument("")).toBe("");
-        expect(unquoteSystemdArgument('"')).toBe('"');
-        expect(unquoteSystemdArgument('""')).toBe("");
-        expect(unquoteSystemdArgument('"/usr/bin/bun')).toBe('"/usr/bin/bun');
-        assertSome(systemdEnvironmentFile(parseSystemdUnit("EnvironmentFile=-/env", "x.service")), "/env");
-        assertSome(systemdEnvironmentFile(parseSystemdUnit("EnvironmentFile=/env", "x.service")), "/env");
-        assertNone(systemdEnvironmentFile(parseSystemdUnit("[Service]", "x.service")));
-      })
-    );
-
-    it.effect(
-      "reads absent and written systemd units from the user unit directory",
-      Effect.fn(function* () {
-        const { fs, path, home, unitDir } = yield* fixture();
-        expect(systemdUserUnitDir(path, home)).toBe(unitDir);
-        expect(pipe(path, systemdUserUnitDir(home))).toBe(unitDir);
-        const options = { home, fileName: "test.service" };
-        const readInstalledSystemdUnit17 = yield* readInstalledSystemdUnit(options);
-        assertNone(readInstalledSystemdUnit17);
-        yield* fs.makeDirectory(unitDir, { recursive: true });
-        yield* fs.writeFileString(path.join(unitDir, options.fileName), "[Service]\nWorkingDirectory= /clone \n");
-        const readInstalledSystemdUnit18 = yield* readInstalledSystemdUnit(options);
-        assertSome(
-          readInstalledSystemdUnit18,
-          SystemdInstalledUnit.make({
-            fileName: options.fileName,
-            directives: [SystemdUnitDirective.make({ key: "WorkingDirectory", value: "/clone" })],
-          })
-        );
-      })
-    );
-
     it.effect(
       "installs with an explicit repo root and expands a home-relative repo root",
       Effect.fn(function* () {

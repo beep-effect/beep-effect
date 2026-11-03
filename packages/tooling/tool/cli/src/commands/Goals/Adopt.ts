@@ -14,6 +14,8 @@
  * @since 0.0.0
  */
 
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Argument from "effect/cli/Argument";
@@ -30,8 +32,6 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import {
   GoalSlug,
   MODELED_GOAL_MANIFEST_KEYS,

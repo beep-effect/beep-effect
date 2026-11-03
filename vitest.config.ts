@@ -13,7 +13,7 @@ export default defineConfig({
       "packages/tooling/*/*/vitest.config.ts",
       "apps/*/vitest.config.ts",
       // Lab apps live one level deeper (apps/labs/<name>); globs do not cross "/".
-      // Canonical labs path module: packages/tooling/tool/cli/src/internal/cli/Labs.
+      // Canonical labs path module: packages/tooling/library/repo-cli-kit/src/cli/Labs.
       "apps/labs/*/vitest.config.ts",
       ...(isBun
         ? [

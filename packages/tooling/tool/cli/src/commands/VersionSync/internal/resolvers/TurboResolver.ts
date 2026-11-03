@@ -14,6 +14,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
+import { workspaceDirectories } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { ArrayKeyDefaultEmpty } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import { A, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
@@ -25,7 +26,6 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
-import { workspaceDirectories } from "../../../../internal/RepoWorkspaces.ts";
 import {
   VersionCategoryReport,
   VersionCategoryStatusEnum,

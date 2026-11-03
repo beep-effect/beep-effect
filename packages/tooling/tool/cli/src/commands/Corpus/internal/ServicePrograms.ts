@@ -40,6 +40,8 @@ import {
 import { $RepoCliId } from "@beep/identity/packages";
 import { makePffexportFileProcessingEngine, PffexportEngineConfig } from "@beep/libpff";
 import { makePopplerRasterizer, PopplerConfig, tiffFrameCount } from "@beep/poppler";
+import { hashFileSha256 as sharedHashFileSha256 } from "@beep/repo-cli-kit/cli/FsGuards";
+import { withDuckDb } from "@beep/repo-cli-kit/duckdb/WithDuckDb";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { makeTesseractPageOcrEngine, planTesseractLanguages, TesseractConfig } from "@beep/tesseract";
@@ -70,8 +72,6 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import sharp from "sharp";
-import { hashFileSha256 as sharedHashFileSha256 } from "../../../internal/cli/FsGuards.ts";
-import { withDuckDb } from "../../../internal/duckdb/WithDuckDb.ts";
 import {
   CorpusArchiveMoveDestinationConflictError,
   CorpusArchiveMoveDigestMismatchError,

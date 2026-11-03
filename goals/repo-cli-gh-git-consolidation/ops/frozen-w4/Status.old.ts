@@ -8,6 +8,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { LiteralKit } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import * as A from "effect/Array";
@@ -46,7 +47,6 @@ import {
 import { YeetCommandError } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/Yeet.errors.ts";
 import { GhActor, ghOutput } from "../../../../packages/tooling/tool/cli/src/internal/github/index.ts";
 import { runRepoCommandCapture } from "../../../../packages/tooling/tool/cli/src/internal/repo-run/index.ts";
-import { JsonStringCodec } from "../../../../packages/tooling/tool/cli/src/internal/schema/JsonCodec.ts";
 import type { Git } from "@beep/git/Git";
 
 export { deriveYeetMergeReady } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/MergeReadiness.policy.ts";

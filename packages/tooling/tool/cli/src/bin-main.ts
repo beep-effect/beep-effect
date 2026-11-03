@@ -26,10 +26,10 @@ const [ConfigProvider, Console, Effect, Layer, Logger, Option, R, Runtime, { Cli
     import("effect/Record"),
     import("effect/Runtime"),
     import("@beep/cli-kit/CliRuntime"),
-    import("./internal/cli/FailureRendering.ts"),
+    import("@beep/repo-cli-kit/cli/FailureRendering"),
   ]);
 const { drainProcessStreams, ProcessStreamName, streamConsole, writeBestEffortLine } = await import(
-  "./internal/cli/Stdout.ts"
+  "@beep/repo-cli-kit/cli/Stdout"
 );
 const [Dispatch, { loadQualityTasks }, HashSet, Command] = await Promise.all([
   import("./internal/dispatch/Dispatch.ts"),
@@ -135,7 +135,7 @@ const withHostTurboCacheDefaults = Effect.fn("RepoCli.withHostTurboCacheDefaults
   effect: import("effect/Effect").Effect<A, E, R>
 ) {
   const { configStringOption, isCiSync, loadHostTurboCacheDefaults } = yield* Effect.promise(
-    () => import("./internal/cli/EnvConfig.ts")
+    () => import("@beep/repo-cli-kit/cli/EnvConfig")
   );
   const defaults = yield* loadHostTurboCacheDefaults(Bun.env, isCiSync(), currentGitOrigin());
   const configuredApi = yield* configStringOption("TURBO_API");

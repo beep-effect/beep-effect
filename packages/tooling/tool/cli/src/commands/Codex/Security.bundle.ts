@@ -4,6 +4,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { readContainedFileBytesNoFollow } from "@beep/repo-cli-kit/cli/FsGuards";
 import { Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -14,7 +16,6 @@ import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
 import { decodeCodexFindingsCapturePayload } from "./Findings.capture.schemas.ts";
 import { scanSensitiveUnknown } from "./Findings.scan.ts";
 import { CodexSecurityError, toCodexSecurityError } from "./Security.errors.ts";
@@ -27,7 +28,7 @@ import {
   SecuritySeverityToPacket,
   SecuritySourceReceipt,
 } from "./Security.schemas.ts";
-import type { FsGuardError } from "../../internal/cli/FsGuards.ts";
+import type { FsGuardError } from "@beep/repo-cli-kit/cli/FsGuards";
 import type { GitHubRepoSlug } from "./Findings.capture.schemas.ts";
 
 const decodeJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));

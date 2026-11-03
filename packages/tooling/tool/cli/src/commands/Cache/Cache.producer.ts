@@ -4,6 +4,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { readContainedFileBytesNoFollow } from "@beep/repo-cli-kit/cli/FsGuards";
 import { CacheClientPin, CacheQualificationKey, CacheTaskContract } from "@beep/repo-configs/cache";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
@@ -21,7 +23,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 import * as Tuple from "effect/Tuple";
-import { readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
 import {
   currentEffectiveUserIdOption,
   validatePrivateCoordinationDirectory,

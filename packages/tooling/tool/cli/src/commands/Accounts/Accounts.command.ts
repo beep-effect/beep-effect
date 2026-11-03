@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
@@ -13,7 +14,6 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Terminal from "effect/Terminal";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { AccountsError } from "./Accounts.errors.ts";
 import { AccountsStatusReportJson } from "./Accounts.schemas.ts";
 import { watchAccounts } from "./Accounts.tui.ts";

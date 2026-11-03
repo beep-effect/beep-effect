@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { isCi } from "@beep/repo-cli-kit/cli/EnvConfig";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
@@ -20,7 +21,6 @@ import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { isCi } from "../../internal/cli/EnvConfig.ts";
 import {
   KnowledgeHostPathDebtError,
   KnowledgeIntroducedFindingsError,

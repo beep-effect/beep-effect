@@ -5,6 +5,8 @@
  * @since 0.0.0
  */
 
+import { hashFileSha256 } from "@beep/repo-cli-kit/cli/FsGuards";
+import { OutputBound, runCapturedStreams } from "@beep/repo-cli-kit/process/index";
 import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -15,8 +17,6 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { hashFileSha256 } from "../../internal/cli/FsGuards.ts";
-import { OutputBound, runCapturedStreams } from "../../internal/process/index.ts";
 import { CacheCommandError } from "./Cache.errors.ts";
 import {
   CacheLinkedFile,

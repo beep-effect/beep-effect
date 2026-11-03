@@ -2,17 +2,7 @@ import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git, GitCommandError, NotARepositoryError, UnknownRefError } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { KnowledgeCloneAttributesError, KnowledgeOperationalError } from "@beep/repo-cli/commands/Knowledge";
-import {
-  BoundedOutput,
-  boundedChunkReducer,
-  collectBoundedText,
-  emptyBoundedOutput,
-  formatCommandLine,
-  OutputBound,
-  qualityStepOutputBound,
-  repoRunOutputBound,
-  runCapturedStreams,
-} from "@beep/repo-cli/test/Process";
+import { repoRunOutputBound } from "@beep/repo-cli/test/Process";
 import {
   adaptGitKitError,
   collectStagedPaths,
@@ -53,88 +43,11 @@ import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
-import * as Stream from "effect/Stream";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { GitCommandErrorAdapter } from "@beep/repo-cli/test/RepoRun";
 
 // `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
 const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
-
-const encode = (value: string): Uint8Array => new TextEncoder().encode(value);
-
-describe("StepExec bounded output fold", () => {
-  const bound = OutputBound.make({ maxChars: 4, truncatedNotice: "!" });
-  const reduce = boundedChunkReducer(bound);
-
-  it("appends a chunk that fits within the bound", () => {
-    expect(reduce(emptyBoundedOutput, "ab")).toEqual(BoundedOutput.make({ text: "ab", truncated: false }));
-  });
-
-  it("truncates a chunk that overflows the bound, slicing to the remaining budget", () => {
-    expect(reduce(emptyBoundedOutput, "abcdef")).toEqual(BoundedOutput.make({ text: "abcd!", truncated: true }));
-  });
-
-  it("appends only the truncation notice when the text is already at the cap", () => {
-    expect(reduce(BoundedOutput.make({ text: "abcd", truncated: false }), "e")).toEqual(
-      BoundedOutput.make({ text: "abcd!", truncated: true })
-    );
-  });
-
-  it("is idempotent once truncated", () => {
-    const truncated = reduce(emptyBoundedOutput, "abcdef");
-    expect(reduce(truncated, "ghi")).toBe(truncated);
-  });
-
-  it.effect(
-    "folds a byte stream into bounded text with the truncation notice",
-    Effect.fnUntraced(function* () {
-      const result = yield* collectBoundedText(bound)(Stream.fromIterable([encode("ab"), encode("cdef")]));
-      expect(result).toEqual(BoundedOutput.make({ text: "abcd!", truncated: true }));
-    })
-  );
-
-  it.effect(
-    "folds a short byte stream without truncating",
-    Effect.fnUntraced(function* () {
-      const result = yield* collectBoundedText(bound)(Stream.fromIterable([encode("hi")]));
-      expect(result).toEqual(BoundedOutput.make({ text: "hi", truncated: false }));
-    })
-  );
-
-  it("exposes the divergent repo-run and quality bounds", () => {
-    expect(repoRunOutputBound.maxChars).toBe(512 * 1024);
-    expect(qualityStepOutputBound.maxChars).toBe(8 * 1024 * 1024);
-    expect(repoRunOutputBound.truncatedNotice).toContain("[repo-run]");
-    expect(qualityStepOutputBound.truncatedNotice).toContain("[beep-cli]");
-  });
-
-  it("formats a command line", () => {
-    expect(formatCommandLine("git", ["status", "--short"])).toBe("git status --short");
-  });
-});
-
-layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "5 seconds" })(
-  "StepExec process integration",
-  (it) => {
-    it.effect(
-      "drains large stdout and stderr streams concurrently",
-      Effect.fnUntraced(function* () {
-        const charsPerStream = 1024 * 1024;
-        const result = yield* runCapturedStreams({
-          command: process.execPath,
-          args: [
-            "-e",
-            `process.stdout.write("o".repeat(${charsPerStream}));process.stderr.write("e".repeat(${charsPerStream}));`,
-          ],
-        });
-
-        expect(result.exitCode).toBe(0);
-        expect(Str.length(result.stdout)).toBe(charsPerStream);
-        expect(Str.length(result.stderr)).toBe(charsPerStream);
-      })
-    );
-  }
-);
 
 describe("GitExec path parsing", () => {
   it("parses NUL-delimited output into sorted unique paths", () => {

@@ -183,7 +183,7 @@ describe("internal/ratchet/RatchetLifecycle enforceRatchet", () => {
   );
 });
 
-describe("internal/artifacts/ArtifactIo renderTruncatedLines", () => {
+describe("artifacts/ArtifactIo renderTruncatedLines", () => {
   it("renders every item when within the limit", () => {
     const lines = renderTruncatedLines({
       items: ["a", "b"],

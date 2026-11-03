@@ -14,6 +14,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { ContainedFileRead, readContainedFileStringNoFollow } from "@beep/repo-cli-kit/cli/FsGuards";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
+import { nearestRank } from "@beep/repo-cli-kit/stats/NearestRank";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { thunk0, thunkEmptyStr, thunkFalse } from "@beep/utils";
@@ -38,11 +41,8 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ContainedFileRead, readContainedFileStringNoFollow } from "../../../internal/cli/FsGuards.ts";
 import { YeetAttemptTerminationReason } from "../../../internal/repo-run/AttemptTerminationJournal.ts";
 import { repoRunArtifactId } from "../../../internal/repo-run/RepoRunArtifacts.ts";
-import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
-import { nearestRank } from "../../../internal/stats/NearestRank.ts";
 import { CLAUDE_WORKTREES_RELATIVE_ROOT, WORKTREES_ROOT_SUFFIX } from "../../Worktree/Worktree.constants.ts";
 import {
   EconomicsAttempt,

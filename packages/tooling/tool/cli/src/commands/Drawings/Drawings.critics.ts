@@ -17,6 +17,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { PdfTools, PngRequest } from "@beep/pdf-tools";
+import { collectText } from "@beep/repo-cli-kit/process/StepExec";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { Sha256Hex } from "@beep/schema";
 import { RenderManifest, sha256Hex } from "@beep/technical-drawing";
@@ -40,7 +41,6 @@ import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
-import { collectText } from "../../internal/process/StepExec.ts";
 import {
   CriticClaudeEvent,
   CriticClaudeOutputLimitStop,

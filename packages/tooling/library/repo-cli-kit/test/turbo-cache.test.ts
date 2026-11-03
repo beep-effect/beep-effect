@@ -1,0 +1,537 @@
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
+import {
+  loadHostTurboCacheDefaults,
+  readTurboCacheEnvironment,
+  readTurboCacheEnvironmentSync,
+} from "@beep/repo-cli-kit/cli/EnvConfig";
+import {
+  forceLocalTurboCacheArgs,
+  hasRemoteTurboCacheArgs,
+  isTurboCacheControlArg,
+  isTurboCacheDirArg,
+  LocalOnlyTurboCache,
+  localOnlyTurboCacheArgs,
+  RemoteReadTurboCache,
+  resolveTurboCachePlan,
+  SHARED_TURBO_CACHE_DIR_SUFFIX,
+  sharedTurboCacheDir,
+  TurboCacheEnvironment,
+  TurboCacheEnvName,
+  TurboCacheMode,
+  TurboCachePlan,
+  TurboCacheSecretEnvName,
+  turboCacheEnvironmentNeedsSecretSession,
+  turboCachePlanArgs,
+  turboCachePlanNeedsSecretSession,
+  turboCachePullRequestPosture,
+  turboCacheValueSourceFor,
+} from "@beep/repo-cli-kit/cli/TurboCache";
+import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
+import { describe, expect, it, vi } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
+import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as R from "effect/Record";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import type { TurboCacheValueSource } from "@beep/repo-cli-kit/cli/TurboCache";
+
+const decodeTurboCachePlanEffect = S.decodeEffect(TurboCachePlan);
+const decodeTurboCachePlanJson = S.decodeEffect(S.fromJsonString(TurboCachePlan));
+const encodeTurboCachePlanJson = S.encodeEffect(S.fromJsonString(TurboCachePlan));
+
+const REMOTE_READ_MODE = TurboCacheMode.Enum["local:rw,remote:r"];
+const LOCAL_ONLY_ARG = `--cache=${TurboCacheMode.Enum["local:rw"]}`;
+const REMOTE_READ_ARG = `--cache=${REMOTE_READ_MODE}`;
+
+const environmentWith = (token: TurboCacheValueSource, cache: string): TurboCacheEnvironment =>
+  TurboCacheEnvironment.make({ api: "literal", token, team: "literal", cache });
+
+// The fully configured workstation posture: a 1Password-backed read token, a
+// literal endpoint and team, and the sanctioned read-only cache mode.
+const completeEnvironment = environmentWith("secret-reference", REMOTE_READ_MODE);
+
+it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "10 seconds" })(
+  "enrolled host cache defaults",
+  (it) => {
+    it.effect("loads only enrolled references and respects checkout, CI and explicit opt-out boundaries", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped();
+        const directory = path.join(root, "beep/r2-cache");
+        yield* fs.makeDirectory(directory, { recursive: true });
+        const file = path.join(directory, "client.env");
+        const contents = A.join(
+          [
+            "TURBO_API=http://127.0.0.1:9427",
+            "TURBO_TOKEN=op://fixture/cache/bearer",
+            "TURBO_REMOTE_CACHE_SIGNATURE_KEY=op://fixture/cache/signing",
+            "TURBO_TEAM=fixture",
+            "TURBO_CACHE=local:rw,remote:rw",
+            "BEEP_TURBO_TRUSTED_WRITER=true",
+            "DATABASE_URL=op://fixture/application/database",
+          ],
+          "\n"
+        );
+        yield* fs.writeFileString(file, contents);
+        const environment = { HOME: root, XDG_CONFIG_HOME: root };
+        const loadedHostTurboCacheDefaults = yield* loadHostTurboCacheDefaults(
+          {},
+          false,
+          "git@github.com:beep-effect/beep-effect.git"
+        );
+        expect(loadedHostTurboCacheDefaults).toEqual({});
+        const loadedHostTurboCacheDefaults1 = yield* loadHostTurboCacheDefaults(
+          { HOME: root },
+          false,
+          "git@github.com:beep-effect/beep-effect.git"
+        );
+        expect(loadedHostTurboCacheDefaults1).toEqual({});
+        const loadedHostTurboCacheDefaults2 = yield* loadHostTurboCacheDefaults(
+          environment,
+          false,
+          "git@github.com:private/fork.git"
+        );
+        expect(loadedHostTurboCacheDefaults2).toEqual({});
+        const loadedHostTurboCacheDefaults3 = yield* loadHostTurboCacheDefaults(environment, false, "");
+        expect(loadedHostTurboCacheDefaults3).toEqual({});
+        const defaults = yield* loadHostTurboCacheDefaults(
+          environment,
+          false,
+          "git@github.com:beep-effect/beep-effect.git"
+        );
+        expect(defaults).toEqual({
+          TURBO_API: "http://127.0.0.1:9427",
+          TURBO_TOKEN: "op://fixture/cache/bearer",
+          TURBO_REMOTE_CACHE_SIGNATURE_KEY: "op://fixture/cache/signing",
+          TURBO_TEAM: "fixture",
+          TURBO_CACHE: "local:rw,remote:rw",
+          BEEP_TURBO_TRUSTED_WRITER: "true",
+        });
+        const loadedHostTurboCacheDefaults4 = yield* loadHostTurboCacheDefaults(
+          { ...environment, TURBO_REMOTE_CACHE_SIGNATURE_KEY: "op://fixture/other/signing" },
+          false,
+          "git@github.com:beep-effect/beep-effect.git"
+        );
+        expect(loadedHostTurboCacheDefaults4).toEqual({});
+        const inherited = {
+          ...environment,
+          ...defaults,
+          TURBO_CACHE: "local:rw,remote:r",
+          BEEP_TURBO_TRUSTED_WRITER: "false",
+          BEEP_TURBO_HOST_CACHE_MANAGED: "true",
+        };
+        const loadedHostTurboCacheDefaults5 = yield* loadHostTurboCacheDefaults(
+          inherited,
+          false,
+          "git@github.com:beep-effect/beep-effect.git"
+        );
+        expect(loadedHostTurboCacheDefaults5).toEqual(defaults);
+        const loadedHostTurboCacheDefaults6 = yield* loadHostTurboCacheDefaults(
+          { ...inherited, TURBO_REMOTE_CACHE_SIGNATURE_KEY: "op://fixture/other/signing" },
+          false,
+          "git@github.com:beep-effect/beep-effect.git"
+        );
+        expect(loadedHostTurboCacheDefaults6).toEqual({});
+        for (const override of [
+          { BEEP_TURBO_HOST_CACHE_MANAGED: "false" },
+          { BEEP_TURBO_HOST_CACHE_DISABLED: "true" },
+          { TURBO_TOKEN: "op://fixture/other/bearer" },
+          { TURBO_CACHE: "local:rw" },
+        ]) {
+          const loadedHostTurboCacheDefaults7 = yield* loadHostTurboCacheDefaults(
+            { ...inherited, ...override },
+            false,
+            "git@github.com:beep-effect/beep-effect.git"
+          );
+          expect(loadedHostTurboCacheDefaults7).toEqual({});
+        }
+        const loadedHostTurboCacheDefaults8 = yield* loadHostTurboCacheDefaults(
+          environment,
+          true,
+          "git@github.com:beep-effect/beep-effect.git"
+        );
+        expect(loadedHostTurboCacheDefaults8).toEqual({});
+        const loadedHostTurboCacheDefaults9 = yield* loadHostTurboCacheDefaults(
+          { ...environment, TURBO_CACHE: "local:rw" },
+          false,
+          "git@github.com:beep-effect/beep-effect.git"
+        );
+        expect(loadedHostTurboCacheDefaults9).toEqual({});
+        const loadedHostTurboCacheDefaults10 = yield* loadHostTurboCacheDefaults(
+          { ...environment, TURBO_API: "https://explicit.test" },
+          false,
+          "git@github.com:beep-effect/beep-effect.git"
+        );
+        expect(loadedHostTurboCacheDefaults10).toEqual({});
+        const loadedHostTurboCacheDefaults11 = yield* loadHostTurboCacheDefaults(
+          { ...environment, BEEP_TURBO_HOST_CACHE_DISABLED: "true" },
+          false,
+          "git@github.com:beep-effect/beep-effect.git"
+        );
+        expect(loadedHostTurboCacheDefaults11).toEqual({});
+        for (const invalid of [
+          Str.replace("op://fixture/cache/bearer", "raw-fixture-token")(contents),
+          Str.replace("http://127.0.0.1:9427", "https://external.test")(contents),
+          Str.replace("BEEP_TURBO_TRUSTED_WRITER=true", "BEEP_TURBO_TRUSTED_WRITER=false")(contents),
+          "TURBO_API=http://127.0.0.1:9427",
+        ]) {
+          yield* fs.writeFileString(file, invalid);
+          const loadedHostTurboCacheDefaults12 = yield* loadHostTurboCacheDefaults(
+            environment,
+            false,
+            "git@github.com:beep-effect/beep-effect.git"
+          );
+          expect(loadedHostTurboCacheDefaults12).toEqual({});
+        }
+        yield* fs.remove(file);
+        const loadedHostTurboCacheDefaults13 = yield* loadHostTurboCacheDefaults(
+          environment,
+          false,
+          "git@github.com:beep-effect/beep-effect.git"
+        );
+        expect(loadedHostTurboCacheDefaults13).toEqual({});
+      })
+    );
+  }
+);
+
+const incompleteEnvironments: ReadonlyArray<readonly [TurboCacheEnvName, TurboCacheEnvironment]> = [
+  ["TURBO_API", TurboCacheEnvironment.make({ token: "secret-reference", team: "literal", cache: REMOTE_READ_MODE })],
+  ["TURBO_TOKEN", TurboCacheEnvironment.make({ api: "literal", team: "literal", cache: REMOTE_READ_MODE })],
+  ["TURBO_TEAM", TurboCacheEnvironment.make({ api: "literal", token: "secret-reference", cache: REMOTE_READ_MODE })],
+  ["TURBO_CACHE", TurboCacheEnvironment.make({ api: "literal", token: "secret-reference", team: "literal" })],
+];
+
+const localPlan = (environment: TurboCacheEnvironment, args: ReadonlyArray<string> = A.empty()) =>
+  resolveTurboCachePlan(environment, { args, ci: false });
+
+describe("turbo cache plan resolution", () => {
+  it("honors a complete remote-read configuration", () => {
+    const plan = localPlan(completeEnvironment);
+
+    expect(plan).toEqual(RemoteReadTurboCache.make({ mode: REMOTE_READ_MODE, requiresSecretSession: true }));
+    expect(turboCachePlanArgs(plan)).toEqual([REMOTE_READ_ARG]);
+    expect(turboCachePlanNeedsSecretSession(plan)).toBe(true);
+  });
+
+  it("needs no 1Password session when every configured value is literal", () => {
+    const plan = localPlan(environmentWith("literal", REMOTE_READ_MODE));
+
+    expect(plan).toEqual(RemoteReadTurboCache.make({ mode: REMOTE_READ_MODE, requiresSecretSession: false }));
+    expect(turboCachePlanNeedsSecretSession(plan)).toBe(false);
+    expect(turboCachePlanArgs(plan)).toEqual([REMOTE_READ_ARG]);
+  });
+
+  it.each(incompleteEnvironments)("falls back to local-only without %s", (name, environment) => {
+    const plan = localPlan(environment);
+
+    expect(plan).toEqual(LocalOnlyTurboCache.make({ reason: "incomplete-remote-config", missing: [name] }));
+    expect(turboCachePlanArgs(plan)).toEqual([LOCAL_ONLY_ARG]);
+    expect(turboCachePlanNeedsSecretSession(plan)).toBe(false);
+  });
+
+  it("reports every missing quad member at once", () => {
+    expect(localPlan(TurboCacheEnvironment.make({ team: "literal" }))).toEqual(
+      LocalOnlyTurboCache.make({
+        reason: "incomplete-remote-config",
+        missing: ["TURBO_API", "TURBO_TOKEN", "TURBO_CACHE"],
+      })
+    );
+  });
+
+  it("treats a blank cache mode as missing", () => {
+    expect(localPlan(environmentWith("secret-reference", "   "))).toEqual(
+      LocalOnlyTurboCache.make({ reason: "incomplete-remote-config", missing: ["TURBO_CACHE"] })
+    );
+  });
+
+  it.each(["local:rw", "remote:r", "local:rw,remote:rw", "remote:rw", "op://vault/item/field"])(
+    "falls back to local-only for the unsupported posture %s",
+    (cache) => {
+      const plan = localPlan(environmentWith("secret-reference", cache));
+
+      expect(plan).toEqual(LocalOnlyTurboCache.make({ reason: "unsupported-cache-mode", missing: [] }));
+      expect(turboCachePlanArgs(plan)).toEqual([LOCAL_ONLY_ARG]);
+    }
+  );
+
+  it("requires an explicit host opt-in before enabling remote writes", () => {
+    const base = environmentWith("secret-reference", "local:rw,remote:rw");
+    expect(localPlan(base)._tag).toBe("local-only");
+    const plan = localPlan(TurboCacheEnvironment.make({ ...base, trustedWriter: true }));
+    expect(plan._tag).toBe("remote-write");
+    expect(turboCachePlanArgs(plan)).toEqual(["--cache=local:rw,remote:rw"]);
+    expect(turboCachePlanNeedsSecretSession(plan)).toBe(true);
+    expect(localOnlyTurboCacheArgs(turboCachePlanArgs(plan))).toEqual([LOCAL_ONLY_ARG]);
+  });
+
+  it("reads the trusted-writer opt-in without adding it to the secret allowlist", () => {
+    const environment = readTurboCacheEnvironment({
+      TURBO_API: "http://127.0.0.1:9427",
+      TURBO_TOKEN: "op://vault/item/bearer",
+      TURBO_TEAM: "beep-effect",
+      TURBO_CACHE: "local:rw,remote:rw",
+      BEEP_TURBO_TRUSTED_WRITER: "true",
+    });
+    expect(environment.trustedWriter).toBe(true);
+    expect(localPlan(environment)._tag).toBe("remote-write");
+    expect(TurboCacheSecretEnvName.literals).not.toContain("BEEP_TURBO_TRUSTED_WRITER");
+  });
+
+  it("tolerates surrounding whitespace in the sanctioned posture", () => {
+    expect(localPlan(environmentWith("secret-reference", `  ${REMOTE_READ_MODE}  `))).toEqual(
+      RemoteReadTurboCache.make({ mode: REMOTE_READ_MODE, requiresSecretSession: true })
+    );
+  });
+
+  it.each(["--cache=local:rw", "--no-cache", "--force", "--force=true", "--remote-only", "--remote-cache-read-only"])(
+    "leaves argv untouched when the caller passes %s",
+    (arg) => {
+      const plan = localPlan(completeEnvironment, ["--filter=@beep/schema", arg]);
+
+      expect(plan._tag).toBe("caller-controlled");
+      expect(turboCachePlanArgs(plan)).toEqual([]);
+      expect(turboCachePlanNeedsSecretSession(plan)).toBe(false);
+    }
+  );
+
+  it("leaves CI untouched even with a complete configuration", () => {
+    const plan = resolveTurboCachePlan(completeEnvironment, { args: A.empty(), ci: true });
+
+    expect(plan._tag).toBe("caller-controlled");
+    expect(turboCachePlanArgs(plan)).toEqual([]);
+  });
+
+  it.effect("prefers the CI verdict over an explicit cache argument", () =>
+    Effect.gen(function* () {
+      const expectation = expect(resolveTurboCachePlan(completeEnvironment, { args: ["--force"], ci: true }));
+      const decodedTurboCachePlanEffect = yield* decodeTurboCachePlanEffect({
+        _tag: "caller-controlled",
+        reason: "ci",
+      });
+      expectation.toEqual(decodedTurboCachePlanEffect);
+    })
+  );
+});
+
+describe("turbo cache control arguments", () => {
+  it("limits secret-session references to Turbo credentials and the artifact signing key", () => {
+    expect(TurboCacheSecretEnvName.literals).toEqual([
+      "TURBO_API",
+      "TURBO_TOKEN",
+      "TURBO_TEAM",
+      "TURBO_REMOTE_CACHE_SIGNATURE_KEY",
+    ]);
+  });
+
+  it.each(["--filter=@beep/schema", "--concurrency=3", "--summarize", "check", "--cache-dir=.turbo"])(
+    "does not treat %s as cache control",
+    (arg) => {
+      expect(isTurboCacheControlArg(arg)).toBe(false);
+    }
+  );
+
+  it("recognizes every cache-control spelling", () => {
+    const controls = [
+      "--no-cache",
+      "--force",
+      "--force=false",
+      "--remote-only",
+      "--remote-only=true",
+      "--remote-cache-read-only",
+      "--remote-cache-read-only=true",
+      "--cache=local:rw",
+    ];
+
+    expect(A.filter(controls, isTurboCacheControlArg)).toEqual(controls);
+  });
+});
+
+describe("forced local signing fallback", () => {
+  it("replaces every native cache mode spelling and preserves forwarded task arguments", () => {
+    expect(
+      forceLocalTurboCacheArgs([
+        "run",
+        "check",
+        "--cache",
+        "remote:r",
+        "--remote-only=false",
+        "--remote-cache-read-only",
+        "true",
+        "--cache=local:rw,remote:rw",
+        "--force",
+        "--cache-dir=shared",
+        "--",
+        "--cache=remote:rw",
+        "true",
+      ])
+    ).toEqual(["run", "check", "--force", "--cache-dir=shared", "--cache=local:rw", "--", "--cache=remote:rw", "true"]);
+    expect(forceLocalTurboCacheArgs(["run", "check"])).toEqual(["run", "check", "--cache=local:rw"]);
+  });
+});
+
+describe("run-time local-only degradation", () => {
+  it("reports whether the checkout's credentials need an op run session", () => {
+    expect(turboCacheEnvironmentNeedsSecretSession(completeEnvironment)).toBe(true);
+    expect(turboCacheEnvironmentNeedsSecretSession(environmentWith("literal", REMOTE_READ_MODE))).toBe(false);
+    expect(turboCacheEnvironmentNeedsSecretSession(TurboCacheEnvironment.make({}))).toBe(false);
+  });
+
+  it("resolves signing references without retaining secret values in the posture model", () => {
+    const environment = readTurboCacheEnvironment({
+      TURBO_API: "http://127.0.0.1:9427",
+      TURBO_TOKEN: "fixture-bearer",
+      TURBO_TEAM: "team_fixture",
+      TURBO_CACHE: REMOTE_READ_MODE,
+      TURBO_REMOTE_CACHE_SIGNATURE_KEY: "op://fixture/cache/signing",
+    });
+    expect(environment.signatureKey).toBe("secret-reference");
+    expect(turboCacheEnvironmentNeedsSecretSession(environment)).toBe(true);
+    const literal = readTurboCacheEnvironment({ TURBO_REMOTE_CACHE_SIGNATURE_KEY: "synthetic-signing-value" });
+    expect(literal.signatureKey).toBe("literal");
+    expect(turboCacheEnvironmentNeedsSecretSession(literal)).toBe(false);
+    expect(readTurboCacheEnvironment({ TURBO_REMOTE_CACHE_SIGNATURE_KEY: "  " })).toEqual(
+      TurboCacheEnvironment.make({})
+    );
+  });
+
+  it("includes signing references in the synchronous secret-session decision", () => {
+    vi.stubEnv("TURBO_REMOTE_CACHE_SIGNATURE_KEY", "op://fixture/cache/signing");
+    try {
+      const environment = readTurboCacheEnvironmentSync();
+      expect(environment.signatureKey).toBe("secret-reference");
+      expect(turboCacheEnvironmentNeedsSecretSession(environment)).toBe(true);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it("classifies both value sources", () => {
+    expect(turboCacheValueSourceFor(true)).toBe("secret-reference");
+    expect(turboCacheValueSourceFor(false)).toBe("literal");
+  });
+
+  it("detects arguments that request remote cache access", () => {
+    expect(hasRemoteTurboCacheArgs(["turbo", "run", "check", REMOTE_READ_ARG])).toBe(true);
+    expect(hasRemoteTurboCacheArgs(["turbo", "run", "check", LOCAL_ONLY_ARG])).toBe(false);
+    expect(hasRemoteTurboCacheArgs(["bun", "run", "beep", "quality", "tsgo-rules"])).toBe(false);
+  });
+
+  it("downgrades a remote posture when the 1Password session is unavailable", () => {
+    expect(localOnlyTurboCacheArgs(["turbo", "run", "check", REMOTE_READ_ARG, "--concurrency=3"])).toEqual([
+      "turbo",
+      "run",
+      "check",
+      LOCAL_ONLY_ARG,
+      "--concurrency=3",
+    ]);
+  });
+
+  it("leaves local-only and cache-free invocations unchanged", () => {
+    const localArgs = ["turbo", "run", "check", LOCAL_ONLY_ARG];
+    const forcedArgs = ["turbo", "run", "build", "--force"];
+
+    expect(localOnlyTurboCacheArgs(localArgs)).toEqual(localArgs);
+    expect(localOnlyTurboCacheArgs(forcedArgs)).toEqual(forcedArgs);
+  });
+});
+
+describe("turboCachePullRequestPosture", () => {
+  it("names every Turbo cache env name, scrubs the credentials, and pins local-only", () => {
+    expect(A.sort(R.keys(turboCachePullRequestPosture), Str.Order)).toEqual(
+      A.sort(A.dedupe([...TurboCacheEnvName.literals, ...TurboCacheSecretEnvName.literals]), Str.Order)
+    );
+    A.forEach(TurboCacheSecretEnvName.literals, (name) => {
+      expect(turboCachePullRequestPosture).toHaveProperty(name);
+      expect(turboCachePullRequestPosture[name]).toBeUndefined();
+    });
+    expect(turboCachePullRequestPosture.TURBO_CACHE).toBe(TurboCacheMode.Enum["local:rw"]);
+  });
+});
+
+describe("shared turbo cache directory", () => {
+  const HOME = "/home/dev";
+  const SHARED_DIR_ARG = `--cache-dir=${HOME}/${SHARED_TURBO_CACHE_DIR_SUFFIX}`;
+  const withHome = (environment: TurboCacheEnvironment, home: string = HOME): TurboCacheEnvironment =>
+    TurboCacheEnvironment.make({ ...environment, home });
+
+  it("appends the shared directory to a local-only plan on a workstation", () => {
+    const plan = resolveTurboCachePlan(withHome(TurboCacheEnvironment.make({})), { args: [], ci: false });
+    expect(turboCachePlanArgs(plan)).toEqual([LOCAL_ONLY_ARG, SHARED_DIR_ARG]);
+  });
+
+  it("appends the shared directory to a remote-read plan", () => {
+    const plan = resolveTurboCachePlan(withHome(completeEnvironment), { args: [], ci: false });
+    expect(turboCachePlanArgs(plan)).toEqual([REMOTE_READ_ARG, SHARED_DIR_ARG]);
+  });
+
+  it("strips a trailing slash from HOME", () => {
+    assertSome(
+      sharedTurboCacheDir(withHome(TurboCacheEnvironment.make({}), `${HOME}/`), []),
+      `${HOME}/${SHARED_TURBO_CACHE_DIR_SUFFIX}`
+    );
+  });
+
+  it("defers to an ambient TURBO_CACHE_DIR", () => {
+    const environment = TurboCacheEnvironment.make({ home: HOME, cacheDir: "/mnt/turbo" });
+    assertNone(sharedTurboCacheDir(environment, []));
+    expect(turboCachePlanArgs(resolveTurboCachePlan(environment, { args: [], ci: false }))).toEqual([LOCAL_ONLY_ARG]);
+  });
+
+  it.each(["--cache=local:rw", "--force", "--remote-cache-read-only"])(
+    "keeps the shared directory when the caller pins the cache mode with %s",
+    (arg) => {
+      const plan = resolveTurboCachePlan(withHome(completeEnvironment), { args: [arg], ci: false });
+      expect(plan._tag).toBe("caller-controlled");
+      expect(turboCachePlanArgs(plan)).toEqual([SHARED_DIR_ARG]);
+    }
+  );
+
+  it("reads HOME and TURBO_CACHE_DIR from a process environment", () => {
+    expect(readTurboCacheEnvironment({ HOME: HOME })).toEqual(TurboCacheEnvironment.make({ home: HOME }));
+    expect(readTurboCacheEnvironment({ HOME: HOME, TURBO_CACHE_DIR: "  /mnt/turbo  " })).toEqual(
+      TurboCacheEnvironment.make({ home: HOME, cacheDir: "/mnt/turbo" })
+    );
+    expect(readTurboCacheEnvironment({ HOME: "  ", TURBO_CACHE_DIR: "" })).toEqual(TurboCacheEnvironment.make({}));
+  });
+
+  it("populates home from the live environment through the sync reader", () => {
+    expect(readTurboCacheEnvironmentSync().home).toBe(Bun.env.HOME);
+  });
+
+  it("defers to a caller-supplied --cache-dir flag", () => {
+    const environment = withHome(TurboCacheEnvironment.make({}));
+    assertNone(sharedTurboCacheDir(environment, ["--cache-dir=/mnt/turbo"]));
+    assertNone(sharedTurboCacheDir(environment, ["--cache-dir", "/mnt/turbo"]));
+    expect(isTurboCacheDirArg("--cache=local:rw")).toBe(false);
+  });
+
+  it("stays silent without HOME and under CI", () => {
+    assertNone(sharedTurboCacheDir(TurboCacheEnvironment.make({}), []));
+    const ci = resolveTurboCachePlan(withHome(TurboCacheEnvironment.make({})), { args: [], ci: true });
+    expect(turboCachePlanArgs(ci)).toEqual([]);
+  });
+
+  it("survives the coverage local-only rewrite", () => {
+    const plan = resolveTurboCachePlan(withHome(completeEnvironment), { args: [], ci: false });
+    expect(localOnlyTurboCacheArgs(turboCachePlanArgs(plan))).toEqual([LOCAL_ONLY_ARG, SHARED_DIR_ARG]);
+  });
+
+  it("decodes every generated plan back to itself", () => {
+    assertSchemaArbitraryDecodesToSelf(TurboCachePlan);
+  });
+
+  it.effect("round-trips a plan that carries the directory", () =>
+    Effect.gen(function* () {
+      const plan = resolveTurboCachePlan(withHome(TurboCacheEnvironment.make({})), { args: [], ci: false });
+      const encodedTurboCachePlanJson = yield* encodeTurboCachePlanJson(plan);
+      const decodedTurboCachePlanJson = yield* decodeTurboCachePlanJson(encodedTurboCachePlanJson);
+      expect(decodedTurboCachePlanJson).toEqual(plan);
+    })
+  );
+});
