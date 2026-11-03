@@ -7,6 +7,11 @@ import pathlib
 import sys
 
 
+# Independent trust anchor for the accepted location exception. Updating an
+# active runner and its self-reported hash must not revise the accepted bytes.
+ACCEPTED_LOCATION_ADDENDUM_SHA256 = "e2d34b95219944018752ead10fc4b474fad7cf0ebfbd68fca754ba51219dae13"
+
+
 def verify(root, freeze, result=None):
     # Only these historical runner locations may be remapped. The original
     # manifest remains unchanged; references, scorer and results cannot move.
@@ -16,7 +21,10 @@ def verify(root, freeze, result=None):
         f"goals/claim-check-performance/research/legacy-protocol/{name}.main.ts.txt"
         for name in names
     }
-    addendum = json.loads((root / "goals/claim-check-performance/research/preservation-location-addendum.json").read_text())
+    addendum_bytes = (root / "goals/claim-check-performance/research/preservation-location-addendum.json").read_bytes()
+    if hashlib.sha256(addendum_bytes).hexdigest() != ACCEPTED_LOCATION_ADDENDUM_SHA256:
+        raise ValueError("Preservation location addendum differs from the independently accepted digest")
+    addendum = json.loads(addendum_bytes)
     mappings = addendum["mappings"]
     mapped = {row["originalPath"]: row for row in mappings}
     if len(mapped) != len(mappings) or set(mapped) != set(expected):

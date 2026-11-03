@@ -204,7 +204,9 @@ const publicationClaims = Effect.fn("UsptoClaims.publicationClaims")(function* (
 const inputAttributePattern = /([^\s=]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/gu;
 const protectedXmlBlockPattern =
   /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<!(?:"[^"]*"|'[^']*'|[^'">])*>/gu;
-const internalSubsetPattern = /<!DOCTYPE(?:"[^"]*"|'[^']*'|[^'">])*\[/u;
+// Empty USPTO subsets carry no declarations; nonempty or incomplete subsets
+// still cannot establish an unambiguous lexical inventory.
+const internalSubsetPattern = /<!DOCTYPE(?:"[^"]*"|'[^']*'|[^'">])*\[(?!\s*\]\s*>)/u;
 const claimMarkupPattern = /<\/?claims?(?=[\s/>])/u;
 const decodeSourceDigest = S.decodeEffect(Sha256HexFromBytes);
 const validateInputNode = decodeXmlTextAs(S.Unknown);
