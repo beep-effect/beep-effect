@@ -42,7 +42,8 @@ const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
 export const makeCitationRegexWorker = Effect.fn("Citation.makeRegexWorker")(function* (
   policy: unknown,
   runtimeInput: unknown,
-  bindings: unknown
+  bindings: unknown,
+  engineInput: unknown = "python-re"
 ) {
   const decoded = yield* decodeCitationRegexPolicy(policy, () => failure("invalid-runtime"));
   const limits = yield* S.encodeEffect(CitationEngineLimits)(decoded).pipe(
@@ -57,7 +58,7 @@ export const makeCitationRegexWorker = Effect.fn("Citation.makeRegexWorker")(fun
     ? supplied.value
     : yield* makeCitationNativeProcessAdmission(limits).pipe(Effect.mapError(() => failure("invalid-runtime")));
   const owner = yield* makeCitationNativeProcessOwner(limits, "extract", failure);
-  const registry = yield* makeCitationRegexDescriptorRegistry(limits, bindings);
+  const registry = yield* makeCitationRegexDescriptorRegistry(limits, bindings, engineInput);
   const preparation = yield* makeCitationRegexJobPreparation(limits);
   const { timed } = yield* makeCitationRegexTiming(limits, false);
   const regexDeadline = limits.regexDeadline.pipe(Duration.toMillis, Duration.millis);
@@ -106,7 +107,7 @@ export const makeCitationRegexWorker = Effect.fn("Citation.makeRegexWorker")(fun
                 );
                 const bound = yield* registry.bind(prepared.pattern.value.storage, flags);
                 const argument = yield* encodeCitationRegexStartup(
-                  CitationRegexWorkerStartup.make({ limits, descriptor: bound.descriptor })
+                  CitationRegexWorkerStartup.make({ limits, descriptor: bound.descriptor, engine: registry.engine })
                 );
                 const result = yield* makeCitationRegexResult(
                   limits,

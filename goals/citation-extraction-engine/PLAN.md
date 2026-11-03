@@ -37,6 +37,15 @@ Full hosted comparison requires 115 exits per runtime. Nullable finditer,
 third-party Unicode/folding, metadata integration and family safety remain open.
 See [nullable single-match evidence](history/evidence/2026-11-03-nullable-single-regex.md).
 
+Source engine checkpoint (2026-11-03): explicit python-re/python-regex-v0
+identity now reaches compiler binding and required child startup data. Source
+surveys cover every Unicode point for three V0 categories and lexer whitespace,
+plus 8,256 ASCII ranges over 132 case candidates. Thirty-eight focused tests
+pass, including actual Bun/Node engine discrimination and child retirement.
+Existing callers keep CPython behavior. Verbose parsing and full compiled V0
+qualification remain required; source facts alone do not prove full matching.
+See [source engine evidence](history/evidence/2026-11-03-source-regex-engine-identity.md).
+
 ## Status
 
 Status: `in-progress`

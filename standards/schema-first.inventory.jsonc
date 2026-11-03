@@ -1638,6 +1638,16 @@
       "reason": "Authenticates exhaustive source character facts and the complete parsed-feature/descriptor vectors, including producer hashes. These pinned oracle receipts must remain fixed; generated native-point membership is covered in CitationRegexAlphabet.test.ts. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
     },
     {
+      "file": "packages/law-practice/server/test/CitationRegexEngine.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 70,
+      "owner": "@beep/law-practice-server",
+      "reason": "Authenticates fixed source character/range observations and exhaustively checks both source-engine startup identities, including missing/unknown rejection. Randomly generating the same two literals adds no codec coverage; the source corpus must remain pinned. Owner: @beep/law-practice-server. Exit: detector recognizes exhaustive finite-domain consumer codec laws or the startup codec gains a larger generated input domain. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-03-source-regex-engine-identity.md. No parity or source-proof obligation is waived."
+    },
+    {
       "file": "packages/law-practice/server/test/CitationResolve.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",

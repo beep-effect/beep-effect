@@ -548,6 +548,15 @@ instead of silently splitting delivery or weakening scope.
 
 ## Decision Log
 
+- **2026-11-03 source regex identity:** capture the exact source engine at
+  server construction and require it explicitly in child startup. Preserve
+  existing CPython defaults; freeze regex V0 character, lexer whitespace and
+  ASCII folding observations separately. Reuse the existing Effect RPC and
+  process owner. Reverse with a normal revert of this private profile and its
+  generated observations. Verbose parsing and other engine profiles remain
+  required, with no new semantic waiver. See
+  `history/evidence/2026-11-03-source-regex-engine-identity.md`.
+
 - **2026-11-03 nullable single matching:** extend the existing Effect RPC worker
   for empty search/match results, preserving exact quotas, bounded frames and
   acknowledged retirement. Keep nullable iterator advancement unqualified until

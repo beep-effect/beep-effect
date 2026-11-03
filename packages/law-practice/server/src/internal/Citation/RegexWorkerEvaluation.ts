@@ -27,10 +27,10 @@ const nativeFailure = () => CitationRegexEvaluationFailure.make({ reason: "nativ
 export const makeCitationRegexEvaluation = Effect.fn("Citation.makeRegexEvaluation")(function* (
   startup: CitationRegexWorkerStartup
 ) {
-  const { limits, descriptor } = startup;
-  const registry = yield* makeCitationRegexDescriptorRegistry(limits, [descriptor]);
+  const { limits, descriptor, engine } = startup;
+  const registry = yield* makeCitationRegexDescriptorRegistry(limits, [descriptor], engine);
   const alphabet = yield* makeCitationRegexAlphabet(limits);
-  const compiler = yield* makeCitationRegexProgram(limits);
+  const compiler = yield* makeCitationRegexProgram(limits, engine);
   const sourceInput = yield* makeCitationRegexInput(limits);
   const evaluate = Effect.fn("Citation.evaluateNativeRegex")(
     function* (job: CitationRegexWorkerJob) {

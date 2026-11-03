@@ -56,6 +56,9 @@ using the existing authenticated frozen edition owner for source labels.
 Python-point truncation and directional anchoring from `helpers.match_on_tokens`.
 The nullable regex control corpus contains independently executed observations
 from CPython 3.11.15 re and regex 2023.12.25; it copies no regex implementation.
+`RegexV0Data.ts` additionally freezes observed regex 2023.12.25 V0 categories,
+lexer whitespace and ASCII literal folding; no third-party implementation
+source is copied. Source-engine identity is explicit in the private worker.
 Fresh-process hash production, general custom protocols
 and complete public tokenizer integration remain open.
 

@@ -15,6 +15,7 @@ import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CitationRegexDescriptorFailure, CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
+import { CitationRegexEngine } from "./RegexEngine.ts";
 import { CitationRegexResultEnvelope } from "./RegexResult.ts";
 import { CitationRegexTranslationFailure } from "./RegexTranslator.ts";
 import {
@@ -101,7 +102,11 @@ export class CitationRegexWorkerStartup extends S.Opaque<
   CitationRegexWorkerStartup,
   { readonly brand: unique symbol }
 >()(
-  S.Struct({ limits: CitationEngineLimits, descriptor: CitationRegexPatternDescriptor }).pipe(
+  S.Struct({
+    limits: CitationEngineLimits,
+    descriptor: CitationRegexPatternDescriptor,
+    engine: CitationRegexEngine,
+  }).pipe(
     $I.annoteSchema("CitationRegexWorkerStartup", {
       description: "Trusted parent-selected policy and descriptor, containing no pattern or source text.",
     })

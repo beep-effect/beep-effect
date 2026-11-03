@@ -308,12 +308,15 @@ const renderToken = (alphabet: CitationRegexAlphabetText, token: CitationRegexPr
  * potentially ambiguous display projection. All returned operations are R=never.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(function* (policy: unknown) {
+export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(function* (
+  policy: unknown,
+  engineInput: unknown = "python-re"
+) {
   const limits = yield* decodeCitationRegexPolicy(policy, () =>
     CitationRegexTranslationFailure.make({ reason: "invalid-policy" })
   );
   const patternInput = yield* makeCitationRegexInput(limits, "pattern");
-  const categories = yield* makeCitationRegexPointSets();
+  const categories = yield* makeCitationRegexPointSets(engineInput);
   const { timed } = yield* makeCitationRegexTiming(limits, false);
 
   const compile = Effect.fn("Citation.compileRegexProgram")(function* (nativePattern: unknown, flagsInput: unknown) {
@@ -657,5 +660,5 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
     }
     return pattern;
   }, timed);
-  return { compile, render };
+  return { engine: categories.engine, compile, render };
 });

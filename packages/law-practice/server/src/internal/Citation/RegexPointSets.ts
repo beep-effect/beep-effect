@@ -11,9 +11,22 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { citationPythonRegexData } from "./PythonRegexData.ts";
 import { CitationRegexAtomInterval } from "./RegexAlphabet.ts";
+import { CitationRegexEngine } from "./RegexEngine.ts";
 import { CitationRegexTranslationFailure } from "./RegexTranslator.ts";
+import { citationRegexV0Data } from "./RegexV0Data.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/RegexPointSets");
+const AsciiFolds = S.Natural.check(S.isLessThanOrEqualTo(0x10ffff))
+  .pipe(S.Array)
+  .check(S.isBetweenLength(1, 3))
+  .pipe(S.Array)
+  .check(S.isBetweenLength(128, 128));
+const AsciiFoldsJson = S.fromJsonString(AsciiFolds).pipe(
+  $I.annoteSchema("AsciiFoldsJson", {
+    description: "Lossless encoded source observation rows, not inferred case-fold equivalence.",
+  })
+);
+
 /** @internal @category models @since 0.0.0 */
 export class CitationRegexPointRange extends S.Opaque<CitationRegexPointRange, { readonly brand: unique symbol }>()(
   S.Struct({ start: CitationRegexAtomInterval.fields.start, end: CitationRegexAtomInterval.fields.end })
@@ -107,20 +120,39 @@ const frozenRanges = Effect.fn("Citation.readFrozenRegexClass")(function* (text:
   }
   return normalizeCitationRegexRanges(output);
 });
-/** Freeze source character categories once. ASCII-source ignore-case expansion
- * is exact for the captured eight flag-2 programs and their reviewed en/em dash
- * literals. Other non-ASCII case-bearing literals remain unsupported, not folded
- * using the host's Unicode version.
+/** Freeze source-engine categories once. CPython retains its qualified ASCII
+ * folding; regex V0 uses captured literal tables and all 8,256 range controls.
+ * Other non-ASCII case-bearing literals remain unsupported, not folded using
+ * the host's Unicode version.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationRegexPointSets = Effect.fn("Citation.makeRegexPointSets")(function* () {
-  const digit = yield* frozenRanges(citationPythonRegexData.digitClass);
-  const space = yield* frozenRanges(citationPythonRegexData.spaceClass);
-  const word = yield* frozenRanges(citationPythonRegexData.wordClass);
+export const makeCitationRegexPointSets = Effect.fn("Citation.makeRegexPointSets")(function* (
+  engineInput: unknown = "python-re"
+) {
+  const engine = yield* S.decodeUnknownEffect(CitationRegexEngine)(engineInput).pipe(Effect.mapError(unsupported));
+  const data = CitationRegexEngine.match(engine, {
+    "python-re": () => citationPythonRegexData,
+    "python-regex-v0": () => citationRegexV0Data,
+  });
+  const folds =
+    engine === "python-regex-v0"
+      ? yield* S.decodeEffect(AsciiFoldsJson)(citationRegexV0Data.asciiIgnoreCaseJson).pipe(
+          Effect.mapError(unsupported)
+        )
+      : [];
+  const digit = yield* frozenRanges(data.digitClass);
+  const space = yield* frozenRanges(data.spaceClass);
+  const word = yield* frozenRanges(data.wordClass);
+  const verboseSpace =
+    engine === "python-re" ? [range(9, 13), range(32)] : yield* frozenRanges(citationRegexV0Data.verboseSpaceClass);
   const literal = Effect.fn("Citation.regexLiteralSet")(function* (start: number, end: number, insensitive: boolean) {
     if (start > end || start < 0 || end > 0x10ffff) return yield* unsupported();
     if (!insensitive) return [range(start, end)];
     if (end > 127) return yield* reviewedNonAscii(start, end);
+    if (engine === "python-regex-v0")
+      return normalizeCitationRegexRanges(
+        A.flatMap(A.range(start, end), (point) => A.map(A.getUnsafe(folds, point), (value) => range(value)))
+      );
     const output = [
       range(start, end),
       ...shiftedLetters(start, end, 65, 90, 32),
@@ -129,5 +161,5 @@ export const makeCitationRegexPointSets = Effect.fn("Citation.makeRegexPointSets
     ];
     return normalizeCitationRegexRanges(output);
   });
-  return { digit, space, word, literal };
+  return { engine, digit, space, word, verboseSpace, literal };
 });

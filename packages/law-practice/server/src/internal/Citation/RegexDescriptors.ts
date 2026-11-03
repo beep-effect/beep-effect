@@ -109,7 +109,8 @@ const copyDescriptor = (descriptor: CitationRegexPatternDescriptor) =>
  */
 export const makeCitationRegexDescriptorRegistry = Effect.fn("Citation.makeRegexDescriptorRegistry")(function* (
   policy: unknown,
-  bindingsInput: unknown
+  bindingsInput: unknown,
+  engineInput: unknown = "python-re"
 ) {
   const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-bindings"));
   if (!A.isArray(bindingsInput)) return yield* fail("invalid-bindings");
@@ -120,7 +121,7 @@ export const makeCitationRegexDescriptorRegistry = Effect.fn("Citation.makeRegex
   );
   const crypto = yield* Digest.Digest;
   const input = yield* makeCitationRegexInput(limits, "pattern");
-  const compiler = yield* makeCitationRegexProgram(limits);
+  const compiler = yield* makeCitationRegexProgram(limits, engineInput);
   const { timed } = yield* makeCitationRegexTiming(limits, false);
   const installed = MutableHashMap.empty<string, CitationRegexPatternDescriptor>();
   for (const descriptor of bindings) {
@@ -150,5 +151,5 @@ export const makeCitationRegexDescriptorRegistry = Effect.fn("Citation.makeRegex
     if (!sameProfile(profile, descriptor.profile)) return yield* fail("profile-mismatch");
     return { descriptor: copyDescriptor(descriptor), program, prepared };
   }, timed);
-  return { bind };
+  return { engine: compiler.engine, bind };
 });

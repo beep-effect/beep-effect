@@ -92,11 +92,11 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexProgram.ts",
-          "sha256": "3afcde0481c6eba10910fb34c566058acac8aac487b7e764a4af76ce62389ebe"
+          "sha256": "83c4fdd3c819da76a0a6f1163b4f2487dd720ad403d735d0ff5b28a2fe04c4d7"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexDescriptors.ts",
-          "sha256": "391ad59fce0d75e03a17e76b00b03a8f4bb4ff52e1a0f99bfabadfb3a5cb1b53"
+          "sha256": "b31786e33213e5d56d21d4c88ecb43f86a58e9becfe05dd97c6efe9fa5661ef6"
         },
         {
           "path": "packages/law-practice/server/test/CitationRegexDescriptors.test.ts",
@@ -104,7 +104,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexPointSets.ts",
-          "sha256": "e864033b0570aefde41fee8dd554b529952cfed5026f2fc60192788fdad4077a"
+          "sha256": "3ed92f614456100899639c51001b7f637f3730fc25895fd5241c354023f0001b"
         },
         {
           "path": "packages/law-practice/server/test/CitationRegexProgram.test.ts",
@@ -120,7 +120,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexWorker.ts",
-          "sha256": "d2f59d54100efd7ededa04a2f6e3fa1d55ec5e67006e55d0826dd94f88ace8e7"
+          "sha256": "b73820dbed3ba7268abff9b595705f4d761a1076baed5a0c2354231040f998b9"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexWorker.entry.ts",
@@ -132,7 +132,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexWorkerEvaluation.ts",
-          "sha256": "84750903923188eaa8d62d01dbaed594e524c6cb6290125a704ec808e4dde749"
+          "sha256": "2af7f4714b21bfa105e600e85935f10d3e8a527b5d0ddb338d49aa86bac406b7"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexWorkerProgram.ts",
@@ -140,7 +140,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexWorkerRpc.ts",
-          "sha256": "a69c7646b26c3cc6527b501fda0604066641de3390d62237ddefdb920276b506"
+          "sha256": "71b920e5788ef35c602ca29ade8cfbcd593594ffd2111e71299654b0be726ae7"
         },
         {
           "path": "packages/law-practice/server/test/CitationRegexWorker.test.ts",
