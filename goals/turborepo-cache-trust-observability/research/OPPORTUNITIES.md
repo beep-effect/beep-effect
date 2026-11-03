@@ -2004,3 +2004,14 @@ or production acceptance.
 ### Generated inventory conflict cost, 2026-11-02
 
 Resolving the independent accepted-main inventory changes required the canonical `bun --no-env-file run beep quality jsdoc-inventory` writer. The sibling phase-progress merge took 515.916 seconds to regenerate the pair across 185 packages; its open totals remained 15 packages, 94 exports and 115 modules. This was a concurrent workstation observation, not an isolated benchmark or evidence of cache savings. A source-scoped canonical regeneration path that retains the complete inventory integrity checks would avoid repeating this full census for each small merge. The generated files were retained; no check, finding or acceptance requirement was waived.
+
+### 2026-11-02 — committed inventory after a base-conflict repair
+
+PR #2569 review found that merge `943d927b` retained the accepted-main JSDoc
+inventory and omitted this branch's two `CacheSignedPilotPhase` export rows.
+Fresh CI inventory generation does not update the committed standards pair.
+Regenerate both files with the canonical inventory writer and preserve the
+existing findings and baseline floors. Check the generated export-set delta
+when resolving this conflict; accepting main's snapshot alone is insufficient
+when a branch adds exports. Local verify, publish and test runs remain skipped
+under the operator's direct-push instruction.
