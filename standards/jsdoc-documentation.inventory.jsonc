@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-02T22:54:00.324Z",
+  "generatedAt": "2026-11-03T00:22:55.151Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -476410,8 +476410,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.workflow.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
-          "line": 57,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-schemas-ts-57-cacheproducerworkflow",
+          "line": 58,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-schemas-ts-58-cacheproducerworkflow",
           "currentTags": [
             "@category",
             "@since"
@@ -476432,8 +476432,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.workflow.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
-          "line": 85,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-schemas-ts-85-cacheproducerobservation",
+          "line": 86,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-schemas-ts-86-cacheproducerobservation",
           "currentTags": [
             "@category",
             "@since"
@@ -476454,8 +476454,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.workflow.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
-          "line": 117,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-schemas-ts-117-cacheproduceruploadruntime",
+          "line": 118,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-schemas-ts-118-cacheproduceruploadruntime",
           "currentTags": [
             "@internal",
             "@category",
@@ -476477,8 +476477,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.workflow.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
-          "line": 151,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-schemas-ts-151-cacheproducerstorageruntime",
+          "line": 152,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-schemas-ts-152-cacheproducerstorageruntime",
           "currentTags": [
             "@internal",
             "@category",
@@ -476500,8 +476500,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.workflow.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
-          "line": 186,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-schemas-ts-186-cacheproducerexecutionprofile",
+          "line": 187,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-schemas-ts-187-cacheproducerexecutionprofile",
           "currentTags": [
             "@internal",
             "@category",
@@ -476615,8 +476615,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 144,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-144-assertcacheproducerworkflowprofile",
+          "line": 204,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-204-assertcacheproducerworkflowprofile",
           "currentTags": [
             "@internal",
             "@category",
@@ -476638,8 +476638,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 174,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-174-assertcacheproducerworkflowlocation",
+          "line": 234,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-234-assertcacheproducerworkflowlocation",
           "currentTags": [
             "@internal",
             "@category",
@@ -476661,8 +476661,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 199,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-199-collectcacheproducerworkflowfiles",
+          "line": 266,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-266-collectcacheproducerworkflowfiles",
           "currentTags": [
             "@internal",
             "@category",
@@ -476684,8 +476684,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 245,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-245-inspectcacheproducerworkflow",
+          "line": 320,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-320-inspectcacheproducerworkflow",
           "currentTags": [
             "@internal",
             "@category",
@@ -476707,8 +476707,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 285,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-285-hashcacheproducerworkflow",
+          "line": 360,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-360-hashcacheproducerworkflow",
           "currentTags": [
             "@internal",
             "@category",
@@ -476730,8 +476730,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 314,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-314-hashcacheproduceruploadtarget",
+          "line": 389,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-389-hashcacheproduceruploadtarget",
           "currentTags": [
             "@internal",
             "@category",
@@ -476753,8 +476753,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 334,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-334-hashcacheproduceruploadkey",
+          "line": 409,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-409-hashcacheproduceruploadkey",
           "currentTags": [
             "@internal",
             "@category",
@@ -476776,8 +476776,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 451,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-451-assertcacheproduceruploadruntime",
+          "line": 526,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-526-assertcacheproduceruploadruntime",
           "currentTags": [
             "@internal",
             "@category",
@@ -476799,8 +476799,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 484,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-484-loadcacheproducerexecutionruntime",
+          "line": 559,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-559-loadcacheproducerexecutionruntime",
           "currentTags": [
             "@internal",
             "@category",
@@ -476822,8 +476822,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 535,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-535-loadcacheproducerstorageruntime",
+          "line": 610,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-610-loadcacheproducerstorageruntime",
           "currentTags": [
             "@internal",
             "@category",
@@ -476845,8 +476845,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 579,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-579-initializecacheproducerexecution",
+          "line": 654,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-654-initializecacheproducerexecution",
           "currentTags": [
             "@internal",
             "@category",
@@ -476868,8 +476868,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 650,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-650-runcacheproducerworkflow",
+          "line": 725,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-725-runcacheproducerworkflow",
           "currentTags": [
             "@internal",
             "@category",
