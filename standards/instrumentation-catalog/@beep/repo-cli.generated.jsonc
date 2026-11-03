@@ -521,6 +521,7 @@
     {"name":"CacheWorkflow.assertStorageProfile","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheWorkflow.assertUploadRuntime","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheWorkflow.buildCompleteHostedReport","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"CacheWorkflow.directoryAlias","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheWorkflow.executeOwnedUpload","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheWorkflow.file","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheWorkflow.files","owner":"@beep/repo-cli","family":"tooling","conforms":true},
