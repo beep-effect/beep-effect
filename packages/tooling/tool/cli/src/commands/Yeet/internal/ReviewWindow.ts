@@ -27,11 +27,8 @@ import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import { GithubRest } from "../../../internal/github/index.ts";
 import { mergeReadyCriterionHolds, YeetMergeReadyCriterion } from "./Verdict.ts";
-import type * as SecureRandom from "effect/crypto/SecureRandom";
-import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetMergeReadyCriteria } from "./Verdict.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ReviewWindow");
@@ -372,65 +369,6 @@ interface YeetReviewWindowTarget {
   readonly prNumber: number;
 }
 
-// Every non-empty output line as an instant, or `None` when the read failed,
-// was clipped, or printed a line that is not an instant. One bad line voids
-// the whole read: a partly parsed list could hide the latest event.
-const readLines = Effect.fn("YeetReviewWindow.readLines")(function* <Line>(
-  context: RepoRunContext,
-  args: ReadonlyArray<string>,
-  capture: typeof runRepoCommandCapture,
-  parse: (line: string) => O.Option<Line>
-) {
-  return yield* capture("gh", args, context.repoRoot).pipe(
-    Effect.map((result) =>
-      result.exitCode === 0 && !result.truncated
-        ? pipe(Str.split(result.output, "\n"), A.map(Str.trim), A.filter(Str.isNonEmpty), A.map(parse), O.all)
-        : O.none<ReadonlyArray<Line>>()
-    ),
-    Effect.orElseSucceed(O.none<ReadonlyArray<Line>>)
-  );
-});
-
-const readInstants = (context: RepoRunContext, args: ReadonlyArray<string>, capture: typeof runRepoCommandCapture) =>
-  readLines(context, args, capture, DateTime.make);
-
-// The timeline events the window reads, as GitHub names them.
-const YeetReviewWindowTimelineEvent = LiteralKit(["ready_for_review", "head_ref_force_pushed"]).pipe(
-  $I.annoteSchema("YeetReviewWindowTimelineEvent", {
-    description: "A pull request timeline event the review window counts from.",
-  })
-);
-
-interface TimelineInstant {
-  readonly at: DateTime.Utc;
-  readonly event: typeof YeetReviewWindowTimelineEvent.Type;
-}
-
-// One `<event>\t<created_at>` timeline line.
-const parseTimelineLine = (line: string): O.Option<TimelineInstant> => {
-  const parts = Str.split(line, "\t");
-  return O.all({
-    event: O.flatMap(A.get(parts, 0), S.decodeUnknownOption(YeetReviewWindowTimelineEvent)),
-    at: O.flatMap(A.get(parts, 1), DateTime.make),
-  });
-};
-
-const timelineInstants = (
-  instants: ReadonlyArray<TimelineInstant>,
-  event: typeof YeetReviewWindowTimelineEvent.Type
-): ReadonlyArray<DateTime.Utc> =>
-  pipe(
-    instants,
-    A.filter((instant) => instant.event === event),
-    A.map((instant) => instant.at)
-  );
-
-const latestInstant = (instants: ReadonlyArray<DateTime.Utc>): O.Option<DateTime.Utc> =>
-  A.isReadonlyArrayNonEmpty(instants) ? O.some(A.max(instants, DateTime.Order)) : O.none();
-
-const earliestInstant = (instants: ReadonlyArray<DateTime.Utc>): O.Option<DateTime.Utc> =>
-  A.isReadonlyArrayNonEmpty(instants) ? O.some(A.min(instants, DateTime.Order)) : O.none();
-
 const unknownWindow = (reason: string): YeetReviewWindow => YeetReviewWindowUnknown.make({ reason });
 
 /**
@@ -438,16 +376,17 @@ const unknownWindow = (reason: string): YeetReviewWindow => YeetReviewWindowUnkn
  *
  * **Details**
  *
- * Three REST reads, none of them GraphQL: the issue timeline for the latest
- * `ready_for_review` and `head_ref_force_pushed` events, the pull request's
- * `created_at` when the timeline has no ready event (it was opened ready), and
- * the head commit's check suites, whose earliest `created_at` is when GitHub
- * first received that commit. The push instant is the later of that first
- * receipt and the latest force-push, so a force-push back to a commit GitHub
- * already knew restarts the window. The current time comes from `Clock`, so a
- * test drives it with `TestClock`. The effect never fails: a failed, clipped,
- * or unparsable read, a head with no check suite, and an invalid
- * `BEEP_YEET_REVIEW_WINDOW` each return `unknown` with the reason.
+ * Three `GithubRest` reads, none of them GraphQL: the issue timeline for the
+ * latest `ready_for_review` and `head_ref_force_pushed` events
+ * (`reviewTimeline`), the pull request's `created_at` when the timeline has no
+ * ready event (it was opened ready), and the head commit's check suites, whose
+ * earliest `created_at` is when GitHub first received that commit
+ * (`headFirstReceivedAt`). The push instant is the later of that first receipt
+ * and the latest force-push, so a force-push back to a commit GitHub already
+ * knew restarts the window. The current time comes from `Clock`, so a test
+ * drives it with `TestClock`. The effect never fails: a failed read, a head
+ * with no check suite, and an invalid `BEEP_YEET_REVIEW_WINDOW` each return
+ * `unknown` with the reason.
  *
  * **Gotchas**
  *
@@ -462,47 +401,21 @@ const unknownWindow = (reason: string): YeetReviewWindow => YeetReviewWindowUnkn
  * console.log(typeof readYeetReviewWindow) // "function"
  * ```
  *
- * @param context - Repo context whose root resolves the GitHub repository.
  * @param target - The pull request number and the head the window is read for.
- * @param capture - Injectable GitHub runner for tests.
  * @returns The open, elapsed, or unknown review window.
  * @category workflows
  * @since 0.0.0
  */
 export const readYeetReviewWindow = Effect.fn("Yeet.readYeetReviewWindow")(function* (
-  context: RepoRunContext,
-  target: YeetReviewWindowTarget,
-  capture: typeof runRepoCommandCapture = runRepoCommandCapture
-): Effect.fn.Return<YeetReviewWindow, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
+  target: YeetReviewWindowTarget
+): Effect.fn.Return<YeetReviewWindow, never, GithubRest> {
   const window = yield* YeetReviewWindowDuration.pipe(Effect.option);
   if (O.isNone(window)) {
     return unknownWindow(`${YEET_REVIEW_WINDOW_ENV} is not a duration such as "20 minutes"`);
   }
+  const rest = yield* GithubRest;
   const [timeline, suites] = yield* Effect.all(
-    [
-      readLines(
-        context,
-        [
-          "api",
-          "--paginate",
-          `repos/{owner}/{repo}/issues/${target.prNumber}/timeline?per_page=100`,
-          "--jq",
-          '.[] | select(.event == "ready_for_review" or .event == "head_ref_force_pushed") | [.event, .created_at] | @tsv',
-        ],
-        capture,
-        parseTimelineLine
-      ),
-      readInstants(
-        context,
-        [
-          "api",
-          `repos/{owner}/{repo}/commits/${target.headSha}/check-suites?per_page=100`,
-          "--jq",
-          ".check_suites[].created_at",
-        ],
-        capture
-      ),
-    ],
+    [Effect.option(rest.reviewTimeline(target.prNumber)), Effect.option(rest.headFirstReceivedAt(target.headSha))],
     { concurrency: "unbounded" }
   );
   if (O.isNone(timeline)) {
@@ -511,27 +424,26 @@ export const readYeetReviewWindow = Effect.fn("Yeet.readYeetReviewWindow")(funct
   if (O.isNone(suites)) {
     return unknownWindow(`the check suites of head ${target.headSha} could not be read`);
   }
-  const firstReceivedAt = earliestInstant(suites.value);
+  const firstReceivedAt = suites.value;
   if (O.isNone(firstReceivedAt)) {
     return unknownWindow(`head ${target.headSha} has no check suite yet, so its push time is not known`);
   }
   // A force-push back to a commit GitHub already knew creates no new check
   // suite, so the latest force-push event is the push instant when it is later.
   const pushedAt = pipe(
-    latestInstant(timelineInstants(timeline.value, "head_ref_force_pushed")),
+    timeline.value.forcedAt,
     O.map((forcedAt) => DateTime.max(forcedAt, firstReceivedAt.value)),
     O.getOrElse(() => firstReceivedAt.value)
   );
-  const flippedAt = latestInstant(timelineInstants(timeline.value, "ready_for_review"));
+  const flippedAt = timeline.value.readyAt;
   // No ready-for-review event on a pull request that is not a draft: it was
   // opened ready, and its creation is when reviewers could first read it.
   const openedAt = O.isSome(flippedAt)
     ? O.none<DateTime.Utc>()
-    : yield* readInstants(
-        context,
-        ["api", `repos/{owner}/{repo}/pulls/${target.prNumber}`, "--jq", ".created_at"],
-        capture
-      ).pipe(Effect.map(O.flatMap(latestInstant)));
+    : yield* rest.pullRequest(target.prNumber).pipe(
+        Effect.map((pull) => pull.createdAt),
+        Effect.option
+      );
   const ready = pipe(
     O.map(flippedAt, (at) => ({ at, anchor: YeetReviewWindowAnchor.Enum["ready-for-review"] })),
     O.orElse(() => O.map(openedAt, (at) => ({ at, anchor: YeetReviewWindowAnchor.Enum["pr-opened"] })))

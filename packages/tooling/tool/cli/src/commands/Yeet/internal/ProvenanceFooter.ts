@@ -10,6 +10,8 @@
  * @since 0.0.0
  */
 import { Git } from "@beep/git/Git";
+import { GitHubClient } from "@beep/github/GitHubClient";
+import { GraphQLDocument } from "@beep/github/GraphQL";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { thunkTrue } from "@beep/utils";
@@ -28,7 +30,8 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { writeContainedFileString } from "../../../internal/cli/FsGuards.ts";
-import { runGitOutput, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import { GithubRest } from "../../../internal/github/index.ts";
+import { runGitOutput } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext, runIdForContext, writeTextFile } from "./ArtifactPaths.ts";
 import { yeetGitOutputErrorAdapter } from "./GitErrorAdapter.ts";
@@ -51,6 +54,9 @@ import type { PrNumber, PrProvenanceRole } from "./Provenance.ts";
 import type { PrSessionRegistryShape } from "./PrSessionRegistry.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ProvenanceFooter");
+
+// The footer reads and writes the PR body through these two services and nothing else.
+type ProvenanceGithubServices = GithubRest | GitHubClient;
 const repositoryPattern = /github\.com[/:]([^/]+)\/([^/]+?)(?:\.git)?$/u;
 
 // One `git config --get <key>` read through `@beep/git`: `None` when the key is unset, trimmed otherwise.
@@ -182,38 +188,14 @@ const skippedStamp = (message: string): ProvenanceStampOutcome =>
 const currentStamp = (prNumber: PrNumber): ProvenanceStampOutcome =>
   ProvenanceStampOutcome.make({ status: "current", message: `provenance footer current for PR #${prNumber}` });
 
-/**
- * Narrow gh pr view response carrying the body.
- *
- * @category models
- * @since 0.0.0
- */
-export class GhPrBody extends S.Opaque<GhPrBody, { readonly brand: unique symbol }>()(
-  S.Struct({ body: S.NullOr(S.String) }).pipe(
-    $I.annoteSchema("GhPrBody", { description: "Narrow gh pr view response carrying the body." })
-  )
-) {}
-
-// `gh pr view --json` exposes `updatedAt` but not `lastEditedAt` (gh 2.99).
-// Any body edit bumps `updatedAt`, so it is a sound inclusive baseline: an
-// edit that lands after this snapshot is timestamped at or after it, and the
-// snapshot's own body is already a known body for the reconcile.
-/**
- * Fresh pull-request body plus the GitHub update timestamp used as a race-detection baseline.
- *
- * @category models
- * @since 0.0.0
- */
-export class GhPrBodySnapshot extends S.Opaque<GhPrBodySnapshot, { readonly brand: unique symbol }>()(
-  S.Struct({
-    body: S.NullOr(S.String),
-    updatedAt: S.DateTimeUtcFromString,
-  }).pipe(
-    $I.annoteSchema("GhPrBodySnapshot", {
-      description: "Fresh pull-request body plus the GitHub update timestamp used as a race-detection baseline.",
-    })
-  )
-) {}
+// The REST pull request read carries `updated_at`; any body edit bumps it, so
+// it is a sound inclusive baseline: an edit that lands after this snapshot is
+// timestamped at or after it, and the snapshot's own body is already a known
+// body for the reconcile.
+interface PrBodySnapshot {
+  readonly body: string;
+  readonly updatedAt: DateTime.Utc;
+}
 
 /**
  * One full pull-request body revision from GitHub's user-content edit history.
@@ -268,82 +250,55 @@ export class GhPrBodyEditNode extends S.Opaque<GhPrBodyEditNode, { readonly bran
 ) {}
 
 /**
- * GitHub GraphQL response containing recent PR body edits.
+ * The `data` of the GitHub GraphQL read of a pull request's recent body edits.
  *
  * @category models
  * @since 0.0.0
  */
 export class GhPrBodyEditsDocument extends S.Opaque<GhPrBodyEditsDocument, { readonly brand: unique symbol }>()(
   S.Struct({
-    data: S.Struct({
-      repository: S.Struct({
-        pullRequest: S.Struct({ userContentEdits: S.Struct({ nodes: S.Array(GhPrBodyEditNode) }) }),
-      }),
+    repository: S.Struct({
+      pullRequest: S.Struct({ userContentEdits: S.Struct({ nodes: S.Array(GhPrBodyEditNode) }) }),
     }),
   }).pipe(
     $I.annoteSchema("GhPrBodyEditsDocument", {
-      description: "GitHub GraphQL response containing recent PR body edits.",
+      description: "The data of the GitHub GraphQL read of a pull request's recent body edits.",
     })
   )
 ) {}
 
-const decodeGhPrBody = S.decodeUnknownEffect(S.fromJsonString(GhPrBody));
-const decodeGhPrBodySnapshot = S.decodeUnknownEffect(S.fromJsonString(GhPrBodySnapshot));
-const decodeGhPrBodyEditsDocument = S.decodeUnknownEffect(S.fromJsonString(GhPrBodyEditsDocument));
 const encodeRecord = S.encodeEffect(S.fromJsonString(PrSessionRecord));
 
 // The pull request reads and the body write go over REST (`gh pr view|edit` spend
 // the shared GraphQL budget and failed the stamp whenever it ran dry). Only the
 // body-edit history is GraphQL-only; see readPrBodyEditsOrNone.
-const restPullArgs = (prNumber: PrNumber, jq: string): ReadonlyArray<string> => [
-  "api",
-  `repos/{owner}/{repo}/pulls/${prNumber}`,
-  "--jq",
-  jq,
-];
+const prBodyEdits = GraphQLDocument.make({
+  name: "pullRequestBodyEdits",
+  document:
+    "query($owner:String!,$name:String!,$number:Int!){repository(owner:$owner,name:$name){pullRequest(number:$number){userContentEdits(last:5){nodes{editedAt editor{login} diff}}}}}",
+  response: GhPrBodyEditsDocument,
+})<{ readonly owner: string; readonly name: string; readonly number: number }>();
 
-const prBodyEditsQuery =
-  "query($owner:String!,$name:String!,$number:Int!){repository(owner:$owner,name:$name){pullRequest(number:$number){userContentEdits(last:5){nodes{editedAt editor{login} diff}}}}}";
+// A failed GitHub read or write, carrying the kit's message (operation, HTTP
+// status and reason) where the capture carried gh's output and exit code.
+const githubBodyFailure = (error: { readonly message: string }): YeetCommandError =>
+  YeetCommandError.make({ message: error.message, exitCode: 1, cause: error });
 
 const readPrBodySnapshot = Effect.fn("ProvenanceFooter.readPrBodySnapshot")(function* (
-  capture: typeof runRepoCommandCapture,
-  context: RepoRunContext,
   prNumber: PrNumber
-) {
-  const viewed = yield* capture("gh", restPullArgs(prNumber, "{body, updatedAt: .updated_at}"), context.repoRoot);
-  if (viewed.exitCode !== 0) {
-    return yield* YeetCommandError.make({ message: viewed.output, exitCode: viewed.exitCode });
-  }
-  return yield* decodeGhPrBodySnapshot(viewed.output);
+): Effect.fn.Return<PrBodySnapshot, YeetCommandError, ProvenanceGithubServices> {
+  const pull = yield* GithubRest.use((rest) => rest.pullRequest(prNumber)).pipe(Effect.mapError(githubBodyFailure));
+  return { body: pull.body, updatedAt: pull.updatedAt };
 });
 
 const readPrBodyEdits = Effect.fn("ProvenanceFooter.readPrBodyEdits")(function* (
-  capture: typeof runRepoCommandCapture,
-  context: RepoRunContext,
   repository: PrRepository,
   prNumber: PrNumber
 ) {
-  const response = yield* capture(
-    "gh",
-    [
-      "api",
-      "graphql",
-      "-f",
-      `query=${prBodyEditsQuery}`,
-      "-F",
-      `owner=${repository.owner}`,
-      "-F",
-      `name=${repository.name}`,
-      "-F",
-      `number=${prNumber}`,
-    ],
-    context.repoRoot
-  );
-  if (response.exitCode !== 0) {
-    return yield* YeetCommandError.make({ message: response.output, exitCode: response.exitCode });
-  }
-  const document = yield* decodeGhPrBodyEditsDocument(response.output);
-  return A.map(document.data.repository.pullRequest.userContentEdits.nodes, (edit) =>
+  const document = yield* GitHubClient.use((client) =>
+    client.graphql(prBodyEdits, { owner: repository.owner, name: repository.name, number: prNumber })
+  ).pipe(Effect.mapError(githubBodyFailure));
+  return A.map(document.repository.pullRequest.userContentEdits.nodes, (edit) =>
     PrBodyEdit.make({
       body: edit.diff,
       editedAt: edit.editedAt,
@@ -358,13 +313,8 @@ const readPrBodyEdits = Effect.fn("ProvenanceFooter.readPrBodyEdits")(function* 
 // The edit history only sharpens race detection; the REST readback in
 // verifyReconciledBody still catches a body that drifted. A spent GraphQL budget
 // must not fail or skip the stamp, so a failed history read is an empty one.
-const readPrBodyEditsOrNone = (
-  capture: typeof runRepoCommandCapture,
-  context: RepoRunContext,
-  repository: PrRepository,
-  prNumber: PrNumber
-) =>
-  readPrBodyEdits(capture, context, repository, prNumber).pipe(
+const readPrBodyEditsOrNone = (repository: PrRepository, prNumber: PrNumber) =>
+  readPrBodyEdits(repository, prNumber).pipe(
     Effect.catch((error) =>
       Console.warn(
         `[yeet] could not read the body-edit history of PR #${prNumber} over GraphQL (${Str.trim(error.message)}); verifying the provenance footer by REST readback only`
@@ -396,34 +346,23 @@ const bodyEditorLabel = (edit: PrBodyEdit): string => O.getOrElse(edit.editor, (
 
 const maxReconcileRounds = 3;
 
+// The body is first written to the run artifacts as the record of the stamp, then
+// sent to GitHub in one PATCH that is never retried.
 const writePrBody = Effect.fn("ProvenanceFooter.writePrBody")(function* (
-  capture: typeof runRepoCommandCapture,
-  context: RepoRunContext,
   prNumber: PrNumber,
   bodyPath: string,
   body: string
 ) {
   yield* writeTextFile(bodyPath, body);
-  const edited = yield* capture(
-    "gh",
-    ["api", "-X", "PATCH", `repos/{owner}/{repo}/pulls/${prNumber}`, "--silent", "-F", `body=@${bodyPath}`],
-    context.repoRoot
+  yield* GithubRest.use((rest) => rest.updatePullRequest(prNumber, { body })).pipe(
+    Effect.mapError(githubBodyFailure),
+    Effect.asVoid
   );
-  if (edited.exitCode !== 0) {
-    return yield* YeetCommandError.make({ message: edited.output, exitCode: edited.exitCode });
-  }
 });
 
-type ReconcileRequirements =
-  | Digest.Digest
-  | FileSystem.FileSystem
-  | Path.Path
-  | Digest.Digest
-  | ChildProcessSpawner.ChildProcessSpawner;
+type ReconcileRequirements = Digest.Digest | FileSystem.FileSystem | Path.Path | ProvenanceGithubServices;
 
 const yieldToConcurrentEdit = Effect.fn("ProvenanceFooter.yieldToConcurrentEdit")(function* (
-  capture: typeof runRepoCommandCapture,
-  context: RepoRunContext,
   prNumber: PrNumber,
   bodyPath: string,
   writtenBody: string,
@@ -433,10 +372,10 @@ const yieldToConcurrentEdit = Effect.fn("ProvenanceFooter.yieldToConcurrentEdit"
   DomainError | S.SchemaError | YeetCommandError,
   ReconcileRequirements | SecureRandom.SecureRandom
 > {
-  const finalReadback = yield* readPrBody(capture, context, prNumber);
+  const finalReadback = yield* readPrBody(prNumber);
   const restoring = Str.Equivalence(finalReadback, writtenBody);
   if (restoring) {
-    yield* writePrBody(capture, context, prNumber, bodyPath, foreign.body);
+    yield* writePrBody(prNumber, bodyPath, foreign.body);
   }
   const outcome = restoring
     ? `restored the concurrent body edit by ${bodyEditorLabel(foreign)} that its last write had overtaken`
@@ -447,8 +386,6 @@ const yieldToConcurrentEdit = Effect.fn("ProvenanceFooter.yieldToConcurrentEdit"
 });
 
 const verifyReconciledBody = Effect.fn("ProvenanceFooter.verifyReconciledBody")(function* (
-  capture: typeof runRepoCommandCapture,
-  context: RepoRunContext,
   prNumber: PrNumber,
   rendered: string,
   sourceBody: string,
@@ -458,7 +395,7 @@ const verifyReconciledBody = Effect.fn("ProvenanceFooter.verifyReconciledBody")(
   DomainError | S.SchemaError | YeetCommandError,
   ReconcileRequirements | SecureRandom.SecureRandom
 > {
-  const readback = yield* readPrBody(capture, context, prNumber);
+  const readback = yield* readPrBody(prNumber);
   const bodyDrifted = !Str.Equivalence(bodyWithoutProvenanceFooter(readback), bodyWithoutProvenanceFooter(sourceBody));
   const footerMissing = !Str.Equivalence(splicePrProvenanceFooter(readback, rendered), readback);
   const outcome = bodyDrifted
@@ -486,8 +423,6 @@ const verifyReconciledBody = Effect.fn("ProvenanceFooter.verifyReconciledBody")(
 });
 
 const reconcilePrBodyAfterWrite = Effect.fn("ProvenanceFooter.reconcileAfterWrite")(function* (
-  capture: typeof runRepoCommandCapture,
-  context: RepoRunContext,
   repository: PrRepository,
   prNumber: PrNumber,
   bodyPath: string,
@@ -504,18 +439,16 @@ const reconcilePrBodyAfterWrite = Effect.fn("ProvenanceFooter.reconcileAfterWrit
 > {
   const writtenBody = splicePrProvenanceFooter(sourceBody, rendered);
   const known = pipe(knownBodies, HashSet.add(sourceBody), HashSet.add(writtenBody));
-  yield* writePrBody(capture, context, prNumber, bodyPath, writtenBody);
-  const edits = yield* readPrBodyEditsOrNone(capture, context, repository, prNumber);
+  yield* writePrBody(prNumber, bodyPath, writtenBody);
+  const edits = yield* readPrBodyEditsOrNone(repository, prNumber);
   const foreign = newestUnknownEditSince(edits, baseline, known);
   if (O.isNone(foreign)) {
-    return yield* verifyReconciledBody(capture, context, prNumber, rendered, sourceBody, preservedForeign);
+    return yield* verifyReconciledBody(prNumber, rendered, sourceBody, preservedForeign);
   }
   if (round >= maxReconcileRounds) {
-    return yield* yieldToConcurrentEdit(capture, context, prNumber, bodyPath, writtenBody, foreign.value);
+    return yield* yieldToConcurrentEdit(prNumber, bodyPath, writtenBody, foreign.value);
   }
   return yield* reconcilePrBodyAfterWrite(
-    capture,
-    context,
     repository,
     prNumber,
     bodyPath,
@@ -529,16 +462,10 @@ const reconcilePrBodyAfterWrite = Effect.fn("ProvenanceFooter.reconcileAfterWrit
 });
 
 const readPrBody = Effect.fn("ProvenanceFooter.readPrBody")(function* (
-  capture: typeof runRepoCommandCapture,
-  context: RepoRunContext,
   prNumber: PrNumber
-) {
-  const viewed = yield* capture("gh", restPullArgs(prNumber, "{body}"), context.repoRoot);
-  if (viewed.exitCode !== 0) {
-    return yield* YeetCommandError.make({ message: viewed.output, exitCode: viewed.exitCode });
-  }
-  const current = yield* decodeGhPrBody(viewed.output);
-  return current.body ?? "";
+): Effect.fn.Return<string, YeetCommandError, ProvenanceGithubServices> {
+  const pull = yield* GithubRest.use((rest) => rest.pullRequest(prNumber)).pipe(Effect.mapError(githubBodyFailure));
+  return pull.body;
 });
 
 const bodyWithoutProvenanceFooter = (body: string): string =>
@@ -852,10 +779,9 @@ export const recordCurrentPrSession = Effect.fn("ProvenanceFooter.recordCurrentS
  * console.log(Effect.isEffect(stamping)) // true
  * ```
  *
- * @param context - Hydrated Yeet run context used for local artifacts and `gh` calls.
+ * @param context - Hydrated Yeet run context used for local artifacts and the provenance labels.
  * @param repository - Registry partition whose rows supply the public projection.
  * @param prNumber - Positive pull-request number used for lookup and the typed resume fence.
- * @param capture - Subprocess runner, injectable for deterministic GitHub body tests.
  * @param registryOverride - Optional in-memory registry used by fixture-safe tests.
  * @returns The typed stamp outcome; {@link ProvenanceStampFailureStatus} members mean the footer could not be confirmed.
  * @category workflows
@@ -865,7 +791,6 @@ export const ensureProvenanceFooter = Effect.fn("ProvenanceFooter.ensure")(funct
   context: RepoRunContext,
   repository: PrRepository,
   prNumber: PrNumber,
-  capture: typeof runRepoCommandCapture = runRepoCommandCapture,
   registryOverride?: PrSessionRegistryShape
 ): Effect.fn.Return<
   ProvenanceStampOutcome,
@@ -873,8 +798,9 @@ export const ensureProvenanceFooter = Effect.fn("ProvenanceFooter.ensure")(funct
   | Digest.Digest
   | FileSystem.FileSystem
   | Path.Path
-  | import("effect/process/ChildProcessSpawner").ChildProcessSpawner
+  | ChildProcessSpawner.ChildProcessSpawner
   | SecureRandom.SecureRandom
+  | ProvenanceGithubServices
 > {
   return yield* Effect.gen(function* () {
     const registry = registryOverride ?? (yield* makePrSessionRegistryLive());
@@ -887,17 +813,15 @@ export const ensureProvenanceFooter = Effect.fn("ProvenanceFooter.ensure")(funct
     const labels = yield* readProvenanceLabels(context.repoRoot);
     const publicValue = toPublicPrProvenance(rows, O.some(prNumber), labels);
     const rendered = renderPrProvenance(publicValue);
-    const body = yield* readPrBody(capture, context, prNumber);
+    const body = yield* readPrBody(prNumber);
     if (Str.Equivalence(splicePrProvenanceFooter(body, rendered), body)) return currentStamp(prNumber);
-    const fresh = yield* readPrBodySnapshot(capture, context, prNumber);
-    const freshBody = fresh.body ?? "";
+    const fresh = yield* readPrBodySnapshot(prNumber);
+    const freshBody = fresh.body;
     const next = splicePrProvenanceFooter(freshBody, rendered);
     if (Str.Equivalence(next, freshBody)) return currentStamp(prNumber);
     const bodyPath = yield* runArtifactPathForContext(context, "pr-provenance-body.md");
     const baseline = fresh.updatedAt;
     return yield* reconcilePrBodyAfterWrite(
-      capture,
-      context,
       repository,
       prNumber,
       bodyPath,
@@ -914,6 +838,55 @@ export const ensureProvenanceFooter = Effect.fn("ProvenanceFooter.ensure")(funct
       return Console.warn(warning).pipe(Effect.as(skippedStamp(warning)));
     })
   );
+});
+
+/**
+ * Record the monitored session, then run `stamp` on the recorded repository.
+ *
+ * **Details**
+ *
+ * The record is local: the origin URL and the session registry, with no GitHub call. A stamp
+ * that cannot reach GitHub therefore never loses the record. A session that cannot be recorded
+ * yields a `skipped` outcome without running the stamp.
+ *
+ * **Example** (Record and stamp in one step)
+ *
+ * ```ts
+ * import { ensureProvenanceFooter, recordMonitoredPrSessionThen, RepoRunContext } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const context = RepoRunContext.make({
+ *   base: "origin/main", branch: "feat/footer", cwd: ".", head: "HEAD",
+ *   originalArgv: [], packetDir: ".beep/yeet", repoRoot: ".",
+ *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
+ * })
+ * const program = recordMonitoredPrSessionThen(context, 42, undefined, (repository) =>
+ *   ensureProvenanceFooter(context, repository, 42)
+ * )
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param context - Hydrated Yeet context for the monitor invocation.
+ * @param prNumber - Pull-request number observed once before polling begins.
+ * @param registryOverride - Optional in-memory registry used by fixture-safe tests.
+ * @param stamp - The footer stamp to run on the recorded repository.
+ * @returns The stamp's outcome, or `skipped` when the session could not be recorded.
+ * @category workflows
+ * @since 0.0.0
+ */
+export const recordMonitoredPrSessionThen = Effect.fnUntraced(function* <E, R>(
+  context: RepoRunContext,
+  prNumber: PrNumber,
+  registryOverride: PrSessionRegistryShape | undefined,
+  stamp: (repository: PrRepository) => Effect.Effect<ProvenanceStampOutcome, E, R>
+) {
+  const recording = yield* recordCurrentPrSession(context, prNumber, O.none(), "monitored", registryOverride);
+  if (O.isNone(recording)) {
+    return skippedStamp(
+      `[yeet] provenance footer stamp skipped for PR #${prNumber}: session recording was unavailable`
+    );
+  }
+  return yield* stamp(recording.value.repository);
 });
 
 /**
@@ -934,7 +907,6 @@ export const ensureProvenanceFooter = Effect.fn("ProvenanceFooter.ensure")(funct
  *
  * @param context - Hydrated Yeet context for the monitor invocation.
  * @param prNumber - Pull-request number observed once before polling begins.
- * @param capture - Subprocess runner, injectable for deterministic GitHub tests.
  * @param registryOverride - Optional in-memory registry used by fixture-safe tests.
  * @returns The typed stamp outcome, `skipped` when the session could not be recorded.
  * @category workflows
@@ -943,14 +915,9 @@ export const ensureProvenanceFooter = Effect.fn("ProvenanceFooter.ensure")(funct
 export const recordMonitoredPrSession = Effect.fn("ProvenanceFooter.recordMonitoredSession")(function* (
   context: RepoRunContext,
   prNumber: PrNumber,
-  capture: typeof runRepoCommandCapture = runRepoCommandCapture,
   registryOverride?: PrSessionRegistryShape
 ) {
-  const recording = yield* recordCurrentPrSession(context, prNumber, O.none(), "monitored", registryOverride);
-  if (O.isNone(recording)) {
-    return skippedStamp(
-      `[yeet] provenance footer stamp skipped for PR #${prNumber}: session recording was unavailable`
-    );
-  }
-  return yield* ensureProvenanceFooter(context, recording.value.repository, prNumber, capture, registryOverride);
+  return yield* recordMonitoredPrSessionThen(context, prNumber, registryOverride, (repository) =>
+    ensureProvenanceFooter(context, repository, prNumber, registryOverride)
+  );
 });
