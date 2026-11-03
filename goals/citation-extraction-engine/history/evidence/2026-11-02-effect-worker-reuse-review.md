@@ -36,3 +36,9 @@ Prove it with the existing real-process/corpus controls before replacing the
 current implementation. The actual regex worker is still unfinished and should
 start from this upstream-first design. No migration or fidelity proof is claimed
 by this review record.
+
+The independent package/module audit is now complete and supplements this
+initial review: [Effect upstream reuse audit](2026-11-02-effect-upstream-reuse-audit.md).
+It identifies transactional admission, typed RPC and SchemaBinary candidates,
+verifies their presence in installed 4.1.1, and records concrete lifecycle and
+surrogate-fidelity constraints. No migration is claimed by either review.
