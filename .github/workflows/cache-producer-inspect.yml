@@ -15,10 +15,9 @@ jobs:
     name: Inspect producer sources and tools
     if: github.ref == 'refs/heads/main'
     # Runner-group workflow access is granted to the reusable Heavy leaf.
-    # The reusable workflow's nested producer requests this validation ceiling.
-    # Its selected inspection/preparation job retains contents-only permissions.
     permissions:
       contents: read
+      # GitHub validates every nested job, including the gated producer.
       actions: read
     uses: beep-effect/beep-effect/.github/workflows/heavy.yml@main
     with:

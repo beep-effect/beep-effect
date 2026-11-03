@@ -146,10 +146,9 @@ jobs:
     # ruleset keeps the PR blocked; never pass `hold` through as
     # `admitted: false`, which would report every lane as passing without work.
     if: ${{ needs.admission.outputs.verdict != 'hold' }}
-    # GitHub validates every nested job's requested permissions, including
-    # protected producer jobs excluded by this caller's inputs and event.
     permissions:
       contents: read
+      # GitHub validates every nested job, including the gated producer.
       actions: read
     uses: beep-effect/beep-effect/.github/workflows/heavy.yml@main
     secrets: inherit

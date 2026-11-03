@@ -347,6 +347,24 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     })
   );
   it.effect(
+    "gives every Heavy caller the read-only permission ceiling required by its nested producer",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      for (const { file, job } of [
+        { file: "check.yml", job: "heavy" },
+        { file: "heavy-admit.yml", job: "heavy" },
+        { file: "cache-producer-inspect.yml", job: "inspect" },
+        { file: "cache-producer-prepare.yml", job: "prepare" },
+        { file: "cache-producer.yml", job: "produce" },
+      ]) {
+        const workflow = parseWorkflowYaml(yield* fs.readFileString(`${root}/.github/workflows/${file}`));
+        const permissions = yamlAt(workflow, ["jobs", job, "permissions"]) ?? yamlAt(workflow, ["permissions"]);
+        assert.deepEqual(permissions, { contents: "read", actions: "read" }, file);
+      }
+    })
+  );
+  it.effect(
     "scopes hosted governance reads to Security and exercises its job token on pull requests",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
