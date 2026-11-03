@@ -39,7 +39,7 @@ Refresh capture: the original 49 records retain their prior triage and proof; CS
 `P9 close` - PR [#1728](https://github.com/beep-effect/beep-effect/pull/1728)
 merged at `de8ddd98448dc4d2f17714e90615ef1c66f2f815`. The 52 captured
 findings are Fixed in Security Cloud. The later separately captured finding in
-`codex-security-findings-2026-10-14-agent-message` was also Fixed after PR
+`retired:codex-security-findings-2026-10-14-agent-message` ([last tree](https://github.com/beep-effect/beep-effect/tree/6bb8584b6dbc9aee927a200901c9eebc0abd63b1/goals/codex-security-findings-2026-10-14-agent-message)) was also Fixed after PR
 [#1766](https://github.com/beep-effect/beep-effect/pull/1766) merged; the
 filtered open view now shows 0 of 0 findings.
 The final reviewer summary scored #1728 5/5. Two optional hosted checks were

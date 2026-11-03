@@ -42,7 +42,9 @@ Claude never appears in the Codex chain; Codex (`gpt-6.1-sol` medium) is the fir
 Claude chain since 2026-10-18 (`goals/agent-pool-doctrine/history/2026-10-18-codex-claude-fallback.md`),
 before Cursor and grok-build. Cursor and
 grok-build workers never delegate onward: they return a result or blocker to the originating
-orchestrator, which owns every cross-provider decision and launch. An unfavorable review or an
+orchestrator, which owns every cross-provider decision and launch. From a T3 session that launch
+is `delegate_task` (or `t3_thread_launch`) with the pinned provider, model and effort from
+`orchestrator_capabilities`; the `orchestrate` skill has the procedure. An unfavorable review or an
 ordinary code failure is remediated on the same route. Only existing subscriptions and
 explicitly authorized API billing are used; when a chain is exhausted, report the concrete
 blockers and hold the dependent work. Every route may implement, explore, research, and review
@@ -195,10 +197,15 @@ https://cursor.com/help/models-and-usage/usage-limits):
 
 | Tier | Primary | Fallback | Bucket | Input / output ($/1M) |
 | --- | --- | --- | --- | --- |
-| Volume implementation | `composer-2.5` | `cursor-grok-4.6-xhigh` | Cursor Models | $0.50 / $2.50; $2 / $6 |
+| Volume implementation | `composer-2.5` | — | Cursor Models | $0.50 / $2.50 |
 | Fallback (policy 2026-10-01, id 2026-10-14) | `claude-opus-5-5-medium` | — | Other Models | Opus 5.5 list price |
-| Review / adversarial | `claude-opus-5-5-high` | `gpt-5.6-sol-xhigh` | Other Models | Opus 5.5 list price; $4 / $20 |
-| Lightweight mechanical | `composer-2.5` | `gpt-5.6-luna-high` | Cursor Models → Other | $0.50 / $2.50; $0.20 / $1.20 |
+| Review / adversarial | `claude-opus-5-5-high` | — | Other Models | Opus 5.5 list price |
+| Lightweight mechanical | `composer-2.5` | — | Cursor Models | $0.50 / $2.50 |
+
+A seat has no fallback model of its own. When a primary fails on quota, availability or an
+unsupported model, the originating orchestrator steps down its chain in [Pool order](#pool-order).
+`cursor-agent --list-models` still lists older ids such as `gpt-5.6-sol` and `grok-4.6`; a listed
+id is not an approved one, and the superseded families below are never picked as a replacement.
 
 Manifest projection of the Cursor seats (tool-owned block):
 

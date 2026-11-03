@@ -50,15 +50,15 @@ Delete (removal map §§1–5a):
   test kit, tests and fixtures, and the `agent_message_*` MCP tools.
 - The `AiProviderCliSession*` managed-session half of `@beep/ai-provider-cli`
   and its tests and fixtures, plus the ai-metrics fixture that imports it.
-- `@beep/t3-code` (`packages/drivers/t3-code`), through
+- `@beep/t3-code` (`@beep/t3-code`), through
   `bun run beep delete-package @beep/t3-code --rewrite-packets`.
 - The ai-metrics `observation-launch-*` modules that are left without a
   caller.
-- `docs/runbooks/agent-messaging.md` and the two
+- the former agent-messaging runbook and the two
   `standards/cache-qualification-agent-message-*` records.
-- These packets: `goals/agent-message-router`, `goals/agent-session-bridges`,
-  `goals/codex-security-findings-2026-10-14-agent-message`, `goals/wake-service`
-  (superseded) and `explorations/cross-provider-agent-communication`.
+- These packets: `retired:agent-message-router`, `retired:agent-session-bridges`,
+  `retired:codex-security-findings-2026-10-14-agent-message`, `retired:wake-service`
+  (superseded) and `retired:cross-provider-agent-communication`.
 
 Rewrite:
 
@@ -84,11 +84,11 @@ Reference edits only: the kept packets in removal map §5c,
   commit where the packet existed. Each kept packet that referenced one gets
   a Decision Log row. That includes `explorations/t3code-fleet-driver`'s own
   links to `cross-provider-agent-communication`.
-- `goals/wake-service` gets `superseded` with `supersededBy:
+- `retired:wake-service` gets `superseded` with `supersededBy:
   t3-native-orchestration` in the same commit that deletes it, so git history
   records why.
 - The skill text names T3 tools exactly as the T3 MCP server exposes them:
-  `orchestrator_capabilities`, `t3_thread_configuration`, `t3_thread_launch`,
+  `orchestrator_capabilities`, `t3_thread_configure`, `t3_thread_launch`,
   `t3_thread_send`, `t3_thread_read`, `t3_thread_wait`, `t3_thread_interrupt`,
   `delegate_task`, and the scheduled-task tools. Each tool's argument names,
   `environmentId` included, are verified against the installed T3 server's
@@ -107,8 +107,10 @@ Reference edits only: the kept packets in removal map §5c,
 ## Acceptance Criteria
 
 - [ ] `rg -n -i 'agent-message|agent_message|AgentMessage|@beep/t3-code|session-bridge'`
-      outside `**/history/**` matches only `retired:` records and Decision Log
-      rows.
+      outside `**/history/**` matches only `retired:` records, Decision Log
+      rows, ACP protocol vocabulary (`agent_message_chunk` in `@beep/acp`),
+      dated prose in closed packets and `docs/reports`, and this packet's own
+      files (Decision Log 2026-11-02).
 - [ ] The packets listed above are gone, and no non-archival markdown link
       points at them. `knowledge semantic-delta` passes.
 - [ ] `bun run beep goals doctor` and `bun run beep explore atlas --check` pass.
@@ -155,6 +157,10 @@ Reference edits only: the kept packets in removal map §5c,
 | 2026-11-01 | T3-native messaging is the only route; beep's mailbox stack is deleted | Operator ruling; T3 already injects MCP and addresses linked environments | Revert the retirement PR |
 | 2026-11-01 | `wake-service` superseded by T3 scheduled tasks and `watch_pull_request` | Its transport is deleted | Restore from git; re-scope on T3 |
 | 2026-11-01 | Agent-message observation enrollment retired; unused `observation-launch-*` modules deleted | No caller remains | Restore from git |
+| 2026-11-02 | The installed server lists `t3_thread_configure`; the spec's `t3_thread_configuration` was a misnomer and the skills use the real name. | Verified against the T3 tool listing this session loads (fork `fa31b66bbb2a`, `apps/server/src/mcp/toolkits/thread/tools.ts:153`). | None needed; the name is the server's. |
+| 2026-11-02 | Of the ai-metrics `observation-launch-*` modules only `observation-launch-claims`, `observation-launch-client` and `observation-claim-population` (plus their tests and fixtures) are deleted; `observation-launch`, `observation-launch-facts` and `observation-launch-http` stay because `ObservationWorker`, `observation-worker.ts` and `evidence-retention.ts` import them. | Importer census at deletion time. | Restore the three modules from git at `6bb8584b6dbc9aee927a200901c9eebc0abd63b1`. |
+| 2026-11-02 | The residue acceptance criterion exempts ACP protocol vocabulary, dated prose in closed packets and reports, and this packet; those mentions are history, not live references (removal map §5d). | Rewriting closed packets' census prose would churn history for no reader; `@beep/acp` cannot drop its wire vocabulary. | Tighten the criterion and rewrite those lines in a follow-up PR. |
+| 2026-11-02 | T3 orchestrator tools were restored from the TokenEconomizer toolprune deny list in the gitignored local Claude settings file (local, gitignored) and marked kept repo-wide, so T3 sessions can run the skill. | The deny list hid `t3_thread_send`, `delegate_task` and the rest from this and every other beep-effect session. | `te toolprune apply <tools>` re-denies them. |
 
 ## Exception Ledger
 

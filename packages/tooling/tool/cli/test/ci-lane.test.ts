@@ -463,7 +463,7 @@ describe("CI lane partitions", () => {
       { id: "repo-cli-6", packages: 1, weightSeconds: 402 },
       { id: "unit-a", packages: 45, weightSeconds: 749 },
       { id: "unit-b", packages: 45, weightSeconds: 750 },
-      { id: "unit-c", packages: 46, weightSeconds: 749 },
+      { id: "unit-c", packages: 45, weightSeconds: 749 },
       { id: "unit-d", packages: 46, weightSeconds: 749 },
     ]);
   });

@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "2c028c5adce1ad31f59feb958ef90386fe13f2409bb5611c757f2aafdca17c77",
+  "specSha256": "bd9f5591fbb4337d83402b8dfd384c47d95ad98c6cb5030dae67595808bcac76",
   "acceptance": [
     {
       "id": "AC-01",
@@ -522,5 +522,14 @@
     "path": "research/saved-storage-grants-checkpoint-2026-11-03.json",
     "sha256": "41c702008f15524729c1cb7653b0f0286b4e6020d7a30f646bce3eea844a1d9d",
     "scope": "Current small-object role capabilities only. No current management-policy inspection, deployed adapter trust, native signed restoration, protected producer, qualification or whole-goal acceptance."
-  }
+  },
+  "priorSpecSha256AtProtectedWorkflowPreparation": "e5157183e7007be1ceb7f4312b91d9d0a9a46c38cac501a5e7732b9a9556ac7e",
+  "protectedProducerWorkflowPreparation": {
+    "path": "research/protected-producer-workflow-preparation-2026-11-03.json",
+    "sha256": "43a756c4689b41623a59117ff7ef8b1b7f5005d382620e356cd028de1f11371b",
+    "authority": "Closed workflow wiring only. No installed issuer, runtime credential delivery, protected execution, published observation, qualification or whole-goal acceptance."
+  },
+  "acceptedMainSpecSha256AtSavedStorageIntegration": "2c028c5adce1ad31f59feb958ef90386fe13f2409bb5611c757f2aafdca17c77",
+  "priorSpecSha256BeforeSavedStorageIntegration": "d4c40df7c1c70fe540d4d4699870c0c8dc2e81ee49edf0b5523519c15f0eea8c",
+  "priorSpecSha256BeforeChannelReferenceReview": "19f4abd3f84a9e5ec056799b595dfe5b8911d34d4490d75c423668dd91b9efa8"
 }

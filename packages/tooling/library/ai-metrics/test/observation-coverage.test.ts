@@ -1,8 +1,16 @@
-import { ObservationCoverageInput, reconcileObservationCoverage } from "@beep/repo-ai-metrics/observation-coverage";
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
+import {
+  ObservationCoverageInput,
+  readObservationCoverage,
+  reconcileObservationCoverage,
+} from "@beep/repo-ai-metrics/observation-coverage";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -176,6 +184,33 @@ describe("independent coverage reconciliation", () => {
         routes: [observed(id("c")), observed(id("5"))],
       }).pipe(Effect.isFailure);
       expect(pipe1).toBe(true);
+    })
+  );
+});
+
+const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
+
+it.layer(Layer.merge(MemoryFileSystem.layer, Path.layer), { timeout: "20 seconds" })((it) => {
+  it.effect("reads a bounded coverage file, counts unknown snapshots as empty and refuses invalid evidence", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped();
+      const file = `${directory}/synthetic-coverage.json`;
+      const value = input();
+      const withUnknown = { ...value, routes: [{ ...value.routes[0], visibleEvents: unknown }] };
+      yield* fs.writeFileString(file, yield* encodeJson(withUnknown), { mode: 0o600 });
+      const decoded = yield* readObservationCoverage(file);
+      expect(reconcileObservationCoverage(decoded).routes[0]?.visibleEvents).toEqual({
+        _tag: "ObservationUnknown",
+        expected: 2,
+      });
+      yield* fs.writeFileString(file, yield* encodeJson({ ...value, boundaryEvidenceId: id("9") }), { mode: 0o600 });
+      expect((yield* readObservationCoverage(file).pipe(Effect.flip)).message).toBe(
+        "Invalid observation coverage boundary or evidence."
+      );
+      expect((yield* readObservationCoverage(`${directory}/absent.json`).pipe(Effect.flip)).message).toBe(
+        "Unable to read observation coverage."
+      );
     })
   );
 });

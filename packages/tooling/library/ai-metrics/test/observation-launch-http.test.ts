@@ -7,6 +7,7 @@ import {
 } from "@beep/repo-ai-metrics/observation-launch-facts";
 import {
   makeObservationLaunchHttp,
+  ObservationLaunchContext,
   ObservationLaunchHttpPolicy,
   ObservationLaunchSubmission,
 } from "@beep/repo-ai-metrics/observation-launch-http";
@@ -82,7 +83,12 @@ const fixture = Effect.fn("LaunchHttpTest.fixture")(function* (enabled = true) {
     );
     return { status: received.status, headers: received.headers, text: yield* received.text };
   });
-  return { config, control, facts, post, submission, encode, client, url };
+  const origin = HttpServer.formatAddress(server.address);
+  const call = Effect.fn("LaunchHttpTest.call")(function* (path: string, method: "POST" | "GET") {
+    const received = yield* client.execute(HttpClientRequest.make(method)(`${origin}${path}`));
+    return { status: received.status, headers: received.headers, text: yield* received.text };
+  });
+  return { config, control, facts, post, submission, encode, client, url, call };
 });
 const decodeObservationLaunchReceiptJson = S.decodeEffect(S.fromJsonString(ObservationLaunchReceipt));
 
@@ -217,6 +223,56 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       expect(read12).toEqual([]);
       yield* sql`DROP TRIGGER synthetic_launch_failure`;
       expect((yield* f.post(body)).status).toBe(200);
+    })
+  )
+);
+
+const decodeObservationLaunchContextJson = S.decodeEffect(S.fromJsonString(ObservationLaunchContext));
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("serves the launch context on GET only and refuses unknown paths", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const paused = yield* f.call("/v1/launch-context", "GET");
+      expect(paused.status).toBe(200);
+      expect(paused.headers["cache-control"]).toBe("no-store");
+      const context = yield* decodeObservationLaunchContextJson(paused.text);
+      expect(context.hostId).toBe(id("a"));
+      expect(context.namespaceId).toBe(id("b"));
+      expect(context.evidenceEpoch).toBe(0);
+      expect(context.accepting).toBe(false);
+      expect(context.routes).toEqual([{ routeId: id("c"), harness: "codex-cli", surface: "cli" }]);
+      yield* f.control.resume;
+      expect(
+        (yield* decodeObservationLaunchContextJson((yield* f.call("/v1/launch-context", "GET")).text)).accepting
+      ).toBe(true);
+      expect((yield* f.call("/v1/launch-context", "POST")).status).toBe(405);
+      expect((yield* f.call("/v1/unknown", "GET")).status).toBe(404);
+    })
+  )
+);
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("hides the launch context while no route is enrolled", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture(false);
+      expect((yield* f.call("/v1/launch-context", "GET")).status).toBe(404);
+    })
+  )
+);
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("refuses a follow-up fact whose launch was never prepared", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      yield* f.control.resume;
+      const started = ObservationLaunchFact.cases.Started.make({ launchId: id("9"), processInstanceId: id("2") });
+      const refused = yield* f.post(
+        yield* f.encode(ObservationLaunchSubmission.make({ ...f.submission(), fact: started }))
+      );
+      expect(refused.status).toBe(409);
+      expect(refused.headers["x-observation-receipt"]).toBeUndefined();
+      expect(yield* f.facts.read(id("9"), 0)).toEqual([]);
     })
   )
 );

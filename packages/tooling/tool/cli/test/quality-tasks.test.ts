@@ -6933,6 +6933,40 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         )
       );
 
+      describe("a package the branch deleted is retired, not missing", () => {
+        const baseFloors = withRows({
+          "@beep/deleted": coveragePackageBaseline("packages/deleted", 80),
+          "@beep/existing": coveragePackageBaseline("packages/existing", 80),
+        });
+        const measured = [
+          CoverageSnapshotEntry.make({
+            packageName: "@beep/existing",
+            baseline: coveragePackageBaseline("packages/existing", 80),
+          }),
+        ];
+        const compare = (proposed: O.Option<CoverageRegressionBaseline>) =>
+          compareCoverageRegressionSnapshotsWithProposedForTesting(
+            CoverageComparisonBaselines.make({ baseline: baseFloors, proposed }),
+            measured,
+            false
+          );
+
+        it("drops the missing summary when the branch's own baseline removed the row", () => {
+          const result = compare(
+            O.some(withRows({ "@beep/existing": coveragePackageBaseline("packages/existing", 80) }))
+          );
+          expect(result.missingActuals).toEqual([]);
+        });
+
+        it("still requires the summary while the branch keeps the row", () => {
+          expect(compare(O.some(baseFloors)).missingActuals).toEqual(["@beep/deleted"]);
+        });
+
+        it("still requires the summary on an unpinned run", () => {
+          expect(compare(O.none()).missingActuals).toEqual(["@beep/deleted"]);
+        });
+      });
+
       describe("rows a pull request raised are judged against its own values", () => {
         const filePath = "packages/existing/src/Index.ts";
         const packageRow = (
