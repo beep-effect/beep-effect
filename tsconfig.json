@@ -2456,7 +2456,14 @@
         "./packages/tooling/tool/cli/src/commands/Holds/index.ts"
       ],
       "@beep/party-domain": ["./packages/party/domain/src/index.ts"],
-      "@beep/party-domain/*": ["./packages/party/domain/src/*"]
+      "@beep/party-domain/*": ["./packages/party/domain/src/*"],
+      "@beep/party-use-cases": ["./packages/party/use-cases/src/index.ts"],
+      "@beep/party-use-cases/*": ["./packages/party/use-cases/src/*"],
+      "@beep/party-server": ["./packages/party/server/src/index.ts"],
+      "@beep/party-server/*": ["./packages/party/server/src/*"],
+      "@beep/law-practice-server/PartyContactSource": [
+        "./packages/law-practice/server/src/PartyContactSource/index.ts"
+      ]
     }
   }
 }

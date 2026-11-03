@@ -31,14 +31,21 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — complete (2026-10-22): the slice shape was grilled with the operator, and module placement and four rulings are in `SPEC.md`. Next: P1, starting with the prerequisite PartyId kit PR (`refactor/party-id-neutral-kit`).
+P2 Verify — in progress (2026-11-03). The package implementation, law-practice
+adapter and rename, migrated scripts and scratch mirror removal are complete.
+Local package verification, synthetic workflow checks and boundary scans pass.
+Repository-wide documentation verification, publication, exact-head hosted
+readiness, merge and closeout remain to be completed. The initiative stays active.
 
 ## Latest Evidence
 
+- Competency migration: [2026-11-03 mapping](history/2026-11-03-competency-migration.md).
+- Local verification: [2026-11-03 gates](history/2026-11-03-local-verification.md).
+- Local continuation: `history/2026-11-02-completion-progress.md` (partial implementation, not completion evidence).
 - Grill rulings: 2026-10-22, recorded in the `SPEC.md` Decision Log.
 - Design evidence: `scratchpad/party/PARTY-DATA-MODEL.md`, and the `@beep/epistemics` envelope and factories (#2017).
 
 ## Notes
 
-<Record high-signal constraints or resume notes that do not belong in the
-normative spec.>
+All corpus and workflow fixtures used for this implementation are synthetic.
+Local results do not substitute for the required published-head readiness receipt.

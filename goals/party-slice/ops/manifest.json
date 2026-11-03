@@ -6,7 +6,7 @@
     "title": "Party Slice",
     "status": "active",
     "created": "2026-10-22",
-    "updated": "2026-10-22",
+    "updated": "2026-11-03",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/party-slice",
@@ -51,12 +51,12 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P3",

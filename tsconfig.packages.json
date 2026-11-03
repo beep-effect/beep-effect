@@ -487,6 +487,12 @@
       "path": "packages/party/domain"
     },
     {
+      "path": "packages/party/server"
+    },
+    {
+      "path": "packages/party/use-cases"
+    },
+    {
       "path": "packages/shared/domain"
     },
     {

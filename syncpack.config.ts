@@ -128,6 +128,8 @@ const config = {
     "packages/drivers/github-actions/package.json",
     "apps/beep-effect-web/package.json",
     "packages/party/domain/package.json",
+    "packages/party/use-cases/package.json",
+    "packages/party/server/package.json",
   ],
   customTypes: {
     catalog: {
