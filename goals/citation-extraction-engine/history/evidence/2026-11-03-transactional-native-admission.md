@@ -34,5 +34,24 @@ Verification:
   Fallow audit still passes with zero dead-code, complexity or clone findings.
 
 This changes the coordination mechanism, not policy or execution authority.
-The shared Worker/RPC backend and optional binary transport remain subsequent
+The shared direct stdio RPC backend and optional binary transport remain subsequent
 migration slices. No source-observation expectation or semantic waiver changed.
+
+## Public ownership boundaries and caller transactions
+
+Three added controls initially failed: an outer failed transaction could roll
+back an issued claim, quarantine/exit acknowledgement, or admission closure even
+though those external ownership events could not be rolled back. The negative
+receipt is `.beep/pr2511-native-tx-ambient-negative.log`.
+
+Public owner operations now omit only the caller's `Effect.Transaction` from
+their execution context. They commit independently while preserving other
+ambient services and the captured Clock. Internal claim and retry steps still
+join the owner's transaction. A caller-owned TxRef marker still rolls back when
+the caller fails, while quarantine persists; isolation does not alter the
+caller's transaction. This does not make arbitrary external operations safe to
+replay inside caller transactions.
+
+All 20 native/operation admission tests and the selected real HTML worker smoke
+pass after this correction. Server test compilation also passes. Receipts:
+`.beep/pr2511-native-tx-isolated-{types,tests,smoke}.log`.

@@ -12,6 +12,10 @@ import * as TxRef from "effect/TxRef";
 import { CitationAdmissionFailure, prepareCitationAdmissionPolicy } from "./Admission.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/NativeAdmission");
+// Native ownership is external to a caller's retryable work. Public operations
+// must commit independently; only the owner's internal claim/retry steps compose.
+const outsideCallerTransaction = <A, E>(body: Effect.Effect<A, E>): Effect.Effect<A, E> =>
+  Effect.updateContext(body, (context: Context.Context<never>) => context.pipe(Context.omit(Effect.Transaction)));
 /** Runtime authority: only the worker holding the exact child may acknowledge release.
  * These effects intentionally survive caller cancellation and owner Scope closure.
  * @internal @category services @since 0.0.0
@@ -86,7 +90,9 @@ export const makeCitationNativeProcessAdmission = Effect.fn("Citation.makeNative
   });
   yield* Scope.addFinalizer(
     scope,
-    TxRef.update(state, (current) => CitationNativeAdmissionSnapshot.make({ ...current, closed: true }))
+    TxRef.update(state, (current) => CitationNativeAdmissionSnapshot.make({ ...current, closed: true })).pipe(
+      outsideCallerTransaction
+    )
   );
   const acquireKind = Effect.fn("Citation.acquireNativeProcessKind")(
     function* (operation: CitationSafetyLimitExceeded["operation"], regex: boolean) {
@@ -105,7 +111,7 @@ export const makeCitationNativeProcessAdmission = Effect.fn("Citation.makeNative
                 quarantined: current.quarantined - (quarantined ? 1 : 0),
               })
             );
-          }).pipe(Effect.tx, Effect.uninterruptible);
+          }).pipe(Effect.tx, Effect.uninterruptible, outsideCallerTransaction);
           const claim = Effect.gen(function* () {
             yield* ensureOpen;
             const current = yield* TxRef.get(state);
@@ -166,17 +172,21 @@ export const makeCitationNativeProcessAdmission = Effect.fn("Citation.makeNative
                     quarantined: current.quarantined + 1,
                   })
                 );
-              }).pipe(Effect.tx, Effect.uninterruptible),
+              }).pipe(Effect.tx, Effect.uninterruptible, outsideCallerTransaction),
             } satisfies CitationNativeProcessLease;
           }).pipe(Effect.onError(() => release));
         })
       );
     },
-    Effect.provideService(Clock.Clock, clock)
+    Effect.provideService(Clock.Clock, clock),
+    outsideCallerTransaction
   );
   return CitationNativeProcessAdmission.of({
     acquire: Effect.fn("Citation.acquireNativeProcess")((operation) => acquireKind(operation, false)),
     acquireRegex: Effect.fn("Citation.acquireRegexProcess")((operation) => acquireKind(operation, true)),
-    snapshot: TxRef.get(state).pipe(Effect.map((current) => CitationNativeAdmissionSnapshot.make({ ...current }))),
+    snapshot: TxRef.get(state).pipe(
+      Effect.map((current) => CitationNativeAdmissionSnapshot.make({ ...current })),
+      outsideCallerTransaction
+    ),
   });
 });

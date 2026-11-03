@@ -7,8 +7,11 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
+import * as O from "effect/Option";
 import * as Scope from "effect/Scope";
+import * as TxRef from "effect/TxRef";
 import * as TestClock from "effect/testing/TestClock";
+import type { CitationNativeProcessLease } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
 
 it.effect("bounds shared native ownership and returns cancelled queue capacity", () =>
   Effect.gen(function* () {
@@ -237,5 +240,63 @@ it.effect("queue entry and cancellation notifications do not renew an older clai
     expect(yield* Fiber.join(older).pipe(Effect.flip)).toMatchObject({ operation: "extract", limit: "queueDeadline" });
     expect(yield* admission.snapshot).toEqual({ active: 1, regexActive: 1, queued: 0, quarantined: 0, closed: false });
     yield* owned.release;
+  })
+);
+
+it.effect("a returned native claim cannot be rolled back by its caller's transaction", () =>
+  Effect.gen(function* () {
+    const admission = yield* makeCitationNativeProcessAdmission((yield* defaultCitationEnginePolicy).limits);
+    let issued = O.none<CitationNativeProcessLease>();
+    const outcome = yield* admission.acquireRegex("extract").pipe(
+      Effect.tap((lease) =>
+        Effect.sync(() => {
+          issued = O.some(lease);
+        })
+      ),
+      Effect.andThen(Effect.fail("caller-rollback")),
+      Effect.tx,
+      Effect.flip
+    );
+    expect(outcome).toBe("caller-rollback");
+    expect(yield* admission.snapshot).toMatchObject({ active: 1, regexActive: 1 });
+    const lease = yield* Effect.fromOption(issued);
+    yield* lease.release;
+    expect(yield* admission.snapshot).toMatchObject({ active: 0, regexActive: 0 });
+  })
+);
+
+it.effect("quarantine and exit acknowledgement survive caller transaction rollback", () =>
+  Effect.gen(function* () {
+    const admission = yield* makeCitationNativeProcessAdmission((yield* defaultCitationEnginePolicy).limits);
+    const lease = yield* admission.acquireRegex("extract");
+    const callerState = yield* TxRef.make(0);
+    expect(
+      yield* TxRef.set(callerState, 1).pipe(
+        Effect.andThen(lease.quarantine),
+        Effect.andThen(Effect.fail("caller-rollback")),
+        Effect.tx,
+        Effect.flip
+      )
+    ).toBe("caller-rollback");
+    expect(yield* admission.snapshot).toMatchObject({ active: 1, regexActive: 1, quarantined: 1 });
+    expect(yield* TxRef.get(callerState)).toBe(0);
+    expect(yield* lease.release.pipe(Effect.andThen(Effect.fail("caller-rollback")), Effect.tx, Effect.flip)).toBe(
+      "caller-rollback"
+    );
+    expect(yield* admission.snapshot).toEqual({ active: 0, regexActive: 0, queued: 0, quarantined: 0, closed: false });
+  })
+);
+
+it.effect("owner Scope closure cannot be undone by a caller transaction rollback", () =>
+  Effect.gen(function* () {
+    const owner = yield* Scope.make();
+    const admission = yield* makeCitationNativeProcessAdmission((yield* defaultCitationEnginePolicy).limits).pipe(
+      Effect.provideService(Scope.Scope, owner)
+    );
+    expect(
+      yield* Scope.close(owner, Exit.void).pipe(Effect.andThen(Effect.fail("caller-rollback")), Effect.tx, Effect.flip)
+    ).toBe("caller-rollback");
+    expect(yield* admission.snapshot).toMatchObject({ closed: true });
+    expect(yield* admission.acquire("clean").pipe(Effect.flip)).toMatchObject({ reason: "closed" });
   })
 );
