@@ -919,15 +919,17 @@ describe("CI lane partitions", () => {
     );
   });
 
+  // `!cancelled()` (not `always()`): a superseded run must not start aggregators
+  // that can only fail; a failed shard still fails its aggregator.
   it.effect("keeps literal required aggregators and fails every non-success shard result", () =>
     Effect.gen(function* () {
       const workflowText = yield* Effect.tryPromise(() => Bun.file(checkWorkflowUrl).text());
       const workflow = parseWorkflowYaml(workflowText);
       expect(workflowText).not.toMatch(/ci lane (?:lint|test-unit)[^\n]*--force/u);
       expect(yamlAt(workflow, ["jobs", "lint", "name"])).toBe("Lint");
-      expect(yamlAt(workflow, ["jobs", "lint", "if"])).toBe("${{ always() }}");
+      expect(yamlAt(workflow, ["jobs", "lint", "if"])).toBe("${{ !cancelled() }}");
       expect(yamlAt(workflow, ["jobs", "test-unit", "name"])).toBe("Test Unit");
-      expect(yamlAt(workflow, ["jobs", "test-unit", "if"])).toBe("${{ always() }}");
+      expect(yamlAt(workflow, ["jobs", "test-unit", "if"])).toBe("${{ !cancelled() }}");
       expect(yamlAt(workflow, ["jobs", "lint-shard", "strategy", "fail-fast"])).toBe(false);
       expect(yamlAt(workflow, ["jobs", "test-unit-shard", "strategy", "fail-fast"])).toBe(false);
 
@@ -1280,6 +1282,45 @@ describe("ciLaneStepsForTesting", () => {
   it("states the lint-policy full sweep in argv instead of inheriting CI=true", () => {
     const step = firstOf(ciLaneStepsForTesting(REPO_ROOT, "lint-policy", baseOptions));
     expect([...step.args]).toEqual(["run", "beep", "lint", "policy", "--full"]);
+  });
+
+  // Perf audit K1: the pull-request shape reaches `beep lint policy` as an explicit changed
+  // scope, which the policy command widens on escalating changes; it never inherits CI=true.
+  it("passes the pull-request affected shape through to the lint-policy changed scope", () => {
+    const step = firstOf(ciLaneStepsForTesting(REPO_ROOT, "lint-policy", prShapeOptions));
+    expect([...step.args]).toEqual(["run", "beep", "lint", "policy", "--affected", "--base", "origin/main"]);
+    assertSome(
+      pipe(
+        CI_LANE_DESCRIPTORS,
+        A.findFirst((descriptor) => descriptor.id === "lint-policy"),
+        O.map((descriptor) => [...descriptor.flags])
+      ),
+      ["--affected", "--base", "--summarize"]
+    );
+  });
+
+  it("replays the lint-policy lane locally with the hosted pull-request shape", () => {
+    const prPlan = CiLocalStepPlan.make({ affected: true, base: "origin/main", onMainBranch: false });
+    const fullPlan = CiLocalStepPlan.make({ ...prPlan, affected: false });
+    expect([...firstOf(ciLocalStepsForTesting(REPO_ROOT, ["lint-policy"], prPlan)).args]).toEqual([
+      "run",
+      "beep",
+      "ci",
+      "lane",
+      "lint-policy",
+      "--affected",
+      "--base",
+      "origin/main",
+      "--summarize",
+    ]);
+    expect([...firstOf(ciLocalStepsForTesting(REPO_ROOT, ["lint-policy"], fullPlan)).args]).toEqual([
+      "run",
+      "beep",
+      "ci",
+      "lane",
+      "lint-policy",
+      "--summarize",
+    ]);
   });
 
   it("runs the first ecosystem member's type and bundle contracts explicitly", () => {
@@ -1660,7 +1701,7 @@ describe("ciLaneStepsForTesting", () => {
     }
   });
 
-  // The workflow gates only on goals_only and hands the affected decision to
+  // The workflow gates only on docs_only and hands the affected decision to
   // the lane (Turbo dry-run probe); no path profile survives anywhere.
   it.layer(gitPlatform, { timeout: "10 seconds" })((it) => {
     it.effect("leaves the storybook affected decision to the lane instead of a workflow path profile", () =>
@@ -1674,7 +1715,7 @@ describe("ciLaneStepsForTesting", () => {
         expect(script).not.toContain("storybook_pattern");
         expect(workflow).not.toContain("storybook_relevant");
         expect(workflow).toContain('eval "$(scripts/ci-change-profile.sh');
-        expect(workflow).toContain('if [[ "$goals_only" == "true" ]]; then');
+        expect(workflow).toContain('if [[ "$docs_only" == "true" ]]; then');
         expect(workflow).toContain('shape_args+=(--affected --base "origin/${GITHUB_BASE_REF:-main}")');
         expect(workflow).toContain('run_lane ci lane storybook "${shape_args[@]}"');
       })

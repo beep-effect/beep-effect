@@ -420,6 +420,10 @@ type FallowAuditDiffFallbackArgsOptions = {
   readonly diffPath: string;
   readonly quiet: boolean;
 };
+type FallowFeatureArgsOptions = {
+  readonly base: string;
+  readonly quiet: boolean;
+};
 type ProcessResult = {
   readonly stdout: string;
   readonly stderr: string;
@@ -1161,6 +1165,11 @@ const fallowArgs = (feature: FallowFeature, base: string, quiet: boolean): Reado
       "--regression-baseline",
       FALLOW_DEAD_CODE_REGRESSION_BASELINE_PATH,
     ],
+    // The gate reads the complexity findings and the summary, whose
+    // `average_maintainability` comes from the file-scores section. Without a
+    // section flag Fallow also builds hotspots and change coupling from 6-12
+    // months of git history: about 110 s single-threaded here, and Fallow 3.34
+    // repeats that walk after every commit that changes a file (quality audit M17).
     health: () => [
       "run",
       "fallow",
@@ -1168,6 +1177,8 @@ const fallowArgs = (feature: FallowFeature, base: string, quiet: boolean): Reado
       "health",
       "--config",
       ".fallowrc.jsonc",
+      "--complexity",
+      "--file-scores",
       "--format",
       "json",
       ...quietArgs,
@@ -1218,6 +1229,34 @@ const fallowArgs = (feature: FallowFeature, base: string, quiet: boolean): Reado
     "fix-preview": () => ["run", "fallow", "--", "fix", "--dry-run", "--format", "json", "--no-create-config"],
   });
 };
+
+/**
+ * Build the Bun argv a Fallow feature lane runs.
+ *
+ * **Example** (Inspect the sections the health lane requests)
+ *
+ * ```ts
+ * import { fallowFeatureArgsForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command"
+ *
+ * const args = fallowFeatureArgsForTesting("health", { base: "origin/main", quiet: true })
+ * console.log(args.includes("--complexity"), args.includes("--hotspots"))
+ * // true false
+ * ```
+ *
+ * @param feature - Fallow feature family the lane runs.
+ * @param options - Base ref and whether to pass Fallow's `--quiet` flag.
+ * @returns Ordered Bun argv for the feature's Fallow invocation.
+ * @category testing
+ * @since 0.0.0
+ */
+export const fallowFeatureArgsForTesting: {
+  (options: FallowFeatureArgsOptions): (feature: FallowFeature) => ReadonlyArray<string>;
+  (feature: FallowFeature, options: FallowFeatureArgsOptions): ReadonlyArray<string>;
+} = dual(
+  2,
+  (feature: FallowFeature, options: FallowFeatureArgsOptions): ReadonlyArray<string> =>
+    fallowArgs(feature, options.base, options.quiet)
+);
 
 /**
  * Build the fallback Fallow audit argv used when base-snapshot worktrees are unavailable.

@@ -24,9 +24,9 @@ import * as Tuple from "effect/Tuple";
 
 const $I = $RepoCliId.create("test/root-tasks-turbo-inputs");
 const fingerprintId = "//#lint:policy-fingerprint";
-const sharedSealId = `${fingerprintId}:shared`;
-// Generated seal tasks are owned and checked by `beep lint policy-fingerprint`.
-const isSealId = Str.startsWith(`${fingerprintId}:`);
+// Generated seal tasks are script-less `@beep/repo-cli` tasks owned and checked by `beep lint policy-fingerprint`.
+const isSealId = Str.startsWith("@beep/repo-cli#lint:policy-fingerprint:");
+const turboRoot = "$TURBO_ROOT$/";
 const nonInput = ".beep/c3-fixture-excluded.bin";
 const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
 const isProofTaskName = S.is(TurboConfigProofTaskName);
@@ -57,6 +57,12 @@ class TaskSummary extends S.Opaque<TaskSummary, { readonly brand: unique symbol 
 // `agentGuidance` must reach the fixture: under an agent-detected environment Turbo 2.11.5+
 // otherwise writes an untracked AGENTS.md before every run, which is a declared input of the
 // knowledge rows and would select them under --affected.
+class SealTask extends S.Opaque<SealTask, { readonly brand: unique symbol }>()(
+  S.Struct({ inputs: Strings, dependsOn: Strings }).pipe(
+    $I.annoteSchema("SealTask", { description: "A generated seal task's inputs and parent edge." })
+  )
+) {}
+const decodeSeal = S.decodeUnknownEffect(SealTask);
 const Configuration = S.Struct({
   tasks: S.Record(S.String, S.Unknown),
   global: S.Unknown,
@@ -211,6 +217,14 @@ const fixture = Effect.fn("RootTasksFixture.make")(function* () {
     })
   );
   const seals = R.fromEntries(A.filter(R.toEntries(configuration.tasks), ([id]) => isSealId(id)));
+  const decodedSeals = R.fromEntries(
+    yield* Effect.forEach(
+      R.toEntries(seals),
+      Effect.fnUntraced(function* ([id, raw]) {
+        return Tuple.make(id, yield* decodeSeal(raw));
+      })
+    )
+  );
   const tasks = R.fromEntries(rootEntries);
   expect(A.length(rootEntries)).toBe(A.length(R.keys(directInputs)));
   for (const [id, task] of rootEntries) {
@@ -222,19 +236,38 @@ const fixture = Effect.fn("RootTasksFixture.make")(function* () {
     name: "root-tasks-fixture",
     private: true,
     packageManager: "bun@1.4.2",
-    workspaces: ["packages/fixture"],
+    workspaces: ["packages/fixture", "packages/tooling/tool/cli"],
     scripts: manifest.scripts,
   });
+  // The seals belong to the CLI workspace; a manifest is all Turbo needs to host them.
+  yield* writeJson(root, "packages/tooling/tool/cli/package.json", { name: "@beep/repo-cli", private: true });
   yield* Effect.forEach(A.dedupe([...R.values(directInputs), nonInput]), (file) => writeFile(root, file, "{}\n"));
   yield* writeJson(root, "packages/fixture/package.json", { name: "@fixture/member" });
   // Candidate tool reads omitted from many direct row inputs, but carried by D15.
   // All are real entries in the production fingerprint declaration.
   yield* Effect.forEach(closureInputs, (file) => writeFile(root, file, "{}\n"));
   yield* writeJson(root, "turbo.json", { ...configuration, tasks: { ...tasks, ...seals } });
-  return { root, tasks, binary: path.join(repo, "node_modules/.bin/turbo") };
+  return { root, tasks, seals: decodedSeals, binary: path.join(repo, "node_modules/.bin/turbo") };
 });
-// Shared-seal inputs: root checker configuration and the CLI shell, loaded by every policy command.
-const closureInputs = [".fallowrc.jsonc", "_typos.toml", "biome.jsonc", "packages/tooling/tool/cli/src/bin-main.ts"];
+// Candidate tool reads: the CLI shell (shared by every command) and root checker configuration, which
+// the fingerprint routes to the seals whose closure reads it. All are real production seal inputs.
+const closureInputs = [
+  ".fallowrc.jsonc",
+  ".oxlintrc.json",
+  "_typos.toml",
+  "biome.jsonc",
+  "tsdoc.json",
+  "packages/tooling/tool/cli/src/bin-main.ts",
+];
+// Every root-relative input a seal chain declares.
+const chainInputs = (seals: Readonly<Record<string, SealTask>>, id: string): ReadonlyArray<string> =>
+  O.match(R.get(seals, id), {
+    onNone: A.empty<string>,
+    onSome: (seal) => [
+      ...A.map(seal.inputs, Str.slice(Str.length(turboRoot))),
+      ...A.flatMap(seal.dependsOn, (parent) => chainInputs(seals, parent)),
+    ],
+  });
 const dryRun = Effect.fn("RootTasksFixture.dryRun")(function* (
   root: string,
   binary: string,
@@ -516,35 +549,38 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
     );
 
     it.effect(
-      "closes tool reads through the fingerprint for every CLI-backed task",
+      "closes tool reads through the fingerprint for every CLI-backed task, and only those",
       Effect.fnUntraced(function* () {
-        const { root, tasks, binary } = yield* fixture();
+        const { root, tasks, seals, binary } = yield* fixture();
         const ids = R.keys(tasks);
+        expect(A.filter(ids, isSealId)).toEqual([]);
         const baseline = yield* dryRun(root, binary, ids, false);
-        const sealIds = A.filter(R.keys(tasks), isSealId);
-        expect(sealIds).toEqual([]);
-        const all = [...ids, sharedSealId];
-        const sealed = yield* dryRun(root, binary, all, false);
-        for (const [id, task] of R.toEntries(tasks)) {
-          if (!A.some(task.dependsOn, isSealId)) continue;
-          const outside = A.findFirst(closureInputs, (file) => !R.has(rowFor(baseline, id).inputs, file));
-          // The roadmap, retired-law and Fallow whole-tree contracts already include every
-          // candidate tool read (Fallow plugins read the root tool configuration).
-          if (O.isNone(outside) && !Str.startsWith("//#fallow:")(id))
-            expect([
-              "//#lint:roadmap-refs",
-              "//#lint:retired-effect-paths",
-              "//#lint:retired-iri-authorities",
-            ]).toContain(id);
-          const candidate = O.getOrElse(outside, () => "packages/tooling/tool/cli/src/bin-main.ts");
-          expect(R.has(rowFor(sealed, sharedSealId).inputs, candidate), candidate).toBe(true);
+        const sealed = A.filter(R.toEntries(tasks), ([, task]) => A.some(task.dependsOn, isSealId));
+        expect(A.length(sealed)).toBeGreaterThan(0);
+        const declares = (id: string, task: RootTask, file: string) =>
+          R.has(rowFor(baseline, id).inputs, file) ||
+          A.some(A.filter(task.dependsOn, isSealId), (seal) => A.contains(chainInputs(seals, seal), file));
+        // The shell is in every chain; each checker configuration is in some chain and absent from another.
+        const shell = "packages/tooling/tool/cli/src/bin-main.ts";
+        expect(A.every(sealed, ([id, task]) => declares(id, task, shell))).toBe(true);
+        for (const file of A.filter(closureInputs, (candidate) => candidate !== shell)) {
+          expect(
+            A.some(sealed, ([id, task]) => declares(id, task, file)),
+            file
+          ).toBe(true);
+        }
+        expect(A.some(sealed, ([id, task]) => !declares(id, task, "biome.jsonc"))).toBe(true);
+        for (const file of closureInputs) {
           yield* mutate(
             root,
-            candidate,
+            file,
             Effect.gen(function* () {
-              const changed = yield* dryRun(root, binary, all, false);
-              expect(rowFor(changed, sharedSealId).hash).not.toBe(rowFor(sealed, sharedSealId).hash);
-              expect(rowFor(changed, id).hash, `${id}: ${candidate}`).not.toBe(rowFor(sealed, id).hash);
+              const changed = yield* dryRun(root, binary, ids, false);
+              for (const [id, task] of sealed) {
+                expect(rowFor(changed, id).hash !== rowFor(baseline, id).hash, `${id}: ${file}`).toBe(
+                  declares(id, task, file)
+                );
+              }
             })
           );
         }

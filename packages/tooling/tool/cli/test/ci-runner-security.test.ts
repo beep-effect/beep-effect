@@ -146,9 +146,17 @@ const stepEnvironment = (step: WorkflowStep): Readonly<Record<string, unknown>> 
 const setupMonorepoInputs = (jobs: WorkflowJobs, jobId: string): Readonly<Record<string, unknown>> =>
   stepInputs(setupMonorepoStep(jobs, jobId));
 
-// The cache key a job's post-lane Turbo fallback save step writes under.
-const fallbackSaveKey = (jobs: WorkflowJobs, jobId: string): unknown =>
-  stepInputs(stepByName(jobSteps(jobs, jobId), "Save post-lane Turbo fallback")).key;
+// Every step that saves an Actions cache, as `job/step` labels.
+const cacheSaveSteps = (jobs: WorkflowJobs): ReadonlyArray<string> =>
+  A.flatMap(R.toEntries(jobs), ([jobId, job]) =>
+    pipe(
+      job.steps ?? [],
+      A.filter((step) =>
+        A.some(["actions/cache@", "actions/cache/save@"], (prefix) => Str.startsWith(prefix)(step.uses ?? ""))
+      ),
+      A.map((step) => `${jobId}/${step.name ?? ""}`)
+    )
+  );
 
 // $GITHUB_ENV heredoc form written by packages/tooling/tool/cli/src/commands/Ci/CiOperational.service.ts:
 //   NAME<<delimiter\n<value lines>\ndelimiter
@@ -256,7 +264,7 @@ const turboJobTable = Effect.fnUntraced(function* (documents: {
   const check = yield* workflowJobs(documents.workflow);
 
   return [
-    [check, "verify", true],
+    [check, "labs", true],
     [check, "lint-shard", true],
     [check, "test-unit-shard", true],
     [check, "property-laws", true],
@@ -720,7 +728,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
   );
 
   it.effect(
-    "classifies goals-only pull requests without suppressing mixed or push runs",
+    "classifies goals-only and docs-only pull requests without suppressing mixed or push runs",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -763,12 +771,15 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       git(["update-ref", "refs/remotes/origin/main", git(["rev-parse", "HEAD"])]);
 
       assert.strictEqual(profile("pull_request").goals_only, "false");
+      assert.strictEqual(profile("pull_request").docs_only, "false");
       assert.strictEqual(profile("pull_request").desktop_rust_relevant, "false");
       yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "GOAL.md"), "# goals-only\n");
       git(["add", "."]);
       git(["commit", "-m", "goals-only"]);
       const outputPath = path.join(tempRoot, "profile-output.txt");
       assert.strictEqual(profile("pull_request", outputPath).goals_only, "true");
+      // goals_only implies docs_only.
+      assert.strictEqual(profile("pull_request").docs_only, "true");
       assert.strictEqual(parseProfileOutput(yield* fs.readFileString(outputPath)).goals_only, "true");
       yield* fs.remove(outputPath);
 
@@ -789,7 +800,33 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         git(["add", "."]);
         git(["commit", "-m", `nested ${directory} markdown fixture`]);
         assert.strictEqual(profile("pull_request").goals_only, "false");
+        // Heavy admission's path rule counts markdown outside the code roots
+        // as documentation, wherever it sits.
+        assert.strictEqual(profile("pull_request").docs_only, "true");
       }
+
+      // Documentation outside packet prose is docs-only, never goals-only; the
+      // same file under a code root carries code.
+      git(["reset", "--hard", metadataHead]);
+      for (const [relative, content] of [
+        ["docs/runbooks/ci.md", "# runbook\n"],
+        ["research/ledger/claims.jsonl", "{}\n"],
+        [".changeset/quiet-lane.md", "---\n---\n"],
+        ["README.md", "# readme\n"],
+      ] as const) {
+        yield* fs.makeDirectory(path.dirname(path.join(tempRoot, relative)), { recursive: true });
+        yield* fs.writeFileString(path.join(tempRoot, relative), content);
+      }
+      git(["add", "."]);
+      git(["commit", "-m", "documentation only"]);
+      assert.strictEqual(profile("pull_request").goals_only, "false");
+      assert.strictEqual(profile("pull_request").docs_only, "true");
+      assert.strictEqual(profile("push").docs_only, "false");
+      yield* fs.makeDirectory(path.join(tempRoot, "packages", "demo"), { recursive: true });
+      yield* fs.writeFileString(path.join(tempRoot, "packages", "demo", "README.md"), "# package readme\n");
+      git(["add", "."]);
+      git(["commit", "-m", "package readme"]);
+      assert.strictEqual(profile("pull_request").docs_only, "false");
 
       git(["reset", "--hard", metadataHead]);
 
@@ -807,12 +844,14 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       git(["add", "."]);
       git(["commit", "-m", "goal executable"]);
       assert.strictEqual(profile("pull_request").goals_only, "false");
+      assert.strictEqual(profile("pull_request").docs_only, "false");
 
       yield* fs.makeDirectory(path.join(tempRoot, "src"));
       yield* fs.writeFileString(path.join(tempRoot, "src", "index.ts"), "export {}\n");
       git(["add", "."]);
       git(["commit", "-m", "mixed"]);
       assert.strictEqual(profile("pull_request").goals_only, "false");
+      assert.strictEqual(profile("pull_request").docs_only, "false");
       assert.strictEqual(profile("push").goals_only, "false");
     })
   );
@@ -883,6 +922,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         stepByName(steps, "Setup Rust toolchain").with?.["cache-workspaces"],
         "apps/professional-desktop/src-tauri"
       );
+      // The ~500 MB cargo cache restores and saves only when cargo runs (audit M13).
+      assert.strictEqual(
+        stepByName(steps, "Setup Rust toolchain").with?.cache,
+        "${{ steps.lane-gate.outputs.rust_should_run }}"
+      );
       assert.include(workflowText, 'eval "$(scripts/ci-change-profile.sh');
       assert.include(workflowText, 'rust_should_run="$desktop_rust_relevant"');
       assert.include(workflowText, "run: cargo check --locked");
@@ -909,18 +953,92 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const repoRoot = yield* findRepoRoot();
-      const workflowText = yield* fs.readFileString(path.join(repoRoot, ".github/workflows/check.yml"));
+      const workflow = parseWorkflowYaml(yield* fs.readFileString(path.join(repoRoot, ".github/workflows/check.yml")));
+      const steps = jobSteps(yield* workflowJobs(workflow), "labs");
+      const gate = stepRun(steps, "Determine lane execution");
 
+      assert.strictEqual(yamlAt(workflow, ["jobs", "labs", "name"]), "Labs");
+      assert.include(gate, 'if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then');
       assert.include(
-        workflowText,
-        'if [[ "${{ matrix.id }}" == "labs" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then'
-      );
-      assert.include(
-        workflowText,
+        gate,
         "grep -Eq '(^apps/labs/|^\\.github/workflows/check\\.yml$|^(bun\\.lock|package\\.json|turbo\\.json)$)'"
       );
-      assert.include(workflowText, "run_lane ci lane labs --coverage-output .beep/ci-coverage/labs");
-      assert.include(workflowText, "labs_checks=false");
+      assert.include(gate, "labs_checks=false");
+      assert.include(stepRun(steps, "Run Labs lane"), "run_lane ci lane labs --coverage-output .beep/ci-coverage/labs");
+      // Not a verify matrix leg: Coverage Regression `needs` the Labs job itself.
+      assertNone(A.findFirst(yield* heavyMatrixLanes(workflow), (lane) => lane.id === "labs"));
+    })
+  );
+
+  // Audit M15: tier-1 lanes decide before installing. Docs-only diffs (Heavy
+  // admission's path rule) skip every lane that reads no documentation, Nix
+  // and Ecosystem Contracts are path-gated on their real inputs, and SAST
+  // dispatches without the monorepo setup. Audit M14: aggregators never start
+  // inside a cancelled run. Pushes keep every lane.
+  it.effect(
+    "skips docs-only and path-gated tier-1 lanes before any install",
+    Effect.fnUntraced(function* () {
+      const policy = yield* readCredentialPolicySources();
+      const jobs = yield* workflowJobs(policy.workflow);
+      const gated = "steps.lane-gate.outputs.should_run == 'true'";
+      for (const jobId of [
+        "verify",
+        "labs",
+        "lint-shard",
+        "test-unit-shard",
+        "property-laws",
+        "fallow-advisory",
+        "jsdoc-ratchet",
+        "nix",
+      ]) {
+        const steps = jobSteps(jobs, jobId);
+        const setupIndex = O.getOrThrow(A.findFirstIndex(steps, (step) => step.uses === SETUP_MONOREPO_ACTION));
+        assert.strictEqual(setupMonorepoStep(jobs, jobId).if, gated, jobId);
+        assert.isBelow(stepIndexByName(steps, "Determine lane execution"), setupIndex, jobId);
+        assert.strictEqual(stepByName(steps, "Skip lane").if, "steps.lane-gate.outputs.should_run != 'true'", jobId);
+      }
+      for (const jobId of [
+        "labs",
+        "lint-shard",
+        "test-unit-shard",
+        "property-laws",
+        "fallow-advisory",
+        "jsdoc-ratchet",
+      ]) {
+        // Fallow's depth-100 checkout defaults an unclassifiable diff to a full run.
+        assert.match(
+          stepRun(jobSteps(jobs, jobId), "Determine lane execution"),
+          /if \[\[ "\$(?:docs_only|\{docs_only:-false\})" == "true" \]\]; then\n\s+should_run=false/u,
+          jobId
+        );
+      }
+      const verifyGate = stepRun(jobSteps(jobs, "verify"), "Determine lane execution");
+      assert.include(verifyGate, 'skip_profile="$docs_only"');
+      // Repo Sanity validates `.changeset/*.md`, which the docs-only rule counts as documentation.
+      assert.include(verifyGate, 'if [[ "${{ matrix.id }}" == "repo-sanity" ]]; then\n  skip_profile="$goals_only"');
+      assert.include(verifyGate, "^packages/ecosystem/");
+      assert.include(
+        stepRun(jobSteps(jobs, "coverage-regression"), "Determine comparison execution"),
+        '[[ "$docs_only" == "true" ]]'
+      );
+
+      const nix = jobSteps(jobs, "nix");
+      assert.include(stepRun(nix, "Determine lane execution"), "^flake\\.(nix|lock)$");
+      for (const name of ["Install Nix", "Setup Cachix (read-only)", "Run Nix checks"]) {
+        assert.strictEqual(stepByName(nix, name).if, gated, name);
+      }
+
+      const sast = jobSteps(jobs, "sast");
+      assertNone(A.findFirst(sast, (step) => step.uses === SETUP_MONOREPO_ACTION));
+      assert.strictEqual(
+        stepRun(sast, "Install dependencies for SAST dispatch"),
+        "bun install --frozen-lockfile --ignore-scripts"
+      );
+      assert.include(stepRun(sast, "Run SAST"), "bun run beep ci lane sast");
+
+      for (const jobId of ["lint", "test-unit", "coverage-regression"]) {
+        assert.strictEqual(yamlAt(policy.workflow, ["jobs", jobId, "if"]), "${{ !cancelled() }}", jobId);
+      }
     })
   );
 
@@ -950,12 +1068,14 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
   );
 
   // Quality-lane audit D13 (revised in PR #1054 review): the workflow gates
-  // Storybook only on goals_only and lets the lane decide through Turbo's
+  // Storybook only on docs_only and lets the lane decide through Turbo's
   // dependency-aware affected probe, restores the Playwright browser cache on
   // every event, and saves it only on trusted pushes. A path profile cannot
   // see transitive workspace dependencies, so none is emitted for Storybook.
+  // The browser cache is keyed on the resolved Playwright version (audit M13):
+  // a bun.lock key stored a new Chromium on every lockfile change.
   it.effect(
-    "gates the Storybook lane on goals_only alone and keeps the browser cache push-saved",
+    "gates the Storybook lane on docs_only alone and keeps the browser cache push-saved",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -990,6 +1110,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const gate = "steps.lane-gate.outputs.should_run == 'true'";
       for (const name of [
         "Setup monorepo CI",
+        "Resolve Playwright version",
         "Restore Playwright Chromium cache",
         "Install Playwright Chromium",
         "Run Storybook lane",
@@ -1003,12 +1124,18 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const upload = stepByName(steps, "Upload Storybook static artifact");
       assert.strictEqual(upload.if, `${gate} && hashFiles('apps/storybook/storybook-static/index.html') != ''`);
       assert.strictEqual(upload.with?.["if-no-files-found"], "error");
-      assert.include(workflowText, 'if [[ "$goals_only" == "true" ]]; then');
+      assert.include(workflowText, 'if [[ "$docs_only" == "true" ]]; then');
       assert.include(workflowText, 'shape_args+=(--affected --base "origin/${GITHUB_BASE_REF:-main}")');
       const restore = stepByName(steps, "Restore Playwright Chromium cache");
       const save = stepByName(steps, "Save Playwright Chromium cache");
+      assert.include(stepRun(steps, "Resolve Playwright version"), "bunx playwright --version");
+      assert.isBelow(stepIndexByName(steps, "Setup monorepo CI"), stepIndexByName(steps, "Resolve Playwright version"));
       assert.strictEqual(restore.with?.path, "~/.cache/ms-playwright");
-      assert.strictEqual(restore.with?.key, "playwright-chromium-${{ runner.os }}-${{ hashFiles('bun.lock') }}");
+      assert.strictEqual(
+        restore.with?.key,
+        "playwright-chromium-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}"
+      );
+      assert.isUndefined(restore.with?.["restore-keys"]);
       assert.include(save.if, "github.event_name == 'push'");
       assert.strictEqual(save.with?.key, restore.with?.key);
       assert.isBelow(
@@ -1105,14 +1232,18 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const policy = yield* readCredentialPolicySources();
       const { workflow, heavyWorkflow, heavyWorkflowText } = policy;
 
-      // Pull requests never publish a cache entry: every Turbo job restores
-      // only, and the post-lane fallback save is push-gated.
-      for (const [jobs, jobId] of yield* turboJobTable(policy)) {
-        assert.strictEqual(setupMonorepoInputs(jobs, jobId)["cache-write"], "false", jobId);
-      }
+      // Pull requests never publish a cache entry. The SHA-keyed post-lane
+      // Turbo fallback was write-only (audit M13: 589 entries, 7.4 GB, zero
+      // restores), so the main Docgen cache and the push-only Playwright
+      // browsers are the only saves left, both push-gated.
+      const checkJobs = yield* workflowJobs(workflow);
       const heavyJobs = yield* workflowJobs(heavyWorkflow);
+      const storybookJobs = yield* workflowJobs(policy.storybook);
+      assert.deepStrictEqual(cacheSaveSteps(checkJobs), []);
+      assert.deepStrictEqual(cacheSaveSteps(heavyJobs), ["verify/Save main Docgen Turbo cache"]);
+      assert.deepStrictEqual(cacheSaveSteps(storybookJobs), ["storybook/Save Playwright Chromium cache"]);
       assert.include(
-        stepByName(jobSteps(heavyJobs, "verify"), "Save post-lane Turbo fallback").if,
+        stepByName(jobSteps(heavyJobs, "verify"), "Save main Docgen Turbo cache").if,
         "github.event_name == 'push'"
       );
       // Quality-lane audit D12: Build runs on pull requests (affected-scoped,
@@ -1145,7 +1276,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const { workflowText, heavyWorkflowText } = yield* readCredentialPolicySources();
 
       assert.include(workflowText, 'eval "$(scripts/ci-change-profile.sh');
-      assert.include(workflowText, 'if [[ "$goals_only" == "true" ]]');
+      assert.include(workflowText, 'if [[ "$docs_only" == "true" ]]');
       assert.include(heavyWorkflowText, 'if [[ "${{ matrix.id }}" == "docgen"');
       assert.include(heavyWorkflowText, "^apps/|^packages/|^infra/");
       assert.include(workflowText, "- name: Skip lane");
@@ -1289,8 +1420,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     })
   );
 
+  // Audit M13: nothing ever restored the SHA-keyed local fallback (589
+  // entries, 7.4 GB, zero restores on 2026-11-02), so the composite action
+  // neither restores nor saves an Actions cache and takes no cache inputs.
   it.effect(
-    "isolates local fallback caches for matrix lanes sharing a job id",
+    "keeps the setup action free of Actions cache steps and their inputs",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -1302,53 +1436,39 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const check = parseWorkflowYaml(checkText);
       const heavy = parseWorkflowYaml(heavyText);
 
-      assert.strictEqual(yamlAt(action, ["inputs", "turbo-cache-key-suffix", "default"]), "");
-      assert.include(actionText, "${{ github.job }}${{ inputs.turbo-cache-key-suffix }}-");
+      const retiredInputs = ["cache-turbo", "cache-write", "turbo-cache-key-suffix"];
+      for (const input of retiredInputs) {
+        assert.isUndefined(yamlAt(action, ["inputs", input]), input);
+      }
       const actionSteps = yield* decodeWorkflowSteps(yamlAt(action, ["runs", "steps"]));
-      const turboRestore = stepByName(actionSteps, "Restore Turbo cache (local fallback only)");
-      assert.strictEqual(
-        Str.trim(String(stepInputs(turboRestore)["restore-keys"])),
-        "turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}${{ inputs.turbo-cache-key-suffix }}-"
-      );
-      // The credential export precedes the Turbo restore so the local fallback
-      // keys on the exported TURBO_TOKEN / TURBO_TEAM.
+      assertNone(A.findFirst(actionSteps, (step) => Str.startsWith("actions/cache")(step.uses ?? "")));
       assert.isBelow(
         stepIndexByName(actionSteps, "Install dependencies"),
         stepIndexByName(actionSteps, "Export job environment")
       );
       assert.isBelow(
-        stepIndexByName(actionSteps, "Export job environment"),
-        stepIndexByName(actionSteps, "Restore Turbo cache (local fallback only)")
-      );
-      assert.isBelow(
         stepIndexByName(actionSteps, "Free runner disk"),
         stepIndexByName(actionSteps, "Install dependencies")
       );
+      const workflowFiles = A.filter(
+        yield* fs.readDirectory(path.join(repoRoot, ".github/workflows")),
+        Str.endsWith(".yml")
+      );
+      for (const file of workflowFiles) {
+        const text = yield* fs.readFileString(path.join(repoRoot, ".github/workflows", file));
+        for (const input of retiredInputs) {
+          assert.notInclude(text, `${input}:`, `${file} passes the retired ${input} input`);
+        }
+      }
 
-      const checkJobs = yield* workflowJobs(check);
-      const heavyJobs = yield* workflowJobs(heavy);
-      assert.strictEqual(setupMonorepoInputs(checkJobs, "verify")["turbo-cache-key-suffix"], "-${{ matrix.id }}");
-      assert.strictEqual(
-        setupMonorepoInputs(checkJobs, "lint-shard")["turbo-cache-key-suffix"],
-        "-${{ matrix.partition }}"
-      );
-      assert.strictEqual(
-        setupMonorepoInputs(checkJobs, "test-unit-shard")["turbo-cache-key-suffix"],
-        "-${{ matrix.partition }}"
-      );
-      assert.strictEqual(setupMonorepoInputs(heavyJobs, "verify")["turbo-cache-key-suffix"], "-${{ matrix.id }}");
-      assert.include(String(fallbackSaveKey(checkJobs, "verify")), "-${{ github.job }}-${{ matrix.id }}-");
-      assert.include(String(fallbackSaveKey(checkJobs, "lint-shard")), "-${{ github.job }}-${{ matrix.partition }}-");
-      assert.include(
-        String(fallbackSaveKey(checkJobs, "test-unit-shard")),
-        "-${{ github.job }}-${{ matrix.partition }}-"
-      );
-      assert.include(String(fallbackSaveKey(heavyJobs, "verify")), "-${{ github.job }}-${{ matrix.id }}-");
       // Disk cleanup is the composite action's job now; the shards keep the
       // 64 GiB short-circuit and the matrix lanes always clean.
+      const checkJobs = yield* workflowJobs(check);
+      const heavyJobs = yield* workflowJobs(heavy);
       assert.notInclude(checkText, "Free runner disk");
       assert.notInclude(heavyText, "Free runner disk");
       assert.strictEqual(setupMonorepoInputs(checkJobs, "verify")["free-disk"], "true");
+      assert.strictEqual(setupMonorepoInputs(checkJobs, "labs")["free-disk"], "true");
       assert.strictEqual(setupMonorepoInputs(checkJobs, "lint-shard")["free-disk-min-gib"], "64");
       assert.strictEqual(setupMonorepoInputs(checkJobs, "test-unit-shard")["free-disk-min-gib"], "64");
       assert.strictEqual(setupMonorepoInputs(checkJobs, "fallow-advisory")["free-disk"], "true");
@@ -1367,7 +1487,6 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const jobs = yield* workflowJobs(workflow);
       const setup = setupMonorepoStep(jobs, "verify");
       assert.strictEqual(setup.with?.["turbo-remote-cache"], "${{ matrix.uses_turbo }}");
-      assert.strictEqual(setup.with?.["cache-write"], "false");
       assert.strictEqual(
         yamlAt(workflow, ["jobs", "verify", "env", "BEEP_DOCGEN_CONCURRENCY"]),
         "${{ matrix.docgen_concurrency || 3 }}"
@@ -1546,8 +1665,6 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const setup = stepByName(steps, "Setup pinned toolchain without cache capabilities");
       expect(setup.uses).toBe(SETUP_MONOREPO_ACTION);
       expect(setup.with).toEqual({
-        "cache-turbo": "false",
-        "cache-write": "false",
         "turbo-remote-cache": "false",
         "r2-enabled": "false",
         "app-secrets": "false",
@@ -1607,12 +1724,14 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const jobs = yield* workflowJobs(policy.workflow);
       const comparison = jobSteps(jobs, "coverage-regression");
       expect(yamlAt(policy.workflow, ["jobs", "heavy", "needs"])).toEqual(["admission"]);
+      // Audit M4: the comparison waits for Test Unit and the Labs producer, not
+      // the whole verify matrix, and never starts inside a cancelled run.
       expect(yamlAt(policy.workflow, ["jobs", "coverage-regression", "needs"])).toEqual([
         "admission",
         "test-unit",
-        "verify",
+        "labs",
       ]);
-      expect(yamlAt(policy.workflow, ["jobs", "coverage-regression", "if"])).toBe("${{ always() }}");
+      expect(yamlAt(policy.workflow, ["jobs", "coverage-regression", "if"])).toBe("${{ !cancelled() }}");
       expect(yamlAt(policy.workflow, ["jobs", "coverage-regression", "name"])).toBe(
         "${{ needs.admission.outputs.legacy_coverage == 'true' && 'Coverage Artifact Migration' || 'Heavy / Coverage Regression' }}"
       );
@@ -1629,12 +1748,23 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const compare = stepByName(comparison, "Compare coverage evidence");
       expect(compare.run).toContain("ci lane coverage --compare-only --coverage-input .beep/ci-coverage-inputs");
       expect(compare.run).not.toContain("ci lane test");
-      expect(setupMonorepoInputs(jobs, "coverage-regression")["cache-turbo"]).toBe("false");
-      expect(setupMonorepoInputs(jobs, "coverage-regression")["turbo-token"]).toBeUndefined();
+      assertNone(A.findFirst(comparison, (step) => step.uses === SETUP_MONOREPO_ACTION));
+      expect(stepRun(comparison, "Install dependencies for coverage comparison")).toBe(
+        "bun install --frozen-lockfile --ignore-scripts"
+      );
+      expect(stepByName(comparison, "Setup Node.js for coverage comparison").with?.["node-version"]).toBe("22.23.4");
+      expect(
+        A.every(comparison, (step) =>
+          A.every(
+            [...R.values(stepInputs(step)), ...R.values(stepEnvironment(step))],
+            (value) => !Str.includes("secrets.")(String(value))
+          )
+        )
+      ).toBe(true);
       expect(jobs["coverage-regression"]?.permissions).toEqual({ contents: "read", actions: "read" });
       for (const { job, name } of [
         { job: "test-unit-shard", name: "Upload Unit coverage evidence" },
-        { job: "verify", name: "Upload Labs coverage evidence" },
+        { job: "labs", name: "Upload Labs coverage evidence" },
       ]) {
         const upload = stepByName(jobSteps(jobs, job), name);
         expect(upload.if).toContain("always()");
@@ -1642,7 +1772,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         expect(upload.with?.["if-no-files-found"]).toBe("error");
         expect(upload.with?.name).toContain("${{ github.run_id }}-${{ github.run_attempt }}");
       }
-      const labs = stepByName(jobSteps(jobs, "verify"), "Run verification lane");
+      const labs = stepByName(jobSteps(jobs, "labs"), "Run Labs lane");
       expect(labs.run).toContain("--coverage-output .beep/ci-coverage/labs");
       expect(labs.run).toContain("--coverage-only");
       const gate = stepByName(comparison, "Determine comparison execution");

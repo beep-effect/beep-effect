@@ -8,16 +8,20 @@ set -euo pipefail
 # never suppress the matrices.
 #
 #   goals_only              only convention-owned packet prose changed
+#   docs_only               every path is docs-only by Heavy admission's path
+#                           rule (HeavyAdmission.ts heavyDocsOnlyPattern): no
+#                           code root, only packet prose or documentation
 #   desktop_rust_relevant   apps/professional-desktop/src-tauri (cargo) changed
 #
-# The Storybook lane has no path profile here: `beep ci lane storybook
-# --affected` asks Turbo's dependency-aware affected set whether
-# @beep/storybook is selected (a path list cannot see transitive workspace
-# dependencies), and storybook.yml gates only on goals_only.
+# goals_only implies docs_only. The Storybook lane has no path profile here:
+# `beep ci lane storybook --affected` asks Turbo's dependency-aware affected
+# set whether @beep/storybook is selected (a path list cannot see transitive
+# workspace dependencies), and storybook.yml gates only on docs_only.
 
 event_name="${GITHUB_EVENT_NAME:-local}"
 base_ref="${1:-origin/${GITHUB_BASE_REF:-main}}"
 goals_only=false
+docs_only=false
 desktop_rust_relevant=true
 
 # Rust crate inputs for the desktop-ipc cargo check/clippy steps (D15): the
@@ -34,6 +38,8 @@ fallback_pattern() {
   case "$1" in
     desktop) printf '%s' '^(apps/professional-desktop/src-tauri/|\.github/workflows/check\.yml$|scripts/ci-change-profile\.sh$|packages/tooling/tool/cli/src/commands/Ci/CiOperational)' ;;
     goals) printf '%s' '^(goals/(INDEX|README)\.md|goals/[^/]+/(GOAL|PLAN|README|SPEC|DECISIONS)\.md|goals/[^/]+/ops/manifest\.json)$' ;;
+    docs) printf '%s' '^docs/|^explorations/|^research/|^\.changeset/[^/]+\.md$|\.md$' ;;
+    codeRoots) printf '%s' '^(packages|apps|infra)/' ;;
     *) return 1 ;;
   esac
 }
@@ -67,6 +73,8 @@ read_pattern() {
 }
 desktop_rust_pattern="$(read_pattern desktop)"
 goals_document_pattern="$(read_pattern goals)"
+docs_pattern="$(read_pattern docs)"
+code_roots_pattern="$(read_pattern codeRoots)"
 
 if [[ "$event_name" == "pull_request" ]]; then
   changed_files="$(git diff --name-only "${base_ref}...HEAD")"
@@ -76,6 +84,12 @@ if [[ "$event_name" == "pull_request" ]]; then
   if [[ -n "$changed_files" ]] && ! grep -Eqv "$goals_document_pattern" <<< "$changed_files"; then
     goals_only=true
   fi
+  # Heavy admission's docs-only path rule, in ERE: no path under a code root,
+  # and every path is packet prose or documentation.
+  if [[ -n "$changed_files" ]] && ! grep -Eq "$code_roots_pattern" <<< "$changed_files" \
+    && ! grep -Eqv "(${goals_document_pattern})|(${docs_pattern})" <<< "$changed_files"; then
+    docs_only=true
+  fi
   if [[ -z "$changed_files" ]] || ! grep -Eq "$desktop_rust_pattern" <<< "$changed_files"; then
     desktop_rust_relevant=false
   fi
@@ -83,6 +97,7 @@ fi
 
 emit() {
   echo "goals_only=$goals_only"
+  echo "docs_only=$docs_only"
   echo "desktop_rust_relevant=$desktop_rust_relevant"
 }
 

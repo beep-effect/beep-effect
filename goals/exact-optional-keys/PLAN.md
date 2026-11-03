@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active` (every phase complete; implementation PR #2145 merged 2026-10-23, PR #2316 merged the alias and scope repairs, closeout PR #2326 merged 2026-10-28 with a retained readiness verdict; proposedCloseout completed-retained verified by `goals completion refresh`, see `history/completion-verified-2026-11-02.md`)
+Status: `completed-retained`, carried by the committed `closeout` record since 2026-11-02 (#2629) (every phase complete; implementation PR #2145 merged 2026-10-23, PR #2316 merged the alias and scope repairs, closeout PR #2326 merged 2026-10-28 with a retained readiness verdict; proposedCloseout completed-retained verified by `goals completion refresh`, see `history/completion-verified-2026-11-02.md`)
 
 ## Phases
 

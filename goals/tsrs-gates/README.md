@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -31,7 +31,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-Complete. PR 1 (#2260) and PR 2 (#2262) merged the compiler migration and the lane fold. Closeout PR #2320 merged as `440e6d0052` from head `ec6d2cb783` with every required context green, and `bun run beep goals completion refresh --slug tsrs-gates` verified the `completed-retained` proposal on 2026-10-28 (`history/completion-verified-2026-11-01.md`). `initiative.status` reads `active` because completion is derived from clone-scoped receipts rather than written into the manifest.
+Complete. PR 1 (#2260) and PR 2 (#2262) merged the compiler migration and the lane fold. Closeout PR #2320 merged as `440e6d0052` from head `ec6d2cb783` with every required context green, and `bun run beep goals completion refresh --slug tsrs-gates` verified the `completed-retained` proposal on 2026-10-28 (`history/completion-verified-2026-11-01.md`). The committed `closeout` record in [`ops/manifest.json`](./ops/manifest.json) now carries that status: `goals set-status` adopted the verified proposal on 2026-11-02 (#2629).
 
 ## Latest Evidence
 

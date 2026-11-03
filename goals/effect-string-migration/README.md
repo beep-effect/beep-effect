@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -39,9 +39,9 @@ base). The publication closeout PR
 `fb680fac7e` from head `4f072259da` with every required context green, and
 `bun run beep goals completion refresh --slug effect-string-migration` verified
 the `completed-retained` proposal on 2026-10-28
-(`history/completion-verified-2026-11-02.md`). `initiative.status` reads
-`active` because completion is derived from clone-scoped receipts rather than
-written into the manifest. The original 2026-10-22 reflection is retained as
+(`history/completion-verified-2026-11-02.md`). The committed `closeout` record
+in [`ops/manifest.json`](./ops/manifest.json) now carries that status:
+`goals set-status` adopted the verified proposal on 2026-11-02 (#2629). The original 2026-10-22 reflection is retained as
 historical implementation evidence; the
 [2026-10-28 reflection](history/reflections/2026-10-28-codex.md) records the
 completion audit and the

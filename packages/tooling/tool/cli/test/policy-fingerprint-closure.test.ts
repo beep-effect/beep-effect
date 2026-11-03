@@ -1,4 +1,11 @@
-import { moduleSyntax, resolvePackageSubpath } from "@beep/repo-cli/test/Lint";
+import {
+  codeStringLiterals,
+  moduleRootFileReads,
+  moduleSyntax,
+  POLICY_ROOT_FILE_ROUTES,
+  POLICY_SHARED_ROOT_FILES,
+  resolvePackageSubpath,
+} from "@beep/repo-cli/test/Lint";
 import { computePolicyFingerprint } from "@beep/repo-cli/test/PackageScripts";
 import { FsUtilsLive } from "@beep/repo-utils";
 import { NodeServices } from "@effect/platform-node";
@@ -11,6 +18,7 @@ import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Str from "effect/String";
 import { fixturePackageFiles, policyCliFixtureFiles, writeFixtureFiles } from "./support/PolicyCliFixture.ts";
 
 const platform = FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer));
@@ -66,6 +74,47 @@ describe("policy fingerprint import graph", () => {
     assertSome(lint.name, "lint");
     expect(A.map(lint.subcommands, O.getOrUndefined)).toEqual(["lawsCommand", undefined]);
     expect(moduleSyntax("a.ts", "const load = (name: string) => import(name);").opaqueDynamicImport).toBe(true);
+  });
+
+  it("marks root-file readers by code literals, never by comments or help text", () => {
+    const source = A.join(
+      [
+        "/** Reads `turbo.json` and runs `biome`. */",
+        "// biome.jsonc, _typos.toml",
+        'export const config = ".oxlintrc.docs.json";',
+        'export const argv = ["oxlint", "--quiet"];',
+        "export const typos = `${root}/_typos.toml`;",
+        'export const route = { name: "fallow", description: "Edits turbo.json and biome.jsonc" };',
+        'export const command = Command.make("x").pipe(Command.withDescription("Reads lint-policy.sweeps.jsonc"));',
+      ],
+      "\n"
+    );
+    expect(codeStringLiterals("a.ts", source)).not.toContain("Edits turbo.json and biome.jsonc");
+    // `.oxlintrc.docs.json` and the bare `oxlint` both mark the Oxlint family (with the `tsdoc.json`
+    // its plugins read); the template marks typos; the dispatch `name` marks Fallow. Nothing marks
+    // `turbo.json`, `biome.jsonc` or the sweeps file: only comments and help text name them.
+    expect(moduleRootFileReads("a.ts", source)).toEqual([
+      ".fallowrc.jsonc",
+      ".oxlintrc.circular.json",
+      ".oxlintrc.deprecated-apis.jsonc",
+      ".oxlintrc.docs.json",
+      ".oxlintrc.json",
+      "_typos.toml",
+      "fallow-plugin-manual-development-tools.json",
+      "tsdoc.json",
+    ]);
+    expect(moduleRootFileReads("b.ts", 'const file = path.join(root, "turbo.json");')).toEqual(["turbo.json"]);
+    expect(moduleRootFileReads("c.ts", 'const tool = "@biomejs/biome";')).toEqual(["biome.jsonc"]);
+    // TSX sources parse as TSX, and a quoted `"description"` key is help text like a bare one.
+    expect(moduleRootFileReads("d.tsx", 'export const View = () => <div title="turbo.json" />;')).toEqual([
+      "turbo.json",
+    ]);
+    expect(moduleRootFileReads("e.ts", 'export const route = { "description": "Reads turbo.json" };')).toEqual([]);
+    // A file that routes nowhere is never a shared default: each family has a reader marker.
+    for (const route of POLICY_ROOT_FILE_ROUTES) {
+      expect(A.isReadonlyArrayNonEmpty([...route.names, ...route.tools]), A.join(route.files, ",")).toBe(true);
+      expect(A.intersection(route.files, POLICY_SHARED_ROOT_FILES)).toEqual([]);
+    }
   });
 
   it("resolves exports subpaths with wildcards and runtime conditions", () => {
@@ -140,6 +189,50 @@ describe("policy fingerprint closures", () => {
         yield* fs.writeFileString(`${root}/packages/nested/src/index.ts`, 'export { value } from "@beep/unrelated";\n');
         const expanded = yield* computePolicyFingerprint(root);
         expect(entry(expanded, "lint-laws").inputs).toContain("packages/unrelated/src/index.ts");
+      })
+    );
+
+    it.effect(
+      "routes each root file to the seals whose command closure reads it",
+      Effect.fnUntraced(function* () {
+        const root = yield* fixture({
+          ...policyCliFixtureFiles([
+            {
+              group: "lint",
+              leaves: [
+                { name: "laws", imports: ["@beep/oxlint-reader"] },
+                { name: "jsdoc", imports: [] },
+              ],
+            },
+            { group: "topo-sort", imports: ["@beep/turbo-reader"] },
+          ]),
+          ...fixturePackageFiles("oxlint-reader"),
+          "packages/oxlint-reader/src/index.ts": 'export const value = ["oxlint", "--quiet"];\n',
+          ...fixturePackageFiles("turbo-reader"),
+          "packages/turbo-reader/src/index.ts": "export const value = (root: string) => `${root}/turbo.json`;\n",
+          "package.json": rootManifest({
+            "lint:laws:root": "beep-cli lint laws --check",
+            "jsdoc:root": "beep-cli lint jsdoc --root-only",
+            "topo-sort": "beep-cli topo-sort",
+          }),
+          "turbo.json": turbo(["//#lint:laws:root", "//#jsdoc:root", "//#topo-sort"]),
+        });
+        const fingerprint = yield* computePolicyFingerprint(root);
+        // The shell reads no checker configuration: the shared seal holds only what Bun loads.
+        expect(A.filter(fingerprint.shared, (input) => !Str.startsWith("packages/")(input))).toEqual([
+          ...POLICY_SHARED_ROOT_FILES,
+        ]);
+        const laws = entry(fingerprint, "lint-laws").inputs;
+        expect(laws).toEqual(expect.arrayContaining([".oxlintrc.json", ".oxlintrc.docs.json", "tsdoc.json"]));
+        expect(laws).not.toContain("turbo.json");
+        expect(laws).not.toContain("biome.jsonc");
+        expect(entry(fingerprint, "lint-jsdoc").inputs).not.toContain(".oxlintrc.json");
+        expect(entry(fingerprint, "topo-sort").inputs).toContain("turbo.json");
+        expect(entry(fingerprint, "topo-sort").inputs).not.toContain(".oxlintrc.json");
+        // The drift check reads the declaration and every routed file a seal declares.
+        expect(fingerprint.check).toEqual(
+          expect.arrayContaining([".oxlintrc.json", "turbo.json", "standards/policy-tools.fingerprint.json"])
+        );
       })
     );
 
