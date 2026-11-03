@@ -1,7 +1,7 @@
 # Worker transport and hosted policy follow-up
 
 PR #2511 published native pattern/source framing in `d90736fc35` and merged
-main through `5403efa4ad` in `8485c280d0`. No runtime Python matcher, regex
+main through `874533e793` in `8485c280d0`. No runtime Python matcher, regex
 family acceptance, or full engine completion is claimed.
 
 The preceding head `86e580698685e7ded6493e84c6b3b18aad135472` ran hosted Check
@@ -39,3 +39,32 @@ The complexity/duplication findings are not dismissed as baseline failures and
 are not resolved by this repair. They require source-preserving refactoring
 and hosted re-evaluation. The package-wide policy replay also reports knowledge
 semantic-delta failures; no passing result is inferred from the focused checks.
+
+## Completed hosted integration inspection
+
+The same run's Heavy Check (125654630926), Integration (125654630987),
+Docgen (125654631029) and Doctest (125654631040) also passed. Integration's
+checkout log identifies merge `44679e24bba18760155bbaea26febf2690482e9a`.
+Fetching that exact object and comparing tree IDs with PR head `86e5806986`
+produces `20585a4cdaa66f8c9644f74a05dcf2a7b9ce1623` for both.
+
+All four law-practice citation integration files passed. The regex qualification
+asserts 13,610 extractor instances, maximum translation length 3,183,
+4,456,448 code-point checks, 28 controlled cases, 23 capture matches and one
+confirmed child exit. Named HTML replay asserts 504 sequences and actual
+retirement. Native custom and Unicode history replay also passed. These are
+exact historical-head receipts; they do not qualify later transport/policy
+changes or complete regex semantics. Job URL:
+https://github.com/beep-effect/beep-effect/actions/runs/41555681173/job/125654630987
+
+Coverage Regression job 125665259121 failed. Its log identifies domain/server
+coverage floor regressions, including citation domain value files, and the
+new citationOracleAssertions file has one uncovered function/line/statement.
+These gaps remain open. No coverage baseline is lowered. New-head hosted
+results supersede these receipts only after inspection.
+
+Final focused fixed-tag check inspected 9,900 files and 5,417 fences with zero
+findings. The test-policy inventory refresh found 486 rows repository-wide,
+with zero open citation rows after the explicit reviews. Focused Oxlint
+completed successfully with warnings, including pre-existing namespace-import
+warnings; this is not a warning-free claim.
