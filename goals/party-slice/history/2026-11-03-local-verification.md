@@ -188,3 +188,19 @@ passing final-head or hosted-readiness claim is made by this remediation note.
 Fresh scoped coverage passes for all three party packages after these fixes.
 The fingerprint suite passes all six tests. The three merge-gate failures remain
 separately documented inherited failures, not passing CLI coverage evidence.
+
+### Completion audit: equal-time merge/veto ordering
+
+The requirement audit found that the fixed scenarios proved a late veto and
+equal-time competing merges, but did not directly exercise a same-endpoint
+merge/veto conflict under both claim-id orderings. Resolution.test.ts now
+checks both orderings at the same recorded time, reversed input order,
+separate survivors, unchanged original key assignments, and the complete
+contradiction case (merge id, veto id, endpoints and query scope).
+
+All six resolution tests pass. The domain package verifier passes (audit and
+docgen) after using the required Effect string helper. Domain coverage passes.
+The fresh architecture audit finds no forbidden boundary imports or legacy
+LawPractice.PartyId source references, and ReviewPage.ts remains identical to
+main. This test change requires a new final-check receipt; the earlier passing
+27e97e4729 receipt does not prove this amended test tree.

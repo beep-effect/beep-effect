@@ -1,12 +1,14 @@
 import { ClaimVersion } from "@beep/party-domain/Claim";
+import { PartyKey } from "@beep/party-domain/PartyKey";
 import { logicalKey, Proposition } from "@beep/party-domain/Proposition";
-import { ResolutionScope, resolveParties } from "@beep/party-domain/Resolution";
+import { ConflictingReview, ResolutionScope, resolveParties } from "@beep/party-domain/Resolution";
 import { PartyId } from "@beep/shared-domain/identity/Party";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const scope = (asOf: number) =>
   ResolutionScope.make({ asOf: DateTime.makeUnsafe(asOf), validAt: DateTime.makeUnsafe(0) });
@@ -65,6 +67,53 @@ describe("cannot-link-first resolution", () => {
         [2, 1],
       ]);
       expect(resolveParties(rows, scope(9)).reviewCases).toEqual([]);
+    })
+  );
+
+  it.effect("equal-time vetoes win in both claim-id orders and preserve each original key", () =>
+    Effect.gen(function* () {
+      const assignments = yield* Effect.forEach(
+        [
+          { party: 1, token: "1" },
+          { party: 2, token: "2" },
+        ],
+        ({ party, token }) =>
+          claim(
+            `key-${party}`,
+            Proposition.cases.KeyAssignment.make({
+              party: PartyId.make(party),
+              key: PartyKey.make(`pk:v1:${Str.repeat(64)(token)}`),
+            }),
+            0
+          )
+      );
+      for (const { mergeId, vetoId } of [
+        { mergeId: "a", vetoId: "z" },
+        { mergeId: "z", vetoId: "a" },
+      ]) {
+        const merge = yield* claim(mergeId, pair("SameParty", 1, 2), 5);
+        const veto = yield* claim(vetoId, pair("DistinctParty", 1, 2), 5);
+        const rows = [...assignments, merge, veto];
+        const view = resolveParties(rows, scope(5));
+        expect(survivors(rows, 5)).toEqual([
+          [1, 1],
+          [2, 2],
+        ]);
+        expect(A.map(view.keys, (row) => [row.key, row.party, row.survivor])).toEqual([
+          [`pk:v1:${Str.repeat(64)("1")}`, 1, 1],
+          [`pk:v1:${Str.repeat(64)("2")}`, 2, 2],
+        ]);
+        expect(view.reviewCases).toEqual([
+          ConflictingReview.make({
+            blockedClaim: merge.id,
+            vetoClaims: [veto.id],
+            left: PartyId.make(1),
+            right: PartyId.make(2),
+            scope: scope(5),
+          }),
+        ]);
+        expect(resolveParties(A.reverse(rows), scope(5))).toEqual(view);
+      }
     })
   );
 
