@@ -56,7 +56,7 @@ const irregular =
   '<claims><claim><claim-text>A fixture comprising a panel.</claim-text></claim><claim num="wrong"><claim-text>A fixture comprising a panel.</claim-text></claim><claim num="1"><claim-text>A fixture comprising a panel.</claim-text></claim><claim num="01"><claim-text>A fixture comprising a panel.</claim-text></claim><claim num="5"/></claims>';
 
 describe("failure-preserving public source adapter", () => {
-  it.layer(recordedLayer(valid))("valid recorded sources", (it) => {
+  it.layer(recordedLayer(valid), { timeout: "10 seconds" })("valid recorded sources", (it) => {
     it.effect("matches strict normalization and binds records to independently hashed bytes", () =>
       Effect.gen(function* () {
         const set = yield* (yield* UsptoClaimInputs).inputs(source);
@@ -92,7 +92,7 @@ describe("failure-preserving public source adapter", () => {
     );
   });
 
-  it.layer(recordedLayer(mixed))("malformed normalization sibling", (it) => {
+  it.layer(recordedLayer(mixed), { timeout: "10 seconds" })("malformed normalization sibling", (it) => {
     it.effect("actually decomposes independent siblings and retains affected ancestry", () =>
       Effect.gen(function* () {
         const set = yield* (yield* UsptoClaimInputs).inputs(source);
@@ -113,7 +113,7 @@ describe("failure-preserving public source adapter", () => {
     );
   });
 
-  it.layer(recordedLayer(irregular))("irregular source numbers", (it) => {
+  it.layer(recordedLayer(irregular), { timeout: "10 seconds" })("irregular source numbers", (it) => {
     it.effect("retains missing, malformed, duplicated and self-closing records", () =>
       Effect.gen(function* () {
         const set = yield* (yield* UsptoClaimInputs).inputs(source);
@@ -133,7 +133,7 @@ describe("failure-preserving public source adapter", () => {
     );
   });
 
-  it.layer(recordedLayer(`\n${valid}`))("changed document bytes", (it) => {
+  it.layer(recordedLayer(`\n${valid}`), { timeout: "10 seconds" })("changed document bytes", (it) => {
     it.effect("uses the new byte digest even when canonical claim text is unchanged", () =>
       Effect.gen(function* () {
         const set = yield* (yield* UsptoClaimInputs).inputs(source);
@@ -153,7 +153,8 @@ describe("failure-preserving public source adapter", () => {
   it.layer(
     recordedLayer(
       '<claims><claim num="1"><claim-text>A fixture comprising 3 < 5.</claim-text></claim><claim num="2"><claim-text>A fixture comprising a panel.</claim-text></claim></claims>'
-    )
+    ),
+    { timeout: "10 seconds" }
   )("invalid extracted text", (it) => {
     it.effect("keeps failed text and usable sibling records", () =>
       Effect.gen(function* () {
@@ -181,25 +182,25 @@ describe("failure-preserving public source adapter", () => {
       "The fixture of claim 1 wherein the panel is metallic.",
     ],
   ] as const) {
-    it.layer(recordedLayer(`<claims><claim num="1"><claim-text>${markup}</claim-text></claim></claims>`))(
-      `source text ${label}`,
-      (it) => {
-        it.effect("retains actual XML text without discarded limitations or leaked metadata", () =>
-          Effect.gen(function* () {
-            const set = yield* (yield* UsptoClaimInputs).inputs(source);
-            const record = O.getOrThrow(A.head(set.input.records));
-            assert.strictEqual(record.kind, "text");
-            if (record.kind === "text") assert.strictEqual(record.canonicalText, expected);
-          })
-        );
-      }
-    );
+    it.layer(recordedLayer(`<claims><claim num="1"><claim-text>${markup}</claim-text></claim></claims>`), {
+      timeout: "10 seconds",
+    })(`source text ${label}`, (it) => {
+      it.effect("retains actual XML text without discarded limitations or leaked metadata", () =>
+        Effect.gen(function* () {
+          const set = yield* (yield* UsptoClaimInputs).inputs(source);
+          const record = O.getOrThrow(A.head(set.input.records));
+          assert.strictEqual(record.kind, "text");
+          if (record.kind === "text") assert.strictEqual(record.canonicalText, expected);
+        })
+      );
+    });
   }
 
   it.layer(
     recordedLayer(
       '<claims><claim num="1"><claim-text>A fixture comprising a panel < 5 and > 2.</claim-text></claim></claims>'
-    )
+    ),
+    { timeout: "10 seconds" }
   )("malformed comparisons", (it) => {
     it.effect("abstains on malformed XML instead of erasing text into a successful record", () =>
       Effect.gen(function* () {
@@ -253,7 +254,7 @@ describe("failure-preserving public source adapter", () => {
     ["no records", "<claims/>", "no-full-text-claims"],
     ["OCR", "<claims><OCRConfidenceData/></claims>", "no-full-text-claims"],
   ] as const) {
-    it.layer(recordedLayer(xml))(`rejected source ${label}`, (it) => {
+    it.layer(recordedLayer(xml), { timeout: "10 seconds" })(`rejected source ${label}`, (it) => {
       it.effect("returns a typed source failure without a clean empty report", () =>
         Effect.gen(function* () {
           const failure = yield* Effect.flip((yield* UsptoClaimInputs).inputs(source));

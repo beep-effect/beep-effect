@@ -8,9 +8,37 @@ import sys
 
 
 def verify(root, freeze, result=None):
-    changed = [row["path"] for row in freeze["files"]
-               if not (root / row["path"]).is_file()
-               or hashlib.sha256((root / row["path"]).read_bytes()).hexdigest() != row["sha256"]]
+    # Only these historical runner locations may be remapped. The original
+    # manifest remains unchanged; references, scorer and results cannot move.
+    names = ("allowed", "iprally-smoke", "positive")
+    expected = {
+        f"packages/law-practice/server/test/evaluation/{name}.main.ts":
+        f"goals/claim-check-performance/research/legacy-protocol/{name}.main.ts.txt"
+        for name in names
+    }
+    addendum = json.loads((root / "goals/claim-check-performance/research/preservation-location-addendum.json").read_text())
+    mappings = addendum["mappings"]
+    mapped = {row["originalPath"]: row for row in mappings}
+    if len(mapped) != len(mappings) or set(mapped) != set(expected):
+        raise ValueError("Only the three named historical runners may be relocated")
+    manifest = {row["path"]: row["sha256"] for row in freeze["files"]}
+    for original, archive in expected.items():
+        row = mapped[original]
+        if row["archivePath"] != archive or row["historicalSha256"] != manifest[original]:
+            raise ValueError("Historical runner mapping differs from original manifest")
+    changed = []
+    active_runners = []
+    for row in freeze["files"]:
+        path = row["path"]
+        artifact = root / (expected[path] if path in expected else path)
+        if not artifact.is_file() or hashlib.sha256(artifact.read_bytes()).hexdigest() != row["sha256"]:
+            changed.append(path)
+        if path in mapped:
+            active = root / path
+            digest = hashlib.sha256(active.read_bytes()).hexdigest() if active.is_file() else None
+            active_runners.append({"path": path, "sha256": digest})
+            if digest != mapped[path]["activeSha256"]:
+                changed.append(f"active-runner:{path}")
     gates = root / "goals/claim-check-performance/research/usefulness-gates.json"
     canonical = json.dumps(json.loads(gates.read_text()), sort_keys=True, separators=(",", ":")).encode()
     if hashlib.sha256(canonical).hexdigest() != freeze["usefulnessGatesCanonicalSha256"]:
@@ -31,7 +59,8 @@ def verify(root, freeze, result=None):
         expected = {(row["familyId"], row["claimNumber"]) for row in freeze["passingClaims"]}
         lost = [f"{family}:{claim}" for family, claim in sorted(expected - passed)]
         matches = len(passed)
-    return {"filesChecked": len(freeze["files"]), "changed": changed,
+    return {"filesChecked": len(freeze["files"]), "originalPathFilesChecked": len(freeze["files"]) - 3,
+            "historicalRunnerArtifactsChecked": 3, "activeRunners": active_runners, "changed": changed,
             "passingClaimsProtected": len(freeze["passingClaims"]), "lost": lost,
             "strictMatches": matches, "retentionEvaluated": result is not None,
             "preserved": not changed and not lost}
