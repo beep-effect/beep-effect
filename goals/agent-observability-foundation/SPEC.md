@@ -684,3 +684,16 @@ refresh. Intervening classic status/verify/closeout/publish commands can replace
 that verdict and must not enter this sequence. Native merge preserves it.
 Reversal is a reviewed source change with the archived records retained. None
 of this releases the recovery hold or changes real-harness coverage claims.
+
+### Owner closeout recovery after PR2612 (2026-11-03 UTC)
+
+Preserve the actual unsatisfied canonical result and immutable pre/post-merge
+records of PR2612. PR2644 is the sole corrective final declaration; its draft
+publication does not release merge authority. The accepted shared repairs #2635
+and #2641 are integrated normally. The new selected-input comparison preserves
+all original scopes, false current-root admission and seven Unknown populations.
+Original acceptance gates are unchanged: strict current-head hosted readiness,
+resolved reviews, ordinary window, successful observer finalization and an
+archived positive classic verdict before owner merge, then actual verified
+canonical completion. Do not infer exclusive technical ownership from a body
+reservation or rewrite historical readiness after merge.

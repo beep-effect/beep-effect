@@ -236,6 +236,10 @@ them and record each in the Decision Log.
 
 ## Decision Log
 
+### 2026-11-02 — retain user-confirmed manual merge and qualify the follow-up
+
+The user confirmed manually merging #2609 and then explicitly requested additional work in a follow-up PR. Record the accepted head, post-merge Policy success and unknown completion without attributing another process. Correct current-status prose and bind final follow-up #2626 to its own branch evidence. Preserve the original recovery report, all labels/results, v27 freeze and all 37 passing claims. Require this follow-up's own hosted verification and archived positive pre-merge monitor verdict before strict merge; refresh canonical completion afterward. Keep raw lifecycle active pending verification. No algorithm, numeric acceptance target, attorney authority or verifier change is introduced. Reversal: supersede the prospective declaration in a later qualified PR while retaining both incident reports and all historical receipts.
+
 ### 2026-11-02 — recover readiness after the third premature final merge
 
 PR #2577 merged before a positive owner readiness verdict was retained; its canonical completion remains unknown. Final PR #2609 supersedes the earlier prospective final declarations. The incident report retains the failure and draft-first publication control; the native ready transition then requests review, and any repair push restarts the ordinary review window. Preserve the original labels, every prior result, the v27 freeze and all 37 passing claims. Require current-head hosted proof, resolved threads, terminal readiness and a genuine positive head-bound monitor verdict archived before a strict merge. Keep the raw lifecycle active with a proposed completed-retained declaration until the canonical receipt verifies completion. No S11/forced window, completion-verifier change, fresh benchmark or attorney authority is inferred. Reversal: supersede the final declaration in a separately qualified recovery while retaining every historical receipt.
