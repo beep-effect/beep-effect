@@ -37,7 +37,11 @@ repr hashes and equality classes are frozen oracle facts for this private
 profile. Dynamic extractor mutation and full tokenizer integration remain open.
 `TokenText.ts` adapts the same pinned module's literal-space `append_text`
 behavior as native source-point spans, retaining all source words without
-projecting literal surrogate pairs into Unicode scalars.
+projecting literal surrogate pairs into Unicode scalars. `TokenAssembly.ts`
+adapts mixed-token sorting, merge/overlap dispatch and output indexing from
+that module. Its captured host service retains source-object responsibilities;
+the assembly oracle replays actual source host decisions without claiming a
+complete target implementation of token construction or edition merging.
 
 The citation oracle fixture baseline also incorporates normalized output and
 regex/extractor data from the official eyecite lock's `reporters-db 3.2.53` and

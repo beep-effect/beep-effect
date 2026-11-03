@@ -274,6 +274,15 @@ operation reservations and mixed citation/plain-text assembly remain open;
 this does not claim a complete tokenizer. See
 [plain-text evidence](history/evidence/2026-11-03-token-text.md).
 
+Latest mixed-token assembly checkpoint (2026-11-03): a private Effect assembly
+stage preserves stable start/descending-end sorting, merge-before-overlap,
+nominative replacement, exact text gaps and special-token indices. It captures
+a typed host service with R = never methods. All 407 independently executed
+source cases and 1,247 ordered host decisions match, with the real target text
+planner producing gap spans. The target source-token host, edition merge and
+general custom span/data mutation remain open; replayed source merge decisions
+are control-flow proof only. See [assembly evidence](history/evidence/2026-11-03-token-assembly.md).
+
 Latest worker evidence (2026-10-31): private process ownership now covers bounded
 schema frames, captured Clock timers, queue/active limits, forced stop,
 acknowledged cleanup and quarantine without permit reuse. Real-process tests
