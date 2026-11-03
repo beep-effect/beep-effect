@@ -12,7 +12,7 @@ import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
-import { temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
+import { NodeTestLayer, temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
 const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
@@ -22,7 +22,7 @@ const workingDirectoryLayer = Layer.effectDiscard(temporaryWorkingDirectory).pip
   Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))
 );
 const testLayer = Layer.mergeAll(
-  NodeServices.layer,
+  NodeTestLayer,
   NodeCrypto.layer,
   PacketEventStoreLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
   TestConsole.layer

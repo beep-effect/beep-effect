@@ -44,6 +44,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 import { NodeTestLayer, temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
+import { completionIoFixture } from "./support/CompletionIo.ts";
 
 const decodeGoalManifest = S.decodeEffect(GoalManifest);
 const decodeGoalManifestJson = S.decodeEffect(S.fromJsonString(GoalManifest));
@@ -65,6 +66,7 @@ const Scenario = S.Struct({
   preMergePendingRerun: S.optionalKey(S.Boolean),
   missingHistory: S.optionalKey(S.Boolean),
   missingTimeline: S.optionalKey(S.Boolean),
+  undatedTimeline: S.optionalKey(S.Boolean),
   windowShort: S.optionalKey(S.Boolean),
   mergeParents: S.optionalKey(S.Int),
   red: S.optionalKey(S.Boolean),
@@ -92,14 +94,12 @@ const check = (id: number, completed: string, conclusion: string) => ({
   completed_at: completed,
 });
 const fixtureIo = (acceptedText: string, scenario: typeof Scenario.Type = {}) =>
-  GoalCompletionIo.of({
-    git: Effect.fn("GoalCompletionIo.git")((_root: string, args: ReadonlyArray<string>) =>
-      Effect.succeed(A.head(args).pipe(O.contains("show")) ? acceptedText : "git@github.com:example/repo.git\n")
-    ),
-    github: Effect.fn("GoalCompletionIo.github")((_root: string, args: ReadonlyArray<string>) => {
+  completionIoFixture({
+    manifest: Effect.succeed(acceptedText),
+    origin: Effect.succeed("git@github.com:example/repo.git\n"),
+    respond: Effect.fn("GoalCompletionIo.response")((endpoint: string) => {
       if (scenario.failure === true)
         return Effect.fail(YeetCommandError.make({ message: "Synthetic network error or rate limit" }));
-      const endpoint = O.getOrElse(A.get(args, 1), () => "");
       return Match.value(endpoint).pipe(
         Match.when(Str.includes("pulls/7"), () =>
           Effect.succeed(
@@ -145,6 +145,7 @@ const fixtureIo = (acceptedText: string, scenario: typeof Scenario.Type = {}) =>
                       event: "ready_for_review",
                       created_at: scenario.windowShort === true ? "2026-10-06T00:59:53Z" : "2026-10-06T00:00:00Z",
                     },
+                    ...(scenario.undatedTimeline === true ? [{ event: "ready_for_review" }] : []),
                   ],
                 ])
               )
@@ -546,6 +547,35 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
         );
       })
     )
+  );
+  it.effect("an absent or refused local manifest uses the typed hosted fallback", () =>
+    Effect.gen(function* () {
+      const value = yield* manifest();
+      const text = yield* encodeGoalManifestJson(value);
+      for (const local of [Effect.succeedNone, Effect.fail(YeetCommandError.make({ message: "refused" }))]) {
+        let hostedReads = 0;
+        const receipt = yield* observeGoalCompletion(process.cwd(), "demo", value, final).pipe(
+          Effect.provideService(GoalCompletionIo, {
+            ...fixtureIo(text),
+            manifestAtHead: () => local,
+            hostedManifest: () =>
+              Effect.sync(() => {
+                hostedReads += 1;
+                return O.some(text);
+              }),
+          })
+        );
+        expect(hostedReads).toBe(1);
+        assertSome(receipt.acceptedDeclarationDigest, yield* goalCompletionDeclarationDigest(value));
+      }
+    })
+  );
+  it.effect("an undated timeline event does not discard the dated review-window evidence", () =>
+    Effect.gen(function* () {
+      const receipt = yield* observe({ undatedTimeline: true });
+      expect(receipt.subClaims).toEqual((yield* observe()).subClaims);
+      expect(A.some(receipt.subClaims, (claim) => claim.outcome === "verified")).toBe(true);
+    })
   );
   it.effect("a rerun pending at merge cannot reuse an older green result", () =>
     Effect.gen(function* () {

@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   CacheActivationPreview,
   CacheCensusNode,
@@ -63,6 +64,9 @@ const platform = Layer.mergeAll(
   PublishedContentClient,
   NodeCrypto.layer,
   NodeServices.layer,
+  // The acceptance path never reaches git (the census is mocked); a live `Git` would read the environment
+  // before the test stubs it, and Effect's environment provider keeps its first read.
+  Git.layerTest(),
   FsUtilsLive.pipe(Layer.provide(NodeServices.layer))
 );
 afterEach(() => {

@@ -6,6 +6,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { Str } from "@beep/utils";
@@ -17,7 +19,8 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
-import { runGitRawOutput } from "../../../internal/repo-run/GitExec.ts";
+import { formatCommandLine } from "../../../internal/process/StepExec.ts";
+import { adaptGitKitError } from "../../../internal/repo-run/GitExec.ts";
 import { EffectSchemaInventoryReferencePath } from "../EffectSchemaInventory.schemas.ts";
 import {
   EffectSchemaInventoryCatalogPinError,
@@ -26,8 +29,7 @@ import {
   EffectSchemaInventoryReferenceMissingError,
 } from "../Lint.errors.ts";
 import { parseEffectSchemaInventoryPin } from "./EffectSchemaInventoryModules.ts";
-import type * as SecureRandom from "effect/crypto/SecureRandom";
-import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type { GitInvocation } from "@beep/git/GitCommand";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/GitExec.ts";
 import type { EffectSchemaInventoryPin } from "../EffectSchemaInventory.schemas.ts";
 
@@ -79,12 +81,20 @@ const gitAdapter = <E>(onFailure: (commandLine: string, detail: string) => E): G
 const makeEffectSchemaInventorySource = Effect.fn("EffectSchemaInventorySource.make")(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const context = yield* Effect.context<SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>();
+  const git = yield* Git;
   const reference = path.join(root, EffectSchemaInventoryReferencePath);
   const manifestPath = path.join(root, "package.json");
-
-  const git = <E>(args: ReadonlyArray<string>, onFailure: (commandLine: string, detail: string) => E) =>
-    runGitRawOutput(reference, args, gitAdapter(onFailure)).pipe(Effect.provide(context));
+  // A kit answer that is not git's failure but still the operation's: the adapter's exit-code wording.
+  const refusal = <E>(
+    invocation: GitInvocation,
+    onFailure: (commandLine: string, detail: string) => E,
+    detail: string
+  ) =>
+    gitAdapter(onFailure).onNonZeroExit({
+      commandLine: formatCommandLine("git", invocation.redactedArgs),
+      exitCode: 1,
+      output: detail,
+    });
 
   const readPin: EffectSchemaInventorySourceShape["readPin"] = fs.readFileString(manifestPath).pipe(
     Effect.mapError((cause) =>
@@ -103,26 +113,46 @@ const makeEffectSchemaInventorySource = Effect.fn("EffectSchemaInventorySource.m
           `The Effect reference clone ${reference} is missing; run bun run beep refs provision. The inventory never regenerates from anything else.`
         );
       }
-      yield* git(["rev-parse", "--git-dir"], (commandLine, detail) =>
+      const notACheckout = (commandLine: string, detail: string) =>
         EffectSchemaInventoryReferenceMissingError.new(
           reference,
           `${reference} is not a git checkout (${commandLine}: ${detail}); run bun run beep refs provision.`
-        )
-      );
-      yield* git(["cat-file", "-e", `${pin}^{commit}`], (commandLine, detail) =>
+        );
+      // `--git-common-dir` resolves exactly where `--git-dir` does, so it is the checkout probe.
+      yield* git
+        .commonDir(reference)
+        .pipe(Effect.mapError(adaptGitKitError(GitCommand.commonDir(), gitAdapter(notACheckout))));
+      const commit = `${pin}^{commit}`;
+      const pinAbsent = (commandLine: string, detail: string) =>
         EffectSchemaInventoryPinAbsentError.new(
           pin,
           reference,
           `inventoryPin ${pin} is not in ${reference} yet (${commandLine}: ${detail}); pull the reference past the pin and rerun.`
-        )
-      );
+        );
+      const pinned = yield* git
+        .refExists(reference, commit)
+        .pipe(Effect.mapError(adaptGitKitError(GitCommand.refExists(commit), gitAdapter(pinAbsent))));
+      if (!pinned) {
+        return yield* refusal(GitCommand.refExists(commit), pinAbsent, `${commit} names no commit`);
+      }
     }
   );
 
-  const readPinned: EffectSchemaInventorySourceShape["readPinned"] = (pin, file) =>
-    git(["show", `${pin}:${file}`], (commandLine, detail) =>
-      EffectSchemaInventoryError.new(`Unable to read ${file} at ${pin} (${commandLine}: ${detail}).`)
-    ).pipe(Effect.withSpan("EffectSchemaInventorySource.readPinned", { attributes: { file } }));
+  const readPinned: EffectSchemaInventorySourceShape["readPinned"] = (pin, file) => {
+    const unreadable = (commandLine: string, detail: string) =>
+      EffectSchemaInventoryError.new(`Unable to read ${file} at ${pin} (${commandLine}: ${detail}).`);
+    const invocation = GitCommand.show(pin, file);
+    return git.show(reference, pin, file).pipe(
+      Effect.mapError(adaptGitKitError(invocation, gitAdapter(unreadable))),
+      Effect.flatMap(
+        O.match({
+          onNone: () => Effect.fail(refusal(invocation, unreadable, `${pin}:${file} does not exist`)),
+          onSome: Effect.succeed,
+        })
+      ),
+      Effect.withSpan("EffectSchemaInventorySource.readPinned", { attributes: { file } })
+    );
+  };
 
   return {
     readPin,
@@ -160,11 +190,8 @@ export class EffectSchemaInventorySource extends Context.Service<
    */
   static readonly layer = (
     root: string
-  ): Layer.Layer<
-    EffectSchemaInventorySource,
-    never,
-    SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
-  > => Layer.effect(EffectSchemaInventorySource, EffectSchemaInventorySource.make(root));
+  ): Layer.Layer<EffectSchemaInventorySource, never, FileSystem.FileSystem | Path.Path | Git> =>
+    Layer.effect(EffectSchemaInventorySource, EffectSchemaInventorySource.make(root));
 
   /**
    * Live source for the checkout the CLI runs in, located with `findRepoRoot`.
@@ -175,7 +202,7 @@ export class EffectSchemaInventorySource extends Context.Service<
   static readonly live: Layer.Layer<
     EffectSchemaInventorySource,
     EffectSchemaInventoryError,
-    SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+    FileSystem.FileSystem | Path.Path | Git
   > = Layer.effect(
     EffectSchemaInventorySource,
     findRepoRoot().pipe(

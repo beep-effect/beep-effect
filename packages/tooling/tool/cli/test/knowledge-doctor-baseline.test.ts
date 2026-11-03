@@ -1,4 +1,4 @@
-import { Git } from "@beep/git/Git";
+import { Git, GitCommandError } from "@beep/git/Git";
 import {
   checkKnowledgeDoctorReport,
   classifyKnowledgeBaselineGroup,
@@ -20,6 +20,7 @@ import {
   KnowledgeDoctorIdentity,
   KnowledgeDoctorLeasesOptions,
   KnowledgeDoctorLive,
+  KnowledgeDoctorMintOptions,
   KnowledgeDoctorPromotion,
   KnowledgeDoctorPromotions,
   KnowledgeIdentityInput,
@@ -50,6 +51,7 @@ import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { assert, describe, vi } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -62,6 +64,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
+import type { GitStubs } from "@beep/git/Git";
 import type { KnowledgeDoctorReport, KnowledgeDoctorTree } from "@beep/repo-cli/commands/Knowledge";
 
 const platformLayer = Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer));
@@ -904,4 +907,102 @@ describe("knowledge doctor sealed baseline", () => {
       })
     );
   });
+});
+
+// Each kit read of the live doctor, failed without an exit code (git never ran) and with one, and what it becomes.
+const knowledgeKitDefaults: Partial<GitStubs> = {
+  revParse: () => Effect.succeed(MINTED),
+  isShallow: () => Effect.succeed(false),
+  mergeBase: () => Effect.succeed(MINTED),
+  changedFiles: () => Effect.succeed([]),
+  lsTree: () => Effect.succeed([]),
+  status: () => Effect.succeed([]),
+  isAncestor: () => Effect.succeed(false),
+};
+const knowledgeKitRuns = {
+  ciMode: (doctor: KnowledgeDoctor["Service"]) => doctor.ciMode("origin/main"),
+  mint: (doctor: KnowledgeDoctor["Service"]) =>
+    doctor
+      .mintFile(KnowledgeDoctorMintOptions.make({ at: "HEAD", baseRef: "origin/main", write: true }))
+      .pipe(Effect.as("minted")),
+};
+const knowledgeSpawnFailure = { detail: "ENOENT" };
+const knowledgeExitFailure = { exitCode: 128 };
+const knowledgeKitFailureCases = [
+  {
+    operation: "isShallow",
+    fields: knowledgeSpawnFailure,
+    run: "ciMode",
+    expected: "KnowledgeOperationalError:Failed to spawn git rev-parse --is-shallow-repository.",
+  },
+  { operation: "isShallow", fields: knowledgeExitFailure, run: "ciMode", expected: "ok:report" },
+  {
+    operation: "status",
+    fields: knowledgeSpawnFailure,
+    run: "mint",
+    expected: "KnowledgeOperationalError:Failed to spawn git status --porcelain.",
+  },
+  { operation: "status", fields: knowledgeExitFailure, run: "mint", expected: "KnowledgeMintContextRefusal:" },
+  { operation: "lsTree", fields: knowledgeSpawnFailure, run: "ciMode", expected: "KnowledgeOperationalError:" },
+  { operation: "lsTree", fields: knowledgeExitFailure, run: "ciMode", expected: "KnowledgeDoctorInputError:" },
+] as const;
+
+// These doubles are supplied while constructing the live doctor because its methods
+// capture their Git service at construction time.
+it.layer(platformLayer, { timeout: "30 seconds" })("knowledge doctor kit failure boundaries", (it) => {
+  for (const { operation, fields, run, expected } of knowledgeKitFailureCases) {
+    it.effect(`preserves the ${operation} failure semantics (${expected})`, () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.realPath(".");
+        const failure = GitCommandError.make({
+          kind: "failed",
+          args: [operation],
+          cwd: root,
+          stderr: "fixture",
+          ...fields,
+        });
+        const git = Git.makeTest({ ...knowledgeKitDefaults, [operation]: () => Effect.fail(failure) });
+        const doctor = yield* KnowledgeDoctorLive.pipe(
+          Layer.fresh,
+          Layer.build,
+          Effect.map(Context.get(KnowledgeDoctor)),
+          Effect.provideService(Git, git)
+        );
+        const outcome = yield* knowledgeKitRuns[run](doctor).pipe(
+          Effect.map((value) => `ok:${String(value)}`),
+          Effect.catch((error) => Effect.succeed(`${error._tag}:${error.message}`))
+        );
+        assert.include(outcome, expected);
+      })
+    );
+  }
+  it.effect("reads clean mint status and the baseline tree before refusing an uncontained mint", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      assert.isTrue(yield* fs.exists(yield* fs.realPath(".")));
+      const doctor = yield* KnowledgeDoctorLive.pipe(
+        Layer.fresh,
+        Layer.build,
+        Effect.map(Context.get(KnowledgeDoctor)),
+        Effect.provideService(
+          Git,
+          Git.makeTest({
+            revParse: () => Effect.succeed(MINTED),
+            isShallow: () => Effect.succeed(false),
+            mergeBase: () => Effect.succeed(MINTED),
+            changedFiles: () => Effect.succeed([]),
+            lsTree: () => Effect.succeed([]),
+            status: () => Effect.succeed([]),
+            isAncestor: () => Effect.succeed(false),
+          })
+        )
+      );
+      assert.strictEqual(yield* doctor.ciMode("origin/main"), "report");
+      const error = yield* doctor
+        .mintFile(KnowledgeDoctorMintOptions.make({ at: "HEAD", baseRef: "origin/main", write: true }))
+        .pipe(Effect.flip);
+      assert.strictEqual(error._tag, "KnowledgeMintContextRefusal");
+    })
+  );
 });

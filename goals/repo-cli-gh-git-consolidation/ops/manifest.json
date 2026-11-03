@@ -42,7 +42,8 @@
     "research/reviewer-ci-github-differential-w3.json",
     "research/review-thread-differential-w4.json",
     "research/yeet-gh-seams-differential-w6.json",
-    "research/w7-site-census-2026-11-03.md"
+    "research/w7-site-census-2026-11-03.md",
+    "research/groups-differential-w7.json"
   ],
   "agentLaunchers": [
     {
@@ -226,6 +227,38 @@
     {
       "path": "ops/frozen-w6/Merge.old.ts",
       "purpose": "Frozen pre-W6 merge phase of mergePr (the gh pr merge --squash --match-head-commit call and its bounded MERGED confirmation, lane base 641180ade6), lifted below the reviewer gate and replayed by ops/yeet-gh-seams-differential-w6.ts."
+    },
+    {
+      "path": "ops/groups-differential-w7.ts",
+      "purpose": "W7b differential: the frozen pre-W7 command-group git bodies (ops/frozen-w7b/Groups.old.ts over the inlined generic runners: the RouteClassify reads, the RouteCensus merge base, the HeavyAdmission diff, Doctest discovery, the Knowledge ref census and path-removal log, the visible-path listings, the Fallow audit diff input, the lane-proof virtual tree, the goals doctor history reads, the Laws and Lint tracked listings, the research vault commit, QA commit provenance) compared with the shipped @beep/git reads over real scratch repositories (renames, a deletion, a non-ASCII path, untracked and ignored files, a shallow clone, an unborn repository, a directory outside any repository), plus the gh rows of ops/groups-differential-w7.github.ts."
+    },
+    {
+      "path": "ops/groups-differential-w7.github.ts",
+      "purpose": "W7b differential, gh half: the frozen RouteCorpus, Completion, CompletionEvidence and RepoCards gh bodies over a scripted gh against GithubRest, GitHubClient and GitHubContent over a paginating fetch, one fixture world per scenario; imported by ops/groups-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7b/GitRunners.old.ts",
+      "purpose": "Frozen pre-W7 generic git runners (runGitOutput, runGitPathList, runGitLines, runGitRawOutput and their private helpers, inlined verbatim because the runner retirement deletes them) (lane base 8602b24203), replayed by ops/groups-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7b/Groups.old.ts",
+      "purpose": "Frozen pre-W7 W7b git site bodies (lane base 8602b24203), replayed by ops/groups-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7b/RouteCorpus.old.ts",
+      "purpose": "Frozen pre-W7 RouteCorpus gh runner (rate limit, run list, run view) (lane base 8602b24203), replayed by ops/groups-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7b/Completion.old.ts",
+      "purpose": "Frozen pre-W7 goal completion manifest and origin reads (lane base 8602b24203), replayed by ops/groups-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7b/CompletionEvidence.old.ts",
+      "purpose": "Frozen pre-W7 goal completion evidence gh and git readers (lane base 8602b24203), replayed by ops/groups-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7b/RepoCards.old.ts",
+      "purpose": "Frozen pre-W7 research repo-card clone and star reads (lane base 8602b24203), replayed by ops/groups-differential-w7.ts."
     }
   ]
 }

@@ -1,3 +1,4 @@
+import { Git, GitCommandError } from "@beep/git/Git";
 import {
   pullResearchNotionLinks,
   ResearchCognifyOptions,
@@ -30,6 +31,7 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import type { GitStubs } from "@beep/git/Git";
 
 // Nothing in this suite may reach a Cognee server: the one URL used points at
 // the loopback discard port so the login request is refused immediately.
@@ -39,7 +41,11 @@ const isCogneeApiUrl = S.is(CogneeApiUrl);
 const testLayer = Layer.mergeAll(
   ResearchCommandServiceLive.pipe(
     Layer.provideMerge(
-      FetchHttpClient.layer.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+      Layer.mergeAll(
+        FetchHttpClient.layer.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
+        // The vault commit runs through the kit (W7b, SPEC D-19).
+        Git.layer.pipe(Layer.provide(NodeServices.layer))
+      )
     )
   ),
   Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)
@@ -135,7 +141,45 @@ const initVault = Effect.fn("ResearchDailyTest.initVault")(function* (options: {
   return vaultRoot;
 });
 
+// Each kit operation of the vault commit, failed without an exit code (git never ran) and with one.
+const dailyDefaults: Partial<GitStubs> = {
+  checkIgnore: () => Effect.succeed([]),
+  add: () => Effect.void,
+  stagedChanges: () => Effect.succeed(["note.md"]),
+  commit: () => Effect.void,
+};
+const spawnFailure = { detail: "ENOENT" };
+const exitFailure = { exitCode: 2 };
+const dailyFailureCases = [
+  { operation: "checkIgnore", fields: spawnFailure, expected: "Failed running git" },
+  { operation: "checkIgnore", fields: exitFailure, expected: "exited with 2 in the vault." },
+  { operation: "add", fields: spawnFailure, expected: "Failed running git" },
+  { operation: "add", fields: exitFailure, expected: "exited with 2 in the vault." },
+  { operation: "stagedChanges", fields: spawnFailure, expected: "Failed checking vault staging state." },
+  { operation: "stagedChanges", fields: exitFailure, expected: "exited with 2 in the vault." },
+  { operation: "commit", fields: spawnFailure, expected: "Failed running git" },
+  { operation: "commit", fields: exitFailure, expected: "exited with 2 in the vault." },
+] as const;
+
 layer(testLayer, { timeout: "30 seconds" })("research daily commit", (it) => {
+  for (const { operation, fields, expected } of dailyFailureCases) {
+    it.effect(`preserves the ${operation} wording for ${expected}`, () =>
+      Effect.gen(function* () {
+        const failure = GitCommandError.make({
+          kind: "failed",
+          args: [operation],
+          cwd: "/vault",
+          stderr: "fixture",
+          ...fields,
+        });
+        const git = Git.makeTest({ ...dailyDefaults, [operation]: () => Effect.fail(failure) });
+        const error = yield* commitVault("/vault").pipe(Effect.provideService(Git, git), Effect.flip);
+        expect(error._tag).toBe("ResearchCommandError");
+        expect(error.message).toContain(expected);
+      })
+    );
+  }
+
   it.effect("commits the vault when its .gitignore already ignores the state directory", () =>
     Effect.gen(function* () {
       const vaultRoot = yield* initVault({ ignoreState: true });

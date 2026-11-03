@@ -614,6 +614,7 @@ const prepareGithubContext = Effect.fn("Library.prepareGithubContext")(function*
   const realClone = yield* fs.realPath(clone);
   const relative = path.relative(realRoot, realClone);
   if (path.isAbsolute(relative) || relative === ".." || Str.startsWith(`..${path.sep}`)(relative)) return O.none();
+  // KEEP (D-19): every git call below rides this helper and its hardened untrusted-clone boundary.
   const git = (args: ReadonlyArray<string>) =>
     runLibraryCommand(root, "git", ["-c", "core.hooksPath=/dev/null", "-C", clone, ...args]);
   if (

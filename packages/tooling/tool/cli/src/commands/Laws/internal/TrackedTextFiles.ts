@@ -14,6 +14,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A } from "@beep/utils";
 import * as Effect from "effect/Effect";
@@ -23,7 +25,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
-import { runGitRawOutput } from "../../../internal/repo-run/GitExec.ts";
+import { adaptGitKitError } from "../../../internal/repo-run/GitExec.ts";
 import type { Err } from "@beep/utils";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -33,8 +35,6 @@ const NEWLINE_PATTERN = /\n/gu;
 
 /** `git ls-files --stage` modes of regular files; symlinks (120000) and gitlinks (160000) carry no text. */
 const REGULAR_FILE_MODES = ["100644", "100755"];
-
-const STAGE_RECORD_PATTERN = /^(\d{6}) [0-9a-f]+ \d\t(.+)$/su;
 
 const READ_CONCURRENCY = 32;
 
@@ -144,23 +144,17 @@ export const messageGitErrorAdapter = <E>(makeError: (message: string) => E): Gi
   onTruncated: O.none(),
 });
 
-const regularFileFromStageRecord = (record: string): O.Option<string> =>
-  F.pipe(
-    O.fromNullishOr(STAGE_RECORD_PATTERN.exec(record)),
-    O.filter((match) => A.contains(REGULAR_FILE_MODES, match[1])),
-    O.flatMap((match) => O.fromNullishOr(match[2]))
-  );
-
 const listTrackedRegularFiles = Effect.fn("TrackedTextFiles.listTrackedRegularFiles")(function* <E>(
   repoRoot: string,
   gitErrors: GitCommandErrorAdapter<E>
 ) {
-  const output = yield* runGitRawOutput(repoRoot, ["ls-files", "-z", "--stage"], gitErrors);
+  const git = yield* Git;
+  // The staged listing is ~6.6 MB, inside the kit's 16 MiB fail-closed bound.
+  const entries = yield* git.lsFiles(repoRoot).pipe(Effect.mapError(adaptGitKitError(GitCommand.lsFiles(), gitErrors)));
   return F.pipe(
-    Str.split("\0")(output),
-    A.filter(Str.isNonEmpty),
-    A.map(regularFileFromStageRecord),
-    A.getSomes,
+    entries,
+    A.filter((entry) => A.contains(REGULAR_FILE_MODES, entry.mode)),
+    A.map((entry) => entry.path),
     A.dedupe
   );
 });
@@ -215,7 +209,7 @@ export const scanTrackedTextFiles = Effect.fn("TrackedTextFiles.scanTrackedTextF
     readonly findings: ReadonlyArray<Finding>;
   },
   E,
-  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

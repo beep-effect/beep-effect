@@ -1,4 +1,4 @@
-import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
+import { Git, GitCommandError } from "@beep/git/Git";
 import {
   analyzeDoctestSourceForTesting,
   classifyDoctestFence,
@@ -322,13 +322,38 @@ const changedSourceLayer = Layer.mergeAll(
     exists: (file) => Effect.succeed(Str.endsWith("packages/example/src/existing.ts")(file)),
   }),
   Path.layer,
-  ScriptedSpawner.make(() => ({ stdout: A.join(changedSourcePaths, "\n") })).layer
+  // The committed, dirty and untracked reads each list both paths; the deleted one must not survive.
+  Git.layerTest({
+    changedFiles: () => Effect.succeed(changedSourcePaths),
+    unstagedChanges: () => Effect.succeed(changedSourcePaths),
+    untrackedFiles: () => Effect.succeed([]),
+  })
 );
+
+// The discovery reads fold kit failures into the analysis error's two wordings (W7b, SPEC D-19).
+const failingDiscovery = (error: GitCommandError) =>
+  discoverChangedDoctestFilesForTesting("/repo").pipe(
+    Effect.provideService(Git, Git.makeTest({ changedFiles: () => Effect.fail(error) })),
+    Effect.flip
+  );
 
 layer(changedSourceLayer, { timeout: "30 seconds" })("changed Doctest discovery", (it) => {
   it.effect("drops deleted Git paths before source analysis", () =>
     Effect.gen(function* () {
       expect(yield* discoverChangedDoctestFilesForTesting("/repo")).toEqual(["packages/example/src/existing.ts"]);
+    })
+  );
+
+  it.effect("names git's exit code, or the command a git that never ran", () =>
+    Effect.gen(function* () {
+      const exited = yield* failingDiscovery(
+        GitCommandError.make({ kind: "failed", args: ["diff"], cwd: "/repo", exitCode: 128, stderr: "fatal" })
+      );
+      expect(exited.message).toContain("failed with exit code 128.");
+      const unspawned = yield* failingDiscovery(
+        GitCommandError.make({ kind: "failed", args: ["diff"], cwd: "/repo", stderr: "", detail: "spawn ENOENT" })
+      );
+      expect(unspawned.message).toContain("Failed to spawn git diff");
     })
   );
 });

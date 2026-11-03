@@ -40,6 +40,8 @@ parallel, then the runner retirement, then closeout C.
 
 ## Latest Evidence
 
+- 2026-11-03 W7b: `research/groups-differential-w7.json` (100 scenarios, 34 git and 66 gh; 76 same, 24 classified,
+  0 unclassified); the census W7b rows B1-B136 are on `@beep/git`/`@beep/github` or KEEP with their reason (D-19).
 - 2026-11-02 W6: `research/yeet-gh-seams-differential-w6.json` (51 scenarios, 40 same, 11 classified, 0 unclassified);
   repo-cli `check` clean, every `yeet-*`, `proof-job` and `shared-internals` suite green on Node and Bun (65 files,
   1885 tests), `goals/tsconfig.ops.json` clean; `lint effect-vitest`, Fallow audit and Fallow health introduce 0.

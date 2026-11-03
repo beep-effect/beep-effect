@@ -17,6 +17,7 @@
  */
 
 import { isPathWithinRoot } from "@beep/file-processing/PathSafety";
+import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
@@ -36,7 +37,6 @@ import * as S from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { diffMembership } from "../../internal/ratchet/RatchetDiff.ts";
-import { runGitOutput } from "../../internal/repo-run/index.ts";
 import { reflectionFileNameIsArtifact, reflectionFrontmatterIsValid } from "../Lint/ReflectionArtifact.ts";
 import {
   goalCloseoutView,
@@ -44,7 +44,6 @@ import {
   observeGoalCompletion,
   storedGoalCompletion,
 } from "./Completion.ts";
-import { GoalsGitError } from "./Goals.errors.ts";
 import {
   decodeGoalManifest,
   GoalOpsScriptPath,
@@ -62,7 +61,6 @@ import {
   parseGoalManifestText,
   readmeLifecycleToken,
 } from "./Inventory.ts";
-import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.ts";
 import type { GoalCompletionReceipt, GoalManifest, GoalPullRequestRef } from "./Goals.schemas.ts";
 import type { CapabilityProjection } from "./Graph.schemas.ts";
 import type { GoalPacketRecord } from "./Inventory.ts";
@@ -820,15 +818,13 @@ export const goalPacketFindings = Effect.fn("Goals.packetFindings")(function* <E
   return { findings, manifest: O.some(decoded.value) };
 });
 
-const gitAdapter: GitCommandErrorAdapter<GoalsGitError> = {
-  onSpawnFailure: (commandLine) => (cause) => GoalsGitError.new(`spawn ${commandLine}: ${String(cause)}`),
-  onNonZeroExit: ({ commandLine, exitCode }) => GoalsGitError.new(`${commandLine} exited with ${exitCode}`),
-  onTruncated: O.none(),
-};
+// The goals-window path walk: every path under goals/ a commit in the staleness window touched. It measured
+// 438 KB in November 2026; the kit's 16 MiB bound fails closed, so an overflow skips the advisories (`None`)
+// instead of reading a partial window as the old 512 KiB capture would have.
+const STALENESS_WINDOW_LOG = { since: `${STALE_ACTIVE_DAYS}.days`, paths: ["goals/"] } as const;
 
-const gitOutputOrNone = Effect.fn("Goals.gitOutputOrNone")(function* (args: ReadonlyArray<string>) {
-  return yield* runGitOutput(".", args, gitAdapter).pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
-});
+// The completion-gate subjects: the newest 4000 commit subjects, read without their paths.
+const RECENT_SUBJECTS_LOG = { limit: 4000, omitPaths: true } as const;
 
 type DoctorPacket = {
   readonly record: GoalPacketRecord;
@@ -1002,14 +998,16 @@ const gitAdvisories = Effect.fn("Goals.gitAdvisories")(function* (packets: Reado
   let findings = A.empty<GoalDoctorFinding>();
   let notes = A.empty<string>();
 
-  const shallow = yield* gitOutputOrNone(["rev-parse", "--is-shallow-repository"]);
+  const git = yield* Git;
+  // Every git read here is advisory: any failure is `None`, which skips the advisories it feeds.
+  const shallow = yield* git.isShallow(".").pipe(Effect.option);
   if (O.isNone(shallow)) {
     return {
       findings,
       notes: A.append(notes, "git history unavailable; staleness/completion-gate advisories skipped."),
     };
   }
-  if (Str.trim(shallow.value) === "true") {
+  if (shallow.value) {
     return {
       findings,
       notes: A.append(notes, "shallow git checkout; staleness/completion-gate advisories skipped."),
@@ -1017,17 +1015,26 @@ const gitAdvisories = Effect.fn("Goals.gitAdvisories")(function* (packets: Reado
   }
 
   // Single-pass staleness walk: every path under goals/ touched in the window.
-  const recentPaths = yield* gitOutputOrNone([
-    "log",
-    `--since=${STALE_ACTIVE_DAYS}.days`,
-    "--name-only",
-    "--format=",
-    "--",
-    "goals/",
-  ]);
+  const recentPaths = yield* git.log(".", STALENESS_WINDOW_LOG).pipe(
+    Effect.map(
+      flow(
+        A.flatMap((entry) => entry.paths),
+        A.join("\n")
+      )
+    ),
+    Effect.option
+  );
   // Single-pass completion-gate heuristic: merge/squash subjects citing the
   // packet slug or the packet's recorded PR number.
-  const subjects = yield* gitOutputOrNone(["log", "--format=%s", "-n", "4000"]);
+  const subjects = yield* git.log(".", RECENT_SUBJECTS_LOG).pipe(
+    Effect.map(
+      flow(
+        A.map((entry) => entry.subject),
+        A.join("\n")
+      )
+    ),
+    Effect.option
+  );
 
   // Shipped-but-open packets first: they take the slot the plain staleness
   // advisory would otherwise fill for the same slug.

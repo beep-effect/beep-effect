@@ -1,5 +1,7 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Exiftool } from "@beep/exiftool";
 import { FFmpeg } from "@beep/ffmpeg";
+import { Git, StatusEntry } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   ArtifactBudget,
@@ -36,6 +38,7 @@ import {
   CaptureTargetRequest,
   citedEventIds,
   citedPaths,
+  collectToolVersions,
   discoverRecordedVideo,
   EvidenceCrossCheck,
   extractionPlanPath,
@@ -93,14 +96,20 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { ActionEvent } from "@beep/qa-capture";
 
 const PlatformLayer = Layer.mergeAll(BunCrypto.layer, MemoryFileSystem.layer, NodePath.layer);
-const SpawnerLayer = NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(PlatformLayer));
+// `Git` over the platform spawner: commit provenance reads HEAD and status through the kit (W7b, SPEC D-19).
+const SpawnerLayer = Git.layer.pipe(
+  Layer.provideMerge(NodeChildProcessSpawner.layer),
+  Layer.provideMerge(PlatformLayer)
+);
 
 const temporaryDirectory = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -335,6 +344,37 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
             expect(provenance.dirty).toBe(false);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+      );
+
+      it.effect("reads the HEAD sha and a dirty tree from the kit", () =>
+        Effect.gen(function* () {
+          const sha = "0123456789abcdef0123456789abcdef01234567";
+          const provenance = yield* readCommitProvenance("/repo").pipe(
+            Effect.provideService(
+              Git,
+              Git.makeTest({
+                revParse: () => Effect.succeed(sha),
+                status: () => Effect.succeed([StatusEntry.make({ x: " ", y: "M", path: "note.md" })]),
+              })
+            )
+          );
+          expect(provenance.sha).toBe(sha);
+          expect(provenance.dirty).toBe(true);
+        })
+      );
+
+      it.effect("records a tool's version only when its probe exits 0", () =>
+        Effect.gen(function* () {
+          const versions = yield* collectToolVersions().pipe(
+            provideSpawner(
+              ScriptedSpawner.make((command) =>
+                command === "ffmpeg" ? { stdout: "ffmpeg version 7.1\n" } : { exit: 1 }
+              )
+            )
+          );
+          expect(R.keys(versions)).toContain("ffmpeg");
+          expect(R.keys(versions)).not.toContain("exiftool");
+        })
       );
     });
 

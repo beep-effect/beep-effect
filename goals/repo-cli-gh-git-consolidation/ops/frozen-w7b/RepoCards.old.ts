@@ -1,0 +1,231 @@
+// Frozen at 8602b24203: inspectClone and stars plus their helpers. Imports rebased.
+/**
+ * Repository knowledge-card extraction for research repo-card.
+ *
+ * Walks the research clone library (theme directories holding git clones,
+ * up to two levels deep) and GitHub stars, producing one markdown card per
+ * repository.
+ *
+ * @internal
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+import { $RepoCliId } from "@beep/identity/packages";
+import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, pipe } from "effect/Function";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import { ResearchCommandError } from "../../../../packages/tooling/tool/cli/src/commands/Research/Research.errors.ts";
+import { runCaptured } from "../../../../packages/tooling/tool/cli/src/internal/process/StepExec.ts";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+
+const $I = $RepoCliId.create("commands/Research/internal/RepoCards");
+
+/**
+ * Facts gathered about one cloned repository.
+ *
+ * @internal
+ * @category models
+ */
+export class ClonedRepoInfo extends S.Opaque<ClonedRepoInfo, { readonly brand: unique symbol }>()(
+  S.Struct({
+    hasLicense: S.Boolean,
+    lastCommitIso: S.OptionFromOptionalKey(S.String),
+    localPath: S.String,
+    readmeExcerpt: S.OptionFromOptionalKey(S.String),
+    remoteUrl: S.OptionFromOptionalKey(S.String),
+    slugOwner: S.String,
+    slugRepo: S.String,
+  }).pipe(
+    $I.annoteSchema("ClonedRepoInfo", {
+      title: "Cloned Repo Info",
+      description: "Facts gathered about one cloned repository before rendering a research repo card.",
+    })
+  )
+) {}
+
+/**
+ * One starred repository from the GitHub API.
+ *
+ * @internal
+ * @category models
+ */
+export class StarredRepo extends S.Opaque<StarredRepo, { readonly brand: unique symbol }>()(
+  S.Struct({
+    description: S.String.pipe(S.NullOr, S.optionalKey),
+    full_name: S.String,
+    html_url: S.String,
+    language: S.String.pipe(S.NullOr, S.optionalKey),
+    topics: S.Array(S.String).pipe(S.optionalKey),
+  }).pipe(
+    $I.annoteSchema("StarredRepo", {
+      title: "Starred Repo",
+      description: "One starred repository row returned by the GitHub API.",
+    })
+  )
+) {}
+
+const decodeStarredRepoJsonLine = S.decodeEffect(S.fromJsonString(StarredRepo));
+
+const runForOutput = Effect.fn("RepoCards.runForOutput")(function* (
+  command: string,
+  args: ReadonlyArray<string>,
+  cwd: string
+): Effect.fn.Return<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
+  const result = yield* runCaptured({
+    command,
+    args,
+    cwd,
+    source: "stdout",
+    trim: true,
+  }).pipe(Effect.option);
+  return result.pipe(
+    O.filter((run) => run.exitCode === 0 && Str.isNonEmpty(run.output)),
+    O.map((run) => run.output)
+  );
+});
+
+const README_NAMES = ["README.md", "readme.md", "Readme.md", "README.MD"];
+const README_MAX_LINES = 80;
+
+const stripBadges = (line: string): string =>
+  pipe(
+    line,
+    Str.replace(/\[!\[[^\]]*\]\([^)]*\)\]\([^)]*\)/g, ""),
+    Str.replace(/!\[[^\]]*\]\([^)]*\)/g, ""),
+    Str.trimEnd
+  );
+
+const readmeExcerptOf = Effect.fn("RepoCards.readmeExcerptOf")(function* (
+  repoDir: string
+): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  for (const name of README_NAMES) {
+    const content = yield* fs.readFileString(path.join(repoDir, name)).pipe(Effect.option);
+    if (O.isSome(content)) {
+      const lines = Str.split(content.value, "\n");
+      const excerpt = A.map(A.take(lines, README_MAX_LINES), stripBadges);
+      return O.some(Str.trim(A.join(excerpt, "\n")));
+    }
+  }
+  return O.none();
+});
+
+/**
+ * Normalize a git remote to a browsable https URL.
+ *
+ * @internal
+ * @param remote - Git remote URL in SSH or HTTPS form.
+ * @returns Browsable HTTPS URL, with a trailing `.git` suffix removed.
+ * @category utilities
+ */
+const remoteToHttpsUrl = (remote: string): string => {
+  const sshMatch = O.getOrNull(Str.match(/^git@([^:]+):(.+?)(\.git)?$/)(remote));
+  if (!P.isNull(sshMatch)) {
+    return `https://${sshMatch[1]}/${sshMatch[2]}`;
+  }
+  return Str.replace(/\.git$/, "")(remote);
+};
+
+/**
+ * Derive owner/repo slug parts from a remote URL or local dirname.
+ *
+ * @internal
+ * @param remoteUrl - Optional git remote URL to parse first.
+ * @param localDirname - Local directory name used as the fallback repo slug.
+ * @returns Owner and repository slug parts.
+ * @category utilities
+ */
+export const slugPartsOf: {
+  (localDirname: string): (remoteUrl: O.Option<string>) => readonly [string, string];
+  (remoteUrl: O.Option<string>, localDirname: string): readonly [string, string];
+} = dual(2, (remoteUrl: O.Option<string>, localDirname: string): readonly [string, string] =>
+  remoteUrl.pipe(
+    O.flatMap((url) => {
+      const match = O.getOrNull(Str.match(/^https?:\/\/[^/]+\/([^/]+)\/([^/?#]+)/)(remoteToHttpsUrl(url)));
+      return P.isNull(match) ? O.none() : O.some([match[1] ?? "unknown", match[2] ?? localDirname] as const);
+    }),
+    O.getOrElse(() => ["local", localDirname] as const)
+  )
+);
+
+/**
+ * Gather remote, README, license, and last-commit facts for one clone.
+ *
+ * @internal
+ * @category utilities
+ */
+export const inspectClone = Effect.fn("RepoCards.inspectClone")(function* (
+  repoDir: string
+): Effect.fn.Return<
+  ClonedRepoInfo,
+  ResearchCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const remoteUrl = (yield* runForOutput("git", ["remote", "get-url", "origin"], repoDir)).pipe(
+    O.map(remoteToHttpsUrl)
+  );
+  const lastCommitIso = yield* runForOutput("git", ["log", "-1", "--format=%cI"], repoDir);
+  const readmeExcerpt = yield* readmeExcerptOf(repoDir);
+  let hasLicense = false;
+  for (const name of ["LICENSE", "LICENSE.md", "LICENSE.txt", "COPYING"]) {
+    if (yield* fs.exists(path.join(repoDir, name)).pipe(Effect.orElseSucceed(() => false))) {
+      hasLicense = true;
+      break;
+    }
+  }
+  const [slugOwner, slugRepo] = slugPartsOf(remoteUrl, path.basename(repoDir));
+  return ClonedRepoInfo.make({
+    hasLicense,
+    lastCommitIso,
+    localPath: repoDir,
+    readmeExcerpt,
+    remoteUrl,
+    slugOwner,
+    slugRepo,
+  });
+});
+
+/**
+ * List the authenticated user's starred repositories via the `gh` CLI.
+ *
+ * @internal
+ * @category utilities
+ */
+export const listStarredRepos = Effect.fn("RepoCards.listStarredRepos")(function* (
+  cwd: string
+): Effect.fn.Return<
+  ReadonlyArray<StarredRepo>,
+  ResearchCommandError,
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+> {
+  const output = yield* runForOutput(
+    "gh",
+    [
+      "api",
+      "user/starred",
+      "--paginate",
+      "--jq",
+      "../../../../packages/tooling/tool/cli/src/commands/Research/internal/.[] | {full_name, html_url, description, language, topics}",
+    ],
+    cwd
+  );
+  if (O.isNone(output)) {
+    return yield* ResearchCommandError.make({
+      message: "Failed listing GitHub stars via `gh api user/starred`; is gh installed and authenticated?",
+    });
+  }
+  return yield* Effect.forEach(A.filter(Str.split(output.value, "\n"), Str.isNonEmpty), (line) =>
+    decodeStarredRepoJsonLine(line)
+  ).pipe(ResearchCommandError.mapError("GitHub stars failed schema validation."));
+});

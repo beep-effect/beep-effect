@@ -106,6 +106,7 @@ export {
   discoverWorkspacePackages,
   fencedLineState,
   jsdocCommentsFromSource,
+  listGitVisiblePaths,
   listSourceFiles,
   readWorkspacePackageText,
   tagsFromComment,

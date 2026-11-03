@@ -9,6 +9,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { Lockfile } from "@beep/lockfiles/Lockfile";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -24,7 +26,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { manifestParser } from "../../internal/ManifestRead.ts";
-import { runCaptured } from "../../internal/process/index.ts";
+import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
 import {
   CatalogUsageFinding,
   CatalogUsageManifest,
@@ -76,7 +78,8 @@ type SourceEnvironment =
   | FileSystem.FileSystem
   | Path.Path
   | SecureRandom.SecureRandom
-  | ChildProcessSpawner.ChildProcessSpawner;
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Git;
 
 const defaultCatalogName = "default";
 const catalogProtocol = "catalog:";
@@ -354,18 +357,24 @@ const readLockfilePackages = Effect.fn("CatalogUsage.readLockfilePackages")(func
 });
 
 const collectTemplateFiles = Effect.fn("CatalogUsage.collectTemplateFiles")(function* (repoRoot: string) {
-  const result = yield* runCaptured({
-    command: "git",
-    args: ["ls-files", "-z", "--", ...CATALOG_USAGE_TEMPLATE_SOURCES],
-    cwd: repoRoot,
-    source: "stdout",
-  }).pipe(CatalogUsageError.mapError("Failed to list generator template sources."));
-  if (result.exitCode !== 0) {
-    return yield* CatalogUsageError.make({
-      message: `git ls-files for generator template sources failed with exit code ${result.exitCode}.`,
-    });
-  }
-  return pipe(Str.split(nulSeparator)(result.output), A.map(Str.trim), A.filter(Str.isNonEmpty));
+  const git = yield* Git;
+  const entries = yield* git.lsFiles(repoRoot, { pathspec: CATALOG_USAGE_TEMPLATE_SOURCES }).pipe(
+    Effect.mapError(
+      adaptGitKitError(GitCommand.lsFiles(CATALOG_USAGE_TEMPLATE_SOURCES), {
+        onSpawnFailure: () => CatalogUsageError.new("Failed to list generator template sources."),
+        onNonZeroExit: ({ exitCode }) =>
+          CatalogUsageError.make({
+            message: `git ls-files for generator template sources failed with exit code ${exitCode}.`,
+          }),
+        onTruncated: O.none(),
+      })
+    )
+  );
+  return pipe(
+    entries,
+    A.map((entry) => Str.trim(entry.path)),
+    A.filter(Str.isNonEmpty)
+  );
 });
 
 const readCatalogUsageSnapshot = Effect.fn("CatalogUsage.readCatalogUsageSnapshot")(function* (

@@ -1,0 +1,20 @@
+{
+  "previous": "6b0fb58a97e723463766f5db1750a4f2a7f2294328894b27ff1c70535e900f31",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W7b, feat/gh-git-w7b-groups)",
+    "reason": "Record the W7b seal drift: the goals completion reads moved onto GitHubContent, so GitHubContent.ts joins the goals-doctor and knowledge policy seals, and the goals doctor dropped GoalsGitError, so Goals.errors.ts leaves them; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
+    "basis": {
+      "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w7b.md",
+      "sha256": "175314d7b9f5c118d21d040d8a8c91391314977a7810d79496358f1d97b1753e"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//", "@beep/repo-cli"]
+}

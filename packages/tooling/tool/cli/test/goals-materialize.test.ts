@@ -15,7 +15,6 @@ import {
   sha256Hex,
 } from "@beep/repo-cli/test/Goals";
 import { it } from "@beep/test-runner";
-import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -30,7 +29,12 @@ import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
-import { expectReportedExit, temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
+import {
+  expectReportedExit,
+  NodeTestLayer,
+  temporaryWorkingDirectory,
+  writeProjectFile,
+} from "./support/CommandTest.ts";
 
 const input = BootstrapInput.make({
   slug: "fresh-goal",
@@ -44,9 +48,7 @@ const listGoals = Effect.gen(function* () {
   return A.sort(yield* fs.readDirectory("goals"), (left: string, right: string) => (left < right ? -1 : 1));
 });
 
-const commandTestLayer = PacketEventStoreLive.pipe(
-  Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))
-);
+const commandTestLayer = PacketEventStoreLive.pipe(Layer.provideMerge(NodeTestLayer));
 
 it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
   describe("goals bootstrap --write", { concurrent: false }, () => {

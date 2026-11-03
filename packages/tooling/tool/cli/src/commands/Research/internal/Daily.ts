@@ -5,16 +5,20 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { runToExit } from "../../../internal/process/StepExec.ts";
+import { formatCommandLine } from "../../../internal/process/StepExec.ts";
+import { adaptGitKitError } from "../../../internal/repo-run/GitExec.ts";
 import { ResearchCommandError } from "../Research.errors.ts";
 import {
   ResearchCognifyOptions,
@@ -29,8 +33,8 @@ import { digestImpl } from "./Digest.ts";
 import { historySiftImpl } from "./HistorySift.ts";
 import { notionPullImpl } from "./NotionPullRun.ts";
 import { VAULT_DIRS } from "./Vault.ts";
-import type * as SecureRandom from "effect/crypto/SecureRandom";
-import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type { GitInvocation } from "@beep/git/GitCommand";
+import type { GitKitError } from "../../../internal/repo-run/GitExec.ts";
 import type { ResearchDailyOptions } from "../Research.schemas.ts";
 import type { ResearchCommandServiceRequirements } from "../Research.service.ts";
 
@@ -75,7 +79,7 @@ const stagePathspecs = (checkIgnoreExit: number): Effect.Effect<ReadonlyArray<st
  * apart with `git check-ignore`, because naming an ignored path in the
  * exclude pathspec makes `git add` exit 1.
  *
- * The capture commit is made with `commit.gpgsign=false`: the systemd user
+ * The capture commit is made with `--no-gpg-sign`: the systemd user
  * unit has no desktop signing agent, so a globally configured SSH signer (for
  * example the 1Password helper) fails there with "failed to write commit
  * object", and a machine-generated capture of a private vault needs no
@@ -87,7 +91,7 @@ const stagePathspecs = (checkIgnoreExit: number): Effect.Effect<ReadonlyArray<st
  * import * as Effect from "effect/Effect";
  * import { commitVault } from "@beep/repo-cli/commands/Research/internal/Daily"
  *
- * // Stage and commit the research vault; provide the process spawner to run it.
+ * // Stage and commit the research vault; provide `Git` to run it.
  * const program = commitVault("/repo/.research")
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -97,42 +101,59 @@ const stagePathspecs = (checkIgnoreExit: number): Effect.Effect<ReadonlyArray<st
  */
 export const commitVault = Effect.fn("Research.commitVault")(function* (
   vaultRoot: string
-): Effect.fn.Return<void, ResearchCommandError, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
-  const git = (args: ReadonlyArray<string>) =>
-    runToExit({
-      command: "git",
-      args,
-      cwd: vaultRoot,
-      stdio: "ignore",
-    }).pipe(ResearchCommandError.mapError(`Failed running git ${A.join(args, " ")} in the vault.`));
-  const run = (args: ReadonlyArray<string>) =>
-    git(args).pipe(
-      Effect.filterOrFail(
-        (exitCode) => exitCode === 0,
-        (exitCode) =>
-          ResearchCommandError.make({ message: `git ${A.join(args, " ")} exited with ${exitCode} in the vault.` })
-      )
+): Effect.fn.Return<void, ResearchCommandError, Git> {
+  const git = yield* Git;
+  // A kit failure as the exit code git ran with; a git that never ran keeps the capture's wording.
+  const exitCodeOf = <A>(
+    invocation: GitInvocation,
+    onExit: (exitCode: number) => Effect.Effect<A, ResearchCommandError>
+  ) =>
+    Effect.catch((error: GitKitError) =>
+      adaptGitKitError<Effect.Effect<A, ResearchCommandError>>(error, invocation, {
+        onSpawnFailure: (commandLine) =>
+          flow(ResearchCommandError.new(`Failed running ${commandLine} in the vault.`), Effect.fail),
+        onNonZeroExit: ({ exitCode }) => onExit(exitCode),
+        onTruncated: O.none(),
+      })
     );
-  const pathspecs = yield* git(["check-ignore", "-q", VAULT_DIRS.state]).pipe(Effect.flatMap(stagePathspecs));
-  yield* run(["add", "-A", "--", ...pathspecs]);
-  const status = yield* runToExit({
-    command: "git",
-    args: ["diff", "--cached", "--quiet"],
-    cwd: vaultRoot,
-    stdio: "ignore",
-  }).pipe(ResearchCommandError.mapError("Failed checking vault staging state."));
-  if (status === 0) {
+  const exitedWith = (invocation: GitInvocation) => (exitCode: number) =>
+    Effect.fail(
+      ResearchCommandError.make({
+        message: `${formatCommandLine("git", invocation.redactedArgs)} exited with ${exitCode} in the vault.`,
+      })
+    );
+  const stateDir = [VAULT_DIRS.state];
+  // `check-ignore` lists the state directory when the vault ignores it: exit 0, as `-q` answered; empty is exit 1.
+  const pathspecs = yield* git.checkIgnore(vaultRoot, stateDir).pipe(
+    Effect.map((ignored) => (A.isReadonlyArrayNonEmpty(ignored) ? 0 : 1)),
+    exitCodeOf(GitCommand.checkIgnore(stateDir), Effect.succeed),
+    Effect.flatMap(stagePathspecs)
+  );
+  // git 2.x stages removals under a pathspec, so `add -- <pathspecs>` is `add -A -- <pathspecs>`.
+  const add = GitCommand.add(pathspecs);
+  yield* git.add(vaultRoot, pathspecs).pipe(exitCodeOf(add, exitedWith(add)));
+  const staged = yield* git.stagedChanges(vaultRoot).pipe(
+    Effect.catch((error) =>
+      adaptGitKitError<Effect.Effect<ReadonlyArray<string>, ResearchCommandError>>(error, GitCommand.stagedChanges(), {
+        onSpawnFailure: () => flow(ResearchCommandError.new("Failed checking vault staging state."), Effect.fail),
+        onNonZeroExit: ({ exitCode }) =>
+          Effect.fail(
+            ResearchCommandError.make({ message: `git diff --cached --quiet exited with ${exitCode} in the vault.` })
+          ),
+        onTruncated: O.none(),
+      })
+    )
+  );
+  if (A.isReadonlyArrayEmpty(staged)) {
     yield* Console.log("research daily: vault clean, nothing to commit.");
     return;
   }
-  if (status !== 1) {
-    return yield* ResearchCommandError.make({
-      message: `git diff --cached --quiet exited with ${status} in the vault.`,
-    });
-  }
   const date = (yield* DateTime.now).pipe(DateTime.formatIso, Str.slice(0, 10));
-  yield* run(["-c", "commit.gpgsign=false", "commit", "-q", "-m", `capture ${date}`]);
-  yield* Console.log(`research daily: committed vault as "capture ${date}".`);
+  const message = `capture ${date}`;
+  // `--no-gpg-sign` overrides `commit.gpgSign`, as `-c commit.gpgsign=false` did.
+  const commit = GitCommand.commit(message, false, false, false, undefined, false, false, true);
+  yield* git.commit(vaultRoot, message, { noGpgSign: true }).pipe(exitCodeOf(commit, exitedWith(commit)));
+  yield* Console.log(`research daily: committed vault as "${message}".`);
 });
 
 /**
@@ -168,7 +189,7 @@ export const commitVault = Effect.fn("Research.commitVault")(function* (
  */
 export const dailyImpl = Effect.fn("Research.dailyImpl")(function* (
   options: ResearchDailyOptions
-): Effect.fn.Return<ResearchDailySummary, ResearchCommandError, ResearchCommandServiceRequirements> {
+): Effect.fn.Return<ResearchDailySummary, ResearchCommandError, ResearchCommandServiceRequirements | Git> {
   const ran: Array<string> = [];
   const skipped: Array<string> = [];
   const failed: Array<string> = [];

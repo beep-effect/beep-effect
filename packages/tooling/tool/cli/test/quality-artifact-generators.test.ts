@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import {
   buildJSDocDocumentationInventory,
@@ -31,10 +32,14 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
-const PlatformLayer = Layer.mergeAll(
-  BunCrypto.layer,
-  FileSystemLayer,
-  NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer))
+// `Git` over the platform spawner: the inventories list the visible tree through the kit (W7b, SPEC D-19).
+const PlatformLayer = Layer.provideMerge(
+  Git.layer,
+  Layer.mergeAll(
+    BunCrypto.layer,
+    FileSystemLayer,
+    NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer))
+  )
 );
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const fixedGeneratedAt = "2026-01-01T00:00:00.000Z";

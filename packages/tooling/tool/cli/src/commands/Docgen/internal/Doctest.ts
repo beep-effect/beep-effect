@@ -1,3 +1,5 @@
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { extractFencedCodeBlockDetails } from "@beep/repo-docgen/Core";
 import { FsUtils, findRepoRoot, GlobOptions } from "@beep/repo-utils";
 import { doctestSourceMarker, isDoctestSourcePath } from "@beep/repo-utils/JSDoc/DoctestSource";
@@ -23,7 +25,7 @@ import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import { Node, SyntaxKind } from "ts-morph";
 import { workspaceDirectories } from "../../../internal/RepoWorkspaces.ts";
-import { runGitLines } from "../../../internal/repo-run/index.ts";
+import { adaptGitKitError } from "../../../internal/repo-run/index.ts";
 import { createInMemoryTsMorphProject } from "../../../internal/tsmorph/index.ts";
 import { DoctestAnalysisError, DoctestRewriteError } from "../Doctest.errors.ts";
 import {
@@ -838,6 +840,9 @@ const gitErrorAdapter: GitCommandErrorAdapter<DoctestAnalysisError> = {
   onTruncated: O.none(),
 };
 
+// The workspace roots whose changed sources can host doctests.
+const DOCTEST_PATHSPEC = ["packages", "apps"];
+
 /**
  * Resolves the existing changed Doctest host files for a test-controlled repository root.
  *
@@ -857,10 +862,26 @@ const gitErrorAdapter: GitCommandErrorAdapter<DoctestAnalysisError> = {
 export const discoverChangedDoctestFilesForTesting = Effect.fn("Doctest.discoverChangedFiles")(function* (
   repoRoot: string
 ) {
+  const git = yield* Git;
+  const pathspec = DOCTEST_PATHSPEC;
   const [committed, dirty, untracked] = yield* Effect.all([
-    runGitLines(repoRoot, ["diff", "--name-only", "origin/main...HEAD", "--", "packages", "apps"], gitErrorAdapter),
-    runGitLines(repoRoot, ["diff", "--name-only", "HEAD", "--", "packages", "apps"], gitErrorAdapter),
-    runGitLines(repoRoot, ["ls-files", "--others", "--exclude-standard", "--", "packages", "apps"], gitErrorAdapter),
+    git
+      .changedFiles(repoRoot, { base: "origin/main", head: "HEAD", pathspec })
+      .pipe(
+        Effect.mapError(
+          adaptGitKitError(GitCommand.changedFiles("origin/main", "HEAD", false, { pathspec }), gitErrorAdapter)
+        )
+      ),
+    git
+      .unstagedChanges(repoRoot, { head: "HEAD", pathspec })
+      .pipe(
+        Effect.mapError(
+          adaptGitKitError(GitCommand.unstagedChanges(false, { head: "HEAD", pathspec }), gitErrorAdapter)
+        )
+      ),
+    git
+      .untrackedFiles(repoRoot, { pathspec })
+      .pipe(Effect.mapError(adaptGitKitError(GitCommand.untrackedFiles(false, pathspec), gitErrorAdapter))),
   ]);
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1194,7 +1215,12 @@ export const DoctestFenceAnalyzerLive = Layer.effect(
   DoctestFenceAnalyzer,
   Effect.gen(function* () {
     const context = yield* Effect.context<
-      SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | FsUtils | ChildProcessSpawner.ChildProcessSpawner
+      | SecureRandom.SecureRandom
+      | FileSystem.FileSystem
+      | Path.Path
+      | FsUtils
+      | ChildProcessSpawner.ChildProcessSpawner
+      | Git
     >();
     return {
       analyze: Effect.fn("DoctestFenceAnalyzer.analyze")((config) =>

@@ -255,6 +255,7 @@ const makeClient = Effect.fn("CiGovernance.makeClient")(function* (root: string)
     Layer.buildWithScope(layerCiGithub(root), scope).pipe(Effect.provideContext(capture))
   );
   const request = Effect.fn("CiGovernance.request")(function* (args: ReadonlyArray<string>) {
+    // KEEP (D-19): reads gh's own exit code, error line and --include headers (#249b).
     const result = yield* runRepoCommandCapture("gh", ["api", ...args], root).pipe(
       Effect.provide(capture),
       CiCommandError.mapError("GitHub policy request failed; state is unknown.")

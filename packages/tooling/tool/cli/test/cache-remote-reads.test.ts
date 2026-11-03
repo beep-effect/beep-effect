@@ -17,9 +17,10 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { NodeTestLayer } from "./support/CommandTest.ts";
 
 const platform = Layer.mergeAll(
-  NodeServices.layer,
+  NodeTestLayer,
   NodeCrypto.layer,
   FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
 );

@@ -186,6 +186,7 @@ const hashBytes = S.decodeEffect(Sha256HexFromBytes);
  * @since 0.0.0
  */
 export const collectCacheGitExclusions = Effect.fn("CacheFingerprint.gitExclusions")(function* (root: string) {
+  // KEEP (D-19): scrubbed-env toolchain probe; an inherited GIT_DIR would redirect it under the kit.
   const commonDirectory = yield* captureVersion(root, "git", [
     "rev-parse",
     "--path-format=absolute",

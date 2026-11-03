@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   CapabilityProjection,
   capabilityDoctorFindings,
@@ -47,6 +48,7 @@ import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
+import { completionIoFixture } from "./support/CompletionIo.ts";
 
 const decodeGoalManifest = S.decodeEffect(GoalManifest);
 const encodeGoalCompletionReceiptJson = S.encodeEffect(S.fromJsonString(GoalCompletionReceipt));
@@ -57,6 +59,8 @@ const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Resu
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
+  // The doctor's git advisories read history through the kit (W7b, SPEC D-19).
+  Git.layer.pipe(Layer.provide(NodeServices.layer)),
   layerGoalCompletionReceiptStoreMemory,
   NodeCrypto.layer,
   PacketEventStoreLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
@@ -178,9 +182,10 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         runGoalsCommand(["doctor"]).pipe(
           Effect.provideService(
             GoalCompletionIo,
-            GoalCompletionIo.of({
-              git: Effect.fn("GoalsDoctorTest.offlineGit")(() => Effect.succeed("git@github.com:example/repo.git")),
-              github: Effect.fn("GoalsDoctorTest.offlineGitHub")(() =>
+            completionIoFixture({
+              manifest: Effect.succeed(""),
+              origin: Effect.succeed("git@github.com:example/repo.git"),
+              respond: Effect.fn("GoalsDoctorTest.offlineGitHub")(() =>
                 Effect.sync(() => {
                   networkReads += 1;
                 }).pipe(Effect.andThen(Effect.die("offline network read")))
@@ -226,9 +231,10 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         runGoalsCommand(["doctor"]).pipe(
           Effect.provideService(
             GoalCompletionIo,
-            GoalCompletionIo.of({
-              git: Effect.fn("GoalsDoctorTest.proposalGit")(() => Effect.succeed("git@github.com:example/repo.git")),
-              github: Effect.fn("GoalsDoctorTest.proposalGitHub")(() => Effect.die("offline proposal used GitHub")),
+            completionIoFixture({
+              manifest: Effect.succeed(""),
+              origin: Effect.succeed("git@github.com:example/repo.git"),
+              respond: Effect.fn("GoalsDoctorTest.proposalGitHub")(() => Effect.die("offline proposal used GitHub")),
             })
           )
         )
@@ -271,9 +277,10 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         runGoalsCommand(["doctor"]).pipe(
           Effect.provideService(
             GoalCompletionIo,
-            GoalCompletionIo.of({
-              git: Effect.fn("GoalsDoctorTest.closeoutGit")(() => Effect.succeed("git@github.com:example/repo.git")),
-              github: Effect.fn("GoalsDoctorTest.closeoutGitHub")(() => Effect.die("offline closeout used GitHub")),
+            completionIoFixture({
+              manifest: Effect.succeed(""),
+              origin: Effect.succeed("git@github.com:example/repo.git"),
+              respond: Effect.fn("GoalsDoctorTest.closeoutGitHub")(() => Effect.die("offline closeout used GitHub")),
             })
           )
         )
@@ -389,9 +396,10 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
           runGoalsCommand(["doctor"]).pipe(
             Effect.provideService(
               GoalCompletionIo,
-              GoalCompletionIo.of({
-                git: Effect.fn("GoalsDoctorTest.wordingGit")(() => Effect.succeed("git@github.com:example/repo.git")),
-                github: Effect.fn("GoalsDoctorTest.wordingGitHub")(() =>
+              completionIoFixture({
+                manifest: Effect.succeed(""),
+                origin: Effect.succeed("git@github.com:example/repo.git"),
+                respond: Effect.fn("GoalsDoctorTest.wordingGitHub")(() =>
                   Effect.die("offline receipt read used GitHub")
                 ),
               })
@@ -477,9 +485,10 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
           runGoalsCommand(["doctor"]).pipe(
             Effect.provideService(
               GoalCompletionIo,
-              GoalCompletionIo.of({
-                git: Effect.fn("GoalsDoctorTest.messageGit")(() => Effect.succeed("git@github.com:example/repo.git")),
-                github: Effect.fn("GoalsDoctorTest.messageGitHub")(() =>
+              completionIoFixture({
+                manifest: Effect.succeed(""),
+                origin: Effect.succeed("git@github.com:example/repo.git"),
+                respond: Effect.fn("GoalsDoctorTest.messageGitHub")(() =>
                   Effect.die("offline receipt read used GitHub")
                 ),
               })
@@ -561,9 +570,10 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         runGoalsCommand(["doctor"]).pipe(
           Effect.provideService(
             GoalCompletionIo,
-            GoalCompletionIo.of({
-              git: Effect.fn("GoalsDoctorTest.storedGit")(() => Effect.succeed("git@github.com:example/repo.git")),
-              github: Effect.fn("GoalsDoctorTest.storedGitHub")(() => Effect.die("offline receipt read used GitHub")),
+            completionIoFixture({
+              manifest: Effect.succeed(""),
+              origin: Effect.succeed("git@github.com:example/repo.git"),
+              respond: Effect.fn("GoalsDoctorTest.storedGitHub")(() => Effect.die("offline receipt read used GitHub")),
             })
           )
         )
@@ -680,9 +690,12 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
           runGoalsCommand(["doctor"]).pipe(
             Effect.provideService(
               GoalCompletionIo,
-              GoalCompletionIo.of({
-                git: Effect.fn("GoalsDoctorTest.phaseGit")(() => Effect.succeed("git@github.com:example/repo.git")),
-                github: Effect.fn("GoalsDoctorTest.phaseGitHub")(() => Effect.die("offline phase fixture used GitHub")),
+              completionIoFixture({
+                manifest: Effect.succeed(""),
+                origin: Effect.succeed("git@github.com:example/repo.git"),
+                respond: Effect.fn("GoalsDoctorTest.phaseGitHub")(() =>
+                  Effect.die("offline phase fixture used GitHub")
+                ),
               })
             ),
             Effect.exit,

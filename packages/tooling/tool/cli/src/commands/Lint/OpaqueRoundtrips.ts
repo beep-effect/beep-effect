@@ -3,6 +3,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import * as A from "effect/Array";
@@ -20,7 +22,7 @@ import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { Project, ts } from "ts-morph";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { runGitPathList } from "../../internal/repo-run/GitExec.ts";
+import { adaptGitKitError, sortedUniquePaths } from "../../internal/repo-run/GitExec.ts";
 
 const $I = $RepoCliId.create("commands/Lint/OpaqueRoundtrips");
 
@@ -336,14 +338,23 @@ const configFindings = (
   return detectOpaqueRoundtrips(program)(sources);
 };
 
+// The tracked test files the scan type-checks.
+const TEST_FILE_PATHSPEC = ["*.test.ts", "*.test.tsx"];
+
 const scan = Effect.fn("OpaqueRoundtrips.scan")(function* () {
   const root = yield* findRepoRoot();
   const path = yield* Path.Path;
-  const tracked = yield* runGitPathList(root, ["ls-files", "-z", "--", "*.test.ts", "*.test.tsx"], {
-    onSpawnFailure: failure,
-    onNonZeroExit: ({ commandLine, exitCode }) => failure(`${commandLine} exited ${exitCode}`)(exitCode),
-    onTruncated: O.none(),
-  });
+  const git = yield* Git;
+  const entries = yield* git.lsFiles(root, { pathspec: TEST_FILE_PATHSPEC }).pipe(
+    Effect.mapError(
+      adaptGitKitError(GitCommand.lsFiles(TEST_FILE_PATHSPEC), {
+        onSpawnFailure: failure,
+        onNonZeroExit: ({ commandLine, exitCode }) => failure(`${commandLine} exited ${exitCode}`)(exitCode),
+        onTruncated: O.none(),
+      })
+    )
+  );
+  const tracked = sortedUniquePaths(A.map(entries, (entry) => entry.path));
   return yield* Effect.try({
     try: () => {
       const candidates = A.filter(

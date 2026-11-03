@@ -5,6 +5,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import { CacheTaskConfiguration } from "@beep/repo-configs/cache";
@@ -29,6 +31,7 @@ import { hashFileSha256 } from "../../internal/cli/FsGuards.ts";
 import { isTurboCacheControlArg } from "../../internal/cli/TurboCache.ts";
 import { OutputBound, runCaptured } from "../../internal/process/index.ts";
 import { workspaceManifests } from "../../internal/RepoWorkspaces.ts";
+import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
 import { CacheCommandError } from "./Cache.errors.ts";
 import { isCacheTaskInspectionArg } from "./Cache.runtime.step.ts";
 import { CacheCensusNode, CacheCensusReport, CacheCensusSource, CacheCensusWorkspace } from "./Cache.schemas.ts";
@@ -153,6 +156,20 @@ const capture = Effect.fn("CacheCensus.capture")(function* (
     return yield* CacheCommandError.new("Census subprocess failed or exceeded its 512 MiB capture bound.");
   }
   return result.output;
+});
+// `git rev-parse HEAD` through the kit with the capture's two census wordings (the Turbo variables the capture
+// blanked never reached git).
+const revisionAt = Effect.fn("CacheCensus.revision")(function* (root: string) {
+  const git = yield* Git;
+  return yield* git.revParse(root, "HEAD").pipe(
+    Effect.mapError(
+      adaptGitKitError(GitCommand.revParse("HEAD"), {
+        onSpawnFailure: () => (cause) => CacheCommandError.new("Unable to collect census subprocess output.", cause),
+        onNonZeroExit: () => CacheCommandError.new("Census subprocess failed or exceeded its 512 MiB capture bound."),
+        onTruncated: O.none(),
+      })
+    )
+  );
 });
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 
@@ -634,7 +651,7 @@ export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function
     { concurrency: 4 }
   );
   return CacheCensusReport.make({
-    revision: Str.trim(yield* capture(root, "git", ["rev-parse", "HEAD"])),
+    revision: yield* revisionAt(root),
     turboVersion: Str.trim(yield* capture(root, turbo, ["--skip-infer", "--version"])),
     rootScripts: toSortedRecord(rootManifest.scripts),
     globalConfiguration: R.filter(rootJson, (_, key) => key !== "tasks" && key !== "$schema"),

@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   KnowledgeCardFrontmatter,
   pullResearchNotionLinks,
@@ -39,7 +40,11 @@ const encodeCardFrontmatter = S.encodeEffect(KnowledgeCardFrontmatter);
 const testLayer = Layer.mergeAll(
   ResearchCommandServiceLive.pipe(
     Layer.provideMerge(
-      FetchHttpClient.layer.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+      Layer.mergeAll(
+        FetchHttpClient.layer.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
+        // The vault commit runs through the kit (W7b, SPEC D-19).
+        Git.layer.pipe(Layer.provide(NodeServices.layer))
+      )
     )
   ),
   Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)

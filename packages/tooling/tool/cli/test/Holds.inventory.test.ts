@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   anchorKey,
@@ -205,7 +206,7 @@ const platformFor = (files: Readonly<Record<string, string>>) =>
 
 const layerFor = (files: Readonly<Record<string, string>>) =>
   Layer.mergeAll(Layer.effect(HoldLedger, makeHoldLedger(root)), Layer.effect(HoldSites, makeHoldSites(root))).pipe(
-    Layer.provideMerge(platformFor(files))
+    Layer.provideMerge(Layer.provideMerge(Git.layer, platformFor(files)))
   );
 
 const rootManifest =

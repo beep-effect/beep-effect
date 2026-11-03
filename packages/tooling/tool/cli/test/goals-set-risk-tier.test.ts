@@ -24,13 +24,13 @@ import * as O from "effect/Option";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
+import { NodeTestLayer, withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
 const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const testLayer = Layer.mergeAll(
-  NodeServices.layer,
+  NodeTestLayer,
   NodeCrypto.layer,
   PacketCoreLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
 );
