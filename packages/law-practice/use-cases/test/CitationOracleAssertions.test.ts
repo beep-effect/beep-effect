@@ -123,6 +123,31 @@ describe("assertion oracle evidence", () => {
     expect(accepts({ ...fixture, events: [{ ...event, assertion: "assertNotEqual" }] })).toBe(false);
   });
 
+  it("retains loop iteration identities and rejects duplicate observations", () => {
+    const loop = {
+      ...site,
+      id: "tests/test_ModelsTest.py:19:8:loop",
+      bodyLine: 20,
+      endLine: 21,
+      targets: ["item"],
+      iterableExpression: "items",
+    };
+    const iteration = {
+      id: "model-test::loop::1",
+      test: "model-test",
+      functionId: site.functionId,
+      invocationOrdinal: 1,
+      loopId: loop.id,
+      ordinal: 1,
+      indexWithinParent: 1,
+      parentIterationIds: [],
+      bindings: { item: "x" },
+    };
+    const observed = { ...fixture, source: { ...fixture.source, loops: [loop] }, iterations: [iteration] };
+    expect(accepts(observed)).toBe(true);
+    expect(accepts({ ...observed, iterations: [iteration, iteration] })).toBe(false);
+  });
+
   it("rejects malformed or unclassified operands and outcomes", () => {
     expect(accepts({ ...fixture, events: [{ ...event, payload: "{" }] })).toBe(false);
     expect(accepts({ ...fixture, events: [{ ...event, assertion: "unknown" }] })).toBe(false);

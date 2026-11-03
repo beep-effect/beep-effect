@@ -178,6 +178,14 @@ focused HTML/regex/resource tests pass. Unsupported profiles remain explicit;
 family execution/scaling review and full public integration remain open. See
 [native regex worker](history/evidence/2026-11-03-native-regex-worker.md).
 
+Latest lifecycle checkpoint (2026-11-03): captured-deadline, parent responsiveness,
+cancellation and late-acknowledgement quarantine controls pass for regex
+supervision using the shared fixed native-busy fixture. Seventeen HTML/regex
+worker tests pass. A focused oracle assertion coverage repair reaches 100% in
+all four metrics. Hosted coverage also reports 88 deliberately retired/replaced
+domain paths and server package drops; those remain open, with no floor or
+scope change. See [lifecycle and coverage](history/evidence/2026-11-03-regex-lifecycle-and-coverage.md).
+
 Latest worker evidence (2026-10-31): private process ownership now covers bounded
 schema frames, captured Clock timers, queue/active limits, forced stop,
 acknowledged cleanup and quarantine without permit reuse. Real-process tests

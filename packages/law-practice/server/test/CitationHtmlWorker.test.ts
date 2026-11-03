@@ -20,7 +20,6 @@ import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
-import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
 import type { CitationHtmlCompletionFailure } from "@beep/law-practice-server/internal/Citation/HtmlCompletion";
@@ -29,63 +28,18 @@ import type { CitationHtmlKernelFailure } from "@beep/law-practice-server/intern
 import type { CitationHtmlWorkerSnapshot } from "@beep/law-practice-server/internal/Citation/HtmlWorker";
 import type { CitationHtmlWorkerFailure } from "@beep/law-practice-server/internal/Citation/HtmlWorkerProtocol";
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
-import type * as PlatformError from "effect/PlatformError";
-
-const StringJson = S.fromJsonString(S.String);
 
 const ready = '{"_tag":"Ready","version":"citation-html-worker/v1"}\\n';
 const started = '{"_tag":"Started","version":"citation-html-worker/v1"}\\n';
 const success = '{"_tag":"Success","version":"citation-html-worker/v1","text":"released"}\\n';
-const quoted = Effect.fn("WorkerTest.quote")((value: string) => S.encodeEffect(StringJson)(value));
-const waitFor = Effect.fn("WorkerTest.waitFor")(function* (
-  predicate: Effect.Effect<boolean, PlatformError.PlatformError>
-) {
-  for (let attempt = 0; attempt < 3000; attempt++) {
-    if (yield* predicate) return;
-    yield* Effect.sleep(Duration.millis(10));
-  }
-  return yield* Effect.die("worker observation did not arrive");
-});
-const manualSleep = Effect.fn("WorkerTest.manualSleep")(function* (duration: Duration.Duration) {
-  const clock = yield* Clock.Clock;
-  const requested = yield* Deferred.make<void>();
-  const wake = yield* Deferred.make<void>();
-  const controlled: Clock.Clock = {
-    currentTimeMillisUnsafe: () => clock.currentTimeMillisUnsafe(),
-    currentTimeNanosUnsafe: () => clock.currentTimeNanosUnsafe(),
-    currentTimeMillis: clock.currentTimeMillis,
-    currentTimeNanos: clock.currentTimeNanos,
-    monotonicTimeNanosUnsafe: () => clock.monotonicTimeNanosUnsafe(),
-    monotonicTimeNanos: clock.monotonicTimeNanos,
-    sleep: (input) =>
-      Duration.equals(input, duration)
-        ? Deferred.succeed(requested, undefined).pipe(Effect.andThen(Deferred.await(wake)))
-        : clock.sleep(input),
-  };
-  return {
-    clock: controlled,
-    trigger: Deferred.await(requested).pipe(Effect.andThen(Deferred.succeed(wake, undefined))),
-  };
-});
-const fixture = Effect.fn("WorkerTest.fixture")(function* (kind: "busy" | "released") {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "citation-html-worker-" });
-  const workerFile = path.join(cwd, "worker.mjs");
-  const marker = path.join(cwd, "started");
-  const release = path.join(cwd, "release");
-  const markerLiteral = yield* quoted(marker);
-  const releaseLiteral = yield* quoted(release);
-  const action =
-    kind === "busy"
-      ? `const module = new WebAssembly.Module(new Uint8Array([0,97,115,109,1,0,0,0,1,4,1,96,0,0,3,2,1,0,7,7,1,3,114,117,110,0,0,10,9,1,7,0,3,64,12,0,11,11])); new WebAssembly.Instance(module).exports.run();`
-      : `const timer=setInterval(()=>{if(existsSync(${releaseLiteral})){clearInterval(timer);process.stdout.write('${success}');}},10);`;
-  yield* fs.writeFileString(
-    workerFile,
-    `import {writeFileSync,existsSync} from 'node:fs';process.stdout.write('${ready}');process.stdin.resume();process.stdin.on('end',()=>process.stdout.write('${started}',()=>{writeFileSync(${markerLiteral},'entered');${action}}));`
-  );
-  return { fs, cwd, workerFile, marker, release, executable: process.execPath };
-});
+
+import {
+  makeCitationNativeWorkerFixture as fixture,
+  makeCitationNativeSleepClock,
+  makeCitationNativeManualClock as manualSleep,
+  waitForCitationNativeTest as waitFor,
+} from "./CitationNativeSpawner.fixtures.ts";
+
 it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes", (it) => {
   it.effect(
     "executes the real bundled kernel and acknowledges cleanup before returning",
@@ -143,16 +97,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
         const worker = yield* makeCitationHtmlWorker({ ...limits, cleanDeadline: Duration.millis(800) }, f).pipe(
           Effect.provideService(Clock.Clock, timer.clock)
         );
-        const clock = yield* Clock.Clock;
-        const callerClock: Clock.Clock = {
-          currentTimeMillisUnsafe: () => clock.currentTimeMillisUnsafe(),
-          currentTimeNanosUnsafe: () => clock.currentTimeNanosUnsafe(),
-          currentTimeMillis: clock.currentTimeMillis,
-          currentTimeNanos: clock.currentTimeNanos,
-          monotonicTimeNanosUnsafe: () => clock.monotonicTimeNanosUnsafe(),
-          monotonicTimeNanos: clock.monotonicTimeNanos,
-          sleep: () => Effect.never,
-        };
+        const callerClock = yield* makeCitationNativeSleepClock(() => Effect.never);
         const fiber = yield* worker
           .clean("private input")
           .pipe(Effect.provideService(Clock.Clock, callerClock), Effect.forkChild);
