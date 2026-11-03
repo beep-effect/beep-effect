@@ -9,13 +9,13 @@
  * @since 0.0.0
  */
 
+import { isRequiredSeverity } from "@beep/qa-capture/QaInventory.schemas";
 import { A, O, Str, thunkEmptyReadonlyArray, thunkEmptyStr } from "@beep/utils";
 import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as N from "effect/Number";
-import { isRequiredSeverity } from "./Inventory.schemas.ts";
 import type { ActionEvent, CaptureArtifact, ExtractionPlan, SessionManifest } from "@beep/qa-capture";
-import type { QaFinding, QaInventory } from "./Inventory.schemas.ts";
+import type { QaFinding, QaInventory } from "@beep/qa-capture/QaInventory.schemas";
 import type { QaEventLog } from "./Qa.session.ts";
 
 const BYTES_PER_MIB = 1024 * 1024;
@@ -302,7 +302,7 @@ const findingSection = (finding: QaFinding): ReadonlyArray<string> => [
  * **Example** (Inventory ending in verdict)
  *
  * ```ts
- * import { QaInventory, QaJudgeRef } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
+ * import { QaInventory, QaJudgeRef } from "@beep/qa-capture/QaInventory.schemas"
  * import { renderInventoryMarkdown } from "@beep/repo-cli/commands/Qa/Qa.render"
  *
  * const inventory = QaInventory.make({

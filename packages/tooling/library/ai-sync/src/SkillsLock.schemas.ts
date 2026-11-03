@@ -25,7 +25,7 @@
  * @since 0.0.0
  */
 
-import { $RepoCliId } from "@beep/identity/packages";
+import { $AiSyncId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -42,7 +42,7 @@ import {
 import type * as Effect from "effect/Effect";
 import type * as AST from "effect/SchemaAST";
 
-const $I = $RepoCliId.create("commands/Skills/SkillsLock.schemas");
+const $I = $AiSyncId.create("SkillsLock.schemas");
 
 /**
  * A skill with a ratified upstream: the full warehouse record.
@@ -50,7 +50,7 @@ const $I = $RepoCliId.create("commands/Skills/SkillsLock.schemas");
  * **Example** (Inspect the tag)
  *
  * ```ts
- * import { VendoredSkillLockEntry } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { VendoredSkillLockEntry } from "@beep/ai-sync/SkillsLock.schemas"
  *
  * console.log(typeof VendoredSkillLockEntry.make) // "function"
  * ```
@@ -80,8 +80,8 @@ export class VendoredSkillLockEntry extends S.Opaque<VendoredSkillLockEntry, { r
  * **Example** (Record a local skill)
  *
  * ```ts
- * import { LocalSkillLockEntry } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
- * import { Sha256Hex } from "@beep/schema"
+ * import { LocalSkillLockEntry } from "@beep/ai-sync/SkillsLock.schemas"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const entry = LocalSkillLockEntry.make({
  *   installedTargets: [".claude/skills/yeet", ".agents/skills/yeet"],
@@ -110,7 +110,7 @@ export class LocalSkillLockEntry extends S.Opaque<LocalSkillLockEntry, { readonl
  * **Example** (Narrow an entry)
  *
  * ```ts
- * import { SkillsLockEntry } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { SkillsLockEntry } from "@beep/ai-sync/SkillsLock.schemas"
  * import * as S from "effect/Schema"
  *
  * console.log(S.isSchema(SkillsLockEntry)) // true
@@ -131,7 +131,7 @@ export const SkillsLockEntry = S.Union([VendoredSkillLockEntry, LocalSkillLockEn
  * **Example** (Annotate an entry)
  *
  * ```ts
- * import type { SkillsLockEntry } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import type { SkillsLockEntry } from "@beep/ai-sync/SkillsLock.schemas"
  *
  * const describe = (entry: SkillsLockEntry): string => entry._tag
  * console.log(typeof describe) // "function"
@@ -148,7 +148,7 @@ export type SkillsLockEntry = typeof SkillsLockEntry.Type;
  * **Example** (Construct an empty document)
  *
  * ```ts
- * import { SkillsLockDocument } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { SkillsLockDocument } from "@beep/ai-sync/SkillsLock.schemas"
  *
  * const lock = SkillsLockDocument.make({ version: 2, skills: {} })
  * console.log(lock.version) // 2
@@ -182,7 +182,7 @@ export class SkillsLockDocument extends S.Opaque<SkillsLockDocument, { readonly 
  * **Example** (Check a disposition)
  *
  * ```ts
- * import { SkillMigrationDisposition } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { SkillMigrationDisposition } from "@beep/ai-sync/SkillsLock.schemas"
  *
  * console.log(SkillMigrationDisposition.is.unresolved("unresolved")) // true
  * ```
@@ -202,7 +202,7 @@ export const SkillMigrationDisposition = LiteralKit(["vendored", "local", "unres
  * **Example** (Annotate a disposition)
  *
  * ```ts
- * import type { SkillMigrationDisposition } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import type { SkillMigrationDisposition } from "@beep/ai-sync/SkillsLock.schemas"
  *
  * const disposition: SkillMigrationDisposition = "vendored"
  * console.log(disposition)
@@ -228,7 +228,7 @@ export type SkillMigrationDisposition = typeof SkillMigrationDisposition.Type;
  * **Example** (Check a drift class)
  *
  * ```ts
- * import { SkillDriftClass } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { SkillDriftClass } from "@beep/ai-sync/SkillsLock.schemas"
  *
  * console.log(SkillDriftClass.is["matches-upstream-revision"]("matches-upstream-revision")) // true
  * ```
@@ -248,7 +248,7 @@ export const SkillDriftClass = LiteralKit(["matches-upstream-revision", "matches
  * **Example** (Annotate a drift class)
  *
  * ```ts
- * import type { SkillDriftClass } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import type { SkillDriftClass } from "@beep/ai-sync/SkillsLock.schemas"
  *
  * const drift: SkillDriftClass = "matches-no-examined-revision"
  * console.log(drift)
@@ -265,7 +265,7 @@ export type SkillDriftClass = typeof SkillDriftClass.Type;
  * **Example** (Record a file pulled from an older upstream revision)
  *
  * ```ts
- * import { MatchesUpstreamRevisionDrift } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { MatchesUpstreamRevisionDrift } from "@beep/ai-sync/SkillsLock.schemas"
  * import * as S from "effect/Schema"
  *
  * const row = S.decodeUnknownSync(MatchesUpstreamRevisionDrift)({
@@ -300,7 +300,7 @@ export class MatchesUpstreamRevisionDrift extends S.Opaque<
  * **Example** (Record a repo-local file)
  *
  * ```ts
- * import { MatchesNoExaminedRevisionDrift } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { MatchesNoExaminedRevisionDrift } from "@beep/ai-sync/SkillsLock.schemas"
  *
  * const row = MatchesNoExaminedRevisionDrift.make({ path: "SKILL.md" })
  * console.log(row.driftClass) // "matches-no-examined-revision"
@@ -329,7 +329,7 @@ export class MatchesNoExaminedRevisionDrift extends S.Opaque<
  * **Example** (Narrow a drift row)
  *
  * ```ts
- * import { SkillDriftRow } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { SkillDriftRow } from "@beep/ai-sync/SkillsLock.schemas"
  * import * as S from "effect/Schema"
  *
  * console.log(S.isSchema(SkillDriftRow)) // true
@@ -350,7 +350,7 @@ export const SkillDriftRow = S.Union([MatchesUpstreamRevisionDrift, MatchesNoExa
  * **Example** (Annotate a drift row)
  *
  * ```ts
- * import type { SkillDriftRow } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import type { SkillDriftRow } from "@beep/ai-sync/SkillsLock.schemas"
  *
  * const pathOf = (row: SkillDriftRow): string => row.path
  * console.log(typeof pathOf) // "function"
@@ -374,7 +374,7 @@ export type SkillDriftRow = typeof SkillDriftRow.Type;
  * **Example** (Record a complete history window)
  *
  * ```ts
- * import { SkillPathHistoryWindow } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { SkillPathHistoryWindow } from "@beep/ai-sync/SkillsLock.schemas"
  * import * as S from "effect/Schema"
  *
  * const window = S.decodeUnknownSync(SkillPathHistoryWindow)({
@@ -416,7 +416,7 @@ export class SkillPathHistoryWindow extends S.Opaque<SkillPathHistoryWindow, { r
  * **Example** (Propose a pristine pin)
  *
  * ```ts
- * import { PristineAtRevisionPin } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { PristineAtRevisionPin } from "@beep/ai-sync/SkillsLock.schemas"
  * import * as S from "effect/Schema"
  *
  * const pin = S.decodeUnknownSync(PristineAtRevisionPin)({
@@ -454,7 +454,7 @@ export class PristineAtRevisionPin extends S.Opaque<PristineAtRevisionPin, { rea
  * **Example** (Keep the baseline pin)
  *
  * ```ts
- * import { KeepSeedPin } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { KeepSeedPin } from "@beep/ai-sync/SkillsLock.schemas"
  * import * as S from "effect/Schema"
  *
  * const pin = S.decodeUnknownSync(KeepSeedPin)({
@@ -485,7 +485,7 @@ export class KeepSeedPin extends S.Opaque<KeepSeedPin, { readonly brand: unique 
  * **Example** (Narrow a pin proposal)
  *
  * ```ts
- * import { SkillPinProposal } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { SkillPinProposal } from "@beep/ai-sync/SkillsLock.schemas"
  * import * as S from "effect/Schema"
  *
  * console.log(S.isSchema(SkillPinProposal)) // true
@@ -506,7 +506,7 @@ export const SkillPinProposal = S.Union([PristineAtRevisionPin, KeepSeedPin]).pi
  * **Example** (Annotate a pin proposal)
  *
  * ```ts
- * import type { SkillPinProposal } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import type { SkillPinProposal } from "@beep/ai-sync/SkillsLock.schemas"
  *
  * const revisionOf = (pin: SkillPinProposal): string => pin.revision
  * console.log(typeof revisionOf) // "function"
@@ -533,7 +533,7 @@ export type SkillPinProposal = typeof SkillPinProposal.Type;
  * **Example** (Inspect the disposition tag)
  *
  * ```ts
- * import { VendoredMigrationRow } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { VendoredMigrationRow } from "@beep/ai-sync/SkillsLock.schemas"
  *
  * console.log(typeof VendoredMigrationRow.make) // "function"
  * ```
@@ -563,8 +563,8 @@ export class VendoredMigrationRow extends S.Opaque<VendoredMigrationRow, { reado
  * **Example** (Record a local skill row)
  *
  * ```ts
- * import { LocalMigrationRow, LocalSkillLockEntry } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
- * import { Sha256Hex } from "@beep/schema"
+ * import { LocalMigrationRow, LocalSkillLockEntry } from "@beep/ai-sync/SkillsLock.schemas"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const row = LocalMigrationRow.make({
  *   skill: "yeet",
@@ -603,7 +603,7 @@ export class LocalMigrationRow extends S.Opaque<LocalMigrationRow, { readonly br
  * **Example** (Check a cause)
  *
  * ```ts
- * import { SkillUnresolvedCause } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { SkillUnresolvedCause } from "@beep/ai-sync/SkillsLock.schemas"
  *
  * console.log(SkillUnresolvedCause.is["no-ratified-seed"]("no-ratified-seed")) // true
  * ```
@@ -629,7 +629,7 @@ export const SkillUnresolvedCause = LiteralKit([
  * **Example** (Annotate a cause)
  *
  * ```ts
- * import type { SkillUnresolvedCause } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import type { SkillUnresolvedCause } from "@beep/ai-sync/SkillsLock.schemas"
  *
  * const cause: SkillUnresolvedCause = "upstream-unavailable"
  * console.log(cause)
@@ -654,7 +654,7 @@ export type SkillUnresolvedCause = typeof SkillUnresolvedCause.Type;
  * **Example** (Record an unresolved row)
  *
  * ```ts
- * import { UnresolvedMigrationRow } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { UnresolvedMigrationRow } from "@beep/ai-sync/SkillsLock.schemas"
  *
  * const row = UnresolvedMigrationRow.make({ skill: "adhd", cause: "no-ratified-seed", note: "no ratified resolution seed" })
  * console.log(row.disposition) // "unresolved"
@@ -683,7 +683,7 @@ export class UnresolvedMigrationRow extends S.Opaque<UnresolvedMigrationRow, { r
  * **Example** (Narrow a row)
  *
  * ```ts
- * import { SkillMigrationRow } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { SkillMigrationRow } from "@beep/ai-sync/SkillsLock.schemas"
  * import * as S from "effect/Schema"
  *
  * console.log(S.isSchema(SkillMigrationRow)) // true
@@ -704,7 +704,7 @@ export const SkillMigrationRow = S.Union([VendoredMigrationRow, LocalMigrationRo
  * **Example** (Annotate a row)
  *
  * ```ts
- * import type { SkillMigrationRow } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import type { SkillMigrationRow } from "@beep/ai-sync/SkillsLock.schemas"
  *
  * const skillOf = (row: SkillMigrationRow): string => row.skill
  * console.log(typeof skillOf) // "function"
@@ -731,8 +731,8 @@ export type SkillMigrationRow = typeof SkillMigrationRow.Type;
  * **Example** (Construct an empty plan)
  *
  * ```ts
- * import { SkillsLockMigrationPlan } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
- * import { Sha256Hex } from "@beep/schema"
+ * import { SkillsLockMigrationPlan } from "@beep/ai-sync/SkillsLock.schemas"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const digest = Sha256Hex.make("0".repeat(64))
  * const plan = SkillsLockMigrationPlan.make({ planDigest: digest, lockSha256: digest, rows: [] })
@@ -762,7 +762,7 @@ export class SkillsLockMigrationPlan extends S.Opaque<SkillsLockMigrationPlan, {
  * **Example** (Hold a generated patch)
  *
  * ```ts
- * import { SkillPatchFile } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { SkillPatchFile } from "@beep/ai-sync/SkillsLock.schemas"
  *
  * const file = SkillPatchFile.make({
  *   path: ".agents/skill-patches/oracle/0001-skill-md.patch",
@@ -796,8 +796,8 @@ export class SkillPatchFile extends S.Opaque<SkillPatchFile, { readonly brand: u
  * **Example** (Construct empty artifacts)
  *
  * ```ts
- * import { SkillsLockMigrationArtifacts, SkillsLockMigrationPlan } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
- * import { Sha256Hex } from "@beep/schema"
+ * import { SkillsLockMigrationArtifacts, SkillsLockMigrationPlan } from "@beep/ai-sync/SkillsLock.schemas"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const digest = Sha256Hex.make("0".repeat(64))
  * const artifacts = SkillsLockMigrationArtifacts.make({
@@ -836,7 +836,7 @@ export class SkillsLockMigrationArtifacts extends S.Opaque<
  * **Example** (Check an outcome)
  *
  * ```ts
- * import { SkillsLockWriteOutcome } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { SkillsLockWriteOutcome } from "@beep/ai-sync/SkillsLock.schemas"
  *
  * console.log(SkillsLockWriteOutcome.is["already-applied"]("already-applied")) // true
  * ```
@@ -856,7 +856,7 @@ export const SkillsLockWriteOutcome = LiteralKit(["written", "already-applied"])
  * **Example** (Annotate an outcome)
  *
  * ```ts
- * import type { SkillsLockWriteOutcome } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import type { SkillsLockWriteOutcome } from "@beep/ai-sync/SkillsLock.schemas"
  *
  * const outcome: SkillsLockWriteOutcome = "written"
  * console.log(outcome)
@@ -873,8 +873,8 @@ export type SkillsLockWriteOutcome = typeof SkillsLockWriteOutcome.Type;
  * **Example** (Record the lock file)
  *
  * ```ts
- * import { SkillsLockWrittenFile } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
- * import { Sha256Hex } from "@beep/schema"
+ * import { SkillsLockWrittenFile } from "@beep/ai-sync/SkillsLock.schemas"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const file = SkillsLockWrittenFile.make({ path: "skills-lock.json", sha256: Sha256Hex.make("0".repeat(64)) })
  * console.log(file.path) // "skills-lock.json"
@@ -900,8 +900,8 @@ export class SkillsLockWrittenFile extends S.Opaque<SkillsLockWrittenFile, { rea
  * **Example** (Construct a receipt)
  *
  * ```ts
- * import { SkillsLockWriteReceipt, SkillsLockWrittenFile } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
- * import { Sha256Hex } from "@beep/schema"
+ * import { SkillsLockWriteReceipt, SkillsLockWrittenFile } from "@beep/ai-sync/SkillsLock.schemas"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const digest = Sha256Hex.make("0".repeat(64))
  * const receipt = SkillsLockWriteReceipt.make({
@@ -942,7 +942,7 @@ const SkillsLockDocumentJson = S.fromJsonString(SkillsLockDocument);
  * **Example** (Build the decode effect)
  *
  * ```ts
- * import { decodeSkillsLockDocumentJson } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { decodeSkillsLockDocumentJson } from "@beep/ai-sync/SkillsLock.schemas"
  * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(decodeSkillsLockDocumentJson('{"version": 2, "skills": {}}'))) // true
@@ -962,7 +962,7 @@ export const decodeSkillsLockDocumentJson: {
  * **Example** (Build the encode effect)
  *
  * ```ts
- * import { encodeSkillsLockDocumentJson, SkillsLockDocument } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { encodeSkillsLockDocumentJson, SkillsLockDocument } from "@beep/ai-sync/SkillsLock.schemas"
  * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(encodeSkillsLockDocumentJson(SkillsLockDocument.make({ version: 2, skills: {} })))) // true

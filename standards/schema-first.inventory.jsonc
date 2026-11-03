@@ -548,6 +548,14 @@
       "reason": "Mixed service contract: FileProcessingEngineDescriptor is already schema-backed, while the remaining members are Effectful driver operations."
     },
     {
+      "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
+      "symbol": "ToolCallRequest",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/mcp-kit",
+      "reason": "Mixed dispatch request: tool is a live Effect AI Tool handle, while toolCallId is already modeled by TierGateAuditRecord."
+    },
+    {
       "file": "packages/foundation/capability/mcp-kit/src/client.ts",
       "symbol": "McpClientConnection",
       "kind": "exported-interface",
@@ -562,14 +570,6 @@
       "status": "exception",
       "owner": "@beep/mcp-kit",
       "reason": "Transport port carrying an Effect writer and a Stream of lines (runtime-bound), not data; the identity half (McpClientOptions) is an annotated S.Class."
-    },
-    {
-      "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
-      "symbol": "ToolCallRequest",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/mcp-kit",
-      "reason": "Mixed dispatch request: tool is a live Effect AI Tool handle, while toolCallId is already modeled by TierGateAuditRecord."
     },
     {
       "file": "packages/foundation/capability/mcp-kit/test/SanitizedToolkit.test.ts",
@@ -2160,14 +2160,6 @@
       "reason": "Row of the ordered classification rule table: applies is a predicate function, and the row's class is the LiteralKit-backed KnowledgeSpanClass. The table is a module constant evaluated in-process and never decoded or persisted."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestSyntax.ts",
-      "symbol": "EffectVitestImports",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "Per-source compiler operation context: ts-morph node identities, WeakMap and MutableHashMap caches, and a lexical binding resolver closure are live handles created by collectEffectVitestImports. They are neither decoded nor persisted and must retain identity for one immutable parse-tree pass; the emitted finding, census and graph data have annotated schemas."
-    },
-    {
       "file": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.render.ts",
       "symbol": "SchemaFirstLintFindings",
       "kind": "exported-type-literal",
@@ -2176,52 +2168,12 @@
       "reason": "In-process classification bag the schema-first scan stage hands to the render stage; single definition exported to kill a fallow clone between the two lint modules. Never decoded, persisted, or sent across a process boundary, and every element is already the schema-backed SchemaFirstInventoryEntry."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
-      "symbol": "CodexCacheEntry",
-      "kind": "object-struct-schema",
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestSyntax.ts",
+      "symbol": "EffectVitestImports",
+      "kind": "exported-type-literal",
       "status": "exception",
       "owner": "@beep/repo-cli",
-      "reason": "Lossless Codex model cache boundary (R1). Future model fields survive exact decode/encode round trips; known routing fields remain validated."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
-      "symbol": "CodexModelsCache",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "Lossless Codex cache envelope (R1). Unknown envelope metadata survives round trips; account-scoped metadata is never projected into persisted catalog snapshots or reports."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
-      "symbol": "CodexReasoningLevel",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "Lossless Codex effort metadata boundary (R10). Unknown ladder metadata survives exact decode/encode round trips; known effort and description fields remain validated."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
-      "symbol": "UpstreamModelEntry",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "Lossless upstream model boundary (R1). Unknown provider capabilities and future metadata must survive exact decode/encode round trips; snapshots persist only the separate normalized CatalogModel."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
-      "symbol": "UpstreamThinkingSupport",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "Lossless external thinking metadata boundary (R1). Open records preserve future reasoning fields and unknown levels through exact decode/encode round trips; a closed class would discard them."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
-      "symbol": "DocumentationIssue",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "Hot-path finding record constructed as plain literals by every inventory rule; S.Struct keeps that construction allocation-light while the annotated schema still owns the shape. Values are aggregated in-process and never decoded from IO."
+      "reason": "Per-source compiler operation context: ts-morph node identities, WeakMap and MutableHashMap caches, and a lexical binding resolver closure are live handles created by collectEffectVitestImports. They are neither decoded nor persisted and must retain identity for one immutable parse-tree pass; the emitted finding, census and graph data have annotated schemas."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
@@ -2230,6 +2182,14 @@
       "status": "exception",
       "owner": "@beep/repo-cli",
       "reason": "Plain data whose fields come from a checked inline struct (S.Struct({...}).pipe(S.check(...))), which the schema-opaque-default codemod could not classify (keep reason fields-expression-unknown), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over that struct."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
+      "symbol": "DocumentationIssue",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Hot-path finding record constructed as plain literals by every inventory rule; S.Struct keeps that construction allocation-light while the annotated schema still owns the shape. Values are aggregated in-process and never decoded from IO."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerModels.ts",
@@ -2392,20 +2352,20 @@
       "reason": "CLI boundary input assembled as a plain object by command callers, with an optional runtime Option override. S.Struct preserves the existing call shape without forcing class construction across the command boundary."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Source.ts",
-      "symbol": "ParsedCsvRow",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "Plain data whose fields come from runtime CSV header columns inside a function (rowFields), which the schema-opaque-default codemod could not classify (keep reason fields-expression-unknown), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over that struct."
-    },
-    {
       "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.schemas.ts",
       "symbol": "SyncDataTarget",
       "kind": "exported-interface",
       "status": "exception",
       "owner": "@beep/repo-cli",
       "reason": "Mixed strategy contract: access, description, id, and sourceUrls are modeled by SyncDataTargetMetadata, while acquire remains an Effect."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Source.ts",
+      "symbol": "ParsedCsvRow",
+      "kind": "plain-data-schema-class",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Plain data whose fields come from runtime CSV header columns inside a function (rowFields), which the schema-opaque-default codemod could not classify (keep reason fields-expression-unknown), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over that struct."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.schemas.ts",
@@ -2441,6 +2401,14 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/internal/repo-run/ProcessTable.ts",
+      "symbol": "ProcessTableShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Effect service contract with filesystem-dependent operations and live Effect values; process data is modeled separately by ProcessStatus and ProcessTableEntry schemas."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/ProcessTable.ts",
       "symbol": "processTableFromEntries",
       "kind": "schema-policy-advisory",
       "status": "exception",
@@ -2448,14 +2416,6 @@
       "line": 606,
       "owner": "@beep/repo-cli",
       "reason": "Test service factory consumes already modeled ProcessTableEntry rows and returns filesystem-compatible Effect operations; its output is a live service implementation, not a serialized data boundary."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/ProcessTable.ts",
-      "symbol": "ProcessTableShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "Effect service contract with filesystem-dependent operations and live Effect values; process data is modeled separately by ProcessStatus and ProcessTableEntry schemas."
     },
     {
       "file": "packages/tooling/tool/cli/src/internal/repo-run/ProcessTable.ts",
@@ -2474,16 +2434,6 @@
       "status": "exception",
       "owner": "@beep/repo-cli",
       "reason": "Generic workstation state partition key shared by PR-session and session-ledger helpers. It accepts existing plain repository objects and PrRepository instances; S.Struct preserves that structural contract without a redundant class constructor."
-    },
-    {
-      "file": "packages/tooling/tool/cli/test/agent-message-store.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 55,
-      "owner": "@beep/repo-cli",
-      "reason": "Store regression scenarios use exact SQLite rows, staged process termination and injected audit-write failure to prove transaction, lease and resolution recovery contracts. Arbitrary operator-evidence transport properties live in agent-message-models.test.ts; random codec round-trips cannot replace these deterministic failure points."
     },
     {
       "file": "packages/tooling/tool/cli/test/AgentMessage.command.test.ts",
@@ -2514,6 +2464,16 @@
       "line": 86,
       "owner": "@beep/repo-cli",
       "reason": "Native runtime regressions decode real synthetic-child and SQLite receipts to verify enrollment, policy rejection, delivery, cancellation cleanup and writer-lock behavior. Generated envelope/reference properties live in agent-message-models.test.ts; arbitrary codec round-trips do not exercise these fixed subprocess lifecycle scenarios. Reconsider if reusable schemas or schema-law assertions move into this file."
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/agent-message-store.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 55,
+      "owner": "@beep/repo-cli",
+      "reason": "Store regression scenarios use exact SQLite rows, staged process termination and injected audit-write failure to prove transaction, lease and resolution recovery contracts. Arbitrary operator-evidence transport properties live in agent-message-models.test.ts; random codec round-trips cannot replace these deterministic failure points."
     },
     {
       "file": "packages/tooling/tool/cli/test/explore-graduate-write.test.ts",

@@ -5,14 +5,14 @@
  * @since 0.0.0
  */
 
-import { $RepoCliId } from "@beep/identity/packages";
+import { $AiSyncId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type * as Effect from "effect/Effect";
 import type * as AST from "effect/SchemaAST";
 
-const $I = $RepoCliId.create("commands/Skills/Skills.schemas");
+const $I = $AiSyncId.create("Skills.schemas");
 
 const gitRevisionPattern = /^[0-9a-f]{40}$/u;
 
@@ -28,7 +28,7 @@ const gitRevisionPattern = /^[0-9a-f]{40}$/u;
  * **Example** (Recognize the pilot source kind)
  *
  * ```ts
- * import { SkillSourceType } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillSourceType } from "@beep/ai-sync/Skills.schemas"
  *
  * console.log(SkillSourceType.is.github("github")) // true
  * console.log(SkillSourceType.is.github("gitlab")) // false
@@ -63,7 +63,7 @@ export type SkillSourceType = typeof SkillSourceType.Type;
  * **Example** (Check the recorded digest algorithm)
  *
  * ```ts
- * import { SkillSnapshotAlgorithm } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillSnapshotAlgorithm } from "@beep/ai-sync/Skills.schemas"
  *
  * console.log(SkillSnapshotAlgorithm.is.sha256("sha256")) // true
  * console.log(SkillSnapshotAlgorithm.is.sha256("sha512")) // false
@@ -99,7 +99,7 @@ export type SkillSnapshotAlgorithm = typeof SkillSnapshotAlgorithm.Type;
  * **Example** (Separate blob modes from directory modes)
  *
  * ```ts
- * import { SkillTreeMode } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillTreeMode } from "@beep/ai-sync/Skills.schemas"
  *
  * console.log(SkillTreeMode.is["100755"]("100755")) // true
  * console.log(SkillTreeMode.is["120000"]("040000")) // false
@@ -136,7 +136,7 @@ export type SkillTreeMode = typeof SkillTreeMode.Type;
  * **Example** (Distinguish a proven origin from a reconstructed one)
  *
  * ```ts
- * import { SkillProvenanceStatus } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillProvenanceStatus } from "@beep/ai-sync/Skills.schemas"
  *
  * console.log(SkillProvenanceStatus.is.exact("exact")) // true
  * console.log(SkillProvenanceStatus.is.inferred("exact")) // false
@@ -172,7 +172,7 @@ export type SkillProvenanceStatus = typeof SkillProvenanceStatus.Type;
  * **Example** (Read the graded confidence domain)
  *
  * ```ts
- * import { SkillProvenanceConfidence } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillProvenanceConfidence } from "@beep/ai-sync/Skills.schemas"
  *
  * console.log(SkillProvenanceConfidence.is.high("high")) // true
  * console.log(SkillProvenanceConfidence.is.unresolved("unresolved")) // true
@@ -208,7 +208,7 @@ export type SkillProvenanceConfidence = typeof SkillProvenanceConfidence.Type;
  * **Example** (Admit content proof and reject an unlisted class)
  *
  * ```ts
- * import { SkillProvenanceEvidence } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillProvenanceEvidence } from "@beep/ai-sync/Skills.schemas"
  *
  * console.log(SkillProvenanceEvidence.is["exact-tree"]("exact-tree")) // true
  * console.log(SkillProvenanceEvidence.is["path-history"]("vibes")) // false
@@ -249,7 +249,7 @@ export type SkillProvenanceEvidence = typeof SkillProvenanceEvidence.Type;
  * **Example** (Label a patch that is meant to be dropped)
  *
  * ```ts
- * import { SkillPatchLabel } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillPatchLabel } from "@beep/ai-sync/Skills.schemas"
  *
  * console.log(SkillPatchLabel.is["temporary-drift"]("temporary-drift")) // true
  * console.log(SkillPatchLabel.is.policy("temporary-drift")) // false
@@ -285,7 +285,7 @@ export type SkillPatchLabel = typeof SkillPatchLabel.Type;
  * **Example** (Reject an abbreviated revision)
  *
  * ```ts
- * import { SkillGitRevision } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillGitRevision } from "@beep/ai-sync/Skills.schemas"
  * import * as S from "effect/Schema"
  *
  * const isRevision = S.is(SkillGitRevision)
@@ -334,7 +334,7 @@ export type SkillGitRevision = typeof SkillGitRevision.Type;
  * **Example** (Supply one pinned upstream file)
  *
  * ```ts
- * import { SkillUpstreamContentFile } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillUpstreamContentFile } from "@beep/ai-sync/Skills.schemas"
  *
  * const file = SkillUpstreamContentFile.make({
  *   path: "SKILL.md",
@@ -373,7 +373,7 @@ export class SkillUpstreamContentFile extends S.Opaque<SkillUpstreamContentFile,
  * **Example** (Assemble the payload a content source returns)
  *
  * ```ts
- * import { SkillUpstreamContent, SkillUpstreamContentFile } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillUpstreamContent, SkillUpstreamContentFile } from "@beep/ai-sync/Skills.schemas"
  *
  * const encoder = new TextEncoder()
  * const content = SkillUpstreamContent.make({
@@ -416,7 +416,7 @@ export class SkillUpstreamContent extends S.Opaque<SkillUpstreamContent, { reado
  * **Example** (Record a one-commit history)
  *
  * ```ts
- * import { SkillPathHistory } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillPathHistory } from "@beep/ai-sync/Skills.schemas"
  * import * as S from "effect/Schema"
  *
  * const history = S.decodeUnknownSync(SkillPathHistory)({
@@ -454,7 +454,7 @@ export class SkillPathHistory extends S.Opaque<SkillPathHistory, { readonly bran
  * **Example** (Decode the ratified upstream identity of the pilot skill)
  *
  * ```ts
- * import { SkillUpstream } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillUpstream } from "@beep/ai-sync/Skills.schemas"
  * import * as S from "effect/Schema"
  *
  * const upstream = S.decodeUnknownSync(SkillUpstream)({
@@ -503,7 +503,7 @@ export class SkillUpstream extends S.Opaque<SkillUpstream, { readonly brand: uni
  * **Example** (Decode one manifest entry)
  *
  * ```ts
- * import { SkillSnapshotFile } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillSnapshotFile } from "@beep/ai-sync/Skills.schemas"
  * import * as S from "effect/Schema"
  *
  * const file = S.decodeUnknownSync(SkillSnapshotFile)({
@@ -558,7 +558,7 @@ const SkillSnapshotFileCountCheck = S.makeFilter(
  * **Example** (Decode a single-file snapshot)
  *
  * ```ts
- * import { SkillSnapshot } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillSnapshot } from "@beep/ai-sync/Skills.schemas"
  * import * as S from "effect/Schema"
  *
  * const digest = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -576,7 +576,7 @@ const SkillSnapshotFileCountCheck = S.makeFilter(
  * **Example** (Reject a manifest that disagrees with its count)
  *
  * ```ts
- * import { SkillSnapshot } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillSnapshot } from "@beep/ai-sync/Skills.schemas"
  * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
@@ -623,7 +623,7 @@ export class SkillSnapshot extends S.Opaque<SkillSnapshot, { readonly brand: uni
  * **Example** (Decode the pinned pilot license)
  *
  * ```ts
- * import { SkillLicense } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillLicense } from "@beep/ai-sync/Skills.schemas"
  * import * as S from "effect/Schema"
  *
  * const license = S.decodeUnknownSync(SkillLicense)({
@@ -662,7 +662,7 @@ export class SkillLicense extends S.Opaque<SkillLicense, { readonly brand: uniqu
  * **Example** (Decode a fully reproduced provenance claim)
  *
  * ```ts
- * import { SkillProvenance } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillProvenance } from "@beep/ai-sync/Skills.schemas"
  * import * as S from "effect/Schema"
  *
  * const provenance = S.decodeUnknownSync(SkillProvenance)({
@@ -705,7 +705,7 @@ export class SkillProvenance extends S.Opaque<SkillProvenance, { readonly brand:
  * **Example** (Decode a patch that names its own retirement condition)
  *
  * ```ts
- * import { SkillPatch } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillPatch } from "@beep/ai-sync/Skills.schemas"
  * import * as S from "effect/Schema"
  *
  * const patch = S.decodeUnknownSync(SkillPatch)({
@@ -748,7 +748,7 @@ export class SkillPatch extends S.Opaque<SkillPatch, { readonly brand: unique sy
  * **Example** (Decode a skill that carries no local drift)
  *
  * ```ts
- * import { SkillPatches } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillPatches } from "@beep/ai-sync/Skills.schemas"
  * import * as S from "effect/Schema"
  *
  * const patches = S.decodeUnknownSync(SkillPatches)({
@@ -788,7 +788,7 @@ export class SkillPatches extends S.Opaque<SkillPatches, { readonly brand: uniqu
  * **Example** (Decode the cross-target effective identity)
  *
  * ```ts
- * import { SkillEffective } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillEffective } from "@beep/ai-sync/Skills.schemas"
  * import * as S from "effect/Schema"
  *
  * const digest = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -829,7 +829,7 @@ export class SkillEffective extends S.Opaque<SkillEffective, { readonly brand: u
  * **Example** (Decode a complete lock entry with no local drift)
  *
  * ```ts
- * import { SkillLockV2Entry } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillLockV2Entry } from "@beep/ai-sync/Skills.schemas"
  * import * as S from "effect/Schema"
  *
  * const digest = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -906,7 +906,7 @@ export class SkillLockV2Entry extends S.Opaque<SkillLockV2Entry, { readonly bran
  * **Example** (Decode the ratified pilot resolution)
  *
  * ```ts
- * import { SkillProvenanceResolution } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillProvenanceResolution } from "@beep/ai-sync/Skills.schemas"
  * import * as S from "effect/Schema"
  *
  * const resolution = S.decodeUnknownSync(SkillProvenanceResolution)({
@@ -968,7 +968,7 @@ export class SkillProvenanceResolution extends S.Opaque<SkillProvenanceResolutio
  * **Example** (Reject a report whose computed entry is missing)
  *
  * ```ts
- * import { SkillProvenanceReport } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillProvenanceReport } from "@beep/ai-sync/Skills.schemas"
  * import * as S from "effect/Schema"
  *
  * const isReport = S.is(SkillProvenanceReport)
@@ -997,7 +997,7 @@ export class SkillProvenanceReport extends S.Opaque<SkillProvenanceReport, { rea
  * **Example** (Reject an upstream block missing its observed revisions)
  *
  * ```ts
- * import { isSkillUpstream } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { isSkillUpstream } from "@beep/ai-sync/Skills.schemas"
  *
  * console.log(isSkillUpstream({ repository: "shadcn-ui/ui", treePath: "skills/shadcn" })) // false
  * ```
@@ -1012,7 +1012,7 @@ export const isSkillUpstream = S.is(SkillUpstream);
  * **Example** (Accept a manifest entry and reject a truncated digest)
  *
  * ```ts
- * import { isSkillSnapshotFile } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { isSkillSnapshotFile } from "@beep/ai-sync/Skills.schemas"
  *
  * const digest = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  *
@@ -1030,7 +1030,7 @@ export const isSkillSnapshotFile = S.is(SkillSnapshotFile);
  * **Example** (Reject a snapshot without its manifest)
  *
  * ```ts
- * import { isSkillSnapshot } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { isSkillSnapshot } from "@beep/ai-sync/Skills.schemas"
  *
  * console.log(isSkillSnapshot({ algorithm: "sha256", fileCount: 0 })) // false
  * ```
@@ -1045,7 +1045,7 @@ export const isSkillSnapshot = S.is(SkillSnapshot);
  * **Example** (Accept the pinned pilot license)
  *
  * ```ts
- * import { isSkillLicense } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { isSkillLicense } from "@beep/ai-sync/Skills.schemas"
  *
  * const sha256 = "1564074e13439397221ffd522e2e504d56561994a23d371aa5e3ad43e4f5423f"
  *
@@ -1063,7 +1063,7 @@ export const isSkillLicense = S.is(SkillLicense);
  * **Example** (Accept a fully evidenced claim)
  *
  * ```ts
- * import { isSkillProvenance } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { isSkillProvenance } from "@beep/ai-sync/Skills.schemas"
  *
  * console.log(
  *   isSkillProvenance({
@@ -1086,7 +1086,7 @@ export const isSkillProvenance = S.is(SkillProvenance);
  * **Example** (Reject a patch that names no drop condition)
  *
  * ```ts
- * import { isSkillPatch } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { isSkillPatch } from "@beep/ai-sync/Skills.schemas"
  *
  * const sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  *
@@ -1103,7 +1103,7 @@ export const isSkillPatch = S.is(SkillPatch);
  * **Example** (Accept an empty but still hashed patch set)
  *
  * ```ts
- * import { isSkillPatches } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { isSkillPatches } from "@beep/ai-sync/Skills.schemas"
  *
  * const patchSetHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  *
@@ -1120,7 +1120,7 @@ export const isSkillPatches = S.is(SkillPatches);
  * **Example** (Reject an effective block with no installed targets recorded)
  *
  * ```ts
- * import { isSkillEffective } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { isSkillEffective } from "@beep/ai-sync/Skills.schemas"
  *
  * const treeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  *
@@ -1137,7 +1137,7 @@ export const isSkillEffective = S.is(SkillEffective);
  * **Example** (Reject an entry that carries only its source kind)
  *
  * ```ts
- * import { isSkillLockV2Entry } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { isSkillLockV2Entry } from "@beep/ai-sync/Skills.schemas"
  *
  * console.log(isSkillLockV2Entry({ sourceType: "github" })) // false
  * ```
@@ -1153,7 +1153,7 @@ export const isSkillLockV2Entry = S.is(SkillLockV2Entry);
  * **Example** (Decode the pinned upstream identity)
  *
  * ```ts
- * import { decodeSkillUpstream } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { decodeSkillUpstream } from "@beep/ai-sync/Skills.schemas"
  * import * as Effect from "effect/Effect";
  * const upstream = Effect.runSync(
  *   decodeSkillUpstream({
@@ -1184,7 +1184,7 @@ export const decodeSkillUpstream: {
  * **Example** (Round-trip the pinned upstream identity)
  *
  * ```ts
- * import { decodeSkillUpstream, encodeSkillUpstream } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { decodeSkillUpstream, encodeSkillUpstream } from "@beep/ai-sync/Skills.schemas"
  * import * as Effect from "effect/Effect";
  * const revision = "91f21dfe1328585670275781b4525fff2507f917"
  * const upstream = Effect.runSync(
@@ -1216,7 +1216,7 @@ export const encodeSkillUpstream: {
  * **Example** (Decode one manifest entry)
  *
  * ```ts
- * import { decodeSkillSnapshotFile } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { decodeSkillSnapshotFile } from "@beep/ai-sync/Skills.schemas"
  * import * as Effect from "effect/Effect";
  * const file = Effect.runSync(
  *   decodeSkillSnapshotFile({
@@ -1242,7 +1242,7 @@ export const decodeSkillSnapshotFile: {
  * **Example** (Round-trip one manifest entry)
  *
  * ```ts
- * import { decodeSkillSnapshotFile, encodeSkillSnapshotFile } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { decodeSkillSnapshotFile, encodeSkillSnapshotFile } from "@beep/ai-sync/Skills.schemas"
  * import * as Effect from "effect/Effect";
  * const file = Effect.runSync(
  *   decodeSkillSnapshotFile({
@@ -1268,7 +1268,7 @@ export const encodeSkillSnapshotFile: {
  * **Example** (Decode a single-file snapshot)
  *
  * ```ts
- * import { decodeSkillSnapshot } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { decodeSkillSnapshot } from "@beep/ai-sync/Skills.schemas"
  * import * as Effect from "effect/Effect";
  * const digest = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  * const snapshot = Effect.runSync(
@@ -1297,7 +1297,7 @@ export const decodeSkillSnapshot: {
  * **Example** (Round-trip a single-file snapshot)
  *
  * ```ts
- * import { decodeSkillSnapshot, encodeSkillSnapshot } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { decodeSkillSnapshot, encodeSkillSnapshot } from "@beep/ai-sync/Skills.schemas"
  * import * as Effect from "effect/Effect";
  * const digest = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  * const snapshot = Effect.runSync(
@@ -1326,7 +1326,7 @@ export const encodeSkillSnapshot: {
  * **Example** (Decode the pinned pilot license)
  *
  * ```ts
- * import { decodeSkillLicense } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { decodeSkillLicense } from "@beep/ai-sync/Skills.schemas"
  * import * as Effect from "effect/Effect";
  * const license = Effect.runSync(
  *   decodeSkillLicense({
@@ -1352,7 +1352,7 @@ export const decodeSkillLicense: {
  * **Example** (Round-trip the pinned pilot license)
  *
  * ```ts
- * import { decodeSkillLicense, encodeSkillLicense } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { decodeSkillLicense, encodeSkillLicense } from "@beep/ai-sync/Skills.schemas"
  * import * as Effect from "effect/Effect";
  * const license = Effect.runSync(
  *   decodeSkillLicense({
@@ -1378,7 +1378,7 @@ export const encodeSkillLicense: {
  * **Example** (Decode a fully reproduced claim)
  *
  * ```ts
- * import { decodeSkillProvenance } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { decodeSkillProvenance } from "@beep/ai-sync/Skills.schemas"
  * import * as Effect from "effect/Effect";
  * const provenance = Effect.runSync(
  *   decodeSkillProvenance({
@@ -1406,7 +1406,7 @@ export const decodeSkillProvenance: {
  * **Example** (Round-trip a fully reproduced claim)
  *
  * ```ts
- * import { decodeSkillProvenance, encodeSkillProvenance } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { decodeSkillProvenance, encodeSkillProvenance } from "@beep/ai-sync/Skills.schemas"
  * import * as Effect from "effect/Effect";
  * const provenance = Effect.runSync(
  *   decodeSkillProvenance({
@@ -1434,7 +1434,7 @@ export const encodeSkillProvenance: {
  * **Example** (Decode one labelled local patch)
  *
  * ```ts
- * import { decodeSkillPatch } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { decodeSkillPatch } from "@beep/ai-sync/Skills.schemas"
  * import * as Effect from "effect/Effect";
  * const patch = Effect.runSync(
  *   decodeSkillPatch({
@@ -1462,7 +1462,7 @@ export const decodeSkillPatch: {
  * **Example** (Round-trip one labelled local patch)
  *
  * ```ts
- * import { decodeSkillPatch, encodeSkillPatch } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { decodeSkillPatch, encodeSkillPatch } from "@beep/ai-sync/Skills.schemas"
  * import * as Effect from "effect/Effect";
  * const patch = Effect.runSync(
  *   decodeSkillPatch({
@@ -1490,7 +1490,7 @@ export const encodeSkillPatch: {
  * **Example** (Decode a drift-free patch set)
  *
  * ```ts
- * import { decodeSkillPatches } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { decodeSkillPatches } from "@beep/ai-sync/Skills.schemas"
  * import * as Effect from "effect/Effect";
  * const patches = Effect.runSync(
  *   decodeSkillPatches({
@@ -1516,7 +1516,7 @@ export const decodeSkillPatches: {
  * **Example** (Round-trip a drift-free patch set)
  *
  * ```ts
- * import { decodeSkillPatches, encodeSkillPatches } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { decodeSkillPatches, encodeSkillPatches } from "@beep/ai-sync/Skills.schemas"
  * import * as Effect from "effect/Effect";
  * const patches = Effect.runSync(
  *   decodeSkillPatches({
@@ -1542,7 +1542,7 @@ export const encodeSkillPatches: {
  * **Example** (Decode the cross-target effective identity)
  *
  * ```ts
- * import { decodeSkillEffective } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { decodeSkillEffective } from "@beep/ai-sync/Skills.schemas"
  * import * as Effect from "effect/Effect";
  * const digest = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  * const effective = Effect.runSync(
@@ -1569,7 +1569,7 @@ export const decodeSkillEffective: {
  * **Example** (Round-trip the cross-target effective identity)
  *
  * ```ts
- * import { decodeSkillEffective, encodeSkillEffective } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { decodeSkillEffective, encodeSkillEffective } from "@beep/ai-sync/Skills.schemas"
  * import * as Effect from "effect/Effect";
  * const digest = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  * const effective = Effect.runSync(
@@ -1596,7 +1596,7 @@ export const encodeSkillEffective: {
  * **Example** (Fail on a partial entry rather than filling in defaults)
  *
  * ```ts
- * import { decodeSkillLockV2Entry } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { decodeSkillLockV2Entry } from "@beep/ai-sync/Skills.schemas"
  * import * as Effect from "effect/Effect";
  * import * as Exit from "effect/Exit";
  * const exit = Effect.runSyncExit(decodeSkillLockV2Entry({ sourceType: "github" }))
@@ -1617,7 +1617,7 @@ export const decodeSkillLockV2Entry: {
  * **Example** (Reject a partial entry on the way out)
  *
  * ```ts
- * import { encodeSkillLockV2Entry } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { encodeSkillLockV2Entry } from "@beep/ai-sync/Skills.schemas"
  * import * as Effect from "effect/Effect";
  * import * as Exit from "effect/Exit";
  * const exit = Effect.runSyncExit(encodeSkillLockV2Entry({ sourceType: "github" }))

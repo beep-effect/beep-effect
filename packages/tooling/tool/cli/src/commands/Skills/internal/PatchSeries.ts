@@ -16,8 +16,8 @@ import * as Str from "effect/String";
 import { SkillMaterializeRefusal, SkillsCommandError } from "../Skills.errors.ts";
 import { PATCH_ROOT } from "./PatchStaging.ts";
 import { hashBytes, patchSetHashOf, validateRelativePath } from "./SkillTree.ts";
+import type { VendoredSkillLockEntry } from "@beep/ai-sync/SkillsLock.schemas";
 import type * as Digest from "effect/crypto/Digest";
-import type { VendoredSkillLockEntry } from "../SkillsLock.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Skills/internal/PatchSeries");
 const textDecoder = new TextDecoder("utf-8", { fatal: true });

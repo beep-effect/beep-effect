@@ -13,12 +13,14 @@ import { Str } from "@beep/utils";
  * **Example** (Classify Doctest source paths)
  *
  * ```ts
- * import { isDoctestSourcePath } from "@beep/repo-cli/test/Docgen"
+ * import { isDoctestSourcePath } from "@beep/repo-utils/JSDoc/DoctestSource"
  *
  * console.log(isDoctestSourcePath("packages/example/src/index.ts")) // true
  * console.log(isDoctestSourcePath("packages/example/src/index.d.ts")) // false
  * ```
  *
+ * @param file - Repo-relative POSIX path, such as `packages/<name>/src/<file>.ts`.
+ * @returns `true` only for `.ts`/`.tsx` sources (not `.d.ts`) under a `packages/` or `apps/` `src/` directory, outside test fixtures, `node_modules`, and `.context`.
  * @category predicates
  * @since 0.0.0
  */
@@ -45,7 +47,7 @@ export const isDoctestSourcePath = (file: string): boolean =>
  * **Example** (Recognize the marker)
  *
  * ```ts
- * import { doctestSourceMarker } from "@beep/repo-cli/test/Docgen"
+ * import { doctestSourceMarker } from "@beep/repo-utils/JSDoc/DoctestSource"
  *
  * console.log(doctestSourceMarker.length) // 18
  * ```
@@ -70,11 +72,13 @@ export const doctestSourceMarker = "import.meta." + "vitest";
  * **Example** (Render example metadata)
  *
  * ```ts
- * import { doctestFenceInfo } from "@beep/repo-cli/test/Docgen"
+ * import { doctestFenceInfo } from "@beep/repo-utils/JSDoc/DoctestSource"
  *
  * console.log(doctestFenceInfo("Add numbers").endsWith('name="Add numbers"')) // true
  * ```
  *
+ * @param name - Example title placed in the fence's `name` attribute.
+ * @returns Fence info string of the form `ts <marker> name="<name>"`.
  * @category formatting
  * @since 0.0.0
  */
