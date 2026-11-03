@@ -20,6 +20,7 @@ import { pipe } from "effect/Function";
 import * as Graph from "effect/Graph";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
@@ -51,8 +52,8 @@ export class ProjectionScope extends S.Opaque<ProjectionScope, { readonly brand:
   )
 ) {}
 
-const RepresentativeLookup = S.declare<(party: PartyId) => PartyId>(
-  (value): value is (party: PartyId) => PartyId => typeof value === "function"
+const RepresentativeLookup = S.declare<(party: PartyId) => PartyId>((value): value is (party: PartyId) => PartyId =>
+  P.isFunction(value)
 ).pipe(
   $I.annoteSchema("RepresentativeLookup", { description: "In-memory representative lookup; not a persisted codec." })
 );

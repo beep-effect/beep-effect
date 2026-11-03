@@ -199,8 +199,9 @@ const groupedStatus = (groups: ReadonlyArray<ReadonlyArray<PartyId>>): ReviewSta
  * @since 0.0.0
  */
 export const applyReviews = Effect.fn("PartyReview.applyReviews")(function* (input: ReviewInput) {
-  let applications = yield* Effect.forEach(input.cases, (current) =>
-    Effect.gen(function* () {
+  let applications = yield* Effect.forEach(
+    input.cases,
+    Effect.fnUntraced(function* (current: CollisionCase) {
       const candidates = A.filter(
         input.decisions,
         (decision) =>

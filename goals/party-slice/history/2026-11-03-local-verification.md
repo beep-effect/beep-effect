@@ -161,3 +161,30 @@ The frozen install passes. The updated cache request carries all 188 prior
 reviews, stamps the same five party/root subjects and preserves scope/profile/
 epoch; the source audit reports zero blocking findings. Party source files
 required no conflict resolution. Final verification will run on the merged head.
+
+### Full final-check findings and remediation
+
+The full run at `0bc39665ac` passed expectation review, cheap gates, package lint,
+changed-file lint, repository sanity, affected type checks, full documentation
+and Fallow. It failed policy checks (generated fingerprint, three Effect-style
+findings, fixture tsconfig ownership) and coverage (one fingerprint test plus
+three inherited merge-gate tests). Coverage ran all ten shards: nine passed;
+the CLI shard had 8,898 passed, 5 skipped and 4 failed tests.
+
+The current remediation replaces the function guard with Predicate.isFunction,
+uses Effect.fnUntraced for the two reusable callbacks, adds a fixture tsconfig,
+and regenerates the fingerprint. The generated diff adds exactly the two new
+party manifests to the input inventory. Its reviewed root cache refresh carries
+192 prior reviews and grants no additional qualification; cache audit passes.
+Both party package verifiers and law checks pass. Direct tests pass (domain 62,
+server 76). The full deprecated-API scan passes with zero unmatched TypeScript
+files and no deprecated usage. The focused fingerprint suite passes all 6 tests.
+
+The three unrelated CLI failures reproduce at the merge base; see
+[the inherited-failure receipt](2026-11-03-inherited-merge-gate-failures.md).
+The new head still requires publication and a new final-check receipt. No
+passing final-head or hosted-readiness claim is made by this remediation note.
+
+Fresh scoped coverage passes for all three party packages after these fixes.
+The fingerprint suite passes all six tests. The three merge-gate failures remain
+separately documented inherited failures, not passing CLI coverage evidence.

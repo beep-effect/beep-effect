@@ -95,8 +95,9 @@ export const PartyLedgerMemory = Layer.effect(
     const anchors = yield* SynchronizedRef.make(HashMap.empty<PartyKey, PartyId>());
     const allocatePartyId = Ref.getAndUpdate(nextId, (id) => id + 1).pipe(Effect.map(PartyId.make));
     const allocateAnchorParty = Effect.fn("PartyLedgerMemory.allocateAnchorParty")((key: PartyKey) =>
-      SynchronizedRef.modifyEffect(anchors, (current) =>
-        Effect.gen(function* () {
+      SynchronizedRef.modifyEffect(
+        anchors,
+        Effect.fnUntraced(function* (current: HashMap.HashMap<PartyKey, PartyId>) {
           const existing = HashMap.get(current, key);
           if (O.isSome(existing)) return Tuple.make(existing.value, current);
           const party = yield* allocatePartyId;
