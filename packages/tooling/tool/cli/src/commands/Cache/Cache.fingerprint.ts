@@ -176,14 +176,14 @@ const fingerprintExecutable = Effect.fn("CacheFingerprint.executable")(function*
  * @category queries
  * @since 0.0.0
  */
-export const collectCacheFileCreationMask = Effect.fn("CacheFingerprint.fileCreationMask")(function* (
-  root: string,
-  executable: string
-) {
-  const text = yield* captureVersion(root, executable, ["--no-env-file", "-p", "process.umask()"]);
-  const value = yield* S.decodeEffect(S.NumberFromString)(text);
-  return yield* S.decodeUnknownEffect(CacheFileCreationMask)(value);
-}, CacheCommandError.mapError("Cannot observe the process file creation mask."));
+export const collectCacheFileCreationMask = Effect.fn("CacheFingerprint.fileCreationMask")(
+  function* (root: string, executable: string) {
+    const text = yield* captureVersion(root, executable, ["--no-env-file", "-p", "process.umask()"]);
+    const value = yield* S.decodeEffect(S.NumberFromString)(text);
+    return yield* S.decodeUnknownEffect(CacheFileCreationMask)(value);
+  },
+  Effect.mapError(() => CacheCommandError.new("Cannot observe the process file creation mask."))
+);
 
 const toDefinition = (node: CacheCensusNode): CacheCensusDefinition =>
   CacheCensusDefinition.make({

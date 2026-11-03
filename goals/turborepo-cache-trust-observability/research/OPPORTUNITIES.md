@@ -2266,3 +2266,9 @@ compiled-artifact proof.
   decoding without inheriting qualification. Require actual hosted regressions.
 - Prevention: include filesystem creation context in runtime-profile review and
   compare complete output metadata before qualifying permission-sensitive work.
+
+The shared version-capture mapper preserves an existing typed error, so an
+empty mask observation initially retained its tool-version message. Normalize
+this boundary to the mask-specific typed error and discard raw native output
+from its cause. The authored empty-output regression covers that distinction;
+no local regression execution is claimed.
