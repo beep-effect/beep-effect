@@ -30,8 +30,7 @@ const Position = S.Natural.check(S.isLessThanOrEqualTo(max.producedTextUtf16)).p
 );
 const Index = S.Natural.pipe($I.annoteSchema("Index", { description: "Nonnegative contextual capture-table index." }));
 const paddedLength = (bytes: number) => 4 * ((bytes + 2 - ((bytes + 2) % 3)) / 3);
-const Wire = S.Struct({
-  _tag: S.tag("Complete"),
+const Wire = S.TaggedStruct("Complete", {
   version: S.tag("citation-regex-result/v1"),
   groups: Groups,
   matches: Count,

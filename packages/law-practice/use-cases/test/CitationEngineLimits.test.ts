@@ -23,6 +23,18 @@ const rejects = (value: unknown) =>
   S.decodeUnknownEffect(CitationEngineLimits)(value).pipe(Effect.exit, Effect.map(Exit.isFailure));
 
 describe("schema-owned citation safety budgets", () => {
+  it.effect.prop(
+    "preserves schema-generated source budgets through the effective limits codec",
+    [CitationEngineLimits.fields.sourceUtf16],
+    ([sourceUtf16]) =>
+      Effect.gen(function* () {
+        const limits = { ...(yield* defaultCitationEnginePolicy).limits, sourceUtf16 };
+        const encoded = yield* S.encodeEffect(CitationEngineLimits)(limits);
+        const decoded = yield* S.decodeEffect(CitationEngineLimits)(encoded);
+        expect(S.toEquivalence(S.toType(CitationEngineLimits))(decoded, limits)).toBe(true);
+        expect(decoded.sourceUtf16).toBeLessThanOrEqual(MAX_SOURCE_TEXT_LENGTH);
+      })
+  );
   it.effect("decodes explicit fixtures with Duration values and exact millisecond round trips", () =>
     Effect.gen(function* () {
       const policy = yield* defaultCitationEnginePolicy;

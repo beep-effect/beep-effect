@@ -136,9 +136,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
             {
               executable: process.execPath,
               cwd: yield* fs.makeTempDirectoryScoped({ prefix: "citation-html-bytes-" }),
-              workerFile: fileURLToPath(
-                new URL("@beep/law-practice-server/internal/Citation/HtmlWorker.entry", import.meta.url)
-              ),
+              workerFile: fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
             }
           ).pipe(
             Effect.provideService(ChildProcessSpawner, {

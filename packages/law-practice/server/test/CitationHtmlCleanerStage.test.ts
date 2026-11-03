@@ -95,9 +95,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         const paths = {
           executable: process.execPath,
           cwd: yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped({ prefix: "citation-html-stage-" }),
-          workerFile: NodeURL.fileURLToPath(
-            new URL("@beep/law-practice-server/internal/Citation/HtmlWorker.entry", import.meta.url)
-          ),
+          workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
         };
         const policy = {
           ...limits,
@@ -236,9 +234,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         const worker = yield* makeCitationHtmlWorker(limits, {
           executable: process.execPath,
           cwd: yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped({ prefix: "citation-byte-stage-" }),
-          workerFile: NodeURL.fileURLToPath(
-            new URL("@beep/law-practice-server/internal/Citation/HtmlWorker.entry", import.meta.url)
-          ),
+          workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
         });
         const h = owned(worker, 0, () => new TextEncoder().encode("<div>A</div>"));
         const pipeline = yield* makeCitationCleanerPipeline(limits).pipe(

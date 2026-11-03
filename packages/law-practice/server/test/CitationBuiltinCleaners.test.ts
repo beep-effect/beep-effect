@@ -85,9 +85,7 @@ it.layer(TestRuntime, { excludeTestServices: true })("captured builtin cleaner i
         const builtins = yield* makeCitationBuiltinCleaners(policy, {
           executable: process.execPath,
           cwd: yield* fs.makeTempDirectoryScoped({ prefix: "citation-builtins-" }),
-          workerFile: fileURLToPath(
-            new URL("@beep/law-practice-server/internal/Citation/HtmlWorker.entry", import.meta.url)
-          ),
+          workerFile: fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
         }).pipe(
           Effect.provideService(CitationCleanerValues, values),
           Effect.provideService(ChildProcessSpawner, {

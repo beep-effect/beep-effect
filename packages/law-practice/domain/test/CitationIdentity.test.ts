@@ -13,6 +13,21 @@ const mention = `cm1:${digest}` as const;
 const authority = `ca1:${digest}` as const;
 
 describe("document-local citation identity schemas", () => {
+  it.effect.prop(
+    "preserves generated occurrence and authority tokens through their own codecs",
+    [CitationMentionId, CitationAuthorityId],
+    ([mention, authority]) =>
+      Effect.gen(function* () {
+        expect(yield* S.decodeEffect(CitationMentionId)(yield* S.encodeEffect(CitationMentionId)(mention))).toBe(
+          mention
+        );
+        expect(yield* S.decodeEffect(CitationAuthorityId)(yield* S.encodeEffect(CitationAuthorityId)(authority))).toBe(
+          authority
+        );
+        expect(S.is(CitationAuthorityId)(mention)).toBe(false);
+        expect(S.is(CitationMentionId)(authority)).toBe(false);
+      })
+  );
   it.effect("round-trips opaque tokens through their own codecs", () =>
     Effect.gen(function* () {
       const decodedMention = yield* S.decodeEffect(CitationMentionId)(mention);

@@ -1,6 +1,7 @@
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { convertTextOffsetRange, TextOffsetRange } from "@beep/langextract/VerifiedSpan";
+import { CitationPythonUnicodeStorage } from "@beep/law-practice-server/internal/Citation/PythonHash";
 import {
   CitationRegexInputLayout,
   CitationRegexProjection,
@@ -28,6 +29,11 @@ import type {
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("test/CitationRegexInput");
+const Latin1Bytes = CitationPythonUnicodeStorage.fields.bytes.check(S.isMaxLength(64)).pipe(
+  $I.annoteSchema("Latin1Bytes", {
+    description: "Generated native one-byte words with exact one-unit source boundaries.",
+  })
+);
 const Storage = S.Struct({ width: S.Literals([1, 2, 4]), nativeHex: S.String }).pipe(
   $I.annoteSchema("Storage", {
     description: "Observed original native bytes and compact width, independent of display projection.",
@@ -85,6 +91,25 @@ it.effect("rejects incoherent layout and projection data through their own codec
 );
 
 it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("native regex input source layouts", (it) => {
+  it.effect.prop(
+    "preserves generated one-byte native words and every source-point boundary",
+    [Latin1Bytes],
+    ([bytes]) =>
+      Effect.gen(function* () {
+        const input = yield* makeCitationRegexInput((yield* defaultCitationEnginePolicy).limits);
+        const prepared = yield* input.prepareUnicode({ width: 1, bytes }, () => Effect.void);
+        expect(prepared.value.storage.bytes).toEqual(bytes);
+        expect(prepared.value.pythonLength).toBe(bytes.byteLength);
+        expect(prepared.value.text).toBe(
+          A.join(
+            A.map(A.fromIterable(bytes), (byte) => String.fromCharCode(byte)),
+            ""
+          )
+        );
+        for (let offset = 0; offset <= bytes.byteLength; offset++)
+          expect(yield* prepared.project({ start: offset, end: offset })).toEqual({ _tag: "Point", offset });
+      })
+  );
   it.effect("preserves all 259 source products, 2395 source projections and canonical raw string interpretations", () =>
     Effect.gen(function* () {
       const corpus = yield* load();

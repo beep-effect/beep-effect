@@ -1,4 +1,5 @@
 import { fileURLToPath } from "node:url";
+import { CitationHtmlKernelFailure } from "@beep/law-practice-server/internal/Citation/HtmlKernel";
 import {
   CitationHtmlWorkerError,
   CitationHtmlWorkerJob,
@@ -30,6 +31,19 @@ const StringJson = S.fromJsonString(S.String);
 
 const utf8 = new TextEncoder();
 it.layer(BunFileSystem.layer)("HTML worker protocol", (it) => {
+  it.effect("round-trips closed parser and safety errors through the complete reply frame", () =>
+    Effect.gen(function* () {
+      for (const failure of [
+        CitationHtmlKernelFailure.make({ reason: "parse-error" }),
+        CitationSafetyLimitExceeded.make({ operation: "clean", limit: "nativeHtmlParserResource" }),
+      ]) {
+        const reply = CitationHtmlWorkerError.make({ failure });
+        const frame = yield* encodeCitationHtmlReply(reply, 4096);
+        const decoded = yield* decodeCitationHtmlReply(frame.slice(0, -1));
+        expect(decoded).toMatchObject({ _tag: "Failure", failure: { _tag: failure._tag } });
+      }
+    })
+  );
   it.effect(
     "charges exact JSON bytes and round-trips every frozen input string",
     () =>

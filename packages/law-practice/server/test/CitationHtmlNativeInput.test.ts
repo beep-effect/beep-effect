@@ -143,9 +143,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("native HTML preparati
       const worker = yield* makeCitationHtmlWorker(policy, {
         executable: process.execPath,
         cwd: process.cwd(),
-        workerFile: NodeURL.fileURLToPath(
-          new URL("@beep/law-practice-server/internal/Citation/HtmlWorker.entry", import.meta.url)
-        ),
+        workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
       }).pipe(
         Effect.provideService(ChildProcessSpawner, {
           ...real,

@@ -86,9 +86,7 @@ export const makeCitationUnicodePipelineHarness = Effect.fn("UnicodePipelineTest
   const builtins = yield* makeCitationBuiltinCleaners(limits, {
     executable: process.execPath,
     cwd: process.cwd(),
-    workerFile: NodeURL.fileURLToPath(
-      new URL("@beep/law-practice-server/internal/Citation/HtmlWorker.entry", import.meta.url)
-    ),
+    workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
   }).pipe(
     Effect.provideService(CitationCleanerValues, values),
     Effect.provideService(ChildProcessSpawner, {

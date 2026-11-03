@@ -98,9 +98,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
         const worker = yield* makeCitationHtmlWorker((yield* defaultCitationEnginePolicy).limits, {
           executable: process.execPath,
           cwd,
-          workerFile: NodeURL.fileURLToPath(
-            new URL("@beep/law-practice-server/internal/Citation/HtmlWorker.entry", import.meta.url)
-          ),
+          workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
         }).pipe(
           Effect.provideService(ChildProcessSpawner, {
             ...real,

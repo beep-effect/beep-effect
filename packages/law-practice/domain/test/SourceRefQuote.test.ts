@@ -6,6 +6,17 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 describe("review-source quote contract after citation locator retirement", () => {
+  it.effect.prop(
+    "preserves generated exact selector text and optional context through its codec",
+    [TextQuote],
+    ([quote]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(TextQuote)(quote);
+        const decoded = yield* S.decodeEffect(TextQuote)(encoded);
+        expect(S.toEquivalence(TextQuote)(decoded, quote)).toBe(true);
+        expect(decoded.exact).toBe(quote.exact);
+      })
+  );
   it.effect("preserves exact/prefix/suffix encoding and empty selector text", () =>
     Effect.gen(function* () {
       for (const wire of [{ exact: "" }, { exact: "claim language", prefix: "", suffix: " after" }]) {

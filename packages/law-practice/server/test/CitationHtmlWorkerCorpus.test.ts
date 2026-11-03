@@ -44,14 +44,22 @@ const runtime = Effect.gen(function* () {
   return {
     executable: process.execPath,
     cwd: yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped({ prefix: "citation-html-corpus-" }),
-    workerFile: NodeURL.fileURLToPath(
-      new URL("@beep/law-practice-server/internal/Citation/HtmlWorker.entry", import.meta.url)
-    ),
+    workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
   };
 });
 const TestRuntime = Layer.merge(BunServices.layer, BunCrypto.layer);
 
 it.layer(TestRuntime, { excludeTestServices: true })("HTML worker qualification", (it) => {
+  it.effect("smoke-tests the actual worker entrypoint for parser errors and successful text", () =>
+    Effect.gen(function* () {
+      const worker = yield* makeCitationHtmlWorker((yield* defaultCitationEnginePolicy).limits, yield* runtime);
+      expect(yield* worker.clean("").pipe(Effect.flip)).toMatchObject({
+        _tag: "CitationHtmlKernelFailure",
+        reason: "parse-error",
+      });
+      expect(yield* worker.clean("<p>ok</p>")).toBe("ok");
+    })
+  );
   it.effect(
     "preserves every frozen native outcome through the owned process boundary",
     () =>
