@@ -545,8 +545,6 @@ describe("proof shadow mode", () => {
       })
     );
 
-    // A lane report written before `inputsCacheable` existed decodes as uncacheable, so an
-    // older journal can only make the tripwire fire more, never less.
     // Ruling 82: a key whose lane the attempt's own reports never journaled has no
     // cacheability evidence, so it is read as uncacheable and fails closed on any change.
     it("treats a lane missing from the attempt's reports as uncacheable", () => {
@@ -566,6 +564,8 @@ describe("proof shadow mode", () => {
       expect(changedPackageTripwireFor(reports, changedUnavailable("git status failed"))(key)).toBe(true);
     });
 
+    // A lane report written before `inputsCacheable` existed decodes as uncacheable, so an
+    // older journal can only make the tripwire fire more, never less.
     it.effect("reads a lane report without the cacheability field as uncacheable", () =>
       Effect.gen(function* () {
         const legacy = yield* S.decodeEffect(QualityTaskLaneRun)({
