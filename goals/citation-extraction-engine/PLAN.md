@@ -262,6 +262,14 @@ two literal surrogate points from one astral digit even when their projected
 UTF-16 bytes coincide. Input preparation and boundary mapping must retain that
 distinction; scalar character-class qualification does not close it.
 
+The [native regex input preparer](./history/evidence/2026-11-02-regex-input-preparation.md)
+now retains original storage and supplies exact pre-allocation transport/map
+layout and unverified projection data. It passes 259 physically observed source
+layouts, 2,395 projections and all 13 ambiguous layouts, with ordinary ranges
+checked against the canonical public converter. All 54 focused component tests
+pass. Native matching encoding, complete-frame transport and the owned regex
+worker remain open; the preparer does not claim to solve those obligations.
+
 The [admitted named-cleaner replay](./history/evidence/2026-11-02-admitted-named-cleaners.md)
 now matches all 600 non-HTML named/official outcomes in the original 1,155-case
 cleaner corpus, including 599 result/identity observations and the invalid-name

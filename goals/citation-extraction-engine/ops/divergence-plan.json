@@ -6,7 +6,12 @@
       "id": "python-codepoint-utf16",
       "statement": "Convert code-point offsets through the canonical public converter; preserve exact source slices and boundary validity.",
       "referencePaths": [
-        "packages/law-practice/use-cases/test/CitationPrerequisites.test.ts"
+        "packages/law-practice/use-cases/test/CitationPrerequisites.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-02-regex-input-preparation.md",
+        "goals/citation-extraction-engine/ops/probe-regex-input.py",
+        "packages/law-practice/server/src/internal/Citation/RegexInput.ts",
+        "packages/law-practice/server/test/CitationRegexInput.test.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/regex-input.json"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

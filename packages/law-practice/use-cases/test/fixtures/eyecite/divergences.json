@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "87290bf878f326d40bd3cf5b636a249af4d6f7d9172be022b9538c574936945a",
+  "planSha256": "924e4b957da60f24febd53ca82a406dc3297935609bcae93f9efe4533604518a",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -21,6 +21,26 @@
         {
           "path": "packages/law-practice/use-cases/test/CitationPrerequisites.test.ts",
           "sha256": "25f552e73941d7f47c92cf5761422e04c5ea52cafe197cc90542cbdcb8f5a87e"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-02-regex-input-preparation.md",
+          "sha256": "c20d6dc7325402e787bccc31ff444fe703c57a934b160131c959bf7392642cd9"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/probe-regex-input.py",
+          "sha256": "4bb21e8ffef4f9a9f4cf0811fac233982f1ad3dad35a68ccdbae622f6580584e"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/RegexInput.ts",
+          "sha256": "4c903c86616f41dcce43790b4b3787bd127aed6efd7d207de28e55d96bbec0ae"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationRegexInput.test.ts",
+          "sha256": "d746b4eded7255cfd906572e5f284670e0c9b1bde07d086b968104830b28e85d"
+        },
+        {
+          "path": "packages/law-practice/use-cases/test/fixtures/eyecite/regex-input.json",
+          "sha256": "dab2793dc0edefee741b317a2558da9c01d58021a53bcb29b4e18b87d34bf51d"
         }
       ],
       "workflowState": "audit",
