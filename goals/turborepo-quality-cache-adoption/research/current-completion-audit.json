@@ -10,7 +10,7 @@
       "source": "SPEC.md:165",
       "requirement": "Current executable/lane population and applicable stable/canary feature matrix are complete, source-backed and assigned to owners.",
       "status": "unproven",
-      "nextProof": "Reconcile the source-bound 2,434-computation census (2,236 remaining reviews) to current source, finish every in-scope computation review and the 25 pending feature decisions, and consume the economics owner baseline. Completed feature reviews do not qualify actual computations."
+      "nextProof": "Reconcile the source-bound 2,434-computation census (2,236 remaining reviews) to current source, finish every in-scope computation review and the 24 pending feature decisions, and consume the economics owner baseline. Completed feature reviews do not qualify actual computations."
     },
     {
       "id": "AC-02",
