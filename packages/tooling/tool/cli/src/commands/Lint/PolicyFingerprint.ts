@@ -4,12 +4,19 @@
  * **Details**
  *
  * Every Turbo task that runs a `beep` policy command depends on a generated
- * seal task, `//#lint:policy-fingerprint:<key>`, whose inputs are the modules
- * that command reaches (see `internal/PolicyFingerprintGraph.ts`). The seals
- * depend on `//#lint:policy-fingerprint:shared`, which holds what every
- * command loads: the CLI shell, root checker configuration and the root
- * manifest. A source edit therefore replays only the policy tasks whose
- * command can reach it.
+ * seal task, `@beep/repo-cli#lint:policy-fingerprint:<key>`, whose inputs are
+ * the modules that command reaches (see `internal/PolicyFingerprintGraph.ts`)
+ * and the root files those modules read (see `internal/PolicyRootFiles.ts`).
+ * The seals depend on `@beep/repo-cli#lint:policy-fingerprint:shared`, which
+ * holds what every command loads: the CLI shell, the root manifest and the
+ * root TypeScript configuration. A source or configuration edit therefore
+ * replays only the policy tasks whose command can reach it.
+ *
+ * The seals are script-less tasks of the CLI workspace, like `transit`, not
+ * root tasks: Turbo hashes the root `turbo.json` into every root task, so a
+ * root seal replayed every per-package policy task (188 `lint:laws`, 183
+ * `lint:jsdoc`) on any `turbo.json` edit. A CLI task hashes the CLI manifest
+ * and overlay instead, and the manifest is already a shared input.
  *
  * `//#lint:policy-fingerprint` itself is the drift check. No policy task
  * depends on it; its inputs are every seal's inputs plus the manifests that
@@ -18,8 +25,9 @@
  * `--write` rewrites that edge to its seal.
  *
  * `--write` owns the declaration file, the check and seal tasks in
- * `turbo.json`, every policy task's fingerprint edge, and the seal scripts in
- * the root manifest. Nothing else in those files is touched.
+ * `turbo.json` and every policy task's fingerprint edge, and removes the
+ * `lint:policy-fingerprint:<key>` scripts the root seals once needed. Nothing
+ * else in those files is touched.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -47,9 +55,9 @@ import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { LINT_POLICY_SUBCOMMANDS } from "../../internal/cli/LintRouting.ts";
 import { workspaceDirectories } from "../../internal/RepoWorkspaces.ts";
 import { QualityTaskName } from "../Quality/Quality.schemas.ts";
-import { OXLINT_CIRCULAR_CONFIG, OXLINT_DEPRECATED_APIS_CONFIG } from "./internal/LintPackage.ts";
 import { makePolicyGraph, renderClosureInputs } from "./internal/PolicyFingerprintGraph.ts";
 import { insertAfterOwned, modifyJson, renderJsonDocument } from "./internal/PolicyFingerprintJson.ts";
+import { makeRootFileReader, POLICY_SHARED_ROOT_FILES } from "./internal/PolicyRootFiles.ts";
 import {
   PolicyCliLayout,
   PolicyClosure,
@@ -67,28 +75,15 @@ const $I = $RepoCliId.create("commands/Lint/PolicyFingerprint");
 const FINGERPRINT_PATH = "standards/policy-tools.fingerprint.json";
 /** The drift check task; policy tasks declare this edge and `--write` rewrites it. */
 const CHECK_TASK = "//#lint:policy-fingerprint";
-const SEAL_TASK_PREFIX = `${CHECK_TASK}:`;
+const CLI_WORKSPACE = "@beep/repo-cli";
+/** Every seal id carries it: `@beep/repo-cli#…` now, `//#…` for the root seals before 2026-11-02. */
+const SEAL_MARKER = "#lint:policy-fingerprint:";
+const SEAL_TASK_PREFIX = `${CLI_WORKSPACE}${SEAL_MARKER}`;
+/** The root seals' `true` scripts; `--write` removes any left over. */
 const SEAL_SCRIPT_PREFIX = "lint:policy-fingerprint:";
 const SHARED_KEY = "shared";
-/** A seal task does no work: Turbo only hashes a root task that has a script. */
-const SEAL_SCRIPT = "true";
-const CLI_WORKSPACE = "@beep/repo-cli";
-const ROOT_CONFIGS = [
-  "standards/lint-policy.sweeps.jsonc",
-  "tsdoc.json",
-  ".oxlintrc.json",
-  ".oxlintrc.docs.json",
-  OXLINT_DEPRECATED_APIS_CONFIG,
-  OXLINT_CIRCULAR_CONFIG,
-  "_typos.toml",
-  ".fallowrc.jsonc",
-  "fallow-plugin-manual-development-tools.json",
-  "biome.jsonc",
-  "tsconfig.base.json",
-  "tsconfig.json",
-  "package.json",
-  FINGERPRINT_PATH,
-];
+/** Seal inputs are root-relative, the seal task belongs to the CLI workspace. */
+const TURBO_ROOT = "$TURBO_ROOT$/";
 
 class TurboTask extends S.Opaque<TurboTask, { readonly brand: unique symbol }>()(
   S.Struct({
@@ -137,11 +132,10 @@ const stringsEquivalent = S.toEquivalence(S.Array(S.String));
 const sortedUnique = (values: Iterable<string>): Array<string> =>
   A.sort(A.dedupe(A.fromIterable(values)), Order.String);
 
-const isFingerprintEdge = (dependency: string) =>
-  dependency === CHECK_TASK || Str.startsWith(SEAL_TASK_PREFIX)(dependency);
+const isSealTask = Str.includes(SEAL_MARKER);
+const isFingerprintEdge = (dependency: string) => dependency === CHECK_TASK || isSealTask(dependency);
 
 const sealTask = (key: string) => `${SEAL_TASK_PREFIX}${key}`;
-const sealScript = (key: string) => `${SEAL_SCRIPT_PREFIX}${key}`;
 
 // One policy task's script in one manifest.
 interface PolicyTaskScript {
@@ -329,7 +323,7 @@ export const computePolicyFingerprint = Effect.fn("computePolicyFingerprint")(fu
 });
 
 const isPolicyTask = (sources: FingerprintSources) => (task: string) =>
-  !Str.startsWith(SEAL_TASK_PREFIX)(task) && A.some(sources.turbo.tasks[task]?.dependsOn ?? [], isFingerprintEdge);
+  !isSealTask(task) && A.some(sources.turbo.tasks[task]?.dependsOn ?? [], isFingerprintEdge);
 
 const rootTaskScripts = (sources: FingerprintSources, task: string): Array<PolicyTaskScript> =>
   O.match(R.get(sources.rootScripts, Str.slice(3)(task)), {
@@ -428,8 +422,17 @@ const cliLayout = (cli: string): PolicyCliLayout =>
     commandsDirectory: `${cli}/src/commands`,
   });
 
-// The shared seal: the shell, the root command's own module, and root configuration.
-const sharedInputs = Effect.fnUntraced(function* (tree: PolicySourceTree, graph: PolicyGraph, layout: PolicyCliLayout) {
+/** The routed root files one closure reads. */
+type RootFileReads = (closure: PolicyClosure) => Effect.Effect<ReadonlyArray<string>, PolicyFingerprintError>;
+
+// The shared seal: the shell, the root command's own module, the root files every command loads
+// and the routed root files the shell reads.
+const sharedInputs = Effect.fnUntraced(function* (
+  tree: PolicySourceTree,
+  graph: PolicyGraph,
+  layout: PolicyCliLayout,
+  rootFiles: RootFileReads
+) {
   const shell = yield* graph.shellClosure(layout);
   const root = yield* graph.commandClosure([
     PolicyCommandNode.make({ module: layout.rootModule, binding: layout.rootBinding, name: "" }),
@@ -438,7 +441,11 @@ const sharedInputs = Effect.fnUntraced(function* (tree: PolicySourceTree, graph:
     modules: HashSet.union(shell.modules, root.modules),
     opaqueWorkspaces: HashSet.union(shell.opaqueWorkspaces, root.opaqueWorkspaces),
   });
-  return sortedUnique([...(yield* renderClosureInputs(tree, graph, reached, HashSet.empty())), ...ROOT_CONFIGS]);
+  return sortedUnique([
+    ...(yield* renderClosureInputs(tree, graph, reached, HashSet.empty())),
+    ...POLICY_SHARED_ROOT_FILES,
+    ...(yield* rootFiles(reached)),
+  ]);
 });
 
 // A rendered prefix: its own inputs, everything its chain declares, and the seal its tasks land on.
@@ -454,6 +461,7 @@ interface RenderedPrefix {
 const renderPrefix = Effect.fnUntraced(function* (
   tree: PolicySourceTree,
   graph: PolicyGraph,
+  rootFiles: RootFileReads,
   sharedCovered: HashSet.HashSet<string>,
   rendered: HashMap.HashMap<string, RenderedPrefix>,
   [key, seal]: readonly [string, PrefixSeal]
@@ -461,7 +469,11 @@ const renderPrefix = Effect.fnUntraced(function* (
   const parent = O.flatMap(seal.parent, (parentKey) => HashMap.get(rendered, parentKey));
   const covered = O.match(parent, { onNone: () => sharedCovered, onSome: (value) => value.covered });
   const parentEffective = O.flatMap(parent, (value) => value.effective);
-  const inputs = yield* renderClosureInputs(tree, graph, yield* graph.commandClosure([seal.node]), covered);
+  const closure = yield* graph.commandClosure([seal.node]);
+  const inputs = sortedUnique([
+    ...(yield* renderClosureInputs(tree, graph, closure, covered)),
+    ...A.filter(yield* rootFiles(closure), (file) => !HashSet.has(covered, file)),
+  ]);
   return {
     key,
     seal,
@@ -476,6 +488,7 @@ const renderPrefix = Effect.fnUntraced(function* (
 const renderPrefixes = Effect.fnUntraced(function* (
   tree: PolicySourceTree,
   graph: PolicyGraph,
+  rootFiles: RootFileReads,
   shared: ReadonlyArray<string>,
   prefixes: HashMap.HashMap<string, PrefixSeal>
 ) {
@@ -489,7 +502,11 @@ const renderPrefixes = Effect.fnUntraced(function* (
   const sharedCovered = HashSet.fromIterable(shared);
   let rendered = HashMap.empty<string, RenderedPrefix>();
   for (const entry of ordered)
-    rendered = HashMap.set(rendered, entry[0], yield* renderPrefix(tree, graph, sharedCovered, rendered, entry));
+    rendered = HashMap.set(
+      rendered,
+      entry[0],
+      yield* renderPrefix(tree, graph, rootFiles, sharedCovered, rendered, entry)
+    );
   return A.map(ordered, ([key]) => O.getOrThrow(HashMap.get(rendered, key)));
 });
 
@@ -520,7 +537,9 @@ const sealEntries = (rendered: ReadonlyArray<RenderedPrefix>) =>
   );
 
 // The drift check has no dependents, so its inputs are whole workspaces: any
-// edit that can change a closure (an import, an export map) is inside one.
+// edit that can change a closure (an import, an export map, a root-file
+// literal) is inside one. It also reads the declaration and every seal's
+// root files.
 const checkInputs = (
   graph: PolicyGraph,
   shared: ReadonlyArray<string>,
@@ -532,9 +551,10 @@ const checkInputs = (
     A.map(A.getSomes(A.map(declared, graph.workspaceOf)), (workspace) => workspace.directory)
   );
   return sortedUnique([
-    ...A.filter(shared, (input) => O.isNone(graph.workspaceOf(input))),
+    ...A.filter(declared, (input) => O.isNone(graph.workspaceOf(input))),
     ...A.flatMap(directories, (directory) => [`${directory}/package.json`, `${directory}/src/**`]),
     ...manifests,
+    FINGERPRINT_PATH,
     "turbo.json",
   ]);
 };
@@ -550,8 +570,9 @@ const fingerprintFromSources = Effect.fnUntraced(function* (sources: Fingerprint
     Effect.map(scriptPath(graph, layout, sources.rootScripts, entry), (path) => pathPrefixes(entry.task, path))
   );
   const prefixes = A.reduce(A.flatten(paths), HashMap.empty<string, PrefixSeal>(), addPrefix);
-  const shared = yield* sharedInputs(tree, graph, layout);
-  const rendered = yield* renderPrefixes(tree, graph, shared, prefixes);
+  const rootFiles = makeRootFileReader(tree);
+  const shared = yield* sharedInputs(tree, graph, layout, rootFiles);
+  const rendered = yield* renderPrefixes(tree, graph, rootFiles, shared, prefixes);
   const entries = sealEntries(rendered);
   return PolicyToolsFingerprint.make({
     schemaVersion: "policy-tools-fingerprint/v2",
@@ -597,10 +618,13 @@ interface SealTaskValue {
   readonly outputs: ReadonlyArray<string>;
 }
 
-const sealTaskValue = (inputs: ReadonlyArray<string>, dependsOn: ReadonlyArray<string>): SealTaskValue =>
-  A.isReadonlyArrayEmpty(dependsOn)
+// Seal inputs are declared root-relative and rendered for the CLI workspace task.
+const sealTaskValue = (declared: ReadonlyArray<string>, dependsOn: ReadonlyArray<string>): SealTaskValue => {
+  const inputs = A.map(declared, (input) => `${TURBO_ROOT}${input}`);
+  return A.isReadonlyArrayEmpty(dependsOn)
     ? { cache: true, outputs: [], inputs }
     : { cache: true, outputs: [], dependsOn, inputs };
+};
 
 // Every generated task in `turbo.json`, keyed by task id.
 const expectedSealTasks = (fingerprint: PolicyToolsFingerprint): HashMap.HashMap<string, SealTaskValue> =>
@@ -612,20 +636,13 @@ const expectedSealTasks = (fingerprint: PolicyToolsFingerprint): HashMap.HashMap
     ),
   ]);
 
-const expectedSealScripts = (fingerprint: PolicyToolsFingerprint) =>
-  sortedUnique([sealScript(SHARED_KEY), ...A.map(fingerprint.entries, (entry) => sealScript(entry.key))]);
-
-const isOwnedTask = (property: string) => property === CHECK_TASK || Str.startsWith(SEAL_TASK_PREFIX)(property);
-const isOwnedScript = (property: string) =>
-  property === "lint:policy-fingerprint" || Str.startsWith(SEAL_SCRIPT_PREFIX)(property);
+const isOwnedTask = (property: string) => property === CHECK_TASK || isSealTask(property);
+const isSealScript = Str.startsWith(SEAL_SCRIPT_PREFIX);
 
 // Apply the generated edits to `turbo.json` text.
 const materializeTurbo = (text: string, turbo: TurboConfiguration, fingerprint: PolicyToolsFingerprint): string => {
   const seals = expectedSealTasks(fingerprint);
-  const stale = A.filter(
-    R.keys(turbo.tasks),
-    (task) => Str.startsWith(SEAL_TASK_PREFIX)(task) && !HashMap.has(seals, task)
-  );
+  const stale = A.filter(R.keys(turbo.tasks), (task) => isSealTask(task) && !HashMap.has(seals, task));
   const withCheck = modifyJson({ text: text, path: ["tasks", CHECK_TASK, "inputs"], value: fingerprint.check });
   const pruned = A.reduce(stale, withCheck, (next, task) =>
     modifyJson({ text: next, path: ["tasks", task], value: undefined })
@@ -645,29 +662,11 @@ const materializeTurbo = (text: string, turbo: TurboConfiguration, fingerprint: 
   );
 };
 
-// Apply the generated seal scripts to the root manifest text.
-const materializeRootManifest = (
-  text: string,
-  scripts: Readonly<Record<string, string>>,
-  fingerprint: PolicyToolsFingerprint
-): string => {
-  const expected = expectedSealScripts(fingerprint);
-  const stale = A.filter(
-    R.keys(scripts),
-    (name) => Str.startsWith(SEAL_SCRIPT_PREFIX)(name) && !A.contains(expected, name)
-  );
-  const pruned = A.reduce(stale, text, (next, name) =>
+// Remove the root seals' leftover scripts from the root manifest text; a CLI-workspace seal needs none.
+const materializeRootManifest = (text: string, scripts: Readonly<Record<string, string>>): string =>
+  A.reduce(A.filter(R.keys(scripts), isSealScript), text, (next, name) =>
     modifyJson({ text: next, path: ["scripts", name], value: undefined })
   );
-  return A.reduce(expected, pruned, (next, name) =>
-    modifyJson({
-      text: next,
-      path: ["scripts", name],
-      value: SEAL_SCRIPT,
-      insertion: insertAfterOwned(isOwnedScript)(name),
-    })
-  );
-};
 
 const declarationDrift = Effect.fnUntraced(function* (
   declarationText: O.Option<string>,
@@ -698,7 +697,7 @@ const turboDrift = (tasks: Readonly<Record<string, TurboTask>>, fingerprint: Pol
     ([task]) => `turbo.json tasks["${task}"]`
   );
   const stale = A.map(
-    A.filter(R.keys(tasks), (task) => Str.startsWith(SEAL_TASK_PREFIX)(task) && !HashMap.has(seals, task)),
+    A.filter(R.keys(tasks), (task) => isSealTask(task) && !HashMap.has(seals, task)),
     (task) => `turbo.json tasks["${task}"] (stale)`
   );
   const edges = A.map(
@@ -712,19 +711,8 @@ const turboDrift = (tasks: Readonly<Record<string, TurboTask>>, fingerprint: Pol
   return [...check, ...sealed, ...stale, ...edges];
 };
 
-const scriptDrift = (rootScripts: Readonly<Record<string, string>>, fingerprint: PolicyToolsFingerprint) => {
-  const expected = expectedSealScripts(fingerprint);
-  return [
-    ...A.map(
-      A.filter(expected, (name) => rootScripts[name] !== SEAL_SCRIPT),
-      (name) => `package.json scripts["${name}"]`
-    ),
-    ...A.map(
-      A.filter(R.keys(rootScripts), (name) => Str.startsWith(SEAL_SCRIPT_PREFIX)(name) && !A.contains(expected, name)),
-      (name) => `package.json scripts["${name}"] (stale)`
-    ),
-  ];
-};
+const scriptDrift = (rootScripts: Readonly<Record<string, string>>) =>
+  A.map(A.filter(R.keys(rootScripts), isSealScript), (name) => `package.json scripts["${name}"] (stale)`);
 
 // The drift between a repository's generated files and a fingerprint.
 const driftOf = Effect.fnUntraced(function* (
@@ -735,7 +723,7 @@ const driftOf = Effect.fnUntraced(function* (
   return [
     ...(yield* declarationDrift(declarationText, fingerprint)),
     ...turboDrift(sources.turbo.tasks, fingerprint),
-    ...scriptDrift(sources.rootScripts, fingerprint),
+    ...scriptDrift(sources.rootScripts),
   ];
 });
 
@@ -804,7 +792,7 @@ export class PolicyToolsFingerprintPolicy extends Context.Service<
         )
       );
       const turbo = materializeTurbo(sources.turboText, sources.turbo, fingerprint);
-      const manifest = materializeRootManifest(sources.rootManifestText, sources.rootScripts, fingerprint);
+      const manifest = materializeRootManifest(sources.rootManifestText, sources.rootScripts);
       yield* Effect.all([
         fs
           .makeDirectory(path.dirname(declarationFile), { recursive: true })

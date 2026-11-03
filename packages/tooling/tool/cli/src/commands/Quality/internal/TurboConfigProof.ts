@@ -27,11 +27,15 @@ const UnknownJson = S.fromJsonString(S.Unknown);
 
 const $I = $RepoCliId.create("commands/Quality/internal/TurboConfigProof");
 
+// Package roles first: `test:property` and `package-test-typecheck` ride `^transit` like `test`, so
+// a dependency edit's cascade (quality audit M10) is measurable task by task.
 const TURBO_CONFIG_PROOF_TASK_VALUES = [
   "build",
   "check",
   "lint",
   "test",
+  "test:property",
+  "package-test-typecheck",
   "docgen",
   "doctest",
   "lint:deprecated-apis",

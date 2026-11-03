@@ -277,8 +277,10 @@ export class HeavyAdmission extends S.Opaque<HeavyAdmission, { readonly brand: u
  * The schema-owned goals pattern consumed by the pre-runtime profile adapter
  * (packet prose: `GOAL|PLAN|README|SPEC|DECISIONS.md`, `ops/manifest.json`,
  * `goals/INDEX|README.md`), widened by `docs/**`, `explorations/**`,
- * `research/**`, `.changeset/*.md`, and `*.md` anywhere. Executables,
- * fixtures, JSON and scripts under `goals/**` stay code-bearing.
+ * `research/**`, `.changeset/*.md`, and `*.md` anywhere, except under the
+ * code roots (`packages/`, `apps/`, `infra/`). Executables, fixtures, JSON and
+ * scripts under `goals/**` stay code-bearing. The tier-1 change profile
+ * (`ci change-profile` and its pre-runtime adapter) reuses this path rule.
  *
  * **Example** (Classify two paths)
  *
@@ -293,7 +295,7 @@ export class HeavyAdmission extends S.Opaque<HeavyAdmission, { readonly brand: u
  * @since 0.0.0
  */
 export const heavyDocsOnlyPattern: RegExp = new RegExp(
-  `^(?!(?:packages|apps|infra)/)(?:${ciOperationalPatterns.goals}|.*(?:${ciOperationalPatterns.docs}))`,
+  `^(?!${ciOperationalPatterns.codeRoots})(?:${ciOperationalPatterns.goals}|.*(?:${ciOperationalPatterns.docs}))`,
   "u"
 );
 

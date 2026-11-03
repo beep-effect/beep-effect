@@ -43,6 +43,11 @@ map.html
 .aider*
 # Turborepo
 .turbo
+
+# Per-run documentation oxlint plugin bundle and the config that loads it
+# (commands/Quality/internal/DocsOxlintPlugin.ts rebuilds both every run)
+/.oxlintrc.docs.prebuilt.json
+/packages/tooling/policy-pack/lint-rules/.prebuilt/
 .vercel
 **/.next/
 **/next-env.d.ts

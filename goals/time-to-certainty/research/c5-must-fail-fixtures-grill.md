@@ -176,7 +176,7 @@ evidence, and ruling 7 asked for evidence); counting `undeclared-inputs` misses 
 (absence of a reusable key is not a contradiction between two runs); recording failed runs as reusable
 facts (that would make a red run serve a later lane, which rulings 1 and 4 exist to prevent).
 
-## Open question for ruling 69 (not implemented): root-level lane inputs outside the epoch
+## Open question for ruling 69: root-level lane inputs outside the epoch (locked 2026-11-02 by ruling 82)
 
 Ruling 69 drops every changed path that falls under no workspace, and the justification written into the
 code was that "root config is already the epoch". That is narrower than it sounds. The proof epoch is
@@ -200,3 +200,7 @@ Two candidate answers for the lock, neither implemented here:
 
 Until one is locked, the code says what is true: unmapped paths are outside the tripwire by ruling 69,
 six root inputs are covered by the epoch, and the rest is a known gap.
+
+Locked 2026-11-02 by ruling 82 (`research/decisions.md`) with a third answer, because measurement ruled
+out both of the above: a lane is decided by its digest only when Turbo caches every task the digest
+folds, and any other lane trips on any changed path.

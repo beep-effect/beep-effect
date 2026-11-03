@@ -51,9 +51,6 @@ jobs:
 
       - name: Setup monorepo CI
         uses: ./.github/actions/setup-monorepo-ci
-        with:
-          cache-turbo: "false"
-          cache-write: "false"
 
       - name: Replay every vendored patch series at its pin
         id: replay
@@ -178,9 +175,6 @@ jobs:
 
       - name: Setup monorepo CI
         uses: ./.github/actions/setup-monorepo-ci
-        with:
-          cache-turbo: "false"
-          cache-write: "false"
 
       - name: Relock, rebuild and prove each bumped skill
         id: relock
@@ -246,9 +240,6 @@ jobs:
 
       - name: Setup monorepo CI
         uses: ./.github/actions/setup-monorepo-ci
-        with:
-          cache-turbo: "false"
-          cache-write: "false"
 
       - name: Render the batch issue
         id: render

@@ -40,6 +40,7 @@ import {
   ciOperationalPatterns,
 } from "./CiOperational.schemas.ts";
 import { CiRunnerOutputsLive } from "./CiRunnerOutputs.ts";
+import { isHeavyDocsOnlyPath } from "./HeavyAdmission.ts";
 import type { Git } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as Scope from "effect/Scope";
@@ -140,11 +141,13 @@ export const CiOperationalLive = Layer.effect(
                 Effect.provide(context)
               )
             : [];
+        const scoped = event === "pull_request" && A.isReadonlyArrayNonEmpty(paths);
         const profile = CiChangeProfile.make({
-          goalsOnly: event === "pull_request" && A.isReadonlyArrayNonEmpty(paths) && A.every(paths, isGoal),
+          goalsOnly: scoped && A.every(paths, isGoal),
+          docsOnly: scoped && A.every(paths, isHeavyDocsOnlyPath),
           desktopRustRelevant: event !== "pull_request" || A.some(paths, isDesktop),
         });
-        const output = `goals_only=${profile.goalsOnly}\ndesktop_rust_relevant=${profile.desktopRustRelevant}\n`;
+        const output = `goals_only=${profile.goalsOnly}\ndocs_only=${profile.docsOnly}\ndesktop_rust_relevant=${profile.desktopRustRelevant}\n`;
         const target = yield* text("GITHUB_OUTPUT");
         if (Str.isNonEmpty(target)) yield* append(target, output);
         yield* Console.log(Str.trimEnd(output));
