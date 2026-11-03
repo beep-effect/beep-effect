@@ -1104,8 +1104,8 @@ const yeetMonitorCommand = Command.make(
         );
     return yield* Match.value(options.detach).pipe(
       Match.when(true, () => provideYeetStateRoot(runYeetMode("monitor", options), stateRoot)),
-      Match.orElse(() =>
-        Effect.gen(function* () {
+      Match.orElse(
+        Effect.fnUntraced(function* () {
           const route = yeetMonitorCommandRoute({
             plan: options.plan,
             settleTimeout,
