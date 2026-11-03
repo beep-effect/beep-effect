@@ -21,6 +21,7 @@
  */
 
 import { SkillTreeMode, SkillUpstreamContentFile } from "@beep/ai-sync/Skills.schemas";
+import { asArrayBufferView, concatBytes } from "@beep/repo-cli-kit/cli/Bytes";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
@@ -29,7 +30,6 @@ import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { asArrayBufferView, concatBytes } from "../../internal/cli/Bytes.ts";
 import { DiffLine, diffLines, joinDiffLines, sameDiffLine } from "./internal/DiffLines.ts";
 import { appendFramedText, hashBytes } from "./internal/SkillTree.ts";
 import { SkillPatchApplyError } from "./Skills.errors.ts";

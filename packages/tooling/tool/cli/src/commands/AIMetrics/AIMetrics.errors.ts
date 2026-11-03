@@ -18,11 +18,11 @@ import {
   AiMetricsScorecardError,
   AiMetricsSourceDiscoveryError,
 } from "@beep/repo-ai-metrics";
+import { OpaqueDefect } from "@beep/repo-cli-kit/schema/OpaqueDefect";
 import { Err } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
-import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 
 const $I = $RepoCliId.create("commands/AIMetrics/AIMetrics.errors");
 

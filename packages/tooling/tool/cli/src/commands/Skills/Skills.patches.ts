@@ -17,6 +17,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { matchCodeownersOwners } from "@beep/repo-cli-kit/Codeowners";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -25,7 +26,6 @@ import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
-import { matchCodeownersOwners } from "../../internal/Codeowners.ts";
 import { diffLines, sameDiffLine } from "./internal/DiffLines.ts";
 import { readAtMergeBase } from "./internal/MergeBase.ts";
 import { SkillsCommandError } from "./Skills.errors.ts";

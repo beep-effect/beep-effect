@@ -684,3 +684,25 @@ still require review. Census, review and archived bytes grant no runtime,
 qualification, adoption or whole-goal acceptance. Reverse publication by
 restoring the byte-identical prior snapshot as historical evidence; preserve
 that archive and rerun source-bound inventory before treating it as current.
+
+
+### Current feature pair and canary-only permission hashing, 2026-11-03
+
+Refresh published metadata, native binary identities and documentation for
+stable 2.11.10 and current canary 2.11.11-canary.1. Preserve the earlier pin file
+byte for byte and keep every historical semantic report bound to its actual
+client/source envelope. Configuration parsing alone grants no feature or task
+qualification. The installed repository client remains stable 2.11.10.
+
+The current canary declares `hashFilePermissions`, absent from stable. Include
+this canary-only feature in the matrix rather than assuming stable/canary flag
+parity. Native dry runs must accept both settings on canary, refuse both on
+stable and execute no task. Keep it disabled: executable-bit, other-mode-bit,
+symlink, Unix/Windows, cross-worktree and epoch/hash invalidation evidence is
+required before any profile-specific adoption. Adding this unfinished decision
+raises the complete matrix to 36 entries with 25 pending, retaining 11 prior
+scoped reviews. No prior result is transplanted to a different binary.
+
+Reverse this metadata refresh by restoring the preserved pin file and prior
+matrix while retaining the discovery/observations. No credential, runtime,
+configuration flag, dependency version, cache epoch or cohort changes here.

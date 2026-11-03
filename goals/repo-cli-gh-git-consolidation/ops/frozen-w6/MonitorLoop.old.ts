@@ -9,6 +9,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { OutputBound, repoRunOutputBound, runCaptured } from "@beep/repo-cli-kit/process/StepExec";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
@@ -31,11 +32,6 @@ import {
   GithubJobRecord,
   githubConclusion,
 } from "../../../../packages/tooling/tool/cli/src/internal/github/index.ts";
-import {
-  OutputBound,
-  repoRunOutputBound,
-  runCaptured,
-} from "../../../../packages/tooling/tool/cli/src/internal/process/StepExec.ts";
 import { runRepoCommandCapture } from "../../../../packages/tooling/tool/cli/src/internal/repo-run/index.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";

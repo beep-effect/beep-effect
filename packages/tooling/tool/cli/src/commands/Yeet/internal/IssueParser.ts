@@ -5,13 +5,13 @@
  * @since 0.0.0
  */
 
+import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
 import * as A from "effect/Array";
 import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
-import { optionalProp } from "../../../internal/cli/OptionRecord.ts";
 import { decodeSchemaFirstPolicyFindingLine } from "../../../internal/quality/SchemaFirstPolicyFinding.ts";
 import { commandTextForStep, TurboWorkspacePackage, turboTaskForStep } from "../../../internal/repo-run/index.ts";
 import { QualityIssue } from "../Yeet.schemas.ts";

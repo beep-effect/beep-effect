@@ -1,0 +1,58 @@
+/**
+ * Dependency-free lint subcommand routing data shared by the CLI entrypoint and
+ * the Quality schema domain.
+ *
+ * @internal
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+/**
+ * Keep a list of subcommand names as a literal tuple.
+ *
+ * @param values - The subcommand names.
+ * @returns The same names, typed as a readonly literal tuple.
+ */
+const subcommands = <const T extends ReadonlyArray<string>>(...values: T): T => values;
+
+/**
+ * Lint subcommand names routed through the shared policy domain.
+ *
+ * **Example** (Recognize a policy subcommand)
+ *
+ * ```ts
+ * import { LINT_POLICY_SUBCOMMANDS } from "@beep/repo-cli-kit/cli/LintRouting"
+ *
+ * console.log(LINT_POLICY_SUBCOMMANDS.includes("jsdoc")) // true
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+const LINT_POLICY_SUBCOMMANDS = subcommands(
+  "circular",
+  "deprecated-apis",
+  "ecosystem-polarity",
+  "effect-schema-inventory",
+  "effect-vitest",
+  "opaque-roundtrips",
+  "identity-registry",
+  "judge-rubric",
+  "jsdoc",
+  "laws",
+  "package-scripts",
+  "package-test-imports",
+  "package-test-typecheck",
+  "policy",
+  "policy-fingerprint",
+  "reflection-artifacts",
+  "roadmap-refs",
+  "schema-catalog",
+  "schema-first",
+  "schema-parity-codemod",
+  "schema-topology",
+  "tooling-schema-first",
+  "tsconfig-overlay"
+);
+
+export { LINT_POLICY_SUBCOMMANDS };

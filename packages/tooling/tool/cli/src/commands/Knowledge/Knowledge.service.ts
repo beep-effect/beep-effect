@@ -7,6 +7,8 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { sanitizeSensitiveText } from "@beep/observability";
+import { readContainedFileBytesNoFollow, writeContainedFileString } from "@beep/repo-cli-kit/cli/FsGuards";
+import { OutputBound, runCapturedStreams } from "@beep/repo-cli-kit/process/StepExec";
 import { findRepoRoot } from "@beep/repo-utils";
 import { Str } from "@beep/utils";
 import * as A from "effect/Array";
@@ -26,8 +28,6 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { extract as extractTar } from "tar";
-import { readContainedFileBytesNoFollow, writeContainedFileString } from "../../internal/cli/FsGuards.ts";
-import { OutputBound, runCapturedStreams } from "../../internal/process/StepExec.ts";
 import {
   gitArchiveEnv,
   guardCloneLocalGitAttributes,
@@ -78,10 +78,10 @@ import {
   KnowledgeTrackedEntry,
 } from "./Knowledge.schemas.ts";
 import type { Git } from "@beep/git/Git";
+import type { CapturedStreams } from "@beep/repo-cli-kit/process/StepExec";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { CapturedStreams } from "../../internal/process/StepExec.ts";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/GitExec.ts";
 import type { KnowledgeStaticCommandTree } from "./Knowledge.command-surface.ts";
 import type {

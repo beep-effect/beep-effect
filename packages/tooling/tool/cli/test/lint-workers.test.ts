@@ -42,7 +42,7 @@ vi.mock("@beep/repo-utils", (importOriginal) =>
 );
 const captured = vi.hoisted(() => vi.fn<typeof StepExec.runCaptured>());
 const execution = vi.hoisted(() => vi.fn<typeof StepExec.runToExit>());
-vi.mock("../src/internal/process/StepExec.ts", (importOriginal) =>
+vi.mock("@beep/repo-cli-kit/process/StepExec", (importOriginal) =>
   importOriginal<typeof StepExec>().then((original) => ({
     ...original,
     runToExit: execution,
@@ -51,7 +51,7 @@ vi.mock("../src/internal/process/StepExec.ts", (importOriginal) =>
   }))
 );
 // Dispatch tests own process execution; ambient secret-session probes are a separate boundary.
-vi.mock("../src/internal/cli/EnvConfig.ts", (importOriginal) =>
+vi.mock("@beep/repo-cli-kit/cli/EnvConfig", (importOriginal) =>
   importOriginal<object>().then((original) => ({
     ...original,
     readTurboCacheEnvironmentSync: () => readTurboCacheEnvironment({}),

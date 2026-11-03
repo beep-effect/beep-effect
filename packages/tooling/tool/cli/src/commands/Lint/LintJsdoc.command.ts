@@ -5,6 +5,9 @@
  * @since 0.0.0
  */
 
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { runToExit } from "@beep/repo-cli-kit/process/StepExec";
+import { workspaceDirectories } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { FsUtils, findRepoRoot, GlobOptions } from "@beep/repo-utils";
 import { normalizePath } from "@beep/schema";
 import { A } from "@beep/utils";
@@ -15,9 +18,6 @@ import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { runToExit } from "../../internal/process/StepExec.ts";
-import { workspaceDirectories } from "../../internal/RepoWorkspaces.ts";
 import { lintPackageFlag, resolveLintPackage } from "./internal/LintPackage.ts";
 
 // Root-only targets are every non-workspace source file; `.oxlintrc.docs.json`

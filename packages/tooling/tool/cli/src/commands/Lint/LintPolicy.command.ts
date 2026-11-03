@@ -5,11 +5,11 @@
  * @since 0.0.0
  */
 
+import { isCi } from "@beep/repo-cli-kit/cli/EnvConfig";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
-import { isCi } from "../../internal/cli/EnvConfig.ts";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { runRootLintPolicyTask } from "../Quality/index.ts";
 import { lintBaseFlag, lintFullFlag } from "./internal/LintPackage.ts";
 

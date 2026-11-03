@@ -6,12 +6,12 @@
  */
 
 import { SkillsLockMigrationPlan, SkillsLockWriteReceipt } from "@beep/ai-sync/SkillsLock.schemas";
+import { renderPrettyCommandJson } from "@beep/repo-cli-kit/cli/Json";
 import * as A from "effect/Array";
 import * as Match from "effect/Match";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { renderPrettyCommandJson } from "../../internal/cli/Json.ts";
 import type { SkillProvenanceReport } from "@beep/ai-sync/Skills.schemas";
 import type { SkillMigrationRow, UnresolvedMigrationRow, VendoredMigrationRow } from "@beep/ai-sync/SkillsLock.schemas";
 import type { SkillMaterializeReport, SkillMaterializeRow } from "./SkillsMaterialize.schemas.ts";

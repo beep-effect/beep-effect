@@ -7,6 +7,7 @@
 
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
+import { concatBytes } from "@beep/repo-cli-kit/cli/Bytes";
 import { LiteralKit } from "@beep/schema";
 import * as OptionUtils from "@beep/utils/Option";
 import * as A from "effect/Array";
@@ -22,7 +23,6 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { concatBytes } from "../../../internal/cli/Bytes.ts";
 import {
   commandTextForStep,
   currentEffectiveUserIdOption,

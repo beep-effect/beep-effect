@@ -6,12 +6,12 @@
  */
 
 import { Jsonc } from "@beep/jsonc/Jsonc";
+import { applyJsoncModification, JsoncModification } from "@beep/repo-cli-kit/cli/Jsonc";
 import { Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import * as Match from "effect/Match";
-import { applyJsoncModification, JsoncModification } from "../../../../internal/cli/Jsonc.ts";
 import { VersionSyncError } from "../../VersionSync.schemas.ts";
 import { BunVercelDocument } from "../resolvers/BunResolver.ts";
 
