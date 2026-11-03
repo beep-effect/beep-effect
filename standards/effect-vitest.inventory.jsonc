@@ -2799,7 +2799,8 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Each of the 17 bounded qualification subjects needs its own nested Scope so its OS child is retired and independently observed before the concurrency slot is reused. The enclosing it.effect scope alone would retain all children until the entire test finishes. Owner: @beep/law-practice-server. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-03-native-regex-worker.md."
     },
     {
       "id": "EV004:packages/ontology/client/test/Session.atoms.test.ts:207:scoped@10#1",
@@ -5900,7 +5901,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Reads and authenticates committed oracle fixture bytes through the real repository filesystem, using the per-test BunServices layer. Replacing the fixture loader with an independently seeded memory filesystem would remove the repository-artifact proof. Owner: @beep/law-practice-server. Exit: retire when the artifact check is separated from pure vector replay."
     },
     {
       "id": "EV010:packages/law-practice/server/test/CitationFrozenEditions.test.ts:7:@effect/platform-bun/BunFileSystem@0#1",
@@ -6317,7 +6319,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Reads and authenticates committed oracle fixture bytes through the real repository filesystem, using the per-test BunServices layer. Replacing the fixture loader with an independently seeded memory filesystem would remove the repository-artifact proof. Owner: @beep/law-practice-server. Exit: retire when the artifact check is separated from pure vector replay."
     },
     {
       "id": "EV010:packages/law-practice/server/test/CitationPythonHash.test.ts:7:@effect/platform-bun/BunFileSystem@0#1",
@@ -6822,7 +6825,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Reads and authenticates committed oracle fixture bytes through the real repository filesystem, using the per-test BunServices layer. Replacing the fixture loader with an independently seeded memory filesystem would remove the repository-artifact proof. Owner: @beep/law-practice-server. Exit: retire when the artifact check is separated from pure vector replay."
     },
     {
       "id": "EV010:packages/law-practice/server/test/integration/CitationHtmlUnicode.test.ts:19:@effect/platform-bun/BunServices@0#1",
