@@ -2,9 +2,9 @@
 
 ## Status
 
-Lifecycle: `paused`
+Lifecycle: `active`
 
-Authored but not started. Source: [manifest](./ops/manifest.json). No implementation, deployment or experiment execution occurred during packet preparation.
+Explicitly launched by the operator on 2026-11-03 after foundation PR2655 verified. Source: [manifest](./ops/manifest.json). The recovery hold remains intact.
 
 ## Mission
 
@@ -28,8 +28,8 @@ Only on an explicit implementation launch, use:
 
 ## Current Phase
 
-P0 pending. Refresh source/live evidence and reproduce the assigned defects before implementation. Dependencies: agent-observability-foundation.
+P0 in progress. Refresh source/live evidence and reproduce the assigned defects before implementation. Dependencies: agent-observability-foundation.
 
 ## Latest Evidence
 
-The October27 audit is design provenance, not this goal's completion proof. Implementation: **not started**.
+The October27 audit is design provenance, not this goal's completion proof. Fresh current-source root admission and real per-route collection proof are in progress. Installed versions and capability alone do not establish collection.

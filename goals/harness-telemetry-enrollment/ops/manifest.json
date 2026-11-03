@@ -3,13 +3,13 @@
   "initiative": {
     "id": "harness-telemetry-enrollment",
     "title": "Qualify every agent harness and surface",
-    "status": "paused",
+    "status": "active",
     "created": "2026-10-27",
-    "updated": "2026-10-27",
+    "updated": "2026-11-03",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/harness-telemetry-enrollment",
-  "lifecycle": "paused",
+  "lifecycle": "active",
   "mission": "Enroll declared CLI, desktop and proxy routes without overstating coverage, preserving identity across clones, worktrees and hosts.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -33,9 +33,16 @@
     "goals/harness-telemetry-enrollment/GOAL.md",
     "goals/harness-telemetry-enrollment/research/SOURCES.md",
     "explorations/agent-observability-rebuild/BRIEF.md",
-    "explorations/agent-observability-rebuild/DECISIONS.md"
+    "explorations/agent-observability-rebuild/DECISIONS.md",
+    "goals/harness-telemetry-enrollment/ops/cli-enrollment-canary.ts",
+    "goals/harness-telemetry-enrollment/ops/test-cli-enrollment-canary.ts"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/CURRENT-SOURCE-ADMISSION.md",
+    "research/HARNESS-ROUTES.md",
+    "ops/history/current-source-admission-20261103.json"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -49,12 +56,12 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",
@@ -77,16 +84,15 @@
     "jq . goals/harness-telemetry-enrollment/ops/manifest.json",
     "rg -n \"harness-telemetry-enrollment|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/harness-telemetry-enrollment",
     "git diff --check -- goals/harness-telemetry-enrollment",
-    "bun run beep lint reflection-artifacts"
+    "bun run beep lint reflection-artifacts",
+    "bun --no-env-file goals/harness-telemetry-enrollment/ops/test-cli-enrollment-canary.ts"
   ],
   "stopConditions": [
-    "Required source files are missing or materially contradictory.",
-    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
-    "The same blocker repeats after reasonable investigation."
+    "Only stop dependent work for an actual unresolved access/authentication/privacy/integrity/resource boundary; continue independent proof and handle routine fixes autonomously.",
+    "New spend, plan changes or purchases require the operator.",
+    "Never release the historical forwarder recovery hold as part of this packet."
   ],
-  "statusNote": "Authored but not started; operator requested implementation-packet preparation, not execution.",
-  "resumeConditions": [
-    "Explicit launch of this packet after dependency proof; refresh live state before changes."
-  ],
+  "statusNote": "Explicit operator launch2026-11-03 after foundation PR2655 canonical verified/completed-retained. Start with fresh current-source root admission, then actual per-route collection for all seven requested harness families with desktop subroutes separate. Metadata plus curated examples only. Recovery forwarder service and timer remain masked/inactive. No coverage claim until actual runtime and backend receipts verify.",
+  "resumeConditions": [],
   "dependencies": ["goals/agent-observability-foundation"]
 }
