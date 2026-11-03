@@ -15,8 +15,8 @@ No runtime or P3 credit; disposition in disposition.md.
 - `goals/boolean-creep/data/r32-parent-integration-2026-09-25.json`: `3fdc0858076bbb8ef5c9697cdad536f66d985200224dfe9a1c48860410e88c22`
 - `packages/tooling/tool/cli/src/internal/cli/FsGuards.ts`: `535387a2fda8ae6fe252144fc8f7930605416ea4a5ff4a4331f4480807034c39`
 - `packages/tooling/tool/cli/src/internal/github/GhSchema.ts`: `e6bef695d72de8457ab396b9038b55a96ab3aad0f9a1094506b331198ba4eb3e`
-- `packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts`: `3a3225181ceb71b7e23bd26a255bf1db10d7f22509c6cb14707a854cb9c09125`
-- `packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts`: `bad39e4279d1f1b9c0f6773a7645bd5b3fb31654209e312a4116066b7ea15b08`
+- `packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts`: `3a3225181ceb71b7e23bd26a255bf1db10d7f22509c6cb14707a854cb9c09125`
+- `packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.schemas.ts`: `bad39e4279d1f1b9c0f6773a7645bd5b3fb31654209e312a4116066b7ea15b08`
 
 ## Outputs
 

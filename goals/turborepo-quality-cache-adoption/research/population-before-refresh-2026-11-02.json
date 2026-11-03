@@ -1321,7 +1321,7 @@
         "sha256": "32a92537d467d31ba3848a1613f4dd954324f6209cd38200b119bdc0c5677efc"
       },
       {
-        "path": "packages/tooling/tool/cli/src/commands/Quality/internal/ResidueTerminalLaneLive.ts",
+        "path": "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueTerminalLaneLive.ts",
         "sha256": "0d3561451d7e5388d2f681321b12b9d5b56e0b1fc4f8f5225314687a220ba09d"
       },
       {

@@ -39,7 +39,7 @@ import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { TmpfsReapSkipReason } from "./TmpfsReap.schemas.ts";
 
-const $I = $RepoCliId.create("internal/repo-run/TmpfsReap");
+const $I = $RepoCliId.create("commands/Worktree/internal/TmpfsReap");
 
 const HEAD_INSTALL_PREFIX = "beep-yeet-head-install-";
 const FALLOW_CACHE_PREFIX = "fallow-audit-base-cache-";

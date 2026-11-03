@@ -154,7 +154,7 @@ const oldLockfileChanged = (cwd: string, base: string, head: string) =>
     Effect.map(A.isReadonlyArrayNonEmpty)
   );
 
-// internal/repo-run/ResidueReap.ts gitCleanSkip, verbatim.
+// commands/Worktree/internal/ResidueReap.ts gitCleanSkip, verbatim.
 const oldGitCleanSkip = Effect.fnUntraced(function* (gitMarkers: ReadonlyArray<string>) {
   const readings = yield* Effect.forEach(
     gitMarkers,
@@ -173,7 +173,7 @@ const oldGitCleanSkip = Effect.fnUntraced(function* (gitMarkers: ReadonlyArray<s
     ? O.some("dirty-tree" as const)
     : O.none();
 });
-// internal/repo-run/TmpfsReap.ts worktreeIsDirty's status read, verbatim.
+// commands/Worktree/internal/TmpfsReap.ts worktreeIsDirty's status read, verbatim.
 const oldWorktreeIsDirty = (parentRepo: string, worktree: string) =>
   runRepoCommandCapture("git", ["-C", worktree, "status", "--porcelain", "--no-renames"], parentRepo).pipe(
     Effect.option,

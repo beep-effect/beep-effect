@@ -12,7 +12,7 @@ import type * as Effect from "effect/Effect";
 import type * as O from "effect/Option";
 import type { ResidueTerminalLaneAuthority } from "./ResidueReap.schemas.ts";
 
-const $I = $RepoCliId.create("internal/repo-run/ResidueTerminalLane");
+const $I = $RepoCliId.create("commands/Worktree/internal/ResidueTerminalLane");
 
 /**
  * Service contract: prove, live, that one checkout is a finished lane.

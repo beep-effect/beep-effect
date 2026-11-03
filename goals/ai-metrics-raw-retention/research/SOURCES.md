@@ -53,7 +53,7 @@ All other claims are workstation measurements recorded in `RESEARCH.md`
 | Fleet mirror (derived checkout view) | `goals/fleet-mirror`, `packages/tooling/tool/cli/src/commands/Worktree/` | reuse (registry joins onto it) |
 | Worktree lifecycle | `packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts`, `Worktree.constants.ts` | extend (parameterize managed root) |
 | `yeet sweep --fleet` discovery | `packages/tooling/tool/cli/src/commands/Yeet/internal/Economics.ts` | extend (fleet-root config) |
-| Residue reap | `packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts` | extend (drain-on-empty class) |
+| Residue reap | `packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts` | extend (drain-on-empty class) |
 | Timer renderers (`--refresh` forms) | `docs/runbooks/systemd-timers.md` | reuse (re-render against ops seat) |
 | Worktree standard | `standards/git-worktrees.md` | rewrite in a graduated goal |
 | Seat/lane authored registry | — | NET-NEW |

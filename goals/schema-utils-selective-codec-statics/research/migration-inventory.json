@@ -9377,7 +9377,7 @@
           "property": "encodeUnknownResultFromJsonString"
         },
         {
-          "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts",
+          "file": "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.probes.ts",
           "start": 19572,
           "property": "decodeEffectFromJsonString"
         }
@@ -10203,7 +10203,7 @@
           "property": "encodeUnknownResultFromJsonString"
         },
         {
-          "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts",
+          "file": "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.probes.ts",
           "start": 19572,
           "property": "decodeEffectFromJsonString"
         }
@@ -11035,7 +11035,7 @@
           "property": "encodeUnknownResultFromJsonString"
         },
         {
-          "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts",
+          "file": "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.probes.ts",
           "start": 19572,
           "property": "decodeEffectFromJsonString"
         }
@@ -11861,7 +11861,7 @@
           "property": "encodeUnknownResultFromJsonString"
         },
         {
-          "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts",
+          "file": "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.probes.ts",
           "start": 19572,
           "property": "decodeEffectFromJsonString"
         }
@@ -12687,7 +12687,7 @@
           "property": "encodeUnknownResultFromJsonString"
         },
         {
-          "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts",
+          "file": "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.probes.ts",
           "start": 19572,
           "property": "decodeEffectFromJsonString"
         }
@@ -13513,7 +13513,7 @@
           "property": "encodeUnknownResultFromJsonString"
         },
         {
-          "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts",
+          "file": "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.probes.ts",
           "start": 19572,
           "property": "decodeEffectFromJsonString"
         }

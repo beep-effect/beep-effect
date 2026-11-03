@@ -3,7 +3,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { OpaqueDefect } from "../../../../internal/schema/OpaqueDefect.ts";
 
-const $I = $RepoCliId.create("internal/cli/RegistrationGeometry/errors");
+const $I = $RepoCliId.create("commands/DeletePackage/internal/RegistrationGeometry/errors");
 
 /**
  * Typed failure raised when registration geometry cannot be resolved,

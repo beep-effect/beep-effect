@@ -529,7 +529,7 @@ SRC: packages/foundation/modeling/schema/src/Graph/index.ts
 REL: A digest-named protocol value needs a serializable graph/topology carrier; the encoding substrate for 'topology as a schema value' already exists and only lacks protocol meaning.
 
 CLAIM: A geometry-as-data precedent exists inside the CLI: RegistrationGeometry.schemas.ts declares 'Schema-first contracts for package registration geometry' with LiteralKit closed domains RegistrationSurfaceKind (owned-tree, workspace-literal, identity-segment, ...) and RegistrationWriter (create-package, identity-sync, tsconfig-sync, ...), i.e. the repo's own registration topology reified as a typed value.
-SRC: packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts
+SRC: packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.schemas.ts
 REL: Shows the repo already models 'which surfaces exist and who may write them' as a closed typed value — a small-scale instance of topology-one-level-above-the-participants.
 
 CLAIM: effect/workflow and effect/cluster are imported ONLY in scratchpad/effect-ontology (WorkflowOrchestrator.ts imports {Workflow, WorkflowEngine} from 'effect/workflow'; DurableActivities.ts and StreamingExtractionActivity.ts import Activity; ClusterRuntime.ts imports {ShardingConfig, SingleRunner} from 'effect/cluster'). rg over packages/**/*.ts returns zero hits.

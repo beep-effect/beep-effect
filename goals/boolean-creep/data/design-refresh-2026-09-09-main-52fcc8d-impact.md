@@ -298,7 +298,7 @@ packages/tooling/tool/cli/src/commands/Yeet/internal/Provenance.ts
 packages/tooling/tool/cli/src/commands/Yeet/internal/Resume.ts
 packages/tooling/tool/cli/src/internal/jsdoc/JSDocSections.ts
 packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
-packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts
+packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts
 ```
 
 The exact path set is reproducible without checkout mutation with:
@@ -442,7 +442,7 @@ can prioritize authored design refresh separately from inventory-only records.
 | `r25-drivers-n-r-runpod-raw-request-authenticated-body` | no | `packages/drivers/runpod/src/Runpod.service.ts` P `134` -> `134` |
 | `scheduler-admission-attempt-origin` | yes | `packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts` P `1571` -> `1571`; E1 `1587` -> `1587`; E2 `1750` -> `1750` |
 | `scheduler-promotion-tick-origin` | yes | `packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts` P `1723` -> `1723`; E1 `1747` -> `1747`; E2 `1834` -> `1851` |
-| `r25-cli-internal-root-residue-reap-name-brands` | no | `packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts` P `61` -> `64` |
+| `r25-cli-internal-root-residue-reap-name-brands` | no | `packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts` P `61` -> `64` |
 | `r25-cli-commands-a-c-ci-lane-run-dry-run-force` | no | `packages/tooling/tool/cli/src/commands/Ci/CiLane.ts` P `619` -> `619` |
 | `r25-cli-commands-l-q-coverage-replace-all-scoped` | no | `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts` P `251` -> `252` |
 | `r25-cli-commands-l-q-github-checks-failure-policy` | no | `packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts` P `2869` -> `2873` |

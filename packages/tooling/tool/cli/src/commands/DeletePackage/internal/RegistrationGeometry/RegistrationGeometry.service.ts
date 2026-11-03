@@ -15,7 +15,7 @@ import type {
   RegistrationTarget,
 } from "./RegistrationGeometry.schemas.ts";
 
-const $I = $RepoCliId.create("internal/cli/RegistrationGeometry/service");
+const $I = $RepoCliId.create("commands/DeletePackage/internal/RegistrationGeometry/service");
 
 /**
  * Operations offered by {@link RegistrationGeometryService}: surface listing,

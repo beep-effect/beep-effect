@@ -213,7 +213,7 @@
       "remediation": {
         "status": "implemented",
         "changedFiles": [
-          "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts",
+          "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts",
           "packages/tooling/tool/cli/test/residue-reap.test.ts"
         ],
         "verificationCommands": [

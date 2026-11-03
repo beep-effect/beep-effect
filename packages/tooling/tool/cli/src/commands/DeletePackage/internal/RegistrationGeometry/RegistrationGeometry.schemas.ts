@@ -13,7 +13,7 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 
-const $I = $RepoCliId.create("internal/cli/RegistrationGeometry");
+const $I = $RepoCliId.create("commands/DeletePackage/internal/RegistrationGeometry");
 
 /**
  * Closed set of surface kinds a package registration can occupy, from the

@@ -59,7 +59,7 @@
     },
     {
       "symbol": "DiscoveredCandidate",
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
       "declarationLine": 62,
       "booleanFields": [
         {

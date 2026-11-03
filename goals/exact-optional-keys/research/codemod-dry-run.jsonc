@@ -92,8 +92,8 @@
     "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",
     "packages/tooling/tool/cli/src/internal/repo-run/AttemptTerminationJournal.ts",
     "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts",
-    "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts",
-    "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts",
+    "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.schemas.ts",
+    "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.schemas.ts",
     "packages/tooling/tool/cli/test/graft-hooks.test.ts",
     "scratchpad/effect-ontology/Repository/schema.ts",
     "scratchpad/effected/engine/LaunchContext.ts",
@@ -3688,7 +3688,7 @@
     {
       "ruleId": "exact-optional-keys",
       "facet": "optional",
-      "filePath": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts",
+      "filePath": "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.schemas.ts",
       "line": 356,
       "column": 16,
       "before": "optional",
@@ -3697,7 +3697,7 @@
     {
       "ruleId": "exact-optional-keys",
       "facet": "optional",
-      "filePath": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts",
+      "filePath": "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.schemas.ts",
       "line": 358,
       "column": 19,
       "before": "optional",
@@ -3706,7 +3706,7 @@
     {
       "ruleId": "exact-optional-keys",
       "facet": "optional",
-      "filePath": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts",
+      "filePath": "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.schemas.ts",
       "line": 359,
       "column": 23,
       "before": "optional",
@@ -3715,7 +3715,7 @@
     {
       "ruleId": "exact-optional-keys",
       "facet": "optional",
-      "filePath": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts",
+      "filePath": "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.schemas.ts",
       "line": 360,
       "column": 14,
       "before": "optional",
@@ -3724,7 +3724,7 @@
     {
       "ruleId": "exact-optional-keys",
       "facet": "optional",
-      "filePath": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts",
+      "filePath": "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.schemas.ts",
       "line": 361,
       "column": 21,
       "before": "optional",
@@ -3733,7 +3733,7 @@
     {
       "ruleId": "exact-optional-keys",
       "facet": "optional",
-      "filePath": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts",
+      "filePath": "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.schemas.ts",
       "line": 362,
       "column": 20,
       "before": "optional",
@@ -3742,7 +3742,7 @@
     {
       "ruleId": "exact-optional-keys",
       "facet": "optional",
-      "filePath": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts",
+      "filePath": "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.schemas.ts",
       "line": 363,
       "column": 17,
       "before": "optional",
@@ -3751,7 +3751,7 @@
     {
       "ruleId": "exact-optional-keys",
       "facet": "optional",
-      "filePath": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts",
+      "filePath": "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.schemas.ts",
       "line": 364,
       "column": 14,
       "before": "optional",
@@ -3760,7 +3760,7 @@
     {
       "ruleId": "exact-optional-keys",
       "facet": "optional",
-      "filePath": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts",
+      "filePath": "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.schemas.ts",
       "line": 365,
       "column": 22,
       "before": "optional",
@@ -3769,7 +3769,7 @@
     {
       "ruleId": "exact-optional-keys",
       "facet": "optional",
-      "filePath": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts",
+      "filePath": "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.schemas.ts",
       "line": 366,
       "column": 28,
       "before": "optional",
@@ -3778,7 +3778,7 @@
     {
       "ruleId": "exact-optional-keys",
       "facet": "optional",
-      "filePath": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts",
+      "filePath": "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.schemas.ts",
       "line": 367,
       "column": 24,
       "before": "optional",
@@ -3787,7 +3787,7 @@
     {
       "ruleId": "exact-optional-keys",
       "facet": "optional",
-      "filePath": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts",
+      "filePath": "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.schemas.ts",
       "line": 368,
       "column": 23,
       "before": "optional",
@@ -3796,7 +3796,7 @@
     {
       "ruleId": "exact-optional-keys",
       "facet": "optional",
-      "filePath": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts",
+      "filePath": "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.schemas.ts",
       "line": 419,
       "column": 14,
       "before": "optional",
@@ -3805,7 +3805,7 @@
     {
       "ruleId": "exact-optional-keys",
       "facet": "optional",
-      "filePath": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts",
+      "filePath": "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.schemas.ts",
       "line": 420,
       "column": 19,
       "before": "optional",
@@ -3814,7 +3814,7 @@
     {
       "ruleId": "exact-optional-keys",
       "facet": "optional",
-      "filePath": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts",
+      "filePath": "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.schemas.ts",
       "line": 434,
       "column": 13,
       "before": "optional",
@@ -3823,7 +3823,7 @@
     {
       "ruleId": "exact-optional-keys",
       "facet": "optional",
-      "filePath": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts",
+      "filePath": "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.schemas.ts",
       "line": 541,
       "column": 38,
       "before": "optional",
@@ -3832,7 +3832,7 @@
     {
       "ruleId": "exact-optional-keys",
       "facet": "optional",
-      "filePath": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts",
+      "filePath": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.schemas.ts",
       "line": 149,
       "column": 13,
       "before": "optional",
@@ -3841,7 +3841,7 @@
     {
       "ruleId": "exact-optional-keys",
       "facet": "optional",
-      "filePath": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts",
+      "filePath": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.schemas.ts",
       "line": 155,
       "column": 19,
       "before": "optional",
@@ -3850,7 +3850,7 @@
     {
       "ruleId": "exact-optional-keys",
       "facet": "optional",
-      "filePath": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts",
+      "filePath": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.schemas.ts",
       "line": 156,
       "column": 19,
       "before": "optional",
@@ -3859,7 +3859,7 @@
     {
       "ruleId": "exact-optional-keys",
       "facet": "optional",
-      "filePath": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts",
+      "filePath": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.schemas.ts",
       "line": 157,
       "column": 18,
       "before": "optional",
@@ -3868,7 +3868,7 @@
     {
       "ruleId": "exact-optional-keys",
       "facet": "optional",
-      "filePath": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts",
+      "filePath": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.schemas.ts",
       "line": 158,
       "column": 14,
       "before": "optional",
@@ -3877,7 +3877,7 @@
     {
       "ruleId": "exact-optional-keys",
       "facet": "optional",
-      "filePath": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts",
+      "filePath": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.schemas.ts",
       "line": 195,
       "column": 40,
       "before": "optional",

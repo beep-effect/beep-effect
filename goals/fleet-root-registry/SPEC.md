@@ -34,7 +34,7 @@ Higher sources outrank lower sources when they conflict.
 
 - `packages/tooling/tool/cli/src/commands/Worktree/` (fleet mirror, managed root at `Worktree.service.ts:996`, `Worktree.constants.ts`)
 - `packages/tooling/tool/cli/src/commands/Yeet/internal/Economics.ts` (`projectsRootOf`, `fleetCandidates`)
-- `packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts` discovery roots
+- `packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts` discovery roots
 - new registry schema + store module under `@beep/repo-cli` (schema -> `Context.Service` -> implementation)
 - `docs/runbooks/` page for the fleet root and registry (new)
 

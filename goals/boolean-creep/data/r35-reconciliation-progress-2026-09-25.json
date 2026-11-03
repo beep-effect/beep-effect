@@ -292,21 +292,21 @@
     {
       "id": "r28-cli-internal-root-tmpfs-gitfile-remove-options",
       "line": 864,
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
       "sourceSha256": "3a3225181ceb71b7e23bd26a255bf1db10d7f22509c6cb14707a854cb9c09125",
       "reason": "Current declaration or constructed call-site anchor verified through Graft; classification unchanged."
     },
     {
       "id": "r28-cli-internal-root-tmpfs-directory-remove-options",
       "line": 923,
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
       "sourceSha256": "3a3225181ceb71b7e23bd26a255bf1db10d7f22509c6cb14707a854cb9c09125",
       "reason": "Current declaration or constructed call-site anchor verified through Graft; classification unchanged."
     },
     {
       "id": "r28-cli-internal-root-tmpfs-fallow-extras-remove-options",
       "line": 930,
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
       "sourceSha256": "3a3225181ceb71b7e23bd26a255bf1db10d7f22509c6cb14707a854cb9c09125",
       "reason": "Current declaration or constructed call-site anchor verified through Graft; classification unchanged."
     },

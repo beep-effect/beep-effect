@@ -123,7 +123,7 @@ Get the full list with `jq -r '.findings[]|[.kind,.file,.name]|@tsv'` on the bas
 | `commands/Yeet/internal/WaveOrder.ts:286-287` `policyHostedRow("quality:knip", …)`, `:490` `laneRowCost` | remove |
 | `commands/Yeet/internal/Status.ts:146-147,728,2097` (JSDoc examples using `quality:knip`) | remove (swap the example lane id) |
 | `commands/DeletePackage/DeletePackage.command.ts:455` "Knip baseline" writer step; `DeletePackage.schemas.ts:307` example | remove |
-| `internal/cli/RegistrationGeometry/RegistrationGeometry.plan.ts:142-154` writer `knip-baseline`; `RegistrationGeometry.schemas.ts:47` literal `"knip-baseline"` | remove |
+| `commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.plan.ts:142-154` writer `knip-baseline`; `RegistrationGeometry.schemas.ts:47` literal `"knip-baseline"` | remove |
 | `internal/ratchet/RatchetDiff.ts:8-10,41` and `RatchetLifecycle.ts:6,53,55` (doc comments citing Knip) | reword. `diffMembership` is shared, so keep it. |
 | `commands/CreatePackage/CreatePackage.command.ts:502,1743,1802,1826,1894,1901,2085` (comments justifying template deps "because Knip …") | reword. The template behaviour stays. Re-justify it or prune any dependency that only existed to satisfy Knip. |
 
