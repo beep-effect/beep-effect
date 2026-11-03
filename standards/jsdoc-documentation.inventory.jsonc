@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-03T02:47:26.512Z",
+  "generatedAt": "2026-11-03T03:47:01.943Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 167,
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 15,
-    "publicModules": 3568,
-    "publicExports": 25401,
+    "publicModules": 3570,
+    "publicExports": 25406,
     "openModules": 115,
     "openExports": 94,
     "missingExportExamples": 0,
@@ -295821,7 +295821,7 @@
         "srcDir": "src",
         "sourceFileCount": 72,
         "publicModuleCount": 72,
-        "publicExportCount": 622
+        "publicExportCount": 623
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -297348,7 +297348,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 1,
+          "exportCount": 2,
           "remediationStatus": "resolved"
         },
         {
@@ -309660,12 +309660,36 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "renderBiomeJsonAt",
+          "exportKind": "const",
+          "filePath": "src/schemas/BiomeJson.ts",
+          "repoPath": "packages/tooling/library/repo-utils/src/schemas/BiomeJson.ts",
+          "line": 78,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-biomejson-ts-78-renderbiomejsonat",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "renderBiomeJson",
           "exportKind": "const",
           "filePath": "src/schemas/BiomeJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/BiomeJson.ts",
-          "line": 63,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-biomejson-ts-63-renderbiomejson",
+          "line": 186,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-biomejson-ts-186-renderbiomejson",
           "currentTags": [
             "@effects",
             "@category",
@@ -449139,9 +449163,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 488,
-        "publicModuleCount": 485,
-        "publicExportCount": 4630
+        "sourceFileCount": 490,
+        "publicModuleCount": 487,
+        "publicExportCount": 4634
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -450799,6 +450823,29 @@
           "line": 1,
           "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-upload-ts-1-module",
           "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/Cache/CachePolicy.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Cache/CachePolicy.command.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cachepolicy-command-ts-1-module",
+          "currentTags": [
+            "@internal",
             "@packageDocumentation",
             "@since"
           ],
@@ -457213,7 +457260,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 9,
+          "exportCount": 10,
           "remediationStatus": "resolved"
         },
         {
@@ -457235,7 +457282,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 45,
+          "exportCount": 43,
           "remediationStatus": "resolved"
         },
         {
@@ -459676,6 +459723,29 @@
           ],
           "exportCount": 10,
           "remediationStatus": "open"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/Worktree/Janitor.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Janitor.command.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-janitor-command-ts-1-module",
+          "currentTags": [
+            "@internal",
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 4,
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -472495,6 +472565,28 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "cachePolicyCommand",
+          "exportKind": "const",
+          "filePath": "src/commands/Cache/CachePolicy.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Cache/CachePolicy.command.ts",
+          "line": 35,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cachepolicy-command-ts-35-cachepolicycommand",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "export {\n  cacheTaskSelectionArgs,\n  collectCacheCensus,\n  collectCacheTaskSelection,\n  isCacheTaskInspectionArg,\n  resolveCacheTurboBinary,\n} from \"./Cache.census.ts\";",
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
@@ -473833,8 +473925,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 120,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-120-ci-lane-class-values",
+          "line": 122,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-122-ci-lane-class-values",
           "currentTags": [
             "@category",
             "@since"
@@ -473855,8 +473947,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 136,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-136-cilaneclass",
+          "line": 138,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-138-cilaneclass",
           "currentTags": [
             "@category",
             "@since"
@@ -473877,8 +473969,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 157,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-157-cilaneclass",
+          "line": 159,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-159-cilaneclass",
           "currentTags": [
             "@category",
             "@since"
@@ -473899,8 +473991,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 173,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-173-ci-lane-replay-values",
+          "line": 175,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-175-ci-lane-replay-values",
           "currentTags": [
             "@category",
             "@since"
@@ -473921,8 +474013,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 189,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-189-cilanereplay",
+          "line": 191,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-191-cilanereplay",
           "currentTags": [
             "@category",
             "@since"
@@ -473943,8 +474035,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 210,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-210-cilanereplay",
+          "line": 212,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-212-cilanereplay",
           "currentTags": [
             "@category",
             "@since"
@@ -473965,8 +474057,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 226,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-226-ci-lane-id-values",
+          "line": 228,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-228-ci-lane-id-values",
           "currentTags": [
             "@category",
             "@since"
@@ -473987,8 +474079,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 267,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-267-cilaneid",
+          "line": 269,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-269-cilaneid",
           "currentTags": [
             "@category",
             "@since"
@@ -474009,8 +474101,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 288,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-288-cilaneid",
+          "line": 290,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-290-cilaneid",
           "currentTags": [
             "@category",
             "@since"
@@ -474031,8 +474123,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 306,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-306-docgen-lane-mode-values",
+          "line": 308,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-308-docgen-lane-mode-values",
           "currentTags": [
             "@category",
             "@since"
@@ -474053,8 +474145,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 322,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-322-docgenlanemode",
+          "line": 324,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-324-docgenlanemode",
           "currentTags": [
             "@category",
             "@since"
@@ -474075,8 +474167,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 343,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-343-docgenlanemode",
+          "line": 345,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-345-docgenlanemode",
           "currentTags": [
             "@category",
             "@since"
@@ -474097,8 +474189,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 371,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-371-cilanedescriptor",
+          "line": 373,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-373-cilanedescriptor",
           "currentTags": [
             "@category",
             "@since"
@@ -474119,8 +474211,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 411,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-411-ci-lane-descriptors",
+          "line": 413,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-413-ci-lane-descriptors",
           "currentTags": [
             "@category",
             "@since"
@@ -474145,8 +474237,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 715,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-715-cilanerunoptions",
+          "line": 717,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-717-cilanerunoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -474167,8 +474259,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 906,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-906-cilanepartitionproof",
+          "line": 908,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-908-cilanepartitionproof",
           "currentTags": [
             "@category",
             "@since"
@@ -474189,8 +474281,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1154,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1154-provecilanepartition",
+          "line": 1156,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1156-provecilanepartition",
           "currentTags": [
             "@param",
             "@returns",
@@ -474213,8 +474305,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1275,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1275-cilanepartitionargs",
+          "line": 1277,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1277-cilanepartitionargs",
           "currentTags": [
             "@category",
             "@since"
@@ -474235,8 +474327,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1307,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1307-cilanedefaultplacementlinesfortesting",
+          "line": 1309,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1309-cilanedefaultplacementlinesfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -474259,8 +474351,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1354,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1354-cilanepartitionargsfortesting",
+          "line": 1356,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1356-cilanepartitionargsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -474283,8 +474375,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1561,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1561-cilanestepsfortesting",
+          "line": 1570,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1570-cilanestepsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -474311,8 +474403,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1904,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1904-docgenlanemodeforchangedpaths",
+          "line": 1919,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1919-docgenlanemodeforchangedpaths",
           "currentTags": [
             "@param",
             "@returns",
@@ -474335,8 +474427,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2347,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2347-runcilane",
+          "line": 2362,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2362-runcilane",
           "currentTags": [
             "@param",
             "@returns",
@@ -474359,8 +474451,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2425,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2425-cilanecommand",
+          "line": 2440,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2440-cilanecommand",
           "currentTags": [
             "@category",
             "@since"
@@ -474381,8 +474473,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2671,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2671-cilocalstepplan",
+          "line": 2686,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2686-cilocalstepplan",
           "currentTags": [
             "@category",
             "@since"
@@ -474403,8 +474495,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2753,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2753-cilanedispatchstep",
+          "line": 2768,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2768-cilanedispatchstep",
           "currentTags": [
             "@param",
             "@returns",
@@ -474427,8 +474519,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2791,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2791-cilocalstepsfortesting",
+          "line": 2806,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2806-cilocalstepsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -474451,8 +474543,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2827,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2827-cilocallaneinputsfortesting",
+          "line": 2842,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2842-cilocallaneinputsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -474475,8 +474567,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2858,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2858-runcilocal",
+          "line": 2873,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2873-runcilocal",
           "currentTags": [
             "@param",
             "@returns",
@@ -474499,8 +474591,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2894,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2894-cilocalcommand",
+          "line": 2909,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2909-cilocalcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -538143,8 +538235,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/FallowQuality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
-          "line": 530,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-530-workflowyamlvaluefortesting",
+          "line": 535,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-535-workflowyamlvaluefortesting",
           "currentTags": [
             "@internal",
             "@category",
@@ -538166,9 +538258,33 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/FallowQuality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
-          "line": 775,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-775-inheritedcodemodduplicationcountfortesting",
+          "line": 780,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-780-inheritedcodemodduplicationcountfortesting",
           "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "fallowReportPathsForTesting",
+          "exportKind": "const",
+          "filePath": "src/commands/Quality/FallowQuality.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+          "line": 1124,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-1124-fallowreportpathsfortesting",
+          "currentTags": [
+            "@param",
+            "@returns",
             "@category",
             "@since"
           ],
@@ -538188,8 +538304,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/FallowQuality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
-          "line": 1218,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-1218-fallowfeatureargsfortesting",
+          "line": 1252,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-1252-fallowfeatureargsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538212,8 +538328,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/FallowQuality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
-          "line": 1249,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-1249-fallowauditdifffallbackargsfortesting",
+          "line": 1283,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-1283-fallowauditdifffallbackargsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538236,8 +538352,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/FallowQuality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
-          "line": 1323,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-1323-fallowauditneedsdifffallbackfortesting",
+          "line": 1357,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-1357-fallowauditneedsdifffallbackfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538260,8 +538376,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/FallowQuality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
-          "line": 1526,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-1526-collectauditdiffinputfortesting",
+          "line": 1560,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-1560-collectauditdiffinputfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538284,8 +538400,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/FallowQuality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
-          "line": 2098,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-2098-reportinvariantdiagnosticsfortesting",
+          "line": 2134,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-2134-reportinvariantdiagnosticsfortesting",
           "currentTags": [
             "@internal",
             "@category",
@@ -538307,8 +538423,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/FallowQuality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
-          "line": 2887,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-2887-qualityfallowcommand",
+          "line": 2923,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-2923-qualityfallowcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -538329,8 +538445,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 165,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-165-export-testtsgosyntheticconfigtemplate-from-internal-testtsgosyntheticconfig-ts",
+          "line": 151,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-151-export-testtsgosyntheticconfigtemplate-from-internal-testtsgosyntheticconfig-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -538351,8 +538467,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 172,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-172-export-qualityscriptcommanderror-from-quality-errors-ts",
+          "line": 158,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-158-export-qualityscriptcommanderror-from-quality-errors-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -538373,8 +538489,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 179,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-179-export-githubchecklanespec-githubchecklanestage-githubcheckmode-githubchecksfallowfeaturematrix-qualityhardwareprofile-qualityprofileconfig-qualityprofiledetection-from-quality-schemas-ts",
+          "line": 165,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-165-export-githubchecklanespec-githubchecklanestage-githubcheckmode-githubchecksfallowfeaturematrix-qualityhardwareprofile-qualityprofileconfig-qualityprofiledetection-from-quality-schemas-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -538395,8 +538511,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 203,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-203-qualityprofiledetectioninput",
+          "line": 189,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-189-qualityprofiledetectioninput",
           "currentTags": [
             "@category",
             "@since"
@@ -538417,8 +538533,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 219,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-219-githubchecklanesformodefortesting",
+          "line": 205,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-205-githubchecklanesformodefortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -538439,8 +538555,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 235,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-235-githubcheckprepushexternallanesfortesting",
+          "line": 221,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-221-githubcheckprepushexternallanesfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -538461,8 +538577,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 251,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-251-githubcheckpromotedfallowlanediagnosticsfortesting",
+          "line": 237,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-237-githubcheckpromotedfallowlanediagnosticsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -538483,8 +538599,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 268,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-268-githubcheckqualitylanesfortesting",
+          "line": 254,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-254-githubcheckqualitylanesfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -538505,8 +538621,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 284,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-284-githubcheckreposanitylanesfortesting",
+          "line": 270,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-270-githubcheckreposanitylanesfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -538527,8 +538643,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 300,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-300-promotedfallowgithubchecklaneidsfortesting",
+          "line": 286,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-286-promotedfallowgithubchecklaneidsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -538549,8 +538665,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 316,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-316-detectqualityprofilefortesting",
+          "line": 302,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-302-detectqualityprofilefortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -538571,8 +538687,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 332,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-332-qualityprofileconfigfortesting",
+          "line": 318,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-318-qualityprofileconfigfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -538593,8 +538709,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 348,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-348-activeosvignoreidsfortesting",
+          "line": 334,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-334-activeosvignoreidsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -538615,8 +538731,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 398,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-398-iseffectdiagnosticsdirectivefortesting",
+          "line": 384,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-384-iseffectdiagnosticsdirectivefortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538639,8 +538755,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 436,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-436-effectdiagnosticsdirectiveexemption",
+          "line": 422,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-422-effectdiagnosticsdirectiveexemption",
           "currentTags": [
             "@category",
             "@since"
@@ -538661,8 +538777,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 477,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-477-effectdiagnosticsdirectiveexemptions",
+          "line": 463,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-463-effectdiagnosticsdirectiveexemptions",
           "currentTags": [
             "@category",
             "@since"
@@ -538683,8 +538799,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 527,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-527-tsgodisabledrule",
+          "line": 513,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-513-tsgodisabledrule",
           "currentTags": [
             "@category",
             "@since"
@@ -538705,8 +538821,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 569,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-569-tsgodisabledrules",
+          "line": 555,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-555-tsgodisabledrules",
           "currentTags": [
             "@category",
             "@since"
@@ -538727,8 +538843,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 643,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-643-isrejectedeffectdiagnosticsdirectivefortesting",
+          "line": 629,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-629-isrejectedeffectdiagnosticsdirectivefortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538751,8 +538867,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 892,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-892-qualitycommandprimitivehelpersfortesting",
+          "line": 878,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-878-qualitycommandprimitivehelpersfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -538773,8 +538889,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1094,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1094-runbunaudit",
+          "line": 1080,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1080-runbunaudit",
           "currentTags": [
             "@param",
             "@returns",
@@ -538801,8 +538917,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1232,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1232-devqualitystepsfortesting",
+          "line": 1218,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1218-devqualitystepsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538825,8 +538941,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1304,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1304-reviewfixdocgenlocalargsfortesting",
+          "line": 1290,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1290-reviewfixdocgenlocalargsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538849,8 +538965,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1574,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1574-rungithubchecks",
+          "line": 1560,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1560-rungithubchecks",
           "currentTags": [
             "@param",
             "@returns",
@@ -538873,8 +538989,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1826,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1826-testtsgoplanningfortesting",
+          "line": 1812,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1812-testtsgoplanningfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -538895,8 +539011,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1971,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1971-collecteffecttsgodiagnosticlines",
+          "line": 1957,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1957-collecteffecttsgodiagnosticlines",
           "currentTags": [
             "@param",
             "@returns",
@@ -538919,8 +539035,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2004,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2004-missingtesttsgotaskmessagefortesting",
+          "line": 1990,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1990-missingtesttsgotaskmessagefortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538943,8 +539059,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2116,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2116-extracteffecttsgoreadmepluginoptionnamesfortesting",
+          "line": 2102,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2102-extracteffecttsgoreadmepluginoptionnamesfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538967,8 +539083,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2186,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2186-collecttsgopluginoptionparitydiagnosticsfortesting",
+          "line": 2172,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2172-collecttsgopluginoptionparitydiagnosticsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538991,8 +539107,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2314,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2314-collecttsgoseveritydiagnosticsfortesting",
+          "line": 2300,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2300-collecttsgoseveritydiagnosticsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -539015,8 +539131,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2602,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2602-collecttsgopluginprofilediagnosticsfortesting",
+          "line": 2588,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2588-collecttsgopluginprofilediagnosticsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -539039,8 +539155,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2624,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2624-collecttsconfiginheritancediagnosticsfortesting",
+          "line": 2610,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2610-collecttsconfiginheritancediagnosticsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -539061,8 +539177,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2819,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2819-collecttsgoworkspacescandiagnosticsfortesting",
+          "line": 2805,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2805-collecttsgoworkspacescandiagnosticsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -539085,8 +539201,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2889,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2889-runtsgorulescheck",
+          "line": 2875,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2875-runtsgorulescheck",
           "currentTags": [
             "@returns",
             "@category",
@@ -539108,8 +539224,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3012,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3012-runtesttsgochecks",
+          "line": 2998,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2998-runtesttsgochecks",
           "currentTags": [
             "@param",
             "@returns",
@@ -539132,8 +539248,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3114,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3114-runtesttsgochecksat",
+          "line": 3100,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3100-runtesttsgochecksat",
           "currentTags": [
             "@param",
             "@returns",
@@ -539156,8 +539272,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3160,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3160-runtsgosmokecheck",
+          "line": 3146,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3146-runtsgosmokecheck",
           "currentTags": [
             "@returns",
             "@category",
@@ -539179,8 +539295,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3273,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3273-ismoduletagscannedpathfortesting",
+          "line": 3259,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3259-ismoduletagscannedpathfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -539203,8 +539319,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3294,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3294-runjsdocmoduletagscheck",
+          "line": 3280,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3280-runjsdocmoduletagscheck",
           "currentTags": [
             "@returns",
             "@category",
@@ -539226,8 +539342,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3367,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3367-runjsdocinventory",
+          "line": 3353,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3353-runjsdocinventory",
           "currentTags": [
             "@returns",
             "@category",
@@ -539249,8 +539365,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3434,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3434-runjsdocquality",
+          "line": 3420,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3420-runjsdocquality",
           "currentTags": [
             "@category",
             "@since"
@@ -539271,56 +539387,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3872,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3872-renderadmissionsnapshotlinesfortesting",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "renderTmpfsReportLinesForTesting",
-          "exportKind": "const",
-          "filePath": "src/commands/Quality/Quality.command.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 4039,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-4039-rendertmpfsreportlinesfortesting",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "renderResidueReportLinesForTesting",
-          "exportKind": "const",
-          "filePath": "src/commands/Quality/Quality.command.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 4192,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-4192-renderresiduereportlinesfortesting",
+          "line": 3851,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3851-renderadmissionsnapshotlinesfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -539343,8 +539411,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 4323,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-4323-qualitycommand",
+          "line": 3981,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3981-qualitycommand",
           "currentTags": [
             "@category",
             "@since"
@@ -559863,6 +559931,98 @@
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
           "line": 1346,
           "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-1346-fleetmirrorservicelive",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "renderTmpfsReportLinesForTesting",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Janitor.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Janitor.command.ts",
+          "line": 89,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-janitor-command-ts-89-rendertmpfsreportlinesfortesting",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "tmpfsReapCommand",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Janitor.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Janitor.command.ts",
+          "line": 106,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-janitor-command-ts-106-tmpfsreapcommand",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "renderResidueReportLinesForTesting",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Janitor.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Janitor.command.ts",
+          "line": 254,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-janitor-command-ts-254-renderresiduereportlinesfortesting",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "residueReapCommand",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Janitor.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Janitor.command.ts",
+          "line": 279,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-janitor-command-ts-279-residuereapcommand",
           "currentTags": [
             "@category",
             "@since"

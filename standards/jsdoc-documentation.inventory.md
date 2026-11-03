@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-03T02:47:26.512Z
+Generated: 2026-11-03T03:47:01.943Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 167 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 15 |
-| publicModules | 3568 |
-| publicExports | 25401 |
+| publicModules | 3570 |
+| publicExports | 25406 |
 | openModules | 115 |
 | openExports | 94 |
 | missingExportExamples | 0 |
@@ -163,7 +163,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 105 | `@beep/pandoc-ast` | `packages/foundation/modeling/pandoc-ast` | clean | 6 | 202 | 0 | 0 |
 | 106 | `@beep/poppler` | `packages/drivers/poppler` | clean | 3 | 9 | 0 | 0 |
 | 107 | `@beep/rdf` | `packages/foundation/modeling/rdf` | clean | 38 | 303 | 0 | 0 |
-| 108 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 72 | 622 | 12 | 0 |
+| 108 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 72 | 623 | 12 | 0 |
 | 109 | `@beep/repo-workspaces` | `packages/tooling/library/repo-workspaces` | clean | 28 | 250 | 0 | 0 |
 | 110 | `@beep/sbom` | `packages/foundation/modeling/sbom` | clean | 9 | 75 | 0 | 0 |
 | 111 | `@beep/skill-contract` | `packages/foundation/modeling/skill-contract` | clean | 10 | 132 | 0 | 0 |
@@ -197,7 +197,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 139 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | clean | 9 | 123 | 0 | 0 |
 | 140 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | clean | 4 | 16 | 0 | 0 |
 | 141 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | clean | 23 | 217 | 0 | 0 |
-| 142 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 485 | 4630 | 46 | 35 |
+| 142 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 487 | 4634 | 46 | 35 |
 | 143 | `@beep/shared-tables` | `packages/shared/tables` | clean | 9 | 12 | 0 | 0 |
 | 144 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 30 | 58 | 0 | 0 |
 | 145 | `@beep/agents-tables` | `packages/agents/tables` | clean | 7 | 15 | 0 | 0 |
@@ -472,8 +472,8 @@ Export findings:
 - `src/commands/Cache/Cache.command.ts:334` `runCacheWarm` (const) - 1 example import violation(s)
 - `src/commands/Cache/Cache.command.ts:532` `buildCacheDashboard` (const) - 1 example import violation(s)
 - `src/commands/Cache/Cache.service.ts:111` `encodeCachePolicyBaselineText` (const) - 1 example import violation(s)
-- `src/commands/Ci/CiLane.ts:411` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
-- `src/commands/Ci/CiLane.ts:1561` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/CiLane.ts:413` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/CiLane.ts:1570` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
 - `src/commands/Corpus/Corpus.errors.ts:312` `CorpusArchiveMoveDigestMismatchError` (class) - 1 example import violation(s)
 - `src/commands/CreatePackage/CreatePackage.command.ts:119` `resolveCreatePackageTemplateDir` (const) - 1 documentation section/link violation(s)
 - `src/commands/Drawings/Drawings.intake.schemas.ts:304` `MessageFacts` (class) - 1 example import violation(s)
@@ -488,7 +488,7 @@ Export findings:
 - `src/commands/Qa/JudgeCheck.ts:606` `extractLastJsonBlock` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:628` `renderTimeline` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:732` `selectJudgeEvidence` (const) - 1 documentation section/link violation(s)
-- `src/commands/Quality/Quality.command.ts:1094` `runBunAudit` (const) - 1 documentation section/link violation(s)
+- `src/commands/Quality/Quality.command.ts:1080` `runBunAudit` (const) - 1 documentation section/link violation(s)
 - `src/commands/Runners/Runners.schemas.ts:120` `BakeConfig` (class) - 1 example import violation(s)
 - `src/commands/Runners/Runners.schemas.ts:167` `BakeReport` (class) - 1 example import violation(s)
 - `src/commands/Runners/Runners.schemas.ts:276` `BakePlan` (class) - 1 example import violation(s)
