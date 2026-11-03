@@ -90,12 +90,12 @@ const lawHashes = Effect.fn("LawsTurboTest.lawHashes")(function* (root: string, 
   expect(run.exitCode, run.output).toBe(0);
   expect(run.truncated).toBe(false);
   const summary = yield* decodeSummary(run.output);
-  const seal = "//#lint:policy-fingerprint:lint-laws";
+  const seal = "@beep/repo-cli#lint:policy-fingerprint:lint-laws";
   return A.map(["@fixture/consumer#lint:laws", "//#lint:native-runtime:roots", seal], (id) => {
     const task = O.getOrThrow(A.findFirst(summary.tasks, (row) => row.taskId === id));
     if (id !== seal) {
       expect(task.dependencies).toHaveLength(1);
-      expect(A.every(task.dependencies, Str.startsWith("//#lint:policy-fingerprint:")), id).toBe(true);
+      expect(A.every(task.dependencies, Str.startsWith("@beep/repo-cli#lint:policy-fingerprint:")), id).toBe(true);
     }
     return task;
   });
@@ -187,7 +187,13 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("Stage B l
       ];
       yield* Effect.forEach(sourceFiles, (file) => writeFile(root, file, "export const value = 1;\n"));
       yield* Effect.forEach(
-        ["standards/effect-laws.allowlist.jsonc", "tsconfig.proof.json", "packages/consumer/tsconfig.test.json"],
+        [
+          "standards/effect-laws.allowlist.jsonc",
+          "tsconfig.proof.json",
+          "packages/consumer/tsconfig.test.json",
+          "biome.jsonc",
+          "_typos.toml",
+        ],
         (file) => writeFile(root, file, "{}\n")
       );
       yield* writeJson(root, "turbo.json", {
@@ -237,6 +243,12 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("Stage B l
         (file) => assertMutation(file, [true, true, false])
       );
       yield* assertMutation("packages/helper/src/index.ts", [true, true, true]);
+      // Quality audit M9: Turbo hashes the root `turbo.json` into every root task, so a root seal
+      // replayed every package policy task on any `turbo.json` edit. The CLI-workspace seal does not:
+      // only the root law task, which hashes `turbo.json` itself, replays.
+      yield* assertMutation("turbo.json", [false, true, false]);
+      // Checker configuration the law commands' closures never name is no seal input.
+      yield* Effect.forEach(["biome.jsonc", "_typos.toml"], (file) => assertMutation(file, [false, false, false]));
       for (const directory of ["dist", "build", ".turbo", "coverage", "node_modules"]) {
         const file = `packages/consumer/${directory}/generated.ts`;
         yield* writeFile(root, file, "export const generated = 1;\n");

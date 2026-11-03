@@ -1,13 +1,15 @@
 import { fcRuns } from "@beep/fc-runs";
 import { $RepoCliId } from "@beep/identity/packages";
+import { moduleRootFileReads, POLICY_ROOT_FILE_ROUTES, POLICY_SHARED_ROOT_FILES } from "@beep/repo-cli/test/Lint";
 import { PolicyToolsFingerprintPolicy, StepExec } from "@beep/repo-cli/test/PackageScripts";
-import { FsUtilsLive, findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
+import { FsUtils, FsUtilsLive, findRepoRoot, GlobOptions, jsonStringifyPretty } from "@beep/repo-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -63,16 +65,19 @@ const PolicyTaskConfiguration = S.Struct({
 });
 const decodePolicyTasks = S.decodeEffect(S.fromJsonString(PolicyTaskConfiguration));
 
+const SEAL = "@beep/repo-cli#lint:policy-fingerprint:";
+const TURBO_ROOT = "$TURBO_ROOT$/";
 const expectedPolicyTasks = {
   "lint:deprecated-apis": {
     cache: true,
     outputs: [],
-    dependsOn: ["^transit", "//#lint:policy-fingerprint:lint-deprecated-apis"],
+    dependsOn: ["^transit", `${SEAL}lint-deprecated-apis`],
   },
-  "lint:jsdoc": { cache: true, outputs: [], dependsOn: ["//#lint:policy-fingerprint:lint-jsdoc"] },
-  "//#lint:jsdoc:root": { cache: true, outputs: [], dependsOn: ["//#lint:policy-fingerprint:lint-jsdoc"] },
+  "lint:jsdoc": { cache: true, outputs: [], dependsOn: [`${SEAL}lint-jsdoc`] },
+  "//#lint:jsdoc:root": { cache: true, outputs: [], dependsOn: [`${SEAL}lint-jsdoc`] },
 };
-const isSeal = Str.startsWith("//#lint:policy-fingerprint:");
+// Every seal id, current or a legacy root seal (`//#lint:policy-fingerprint:<key>`).
+const isSeal = Str.includes("#lint:policy-fingerprint:");
 const TurboTasks = S.Struct({
   tasks: S.Record(
     S.String,
@@ -80,9 +85,12 @@ const TurboTasks = S.Struct({
       dependsOn: S.Array(S.String).pipe(S.optionalKey),
       cache: S.Boolean.pipe(S.optionalKey),
       outputs: S.Array(S.String).pipe(S.optionalKey),
+      inputs: S.Array(S.String).pipe(S.optionalKey),
     })
   ),
 });
+const TYPESCRIPT_SOURCE = /\.(?:ts|tsx|mts|cts)$/;
+const routedFiles = A.flatMap(POLICY_ROOT_FILE_ROUTES, (route) => route.files);
 const decodeTurboTasks = S.decodeEffect(S.fromJsonString(TurboTasks));
 
 const RootScripts = S.Struct({ scripts: S.Record(S.String, S.String) });
@@ -130,7 +138,7 @@ const packageHash = Effect.fn("PolicyFingerprintTurboTest.packageHash")(function
   expect(O.isSome(task)).toBe(true);
   const found = O.getOrThrow(task);
   expect(A.some(found.dependencies, isSeal)).toBe(true);
-  expect(A.some(summary.tasks, (row) => row.taskId === "//#lint:policy-fingerprint:shared")).toBe(true);
+  expect(A.some(summary.tasks, (row) => row.taskId === `${SEAL}shared`)).toBe(true);
   return found.hash;
 });
 
@@ -194,9 +202,77 @@ describe("policy fingerprint Turbo inputs", { concurrent: false }, () => {
         }
         const manifest = yield* decodeScripts(yield* fs.readFileString(`${root}/package.json`));
         expect(manifest.scripts["lint:policy-fingerprint"]).toBe("beep-cli lint policy-fingerprint --check");
-        for (const [name, script] of R.toEntries(manifest.scripts))
-          if (Str.startsWith("lint:policy-fingerprint:")(name)) expect(script, name).toBe("true");
+        // The seals are script-less CLI-workspace tasks (quality audit M9): no root `true` script remains,
+        // and every seal input is root-relative.
+        expect(A.filter(R.keys(manifest.scripts), Str.startsWith("lint:policy-fingerprint:"))).toEqual([]);
+        for (const [task, value] of R.toEntries(config.tasks)) {
+          if (!isSeal(task)) continue;
+          expect(Str.startsWith(SEAL)(task), task).toBe(true);
+          expect(
+            A.filter(value.inputs ?? [], (input) => !Str.startsWith(TURBO_ROOT)(input)),
+            task
+          ).toEqual([]);
+        }
       })
+    );
+
+    it.effect(
+      "declares in every seal chain each root file its closure modules read",
+      Effect.fnUntraced(function* () {
+        const root = yield* findRepoRoot();
+        const fs = yield* FileSystem.FileSystem;
+        const fsUtils = yield* FsUtils;
+        const config = yield* decodeTurboTasks(yield* fs.readFileString(`${root}/turbo.json`));
+        const seals = A.filter(R.toEntries(config.tasks), ([task]) => isSeal(task));
+        expect(A.length(seals)).toBeGreaterThan(1);
+        const declaredOf = (task: string): ReadonlyArray<string> => {
+          const value = config.tasks[task];
+          return [
+            ...A.map(value?.inputs ?? [], Str.slice(Str.length(TURBO_ROOT))),
+            ...A.flatMap(value?.dependsOn ?? [], declaredOf),
+          ];
+        };
+        // Re-derive each chain's reads from the declared modules' live text, independently of the writer;
+        // a whole-`src` input (an opaque dynamic import) contributes every TypeScript file under it.
+        const modulesOf = Effect.fnUntraced(function* (input: string) {
+          if (TYPESCRIPT_SOURCE.test(input)) return [input];
+          if (!Str.endsWith("/src/**")(input)) return [];
+          const directory = Str.slice(0, -Str.length("/**"))(input);
+          const files = yield* fsUtils.globFiles("**/*", GlobOptions.make({ cwd: `${root}/${directory}` }));
+          return A.map(
+            A.filter(files, (file) => TYPESCRIPT_SOURCE.test(file)),
+            (file) => `${directory}/${file}`
+          );
+        });
+        const modules = A.dedupe(
+          A.flatten(yield* Effect.forEach(A.dedupe(A.flatMap(seals, ([task]) => declaredOf(task))), modulesOf))
+        );
+        const reads = HashMap.fromIterable(
+          yield* Effect.forEach(
+            modules,
+            Effect.fnUntraced(function* (module) {
+              return [module, moduleRootFileReads(module, yield* fs.readFileString(`${root}/${module}`))] as const;
+            })
+          )
+        );
+        for (const [task] of seals) {
+          const declared = declaredOf(task);
+          const read = A.flatMap(A.flatten(yield* Effect.forEach(declared, modulesOf)), (module) =>
+            O.getOrElse(HashMap.get(reads, module), A.empty<string>)
+          );
+          expect(A.dedupe(A.filter(read, (file) => !A.contains(declared, file))), task).toEqual([]);
+          // A seal's root-level inputs are the shared ones or routed families, nothing else.
+          const rootLevel = A.filter(declared, (input) => !Str.includes("/")(input) || A.contains(routedFiles, input));
+          expect(
+            A.filter(rootLevel, (input) => !A.contains([...POLICY_SHARED_ROOT_FILES, ...routedFiles], input)),
+            task
+          ).toEqual([]);
+        }
+        // The per-package policy chains read no root `turbo.json` (the M9 cascade).
+        for (const key of ["lint-laws", "lint-jsdoc"])
+          expect(declaredOf(`${SEAL}${key}`), key).not.toContain("turbo.json");
+      }),
+      { timeout: 60_000 }
     );
   });
 
@@ -218,11 +294,14 @@ describe("policy fingerprint Turbo inputs", { concurrent: false }, () => {
         });
         yield* writeFixtureFiles(root, {
           ...policyCliFixtureFiles([
-            { group: "lint", leaves: [{ name: "jsdoc", imports: ["@beep/helper"] }] },
+            { group: "lint", leaves: [{ name: "jsdoc", imports: ["@beep/helper", "@beep/sweeps"] }] },
             { group: "other", imports: ["@beep/sibling"] },
           ]),
           ...fixturePackageFiles("helper"),
           ...fixturePackageFiles("sibling"),
+          ...fixturePackageFiles("sweeps"),
+          // The one module that names the sweeps file: that root file is routed to this command's seal.
+          "packages/sweeps/src/index.ts": 'export const value = "standards/lint-policy.sweeps.jsonc";\n',
         });
         yield* writeJson(root, "packages/consumer/package.json", {
           name: "@fixture/consumer",
@@ -232,6 +311,7 @@ describe("policy fingerprint Turbo inputs", { concurrent: false }, () => {
         yield* writeFile(root, ".gitignore", "node_modules\n.turbo\n");
         yield* writeFile(root, "packages/consumer/src/index.ts", "export const consumer = 1;\n");
         yield* writeFile(root, "packages/unrelated/src/index.ts", "export const unrelated = 1;\n");
+        yield* writeFile(root, "_typos.toml", "[default]\n");
         yield* writeJson(root, "standards/lint-policy.sweeps.jsonc", {
           schemaVersion: "lint-policy-sweeps/v1",
           deprecatedApis: "oxlint",
@@ -261,6 +341,15 @@ describe("policy fingerprint Turbo inputs", { concurrent: false }, () => {
           deprecatedApis: "oxlint",
         });
         expect(yield* packageHash(root, binary)).toBe(baseline);
+        // A root file no closure module names is no seal input.
+        yield* writeFile(root, "_typos.toml", '[default]\nlocale = "en-us"\n');
+        expect(yield* packageHash(root, binary)).toBe(baseline);
+        // Turbo hashes the root `turbo.json` into root tasks only; the CLI-workspace seal keeps a
+        // `turbo.json` edit out of package policy tasks (quality audit M9).
+        const turboText = yield* fs.readFileString(path.join(root, "turbo.json"));
+        yield* writeFile(root, "turbo.json", `${turboText}\n`);
+        expect(yield* packageHash(root, binary)).toBe(baseline);
+        yield* writeFile(root, "turbo.json", turboText);
         yield* writeFile(root, "packages/unrelated/src/index.ts", "export const unrelated = 2;\n");
         expect(yield* packageHash(root, binary)).toBe(baseline);
         yield* writeJson(root, "packages/unrelated/package.json", { name: "@fixture/unrelated", private: false });
@@ -424,10 +513,14 @@ describe("Documentation task inputs", { concurrent: false }, () => {
         yield* assertMutation("packages/dependency/src/index.ts", [true, false, true]);
         // This root tsconfig is deliberately outside the fingerprint's two named tsconfigs.
         yield* assertMutation("tsconfig.proof.json", [true, false, false]);
+        // No fixture closure module names a checker configuration, so each one replays only the
+        // tasks that declare it: the routed seal families are proven against the live CLI separately.
+        yield* assertMutation(".oxlintrc.deprecated-apis.jsonc", [true, false, false]);
+        yield* Effect.forEach([".oxlintrc.docs.json", "tsdoc.json"], (file) =>
+          assertMutation(file, [false, true, true])
+        );
         yield* Effect.forEach(
           [
-            ".oxlintrc.deprecated-apis.jsonc",
-            "tsdoc.json",
             "packages/tooling/policy-pack/repo-configs/src/laws/rule.ts",
             "packages/tooling/policy-pack/repo-configs/src/internal/laws/helper.ts",
             "packages/helper/src/index.ts",
