@@ -1,4 +1,5 @@
 import * as NodeURL from "node:url";
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import {
   CLAUDE_WORKTREES_RELATIVE_ROOT,
@@ -61,6 +62,7 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 
 // `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
 const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
@@ -115,6 +117,7 @@ const encodePrFiles = S.encodeEffect(S.fromJsonString(S.Struct({ files: S.Array(
 // observation rather than as a failure.
 type FakePullRequestState = "MERGED" | "OPEN" | "none";
 
+// Own double: decorates the real platform spawner; only `gh` is scripted, git runs for real.
 const ghSpawner = Effect.fn("YeetRetireTest.ghSpawner")(function* (
   headRefOid: string,
   state: FakePullRequestState,
@@ -865,11 +868,8 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         // `Git` is rebuilt over a spawner that cannot start git: the kit's spawn failure (W2b).
         const error = yield* Effect.flip(planRetire(context, O.none())).pipe(
           Effect.provideServiceEffect(Git, Git.make),
-          Effect.provideService(
-            ChildProcessSpawner.ChildProcessSpawner,
-            ChildProcessSpawner.make(() =>
-              Effect.fail(PlatformError.badArgument({ module: "ChildProcess", method: "spawn" }))
-            )
+          provideSpawner(
+            ScriptedSpawner.make(() => PlatformError.badArgument({ module: "ChildProcess", method: "spawn" }))
           )
         );
         expect(error.message).toBe("git rev-parse --path-format=absolute --git-common-dir could not run in /lane.");

@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
@@ -64,15 +65,11 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { commandArgs } from "./support/commandArgs.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import { provideLegacyGh } from "./support/YeetGithub.ts";
 import type { YeetRunOptions } from "@beep/repo-cli/test/Yeet";
 
@@ -141,66 +138,49 @@ const prView = (
 
 const MERGE_TITLE = `Merge remote-tracking branch 'origin/main' into ${BRANCH}`;
 
-const handle = (exitCode: number, output: string) =>
-  ChildProcessSpawner.makeHandle({
-    all: Stream.make(new TextEncoder().encode(output)),
-    stdout: Stream.make(new TextEncoder().encode(output)),
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    unref: Effect.succeed(Effect.void),
-  });
-
 // One scripted process response, matched by a substring of the whole command
 // line. The first matching reply wins; an unscripted command exits 1. A
 // negative exit code scripts a command that could not be spawned at all.
 type Reply = readonly [needle: string, exitCode: number, output: string];
 
-const scriptedSpawner = (replies: ReadonlyArray<Reply>, commands: Ref.Ref<ReadonlyArray<string>>) =>
-  ChildProcessSpawner.make((command) => {
-    if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-    const line = A.join([command.command, ...commandArgs(command)], " ");
-    const reply = A.findFirst(replies, ([needle]) => pipe(line, Str.includes(needle)));
-    return Ref.update(commands, A.append(line)).pipe(
-      Effect.andThen(
-        O.match(reply, {
-          onNone: () => Effect.succeed(handle(1, `unscripted: ${line}`)),
-          onSome: ([, exitCode, output]) =>
-            exitCode < 0
-              ? Effect.fail(
-                  PlatformError.systemError({
-                    _tag: "NotFound",
-                    module: "YeetPullRequestGuardsTest",
-                    method: "spawn",
-                    description: output,
-                  })
-                )
-              : Effect.succeed(handle(exitCode, output)),
-        })
-      )
+const commandLine = ({ command, args }: { readonly command: string; readonly args: ReadonlyArray<string> }) =>
+  A.join([command, ...args], " ");
+
+const scriptedSpawner = (replies: ReadonlyArray<Reply>) =>
+  ScriptedSpawner.make((command, args) => {
+    const line = commandLine({ command, args });
+    return O.match(
+      A.findFirst(replies, ([needle]) => pipe(line, Str.includes(needle))),
+      {
+        onNone: () => ({ exit: 1, stdout: `unscripted: ${line}` }),
+        onSome: ([, exit, output]) =>
+          exit < 0
+            ? PlatformError.systemError({
+                _tag: "NotFound",
+                module: "YeetPullRequestGuardsTest",
+                method: "spawn",
+                description: output,
+              })
+            : { exit, stdout: output },
+      }
     );
   });
 
-const withProcesses =
-  (replies: ReadonlyArray<Reply>, commands: Ref.Ref<ReadonlyArray<string>>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-    effect.pipe(
-      provideLegacyGh,
-      Effect.provideServiceEffect(Git, Git.make),
-      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, scriptedSpawner(replies, commands))
-    );
+// Every scripted spawner one test builds, in order; the issued command lines
+// are read back from their spawns.
+const makeCommands = Effect.sync((): Array<ScriptedSpawner> => []);
+const commandLines = (commands: ReadonlyArray<ScriptedSpawner>) =>
+  A.flatMap(commands, (spawner) => A.map(spawner.spawns, commandLine));
 
-const makeCommands = Ref.make<ReadonlyArray<string>>([]);
+const withProcesses = (replies: ReadonlyArray<Reply>, commands: Array<ScriptedSpawner>) => {
+  const spawner = scriptedSpawner(replies);
+  commands.push(spawner);
+  return <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+    effect.pipe(provideLegacyGh, Effect.provideServiceEffect(Git, Git.make), provideSpawner(spawner));
+};
+
 const makeRecorder = Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
-const failClosedSpawnerLayer = Layer.effect(
-  ChildProcessSpawner.ChildProcessSpawner,
-  makeCommands.pipe(Effect.map((commands) => scriptedSpawner([], commands)))
-);
+const failClosedSpawnerLayer = scriptedSpawner([]).layer;
 const testLayer = Layer.provideMerge(
   Git.layer,
   Layer.mergeAll(MemoryFileSystem.layer, Path.layer, NodeCrypto.layer, failClosedSpawnerLayer)
@@ -271,7 +251,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet guards", (it) 
         (options) => validateMonitorGuards(contextAt("/repo"), options),
         { discard: true }
       ).pipe(withProcesses([], commands));
-      expect(yield* Ref.get(commands)).toEqual([]);
+      expect(commandLines(commands)).toEqual([]);
     })
   );
 
@@ -293,8 +273,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet guards", (it) 
         )
       );
       // Two REST-side reads per guard (origin owner, pulls?head=), never `gh pr view`.
-      expect(A.length(yield* Ref.get(commands))).toBe(4);
-      expect(A.some(yield* Ref.get(commands), Str.includes("gh pr view"))).toBe(false);
+      expect(A.length(commandLines(commands))).toBe(4);
+      expect(A.some(commandLines(commands), Str.includes("gh pr view"))).toBe(false);
 
       const blocked = yield* validateMonitorGuards(
         contextAt("/repo", "main"),
@@ -332,7 +312,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet guards", (it) 
         withProcesses([["commitlint --edit", 0, ""]], commands)
       );
       expect(yield* fs.readFileString(messagePath)).toBe("feat(repo-cli): accepted\n");
-      expect(yield* Ref.get(commands)).toEqual([`commitlint --edit ${messagePath}`]);
+      expect(commandLines(commands)).toEqual([`commitlint --edit ${messagePath}`]);
 
       const rejected = yield* validateCommitMessage(context, "nope").pipe(
         Effect.flip,
@@ -471,7 +451,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           )
         );
         expect(view.headRefName).toBe(branch);
-        expect(A.some(yield* Ref.get(commands), Str.includes("head=fork-owner%3Arepo-cli%2Ffix"))).toBe(true);
+        expect(A.some(commandLines(commands), Str.includes("head=fork-owner%3Arepo-cli%2Ffix"))).toBe(true);
       })
     );
 
@@ -536,7 +516,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         );
         expect(body).toContain("## feat(repo-cli): ship\n\nbody text\n\n## Local proof\n\n");
         expect(body).toContain("- full:cheap-gates: passed\n- full:pre-push: failed\n\nVerdict: .beep/yeet/runs/");
-        expect(A.some(yield* Ref.get(commands), Str.endsWith("abc123..HEAD"))).toBe(true);
+        expect(A.some(commandLines(commands), Str.endsWith("abc123..HEAD"))).toBe(true);
       })
     );
 
@@ -548,7 +528,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           withProcesses([["log --reverse", 0, "## docs: note\n"]], commands)
         );
         expect(body).toContain("- no local proof lane ran before the push; hosted CI is the authoritative proof");
-        expect(A.some(yield* Ref.get(commands), Str.endsWith(" HEAD"))).toBe(true);
+        expect(A.some(commandLines(commands), Str.endsWith(" HEAD"))).toBe(true);
       })
     );
 
@@ -589,7 +569,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         expect(pullRequest.number).toBe(7);
         expect(pullRequest.created).toBe(true);
         assertSome(pullRequest.url, PR_URL);
-        const create = A.findFirst(yield* Ref.get(commands), Str.startsWith("gh pr create"));
+        const create = A.findFirst(commandLines(commands), Str.startsWith("gh pr create"));
         assertSome(
           O.map(create, Str.startsWith("gh pr create --base main --title feat(repo-cli): ship --body-file ")),
           true
@@ -663,10 +643,10 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         );
         expect(pullRequest.created).toBe(true);
         assertSome(pullRequest.url, PR_URL);
-        expect(A.some(yield* Ref.get(commands), Str.includes("draft=true"))).toBe(true);
-        expect(A.some(yield* Ref.get(commands), Str.includes("base=main"))).toBe(true);
-        expect(A.some(yield* Ref.get(commands), Str.includes("head=fork-owner:repo-cli/fix"))).toBe(true);
-        expect(A.some(yield* Ref.get(commands), Str.includes("body=@"))).toBe(true);
+        expect(A.some(commandLines(commands), Str.includes("draft=true"))).toBe(true);
+        expect(A.some(commandLines(commands), Str.includes("base=main"))).toBe(true);
+        expect(A.some(commandLines(commands), Str.includes("head=fork-owner:repo-cli/fix"))).toBe(true);
+        expect(A.some(commandLines(commands), Str.includes("body=@"))).toBe(true);
         const recorded = yield* Ref.get(recorder);
         expect(recorded[0]?.result.commandText).toBe("gh api -X POST repos/{owner}/{repo}/pulls");
       })
@@ -697,7 +677,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           )
         );
         expect(pullRequest.created).toBe(true);
-        const issued = yield* Ref.get(commands);
+        const issued = commandLines(commands);
         expect(A.some(issued, Str.includes("base=trunk"))).toBe(true);
         expect(A.some(issued, Str.includes("gh pr create --base trunk"))).toBe(true);
         expect(A.some(issued, Str.includes("base=goals/push-first-publish"))).toBe(false);
@@ -725,7 +705,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         );
         expect(error.message).toBe("GitHub REST default branch read failed:\nHTTP 502: Bad Gateway");
         expect(error.exitCode).toBe(1);
-        const issued = yield* Ref.get(commands);
+        const issued = commandLines(commands);
         expect(A.some(issued, Str.startsWith("gh pr create"))).toBe(false);
         expect(A.some(issued, Str.includes("-X POST"))).toBe(false);
       })
@@ -752,7 +732,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         );
         expect(error.message).toBe("GitHub REST default branch read returned no branch.");
         expect(error.exitCode).toBe(1);
-        expect(A.some(yield* Ref.get(commands), Str.startsWith("gh pr create"))).toBe(false);
+        expect(A.some(commandLines(commands), Str.startsWith("gh pr create"))).toBe(false);
       })
     );
 
@@ -778,7 +758,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           )
         );
         expect(pullRequest.created).toBe(false);
-        expect(A.some(yield* Ref.get(commands), Str.includes("-X POST"))).toBe(false);
+        expect(A.some(commandLines(commands), Str.includes("-X POST"))).toBe(false);
       })
     );
 
@@ -820,7 +800,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         expect(laneRows(yield* Ref.get(recorder))).toEqual([
           [createStep.id, undefined, 0, "skipped: open pull request #7 already exists"],
         ]);
-        expect(A.some(yield* Ref.get(commands), Str.startsWith("gh pr create"))).toBe(false);
+        expect(A.some(commandLines(commands), Str.startsWith("gh pr create"))).toBe(false);
       })
     );
 
@@ -849,7 +829,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           )
         );
         expect(pullRequest.created).toBe(true);
-        const lines = yield* Ref.get(commands);
+        const lines = commandLines(commands);
         const create = A.findFirst(lines, Str.startsWith("gh pr create"));
         assertSome(
           O.map(
@@ -882,7 +862,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
             commands
           )
         );
-        const lines = yield* Ref.get(commands);
+        const lines = commandLines(commands);
         expect(A.some(lines, Str.includes("git log --no-merges --reverse --pretty=%s HEAD"))).toBe(true);
         expect(A.some(lines, Str.includes("log -1 --pretty=%s"))).toBe(false);
         const create = A.findFirst(lines, Str.startsWith("gh pr create"));
@@ -907,7 +887,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         }).pipe(Effect.flip, withProcesses([["log --no-merges", 0, "\n"]], commands));
         expect(error.message).toContain("no non-merge commit in HEAD");
         expect(error.message).toContain('pass --message "<conventional subject>"');
-        expect(A.some(yield* Ref.get(commands), Str.startsWith("gh pr create"))).toBe(false);
+        expect(A.some(commandLines(commands), Str.startsWith("gh pr create"))).toBe(false);
         expect(yield* Ref.get(recorder)).toEqual([]);
       })
     );
@@ -933,7 +913,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           )
         );
         expect(pullRequest.created).toBe(false);
-        expect(yield* Ref.get(commands)).toContain("gh pr edit 7 --title feat(repo-cli): ship");
+        expect(commandLines(commands)).toContain("gh pr edit 7 --title feat(repo-cli): ship");
         expect(laneRows(yield* Ref.get(recorder))).toEqual([
           [
             createStep.id,
@@ -959,7 +939,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
             commands
           )
         );
-        expect(yield* Ref.get(commands)).toContain("gh pr edit 7 --title feat(repo-cli): from history");
+        expect(commandLines(commands)).toContain("gh pr edit 7 --title feat(repo-cli): from history");
       })
     );
 
@@ -975,7 +955,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           {},
           O.some("feat(repo-cli): a newer message")
         ).pipe(withProcesses([["gh pr view", 0, prView({ title: "feat(repo-cli): merge strategy" })]], commands));
-        expect(A.some(yield* Ref.get(commands), Str.includes("--title"))).toBe(false);
+        expect(A.some(commandLines(commands), Str.includes("--title"))).toBe(false);
         expect(laneRows(yield* Ref.get(recorder))).toEqual([
           [createStep.id, undefined, 0, "skipped: open pull request #7 already exists"],
         ]);
@@ -996,7 +976,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
             commands
           )
         );
-        expect(yield* Ref.get(commands)).toContain(
+        expect(commandLines(commands)).toContain(
           "gh api -X PATCH repos/{owner}/{repo}/pulls/7 -f title=fix: x --jq .title"
         );
         expect(laneRows(yield* Ref.get(recorder))).toEqual([
@@ -1090,7 +1070,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           ],
           { discard: true }
         ).pipe(withProcesses([], commands));
-        expect(yield* Ref.get(commands)).toEqual([]);
+        expect(commandLines(commands)).toEqual([]);
         expect(laneRows(yield* Ref.get(recorder))).toEqual([
           [labelStep.id, "skipped", 0, "skipped: pull request #7 already existed and keeps its labels"],
           [labelStep.id, "skipped", 0, "skipped: docs-only diff needs no heavy matrix"],
@@ -1115,7 +1095,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
             commands
           )
         );
-        assertSome(A.last(yield* Ref.get(commands)), labelCommand);
+        assertSome(A.last(commandLines(commands)), labelCommand);
         expect(laneRows(yield* Ref.get(recorder))).toEqual([[labelStep.id, "passed", 0, PR_URL]]);
       })
     );
@@ -1124,7 +1104,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
       Effect.gen(function* () {
         const commands = yield* makeCommands;
         const recorder = yield* makeRecorder;
-        const captured = yield* makeCommands;
+        const captured = yield* Ref.make<ReadonlyArray<string>>([]);
         yield* applyHeavyAdmissionLabel(contextAt("/repo"), recorder, O.some(labelStep), created, {
           capture: (command, args) =>
             Ref.update(captured, A.append(A.join([command, ...args], " "))).pipe(
@@ -1182,7 +1162,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet retire packet 
         )
       );
       expect(slugs).toEqual(["open", "unblocked"]);
-      expect(A.some(yield* Ref.get(commands), Str.startsWith("gh pr view claude/lane --json files"))).toBe(true);
+      expect(A.some(commandLines(commands), Str.startsWith("gh pr view claude/lane --json files"))).toBe(true);
     })
   );
 });
@@ -1385,7 +1365,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet ready gate ove
         markReady: (prNumber) => Ref.update(flips, A.append(prNumber)),
       }).pipe(withProcesses(greenDraft, commands));
       expect(decision).toMatchObject({ _tag: "flip", prNumber: 7 });
-      const ran = yield* Ref.get(commands);
+      const ran = commandLines(commands);
       expect(A.length(A.filter(ran, Str.startsWith("gh pr view --json id,number")))).toBe(3);
       expect(yield* Ref.get(flips)).toEqual([7]);
     })
@@ -1502,7 +1482,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           )
         );
         expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "pr-open" });
-        expect(A.some(yield* Ref.get(commands), Str.startsWith("gh pr ready"))).toBe(false);
+        expect(A.some(commandLines(commands), Str.startsWith("gh pr ready"))).toBe(false);
       })
     );
   }

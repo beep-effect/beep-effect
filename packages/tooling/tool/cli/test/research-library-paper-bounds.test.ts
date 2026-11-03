@@ -53,6 +53,7 @@ const runBody = Effect.fn("test.paper.runBody")(function* (
     expect(request.url).toBe(source.canonicalUrl);
     return Effect.succeed(HttpClientResponse.fromWeb(request, new Response(body, { status: 200, headers })));
   });
+  // Own double: the extractor reads the retained PDF inside the spawn, proving it landed before extraction ran.
   const spawner = ChildProcessSpawner.make((command) =>
     Effect.gen(function* () {
       if (!ChildProcess.isStandardCommand(command)) return yield* Effect.die("Unexpected piped extractor fixture");

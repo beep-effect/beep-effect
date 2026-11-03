@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import {
   ArchiveWriter,
   ArchiveWriterLive,
@@ -52,12 +53,11 @@ import { flow, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 
 const preservationTestLayer = Layer.mergeAll(CorpusCommandServiceLive, CapacityPreflightServiceLive).pipe(
   Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))
@@ -71,32 +71,9 @@ const decodeInheritedLossRow = S.decodeUnknownEffect(S.fromJsonString(InheritedL
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const isT7ArchiveProvenanceRecord = S.is(T7ArchiveProvenanceRecord);
 const runCorpusCommand = Command.runWith(corpusCommand, { version: "0.0.0" });
-const utf8Encoder = new TextEncoder();
 
-const capturedSpawnerFrom = (reply: () => readonly [exitCode: number, stdout: string, stderr: string]) =>
-  ChildProcessSpawner.make(() => {
-    const [exitCode, stdout, stderr] = reply();
-    const stdoutStream = Stream.make(utf8Encoder.encode(stdout));
-    const stderrStream = Stream.make(utf8Encoder.encode(stderr));
-    return Effect.succeed(
-      ChildProcessSpawner.makeHandle({
-        all: Stream.concat(stdoutStream, stderrStream),
-        exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
-        getInputFd: () => Sink.drain,
-        getOutputFd: () => Stream.empty,
-        isRunning: Effect.succeed(false),
-        kill: () => Effect.void,
-        pid: ChildProcessSpawner.ProcessId(1),
-        stderr: stderrStream,
-        stdin: Sink.drain,
-        stdout: stdoutStream,
-        unref: Effect.succeed(Effect.void),
-      })
-    );
-  });
-
-const capturedSpawner = (exitCode: number, stdout: string, stderr: string) =>
-  capturedSpawnerFrom(() => [exitCode, stdout, stderr]);
+const capturedSpawner = (exit: number, stdout: string, stderr: string) =>
+  ScriptedSpawner.make(() => ({ exit, stdout, stderr }));
 
 const syntheticBytes = (length: number): Uint8Array => {
   const bytes = new Uint8Array(length);
@@ -248,10 +225,7 @@ it.layer(preservationTestLayer, { concurrent: false, timeout: "30 seconds" })("T
         { expectedOperation: "capacity-stat", spawner: capturedSpawner(1, "", "synthetic failure") },
         { expectedOperation: "capacity-decode", spawner: capturedSpawner(0, "malformed", "") },
       ]) {
-        const failure = yield* preflightT7PreservationImpl(options).pipe(
-          Effect.flip,
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, probe.spawner)
-        );
+        const failure = yield* preflightT7PreservationImpl(options).pipe(Effect.flip, provideSpawner(probe.spawner));
         expect(failure.operation).toBe(probe.expectedOperation);
       }
     })
@@ -543,18 +517,15 @@ it.layer(preservationTestLayer, { concurrent: false, timeout: "30 seconds" })("T
         })}\n`
       );
 
-      let capacityProbeCount = 0;
-      const capacitySpawner = capturedSpawnerFrom(() => {
-        capacityProbeCount += 1;
-        const availableKiB = capacityProbeCount < 4 ? 1024 : 0;
-        return [
-          0,
-          `Filesystem 1024-blocks Used Available Capacity Mounted on\nsynthetic 1024 0 ${availableKiB} 0% /\n`,
-          "",
-        ];
+      // Each probe's record is pushed before the script runs, so the spawn count includes the current probe.
+      const capacitySpawner: ScriptedSpawner = ScriptedSpawner.make(() => {
+        const availableKiB = A.length(capacitySpawner.spawns) < 4 ? 1024 : 0;
+        return {
+          stdout: `Filesystem 1024-blocks Used Available Capacity Mounted on\nsynthetic 1024 0 ${availableKiB} 0% /\n`,
+        };
       });
       const provideCapacityServices = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-        effect.pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, capacitySpawner));
+        effect.pipe(provideSpawner(capacitySpawner));
       const options = T7PreservationOptions.make({ corpusRoot, t7Root });
       const proposed = yield* provideCapacityServices(preflightT7PreservationImpl(options));
       yield* provideCapacityServices(
@@ -562,7 +533,7 @@ it.layer(preservationTestLayer, { concurrent: false, timeout: "30 seconds" })("T
       );
       const failure = yield* provideCapacityServices(runT7PreservationImpl(options)).pipe(Effect.flip);
 
-      expect(capacityProbeCount).toBe(4);
+      expect(A.length(capacitySpawner.spawns)).toBe(4);
       expect(failure._tag).toBe("PreservationCeilingExceededError");
       if (failure._tag === "PreservationCeilingExceededError") {
         expect(failure.measuredBytes).toBe(proposed.measurement.requiredBytes);
@@ -593,18 +564,15 @@ it.layer(preservationTestLayer, { concurrent: false, timeout: "30 seconds" })("T
         })}\n`
       );
 
-      let capacityProbeCount = 0;
-      const capacitySpawner = capturedSpawnerFrom(() => {
-        capacityProbeCount += 1;
+      const capacitySpawner: ScriptedSpawner = ScriptedSpawner.make(() => {
+        const capacityProbeCount = A.length(capacitySpawner.spawns);
         const availableKiB = capacityProbeCount < 5 ? 3 : capacityProbeCount === 5 ? 2 : 1;
-        return [
-          0,
-          `Filesystem 1024-blocks Used Available Capacity Mounted on\nsynthetic 2 0 ${availableKiB} 0% /\n`,
-          "",
-        ];
+        return {
+          stdout: `Filesystem 1024-blocks Used Available Capacity Mounted on\nsynthetic 2 0 ${availableKiB} 0% /\n`,
+        };
       });
       const provideCapacityServices = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-        effect.pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, capacitySpawner));
+        effect.pipe(provideSpawner(capacitySpawner));
       const options = T7PreservationOptions.make({ corpusRoot, t7Root });
       const proposed = yield* provideCapacityServices(preflightT7PreservationImpl(options));
       expect(proposed.measurement.requiredBytes).toBeGreaterThan(2048);
@@ -614,7 +582,7 @@ it.layer(preservationTestLayer, { concurrent: false, timeout: "30 seconds" })("T
       );
       const summary = yield* provideCapacityServices(runT7PreservationImpl(options));
 
-      expect(capacityProbeCount).toBe(6);
+      expect(A.length(capacitySpawner.spawns)).toBe(6);
       expect(summary.passed).toBe(3);
       expect(summary.unapproved).toBe(0);
     })

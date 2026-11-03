@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import {
   analyzeDoctestSourceForTesting,
   classifyDoctestFence,
@@ -18,28 +19,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-
-const encoder = new TextEncoder();
-
-const changedFilesHandle = (output: string) =>
-  ChildProcessSpawner.makeHandle({
-    all: Stream.make(encoder.encode(output)),
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    stdout: Stream.make(encoder.encode(output)),
-    unref: Effect.succeed(Effect.void),
-  });
 
 const analyzeExample = (source: string) =>
   Effect.fromResult(analyzeDoctestSourceForTesting("packages/example/src/index.ts", source));
@@ -342,13 +322,7 @@ const changedSourceLayer = Layer.mergeAll(
     exists: (file) => Effect.succeed(Str.endsWith("packages/example/src/existing.ts")(file)),
   }),
   Path.layer,
-  Layer.succeed(
-    ChildProcessSpawner.ChildProcessSpawner,
-    ChildProcessSpawner.make((command) => {
-      if (!ChildProcess.isStandardCommand(command)) return Effect.die("expected a standard Git command");
-      return Effect.succeed(changedFilesHandle(A.join(changedSourcePaths, "\n")));
-    })
-  )
+  ScriptedSpawner.make(() => ({ stdout: A.join(changedSourcePaths, "\n") })).layer
 );
 
 layer(changedSourceLayer, { timeout: "30 seconds" })("changed Doctest discovery", (it) => {

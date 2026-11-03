@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { Repo, RepoRef } from "@beep/github/Repo";
 import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
@@ -46,19 +47,14 @@ import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import * as PlatformError from "effect/PlatformError";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { commandArgs } from "./support/commandArgs.ts";
 import { githubFetch, reply, unreachable } from "./support/GithubFetch.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
 import type { GithubFetchCall } from "./support/GithubFetch.ts";
 
@@ -337,21 +333,6 @@ describe("runner-loss rerun decision", () => {
   });
 });
 
-const handle = (exitCode: number, output: string) =>
-  ChildProcessSpawner.makeHandle({
-    all: Stream.make(new TextEncoder().encode(output)),
-    stdout: Stream.make(new TextEncoder().encode(output)),
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    unref: Effect.succeed(Effect.void),
-  });
-
 // One scripted GitHub answer, keyed as the `gh` call it replaces: a REST read by its
 // `repos/{owner}/{repo}/...` endpoint, the job rerun by `run rerun --job <id>`. Exit 0 answers the output as
 // JSON, exit 1 a refusal (HTTP 403), and a negative exit a request that never reaches GitHub.
@@ -388,10 +369,10 @@ const answer = (replies: ReadonlyArray<GhReply>) => (call: GithubFetchCall) => {
   );
 };
 // The command resolves its own client from `gh auth token` and `GH_REPO`; the direct runs take this one.
-const ghAuthToken = ChildProcessSpawner.make((command) =>
-  ChildProcess.isStandardCommand(command) && A.join([command.command, ...commandArgs(command)], " ") === "gh auth token"
-    ? Effect.succeed(handle(0, "ghs_fixture\n"))
-    : Effect.die("rerun-runner-loss spawns only gh auth token")
+const ghAuthToken = ScriptedSpawner.make((command, args) =>
+  A.join([command, ...args], " ") === "gh auth token"
+    ? { stdout: "ghs_fixture\n" }
+    : { exit: 1, stderr: "rerun-runner-loss spawns only gh auth token" }
 );
 const withGh =
   (replies: ReadonlyArray<GhReply>, commands: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>) =>
@@ -407,7 +388,7 @@ const withGh =
       return yield* program.pipe(
         Effect.provideContext(github),
         Effect.provideService(GithubTransportFetch, O.some(api.fetch)),
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, ghAuthToken),
+        provideSpawner(ghAuthToken),
         Effect.ensuring(Effect.suspend(() => Ref.update(commands, A.appendAll(A.map(api.calls, argvOf)))))
       );
     }).pipe(Effect.scoped);
@@ -967,37 +948,25 @@ const reviewRow = {
   ],
 };
 const reviewReplies = HashMap.make(
-  [`api --jq .sha repos/{owner}/{repo}/commits/${REVIEW_SHA}`, handle(0, `${REVIEW_SHA}\n`)],
+  [`api --jq .sha repos/{owner}/{repo}/commits/${REVIEW_SHA}`, { stdout: `${REVIEW_SHA}\n` }],
   [
     `api -i repos/{owner}/{repo}/dependency-graph/compare/${REVIEW_SHA}...${REVIEW_SHA}?per_page=1&page=1`,
-    handle(0, `HTTP/2.0 200 OK\r\nContent-Type: application/json; charset=utf-8\r\n\r\n${encodeJson([reviewRow])}`),
+    { stdout: `HTTP/2.0 200 OK\r\nContent-Type: application/json; charset=utf-8\r\n\r\n${encodeJson([reviewRow])}` },
   ]
 );
-const reviewSpawner = ChildProcessSpawner.make((command) => {
-  if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-  const key = A.join(commandArgs(command), " ");
+const reviewSpawner = ScriptedSpawner.make((command, args) => {
+  const key = A.join(args, " ");
   return key === `api --jq .sha repos/{owner}/{repo}/commits/${SPAWN_FAILURE_SHA}`
-    ? Effect.fail(
-        PlatformError.systemError({
-          _tag: "NotFound",
-          module: "DependencyReviewTest",
-          method: "spawn",
-          description: "gh is not installed",
-        })
-      )
-    : Effect.succeed(O.getOrElse(HashMap.get(reviewReplies, key), () => handle(1, `gh: unscripted ${key} (HTTP 404)`)));
+    ? ScriptedSpawner.notFound(command)
+    : O.getOrElse(HashMap.get(reviewReplies, key), () => ({ exit: 1, stdout: `gh: unscripted ${key} (HTTP 404)` }));
 });
-const reviewPlatform = Layer.merge(
-  Layer.mergeAll(NodeServices.layer, NodeCrypto.layer),
-  Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, reviewSpawner)
-);
+const reviewPlatform = Layer.merge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), reviewSpawner.layer);
 
 it.layer(Layer.provideMerge(Layer.provideMerge(DependencyReviewLive, GithubPolicyClientLive), reviewPlatform), {
   timeout: "30 seconds",
 })("dependency review over the live gh client", (layerIt) => {
   layerIt.effect("runs the exact gh api calls and fails closed when gh cannot start", () =>
     Effect.gen(function* () {
-      expect(yield* ChildProcessSpawner.ChildProcessSpawner).toBe(reviewSpawner);
       const service = yield* DependencyReview;
       const verdict = yield* service.review(DependencyReviewRequest.make({ base: REVIEW_SHA, head: REVIEW_SHA }));
       expect(verdict._tag === "fail" && A.map(verdict.findings, (finding) => finding.name)).toEqual(["urllib3"]);
@@ -1011,6 +980,13 @@ it.layer(Layer.provideMerge(Layer.provideMerge(DependencyReviewLive, GithubPolic
         DependencyReviewRequest.make({ base: SPAWN_FAILURE_SHA, head: REVIEW_SHA })
       );
       expect(unknown._tag === "unknown" && unknown.reason).toBe("request-failed");
+      expect(A.map(reviewSpawner.spawns, (spawn) => A.join([spawn.command, ...spawn.args], " "))).toEqual([
+        `gh api --jq .sha repos/{owner}/{repo}/commits/${REVIEW_SHA}`,
+        `gh api --jq .sha repos/{owner}/{repo}/commits/${REVIEW_SHA}`,
+        `gh api -i repos/{owner}/{repo}/dependency-graph/compare/${REVIEW_SHA}...${REVIEW_SHA}?per_page=1&page=1`,
+        "gh api repos/{owner}/{repo}/license",
+        `gh api --jq .sha repos/{owner}/{repo}/commits/${SPAWN_FAILURE_SHA}`,
+      ]);
     })
   );
 });
