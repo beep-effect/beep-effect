@@ -17,7 +17,6 @@ import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import * as ChildProcess from "effect/process/ChildProcess";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
@@ -33,7 +32,11 @@ import {
 } from "./HtmlWorkerProtocol.ts";
 import { prepareCitationHtmlRpc } from "./HtmlWorkerRpc.ts";
 import { CitationNativeProcessAdmission, makeCitationNativeProcessAdmission } from "./NativeAdmission.ts";
-import { makeCitationNativeProcessOwner } from "./NativeProcess.ts";
+import {
+  CitationNativeProcessRuntime,
+  citationNativeProcessCommand,
+  makeCitationNativeProcessOwner,
+} from "./NativeProcess.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import type { CitationCleanerWork } from "./CleanerPipeline.ts";
 import type { CitationNativeProcessLease } from "./NativeAdmission.ts";
@@ -44,19 +47,6 @@ const NativeStorage = S.toType(CitationPythonUnicodeStorage);
 const NaturalJson = S.fromJsonString(S.Natural);
 
 const $I = $LawPracticeServerId.create("internal/Citation/HtmlWorker");
-const RuntimePath = S.NonEmptyString.check(S.isMaxLength(4096)).pipe(
-  $I.annoteSchema("RuntimePath", {
-    description: "Explicit trusted local worker executable/script/working-directory path.",
-  })
-);
-/** @internal @category models @since 0.0.0 */
-export class CitationHtmlWorkerRuntime extends S.Opaque<CitationHtmlWorkerRuntime, { readonly brand: unique symbol }>()(
-  S.Struct({ executable: RuntimePath, workerFile: RuntimePath, cwd: RuntimePath }).pipe(
-    $I.annoteSchema("CitationHtmlWorkerRuntime", {
-      description: "Injected Bun runtime capability, never a raw-text request field or ambient configuration.",
-    })
-  )
-) {}
 /** @internal @category models @since 0.0.0 */
 export class CitationHtmlWorkerSnapshot extends S.Opaque<
   CitationHtmlWorkerSnapshot,
@@ -121,7 +111,7 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
     queueDeadline: decodedLimits.queueDeadline.pipe(Duration.toMillis, Duration.millis),
     cleanupDeadline: decodedLimits.cleanupDeadline.pipe(Duration.toMillis, Duration.millis),
   });
-  const runtime = yield* S.decodeUnknownEffect(CitationHtmlWorkerRuntime)(runtimeInput).pipe(
+  const runtime = yield* S.decodeUnknownEffect(CitationNativeProcessRuntime)(runtimeInput).pipe(
     Effect.mapError(() => failure("invalid-runtime"))
   );
   const clock = yield* Clock.Clock;
@@ -240,26 +230,10 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
               Effect.uninterruptible
             );
             const started = yield* nativeOwner
-              .start(
-                ChildProcess.make(runtime.executable, ["--no-env-file", "--no-install", runtime.workerFile, argument], {
-                  cwd: runtime.cwd,
-                  env: {},
-                  extendEnv: false,
-                  shell: false,
-                  detached: false,
-                  stdin: "pipe",
-                  stdout: "pipe",
-                  stderr: "ignore",
-                  killSignal: "SIGKILL",
-                  forceKillAfter: Duration.zero,
-                }),
-                {
-                  quarantine: Effect.suspend(() =>
-                    O.isSome(nativeLease) ? nativeLease.value.quarantine : Effect.void
-                  ),
-                  release,
-                }
-              )
+              .start(citationNativeProcessCommand(runtime, argument), {
+                quarantine: Effect.suspend(() => (O.isSome(nativeLease) ? nativeLease.value.quarantine : Effect.void)),
+                release,
+              })
               .pipe(
                 Effect.tap((started) =>
                   Effect.sync(() => {

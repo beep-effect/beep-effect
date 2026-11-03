@@ -124,15 +124,15 @@ const HostCallbackCorpusJson = S.fromJsonString(
 
 const Operation = S.Union([
   S.Struct({ kind: S.Literals(["set"]), key: S.Natural, value: S.Natural }),
-  S.Struct({ kind: S.Literal("get"), key: S.Natural }),
-  S.Struct({ kind: S.Literal("remove"), key: S.Natural }),
-  S.Struct({ kind: S.Literal("alias"), key: S.Natural }),
+  S.Struct({ kind: S.tag("get"), key: S.Natural }),
+  S.Struct({ kind: S.tag("remove"), key: S.Natural }),
+  S.Struct({ kind: S.tag("alias"), key: S.Natural }),
   S.Struct({ kind: S.Literals(["append"]), key: S.Natural, member: S.Natural }),
   S.Struct({ kind: S.Literals(["clear"]) }),
   S.Struct({ kind: S.Literals(["page"]), value: S.String }),
   S.Struct({ kind: S.Literals(["truth"]), host: S.Natural, value: S.Boolean }),
-  S.Struct({ kind: S.Literal("hashRaw"), host: S.Natural, value: S.String }),
-  S.Struct({ kind: S.Literal("token"), host: S.Natural, value: S.String }),
+  S.Struct({ kind: S.tag("hashRaw"), host: S.Natural, value: S.String }),
+  S.Struct({ kind: S.tag("token"), host: S.Natural, value: S.String }),
   S.Struct({
     kind: S.Literals(["flag"]),
     host: S.Natural,

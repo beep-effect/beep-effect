@@ -109,6 +109,11 @@ it.effect("enforces exact complete-frame size and raw-match limits before encodi
     const short = yield* makeCitationRegexResult({ ...policy, processMessageBytes: frame.byteLength - 1 }, 0, 1);
     expect(yield* short.encode(1, words([0, 1])).pipe(Effect.flip)).toMatchObject({ limit: "processMessageBytes" });
     expect(yield* short.decode(frame.slice(0, -1)).pipe(Effect.flip)).toMatchObject({ limit: "processMessageBytes" });
+    expect(yield* normal.decode(yield* wire(0, 1, "INVALID"), 0).pipe(Effect.flip)).toMatchObject({
+      limit: "patternMatches",
+    });
+    const empty = yield* normal.encode(0, new Uint8Array(0));
+    expect((yield* normal.decode(empty.subarray(0, -1), 0)).matches).toBe(0);
     const bounded = yield* makeCitationRegexResult({ ...policy, patternMatches: 1 }, 0, 1);
     expect(yield* bounded.encode(2, new Uint8Array(0)).pipe(Effect.flip)).toMatchObject({ limit: "patternMatches" });
     expect(yield* bounded.decode(yield* wire(0, 2, "INVALID")).pipe(Effect.flip)).toMatchObject({

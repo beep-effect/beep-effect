@@ -10,18 +10,55 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as ChildProcess from "effect/process/ChildProcess";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Semaphore from "effect/Semaphore";
-import type * as ChildProcess from "effect/process/ChildProcess";
 import type { ChildProcessHandle } from "effect/process/ChildProcessSpawner";
 import type { CitationNativeProcessLease } from "./NativeAdmission.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/NativeProcess");
 const LimitsType = S.toType(CitationEngineLimits);
+const RuntimePath = S.NonEmptyString.check(S.isMaxLength(4096)).pipe(
+  $I.annoteSchema("RuntimePath", {
+    description: "Explicit trusted local worker executable/script/working-directory path.",
+  })
+);
+/** @internal @category models @since 0.0.0 */
+export class CitationNativeProcessRuntime extends S.Opaque<
+  CitationNativeProcessRuntime,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({ executable: RuntimePath, workerFile: RuntimePath, cwd: RuntimePath }).pipe(
+    $I.annoteSchema("CitationNativeProcessRuntime", {
+      description: "Injected Bun runtime capability, never a raw-text request field or ambient configuration.",
+    })
+  )
+) {}
+/** Construct the same restricted Bun process for each native procedure.
+ * @internal @category operations @since 0.0.0
+ */
+export const citationNativeProcessCommand: {
+  (argument: string): (runtime: CitationNativeProcessRuntime) => ChildProcess.StandardCommand;
+  (runtime: CitationNativeProcessRuntime, argument: string): ChildProcess.StandardCommand;
+} = dual(2, (runtime: CitationNativeProcessRuntime, argument: string) =>
+  ChildProcess.make(runtime.executable, ["--no-env-file", "--no-install", runtime.workerFile, argument], {
+    cwd: runtime.cwd,
+    env: {},
+    extendEnv: false,
+    shell: false,
+    detached: false,
+    stdin: "pipe",
+    stdout: "pipe",
+    stderr: "ignore",
+    killSignal: "SIGKILL",
+    forceKillAfter: Duration.zero,
+  })
+);
 /** @internal @category models @since 0.0.0 */
 export const CitationNativeProcessFailureReason = LiteralKit([
   "invalid-runtime",

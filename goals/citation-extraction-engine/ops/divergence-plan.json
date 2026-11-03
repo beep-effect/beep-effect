@@ -29,7 +29,16 @@
         "packages/law-practice/server/test/CitationRegexDescriptors.test.ts",
         "packages/law-practice/server/src/internal/Citation/RegexPointSets.ts",
         "packages/law-practice/server/test/CitationRegexProgram.test.ts",
-        "goals/citation-extraction-engine/history/evidence/2026-11-02-regex-program-compiler.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-02-regex-program-compiler.md",
+        "packages/law-practice/server/src/internal/Citation/NativeRpc.ts",
+        "packages/law-practice/server/src/internal/Citation/RegexWorker.ts",
+        "packages/law-practice/server/src/internal/Citation/RegexWorker.entry.ts",
+        "packages/law-practice/server/src/internal/Citation/RegexWorkerClient.ts",
+        "packages/law-practice/server/src/internal/Citation/RegexWorkerEvaluation.ts",
+        "packages/law-practice/server/src/internal/Citation/RegexWorkerProgram.ts",
+        "packages/law-practice/server/src/internal/Citation/RegexWorkerRpc.ts",
+        "packages/law-practice/server/test/CitationRegexWorker.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-03-native-regex-worker.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

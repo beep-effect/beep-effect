@@ -154,12 +154,13 @@ export const encodeCitationRegexJob = Effect.fn("Citation.encodeRegexJob")(funct
 });
 // The request is flat. Reject structural amplification before JSON.parse or
 // base64 decoding; punctuation inside quoted strings is not structure.
-/** Flat JSON structure guard shared by closed regex messages.
+/** Bounded JSON structure guard shared by closed regex messages.
  * @internal @category operations @since 0.0.0
  */
 export const preflightCitationRegexJson = Effect.fn("Citation.preflightRegexJson")(function* (
   bytes: Uint8Array,
-  propertyCeiling: number
+  propertyCeiling: number,
+  maximumDepth = 1
 ) {
   let quoted = false;
   let escaped = false;
@@ -172,7 +173,7 @@ export const preflightCitationRegexJson = Effect.fn("Citation.preflightRegexJson
   };
   const openObject = Effect.fnUntraced(function* () {
     depth++;
-    if (depth > 1) return yield* invalid();
+    if (depth > maximumDepth) return yield* invalid();
   });
   const closeObject = Effect.fnUntraced(function* () {
     depth--;

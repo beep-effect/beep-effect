@@ -2847,6 +2847,28 @@
       "reason": "Owner: @beep/observability. runWithLayer scopes the layer so closing it flushes the OTLP exporters before the caller asserts on the captured requests; the helper comment says so. Without the shorter scope the exports arrive only at test teardown, after the assertions. Exit: retire when EV004 recognises a helper scope whose close the caller's later assertions observe (#1855 wave 4 register)."
     },
     {
+      "id": "EV004:packages/law-practice/server/test/integration/CitationRegexTranslator.test.ts:42:scoped@35#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/integration/CitationRegexTranslator.test.ts",
+      "line": 42,
+      "endLine": 88,
+      "symbol": "scoped",
+      "occurrence": "v2:aa8a3236c0d82aa2545020ef0a5c9af64edf333fb0dff589cc45efbdfe051847",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const child = yield* native.spawner.spawn( ChildProcess.make( process.execPath, [ \"--no-env-file\", \"--no-install\", NodeURL.fileURLToPath( new URL( \"../../../..",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "Delete only a whole-body Effect.scoped; retain deliberate shorter lifetimes for judgment."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Each of the 17 bounded qualification subjects needs its own nested Scope so its OS child is retired and independently observed before the concurrency slot is reused. The enclosing it.effect scope alone would retain all children until the entire test finishes. Owner: @beep/law-practice-server. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-03-native-regex-worker.md."
+    },
+    {
       "id": "EV004:packages/ontology/client/test/Session.atoms.test.ts:207:scoped@10#1",
       "lens": "resource",
       "ruleId": "EV004",
@@ -3605,7 +3627,7 @@
       "symbol": "it.live",
       "occurrence": "v2:c027e67dd880a2a8fe4d854ffa24710fb29e526922688554f73771e44f9220b0",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"never restores over a synchronous turn start (subscription races the dispatch)\", Effect.fnUntraced(function* () { // A submit whose write starts the turn synchronously inside the set — // th",
+      "evidence": "it.live( \"never restores over a synchronous turn start (subscription races the dispatch)\", Effect.fnUntraced(function* () { // A submit whose write starts the turn synchronously inside the set \u2014 // th",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -3649,7 +3671,7 @@
       "symbol": "it.live",
       "occurrence": "v2:839f4c06674803449cc12ea63d0ef0fe4c6c3b982ae7010cc7e7aa1039f70146",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"restores the draft when the dispatch is swallowed\", Effect.fnUntraced(function* () { // A submit whose write is silently dropped — the zombie-node failure // mode the QA 2026-08-26 P0 found:",
+      "evidence": "it.live( \"restores the draft when the dispatch is swallowed\", Effect.fnUntraced(function* () { // A submit whose write is silently dropped \u2014 the zombie-node failure // mode the QA 2026-08-26 P0 found:",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -6323,6 +6345,28 @@
       "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
     },
     {
+      "id": "EV010:packages/law-practice/server/test/CitationNativeProcess.test.ts:6:@effect/platform-bun/BunServices@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/CitationNativeProcess.test.ts",
+      "line": 6,
+      "endLine": 6,
+      "symbol": "@effect/platform-bun/BunServices",
+      "occurrence": "v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import * as BunServices from \"@effect/platform-bun/BunServices\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Exercises real child process creation and independent OS PID exit acknowledgement; the regex worker also needs an OS-visible entrypoint and temporary working directory. MemoryFileSystem cannot preserve this subject. Owner: @beep/law-practice-server. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-03-native-regex-worker.md."
+    },
+    {
       "id": "EV010:packages/law-practice/server/test/CitationPriorFulls.test.ts:18:@effect/platform-bun/BunFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -6453,6 +6497,28 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Authenticates committed source-observation bytes and maintainer producer hashes through the real repository fixture loader. Seeding a memory filesystem would remove the artifact integrity check. Owner: @beep/law-practice-server. Exit: detector recognizes authenticated repository corpus replay."
+    },
+    {
+      "id": "EV010:packages/law-practice/server/test/CitationRegexWorker.test.ts:10:@effect/platform-bun/BunServices@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/CitationRegexWorker.test.ts",
+      "line": 10,
+      "endLine": 10,
+      "symbol": "@effect/platform-bun/BunServices",
+      "occurrence": "v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import * as BunServices from \"@effect/platform-bun/BunServices\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Exercises real child process creation and independent OS PID exit acknowledgement; the regex worker also needs an OS-visible entrypoint and temporary working directory. MemoryFileSystem cannot preserve this subject. Owner: @beep/law-practice-server. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-03-native-regex-worker.md."
     },
     {
       "id": "EV010:packages/law-practice/server/test/CitationResolve.test.ts:6:@effect/platform-bun/BunFileSystem@0#1",

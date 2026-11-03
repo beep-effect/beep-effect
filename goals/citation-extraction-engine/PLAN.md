@@ -167,7 +167,16 @@ source-hash-bound ranges plus its baseline, retaining every aggregate assertion,
 the per-child watchdog and independent exit checks. Effect.forEach bounds hosted
 qualification concurrency at two. See
 [qualification partition](history/evidence/2026-11-03-regex-hosted-qualification-partition.md).
-The new full native run remains pending; no engine safety limit changed.
+Hosted Check run 41591267727 on `dfc56bc1df` passed Heavy / Check, Heavy / Test
+Integration and Fallow Advisory Envelopes. No engine safety limit changed.
+
+Latest isolated regex checkpoint (2026-11-03): actual native matching now runs
+behind Effect RPC and the shared physical owner. Both ends bind exact native
+words/flags/profile; bounded capture collection retains zero-quota and Unicode
+scalar/literal-surrogate distinctions. Four actual-child controls and forty-four
+focused HTML/regex/resource tests pass. Unsupported profiles remain explicit;
+family execution/scaling review and full public integration remain open. See
+[native regex worker](history/evidence/2026-11-03-native-regex-worker.md).
 
 Latest worker evidence (2026-10-31): private process ownership now covers bounded
 schema frames, captured Clock timers, queue/active limits, forced stop,

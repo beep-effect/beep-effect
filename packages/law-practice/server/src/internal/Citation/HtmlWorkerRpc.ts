@@ -5,15 +5,12 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as Rpc from "effect/rpc/Rpc";
 import * as RpcClient from "effect/rpc/RpcClient";
 import * as RpcGroup from "effect/rpc/RpcGroup";
-import * as RpcMessage from "effect/rpc/RpcMessage";
-import * as Stream from "effect/Stream";
 import {
   CitationHtmlWorkerError,
   CitationHtmlWorkerFailure,
@@ -24,6 +21,7 @@ import {
   encodeCitationHtmlJob,
   readCitationHtmlFrames,
 } from "./HtmlWorkerProtocol.ts";
+import { makeCitationNativeRpcTransport } from "./NativeRpc.ts";
 import type { ChildProcessHandle } from "effect/process/ChildProcessSpawner";
 
 /**
@@ -55,20 +53,11 @@ export const prepareCitationHtmlRpc = Effect.fn("Citation.prepareHtmlRpc")(funct
   return Effect.fn("Citation.callHtmlRpc")((child: Pick<ChildProcessHandle, "stdin" | "stdout">) =>
     Effect.scoped(
       Effect.gen(function* () {
-        const requestId = RpcMessage.RequestId(0);
-        const sent = yield* Deferred.make<void>();
-        const rpc = yield* RpcClient.makeNoSerialization(CitationHtmlRpcs, {
-          supportsAck: false,
-          spanPrefix: "Citation.native",
-          generateRequestId: () => requestId,
-          onFromClient: ({ message }) =>
-            message._tag === "Request"
-              ? Stream.run(Stream.make(frame), child.stdin).pipe(
-                  Effect.tap(() => Deferred.succeed(sent, undefined)),
-                  Effect.mapError(() => CitationHtmlWorkerFailure.make({ reason: "channel-failed" }))
-                )
-              : Effect.void,
-        });
+        const transport = yield* makeCitationNativeRpcTransport(child, frame, () =>
+          CitationHtmlWorkerFailure.make({ reason: "channel-failed" })
+        );
+        const requestId = transport.requestId;
+        const rpc = yield* RpcClient.makeNoSerialization(CitationHtmlRpcs, transport.options);
         let step = 0;
         let terminal = O.none<CitationHtmlWorkerReply>();
         const receive = readCitationHtmlFrames(
@@ -93,7 +82,7 @@ export const prepareCitationHtmlRpc = Effect.fn("Citation.prepareHtmlRpc")(funct
               if (!CitationHtmlWorkerReply.isAnyOf(["Success", "Failure"])(reply)) return yield* invalid();
               // A complete early reply cannot precede registration of its call
               // or interrupt a still-pending request write.
-              yield* Deferred.await(sent);
+              yield* transport.sent;
               yield* rpc.write({
                 _tag: "Exit",
                 clientId: 0,

@@ -32,17 +32,23 @@ const NativeCapture = S.UndefinedOr(S.Tuple([Position, Position])).pipe(
   })
 );
 const paddedLength = (bytes: number) => 4 * ((bytes + 2 - ((bytes + 2) % 3)) / 3);
-const Wire = S.TaggedStruct("Complete", {
-  version: S.tag("citation-regex-result/v1"),
-  groups: Groups,
-  matches: Count,
-  spans: S.String.check(S.isMaxLength(paddedLength(max.processMessageBytes))),
-}).pipe(
-  $I.annoteSchema("Wire", {
-    description: "Flat complete-result envelope. Native capture words are decoded only after contextual size checks.",
-  })
-);
-const Json = S.fromJsonString(Wire);
+/** @internal @category models @since 0.0.0 */
+export class CitationRegexResultEnvelope extends S.Opaque<
+  CitationRegexResultEnvelope,
+  { readonly brand: unique symbol }
+>()(
+  S.TaggedStruct("Complete", {
+    version: S.tag("citation-regex-result/v1"),
+    groups: Groups,
+    matches: Count,
+    spans: S.String.check(S.isMaxLength(paddedLength(max.processMessageBytes))),
+  }).pipe(
+    $I.annoteSchema("CitationRegexResultEnvelope", {
+      description: "Flat complete-result envelope. Native capture words are decoded only after contextual size checks.",
+    })
+  )
+) {}
+const Json = S.fromJsonString(CitationRegexResultEnvelope);
 const NativeBytes = S.Uint8ArrayFromBase64;
 const encoder = new TextEncoder();
 const decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
@@ -118,13 +124,13 @@ export const makeCitationRegexResult = Effect.fn("Citation.makeRegexResult")(fun
     if (matches > limits.patternMatches) return yield* safety("patternMatches");
     const bytes = matches * (groups + 1) * 8;
     // Includes the fixed header and LF, even for a zero-match result.
-    const header = yield* S.encodeEffect(Json)({
-      _tag: "Complete",
-      version: "citation-regex-result/v1",
-      groups,
-      matches,
-      spans: "",
-    }).pipe(Effect.mapError(invalid));
+    const header = yield* S.encodeEffect(Json)(
+      CitationRegexResultEnvelope.make({
+        groups,
+        matches,
+        spans: "",
+      })
+    ).pipe(Effect.mapError(invalid));
     const completeBytes = encoder.encode(header).byteLength + 1 + paddedLength(bytes);
     if (completeBytes > limits.processMessageBytes) return yield* safety("processMessageBytes");
     return { matches, bytes, completeBytes };
@@ -165,12 +171,18 @@ export const makeCitationRegexResult = Effect.fn("Citation.makeRegexResult")(fun
     for (let match = 0; match < matches; match++) yield* matchCaptures(view, match * (groups + 1) * 8);
   });
 
-  const decode = Effect.fn("Citation.decodeRegexResult")(function* (body: Uint8Array) {
+  const decode = Effect.fn("Citation.decodeRegexResult")(function* (
+    body: Uint8Array,
+    maximumMatchesInput: unknown = limits.patternMatches
+  ) {
+    const maximumMatches = yield* S.decodeUnknownEffect(Count)(maximumMatchesInput).pipe(Effect.mapError(invalid));
+    if (maximumMatches > limits.patternMatches) return yield* safety("patternMatches");
     if (body.byteLength + 1 > limits.processMessageBytes) return yield* safety("processMessageBytes");
     yield* preflightCitationRegexJson(body, 5);
     const text = yield* Effect.try({ try: () => decoder.decode(body), catch: invalid });
     const wire = yield* S.decodeEffect(Json, { onExcessProperty: "error" })(text).pipe(Effect.mapError(invalid));
     if (wire.groups !== groups) return yield* invalid();
+    if (wire.matches > maximumMatches) return yield* safety("patternMatches");
     const layout = yield* counts(wire.matches);
     if (Str.length(wire.spans) !== paddedLength(layout.bytes)) return yield* invalid();
     const bytes = yield* S.decodeEffect(NativeBytes)(wire.spans).pipe(Effect.mapError(invalid));
@@ -193,13 +205,13 @@ export const makeCitationRegexResult = Effect.fn("Citation.makeRegexResult")(fun
     if (bytes.byteLength !== layout.bytes) return yield* invalid();
     yield* validate(layout.matches, bytes);
     const spans = yield* S.encodeEffect(NativeBytes)(bytes).pipe(Effect.mapError(invalid));
-    const text = yield* S.encodeEffect(Json)({
-      _tag: "Complete",
-      version: "citation-regex-result/v1",
-      groups,
-      matches: layout.matches,
-      spans,
-    }).pipe(Effect.mapError(invalid));
+    const text = yield* S.encodeEffect(Json)(
+      CitationRegexResultEnvelope.make({
+        groups,
+        matches: layout.matches,
+        spans,
+      })
+    ).pipe(Effect.mapError(invalid));
     const frame = encoder.encode(`${text}\n`);
     if (frame.byteLength !== layout.completeBytes) return yield* invalid();
     return frame;

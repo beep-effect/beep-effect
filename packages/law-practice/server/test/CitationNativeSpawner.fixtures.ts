@@ -3,7 +3,7 @@
  */
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationHtmlWorkerRuntime } from "@beep/law-practice-server/internal/Citation/HtmlWorker";
+import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { assertFailure } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
@@ -14,7 +14,7 @@ import * as S from "effect/Schema";
  * @internal @category testing @since 0.0.0
  */
 export const citationHtmlWorkerTestRuntime = () =>
-  CitationHtmlWorkerRuntime.make({
+  CitationNativeProcessRuntime.make({
     executable: process.execPath,
     cwd: process.cwd(),
     workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),

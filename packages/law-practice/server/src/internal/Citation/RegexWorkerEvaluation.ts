@@ -1,0 +1,80 @@
+/** Isolated native evaluator. Never import into the responsive parent.
+ * @internal @packageDocumentation @since 0.0.0
+ */
+
+import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as RegExp from "effect/RegExp";
+import { makeCitationRegexAlphabet } from "./RegexAlphabet.ts";
+import { makeCitationRegexDescriptorRegistry } from "./RegexDescriptors.ts";
+import { makeCitationRegexInput } from "./RegexInput.ts";
+import { makeCitationRegexProgram } from "./RegexProgram.ts";
+import { makeCitationRegexResult } from "./RegexResult.ts";
+import { CitationRegexWorkerFailure } from "./RegexWorkerProtocol.ts";
+import { CitationRegexEvaluationFailure } from "./RegexWorkerRpc.ts";
+import type { CitationRegexWorkerJob } from "./RegexWorkerProtocol.ts";
+import type { CitationRegexWorkerStartup } from "./RegexWorkerRpc.ts";
+
+const nativeFailure = () => CitationRegexEvaluationFailure.make({ reason: "native-failed" });
+/** Rebind exact native words/profile and collect a complete bounded result.
+ * Parent process ownership supplies the hard deadline for synchronous RegExp.
+ * This canonical profile admits positive-width, non-repeated captures only;
+ * unsupported profiles fail explicitly and acquire no public family approval.
+ * @internal @category operations @since 0.0.0
+ */
+export const makeCitationRegexEvaluation = Effect.fn("Citation.makeRegexEvaluation")(function* (
+  startup: CitationRegexWorkerStartup
+) {
+  const { limits, descriptor } = startup;
+  const registry = yield* makeCitationRegexDescriptorRegistry(limits, [descriptor]);
+  const alphabet = yield* makeCitationRegexAlphabet(limits);
+  const compiler = yield* makeCitationRegexProgram(limits);
+  const sourceInput = yield* makeCitationRegexInput(limits);
+  const evaluate = Effect.fn("Citation.evaluateNativeRegex")(
+    function* (job: CitationRegexWorkerJob) {
+      if (job.maxMatches > limits.patternMatches)
+        return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "patternMatches" });
+      const bound = yield* registry.bind({ width: job.patternWidth, bytes: job.patternBytes }, job.flags);
+      const program = bound.program;
+      if (
+        program.groups > 10 ||
+        program.minimumWidthFloor === 0 ||
+        program.repeatedCaptures ||
+        program.nullableMultiRepeat
+      )
+        return yield* CitationRegexEvaluationFailure.make({ reason: "unsupported-profile" });
+      const source = yield* sourceInput
+        .prepareUnicode({ width: job.sourceWidth, bytes: job.sourceBytes }, () => Effect.void)
+        .pipe(
+          Effect.catchTag("CitationRegexInputFailure", () =>
+            Effect.fail(CitationRegexWorkerFailure.make({ reason: "invalid-frame" }))
+          )
+        );
+      const encoded = yield* alphabet.prepare(program.sets, source.value.storage);
+      const pattern = yield* compiler.render(program, encoded);
+      const result = yield* makeCitationRegexResult(limits, program.groups, source.layout.pythonLength);
+      const native = yield* Effect.try({
+        try: () => new RegExp.RegExp(pattern, encoded.flags),
+        catch: nativeFailure,
+      });
+      const pull = Effect.gen(function* () {
+        const match = yield* Effect.try({ try: () => native.exec(encoded.source), catch: nativeFailure });
+        const next = O.fromNullishOr(match);
+        if (O.isNone(next)) return O.none();
+        const indices = yield* Effect.fromOption(O.fromUndefinedOr(next.value.indices)).pipe(
+          Effect.mapError(nativeFailure)
+        );
+        const whole = yield* Effect.fromOption(O.fromUndefinedOr(indices[0])).pipe(Effect.mapError(nativeFailure));
+        if (whole[0] >= whole[1]) return yield* nativeFailure();
+        return O.some(indices);
+      });
+      const frame = yield* result.collect(pull, job.maxMatches);
+      return frame.subarray(0, -1);
+    },
+    Effect.catchTag("CitationRegexInputFailure", () =>
+      Effect.fail(CitationRegexWorkerFailure.make({ reason: "invalid-frame" }))
+    )
+  );
+  return { evaluate };
+});

@@ -14,11 +14,8 @@ import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
-import * as Headers from "effect/http/Headers";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import * as RpcMessage from "effect/rpc/RpcMessage";
-import * as RpcServer from "effect/rpc/RpcServer";
 import * as S from "effect/Schema";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
@@ -36,7 +33,10 @@ import {
   readCitationHtmlFrames,
 } from "./HtmlWorkerProtocol.ts";
 import { CitationHtmlRpcs } from "./HtmlWorkerRpc.ts";
+import { citationNativeRpcRequest, makeCitationNativeRpcServer } from "./NativeRpc.ts";
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import type * as RpcGroup from "effect/rpc/RpcGroup";
+import type * as RpcMessage from "effect/rpc/RpcMessage";
 import type { CitationHtmlWorkerJob, CitationHtmlWorkerReply } from "./HtmlWorkerProtocol.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/HtmlWorkerProgram");
@@ -108,35 +108,26 @@ export const citationHtmlWorkerProgram = Effect.gen(function* () {
         .pipe(Effect.catchDefect(() => Effect.interrupt)),
   });
   const completed = yield* Deferred.make<void, CitationHtmlWorkerFailure | CitationSafetyLimitExceeded>();
-  const server = yield* RpcServer.makeNoSerialization(CitationHtmlRpcs, {
-    concurrency: 1,
-    disableClientAcks: true,
-    disableSpanPropagation: true,
-    spanPrefix: "Citation.native",
-    onFromServer: (response) => {
-      if (response._tag !== "Exit") return Effect.void;
-      const reply = Exit.isSuccess(response.exit)
-        ? Effect.succeed(CitationHtmlWorkerSuccess.make({ text: response.exit.value }))
-        : response.exit.cause.pipe(
-            Cause.findErrorOption,
-            Effect.fromOption,
-            Effect.mapBoth({ onSuccess: (failure) => CitationHtmlWorkerError.make({ failure }), onFailure: badFrame })
-          );
-      return Deferred.complete(
-        completed,
-        reply.pipe(
-          Effect.flatMap(send),
-          Effect.catchTag("CitationSafetyLimitExceeded", (failure) => send(CitationHtmlWorkerError.make({ failure })))
-        )
-      ).pipe(Effect.asVoid);
-    },
-  }).pipe(Effect.provideContext(handlers));
-  yield* server.write(0, {
-    _tag: "Request",
-    id: RpcMessage.RequestId(0),
-    tag: "Clean",
-    payload: job,
-    headers: Headers.empty,
-  });
+  const onFromServer = (response: RpcMessage.FromServer<RpcGroup.Rpcs<typeof CitationHtmlRpcs>>) => {
+    if (response._tag !== "Exit") return Effect.void;
+    const reply = Exit.isSuccess(response.exit)
+      ? Effect.succeed(CitationHtmlWorkerSuccess.make({ text: response.exit.value }))
+      : response.exit.cause.pipe(
+          Cause.findErrorOption,
+          Effect.fromOption,
+          Effect.mapBoth({ onSuccess: (failure) => CitationHtmlWorkerError.make({ failure }), onFailure: badFrame })
+        );
+    return Deferred.complete(
+      completed,
+      reply.pipe(
+        Effect.flatMap(send),
+        Effect.catchTag("CitationSafetyLimitExceeded", (failure) => send(CitationHtmlWorkerError.make({ failure })))
+      )
+    ).pipe(Effect.asVoid);
+  };
+  const server = yield* makeCitationNativeRpcServer(CitationHtmlRpcs, onFromServer).pipe(
+    Effect.provideContext(handlers)
+  );
+  yield* server.write(0, citationNativeRpcRequest<RpcGroup.Rpcs<typeof CitationHtmlRpcs>>("Clean", job));
   yield* Deferred.await(completed);
 }).pipe(Effect.withSpan("Citation.htmlWorkerProgram"));
