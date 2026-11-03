@@ -1768,6 +1768,18 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         override: "false",
         matcher: "false",
       });
+      const install = stepByName(steps, "Install pinned portable build tools");
+      expect(install.run).toContain("--require-hashes");
+      expect(install.run).toContain("--only-binary=:all:");
+      const buildRequirements = yield* fs.readFileString(`${root}/infra/r2-cache/policy-build-requirements.txt`);
+      expect(buildRequirements).toContain("cargo-zigbuild==0.20.1");
+      expect(buildRequirements).toContain(
+        "--hash=sha256:cb9508149ee63d60e5110ff24b527ab25ed418a6329252aa4f86868197c55bf6"
+      );
+      expect(buildRequirements).toContain("ziglang==0.14.1");
+      expect(buildRequirements).toContain(
+        "--hash=sha256:6eb9d4d759b292c83810dbee2e9e8e3fbfbf01d864e6e9811bae711fd74e1c2f"
+      );
       const build = stepByName(steps, "Build pinned portable candidate");
       expect(build.run).toContain("infra/r2-cache/policy.sh cargo-build-musl");
       expect(build.run).toContain("infra/r2-cache/policy.sh prepare");
@@ -1775,6 +1787,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(build.run).toContain("size+len(encoded)>16*1024*1024");
       expect(build.run).toContain("len(encoded)>64*1024");
       expect(build.run).toContain("independent approval and runtime qualification are required");
+      expect(build.run).toContain("'toolExecutables':{name:executable_digest(path)");
+      expect(build.run).toContain("['rustup','which','rustc']");
       expect(stepByName(steps, "Retain candidate for at most one day").with).toEqual({
         name: "cache-producer-adapter-${{ github.run_id }}-${{ github.run_attempt }}",
         path: "${{ steps.scratch.outputs.artifact }}",

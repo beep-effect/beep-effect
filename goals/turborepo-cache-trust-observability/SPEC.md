@@ -1133,3 +1133,15 @@ approval. The separate normal comparison, protocol and ten-minute upload
 limits remain unchanged. Reverse by removing the preparation caller, optional
 Heavy mode and its candidate artifact; preserve ordinary cache services,
 independent issuer/verifier stores and all historical failed evidence.
+
+### Candidate build-tool content pins, 2026-11-02
+
+PR #2643 review identified that exact wheel versions alone do not bind their
+content. Lock the published Linux x86_64 cargo-zigbuild 0.20.1 and ziglang 0.14.1
+wheel SHA-256 values in the existing requirements file and require pip hash
+verification with binary-only installation. The latter is the former's only
+runtime package dependency and remains independently pinned. Unsupported host
+wheels fail closed. Record actual Rust compiler, cargo-zigbuild and Zig
+executable digests and byte sizes alongside versions in the bounded build
+manifest; resolve the compiler through Rustup rather than hashing its launcher.
+This repairs preparation, not its unexecuted build or independent approval.

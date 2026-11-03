@@ -2057,3 +2057,12 @@ console entry point; the existing successful environment uses an explicit
 link to its module's `zig` binary. Preserve that setup in the isolated CI tools
 and check both tool versions before compilation. Source preparation does not
 prove build success, approval or signed execution.
+
+### 2026-11-02 — version-only build-tool requirements
+
+PR #2643 review `discussion_r4450530140` found that the portable builder pinned
+cargo-zigbuild and its Zig linker by version without binding wheel content.
+Record the published Linux x86_64 wheel hashes, enforce `--require-hashes`,
+and retain installed executable digests in the build manifest. Future pinned
+tool installs should review the complete dependency list and content hashes
+alongside their version checks before a protected runner consumes them.

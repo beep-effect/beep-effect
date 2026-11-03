@@ -422,7 +422,7 @@ jobs:
           set -euo pipefail
           python3 -m venv "$BEEP_CACHE_PRODUCER_BUILD_ROOT/tools"
           "$BEEP_CACHE_PRODUCER_BUILD_ROOT/tools/bin/python" -m pip install \
-            --disable-pip-version-check --no-cache-dir --only-binary=:all: \
+            --disable-pip-version-check --no-cache-dir --only-binary=:all: --require-hashes \
             -r infra/r2-cache/policy-build-requirements.txt
           # ziglang distributes the binary inside its module, without a PATH entry.
           zig_binary="$("$BEEP_CACHE_PRODUCER_BUILD_ROOT/tools/bin/python" -c \
@@ -468,6 +468,18 @@ jobs:
           inputs=['infra/r2-cache/policy.sh','infra/r2-cache/policy-build-requirements.txt',
                   'infra/r2-cache/patches/4.0.20-signed-policy.patch',
                   'infra/r2-cache/patches/4.0.20-signed-policy.json']
+          def executable_digest(path):
+              executable=pathlib.Path(path).resolve(strict=True)
+              digest=hashlib.sha256()
+              with executable.open('rb') as handle:
+                  for block in iter(lambda:handle.read(1024*1024),b''):
+                      digest.update(block)
+              return {'sha256':digest.hexdigest(),'bytes':executable.stat().st_size}
+          tool_paths={
+              'rustc':subprocess.check_output(['rustup','which','rustc'],text=True).strip(),
+              'cargoZigbuild':shutil.which('cargo-zigbuild'),
+              'zig':shutil.which('zig')
+          }
           report={
               'schemaVersion':'cache-producer-adapter-build/v1',
               'authority':'Candidate build only; independent approval and runtime qualification are required.',
@@ -480,6 +492,7 @@ jobs:
               'target':'x86_64-unknown-linux-musl',
               'binary':{'file':'decay','bytes':size,'sha256':hashlib.sha256(binary.read_bytes()).hexdigest()},
               'sourceInputs':{p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in inputs},
+              'toolExecutables':{name:executable_digest(path) for name,path in tool_paths.items()},
               'tools':{name:subprocess.check_output(args,text=True).strip() for name,args in [
                   ('rustc',['rustc','-vV']),('cargoZigbuild',['cargo-zigbuild','--version']),('zig',['zig','version'])]}
           }

@@ -18,11 +18,15 @@
     },
     {
       "path": ".github/workflows/heavy.yml",
-      "sha256": "0cd3bb56322229d2001fd63863e72186fe0def07ae61c4f709ad0fd195cdc7a9"
+      "sha256": "d03361d0bd4b034c83256ef3225188c986b2c4fc1a40b2dbaa8033d3e6b6ee46"
     },
     {
       "path": "packages/tooling/tool/cli/test/ci-runner-security.test.ts",
-      "sha256": "7675754a1cb62f397a3d73705afa305f1b797f3d77b31609b41e73f3975ea284"
+      "sha256": "5f8cdd3472aa08c82cc9b02c989c680bbcf48e994ee9eab0354f51ccb8f09203"
+    },
+    {
+      "path": "infra/r2-cache/policy-build-requirements.txt",
+      "sha256": "8270e2e179f2b0abbaea61f6a08ad8b1770322408e032122d2bece32413d194a"
     }
   ],
   "environmentRecords": {
@@ -172,7 +176,12 @@
       "rust": "1.96.0",
       "cargoZigbuild": "0.20.1",
       "zig": "0.14.1",
-      "target": "x86_64-unknown-linux-musl"
+      "target": "x86_64-unknown-linux-musl",
+      "wheelSha256": {
+        "cargo-zigbuild": "cb9508149ee63d60e5110ff24b527ab25ed418a6329252aa4f86868197c55bf6",
+        "ziglang": "6eb9d4d759b292c83810dbee2e9e8e3fbfbf01d864e6e9811bae711fd74e1c2f"
+      },
+      "installedExecutableDigestsRecorded": true
     },
     "builder": "infra/r2-cache/policy.sh cargo-build-musl",
     "postBuildSourcePatchRecheck": true,
@@ -188,5 +197,52 @@
     "priorProducerImplementationUnchangedByMerge": true,
     "allParentEvidenceRegistrationsRetained": true,
     "wholeGoalAcceptanceGranted": false
+  },
+  "priorSourceBindingsBeforeWheelHashReview": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "sha256": "44e6842fb3b73a66d8a0a707f67bb0a04401b9ca601daacc666617e733ad38e3"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-dispatch.test.ts",
+      "sha256": "c8198c1d847455b0d9639e064d71e1b80634a80ff7cf322b36dd7305b81bface"
+    },
+    {
+      "path": ".github/workflows/cache-producer-prepare.yml",
+      "sha256": "494b65ee582d2e0826838b6f99d3640feeb58940987852b3af1cd21982f9d1b1"
+    },
+    {
+      "path": ".github/workflows/heavy.yml",
+      "sha256": "0cd3bb56322229d2001fd63863e72186fe0def07ae61c4f709ad0fd195cdc7a9"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/ci-runner-security.test.ts",
+      "sha256": "7675754a1cb62f397a3d73705afa305f1b797f3d77b31609b41e73f3975ea284"
+    }
+  ],
+  "wheelHashReview": {
+    "thread": "https://github.com/beep-effect/beep-effect/pull/2643#discussion_r4450530140",
+    "classification": "valid",
+    "repair": "Published Linux x86_64 wheel hashes, pip --require-hashes and actual compiler/linker executable digests in build.json.",
+    "publishedWheels": {
+      "cargo-zigbuild": {
+        "filename": "cargo_zigbuild-0.20.1-py3-none-manylinux_2_5_x86_64.manylinux1_x86_64.whl",
+        "sha256": "cb9508149ee63d60e5110ff24b527ab25ed418a6329252aa4f86868197c55bf6",
+        "bytes": 1679876,
+        "url": "https://files.pythonhosted.org/packages/32/dd/ccec85254c252a784ed795639b51f7ea75dadbcba6b0a8c58b983ff20c96/cargo_zigbuild-0.20.1-py3-none-manylinux_2_5_x86_64.manylinux1_x86_64.whl",
+        "requiresPython": null,
+        "yanked": false
+      },
+      "ziglang": {
+        "filename": "ziglang-0.14.1-py3-none-manylinux_2_12_x86_64.manylinux2010_x86_64.musllinux_1_1_x86_64.whl",
+        "sha256": "6eb9d4d759b292c83810dbee2e9e8e3fbfbf01d864e6e9811bae711fd74e1c2f",
+        "bytes": 83184072,
+        "url": "https://files.pythonhosted.org/packages/9d/ef/494f128ea7ec3345850bbd75d2cb7b987006fb5601c37543e8fa83e5e3d4/ziglang-0.14.1-py3-none-manylinux_2_12_x86_64.manylinux2010_x86_64.musllinux_1_1_x86_64.whl",
+        "requiresPython": "~=3.5",
+        "yanked": false
+      }
+    },
+    "candidateBuildExecuted": false,
+    "currentHostedProof": "pending"
   }
 }
