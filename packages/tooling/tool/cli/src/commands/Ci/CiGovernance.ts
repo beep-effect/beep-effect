@@ -150,8 +150,9 @@ class HeldRunList extends S.Opaque<HeldRunList, { readonly brand: unique symbol 
 
 const stringListOption = S.Array(S.String).pipe(S.decodeUnknownOption);
 const textRecordsOption = S.Array(textRecord).pipe(S.decodeUnknownOption);
-const SetupAction = S.Struct({ inputs: S.Record(S.String, S.Struct({ default: S.optionalKey(S.Unknown) })) });
+const SetupAction = S.Struct({ runs: S.Struct({ steps: S.Array(S.Struct({ uses: S.optionalKey(S.String) })) }) });
 const decodeSetupAction = SetupAction.pipe(S.decodeUnknownEffect);
+const cacheSaveActions = ["actions/cache@", "actions/cache/save@"];
 const decodeWorkflowDocument = WorkflowDocument.pipe(S.decodeUnknownEffect);
 const PrFileCount = S.Struct({ changed_files: S.Int });
 const PrLabels = S.Array(S.Struct({ name: S.String }));
@@ -391,24 +392,32 @@ export const workflowPolicyDiagnostics = Effect.fn("CiGovernance.workflowPolicyD
 });
 
 /**
- * Check that setup's cache-write input defaults to the fail-closed value.
+ * Check that the setup action declares no step that saves an Actions cache.
  *
- * **Example** (Missing default)
+ * **Details**
+ *
+ * Pull requests run the composite action with their own code, so a save step
+ * there could seed an entry a trusted main run later restores. Trusted cache
+ * entries are written only by push-gated workflow steps.
+ *
+ * **Example** (A restore-only action)
  *
  * ```ts
- * import { setupCacheWriteDisabled } from "@beep/repo-cli/commands/Ci"
+ * import { setupActionSavesNoCache } from "@beep/repo-cli/commands/Ci"
  * import * as Effect from "effect/Effect"
- * Effect.isEffect(setupCacheWriteDisabled("inputs: {}")) // => true
+ * Effect.isEffect(setupActionSavesNoCache("runs:\n  steps: []\n")) // => true
  * ```
  *
  * @category predicates
  * @since 0.0.0
  */
-export const setupCacheWriteDisabled = Effect.fn("CiGovernance.setupCacheWriteDisabled")(function* (text: string) {
+export const setupActionSavesNoCache = Effect.fn("CiGovernance.setupActionSavesNoCache")(function* (text: string) {
   const action = yield* decodeYamlTextWith(decodeSetupAction)(text).pipe(
     CiCommandError.mapError("Cannot parse setup action.")
   );
-  return action.inputs["cache-write"]?.default === "false";
+  return !A.some(action.runs.steps, (step) =>
+    A.some(cacheSaveActions, (prefix) => Str.startsWith(prefix)(step.uses ?? ""))
+  );
 });
 
 /**
@@ -759,8 +768,8 @@ const ciWorkflowPolicyCommand = Command.make(
       { concurrency: 4 }
     ).pipe(Effect.map(A.flatten));
     const actionText = yield* fs.readFileString(`${root}/.github/actions/setup-monorepo-ci/action.yml`);
-    if (!(yield* setupCacheWriteDisabled(actionText)))
-      return yield* CiCommandError.make({ message: "setup action cache-write must default to false" });
+    if (!(yield* setupActionSavesNoCache(actionText)))
+      return yield* CiCommandError.make({ message: "setup action must not save an Actions cache" });
     if (A.isReadonlyArrayNonEmpty(diagnostics))
       return yield* CiCommandError.make({ message: A.join(diagnostics, "\n") });
     yield* Console.log("workflow-lint: clean");

@@ -631,3 +631,5 @@ success is not reused as ordinary qualification. All full-goal gates remain.
 - Existing `Cache.producer.ts` provisioning reader and `Cache.workflow.ts` exclusive initializer supply the authority, record bounds, source/target/executable checks and rollback.
 - Installed Effect 4.1.1 and the canonical Effect reference expose `Config.Redacted`, `Schema.Uint8ArrayFromBase64` and length checks; the transport uses those APIs and the existing JSON codecs.
 - The [preparation record](producer-environment-install-preparation-2026-11-02.json) binds implementation and authored controls. It records no executed test, deployment or qualification claim.
+
+- [Protected source inspection](protected-source-inspection-2026-11-02.json): authenticated successful main run `41561109340`, exact caller/callee source `c96edf8c`, immutable archive digest, canonical workflow digest and actual tool pins. Source/tool evidence only; actual runner readiness and protected signed execution remain unproven.

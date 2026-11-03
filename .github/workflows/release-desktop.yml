@@ -196,9 +196,6 @@ jobs:
       # and the `beforeBuildCommand` frontend build both work.
       - name: Setup monorepo CI
         uses: ./.github/actions/setup-monorepo-ci
-        with:
-          cache-turbo: "false"
-          cache-write: "false"
 
       - name: Build Bun sidecar
         shell: bash

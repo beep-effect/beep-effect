@@ -1,19 +1,7 @@
 name: Setup monorepo CI
-description: Restore caches and install dependencies for CI jobs after checkout.
+description: Install the pinned toolchain and dependencies for CI jobs after checkout.
 
 inputs:
-  cache-turbo:
-    description: Restore the Turbo cache for jobs that execute Turbo tasks.
-    required: false
-    default: "false"
-  cache-write:
-    description: Save restored caches after install when cache misses occur.
-    required: false
-    default: "false"
-  turbo-cache-key-suffix:
-    description: Stable suffix that isolates local Turbo caches for matrix lanes sharing one job id.
-    required: false
-    default: ""
   use-node:
     description: Setup Node.js runtime when workflow steps require it.
     required: false
@@ -146,9 +134,7 @@ runs:
         echo "BEEP_SETUP_STARTED_AT=$(date +%s)" >> "$GITHUB_ENV"
 
     - name: Ensure native PDF text extraction
-      # The reusable heavy workflow is pinned to main. Its existing cache
-      # suffix identifies coverage before the new explicit input lands there.
-      if: inputs.native-pdf-tools == 'true' || inputs.turbo-cache-key-suffix == '-coverage'
+      if: inputs.native-pdf-tools == 'true'
       shell: bash
       run: |
         set -euo pipefail
@@ -295,10 +281,8 @@ runs:
         echo "BEEP_SETUP_INSTALL_SECONDS=$((install_finished_at - install_started_at))" >> "$GITHUB_ENV"
 
     # One definition of the credential policy for every Turbo-backed job.
-    # Runs after dependency installation (the typed owner needs it) and before the
-    # Turbo restore below, which keys its local fallback on the exported
-    # TURBO_TOKEN / TURBO_TEAM. Only trusted main pushes ever see the write
-    # token or the application secrets.
+    # Runs after dependency installation (the typed owner needs it). Only
+    # trusted main pushes ever see the write token or the application secrets.
     - name: Export job environment
       if: ${{ inputs.turbo-remote-cache == 'true' || inputs.app-secrets == 'true' }}
       shell: bash
@@ -341,25 +325,6 @@ runs:
           echo 'R2 helper absent in this checkout; retaining the existing cache posture.'
         fi
 
-    - name: Restore Turbo cache (local fallback only)
-      if: ${{ inputs.cache-turbo == 'true' && (env.TURBO_TOKEN == '' || env.TURBO_TEAM == '') }}
-      id: turbo-cache-restore
-      continue-on-error: true
-      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-      with:
-        path: .turbo/cache
-        key: turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}${{ inputs.turbo-cache-key-suffix }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}
-        restore-keys: |
-          turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}${{ inputs.turbo-cache-key-suffix }}-
-
-    - name: Save Turbo cache (local fallback only)
-      if: ${{ inputs.cache-write == 'true' && inputs.cache-turbo == 'true' && (env.TURBO_TOKEN == '' || env.TURBO_TEAM == '') && steps.turbo-cache-restore.outputs.cache-hit != 'true' }}
-      continue-on-error: true
-      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-      with:
-        path: .turbo/cache
-        key: turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}${{ inputs.turbo-cache-key-suffix }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}
-
     - name: Report setup timing and cache metadata
       if: ${{ always() }}
       shell: bash
@@ -374,9 +339,7 @@ runs:
 
         install_seconds="${BEEP_SETUP_INSTALL_SECONDS:-n/a}"
         bun_cache_hit="disabled"
-        turbo_cache_hit="${{ steps.turbo-cache-restore.outputs.cache-hit }}"
         bun_cache_hit="${bun_cache_hit:-unknown}"
-        turbo_cache_hit="${turbo_cache_hit:-skipped}"
         turbo_remote_mode="${BEEP_CI_TURBO_REMOTE_MODE:-not requested}"
         bun_cache_size="$(du -sh ~/.bun/install/cache 2>/dev/null | awk '{ print $1 }' || true)"
         turbo_cache_size="$(du -sh .turbo/cache 2>/dev/null | awk '{ print $1 }' || true)"
@@ -399,10 +362,6 @@ runs:
           echo "| Node version | \`${node_version}\` |"
           echo "| Bun cache hit | \`${bun_cache_hit}\` |"
           echo "| Bun cache size | \`${bun_cache_size}\` |"
-          echo "| Turbo cache enabled | \`${{ inputs.cache-turbo }}\` |"
-          echo "| Turbo cache key | \`turbo-${{ runner.os }}-${{ github.job }}${{ inputs.turbo-cache-key-suffix }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}\` |"
-          echo "| Turbo cache hit | \`${turbo_cache_hit}\` |"
           echo "| Turbo cache size | \`${turbo_cache_size}\` |"
           echo "| Turbo remote cache | \`${turbo_remote_mode}\` |"
-          echo "| Cache write enabled | \`${{ inputs.cache-write }}\` |"
         } >> "${GITHUB_STEP_SUMMARY:-/dev/stdout}"

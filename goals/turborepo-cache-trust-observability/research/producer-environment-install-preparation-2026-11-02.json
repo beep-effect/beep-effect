@@ -66,13 +66,18 @@
     }
   ],
   "acceptedMainIntegration": {
-    "revision": "874533e793196c38aae371606b1df01787b8e809",
+    "revision": "0be0bfc6e7b864877e362c9421499ec12ac3bbc1",
     "environmentSourceBindingsUnchanged": true,
     "consumedAcceptedComponents": [
       "resolved Heavy approval (#2603)",
       "narrowed policy-seal, role and transit hashes (#2633)",
-      "optional exporter default review (#2636)"
+      "optional exporter default review (#2636)",
+      "merge-preview and stronger storage coverage controls (#2624)",
+      "root-input cacheability contract (#2625)",
+      "constrained dispatch process controls (#2640)",
+      "hosted queue and cache consumer repair (#2627)"
     ],
     "acceptanceGranted": false
-  }
+  },
+  "protectedSourceInspection": "research/protected-source-inspection-2026-11-02.json"
 }

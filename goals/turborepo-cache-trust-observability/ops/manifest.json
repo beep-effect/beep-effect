@@ -40,7 +40,9 @@
     "goals/turborepo-cache-trust-observability/research/private-object-c737-baseline-review-2026-11-02.md",
     "goals/turborepo-cache-trust-observability/research/private-object-c737-baseline-request-2026-11-02.json",
     "goals/turborepo-cache-trust-observability/research/private-object-a88d-baseline-review-2026-11-02.md",
-    "goals/turborepo-cache-trust-observability/research/private-object-a88d-baseline-request-2026-11-02.json"
+    "goals/turborepo-cache-trust-observability/research/private-object-a88d-baseline-request-2026-11-02.json",
+    "goals/turborepo-cache-trust-observability/research/producer-object-coverage-identity-review-2026-11-02.md",
+    "goals/turborepo-cache-trust-observability/research/producer-object-coverage-identity-checkpoint-2026-11-02.json"
   ],
   "researchReports": [
     "research/SOURCES.md",
@@ -132,7 +134,8 @@
     "research/resolved-heavy-approval-checkpoint-2026-11-02.json",
     "research/source-directory-alias-checkpoint-2026-11-02.json",
     "research/producer-environment-install-preparation-2026-11-02.md",
-    "research/producer-environment-install-preparation-2026-11-02.json"
+    "research/producer-environment-install-preparation-2026-11-02.json",
+    "research/protected-source-inspection-2026-11-02.json"
   ],
   "agentLaunchers": [
     {

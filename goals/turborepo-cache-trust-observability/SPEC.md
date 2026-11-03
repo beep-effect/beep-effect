@@ -1006,6 +1006,8 @@ the prior closure, never by overwriting a newer baseline or the ledger.
 - 2026-11-02: Resolve the accepted a88d baseline conflict using the canonical CAS writer and the [named configuration review](research/private-object-a88d-baseline-review-2026-11-02.md). Preserve main's party-domain expansion and all unrelated reviews, add only the owned storage policy input, and leave scope/profile/epoch/qualification unchanged. This is configuration provenance, not computation qualification or production activation. Reverse only with the corresponding owned input removal; never discard accepted package definitions.
 
 
+- 2026-11-02: Propose the [source-bound hosted identity](research/producer-object-coverage-identity-review-2026-11-02.md) for the newly introduced private storage file. Retain all previous coverage floors and safeguards, add real negative controls, and require primary review plus fresh CI. Use the canonical reporter's exact measured row, not an invented threshold or a broad baseline regeneration. Reversal removes only the newly added file identity.
+
 ### Independently approve the resolved main Heavy leaf, 2026-11-02
 
 - The admitted runner path executes the same-repository `heavy.yml@main`
@@ -1053,3 +1055,5 @@ the prior closure, never by overwriting a newer baseline or the ledger.
 
 
 - 2026-11-02: Prepare explicit `producer-install --from-environment` through the existing independent installer. Decode the fixed redacted approval/profile records under the existing sixteen-KiB UTF-8 bounds, validate approval before issuer lookup and require exactly 96 transferred bytes under a 128-character Base64 cap. Keep private files as the default and forbid this transport for issuer provisioning. Actual protected delivery must be installation-step scoped, outside every worker environment/mount, with the verifier off-runner. Preserve all existing source/target/executable/binding checks and exclusive-store cleanup. No credential, runtime activation or proof authority is added; reverse by removing only the opt-in transport.
+
+- 2026-11-02: Consume accepted #2632 without changing any accepted coverage baseline byte. Preserve its stronger storage-file row and both test sets; retain the earlier lower proposal as historical evidence in the [reconciliation](research/producer-object-coverage-identity-review-2026-11-02.md). This adds no floor exception or qualification authority. Reversal must retain the accepted main baseline.

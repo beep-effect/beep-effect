@@ -1146,6 +1146,10 @@ and accepted-main integration remain required; this is no rollout or qualificati
 The [configuration review](research/private-object-a88d-baseline-review-2026-11-02.md) and [canonical CAS request](research/private-object-a88d-baseline-request-2026-11-02.json) retain the accepted main package expansion and the owned storage quality-seal input. The canonical census has 2,448 executable nodes: twelve new party-domain commands, with eight existing inherited cache settings. Only the two named root fingerprint input lists change among previous nodes; every other existing configuration and non-root review is preserved. Scope, profile, epoch and qualification ledger bytes are unchanged. No runtime setting, task eligibility, tuple qualification or whole-goal acceptance is granted. The earlier hosted new-file coverage identity failure remains open for a separate source-bound repair.
 
 
+### Producer-object file identity follow-through, 2026-11-02
+
+The [named review](research/producer-object-coverage-identity-review-2026-11-02.md) and [checkpoint](research/producer-object-coverage-identity-checkpoint-2026-11-02.json) propose only the exact new-file row printed by the actual hosted comparison. Every existing floor and metadata field is unchanged. Four new failure-boundary cases bring the affected suites to 94 passing tests on both Bun and Node 24; all production storage bytes and defensive guards are retained. Separate failed diagnostics are preserved and do not count as hosted acceptance. Fresh exact-head CI, the review window and primary review remain required. No whole-goal criterion is completed.
+
 ### Resolve the admitted reusable producer workflow, 2026-11-02
 
 The [resolved Heavy approval checkpoint](research/resolved-heavy-approval-checkpoint-2026-11-02.json)
@@ -1194,3 +1198,13 @@ whole-goal criterion or production configuration is changed.
 ### Protected environment installation preparation, 2026-11-02
 
 The [transport preparation](research/producer-environment-install-preparation-2026-11-02.md) adds an explicit environment source to the existing installer. It reuses approved record schemas and the exclusive initializer, preserves file defaults, caps UTF-8/issuer bytes and adds thirteen authored dispatch controls. No local or hosted execution proof is claimed. Independent protected source/profile approval, step-scoped secret delivery, actual portable execution, bounded R2 publication and all representative windows remain gates.
+
+### Actual protected source inspection, 2026-11-02
+
+Main-only inspection run `41561109340` passed on accepted source and resolved
+Heavy revision `c96edf8c10326942d292d78635296ce31b5b07cf`. Its immutable artifact
+digest matches the bounded downloaded archive; the existing schema and workflow
+hasher validate the report over 15,050 file records and actual runner tools.
+The [receipt](research/protected-source-inspection-2026-11-02.json) is source/tool
+evidence only. No issuer approval, signed execution, qualification or observation
+window is granted. Inspect the final accepted source again before provisioning.
