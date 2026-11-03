@@ -11,9 +11,12 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
+import * as ChildProcess from "effect/process/ChildProcess";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import type * as PlatformError from "effect/PlatformError";
 
 /** The actual owned HTML entrypoint, resolved from the test fixture location.
@@ -21,6 +24,7 @@ import type * as PlatformError from "effect/PlatformError";
  */
 export const citationHtmlWorkerTestRuntime = () =>
   CitationNativeProcessRuntime.make({
+    kind: "bun",
     executable: process.execPath,
     cwd: process.cwd(),
     workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
@@ -126,7 +130,8 @@ export const makeCitationNativeManualClock = Effect.fn("WorkerTest.manualSleep")
 /** @internal @category testing @since 0.0.0 */
 export const makeCitationNativeWorkerFixture = Effect.fn("WorkerTest.fixture")(function* (
   kind: "busy" | "released",
-  family: "html" | "regex" = "html"
+  family: "html" | "regex" = "html",
+  runtimeKind: CitationNativeRuntimeKind = "bun"
 ) {
   const version = family === "regex" ? "v2" : "v1";
   const ready = `{"_tag":"Ready","version":"citation-${family}-worker/${version}"}\\n`;
@@ -148,5 +153,9 @@ export const makeCitationNativeWorkerFixture = Effect.fn("WorkerTest.fixture")(f
     workerFile,
     `import {writeFileSync,existsSync} from 'node:fs';process.stdout.write('${ready}');process.stdin.resume();process.stdin.on('end',()=>process.stdout.write('${started}',()=>{writeFileSync(${markerLiteral},'entered');${action}}));`
   );
-  return { fs, cwd, workerFile, marker, release, executable: process.execPath };
+  const executable =
+    runtimeKind === "node"
+      ? Str.trim(yield* (yield* ChildProcessSpawner).string(ChildProcess.make("node", ["-p", "process.execPath"])))
+      : process.execPath;
+  return { fs, cwd, workerFile, marker, release, kind: runtimeKind, executable };
 });

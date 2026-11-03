@@ -29,35 +29,59 @@ const RuntimePath = S.NonEmptyString.check(S.isMaxLength(4096)).pipe(
   })
 );
 /** @internal @category models @since 0.0.0 */
+export const CitationNativeRuntimeKind = LiteralKit(["bun", "node"]).pipe(
+  $I.annoteSchema("CitationNativeRuntimeKind", {
+    description: "Explicit trusted runtime selection for native worker launch arguments.",
+  })
+);
+/** @internal @category models @since 0.0.0 */
+export type CitationNativeRuntimeKind = typeof CitationNativeRuntimeKind.Type;
+/** @internal @category models @since 0.0.0 */
 export class CitationNativeProcessRuntime extends S.Opaque<
   CitationNativeProcessRuntime,
   { readonly brand: unique symbol }
 >()(
-  S.Struct({ executable: RuntimePath, workerFile: RuntimePath, cwd: RuntimePath }).pipe(
+  S.Struct({
+    kind: CitationNativeRuntimeKind,
+    executable: RuntimePath,
+    workerFile: RuntimePath,
+    cwd: RuntimePath,
+  }).pipe(
     $I.annoteSchema("CitationNativeProcessRuntime", {
-      description: "Injected Bun runtime capability, never a raw-text request field or ambient configuration.",
+      description: "Injected Bun or Node runtime capability, never a raw-text request field or ambient configuration.",
     })
   )
 ) {}
-/** Construct the same restricted Bun process for each native procedure.
+/** Construct the same restricted process for each native procedure.
  * @internal @category operations @since 0.0.0
  */
 export const citationNativeProcessCommand: {
   (argument: string): (runtime: CitationNativeProcessRuntime) => ChildProcess.StandardCommand;
   (runtime: CitationNativeProcessRuntime, argument: string): ChildProcess.StandardCommand;
 } = dual(2, (runtime: CitationNativeProcessRuntime, argument: string) =>
-  ChildProcess.make(runtime.executable, ["--no-env-file", "--no-install", runtime.workerFile, argument], {
-    cwd: runtime.cwd,
-    env: {},
-    extendEnv: false,
-    shell: false,
-    detached: false,
-    stdin: "pipe",
-    stdout: "pipe",
-    stderr: "ignore",
-    killSignal: "SIGKILL",
-    forceKillAfter: Duration.zero,
-  })
+  ChildProcess.make(
+    runtime.executable,
+    [
+      ...CitationNativeRuntimeKind.match(runtime.kind, {
+        bun: () => ["--no-env-file", "--no-install"],
+        node: () => [],
+      }),
+      runtime.workerFile,
+      argument,
+    ],
+    {
+      cwd: runtime.cwd,
+      env: {},
+      extendEnv: false,
+      shell: false,
+      detached: false,
+      stdin: "pipe",
+      stdout: "pipe",
+      stderr: "ignore",
+      killSignal: "SIGKILL",
+      forceKillAfter: Duration.zero,
+    }
+  )
 );
 /** @internal @category models @since 0.0.0 */
 export const CitationNativeProcessFailureReason = LiteralKit([

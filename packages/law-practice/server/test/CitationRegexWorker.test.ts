@@ -4,6 +4,7 @@ import {
   CitationNativeProcessAdmission,
   makeCitationNativeProcessAdmission,
 } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
+import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { CitationRegexPatternProfile } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
 import { makeCitationRegexWorker } from "@beep/law-practice-server/internal/Citation/RegexWorker";
 import { CitationRegexMatchMode } from "@beep/law-practice-server/internal/Citation/RegexWorkerProtocol";
@@ -21,8 +22,11 @@ import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as ChildProcess from "effect/process/ChildProcess";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import {
   makeCitationNativeManualClock,
   makeCitationNativeSleepClock,
@@ -74,7 +78,32 @@ const descriptor = {
     nullableMultiRepeat: false,
   },
 };
-const setup = Effect.fn("RegexWorkerTest.setup")(function* (bindings: unknown) {
+const nodeRuntime = Effect.fn("RegexWorkerTest.nodeRuntime")(function* (cwd: string) {
+  const path = yield* Path.Path;
+  const spawner = yield* ChildProcessSpawner;
+  // Resolve the installed runtime through a fixed probe; the actual worker
+  // receives the same empty environment and explicit executable as Bun.
+  const executable = Str.trim(yield* spawner.string(ChildProcess.make("node", ["-p", "process.execPath"])));
+  const entrypoint = NodeURL.fileURLToPath(
+    new URL("../src/internal/Citation/RegexWorker.node.entry.ts", import.meta.url)
+  );
+  const bundle = yield* Effect.tryPromise(() =>
+    Bun.build({
+      entrypoints: [entrypoint],
+      target: "node",
+      format: "esm",
+      packages: "bundle",
+      outdir: cwd,
+      naming: "worker.mjs",
+    })
+  ).pipe(Effect.orDie);
+  expect(bundle.success).toBe(true);
+  return { kind: "node", executable, cwd, workerFile: path.join(cwd, "worker.mjs") };
+});
+const setup = Effect.fn("RegexWorkerTest.setup")(function* (
+  bindings: unknown,
+  kind: CitationNativeRuntimeKind = "bun"
+) {
   // Distinct from the default one-second cleanup timer: only native execution
   // time is manually controlled in functional tests.
   const limits = { ...(yield* defaultCitationEnginePolicy).limits, regexDeadline: Duration.millis(997) };
@@ -83,11 +112,16 @@ const setup = Effect.fn("RegexWorkerTest.setup")(function* (bindings: unknown) {
   const timer = yield* makeCitationNativeManualClock(limits.regexDeadline);
   const admission = yield* makeCitationNativeProcessAdmission(limits);
   const observed = yield* makeCitationObservedSpawner();
-  const runtime = {
-    executable: process.execPath,
-    cwd: yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped({ prefix: "citation-regex-worker-" }),
-    workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/RegexWorker.entry.ts", import.meta.url)),
-  };
+  const cwd = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped({ prefix: "citation-regex-worker-" });
+  const runtime =
+    kind === "node"
+      ? yield* nodeRuntime(cwd)
+      : {
+          kind: "bun",
+          executable: process.execPath,
+          cwd,
+          workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/RegexWorker.entry.ts", import.meta.url)),
+        };
   const worker = yield* makeCitationRegexWorker(limits, runtime, bindings).pipe(
     Effect.provideService(Clock.Clock, timer.clock),
     Effect.provideService(CitationNativeProcessAdmission, admission),
@@ -98,9 +132,10 @@ const setup = Effect.fn("RegexWorkerTest.setup")(function* (bindings: unknown) {
 
 const controlled = Effect.fn("RegexWorkerTest.controlled")(function* (
   afterKill: Effect.Effect<void> = Effect.void,
-  cleanupDeadline = Duration.seconds(2)
+  cleanupDeadline = Duration.seconds(2),
+  kind: CitationNativeRuntimeKind = "bun"
 ) {
-  const fixture = yield* makeCitationNativeWorkerFixture("busy", "regex");
+  const fixture = yield* makeCitationNativeWorkerFixture("busy", "regex", kind);
   const timer = yield* makeCitationNativeManualClock(Duration.millis(800));
   const limits = {
     ...(yield* defaultCitationEnginePolicy).limits,
@@ -165,42 +200,45 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
     })
   );
 
-  it.effect(
-    "matches pinned CPython iteration, search and prefix semantics through real children",
-    () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const crypto = yield* Digest.Digest;
-        const file = NodeURL.fileURLToPath(
-          new URL("../../use-cases/test/fixtures/eyecite/regex-modes.json", import.meta.url)
-        );
-        const bytes = yield* fs.readFile(file);
-        expect(yield* crypto.digestHex(Digest.sha256, bytes)).toBe(
-          "6176aed02afda7ca709db880b438b2a8174e689ef97048a3ee018ccc487ba506"
-        );
-        const corpus = yield* S.decodeEffect(ModeControls)(new TextDecoder().decode(bytes));
-        const { worker, admission, observed } = yield* setup([
-          { patternSha256: corpus.patternSha256, flags: corpus.flags, profile: corpus.profile },
-        ]);
-        for (const row of corpus.cases) {
-          for (const mode of CitationRegexMatchMode.literals) {
-            const expected = row.modes[mode];
-            const completed = yield* worker.evaluate(
-              native(corpus.pattern),
-              { width: row.width, bytes: row.sourceWords },
-              corpus.flags,
-              expected.length,
-              mode
-            );
-            expect(completed.source.layout.pythonLength).toBe(row.sourcePoints);
-            yield* assertModeCaptures(completed, expected, corpus.profile.groups);
+  for (const kind of CitationNativeRuntimeKind.literals) {
+    it.effect(
+      `matches pinned CPython iteration, search and prefix semantics through real ${kind} children`,
+      () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const crypto = yield* Digest.Digest;
+          const file = NodeURL.fileURLToPath(
+            new URL("../../use-cases/test/fixtures/eyecite/regex-modes.json", import.meta.url)
+          );
+          const bytes = yield* fs.readFile(file);
+          expect(yield* crypto.digestHex(Digest.sha256, bytes)).toBe(
+            "6176aed02afda7ca709db880b438b2a8174e689ef97048a3ee018ccc487ba506"
+          );
+          const corpus = yield* S.decodeEffect(ModeControls)(new TextDecoder().decode(bytes));
+          const { worker, admission, observed } = yield* setup(
+            [{ patternSha256: corpus.patternSha256, flags: corpus.flags, profile: corpus.profile }],
+            kind
+          );
+          for (const row of corpus.cases) {
+            for (const mode of CitationRegexMatchMode.literals) {
+              const expected = row.modes[mode];
+              const completed = yield* worker.evaluate(
+                native(corpus.pattern),
+                { width: row.width, bytes: row.sourceWords },
+                corpus.flags,
+                expected.length,
+                mode
+              );
+              expect(completed.source.layout.pythonLength).toBe(row.sourcePoints);
+              yield* assertModeCaptures(completed, expected, corpus.profile.groups);
+            }
           }
-        }
-        expect(yield* observed.snapshot).toEqual({ spawned: 15, confirmed: 15 });
-        expect(yield* admission.snapshot).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
-      }),
-    { timeout: 30_000 }
-  );
+          expect(yield* observed.snapshot).toEqual({ spawned: 15, confirmed: 15 });
+          expect(yield* admission.snapshot).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
+        }),
+      { timeout: 30_000 }
+    );
+  }
 
   it.effect("distinguishes a scalar from literal surrogate words before projecting captures", () =>
     Effect.gen(function* () {
@@ -267,65 +305,72 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
       expect(yield* admission.snapshot).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
     })
   );
-  it.effect("enforces its captured regex deadline while native work leaves the parent responsive", () =>
-    Effect.gen(function* () {
-      const { worker, admission, observed, fixture, timer } = yield* controlled();
-      const disabled = yield* makeCitationNativeSleepClock(() => Effect.never);
-      const pending = yield* worker
-        .evaluate(pattern, native("private input"), 0)
-        .pipe(Effect.provideService(Clock.Clock, disabled), Effect.forkChild);
-      yield* waitForCitationNativeTest(fixture.fs.exists(fixture.marker));
-      let responsive = false;
-      yield* Effect.sync(() => {
-        responsive = true;
-      }).pipe(Effect.forkChild, Effect.flatMap(Fiber.join));
-      expect(responsive).toBe(true);
-      yield* timer.trigger;
-      const failed = yield* Fiber.join(pending).pipe(Effect.flip);
-      expect(failed).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "regexDeadline" });
-      expect(yield* worker.snapshot).toMatchObject({ processes: 0, quarantined: 0 });
-      expect(yield* observed.snapshot).toEqual({ spawned: 1, confirmed: 1 });
-      expect(yield* admission.snapshot).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
-    })
-  );
+  for (const kind of CitationNativeRuntimeKind.literals) {
+    it.effect(`enforces its captured regex deadline while ${kind} native work leaves the parent responsive`, () =>
+      Effect.gen(function* () {
+        const { worker, admission, observed, fixture, timer } = yield* controlled(
+          Effect.void,
+          Duration.seconds(2),
+          kind
+        );
+        const disabled = yield* makeCitationNativeSleepClock(() => Effect.never);
+        const pending = yield* worker
+          .evaluate(pattern, native("private input"), 0)
+          .pipe(Effect.provideService(Clock.Clock, disabled), Effect.forkChild);
+        yield* waitForCitationNativeTest(fixture.fs.exists(fixture.marker));
+        let responsive = false;
+        yield* Effect.sync(() => {
+          responsive = true;
+        }).pipe(Effect.forkChild, Effect.flatMap(Fiber.join));
+        expect(responsive).toBe(true);
+        yield* timer.trigger;
+        const failed = yield* Fiber.join(pending).pipe(Effect.flip);
+        expect(failed).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "regexDeadline" });
+        expect(yield* worker.snapshot).toMatchObject({ processes: 0, quarantined: 0 });
+        expect(yield* observed.snapshot).toEqual({ spawned: 1, confirmed: 1 });
+        expect(yield* admission.snapshot).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
+      })
+    );
 
-  it.effect("retires an entered native child before acknowledging caller interruption", () =>
-    Effect.gen(function* () {
-      const { worker, admission, observed, fixture } = yield* controlled();
-      const pending = yield* Effect.forkChild(worker.evaluate(pattern, native("private input"), 0));
-      yield* waitForCitationNativeTest(fixture.fs.exists(fixture.marker));
-      yield* Fiber.interrupt(pending);
-      expect(Exit.hasInterrupts(yield* Fiber.await(pending))).toBe(true);
-      expect(yield* observed.snapshot).toEqual({ spawned: 1, confirmed: 1 });
-      expect(yield* worker.snapshot).toMatchObject({ processes: 0, quarantined: 0 });
-      expect(yield* admission.snapshot).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
-    })
-  );
+    it.effect(`retires an entered ${kind} native child before acknowledging caller interruption`, () =>
+      Effect.gen(function* () {
+        const { worker, admission, observed, fixture } = yield* controlled(Effect.void, Duration.seconds(2), kind);
+        const pending = yield* Effect.forkChild(worker.evaluate(pattern, native("private input"), 0));
+        yield* waitForCitationNativeTest(fixture.fs.exists(fixture.marker));
+        yield* Fiber.interrupt(pending);
+        expect(Exit.hasInterrupts(yield* Fiber.await(pending))).toBe(true);
+        expect(yield* observed.snapshot).toEqual({ spawned: 1, confirmed: 1 });
+        expect(yield* worker.snapshot).toMatchObject({ processes: 0, quarantined: 0 });
+        expect(yield* admission.snapshot).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
+      })
+    );
 
-  it.effect("quarantines total and regex capacity until late exit acknowledgement", () =>
-    Effect.gen(function* () {
-      const acknowledged = yield* Deferred.make<void>();
-      const { worker, admission, observed, fixture, timer } = yield* controlled(
-        Deferred.await(acknowledged),
-        Duration.millis(25)
-      );
-      const pending = yield* Effect.forkChild(worker.evaluate(pattern, native("private input"), 0));
-      yield* waitForCitationNativeTest(fixture.fs.exists(fixture.marker));
-      yield* timer.trigger;
-      expect(yield* Fiber.join(pending).pipe(Effect.flip)).toMatchObject({
-        _tag: "CitationSafetyLimitExceeded",
-        limit: "cleanupDeadline",
-      });
-      expect(yield* worker.snapshot).toMatchObject({ processes: 1, quarantined: 1 });
-      expect(yield* admission.snapshot).toMatchObject({ active: 1, regexActive: 1, quarantined: 1 });
-      expect(yield* worker.evaluate(pattern, native("replacement"), 0).pipe(Effect.flip)).toMatchObject({
-        reason: "quarantined",
-      });
-      expect(yield* observed.snapshot).toEqual({ spawned: 1, confirmed: 0 });
-      yield* Deferred.succeed(acknowledged, undefined);
-      yield* waitForCitationNativeTest(worker.snapshot.pipe(Effect.map((state) => state.processes === 0)));
-      expect(yield* observed.snapshot).toEqual({ spawned: 1, confirmed: 1 });
-      expect(yield* admission.snapshot).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
-    })
-  );
+    it.effect(`quarantines ${kind} total and regex capacity until late exit acknowledgement`, () =>
+      Effect.gen(function* () {
+        const acknowledged = yield* Deferred.make<void>();
+        const { worker, admission, observed, fixture, timer } = yield* controlled(
+          Deferred.await(acknowledged),
+          Duration.millis(25),
+          kind
+        );
+        const pending = yield* Effect.forkChild(worker.evaluate(pattern, native("private input"), 0));
+        yield* waitForCitationNativeTest(fixture.fs.exists(fixture.marker));
+        yield* timer.trigger;
+        expect(yield* Fiber.join(pending).pipe(Effect.flip)).toMatchObject({
+          _tag: "CitationSafetyLimitExceeded",
+          limit: "cleanupDeadline",
+        });
+        expect(yield* worker.snapshot).toMatchObject({ processes: 1, quarantined: 1 });
+        expect(yield* admission.snapshot).toMatchObject({ active: 1, regexActive: 1, quarantined: 1 });
+        expect(yield* worker.evaluate(pattern, native("replacement"), 0).pipe(Effect.flip)).toMatchObject({
+          reason: "quarantined",
+        });
+        expect(yield* observed.snapshot).toEqual({ spawned: 1, confirmed: 0 });
+        yield* Deferred.succeed(acknowledged, undefined);
+        yield* waitForCitationNativeTest(worker.snapshot.pipe(Effect.map((state) => state.processes === 0)));
+        expect(yield* observed.snapshot).toEqual({ spawned: 1, confirmed: 1 });
+        expect(yield* admission.snapshot).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
+      })
+    );
+  }
 });

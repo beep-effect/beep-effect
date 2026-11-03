@@ -214,6 +214,14 @@ The negative regression and four focused policy controls pass. New hosted
 startup and later exact-head checks remain required. See
 [startup permission repair](history/evidence/2026-11-03-heavy-startup-permission-repair.md).
 
+Latest Node adapter checkpoint (2026-11-03): explicit schema-owned Bun/Node
+selection uses the shared Effect process owner and RPC program. A Node entry
+uses NodeRuntime, NodeStdio and digest-only NodeCrypto. Both real entries match
+all 15 pinned CPython mode controls and pass native-busy deadline, cancellation,
+quarantine and late-acknowledgement controls; 25 focused tests pass. Full Node
+source-corpus replay, family/scaling proof and public engine integration remain
+open. See [Node worker adapter](history/evidence/2026-11-03-node-regex-worker.md).
+
 Latest worker evidence (2026-10-31): private process ownership now covers bounded
 schema frames, captured Clock timers, queue/active limits, forced stop,
 acknowledged cleanup and quarantine without permit reuse. Real-process tests

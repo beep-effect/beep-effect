@@ -93,6 +93,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
       Effect.gen(function* () {
         const limits = (yield* defaultCitationEnginePolicy).limits;
         const paths = {
+          kind: "bun",
           executable: process.execPath,
           cwd: yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped({ prefix: "citation-html-stage-" }),
           workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
@@ -192,7 +193,12 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         };
         const real = yield* ChildProcessSpawner;
         let childPid = O.none<number>();
-        const worker = yield* makeCitationHtmlWorker(limits, { executable: process.execPath, cwd, workerFile }).pipe(
+        const worker = yield* makeCitationHtmlWorker(limits, {
+          kind: "bun",
+          executable: process.execPath,
+          cwd,
+          workerFile,
+        }).pipe(
           Effect.provideService(ChildProcessSpawner, {
             ...real,
             spawn: (command) =>
@@ -232,6 +238,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
       Effect.gen(function* () {
         const limits = { ...(yield* defaultCitationEnginePolicy).limits, sourceUtf16: 1, producedTextUtf16: 1 };
         const worker = yield* makeCitationHtmlWorker(limits, {
+          kind: "bun",
           executable: process.execPath,
           cwd: yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped({ prefix: "citation-byte-stage-" }),
           workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),

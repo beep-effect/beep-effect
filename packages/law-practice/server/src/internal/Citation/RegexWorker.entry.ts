@@ -8,7 +8,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { citationRegexWorkerProgram } from "./RegexWorkerProgram.ts";
 
-const main = Layer.merge(BunCrypto.layer, BunStdio.layer).pipe(
+const main = Layer.merge(BunCrypto.layerDigest, BunStdio.layer).pipe(
   Layer.build,
   Effect.flatMap((context) => Effect.provide(citationRegexWorkerProgram, context)),
   Effect.scoped

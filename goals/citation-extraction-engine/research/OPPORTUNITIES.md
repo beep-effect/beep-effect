@@ -126,3 +126,16 @@
 - Prevention: compare the proposed feature base with tracked main before
   creating a lane; do not confuse preserving current source context with
   authorization to ship unrelated inherited commits.
+
+## 2026-11-03 — package unit filename also starts full native corpus
+
+- Work: check explicit Bun runtime selection after adding the Node regex adapter.
+- Evidence: selecting `CitationHtmlWorkerCorpus.test.ts` starts 1,097 native HTML
+  observations, and `CitationHtmlBytes.test.ts` embeds 589 child processes in
+  the ordinary package unit tier. Both local commands were stopped.
+- Resolution: stop only the owned command tree, retain its incomplete receipt,
+  and retain the 25 passing focused worker/ownership tests plus package lint/check.
+  Full HTML/byte corpus proof stays hosted.
+- Prevention: inspect test bodies and select individual smoke-test names before local
+  replay; filenames alone do not bound compute. No partial run is accepted as
+  corpus proof.

@@ -50,6 +50,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
         const real = yield* ChildProcessSpawner;
         let pids: ReadonlyArray<number> = [];
         const worker = yield* makeCitationHtmlWorker((yield* defaultCitationEnginePolicy).limits, {
+          kind: "bun",
           executable: process.execPath,
           cwd,
           workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),

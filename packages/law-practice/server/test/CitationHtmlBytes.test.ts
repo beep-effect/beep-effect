@@ -134,6 +134,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
           const worker = yield* makeCitationHtmlWorker(
             { ...limits, concurrentOperations: 2 },
             {
+              kind: "bun",
               executable: process.execPath,
               cwd: yield* fs.makeTempDirectoryScoped({ prefix: "citation-html-bytes-" }),
               workerFile: fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),

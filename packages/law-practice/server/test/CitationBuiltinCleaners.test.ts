@@ -84,6 +84,7 @@ it.layer(TestRuntime, { excludeTestServices: true })("captured builtin cleaner i
         let spawned = 0;
         let retired = 0;
         const builtins = yield* makeCitationBuiltinCleaners(policy, {
+          kind: "bun",
           executable: process.execPath,
           cwd: yield* fs.makeTempDirectoryScoped({ prefix: "citation-builtins-" }),
           workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),

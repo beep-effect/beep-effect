@@ -46,6 +46,7 @@ const CorpusJson = S.fromJsonString(
 
 const runtime = Effect.gen(function* () {
   return {
+    kind: "bun",
     executable: process.execPath,
     cwd: yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped({ prefix: "citation-html-corpus-" }),
     workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
