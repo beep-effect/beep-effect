@@ -3,7 +3,6 @@ import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 
 describe("bounded parent-claim reference expressions", () => {
@@ -74,13 +73,13 @@ describe("bounded parent-claim reference expressions", () => {
         "claims 1 and the aforementioned claim 2",
         "claims 1 and in particular claim 24",
       ]) {
-        const result = yield* Effect.exit(
+        const failure = yield* Effect.flip(
           normalizePatentClaims([
             ["1", "A machining method comprising rotating a workpiece."],
             ["2", `The method of ${reference}, wherein a tool (24) is movable.`],
           ])
         );
-        assert.isTrue(Exit.isFailure(result));
+        assert.strictEqual(failure.reason, "invalid-claim");
       }
     })
   );
