@@ -27,6 +27,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("authenticated froze
       for (const row of expected.editions) {
         const edition = yield* adapter.lookup(row.edition, row.family);
         expect(edition.value.short_name).toBe(row.shortName);
+        const source = yield* adapter.source(row.edition);
+        expect(source).toBe(edition.value.reporter.source);
         const encoded = yield* encodeCitationRuntimeEdition(edition.value);
         const citationResult1 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(encoded));
         expect(citationResult1, row.edition).toBe(row.runtimePayloadSha256);

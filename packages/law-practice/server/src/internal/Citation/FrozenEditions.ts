@@ -88,6 +88,7 @@ export class CitationFrozenEditionFailure extends S.TaggedError<
 export class CitationFrozenEditions extends Context.Service<
   CitationFrozenEditions,
   {
+    readonly source: (reference: CitationEditionRef) => Effect.Effect<string, CitationFrozenEditionFailure>;
     readonly lookup: (
       reference: CitationEditionRef,
       family: typeof Family.Type
@@ -187,6 +188,13 @@ export const makeCitationFrozenEditions = Effect.fn("Citation.makeFrozenEditions
     return yield* snapshotCitationValue(RuntimeJson, edition, () => failure("corrupt-artifact"));
   });
   return CitationFrozenEditions.of({
+    source: Effect.fn("Citation.frozenEditionSource")(function* (reference: CitationEditionRef) {
+      const ref = yield* S.decodeEffect(CitationEditionRef)(reference).pipe(
+        Effect.mapError(() => failure("invalid-input"))
+      );
+      const edition = yield* Effect.fromOption(HashMap.get(editions, ref), () => failure("missing-edition"));
+      return edition.value.reporter.source;
+    }),
     lookup,
     lookupMany: Effect.fn("Citation.frozenEditionLookupMany")(function* (
       references: ReadonlyArray<CitationEditionRef>,

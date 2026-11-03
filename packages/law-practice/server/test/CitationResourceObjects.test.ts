@@ -56,6 +56,9 @@ class MissingReporterOutcome extends S.Opaque<MissingReporterOutcome, { readonly
 
 // These histories have no selected edition; any artifact lookup is a regression.
 const unusedEditions = CitationFrozenEditions.of({
+  source: Effect.fn("CaseOnlyTest.unusedEditionSource")(() =>
+    Effect.fail(CitationFrozenEditionFailure.make({ reason: "missing-edition" }))
+  ),
   lookup: Effect.fn("CaseOnlyTest.unusedEdition")(() =>
     Effect.fail(CitationFrozenEditionFailure.make({ reason: "missing-edition" }))
   ),

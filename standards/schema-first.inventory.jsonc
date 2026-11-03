@@ -1663,7 +1663,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 104,
+      "line": 107,
       "owner": "@beep/law-practice-server",
       "reason": "Checks all 38 source events through current semantic fields, owned runtime objects and exact native hashes. The fixture codec does not manufacture the actual identity-bearing owner/table capabilities. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
     },

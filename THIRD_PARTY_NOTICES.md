@@ -49,7 +49,9 @@ constructor class and ordered edition references of the canonical extractors.
 capture construction, mixed assembly and invocation-wide output accounting.
 `TokenizerCatalog.ts` authenticates the default extractor artifact and binds its
 native pattern fingerprints to the independently observed constructor, compiler,
-ordering and parameterized edition metadata.
+ordering and parameterized edition metadata. `TokenDispatch.ts` adapts the
+built-in extraction branch loop and full-citation class priority from `find.py`,
+using the existing authenticated frozen edition owner for source labels.
 Fresh-process hash production, general custom protocols
 and complete public tokenizer integration remain open.
 

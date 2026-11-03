@@ -1,5 +1,25 @@
 # Citation Extraction Engine Plan
 
+Latest extraction dispatch checkpoint (2026-11-03): the private schema-first
+planner connects native tokenizer indices and built-in token classes to source
+extraction branches. All 7,318 isolated source cases and 19,608 ordered edition
+source reads match, including 259 source failures. The existing authenticated
+edition owner supplies source labels; all 2,533 labels agree with its edition
+lookup. A real canonical 1 U.S. 1 tokenizer result reaches FullCaseCitation.
+Nine focused tests pass, and regeneration under a different Python hash seed
+is byte-identical. This proves branch selection only: metadata, context,
+references, parallel citations, filtering, custom protocols and fresh-process
+hash production remain open. See
+[dispatch evidence](history/evidence/2026-11-03-token-extraction-dispatch.md).
+
+Hosted composition receipt (2026-11-03): Heavy / Test Integration job
+125982250745 passed on `631da83988`, including all seventeen canonical cases
+and 192 independently confirmed child exits under each runtime, and all twenty
+controlled composition cases with 35 exits per runtime. This supersedes prior
+pending replay statements for that head only. New dispatch code still requires
+new-head hosted proof. See
+[hosted composition evidence](history/evidence/2026-11-03-hosted-tokenizer-composition.md).
+
 ## Status
 
 Status: `in-progress`

@@ -167,4 +167,5 @@ export const assertCitationTokenizerCase = Effect.fn("TokenizerTest.case")(funct
   expect(output.tokens, `case ${row.id}`).toEqual(row.tokens);
   const snapshot = yield* setup.admission.snapshot;
   expect(snapshot).toMatchObject({ active: 0, queued: 0 });
+  return output;
 });

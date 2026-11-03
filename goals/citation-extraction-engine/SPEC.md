@@ -548,6 +548,16 @@ instead of silently splitting delivery or weakening scope.
 
 ## Decision Log
 
+- **2026-11-03 built-in extraction dispatch:** reuse the authenticated frozen
+  edition owner for source labels and Effect collections for source-class
+  priority. Preserve actual source lookup order, token indices and explicit
+  unknown-source failure. Full context/metadata/reference/filter behavior stays
+  required. The exact generated token-dispatch fixture preserves one vector per
+  line through its formatter exclusion and authenticated byte check. Revert
+  this private planner and exact fixture exclusion to reverse the change;
+  no public completion contract changes. See
+  `history/evidence/2026-11-03-token-extraction-dispatch.md`.
+
 - **2026-07-29 capability override:** “port” means 1:1 observable capability,
   not a greenfield subset and not 1:1 source architecture.
 - **2026-07-29 behavioral oracle:** pinned official Python eyecite is normative
