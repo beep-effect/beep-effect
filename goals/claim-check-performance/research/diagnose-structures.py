@@ -53,7 +53,7 @@ def diagnose(root, directory):
         fixture = root / "packages/law-practice/domain/test/fixtures/claim-element/positive" / family["familyId"]
         references = json.loads((fixture / "expected.json").read_text())
         report = json.loads((directory / f"{family['familyId']}.prediction.json").read_text())
-        inspection = results["schemaVersion"] == "claim-input-inspection-evaluation/v1"
+        inspection = results["schemaVersion"] in ("claim-input-inspection-evaluation/v1", "claim-input-tool-evaluation/v1")
         predictions = ([row["decomposition"]["tree"] for row in report["report"]["records"]
                         if row["decomposition"]["status"] == "decomposed"]
                        if inspection else report["report"]["trees"])
