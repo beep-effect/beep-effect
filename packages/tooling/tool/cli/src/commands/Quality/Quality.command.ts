@@ -88,6 +88,7 @@ import {
   RunJSDocRatchetOptions,
   runJSDocRatchet,
 } from "./internal/JSDocRatchet.ts";
+import { pinnedLaneProofBaseSha } from "./internal/LaneProofReuse.ts";
 import { runPackageVerifyCli } from "./internal/PackageVerify.ts";
 import { collectFiles, repoRelative } from "./internal/QualityArtifactSupport.ts";
 import { testTsgoPrograms } from "./internal/TestTsgoPrograms.ts";
@@ -1007,6 +1008,29 @@ const ensureOriginMain = Effect.fn("QualityScriptCommands.ensureOriginMain")(fun
   QualityScriptCommandError,
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
+  // A Yeet run fetches its base once and pins the SHA for every tier. Fetching
+  // again here would move `origin/main` between tiers (and break lane-proof
+  // reuse), so a battery whose pin still matches leaves the ref alone.
+  const pinned = pinnedLaneProofBaseSha();
+  if (O.isSome(pinned)) {
+    const current = yield* collectSuccessfulOutput(
+      QualityTaskStep.make({
+        label: "git:origin-main",
+        command: "git",
+        args: ["rev-parse", "origin/main"],
+        cwd: repoRoot,
+      })
+    );
+    if (current === pinned.value) {
+      yield* Console.log(
+        `[github-checks] origin/main pinned at ${Str.takeLeft(current, 12)} by the parent run; not refreshing`
+      );
+      return;
+    }
+    yield* Console.log(
+      `[github-checks] origin/main is ${Str.takeLeft(current, 12)}, not the parent run's pinned base ${Str.takeLeft(pinned.value, 12)}; refreshing`
+    );
+  }
   yield* Console.log("[github-checks] refreshing origin/main");
   const shallow = yield* collectSuccessfulOutput(
     QualityTaskStep.make({
@@ -1028,6 +1052,23 @@ const ensureOriginMain = Effect.fn("QualityScriptCommands.ensureOriginMain")(fun
     "--quiet",
   ]);
 });
+
+/**
+ * Refresh `origin/main` for a GitHub-check battery unless the parent Yeet run
+ * pinned it and the pin still matches.
+ *
+ * **Example** (Reference the refresh for a test)
+ *
+ * ```ts
+ * import { ensureOriginMainForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * console.log(typeof ensureOriginMainForTesting) // "function"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const ensureOriginMainForTesting = ensureOriginMain;
 
 // The changeset-status lane is appended at runtime by the quality and pre-push
 // composers (it depends on the current branch and is skipped on main pushes),
