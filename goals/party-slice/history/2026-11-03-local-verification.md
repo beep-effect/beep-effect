@@ -147,3 +147,17 @@ The closeout proposal passed publish gates and was pushed as `1d4576ad30`.
 There were zero actionable review threads at the first closeout read. Optional
 Vercel deployment statuses reported rate limits; these are separate from the
 required release-policy failure. Final verification and readiness remain open.
+
+### Main synchronization before final verification
+
+The release-policy correction published successfully as `9c960e1b1d`. Main then
+advanced through `8fe07d3eed94`, producing conflicts only in the cache baseline
+and generated Fallow boundary inventory. The initial final-check run was stopped
+(exit 130) before continuing; it is unproven and is not an acceptance receipt.
+
+The merge retains main's tooling/schema moves, regenerates the boundary inventory
+and reapplies the reviewed party cache subjects against main's exact baseline.
+The frozen install passes. The updated cache request carries all 188 prior
+reviews, stamps the same five party/root subjects and preserves scope/profile/
+epoch; the source audit reports zero blocking findings. Party source files
+required no conflict resolution. Final verification will run on the merged head.

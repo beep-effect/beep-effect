@@ -12,6 +12,14 @@
  * @since 0.0.0
  */
 
+import {
+  CatalogAvailability,
+  CatalogDiff,
+  CatalogLevelsChange,
+  CatalogModel,
+  EffortLevel,
+  ProviderSection,
+} from "@beep/ai-sync/ModelCatalog.schemas";
 import { A, O, pipe, Struct } from "@beep/utils";
 import * as Eq from "effect/Equal";
 import { dual, flow } from "effect/Function";
@@ -20,14 +28,6 @@ import * as MutableHashMap from "effect/MutableHashMap";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import {
-  CatalogAvailability,
-  CatalogDiff,
-  CatalogLevelsChange,
-  CatalogModel,
-  EffortLevel,
-  ProviderSection,
-} from "./Models.catalog.schemas.ts";
 import type {
   CatalogSnapshot,
   CatalogSource,
@@ -37,7 +37,7 @@ import type {
   ModelId,
   ProxyModelsResponse,
   UpstreamCatalog,
-} from "./Models.catalog.schemas.ts";
+} from "@beep/ai-sync/ModelCatalog.schemas";
 
 const isEffortLevel = S.is(EffortLevel);
 const isProviderSection = S.is(ProviderSection);
@@ -166,11 +166,12 @@ const mergeProxy = (drafts: Drafts, listing: ProxyModelsResponse): void => {
  * **Example** (Merge an upstream-only catalog)
  *
  * ```ts
+ * import { UpstreamModelEntry } from "@beep/ai-sync/ModelCatalog.schemas"
  * import { mergeLayers } from "@beep/repo-cli/commands/Models"
  * import * as O from "effect/Option"
  *
  * const models = mergeLayers({
- *   upstream: O.some({ xai: [{ id: "grok-4.6" }] }),
+ *   upstream: O.some({ xai: [UpstreamModelEntry.make({ id: "grok-4.6" })] }),
  *   codex: O.none(),
  *   grok: O.none(),
  *   cursor: O.none(),

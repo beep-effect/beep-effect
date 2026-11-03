@@ -66,3 +66,14 @@ and the generated Vitest aliases and Fallow boundary inventory include them.
 These are actual root registration input changes. Root commands, outputs and
 qualification remain unchanged. The root subject is included to record that
 changed workspace configuration; this does not attribute an edit to turbo.json.
+
+## Main merge at 8fe07d3eed94
+
+The W2 tooling merge changes root Turbo inputs and moves CLI leaf schemas into
+owning libraries. Its committed cache reviews are retained as the starting
+baseline. After resolving the generated boundary inventory, the source audit
+names the same 29 party/law-practice tasks listed above. The four package
+subjects retain the same manifest/reference reasons. The root subject retains
+the party package registration changes; main's own Turbo changes are not
+requalified by this lane. Scope, profile, epoch, outputs and qualification stay
+unchanged. The request is rebound to the exact merged baseline and this basis.

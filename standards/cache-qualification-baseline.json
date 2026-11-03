@@ -14,7 +14,7 @@
       "reason": "Record audit-named manifest/reference changes and new generated party package tasks; retain existing qualification scope, outputs and cache flags.",
       "basis": {
         "path": "goals/party-slice/research/cache-baseline-review-2026-11-03.md",
-        "sha256": "7844d1f0110b54f87b27a28322621670fbd066bccde954aa785e5bb1e4266edc"
+        "sha256": "d9637a739c41cfe5e8d603257a72a085a1d9bf4d6985893b87b4429ac4af5918"
       }
     },
     "@beep/acp": {
@@ -646,7 +646,7 @@
       "reason": "Record audit-named manifest/reference changes and new generated party package tasks; retain existing qualification scope, outputs and cache flags.",
       "basis": {
         "path": "goals/party-slice/research/cache-baseline-review-2026-11-03.md",
-        "sha256": "7844d1f0110b54f87b27a28322621670fbd066bccde954aa785e5bb1e4266edc"
+        "sha256": "d9637a739c41cfe5e8d603257a72a085a1d9bf4d6985893b87b4429ac4af5918"
       }
     },
     "@beep/law-practice-tables": {
@@ -974,7 +974,7 @@
       "reason": "Record audit-named manifest/reference changes and new generated party package tasks; retain existing qualification scope, outputs and cache flags.",
       "basis": {
         "path": "goals/party-slice/research/cache-baseline-review-2026-11-03.md",
-        "sha256": "7844d1f0110b54f87b27a28322621670fbd066bccde954aa785e5bb1e4266edc"
+        "sha256": "d9637a739c41cfe5e8d603257a72a085a1d9bf4d6985893b87b4429ac4af5918"
       }
     },
     "@beep/party-server": {
@@ -982,7 +982,7 @@
       "reason": "Record audit-named manifest/reference changes and new generated party package tasks; retain existing qualification scope, outputs and cache flags.",
       "basis": {
         "path": "goals/party-slice/research/cache-baseline-review-2026-11-03.md",
-        "sha256": "7844d1f0110b54f87b27a28322621670fbd066bccde954aa785e5bb1e4266edc"
+        "sha256": "d9637a739c41cfe5e8d603257a72a085a1d9bf4d6985893b87b4429ac4af5918"
       }
     },
     "@beep/party-use-cases": {
@@ -990,7 +990,7 @@
       "reason": "Record audit-named manifest/reference changes and new generated party package tasks; retain existing qualification scope, outputs and cache flags.",
       "basis": {
         "path": "goals/party-slice/research/cache-baseline-review-2026-11-03.md",
-        "sha256": "7844d1f0110b54f87b27a28322621670fbd066bccde954aa785e5bb1e4266edc"
+        "sha256": "d9637a739c41cfe5e8d603257a72a085a1d9bf4d6985893b87b4429ac4af5918"
       }
     },
     "@beep/pdf-tools": {
@@ -1194,11 +1194,11 @@
       }
     },
     "@beep/repo-utils": {
-      "reviewer": "Claude Opus 5.5 (perf-turbo-granularity, claude/perf-turbo-granularity-110eae)",
-      "reason": "Re-record input lists and policy-task fingerprint edges after quality audit M9, M10 and K3: package-root README/CHANGELOG/LICENSE leave transit, build, check and test hashes, test/** leaves build and transit (eleven test-compiling builds keep it), and the policy seals move to script-less @beep/repo-cli tasks with per-seal root-config routing. Commands, outputs, cache flags and environment are unchanged; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (W2 lane, refactor/beep-cli-w2-leaf)",
+      "reason": "Re-record the root and repo-utils subjects after merging main: repo-utils declares the @beep/markdown dependency its moved JSDoc section parser reads; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/perf-turbo-granularity-cache-review-2026-11-02.md",
-        "sha256": "1da98f30c3c2545b941ca97f7e8bc5fcfad15810713ff25c9f92e2f2ec82fc28"
+        "path": "goals/beep-cli-composition/research/w2-cache-baseline-review-2.md",
+        "sha256": "c09d4e99e6cb7d5591dd4f995cc909f0ba633dd39d98a33718969e70cc58056a"
       }
     },
     "@beep/repo-workspaces": {
@@ -95147,6 +95147,7 @@
         "dependencies": [
           "@beep/glob#build",
           "@beep/identity#build",
+          "@beep/markdown#build",
           "@beep/memfs#build",
           "@beep/package-json#build",
           "@beep/schema#build",
@@ -95208,6 +95209,7 @@
         "dependencies": [
           "@beep/glob#build",
           "@beep/identity#build",
+          "@beep/markdown#build",
           "@beep/memfs#build",
           "@beep/package-json#build",
           "@beep/schema#build",
@@ -95255,6 +95257,7 @@
         "dependencies": [
           "@beep/glob#build",
           "@beep/identity#build",
+          "@beep/markdown#build",
           "@beep/memfs#build",
           "@beep/package-json#build",
           "@beep/schema#build",
@@ -95384,6 +95387,7 @@
         "dependencies": [
           "@beep/glob#transit",
           "@beep/identity#transit",
+          "@beep/markdown#transit",
           "@beep/memfs#transit",
           "@beep/package-json#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
@@ -95594,6 +95598,7 @@
         "dependencies": [
           "@beep/glob#transit",
           "@beep/identity#transit",
+          "@beep/markdown#transit",
           "@beep/memfs#transit",
           "@beep/package-json#transit",
           "@beep/schema#transit",
@@ -95644,6 +95649,7 @@
         "dependencies": [
           "@beep/glob#transit",
           "@beep/identity#transit",
+          "@beep/markdown#transit",
           "@beep/memfs#transit",
           "@beep/package-json#transit",
           "@beep/schema#transit",
@@ -95702,6 +95708,7 @@
         "dependencies": [
           "@beep/glob#transit",
           "@beep/identity#transit",
+          "@beep/markdown#transit",
           "@beep/memfs#transit",
           "@beep/package-json#transit",
           "@beep/schema#transit",
@@ -121514,7 +121521,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "9ed89e39363b1c4bfe00ebc1ebfa8294418a995d1d1556c097478a1df55250e6"
+        "sha256": "c54d76fbc0b7acbc1bfc50a4228bd235b519edd49274bc314255bdba7ef94e95"
       }
     ]
   }

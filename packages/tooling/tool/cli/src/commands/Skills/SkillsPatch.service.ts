@@ -22,6 +22,8 @@
  * @since 0.0.0
  */
 
+import { SkillEffective, SkillPatch, SkillPatches, SkillPatchLabel } from "@beep/ai-sync/Skills.schemas";
+import { VendoredSkillLockEntry } from "@beep/ai-sync/SkillsLock.schemas";
 import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
@@ -48,9 +50,7 @@ import {
 import { applySkillPatch, listSkillPatchHunks } from "./SkillPatches.apply.ts";
 import { SkillPatchRefusal, SkillsCommandError, SkillsLockWriteRefusal } from "./Skills.errors.ts";
 import { SkillPatchOwnerSourceLive } from "./Skills.patches.ts";
-import { SkillEffective, SkillPatch, SkillPatches, SkillPatchLabel } from "./Skills.schemas.ts";
 import { buildSkillPatchAdditions, SkillUpstreamContentSourceLive, skillPatchDropCondition } from "./Skills.service.ts";
-import { VendoredSkillLockEntry } from "./SkillsLock.schemas.ts";
 import { publishSkillsLockEntry } from "./SkillsLock.write.ts";
 import { reconstructVendoredSkill } from "./SkillsMaterialize.service.ts";
 import {
@@ -59,19 +59,19 @@ import {
   SkillPatchLabelPending,
   SkillPatchLabelReceipt,
 } from "./SkillsPatch.schemas.ts";
-import type { Sha256Hex } from "@beep/schema";
-import type * as Digest from "effect/crypto/Digest";
-import type { ComputedSkillTree } from "./internal/SkillTree.ts";
-import type { SkillMaterializeRefusal, SkillPatchApplyError, SkillUpstreamContentError } from "./Skills.errors.ts";
-import type { SkillPatchOwnerSource } from "./Skills.patches.ts";
-import type { SkillUpstreamContentFile } from "./Skills.schemas.ts";
-import type { SkillUpstreamContentSource } from "./Skills.service.ts";
+import type { SkillUpstreamContentFile } from "@beep/ai-sync/Skills.schemas";
 import type {
   SkillPatchFile,
   SkillsLockDocument,
   SkillsLockEntry,
   SkillsLockWrittenFile,
-} from "./SkillsLock.schemas.ts";
+} from "@beep/ai-sync/SkillsLock.schemas";
+import type { Sha256Hex } from "@beep/schema";
+import type * as Digest from "effect/crypto/Digest";
+import type { ComputedSkillTree } from "./internal/SkillTree.ts";
+import type { SkillMaterializeRefusal, SkillPatchApplyError, SkillUpstreamContentError } from "./Skills.errors.ts";
+import type { SkillPatchOwnerSource } from "./Skills.patches.ts";
+import type { SkillUpstreamContentSource } from "./Skills.service.ts";
 import type { SkillPatchLabelPendingReason, SkillPatchPlanOutcome } from "./SkillsPatch.schemas.ts";
 import type { SkillHunkLedgerRow } from "./SkillsReview.schemas.ts";
 
@@ -540,7 +540,7 @@ const makeSkillPatchRecorder = Effect.gen(function* () {
  *
  * ```ts
  * import { SkillPatchOwnerSource, skillPatchOwnerSourceFromCodeowners } from "@beep/repo-cli/commands/Skills/Skills.patches"
- * import { SkillPathHistory, SkillUpstreamContent } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillPathHistory, SkillUpstreamContent } from "@beep/ai-sync/Skills.schemas"
  * import { SkillUpstreamContentSource } from "@beep/repo-cli/commands/Skills/Skills.service"
  * import { SkillPatchRecorderLayer } from "@beep/repo-cli/commands/Skills/SkillsPatch.service"
  * import * as Effect from "effect/Effect"

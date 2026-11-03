@@ -4709,6 +4709,7 @@
         "allow": [
           "@beep/glob",
           "@beep/identity",
+          "@beep/markdown",
           "@beep/memfs",
           "@beep/package-json",
           "@beep/repo-utils",
@@ -4721,6 +4722,7 @@
         "allowTypeOnly": [
           "@beep/glob",
           "@beep/identity",
+          "@beep/markdown",
           "@beep/memfs",
           "@beep/package-json",
           "@beep/repo-utils",

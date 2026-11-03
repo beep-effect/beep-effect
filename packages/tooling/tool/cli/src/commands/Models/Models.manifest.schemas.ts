@@ -19,6 +19,7 @@
  * @since 0.0.0
  */
 
+import { EffortLevel, ModelId } from "@beep/ai-sync/ModelCatalog.schemas";
 import { $RepoCliId } from "@beep/identity/packages";
 import { SectionKey } from "@beep/managed-section/Section";
 import { LiteralKit } from "@beep/schema";
@@ -31,9 +32,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaParser from "effect/SchemaParser";
 import * as SchemaTransformation from "effect/SchemaTransformation";
-import { EffortLevel, ModelId } from "./Models.catalog.schemas.ts";
 import { ModelsLegacyPublication, ModelsPublication, ModelsTrackedPublication } from "./Models.exchange.schemas.ts";
-import type { EffortLevel as EffortLevelValue } from "./Models.catalog.schemas.ts";
+import type { EffortLevel as EffortLevelValue } from "@beep/ai-sync/ModelCatalog.schemas";
 
 const $I = $RepoCliId.create("commands/Models/Models.manifest.schemas");
 
@@ -333,7 +333,7 @@ export const isEffortAllowedOnSurface: {
  * **Example** (Pin a heavy Codex binding)
  *
  * ```ts
- * import { ModelId } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { ModelId } from "@beep/ai-sync/ModelCatalog.schemas"
  * import { ModelBinding } from "@beep/repo-cli/commands/Models/Models.manifest.schemas"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
@@ -979,7 +979,7 @@ export class ModelSyncTarget extends S.Opaque<ModelSyncTarget, { readonly brand:
  * **Example** (Record a supersession)
  *
  * ```ts
- * import { ModelId } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { ModelId } from "@beep/ai-sync/ModelCatalog.schemas"
  * import { SupersededModel } from "@beep/repo-cli/commands/Models/Models.manifest.schemas"
  * import * as DateTime from "effect/DateTime"
  * import * as O from "effect/Option"

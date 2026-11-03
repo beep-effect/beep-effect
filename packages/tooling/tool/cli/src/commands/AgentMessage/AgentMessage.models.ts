@@ -5,13 +5,13 @@
  * @since 0.0.0
  */
 import { ManagedTerminalEvidence } from "@beep/ai-provider-cli";
+import { EffortLevel, ModelId } from "@beep/ai-sync/ModelCatalog.schemas";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { EffortLevel, ModelId } from "../Models/Models.catalog.schemas.ts";
 
 const $I = $RepoCliId.create("commands/AgentMessage/AgentMessage.models");
 const Identity = S.NonEmptyString.check(S.isMaxLength(128)).pipe(
@@ -244,7 +244,7 @@ export class CapabilityEvidence extends S.Opaque<CapabilityEvidence, { readonly 
  *
  * ```ts
  * import { PolicySnapshot } from "@beep/repo-cli/test/AgentMessage"
- * import { ModelId } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { ModelId } from "@beep/ai-sync/ModelCatalog.schemas"
  * import * as S from "effect/Schema"
  *
  * console.log(S.is(PolicySnapshot)(PolicySnapshot.make({ provider: "codex", modelId: ModelId.make("gpt-6.1-sol"), effort: "medium", sandbox: "read-only", approvalPolicy: "never", fingerprint: "policy-v1", policyEvidence: "effective-reported" }))) // true
@@ -376,7 +376,7 @@ export class EndpointHostRef extends S.Opaque<EndpointHostRef, { readonly brand:
  *
  * ```ts
  * import { EndpointBinding, PolicySnapshot } from "@beep/repo-cli/test/AgentMessage"
- * import { ModelId } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { ModelId } from "@beep/ai-sync/ModelCatalog.schemas"
  * import * as S from "effect/Schema"
  *
  * console.log(S.is(EndpointBinding)(EndpointBinding.make({ endpointId: "reviewer", participantId: "agent", sessionId: "session", ownerId: "owner", generation: 1, repositoryScope: "repo", capabilityFingerprint: "cap-v1", policyFingerprint: "policy-v1", supported: true, capabilityEvidence: [], policy: PolicySnapshot.make({ provider: "codex", modelId: ModelId.make("gpt-6.1-sol"), effort: "medium", sandbox: "read-only", approvalPolicy: "never", fingerprint: "policy-v1", policyEvidence: "effective-reported" }) }))) // true

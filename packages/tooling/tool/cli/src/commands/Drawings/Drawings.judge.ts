@@ -10,6 +10,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { PdfTools, PngRequest } from "@beep/pdf-tools";
+import { DrawingQaLens, decodeQaInventory, QaInventory } from "@beep/qa-capture/QaInventory.schemas";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { RenderManifest } from "@beep/technical-drawing";
 import { A, O, Str } from "@beep/utils";
@@ -21,7 +22,6 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { DrawingQaLens, decodeQaInventory, QaInventory } from "../Qa/Inventory.schemas.ts";
 import { DRAWING_JUDGE_PROMPT_TEMPLATE, JudgeEvidenceKind } from "../Qa/JudgePack.ts";
 import { DrawingsCommandError } from "./Drawings.errors.ts";
 import { reviewerRequestsSection } from "./Drawings.review.rules.ts";

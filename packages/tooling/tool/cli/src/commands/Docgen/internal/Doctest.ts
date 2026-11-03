@@ -1,5 +1,13 @@
 import { extractFencedCodeBlockDetails } from "@beep/repo-docgen/Core";
 import { FsUtils, findRepoRoot, GlobOptions } from "@beep/repo-utils";
+import { doctestSourceMarker, isDoctestSourcePath } from "@beep/repo-utils/JSDoc/DoctestSource";
+import {
+  jsdocOwnersByStart,
+  ownJSDocNodeName,
+  ParseJSDocSectionsOptions,
+  parseJSDocSections,
+  rawJSDocSpans,
+} from "@beep/repo-utils/JSDoc/JSDocSections";
 import { A, O, Str } from "@beep/utils";
 import { transform as transformDoctest } from "@effect/doctest/Transform";
 import * as Effect from "effect/Effect";
@@ -14,14 +22,6 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import { Node, SyntaxKind } from "ts-morph";
-import { doctestSourceMarker, isDoctestSourcePath } from "../../../internal/jsdoc/DoctestSource.ts";
-import {
-  jsdocOwnersByStart,
-  ownJSDocNodeName,
-  ParseJSDocSectionsOptions,
-  parseJSDocSections,
-  rawJSDocSpans,
-} from "../../../internal/jsdoc/JSDocSections.ts";
 import { workspaceDirectories } from "../../../internal/RepoWorkspaces.ts";
 import { runGitLines } from "../../../internal/repo-run/index.ts";
 import { createInMemoryTsMorphProject } from "../../../internal/tsmorph/index.ts";
@@ -40,9 +40,9 @@ import {
   TypeOnlyFence,
 } from "../Doctest.schemas.ts";
 import { DoctestFenceAnalyzer, DoctestFenceRewriter } from "../Doctest.service.ts";
+import type { RawJSDocSpan } from "@beep/repo-utils/JSDoc/JSDocSections";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { RawJSDocSpan } from "../../../internal/jsdoc/JSDocSections.ts";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/index.ts";
 import type { DoctestCliConfig, ImpurityReason, PurityVerdict } from "../Doctest.schemas.ts";
 import type { DoctestFenceAnalyzerShape, DoctestFenceRewriterShape } from "../Doctest.service.ts";

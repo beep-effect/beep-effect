@@ -9,7 +9,7 @@ import {
   ParseJSDocSectionsOptions,
   parseJSDocSections,
   rawJSDocSpans,
-} from "@beep/repo-cli/test/Docgen";
+} from "@beep/repo-utils/JSDoc/JSDocSections";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -231,6 +231,21 @@ describe("parseJSDocSections", () => {
       lines("", "Sometimes.", "")
     );
     expect(parsed.bodyLines).not.toContain("@since 0.0.0");
+  });
+
+  it("masks fence bodies by line when the markdown parser refuses the comment", () => {
+    // Nesting past the markdown parser's depth cap makes it refuse the text, so the
+    // line scanner masks the fence instead and the quoted section marker stays hidden.
+    const deep = A.join(
+      A.makeBy(300, () => ">"),
+      ""
+    );
+    const parsed = parseJSDocSections(
+      ParseJSDocSectionsOptions.make({
+        commentText: lines("/**", ` * ${deep} quoted`, " *", " * ```ts", " * **Details**", " * ```", " */"),
+      })
+    );
+    expect(parsed.sections).toEqual([]);
   });
 
   it("parses a comment without sections or tags", () => {

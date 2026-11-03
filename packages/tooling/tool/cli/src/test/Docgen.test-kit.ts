@@ -5,6 +5,28 @@
  * @since 0.0.0
  */
 
+/**
+ * Shared source marker and fence rendering helpers for documentation tests.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export { doctestFenceInfo, doctestSourceMarker, isDoctestSourcePath } from "@beep/repo-utils/JSDoc/DoctestSource";
+export {
+  fencedLineState,
+  JSDocSection,
+  JSDocSectionName,
+  jsDocSectionBodyText,
+  jsDocSectionOrder,
+  jsdocCommentsFromSource,
+  jsdocOwnersByStart,
+  ownJSDocNodeName,
+  ParseJSDocSectionsOptions,
+  ParseJSDocSectionsResult,
+  parseJSDocSections,
+  RawJSDocSpan,
+  rawJSDocSpans,
+} from "@beep/repo-utils/JSDoc/JSDocSections";
 export * from "../commands/Docgen/Doctest.errors.ts";
 export * from "../commands/Docgen/Doctest.schemas.ts";
 export * from "../commands/Docgen/Doctest.service.ts";
@@ -28,25 +50,3 @@ export { getDeclaredJsDocs } from "../commands/Docgen/internal/JsDocNodes.ts";
 export * from "../commands/Docgen/internal/Local.ts";
 export * from "../commands/Docgen/internal/Operations.ts";
 export * from "../commands/Docgen/internal/Quality.ts";
-/**
- * Shared source marker and fence rendering helpers for documentation tests.
- *
- * @category testing
- * @since 0.0.0
- */
-export { doctestFenceInfo, doctestSourceMarker, isDoctestSourcePath } from "../internal/jsdoc/DoctestSource.ts";
-export {
-  fencedLineState,
-  JSDocSection,
-  JSDocSectionName,
-  jsDocSectionBodyText,
-  jsDocSectionOrder,
-  jsdocCommentsFromSource,
-  jsdocOwnersByStart,
-  ownJSDocNodeName,
-  ParseJSDocSectionsOptions,
-  ParseJSDocSectionsResult,
-  parseJSDocSections,
-  RawJSDocSpan,
-  rawJSDocSpans,
-} from "../internal/jsdoc/JSDocSections.ts";

@@ -7,6 +7,7 @@
  * @since 0.0.0
  */
 
+import { SkillsLockDocument } from "@beep/ai-sync/SkillsLock.schemas";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import { Str } from "@beep/utils";
@@ -33,7 +34,6 @@ import {
   TEMPLATE_SLUG,
 } from "../Goals/Inventory.ts";
 import { SkillLockFile } from "../Skills/Skills.command.ts";
-import { SkillsLockDocument } from "../Skills/SkillsLock.schemas.ts";
 import { KnowledgeOperationalError } from "./Knowledge.errors.ts";
 import { decodeKnowledgeUtf8, knowledgeLineMatches } from "./Knowledge.refs.ts";
 import {
