@@ -267,12 +267,12 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const f = yield* fixture();
       yield* f.control.resume;
       const started = ObservationLaunchFact.cases.Started.make({ launchId: id("9"), processInstanceId: id("2") });
-      const refused = yield* f.post(
-        yield* f.encode(ObservationLaunchSubmission.make({ ...f.submission(), fact: started }))
-      );
+      const encodedSubmission = yield* f.encode(ObservationLaunchSubmission.make({ ...f.submission(), fact: started }));
+      const refused = yield* f.post(encodedSubmission);
       expect(refused.status).toBe(409);
       expect(refused.headers["x-observation-receipt"]).toBeUndefined();
-      expect(yield* f.facts.read(id("9"), 0)).toEqual([]);
+      const facts = yield* f.facts.read(id("9"), 0);
+      expect(facts).toEqual([]);
     })
   )
 );

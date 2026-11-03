@@ -1936,8 +1936,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         BEEP_TURBO_HOST_CACHE_DISABLED: "true",
         BEEP_CACHE_PRODUCER_CHANNEL: "${{ inputs.producer_channel }}",
       });
-      expect(yield* workflowPolicyDiagnostics("cache-producer.yml", text)).toEqual([]);
-      expect(yield* workflowPolicyDiagnostics("heavy.yml", heavyText)).toEqual([]);
+      const producerDiagnostics = yield* workflowPolicyDiagnostics("cache-producer.yml", text);
+      expect(producerDiagnostics).toEqual([]);
+      const heavyDiagnostics = yield* workflowPolicyDiagnostics("heavy.yml", heavyText);
+      expect(heavyDiagnostics).toEqual([]);
     })
   );
 
@@ -1945,8 +1947,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* findRepoRoot();
-      const heavy = parseWorkflowYaml(yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`));
-      const steps = jobSteps(yield* workflowJobs(heavy), "producer-execute");
+      const heavyText = yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`);
+      const heavy = parseWorkflowYaml(heavyText);
+      const jobs = yield* workflowJobs(heavy);
+      const steps = jobSteps(jobs, "producer-execute");
       expect(stepByName(steps, "Setup pinned toolchain without trial capabilities").with).toEqual({
         "turbo-remote-cache": "false",
         "r2-enabled": "false",
@@ -1998,8 +2002,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* findRepoRoot();
-      const heavy = parseWorkflowYaml(yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`));
-      const steps = jobSteps(yield* workflowJobs(heavy), "producer-execute");
+      const heavyText = yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`);
+      const heavy = parseWorkflowYaml(heavyText);
+      const jobs = yield* workflowJobs(heavy);
+      const steps = jobSteps(jobs, "producer-execute");
       const installName = "Install independently approved issuer only";
       const runName = "Execute closed signed trial and retain private observation";
       const publishName = "Publish issued observation using storage capabilities only";
@@ -2038,11 +2044,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* findRepoRoot();
-      const heavy = parseWorkflowYaml(yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`));
-      const script = stepRun(
-        jobSteps(yield* workflowJobs(heavy), "producer-execute"),
-        "Require independent frozen trial selection"
-      );
+      const heavyText = yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`);
+      const heavy = parseWorkflowYaml(heavyText);
+      const jobs = yield* workflowJobs(heavy);
+      const script = stepRun(jobSteps(jobs, "producer-execute"), "Require independent frozen trial selection");
       const directory = yield* fs.makeTempDirectoryScoped();
       const source = "1111111111111111111111111111111111111111";
       const base = {
