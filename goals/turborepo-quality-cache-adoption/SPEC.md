@@ -858,3 +858,36 @@ fixtures. Preserve earlier observations under their original driver bytes.
 This supplies synthetic semantics, not a real-repository adoption decision or
 a task/profile qualification. Reverse the registration through Git while
 retaining the observations; production settings need no rollback.
+
+
+### Isolated native Git worktree sharing controls, 2026-11-03
+
+Use disposable main/linked Git worktrees on both frozen native clients. Exercise
+implicit local sharing in both directions, changed-input misses, explicit
+cache-directory isolation, same-worktree replay, and an absolute-output-path
+counterexample against a fresh consumer execution. Run only tiny fixture task
+bodies; do not use Beep tasks, real checkout caches, remote transport or secrets.
+
+Reuse the captured availability collector and contained pin reader. Use one
+existing admission token, a 60-second wrapper, 20-second native subprocess
+deadlines, 256-KiB command streams, four-MiB total retained raw evidence and a
+two-MiB compact report. Isolate the network. Fixture-only offline lock generation
+ignores lifecycle scripts; Git uses a private fixture identity and no hooks.
+Require unchanged inputs and source/tool digests, actual HIT/MISS and task-body
+markers, complete output-file/mode and task-log comparisons, raw-summary joins
+and owned fixture removal. Stop on the first failure and retain partial output.
+
+This supplies synthetic local semantics, not independent-clone/remote-box proof,
+real computation/profile qualification, a feature adoption decision or measured
+production savings. Reverse the registration through Git; no live setting or
+cache activation requires rollback.
+
+
+The worktree fixture also includes an observed permission counterexample:
+under private umask 0077, an explicitly chmodded 0755 output is restored as
+0700. Require that exact mismatch and a fresh consumer control returning 0755
+on both pinned clients. Separate it from the positive owner-only 0700 output
+controls; never accept bytes-only equality as full metadata equivalence. This
+extends the bounded matrix to 36 tiny invocations, without changing its token,
+time, retention or isolation limits. Both counterexample families keep real
+portability and permission-sensitive computation qualification open.

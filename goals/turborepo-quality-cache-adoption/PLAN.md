@@ -864,3 +864,28 @@ exact bytes published with the report. The execution base does not claim the
 new file already existed there. Prior narrower observations remain private.
 No live boundary setting or CI job is enabled. Real package-graph applicability,
 value and profile qualification remain open; all goal criteria remain unproven.
+
+
+### Local Git worktree sharing and counterexamples, 2026-11-03
+
+`research/worktree-native-checkpoint-2026-11-03.json` binds 36 actual tiny
+fixture invocations on the refreshed exact stable/canary pair. Twenty-four
+portable controls verify sharing in both directions, input invalidation,
+explicit-cache-directory isolation and own-worktree replay. Fourteen invocations
+HIT and 22 task bodies actually execute; all 36 summaries join retained output
+file bytes, modes and complete task logs. No Beep quality task runs.
+
+Each client also reproduces two counterexamples against forced fresh execution:
+shared output keeps the producer's absolute path, and an executable set to 0755
+returns 0700 under private umask 0077. Content/log equality does not erase that
+metadata mismatch. These synthetic tasks are not qualification candidates;
+real consumers need portability and permission-sensitive review before reuse.
+The existing one-token admission was released after 5.403 seconds; wrapper 5.783 seconds
+is experiment duration, not time saved. Prior refused fixture sources/raw output
+remain private; only the complete final source-bound matrix is registered.
+
+The new driver was uncommitted during execution and is bound by captured bytes.
+No live cache setting, global umask, key, epoch, remote transport or deployment
+changes. Feature decisions remain 11 scoped / 25 pending and all whole-goal criteria,
+real computation adoption, independent-clone/remote-box proof and observation
+windows remain unfinished.

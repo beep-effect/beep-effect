@@ -482,6 +482,12 @@
         ],
         "sourceRevision": "0fa82e5eac6324ccc8806ecc83745daa1d52e70d",
         "scope": "Actual repaired-driver synthetic native behavior only; original per-feature and tuple acceptance requirements remain unchanged."
+      },
+      "currentNativeWorktreeObservation": {
+        "checkpoint": "worktree-native-checkpoint-2026-11-03.json",
+        "report": "native-worktree-controls-2026-11-03.json",
+        "scope": "36 pinned local Git-worktree invocations: bidirectional portable sharing and explicit isolation, plus absolute-path and permission-mode counterexamples. Full content/mode/log comparisons and body markers retained.",
+        "authority": "Synthetic only; acceptance remains pending and real permission-sensitive/absolute-output qualification is not granted."
       }
     },
     {
@@ -656,6 +662,12 @@
           "sha256": "1f03b1364b79590eb128649c21939ba99011765625df21b324fea7d37b9b9c5e",
           "termObserved": true
         }
+      },
+      "currentNativeWorktreeObservation": {
+        "checkpoint": "worktree-native-checkpoint-2026-11-03.json",
+        "report": "native-worktree-controls-2026-11-03.json",
+        "scope": "36 pinned local Git-worktree invocations: bidirectional portable sharing and explicit isolation, plus absolute-path and permission-mode counterexamples. Full content/mode/log comparisons and body markers retained.",
+        "authority": "Synthetic only; acceptance remains pending and real permission-sensitive/absolute-output qualification is not granted."
       }
     },
     {

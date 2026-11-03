@@ -947,3 +947,52 @@ observed schema difference changed the matrix and next qualification work.
   bytes, one released admission token and zero task executions.
 - Captured native daemon-option deprecation warnings remain explicit. The
   experiment does not enable a checker over Beep or justify another CI job.
+
+
+### 2026-11-03 — require an actual offline fixture lock before native worktree controls
+
+The first worktree experiment stopped before any task because a dependency-free
+Bun fixture produced no `bun.lock`. Treat successful lockfile-only exit as
+insufficient: include one local workspace and assert the lock exists before
+initializing the disposable Git worktrees. The original driver and bounded raw
+prerequisite output are retained privately; a fresh source-bound observation
+is required. This is fixture setup friction, not a cache correctness result.
+
+
+### 2026-11-03 — retain restored tree metadata before checking cache-hit correctness
+
+The first actual linked-worktree HIT failed the complete output-tree/mode
+assertion. Its native streams and cold outputs survive, but the failed tree
+metadata was computed only in memory before fixture cleanup. Retain the task
+summary, restored bytes/logs and modes before asserting equivalence. A cache
+HIT alone is insufficient proof. Preserve the original failed source envelope;
+the next diagnostic observation keeps the strict assertion unchanged.
+
+
+### 2026-11-03 — permission-sensitive outputs need a real replay control
+
+Pinned stable 2.11.10 reports a shared-worktree HIT with identical content and
+logs, but an explicitly chmodded executable changes from 0755 to 0700 when
+restored under the fixture's private umask 0077. The two actual output manifests,
+source bytes and native summaries are retained. Treat this as a failed metadata
+equivalence control, not a portable task or a production R2 result. Extend the
+exact-client matrix with this expected counterexample and a fresh-execution
+control, alongside owner-only portable outputs. No global umask or cache
+setting should be weakened to make the experiment pass.
+
+
+### 2026-11-03 — forced execution preserves the native task-log comparison
+
+The partial worktree matrix passed twelve portable/isolation observations and
+the absolute-path cold/shared pair. Its fresh cache-disabled control executed
+but produced no persistent task log, so the full-log assertion stopped it. Use
+documented `--force` with local caching retained for fresh controls requiring
+log comparison. Preserve the partial matrix as setup evidence, not a complete
+client-pair result; no repository quality task or cache setting changes.
+
+
+The exact native CLI additionally rejects combining `--cache` and `--force`;
+the attempted fresh control therefore did not execute. Use `--force` alone
+inside the same credential-free, network-isolated fixture. The default local
+cache remains available; remote access remains impossible. Its refusal and
+original source bytes stay with the partial evidence.
