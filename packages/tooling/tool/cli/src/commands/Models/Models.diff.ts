@@ -166,11 +166,12 @@ const mergeProxy = (drafts: Drafts, listing: ProxyModelsResponse): void => {
  * **Example** (Merge an upstream-only catalog)
  *
  * ```ts
+ * import { UpstreamModelEntry } from "@beep/ai-sync/ModelCatalog.schemas"
  * import { mergeLayers } from "@beep/repo-cli/commands/Models"
  * import * as O from "effect/Option"
  *
  * const models = mergeLayers({
- *   upstream: O.some({ xai: [{ id: "grok-4.6" }] }),
+ *   upstream: O.some({ xai: [UpstreamModelEntry.make({ id: "grok-4.6" })] }),
  *   codex: O.none(),
  *   grok: O.none(),
  *   cursor: O.none(),
