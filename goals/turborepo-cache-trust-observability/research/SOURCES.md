@@ -611,6 +611,30 @@ streams and causes remain private, and a hint is not a trusted classification.
 The ordinary 967-second failure remains unclassified; the separately instrumented
 success is not reused as ordinary qualification. All full-goal gates remain.
 
+### Bounded live phase feedback, 2026-11-02
+
+The [phase-feedback checkpoint](supervisor-phase-checkpoint-2026-11-02.json)
+binds the ordinary twenty-minute timeout separately from current source controls.
+The worker emits eleven fixed schema-owned markers. The parent uses the existing
+folded stdout runner and bounded accumulator, retaining only a complete exact
+marker for timeout feedback. Sixty focused controls include split chunks,
+non-monotonic observations, partial/decorated/unknown lines, overflow, private
+output, real child exits and unchanged deadlines. These are diagnostic controls,
+not an ordinary signed qualification, protected publication or production rollout.
+
+
+### Ordinary frozen-source native matrices, 2026-11-02
+
+The [matrix checkpoint](ordinary-native-matrix-checkpoint-2026-11-02.json) binds the
+inspectable [stable view](ordinary-stable-signed-observation-2026-11-02.json) and
+[current-canary view](ordinary-canary-signed-observation-2026-11-02.json). The
+ordinary supervisor accepted both complete matrices under the unchanged limits
+and actual-overlap guard. The public views reconstruct the
+exact complete decoded private reports through an explicit runtime-toolchain
+fingerprint field mapping; raw-artifact and public-view byte hashes are separate. These
+observations have explicit supervisor/task-source identities and grant no
+protected producer provenance, current-main qualification or production rollout.
+
 
 ### 2026-11-02 — actual inspection and contained directory-alias repair
 

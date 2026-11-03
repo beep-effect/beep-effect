@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "d6c392764524b66eea1031b2efec11aab9821aca12b5642dffe774773fe327a5",
+  "specSha256": "f6c677b00a4dda11e981247ad4d523f0ea7c064a16d33219dd7551ddf7920f8a",
   "acceptance": [
     {
       "id": "AC-01",
@@ -495,10 +495,24 @@
   "priorSpecSha256MergeHistory": [
     {
       "field": "priorSpecSha256Before1dd2ConflictResolution",
+      "recordedAtHead": "eae3212bed5d508b03086251e91e2117f85a4eb9",
+      "sha256": "4fb70ebb96714803c49b9aea25b1f0b80fc2bfb6faf95b901af229a2a486af03"
+    },
+    {
+      "field": "priorSpecSha256Before1dd2ConflictResolution",
       "sha256": "7f5f6d99d4053eba6760eee05f21edc05b63b4f9a7342c4f4d3d5d1301b5bd0c",
       "recordedAtHead": "97dfca278201269d3d6606750e90ed656060569e"
+    },
+    {
+      "field": "priorSpecSha256BeforeAfeaIntegration",
+      "recordedAtHead": "b5e0ee54072d5683121dafb7807f16cad37ad51e",
+      "sha256": "69cf3a2c1e53c9a41b34ead7420db9ca1e281dbb23e63ce6cd6ebe3ec32e8040"
     }
   ],
   "priorSpecSha256BeforeEnvironment0beIntegration": "53f29506a4bbc11db7c348c966fc05be578906f20dc53d18ca57d31f5815497f",
-  "acceptedMainSpecSha256AtEnvironment0beIntegration": "bb7a0efbaef84cbbe1ea4f1a3e48847b917a791ff2075237cf4c0a2fada42715"
+  "acceptedMainSpecSha256AtEnvironment0beIntegration": "bb7a0efbaef84cbbe1ea4f1a3e48847b917a791ff2075237cf4c0a2fada42715",
+  "priorSpecSha256Before0beIntegration": "7f974dfb420c11334379c39dbc8eb6c90e54e8d8ab575d64d9a2e4259202f367",
+  "acceptedMainSpecSha256At0beIntegration": "bb7a0efbaef84cbbe1ea4f1a3e48847b917a791ff2075237cf4c0a2fada42715",
+  "priorSpecSha256BeforeEnvironment070Integration": "d6c392764524b66eea1031b2efec11aab9821aca12b5642dffe774773fe327a5",
+  "acceptedMainSpecSha256AtEnvironment070Integration": "8417ce9c74b2588578ed90de5d18e417a71721a8ab8d82b21cabcc440bed031c"
 }

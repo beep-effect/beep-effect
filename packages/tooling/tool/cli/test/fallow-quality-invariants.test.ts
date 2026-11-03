@@ -1,4 +1,5 @@
 import {
+  fallowFeatureArgsForTesting,
   inheritedCodemodDuplicationCountForTesting,
   reportInvariantDiagnosticsForTesting,
   workflowYamlValueForTesting,
@@ -7,6 +8,28 @@ import { expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Str from "effect/String";
+
+// Without a section flag Fallow also computes hotspots and change coupling from git
+// history, about 110 s per run here after any commit that changes a file (audit M17).
+it("runs the health gate on the complexity and file-score sections only", () => {
+  expect(fallowFeatureArgsForTesting("health", { base: "origin/main", quiet: true })).toEqual([
+    "run",
+    "fallow",
+    "--",
+    "health",
+    "--config",
+    ".fallowrc.jsonc",
+    "--complexity",
+    "--file-scores",
+    "--format",
+    "json",
+    "--quiet",
+    "--baseline",
+    "standards/fallow.health.regression-baseline.jsonc",
+    "--top",
+    "50",
+  ]);
+});
 
 it("reports malformed Fallow failure attribution and exit invariants", () => {
   expect(

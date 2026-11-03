@@ -4,13 +4,13 @@
     "id": "public-origin-beep-effect-com",
     "packetId": "goal-packet/v1:5be1c6ccdbc3909d3253bc305c3b4614cc966c4b0db40b1522bb73f8a465ed4d",
     "title": "Single public origin beep-effect.com",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-10-20",
-    "updated": "2026-10-28",
+    "updated": "2026-11-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/public-origin-beep-effect-com",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Move the identity authority to the beep-effect.com/ns/ root, reserve the apex route table in @beep/public-site, and gate the retired hosts.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -27,10 +27,6 @@
         "gating": true
       }
     ]
-  },
-  "proposedCloseout": {
-    "status": "completed-retained",
-    "finalPullRequest": 2319
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -84,8 +80,8 @@
     {
       "id": "P4",
       "name": "Closeout",
-      "status": "in-progress",
-      "exit": "proposedCloseout and gating yeet-verdict evidence declared; reflection lint green; PR mergeable at the gate."
+      "status": "complete",
+      "exit": "closeout record (adopted from proposedCloseout) and gating yeet-verdict evidence declared; reflection lint green; PR mergeable at the gate."
     }
   ],
   "verificationCommands": [
@@ -102,5 +98,9 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2319
+  }
 }

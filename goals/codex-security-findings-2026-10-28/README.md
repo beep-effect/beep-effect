@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -103,9 +103,11 @@ Final closeout PR [#2488](https://github.com/beep-effect/beep-effect/pull/2488)
 retains the merged implementation and must obtain genuine final-head canonical
 `merge-ready: yes` while it is still open. Preserve that evidence before merge.
 After #2488 merges and all exact external statuses are verified, run
-`goals completion refresh` for both packets. Their declared lifecycle remains
-`active` with prospective `completed-retained` until verified receipts derive
-completion. No gate is weakened and no readiness receipt is fabricated.
+`goals completion refresh` for both packets. Both receipts for #2488 now
+verify (`goals doctor`: `completed-retained (verified via #2488)`), and the
+committed `closeout` record in `ops/manifest.json` carries that status: `goals
+set-status` adopted the verified proposal on 2026-11-02 (#2629). No gate is
+weakened and no readiness receipt is fabricated.
 
 Dependency IDs #450–#469 are Fixed (GitHub REST, observed 2026-11-01) and the
 Dependabot, code-scanning and secret-scanning open inventories are zero. See the
