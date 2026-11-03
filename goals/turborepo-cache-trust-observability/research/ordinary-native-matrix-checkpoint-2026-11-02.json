@@ -1,0 +1,133 @@
+{
+  "schemaVersion": "cache-ordinary-native-matrix-checkpoint/v1",
+  "recordedAt": "2026-11-02T12:09:44.434666+00:00",
+  "authority": "Complete ordinary stable/current-canary local private-loopback matrices for the exact frozen tuple. No current-main adoption, protected producer/R2 publication, production signing or whole-goal acceptance.",
+  "parentAndWorkerRevision": "976ca2a943b13bd32f9690ebfdbfc69bd64f239b",
+  "taskSourceRevision": "68834a997e97a0504df6feee6f57d083b3258c1b",
+  "key": {
+    "computation": "@beep/identity#lint",
+    "layer": "turbo-task-result",
+    "profile": "local-linux-x64-bun1.4.4-private-loopback-signed-v1",
+    "epoch": "qualification-v3"
+  },
+  "channels": {
+    "stable": {
+      "recordedAt": "2026-11-02T11:46:09.000777+00:00",
+      "authority": "Complete ordinary uninstrumented stable native matrix for the frozen tuple only; no protected producer/R2 publication, production signing or whole-goal acceptance.",
+      "result": {
+        "exit": 0,
+        "elapsedSeconds": 1113.197,
+        "finishedAt": "2026-11-02T11:45:11.985747+00:00"
+      },
+      "reportSha256": "73cacf65e2c1fbcbca8e83b4c204f6d55e6139d0c18c8ac1e308d0fc514d68d4",
+      "reportBytes": 225571,
+      "parentAndWorkerRevision": "976ca2a943b13bd32f9690ebfdbfc69bd64f239b",
+      "taskSourceRevision": "68834a997e97a0504df6feee6f57d083b3258c1b",
+      "key": {
+        "computation": "@beep/identity#lint",
+        "layer": "turbo-task-result",
+        "profile": "local-linux-x64-bun1.4.4-private-loopback-signed-v1",
+        "epoch": "qualification-v3"
+      },
+      "client": {
+        "version": "2.11.10",
+        "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6",
+        "namespace": "current-68834-stable-phase-20261102"
+      },
+      "controlCounts": {
+        "captureControls": 4,
+        "nonExecutions": 4,
+        "mutations": 7,
+        "shadows": 10,
+        "freshPairs": 3,
+        "pairs": 3
+      },
+      "freshSelectedTaskOverlapMilliseconds": [-1551, -888, 543],
+      "allThreeRemoteReplaysMatchFreshLogs": true,
+      "instrumentationInjected": false,
+      "deadlinesOrConcurrencyGuardChanged": false,
+      "productionChanged": false,
+      "publicObservationPath": "research/ordinary-stable-signed-observation-2026-11-02.json",
+      "publicObservationSha256": "61efdbee13b3b7689e8523262f8654f71278f704c863361e12c30a0190505c48",
+      "projection": "Explicit public field mapping preserves the sandbox runtime-toolchain SHA-256 under runtimeToolchainSha256. Restore native schemaVersion and runtimeKeyDigest to reconstruct the exact complete decoded private receipt. The public view is not validator input."
+    },
+    "canary": {
+      "recordedAt": "2026-11-02T12:06:14.071520+00:00",
+      "authority": "Complete ordinary uninstrumented current-canary native matrix for the frozen tuple only; no protected producer/R2 publication, production signing or whole-goal acceptance.",
+      "result": {
+        "exit": 0,
+        "elapsedSeconds": 1070.584,
+        "finishedAt": "2026-11-02T12:04:45.354850+00:00"
+      },
+      "reportSha256": "fc65c7f76745b8b4c8ce8dc03430f011e8d8ff390303731de21005c98a84c1a3",
+      "reportBytes": 226183,
+      "parentAndWorkerRevision": "976ca2a943b13bd32f9690ebfdbfc69bd64f239b",
+      "taskSourceRevision": "68834a997e97a0504df6feee6f57d083b3258c1b",
+      "key": {
+        "computation": "@beep/identity#lint",
+        "layer": "turbo-task-result",
+        "profile": "local-linux-x64-bun1.4.4-private-loopback-signed-v1",
+        "epoch": "qualification-v3"
+      },
+      "client": {
+        "version": "2.11.11-canary.1",
+        "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2",
+        "namespace": "current-68834-canary-phase-20261102"
+      },
+      "controlCounts": {
+        "captureControls": 4,
+        "nonExecutions": 4,
+        "mutations": 7,
+        "shadows": 10,
+        "freshPairs": 3,
+        "pairs": 3
+      },
+      "freshSelectedTaskOverlapMilliseconds": [-842, -387, 754],
+      "allThreeRemoteReplaysMatchFreshLogs": true,
+      "instrumentationInjected": false,
+      "deadlinesOrConcurrencyGuardChanged": false,
+      "allFrozenSourceHeadsAndTreesUnchanged": true,
+      "ordinaryParentProcessEnded": true,
+      "productionChanged": false,
+      "publicObservationPath": "research/ordinary-canary-signed-observation-2026-11-02.json",
+      "publicObservationSha256": "b5236d35841f6d6633ec9fa95fa214b3f25ab294ce4f5b9e7b370176c88f3685",
+      "projection": "Explicit public field mapping preserves the sandbox runtime-toolchain SHA-256 under runtimeToolchainSha256. Restore native schemaVersion and runtimeKeyDigest to reconstruct the exact complete decoded private receipt. The public view is not validator input."
+    }
+  },
+  "executionContract": {
+    "instrumentationInjected": false,
+    "taskSleepPaddingOrClockManipulation": false,
+    "admissionBypassed": false,
+    "comparisonDeadlineMinutes": 20,
+    "actualSelectedTaskOverlapRequired": true,
+    "allSourceAndToolIntegrityGuardsRetained": true,
+    "reportValidatedByOrdinarySupervisor": true,
+    "hostedProofReplaced": false
+  },
+  "privacy": {
+    "homePathsOrSecretReferencesInPublicReceipts": false,
+    "rawSecretHeaderPayloadSignatureFieldsPresent": false,
+    "storedTaskOutput": "Digests and bounded structural facts only; no artifact payload or decoded logs.",
+    "toolchainFingerprintProjection": {
+      "sourceFact": "Cache.pilot.ts assigns runtimeKeyDigest from runtimeIdentity.toolchainDigest; the separate top-level toolchainDigest belongs to the host source identity.",
+      "publicRepresentation": "Preserve both values separately; label the sandbox fingerprint runtimeToolchainSha256 and retain the explicit native-field mapping.",
+      "scannerRulesOrExceptionsChanged": false,
+      "originalFullReceiptRetained": true
+    }
+  },
+  "limits": [
+    "The protected persistent issuer-material argument was absent; these matrices do not prove actual protected issuer denial or provenance.",
+    "Task fixtures remain source68834; the later e274 adoption census has different manifests/lock/entrypoint bindings. Do not rebind this execution to current-main source.",
+    "No qualification ledger or production configuration changes are made.",
+    "Public views reconstruct complete decoded native receipts through explicit field mapping; raw private byte hashes remain separate. Public views are not validator inputs."
+  ],
+  "remaining": [
+    "Obtain hosted acceptance of the component and real protected-main source inspection.",
+    "Issue independent current-source approval and complete bounded owned signed upload/publication/acceptance.",
+    "Qualify current-source task/profile/epoch cohorts before adoption; complete all pending computation and feature reviews.",
+    "Prove role/epoch/rotation/rollback requirements, representative observation and final same-PR lifecycle/reflection/hosted readiness."
+  ],
+  "qualificationLedgerChanged": false,
+  "productionChanged": false,
+  "wholeGoalAcceptanceChanged": false
+}

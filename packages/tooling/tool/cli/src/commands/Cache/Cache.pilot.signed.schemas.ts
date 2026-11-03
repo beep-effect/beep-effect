@@ -25,6 +25,48 @@ import { CacheProtocolNativeSummary } from "./Cache.protocol.runner.schemas.ts";
 const $I = $RepoCliId.create("commands/Cache/Cache.pilot.signed.schemas");
 
 /**
+ * Fixed worker progress markers that carry no task, credential or source payload.
+ *
+ * **Details**
+ * These observations only explain an interrupted comparison. A marker cannot
+ * establish execution success, producer provenance or qualification.
+ *
+ * **Example** (Identify a safe progress marker)
+ * ```ts
+ * import { CacheSignedPilotPhase } from "@beep/repo-cli/commands/Cache"
+ * console.assert(CacheSignedPilotPhase.Enum["signed-pilot:preflight"] === "signed-pilot:preflight")
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export const CacheSignedPilotPhase = LiteralKit([
+  "signed-pilot:request",
+  "signed-pilot:preflight",
+  "signed-pilot:capture-controls",
+  "signed-pilot:fresh-comparisons",
+  "signed-pilot:baseline-comparisons",
+  "signed-pilot:shadows",
+  "signed-pilot:mutations",
+  "signed-pilot:non-execution-controls",
+  "signed-pilot:final-integrity",
+  "signed-pilot:owned-upload",
+  "signed-pilot:complete",
+]).pipe(
+  $I.annoteSchema("CacheSignedPilotPhase", {
+    description: "Finite diagnostic-only progress markers emitted outside selected native task intervals.",
+  })
+);
+
+/**
+ * One fixed diagnostic-only signed worker progress marker.
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export type CacheSignedPilotPhase = typeof CacheSignedPilotPhase.Type;
+
+/**
  * Selected-task facts permitting fresh execution or explicit remote replay.
  *
  * **Example** (Inspect remote evidence fields)
