@@ -283,6 +283,17 @@ planner producing gap spans. The target source-token host, edition merge and
 general custom span/data mutation remain open; replayed source merge decisions
 are control-flow proof only. See [assembly evidence](history/evidence/2026-11-03-token-assembly.md).
 
+Latest edition-merge checkpoint (2026-11-03): the target now deduplicates exact
+and variation edition occurrences with the existing CPython set adapter and
+checks nominative reporters with Effect HashSet. All 89 actual source merge
+cases and 42 independent classification/preference controls pass under the
+captured source hash profile. A separate source replay with those explicit
+hash parameters is byte-identical. This is not fresh-process hash production;
+None-dependent hashes vary between processes. The existing normalized public
+candidate-bag rule is preserved. Token construction, concrete host state and
+full tokenizer integration remain open. See
+[edition merge evidence](history/evidence/2026-11-03-token-editions.md).
+
 Latest worker evidence (2026-10-31): private process ownership now covers bounded
 schema frames, captured Clock timers, queue/active limits, forced stop,
 acknowledged cleanup and quarantine without permit reuse. Real-process tests

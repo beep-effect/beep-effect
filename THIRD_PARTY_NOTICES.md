@@ -42,6 +42,10 @@ adapts mixed-token sorting, merge/overlap dispatch and output indexing from
 that module. Its captured host service retains source-object responsibilities;
 the assembly oracle replays actual source host decisions without claiming a
 complete target implementation of token construction or edition merging.
+`TokenEditions.ts` now supplies the edition set/deduplication and nominative
+selection primitive using the existing PSF-attributed set adapter and captured
+source runtime hash facts. Fresh-process hash production and the concrete token
+object host remain separate integration work.
 
 The citation oracle fixture baseline also incorporates normalized output and
 regex/extractor data from the official eyecite lock's `reporters-db 3.2.53` and
