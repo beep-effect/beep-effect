@@ -15,7 +15,7 @@ import * as Path from "effect/Path";
 import * as Ref from "effect/Ref";
 import * as Str from "effect/String";
 import { SkillsCommandError } from "../Skills.errors.ts";
-import type { SkillUpstreamContentFile } from "../Skills.schemas.ts";
+import type { SkillUpstreamContentFile } from "@beep/ai-sync/Skills.schemas";
 
 /**
  * Name of the work directory that holds stages and set-aside trees, beside each physical skills directory.

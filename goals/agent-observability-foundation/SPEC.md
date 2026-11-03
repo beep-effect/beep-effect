@@ -32,7 +32,7 @@ Do not infer that an enum, installed app, green service, transport acknowledgmen
 
 These thirteen criteria are supported by the [acceptance audit](research/ACCEPTANCE-EVIDENCE-AUDIT.md),
 [retained qualification](research/RETAINED-FINAL-QUALIFICATION.md) and
-[latest source comparison](ops/history/shared-repair-source-applicability-20261102.json)
+[latest source comparison](ops/history/merge-coordination-source-applicability-20261103.json)
 at their recorded source, synthetic, pinned-backend and historical-canary scopes.
 A checked box records qualified domain support. It does not certify a fresh
 execution at this PR head, current exact-source root admission, complete
@@ -88,6 +88,7 @@ Missing source access remains an explicit coverage gap; do independent synthetic
 
 | Date | Decision | Reason | Reversal |
 | --- | --- | --- | --- |
+| 2026-11-02 | The managed-owner enrollment route is retired: `beep agent-message observation`, `AiProviderCliSession.lifecycle` and the orphaned ai-metrics `observation-launch-{claims,client}` and `observation-claim-population` modules are deleted; the `ops/*.json` proofs that cite them stay as frozen evidence. `observation-launch`, `-facts` and `-http` remain under `ObservationWorker`. | `goals/t3-native-orchestration` made T3 Code the only cross-session route, so no managed owner launches agents through beep. | Restore the modules from git at the permalink in that packet's Decision Log and re-enroll a T3-launched owner. |
 | 2026-10-28 | Bind export and query origins in target v2 and require exact request-metadata reconciliation before visibility | A collector acknowledgment can precede queryability; an unrelated backend or partial metadata match must not satisfy delivery evidence | Keep earlier synthetic stores intact and refuse configuration drift; remove un-enrolled APIs or migrate explicitly before any later target change |
 | 2026-10-28 | Qualify the single-attempt native sender against an isolated exact-image Phoenix before production composition | Durable send receipts and actual read-back must be separate; preserve incomplete usage and document UI subtotal/zero-cost hazards | Remove the new opt-in sender; retain local evidence and the masked recovery hold; dispose only of synthetic test resources |
 | 2026-10-27 | Prepare paused implementation packet | Operator adopted exploration direction and asked for packets, not execution | Revise packet before launch |
@@ -376,7 +377,7 @@ full acceptance remain open.
 ### Existing managed-owner enrollment decision (2026-10-28)
 
 Add explicit private observation enrollment to the existing agent-message serve
-owner. Bind its salted attempt to endpoint, owner, generation, repository scope,
+owner (retired 2026-11-02; see the Decision Log). Bind its salted attempt to endpoint, owner, generation, repository scope,
 canonical workspace and provider. Persist lifecycle callbacks locally; reconcile
 only after binding, stop reconciliation before close, and retain unknown outcomes
 when numeric exit evidence is unavailable. Reject insecure salt fallbacks in both
@@ -389,7 +390,7 @@ Synthetic qualification is not production coverage or full packet completion.
 ### Managed-owner recovery command decision (2026-10-28)
 
 Expose bounded status/reconcile under the existing agent-message observation
-command. Read only existing explicit enrollment, match its entire Prepared claim,
+command (retired 2026-11-02; see the Decision Log). Read only existing explicit enrollment, match its entire Prepared claim,
 and replay original facts without process-launch authority, epoch retargeting or
 store repair. Report current liveness/backend visibility as unknown even when
 historical Finished/receipt evidence exists. Scope each periodic HTTP client to
@@ -700,7 +701,7 @@ reservation or rewrite historical readiness after merge.
 
 ### Final readiness checkpoint after PR2644 (2026-11-03 UTC)
 
-PR2649 is the sole final checkpoint, reserved to the owning chat. Preserve
+PR2649 was the reserved final checkpoint at that historical decision. Preserve
 PR2644's unknown receipt and all later passing checks without creating past
 readiness. The operator explicitly retained the original pre-merge rule. Update
 the live README, PLAN, manifest and qualification report together. Retained
@@ -710,3 +711,7 @@ admission remains false and all seven real-harness populations remain Unknown.
 The owner must retain actual terminal ready, successful job finalization and a
 positive exact-head classic verdict before strict merge, then obtain actual
 verified canonical completion. No S11, forced window or retrospective evidence.
+
+### Coordination-repaired final checkpoint (2026-11-03)
+
+The operator directed an executable coordination repair followed by final PR2655, to be merged by this chat after verification. Preserve PR2649 canonical unknown and the actual after-merge coverage/observer timing. The [coordination runbook](./research/MERGE-COORDINATION.md) covers the deployed cooperative guard, original evidence requirements and direct-website authority limits. Selected comparisons are now232/249,80/84, 84/90, 83/89 at accepted-main e81a5399; historical executions retain their source and time. All thirteen domain criteria retain their qualified scopes. Exact-root admission remains false, all seven real-harness populations remain Unknown, and the recovery hold remains intact. Require final-head hosted checks, actual resolved review, normal window, successfully finalized exact-head terminal readiness, positive canonical verdict archived BEFORE strict owner merge, then genuinely verified canonical completion.

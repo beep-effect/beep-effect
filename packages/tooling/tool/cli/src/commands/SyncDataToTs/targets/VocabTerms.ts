@@ -12,11 +12,11 @@
  */
 
 import { CoreVocab } from "@beep/identity";
+import { doctestFenceInfo } from "@beep/repo-utils/JSDoc/DoctestSource";
 import { A, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as R from "effect/Record";
-import { doctestFenceInfo } from "../../../internal/jsdoc/DoctestSource.ts";
 import { formatJson, outputFile } from "../internal/Source.ts";
 import { SyncDataTargetMetadata, SyncDataTargetProjection } from "../SyncDataToTs.schemas.ts";
 import type { SyncDataTarget } from "../SyncDataToTs.schemas.ts";

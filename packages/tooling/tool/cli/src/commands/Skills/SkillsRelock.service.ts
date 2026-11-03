@@ -27,6 +27,8 @@
  * @since 0.0.0
  */
 
+import { SkillEffective, SkillSnapshot } from "@beep/ai-sync/Skills.schemas";
+import { VendoredSkillLockEntry } from "@beep/ai-sync/SkillsLock.schemas";
 import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
@@ -44,23 +46,21 @@ import { decodePatchText, readVerifiedPatchSeries } from "./internal/PatchSeries
 import { computeSkillTree, hashBytes, installedTargetsHash } from "./internal/SkillTree.ts";
 import { applySkillPatch, classifySkillPatchHunks } from "./SkillPatches.apply.ts";
 import { SkillRelockRefusal, SkillsCommandError, SkillsLockWriteRefusal } from "./Skills.errors.ts";
-import { SkillEffective, SkillSnapshot } from "./Skills.schemas.ts";
 import {
   renderSkillTreeDiff,
   SkillUpstreamContentSource,
   SkillUpstreamContentSourceLive,
   skillResolutionOfEntry,
 } from "./Skills.service.ts";
-import { VendoredSkillLockEntry } from "./SkillsLock.schemas.ts";
 import { publishSkillsLockEntry } from "./SkillsLock.write.ts";
 import { SkillHunkReport, SkillRelockReceipt, SkillReplayBatch, SkillReplayReport } from "./SkillsRelock.schemas.ts";
+import type { SkillUpstreamContentFile } from "@beep/ai-sync/Skills.schemas";
+import type { SkillsLockEntry, SkillsLockWrittenFile } from "@beep/ai-sync/SkillsLock.schemas";
 import type * as Digest from "effect/crypto/Digest";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type { ComputedSkillTree } from "./internal/SkillTree.ts";
 import type { SkillMaterializeRefusal, SkillUpstreamContentError } from "./Skills.errors.ts";
-import type { SkillUpstreamContentFile } from "./Skills.schemas.ts";
-import type { SkillsLockEntry, SkillsLockWrittenFile } from "./SkillsLock.schemas.ts";
 import type { SkillReplayStatus } from "./SkillsRelock.schemas.ts";
 import type { SkillHunkLedgerRow } from "./SkillsReview.schemas.ts";
 
@@ -512,7 +512,7 @@ const makeSkillUpdateTrain = Effect.gen(function* () {
  * **Example** (Close the layer over an offline source)
  *
  * ```ts
- * import { SkillPathHistory, SkillUpstreamContent } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillPathHistory, SkillUpstreamContent } from "@beep/ai-sync/Skills.schemas"
  * import { SkillUpstreamContentSource } from "@beep/repo-cli/commands/Skills/Skills.service"
  * import { SkillUpdateTrainLayer } from "@beep/repo-cli/commands/Skills/SkillsRelock.service"
  * import * as Effect from "effect/Effect"

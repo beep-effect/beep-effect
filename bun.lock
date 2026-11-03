@@ -1064,7 +1064,6 @@
       "name": "@beep/ai-provider-cli",
       "version": "0.0.1",
       "dependencies": {
-        "@beep/acp": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
@@ -1923,22 +1922,6 @@
         "@types/node": "catalog:",
         "bun-types": "catalog:",
         "vitest": "catalog:",
-      },
-    },
-    "packages/drivers/t3-code": {
-      "name": "@beep/t3-code",
-      "version": "0.0.0",
-      "dependencies": {
-        "@beep/identity": "workspace:^",
-        "@beep/mcp-kit": "workspace:^",
-        "@beep/schema": "workspace:^",
-        "@beep/utils": "workspace:^",
-        "effect": "catalog:",
-      },
-      "devDependencies": {
-        "@effect/vitest": "catalog:",
-        "@types/node": "catalog:",
-        "bun-types": "catalog:",
       },
     },
     "packages/drivers/tailscale": {
@@ -3726,7 +3709,6 @@
         "protobufjs": "catalog:",
       },
       "devDependencies": {
-        "@beep/ai-provider-cli": "workspace:^",
         "@beep/fc-runs": "workspace:^",
         "@beep/memfs": "workspace:^",
         "@beep/test-runner": "workspace:^",
@@ -3857,6 +3839,7 @@
       "dependencies": {
         "@beep/glob": "workspace:^",
         "@beep/identity": "workspace:^",
+        "@beep/markdown": "workspace:^",
         "@beep/package-json": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
@@ -4035,7 +4018,6 @@
         "beep-cli": "./src/bin.ts",
       },
       "dependencies": {
-        "@beep/ai-provider-cli": "workspace:^",
         "@beep/ai-sync": "workspace:^",
         "@beep/chalk": "workspace:^",
         "@beep/cli-kit": "workspace:^",
@@ -4082,7 +4064,6 @@
         "@beep/semver": "workspace:^",
         "@beep/skill-contract": "workspace:^",
         "@beep/spdx": "workspace:^",
-        "@beep/t3-code": "workspace:^",
         "@beep/technical-drawing": "workspace:^",
         "@beep/tesseract": "workspace:^",
         "@beep/test-utils": "workspace:^",
@@ -5058,8 +5039,6 @@
     "@beep/spdx": ["@beep/spdx@workspace:packages/foundation/modeling/spdx"],
 
     "@beep/storybook": ["@beep/storybook@workspace:apps/storybook"],
-
-    "@beep/t3-code": ["@beep/t3-code@workspace:packages/drivers/t3-code"],
 
     "@beep/tailscale": ["@beep/tailscale@workspace:packages/drivers/tailscale"],
 

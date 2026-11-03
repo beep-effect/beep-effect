@@ -12,13 +12,13 @@ Four read-only sweeps, each with its own cited report:
 | In-repo orchestration, handoff and messaging bricks | [research/repo-inventory.md](research/repo-inventory.md) |
 
 This packet builds on
-[cross-provider-agent-communication](../cross-provider-agent-communication/README.md).
+`retired:cross-provider-agent-communication` ([last tree](https://github.com/beep-effect/beep-effect/tree/6bb8584b6dbc9aee927a200901c9eebc0abd63b1/explorations/cross-provider-agent-communication)).
 That packet qualified a T3-owned desktop host for autonomous Claude <-> Codex
-messaging ([T3CODE-QUALIFICATION.md](../cross-provider-agent-communication/research/T3CODE-QUALIFICATION.md))
-and graduated `goals/agent-message-router` and `goals/agent-session-bridges`
+messaging ([T3CODE-QUALIFICATION.md](https://github.com/beep-effect/beep-effect/tree/6bb8584b6dbc9aee927a200901c9eebc0abd63b1/explorations/cross-provider-agent-communication/research/T3CODE-QUALIFICATION.md))
+and graduated `retired:agent-message-router` ([last tree](https://github.com/beep-effect/beep-effect/tree/6bb8584b6dbc9aee927a200901c9eebc0abd63b1/goals/agent-message-router)) and `retired:agent-session-bridges` ([last tree](https://github.com/beep-effect/beep-effect/tree/6bb8584b6dbc9aee927a200901c9eebc0abd63b1/goals/agent-session-bridges))
 (both merged in PR #1571). Its queued candidates for cross-host delivery and
 live orchestrator coordination
-([MAP.md](../cross-provider-agent-communication/MAP.md)) are the re-entry
+([MAP.md](https://github.com/beep-effect/beep-effect/tree/6bb8584b6dbc9aee927a200901c9eebc0abd63b1/explorations/cross-provider-agent-communication/MAP.md)) are the re-entry
 points this packet picks up.
 
 ### What T3 Code already gives us
@@ -35,7 +35,7 @@ points this packet picks up.
   only over HTTPS or loopback, so tailnet use needs Tailscale HTTPS
   (`t3 serve --tailscale-serve` / `t3 pair --tailscale`). A Read-only grant
   cannot send to a Full-access thread
-  ([prior qualification](../cross-provider-agent-communication/research/T3CODE-QUALIFICATION.md)).
+  ([prior qualification](https://github.com/beep-effect/beep-effect/tree/6bb8584b6dbc9aee927a200901c9eebc0abd63b1/explorations/cross-provider-agent-communication/research/T3CODE-QUALIFICATION.md)).
 - **Cross-host messaging is native but in beta.** With "Linked environments"
   (a Labs setting, off by default) turned on at both ends, `t3_thread_send`,
   `read`, `wait`, `list`, `interrupt`, the scheduled-task tools and
@@ -60,13 +60,13 @@ points this packet picks up.
   package. A fork build on remote hosts has to be distributed by us.
   ([capabilities §6](research/t3code-capabilities.md#6-updating))
 
-### What the repo already has
+### What the repo had (deleted by `goals/t3-native-orchestration`, 2026-11-02)
 
-- `bun run beep agent-message` is a private SQLite mailbox with grants,
+- the former `agent-message` command group was a private SQLite mailbox with grants,
   receipts and 17 subcommands. Its six `agent_message_*` tools have managed
   adapters for Codex, Claude and Grok; Cursor is blocked.
   ([inventory](research/repo-inventory.md))
-- `@beep/t3-code` (`packages/drivers/t3-code`) wraps six T3 tools: send is
+- `@beep/t3-code` wrapped six T3 tools: send is
   queue-only, and it has no launch. Its URL is pinned to loopback
   (`T3Code.service.ts:32`), so a remote environment needs an SSH forward.
   `attach-t3` hardcodes model pins instead of reading the models manifest.
@@ -76,7 +76,7 @@ points this packet picks up.
 - Edit targets for "T3 is the session and messaging substrate":
   `orchestrate` (route table and T3 section), `operator-handoff` (re-arm and
   broadcast), `remote-development-agents` (no T3 at all; two hosts missing),
-  `docs/runbooks/agent-messaging.md`, `agent-notifications.md`,
+  the former agent-messaging runbook, `agent-notifications.md`,
   `agent-pools.md`, and `AGENTS.md`. The full table is in
   [inventory](research/repo-inventory.md).
 - No `beep` command writes harness MCP config. `@beep/ai-sync` has schemas and

@@ -61,8 +61,8 @@ Gated candidates (re-entry points; not graduated now):
 - T3's own updater must not overwrite the fork build on hosts; disable or
   verify it.
 - Provider credentials stay each host's own logins.
-- Deleting `explorations/cross-provider-agent-communication` breaks this
-  packet's relative links to it. Goal 1 rewrites them as `retired:<slug>`
-  plus a commit permalink.
+- `retired:cross-provider-agent-communication` was deleted by goal 1; this
+  packet's links to it are `retired:<slug>` plus a commit permalink
+  (DECISIONS.md, 2026-11-02).
 - `t3-hub` at user scope may double-load inside T3-launched sessions. Check
   this before rolling out beyond DankStation.

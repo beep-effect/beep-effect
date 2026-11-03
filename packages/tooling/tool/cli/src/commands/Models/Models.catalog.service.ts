@@ -12,6 +12,16 @@
  * @since 0.0.0
  */
 
+import {
+  CatalogModel,
+  CatalogSnapshot,
+  CatalogSnapshotSummary,
+  CodexModelsCache,
+  CursorModelList,
+  GrokModelsCache,
+  ProxyModelsResponse,
+  UpstreamCatalog,
+} from "@beep/ai-sync/ModelCatalog.schemas";
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe, Str } from "@beep/utils";
 import * as Context from "effect/Context";
@@ -29,20 +39,10 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import { formatJsonValue } from "../../internal/cli/Json.ts";
 import { runCaptured } from "../../internal/process/StepExec.ts";
-import {
-  CatalogModel,
-  CatalogSnapshot,
-  CatalogSnapshotSummary,
-  CodexModelsCache,
-  CursorModelList,
-  GrokModelsCache,
-  ProxyModelsResponse,
-  UpstreamCatalog,
-} from "./Models.catalog.schemas.ts";
 import { mergeLayers } from "./Models.diff.ts";
 import { ModelsCatalogError, ModelsLedgerError } from "./Models.errors.ts";
 import { defaultProxyBaseUrl, parseJsonText, upstreamCatalogUrls } from "./Models.paths.ts";
-import type { CatalogSource } from "./Models.catalog.schemas.ts";
+import type { CatalogSource } from "@beep/ai-sync/ModelCatalog.schemas";
 
 const $I = $RepoCliId.create("commands/Models/Models.catalog.service");
 

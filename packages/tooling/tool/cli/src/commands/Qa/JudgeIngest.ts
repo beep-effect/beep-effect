@@ -13,6 +13,7 @@
 
 import { writeFileWithinRootAtomically } from "@beep/file-processing/PathSafety";
 import { SessionStore } from "@beep/qa-capture";
+import { encodeQaInventory } from "@beep/qa-capture/QaInventory.schemas";
 import { Sha256HexFromBytes } from "@beep/schema/Sha256";
 import {
   applyGateCertificatePlan,
@@ -30,7 +31,6 @@ import * as Path from "effect/Path";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { printLines } from "../../internal/cli/Printer.ts";
-import { encodeQaInventory } from "./Inventory.schemas.ts";
 import {
   evidenceCrossCheckVerdictToCrossCheck,
   extractLastJsonBlock,
@@ -52,9 +52,9 @@ import { QaCommandError } from "./Qa.errors.ts";
 import { renderInventoryMarkdown } from "./Qa.render.ts";
 import { qaRootPath, readEventLog } from "./Qa.session.ts";
 import type { RoundLayout } from "@beep/qa-capture";
+import type { QaInventory } from "@beep/qa-capture/QaInventory.schemas";
 import type { GateCertificateApplyPlan } from "@beep/skill-contract";
 import type * as Digest from "effect/crypto/Digest";
-import type { QaInventory } from "./Inventory.schemas.ts";
 import type { JudgeOutputDecodeFailure } from "./JudgeContract.ts";
 import type { QaJudgeIngestOptions } from "./Qa.schemas.ts";
 

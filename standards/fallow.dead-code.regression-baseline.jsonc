@@ -1,8 +1,8 @@
 {
   "schema_version": 2,
-  "fallow_version": "3.32.0",
-  "timestamp": "2026-10-14T13:26:36Z",
-  "git_sha": "80fe0135fffc988c0dd53bb7a7d2678031d7135e",
+  "fallow_version": "3.34.1",
+  "timestamp": "2026-11-02T10:57:17Z",
+  "git_sha": "6bb8584b6dbc9aee927a200901c9eebc0abd63b1",
   "analysis_identity": {
     "mode": "syntactic",
     "semantic_schema_version": 1,
@@ -30,6 +30,9 @@
     "unused_component_inputs": 0,
     "unused_component_outputs": 0,
     "unused_svelte_events": 0,
+    "unused_effect_layers": 0,
+    "unused_tagged_errors": 0,
+    "unproduced_catch_tags": 0,
     "unused_server_actions": 0,
     "unused_load_data_keys": 0,
     "unresolved_imports": 0,

@@ -6,7 +6,7 @@
     "title": "Claim Element Antecedent Check",
     "status": "active",
     "created": "2026-10-14",
-    "updated": "2026-11-02",
+    "updated": "2026-11-03",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/claim-element-antecedent-check",
@@ -26,14 +26,14 @@
     "grandfathered": false,
     "pullRequests": [
       {
-        "number": 2626,
+        "number": 2656,
         "role": "final"
       }
     ],
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/docs_claim-element-manual-merge-closeout-994405b54a14/verdict.json",
+        "ref": ".beep/yeet/runs/docs_claim-element-retained-final-1103-d521e6dca988/verdict.json",
         "gating": true
       },
       {
@@ -112,9 +112,9 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "User-authorized final follow-up #2626 after the manual merge of #2609. Its final Check and Policy retry passed after merge, but canonical completion remains unknown because no positive pre-merge monitor verdict was retained. The new incident and reflection preserve that history. This final is bound to #2626 and its own branch verdict; it must earn current-head readiness before strict merge, and verify canonical completion afterward. Raw lifecycle stays active; 37/538, all 34 protected/all 37 previous matches, reference labels, prior results and v27 freeze remain intact. No fresh benchmark, attorney authority, S11 exception, verifier change or local full-proof queue is claimed.",
+  "statusNote": "Owner-controlled final PR #2656 after #2626 merged before final Policy success and positive exact-head readiness. Its terminal Check and Storybook succeeded, but completion remains unsatisfied due to the older verdict head. Retain that incident and every prior result. This fresh branch binds #2656 and its own evidence, explicitly reruns closeout after the final push, archives positive readiness before the goal-chat owner performs strict merge, then verifies canonical completion. Raw lifecycle remains active pending verification. v27 stays 37/538 with all 34 protected/all 37 prior matches; labels, old results, scope and uncertainty remain intact. No fresh benchmark, attorney authority, S11 or verifier change is claimed.",
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2626
+    "finalPullRequest": 2656
   }
 }
