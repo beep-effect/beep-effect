@@ -44,7 +44,6 @@ import {
 } from "./Goals.errors.ts";
 import {
   decodeGoalManifest,
-  GoalCloseoutRecord,
   GoalCloseoutVerification,
   GoalPhaseStatus,
   GoalStatus,
@@ -67,7 +66,7 @@ import {
   PacketTransitionWriter,
 } from "./PacketCore/PacketTransitionWriter.ts";
 import { PORTFOLIO_INDEX_PATH, writePortfolioIndex } from "./PortfolioIndex.ts";
-import type { GoalManifest, GoalPhase } from "./Goals.schemas.ts";
+import type { GoalCloseoutRecord, GoalManifest, GoalPhase, GoalProposedCloseout } from "./Goals.schemas.ts";
 import type { GoalPacketRecord } from "./Inventory.ts";
 import type { GoalPacketMigration } from "./Migration.ts";
 import type { PacketStage } from "./PacketCore/PacketCore.schemas.ts";
@@ -412,16 +411,20 @@ const planStreamTransition = Effect.fn("Goals.planStreamTransition")(function* (
   return O.some(yield* writer.plan(request));
 });
 
+type ManifestEdit = { readonly path: ReadonlyArray<string>; readonly value: unknown };
+
+type CloseoutTransition = { readonly edits: ReadonlyArray<ManifestEdit>; readonly note: string };
+
 // A proposal keeps its declared status active or paused until its completion
 // receipt verifies; `completed-retained` then adopts it as a committed closeout
 // record. The record digests in the proposal's slot, so that receipt still matches.
 const adoptVerifiedCloseout = Effect.fn("Goals.adoptVerifiedCloseout")(function* (
   slug: string,
   status: GoalStatus,
-  decoded: GoalManifest
+  decoded: GoalManifest,
+  proposal: GoalProposedCloseout
 ) {
-  const proposal = decoded.proposedCloseout;
-  if (proposal === undefined || status === "active" || status === "paused") return O.none<GoalCloseoutRecord>();
+  if (status === "active" || status === "paused") return O.none<CloseoutTransition>();
   if (status !== proposal.status) {
     return yield* GoalStatusInputError.new(
       `A proposed closeout retains active/paused declared status or adopts its proposed ${proposal.status}; ${status} is neither.`
@@ -434,34 +437,75 @@ const adoptVerifiedCloseout = Effect.fn("Goals.adoptVerifiedCloseout")(function*
       `The proposed closeout via #${proposal.finalPullRequest} has no verified completion receipt; run \`bun run beep goals completion refresh --slug ${slug}\` once the final PR is merged and merge-ready.`
     );
   }
-  return O.some(GoalCloseoutRecord.make({ status: proposal.status, finalPullRequest: proposal.finalPullRequest }));
+  return O.some({
+    edits: [
+      { path: ["proposedCloseout"], value: undefined },
+      { path: ["closeout"], value: { status: proposal.status, finalPullRequest: proposal.finalPullRequest } },
+    ],
+    note: `verified via #${proposal.finalPullRequest}; a write replaces proposedCloseout with the committed closeout record.`,
+  });
 });
 
-// One JSONC edit per field keeps comments and key order; an adopted closeout
-// swaps the proposal for its committed record in the same write.
-const rewriteManifestStatus = (
-  manifestText: string,
-  manifest: Readonly<Record<string, unknown>>,
+// Reopening a committed closeout (active or paused) turns the record back into
+// its proposal; the digest is unchanged, so the receipt keeps verifying it.
+// Any other status would leave a record that contradicts the declared status.
+const reopenCommittedCloseout = Effect.fn("Goals.reopenCommittedCloseout")(function* (
+  status: GoalStatus,
+  record: GoalCloseoutRecord
+) {
+  if (status === record.status) return O.none<CloseoutTransition>();
+  if (status !== "active" && status !== "paused") {
+    return yield* GoalStatusInputError.new(
+      `A committed closeout via #${record.finalPullRequest} keeps ${record.status} or reopens as active/paused; ${status} is neither.`
+    );
+  }
+  return O.some({
+    edits: [
+      { path: ["closeout"], value: undefined },
+      {
+        path: ["proposedCloseout"],
+        value: { status: record.status, finalPullRequest: record.finalPullRequest },
+      },
+    ],
+    note: `reopened from #${record.finalPullRequest}; a write turns the committed closeout record back into proposedCloseout.`,
+  });
+});
+
+const closeoutTransition = (slug: string, status: GoalStatus, decoded: GoalManifest) =>
+  decoded.proposedCloseout !== undefined
+    ? adoptVerifiedCloseout(slug, status, decoded, decoded.proposedCloseout)
+    : decoded.closeout !== undefined
+      ? reopenCommittedCloseout(status, decoded.closeout)
+      : Effect.succeed(O.none<CloseoutTransition>());
+
+// One JSONC edit per field keeps comments and key order; a closeout transition
+// lands in the same write, and the result must still decode before anything is written.
+const rewriteManifestStatus = Effect.fn("Goals.rewriteManifestStatus")(function* (
+  slug: string,
+  surfaces: { readonly manifestText: string; readonly manifest: Readonly<Record<string, unknown>> },
   status: GoalStatus,
   today: string,
-  adopted: O.Option<GoalCloseoutRecord>
-): string => {
-  const edits = A.flatten([
+  transition: O.Option<CloseoutTransition>
+) {
+  const edits: ReadonlyArray<ManifestEdit> = A.flatten<ReadonlyArray<ReadonlyArray<ManifestEdit>>>([
     [{ path: ["initiative", "status"], value: status }],
-    R.has(manifest, "lifecycle") ? [{ path: ["lifecycle"], value: status }] : [],
+    R.has(surfaces.manifest, "lifecycle") ? [{ path: ["lifecycle"], value: status }] : A.empty<ManifestEdit>(),
     [{ path: ["initiative", "updated"], value: today }],
-    O.match(adopted, {
-      onNone: () => [],
-      onSome: (record) => [
-        { path: ["proposedCloseout"], value: undefined },
-        { path: ["closeout"], value: { status: record.status, finalPullRequest: record.finalPullRequest } },
-      ],
-    }),
+    O.match(transition, { onNone: A.empty<ManifestEdit>, onSome: (value) => value.edits }),
   ]);
-  return A.reduce(edits, manifestText, (content, edit) =>
-    applyJsoncModification(JsoncModification.make({ content, ...edit }))
+  const text = A.reduce(edits, surfaces.manifestText, (content, edit) =>
+    applyJsoncModification(JsoncModification.make({ content, path: [...edit.path], value: edit.value }))
   );
-};
+  yield* pipe(
+    parseGoalManifestText(text),
+    Effect.fromOption(() => GoalManifestInvalidError.new(slug, "the rewritten manifest does not parse as JSON.")),
+    Effect.flatMap((value) => decodeGoalManifest(value)),
+    Effect.mapError((issue) =>
+      GoalManifestInvalidError.new(slug, `the rewritten manifest would not decode as GoalManifest: ${issue.message}`)
+    )
+  );
+  return text;
+});
 
 const reportSetStatusFailure = Effect.fn(function* (error: { readonly message: string }) {
   yield* Console.error(`[goals:set-status] ${error.message}`);
@@ -476,16 +520,15 @@ const setStatusForSlug = Effect.fn("Goals.setStatusForSlug")(function* (
   const fs = yield* FileSystem.FileSystem;
   const writer = yield* PacketTransitionWriter;
   const { decoded, manifest, manifestText, record, rewrittenReadme } = yield* loadPacketSurfaces(slug, status);
-  const adopted = yield* adoptVerifiedCloseout(slug, status, decoded);
+  const transition = yield* closeoutTransition(slug, status, decoded);
   const now = yield* DateTime.now;
   const today = pipe(DateTime.formatIso(now), Str.slice(0, 10));
+  const nextManifest = yield* rewriteManifestStatus(slug, { manifestText, manifest }, status, today, transition);
   const plan = yield* planStreamTransition(slug, status, decoded, record, DateTime.formatIso(now));
 
   if (preview) {
-    if (O.isSome(adopted)) {
-      yield* Console.log(
-        `[goals:set-status] closeout: verified via #${adopted.value.finalPullRequest}; a write replaces proposedCloseout with the committed closeout record.`
-      );
+    if (O.isSome(transition)) {
+      yield* Console.log(`[goals:set-status] closeout: ${transition.value.note}`);
     }
     return yield* printTransitionPreview(slug, status, decoded.initiative.status, plan);
   }
@@ -501,7 +544,7 @@ const setStatusForSlug = Effect.fn("Goals.setStatusForSlug")(function* (
     }
   }
 
-  yield* fs.writeFileString(record.manifestPath, rewriteManifestStatus(manifestText, manifest, status, today, adopted));
+  yield* fs.writeFileString(record.manifestPath, nextManifest);
   yield* fs.writeFileString(record.readmePath, rewrittenReadme);
   yield* writePortfolioIndex();
   yield* Console.log(
