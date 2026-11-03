@@ -21,7 +21,7 @@ def native(text):
 
 def seed(token):
     return {"kind": type(token).__name__, "data": native(token.data), "start": token.start, "end": token.end,
-            "groups": {k: native(v) for k, v in token.groups.items()}, "exact": [], "variation": [], "short": getattr(token, "short", False)}
+            "groups": {k: native(v) for k, v in token.groups.items()}, "exact": [0 if e.reporter.short_name == "Thompson" else 9 for e in getattr(token, "exact_editions", [])], "variation": [0 if e.reporter.short_name == "Thompson" else 9 for e in getattr(token, "variation_editions", [])], "short": getattr(token, "short", False)}
 
 
 def main():
@@ -41,6 +41,7 @@ def main():
     names = ["Token", "CitationToken", "SectionToken", "SupraToken", "IdToken", "ParagraphToken", "StopWordToken", "PlaceholderCitationToken", "CaseReferenceToken"]
     witnesses = [(r"(?P<value>.)", t) for t in ("x", "\U0001f600", "\ud835\udfce", "\x00", "\ud800")]
     witnesses += [(r"(?P<value>a)?", "x"), (r"(?P<value>)", ""), (r"(?P<first>x)(?P<tail>y)?", "x"), (r"(?P<a>x)(?P<b>y)", "xy"), (r"(?P<á>x)", "x"), (r"(?P<__proto__>x)", "x")]
+    witnesses += [(r"(?<=(?P<before>a))(?P<body>b)", "ab"), (r"(?P<first>a)?(?P<body>b)", "b"), (r"(?P<first>a*)(?P<body>b)", "b")]
     constructors = []
     for name in names:
         cls = getattr(models, name)
@@ -50,7 +51,9 @@ def main():
             for offset in (0, 7, -3):
                 raw = cls.from_match(match, {}, 0)
                 actual = cls.from_match(match, {}, offset)
-                constructors.append({"id": len(constructors), "input": seed(raw), "offset": offset, "expected": seed(actual)})
+                constructors.append({"id": len(constructors), "input": seed(raw), "offset": offset, "expected": seed(actual), "source": native(text),
+                                     "bindings": {"groups": match.re.groups, "names": dict(match.re.groupindex)},
+                                     "captures": [list(span) if span[0] >= 0 else None for span in match.regs], "groupOrder": list(match.groupdict())})
     merges = []
     for name in names:
         cls = getattr(models, name)
@@ -74,10 +77,32 @@ def main():
                 except TypeError:
                     outcome, truth = "error", None
                 merges.append({"id": len(merges), "left": a, "right": b, "outcome": outcome, "truth": truth})
-    out = {"schemaVersion": "citation-token-objects/v1", "oracleCommit": PIN, "oracleTree": TREE, "python": "3.11.15",
-           "producerSha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(), "constructors": constructors, "merges": merges}
+    errors = []
+    for name in names:
+        controls = [(r"x", {}), (r"x", {"oops": 1}), (r"(x)", {"oops": 1}), (r"(x)", None), (r"(x)", {"groups": {}})]
+        controls.append((r"(x)", {"exact_editions": None} if name == "CitationToken" else {"short": False}))
+        for pattern, extra in controls:
+            match = re.search(pattern, "x")
+            try:
+                getattr(models, name).from_match(match, extra)
+                raise AssertionError("expected constructor failure")
+            except (TypeError, IndexError) as error:
+                errors.append({"source": native("x"), "bindings": {"groups": match.re.groups, "names": dict(match.re.groupindex)}, "captures": [list(span) if span[0] >= 0 else None for span in match.regs], "recipe": {"kind": name, "extra": extra}, "sourceError": type(error).__name__, "reason": "missing-capture" if isinstance(error, IndexError) else "invalid-extra"})
+    profile_bytes = (Path(__file__).resolve().parents[3] / "packages/law-practice/use-cases/test/fixtures/eyecite/token-editions.json").read_bytes()
+    profile_sha = hashlib.sha256(profile_bytes).hexdigest()
+    assert profile_sha == "b42419aa8c06a5ccb3a15ea6e46650219e1f50445dbd827224b4d771e9f2932c"
+    editions = {i: models.Edition(models.Reporter(name, name, "state", "reporters"), name, None, None) for i, name in ((0, "Thompson"), (9, "U.S."))}
+    extras = []
+    for extra in ({"exact_editions": [0, 9, 0]}, {"variation_editions": [9, 0]}, {"short": True}, {"exact_editions": [9], "variation_editions": [0], "short": True}, {"exact_editions": [], "variation_editions": [], "short": False}):
+        source_extra = {k: [editions[i] for i in value] if k.endswith("editions") else value for k, value in extra.items()}
+        match = re.search(r"(?P<value>x)", "x")
+        for offset in (0, 7, -3):
+            actual = models.CitationToken.from_match(match, source_extra, offset)
+            extras.append({"source": native("x"), "bindings": {"groups": 1, "names": {"value": 1}}, "captures": [list(span) for span in match.regs], "recipe": {"kind": "CitationToken", "extra": extra, "offset": offset}, "expected": seed(actual)})
+    out = {"schemaVersion": "citation-token-objects/v2", "oracleCommit": PIN, "oracleTree": TREE, "python": "3.11.15",
+           "producerSha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(), "constructors": constructors, "merges": merges, "errors": errors, "extras": extras, "editionBindings": json.loads(profile_bytes)["bindings"], "editionProfileSha256": profile_sha}
     args.output.write_text(json.dumps(out, sort_keys=True, indent=2) + "\n")
-    print(json.dumps({"constructors": len(constructors), "merges": len(merges)}))
+    print(json.dumps({"constructors": len(constructors), "merges": len(merges), "errors": len(errors), "extras": len(extras)}))
 
 
 if __name__ == "__main__":

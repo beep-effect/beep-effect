@@ -14,7 +14,7 @@
   "scripts": {
     "build": "bun run beep:build",
     "check": "bun run beep:check",
-    "coverage": "bunx --bun vitest run --coverage --exclude=test/integration/**",
+    "coverage": "bunx --bun vitest run --coverage --exclude=test/integration/** --exclude=test/PartyContactSource.boundary.test.ts",
     "docgen": "bun run beep:docgen",
     "doctest": "bun run beep:doctest",
     "lint": "bun run beep:lint",

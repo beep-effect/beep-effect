@@ -67,6 +67,14 @@ export class CitationTokenSeed extends S.Opaque<CitationTokenSeed, { readonly br
     })
   )
 ) {}
+/** @internal @category models @since 0.0.0 */
+export class CitationTokenConstruction extends S.Opaque<CitationTokenConstruction, { readonly brand: unique symbol }>()(
+  S.Struct({ seed: CitationTokenSeed, offset: Position }).pipe(
+    $I.annoteSchema("CitationTokenConstruction", {
+      description: "Complete owned first-capture fields and source offset, ready for atomic publication.",
+    })
+  )
+) {}
 const Seed = S.toType(CitationTokenSeed);
 const sameGroups = S.toEquivalence(Groups);
 const failure = () => CitationTokenAssemblyFailure.make({ reason: "host-failed" });
@@ -183,7 +191,21 @@ export const makeCitationTokenObjects = Effect.fn("Citation.makeTokenObjects")(f
     const row = yield* lookup(id);
     return row.kind === "CitationToken" ? yield* editions.nominative(row.exact, row.variation) : false;
   });
+  const constructFrom = Effect.fn("Citation.constructTokenWithCapacity")(function* <E>(
+    produce: (remaining: number) => Effect.Effect<CitationTokenConstruction, E>
+  ) {
+    return yield* timing.timed(
+      mutex.withPermit(
+        Effect.gen(function* () {
+          if (HashMap.size(rows) >= limits.candidates) return yield* safety("candidates");
+          const construction = yield* produce(limits.producedTextUtf16 - produced);
+          return yield* fromCapture(construction.seed, construction.offset);
+        })
+      )
+    );
+  });
   return {
+    constructFrom,
     fromCapture: Effect.fn("Citation.serialTokenFromCapture")((input: unknown, offset: unknown) =>
       timing.timed(mutex.withPermit(fromCapture(input, offset)))
     ),

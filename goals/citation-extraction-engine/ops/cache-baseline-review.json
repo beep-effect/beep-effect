@@ -1,11 +1,11 @@
 {
-  "previous": "ad901be2454fd84847fbbe993e24c63d8ddf4c13460294ac230dcae2ce9195b2",
+  "previous": "ceafdb6e605eea140cf4e7bc513b4fb1f2df3adaae666789bf33ef6f84788ff4",
   "review": {
-    "reviewer": "GPT-6.1-Sol medium (citation/main conflict resolution)",
-    "reason": "Record the combined Party Node boundary-test route and citation Bun/integration routing, tsconfig and runtime dependencies; retain all existing cache flags and qualification scope.",
+    "reviewer": "Codex (citation native capture / CI repair)",
+    "reason": "Preserve the Node-only static boundary suite as a disjoint Node continuation while excluding it from incompatible Bun coverage; no production exclusion, floor, cache flag or qualification scope changes.",
     "basis": {
-      "path": "goals/citation-extraction-engine/history/evidence/2026-11-03-main-party-merge-cache-review.md",
-      "sha256": "efabcb10973885ae4a42f9c7235d7796e89b7f043bfa13fa82f6a6407bc1010b"
+      "path": "goals/citation-extraction-engine/history/evidence/2026-11-03-node-boundary-coverage-review.md",
+      "sha256": "18d54673811c8c4aae6ee9491df6a5884931d59b60ada1b929e4a0ce86890cae"
     }
   },
   "subjects": ["@beep/law-practice-server"],

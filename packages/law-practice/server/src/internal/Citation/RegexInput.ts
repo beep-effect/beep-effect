@@ -12,9 +12,13 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
-import { makeCitationPythonUnicode } from "./PythonUnicode.ts";
+import { makeCitationPythonUnicode, sliceCitationPythonStorage } from "./PythonUnicode.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
-import type { CitationPythonUnicodeFailure, CitationPythonUnicodeValue } from "./PythonUnicode.ts";
+import type {
+  CitationPythonSliceLayout,
+  CitationPythonUnicodeFailure,
+  CitationPythonUnicodeValue,
+} from "./PythonUnicode.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/RegexInput");
 const Role = LiteralKit(["source", "pattern"]).pipe(
@@ -162,6 +166,10 @@ export type CitationRegexProjection = typeof CitationRegexProjection.Type;
 export interface CitationPreparedRegexInput {
   readonly layout: CitationRegexInputLayout;
   readonly project: (input: unknown) => Effect.Effect<CitationRegexProjection, CitationRegexInputFailure>;
+  readonly slice: <E>(
+    input: unknown,
+    beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E>
+  ) => Effect.Effect<CitationPythonUnicodeStorage, E | CitationRegexInputFailure | CitationSafetyLimitExceeded>;
   readonly value: CitationPythonUnicodeValue;
 }
 const fail = (reason: CitationRegexInputFailure["reason"]) => CitationRegexInputFailure.make({ reason });
@@ -236,7 +244,25 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
       if (startChar === endChar) return CitationRegexProjectedPoint.make({ offset: startChar });
       return CitationRegexProjectedRange.make({ startChar, endChar });
     });
-    return { layout: expected, value, project };
+    const slice = Effect.fn("Citation.slicePreparedRegexSource")(function* <E>(
+      input: unknown,
+      beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E>
+    ) {
+      const range = yield* S.decodeUnknownEffect(RangeInput)(input).pipe(Effect.mapError(() => fail("invalid-range")));
+      if (range.end < range.start || range.end > value.pythonLength) return yield* fail("invalid-range");
+      return yield* sliceCitationPythonStorage(value.storage, range.start, range.end, beforeAllocate);
+    });
+    return {
+      layout: expected,
+      value,
+      project,
+      slice: Effect.fn("Citation.capturePreparedSourceSlice")(function* <E>(
+        input: unknown,
+        beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E>
+      ) {
+        return yield* slice(input, beforeAllocate);
+      }, timed),
+    };
   });
   const capture = <A>(body: Effect.Effect<A, CitationPythonUnicodeFailure>) =>
     body.pipe(

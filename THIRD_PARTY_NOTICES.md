@@ -41,8 +41,10 @@ edition-list mutation, using Effect Bytes and schema-derived record equivalence.
 `TokenEditions.ts` provides source set deduplication and nominative selection
 through the existing set adapter and captured edition hash/equality facts.
 Independent source observations and their proof limits are recorded in the
-citation-engine packet. Fresh-process hash production, raw regex/extra binding,
-custom protocols and complete public tokenizer integration remain open.
+citation-engine packet. `TokenCapture.ts` binds native source captures and named
+ordinals to these built-in constructors, preserving source failure order and
+frozen array/bool extras. Fresh-process hash production, general custom protocols
+and complete public tokenizer integration remain open.
 
 The citation oracle fixture baseline also incorporates normalized output and
 regex/extractor data from the official eyecite lock's `reporters-db 3.2.53` and
@@ -344,7 +346,9 @@ identity observations are recorded in the citation engine packet.
 into explicit little-endian storage and a separate JavaScript text projection.
 It preserves surrogate source code points, validates native widths and lengths,
 and uses bounded, interruptible scans. Projection does not normalize the native
-source representation or issue a runtime ownership capability.
+source representation or issue a runtime ownership capability. Native slicing
+also measures selected Python words and allocates their minimal canonical width
+only after the captured allocation-approval port accepts the layout.
 The literal cleaner adapter retains source code points selected by its existing
 substring/replacement scans and rebuilds canonical native storage without a
 round trip through JavaScript text.

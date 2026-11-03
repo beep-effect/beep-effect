@@ -4,7 +4,7 @@ import { makeCitationPythonHash } from "@beep/law-practice-server/internal/Citat
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import * as BunServices from "@effect/platform-bun/BunServices";
+import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -13,7 +13,7 @@ import * as S from "effect/Schema";
 import { loadCitationExtractorSelectionControls } from "./CitationExtractorSelection.fixtures.ts";
 
 const sameOrder = S.toEquivalence(S.Array(S.Natural));
-it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestServices: true })(
+it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestServices: true })(
   "static source extractor order",
   (it) => {
     it.effect("recomputes every synthetic repr hash and matches source set order and first introductions", () =>

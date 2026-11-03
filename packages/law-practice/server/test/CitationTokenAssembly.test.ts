@@ -13,7 +13,7 @@ import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { LiteralKit } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import * as BunServices from "@effect/platform-bun/BunServices";
+import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
@@ -66,7 +66,7 @@ const Corpus = S.fromJsonString(
   })
 );
 const failure = () => CitationTokenAssemblyFailure.make({ reason: "host-failed" });
-it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestServices: true })(
+it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestServices: true })(
   "token assembly",
   (it) => {
     it.effect("matches source mixed outputs and decisions using actual target token/edition merging", () =>

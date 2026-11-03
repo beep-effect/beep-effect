@@ -163,3 +163,29 @@
   no spelling allowlist or scanner exclusion is added.
 - Prevention: choose the existing hex carrier for opaque native-word fixtures
   before publishing their first digest-bound format.
+
+## 2026-11-03 — an empty Struct is not an exact empty kwargs dictionary
+
+- Work: bind decoded captures to the nine built-in source token constructors.
+- Evidence: the actual source rejects unknown plain-token keyword arguments,
+  but the target initially accepted one and published token identity zero.
+  `S.Struct({})` with excess-property checking did not express the intended
+  empty dictionary contract; the 54 independent source failure controls exposed
+  the mismatch.
+- Resolution: use the existing `S.Record(S.String, S.Never)` schema for empty
+  constructor extras. Every source failure control now matches, including
+  missing-group precedence and explicit null extras.
+- Prevention: use an explicit empty-record schema when the source requires zero
+  keyword keys; do not infer exact-dictionary semantics from an empty Struct.
+
+## 2026-11-03 — canonical JSON key order is not regex group-definition order
+
+- Work: materialize native named captures into real token objects.
+- Evidence: the oracle export sorts JSON object keys, while source groupdict
+  follows compiled named-group ordinals. The optional-first/body controls have
+  different lexical and definition order.
+- Resolution: retain an independent groupOrder array from actual source
+  groupdict and restore target names by their unique capture ordinals with
+  Effect Array/Order. Every constructor now asserts its output group-key order.
+- Prevention: preserve source-observable order separately before canonical JSON
+  normalization; do not treat wire object order as a semantic iteration receipt.

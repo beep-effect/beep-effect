@@ -4,7 +4,7 @@ import { makeCitationTokenText } from "@beep/law-practice-server/internal/Citati
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import * as BunServices from "@effect/platform-bun/BunServices";
+import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
 import * as Clock from "effect/Clock";
 import * as Digest from "effect/crypto/Digest";
@@ -40,7 +40,7 @@ const Corpus = S.fromJsonString(
   })
 ).pipe($I.annoteSchema("Corpus", { description: "Independent literal-space append_text observations." }));
 const native = (text: string) => ({ width: 1, bytes: new TextEncoder().encode(text) });
-it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestServices: true })("token text", (it) => {
+it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestServices: true })("token text", (it) => {
   it.effect("matches every independent source boundary and retains native storage identity", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

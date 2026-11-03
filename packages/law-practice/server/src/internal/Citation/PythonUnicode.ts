@@ -12,6 +12,7 @@ import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as MutableList from "effect/MutableList";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -112,6 +113,76 @@ const projectStorage = Effect.fnUntraced(function* (bytes: Uint8Array, width: 1 
   if (Str.length(chunk) > 0) MutableList.append(chunks, chunk);
   return A.join(MutableList.takeAll(chunks), "");
 });
+/** @internal @category models @since 0.0.0 */
+export class CitationPythonSliceLayout extends S.Opaque<CitationPythonSliceLayout, { readonly brand: unique symbol }>()(
+  S.Struct({
+    width: CitationPythonUnicodeStorage.fields.width,
+    pythonLength: S.Natural,
+    utf16Units: S.Natural,
+    byteLength: S.Natural,
+  }).pipe(
+    $I.annoteSchema("CitationPythonSliceLayout", {
+      description: "Exact receiving sizes of a validated native source substring, before payload allocation.",
+    })
+  )
+) {}
+const measureSlice = Effect.fn("Citation.measureNativeSlice")(function* (
+  source: CitationPythonUnicodeStorage,
+  start: number,
+  end: number
+) {
+  let largest = 0;
+  let units = 0;
+  for (let index = start; index < end; index++) {
+    if (index % 4096 === 0) yield* Effect.yieldNow;
+    const point = readPoint(source.bytes, index * source.width, source.width);
+    largest = Num.max(largest, point);
+    units += pointUnits(point);
+  }
+  const width = widthOf(largest);
+  return CitationPythonSliceLayout.make({
+    width,
+    pythonLength: end - start,
+    utf16Units: units,
+    byteLength: (end - start) * width,
+  });
+});
+const materializeSlice = Effect.fn("Citation.materializeNativeSlice")(function* (
+  source: CitationPythonUnicodeStorage,
+  start: number,
+  end: number,
+  layout: CitationPythonSliceLayout
+) {
+  const width = layout.width;
+  const bytes = new Uint8Array(layout.byteLength);
+  const view = new DataView(bytes.buffer);
+  for (let index = start; index < end; index++) {
+    if (index % 4096 === 0) yield* Effect.yieldNow;
+    const point = readPoint(source.bytes, index * source.width, source.width);
+    const offset = (index - start) * width;
+    if (width === 1) view.setUint8(offset, point);
+    else if (width === 2) view.setUint16(offset, point, true);
+    else view.setUint32(offset, point, true);
+  }
+  return CitationPythonUnicodeStorage.make({ width, bytes });
+});
+
+/** Materialize a range already validated by its captured source owner. Native
+ * storage and bounds are trusted here, never issued by decoding this layout.
+ * The receiver reserves exact units/bytes before allocating the new payload.
+ * @internal @category operations @since 0.0.0
+ */
+export const sliceCitationPythonStorage = Effect.fn("Citation.slicePythonStorage")(function* <E>(
+  source: CitationPythonUnicodeStorage,
+  start: number,
+  end: number,
+  beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E>
+) {
+  const layout = yield* measureSlice(source, start, end);
+  yield* beforeAllocate(layout);
+  return yield* materializeSlice(source, start, end, layout);
+});
+
 /**
  * Capture the intermediate ceiling and minimum operation/clean deadline.
  * Storage input is copied before the first scan yield; output bytes belong to

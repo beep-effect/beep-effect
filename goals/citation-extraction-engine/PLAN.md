@@ -317,6 +317,22 @@ controls. Whole-operation produced-text/mixed-output reservations and final
 regex-result/extra binding remain open. See
 [native gap evidence](history/evidence/2026-11-03-native-token-gaps.md).
 
+Latest native capture checkpoint (2026-11-03): owned source slicing now preserves
+canonical native widths and literal surrogate words across 137 independent cases.
+Raw decoded captures and ordinal-sorted named groups drive all 378 built-in
+constructor cases, 15 valid extras and 54 source failure cases; all 216 merge
+controls remain. The existing store serializes capacity borrowing and publication,
+with preallocation ledger approval and captured deadlines. Thirty-seven focused
+tests pass at the pre-main-merge checkpoint. General Python extras/custom protocols,
+whole-operation reservations, canonical extractor wiring and public tokenizer
+integration remain open. See [capture evidence](history/evidence/2026-11-03-native-capture-binding.md).
+
+Hosted head c08ab4a0d8 now passes the complete Bun and actual Node canonical regex
+witness comparisons and all 6,805 extractor bindings/twelve final-order vectors.
+This supersedes earlier pending hosted statements only for that exact head.
+Family review and adversarial scaling remain open. See
+[hosted qualification](history/evidence/2026-11-03-hosted-canonical-qualification.md).
+
 Latest worker evidence (2026-10-31): private process ownership now covers bounded
 schema frames, captured Clock timers, queue/active limits, forced stop,
 acknowledged cleanup and quarantine without permit reuse. Real-process tests

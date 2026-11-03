@@ -7,7 +7,7 @@ import {
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import * as BunServices from "@effect/platform-bun/BunServices";
+import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
@@ -57,7 +57,7 @@ const load = Effect.fn("EditionTest.load")(function* () {
   );
   return yield* S.decodeEffect(Corpus)(new TextDecoder().decode(bytes));
 });
-it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestServices: true })(
+it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestServices: true })(
   "token editions",
   (it) => {
     it.effect("performs actual target set deduplication and source nominative choice in every captured case", () =>

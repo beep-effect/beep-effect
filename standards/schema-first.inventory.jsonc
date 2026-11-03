@@ -1658,6 +1658,16 @@
       "reason": "Checks all 38 source events through current semantic fields, owned runtime objects and exact native hashes. The fixture codec does not manufacture the actual identity-bearing owner/table capabilities. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
     },
     {
+      "file": "packages/law-practice/server/test/CitationRuntimeSet.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 56,
+      "owner": "@beep/law-practice-server",
+      "reason": "Independent pinned-source golden replay and corruption/resource controls, not a target schema law suite. Fixture schemas authenticate exact oracle versions, hashes, counts and source observations; generated random fixture records would lose that source authority. Native representation properties are separately covered in CitationRegexInput.test.ts. Owner: @beep/law-practice-server. Exit: revisit if this file gains target schema laws beyond fixture authentication. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-03-native-capture-binding.md."
+    },
+    {
       "file": "packages/law-practice/server/test/CitationSessionDescriptors.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
@@ -1716,6 +1726,16 @@
       "line": 62,
       "owner": "@beep/law-practice-server",
       "reason": "PGlite-backed drizzle repository proof decodes fixed fixture rows through the real migration bundle to prove read-back with database-assigned ids, tenant isolation, id-ascending order, and typed driver failures; schema-derived arbitrary coverage for these entities lives with the law-practice domain model tests (same posture as the candor sibling and the migration proof entries above)."
+    },
+    {
+      "file": "packages/law-practice/server/test/integration/CitationExtractorSelection.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 65,
+      "owner": "@beep/law-practice-server",
+      "reason": "Independent pinned-source golden replay and corruption/resource controls, not a target schema law suite. Fixture schemas authenticate exact oracle versions, hashes, counts and source observations; generated random fixture records would lose that source authority. Native representation properties are separately covered in CitationRegexInput.test.ts. Owner: @beep/law-practice-server. Exit: revisit if this file gains target schema laws beyond fixture authentication. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-03-native-capture-binding.md."
     },
     {
       "file": "packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.service.ts",
