@@ -59,11 +59,11 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
 import { commandArgs } from "./support/commandArgs.ts";
 import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
 import type { SpawnRecord } from "@beep/commands/ScriptedSpawner";
 
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
 const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
 const gitPlatform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer);
 
