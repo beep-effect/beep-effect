@@ -820,3 +820,26 @@ SSH or 1Password variables; this is environment hygiene, not same-user secret
 isolation. Fresh remote observations remain unverified after the hardware-backed
 SSH route refused three authentication attempts. The protected stop and skipped
 host remain untouched. Qualification and every whole-goal criterion stay open.
+
+
+### Complete script entrypoint catalogue: 2026-11-03
+
+The [native catalogue join](research/nested-entrypoint-inventory-2026-11-03.json)
+compares the real root on stable 2.11.10 and canary 2.11.11-canary.1. Both
+clients agree on all 6,327 catalogue nodes and all 4,235 manifest script
+names and literal commands. The configured graph projection remains 4,528
+nodes, with 2,436 executable computations and 2,092 graph-only nodes. It is
+not the full script entrypoint inventory.
+
+The additional 1,799 script-only entrypoints now have explicit rows and an
+owner. For 1,309 of them, a configured wrapper's complete command literally
+invokes that script; 490 lack that specific simple caller form. These are
+source invocation edges, not execution counts or equivalence grants. Dynamic
+and composite callers still need review. All additional rows retain pending
+semantic review and no final disposition. The existing 204 keep-fresh decisions,
+2,232 pending configured reviews and qualification ledger remain unchanged.
+
+Two native queries took 90 and 89 milliseconds and executed no task bodies.
+The initial wider query hit its output bound; the reduced field selection
+kept the original limits. Query feature acceptance, task qualification and
+every whole-goal acceptance criterion remain incomplete.

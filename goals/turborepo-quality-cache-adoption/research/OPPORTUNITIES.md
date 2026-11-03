@@ -887,3 +887,17 @@ restarting the adapter or applying enrollment. Include installed helper source
 parity in package-layout migration handoffs. Refresh the needed helper
 independently so maintenance does not activate a later opt-in signing extension.
 The receipt preserves the source hashes and the 38-checkout before/after plan.
+
+
+### 2026-11-03 — Configured task graphs omit script-only entrypoints
+
+The real `turbo query` catalogue on both pinned clients exposes 1,799 script
+entrypoints outside the requested configured graph. All match manifest names
+and literal command bytes. The earlier 2,436-executable projection remained a
+useful graph census, but the nested-command obligation needed an explicit
+complete inventory. The new receipt names every additional entrypoint and
+1,309 literal wrapper-call relationships without inventing execution or
+equivalence. Use the manifest/query join during future census refreshes, and
+retain the remaining role and dynamic-caller reviews as unfinished work.
+The first query selected unnecessary fields and reached its one-MiB bound;
+reducing fields preserved the budget and captured the complete needed catalogue.

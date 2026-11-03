@@ -1,6 +1,6 @@
 {
   "schemaVersion": "cache-adoption-population-refresh/v1",
-  "authority": "Inventory and review queue only. Cache remains the qualification state writer.",
+  "authority": "Inventory and review queue only. Cache remains the qualification state writer. The configured graph projection is supplemented by the linked complete manifest-script entrypoint inventory; neither catalogue reports task executions.",
   "sourceBaseRevision": "31e2ac20f34a1c699a35be55f67881dbf0d8ffd0",
   "turboVersion": "2.11.10",
   "counts": {
@@ -16,7 +16,11 @@
       "excluded": 5
     },
     "priorReviewedDispositionsRetained": 200,
-    "priorReviewedComputationsStillPresent": 199
+    "priorReviewedComputationsStillPresent": 199,
+    "declaredExecutableScriptEntrypoints": 4235,
+    "configuredGraphExecutableComputations": 2436,
+    "additionalScriptOnlyEntrypoints": 1799,
+    "queryCatalogueNodes": 6327
   },
   "provenance": {
     "censusSha256": "1ace258b07a1fa04216a40ed9730d9ab8163055b9444b8ff2e5ad3724380c77c",
@@ -1866,7 +1870,7 @@
     }
   },
   "unresolvedCensusObligations": [
-    "Classify nested workspace and root command semantics.",
+    "Classify all nested workspace and root command semantics, including the 1799 explicitly enumerated script-only entrypoints in the linked inventory.",
     "Review dynamic Cache/CI/Quality/Yeet entrypoint branches and their external verdicts."
   ],
   "configurations": {
@@ -64500,5 +64504,13 @@
     "A configured cache flag grants no qualification or hosted-proof authority.",
     "Every current semantic review and final disposition remains open until separately proven.",
     "The retained prior-reviewed population preserves earlier decisions, including computations no longer present; this refresh does not revalidate them."
-  ]
+  ],
+  "nestedEntrypointInventory": {
+    "path": "research/nested-entrypoint-inventory-2026-11-03.json",
+    "scriptOnlyEntrypoints": 1799,
+    "withLiteralConfiguredCaller": 1309,
+    "withoutLiteralConfiguredCaller": 490,
+    "reviewState": "pending",
+    "countsDoNotMeanDistinctSemanticComputations": true
+  }
 }

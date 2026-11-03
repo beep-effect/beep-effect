@@ -795,3 +795,20 @@ receipts and qualification evidence keep their original source and authority.
 - Reverse only the installed scanner using the verified backup or named prior
   accepted Git source, with mode 0700. The receipt retains numeric bounds,
   source identities, current local adapter observations and remote evidence gaps.
+
+
+### Enumerate nested script entrypoints without inventing executions, 2026-11-03
+
+The configured dry-run graph is not the whole manifest-script population.
+Keep its 2,436 executable rows and 2,092 graph-only nodes unchanged, and join
+both pinned clients' complete query catalogue to all 4,235 manifest scripts.
+Explicitly retain the additional 1,799 script-only entrypoints for semantic,
+caller and pure-boundary review. A literal `bun run <script>` invocation edge
+does not grant semantic equivalence, execution, qualification or cache reuse.
+
+Bound this metadata observation to one process at a time, twelve seconds and
+one MiB stdout per query, sixty-four KiB stderr, thirty seconds aggregate and
+zero repository task bodies. Verify the 458 census source bindings before and
+after capture. Keep raw bounded captures private, preserve refusals and publish
+only source identities and the complete normalized inventory. Reversal removes
+this supplementary inventory projection; runtime and qualification are unchanged.
