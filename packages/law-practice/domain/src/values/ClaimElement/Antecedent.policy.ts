@@ -13,6 +13,7 @@
  */
 
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
@@ -26,14 +27,26 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { PatentClaim } from "../PatentDocument/PatentDocument.model.ts";
 import { AntecedentFinding, AntecedentRuleId } from "./AntecedentFinding.model.ts";
-import { ClaimTermIntroducingDeterminer, ClaimTermReferringDeterminer } from "./ClaimElement.behavior.ts";
-import { ClaimTermDeterminer, ClaimTermRef } from "./ClaimElement.model.ts";
+import {
+  ClaimTermIntroducingDeterminer,
+  ClaimTermReferringDeterminer,
+  decomposeClaimInput,
+} from "./ClaimElement.behavior.ts";
+import { ClaimInputQualification } from "./ClaimElement.input.model.ts";
+import {
+  ClaimInputCoverageIssue,
+  ClaimInputDecomposition,
+  ClaimInputInspection,
+  ClaimInputInspectionReport,
+} from "./ClaimElement.inspection.model.ts";
+import { ClaimTermDeterminer, ClaimTermRef, claimNumberOfPath } from "./ClaimElement.model.ts";
 import {
   isCountedHead,
   isExplicitAbbreviatedHead,
   isSingleModifiedHead as isSingleModifiedOf,
 } from "./ClaimTerm.compatibility.ts";
 import type { PatentClaims } from "../PatentDocument/PatentDocument.model.ts";
+import type { ClaimInputCollection } from "./ClaimElement.input.model.ts";
 import type { ClaimTerm } from "./ClaimElement.model.ts";
 import type { ClaimElementTree } from "./ClaimElement.tree.model.ts";
 
@@ -436,70 +449,10 @@ const verdictFor =
       : O.some(uncovered(referring, rule.chainUnresolvable));
   };
 
-/**
- * Deterministic rule policy: resolves every referring term along each dependency chain of its claim.
- *
- * **Details**
- *
- * Unsupported possessives (`its` / `their`) are retained as `bare` terms and
- * yield `pattern-not-covered`, without attempting antecedent resolution.
- *
- * Referring terms are `the`/`said` terms, except the idioms `the same`,
- * `the like`, `the art`, `the other`, `the following` and `the case`. Along one
- * chain, a term's introductions are the `a`/`an`/`at least one`/`plurality of`
- * terms earlier in its own claim or anywhere in an ancestor claim. Then, in
- * order:
- *
- * - exactly one introduction with the same head resolves it; several are
- *   `ambiguous-antecedent`;
- * - otherwise a head that differs only in grammatical number is
- *   `number-mismatch` (several: `ambiguous-antecedent`);
- * - otherwise exactly one introduction with one extra modifier word ("an
- *   optical sensor" for "the sensor") resolves it; several, as with "a first
- *   sensor" and "a second sensor", are `ambiguous-antecedent`;
- * - otherwise an introduction in a claim outside the chain is
- *   `antecedent-outside-chain`, and no introduction at all is
- *   `missing-antecedent`.
- *
- * Coverage limits yield `pattern-not-covered`: a tree whose claim is not in
- * the set, a chain that reaches an absent or non-earlier claim, and a chain
- * through a claim with no tree when the term does not resolve inside the
- * decomposed part. Findings are sorted by claim number, referring span start,
- * then chain; identical findings are reported once. Dependency traversal is
- * bounded across the invocation, including copied paths and term evaluation;
- * exhausted work or depth discards that term's incomplete results and yields
- * an explicit `pattern-not-covered` finding with rule `chain-work-limit`.
- *
- * **Example** (Report a definite term without an introduction)
- *
- * ```ts
- * import * as A from "effect/Array"
- * import * as Effect from "effect/Effect"
- * import * as S from "effect/Schema"
- * import { antecedentPolicy, decomposeClaim } from "@beep/law-practice-domain/values/ClaimElement"
- * import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument"
- *
- * const PosInt = S.Int.check(S.isGreaterThan(0))
- *
- * const claim = PatentClaim.cases.independent.make({
- *   body: "a controller mounted in the housing.",
- *   claimNumber: PosInt.make(1),
- *   claimText: "A system comprising: a controller mounted in the housing.",
- *   preamble: "A system",
- *   transition: "comprising"
- * })
- * const tree = Effect.runSync(decomposeClaim(claim, [claim]))
- * const findings = antecedentPolicy([tree], [claim])
- * console.log(A.map(findings, ({ kind }) => kind)) // ["missing-antecedent"]
- * ```
- *
- * @category policies
- * @since 0.0.0
- */
-export const antecedentPolicy: {
-  (claims: Parameters<AntecedentPolicy>[1]): (trees: Parameters<AntecedentPolicy>[0]) => ReturnType<AntecedentPolicy>;
-  (...args: Parameters<AntecedentPolicy>): ReturnType<AntecedentPolicy>;
-} = dual(2, ((trees: ReadonlyArray<ClaimElementTree>, claims: PatentClaims): ReadonlyArray<AntecedentFinding> => {
+const policyInContext = (
+  trees: ReadonlyArray<ClaimElementTree>,
+  claims: ReadonlyArray<PatentClaim>
+): ReadonlyArray<AntecedentFinding> => {
   const claimIndex = HashMap.fromIterable(
     A.map(claims, (claim): readonly [number, PatentClaim] => [claim.claimNumber, claim])
   );
@@ -569,4 +522,178 @@ export const antecedentPolicy: {
     );
   });
   return A.dedupe(A.map(A.sort(ranked, rankedOrder), ({ finding }) => finding));
-}) satisfies AntecedentPolicy);
+};
+
+/**
+ * Deterministic rule policy: resolves every referring term along each dependency chain of its claim.
+ *
+ * **Details**
+ *
+ * Unsupported possessives (`its` / `their`) are retained as `bare` terms and
+ * yield `pattern-not-covered`, without attempting antecedent resolution.
+ *
+ * Referring terms are `the`/`said` terms, except the idioms `the same`,
+ * `the like`, `the art`, `the other`, `the following` and `the case`. Along one
+ * chain, a term's introductions are the `a`/`an`/`at least one`/`plurality of`
+ * terms earlier in its own claim or anywhere in an ancestor claim. Then, in
+ * order:
+ *
+ * - exactly one introduction with the same head resolves it; several are
+ *   `ambiguous-antecedent`;
+ * - otherwise a head that differs only in grammatical number is
+ *   `number-mismatch` (several: `ambiguous-antecedent`);
+ * - otherwise exactly one introduction with one extra modifier word ("an
+ *   optical sensor" for "the sensor") resolves it; several, as with "a first
+ *   sensor" and "a second sensor", are `ambiguous-antecedent`;
+ * - otherwise an introduction in a claim outside the chain is
+ *   `antecedent-outside-chain`, and no introduction at all is
+ *   `missing-antecedent`.
+ *
+ * Coverage limits yield `pattern-not-covered`: a tree whose claim is not in
+ * the set, a chain that reaches an absent or non-earlier claim, and a chain
+ * through a claim with no tree when the term does not resolve inside the
+ * decomposed part. Findings are sorted by claim number, referring span start,
+ * then chain; identical findings are reported once. Dependency traversal is
+ * bounded across the invocation, including copied paths and term evaluation;
+ * exhausted work or depth discards that term's incomplete results and yields
+ * an explicit `pattern-not-covered` finding with rule `chain-work-limit`.
+ *
+ * **Example** (Report a definite term without an introduction)
+ *
+ * ```ts
+ * import * as A from "effect/Array"
+ * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
+ * import { antecedentPolicy, decomposeClaim } from "@beep/law-practice-domain/values/ClaimElement"
+ * import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
+ *
+ * const claim = PatentClaim.cases.independent.make({
+ *   body: "a controller mounted in the housing.",
+ *   claimNumber: PosInt.make(1),
+ *   claimText: "A system comprising: a controller mounted in the housing.",
+ *   preamble: "A system",
+ *   transition: "comprising"
+ * })
+ * const tree = Effect.runSync(decomposeClaim(claim, [claim]))
+ * const findings = antecedentPolicy([tree], [claim])
+ * console.log(A.map(findings, ({ kind }) => kind)) // ["missing-antecedent"]
+ * ```
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export const antecedentPolicy: {
+  (claims: Parameters<AntecedentPolicy>[1]): (trees: Parameters<AntecedentPolicy>[0]) => ReturnType<AntecedentPolicy>;
+  (...args: Parameters<AntecedentPolicy>): ReturnType<AntecedentPolicy>;
+} = dual(2, policyInContext satisfies AntecedentPolicy);
+
+// Qualification establishes strictly prior, unique parent numbers. This
+// ordered pass therefore propagates structural failure without enumerating
+// dependency paths, including claims that contain no referring terms.
+const unavailableAncestors = (decompositions: ReadonlyArray<ClaimInputDecomposition>) => {
+  const numbered = A.flatMap(decompositions, (decomposition) =>
+    ClaimInputQualification.guards["context-ready"](decomposition.qualification)
+      ? [{ decomposition, claim: decomposition.qualification.claim }]
+      : []
+  );
+  let ready = HashSet.empty<number>();
+  let unavailable = HashMap.empty<number, ReadonlyArray<ClaimInputCoverageIssue>>();
+  for (const { decomposition, claim } of A.sort(
+    numbered,
+    Order.mapInput(Num.Order, (entry: (typeof numbered)[number]) => entry.claim.claimNumber)
+  )) {
+    if (decomposition.status !== "decomposed") continue;
+    const issues = PatentClaim.match(claim, {
+      independent: () => A.empty<ClaimInputCoverageIssue>(),
+      dependent: ({ claimReferences }) =>
+        A.map(
+          A.filter(claimReferences, (parent) => !HashSet.has(ready, parent)),
+          (parentClaimNumber) => ClaimInputCoverageIssue.cases["ancestor-unavailable"].make({ parentClaimNumber })
+        ),
+    });
+    unavailable = HashMap.set(unavailable, decomposition.qualification.record.sourceOrdinal, issues);
+    if (A.isReadonlyArrayEmpty(issues)) ready = HashSet.add(ready, claim.claimNumber);
+  }
+  return unavailable;
+};
+
+const inspectionFindings = (findings: ReadonlyArray<AntecedentFinding>, indexComplete: boolean) =>
+  A.dedupe(
+    A.map(findings, (finding) =>
+      !indexComplete && (finding.kind === "missing-antecedent" || finding.kind === "antecedent-outside-chain")
+        ? AntecedentFinding.cases["pattern-not-covered"].make({
+            referring: finding.referring,
+            rule: AntecedentRuleId.make("source-index-incomplete"),
+          })
+        : finding
+    )
+  );
+
+/**
+ * Inspect preserved source records with explicit coverage and ancestry uncertainty.
+ *
+ * **Details**
+ * Normalization and decomposition run here, so callers cannot invent a sparse
+ * PatentClaims set. Every source record survives. Any unavailable ancestor
+ * prevents checking that descendant, even without referring terms. An
+ * incomplete document index turns missing/outside-chain verdicts into explicit
+ * uncovered findings; supported in-chain ambiguity and number mismatch remain
+ * advisory findings. Partial and unchecked records never establish a clean result.
+ *
+ * **Example** (Inspect the source-ledger operation)
+ * ```ts
+ * import { inspectClaimInput } from "@beep/law-practice-domain/values/ClaimElement"
+ * console.log(typeof inspectClaimInput) // function
+ * ```
+ * @category policies
+ * @since 0.0.0
+ */
+export const inspectClaimInput = Effect.fn("ClaimElement.inspectClaimInput")(function* (
+  input: ClaimInputCollection
+): Effect.fn.Return<ClaimInputInspectionReport> {
+  const decompositions = yield* decomposeClaimInput(input);
+  const unavailable = unavailableAncestors(decompositions);
+  const eligible = A.filter(
+    decompositions,
+    (decomposition) =>
+      decomposition.status === "decomposed" &&
+      O.exists(HashMap.get(unavailable, decomposition.qualification.record.sourceOrdinal), A.isReadonlyArrayEmpty)
+  );
+  const usable = A.filter(eligible, ClaimInputDecomposition.guards.decomposed);
+  const indexComplete = usable.length === input.records.length;
+  const findings = inspectionFindings(
+    policyInContext(
+      A.map(usable, ({ tree }) => tree),
+      A.map(usable, ({ qualification }) => qualification.claim)
+    ),
+    indexComplete
+  );
+  const records = A.map(input.records, (_, index): ClaimInputInspection => {
+    const decomposition = O.getOrThrow(A.get(decompositions, index));
+    if (decomposition.status !== "decomposed") {
+      return ClaimInputInspection.cases.unchecked.make({
+        decomposition,
+        coverage: [ClaimInputCoverageIssue.cases["record-unavailable"].make({})],
+      });
+    }
+    const ancestry = O.getOrThrow(HashMap.get(unavailable, decomposition.qualification.record.sourceOrdinal));
+    if (A.isReadonlyArrayNonEmpty(ancestry)) {
+      return ClaimInputInspection.cases.unchecked.make({ decomposition, coverage: ancestry });
+    }
+    const ownFindings = A.filter(findings, (finding) =>
+      Num.Equivalence(claimNumberOfPath(finding.referring.path), decomposition.tree.claimNumber)
+    );
+    const coverage = A.appendAll(
+      indexComplete ? [] : [ClaimInputCoverageIssue.cases["global-index-incomplete"].make({})],
+      A.some(ownFindings, AntecedentFinding.guards["pattern-not-covered"])
+        ? [ClaimInputCoverageIssue.cases["policy-uncovered"].make({})]
+        : []
+    );
+    return A.isReadonlyArrayNonEmpty(coverage)
+      ? ClaimInputInspection.cases.partial.make({ decomposition, findings: ownFindings, coverage })
+      : ClaimInputInspection.cases.complete.make({ decomposition, findings: ownFindings });
+  });
+  return ClaimInputInspectionReport.make({ input, indexStatus: indexComplete ? "complete" : "incomplete", records });
+});

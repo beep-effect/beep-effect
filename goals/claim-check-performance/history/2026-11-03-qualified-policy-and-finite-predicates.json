@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "claim-performance-qualified-policy/v1",
+  "sourceFreeze": "research/implementation-finite-inspection-policy-002.json",
+  "resultSha256": "e11f46803eb629edd012aa77cba9f5d95da4ae89e23090f64b4e364ed4436e28",
+  "legacyStrictMatches": 37,
+  "selectedClaims": 538,
+  "lostOriginalPasses": [],
+  "unchangedOriginalManifest": true,
+  "protectedOriginalPathArtifacts": 1210,
+  "protectedHistoricalRunnerArtifacts": 3,
+  "domainFocusedTests": 57,
+  "finitePredicateTests": 2,
+  "domainPackageAudit": "passed",
+  "domainDocgen": "passed",
+  "independentRequiredFindings": 0,
+  "priorRejectedLexicalCandidateRetained": true,
+  "inspectionPolicyImplemented": true,
+  "productServiceToolIntegrated": false,
+  "productPathCoverageMeasured": false,
+  "usefulnessEstablished": false,
+  "goalComplete": false,
+  "diagnosticChanges": {
+    "nodeKindOrBoundaryAffectedClaims": [281, 277],
+    "functionalEdgeAffectedClaims": [417, 415],
+    "termAffectedClaims": [275, 277],
+    "dependencyEdgeAffectedClaims": [210, 213]
+  },
+  "diagnosticCaveat": "Overlapping mismatch categories; not accuracy gates. No exact-match gain. Future service/tool work is separate."
+}

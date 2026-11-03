@@ -1,6 +1,6 @@
 # Claim Checker Performance Plan
 
-Status: active. Current P0: frozen numerical gates and preservation; baseline reproduced; first reference grammar repair recovers 15 inputs with zero losses.
+Status: active. Strict recovery remains 37/538. The qualified per-record domain policy is implemented; service/tool integration and every usefulness gate remain unproved. Frozen references, all previous results and the original 37 passes are retained.
 
 ## P0 — Baseline and evaluation integrity
 
@@ -42,7 +42,7 @@ native cleanup. Mark completed-retained only after P0-P4 truly pass.
 
 ## Current next actions
 
-1. Completed: baseline37/538, 37 retained, all 1,213 files exact.
+1. Completed: baseline37/538, 37 retained, all 1,213 artifacts exact (1,210 original paths plus three explicit historical runner archives).
 2. Diagnostics: node kind/boundary differences in281 claims; term differences275; dependency edges210; antecedent edges436. These overlap.
 3. Completed: record-based numerical evaluator and ten anti-silence/unknown/retention tests. Independent provenance remains separate.
 4. Reference grammar repair complete; next: broad hierarchy/term rules and independently qualified fresh source cohorts.

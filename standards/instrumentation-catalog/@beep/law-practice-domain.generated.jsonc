@@ -8,6 +8,7 @@
   "spans": [
     {"name":"ClaimElement.decomposeClaim","owner":"@beep/law-practice-domain","family":"slice","conforms":true},
     {"name":"ClaimElement.decomposeClaimInput","owner":"@beep/law-practice-domain","family":"slice","conforms":true},
+    {"name":"ClaimElement.inspectClaimInput","owner":"@beep/law-practice-domain","family":"slice","conforms":true},
     {"name":"OfficeActionFixture.source","owner":"@beep/law-practice-domain","family":"slice","conforms":true},
     {"name":"PatentDocument.claimsFromDraft","owner":"@beep/law-practice-domain","family":"slice","conforms":true},
     {"name":"PatentDocument.normalize","owner":"@beep/law-practice-domain","family":"slice","conforms":true},

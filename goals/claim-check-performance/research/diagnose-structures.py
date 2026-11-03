@@ -97,7 +97,14 @@ def diagnose(root, directory):
     return {"schemaVersion": "claim-performance-diagnostics/v1", "authoritativeScorerChanged": False,
             "diagnosticOnly": True, "implementationDigest": results["implementationDigest"],
             "overlappingFailureCounts": dict(counts),
-            "closest": sorted(rows, key=lambda row: (row["differenceCount"], row["familyId"], row["claimNumber"]))[:30]}
+            "closest": sorted(rows, key=lambda row: (row["differenceCount"], row["familyId"], row["claimNumber"]))[:30],
+            # Global nearest matches can hide entire recurring error classes.
+            # These are development diagnostics only, never a scorer or cohort filter.
+            "closestByFeature": {
+                feature: sorted((row for row in rows if feature in row["features"]),
+                                key=lambda row: (row["differenceCount"], row["familyId"], row["claimNumber"]))[:10]
+                for feature in sorted({feature for row in rows for feature in row["features"]})
+            }}
 
 
 if __name__ == "__main__":

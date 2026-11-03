@@ -35,3 +35,21 @@ The verifier reports 1,210 original paths and three archives separately, checks
 active hashes; SPEC separately requires report-equivalence replay. No diagnostic is disabled.
 Future protocol freezes should distinguish immutable historical executable
 artifacts from active source paths before repository-wide syntax migrations.
+
+## Closest-only diagnostics hide recurring categories
+
+The global closest-30 sample contained zero node mismatches despite 281 claims
+with node-kind/boundary discrepancies. Added a separate nearest-ten sample for
+every observed category, keeping the original closest30, counts, scorer and
+cohort unchanged. Diagnostic output remains private because it contains source
+claim text. The first finite-predicate repair reduces affected node claims from
+281 to277 but gives no strict-match gain; other categories can worsen.
+
+## Plausible local consistency is not retention proof
+
+Removing a redundant exact-head restriction after antecedent resolution passed
+synthetic tests and independent code review, but the unchanged 538-claim replay
+scored33/538: zero gains and four protected losses. The runtime change was
+reverted. Its source freeze, complete private outputs, public failure receipt
+and proposed patch remain available. Never accept a plausible parser change
+from focused examples alone, and do not repair the measurement by editing gold.

@@ -372,7 +372,10 @@ const isPredicateToken = (tokens: ReadonlyArray<Span>, index: number): boolean =
   );
   const finite = O.exists(current, (word) =>
     A.some([word, Str.replace(/s$/u, "")(word), Str.replace(/es$/u, "")(word)], (base) =>
-      HashSet.has(HashSet.make("display", "extend", "mesh", "embed", "include", "incorporate"), base)
+      HashSet.has(
+        HashSet.make("display", "extend", "mesh", "embed", "include", "incorporate", "rotate", "go", "generate"),
+        base
+      )
     )
   );
   const clauseVerb = O.exists(previous, (word) => HashSet.has(HashSet.make("to", "that", "which"), word));
