@@ -205,6 +205,15 @@ from standard re, construction/escape rows and Hyperscan lifecycle/refinement.
 No family proof or unsupported source-engine behavior is promoted. See
 [modes and source engines](history/evidence/2026-11-03-regex-modes-and-source-engines.md).
 
+Latest hosted startup repair (2026-11-03): Check on `559eedb77f` and recent main
+heads failed before any jobs because the shared Heavy producer requests Actions
+read while four callers capped it at none. Raise only those caller-job ceilings
+to the existing contents/actions read pair; ordinary called quality jobs keep
+their contents-only tokens and the protected producer remains manual/main-only.
+The negative regression and four focused policy controls pass. New hosted
+startup and later exact-head checks remain required. See
+[startup permission repair](history/evidence/2026-11-03-heavy-startup-permission-repair.md).
+
 Latest worker evidence (2026-10-31): private process ownership now covers bounded
 schema frames, captured Clock timers, queue/active limits, forced stop,
 acknowledged cleanup and quarantine without permit reuse. Real-process tests

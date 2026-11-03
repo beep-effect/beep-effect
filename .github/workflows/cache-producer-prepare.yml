@@ -15,6 +15,11 @@ jobs:
     name: Build candidate producer adapter
     if: github.ref == 'refs/heads/main'
     # The runner group admits the reusable Heavy leaf, not this caller.
+    # The reusable workflow's nested producer requests this validation ceiling.
+    # Its selected inspection/preparation job retains contents-only permissions.
+    permissions:
+      contents: read
+      actions: read
     uses: beep-effect/beep-effect/.github/workflows/heavy.yml@main
     with:
       admitted: false

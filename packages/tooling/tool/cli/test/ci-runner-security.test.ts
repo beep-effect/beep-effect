@@ -1630,6 +1630,41 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       }
     })
   );
+  it.effect("keeps reusable Heavy callers compatible with the protected producer permission ceiling", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const heavy = parseWorkflowYaml(yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`));
+      const requested = yamlAt(heavy, ["jobs", "producer-execute", "permissions"]);
+      expect(requested).toEqual({ contents: "read", actions: "read" });
+      const callers = [
+        ["check.yml", "heavy"],
+        ["heavy-admit.yml", "heavy"],
+        ["cache-producer-inspect.yml", "inspect"],
+        ["cache-producer-prepare.yml", "prepare"],
+        ["cache-producer.yml", "produce"],
+      ] as const;
+      for (const [file, job] of callers) {
+        const text = yield* fs.readFileString(`${root}/.github/workflows/${file}`);
+        const caller = parseWorkflowYaml(text);
+        expect(yield* workflowPolicyDiagnostics(file, text), file).toEqual([]);
+        expect(yamlAt(caller, ["jobs", job, "uses"]), file).toBe(
+          "beep-effect/beep-effect/.github/workflows/heavy.yml@main"
+        );
+        const allowed = yamlAt(caller, ["jobs", job, "permissions"]) ?? yamlAt(caller, ["permissions"]);
+        expect(allowed, file).toEqual(requested);
+      }
+      // The caller ceiling permits validation; ordinary quality jobs still
+      // strip Actions access and cannot select the protected producer mode.
+      expect(yamlAt(heavy, ["jobs", "verify", "permissions"])).toEqual({ contents: "read" });
+      const check = parseWorkflowYaml(yield* fs.readFileString(`${root}/.github/workflows/check.yml`));
+      expect(yamlAt(check, ["jobs", "heavy", "with", "producer_execution"])).toBeUndefined();
+      expect(yamlAt(heavy, ["jobs", "producer-execute", "if"])).toContain(
+        "github.workflow_ref == 'beep-effect/beep-effect/.github/workflows/cache-producer.yml@refs/heads/main'"
+      );
+    })
+  );
+
   it.effect("keeps protected source inspection credential-free and retains only its bounded report", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
