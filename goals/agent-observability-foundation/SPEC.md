@@ -28,21 +28,40 @@ Do not infer that an enum, installed app, green service, transport acknowledgmen
 - Claiming deployment or goal completion from packet authoring or local tests alone.
 - Deleting user data, removing recovery material or changing protected credentials as a shortcut.
 
-## Acceptance criteria
+## Domain acceptance evidence — qualified retained scope
 
-- [ ] Publish a typed host/root/route inventory with separate capability, known-launch and expected-event denominators; unsupported/excluded/idle/stale/failed/unknown states are distinct.
-- [ ] Preserve repository, clone, worktree, source session, task, attempt and event-occurrence identity separately; global Codex inputs never inherit the ingestion checkout as asserted source identity.
-- [ ] Prove fair incremental discovery for N+1 sources, rotation/truncation, partial lines, copied files, oversized growth, retired worktrees and permission errors with synthetic fixtures.
-- [ ] Prove event-time preservation and absence of invented durations through actual encoded OTLP, including historical replay and mixed timestamp offsets.
-- [ ] Prove a bounded metadata-only native intake and journal; document the exact upstream acknowledgment boundary and pre-intake loss window.
-- [ ] Derive one mutually exclusive delivery state per event from append-only receipt facts; test partial success, lost acknowledgment, crash-after-acceptance, restart, duplicate send, queue exhaustion and reclamation.
-- [ ] Normalize Claude/native usage into Phoenix fields with a provider-specific cache fixture; reconcile encoded records, stored queries and UI/API totals without double counting.
-- [ ] Preserve deployed transform/prom-label-collisions in dankserver source; qualify the rendered configuration before applying any deployment.
-- [ ] Provide owned persistent queue bounds and health signals for lag, refusal, failed delivery, disk pressure, missing sources and missing collector self-metrics; distinguish healthy idle from stopped collection.
-- [ ] Fix health-check path and backup/retention reporting weaknesses with synthetic tests; verify exact policy identity and project assignment, not the first policy returned.
-- [ ] Keep the historical recovery hold intact until its resource-integrity investigation and bounded replacement proof support release; no blind restoration of old units.
-- [ ] Qualify one declared host/repo with one CLI and one desktop-marked fixture against a disposable backend, then a tightly bounded canary/live route with rollback. Never claim every real session was captured.
-- [ ] Record privacy/retention/dead-letter ownership, old-ID compatibility, project producers and a tested rollback. Preserve historical raw archives without reingesting them by default.
+These thirteen criteria are supported by the [acceptance audit](research/ACCEPTANCE-EVIDENCE-AUDIT.md),
+[retained qualification](research/RETAINED-FINAL-QUALIFICATION.md) and
+[latest source comparison](ops/history/shared-repair-source-applicability-20261102.json)
+at their recorded source, synthetic, pinned-backend and historical-canary scopes.
+A checked box records qualified domain support. It does not certify a fresh
+execution at this PR head, current exact-source root admission, complete
+transitive dependency closure, production enrollment or final goal completion.
+Original receipts and source maps remain unchanged. All seven real-harness
+populations remain Unknown, and the historical recovery hold remains in force.
+New current-source admission requires fresh qualification.
+
+- [x] Publish a typed host/root/route inventory with separate capability, known-launch and expected-event denominators; unsupported/excluded/idle/stale/failed/unknown states are distinct.
+- [x] Preserve repository, clone, worktree, source session, task, attempt and event-occurrence identity separately; global Codex inputs never inherit the ingestion checkout as asserted source identity.
+- [x] Prove fair incremental discovery for N+1 sources, rotation/truncation, partial lines, copied files, oversized growth, retired worktrees and permission errors with synthetic fixtures.
+- [x] Prove event-time preservation and absence of invented durations through actual encoded OTLP, including historical replay and mixed timestamp offsets.
+- [x] Prove a bounded metadata-only native intake and journal; document the exact upstream acknowledgment boundary and pre-intake loss window.
+- [x] Derive one mutually exclusive delivery state per event from append-only receipt facts; test partial success, lost acknowledgment, crash-after-acceptance, restart, duplicate send, queue exhaustion and reclamation.
+- [x] Normalize Claude/native usage into Phoenix fields with a provider-specific cache fixture; reconcile encoded records, stored queries and UI/API totals without double counting.
+- [x] Preserve deployed transform/prom-label-collisions in dankserver source; qualify the rendered configuration before applying any deployment.
+- [x] Provide owned persistent queue bounds and health signals for lag, refusal, failed delivery, disk pressure, missing sources and missing collector self-metrics; distinguish healthy idle from stopped collection.
+- [x] Fix health-check path and backup/retention reporting weaknesses with synthetic tests; verify exact policy identity and project assignment, not the first policy returned.
+- [x] Keep the historical recovery hold intact until its resource-integrity investigation and bounded replacement proof support release; no blind restoration of old units.
+- [x] Qualify one declared host/repo with one CLI and one desktop-marked fixture against a disposable backend, then a tightly bounded canary/live route with rollback. Never claim every real session was captured.
+- [x] Record privacy/retention/dead-letter ownership, old-ID compatibility, project producers and a tested rollback. Preserve historical raw archives without reingesting them by default.
+
+### Final delivery gate
+
+The canonical verifier determines final delivery independently of these domain
+marks. It requires current final-head hosted checks and resolved review under
+the ordinary window, a positive exact-head readiness verdict preserved before
+the strict merge, and an actually VERIFIED post-merge completion receipt with
+the completed-retained projection. This proposal does not predict that outcome.
 
 ## Dependencies
 
@@ -604,3 +623,65 @@ is proof-side producer association, not a new real-harness capability or populat
 claim. Both stages retain raw proof evidence and private queues while removing only
 owned temporary units/containers. Reversal is the tested pause/stop/removal path;
 historical forwarders, archives and production collector configuration remain held.
+
+
+### Verification provenance and failure-cleanup decision (2026-11-02)
+
+Identify the coverage artifact version as the CLI's directly imported processing
+library, independently check installed package metadata, and keep the supported
+version strict. The earlier `1.0.2` label cannot stand in for the actual `2.1.0`
+processor. Historical artifacts remain unchanged; current strict readers refuse
+the stale label. Coverage arithmetic and floors are not relaxed.
+
+Use an owned test clock to separate protocol validation from deadline behavior.
+Retain real sockets and database commits, explicitly test the timeout boundary,
+and release held replies before client/server teardown under LIFO finalization.
+The enclosing-scope regression preserves the original failure through cleanup.
+These fixture changes do not change production deadlines. Reversal is a normal
+source PR; retain original negative and positive receipts rather than rewriting
+history or rerunning unqualified production collection.
+
+Retained synthetic-source applicability and current exact-source root admission
+are separate claims. Incoming legacy Git snapshot changes are outside the
+retained synthetic execution path, as documented in the post-repair comparison.
+Keep the exact-byte admission guard intact and require new qualification for any
+new current-source admission. This preserves the recovery hold and all seven
+real-harness populations as Unknown while scoped source/hosted verification and
+strict delivery proceed.
+
+
+### Routine blocker autonomy decision (2026-11-02)
+
+Treat CI waiting, attributed failures, local admission refusal and publish/verify
+sequencing as repair or routing work. Reuse the authoritative observer and publish
+reviewable work with explicit local proof limits. A repeated routine blocker is
+not, by itself, a reason to pause the packet or request the operator to continue.
+Keep dependent mutation held when identity, integrity, privacy, resources or
+authority are unproven, and continue safe independent work. Escalate concrete
+required input after authorized alternatives are exhausted. This does not release
+the recovery hold, weaken authentication retry limits, authorize spend, or bypass
+the strict final readiness and merge gate. Reversal is restoring the previous
+packet guidance through a normal reviewed source change.
+
+### Shared CI repair and evidence-preservation decision (2026-11-02)
+
+The merge-preview regression must compare merged content, parents and the actual
+checked-out commit/tree. Separately minted commits can differ with author or
+clock metadata; repeated commit identity is not the production contract. PR2624
+changes fixture metadata deliberately while preserving the real-worktree,
+detached-HEAD and stale-sentinel checks. Production preview code is unchanged.
+
+Consume the stronger storage-file coverage identity and Party-domain package
+identity accepted through PR2632/PR2639. Original baseline values remain exact;
+new identities retain their measured source provenance. The older storage
+proposal remains historical. The later shared repair's actual coverage comparison
+selects one package, not a fresh measurement of the entire baseline.
+
+Coordinate shared unblocker landing order before overlapping packet updates
+restart verification. Preserve actual terminated-observer records and replace
+only a dead observer. After terminal ready, write and archive one positive plain
+monitor verdict; proceed directly to native merge and canonical completion
+refresh. Intervening classic status/verify/closeout/publish commands can replace
+that verdict and must not enter this sequence. Native merge preserves it.
+Reversal is a reviewed source change with the archived records retained. None
+of this releases the recovery hold or changes real-harness coverage claims.
