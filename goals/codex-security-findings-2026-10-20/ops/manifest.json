@@ -174,7 +174,7 @@
     {
       "id": "P5",
       "name": "Repo proof",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P6",
@@ -184,17 +184,17 @@
     {
       "id": "P7",
       "name": "Monitor",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P8",
       "name": "Merge and close findings",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P9",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

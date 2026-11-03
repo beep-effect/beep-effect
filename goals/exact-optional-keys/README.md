@@ -36,9 +36,9 @@ law and the GritQL recall and precision repairs. Closeout PR #2326 merged as
 `89a8d5a399` from head `ecfab28c05` with every required context green and a
 retained `until-ready` verdict, and `bun run beep goals completion refresh
 --slug exact-optional-keys` verified the `completed-retained` proposal on
-2026-10-28 (`history/completion-verified-2026-11-02.md`). `initiative.status`
-reads `active` because completion is derived from clone-scoped receipts rather
-than written into the manifest.
+2026-10-28 (`history/completion-verified-2026-11-02.md`). The committed
+`closeout` record in [`ops/manifest.json`](./ops/manifest.json) now carries that
+status: `goals set-status` adopted the verified proposal on 2026-11-02 (#2629).
 
 ## Latest Evidence
 

@@ -80,8 +80,8 @@
     {
       "id": "P4",
       "name": "Closeout",
-      "status": "in-progress",
-      "exit": "proposedCloseout and gating yeet-verdict evidence declared; reflection lint green; PR mergeable at the gate."
+      "status": "complete",
+      "exit": "closeout record (adopted from proposedCloseout) and gating yeet-verdict evidence declared; reflection lint green; PR mergeable at the gate."
     }
   ],
   "verificationCommands": [

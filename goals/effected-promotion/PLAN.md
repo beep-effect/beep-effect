@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active` — every phase is complete. The closing PR C (#2476) merged as `a0589d263d` from head `b55670b020`, and `bun run beep goals completion refresh --slug effected-promotion` verified the `completed-retained` proposal on 2026-11-01 (`history/completion-verified-2026-11-01.md`). `initiative.status` reads `active` because completion is derived from clone-scoped receipts, not written into the manifest (D-61). The state of each wave and PR lives in its row in the tables below: a PR edits only its own row, and this line names no wave or PR, so concurrent lanes never conflict on it (SPEC W4-v).
+Status: `completed-retained`, carried by the committed `closeout` record since 2026-11-02 (#2629) — every phase is complete. The closing PR C (#2476) merged as `a0589d263d` from head `b55670b020`, and `bun run beep goals completion refresh --slug effected-promotion` verified the `completed-retained` proposal on 2026-11-01 (`history/completion-verified-2026-11-01.md`). D-61 kept `initiative.status` derived at the time; the adopted record now commits it. The state of each wave and PR lives in its row in the tables below: a PR edits only its own row, and this line names no wave or PR, so concurrent lanes never conflict on it (SPEC W4-v).
 
 ## Phases
 
