@@ -14,9 +14,11 @@ import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import {
   buildProofShadowReport,
   changedPackagesForAttempt,
+  changedPackageTripwireFor,
   loadProofShadowReport,
   ProofChangedPackagesKnown,
   ProofChangedPackagesUnavailable,
+  ProofInputDigest,
   ProofLedger,
   ProofLedgerShadowRow,
   ProofReuseHit,
@@ -545,6 +547,25 @@ describe("proof shadow mode", () => {
 
     // A lane report written before `inputsCacheable` existed decodes as uncacheable, so an
     // older journal can only make the tripwire fire more, never less.
+    // Ruling 82: a key whose lane the attempt's own reports never journaled has no
+    // cacheability evidence, so it is read as uncacheable and fails closed on any change.
+    it("treats a lane missing from the attempt's reports as uncacheable", () => {
+      const key = ProofInputDigest.make({
+        laneId: "quality:unreported",
+        laneClass: "cli-runnable",
+        commandDigest: "c1",
+        envProfile: "local",
+        inputDigest: "d1",
+        inputSource: "turbo-task-hash",
+        epochDigest: "e1",
+        key: "k1",
+      });
+      const reports = [report([lane("cheap-gates:lint-policy", "passed", O.some("d-root"))])];
+      expect(changedPackageTripwireFor(reports, changedKnown([], 1))(key)).toBe(true);
+      expect(changedPackageTripwireFor(reports, changedNone())(key)).toBe(false);
+      expect(changedPackageTripwireFor(reports, changedUnavailable("git status failed"))(key)).toBe(true);
+    });
+
     it.effect("reads a lane report without the cacheability field as uncacheable", () =>
       Effect.gen(function* () {
         const legacy = yield* S.decodeEffect(QualityTaskLaneRun)({
