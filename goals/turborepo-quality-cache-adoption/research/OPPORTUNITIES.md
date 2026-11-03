@@ -924,3 +924,11 @@ observed schema difference changed the matrix and next qualification work.
 - Validate admission release against the actual launched process, current
   source/client digests and retained raw captures before publication. The
  13.690-second experiment runtime is not a measurement of cache time saved.
+
+
+- Ordinary commit formatting changed whitespace in fresh JSON files, including
+  replay reports. Preserve raw experiment bytes privately, compare every
+  decoded JSON object, and record separate raw/public digests in the checkpoint.
+  Do not disable formatting, claim byte-identical public copies, or rerun a
+  native experiment to repair publication metadata. The exact changed-report
+  count comes from byte comparisons, not the hook's total formatted-file count.

@@ -72,24 +72,32 @@
     {
       "id": "base-ref",
       "path": "native-source-replay-base-ref-2026-11-03.json",
-      "sha256": "8cf47cf56d886e48713d7b73b602c5115690021bf7ae5498b2b861707c75443f",
-      "bytes": 22051,
+      "sha256": "ff6159dd46d8dbc89817cc75685131a924cf32782a5719340bc162e15e4766c2",
+      "bytes": 21491,
       "rows": 36,
       "observations": {
         "dryRunCases": 36,
         "fixtureTaskExecutions": 0
-      }
+      },
+      "sourceReportSha256": "8cf47cf56d886e48713d7b73b602c5115690021bf7ae5498b2b861707c75443f",
+      "sourceReportBytes": 22051,
+      "decodedJsonEqualsSourceReport": true,
+      "byteIdenticalToSourceReport": false
     },
     {
       "id": "filter-composition",
       "path": "native-source-replay-filter-composition-2026-11-03.json",
-      "sha256": "65687bb45439b290489f0b0adabd704b5cbe6f9b43296c9878228572324c959c",
-      "bytes": 32951,
+      "sha256": "307997c467fb4112a8cc2703c4821dd76e9a2d64990c460d4954a3bcd23deae5",
+      "bytes": 31511,
       "rows": 56,
       "observations": {
         "dryRunCases": 56,
         "fixtureTaskExecutions": 0
-      }
+      },
+      "sourceReportSha256": "65687bb45439b290489f0b0adabd704b5cbe6f9b43296c9878228572324c959c",
+      "sourceReportBytes": 32951,
+      "decodedJsonEqualsSourceReport": true,
+      "byteIdenticalToSourceReport": false
     },
     {
       "id": "future-availability",
@@ -101,7 +109,11 @@
         "nativeDryRunCases": 60,
         "fixtureTaskExecutions": 0,
         "scope": "Fourteen common stable flags plus baseline/unknown-key controls; no semantic feature qualification."
-      }
+      },
+      "sourceReportSha256": "4dc325530ee8c86cbef8ab7091520b70e258507e12c91af5a1c07b303ab9571e",
+      "sourceReportBytes": 29356,
+      "decodedJsonEqualsSourceReport": true,
+      "byteIdenticalToSourceReport": true
     },
     {
       "id": "global-configuration",
@@ -116,7 +128,11 @@
           "MISS": 40,
           "HIT": 32
         }
-      }
+      },
+      "sourceReportSha256": "f01bc71b336a21e28b82c328cca615c3904a028c6017026150bfabffed358963",
+      "sourceReportBytes": 42543,
+      "decodedJsonEqualsSourceReport": true,
+      "byteIdenticalToSourceReport": true
     },
     {
       "id": "log-cache",
@@ -131,7 +147,11 @@
           "MISS": 8,
           "HIT": 4
         }
-      }
+      },
+      "sourceReportSha256": "287294ae126238b67e2ee5735598c142890bf161d34c62fa3d3d097fd64805b5",
+      "sourceReportBytes": 14058,
+      "decodedJsonEqualsSourceReport": true,
+      "byteIdenticalToSourceReport": true
     },
     {
       "id": "log-presentation",
@@ -142,7 +162,11 @@
       "observations": {
         "nativeCases": 12,
         "fixtureTaskExecutions": 12
-      }
+      },
+      "sourceReportSha256": "29b2e0d81abc37b18d0f21f6f1415ae6b94fe30a1d0fff15d1344a06cc4182a6",
+      "sourceReportBytes": 11493,
+      "decodedJsonEqualsSourceReport": true,
+      "byteIdenticalToSourceReport": true
     },
     {
       "id": "observability",
@@ -153,7 +177,11 @@
       "observations": {
         "nativeConfigurationCases": 24,
         "fixtureTaskExecutions": 16
-      }
+      },
+      "sourceReportSha256": "3f06afeb0c5888c50497e97c20f3ca770815aee7847422425be934e297f5029d",
+      "sourceReportBytes": 15870,
+      "decodedJsonEqualsSourceReport": true,
+      "byteIdenticalToSourceReport": true
     },
     {
       "id": "permission-availability",
@@ -164,7 +192,11 @@
       "observations": {
         "dryRunCases": 4,
         "fixtureTaskExecutions": 0
-      }
+      },
+      "sourceReportSha256": "af63b150cfe414109dac02ea048fc7daf8b39be1fdfedf405c19625cc89956ac",
+      "sourceReportBytes": 2941,
+      "decodedJsonEqualsSourceReport": true,
+      "byteIdenticalToSourceReport": true
     },
     {
       "id": "permission-mode",
@@ -177,7 +209,11 @@
         "fixtureTaskExecutions": 0,
         "unrepresentedInputObservations": 3,
         "aliasAndPlatformQualificationStillOpen": true
-      }
+      },
+      "sourceReportSha256": "9f22adb3890dd4fcdeebfcfe1754a91aece8c565d3f244a6b82be56e1d38c326",
+      "sourceReportBytes": 74790,
+      "decodedJsonEqualsSourceReport": true,
+      "byteIdenticalToSourceReport": true
     },
     {
       "id": "prune-global",
@@ -189,19 +225,27 @@
         "configurationVariants": 16,
         "nativeAndInstallSubprocesses": 64,
         "fixtureTaskExecutions": 0
-      }
+      },
+      "sourceReportSha256": "64a047f71e20d78e542d762a6716d30d950906917ff4c930f2df028a3fb9a326",
+      "sourceReportBytes": 7886,
+      "decodedJsonEqualsSourceReport": true,
+      "byteIdenticalToSourceReport": true
     },
     {
       "id": "selection",
       "path": "native-source-replay-selection-2026-11-03.json",
-      "sha256": "7b70adee36ece90a852d1b5f1cc49c7720e3e28093a539de9bb8030f6e421307",
-      "bytes": 75956,
+      "sha256": "0b9950e96b9a18c2f00969cabba66d6d24db9c4bd3bcfea3b7698161265e9c2b",
+      "bytes": 73860,
       "rows": 44,
       "observations": {
         "assertedCases": 44,
         "dryAndExecutionInvocations": 88,
         "observedFixtureTaskPackageExecutions": 56
-      }
+      },
+      "sourceReportSha256": "7b70adee36ece90a852d1b5f1cc49c7720e3e28093a539de9bb8030f6e421307",
+      "sourceReportBytes": 75956,
+      "decodedJsonEqualsSourceReport": true,
+      "byteIdenticalToSourceReport": false
     },
     {
       "id": "setup",
@@ -213,7 +257,11 @@
         "nativeSetupCases": 36,
         "fixtureTaskExecutions": 0,
         "trackedFixtureBytesUnchanged": true
-      }
+      },
+      "sourceReportSha256": "7913676341ff974442221f30ee0e1cf3cf452ba81fb8afa25d2f9490aa9ee1a2",
+      "sourceReportBytes": 17979,
+      "decodedJsonEqualsSourceReport": true,
+      "byteIdenticalToSourceReport": true
     },
     {
       "id": "signature",
@@ -226,7 +274,11 @@
         "fixtureTaskExecutions": 162,
         "earlySuppliedKeyRefusals": 6,
         "historicalSemanticRowsMatched": true
-      }
+      },
+      "sourceReportSha256": "4296adf99570cca11595d1b0474600e0fdcb7a26ee7e65e61487723b06204534",
+      "sourceReportBytes": 107502,
+      "decodedJsonEqualsSourceReport": true,
+      "byteIdenticalToSourceReport": true
     }
   ],
   "observationUnits": "Per-report native cases, task-result observations, invocations and actual fixture task executions are distinct; no aggregate case count is inferred.",
@@ -234,7 +286,7 @@
     "allThirteenExperimentDriversCompleted": true,
     "allThirteenSourcesStillMatchPublishedGitBytes": true,
     "sourceBindingsChecked": 53,
-    "compactReportBytes": 455376,
+    "compactReportBytes": 451280,
     "privateValidationReceiptSha256": "8b0be142209d32d702e6d599aeecd0ba81b83f6b546f3ef312aef207b8a7f4a2",
     "retainedRawJoins": {
       "signature": {
@@ -253,7 +305,13 @@
         "allDigestsMatched": true
       }
     },
-    "futureRawObservationDigestMatched": true
+    "futureRawObservationDigestMatched": true,
+    "repositoryFormatterOnlyChangesDecodedJsonUnchanged": [
+      "base-ref",
+      "filter-composition",
+      "selection"
+    ],
+    "publicationDigestScope": "Public sha256 fields bind repository-formatted bytes. sourceReportSha256 fields bind raw private experiment reports. Decoded JSON objects match exactly; no experiment was rerun."
   },
   "admission": {
     "existingScheduler": true,
