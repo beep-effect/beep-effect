@@ -125,7 +125,7 @@ const stepRun = (steps: ReadonlyArray<WorkflowStep>, name: string): string =>
 // first, through the shared prune script.
 const PRUNE_APT_SOURCES = "scripts/ci-prune-apt-sources.sh";
 const assertPrunesAptSourcesBefore = (run: string, command: string): void => {
-  assert.include(run, `\n${PRUNE_APT_SOURCES}\n`);
+  assert.match(run, /^[\t ]*(?:bash[\t ]+)?scripts\/ci-prune-apt-sources\.sh[\t ]*$/mu);
   assert.include(run, command);
   assert.isBelow(
     O.getOrElse(Str.indexOf(PRUNE_APT_SOURCES)(run), constant(-1)),
@@ -296,6 +296,17 @@ const assertTurboJobSetup = (jobs: WorkflowJobs, jobId: string, appSecrets: bool
 };
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (it) => {
+  it.effect("requires a real apt-pruning command before refreshing package indexes", () =>
+    Effect.sync(() => {
+      const update = "sudo apt-get update";
+      assert.doesNotThrow(() => assertPrunesAptSourcesBefore(`${PRUNE_APT_SOURCES}\n${update}`, update));
+      assert.doesNotThrow(() => assertPrunesAptSourcesBefore(`  bash ${PRUNE_APT_SOURCES}\n${update}`, update));
+      assert.throws(() => assertPrunesAptSourcesBefore(`# ${PRUNE_APT_SOURCES}\n${update}`, update));
+      assert.throws(() => assertPrunesAptSourcesBefore(`echo ${PRUNE_APT_SOURCES}\n${update}`, update));
+      assert.throws(() => assertPrunesAptSourcesBefore(`${update}\n${PRUNE_APT_SOURCES}`, update));
+    })
+  );
+
   it.effect.prop(
     "preserves arbitrary workflow permissions and step inputs through their codec",
     [Arbitrary.schema(WorkflowJobs)],
@@ -332,6 +343,24 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       }
       for (const file of ["packages/demo/README.md", "apps/demo/README.md", "infra/demo/README.md"]) {
         assert.isFalse(isHeavyDocsOnlyPath(file), file);
+      }
+    })
+  );
+  it.effect(
+    "gives every Heavy caller the read-only permission ceiling required by its nested producer",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      for (const { file, job } of [
+        { file: "check.yml", job: "heavy" },
+        { file: "heavy-admit.yml", job: "heavy" },
+        { file: "cache-producer-inspect.yml", job: "inspect" },
+        { file: "cache-producer-prepare.yml", job: "prepare" },
+        { file: "cache-producer.yml", job: "produce" },
+      ]) {
+        const workflow = parseWorkflowYaml(yield* fs.readFileString(`${root}/.github/workflows/${file}`));
+        const permissions = yamlAt(workflow, ["jobs", job, "permissions"]) ?? yamlAt(workflow, ["permissions"]);
+        assert.deepEqual(permissions, { contents: "read", actions: "read" }, file);
       }
     })
   );
@@ -1572,6 +1601,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         // A candidate adapter build grants no producer or quality verdict authority.
         "cache-producer-prepare.yml:Build candidate producer adapter",
         "heavy.yml:Heavy / Build candidate producer adapter",
+        // Protected execution authenticates observations; required quality proof stays separate.
+        "cache-producer.yml:Execute approved signed producer",
+        "heavy.yml:Heavy / Execute approved signed producer",
         "data-sync.yml:Sync Official Data",
         // Prod deploy of the Alchemy stack; environment-gated, not a local lane.
         "deploy-beep-effect-web.yml:Deploy beep-effect-web (prod)",
@@ -1649,12 +1681,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         default: false,
       });
       expect(yamlAt(heavy, ["jobs", "verify", "if"])).toBe(
-        "${{ !inputs.producer_inspection && !inputs.producer_preparation }}"
+        "${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution }}"
       );
       expect(yamlAt(heavy, ["jobs", "producer-inspect", "if"])).toBe(
         A.join(
           [
-            "inputs.producer_inspection && !inputs.producer_preparation &&",
+            "inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution &&",
             "github.repository == 'beep-effect/beep-effect' &&",
             "github.event_name == 'workflow_dispatch' &&",
             "github.ref == 'refs/heads/main' &&",
@@ -1731,12 +1763,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         default: false,
       });
       expect(yamlAt(heavy, ["jobs", "verify", "if"])).toBe(
-        "${{ !inputs.producer_inspection && !inputs.producer_preparation }}"
+        "${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution }}"
       );
       expect(yamlAt(heavy, ["jobs", "producer-prepare", "if"])).toBe(
         A.join(
           [
-            "inputs.producer_preparation && !inputs.producer_inspection &&",
+            "inputs.producer_preparation && !inputs.producer_inspection && !inputs.producer_execution &&",
             "github.repository == 'beep-effect/beep-effect' &&",
             "github.event_name == 'workflow_dispatch' &&",
             "github.ref == 'refs/heads/main' &&",
@@ -1768,6 +1800,15 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         override: "false",
         matcher: "false",
       });
+      const hostTools = "Ensure native host compiler and ELF inspection tools";
+      const hostSetup = stepRun(steps, hostTools);
+      expect(hostSetup).toContain("command -v cc");
+      expect(hostSetup).toContain("command -v ld");
+      expect(hostSetup).toContain("command -v readelf");
+      expect(hostSetup).toContain("dnf install -y gcc binutils");
+      expect(hostSetup).toContain("apt-get install -y --no-install-recommends gcc binutils");
+      assertPrunesAptSourcesBefore(hostSetup, '"${privilege[@]}" apt-get update');
+      expect(stepIndexByName(steps, hostTools)).toBeLessThan(stepIndexByName(steps, "Build pinned portable candidate"));
       const install = stepByName(steps, "Install pinned portable build tools");
       expect(install.run).toContain("--require-hashes");
       expect(install.run).toContain("--only-binary=:all:");
@@ -1789,6 +1830,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(build.run).toContain("independent approval and runtime qualification are required");
       expect(build.run).toContain("'toolExecutables':{name:executable_digest(path)");
       expect(build.run).toContain("['rustup','which','rustc']");
+      expect(build.run).toContain("'hostCc':shutil.which('cc')");
+      expect(build.run).toContain("'hostLinker':shutil.which('ld')");
+      expect(build.run).toContain("'readelf':shutil.which('readelf')");
       expect(stepByName(steps, "Retain candidate for at most one day").with).toEqual({
         name: "cache-producer-adapter-${{ github.run_id }}-${{ github.run_attempt }}",
         path: "${{ steps.scratch.outputs.artifact }}",
@@ -1811,6 +1855,226 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       }
       expect(yield* workflowPolicyDiagnostics("cache-producer-prepare.yml", text)).toEqual([]);
       expect(yield* workflowPolicyDiagnostics("heavy.yml", heavyText)).toEqual([]);
+    })
+  );
+
+  it.effect("restricts the protected producer caller to the closed main-only trial", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const text = yield* fs.readFileString(`${root}/.github/workflows/cache-producer.yml`);
+      const caller = parseWorkflowYaml(text);
+      const heavyText = yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`);
+      const heavy = parseWorkflowYaml(heavyText);
+      expect(text).toMatch(/^[\u0000-\u007f]*$/u);
+      expect(heavyText).toMatch(/^[\u0000-\u007f]*$/u);
+      expect(text.length + heavyText.length).toBeLessThanOrEqual(64 * 1024);
+      expect(yamlAt(caller, ["permissions"])).toEqual({ contents: "read", actions: "read" });
+      expect(yamlAt(caller, ["on", "workflow_dispatch", "inputs", "channel", "options"])).toEqual(["stable", "canary"]);
+      expect(yamlAt(caller, ["concurrency"])).toEqual({
+        group: "cache-protected-producer-main",
+        "cancel-in-progress": false,
+      });
+      expect(yamlAt(caller, ["jobs", "produce", "if"])).toBe("github.ref == 'refs/heads/main'");
+      expect(yamlAt(caller, ["jobs", "produce", "uses"])).toBe(
+        "beep-effect/beep-effect/.github/workflows/heavy.yml@main"
+      );
+      expect(yamlAt(caller, ["jobs", "produce", "with"])).toEqual({
+        admitted: false,
+        producer_execution: true,
+        producer_channel: "${{ inputs.channel }}",
+      });
+      const expectedSecrets = {
+        BEEP_CACHE_PRODUCER_STABLE_APPROVAL_JSON:
+          "${{ inputs.channel == 'stable' && secrets.BEEP_CACHE_PRODUCER_STABLE_APPROVAL_JSON || '' }}",
+        BEEP_CACHE_PRODUCER_CANARY_APPROVAL_JSON:
+          "${{ inputs.channel == 'canary' && secrets.BEEP_CACHE_PRODUCER_CANARY_APPROVAL_JSON || '' }}",
+        BEEP_CACHE_PRODUCER_STABLE_RUNTIME_JSON:
+          "${{ inputs.channel == 'stable' && secrets.BEEP_CACHE_PRODUCER_STABLE_RUNTIME_JSON || '' }}",
+        BEEP_CACHE_PRODUCER_CANARY_RUNTIME_JSON:
+          "${{ inputs.channel == 'canary' && secrets.BEEP_CACHE_PRODUCER_CANARY_RUNTIME_JSON || '' }}",
+        BEEP_CACHE_PRODUCER_STABLE_ISSUER_MATERIAL_BASE64:
+          "${{ inputs.channel == 'stable' && secrets.BEEP_CACHE_PRODUCER_STABLE_ISSUER_MATERIAL_BASE64 || '' }}",
+        BEEP_CACHE_PRODUCER_CANARY_ISSUER_MATERIAL_BASE64:
+          "${{ inputs.channel == 'canary' && secrets.BEEP_CACHE_PRODUCER_CANARY_ISSUER_MATERIAL_BASE64 || '' }}",
+        BEEP_CACHE_TRIAL_R2_ACCESS_KEY_ID: "${{ secrets.BEEP_CACHE_TRIAL_R2_ACCESS_KEY_ID }}",
+        BEEP_CACHE_TRIAL_R2_SECRET_ACCESS_KEY: "${{ secrets.BEEP_CACHE_TRIAL_R2_SECRET_ACCESS_KEY }}",
+        BEEP_CACHE_TRIAL_ARTIFACT_KEY: "${{ secrets.BEEP_CACHE_TRIAL_ARTIFACT_KEY }}",
+        BEEP_CACHE_TRIAL_READER_BEARER: "${{ secrets.BEEP_CACHE_TRIAL_READER_BEARER }}",
+        BEEP_CACHE_TRIAL_WRITER_BEARER: "${{ secrets.BEEP_CACHE_TRIAL_WRITER_BEARER }}",
+      };
+      const forwarded = yield* decodeYamlRecord(yamlAt(caller, ["jobs", "produce", "secrets"]));
+      expect(forwarded).toEqual(expectedSecrets);
+      for (const name of R.keys(expectedSecrets)) {
+        expect(yamlAt(heavy, ["on", "workflow_call", "secrets", name, "required"])).toBe(false);
+      }
+      expect(yamlAt(heavy, ["on", "workflow_call", "inputs", "producer_execution", "default"])).toBe(false);
+      expect(yamlAt(heavy, ["jobs", "verify", "if"])).toBe(
+        "${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution }}"
+      );
+      expect(yamlAt(heavy, ["jobs", "producer-execute", "if"])).toBe(
+        A.join(
+          [
+            "inputs.producer_execution && !inputs.producer_inspection && !inputs.producer_preparation &&",
+            "(inputs.producer_channel == 'stable' || inputs.producer_channel == 'canary') &&",
+            "github.repository == 'beep-effect/beep-effect' &&",
+            "github.event_name == 'workflow_dispatch' &&",
+            "github.ref == 'refs/heads/main' &&",
+            "github.workflow_ref == 'beep-effect/beep-effect/.github/workflows/cache-producer.yml@refs/heads/main'",
+          ],
+          " "
+        )
+      );
+      expect(yamlAt(heavy, ["jobs", "producer-execute", "environment"])).toBe("turbo-cache-write");
+      expect(yamlAt(heavy, ["jobs", "producer-execute", "timeout-minutes"])).toBe(60);
+      expect(yamlAt(heavy, ["jobs", "producer-execute", "permissions"])).toEqual({ contents: "read", actions: "read" });
+      expect(yamlAt(heavy, ["jobs", "producer-execute", "env"])).toEqual({
+        BEEP_TURBO_HOST_CACHE_DISABLED: "true",
+        BEEP_CACHE_PRODUCER_CHANNEL: "${{ inputs.producer_channel }}",
+      });
+      expect(yield* workflowPolicyDiagnostics("cache-producer.yml", text)).toEqual([]);
+      expect(yield* workflowPolicyDiagnostics("heavy.yml", heavyText)).toEqual([]);
+    })
+  );
+
+  it.effect("binds producer installation and publication to their approved capabilities", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const heavy = parseWorkflowYaml(yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`));
+      const steps = jobSteps(yield* workflowJobs(heavy), "producer-execute");
+      expect(stepByName(steps, "Setup pinned toolchain without trial capabilities").with).toEqual({
+        "turbo-remote-cache": "false",
+        "r2-enabled": "false",
+        "app-secrets": "false",
+      });
+      const download = stepByName(steps, "Download independently selected candidate");
+      expect(download.with?.["artifact-ids"]).toBe("${{ steps.selection.outputs.artifact }}");
+      expect(download.with?.["digest-mismatch"]).toBe("error");
+      const installName = "Install independently approved issuer only";
+      const runName = "Execute closed signed trial and retain private observation";
+      const publishName = "Publish issued observation using storage capabilities only";
+      expect(stepRun(steps, "Reserve exclusive private trial directory")).toContain(
+        'trial_root="$HOME/.cache/beep/cache-producer-trial-v1"'
+      );
+      const install = stepByName(steps, installName);
+      expect(A.sort(R.keys(install.env ?? {}), Order.String)).toEqual([
+        "BEEP_CACHE_PRODUCER_APPROVAL_JSON",
+        "BEEP_CACHE_PRODUCER_ISSUER_MATERIAL_BASE64",
+        "BEEP_CACHE_PRODUCER_RUNTIME_JSON",
+      ]);
+      // Name each secret statically; a missing stable value must not fall back to canary material.
+      expect(install.env?.BEEP_CACHE_PRODUCER_APPROVAL_JSON).toBe(
+        "${{ inputs.producer_channel == 'stable' && secrets.BEEP_CACHE_PRODUCER_STABLE_APPROVAL_JSON || inputs.producer_channel == 'canary' && secrets.BEEP_CACHE_PRODUCER_CANARY_APPROVAL_JSON || '' }}"
+      );
+      expect(install.env?.BEEP_CACHE_PRODUCER_RUNTIME_JSON).toBe(
+        "${{ inputs.producer_channel == 'stable' && secrets.BEEP_CACHE_PRODUCER_STABLE_RUNTIME_JSON || inputs.producer_channel == 'canary' && secrets.BEEP_CACHE_PRODUCER_CANARY_RUNTIME_JSON || '' }}"
+      );
+      expect(install.env?.BEEP_CACHE_PRODUCER_ISSUER_MATERIAL_BASE64).toBe(
+        "${{ inputs.producer_channel == 'stable' && secrets.BEEP_CACHE_PRODUCER_STABLE_ISSUER_MATERIAL_BASE64 || inputs.producer_channel == 'canary' && secrets.BEEP_CACHE_PRODUCER_CANARY_ISSUER_MATERIAL_BASE64 || '' }}"
+      );
+      expect(install.run).toContain("producer-install --from-environment");
+      expect(stepIndexByName(steps, "Verify selected candidate before issuer delivery")).toBeLessThan(
+        stepIndexByName(steps, installName)
+      );
+      expect(stepIndexByName(steps, "Prepare fixed full-pilot inputs without credentials")).toBeLessThan(
+        stepIndexByName(steps, installName)
+      );
+      expect(stepRun(steps, runName)).toContain("timeout --signal=TERM --kill-after=30s 50m");
+      expect(stepRun(steps, runName)).toContain("cache producer-run");
+      expect(stepRun(steps, "Prepare fixed full-pilot inputs without credentials")).toContain("'selection':'full'");
+      expect(stepByName(steps, publishName).env).toEqual({
+        R2_ACCESS_KEY_ID: "${{ secrets.BEEP_CACHE_TRIAL_R2_ACCESS_KEY_ID }}",
+        R2_SECRET_ACCESS_KEY: "${{ secrets.BEEP_CACHE_TRIAL_R2_SECRET_ACCESS_KEY }}",
+      });
+    })
+  );
+
+  it.effect("keeps other producer steps unprivileged and bounds public artifacts and cleanup", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const heavy = parseWorkflowYaml(yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`));
+      const steps = jobSteps(yield* workflowJobs(heavy), "producer-execute");
+      const installName = "Install independently approved issuer only";
+      const runName = "Execute closed signed trial and retain private observation";
+      const publishName = "Publish issued observation using storage capabilities only";
+      for (const step of A.filter(steps, (step) => step.name !== installName)) {
+        expect(step.run ?? "").not.toContain("producer-install");
+      }
+      const unprivilegedValues = pipe(
+        steps,
+        A.filter((step) => !A.contains([installName, runName, publishName], step.name ?? "")),
+        A.flatMap((step) => [...R.values(step.env ?? {}), ...R.values(step.with ?? {}), step.run ?? ""]),
+        A.filter(S.is(S.String))
+      );
+      for (const value of unprivilegedValues) expect(value).not.toMatch(/\bsecrets\s*(?:\.|\[)/iu);
+      for (const step of steps) {
+        expect(step.uses ?? "").not.toContain("actions/cache");
+        expect(step.run ?? "").not.toContain("op read");
+      }
+      expect(stepByName(steps, "Retain only digest publication for one day").with).toEqual({
+        name: "cache-producer-${{ github.run_id }}-${{ github.run_attempt }}",
+        path: "${{ steps.private.outputs.root }}/publication/cache-producer.json",
+        "if-no-files-found": "error",
+        "retention-days": 1,
+        "compression-level": 0,
+      });
+      expect(stepRun(steps, "Check bounded public digest report")).toContain("64*1024");
+      expect(stepByName(steps, "Remove only this trial's private files and worktrees").if).toBe(
+        "always() && steps.private.outputs.root != ''"
+      );
+      expect(stepRun(steps, "Remove only this trial's private files and worktrees")).toContain(
+        '"$TRIAL_ROOT" == "$HOME/.cache/beep/cache-producer-trial-v1"'
+      );
+    })
+  );
+
+  it.effect("refuses disabled or malformed producer selection before any private trial setup", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const heavy = parseWorkflowYaml(yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`));
+      const script = stepRun(
+        jobSteps(yield* workflowJobs(heavy), "producer-execute"),
+        "Require independent frozen trial selection"
+      );
+      const directory = yield* fs.makeTempDirectoryScoped();
+      const source = "1111111111111111111111111111111111111111";
+      const base = {
+        PATH: "/usr/bin:/bin",
+        TRIAL_ENABLED: "true",
+        EXPECTED_SOURCE: source,
+        GITHUB_SHA: source,
+        ADAPTER_RUN: "12",
+        ADAPTER_ARTIFACT: "34",
+        ADAPTER_SHA256: "1111111111111111111111111111111111111111111111111111111111111111",
+      };
+      const cases: ReadonlyArray<readonly [Readonly<Record<string, string>>, boolean]> = [
+        [{}, true],
+        [{ TRIAL_ENABLED: "" }, false],
+        [{ EXPECTED_SOURCE: "private-marker" }, false],
+        [{ ADAPTER_RUN: "" }, false],
+        [{ ADAPTER_RUN: "1\nprivate-marker" }, false],
+        [{ ADAPTER_ARTIFACT: "-1" }, false],
+        [{ ADAPTER_SHA256: "private-marker" }, false],
+      ];
+      let index = 0;
+      for (const [override, succeeds] of cases) {
+        const output = `${directory}/output-${index++}`;
+        yield* fs.writeFileString(output, "");
+        const result = Bun.spawnSync(["/usr/bin/bash", "-c", script], {
+          env: { ...base, ...override, GITHUB_OUTPUT: output },
+          stdout: "pipe",
+          stderr: "pipe",
+        });
+        expect(result.exitCode).toBe(succeeds ? 0 : 1);
+        const record = yield* fs.readFileString(output);
+        if (succeeds) expect(record).toContain("run=12\nartifact=34\n");
+        else expect(record).toBe("");
+        expect(result.stdout.toString()).not.toContain("private-marker");
+        expect(result.stderr.toString()).not.toContain("private-marker");
+      }
     })
   );
 

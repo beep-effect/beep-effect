@@ -1134,11 +1134,11 @@
         "Exact-client regression evidence",
         "Change only one experimental flag at a time"
       ],
-      "beepUseCase": "Review against the declared Bun workspace, trust controls and current root settings.",
-      "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
-      "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
-      "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending",
+      "beepUseCase": "Existing tracked development watchers belong to Bun and application frameworks; root development delegates through turbo run dev.",
+      "expectedBenefit": "No measured saving is claimed; review a named native watch consumer before changing its selection semantics.",
+      "correctnessCase": "Reopen for real file-event, complete-input, persistent-task, output ownership and portability controls on both exact clients before any activation.",
+      "disposition": "Retain the absent native watch-input flag; no configured native Turbo watch consumer was found in the reviewed tracked source.",
+      "acceptanceStatus": "accepted-retain-current-absence",
       "nativeConfigurationObservation": {
         "report": "native-future-flag-availability.json",
         "stable": {
@@ -1150,6 +1150,11 @@
           "true": "dry-run-accepted"
         },
         "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      },
+      "sourceApplicabilityReview": {
+        "path": "watch-feature-review.json",
+        "scope": "Current tracked caller applicability only; no native watch semantic or task qualification proof.",
+        "nativeObservationScope": "Older parser-only canary 2.11.9-canary.1 observation retained unchanged; no current-native watch behavior claim."
       }
     }
   ],
@@ -1167,8 +1172,8 @@
     "Feature rows carry current dispositions; reviewCounts records their totals. Native fixture evidence alone grants no real computation qualification."
   ],
   "reviewCounts": {
-    "pending": 25,
-    "acceptedRetainCurrentAbsence": 7,
+    "pending": 24,
+    "acceptedRetainCurrentAbsence": 8,
     "acceptedRetainCurrentDefault": 1,
     "acceptedNotApplicable": 1,
     "acceptedRetainCurrentSetting": 1
