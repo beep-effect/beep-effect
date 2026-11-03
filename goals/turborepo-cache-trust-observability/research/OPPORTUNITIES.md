@@ -1982,6 +1982,9 @@ scanner on touched test files: package lint alone does not include that rule.
 
 - 2026-11-02: New-file identity, rather than the numeric tier, kept the private storage module red after its first coverage repair. The actual hosted reporter supplies the reviewable row. Broad package regeneration would move unrelated floors; a narrow schema-encoded pin with before/after equivalence preserves them. A private helper's wrong record adapter was caught before commit, restored from the exact backup, and replaced with a pre-write equivalence guard. Incompatible instrumentation unions and a refused Labs collector replay are retained as diagnostics, never passing proof.
 
+### Protected input delivery and shared review-budget friction, 2026-11-02
+
+The private-file producer installer has no direct step-scoped protected-environment input. Preparing that bridge through the existing schemas/initializer avoids duplicating an authority or persisting an extra material copy. Thirteen controls are authored but not run under the push-only instruction. The isolated worktree used a frozen install with lifecycle scripts disabled to avoid unrelated compiler work; no local secret files were copied. Separately, three existing PR observers exhausted their API poll-error budgets after the shared GraphQL route was refused. Terminal results are retained; they are not merge readiness. Quota-aware restoration and fresh exact-head gates are required before acceptance.
 ### 2026-11-02 — process double retained a root-policy verdict
 
 PR #2569 job 125603695913 failed four orchestration cases because the process
@@ -2007,6 +2010,31 @@ or production acceptance.
 
 Resolving the independent accepted-main inventory changes required the canonical `bun --no-env-file run beep quality jsdoc-inventory` writer. The sibling phase-progress merge took 515.916 seconds to regenerate the pair across 185 packages; its open totals remained 15 packages, 94 exports and 115 modules. This was a concurrent workstation observation, not an isolated benchmark or evidence of cache savings. A source-scoped canonical regeneration path that retains the complete inventory integrity checks would avoid repeating this full census for each small merge. The generated files were retained; no check, finding or acceptance requirement was waived.
 
+### 2026-11-02 — source pin changes before protected inspection
+
+The main-ref preflight refused a stale selection before dispatching anything.
+After reviewing unchanged inspection controls, one credential-free inspection
+ran on `c96edf8c` and passed. The earlier directory-alias failure is retained
+separately. Verify the main selection immediately before dispatch and bind both
+the caller and resolved Heavy leaf; later accepted commits require a fresh
+source approval rather than relabeling this observation as current.
+
+### 2026-11-02 — new dispatch controls before hosted replay
+
+Source review found inline schema encoders and boolean failure assertions in
+the newly authored environment-installation controls. Reuse module-level
+encoders and the existing Effect.flip failure pattern before submitting this
+wave. The thirteen controls retain their original scope and remain unrun; this
+source correction is not evidence that policy or behavioral gates have passed.
+
+### 2026-11-02 — installer error channel in hosted compilation
+
+PR #2643's Check, Build, Integration, Docgen and Repo Sanity jobs exposed the new
+installer's unhandled SchemaError from approval validation. Preserve the typed
+policy failure, erase schema-input details at the CLI boundary and retain the
+red logs as source-bound failures. Reuse the canonical per-file inventory
+analyzer for location-only changes after this small repair; its semantic
+comparison preserves every finding and count without another full scan.
 ### 2026-11-02 — committed inventory after a base-conflict repair
 
 PR #2569 review found that merge `943d927b` retained the accepted-main JSDoc
@@ -2017,3 +2045,24 @@ existing findings and baseline floors. Check the generated export-set delta
 when resolving this conflict; accepting main's snapshot alone is insufficient
 when a branch adds exports. Local verify, publish and test runs remain skipped
 under the operator's direct-push instruction.
+
+### 2026-11-02 — protected CI has no candidate adapter binary
+
+The actual source inspection supplied tool and workflow identities, but the
+historical workstation musl build is not an authenticated current CI artifact.
+Prepare the candidate through the admitted Heavy leaf before provisioning a
+producer. Reuse the pinned policy builder instead of compiling during adapter
+startup. A local packaging inspection also found that ziglang 0.14.1 has no
+console entry point; the existing successful environment uses an explicit
+link to its module's `zig` binary. Preserve that setup in the isolated CI tools
+and check both tool versions before compilation. Source preparation does not
+prove build success, approval or signed execution.
+
+### 2026-11-02 — version-only build-tool requirements
+
+PR #2643 review `discussion_r4450530140` found that the portable builder pinned
+cargo-zigbuild and its Zig linker by version without binding wheel content.
+Record the published Linux x86_64 wheel hashes, enforce `--require-hashes`,
+and retain installed executable digests in the build manifest. Future pinned
+tool installs should review the complete dependency list and content hashes
+alongside their version checks before a protected runner consumes them.

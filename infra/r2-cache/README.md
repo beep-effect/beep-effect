@@ -362,6 +362,9 @@ receipts retain their original source inputs. The portable build uses installed
 Rust1.96.0 plus cargo-zigbuild0.20.1/Zig0.14.1, pinned in
 `policy-build-requirements.txt`; its checksum and byte size are retained beside
 the source patch. `cargo-build-musl` reproduces that build inside admission.
+The requirements now lock the reviewed Linux x86_64 wheel hashes. Candidate
+CI installs with `--require-hashes` and records actual compiler/linker
+executable digests alongside their versions; other host wheels fail closed.
 Remote fleet execution, R2 grant negatives, producer attribution, rotation/rollback,
 deployment and representative observation remain required before activation.
 
