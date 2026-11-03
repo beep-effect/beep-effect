@@ -1,5 +1,13 @@
 # Citation Extraction Engine Plan
 
+Metadata year checkpoint (2026-11-03): source get_year conversion matches all
+1,169 observations, including the complete Python decimal/digit sets, integer
+whitespace, separators and conversion limit. Effect Clock and CurrentTimeZone
+capture the source import-time bound once. Resolution and metadata share the
+existing frozen decimal facts. Thirteen focused tests pass; full metadata
+assignment remains open. See
+[metadata year evidence](history/evidence/2026-11-03-metadata-year.md).
+
 Context matching checkpoint (2026-11-03): the private matcher composes the
 existing context planner and Effect worker, returning owned native captures.
 The original helper supplies 144 observations over eight patterns, including

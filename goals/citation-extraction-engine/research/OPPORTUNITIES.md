@@ -220,3 +220,14 @@ source implementation. It does not normalize intermediate order or establish
 fresh-process production semantics. The installing server must authenticate the
 metadata separately from the canonical regex artifact. See
 history/evidence/2026-11-03-canonical-tokenizer-catalog.md.
+
+### Give clock-changing source profiles independent TestClock owners
+
+The metadata-year corpus installs several source import-time calendar bounds,
+while other controls move time across a year boundary. Sharing a test-layer
+clock caused an extractDeadline failure when concurrent tests moved it. Upstream
+TestClock.layer in a separate nested it.layer for each test preserves the
+intended ownership and avoids direct Effect.provide inside test bodies, which
+the repository's strict Effect diagnostic rejects. Thirteen focused tests now
+pass without deadline weakening or diagnostic suppression. See
+history/evidence/2026-11-03-metadata-year.md.

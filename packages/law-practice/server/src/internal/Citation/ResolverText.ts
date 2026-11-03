@@ -18,16 +18,11 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Tuple from "effect/Tuple";
+import { citationPythonDecimalValues as decimalValues } from "./PythonDecimal.ts";
 import { citationPythonTextData } from "./PythonTextData.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/ResolverText");
 const digitSet = HashSet.fromIterable(citationPythonTextData.digits);
-const decimalValues = HashMap.fromIterable(
-  A.map(A.fromIterable(citationPythonTextData.decimalDigits), (char, index) =>
-    Tuple.make(char, A.getUnsafe(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"], index % 10))
-  )
-);
 const Input = S.Struct({ fullCitation: Citation, idCitation: IdCitation });
 const InputType = S.toType(Input);
 
@@ -103,7 +98,7 @@ const decimalInteger = Effect.fn("Citation.parseResolverDecimal")(function* (cha
   // Match the frozen Python integer conversion limit, including leading zeroes.
   if (A.length(characters) > 4300) return yield* CitationResolverTextFailure.make({ reason: "integer-conversion" });
   const values = A.map(characters, (char) => HashMap.get(decimalValues, char));
-  const digits = A.getSomes(values);
+  const digits = A.map(A.getSomes(values), (digit) => `${digit}`);
   if (A.length(digits) !== A.length(characters))
     return yield* CitationResolverTextFailure.make({ reason: "integer-conversion" });
   return yield* Effect.fromOption(BI.fromString(A.join(digits, "")), () =>

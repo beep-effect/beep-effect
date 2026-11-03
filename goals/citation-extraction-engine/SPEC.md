@@ -548,6 +548,15 @@ instead of silently splitting delivery or weakening scope.
 
 ## Decision Log
 
+- **2026-11-03 metadata year:** preserve native Python integer grammar using
+  existing frozen Unicode facts and shared Effect collections, with bounded
+  accumulation above the largest source-valid date ceiling. Capture the source
+  import-time year using Clock and CurrentTimeZone at installation; methods
+  remain R=never. The live Layer still owns local-zone and installation-lifetime
+  integration. Reversal removes this private adapter and restores the resolver's
+  prior inline decimal map; it reopens year parity rather than granting a waiver.
+  See `history/evidence/2026-11-03-metadata-year.md`.
+
 - **2026-11-03 context matching:** compose native context preparation with the
   existing Effect RPC worker and source V0 descriptors; preserve both exact
   source anchors and complete native captures. Include the extra worker context

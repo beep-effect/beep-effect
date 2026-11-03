@@ -11,6 +11,7 @@ import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as MutableList from "effect/MutableList";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
@@ -83,6 +84,17 @@ const readPoint = (bytes: Uint8Array, index: number, width: number) => {
     point += O.getOrElse(O.fromUndefinedOr(bytes[index + part]), () => 0) * 2 ** (8 * part);
   return point;
 };
+/** Read a source point from already validated, immutable native storage.
+ * The caller proves an integer index within the source length; this borrowed
+ * view performs no input validation or ownership transfer.
+ * @internal @category operations @since 0.0.0
+ */
+export const citationPythonPointAt: {
+  (index: number): (source: CitationPythonUnicodeStorage) => number;
+  (source: CitationPythonUnicodeStorage, index: number): number;
+} = dual(2, (source: CitationPythonUnicodeStorage, index: number) =>
+  readPoint(source.bytes, index * source.width, source.width)
+);
 const pointUnits = (point: number) => (point > 65535 ? 2 : 1);
 const encodeText = Effect.fnUntraced(function* (text: string, width: 1 | 2 | 4, points: number) {
   const bytes = new Uint8Array(points * width);
