@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { makeCitationHtmlInput } from "@beep/law-practice-server/internal/Citation/HtmlInput";
 import {
   makeCitationClosedHtmlWasi,
@@ -42,7 +42,7 @@ const CorpusJson = S.fromJsonString(
 
 const loadAsset = Effect.fn("HtmlKernelTest.loadAsset")(function* () {
   return yield* (yield* FileSystem.FileSystem).readFile(
-    fileURLToPath(new URL("../assets/citation-html/kernel.wasm", import.meta.url))
+    NodeURL.fileURLToPath(new URL("../assets/citation-html/kernel.wasm", import.meta.url))
   );
 });
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("private HTML kernel", (it) => {
@@ -100,7 +100,9 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("private HTML kernel
     () =>
       Effect.gen(function* () {
         const raw = yield* (yield* FileSystem.FileSystem).readFileString(
-          fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/html-kernel-cases.json", import.meta.url))
+          NodeURL.fileURLToPath(
+            new URL("../../use-cases/test/fixtures/eyecite/html-kernel-cases.json", import.meta.url)
+          )
         );
         expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
           "34a9b3b4667a71c0234f77fb898f6d6de55a85e7306ea66a55144b3ca95d24d0"
@@ -121,9 +123,10 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("private HTML kernel
             const text = yield* Effect.fromOption(HashMap.get(texts, row.text));
             if (row.outcome.kind === "error" && row.outcome.type === "builtins.ValueError") {
               const failed = yield* Effect.flip(preparation.prepare(text));
-              expect(failed._tag, row.name).toBe("CitationHtmlInputFailure");
-              if (failed._tag === "CitationHtmlInputFailure")
-                expect(failed.reason, row.name).toBe("unicode-encoding-declaration");
+              expect(failed, row.name).toMatchObject({
+                _tag: "CitationHtmlInputFailure",
+                reason: "unicode-encoding-declaration",
+              });
               declarations++;
               return;
             }
@@ -134,15 +137,15 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("private HTML kernel
             >;
             if (A.some(row.diagnostics, (d) => d.resourceLimit)) {
               const failed = yield* Effect.flip(run);
-              expect(failed._tag, row.name).toBe("CitationSafetyLimitExceeded");
-              if (failed._tag === "CitationSafetyLimitExceeded")
-                expect(failed.limit, row.name).toBe("nativeHtmlParserResource");
+              expect(failed, row.name).toMatchObject({
+                _tag: "CitationSafetyLimitExceeded",
+                limit: "nativeHtmlParserResource",
+              });
               resourceErrors++;
             } else if (row.outcome.kind === "error") {
               expect(row.outcome.type, row.name).toBe("lxml.etree.ParserError");
               const failed = yield* Effect.flip(run);
-              expect(failed._tag, row.name).toBe("CitationHtmlKernelFailure");
-              if (failed._tag === "CitationHtmlKernelFailure") expect(failed.reason, row.name).toBe("parse-error");
+              expect(failed, row.name).toMatchObject({ _tag: "CitationHtmlKernelFailure", reason: "parse-error" });
               parseErrors++;
             } else {
               expect(yield* run, row.name).toBe(yield* Effect.fromOption(HashMap.get(texts, row.outcome.value)));

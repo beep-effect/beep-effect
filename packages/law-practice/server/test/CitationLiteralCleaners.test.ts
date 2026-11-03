@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import {
   CitationLiteralCleaner,
   makeCitationLiteralCleaners,
@@ -40,7 +40,7 @@ const Corpus = S.fromJsonString(
 );
 const load = Effect.fn("LiteralCleanerTest.load")(function* () {
   const raw = yield* (yield* FileSystem.FileSystem).readFileString(
-    fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/literal-cleaners.json", import.meta.url))
+    NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/literal-cleaners.json", import.meta.url))
   );
   expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
     "242701dc5547bc00fa441117925f934e45c4505f1515e4c51ab0e8380dd199e8"
@@ -103,7 +103,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("literal citation cl
         const cleaners = yield* makeCitationLiteralCleaners((yield* defaultCitationEnginePolicy).limits);
         const Rows = S.Struct({ operation: S.String, payload: S.String });
         const operationsText = yield* fs.readFileString(
-          fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/operation-cases.json", import.meta.url))
+          NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/operation-cases.json", import.meta.url))
         );
         expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(operationsText))).toBe(
           "ae441000ddc90537864e3fdd4a9dfc4aa81af37a65818b48ce9bf37d95d1eeb1"
@@ -112,7 +112,9 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("literal citation cl
           operationsText
         )).cases;
         const supplementalText = yield* fs.readFileString(
-          fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/supplemental-extraction.json", import.meta.url))
+          NodeURL.fileURLToPath(
+            new URL("../../use-cases/test/fixtures/eyecite/supplemental-extraction.json", import.meta.url)
+          )
         );
         expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(supplementalText))).toBe(
           "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9"

@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { Citation } from "@beep/law-practice-domain/values";
 import { CitationCallbackResource } from "@beep/law-practice-server/internal/Citation/CallbackSession";
@@ -116,7 +116,9 @@ export const normalizeCallbackFixtureResource = Effect.fn("CallbackTest.resource
 const templates = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const raw = yield* fs.readFileString(
-    fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/default-resolution-cases.json", import.meta.url))
+    NodeURL.fileURLToPath(
+      new URL("../../use-cases/test/fixtures/eyecite/default-resolution-cases.json", import.meta.url)
+    )
   );
   const data = yield* S.decodeEffect(CorpusJson)(raw);
   return HashMap.fromIterable(

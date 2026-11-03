@@ -30,7 +30,6 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Struct from "effect/Struct";
 import * as Tuple from "effect/Tuple";
 import { makeCitationAuthorityId } from "./AuthorityIdentity.ts";
 import { prepareCitationResolution } from "./ResolutionInput.ts";
@@ -47,7 +46,7 @@ import type * as Digest from "effect/crypto/Digest";
 
 const CitationDocumentType = S.toType(CitationDocument);
 
-import { citationMetadataValues } from "./MetadataValues.ts";
+import { citationMetadataValues, citationReferenceNames } from "./MetadataValues.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/Resolve");
 const Entry = S.Struct({
@@ -142,13 +141,17 @@ export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(fun
       return CitationAmbiguous.make({ mentionId: mention.id, candidateAuthorityIds: ids, confidence: O.none() });
     return CitationUnresolved.make({ mentionId: mention.id, reason: "no-matching-authority" });
   });
+  const selectedEditionOf = Effect.fnUntraced(function* (citation: FullCitation | ShortFormCaseCitation) {
+    const selectedEdition = O.flatMap(citation.publication.selectedEdition, (id) => HashMap.get(editions, id));
+    if (O.isSome(citation.publication.selectedEdition) && O.isNone(selectedEdition))
+      return yield* CitationResolveFailure.make({ reason: "edition-missing" });
+    return selectedEdition;
+  });
   const resolveFull = Effect.fn("Citation.resolveFullMention")(function* (
     mention: CitationMention,
     citation: FullCitation
   ) {
-    const selectedEdition = O.flatMap(citation.publication.selectedEdition, (id) => HashMap.get(editions, id));
-    if (O.isSome(citation.publication.selectedEdition) && O.isNone(selectedEdition))
-      return yield* CitationResolveFailure.make({ reason: "edition-missing" });
+    const selectedEdition = yield* selectedEditionOf(citation);
     const id = yield* makeCitationAuthorityId({ citation, mentionId: mention.id, selectedEdition }).pipe(
       Effect.mapError(() => CitationResolveFailure.make({ reason: "identity-failed" }))
     );
@@ -234,9 +237,7 @@ export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(fun
   ) {
     let candidates = Chunk.empty<typeof Entry.Type>();
     const groups = yield* S.encodeEffect(CitationComponents)(citation.components).pipe(Effect.mapError(invalid));
-    const selectedEdition = O.flatMap(citation.publication.selectedEdition, (id) => HashMap.get(editions, id));
-    if (O.isSome(citation.publication.selectedEdition) && O.isNone(selectedEdition))
-      return yield* CitationResolveFailure.make({ reason: "edition-missing" });
+    const selectedEdition = yield* selectedEditionOf(citation);
     const reporter = O.isSome(selectedEdition)
       ? selectedEdition.value.shortName
       : O.getOrElse(R.get(groups, "reporter"), () => null);
@@ -274,10 +275,7 @@ export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(fun
     mention: CitationMention,
     citation: ReferenceCitation
   ) {
-    const names = A.filter(
-      A.getSomes(R.values(Struct.pick(citation.metadata, ["plaintiff", "defendant", "shortCaseName", "caseName"]))),
-      Str.isNonEmpty
-    );
+    const names = citationReferenceNames(citation.metadata);
     if (A.length(names) === 0) return yield* missingAntecedent(mention);
     let candidates = Chunk.empty<typeof Entry.Type>();
     for (const entry of fulls) {

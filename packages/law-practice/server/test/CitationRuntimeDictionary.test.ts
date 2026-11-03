@@ -121,27 +121,37 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("source runtime d
           const table = yield* makeCitationRuntimeDictionary(
             CitationRuntimeDictionaryLimits.make({ entries: 64, iterations: 20_000 })
           ).pipe(Effect.provideService(CitationRuntimeDictionaryComparison, comparison));
+          const operationKey = (id: number) =>
+            Effect.fromOption(HashMap.get(keys, id), invalid).pipe(
+              Effect.map((state) => CitationRuntimeDictionaryKey.make({ objectId: state.objectId, hash: state.hash }))
+            );
+          const prepareOperation = Effect.fnUntraced(function* (operation: typeof Operation.Type) {
+            return yield* Operation.match(operation, {
+              get: Effect.fnUntraced(function* (op) {
+                return { run: table.get(yield* operationKey(op.key)) };
+              }),
+              remove: Effect.fnUntraced(function* (op) {
+                return { run: table.remove(yield* operationKey(op.key)) };
+              }),
+              set: Effect.fnUntraced(function* (op) {
+                return {
+                  run: table
+                    .set(yield* operationKey(op.key), op.value)
+                    .pipe(Effect.as(O.none<CitationRuntimeDictionaryEntry>())),
+                };
+              }),
+              clear: () =>
+                Effect.succeed({ run: table.clear.pipe(Effect.as(O.none<CitationRuntimeDictionaryEntry>())) }),
+              hash: () => Effect.succeed({ run: Effect.succeedNone }),
+              error: () => Effect.succeed({ run: Effect.succeedNone }),
+            });
+          });
           yield* Effect.forEach(
             row.events,
             Effect.fnUntraced(function* (event) {
               keys = HashMap.fromIterable(A.map(event.keys, (key) => Tuple.make(key.objectId, key)));
               comparisons = [];
-              const operation = event.operation;
-              let run: Effect.Effect<O.Option<CitationRuntimeDictionaryEntry>, CitationRuntimeDictionaryFailure>;
-              if (operation.kind === "get" || operation.kind === "remove" || operation.kind === "set") {
-                const state = yield* Effect.fromOption(HashMap.get(keys, operation.key), invalid);
-                const key = CitationRuntimeDictionaryKey.make({ objectId: state.objectId, hash: state.hash });
-                run =
-                  operation.kind === "get"
-                    ? table.get(key)
-                    : operation.kind === "remove"
-                      ? table.remove(key)
-                      : table.set(key, operation.value).pipe(Effect.as(O.none<CitationRuntimeDictionaryEntry>()));
-              } else
-                run =
-                  operation.kind === "clear"
-                    ? table.clear.pipe(Effect.as(O.none<CitationRuntimeDictionaryEntry>()))
-                    : Effect.succeedNone;
+              const { run } = yield* prepareOperation(event.operation);
               let actual: typeof Outcome.Type;
               if (event.outcome.status === "error") {
                 const failure = yield* Effect.flip(run);

@@ -31,7 +31,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
 import { makeCitationMentionId } from "./MentionIdentity.ts";
-import { snapshotCitationValue } from "./Snapshot.ts";
+import { captureCitationRestoration } from "./Snapshot.ts";
 import type { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
 import type * as Digest from "effect/crypto/Digest";
 
@@ -220,13 +220,10 @@ const reverify = Effect.fn("Citation.reverifyMentionAnchor")(function* (
 export const restoreCitationMention = Effect.fn("Citation.restoreMention")(function* (
   input: unknown
 ): Effect.fn.Return<CitationMention, CitationMentionFailure, Digest.Digest> {
-  const decoded = yield* S.decodeUnknownEffect(RestoreInputType)(input).pipe(Effect.mapError(invalid));
-  // Copy all structural input before the first asynchronous hash. Receipts are
-  // data, and caller-owned objects cannot be allowed to change mid-verification.
-  const snapshot = yield* snapshotCitationValue(RestoreJson, decoded, invalid);
+  const snapshot = yield* captureCitationRestoration(RestoreInputType, RestoreJson, input, invalid, () =>
+    CitationMentionFailure.make({ reason: "stale-engine" })
+  );
   const receipt = snapshot.receipt;
-  if (receipt.engineArtifact !== snapshot.expectedEngineArtifact)
-    return yield* CitationMentionFailure.make({ reason: "stale-engine" });
   const verifiedSource = yield* verifySourceTextIdentity(
     VerifySourceTextIdentityInput.make({
       expectedSource: snapshot.expectedSource,

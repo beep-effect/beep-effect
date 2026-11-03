@@ -1,12 +1,24 @@
 /** Independent exit observations for hosted native citation qualification.
  * @internal @packageDocumentation @since 0.0.0
  */
+import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { CitationHtmlWorkerRuntime } from "@beep/law-practice-server/internal/Citation/HtmlWorker";
 import { assertFailure } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+
+/** The actual owned HTML entrypoint, resolved from the test fixture location.
+ * @internal @category testing @since 0.0.0
+ */
+export const citationHtmlWorkerTestRuntime = () =>
+  CitationHtmlWorkerRuntime.make({
+    executable: process.execPath,
+    cwd: process.cwd(),
+    workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
+  });
 
 const $I = $LawPracticeServerId.create("test/CitationNativeSpawner");
 const MissingProcess = S.Struct({ code: S.tag("ESRCH") }).pipe(

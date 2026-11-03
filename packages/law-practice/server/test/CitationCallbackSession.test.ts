@@ -400,123 +400,128 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
         expect(A.length(A.dedupe(A.map(data.cases, (row) => row.name)))).toBe(18);
         expect(A.reduce(data.cases, 0, (count, row) => count + A.length(row.kinds))).toBe(56);
         expect(A.reduce(data.cases, 0, (count, row) => count + A.length(row.events))).toBe(53);
-        for (const row of data.cases) {
-          const input = yield* context(row);
-          const prepared = yield* prepareCitationResolution(input);
-          const work = yield* makeCitationResolutionWork(prepared.limits);
-          const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
-            Effect.provideService(CitationResolutionWork, work)
-          );
-          const defaults = yield* makeDefaultCitationResolutionCallbacks(prepared).pipe(
-            Effect.provideService(CitationCallbackDictionary, dictionary),
-            Effect.provideService(CitationResolutionWork, work)
-          );
-          const crypto = yield* Digest.Digest;
-          const byId = HashMap.fromIterable(
-            A.map(input.mentions, (mention, index) => Tuple.make(mention.id, { mention, index }))
-          );
-          const indexOf = (id: CitationMentionId) =>
-            O.getOrElse(
-              O.map(HashMap.get(byId, id), (entry) => entry.index),
-              () => -1
+        yield* Effect.forEach(
+          data.cases,
+          Effect.fnUntraced(function* (row) {
+            const input = yield* context(row);
+            const prepared = yield* prepareCitationResolution(input);
+            const work = yield* makeCitationResolutionWork(prepared.limits);
+            const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
+              Effect.provideService(CitationResolutionWork, work)
             );
-          const groupValue = (group: CitationCallbackGroup | CitationCallbackEntry): S.Json => ({
-            resource: presentation(group.resource),
-            members: A.map(group.members, (reference) =>
-              reference._tag === "Mention" ? indexOf(reference.mentionId) : -1
-            ),
-          });
-          let events = A.empty<S.Json>();
-          const behavior = Effect.fn("CallbackTest.behavior")(function* (
-            slot: string,
-            id: CitationMentionId,
-            event: S.Json
-          ) {
-            const binding = R.get(row.bindings, slot);
-            if (O.isNone(binding)) return "default";
-            events = A.append(events, event);
-            const value = binding.value;
-            if (P.isObject(value) && !A.isArray(value)) {
-              const record = yield* S.decodeUnknownEffect(S.JsonObject)(value);
-              return O.getOrElse(R.get(record, yield* S.encodeEffect(S.FiniteFromString)(indexOf(id))), () => null);
-            }
-            return value;
-          });
-          const fullsCallback = (slot: string) =>
-            Effect.fn("CallbackTest.fulls")(function* (arg: CitationFullsCallbackInput) {
-              const action = yield* behavior(slot, arg.mention.id, {
-                slot,
-                mention: indexOf(arg.mention.id),
-                fulls: A.map(arg.fulls, (entry) => ({
-                  mention: entry.citation._tag === "Mention" ? indexOf(entry.citation.mentionId) : -1,
-                  resource: presentation(entry.resource),
-                })),
-              });
-              if (action === "raise") return yield* fail();
-              if (action === "clear-fulls") {
-                yield* dictionary.writeFulls([]);
-                return CitationCallbackResult.make({ resource: none() });
-              }
-              if (action !== "default") return CitationCallbackResult.make({ resource: yield* resource(action) });
-              if (slot === "shortcase") return yield* defaults.shortCase(arg);
-              if (slot === "supra") return yield* defaults.supra(arg);
-              return yield* defaults.reference(arg);
-            });
-          const short = fullsCallback("shortcase");
-          const supra = fullsCallback("supra");
-          const reference = fullsCallback("reference");
-          const callbacks = CitationResolutionCallbacks.of({
-            full: Effect.fn("CallbackTest.full")(
-              function* (mention: (typeof input.mentions)[number]) {
-                const action = yield* behavior("full", mention.id, { slot: "full", mention: indexOf(mention.id) });
-                if (action !== "default") return yield* resource(action);
-                return yield* defaults.full(mention);
-              },
-              Effect.provideService(Digest.Digest, crypto),
-              Effect.mapError(fail)
-            ),
-            shortCase: Effect.fn("CallbackTest.short")((arg: CitationFullsCallbackInput) =>
-              short(arg).pipe(Effect.provideService(Digest.Digest, crypto), Effect.mapError(fail))
-            ),
-            supra: Effect.fn("CallbackTest.supra")((arg: CitationFullsCallbackInput) =>
-              supra(arg).pipe(Effect.provideService(Digest.Digest, crypto), Effect.mapError(fail))
-            ),
-            reference: Effect.fn("CallbackTest.reference")((arg: CitationFullsCallbackInput) =>
-              reference(arg).pipe(Effect.provideService(Digest.Digest, crypto), Effect.mapError(fail))
-            ),
-            id: Effect.fn("CallbackTest.id")(
-              function* (arg: CitationIdCallbackInput) {
-                const action = yield* behavior("id", arg.mention.id, {
-                  slot: "id",
-                  mention: indexOf(arg.mention.id),
-                  last: presentation(arg.last),
-                  groups: A.map(arg.groups, groupValue),
-                });
-                if (action !== "default") return CitationCallbackResult.make({ resource: yield* resource(action) });
-                return yield* defaults.id(arg);
-              },
-              Effect.provideService(Digest.Digest, crypto),
-              Effect.mapError(fail)
-            ),
-          });
-          const result = yield* runPreparedCitationCallbackSession(prepared).pipe(
-            Effect.provideService(CitationResolutionWork, work),
-            Effect.provideService(CitationCallbackDictionary, dictionary),
-            Effect.provideService(CitationResolutionCallbacks, callbacks),
-            Effect.result
-          );
-          if (row.outcome.status === "error") {
-            expect(result._tag, row.name).toBe("Failure");
-            if (result._tag === "Failure")
-              expect(result.failure.reason).toBe(
-                row.outcome.kind === "TypeError" ? "unhashable-resource" : "callback-failed"
+            const defaults = yield* makeDefaultCitationResolutionCallbacks(prepared).pipe(
+              Effect.provideService(CitationCallbackDictionary, dictionary),
+              Effect.provideService(CitationResolutionWork, work)
+            );
+            const crypto = yield* Digest.Digest;
+            const byId = HashMap.fromIterable(
+              A.map(input.mentions, (mention, index) => Tuple.make(mention.id, { mention, index }))
+            );
+            const indexOf = (id: CitationMentionId) =>
+              O.getOrElse(
+                O.map(HashMap.get(byId, id), (entry) => entry.index),
+                () => -1
               );
-          } else {
-            if (result._tag !== "Success") return yield* result.failure;
-            expect(A.map(result.success.groups, groupValue), row.name).toEqual(row.outcome.groups);
-          }
-          expect(events, row.name).toEqual(row.events);
-        }
+            const groupValue = (group: CitationCallbackGroup | CitationCallbackEntry): S.Json => ({
+              resource: presentation(group.resource),
+              members: A.map(group.members, (reference) =>
+                reference._tag === "Mention" ? indexOf(reference.mentionId) : -1
+              ),
+            });
+            let events = A.empty<S.Json>();
+            const behavior = Effect.fn("CallbackTest.behavior")(function* (
+              slot: string,
+              id: CitationMentionId,
+              event: S.Json
+            ) {
+              const binding = R.get(row.bindings, slot);
+              if (O.isNone(binding)) return "default";
+              events = A.append(events, event);
+              const value = binding.value;
+              if (P.isObject(value) && !A.isArray(value)) {
+                const record = yield* S.decodeUnknownEffect(S.JsonObject)(value);
+                return O.getOrElse(R.get(record, yield* S.encodeEffect(S.FiniteFromString)(indexOf(id))), () => null);
+              }
+              return value;
+            });
+            const fullsCallback = (slot: string) =>
+              Effect.fn("CallbackTest.fulls")(function* (arg: CitationFullsCallbackInput) {
+                const action = yield* behavior(slot, arg.mention.id, {
+                  slot,
+                  mention: indexOf(arg.mention.id),
+                  fulls: A.map(arg.fulls, (entry) => ({
+                    mention: entry.citation._tag === "Mention" ? indexOf(entry.citation.mentionId) : -1,
+                    resource: presentation(entry.resource),
+                  })),
+                });
+                if (action === "raise") return yield* fail();
+                if (action === "clear-fulls") {
+                  yield* dictionary.writeFulls([]);
+                  return CitationCallbackResult.make({ resource: none() });
+                }
+                if (action !== "default") return CitationCallbackResult.make({ resource: yield* resource(action) });
+                if (slot === "shortcase") return yield* defaults.shortCase(arg);
+                if (slot === "supra") return yield* defaults.supra(arg);
+                return yield* defaults.reference(arg);
+              });
+            const short = fullsCallback("shortcase");
+            const supra = fullsCallback("supra");
+            const reference = fullsCallback("reference");
+            const callbacks = CitationResolutionCallbacks.of({
+              full: Effect.fn("CallbackTest.full")(
+                function* (mention: (typeof input.mentions)[number]) {
+                  const action = yield* behavior("full", mention.id, { slot: "full", mention: indexOf(mention.id) });
+                  if (action !== "default") return yield* resource(action);
+                  return yield* defaults.full(mention);
+                },
+                Effect.provideService(Digest.Digest, crypto),
+                Effect.mapError(fail)
+              ),
+              shortCase: Effect.fn("CallbackTest.short")((arg: CitationFullsCallbackInput) =>
+                short(arg).pipe(Effect.provideService(Digest.Digest, crypto), Effect.mapError(fail))
+              ),
+              supra: Effect.fn("CallbackTest.supra")((arg: CitationFullsCallbackInput) =>
+                supra(arg).pipe(Effect.provideService(Digest.Digest, crypto), Effect.mapError(fail))
+              ),
+              reference: Effect.fn("CallbackTest.reference")((arg: CitationFullsCallbackInput) =>
+                reference(arg).pipe(Effect.provideService(Digest.Digest, crypto), Effect.mapError(fail))
+              ),
+              id: Effect.fn("CallbackTest.id")(
+                function* (arg: CitationIdCallbackInput) {
+                  const action = yield* behavior("id", arg.mention.id, {
+                    slot: "id",
+                    mention: indexOf(arg.mention.id),
+                    last: presentation(arg.last),
+                    groups: A.map(arg.groups, groupValue),
+                  });
+                  if (action !== "default") return CitationCallbackResult.make({ resource: yield* resource(action) });
+                  return yield* defaults.id(arg);
+                },
+                Effect.provideService(Digest.Digest, crypto),
+                Effect.mapError(fail)
+              ),
+            });
+            const result = yield* runPreparedCitationCallbackSession(prepared).pipe(
+              Effect.provideService(CitationResolutionWork, work),
+              Effect.provideService(CitationCallbackDictionary, dictionary),
+              Effect.provideService(CitationResolutionCallbacks, callbacks),
+              Effect.result
+            );
+            if (row.outcome.status === "error") {
+              expect(result, row.name).toMatchObject({
+                _tag: "Failure",
+                failure: {
+                  reason: row.outcome.kind === "TypeError" ? "unhashable-resource" : "callback-failed",
+                },
+              });
+            } else {
+              if (result._tag !== "Success") return yield* result.failure;
+              expect(A.map(result.success.groups, groupValue), row.name).toEqual(row.outcome.groups);
+            }
+            expect(events, row.name).toEqual(row.events);
+          }),
+          { concurrency: 1, discard: true }
+        );
       }),
     { timeout: 30_000 }
   );

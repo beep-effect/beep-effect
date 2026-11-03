@@ -11,6 +11,7 @@ import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as BI from "effect/BigInt";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -71,30 +72,32 @@ export const isCitationPythonDigit = (text: string): boolean =>
  * @category transformations
  * @since 0.0.0
  */
-export const stripCitationAntecedentPunctuation = (text: string): string => {
-  let value = Str.replace(/^["']/u, "")(text);
-  value = Str.replace(/``/gu, "")(value);
-  value = Str.replace(/([ ([{<])"/gu, "")(value);
-  value = Str.replace(/\.\.\./gu, "")(value);
-  value = Str.replace(/[,;:@#$%&]/gu, "")(value);
-  value = Str.replace(
-    /([^.])(\.)([\])}>"']*)[\u0009-\u000d\u001c-\u0020\u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]*$/gu,
-    "$1"
-  )(value);
-  value = Str.replace(/[?!]/gu, "")(value);
-  value = Str.replace(/([^'])' /gu, "")(value);
-  value = Str.replace(/[\][(){}<>]/gu, "")(value);
-  value = Str.replace(/--/gu, "")(value);
-  value = Str.replace(/"/gu, "")(value);
-  value = Str.replace(
-    /([^\u0009-\u000d\u001c-\u0020\u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000])(''?)/gu,
-    "$1"
-  )(value);
-  return Str.replace(
-    /^[\u0009-\u000d\u001c-\u0020\u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]+|[\u0009-\u000d\u001c-\u0020\u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]+$/gu,
-    ""
-  )(value);
-};
+export const stripCitationAntecedentPunctuation = (text: string): string =>
+  pipe(
+    text,
+    Str.replace(/^["']/u, ""),
+    Str.replace(/``/gu, ""),
+    Str.replace(/([ ([{<])"/gu, ""),
+    Str.replace(/\.\.\./gu, ""),
+    Str.replace(/[,;:@#$%&]/gu, ""),
+    Str.replace(
+      /([^.])(\.)([\])}>"']*)[\u0009-\u000d\u001c-\u0020\u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]*$/gu,
+      "$1"
+    ),
+    Str.replace(/[?!]/gu, ""),
+    Str.replace(/([^'])' /gu, ""),
+    Str.replace(/[\][(){}<>]/gu, ""),
+    Str.replace(/--/gu, ""),
+    Str.replace(/"/gu, ""),
+    Str.replace(
+      /([^\u0009-\u000d\u001c-\u0020\u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000])(''?)/gu,
+      "$1"
+    ),
+    Str.replace(
+      /^[\u0009-\u000d\u001c-\u0020\u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]+|[\u0009-\u000d\u001c-\u0020\u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]+$/gu,
+      ""
+    )
+  );
 
 const decimalInteger = Effect.fn("Citation.parseResolverDecimal")(function* (characters: ReadonlyArray<string>) {
   // Match the frozen Python integer conversion limit, including leading zeroes.

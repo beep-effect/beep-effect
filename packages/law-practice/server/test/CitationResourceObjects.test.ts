@@ -174,13 +174,37 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
             owner.start,
             () =>
               Effect.gen(function* () {
+                const keyedOperation = Effect.fnUntraced(function* (
+                  operation: Extract<typeof Operation.Type, { readonly resource: number }>,
+                  expected: S.Json
+                ) {
+                  const resource = A.getUnsafe(resources, operation.resource);
+                  if (S.is(MissingReporterOutcome)(expected)) {
+                    const failure = yield* Effect.flip(objects.key(resource));
+                    expect(operation.kind).toBe("hash");
+                    expect(failure.reason).toBe("missing-reporter");
+                    return { status: "error", field: "reporter" };
+                  }
+                  const key = yield* objects.key(resource);
+                  let result: S.Json = null;
+                  if (operation.kind === "hash") result = yield* S.encodeEffect(S.BigIntFromString)(key.hash);
+                  else if (operation.kind === "set") yield* table.set(key, operation.value);
+                  else {
+                    const hit = yield* operation.kind === "get" ? table.get(key) : table.remove(key);
+                    result = O.getOrElse(
+                      O.map(hit, (entry) => entry.value),
+                      () => null
+                    );
+                  }
+                  return { status: "value", result };
+                });
                 yield* Effect.forEach(
                   row.events,
                   Effect.fnUntraced(function* (event) {
                     comparisons = [];
                     const operation = event.operation;
                     let result: S.Json = null;
-                    let outcome: S.Json;
+                    let keyedOutcome = O.none<S.Json>();
                     if (operation.kind === "create") {
                       const resource = yield* objects.create(reference(operation.reference));
                       resources = A.append(resources, resource);
@@ -197,32 +221,9 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
                       result = yield* comparison.equal(operation.left, operation.right);
                     else if (operation.kind === "clear") yield* table.clear;
                     else {
-                      const resource = A.getUnsafe(resources, operation.resource);
-                      if (S.is(MissingReporterOutcome)(event.outcome)) {
-                        const failure = yield* Effect.flip(objects.key(resource));
-                        expect(operation.kind).toBe("hash");
-                        expect(failure.reason).toBe("missing-reporter");
-                        outcome = { status: "error", field: "reporter" };
-                        expect(outcome, row.name).toEqual(event.outcome);
-                        expect(
-                          A.map(yield* table.read, (entry) => ({ objectId: entry.objectId, value: entry.value }))
-                        ).toEqual(event.entries);
-                        expect(comparisons).toEqual(event.comparisons);
-                        events += 1;
-                        return;
-                      }
-                      const key = yield* objects.key(resource);
-                      if (operation.kind === "hash") result = yield* S.encodeEffect(S.BigIntFromString)(key.hash);
-                      else if (operation.kind === "set") yield* table.set(key, operation.value);
-                      else {
-                        const hit = yield* operation.kind === "get" ? table.get(key) : table.remove(key);
-                        result = O.getOrElse(
-                          O.map(hit, (entry) => entry.value),
-                          () => null
-                        );
-                      }
+                      keyedOutcome = O.some(yield* keyedOperation(operation, event.outcome));
                     }
-                    outcome = { status: "value", result };
+                    const outcome = O.getOrElse(keyedOutcome, () => ({ status: "value", result }));
                     expect(outcome, row.name).toEqual(event.outcome);
                     expect(
                       A.map(yield* table.read, (entry) => ({ objectId: entry.objectId, value: entry.value })),

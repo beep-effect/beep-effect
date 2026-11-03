@@ -1,5 +1,4 @@
 /** Scoped registry protocol test harness. @internal @packageDocumentation @since 0.0.0 */
-import * as NodeURL from "node:url";
 import {
   CitationBuiltinCleaners,
   makeCitationBuiltinCleaners,
@@ -25,6 +24,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
+import { citationHtmlWorkerTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 import type {
   CitationCleanerObject,
   CitationCleanerProduced,
@@ -56,11 +56,7 @@ export const makeCitationCleanerRegistryHarness = Effect.fn("CleanerRegistryTest
     resolutionIterations: O.getOrElse(O.fromUndefinedOr(iterations), () => base.resolutionIterations),
   };
   const values = yield* makeCitationCleanerValues(limits);
-  const builtin = yield* makeCitationBuiltinCleaners(limits, {
-    executable: process.execPath,
-    cwd: process.cwd(),
-    workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
-  }).pipe(
+  const builtin = yield* makeCitationBuiltinCleaners(limits, citationHtmlWorkerTestRuntime()).pipe(
     Effect.provideService(CitationCleanerValues, values),
     Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
   );

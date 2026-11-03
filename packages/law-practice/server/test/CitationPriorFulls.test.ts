@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { Citation, CitationGroupMember, CitationMention } from "@beep/law-practice-domain/values";
 import {
@@ -72,7 +72,9 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("retained prior-f
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const raw = yield* fs.readFileString(
-        fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/prior-full-observations.json", import.meta.url))
+        NodeURL.fileURLToPath(
+          new URL("../../use-cases/test/fixtures/eyecite/prior-full-observations.json", import.meta.url)
+        )
       );
       expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
         "191b4e7f872ffb886f2532aba1a4fc68f25a5022141df7207197906d49c9b2ac"

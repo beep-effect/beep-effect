@@ -113,7 +113,7 @@ export const measureCitationPythonText = Effect.fn("Citation.measurePythonText")
  */
 export const validateCitationPythonStorage = Effect.fn("Citation.validatePythonStorage")(function* <E>(
   bytes: Uint8Array,
-  width: (typeof CitationPythonUnicodeStorage.Type)["width"],
+  width: CitationPythonUnicodeStorage["width"],
   maximum: number,
   invalid: () => E,
   overflow: () => E

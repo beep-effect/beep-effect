@@ -6,14 +6,16 @@
  * @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationComponents, FullCaseCitation } from "@beep/law-practice-domain/values";
+import { FullCaseCitation } from "@beep/law-practice-domain/values";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { CitationAuthorityEdition, citationAuthorityEditionMatches } from "./AuthorityIdentity.ts";
+import { readCitationResourcePage } from "./ResourceComponents.ts";
 import { encodeCitationRuntimeString, hashCitationRuntimePreimage } from "./RuntimeHashEncoding.ts";
+import type { CitationComponents } from "@beep/law-practice-domain/values";
 import type * as Digest from "effect/crypto/Digest";
 
 const $I = $LawPracticeServerId.create("internal/Citation/CaseResourceHash");
@@ -135,17 +137,17 @@ export const makeCitationCaseResourceHash = Effect.fn("Citation.makeCaseResource
   const decoded = yield* S.decodeUnknownEffect(CitationCaseResourceHashInputType)(input).pipe(
     Effect.mapError(() => failure("invalid-input"))
   );
-  const groups = yield* S.encodeEffect(CitationComponents)(decoded.citation.components).pipe(
-    Effect.mapError(() => failure("invalid-input"))
+  const [groups, page] = yield* readCitationResourcePage(
+    decoded.citation,
+    () => failure("invalid-input"),
+    () => failure("missing-page")
   );
-  const page = R.get(groups, "page");
-  if (O.isNone(page)) return yield* failure("missing-page");
   let citationHash: bigint;
-  if (page.value === null) {
+  if (page === null) {
     if (O.isNone(decoded.missingPageIdentityHash)) return yield* failure("identity-unavailable");
     citationHash = decoded.missingPageIdentityHash.value;
   } else {
-    citationHash = yield* nonNullCaseHash(decoded, groups, page.value);
+    citationHash = yield* nonNullCaseHash(decoded, groups, page);
   }
   const decimal = yield* S.encodeEffect(S.BigIntFromString)(citationHash).pipe(
     Effect.mapError(() => failure("invalid-input"))

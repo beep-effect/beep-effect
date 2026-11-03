@@ -15,7 +15,6 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Struct from "effect/Struct";
 import * as Tuple from "effect/Tuple";
 import { prepareCitationCallbackInput } from "./CallbackInput.ts";
 import { CitationDefaultObservation, issueCitationDefaultNone } from "./CallbackObservations.ts";
@@ -29,7 +28,7 @@ import {
   makeCitationResolutionWork,
   runPreparedCitationCallbackSession,
 } from "./CallbackSession.ts";
-import { citationMetadataValues } from "./MetadataValues.ts";
+import { citationMetadataValues, citationReferenceNames } from "./MetadataValues.ts";
 import { hasInvalidCitationPinCite, stripCitationAntecedentPunctuation } from "./ResolverText.ts";
 import type { Citation, CitationMention, CitationMentionId } from "@beep/law-practice-domain/values";
 import type { CitationCallbackFull, CitationFullsCallbackInput, CitationIdCallbackInput } from "./CallbackSession.ts";
@@ -188,10 +187,7 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
       function* (input: CitationFullsCallbackInput) {
         const citation = yield* currentCitation(input.mention);
         if (citation.type !== "reference") return yield* invalid();
-        const names = A.filter(
-          A.getSomes(R.values(Struct.pick(citation.metadata, ["plaintiff", "defendant", "shortCaseName", "caseName"]))),
-          Str.isNonEmpty
-        );
+        const names = citationReferenceNames(citation.metadata);
         if (A.length(names) === 0) return yield* unresolved(input.mention.id, "missing-antecedent");
         let candidates = A.empty<CitationCallbackFull>();
         if (A.length(names) > 0)

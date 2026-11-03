@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationComponents, CitationGroupMember, FullCitation } from "@beep/law-practice-domain/values";
+import { CitationGroupMember, FullCitation } from "@beep/law-practice-domain/values";
 import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as Context from "effect/Context";
@@ -14,7 +14,6 @@ import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import { CitationAuthorityEdition } from "./AuthorityIdentity.ts";
@@ -31,6 +30,8 @@ import {
 } from "./RuntimeDictionary.ts";
 
 const CitationEngineLimitsType = S.toType(CitationEngineLimits);
+
+import { readCitationResourcePage } from "./ResourceComponents.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/ResourceObjects");
 /**
@@ -185,12 +186,12 @@ export const makeCitationResourceObjects = Effect.fn("Citation.makeResourceObjec
     const citation = current.citation;
     if (citation.type === "case") {
       // Explicit null pages must not evaluate reporter/edition lookup.
-      const groups = yield* S.encodeEffect(CitationComponents)(citation.components).pipe(
-        Effect.mapError(() => failure("invalid-input"))
+      const [, page] = yield* readCitationResourcePage(
+        citation,
+        () => failure("invalid-input"),
+        () => failure("missing-page")
       );
-      const page = R.get(groups, "page");
-      if (O.isNone(page)) return yield* failure("missing-page");
-      const nullPage = page.value === null;
+      const nullPage = page === null;
       const selected = nullPage ? O.none() : citation.publication.selectedEdition;
       const edition = O.isSome(selected)
         ? O.some(yield* editions.lookup(selected.value, "case").pipe(Effect.mapError(() => failure("artifact-failed"))))

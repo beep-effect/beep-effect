@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { Citation } from "@beep/law-practice-domain/values";
 import { CitationAuthorityEdition } from "@beep/law-practice-server/internal/Citation/AuthorityIdentity";
 import { CitationOracleOperations } from "@beep/law-practice-use-cases/test";
@@ -62,10 +62,12 @@ const vocabularyUrl = new URL("../../use-cases/test/fixtures/eyecite/vocabulary-
  */
 export const loadResolutionOperationContexts = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
-  const raw = yield* fs.readFileString(fileURLToPath(corpusUrl));
+  const raw = yield* fs.readFileString(NodeURL.fileURLToPath(corpusUrl));
   const corpus = yield* S.decodeEffect(CitationOracleOperationsJson)(raw);
   const corpusSha256 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
-  const vocabulary = yield* S.decodeEffect(VocabularyJson)(yield* fs.readFileString(fileURLToPath(vocabularyUrl)));
+  const vocabulary = yield* S.decodeEffect(VocabularyJson)(
+    yield* fs.readFileString(NodeURL.fileURLToPath(vocabularyUrl))
+  );
   const editions = HashMap.fromIterable(
     A.map(vocabulary.editions, (edition) => Tuple.make(edition.artifactSha256, edition))
   );
@@ -96,6 +98,7 @@ export const loadResolutionOperationContexts = Effect.gen(function* () {
       Match.when("FullLawCitation", () => R.toEntries({ publisher: "publisher" })),
       Match.orElse(() => [])
     );
+  const courtValue = (court: string | null) => (court === null ? null : { status: "unmapped", value: court });
   const project = Effect.fn("ResolveTest.projectOracleCitation")(function* (source: OracleCitation) {
     const meta = yield* S.decodeUnknownEffect(Metadata)(source.fields.metadata);
     const read = Effect.fn("ResolveTest.readMetadata")(function* (key: string) {
@@ -127,11 +130,7 @@ export const loadResolutionOperationContexts = Effect.gen(function* () {
           selectedEdition: selected,
         };
         const court = yield* read("court");
-        metadata = R.set<string, S.Json, string, S.Json>(
-          metadata,
-          "court",
-          court === null ? null : { status: "unmapped", value: court }
-        );
+        metadata = R.set<string, S.Json, string, S.Json>(metadata, "court", courtValue(court));
       }
       yield* Effect.forEach(
         ["year", "month", "day"],

@@ -101,6 +101,23 @@ const propertyCeiling = R.keys(CitationRegexWorkerJob.fields).length;
 const Layout = S.toType(CitationRegexInputLayout);
 const encoder = new TextEncoder();
 const decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
+const emptyJobHeader = Effect.fnUntraced(function* (
+  patternWidth: CitationRegexWorkerJob["patternWidth"],
+  sourceWidth: CitationRegexWorkerJob["sourceWidth"],
+  flags: CitationRegexWorkerJob["flags"],
+  maxMatches: CitationRegexWorkerJob["maxMatches"]
+) {
+  return yield* S.encodeEffect(JobJson)(
+    CitationRegexWorkerJob.make({
+      patternWidth,
+      sourceWidth,
+      flags,
+      maxMatches,
+      patternBytes: new Uint8Array(0),
+      sourceBytes: new Uint8Array(0),
+    })
+  ).pipe(Effect.mapError(invalid));
+});
 /** Check the exact encoded job while both preparers still have only layouts.
  * No pattern/source payload, base64 or whole-message allocation is required.
  * @internal @category operations @since 0.0.0
@@ -119,16 +136,7 @@ export const preflightCitationRegexJob = Effect.fn("Citation.preflightRegexJob")
   const flags = yield* S.decodeUnknownEffect(Flags)(flagsInput).pipe(Effect.mapError(invalid));
   const maxMatches = yield* S.decodeUnknownEffect(Matches)(maxMatchesInput).pipe(Effect.mapError(invalid));
   const limit = yield* S.decodeEffect(Limit)(maximum).pipe(Effect.mapError(invalid));
-  const header = yield* S.encodeEffect(JobJson)(
-    CitationRegexWorkerJob.make({
-      patternWidth: pattern.width,
-      sourceWidth: source.width,
-      patternBytes: new Uint8Array(0),
-      sourceBytes: new Uint8Array(0),
-      flags,
-      maxMatches,
-    })
-  ).pipe(Effect.mapError(invalid));
+  const header = yield* emptyJobHeader(pattern.width, source.width, flags, maxMatches);
   const bytes =
     encoder.encode(header).byteLength + 1 + paddedLength(pattern.byteLength) + paddedLength(source.byteLength);
   if (bytes > limit) return yield* exceeded();
@@ -144,9 +152,7 @@ export const encodeCitationRegexJob = Effect.fn("Citation.encodeRegexJob")(funct
 ) {
   const job = yield* S.decodeEffect(JobType)(input).pipe(Effect.mapError(invalid));
   const limit = yield* S.decodeEffect(Limit)(maximum).pipe(Effect.mapError(invalid));
-  const header = yield* S.encodeEffect(JobJson)(
-    CitationRegexWorkerJob.make({ ...job, patternBytes: new Uint8Array(0), sourceBytes: new Uint8Array(0) })
-  ).pipe(Effect.mapError(invalid));
+  const header = yield* emptyJobHeader(job.patternWidth, job.sourceWidth, job.flags, job.maxMatches);
   const count =
     encoder.encode(header).byteLength +
     1 +

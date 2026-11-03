@@ -31,6 +31,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
+import { citationHtmlWorkerTestRuntime, makeCitationObservedSpawner } from "./CitationNativeSpawner.fixtures.ts";
 import type {
   CitationCleanerObject,
   CitationCleanerWork,
@@ -79,40 +80,15 @@ export const makeCitationUnicodePipelineHarness = Effect.fn("UnicodePipelineTest
   const limits = allowNative
     ? { ...base, cleanDeadline: Duration.seconds(30), operationDeadline: Duration.seconds(60) }
     : base;
-  let spawned = 0;
-  let confirmed = 0;
   const values = yield* makeCitationCleanerValues(limits);
-  const real = yield* ChildProcessSpawner;
-  const builtins = yield* makeCitationBuiltinCleaners(limits, {
-    executable: process.execPath,
-    cwd: process.cwd(),
-    workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
-  }).pipe(
+  const observed = yield* makeCitationObservedSpawner();
+  const builtins = yield* makeCitationBuiltinCleaners(limits, citationHtmlWorkerTestRuntime()).pipe(
     Effect.provideService(CitationCleanerValues, values),
     Effect.provideService(ChildProcessSpawner, {
-      ...real,
-      spawn: Effect.fn("UnicodePipelineTest.spawn")((command: Parameters<typeof real.spawn>[0]) =>
+      ...observed.spawner,
+      spawn: Effect.fn("UnicodePipelineTest.spawn")((command: Parameters<typeof observed.spawner.spawn>[0]) =>
         allowNative
-          ? real.spawn(command).pipe(
-              Effect.map((handle) => {
-                spawned++;
-                let seen = false;
-                return {
-                  ...handle,
-                  isRunning: handle.isRunning.pipe(
-                    Effect.tap((running) =>
-                      Effect.sync(() => {
-                        if (!running && !seen) {
-                          expect(() => process.kill(handle.pid, 0)).toThrow();
-                          confirmed++;
-                          seen = true;
-                        }
-                      })
-                    )
-                  ),
-                };
-              })
-            )
+          ? observed.spawner.spawn(command)
           : Effect.die("Literal composition must not start a native worker.")
       ),
     })
@@ -185,6 +161,6 @@ export const makeCitationUnicodePipelineHarness = Effect.fn("UnicodePipelineTest
     },
     references: Effect.sync(() => retained),
     lastWork: Effect.sync(() => lastWork),
-    nativeCounts: Effect.sync(() => ({ spawned, confirmed })),
+    nativeCounts: observed.snapshot,
   };
 });

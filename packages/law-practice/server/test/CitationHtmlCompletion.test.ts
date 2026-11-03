@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { completeCitationHtml } from "@beep/law-practice-server/internal/Citation/HtmlCompletion";
 import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { Sha256HexFromBytes } from "@beep/schema";
@@ -41,7 +41,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("approved HTML safet
   it.effect("changes only the three source native-depth exhaustion outcomes", () =>
     Effect.gen(function* () {
       const raw = yield* (yield* FileSystem.FileSystem).readFileString(
-        fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/html-cleaner-audit.json", import.meta.url))
+        NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/html-cleaner-audit.json", import.meta.url))
       );
       expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
         "049bbadd90348588e2e7a1c62daf1f5dba0b6865df9f2001b9461b8b80f9cb71"

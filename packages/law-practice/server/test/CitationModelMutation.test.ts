@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { Citation, CitationGroupMember, CitationMention, CitationMentionId } from "@beep/law-practice-domain/values";
 import {
@@ -92,7 +92,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback semanti
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const raw = yield* fs.readFileString(
-        fileURLToPath(
+        NodeURL.fileURLToPath(
           new URL("../../use-cases/test/fixtures/eyecite/model-mutation-observations.json", import.meta.url)
         )
       );

@@ -48,7 +48,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexWorkerProtocol.ts",
-          "sha256": "ceeabec2910ba9cb9a6b4591557d60bdd17212d8e97776dc8060586826a55b4d"
+          "sha256": "2372be9e77755e51909d948d956fd07d8996a52b184bd3237b875983340a50a0"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/ByteFrames.ts",
@@ -236,7 +236,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/Document.ts",
-          "sha256": "c5b342082e8772c984f70c6cf0171b39126d3e9539a260401d7edd1b9a07a042"
+          "sha256": "e1eaaec36cca270ec5a007f79d234e87aced01d0c45b16cad58a09c35f68c3b9"
         }
       ],
       "workflowState": "audit",
@@ -313,7 +313,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationSessionDescriptors.test.ts",
-          "sha256": "c269c834f4b4cd2cb96c351df2393956bfe2eff40630c3c62bb48ceacff33ba2"
+          "sha256": "0c6b4cf73d54647d748e963fef7b0b6a59a24112cb7225a03a3ef5595755659a"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-registered-default-resolution.md",
@@ -325,7 +325,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationDefaultCallbacks.test.ts",
-          "sha256": "a668d022734af4ee1354a870bf8f8c8d63ef7604bce81739a006bcced3c946ae"
+          "sha256": "1831c3b8af766998e6ebd74aa7fd5b2baff4b47c249a7b666260bb8fd150ac46"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-default-branch-observations.md",
@@ -353,7 +353,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/Document.ts",
-          "sha256": "c5b342082e8772c984f70c6cf0171b39126d3e9539a260401d7edd1b9a07a042"
+          "sha256": "e1eaaec36cca270ec5a007f79d234e87aced01d0c45b16cad58a09c35f68c3b9"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-literal-cleaners.md",
@@ -365,7 +365,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationLiteralCleaners.test.ts",
-          "sha256": "4b13055d23b2fb4b8244d020683ec448db476bdbf0215b3518e56e2d428347ec"
+          "sha256": "4c63a2e7fec8c1520d1fa480834675b82a1c0c767f658da51e621bdf13e2e671"
         },
         {
           "path": "packages/law-practice/use-cases/test/fixtures/eyecite/literal-cleaners.json",
@@ -421,7 +421,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlCompletion.test.ts",
-          "sha256": "b22af0e2f9f640c80e5512f970bb9c57b57afab3f9a527d0f2bd5bf50175e506"
+          "sha256": "8cb15e435d46209f5505364315f35c8b359c79051d286c55f198fd55cd77d529"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-31-html-input-preparation.md",
@@ -441,7 +441,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlInput.ts",
-          "sha256": "74b423a0b4eb1bab6207dff58430f88d95420d6971ee38ef0a7e0f70d2add4ad"
+          "sha256": "6368db9693879e5866d90c5a599f54c5d7672c54afb93926a610689b34ab5d39"
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlInput.test.ts",
@@ -489,7 +489,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlKernel.test.ts",
-          "sha256": "5a246e040307d45e64a4a2c11d274e4051f369529cb51d42a0d0d9d7d9110f11"
+          "sha256": "eca9c865934f765fb4344d395fa0ba7d70f08a734949ac8097d8185aa8bab9fd"
         },
         {
           "path": "packages/law-practice/use-cases/test/fixtures/eyecite/html-kernel-cases.json",
@@ -573,7 +573,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationDictionaryReentrancy.test.ts",
-          "sha256": "055157fc5e00510c5a117643b7e2bd78cf00db68a61d5024c07ee1d3eb65f271"
+          "sha256": "ac9d72b093ae633d03b646c229844e6c62c53adb7f3913075b70bcd82a33800b"
         },
         {
           "path": "packages/law-practice/use-cases/test/fixtures/eyecite/dictionary-reentrancy.json",
@@ -669,7 +669,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationBuiltinCleaners.test.ts",
-          "sha256": "9e780265df7527fc1d6bd8eaabc820a2b162439d576f15ab79b255f00fef744a"
+          "sha256": "a14a567891d970015185d06f19421bd74d90f6d7b07063119c0c2c5cc9981911"
         },
         {
           "path": "packages/law-practice/server/test/CitationCleanerValues.test.ts",
@@ -713,7 +713,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/PythonHash.ts",
-          "sha256": "0b0b47e907f04594d04620f2c13a8018b8d8035c19f1bc92b8c54240861f1833"
+          "sha256": "009acb632ed9fb0f015f7c1c624ffb98057b6c59d8737a018aaa829e4aa7fdbf"
         },
         {
           "path": "packages/law-practice/server/test/CitationPythonHash.test.ts",
@@ -777,7 +777,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationUnicodePipeline.fixtures.ts",
-          "sha256": "9d866b98c1e31e8f711f2685753c6b7e573217dcf867ac6d39d1755a79adedc2"
+          "sha256": "d3c6a7a3bb038d53940bec4055ceb53f560e660452af605e21e5d062723b9bbb"
         },
         {
           "path": "packages/law-practice/server/test/integration/CitationHtmlUnicode.test.ts",
@@ -801,11 +801,11 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/MetadataValues.ts",
-          "sha256": "fbfd1ae9a993bb62f80fc91c7928c9283e208b18e94e8388c29b0b422185d37e"
+          "sha256": "ea86a60625b66b7b23c15141a86ab6da88fed51fcecfd7e8e3663606c1f16330"
         },
         {
           "path": "packages/law-practice/server/test/CitationCleanerRegistry.fixtures.ts",
-          "sha256": "8bbd99b2ed3596741ec05ac36f237b6954d98ba18207817df60ead3e199a3aba"
+          "sha256": "26c0ffb91beff0899146e3fe24077d270d15cdf773a8be115e952e03d347a9f6"
         },
         {
           "path": "packages/law-practice/use-cases/test/CitationOracleArtifact.test.ts",
@@ -858,7 +858,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationCleanerCustomReplay.fixtures.ts",
-          "sha256": "6f8fe359e6ef8620d3ad7f323ecdafd101dd82a426d3e73b3148322a5a3f2746"
+          "sha256": "7c285448f0f1d56dcdf14720bb2f832c7258bb305709e6d518a364fa7738495c"
         },
         {
           "path": "packages/law-practice/server/test/integration/CitationCleanerNativeCustom.test.ts",
@@ -874,11 +874,11 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationCleanerNamedReplay.fixtures.ts",
-          "sha256": "46a81dfb09e94391342867426e6683f159db5adde28f1ac9b560f666cb218b12"
+          "sha256": "f444aa5d275b904bff5666d70344c434db9a3e6477a02e80c940b7bafb4c8da8"
         },
         {
           "path": "packages/law-practice/server/test/CitationNativeSpawner.fixtures.ts",
-          "sha256": "0c4781d1ff031848687ddc3e880dc9a372713a53360cd768e6ccfa108b4ed71a"
+          "sha256": "1d9e727f6975fb66708ee3df9cab9db830b8e8707d1e1ba7ab97bc066dceac54"
         },
         {
           "path": "packages/law-practice/server/test/integration/CitationCleanerNamedHtml.test.ts",
@@ -906,7 +906,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/NativeAdmission.ts",
-          "sha256": "9f202603c3c4595db595e7363a2457c5ae7fdb1d09857abf1eafc934e56915dd"
+          "sha256": "c81ee418962b1e3d6d28cc91e3f1cc1928308e13b8dd98070613046f214a2bd8"
         },
         {
           "path": "packages/law-practice/server/test/CitationNativeAdmission.test.ts",
@@ -1045,7 +1045,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationSessionDescriptors.test.ts",
-          "sha256": "c269c834f4b4cd2cb96c351df2393956bfe2eff40630c3c62bb48ceacff33ba2"
+          "sha256": "0c6b4cf73d54647d748e963fef7b0b6a59a24112cb7225a03a3ef5595755659a"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-registered-default-resolution.md",
@@ -1057,7 +1057,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationDefaultCallbacks.test.ts",
-          "sha256": "a668d022734af4ee1354a870bf8f8c8d63ef7604bce81739a006bcced3c946ae"
+          "sha256": "1831c3b8af766998e6ebd74aa7fd5b2baff4b47c249a7b666260bb8fd150ac46"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-default-branch-observations.md",
@@ -1085,7 +1085,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/Document.ts",
-          "sha256": "c5b342082e8772c984f70c6cf0171b39126d3e9539a260401d7edd1b9a07a042"
+          "sha256": "e1eaaec36cca270ec5a007f79d234e87aced01d0c45b16cad58a09c35f68c3b9"
         }
       ],
       "workflowState": "audit",

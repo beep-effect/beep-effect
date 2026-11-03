@@ -12,6 +12,8 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Struct from "effect/Struct";
+import type { ReferenceCitation } from "@beep/law-practice-domain/values";
 
 const $I = $LawPracticeServerId.create("internal/Citation/MetadataValues");
 const Metadata = S.Record(S.String, S.Unknown).pipe(
@@ -32,3 +34,12 @@ export const citationMetadataValues = Effect.fn("Citation.metadataValues")(funct
   const name = court.status === "known" ? court.id : court.value;
   return Str.isNonEmpty(name) ? A.append(values, name) : values;
 });
+
+/** Select source-visible nonempty reference names in their fixed field order.
+ * @internal @category operations @since 0.0.0
+ */
+export const citationReferenceNames = (metadata: ReferenceCitation["metadata"]) =>
+  A.filter(
+    A.getSomes(R.values(Struct.pick(metadata, ["plaintiff", "defendant", "shortCaseName", "caseName"]))),
+    Str.isNonEmpty
+  );

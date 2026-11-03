@@ -3,11 +3,6 @@
  */
 
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import {
-  CitationOperationAdmission,
-  makeCitationOperationAdmission,
-} from "@beep/law-practice-server/internal/Citation/Admission";
-import { makeCitationCleanerOperation } from "@beep/law-practice-server/internal/Citation/CleanerOperation";
 import { CitationCleanerRuntime } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { expect } from "@effect/vitest";
@@ -19,6 +14,10 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { makeControlledLiteralScene } from "./CitationCleanerCustom.fixtures.ts";
+import {
+  captureCitationReplaySource,
+  makeCitationReplayCleanerOperation,
+} from "./CitationCleanerOperation.fixtures.ts";
 import { loadCitationCleanerSource } from "./CitationCleanerSource.fixtures.ts";
 import type {
   CitationCleanerObject,
@@ -110,7 +109,6 @@ export const replayControlledCleanerScenes = Effect.fn("CleanerCustomCorpusTest.
     const owned = yield* makeControlledLiteralScene(row.name, spawner);
     const input = yield* S.decodeUnknownEffect(SourceInput)(row.input);
     const text = O.getOrThrow(HashMap.get(artifacts, input.text));
-    const admission = yield* makeCitationOperationAdmission(limits);
     let initial = O.none<CitationCleanerObject>();
     let lastWork = O.none<CitationCleanerWork>();
     const runtime = CitationCleanerRuntime.of({
@@ -120,19 +118,12 @@ export const replayControlledCleanerScenes = Effect.fn("CleanerCustomCorpusTest.
         return owned.h.registry.runtime.open(plan, value, work);
       }),
       fromText: Effect.fn("CleanerCustomCorpusTest.source")((source) =>
-        owned.source(source).pipe(
-          Effect.tap((value) =>
-            Effect.sync(() => {
-              initial = O.some(value);
-            })
-          )
-        )
+        captureCitationReplaySource(owned.source(source), (value) => {
+          initial = O.some(value);
+        })
       ),
     });
-    const operation = yield* makeCitationCleanerOperation(limits).pipe(
-      Effect.provideService(CitationOperationAdmission, admission),
-      Effect.provideService(CitationCleanerRuntime, runtime)
-    );
+    const { operation, admission } = yield* makeCitationReplayCleanerOperation(limits, runtime);
     for (const raw of row.runs) {
       const outcome = yield* S.decodeUnknownEffect(Outcome)(raw);
       if (row.name === "resource-before-callback") {

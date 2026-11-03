@@ -2,20 +2,18 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineLimits, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
-import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Semaphore from "effect/Semaphore";
-import { CitationAdmissionFailure } from "./Admission.ts";
+import { CitationAdmissionFailure, prepareCitationAdmissionPolicy } from "./Admission.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/NativeAdmission");
-const Limits = S.toType(CitationEngineLimits);
 /** Runtime authority: only the worker holding the exact child may acknowledge release.
  * These effects intentionally survive caller cancellation and owner Scope closure.
  * @internal @category services @since 0.0.0
@@ -68,10 +66,7 @@ export class CitationNativeProcessAdmission extends Context.Service<
 export const makeCitationNativeProcessAdmission = Effect.fn("Citation.makeNativeProcessAdmission")(function* (
   policy: unknown
 ) {
-  const limits = yield* S.decodeUnknownEffect(Limits)(policy).pipe(
-    Effect.mapError(() => CitationAdmissionFailure.make({ reason: "invalid-policy" }))
-  );
-  const queueDeadline = limits.queueDeadline.pipe(Duration.toMillis, Duration.millis);
+  const { limits, queueDeadline } = yield* prepareCitationAdmissionPolicy(policy);
   const clock = yield* Clock.Clock;
   const scope = yield* Scope.Scope;
   // Lease flags and aggregate counters change together, including concurrent

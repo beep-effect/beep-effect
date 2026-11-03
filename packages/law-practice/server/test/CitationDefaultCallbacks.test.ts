@@ -158,28 +158,32 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("production defau
               const expectations = HashMap.get(branches, row.name);
               if (O.isSome(expectations)) {
                 expect(result.document.resolutions, row.name).toHaveLength(A.length(expectations.value));
-                for (const expected of expectations.value) {
-                  checked++;
-                  const resolution = A.getUnsafe(result.document.resolutions, expected.index);
-                  expect(resolution.status, row.name).toBe(expected.status);
-                  if (resolution.status === "Unresolved") expect(resolution.reason, row.name).toBe(expected.reason);
-                  if (resolution.status === "Ambiguous") {
-                    expect(resolution.candidateAuthorityIds, row.name).toHaveLength(
-                      O.getOrElse(O.fromUndefinedOr(expected.distinctCount), () => 0)
-                    );
-                    const indices = expected.candidateIndices;
-                    if (indices === undefined) return yield* Effect.die("source candidate indices missing");
-                    const authorities = yield* Effect.forEach(indices, (index) =>
-                      Effect.gen(function* () {
-                        const prior = A.getUnsafe(result.document.resolutions, index);
-                        if (prior.status !== "Resolved")
-                          return yield* Effect.die("source candidate is not a resolved full");
-                        return prior.authorityId;
-                      })
-                    );
-                    expect(resolution.candidateAuthorityIds, row.name).toEqual(expect.arrayContaining(authorities));
-                  }
-                }
+                yield* Effect.forEach(
+                  expectations.value,
+                  Effect.fnUntraced(function* (expected) {
+                    checked++;
+                    const resolution = A.getUnsafe(result.document.resolutions, expected.index);
+                    expect(resolution.status, row.name).toBe(expected.status);
+                    if (resolution.status === "Unresolved") expect(resolution.reason, row.name).toBe(expected.reason);
+                    if (resolution.status === "Ambiguous") {
+                      expect(resolution.candidateAuthorityIds, row.name).toHaveLength(
+                        O.getOrElse(O.fromUndefinedOr(expected.distinctCount), () => 0)
+                      );
+                      const indices = expected.candidateIndices;
+                      if (indices === undefined) return yield* Effect.die("source candidate indices missing");
+                      const authorities = yield* Effect.forEach(indices, (index) =>
+                        Effect.gen(function* () {
+                          const prior = A.getUnsafe(result.document.resolutions, index);
+                          if (prior.status !== "Resolved")
+                            return yield* Effect.die("source candidate is not a resolved full");
+                          return prior.authorityId;
+                        })
+                      );
+                      expect(resolution.candidateAuthorityIds, row.name).toEqual(expect.arrayContaining(authorities));
+                    }
+                  }),
+                  { concurrency: 1, discard: true }
+                );
               }
               const restored = yield* restoreCitationDocument({
                 receipt: result.receipt,

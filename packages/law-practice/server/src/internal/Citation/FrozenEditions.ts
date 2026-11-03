@@ -166,6 +166,8 @@ export const makeCitationFrozenEditions = Effect.fn("Citation.makeFrozenEditions
     });
     editions = HashMap.set(editions, edition.edition, edition);
   }
+  const checkedFamily = (family: typeof Family.Type) =>
+    S.decodeEffect(Family)(family).pipe(Effect.mapError(() => failure("invalid-input")));
   const lookup = Effect.fn("Citation.frozenEditionLookup")(function* (
     reference: CitationEditionRef,
     family: typeof Family.Type
@@ -173,7 +175,7 @@ export const makeCitationFrozenEditions = Effect.fn("Citation.makeFrozenEditions
     const ref = yield* S.decodeEffect(CitationEditionRef)(reference).pipe(
       Effect.mapError(() => failure("invalid-input"))
     );
-    const kind = yield* S.decodeEffect(Family)(family).pipe(Effect.mapError(() => failure("invalid-input")));
+    const kind = yield* checkedFamily(family);
     const edition = yield* Effect.fromOption(HashMap.get(editions, ref), () => failure("missing-edition"));
     const source = edition.value.reporter.source;
     if (
@@ -191,7 +193,7 @@ export const makeCitationFrozenEditions = Effect.fn("Citation.makeFrozenEditions
       family: typeof Family.Type
     ) {
       const refs = yield* S.decodeEffect(References)(references).pipe(Effect.mapError(() => failure("invalid-input")));
-      const kind = yield* S.decodeEffect(Family)(family).pipe(Effect.mapError(() => failure("invalid-input")));
+      const kind = yield* checkedFamily(family);
       const captured = A.fromIterable(refs);
       return yield* Effect.forEach(captured, (ref) => lookup(ref, kind), { concurrency: 1 });
     }),

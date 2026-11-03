@@ -51,16 +51,23 @@ export class CitationOperationAdmission extends Context.Service<
     readonly snapshot: Effect.Effect<CitationAdmissionSnapshot>;
   }
 >()($I`CitationOperationAdmission`) {}
+/** Decode the shared admission policy and retain its normalized queue budget.
+ * @internal @category operations @since 0.0.0
+ */
+export const prepareCitationAdmissionPolicy = Effect.fn("Citation.prepareAdmissionPolicy")(function* (policy: unknown) {
+  const limits = yield* S.decodeUnknownEffect(Limits)(policy).pipe(
+    Effect.mapError(() => CitationAdmissionFailure.make({ reason: "invalid-policy" }))
+  );
+  const queueDeadline = limits.queueDeadline.pipe(Duration.toMillis, Duration.millis);
+  return { limits, queueDeadline };
+});
 /** Capture explicit policy, Clock and Scope once for all operations in a composed engine.
  * Queue time is included in the total operation deadline. Cancellation and closure
  * wait for the operation's finalizers before returning its active permit.
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationOperationAdmission = Effect.fn("Citation.makeOperationAdmission")(function* (policy: unknown) {
-  const limits = yield* S.decodeUnknownEffect(Limits)(policy).pipe(
-    Effect.mapError(() => CitationAdmissionFailure.make({ reason: "invalid-policy" }))
-  );
-  const queueDeadline = limits.queueDeadline.pipe(Duration.toMillis, Duration.millis);
+  const { limits, queueDeadline } = yield* prepareCitationAdmissionPolicy(policy);
   const operationDeadline = limits.operationDeadline.pipe(Duration.toMillis, Duration.millis);
   const clock = yield* Clock.Clock;
   const scope = yield* Scope.Scope;

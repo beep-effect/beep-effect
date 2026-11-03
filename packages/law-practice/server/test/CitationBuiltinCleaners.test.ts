@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { makeCitationBuiltinCleaners } from "@beep/law-practice-server/internal/Citation/BuiltinCleaners";
 import {
   CitationCleanerFailure,
@@ -66,7 +66,7 @@ it.layer(TestRuntime, { excludeTestServices: true })("captured builtin cleaner i
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const raw = yield* fs.readFileString(
-          fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/html-bytes.json", import.meta.url))
+          NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/html-bytes.json", import.meta.url))
         );
         expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
           "179fc43e44d8d6048b0d4eea38a8a8667d505ce60ee23ded6aa43138cd265201"
@@ -86,7 +86,7 @@ it.layer(TestRuntime, { excludeTestServices: true })("captured builtin cleaner i
         const builtins = yield* makeCitationBuiltinCleaners(policy, {
           executable: process.execPath,
           cwd: yield* fs.makeTempDirectoryScoped({ prefix: "citation-builtins-" }),
-          workerFile: fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
+          workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
         }).pipe(
           Effect.provideService(CitationCleanerValues, values),
           Effect.provideService(ChildProcessSpawner, {

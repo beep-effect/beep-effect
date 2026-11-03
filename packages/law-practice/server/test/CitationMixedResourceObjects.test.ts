@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import {
   Citation,
   CitationEditionRef,
@@ -80,7 +80,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("mixed live resource
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const raw = yield* fs.readFileString(
-        fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/live-resources.json", import.meta.url))
+        NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/live-resources.json", import.meta.url))
       );
       expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
         "92a6dd9e59d5808536a4a83b92f3a099713f690cca781dcd5cde1439e75e8b1f"
@@ -148,66 +148,80 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("mixed live resource
             iterations: prepared.limits.resolutionIterations,
           }).pipe(Effect.provideService(CitationRuntimeDictionaryComparison, comparison));
           let resources = A.empty<CitationResourceObject>();
+          const editionModel = Effect.fnUntraced(function* (
+            operation: Extract<typeof Operation.Type, { readonly kind: "editions" }>,
+            wire: typeof Citation.Encoded
+          ) {
+            if (wire.type === "case") {
+              const initial = A.getUnsafe(row.initial, operation.reference).citation;
+              if (initial.type !== "case") return yield* modelFailure();
+              const editions = yield* Effect.forEach(operation.values, (ref) =>
+                Effect.fromOption(
+                  A.findFirst(initial.publication.editions, (edition) => edition.edition === ref),
+                  modelFailure
+                )
+              );
+              return yield* S.decodeEffect(Citation)({ ...wire, publication: { ...wire.publication, editions } });
+            }
+            if (wire.type !== "law" && wire.type !== "journal") return yield* modelFailure();
+            return yield* S.decodeEffect(Citation)({
+              ...wire,
+              publication: { ...wire.publication, editions: operation.values },
+            });
+          });
+          const mutate = Effect.fnUntraced(function* (
+            operation: Extract<typeof Operation.Type, { readonly kind: "change" | "editions" }>
+          ) {
+            const ref = reference(operation.reference);
+            const wire = yield* S.encodeEffect(Citation)(yield* owner.citationOf(ref));
+            const value =
+              operation.kind === "change"
+                ? yield* S.decodeEffect(Citation)({
+                    ...wire,
+                    components: { ...wire.components, [operation.field]: operation.value },
+                  })
+                : yield* editionModel(operation, wire);
+            yield* owner.writeCitation(ref, value);
+          });
+          const keyedOperation = Effect.fnUntraced(function* (
+            operation: Extract<typeof Operation.Type, { readonly resource: number }>
+          ) {
+            const key = yield* objects.key(A.getUnsafe(resources, operation.resource));
+            if (operation.kind === "hash") return yield* S.encodeEffect(S.BigIntFromString)(key.hash);
+            if (operation.kind === "set") {
+              yield* table.set(key, operation.value);
+              return null;
+            }
+            const hit = yield* operation.kind === "get" ? table.get(key) : table.remove(key);
+            return O.getOrElse(
+              O.map(hit, (entry) => entry.value),
+              () => null
+            );
+          });
+          const applyOperation = Effect.fnUntraced(function* (operation: typeof Operation.Type) {
+            if (operation.kind === "create") {
+              const resource = yield* objects.create(reference(operation.reference));
+              resources = A.append(resources, resource);
+              return resource.slot;
+            }
+            if (operation.kind === "change" || operation.kind === "editions") {
+              yield* mutate(operation);
+              return null;
+            }
+            if (operation.kind === "equal") return yield* comparison.equal(operation.left, operation.right);
+            if (operation.kind === "clear") {
+              yield* table.clear;
+              return null;
+            }
+            return yield* keyedOperation(operation);
+          });
           yield* Effect.acquireUseRelease(
             owner.start,
             () =>
               Effect.gen(function* () {
                 for (const event of row.events) {
                   comparisons = [];
-                  const operation = event.operation;
-                  let result: S.Json = null;
-                  if (operation.kind === "create") {
-                    const resource = yield* objects.create(reference(operation.reference));
-                    resources = A.append(resources, resource);
-                    result = resource.slot;
-                  } else if (operation.kind === "change" || operation.kind === "editions") {
-                    const ref = reference(operation.reference);
-                    const wire = yield* S.encodeEffect(Citation)(yield* owner.citationOf(ref));
-                    let value: Citation;
-                    if (operation.kind === "change")
-                      value = yield* S.decodeEffect(Citation)({
-                        ...wire,
-                        components: { ...wire.components, [operation.field]: operation.value },
-                      });
-                    else {
-                      if (wire.type === "case") {
-                        const initial = A.getUnsafe(row.initial, operation.reference).citation;
-                        if (initial.type !== "case") return yield* modelFailure();
-                        const editions = yield* Effect.forEach(operation.values, (ref) =>
-                          Effect.fromOption(
-                            A.findFirst(initial.publication.editions, (edition) => edition.edition === ref),
-                            modelFailure
-                          )
-                        );
-                        value = yield* S.decodeEffect(Citation)({
-                          ...wire,
-                          publication: { ...wire.publication, editions },
-                        });
-                      } else {
-                        if (wire.type !== "law" && wire.type !== "journal") return yield* modelFailure();
-                        value = yield* S.decodeEffect(Citation)({
-                          ...wire,
-                          publication: { ...wire.publication, editions: operation.values },
-                        });
-                      }
-                    }
-                    yield* owner.writeCitation(ref, value);
-                  } else if (operation.kind === "equal")
-                    result = yield* comparison.equal(operation.left, operation.right);
-                  else if (operation.kind === "clear") yield* table.clear;
-                  else {
-                    const key = yield* objects.key(A.getUnsafe(resources, operation.resource));
-                    if (operation.kind === "hash") result = yield* S.encodeEffect(S.BigIntFromString)(key.hash);
-                    else if (operation.kind === "set") yield* table.set(key, operation.value);
-                    else
-                      result = O.getOrElse(
-                        O.map(
-                          yield* operation.kind === "get" ? table.get(key) : table.remove(key),
-                          (entry) => entry.value
-                        ),
-                        () => null
-                      );
-                  }
+                  const result = yield* applyOperation(event.operation);
                   expect(result, `${row.name}:${count}`).toEqual(event.outcome);
                   expect(
                     A.map(yield* table.read, (entry) => ({ objectId: entry.objectId, value: entry.value })),

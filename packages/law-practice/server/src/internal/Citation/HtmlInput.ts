@@ -237,6 +237,11 @@ export const makeCitationHtmlInput = Effect.fn("Citation.makeHtmlInput")(functio
     }
     return largest;
   });
+  const timed = <A, E>(body: Effect.Effect<A, E>) =>
+    body.pipe(
+      Effect.timeoutOrElse({ duration: deadline, orElse: () => Effect.fail(safety("cleanDeadline")) }),
+      Effect.provideService(Clock.Clock, clock)
+    );
   const prepare = Effect.fn("Citation.prepareHtmlBuffer")(
     function* <E>(
       input: unknown,
@@ -264,55 +269,51 @@ export const makeCitationHtmlInput = Effect.fn("Citation.makeHtmlInput")(functio
     },
     Effect.provideService(Clock.Clock, clock)
   );
-  const prepareBytes = Effect.fn("Citation.prepareHtmlBytes")(
-    function* <E>(input: unknown, beforeAllocate: (layout: CitationHtmlInputLayout) => Effect.Effect<void, E>) {
-      // This private port receives an immutable, adapter-owned Python byte value.
-      // The snapshot owns transport memory; callers must not mutate their value
-      // while preparation runs. No raw byte field is added to public requests.
-      const source = yield* S.decodeUnknownEffect(S.Uint8Array)(input).pipe(
-        Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
-      );
-      const size = source.byteLength;
-      if (size > messageCeiling) return yield* safety("processMessageBytes");
-      const start = yield* skipByteSpace(source);
-      const read = (index: number) => O.getOrElse(O.fromUndefinedOr(source[index]), () => -1);
-      const fullHtml = fullDocument(read, start);
-      yield* beforeAllocate(CitationHtmlInputLayout.make({ encoding: "AUTO", fullHtml, byteLength: size }));
-      const bytes = yield* copyTransport(source, size);
-      return CitationHtmlInput.make({ encoding: "AUTO", fullHtml, bytes });
-    },
-    (body) =>
-      body.pipe(Effect.timeoutOrElse({ duration: deadline, orElse: () => Effect.fail(safety("cleanDeadline")) })),
-    Effect.provideService(Clock.Clock, clock)
-  );
-  const prepareUnicode = Effect.fn("Citation.prepareNativeHtmlInput")(
-    function* <E>(input: unknown, beforeAllocate: (layout: CitationHtmlInputLayout) => Effect.Effect<void, E>) {
-      // This private stage borrows immutable adapter-owned storage. Validation
-      // and complete-frame preflight precede allocation of transport memory.
-      const source = yield* S.decodeUnknownEffect(NativeStorage)(input).pipe(
-        Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
-      );
-      const size = source.bytes.byteLength;
-      if (size % source.width !== 0) return yield* CitationHtmlInputFailure.make({ reason: "invalid-input" });
-      if (size > messageCeiling) return yield* safety("processMessageBytes");
-      const length = size / source.width;
-      const read = nativeReader(source, length);
-      const largest = yield* nativeMaximum(read, length);
-      const width = nativeWidth(largest);
-      if (source.width !== width) return yield* CitationHtmlInputFailure.make({ reason: "invalid-input" });
-      if (yield* hasDeclaration(read, length))
-        return yield* CitationHtmlInputFailure.make({ reason: "unicode-encoding-declaration" });
-      const start = yield* skipSpace(read, length, 0);
-      const fullHtml = fullDocument(read, start);
-      const encoding = nativeEncoding(largest);
-      yield* beforeAllocate(CitationHtmlInputLayout.make({ encoding, fullHtml, byteLength: size }));
-      const bytes = yield* copyTransport(source.bytes, size);
-      return CitationHtmlInput.make({ encoding, bytes, fullHtml });
-    },
-    (body) =>
-      body.pipe(Effect.timeoutOrElse({ duration: deadline, orElse: () => Effect.fail(safety("cleanDeadline")) })),
-    Effect.provideService(Clock.Clock, clock)
-  );
+  const prepareBytes = Effect.fn("Citation.prepareHtmlBytes")(function* <E>(
+    input: unknown,
+    beforeAllocate: (layout: CitationHtmlInputLayout) => Effect.Effect<void, E>
+  ) {
+    // This private port receives an immutable, adapter-owned Python byte value.
+    // The snapshot owns transport memory; callers must not mutate their value
+    // while preparation runs. No raw byte field is added to public requests.
+    const source = yield* S.decodeUnknownEffect(S.Uint8Array)(input).pipe(
+      Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
+    );
+    const size = source.byteLength;
+    if (size > messageCeiling) return yield* safety("processMessageBytes");
+    const start = yield* skipByteSpace(source);
+    const read = (index: number) => O.getOrElse(O.fromUndefinedOr(source[index]), () => -1);
+    const fullHtml = fullDocument(read, start);
+    yield* beforeAllocate(CitationHtmlInputLayout.make({ encoding: "AUTO", fullHtml, byteLength: size }));
+    const bytes = yield* copyTransport(source, size);
+    return CitationHtmlInput.make({ encoding: "AUTO", fullHtml, bytes });
+  }, timed);
+  const prepareUnicode = Effect.fn("Citation.prepareNativeHtmlInput")(function* <E>(
+    input: unknown,
+    beforeAllocate: (layout: CitationHtmlInputLayout) => Effect.Effect<void, E>
+  ) {
+    // This private stage borrows immutable adapter-owned storage. Validation
+    // and complete-frame preflight precede allocation of transport memory.
+    const source = yield* S.decodeUnknownEffect(NativeStorage)(input).pipe(
+      Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
+    );
+    const size = source.bytes.byteLength;
+    if (size % source.width !== 0) return yield* CitationHtmlInputFailure.make({ reason: "invalid-input" });
+    if (size > messageCeiling) return yield* safety("processMessageBytes");
+    const length = size / source.width;
+    const read = nativeReader(source, length);
+    const largest = yield* nativeMaximum(read, length);
+    const width = nativeWidth(largest);
+    if (source.width !== width) return yield* CitationHtmlInputFailure.make({ reason: "invalid-input" });
+    if (yield* hasDeclaration(read, length))
+      return yield* CitationHtmlInputFailure.make({ reason: "unicode-encoding-declaration" });
+    const start = yield* skipSpace(read, length, 0);
+    const fullHtml = fullDocument(read, start);
+    const encoding = nativeEncoding(largest);
+    yield* beforeAllocate(CitationHtmlInputLayout.make({ encoding, fullHtml, byteLength: size }));
+    const bytes = yield* copyTransport(source.bytes, size);
+    return CitationHtmlInput.make({ encoding, bytes, fullHtml });
+  }, timed);
   return {
     prepare: Effect.fn("Citation.prepareHtmlInput")((input: unknown) =>
       prepare(input, rawText, sourceCeiling, () => Effect.void)

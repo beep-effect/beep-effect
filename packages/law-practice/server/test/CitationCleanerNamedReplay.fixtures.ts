@@ -3,11 +3,6 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
-  CitationOperationAdmission,
-  makeCitationOperationAdmission,
-} from "@beep/law-practice-server/internal/Citation/Admission";
-import { makeCitationCleanerOperation } from "@beep/law-practice-server/internal/Citation/CleanerOperation";
-import {
   CitationCleanerFailure,
   CitationCleanerRuntime,
 } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
@@ -21,6 +16,10 @@ import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { makeCitationBuiltinObservation } from "./CitationCleanerBuiltinObservation.fixtures.ts";
+import {
+  captureCitationReplaySource,
+  makeCitationReplayCleanerOperation,
+} from "./CitationCleanerOperation.fixtures.ts";
 import { makeCitationCleanerRegistryHarness } from "./CitationCleanerRegistry.fixtures.ts";
 import { loadCitationCleanerSource } from "./CitationCleanerSource.fixtures.ts";
 import type { CitationCleanerObject } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
@@ -116,24 +115,16 @@ export const replayNamedCleanerScenes = Effect.fn("NamedCorpusTest.replay")(func
     const descriptor = yield* Effect.fromOption(yield* h.values.getText(value), fail);
     return { kind: "text", text: descriptor.text, subtype: descriptor.subtype === "plain" ? "plain" : "marked" };
   });
-  const admission = yield* makeCitationOperationAdmission(limits);
   let initial = O.none<CitationCleanerObject>();
   const runtime = CitationCleanerRuntime.of({
     ...h.registry.runtime,
     fromText: Effect.fn("NamedCorpusTest.captureSource")((source) =>
-      h.registry.runtime.fromText(source).pipe(
-        Effect.tap((value) =>
-          Effect.sync(() => {
-            initial = O.some(value);
-          })
-        )
-      )
+      captureCitationReplaySource(h.registry.runtime.fromText(source), (value) => {
+        initial = O.some(value);
+      })
     ),
   });
-  const operation = yield* makeCitationCleanerOperation(limits).pipe(
-    Effect.provideService(CitationOperationAdmission, admission),
-    Effect.provideService(CitationCleanerRuntime, runtime)
-  );
+  const { operation, admission } = yield* makeCitationReplayCleanerOperation(limits, runtime);
   let checked = 0;
   let successes = 0;
   let parseFailures = 0;

@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { Citation, CitationGroupMember, CitationMention } from "@beep/law-practice-domain/values";
 import {
   CitationCallbackRuntimeIndexFactory,
@@ -58,7 +58,7 @@ const Corpus = S.fromJsonString(
 );
 const load = Effect.fn("CanonicalDescriptorsTest.load")(function* (file: string, digest: string) {
   const text = yield* (yield* FileSystem.FileSystem).readFileString(
-    fileURLToPath(new URL(`../../use-cases/test/fixtures/eyecite/${file}`, import.meta.url))
+    NodeURL.fileURLToPath(new URL(`../../use-cases/test/fixtures/eyecite/${file}`, import.meta.url))
   );
   expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(text))).toBe(digest);
   return (yield* S.decodeEffect(Corpus)(text)).cases;

@@ -17,6 +17,7 @@ import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { CitationRuntimeDictionary } from "@beep/law-practice-server/internal/Citation/RuntimeDictionary";
@@ -94,45 +95,74 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("direct comparison r
           const action = Effect.fn("ReentrantTest.action")(function* () {
             const current = yield* Effect.fromOption(table, invalid);
             mutations++;
-            if (A.contains(["clear-in-get", "clear-in-remove", "mutate-raise", "clear-refill"], row.name)) {
-              yield* current.clear;
-              trace = A.append(trace, { kind: "clear" });
-              if (row.name === "clear-refill") {
-                yield* current.set(yield* capturedKey(0), 99);
-                trace = A.append(trace, { kind: "set", key: 0, value: 99 });
-              }
-              if (row.name === "mutate-raise")
-                return yield* CitationRuntimeDictionaryFailure.make({ reason: "comparison-failed" });
-            } else if (A.contains(["remove-in-get", "replace-in-get", "resize-in-set", "replace-five"], row.name)) {
-              const result = yield* current.remove(yield* capturedKey(0));
-              trace = A.append(trace, {
-                kind: "remove",
-                key: 0,
-                result: O.getOrNull(O.map(result, (entry) => entry.value)),
-              });
-              if (row.name === "replace-in-get" || row.name === "replace-five") {
-                yield* current.set(yield* capturedKey(0), 99 + mutations);
-                trace = A.append(trace, { kind: "set", key: 0, value: 99 + mutations });
-              } else if (row.name === "resize-in-set") {
-                yield* current.set(yield* capturedKey(6), 106);
-                trace = A.append(trace, { kind: "set", key: 6, value: 106 });
-              }
-            } else if (row.name === "update-in-get") {
-              yield* current.set(yield* capturedKey(0), 99);
-              trace = A.append(trace, { kind: "set", key: 0, value: 99 });
-            } else if (A.contains(["insert-no-resize", "resize-in-get", "false-after-resize"], row.name)) {
-              const id = row.name === "insert-no-resize" ? 2 : 6;
-              yield* current.set(yield* capturedKey(id), 100 + id);
-              trace = A.append(trace, { kind: "set", key: id, value: 100 + id });
-            } else if (row.name === "read-get") {
-              trace = A.append(trace, { kind: "read", entries: yield* project });
-              const result = yield* current.get(yield* capturedKey(0));
-              trace = A.append(trace, {
-                kind: "get",
-                key: 0,
-                result: O.getOrNull(O.map(result, (entry) => entry.value)),
-              });
-            } else return yield* invalid();
+            return yield* Match.value(row.name).pipe(
+              Match.when(
+                (candidate: string) =>
+                  A.contains(["clear-in-get", "clear-in-remove", "mutate-raise", "clear-refill"], candidate),
+                Effect.fnUntraced(function* () {
+                  yield* current.clear;
+                  trace = A.append(trace, { kind: "clear" });
+                  if (row.name === "clear-refill") {
+                    yield* current.set(yield* capturedKey(0), 99);
+                    trace = A.append(trace, { kind: "set", key: 0, value: 99 });
+                  }
+                  if (row.name === "mutate-raise")
+                    return yield* CitationRuntimeDictionaryFailure.make({ reason: "comparison-failed" });
+                })
+              ),
+              Match.when(
+                (candidate: string) =>
+                  A.contains(["remove-in-get", "replace-in-get", "resize-in-set", "replace-five"], candidate),
+                Effect.fnUntraced(function* () {
+                  const result = yield* current.remove(yield* capturedKey(0));
+                  trace = A.append(trace, {
+                    kind: "remove",
+                    key: 0,
+                    result: O.getOrNull(O.map(result, (entry) => entry.value)),
+                  });
+                  if (row.name === "replace-in-get" || row.name === "replace-five") {
+                    yield* current.set(yield* capturedKey(0), 99 + mutations);
+                    trace = A.append(trace, { kind: "set", key: 0, value: 99 + mutations });
+                  } else if (row.name === "resize-in-set") {
+                    yield* current.set(yield* capturedKey(6), 106);
+                    trace = A.append(trace, { kind: "set", key: 6, value: 106 });
+                  }
+                })
+              ),
+              Match.when(
+                (candidate: string) => candidate === "update-in-get",
+                Effect.fnUntraced(function* () {
+                  yield* current.set(yield* capturedKey(0), 99);
+                  trace = A.append(trace, { kind: "set", key: 0, value: 99 });
+                })
+              ),
+              Match.when(
+                (candidate: string) =>
+                  A.contains(["insert-no-resize", "resize-in-get", "false-after-resize"], candidate),
+                Effect.fnUntraced(function* () {
+                  const id = row.name === "insert-no-resize" ? 2 : 6;
+                  yield* current.set(yield* capturedKey(id), 100 + id);
+                  trace = A.append(trace, { kind: "set", key: id, value: 100 + id });
+                })
+              ),
+              Match.when(
+                (candidate: string) => candidate === "read-get",
+                Effect.fnUntraced(function* () {
+                  trace = A.append(trace, { kind: "read", entries: yield* project });
+                  const result = yield* current.get(yield* capturedKey(0));
+                  trace = A.append(trace, {
+                    kind: "get",
+                    key: 0,
+                    result: O.getOrNull(O.map(result, (entry) => entry.value)),
+                  });
+                })
+              ),
+              Match.orElse(
+                Effect.fnUntraced(function* () {
+                  return yield* invalid();
+                })
+              )
+            );
           });
           const comparison = CitationRuntimeDictionaryComparison.of({
             step: Effect.void,
