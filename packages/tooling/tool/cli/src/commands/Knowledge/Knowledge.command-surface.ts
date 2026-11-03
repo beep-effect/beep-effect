@@ -52,7 +52,7 @@ const STATIC_PROJECT_ROOT = "/repo";
 const STATIC_COMMAND_SOURCE_ROOT = `${STATIC_PROJECT_ROOT}/${COMMAND_SOURCE_ROOT}`;
 const STATIC_ROOT_COMMAND_SOURCE = `${STATIC_PROJECT_ROOT}/${ROOT_COMMAND_SOURCE}`;
 // Shared flag declarations commands import; read as source like the command corpus, never executed.
-const SHARED_FLAG_SOURCE = "packages/tooling/tool/cli/src/internal/cli/Flags.ts";
+const SHARED_FLAG_SOURCE = "packages/tooling/library/repo-cli-kit/src/cli/Flags.ts";
 const STATIC_SHARED_FLAG_SOURCE = `${STATIC_PROJECT_ROOT}/${SHARED_FLAG_SOURCE}`;
 
 const StaticCommandAlias = S.NullOr(S.String).pipe(

@@ -84,7 +84,7 @@ keeps the token a 1Password reference instead of a live value in every shell.
 ## How the CLI decides (fail closed)
 
 The decision is one pure resolver, `resolveTurboCachePlan`
-(`packages/tooling/tool/cli/src/internal/cli/TurboCache.ts`), with the matrix
+(`packages/tooling/library/repo-cli-kit/src/cli/TurboCache.ts`), with the matrix
 covered by `packages/tooling/tool/cli/test/turbo-cache.test.ts`:
 
 | Situation | Injected flag |
@@ -304,7 +304,7 @@ export TURBO_CACHE_DIR="$HOME/.cache/beep/turbo"
 The CLI owns this default: every Turbo invocation `bun run beep` builds on a
 workstation (quality tasks, Yeet proofs, detached proof jobs, `beep ci lane`
 bodies, local docgen) resolves its cache plan through
-`internal/cli/TurboCache`, which appends `--cache-dir=$HOME/.cache/beep/turbo`
+`@beep/repo-cli-kit/cli/TurboCache`, which appends `--cache-dir=$HOME/.cache/beep/turbo`
 whenever `TURBO_CACHE_DIR` is unset and the arguments carry no `--cache-dir`.
 Cache mode and cache directory are independent, so a caller-supplied `--cache=`
 or `--force` keeps the shared directory. CI stays caller-controlled and keeps

@@ -37,7 +37,7 @@ const DOCGEN_CONFIG_SCAN_GLOBS = ["apps/**/docgen.json", "packages/**/docgen.jso
 const DOCGEN_CONFIG_SCAN_IGNORES = [
   // Labs are ceremony-exempt (goals/lab-apps-lifecycle D2): lab templates omit
   // docgen.json, and a stray one below apps/labs must never be scanned or
-  // orphan-flagged. Canonical glob: src/internal/cli/Labs/LabsWorkspace.ts.
+  // orphan-flagged. Canonical glob: @beep/repo-cli-kit/cli/Labs/LabsWorkspace.
   LABS_PATH_IGNORE_GLOB,
   "**/.git/**",
   "**/.turbo/**",

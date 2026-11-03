@@ -701,7 +701,7 @@ class RuntimeCommandFlags extends S.Opaque<RuntimeCommandFlags, { readonly brand
 ) {}
 
 const RuntimeCommandFlagsJson = RuntimeCommandFlags.pipe(S.Array, S.fromJsonString);
-const SHARED_FLAGS_PATH = "packages/tooling/tool/cli/src/internal/cli/Flags.ts";
+const SHARED_FLAGS_PATH = "packages/tooling/library/repo-cli-kit/src/cli/Flags.ts";
 
 describe("knowledge static option surface", () => {
   it.layer(testLayer, { timeout: "30 seconds" })((it) => {
@@ -727,7 +727,7 @@ describe("knowledge static option surface", () => {
           doc(
             'import { Argument, Command, Flag } from "effect/cli"',
             'import { pipe } from "effect/Function"',
-            'import { jsonFlag } from "../internal/cli/Flags.ts"',
+            'import { jsonFlag } from "@beep/repo-cli-kit/cli/Flags"',
             'const treeFlag = Flag.String("tree").pipe(Flag.withAlias("-t"), Flag.withDefault("HEAD"))',
             'const shared = { verbose: Flag.optional(Flag.Boolean("verbose")) }',
             "const json = jsonFlag",

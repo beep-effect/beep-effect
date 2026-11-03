@@ -174,10 +174,10 @@ it.layer(CommandTestLayer, { timeout: "5 seconds" })((it) => {
 // contract as LintRouting.ts and enumerated in the allowlist below.
 // FailureRendering.ts left this list in 4-C-A: it now holds the
 // `CliRuntime.main` render hook and loads lazily beside `@beep/cli-kit`.
-const PRE_FAST_PATH_MODULES: ReadonlyArray<string> = ["internal/cli/LintRouting.ts"];
+const PRE_FAST_PATH_MODULES: ReadonlyArray<string> = ["packages/tooling/library/repo-cli-kit/src/cli/LintRouting.ts"];
 
 it.layer(CommandTestLayer, { timeout: "5 seconds" })((it) => {
-  describe("internal/cli dependency-free boundary", () => {
+  describe("cli dependency-free boundary", () => {
     // bin-main.ts pays every eager import on every `beep` invocation before its
     // fast-path branches run; routing data hidden behind a heavier module cost
     // ~1.1s/415MB of startup (the round-1 ARCH-BOUNDARY-01 regression). Existing
@@ -194,7 +194,7 @@ it.layer(CommandTestLayer, { timeout: "5 seconds" })((it) => {
         const repoRoot = yield* findRepoRoot();
         const sourceDir = path.join(repoRoot, "packages/tooling/tool/cli/src");
         const preFastPathSources = yield* Effect.forEach(PRE_FAST_PATH_MODULES, (module) =>
-          Effect.map(fs.readFileString(path.join(sourceDir, module)), (source) => ({ module, source }))
+          Effect.map(fs.readFileString(path.join(repoRoot, module)), (source) => ({ module, source }))
         );
         const binMainSource = yield* fs.readFileString(path.join(sourceDir, "bin-main.ts"));
         const manifestSource = yield* fs.readFileString(path.join(sourceDir, "internal/dispatch/Dispatch.manifest.ts"));

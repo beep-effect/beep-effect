@@ -1142,7 +1142,7 @@ const shouldRunLintRepoWideSteps = (args: ReadonlyArray<string>): boolean =>
   !A.some(args, isExplicitTurboAffectedOrScopeArg);
 
 // A workstation configured for remote reads is honored; everything else falls
-// back to local-only. The decision itself lives in `internal/cli/TurboCache`
+// back to local-only. The decision itself lives in `@beep/repo-cli-kit/cli/TurboCache`
 // so the whole matrix stays unit-testable without mutating the environment.
 const turboCachePlan = (args: ReadonlyArray<string>) =>
   resolveTurboCachePlan(readTurboCacheEnvironmentSync(), { args, ci: isCiSync() });

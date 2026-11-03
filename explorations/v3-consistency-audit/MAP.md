@@ -37,7 +37,7 @@
    step 3 lands (until then, the proof's nine divergences are baseline rows;
    NET-NEW test beside the v1 replay in `test/architecture-operation-plan.test.ts`
    — no existing test references `AcceptedProofManifest`). The command walks
-   packages with repo-cli `internal/RepoWorkspaces.ts` `workspaceDirectories` and ratchets through
+   packages with `@beep/repo-cli-kit/RepoWorkspaces` `workspaceDirectories` and ratchets through
    `cli/src/internal/ratchet` (`diffMembership` / `diffTotals` /
    `enforceRatchet`), the same substrate as the coverage, knip, JSDoc and
    test-typecheck ratchets — no new ratchet code.

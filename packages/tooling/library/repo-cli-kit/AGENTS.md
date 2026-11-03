@@ -4,7 +4,7 @@ Repo-specific CLI helpers shared by the beep command tools: JSON and text codecs
 
 ## Surface
 
-- See `src/index.ts` barrel — do not hand-maintain inventory tables here.
+- Leaf modules under `src/<dir>/`, imported as `@beep/repo-cli-kit/<dir>/<Module>`; the root entry is empty.
 
 ## Laws
 
