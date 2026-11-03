@@ -47,6 +47,14 @@ const RunScopesDisabled = ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" }).p
   ConfigProvider.orElse(ConfigProvider.fromEnv())
 );
 
+// Admission also samples every live lease under the host's shared runtime root (another
+// session's detached proof job, for one), so these tests coordinate under a private root.
+const isolatedRuntimeRoot = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "quality-command-dispatch-" });
+  return RuntimeRootChoice.make({ kind: "test-override", root });
+});
+
 const consoleText = Effect.fn("QualityCommandDispatchTest.consoleText")(function* () {
   const logs = A.filter(yield* TestConsole.logLines, P.isString);
   const errors = A.filter(yield* TestConsole.errorLines, P.isString);
@@ -125,8 +133,9 @@ it.layer(CommandTestLayer, { timeout: "10 seconds" })("quality command dispatch"
     const spawner = recordingSpawner();
 
     return Effect.gen(function* () {
-      yield* runQualityCommand(["github-checks", "security"]);
-      yield* runQualityCommand(["github-checks", "security", "--collect-all"]);
+      const root = yield* isolatedRuntimeRoot;
+      yield* runQualityCommand(["github-checks", "security"]).pipe(provideRuntimeRootForTesting(root));
+      yield* runQualityCommand(["github-checks", "security", "--collect-all"]).pipe(provideRuntimeRootForTesting(root));
 
       expect(spawnedLines(spawner)).toEqual([
         expect.stringMatching(/^docker run --rm /),
@@ -143,7 +152,10 @@ it.layer(CommandTestLayer, { timeout: "10 seconds" })("quality command dispatch"
     const spawner = recordingSpawner({ exit: 1 });
 
     return Effect.gen(function* () {
-      const exit = yield* Effect.exit(runQualityCommand(["github-checks", "security"]));
+      const root = yield* isolatedRuntimeRoot;
+      const exit = yield* Effect.exit(
+        runQualityCommand(["github-checks", "security"]).pipe(provideRuntimeRootForTesting(root))
+      );
 
       exit.pipe(Exit.isFailure, assertTrue);
       expect(spawnedLines(spawner)).toEqual([expect.stringMatching(/^docker run --rm /)]);

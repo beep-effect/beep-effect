@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-03T01:24:53.547Z",
+  "generatedAt": "2026-11-03T01:46:13.203Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -546258,8 +546258,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 2155,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2155-qualitytasklanerun",
+          "line": 2167,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2167-qualitytasklanerun",
           "currentTags": [
             "@category",
             "@since"
@@ -546280,8 +546280,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 2193,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2193-qualitytasklanerunreport",
+          "line": 2206,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2206-qualitytasklanerunreport",
           "currentTags": [
             "@category",
             "@since"
@@ -546302,8 +546302,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 2225,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2225-githubchecklanerun",
+          "line": 2238,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2238-githubchecklanerun",
           "currentTags": [
             "@category",
             "@since"
@@ -546324,8 +546324,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 2257,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2257-githubcheckrunreport",
+          "line": 2270,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2270-githubcheckrunreport",
           "currentTags": [
             "@category",
             "@since"
