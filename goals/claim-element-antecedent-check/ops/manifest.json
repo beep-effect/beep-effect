@@ -26,7 +26,7 @@
     "grandfathered": false,
     "pullRequests": [
       {
-        "number": 2626,
+        "number": 2656,
         "role": "final"
       }
     ],
@@ -112,9 +112,9 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Owner-controlled final publication after #2626 merged before final Policy success and positive exact-head readiness. Its terminal Check and Storybook succeeded, but completion remains unsatisfied due to the older verdict head. Retain that incident and every prior result. This fresh branch binds its own final PR/evidence, explicitly reruns closeout after the final push, archives positive readiness before the goal-chat owner performs strict merge, then verifies canonical completion. Raw lifecycle remains active pending verification. v27 stays 37/538 with all 34 protected/all 37 prior matches; labels, old results, scope and uncertainty remain intact. No fresh benchmark, attorney authority, S11 or verifier change is claimed.",
+  "statusNote": "Owner-controlled final PR #2656 after #2626 merged before final Policy success and positive exact-head readiness. Its terminal Check and Storybook succeeded, but completion remains unsatisfied due to the older verdict head. Retain that incident and every prior result. This fresh branch binds #2656 and its own evidence, explicitly reruns closeout after the final push, archives positive readiness before the goal-chat owner performs strict merge, then verifies canonical completion. Raw lifecycle remains active pending verification. v27 stays 37/538 with all 34 protected/all 37 prior matches; labels, old results, scope and uncertainty remain intact. No fresh benchmark, attorney authority, S11 or verifier change is claimed.",
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2626
+    "finalPullRequest": 2656
   }
 }
