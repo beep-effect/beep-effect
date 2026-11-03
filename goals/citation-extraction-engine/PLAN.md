@@ -910,3 +910,8 @@ accounting checker.
 4. Run reflection lint and local Yeet verification.
 5. Update README, PLAN, manifest, and lifecycle status in the implementation PR.
 6. Publish once, monitor, and repair hosted findings in that same PR.
+
+- 2026-11-03: private full-law metadata now composes helper state and superclass
+  edition selection in one admitted/timed operation. Original full-method corpus
+  has 768 cases; see history/evidence/2026-11-03-full-law-metadata.md. Full hosted
+  replay and the remaining goal acceptance duties stay open.

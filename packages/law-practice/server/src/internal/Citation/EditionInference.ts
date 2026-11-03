@@ -13,6 +13,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CitationFrozenEditions } from "./FrozenEditions.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/EditionInference");
 const Reason = LiteralKit(["invalid-input", "invalid-edition", "invalid-clock"]).pipe(
@@ -64,6 +65,19 @@ const Envelope = S.Struct({ exact: S.Unknown, variation: S.Unknown, year: S.Unkn
 const fail = (reason: typeof Reason.Type) => CitationEditionInferenceFailure.make({ reason });
 const dateYear = (text: string) =>
   S.decodeEffect(Year)(Str.slice(0, 4)(text)).pipe(Effect.mapError(() => fail("invalid-edition")));
+/** Decode and bound ordered candidates before any dependent stage allocates.
+ * @internal @category operations @since 0.0.0
+ */
+export const prepareCitationEditionInferenceInput = Effect.fn("Citation.prepareEditionInferenceInput")(function* (
+  limits: CitationEngineLimits,
+  raw: unknown
+) {
+  const envelope = yield* S.decodeUnknownEffect(Envelope)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
+  if (!A.isArray(envelope.exact) || !A.isArray(envelope.variation)) return yield* fail("invalid-input");
+  if (envelope.exact.length + envelope.variation.length > limits.candidates)
+    return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "candidates" });
+  return yield* S.decodeUnknownEffect(Input)(envelope).pipe(Effect.mapError(() => fail("invalid-input")));
+});
 /** Capture the authenticated payload owner, Clock and zone; calendar reads stay
  * live at each includes_year call. No source module-import bound is substituted.
  * Methods have R = never. This performs selection only, not reporter correction.
@@ -97,11 +111,7 @@ export const makeCitationEditionInference = Effect.fn("Citation.makeEditionInfer
     return edition.value.end === null || (yield* dateYear(edition.value.end)) >= year;
   }, timing.timed);
   const guess = Effect.fn("Citation.guessEdition")(function* (raw: unknown) {
-    const envelope = yield* S.decodeUnknownEffect(Envelope)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
-    if (!A.isArray(envelope.exact) || !A.isArray(envelope.variation)) return yield* fail("invalid-input");
-    if (envelope.exact.length + envelope.variation.length > limits.candidates)
-      return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "candidates" });
-    const request = yield* S.decodeUnknownEffect(Input)(envelope).pipe(Effect.mapError(() => fail("invalid-input")));
+    const request = yield* prepareCitationEditionInferenceInput(limits, raw);
     const selected = request.exact.length > 0 ? request.exact : request.variation;
     const candidates =
       selected.length > 1 && request.year !== null && request.year !== 0

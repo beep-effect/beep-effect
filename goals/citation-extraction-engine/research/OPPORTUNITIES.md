@@ -261,3 +261,10 @@ Biome's 1 MiB input limit. Keeping canonical references and independent source
 outcomes reduces it to 889700 bytes; existing authenticated fixtures still own
 payload verification. No formatter exclusion or limit change is needed. See
 history/evidence/2026-11-03-edition-inference.md.
+
+- 2026-11-03 full-law oracle controls: law editions did not expose five distinct
+  date-bound pairs, so the initial producer assertion failed before output.
+  The final controlled full-law model vectors use actual canonical editions
+  across source families, which the original model accepts. The receipt names
+  that scope explicitly; default-tokenizer cross-family assignment is not
+  inferred. Inspect source artifact diversity before selecting fixture controls.

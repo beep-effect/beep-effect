@@ -25,7 +25,7 @@ import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
 import { makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
-import { setupCitationRegexRuntime } from "./CitationRegexWorker.fixtures.ts";
+import { assertCitationWorkerCompositionReleased, setupCitationRegexRuntime } from "./CitationRegexWorker.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
 const $I = $LawPracticeServerId.create("test/CitationLawMetadata");
@@ -70,7 +70,8 @@ const Corpus = S.fromJsonString(
     description: "Actual add_law_metadata mutations and regex routes under explicitly frozen source calendar state.",
   })
 );
-const load = Effect.fn("LawMetadataTest.load")(function* () {
+/** Digest-bound source law inputs and complete helper state. */
+export const loadCitationLawMetadataFixtures = Effect.fn("LawMetadataTest.load")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const bytes = yield* fs.readFile(
     NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/law-metadata.json", import.meta.url))
@@ -102,7 +103,7 @@ export const replayCitationLawMetadata = Effect.fn("LawMetadataTest.replay")(fun
   kind: CitationNativeRuntimeKind,
   full: boolean
 ) {
-  const corpus = yield* load();
+  const corpus = yield* loadCitationLawMetadataFixtures();
   const setup = yield* install(kind, corpus.configuration);
   const rows = full ? corpus.cases : A.filter(corpus.cases, (row) => row.smoke);
   for (const row of rows) {
@@ -114,16 +115,11 @@ export const replayCitationLawMetadata = Effect.fn("LawMetadataTest.replay")(fun
   expect(rows).toHaveLength(full ? 128 : 10);
   const calls = A.reduce(rows, 0, (total, row) => total + row.calls.length);
   expect(calls).toBe(full ? 156 : 13);
-  const observed = yield* setup.observed.snapshot;
-  expect(observed).toEqual({ spawned: calls, confirmed: calls });
-  const operation = yield* setup.operation.snapshot;
-  expect(operation).toMatchObject({ active: 0, queued: 0 });
-  const admission = yield* setup.admission.snapshot;
-  expect(admission).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
+  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, calls);
 });
 /** Partial allocation failure cannot publish a patch; caller mutation cannot change configuration. */
 export const assertCitationLawMetadataBudget = Effect.fn("LawMetadataTest.budget")(function* () {
-  const corpus = yield* load();
+  const corpus = yield* loadCitationLawMetadataFixtures();
   const row = yield* Effect.fromOption(A.get(corpus.cases, 11));
   const bounded = yield* install("bun", corpus.configuration, 40);
   const failure = yield* bounded.metadata.apply(row.request).pipe(Effect.flip);
@@ -159,7 +155,7 @@ export const assertCitationLawMetadataBudget = Effect.fn("LawMetadataTest.budget
 
 /** Closed installation, lifetime and deadline failures precede partial metadata. */
 export const assertCitationLawMetadataLifetime = Effect.fn("LawMetadataTest.lifetime")(function* () {
-  const corpus = yield* load();
+  const corpus = yield* loadCitationLawMetadataFixtures();
   const row = yield* Effect.fromOption(A.get(corpus.cases, 11));
   const invalid = yield* install("bun", {
     ...corpus.configuration,

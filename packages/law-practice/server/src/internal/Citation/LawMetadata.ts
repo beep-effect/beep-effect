@@ -2,6 +2,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { CitationEditionRef } from "@beep/law-practice-domain/values";
 import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
 import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
@@ -16,6 +17,11 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { CitationOperationAdmission } from "./Admission.ts";
 import { makeCitationContextMatcher } from "./ContextMatcher.ts";
+import {
+  CitationEditionInferenceInput,
+  makeCitationEditionInference,
+  prepareCitationEditionInferenceInput,
+} from "./EditionInference.ts";
 import { makeCitationMetadataStrings } from "./MetadataStrings.ts";
 import { CitationMetadataYearBound, makeCitationMetadataYearFromBound } from "./MetadataYear.ts";
 import { CitationNativeProcessAdmission, makeCitationNativeProcessAdmission } from "./NativeAdmission.ts";
@@ -241,13 +247,7 @@ const preparePatch = Effect.fn("Citation.prepareLawMetadataPatch")(function* (
   });
   return O.some(patch);
 });
-/** Install immutable source configuration and shared admission. Each call uses
- * a fresh Scope and captures no outer Scope in its dependency Context. An
- * enclosing installed budget is retained, otherwise calls get fresh owners.
- * Methods have R = never and never return partially assigned metadata.
- * @internal @category operations @since 0.0.0
- */
-export const makeCitationLawMetadata = Effect.fn("Citation.makeLawMetadata")(function* (
+const installLawMetadata = Effect.fn("Citation.installLawMetadata")(function* (
   policy: unknown,
   runtimeInput: unknown,
   configurationInput: unknown
@@ -260,22 +260,94 @@ export const makeCitationLawMetadata = Effect.fn("Citation.makeLawMetadata")(fun
   if (O.isSome(enclosing) && enclosing.value.maximum > limits.producedTextUtf16)
     return yield* fail("invalid-configuration");
   const timing = yield* makeCitationRegexTiming(limits, true);
+  const run = Effect.fn("Citation.runLawMetadata")(function* (request: CitationLawMetadataInput) {
+    const budget = O.isSome(enclosing) ? enclosing.value : yield* makeCitationTextBudget(limits);
+    const patch = yield* Effect.scoped(preparePatch(limits, runtime, config, request)).pipe(
+      Effect.provideContext(dependencies),
+      Effect.provideService(CitationTextBudget, budget)
+    );
+    const reservedUnits = yield* budget.snapshot;
+    return CitationLawMetadataResult.make({ patch, reservedUnits });
+  });
+  return { limits, operation, timing, run };
+});
+/** Install immutable source configuration and shared admission. Each call uses
+ * a fresh Scope and captures no outer Scope in its dependency Context. An
+ * enclosing installed budget is retained, otherwise calls get fresh owners.
+ * Methods have R = never and never return partially assigned metadata.
+ * @internal @category operations @since 0.0.0
+ */
+export const makeCitationLawMetadata = Effect.fn("Citation.makeLawMetadata")(function* (
+  policy: unknown,
+  runtimeInput: unknown,
+  configurationInput: unknown
+) {
+  const installed = yield* installLawMetadata(policy, runtimeInput, configurationInput);
   const apply = Effect.fn("Citation.addLawMetadata")(
     (raw: unknown) =>
-      operation.run(
+      installed.operation.run(
         "extract",
         Effect.gen(function* () {
           const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
-          const budget = O.isSome(enclosing) ? enclosing.value : yield* makeCitationTextBudget(limits);
-          const patch = yield* Effect.scoped(preparePatch(limits, runtime, config, request)).pipe(
-            Effect.provideContext(dependencies),
-            Effect.provideService(CitationTextBudget, budget)
-          );
-          const reservedUnits = yield* budget.snapshot;
-          return CitationLawMetadataResult.make({ patch, reservedUnits });
+          return yield* installed.run(request);
         })
       ),
-    timing.timed
+    installed.timing.timed
+  );
+  return { apply };
+});
+/** Built-in full-law state before metadata and superclass edition selection.
+ * @internal @category models @since 0.0.0
+ */
+export class CitationFullLawMetadataInput extends S.Opaque<
+  CitationFullLawMetadataInput,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({ ...CitationLawMetadataInput.fields, ...CitationEditionInferenceInput.fields }).pipe(
+    $I.annoteSchema("CitationFullLawMetadataInput", {
+      description: "One source year shared by law metadata and edition selection.",
+    })
+  )
+) {}
+/** Complete helper patch and resulting superclass guess, published together.
+ * @internal @category models @since 0.0.0
+ */
+export class CitationFullLawMetadataResult extends S.Opaque<
+  CitationFullLawMetadataResult,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({ ...CitationLawMetadataResult.fields, editionGuess: S.NullOr(CitationEditionRef) }).pipe(
+    $I.annoteSchema("CitationFullLawMetadataResult", {
+      description: "Atomic observable full-law metadata and superclass selection result.",
+    })
+  )
+) {}
+/** Preserve FullLawCitation.add_metadata order inside one captured admission
+ * and deadline. The helper's updated year drives superclass inference; a late
+ * failure publishes no patch or guess. Existing owners perform all work.
+ * @internal @category operations @since 0.0.0
+ */
+export const makeCitationFullLawMetadata = Effect.fn("Citation.makeFullLawMetadata")(function* (
+  policy: unknown,
+  runtimeInput: unknown,
+  configurationInput: unknown
+) {
+  const installed = yield* installLawMetadata(policy, runtimeInput, configurationInput);
+  const inference = yield* makeCitationEditionInference(installed.limits);
+  const apply = Effect.fn("Citation.addFullLawMetadata")(
+    (raw: unknown) =>
+      installed.operation.run(
+        "extract",
+        Effect.gen(function* () {
+          const selection = yield* prepareCitationEditionInferenceInput(installed.limits, raw);
+          const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
+          const result = yield* installed.run(request);
+          const year = O.match(result.patch, { onNone: () => request.year, onSome: (patch) => patch.year });
+          const editionGuess = yield* inference.guess({ ...selection, year });
+          return CitationFullLawMetadataResult.make({ ...result, editionGuess });
+        })
+      ),
+    installed.timing.timed
   );
   return { apply };
 });

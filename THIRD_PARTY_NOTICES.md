@@ -824,3 +824,7 @@ is retained byte-for-byte, SHA-256
 The affected parser is `RegexProgram.ts`; source-engine flags and framing use
 `RegexEngine.ts` and the existing typed worker. The source observation corpus
 copies no regex implementation. No regex runtime binary is distributed here.
+
+The private full-law metadata composition and full-law-metadata fixture derive
+from eyecite 2.7.6 FullLawCitation.add_metadata and ResourceCitation.add_metadata
+at the pinned revision above (Free Law Project, BSD-2-Clause).

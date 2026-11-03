@@ -1415,3 +1415,13 @@ and MD046 allowances to preserve upstream bytes and the notice's existing
 block style. Its digest is checked by the runtime dictionary source verifier.
 The proper Dutch institution names are allowed only for that notice path in
 _typos.toml; authored prose is still checked normally.
+
+### Full-law superclass metadata composition (2026-11-03)
+
+The private full-law stage runs the source law helper before edition selection,
+uses the resulting year, retains source exact/variation priority and prior guess
+behavior, and publishes a complete result only after both succeed. Candidate
+preflight precedes native execution; one admission/deadline covers both stages.
+The helper owns the existing text budget and fresh native Scope. Source-free
+errors retain no partial patch. This is a built-in model-state adapter; custom
+protocols and public engine lifetime integration remain separate obligations.
