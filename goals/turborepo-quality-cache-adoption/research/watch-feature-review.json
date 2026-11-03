@@ -1,0 +1,136 @@
+{
+  "schemaVersion": "cache-watch-feature-review/v1",
+  "recordedAt": "2026-11-03T07:44:15.296547+00:00",
+  "feature": "futureFlag:watchUsingTaskInputs",
+  "decision": "retain-current-absence",
+  "disposition": "accepted-retain-current-absence",
+  "authority": "Scoped applicability decision for current tracked repository commands. No native watch semantics, timing, runtime adoption, task qualification or whole-goal acceptance.",
+  "sourceBaseRevision": "8fe07d3eed947c146448d1e469af4bb06148c7c3",
+  "sourceObservation": {
+    "path": "research/watch-source-observation.json",
+    "sha256": "90efbf673cf218a9e0bd45f7cd4b38eb5d919ae92e35906da0fe182c8cf90a36",
+    "trackedManifests": 213,
+    "configurations": 27,
+    "configuredFlagOccurrences": 0,
+    "tasksExecuted": 0,
+    "rawReportSha256": "90efbf673cf218a9e0bd45f7cd4b38eb5d919ae92e35906da0fe182c8cf90a36",
+    "publicationEncoding": "Formatting-only JSON projection; decoded values must equal the retained original observation."
+  },
+  "driverControls": {
+    "path": "research/watch-source-driver-controls.json",
+    "sha256": "665bb44709e030fa488a087cae1bedeeb39aaec33b965da891d6a605ee84328e",
+    "refusals": 3,
+    "passingObservationUnchanged": true
+  },
+  "sourceBindings": [
+    {
+      "path": "package.json",
+      "sha256": "4586f8438261d891334286381ab967abb91851923f59dce5c6c6f813e618dcbf"
+    },
+    {
+      "path": "turbo.json",
+      "sha256": "c54d76fbc0b7acbc1bfc50a4228bd235b519edd49274bc314255bdba7ef94e95"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
+      "sha256": "269260e5b33f4a1e281b5c4caa4c31bafac3f9a9937f0fb2bebe11d06532145d"
+    },
+    {
+      "path": "node_modules/turbo/docs/reference/watch.mdx",
+      "sha256": "6a6c3d016a90c8cb6f7bc3f96d0fc8486cf7a9305d7d5d4365b62f4d0a283f84"
+    },
+    {
+      "path": "node_modules/turbo/docs/reference/configuration.mdx",
+      "sha256": "f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074"
+    }
+  ],
+  "driverSha256": "79d4b44f9456874262869551c8ab13abfe75ee9393b3e67b63ce1b64cd477d01",
+  "publishedTagsObserved": {
+    "url": "https://registry.npmjs.org/-/package/turbo/dist-tags",
+    "sha256": "e02b1ed750aa5e9b3550b1c642f9434390eb9c2636cbd43923abf4a105698753",
+    "latest": "2.11.10",
+    "canary": "2.11.11-canary.1"
+  },
+  "upstreamDeclarations": [
+    {
+      "channel": "stable",
+      "commit": "e521641a142a24abe4554a77fdd6551e47e96fb3",
+      "url": "https://raw.githubusercontent.com/vercel/turborepo/e521641a142a24abe4554a77fdd6551e47e96fb3/crates/turborepo-turbo-json/src/future_flags.rs",
+      "sha256": "1c07c8c7b22c2b88a19d5c8bd9d7d30f9df39b3f2525231707e8bd897de28c08",
+      "declaresWatchFlag": true
+    },
+    {
+      "channel": "canary",
+      "commit": "a4ab545cd10a4db4e8e8c58cd2792d82c630a2f0",
+      "url": "https://raw.githubusercontent.com/vercel/turborepo/a4ab545cd10a4db4e8e8c58cd2792d82c630a2f0/crates/turborepo-turbo-json/src/future_flags.rs",
+      "sha256": "22c451cc9494845883a15b70bf1b28deddc185bafee27119681f0143492ffa55",
+      "declaresWatchFlag": true
+    }
+  ],
+  "scriptClassifications": [
+    {
+      "path": "apps/labs/api-docs/package.json",
+      "task": "dev",
+      "command": "portless api-docs.labs.beep sh -c 'bun --watch src/main.ts'",
+      "classification": "Bun process watcher inside the existing portless development script; not a native Turbo watcher."
+    },
+    {
+      "path": "apps/labs/ciops/package.json",
+      "task": "dev",
+      "command": "portless ciops.labs.beep sh -c 'bun --watch src/main.ts'",
+      "classification": "Bun process watcher inside the existing portless development script; not a native Turbo watcher."
+    },
+    {
+      "path": "apps/practice-m365-contacts/package.json",
+      "task": "dev",
+      "command": "portless practice-m365-contacts.beep sh -c 'bun --watch src/main.ts'",
+      "classification": "Bun process watcher inside the existing portless development script; not a native Turbo watcher."
+    },
+    {
+      "path": "apps/practice-review-hub/package.json",
+      "task": "dev",
+      "command": "portless practice-review-hub.beep sh -c 'bun --watch src/main.ts'",
+      "classification": "Bun process watcher inside the existing portless development script; not a native Turbo watcher."
+    }
+  ],
+  "runtimeMatchClassifications": [
+    {
+      "match": "packages/foundation/modeling/lockfiles/KNOWLEDGE.md:492:cache was populated but before turbo's watch saw it \u2014 the log for a stale",
+      "classification": "Historical package prose, not a configured invocation."
+    },
+    {
+      "match": "turbo.json:611:        \"$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts\",",
+      "classification": "Declared policy-input filename for Yeet WatchStream, not a Turbo watch command."
+    },
+    {
+      "match": "turbo.json:1022:        \"$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts\",",
+      "classification": "Declared policy-input filename for Yeet WatchStream, not a Turbo watch command."
+    }
+  ],
+  "currentRootDevelopmentCommand": "bunx turbo run dev",
+  "adjacentWatchRoute": "Yeet monitor/watch observes PR and quality state; it is a separate command route.",
+  "documentation": {
+    "url": "https://turborepo.dev/docs/reference/watch",
+    "observedAt": "2026-11-03T07:44:15.296547+00:00",
+    "scope": "The installed stable documentation and live official page place the flag on native watch input filtering. They describe framework-owned watchers separately; native watch caching has a separate experimental opt-in. These are documentation/source observations, not executed watch behavior."
+  },
+  "rationale": "No named tracked native Turbo watch consumer was found. Preserve the current absent flag and existing application watcher ownership. Changing native watch selection supplies no demonstrated benefit to the configured Bun/Vite/Next development commands.",
+  "expectedBenefit": "No measured speed or cost benefit is claimed; no configuration change is justified by the reviewed callers.",
+  "reopenWhen": [
+    "A named tracked native Turbo watch consumer is proposed.",
+    "Review its complete task inputs, persistent/interruptible behavior, output ownership and feedback-loop risks.",
+    "Run both exact current native clients against real file edits, missing-input controls, supported worktrees and concurrent output ownership before activation.",
+    "Qualify any experimental watch cache writes separately; preserve fresh hosted statuses and use the economics owner for performance attribution."
+  ],
+  "historicalEvidence": "The older native-future-flag-availability report uses canary 2.11.9-canary.1. It is retained unchanged and supplies no current-canary watch behavior proof.",
+  "limitations": [
+    "Source searches do not inventory arbitrary shell commands or ignored host configuration.",
+    "213 tracked manifests include fixtures; this is not a refreshed count of executable workspaces.",
+    "No watcher was started, file-event timing tested, framework hot reload proven or native caching experiment run.",
+    "Broad persistence/watch feature review, computation qualification, cross-host rollout and every whole-goal criterion remain incomplete."
+  ],
+  "qualificationGranted": false,
+  "productionConfigurationChanged": false,
+  "wholeGoalAcceptanceChanged": false,
+  "rollback": "Revert this scoped decision registration and its research evidence; runtime configuration is unchanged."
+}

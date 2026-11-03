@@ -1,0 +1,236 @@
+{
+  "schemaVersion": "cache-watch-source-review/v1",
+  "recordedAt": "2026-11-03T07:39:43.496512+00:00",
+  "sourceRevision": "8fe07d3eed947c146448d1e469af4bb06148c7c3",
+  "authority": "Tracked source applicability only; no task, watcher, native matrix or qualification execution.",
+  "roots": [
+    ".github",
+    "scripts",
+    "infra",
+    "apps",
+    "packages",
+    "package.json",
+    "turbo.json"
+  ],
+  "trackedFiles": 46092,
+  "manifestCount": 213,
+  "configurations": [
+    {
+      "path": "apps/beep-effect-web/turbo.json",
+      "sha256": "377d43a7204b727d9cb97534c959078fab21fdc406f0687b3f1d3b88c6b3a65d",
+      "watchFlagTextPresent": false
+    },
+    {
+      "path": "apps/docket-intake/turbo.json",
+      "sha256": "b60ad7a2a42c9573a817eb1a32e4d8ecd27b74d32e2841308ac0cbd3186ad453",
+      "watchFlagTextPresent": false
+    },
+    {
+      "path": "apps/labs/api-docs/turbo.json",
+      "sha256": "b60ad7a2a42c9573a817eb1a32e4d8ecd27b74d32e2841308ac0cbd3186ad453",
+      "watchFlagTextPresent": false
+    },
+    {
+      "path": "apps/labs/ciops/turbo.json",
+      "sha256": "b60ad7a2a42c9573a817eb1a32e4d8ecd27b74d32e2841308ac0cbd3186ad453",
+      "watchFlagTextPresent": false
+    },
+    {
+      "path": "apps/labs/lejeune-bolt-workbench/turbo.json",
+      "sha256": "377d43a7204b727d9cb97534c959078fab21fdc406f0687b3f1d3b88c6b3a65d",
+      "watchFlagTextPresent": false
+    },
+    {
+      "path": "apps/labs/semantica/turbo.json",
+      "sha256": "377d43a7204b727d9cb97534c959078fab21fdc406f0687b3f1d3b88c6b3a65d",
+      "watchFlagTextPresent": false
+    },
+    {
+      "path": "apps/labs/trustgraph-workbench/turbo.json",
+      "sha256": "377d43a7204b727d9cb97534c959078fab21fdc406f0687b3f1d3b88c6b3a65d",
+      "watchFlagTextPresent": false
+    },
+    {
+      "path": "apps/oip-web/turbo.json",
+      "sha256": "1b849fba074d27a7c64c96078186560ffd96b5eb93708cbddcdedf59cf43635d",
+      "watchFlagTextPresent": false
+    },
+    {
+      "path": "apps/practice-claude-mod/turbo.json",
+      "sha256": "b60ad7a2a42c9573a817eb1a32e4d8ecd27b74d32e2841308ac0cbd3186ad453",
+      "watchFlagTextPresent": false
+    },
+    {
+      "path": "apps/practice-identify/turbo.json",
+      "sha256": "b60ad7a2a42c9573a817eb1a32e4d8ecd27b74d32e2841308ac0cbd3186ad453",
+      "watchFlagTextPresent": false
+    },
+    {
+      "path": "apps/practice-m365-contacts/turbo.json",
+      "sha256": "b60ad7a2a42c9573a817eb1a32e4d8ecd27b74d32e2841308ac0cbd3186ad453",
+      "watchFlagTextPresent": false
+    },
+    {
+      "path": "apps/practice-mail-tagging/turbo.json",
+      "sha256": "b60ad7a2a42c9573a817eb1a32e4d8ecd27b74d32e2841308ac0cbd3186ad453",
+      "watchFlagTextPresent": false
+    },
+    {
+      "path": "apps/practice-review-hub/turbo.json",
+      "sha256": "b60ad7a2a42c9573a817eb1a32e4d8ecd27b74d32e2841308ac0cbd3186ad453",
+      "watchFlagTextPresent": false
+    },
+    {
+      "path": "apps/practice-setup/turbo.json",
+      "sha256": "b60ad7a2a42c9573a817eb1a32e4d8ecd27b74d32e2841308ac0cbd3186ad453",
+      "watchFlagTextPresent": false
+    },
+    {
+      "path": "apps/professional-desktop/turbo.json",
+      "sha256": "fbabf0485199158999e72970af6f5551adfb690191bad72aab962d415554b543",
+      "watchFlagTextPresent": false
+    },
+    {
+      "path": "apps/storybook/turbo.json",
+      "sha256": "1e2b850fcd13e1031be1dcdb1f9b42678d76827f032250d871955a815c2f4dac",
+      "watchFlagTextPresent": false
+    },
+    {
+      "path": "apps/todox/turbo.json",
+      "sha256": "5d77b1bd1558cf271d24595b83956defadbbbeb916c95385654dc33abb386950",
+      "watchFlagTextPresent": false
+    },
+    {
+      "path": "infra/turbo.json",
+      "sha256": "3466632a41e387b7b6fe8c455d81771b77bb3997fa521bf5559624c499df4340",
+      "watchFlagTextPresent": false
+    },
+    {
+      "path": "packages/foundation/modeling/identity/turbo.json",
+      "sha256": "1c694094dcfeef53b714e7980f8193cf93b2c34690f9a9a4dcd5936f328456e8",
+      "watchFlagTextPresent": false
+    },
+    {
+      "path": "packages/foundation/primitive/types/turbo.json",
+      "sha256": "6c8d1d6e3c12318fa0273a3ec1585487e4661e8a80bda2ccf5d48a2c821dedd4",
+      "watchFlagTextPresent": false
+    },
+    {
+      "path": "packages/tooling/library/ai-sync/turbo.json",
+      "sha256": "e68a2becd965278b7ef29b9540d2b71695e77fd476931d3ba0f6e24fdc4d082b",
+      "watchFlagTextPresent": false
+    },
+    {
+      "path": "packages/tooling/policy-pack/repo-configs/turbo.json",
+      "sha256": "a8d6070aa5f31cb7d0f9fd42550a5adba806912fdd18ca84c18ee47f5649987b",
+      "watchFlagTextPresent": false
+    },
+    {
+      "path": "packages/tooling/test-kit/fc-runs/turbo.json",
+      "sha256": "427d28a29603a6fd99910c3de7f75fee1b5437f345e52890300c994753c3bf57",
+      "watchFlagTextPresent": false
+    },
+    {
+      "path": "packages/tooling/test-kit/test-runner/turbo.json",
+      "sha256": "427d28a29603a6fd99910c3de7f75fee1b5437f345e52890300c994753c3bf57",
+      "watchFlagTextPresent": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/fixtures/proof-epoch/turbo.json",
+      "sha256": "2ef47f50a33dccec36bb7d308ebc132669fa410c7562c85edaaa50b22660ed2e",
+      "watchFlagTextPresent": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/turbo.json",
+      "sha256": "c52155e26db44b552bf3462bf1da200496fb5792050908fd2f16dd80f2483f8d",
+      "watchFlagTextPresent": false
+    },
+    {
+      "path": "turbo.json",
+      "sha256": "c54d76fbc0b7acbc1bfc50a4228bd235b519edd49274bc314255bdba7ef94e95",
+      "watchFlagTextPresent": false
+    }
+  ],
+  "watchNamedScripts": [
+    {
+      "path": "apps/labs/api-docs/package.json",
+      "task": "dev",
+      "command": "portless api-docs.labs.beep sh -c 'bun --watch src/main.ts'"
+    },
+    {
+      "path": "apps/labs/ciops/package.json",
+      "task": "dev",
+      "command": "portless ciops.labs.beep sh -c 'bun --watch src/main.ts'"
+    },
+    {
+      "path": "apps/practice-m365-contacts/package.json",
+      "task": "dev",
+      "command": "portless practice-m365-contacts.beep sh -c 'bun --watch src/main.ts'"
+    },
+    {
+      "path": "apps/practice-review-hub/package.json",
+      "task": "dev",
+      "command": "portless practice-review-hub.beep sh -c 'bun --watch src/main.ts'"
+    }
+  ],
+  "runtimeSearch": {
+    "pattern": "turbo.{0,80}watch|watchUsingTaskInputs",
+    "matchingLines": [
+      "packages/foundation/modeling/lockfiles/KNOWLEDGE.md:492:cache was populated but before turbo's watch saw it \u2014 the log for a stale",
+      "turbo.json:611:        \"$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts\",",
+      "turbo.json:1022:        \"$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts\","
+    ]
+  },
+  "registry": {
+    "url": "https://registry.npmjs.org/-/package/turbo/dist-tags",
+    "sha256": "e02b1ed750aa5e9b3550b1c642f9434390eb9c2636cbd43923abf4a105698753",
+    "latest": "2.11.10",
+    "canary": "2.11.11-canary.1"
+  },
+  "upstreamDeclarations": [
+    {
+      "channel": "stable",
+      "commit": "e521641a142a24abe4554a77fdd6551e47e96fb3",
+      "url": "https://raw.githubusercontent.com/vercel/turborepo/e521641a142a24abe4554a77fdd6551e47e96fb3/crates/turborepo-turbo-json/src/future_flags.rs",
+      "sha256": "1c07c8c7b22c2b88a19d5c8bd9d7d30f9df39b3f2525231707e8bd897de28c08",
+      "declaresWatchFlag": true
+    },
+    {
+      "channel": "canary",
+      "commit": "a4ab545cd10a4db4e8e8c58cd2792d82c630a2f0",
+      "url": "https://raw.githubusercontent.com/vercel/turborepo/a4ab545cd10a4db4e8e8c58cd2792d82c630a2f0/crates/turborepo-turbo-json/src/future_flags.rs",
+      "sha256": "22c451cc9494845883a15b70bf1b28deddc185bafee27119681f0143492ffa55",
+      "declaresWatchFlag": true
+    }
+  ],
+  "sourceBindings": [
+    {
+      "path": "package.json",
+      "sha256": "4586f8438261d891334286381ab967abb91851923f59dce5c6c6f813e618dcbf"
+    },
+    {
+      "path": "turbo.json",
+      "sha256": "c54d76fbc0b7acbc1bfc50a4228bd235b519edd49274bc314255bdba7ef94e95"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
+      "sha256": "269260e5b33f4a1e281b5c4caa4c31bafac3f9a9937f0fb2bebe11d06532145d"
+    },
+    {
+      "path": "node_modules/turbo/docs/reference/watch.mdx",
+      "sha256": "6a6c3d016a90c8cb6f7bc3f96d0fc8486cf7a9305d7d5d4365b62f4d0a283f84"
+    },
+    {
+      "path": "node_modules/turbo/docs/reference/configuration.mdx",
+      "sha256": "f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074"
+    }
+  ],
+  "driverSha256": "79d4b44f9456874262869551c8ab13abfe75ee9393b3e67b63ce1b64cd477d01",
+  "tasksExecuted": 0,
+  "configurationChanged": false,
+  "qualificationGranted": false,
+  "limitations": [
+    "No arbitrary shell or ignored host configuration census.",
+    "Source declarations do not prove native watch semantics or event timing."
+  ]
+}

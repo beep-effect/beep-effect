@@ -768,3 +768,13 @@ The manifest status note still counted eight scoped feature decisions while its
 accepted matrix counted nine. This no-change prune review updates both to ten
 with 25 pending rows. Matrix counts must be derived from row dispositions before
 publishing; an accepted optional absence is not computation or goal completion.
+
+
+### 2026-11-03: watch caller and declaration ownership
+
+A broad native-watch search also matched historical package prose and declared
+Yeet `WatchStream.ts` input paths. Keep every hit and classify it before treating
+text as an invocation. The config loader and raw model delegate flag declarations
+to `future_flags.rs`; the initial module probes did not establish availability
+and remain retained locally. Follow the import boundary and pin the owning
+module before making a feature claim. No runtime configuration changed.
