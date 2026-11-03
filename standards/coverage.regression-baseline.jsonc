@@ -15104,7 +15104,7 @@
             "functions": 0
           }
         },
-        "packages/law-practice/domain/src/entities/Party/Party.model.ts": {
+        "packages/law-practice/domain/src/entities/LegalPartyReference/LegalPartyReference.model.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -15116,7 +15116,7 @@
             "functions": 0
           }
         },
-        "packages/law-practice/domain/src/entities/Party/Party.values.ts": {
+        "packages/law-practice/domain/src/entities/LegalPartyReference/LegalPartyReference.values.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -15128,7 +15128,7 @@
             "functions": 0
           }
         },
-        "packages/law-practice/domain/src/entities/Party/index.ts": {
+        "packages/law-practice/domain/src/entities/LegalPartyReference/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -26930,6 +26930,42 @@
         "functions": 4
       },
       "files": {
+        "packages/party/domain/src/values/Contradiction/Contradiction.model.ts": {
+          "lines": 97.56,
+          "statements": 97.56,
+          "branches": 100,
+          "functions": 50,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/party/domain/src/values/Projection/Projection.behavior.ts": {
+          "lines": 98.78,
+          "statements": 98.83,
+          "branches": 100,
+          "functions": 98,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/party/domain/src/values/Resolution/Resolution.behavior.ts": {
+          "lines": 97.82,
+          "statements": 97.95,
+          "branches": 93.75,
+          "functions": 96,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 1,
+            "functions": 1
+          }
+        },
         "packages/party/domain/src/Identifier.ts": {
           "lines": 100,
           "statements": 100,
