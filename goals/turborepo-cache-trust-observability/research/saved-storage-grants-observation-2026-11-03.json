@@ -1,0 +1,57 @@
+{
+  "driverSha256": "9895f3f8d99f49ea56caa12cfdc1ae04968da7933b62e63847eb742a95055f58",
+  "schemaVersion": "cache-saved-trial-storage-grants/v1",
+  "recordedAt": "2026-11-03T04:00:46.424047+00:00",
+  "authority": "Actual saved-credential storage operations only. Current management API policy metadata is not reverified.",
+  "signedAdapterActivated": false,
+  "secretValuesInReport": false,
+  "payloadBytesRetained": false,
+  "sourceSha256": "71d91c11e6d9251c2a750c1d897a8e8a13ac4f3fbb9b13513bc91b166ee998c7",
+  "referencesLoaded": 4,
+  "noArtifactKeyOrBearerLoaded": true,
+  "roles": [
+    {
+      "role": "reader",
+      "matchesSavedAlchemyRole": true,
+      "credentialIdSha256": "c95422d82a1824ebff7fee4d243651ca921fa1b32a29aa6febd12fbe7b0741dd"
+    },
+    {
+      "role": "writer",
+      "matchesSavedAlchemyRole": true,
+      "credentialIdSha256": "5d094b69ce9d91d35591e6bdaac3a0bc3d5855f583c579d6e15e0ae722bc67fe"
+    }
+  ],
+  "cleanupFailures": [],
+  "ownedProbeObjectsCleaned": true,
+  "cleanupHeadsNotFound": 2,
+  "result": "passed",
+  "operations": [
+    {
+      "role": "writer",
+      "operation": "PUT",
+      "status": 200,
+      "bytes": 26
+    },
+    {
+      "role": "reader",
+      "operation": "GET",
+      "status": 200,
+      "exactBytes": true
+    },
+    {
+      "role": "reader",
+      "operation": "PUT",
+      "status": 403,
+      "denied": true
+    },
+    {
+      "role": "reader",
+      "operation": "DELETE",
+      "status": 403,
+      "denied": true
+    }
+  ],
+  "maximumProbeObjectBytes": 52,
+  "objectNamespace": "dedicated non-cache probe prefix",
+  "endpointValuesRetained": false
+}
