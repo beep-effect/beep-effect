@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "e5157183e7007be1ceb7f4312b91d9d0a9a46c38cac501a5e7732b9a9556ac7e",
+  "specSha256": "2c028c5adce1ad31f59feb958ef90386fe13f2409bb5611c757f2aafdca17c77",
   "acceptance": [
     {
       "id": "AC-01",
@@ -21,7 +21,7 @@
       "source": "SPEC.md:157",
       "requirement": "Reader, fork, writer, backend and storage roles satisfy the independent capability matrix; tenant escape and direct invocation negatives pass.",
       "status": "unproven",
-      "nextProof": "Prove current reader/fork/writer/backend/storage capabilities, selector validation and direct invocation denials against the applicable deployed topology.",
+      "nextProof": "Current saved-role object checks passed in saved-storage-grants-checkpoint-2026-11-03.json. Still prove current management policy, deployed reader/fork/writer/backend separation, tenant/selector/direct-invocation negatives and the complete capability matrix.",
       "partialEvidence": [
         "research/private-pilot-storage-checkpoint.json",
         "research/closed-producer-upload-checkpoint.json",
@@ -516,5 +516,11 @@
   "priorSpecSha256BeforeEnvironment070Integration": "d6c392764524b66eea1031b2efec11aab9821aca12b5642dffe774773fe327a5",
   "acceptedMainSpecSha256AtEnvironment070Integration": "8417ce9c74b2588578ed90de5d18e417a71721a8ab8d82b21cabcc440bed031c",
   "priorSpecSha256BeforeCandidateBuildPreparation": "f6c677b00a4dda11e981247ad4d523f0ea7c064a16d33219dd7551ddf7920f8a",
-  "priorSpecSha256BeforeWheelHashReview": "ee6a9e498c4e60a026090d1852247113628e3f725134faf4a98390ead7b036f2"
+  "priorSpecSha256BeforeWheelHashReview": "ee6a9e498c4e60a026090d1852247113628e3f725134faf4a98390ead7b036f2",
+  "priorSpecSha256AtSavedStorageGrantReview": "e5157183e7007be1ceb7f4312b91d9d0a9a46c38cac501a5e7732b9a9556ac7e",
+  "savedStorageGrantCheckpoint": {
+    "path": "research/saved-storage-grants-checkpoint-2026-11-03.json",
+    "sha256": "fbdc0090b55bd988975fceae16b4c804e532bc0c1c729462e0068ace5a1ef440",
+    "scope": "Current small-object role capabilities only. No current management-policy inspection, deployed adapter trust, native signed restoration, protected producer, qualification or whole-goal acceptance."
+  }
 }
