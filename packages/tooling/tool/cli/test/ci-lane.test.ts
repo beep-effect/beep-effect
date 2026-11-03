@@ -43,7 +43,9 @@ import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import { constUndefined, flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
+import * as Latch from "effect/Latch";
 import * as Layer from "effect/Layer";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
@@ -1899,6 +1901,111 @@ it.layer(storybookCiLayer(malformedStorybook), { timeout: "10 seconds" })(
         expect(error._tag).toBe("CiCommandError");
         expect(error.message).toBe("Turbo emitted invalid JSON for the Storybook affected dry run.");
         expect(malformedStorybook.spawns).toHaveLength(1);
+      })
+    );
+  }
+);
+
+type FallowLaneProbe = {
+  readonly started: Array<string>;
+  inFlight: number;
+  maxInFlight: number;
+  status: string;
+};
+
+const FALLOW_LANE_TASKS = [
+  "fallow:audit:check",
+  "fallow:dead-code:check",
+  "fallow:health:check",
+  "fallow:boundaries:advisory",
+  "fallow:flags:advisory",
+  "fallow:security:advisory",
+  "fallow:fix-preview:advisory",
+];
+const FALLOW_STATUS_LANES = ["audit", "dead-code", "health", "boundaries", "flags", "security", "fix-preview"];
+
+const fallowLaneProbe = (): FallowLaneProbe => ({ started: [], inFlight: 0, maxInFlight: 0, status: "" });
+
+// Each fake Fallow `turbo run` holds its exit until three sub-lanes are in flight, so
+// a runner that waits for one sub-lane before starting the next never gets past the
+// first and the test times out.
+const fallowCiLayer = (probe: FallowLaneProbe, failingTask?: string) => {
+  const threeInFlight = Latch.makeUnsafe(false);
+  const fileSystemLayer = FileSystem.layerNoop({
+    exists: (file) => Effect.succeed(Str.endsWith("/.git")(file)),
+    makeDirectory: () => Effect.void,
+    readFileString: () => Effect.succeed("{}"),
+    writeFileString: (_file, content) =>
+      Effect.sync(() => {
+        probe.status = content;
+      }),
+  });
+  const processLayer = Layer.succeed(
+    ChildProcessSpawner.ChildProcessSpawner,
+    ChildProcessSpawner.make((command) => {
+      if (!ChildProcess.isStandardCommand(command)) {
+        return Effect.die("the Fallow lane test never spawns a piped command");
+      }
+      const task = A.findFirst(commandArgs(command), Str.startsWith("fallow:"));
+      if (O.isNone(task)) {
+        return Effect.succeed(commandHandle());
+      }
+      A.appendInPlace(probe.started, task.value);
+      probe.inFlight += 1;
+      probe.maxInFlight = Num.max(probe.maxInFlight, probe.inFlight);
+      if (A.length(probe.started) === 3) {
+        Latch.openUnsafe(threeInFlight);
+      }
+      const exit = Effect.sync(() => {
+        probe.inFlight -= 1;
+        return ChildProcessSpawner.ExitCode(task.value === failingTask ? 1 : 0);
+      });
+      return Effect.succeed(
+        ChildProcessSpawner.makeHandle({ ...commandHandle(), exitCode: Latch.whenOpen(threeInFlight, exit) })
+      );
+    })
+  );
+  const fileSystemAndPath = Layer.merge(fileSystemLayer, Path.layer);
+  return Layer.provideMerge(
+    Git.layer,
+    Layer.mergeAll(
+      BunCrypto.layer,
+      fileSystemAndPath,
+      FsUtilsLive.pipe(Layer.provide(fileSystemAndPath)),
+      processLayer,
+      TestConsole.layer
+    )
+  );
+};
+
+const statusLanes = flow(Str.split("\n"), A.filter(Str.isNonEmpty), A.map(Str.replace(/ \(\d+s\)$/u, "")));
+
+const concurrentFallowProbe = fallowLaneProbe();
+it.layer(fallowCiLayer(concurrentFallowProbe), { timeout: "10 seconds" })("fallow lane sub-lane concurrency", (it) => {
+  it.effect("runs the seven sub-lanes three at a time and records status in declaration order", () =>
+    Effect.gen(function* () {
+      yield* runCiLane("fallow", baseOptions);
+
+      expect(concurrentFallowProbe.started).toEqual(FALLOW_LANE_TASKS);
+      expect(concurrentFallowProbe.maxInFlight).toBe(3);
+      expect(statusLanes(concurrentFallowProbe.status)).toEqual(A.map(FALLOW_STATUS_LANES, (lane) => `- ${lane}: 0`));
+    })
+  );
+});
+
+const failingFallowProbe = fallowLaneProbe();
+it.layer(fallowCiLayer(failingFallowProbe, "fallow:health:check"), { timeout: "10 seconds" })(
+  "fallow lane blocking failure under concurrency",
+  (it) => {
+    it.effect("still runs the advisory sub-lanes and fails on the blocking exit status", () =>
+      Effect.gen(function* () {
+        const error = yield* runCiLane("fallow", baseOptions).pipe(Effect.flip);
+
+        expect(error.message).toBe("Fallow blocking lane(s) failed with status 1.");
+        expect(failingFallowProbe.started).toEqual(FALLOW_LANE_TASKS);
+        expect(statusLanes(failingFallowProbe.status)).toEqual(
+          A.map(FALLOW_STATUS_LANES, (lane) => `- ${lane}: ${lane === "health" ? 1 : 0}`)
+        );
       })
     );
   }

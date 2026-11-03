@@ -18,6 +18,8 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { ScriptResult } from "@beep/commands/ScriptedSpawner";
@@ -38,6 +40,10 @@ const runQualityCommand = Command.runWith(qualityCommand, { version: "0.0.0" });
 const recordingSpawner = (result: ScriptResult.Encoded = {}) => ScriptedSpawner.make(() => result);
 const spawnedLines = (spawner: ScriptedSpawner) =>
   A.map(spawner.spawns, (spawn) => A.join([spawn.command, ...spawn.args], " "));
+
+const decodeEnvelopeStatus = S.decodeUnknownEffect(
+  S.fromJsonString(S.Struct({ advisory: S.Boolean, status: S.String, exitStatus: S.Finite }))
+);
 
 // `github-checks` scales its widths by the admission state under the runtime root. An
 // empty root keeps live leases from other sessions, and the systemd scope probes they
@@ -161,6 +167,31 @@ it.layer(CommandTestLayer, { timeout: "10 seconds" })("quality command dispatch"
     }).pipe(
       provideSpawner(spawner),
       Effect.provideService(ConfigProvider.ConfigProvider, RunScopesDisabled),
+      Effect.provideServiceEffect(Console.Console, TestConsole.make)
+    );
+  });
+
+  it.effect("fails an advisory Fallow run whose tool failed, so a cached task never replays it", () => {
+    const isFallowHealth = Str.includes("fallow -- health");
+    const spawner = ScriptedSpawner.make((command, args) =>
+      isFallowHealth(A.join([command, ...args], " ")) ? { stderr: "simulated fallow failure", exit: 2 } : {}
+    );
+
+    return Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const out = path.join(yield* fs.makeTempDirectoryScoped({ prefix: "fallow-tool-failed-" }), "health.json");
+
+      const exit = yield* runQualityCommand(["fallow", "health", "--advisory", "--base", "HEAD", "--out", out]).pipe(
+        Effect.exit
+      );
+
+      exit.pipe(Exit.isFailure, assertTrue);
+      expect(A.some(spawnedLines(spawner), isFallowHealth)).toBe(true);
+      const envelope = yield* decodeEnvelopeStatus(yield* fs.readFileString(out));
+      expect(envelope).toEqual({ advisory: true, status: "tool-failed", exitStatus: 2 });
+    }).pipe(
+      provideSpawner(spawner),
       Effect.provideServiceEffect(Console.Console, TestConsole.make)
     );
   });
