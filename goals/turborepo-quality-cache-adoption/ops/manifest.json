@@ -119,7 +119,11 @@
     "research/native-observability-default-controls.py",
     "research/native-observability-default-controls.json",
     "research/observability-driver-controls.json",
-    "research/observability-feature-review.json"
+    "research/observability-feature-review.json",
+    "research/native-filter-composition-controls.py",
+    "research/native-filter-composition-controls.json",
+    "research/filter-composition-driver-controls.json",
+    "research/filter-composition-source-review.json"
   ],
   "agentLaunchers": [
     {

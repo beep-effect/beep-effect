@@ -551,3 +551,17 @@ production qualification.
 - The current source census distinguishes app/agent/adapter OTEL from a Turbo
   consumer. A missing optional consumer supports retaining the default; it does
   not complete deployed trust or telemetry safety acceptance.
+
+### 2026-11-02 affected/filter composition supplement
+
+- Installed Turbo 2.11.10 documentation: `reference/configuration.mdx` task-level
+  filter/affected sections and `reference/run.mdx`; source is the bundled vendor
+  documentation matching the pinned stable package.
+- `errors-only-client-pins.json` supplies immutable stable 2.11.10 and published
+  canary 2.11.11-canary.1 binary digests. The driver verifies their bytes and
+  actual version output before the bounded offline plans.
+- `native-filter-composition-controls.py` reuses the existing captured
+  `run_bounded` function; its versioned report binds the driver, helper, pins,
+  root configuration and reviewed CI caller source.
+- These are synthetic task-selection plans and comment-correction evidence,
+  not real Beep execution, performance, qualification or hosted acceptance.

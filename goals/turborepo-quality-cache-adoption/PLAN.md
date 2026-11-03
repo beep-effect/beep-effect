@@ -642,3 +642,21 @@ named consumer passes the separate payload and credential gates.
 This closes one optional feature decision: nine scoped decisions and 26 pending
 rows out of 35. Every computation review/qualification, deployed trust, measured
 value, observation window and whole-goal acceptance gate remains open.
+
+### Pinned affected/filter composition, 2026-11-02
+
+A source review found two CI comments claiming that a positive filter plus
+`--affected` widens selection. The exact enabled repository flags instead
+intersect those sets on stable 2.11.10 and canary 2.11.11-canary.1. The new
+[native controls](research/native-filter-composition-controls.json) assert 56
+plans across product, labs, unrelated and global changes. They retain executable
+prerequisites, negative filtering, union between positive filters and `--only`.
+No task executes and the real repository is not mounted in the network-isolated
+fixtures. The existing stream collector enforces bounded capture and lifetime.
+
+Five driver controls reject optimized Python, wrong pins, report overwrite, the
+stale union expectation and an omitted prerequisite. The CI comments now state
+the real full-labs contract; executable argv and local/hosted parity stay unchanged.
+The source review remains partial: applicable real callers and computations
+still need their complete review and qualification. No feature disposition,
+production setting, measured savings or whole-goal acceptance changes.
