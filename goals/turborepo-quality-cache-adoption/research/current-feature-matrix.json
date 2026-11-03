@@ -1359,11 +1359,12 @@
       "sourceBindingRepair": {
         "checkpoint": "signature-key-source-binding-repair.json",
         "metadataControls": "signature-key-source-binding-controls.json",
-        "nativeSemanticReplayForCurrentDriver": "observed-synthetic-only",
+        "nativeSemanticReplayForCurrentDriver": "pending-after-descriptor-containment-repair",
         "historical168CaseObservationRetainsOriginalDriverBinding": true,
-        "currentNativeReplayCheckpoint": "signature-key-sourcebound-native-replay.json"
+        "currentNativeReplayCheckpoint": "signature-key-sourcebound-native-replay.json",
+        "descriptorRepairCheckpoint": "native-source-family-repair.json"
       },
-      "currentNativeSemanticObservation": {
+      "preContainmentNativeSemanticObservation": {
         "report": "signature-key-sourcebound-native-replay.json",
         "nativeReport": "native-signature-key-sourcebound-controls-2026-11-03.json",
         "cases": 168,
@@ -1606,5 +1607,17 @@
     "sentinelsExecuted": 0,
     "featuresSemanticallyQualified": 0
   },
-  "currentClientPairScope": "The current pin manifest and availability observations use stable2.11.10/current published canary2.11.11-canary.1. Historical semantic and applicability reports retain their original exact source/client envelopes; no qualification or prior result is transplanted."
+  "currentClientPairScope": "The current pin manifest and availability observations use stable2.11.10/current published canary2.11.11-canary.1. Historical semantic and applicability reports retain their original exact source/client envelopes; no qualification or prior result is transplanted.",
+  "relatedNativeSourceIntegrityRepair": {
+    "checkpoint": "native-source-family-repair.json",
+    "metadataControls": "native-source-family-controls.json",
+    "affectedDrivers": 13,
+    "prefixDrivers": 10,
+    "prefixCases": 208,
+    "additionalSignaturePrefixCases": 13,
+    "nativeInvocations": 0,
+    "taskExecutions": 0,
+    "nativeSemanticReplaysForChangedDrivers": "pending",
+    "historicalEvidenceBindingsRetained": true
+  }
 }

@@ -867,3 +867,38 @@ observed schema difference changed the matrix and next qualification work.
 - Matching synthetic semantics is not signed artifact transport, a protected
   producer result, feature adoption or full-goal acceptance. Keep those gates
   explicit rather than renaming this bounded experiment as qualification.
+
+
+### 2026-11-03 — repair related evidence joins in one wave
+
+- Source review after the signature repair found split reads in the setup,
+  prune, base-ref, global and log probes, a later Bun-pin read in filter
+  composition, and a late guard in selection. The observability snapshot was
+  already parsed consistently but lacked the early pre-probe refusal.
+- Capture source bytes once, parse those bytes, hash those bytes and guard them
+  before probes. Reuse the captured-byte pattern and existing bounded
+  collectors. Preserve all function ASTs, budgets and historical reports; do
+  not copy old semantic results onto changed driver digests.
+- The generalized metadata-prefix fixture initially omitted its synthetic
+  canary file. Preserve that failed calibration and its source. The corrected
+  151-case run executes no native client/task and checks seven external-pin
+  refusals. It is separate from native experiments and hosted quality.
+- The two log probes used check-then-overwrite report publication. Create
+  their reports exclusively with mode0600 so a concurrent writer cannot be
+  silently overwritten or a temporarily world-readable report exposed.
+
+
+### 2026-11-03 — verify the opened pin descriptor
+
+- Review #2689 found a real gap between resolving/checking a pin pathname and
+  opening it. Leaf or parent replacement could supply external bytes while a
+  later pathname digest comparison still matched.
+- Reuse the bounded-reader owner: check the opened descriptor's actual path
+  and file type before reading, reject leaf symlinks, bound bytes, and apply
+  the same rule to revalidation. Twenty legacy replacement controls read
+  synthetic external bytes; twenty repaired controls read none.
+- The 208-case actual-reader prefix controls and thirteen stubbed-reader binding
+  contrasts execute no native clients/tasks. Earlier151-case metadata receipts
+  and their unpublished source envelopes are retained privately. The native
+  signature replay predates this repair; preserve its source binding and
+  require a fresh replay rather than claiming it is current.

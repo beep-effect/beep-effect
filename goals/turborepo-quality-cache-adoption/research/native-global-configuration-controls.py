@@ -29,11 +29,25 @@ args = parser.parse_args()
 assert not args.output.exists(), "Existing reports are refused."
 repo = Path(__file__).resolve().parents[3]
 research = Path(__file__).parent
-pins_path = args.pins or research / "errors-only-client-pins.json"
-pins = json.loads(pins_path.read_text())
+source_reader = research / "native-future-flag-availability.py"
+source_reader_bytes = source_reader.read_bytes()
+source_reader_node = next(n for n in ast.parse(source_reader_bytes).body
+                          if isinstance(n, ast.FunctionDef) and n.name == "read_contained_source")
+source_reader_namespace = {"os": os}
+exec(compile(ast.Module(body=[source_reader_node], type_ignores=[]), str(source_reader), "exec"), source_reader_namespace)
+read_contained_source = source_reader_namespace["read_contained_source"]
+pins_path = (args.pins or research / "errors-only-client-pins.json").resolve()
+try:
+    pins_path.relative_to(repo)
+except ValueError:
+    raise SystemExit("Pin manifest must be within the checkout.") from None
 harness = research / "native-future-flag-availability.py"
+sources = [Path(__file__).resolve(), pins_path, harness, repo / ".bun-version"]
+captured_sources = {path: (source_reader_bytes if path == source_reader else read_contained_source(path, repo)) for path in sources}
+before = {str(path.relative_to(repo)): hashlib.sha256(data).hexdigest() for path, data in captured_sources.items()}
+pins = json.loads(captured_sources[pins_path])
 function = next(
-    node for node in ast.parse(harness.read_text()).body
+    node for node in ast.parse(captured_sources[harness]).body
     if isinstance(node, ast.FunctionDef) and node.name == "run_bounded"
 )
 capture = {
@@ -41,21 +55,20 @@ capture = {
     "signal": signal, "subprocess": subprocess, "start": time.monotonic(),
 }
 exec(compile(ast.Module(body=[function], type_ignores=[]), str(harness), "exec"), capture)
+assert all(read_contained_source(path, repo) == data for path, data in captured_sources.items()), "Observation sources changed before probes."
 clients = {
     "stable": args.stable or repo / "node_modules/@turbo/linux-64/bin/turbo",
     "canary": Path.home() / ".cache/beep/turbo-goals-clients"
     / pins["canary"]["packageVersion"] / "turbo",
 }
-sha = lambda path: hashlib.sha256(path.read_bytes()).hexdigest()
+sha = lambda path: hashlib.sha256(read_contained_source(path, repo) if path == pins_path else path.read_bytes()).hexdigest()
 for channel, binary in clients.items():
     assert sha(binary) == pins[channel]["sha256"], "Native client pin changed."
 bun = Path(subprocess.check_output(
     ["bun", "--no-env-file", "-p", "process.execPath"], cwd=repo, text=True, timeout=5,
 ).strip())
 bun_version = subprocess.check_output([str(bun), "--version"], text=True, timeout=5).strip()
-assert bun_version == (repo / ".bun-version").read_text().strip(), "Bun pin changed."
-sources = [Path(__file__).resolve(), pins_path.resolve(), harness, repo / ".bun-version"]
-before = {str(path.relative_to(repo)): sha(path) for path in sources}
+assert bun_version == captured_sources[repo / ".bun-version"].decode().strip(), "Bun pin changed."
 tools = {"bun": sha(bun), "bwrap": sha(Path("/usr/bin/bwrap")),
          **{channel: sha(binary) for channel, binary in clients.items()}}
 base = repo / ".beep/global-configuration-native-controls"

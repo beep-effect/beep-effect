@@ -21,6 +21,13 @@ args = parser.parse_args()
 assert not args.output.exists(), "Existing reports are refused."
 repo = Path(__file__).resolve().parents[3]
 research = Path(__file__).parent
+source_reader = research / "native-future-flag-availability.py"
+source_reader_bytes = source_reader.read_bytes()
+source_reader_node = next(n for n in ast.parse(source_reader_bytes).body
+                          if isinstance(n, ast.FunctionDef) and n.name == "read_contained_source")
+source_reader_namespace = {"os": os}
+exec(compile(ast.Module(body=[source_reader_node], type_ignores=[]), str(source_reader), "exec"), source_reader_namespace)
+read_contained_source = source_reader_namespace["read_contained_source"]
 base = repo / ".beep/setup-native-controls"
 base.mkdir(parents=True, mode=0o700, exist_ok=True)
 raw = Path(tempfile.mkdtemp(prefix="raw-", dir=base))
@@ -30,7 +37,12 @@ harness = (
     repo
     / "goals/turborepo-quality-cache-adoption/research/native-future-flag-availability.py"
 )
-parsed = ast.parse(harness.read_text())
+pins_file = (args.pins or research / "errors-only-client-pins.json").resolve()
+pins_file.relative_to(repo)
+source_paths = [Path(__file__).resolve(), harness, pins_file, repo / ".bun-version"]
+captured_sources = {path: (source_reader_bytes if path == source_reader else read_contained_source(path, repo)) for path in source_paths}
+source_hashes = {str(path): hashlib.sha256(data).hexdigest() for path, data in captured_sources.items()}
+parsed = ast.parse(captured_sources[harness])
 fn = next(
     n for n in parsed.body if isinstance(n, ast.FunctionDef) and n.name == "run_bounded"
 )
@@ -46,8 +58,8 @@ exec(
     capture_namespace,
 )
 run_bounded = capture_namespace["run_bounded"]
-pins_file = args.pins or research / "errors-only-client-pins.json"
-pins = json.loads(pins_file.read_text())
+pins = json.loads(captured_sources[pins_file])
+assert all(read_contained_source(path, repo) == data for path, data in captured_sources.items()), "Observation sources changed before probes."
 clients = {
     "stable": (
         args.stable or repo / "node_modules/@turbo/linux-64/bin/turbo",
@@ -69,14 +81,10 @@ bun = Path(
 bun_version = subprocess.check_output(
     [str(bun), "--version"], text=True, timeout=5
 ).strip()
-assert bun_version == (repo / ".bun-version").read_text().strip(), "Bun pin changed."
+assert bun_version == captured_sources[repo / ".bun-version"].decode().strip(), "Bun pin changed."
 source_revision = subprocess.check_output(
     ["git", "-C", str(repo), "rev-parse", "HEAD"], text=True, timeout=5
 ).strip()
-source_paths = [Path(__file__).resolve(), harness, pins_file.resolve()]
-source_hashes = {
-    str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in source_paths
-}
 tool_paths = {
     "bun": bun,
     "git": Path("/usr/bin/git"),
@@ -344,7 +352,7 @@ for channel, (binary, digest) in clients.items():
 assert len(rows) == 36 and time.monotonic() - start < 600
 assert all(r["fileBytesUnchanged"] and not r["sentinelExecuted"] for r in rows)
 assert all(
-    hashlib.sha256(Path(p).read_bytes()).hexdigest() == h
+    hashlib.sha256(read_contained_source(Path(p), repo)).hexdigest() == h
     for p, h in source_hashes.items()
 ), "Driver/helper/pins changed."
 assert all(

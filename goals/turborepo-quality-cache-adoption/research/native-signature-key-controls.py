@@ -29,15 +29,22 @@ args = parser.parse_args()
 assert not args.output.exists(), "Existing reports are refused."
 repo = Path(__file__).resolve().parents[3]
 research = Path(__file__).resolve().parent
+source_reader = research / "native-future-flag-availability.py"
+source_reader_bytes = source_reader.read_bytes()
+source_reader_node = next(n for n in ast.parse(source_reader_bytes).body
+                          if isinstance(n, ast.FunctionDef) and n.name == "read_contained_source")
+source_reader_namespace = {"os": os}
+exec(compile(ast.Module(body=[source_reader_node], type_ignores=[]), str(source_reader), "exec"), source_reader_namespace)
+read_contained_source = source_reader_namespace["read_contained_source"]
 pins_path = (args.pins or research / "errors-only-client-pins.json").resolve()
 try:
     pins_path.relative_to(repo)
 except ValueError:
     raise SystemExit("Pin manifest must be within the checkout.") from None
-pins_bytes = pins_path.read_bytes()
+pins_bytes = read_contained_source(pins_path, repo)
 pins = json.loads(pins_bytes)
 harness = research / "native-future-flag-availability.py"
-harness_bytes = harness.read_bytes()
+harness_bytes = source_reader_bytes
 function = next(
     x for x in ast.parse(harness_bytes).body
     if isinstance(x, ast.FunctionDef) and x.name == "run_bounded"
@@ -47,7 +54,7 @@ capture = {
     "signal": signal, "subprocess": subprocess, "start": time.monotonic(),
 }
 exec(compile(ast.Module(body=[function], type_ignores=[]), str(harness), "exec"), capture)
-sha = lambda path: hashlib.sha256(path.read_bytes()).hexdigest()
+sha = lambda path: hashlib.sha256(read_contained_source(path, repo) if path == pins_path else path.read_bytes()).hexdigest()
 bun_pin = repo / ".bun-version"
 bun_pin_bytes = bun_pin.read_bytes()
 captured_sources = {

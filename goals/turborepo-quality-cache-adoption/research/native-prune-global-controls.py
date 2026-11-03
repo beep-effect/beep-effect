@@ -24,26 +24,35 @@ args = parser.parse_args()
 assert not args.output.exists(), "Existing reports are refused."
 repo = Path(__file__).resolve().parents[3]
 research = Path(__file__).resolve().parent
+source_reader = research / "native-future-flag-availability.py"
+source_reader_bytes = source_reader.read_bytes()
+source_reader_node = next(n for n in ast.parse(source_reader_bytes).body
+                          if isinstance(n, ast.FunctionDef) and n.name == "read_contained_source")
+source_reader_namespace = {"os": os}
+exec(compile(ast.Module(body=[source_reader_node], type_ignores=[]), str(source_reader), "exec"), source_reader_namespace)
+read_contained_source = source_reader_namespace["read_contained_source"]
 pins_path = (args.pins or research / "errors-only-client-pins.json").resolve()
 pins_path.relative_to(repo)
-pins = json.loads(pins_path.read_text())
 harness = research / "native-future-flag-availability.py"
 selection = research / "native-selection-controls.py"
 sources = [Path(__file__).resolve(), pins_path, harness, selection, repo / ".bun-version"]
-sha = lambda path: hashlib.sha256(path.read_bytes()).hexdigest()
-before = {path.relative_to(repo).as_posix(): sha(path) for path in sources}
-node = next(n for n in ast.parse(harness.read_text()).body
+sha = lambda path: hashlib.sha256(read_contained_source(path, repo) if path == pins_path else path.read_bytes()).hexdigest()
+captured_sources = {path: (source_reader_bytes if path == source_reader else read_contained_source(path, repo)) for path in sources}
+before = {path.relative_to(repo).as_posix(): hashlib.sha256(data).hexdigest() for path, data in captured_sources.items()}
+pins = json.loads(captured_sources[pins_path])
+node = next(n for n in ast.parse(captured_sources[harness]).body
             if isinstance(n, ast.FunctionDef) and n.name == "run_bounded")
 capture = {"time": time, "os": os, "selectors": selectors,
            "signal": signal, "subprocess": subprocess, "start": time.monotonic()}
 exec(compile(ast.Module(body=[node], type_ignores=[]), str(harness), "exec"), capture)
-node = next(n for n in ast.parse(selection.read_text()).body
+node = next(n for n in ast.parse(captured_sources[selection]).body
             if isinstance(n, ast.FunctionDef) and n.name == "invoke_bounded")
 deadline = time.monotonic() + 180
 ns = {"time": time, "signal": signal, "capture": capture,
       "timeout": Path("/usr/bin/timeout"), "deadline": deadline}
 exec(compile(ast.Module(body=[node], type_ignores=[]), str(selection), "exec"), ns)
 invoke = ns["invoke_bounded"]
+assert all(read_contained_source(path, repo) == data for path, data in captured_sources.items()), "Observation sources changed before probes."
 clients = {"stable": args.stable.resolve(), "canary": Path.home()
            / ".cache/beep/turbo-goals-clients" / pins["canary"]["packageVersion"] / "turbo"}
 for channel, binary in clients.items():
@@ -52,7 +61,7 @@ bun = Path(subprocess.check_output(
     ["bun", "--no-env-file", "-p", "process.execPath"], text=True, timeout=5,
 ).strip())
 bun_version = subprocess.check_output([str(bun), "--version"], text=True, timeout=5).strip()
-assert bun_version == (repo / ".bun-version").read_text().strip(), "Bun pin changed."
+assert bun_version == captured_sources[repo / ".bun-version"].decode().strip(), "Bun pin changed."
 tools = {"bun": sha(bun), "bwrap": sha(Path("/usr/bin/bwrap")),
          "timeout": sha(Path("/usr/bin/timeout"))}
 base = repo / ".beep/prune-global-native-controls"

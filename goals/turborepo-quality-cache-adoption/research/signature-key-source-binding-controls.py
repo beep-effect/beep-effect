@@ -70,7 +70,9 @@ for version, source in sources.items():
                     "canary": {"packageVersion": "synthetic", "sha256": binary_digest},
                 }) + "\n")
                 harness = research / "native-future-flag-availability.py"
-                harness.write_text("def run_bounded(binary, cwd, environment):\n"
+                harness.write_text("def read_contained_source(path, root):\n"
+                                   "    return path.read_bytes()\n"
+                                   "def run_bounded(binary, cwd, environment):\n"
                                    "    raise AssertionError('Native execution is forbidden')\n")
                 observed = {"pins": pins, "harness": harness, "bun-pin": bun_pin}.get(target, pins)
                 original_digest = hashlib.sha256(observed.read_bytes()).hexdigest()
@@ -149,7 +151,8 @@ report = {
        {"role": "historical-native-report", "sha256": hashlib.sha256(historical_bytes).hexdigest()}],
     "cases": len(rows), "rows": rows, "nativeInvocations": 0, "taskExecutions": 0,
     "historical168CaseObservationUnchanged": True,
-    "limits": ["Bun version queries are stubs; no native binary is executed.",
+    "limits": ["Bun version queries and the filesystem source-reader seam are stubs; no native binary is executed.",
+               "Descriptor containment is exercised separately by the native source-family controls.",
                "Real signed transport, current driver replay and feature acceptance remain pending."],
 }
 with args.output.open("x") as output:

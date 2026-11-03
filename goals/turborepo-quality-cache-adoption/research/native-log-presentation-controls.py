@@ -15,6 +15,14 @@ if not __debug__:
     raise SystemExit("Assertion checks are required.")
 
 repo = Path(__file__).resolve().parents[3]
+research = Path(__file__).resolve().parent
+source_reader = research / "native-future-flag-availability.py"
+source_reader_bytes = source_reader.read_bytes()
+source_reader_node = next(n for n in ast.parse(source_reader_bytes).body
+                          if isinstance(n, ast.FunctionDef) and n.name == "read_contained_source")
+source_reader_namespace = {"os": os}
+exec(compile(ast.Module(body=[source_reader_node], type_ignores=[]), str(source_reader), "exec"), source_reader_namespace)
+read_contained_source = source_reader_namespace["read_contained_source"]
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--stable', type=Path, help='Pinned stable executable; defaults to this checkout installation')
 parser.add_argument('--pins', type=Path, help='Reviewed feature-local pin observation; defaults to errors-only-client-pins.json')
@@ -26,12 +34,16 @@ report_dir.chmod(0o700)
 output = args.output if args.output else report_dir / 'presentation.json'
 assert not output.exists()
 shared = repo / 'goals/turborepo-quality-cache-adoption/research/native-selection-controls.py'
-node = next(n for n in ast.parse(shared.read_text()).body if isinstance(n, ast.FunctionDef) and n.name == 'invoke')
+pins_file = (args.pins or repo / "goals/turborepo-quality-cache-adoption/research/errors-only-client-pins.json").resolve()
+pins_file.relative_to(repo)
+source_paths = [Path(__file__).resolve(), shared, pins_file, repo / ".bun-version", source_reader]
+captured_sources = {path: (source_reader_bytes if path == source_reader else read_contained_source(path, repo)) for path in source_paths}
+node = next(n for n in ast.parse(captured_sources[shared]).body if isinstance(n, ast.FunctionDef) and n.name == 'invoke')
 namespace = dict(time=time, subprocess=subprocess, os=os, signal=signal, deadline=time.monotonic() + 90)
 exec(compile(ast.Module(body=[node], type_ignores=[]), str(shared), 'exec'), namespace)
 invoke = namespace['invoke']
-pins_file = args.pins or repo / 'goals/turborepo-quality-cache-adoption/research/errors-only-client-pins.json'
-pins = json.loads(pins_file.read_text())
+pins = json.loads(captured_sources[pins_file])
+assert all(read_contained_source(path, repo) == data for path, data in captured_sources.items()), "Observation sources changed before probes."
 bun = Path(subprocess.check_output(['bun', '--no-env-file', '-p', 'process.execPath'], text=True).strip())
 clients = {
     'stable': args.stable.resolve() if args.stable else repo / 'node_modules/@turbo/linux-64/bin/turbo',
@@ -39,7 +51,8 @@ clients = {
 }
 cache = Path.home() / '.cache/beep/turbo-errors-only-probe'
 cache.mkdir(mode=0o700, parents=True, exist_ok=True)
-assert subprocess.check_output([str(bun), '--version'], text=True, timeout=5).strip() == (repo / '.bun-version').read_text().strip(), 'Bun pin changed'
+assert subprocess.check_output([str(bun), '--version'], text=True, timeout=5).strip() == captured_sources[repo / '.bun-version'].decode().strip(), 'Bun pin changed'
+bun_digest = hashlib.sha256(bun.read_bytes()).hexdigest()
 for channel, binary in clients.items():
     assert hashlib.sha256(binary.read_bytes()).hexdigest() == pins[channel]['sha256'], channel + ' native pin changed'
     version = subprocess.check_output([str(binary), '--skip-infer', '--version'], cwd=repo, env={'PATH': '/usr/bin:/bin', 'TURBO_TELEMETRY_DISABLED': '1'}, text=True, timeout=5).strip()
@@ -95,14 +108,19 @@ for row in rows:
     visible = row['outputLogs'] == 'full' or row['expectedTaskExit'] != 0
     assert row['stdoutVisible'] == visible and row['stderrVisible'] == visible
     assert row['hashVisible'] == (visible or row['flag'])
+assert all(read_contained_source(path, repo) == data for path, data in captured_sources.items()), "Observation sources changed."
+assert hashlib.sha256(bun.read_bytes()).hexdigest() == bun_digest, "Bun executable changed."
+assert all(hashlib.sha256(binary.read_bytes()).hexdigest() == pins[channel]["sha256"] for channel, binary in clients.items()), "Native executable changed."
 report = {
+    "sourceBindings": [{"path": path.relative_to(repo).as_posix(), "sha256": hashlib.sha256(data).hexdigest()} for path, data in captured_sources.items()],
+    "sourceAndToolsUnchanged": True,
     'authority': 'Pinned synthetic presentation controls; no computation qualification, adoption or performance claim.',
-    'pinsSha256': hashlib.sha256(pins_file.read_bytes()).hexdigest(),
-    'driverSha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
-    'reusedInvokeSha256': hashlib.sha256(shared.read_bytes()).hexdigest(),
-    'bunSha256': hashlib.sha256(bun.read_bytes()).hexdigest(),
+    'pinsSha256': hashlib.sha256(captured_sources[pins_file]).hexdigest(),
+    'driverSha256': hashlib.sha256(captured_sources[Path(__file__).resolve()]).hexdigest(),
+    'reusedInvokeSha256': hashlib.sha256(captured_sources[shared]).hexdigest(),
+    'bunSha256': bun_digest,
     'rows': rows,
 }
-output.write_text(json.dumps(report, indent=2) + '\n')
-output.chmod(0o600)
+with os.fdopen(os.open(output, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "w") as report_file:
+    report_file.write(json.dumps(report, indent=2) + "\n")
 print(json.dumps({'cases': len(rows), 'channels': sorted(clients), 'assertionsPassed': True, 'report': str(output)}))

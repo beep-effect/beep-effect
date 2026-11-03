@@ -29,8 +29,15 @@ arguments = parser.parse_args()
 assert not arguments.output.exists(), 'Existing reports are refused'
 repo = Path(__file__).resolve().parents[3]
 research = Path(__file__).resolve().parent
+source_reader = research / "native-future-flag-availability.py"
+source_reader_bytes = source_reader.read_bytes()
+source_reader_node = next(n for n in ast.parse(source_reader_bytes).body
+                          if isinstance(n, ast.FunctionDef) and n.name == "read_contained_source")
+source_reader_namespace = {"os": os}
+exec(compile(ast.Module(body=[source_reader_node], type_ignores=[]), str(source_reader), "exec"), source_reader_namespace)
+read_contained_source = source_reader_namespace["read_contained_source"]
 source_paths = [Path(__file__).resolve(), research / 'errors-only-client-pins.json', research / 'native-future-flag-availability.py', repo / '.bun-version', repo / 'turbo.json', repo / 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts']
-source_bytes = {p: p.read_bytes() for p in source_paths}
+source_bytes = {path: (source_reader_bytes if path == source_reader else read_contained_source(path, repo)) for path in source_paths}
 source_bindings = [{'path': p.relative_to(repo).as_posix(), 'sha256': hashlib.sha256(v).hexdigest()} for p, v in source_bytes.items()]
 pins = json.loads(source_bytes[research / 'errors-only-client-pins.json'])
 harness = research / 'native-future-flag-availability.py'
@@ -47,11 +54,12 @@ def checked(argv, root, env):
     code, out, err = invoke(argv, root, env)
     assert code == 0, (argv[:3], code, err[-500:])
     return out.decode().strip()
+assert all(read_contained_source(path, repo) == data for path, data in source_bytes.items()), "Observation sources changed before probes."
 bun = Path(subprocess.check_output(['bun', '--no-env-file', '-p', 'process.execPath'], text=True, timeout=5).strip())
 version = subprocess.check_output([str(bun), '--version'], text=True, timeout=5).strip()
 tool_paths = {'bun': bun, 'bwrap': Path('/usr/bin/bwrap'), 'git': Path('/usr/bin/git')}
 tool_hashes = {key: hashlib.sha256(path.read_bytes()).hexdigest() for key, path in tool_paths.items()}
-assert version == (repo / '.bun-version').read_text().strip()
+assert version == source_bytes[repo / '.bun-version'].decode().strip()
 cache = Path.home() / '.cache/beep/turbo-filter-composition-controls'
 cache.mkdir(mode=0o700, parents=True, exist_ok=True)
 clients = {'stable': arguments.stable or repo / 'node_modules/@turbo/linux-64/bin/turbo', 'canary': Path.home() / '.cache/beep/turbo-goals-clients' / pins['canary']['packageVersion'] / 'turbo'}
@@ -125,7 +133,7 @@ for channel, binary in clients.items():
                 rows.append({'channel': channel, 'changed': case, 'selector': label, 'tasks': selected, 'expectedTasks': expected, 'assertionsPassed': True, 'allSelectedTasksExecutable': True, 'noTaskExecuted': True, 'stdoutBytes': len(out), 'stderrBytes': len(err), 'stdoutSha256': hashlib.sha256(out).hexdigest(), 'stderrSha256': hashlib.sha256(err).hexdigest()})
                 assert not list(root.rglob('execution.marker'))
 assert len(rows) == 56
-assert all((hashlib.sha256(path.read_bytes()).hexdigest() == entry['sha256'] for path, entry in zip(source_paths, source_bindings))), 'Source changed during observation'
+assert all((hashlib.sha256(read_contained_source(path, repo)).hexdigest() == entry['sha256'] for path, entry in zip(source_paths, source_bindings))), 'Source changed during observation'
 assert all((hashlib.sha256(path.read_bytes()).hexdigest() == tool_hashes[key] for key, path in tool_paths.items())), 'Tool changed during observation'
 assert all((hashlib.sha256(binary.read_bytes()).hexdigest() == pins[channel]['sha256'] for channel, binary in clients.items())), 'Client changed during observation'
 result = {'schemaVersion': 'cache-native-filter-composition-controls/v1', 'recordedAt': datetime.datetime.now(datetime.timezone.utc).isoformat(), 'authority': 'Synthetic native selection only; no current-root execution, task qualification, hosted proof, performance claim or production change.', 'sourceRevision': subprocess.check_output(['/usr/bin/git', 'rev-parse', 'HEAD'], cwd=repo, text=True, timeout=5).strip(), 'sourceState': 'working-tree-bound', 'sourceBindings': source_bindings, 'clients': {channel: {'reportedVersion': observed_versions[channel], 'sha256': pins[channel]['sha256']} for channel in clients}, 'toolSha256': tool_hashes, 'bunVersion': version, 'fixtureFutureFlags': {'globalConfiguration': True, 'filterUsingTasks': True, 'affectedUsingTaskInputs': True}, 'networkIsolated': True, 'repositoryNotMounted': True, 'onlySyntheticInputs': True, 'captureBounds': {'wholeSeconds': 600, 'perProcessSeconds': 20, 'stdoutBytes': 1048576, 'stderrBytes': 65536}, 'cases': len(rows), 'rows': rows, 'sourceAndToolsUnchanged': True}

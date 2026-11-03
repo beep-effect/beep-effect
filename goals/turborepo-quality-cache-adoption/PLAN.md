@@ -800,3 +800,28 @@ signed artifact reuse, protected producer provenance, role-policy controls,
 feature/tuple qualification and complete-goal windows remain pending. No local
 repository quality suite, verify, publish or package-verify ran. Hosted CI is
 the PR quality proof; this replay does not activate signing or change a cache.
+
+
+### Related bootstrap and descriptor containment repairs, 2026-11-03
+
+[The repair checkpoint](research/native-source-family-repair.json) binds thirteen
+changed drivers/shared inputs. Actual-reader prefix controls cover ten drivers
+in 208 cases:80 source-change refusals before probes,20 leaf/parent symlink
+replacement refusals before external bytes are read, eight external-pin
+refusals and historical contrasts. Twenty legacy replacement cases read
+synthetic external bytes. Twenty unchanged prefixes complete. All real
+subprocesses are blocked. A separate thirteen-case binding contrast stubs the
+filesystem-reader seam explicitly; it does not supply descriptor proof.
+
+The shared bounded-reader owner verifies the opened descriptor's actual path
+and regular-file type before a bounded read, with no-follow/nonblocking flags.
+Capture and revalidation use that reader. Existing collectors/oracles remain
+unchanged; the permission driver's digest seam now also uses the reader.
+The two log reports use exclusive mode-0600 creation.
+
+Historical native reports remain byte-identical under their original sources.
+The earlier 168-case signature replay predates this containment repair and is
+not current-driver proof. All affected-driver native replays remain pending.
+Feature dispositions stay eleven scoped decisions and 25 pending. No task
+qualification, signing, cache configuration, rollout or local repository quality
+suite changes; hosted CI is the PR quality authority.

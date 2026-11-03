@@ -785,3 +785,34 @@ unavailable and no production credentials or cache traffic were used. Missing
 keys still permit task execution with a signature warning, so role-policy
 qualification remains necessary. Signed transport, protected producer proof,
 feature adoption and every whole-goal acceptance criterion remain pending.
+
+
+### Complete the related native source-capture repair, 2026-11-03
+
+Audit the related native experiment drivers as one wave. Bind parsed pin, helper
+and Bun-version bytes to the same captured bytes and reject movement before
+version probes. Preserve each experiment's collector function, bounds, task
+semantics and historical reports. Confine optional pin manifests before reads.
+Use disposable metadata-prefix controls with version queries stubbed and real
+subprocesses refused; they grant no native replay or feature qualification.
+Keep historical observations bound to their original drivers until a separately
+admitted replay records new evidence. Reverse through Git while retaining both
+source envelopes and reports; no production setting or credential changes.
+
+
+### Opened-descriptor containment, 2026-11-03
+
+The review identified a valid replacement race after a pathname containment
+check. Reuse the existing bounded-reader owner for a source reader that opens
+with no-follow and nonblocking flags, checks the kernel-reported descriptor
+path inside the checkout and regular-file status, then reads at most one MiB.
+Hash and parse those captured bytes. Revalidation also verifies its opened
+descriptor; never read an external redirect merely to compare its digest.
+Twenty controlled legacy replacements read synthetic external bytes, while
+twenty repaired leaf/parent replacements refuse before external reads. Record
+the 208-case actual-reader and 13-case stubbed binding controls separately.
+
+This change invalidates current-driver semantic replay claims for its affected
+source envelopes. Preserve the earlier 168-case signature replay as historical,
+with its exact original digests. Fresh native evidence remains pending. No
+qualification, key, signed epoch, cache setting or production cohort changes.
