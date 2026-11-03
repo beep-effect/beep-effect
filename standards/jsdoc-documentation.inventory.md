@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-03T05:10:38.349Z
+Generated: 2026-11-03T05:24:58.436Z
 
 ## Scope
 
@@ -11,23 +11,23 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | Metric | Count |
 |---|---:|
 | packages | 185 |
-| cleanPackages | 167 |
+| cleanPackages | 168 |
 | packagesWithoutPublicSrcSurface | 2 |
-| packagesNeedingRemediation | 16 |
+| packagesNeedingRemediation | 15 |
 | publicModules | 3607 |
 | publicExports | 25595 |
-| openModules | 115 |
-| openExports | 94 |
+| openModules | 114 |
+| openExports | 88 |
 | missingExportExamples | 0 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 50 |
+| exampleImportFindings | 44 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 1 |
-| multiple-description-paragraphs | 158 |
+| multiple-description-paragraphs | 157 |
 | leading-blank | 0 |
 | trailing-blank | 0 |
 | invalid-heading | 1 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 47 |
+| no-root-package-import | 41 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -92,7 +92,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 34 | `@beep/xstate` | `packages/drivers/xstate` | clean | 6 | 26 | 0 | 0 |
 | 35 | `@beep/yaml` | `packages/foundation/modeling/yaml` | clean | 11 | 95 | 0 | 0 |
 | 36 | `@beep/acp` | `packages/drivers/acp` | clean | 15 | 1047 | 0 | 0 |
-| 37 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | needs-remediation | 13 | 232 | 0 | 6 |
+| 37 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 13 | 232 | 0 | 0 |
 | 38 | `@beep/anthropic` | `packages/drivers/anthropic` | clean | 6 | 31 | 0 | 0 |
 | 39 | `@beep/api-transport` | `packages/foundation/capability/api-transport` | clean | 3 | 9 | 0 | 0 |
 | 40 | `@beep/architecture-lab-config` | `packages/architecture-lab/config` | clean | 9 | 20 | 0 | 0 |
@@ -179,7 +179,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 121 | `@beep/oip-web` | `apps/oip-web` | clean | 31 | 87 | 0 | 0 |
 | 122 | `@beep/ontology` | `packages/foundation/modeling/ontology` | clean | 15 | 157 | 0 | 0 |
 | 123 | `@beep/ontology-domain` | `packages/ontology/domain` | clean | 6 | 40 | 0 | 0 |
-| 124 | `@beep/qa-capture` | `packages/tooling/library/qa-capture` | needs-remediation | 12 | 174 | 11 | 0 |
+| 124 | `@beep/qa-capture` | `packages/tooling/library/qa-capture` | needs-remediation | 12 | 174 | 10 | 0 |
 | 125 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | clean | 66 | 822 | 0 | 0 |
 | 126 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 10 | 98 | 0 | 3 |
 | 127 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | clean | 8 | 56 | 0 | 0 |
@@ -313,18 +313,6 @@ Path: `packages/tooling/test-kit/test-utils`
 Module findings:
 - `src/FastCheckRuns.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
-### @beep/ai-sync
-
-Path: `packages/tooling/library/ai-sync`
-
-Export findings:
-- `src/SkillsLock.schemas.ts:96` `LocalSkillLockEntry` (class) - 1 example import violation(s)
-- `src/SkillsLock.schemas.ts:579` `LocalMigrationRow` (class) - 1 example import violation(s)
-- `src/SkillsLock.schemas.ts:745` `SkillsLockMigrationPlan` (class) - 1 example import violation(s)
-- `src/SkillsLock.schemas.ts:813` `SkillsLockMigrationArtifacts` (class) - 1 example import violation(s)
-- `src/SkillsLock.schemas.ts:886` `SkillsLockWrittenFile` (class) - 1 example import violation(s)
-- `src/SkillsLock.schemas.ts:921` `SkillsLockWriteReceipt` (class) - 1 example import violation(s)
-
 ### @beep/duckdb
 
 Path: `packages/drivers/duckdb`
@@ -386,7 +374,6 @@ Module findings:
 - `src/ExtractionPlan.models.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/ExtractionPlanner.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/QaCapture.models.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/QaInventory.schemas.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/SessionStore.service.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Witness.service.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/index.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)

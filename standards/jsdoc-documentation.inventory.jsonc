@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-03T05:10:38.349Z",
+  "generatedAt": "2026-11-03T05:24:58.436Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -62,23 +62,23 @@
   },
   "totals": {
     "packages": 185,
-    "cleanPackages": 167,
+    "cleanPackages": 168,
     "packagesWithoutPublicSrcSurface": 2,
-    "packagesNeedingRemediation": 16,
+    "packagesNeedingRemediation": 15,
     "publicModules": 3607,
     "publicExports": 25595,
-    "openModules": 115,
-    "openExports": 94,
+    "openModules": 114,
+    "openExports": 88,
     "missingExportExamples": 0,
     "missingExportCategories": 0,
     "missingExportSince": 0,
     "forbiddenTagFindings": 0,
     "malformedConditionalTagFindings": 0,
-    "exampleImportFindings": 50,
+    "exampleImportFindings": 44,
     "unsafeExampleFindings": 0,
     "schemaAnnotationFindings": 0,
     "undescribed-see": 1,
-    "multiple-description-paragraphs": 158,
+    "multiple-description-paragraphs": 157,
     "leading-blank": 0,
     "trailing-blank": 0,
     "invalid-heading": 1,
@@ -91,7 +91,7 @@
     "duplicate-example": 0,
     "loose-ts-fence": 0,
     "forbidden-remarks": 0,
-    "no-root-package-import": 47,
+    "no-root-package-import": 41,
     "rootPolicyOpen": 0
   },
   "packages": [
@@ -98227,7 +98227,7 @@
       "packageName": "@beep/ai-sync",
       "packagePath": "packages/tooling/library/ai-sync",
       "topoOrder": 37,
-      "status": "needs-remediation",
+      "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
         "sourceFileCount": 13,
@@ -98242,14 +98242,14 @@
       },
       "counts": {
         "openModules": 0,
-        "openExports": 6,
+        "openExports": 0,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
         "missingExportSince": 0,
         "missingExportSummaries": 0,
         "forbiddenTagFindings": 0,
         "malformedConditionalTagFindings": 0,
-        "exampleImportFindings": 6,
+        "exampleImportFindings": 0,
         "unsafeExampleFindings": 0,
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
@@ -98267,7 +98267,7 @@
           "duplicate-example": 0,
           "loose-ts-fence": 0,
           "forbidden-remarks": 0,
-          "no-root-package-import": 6
+          "no-root-package-import": 0
         }
       },
       "modules": [
@@ -100702,18 +100702,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/schema package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SkillsLockEntry",
@@ -101104,18 +101098,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/schema package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SkillUnresolvedCause",
@@ -101242,18 +101230,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/schema package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SkillPatchFile",
@@ -101292,18 +101274,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/schema package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SkillsLockWriteOutcome",
@@ -101364,18 +101340,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/schema package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SkillsLockWriteReceipt",
@@ -101392,18 +101362,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/schema package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "decodeSkillsLockDocumentJson",
@@ -358704,7 +358668,7 @@
         "enforceVersion": true
       },
       "counts": {
-        "openModules": 11,
+        "openModules": 10,
         "openExports": 0,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
@@ -358717,7 +358681,7 @@
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
           "undescribed-see": 0,
-          "multiple-description-paragraphs": 11,
+          "multiple-description-paragraphs": 10,
           "leading-blank": 0,
           "trailing-blank": 0,
           "invalid-heading": 0,
@@ -358956,13 +358920,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 19,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -362095,8 +362055,8 @@
           "exportKind": "const",
           "filePath": "src/QaInventory.schemas.ts",
           "repoPath": "packages/tooling/library/qa-capture/src/QaInventory.schemas.ts",
-          "line": 46,
-          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-46-qaseverity",
+          "line": 48,
+          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-48-qaseverity",
           "currentTags": [
             "@category",
             "@since"
@@ -362117,8 +362077,8 @@
           "exportKind": "type",
           "filePath": "src/QaInventory.schemas.ts",
           "repoPath": "packages/tooling/library/qa-capture/src/QaInventory.schemas.ts",
-          "line": 67,
-          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-67-qaseverity",
+          "line": 69,
+          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-69-qaseverity",
           "currentTags": [
             "@category",
             "@since"
@@ -362139,8 +362099,8 @@
           "exportKind": "const",
           "filePath": "src/QaInventory.schemas.ts",
           "repoPath": "packages/tooling/library/qa-capture/src/QaInventory.schemas.ts",
-          "line": 88,
-          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-88-qalens",
+          "line": 90,
+          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-90-qalens",
           "currentTags": [
             "@category",
             "@since"
@@ -362161,8 +362121,8 @@
           "exportKind": "type",
           "filePath": "src/QaInventory.schemas.ts",
           "repoPath": "packages/tooling/library/qa-capture/src/QaInventory.schemas.ts",
-          "line": 132,
-          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-132-qalens",
+          "line": 134,
+          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-134-qalens",
           "currentTags": [
             "@category",
             "@since"
@@ -362183,8 +362143,8 @@
           "exportKind": "const",
           "filePath": "src/QaInventory.schemas.ts",
           "repoPath": "packages/tooling/library/qa-capture/src/QaInventory.schemas.ts",
-          "line": 148,
-          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-148-browserqalens",
+          "line": 150,
+          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-150-browserqalens",
           "currentTags": [
             "@category",
             "@since"
@@ -362205,8 +362165,8 @@
           "exportKind": "const",
           "filePath": "src/QaInventory.schemas.ts",
           "repoPath": "packages/tooling/library/qa-capture/src/QaInventory.schemas.ts",
-          "line": 182,
-          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-182-drawingqalens",
+          "line": 184,
+          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-184-drawingqalens",
           "currentTags": [
             "@category",
             "@since"
@@ -362227,8 +362187,8 @@
           "exportKind": "const",
           "filePath": "src/QaInventory.schemas.ts",
           "repoPath": "packages/tooling/library/qa-capture/src/QaInventory.schemas.ts",
-          "line": 205,
-          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-205-qaevidencekind",
+          "line": 207,
+          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-207-qaevidencekind",
           "currentTags": [
             "@category",
             "@since"
@@ -362249,8 +362209,8 @@
           "exportKind": "type",
           "filePath": "src/QaInventory.schemas.ts",
           "repoPath": "packages/tooling/library/qa-capture/src/QaInventory.schemas.ts",
-          "line": 226,
-          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-226-qaevidencekind",
+          "line": 228,
+          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-228-qaevidencekind",
           "currentTags": [
             "@category",
             "@since"
@@ -362271,8 +362231,8 @@
           "exportKind": "const",
           "filePath": "src/QaInventory.schemas.ts",
           "repoPath": "packages/tooling/library/qa-capture/src/QaInventory.schemas.ts",
-          "line": 244,
-          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-244-qafindingordinal",
+          "line": 246,
+          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-246-qafindingordinal",
           "currentTags": [
             "@category",
             "@since"
@@ -362293,8 +362253,8 @@
           "exportKind": "const",
           "filePath": "src/QaInventory.schemas.ts",
           "repoPath": "packages/tooling/library/qa-capture/src/QaInventory.schemas.ts",
-          "line": 275,
-          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-275-qafindingid",
+          "line": 277,
+          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-277-qafindingid",
           "currentTags": [
             "@category",
             "@since"
@@ -362315,8 +362275,8 @@
           "exportKind": "type",
           "filePath": "src/QaInventory.schemas.ts",
           "repoPath": "packages/tooling/library/qa-capture/src/QaInventory.schemas.ts",
-          "line": 298,
-          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-298-qafindingid",
+          "line": 300,
+          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-300-qafindingid",
           "currentTags": [
             "@category",
             "@since"
@@ -362337,8 +362297,8 @@
           "exportKind": "class",
           "filePath": "src/QaInventory.schemas.ts",
           "repoPath": "packages/tooling/library/qa-capture/src/QaInventory.schemas.ts",
-          "line": 324,
-          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-324-qaevidenceref",
+          "line": 326,
+          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-326-qaevidenceref",
           "currentTags": [
             "@category",
             "@since"
@@ -362359,8 +362319,8 @@
           "exportKind": "class",
           "filePath": "src/QaInventory.schemas.ts",
           "repoPath": "packages/tooling/library/qa-capture/src/QaInventory.schemas.ts",
-          "line": 369,
-          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-369-qajudgeref",
+          "line": 371,
+          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-371-qajudgeref",
           "currentTags": [
             "@category",
             "@since"
@@ -362381,8 +362341,8 @@
           "exportKind": "class",
           "filePath": "src/QaInventory.schemas.ts",
           "repoPath": "packages/tooling/library/qa-capture/src/QaInventory.schemas.ts",
-          "line": 415,
-          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-415-qafinding",
+          "line": 417,
+          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-417-qafinding",
           "currentTags": [
             "@category",
             "@since"
@@ -362403,8 +362363,8 @@
           "exportKind": "const",
           "filePath": "src/QaInventory.schemas.ts",
           "repoPath": "packages/tooling/library/qa-capture/src/QaInventory.schemas.ts",
-          "line": 482,
-          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-482-isrequiredseverity",
+          "line": 484,
+          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-484-isrequiredseverity",
           "currentTags": [
             "@param",
             "@returns",
@@ -362427,8 +362387,8 @@
           "exportKind": "const",
           "filePath": "src/QaInventory.schemas.ts",
           "repoPath": "packages/tooling/library/qa-capture/src/QaInventory.schemas.ts",
-          "line": 505,
-          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-505-requiredfindingcount",
+          "line": 507,
+          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-507-requiredfindingcount",
           "currentTags": [
             "@param",
             "@returns",
@@ -362451,8 +362411,8 @@
           "exportKind": "class",
           "filePath": "src/QaInventory.schemas.ts",
           "repoPath": "packages/tooling/library/qa-capture/src/QaInventory.schemas.ts",
-          "line": 542,
-          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-542-qainventory",
+          "line": 544,
+          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-544-qainventory",
           "currentTags": [
             "@category",
             "@since"
@@ -362473,8 +362433,8 @@
           "exportKind": "const",
           "filePath": "src/QaInventory.schemas.ts",
           "repoPath": "packages/tooling/library/qa-capture/src/QaInventory.schemas.ts",
-          "line": 606,
-          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-606-decodeqainventory",
+          "line": 608,
+          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-608-decodeqainventory",
           "currentTags": [
             "@category",
             "@since"
@@ -362495,8 +362455,8 @@
           "exportKind": "const",
           "filePath": "src/QaInventory.schemas.ts",
           "repoPath": "packages/tooling/library/qa-capture/src/QaInventory.schemas.ts",
-          "line": 633,
-          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-633-encodeqainventory",
+          "line": 635,
+          "anchor": "packages-tooling-library-qa-capture-src-qainventory-schemas-ts-635-encodeqainventory",
           "currentTags": [
             "@category",
             "@since"

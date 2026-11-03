@@ -81,7 +81,7 @@ export class VendoredSkillLockEntry extends S.Opaque<VendoredSkillLockEntry, { r
  *
  * ```ts
  * import { LocalSkillLockEntry } from "@beep/ai-sync/SkillsLock.schemas"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const entry = LocalSkillLockEntry.make({
  *   installedTargets: [".claude/skills/yeet", ".agents/skills/yeet"],
@@ -564,7 +564,7 @@ export class VendoredMigrationRow extends S.Opaque<VendoredMigrationRow, { reado
  *
  * ```ts
  * import { LocalMigrationRow, LocalSkillLockEntry } from "@beep/ai-sync/SkillsLock.schemas"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const row = LocalMigrationRow.make({
  *   skill: "yeet",
@@ -732,7 +732,7 @@ export type SkillMigrationRow = typeof SkillMigrationRow.Type;
  *
  * ```ts
  * import { SkillsLockMigrationPlan } from "@beep/ai-sync/SkillsLock.schemas"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const digest = Sha256Hex.make("0".repeat(64))
  * const plan = SkillsLockMigrationPlan.make({ planDigest: digest, lockSha256: digest, rows: [] })
@@ -797,7 +797,7 @@ export class SkillPatchFile extends S.Opaque<SkillPatchFile, { readonly brand: u
  *
  * ```ts
  * import { SkillsLockMigrationArtifacts, SkillsLockMigrationPlan } from "@beep/ai-sync/SkillsLock.schemas"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const digest = Sha256Hex.make("0".repeat(64))
  * const artifacts = SkillsLockMigrationArtifacts.make({
@@ -874,7 +874,7 @@ export type SkillsLockWriteOutcome = typeof SkillsLockWriteOutcome.Type;
  *
  * ```ts
  * import { SkillsLockWrittenFile } from "@beep/ai-sync/SkillsLock.schemas"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const file = SkillsLockWrittenFile.make({ path: "skills-lock.json", sha256: Sha256Hex.make("0".repeat(64)) })
  * console.log(file.path) // "skills-lock.json"
@@ -901,7 +901,7 @@ export class SkillsLockWrittenFile extends S.Opaque<SkillsLockWrittenFile, { rea
  *
  * ```ts
  * import { SkillsLockWriteReceipt, SkillsLockWrittenFile } from "@beep/ai-sync/SkillsLock.schemas"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const digest = Sha256Hex.make("0".repeat(64))
  * const receipt = SkillsLockWriteReceipt.make({

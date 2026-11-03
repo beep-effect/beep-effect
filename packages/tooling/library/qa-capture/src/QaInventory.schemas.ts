@@ -1,6 +1,8 @@
 /**
  * Structured vision-judge inventory schemas (`qa-inventory/v1`).
  *
+ * **Details**
+ *
  * The judge emits JSON only; this module is the contract that JSON must
  * satisfy before the CLI writes `inventory.json`. The verdict line can no
  * longer disagree with the findings array: {@link QaInventory} carries a

@@ -4,6 +4,8 @@ import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
+const decodeUpstreamCatalogJson = S.decodeEffect(S.fromJsonString(UpstreamCatalog));
+
 describe("ModelCatalog.schemas", () => {
   it("guards model identifiers, effort levels, and catalog sources", () => {
     expect(S.is(ModelId)("claude-opus-5-5")).toBe(true);
@@ -15,7 +17,7 @@ describe("ModelCatalog.schemas", () => {
 
   it.effect("decodes an upstream catalog whose optional fields arrive as null and keeps unknown keys", () =>
     Effect.gen(function* () {
-      const catalog = yield* S.decodeEffect(S.fromJsonString(UpstreamCatalog))(
+      const catalog = yield* decodeUpstreamCatalogJson(
         '{"claude":[{"id":"claude-opus-5-5","owned_by":null,"vendor_extra":1}]}'
       );
       expect(catalog.claude?.[0]?.id).toBe("claude-opus-5-5");
