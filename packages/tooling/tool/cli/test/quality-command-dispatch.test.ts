@@ -8,6 +8,7 @@ import { A } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
@@ -70,6 +71,14 @@ const withEmptyAdmissionRoot = Effect.fn("QualityCommandDispatchTest.withEmptyAd
   const root = yield* fs.makeTempDirectoryScoped({ prefix: "quality-command-admission-" });
   return yield* provideRuntimeRootForTesting(effect, RuntimeRootChoice.make({ kind: "test-override", root }));
 });
+
+// Admission adopts the run into a systemd user scope when the host has a user
+// manager, then reads the scope's telemetry through the spawner under test. A
+// recording spawner must not see that host-dependent probe, so the tests that
+// assert on spawned commands pin run scopes off and keep the ambient env for the rest.
+const RunScopesDisabled = ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" }).pipe(
+  ConfigProvider.orElse(ConfigProvider.fromEnv())
+);
 
 const consoleText = Effect.fn("QualityCommandDispatchTest.consoleText")(function* () {
   const logs = A.filter(yield* TestConsole.logLines, P.isString);
@@ -161,6 +170,7 @@ it.layer(CommandTestLayer, { timeout: "10 seconds" })("quality command dispatch"
       expect(spawned).toEqual([expect.stringMatching(/^docker run --rm /), expect.stringMatching(/^docker run --rm /)]);
     }).pipe(
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, recordingSpawner(spawned)),
+      Effect.provideService(ConfigProvider.ConfigProvider, RunScopesDisabled),
       Effect.provideServiceEffect(Console.Console, TestConsole.make)
     );
   });
@@ -179,6 +189,7 @@ it.layer(CommandTestLayer, { timeout: "10 seconds" })("quality command dispatch"
       expect(spawned).toEqual([expect.stringMatching(/^docker run --rm /)]);
     }).pipe(
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, recordingSpawner(spawned, failedHandle)),
+      Effect.provideService(ConfigProvider.ConfigProvider, RunScopesDisabled),
       Effect.provideServiceEffect(Console.Console, TestConsole.make)
     );
   });

@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "cache-producer-object-coverage-identity/v1",
+  "recordedAt": "2026-11-02T22:32:16.724460+00:00",
+  "authority": "Reviewable measured file-floor proposal and supporting tests; not a current hosted verdict or cache qualification.",
+  "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.storage.ts",
+  "fileSha256": "2153bbe3ed57051f614a8b42da839a3a353f9edc48e96440b3229414ca462ef2",
+  "hostedMeasurement": {
+    "requestHead": "06df7a2cd379157502896cb108ce8032c69ee90a",
+    "testedExecution": "8f735c6620f5c40557f3dd21cd80abe2fc6894a9",
+    "run": 41530448013,
+    "job": 125576027983,
+    "reportedRow": {
+      "lines": 96.11,
+      "statements": 86.2,
+      "branches": 80.43,
+      "functions": 73.07,
+      "uncovered": {
+        "lines": 4,
+        "statements": 16,
+        "branches": 9,
+        "functions": 7
+      }
+    }
+  },
+  "additionalControls": {
+    "BunPassed": 94,
+    "Node24Passed": 94,
+    "privateObjectCases": 34,
+    "workflowCases": 39,
+    "uploadRuntimeCases": 21,
+    "Node24FileCoverage": {
+      "lines": 97.08,
+      "statements": 88.79,
+      "branches": 82.6,
+      "functions": 80.76
+    },
+    "newCases": [
+      "empty private observation",
+      "schema-invalid private observation",
+      "oversized observation rejected before issuer or credential access",
+      "failed response body classified without raw-cause disclosure"
+    ]
+  },
+  "baselinePostconditions": {
+    "onlyAddedOwnedFileIdentity": true,
+    "allExistingRowsPackageTotalsMetadataMinimumEpsilonExemptionsAndFollowupsUnchanged": true,
+    "existingFloorsLowered": false
+  },
+  "preservation": {
+    "productionStorageModuleUnchanged": true,
+    "boundsAndFailureGuardsRemoved": false,
+    "incompatibleCountersCombined": false,
+    "localCollectorReplayCountedAsHostedAcceptance": false,
+    "originalFailedAttemptsRetained": true
+  },
+  "remaining": [
+    "Fresh exact-head hosted checks and the ordinary review window.",
+    "Primary review of this named file-floor proposal before merge.",
+    "Protected producer, live R2, rotation/rollback, whole-goal representative observations and full adoption requirements."
+  ],
+  "qualificationOrProductionActivationChanged": false,
+  "wholeGoalAcceptanceChanged": false,
+  "acceptedMainCoverageFollowthrough": {
+    "acceptedMain": "71bc36fcb49a3b274dfb7bf9d22b60988439e5cb",
+    "pullRequest": 2632,
+    "baselineEqualsAcceptedMainByteForByte": true,
+    "earlierProposalRetainedAsHistorical": true,
+    "acceptedFileRow": {
+      "lines": 98.05,
+      "statements": 94.82,
+      "branches": 93.47,
+      "functions": 88.46,
+      "uncovered": {
+        "lines": 2,
+        "statements": 6,
+        "branches": 3,
+        "functions": 3
+      }
+    },
+    "newLocalVerifyPublishFinalCheck": false,
+    "freshHostedProofRequired": true
+  }
+}

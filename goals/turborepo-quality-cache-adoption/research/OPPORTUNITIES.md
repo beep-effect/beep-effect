@@ -743,3 +743,20 @@ projection. Review caught the omitted regeneration before current-head validatio
 `bun run beep cache profile --write` regenerates it; the freshness command then
 passes. Both configuration files remain a projection, without a cache qualification
 or runtime activation. Keep the generated profile in the same config-edit wave.
+
+
+### 2026-11-02 — exporter gate documentation and native behavior
+
+The first offline observability control expected a missing feature flag to
+reject configured export before task execution, as the pinned documentation
+states. Stable 2.11.10 instead returned success and executed the synthetic
+task with the global namespace shape. The failed expectation is retained.
+Resolve configuration placement and exact parser behavior before finalizing
+the control or feature decision. No repository exporter or runtime flag was
+changed; these fixtures have no host network or real credential.
+
+The exact-tag review resolved the mismatch: file settings are deliberately
+dropped before the run-builder guard; CLI/environment settings are guarded. The
+revised controls assert both paths on stable and current canary. Keep the initial
+failed receipt and source separately; generated schema omission is also not an
+availability test because this experimental block is intentionally hidden.
