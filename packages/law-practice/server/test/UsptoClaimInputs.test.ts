@@ -7,7 +7,7 @@ import { UsptoClaimInputs, UsptoClaimSource, UsptoClaims } from "@beep/law-pract
 import { it } from "@beep/test-runner";
 import { Uspto, UsptoConfigInput } from "@beep/uspto";
 import { assert, describe } from "@effect/vitest";
-import { assertNone } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
@@ -22,7 +22,7 @@ const source = UsptoClaimSource.cases.application.make({
   applicationNumber: UsptoNormalizedApplicationNumber.make(recordedApplication),
 });
 const publication = UsptoClaimSource.cases.publication.make({ publicationNumber: PatentNumber.make("20260100001") });
-const recordedLayer = (xml: string | Uint8Array) =>
+const recordedLayer = (xml: string | Uint8Array, digestLayer: Layer.Layer<Digest.Digest> = Digest.layerWebCrypto) =>
   Layer.merge(UsptoClaimsLive, UsptoClaimInputsLive).pipe(
     Layer.provide(Uspto.makeLayer(UsptoConfigInput.make({}))),
     Layer.provide(
@@ -46,7 +46,7 @@ const recordedLayer = (xml: string | Uint8Array) =>
         )
       )
     ),
-    Layer.provide(Digest.layerWebCrypto)
+    Layer.provide(digestLayer)
   );
 const valid =
   '<claims><claim num="00001"><claim-text>1. A fixture comprising a panel.</claim-text></claim><claim num="00002"><claim-text>2. The fixture of claim 1 wherein the panel is metallic.</claim-text></claim></claims>';
@@ -132,6 +132,95 @@ describe("failure-preserving public source adapter", () => {
       })
     );
   });
+
+  it.layer(recordedLayer("<claims><claim num='00003'>A fixture comprising a panel.</claim></claims>"), {
+    timeout: "10 seconds",
+  })("single-quoted source number", (it) => {
+    it.effect("retains the original literal number and source fragment", () =>
+      Effect.gen(function* () {
+        const set = yield* (yield* UsptoClaimInputs).inputs(source);
+        const record = O.getOrThrow(A.head(set.input.records));
+        assertSome(record.numberText, "00003");
+        assert.strictEqual(record.sourceText, "<claim num='00003'>A fixture comprising a panel.</claim>");
+        assert.strictEqual(record.kind, "text");
+      })
+    );
+  });
+
+  const duplicateNumberRecord = '<claim num="1" num="2">A fixture comprising a panel.</claim>';
+  it.layer(
+    recordedLayer(`<claims>${duplicateNumberRecord}<claim num="3">A fixture comprising a sensor.</claim></claims>`),
+    {
+      timeout: "10 seconds",
+    }
+  )("ambiguous duplicate number attributes", (it) => {
+    it.effect(
+      "retains the ambiguous record as unavailable instead of selecting an attribute or dropping its sibling",
+      () =>
+        Effect.gen(function* () {
+          const set = yield* (yield* UsptoClaimInputs).inputs(source);
+          assert.deepStrictEqual(
+            A.map(set.input.records, ({ kind }) => kind),
+            ["unavailable", "text"]
+          );
+          const record = O.getOrThrow(A.head(set.input.records));
+          assertNone(record.numberText);
+          assert.strictEqual(record.sourceText, duplicateNumberRecord);
+          if (record.kind === "unavailable") assert.strictEqual(record.reason, "invalid-text");
+        })
+    );
+  });
+
+  it.layer(recordedLayer(new Uint8Array([0xff, 0xfe])), { timeout: "10 seconds" })("invalid source encoding", (it) => {
+    it.effect("rejects non-UTF-8 bytes through both source and strict acquisition without replacement text", () =>
+      Effect.gen(function* () {
+        const inputFailure = yield* Effect.flip((yield* UsptoClaimInputs).inputs(source));
+        const strictFailure = yield* Effect.flip((yield* UsptoClaims).claims(source));
+        assert.strictEqual(inputFailure.reason, "no-full-text-claims");
+        assert.strictEqual(strictFailure.reason, "no-full-text-claims");
+        assert.isTrue(Str.includes("UTF-8")(inputFailure.message));
+      })
+    );
+  });
+
+  const invalidDigest = Layer.succeed(
+    Digest.Digest,
+    Digest.Digest.of({
+      digest: Effect.fn("RecordedDigest.invalidBytes")(() => Effect.succeed(new Uint8Array([0x01]))),
+      digestHex: Effect.fn("RecordedDigest.unusedHex")(() =>
+        Effect.die("The acquisition hashes bytes, not digestHex.")
+      ),
+    })
+  );
+  it.layer(recordedLayer(valid, invalidDigest), { timeout: "10 seconds" })("invalid digest provider result", (it) => {
+    it.effect("refuses a source identity when the provider cannot establish a valid SHA-256 digest", () =>
+      Effect.gen(function* () {
+        const failure = yield* Effect.flip((yield* UsptoClaimInputs).inputs(source));
+        assert.strictEqual(failure.reason, "malformed-claims");
+        assert.isTrue(Str.includes("digest could not be established")(failure.message));
+      })
+    );
+  });
+
+  for (const [label, xml, reason] of [
+    ["missing numeric attribute", "<claims><claim>A fixture comprising a panel.</claim></claims>", "malformed-claims"],
+    ["invalid XML text", '<claims><claim num="1">A fixture comprising 3 < 5.</claim></claims>', "malformed-claims"],
+    ["empty claim inventory", "<claims/>", "no-full-text-claims"],
+    [
+      "unsupported claim grammar",
+      '<claims><claim num="1">A fragment without a transition.</claim></claims>',
+      "malformed-claims",
+    ],
+  ] as const) {
+    it.layer(recordedLayer(xml), { timeout: "10 seconds" })(`strict acquisition failure ${label}`, (it) => {
+      it.effect("keeps the original strict failure contract instead of returning repaired claims", () =>
+        Effect.gen(function* () {
+          const failure = yield* Effect.flip((yield* UsptoClaims).claims(source));
+          assert.strictEqual(failure.reason, reason);
+        })
+      );
+    });
+  }
 
   it.layer(recordedLayer(`\n${valid}`), { timeout: "10 seconds" })("changed document bytes", (it) => {
     it.effect("uses the new byte digest even when canonical claim text is unchanged", () =>
@@ -221,6 +310,13 @@ describe("failure-preserving public source adapter", () => {
       '<claims><claim num="1"><claim-text>A fixture comprising a panel.</claim-text></claim><claim num="2">unfinished',
       "malformed-claims",
     ],
+    ["container interrupts claim", '<claims><claim num="1"><claims/></claim></claims>', "malformed-claims"],
+    ["unmatched container close", "</claims>", "malformed-claims"],
+    ["multiple containers", "<claims/><claims/>", "malformed-claims"],
+    ["unmatched claim close", "<claims></claim></claims>", "malformed-claims"],
+    ["nested claim", '<claims><claim num="1"><claim num="2"/></claim></claims>', "malformed-claims"],
+    ["unsupported between-record element", "<claims><note/></claims>", "malformed-claims"],
+    ["unterminated trailing metadata", `${valid}<metadata value="unfinished`, "malformed-claims"],
     [
       "comment spoof",
       '<claims><!-- <claim num="1">A fixture comprising a panel.</claim> --></claims>',
