@@ -761,3 +761,15 @@ the timeout is repaired. Reverse by removing these phase emissions while
 retaining the actual timeout evidence and its unresolved hold. No local quality
 suite, generator, new runner capacity or paid service is authorized by this
 diagnostic change.
+
+
+### First cached history read diagnostic, 2026-11-03
+
+Review of #2688 showed that the scan consumes cached path-removal history
+inside its report grouping. Move the `read-removals` phase and first read ahead
+of the scan, and keep the later baseline consumer on that same value. This
+supersedes the earlier operation-order statement only for this optional cached
+read. Keep its query arguments, fallback, cache, report and gate rules. All
+fourteen fixed labels and their 564-byte bound remain; no per-document output
+or new quality operation is introduced. Reverse by moving this cached read
+back while retaining the review finding and unresolved timeout evidence.

@@ -884,3 +884,14 @@ observed schema difference changed the matrix and next qualification work.
   process-capture restoration. Do not filter away unexpected new messages or
   increase the expected count to match the diagnostic implementation. Push the
   correction for fresh hosted proof; no local suite was started.
+
+
+### 2026-11-03 — label the first cached history read
+
+- Review discussion 4460122302 found that `scanKnowledgeDoctorTree` already
+  reads `tree.pathRemovals`; a later progress label described only a cached
+  second read. A history stall would incorrectly appear as `scan-tree`.
+- Resolve the same cached history effect under `read-removals` before calling
+  the scan, then reuse its value for baseline comparison. Preserve its Git
+  arguments, optional-evidence fallback, cache and gate semantics. This repairs
+  the diagnostic attribution; it does not establish the timeout root cause.

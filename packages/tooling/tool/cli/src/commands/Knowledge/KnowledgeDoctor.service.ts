@@ -1876,6 +1876,8 @@ const checkLive = Effect.fn("KnowledgeDoctor.checkLive")(function* (options: Kno
       const baseline = yield* Effect.fromOption(O.orElse(head.baseline, () => base.baseline)).pipe(
         Effect.mapError(missingBaseline)
       );
+      yield* progress("read-removals");
+      const removals = yield* tree.pathRemovals;
       yield* progress("scan-tree");
       const report = yield* scanKnowledgeDoctorTree(tree);
       const adapter = doctorGitAdapter(`mintedAt ${baseline.mintedAt}`);
@@ -1908,8 +1910,6 @@ const checkLive = Effect.fn("KnowledgeDoctor.checkLive")(function* (options: Kno
             onSome: (headBaseline) => Effect.asSome(mintAcceptance(refs, headBaseline, head.baselineText)),
           })
         : O.none<KnowledgeMintAcceptance>();
-      yield* progress("read-removals");
-      const removals = yield* tree.pathRemovals;
       yield* progress("compare-baseline");
       const checked = yield* checkKnowledgeDoctorReport(
         KnowledgeDoctorCheckInput.make({
