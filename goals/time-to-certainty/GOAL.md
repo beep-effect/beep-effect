@@ -39,10 +39,10 @@ checkmarks as items land; the status flip and closeout reflection ride the final
 
 Status (2026-09-28): `paused`. P0, P1 and P3 complete; P2 complete except C4.2 enforcement;
 the P4 A1 close re-run landed as `research/economics-close.md`. `research/decisions.md` holds
-rulings 1-82. Round 25 moved the proof ledger to the owning clone (71), made a red run's
+rulings 1-83. Round 25 moved the proof ledger to the owning clone (71), made a red run's
 digest observable (72), and set C4.2's flip condition (80). Resume when
-`bun run beep yeet proof-report --since <round-25 merge instant>` in the owning clone reads ready
-with zero malformed rows and every C5 fixture is green (ruling 82 closed the ruling-69 root-input gap).
+`bun run beep yeet proof-report --since <ruling-83 merge instant>` in the owning clone reads ready
+with zero malformed rows and every C5 fixture is green (ruling 82 closed the ruling-69 gap; ruling 83 restarted the sample).
 That flip PR turns reuse on, deletes the legacy lane-proof store, re-runs
 `economics.py --run close`, and carries the status flip and closeout reflection. B9 lives in
 `explorations/github-merge-queue`, gated on E8.
