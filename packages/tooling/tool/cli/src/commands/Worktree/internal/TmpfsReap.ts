@@ -30,16 +30,16 @@ import * as N from "effect/Number";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { WORKTREES_ROOT_SUFFIX } from "../../commands/Worktree/Worktree.constants.ts";
-import { configuredPath, resolveBeepCacheRoot } from "./BeepCacheRoot.ts";
-import { FALLOW_AUDIT_CACHE_SEGMENTS } from "./FallowAuditCache.ts";
-import { runRepoCommandCapture } from "./RepoRun.executor.ts";
+import { configuredPath, resolveBeepCacheRoot } from "../../../internal/repo-run/BeepCacheRoot.ts";
+import { FALLOW_AUDIT_CACHE_SEGMENTS } from "../../../internal/repo-run/FallowAuditCache.ts";
+import { runRepoCommandCapture } from "../../../internal/repo-run/RepoRun.executor.ts";
+import { WORKTREES_ROOT_SUFFIX } from "../Worktree.constants.ts";
 import { TmpfsReapCandidate, TmpfsReapClass, TmpfsReapReport } from "./TmpfsReap.schemas.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { TmpfsReapSkipReason } from "./TmpfsReap.schemas.ts";
 
-const $I = $RepoCliId.create("internal/repo-run/TmpfsReap");
+const $I = $RepoCliId.create("commands/Worktree/internal/TmpfsReap");
 
 const HEAD_INSTALL_PREFIX = "beep-yeet-head-install-";
 const FALLOW_CACHE_PREFIX = "fallow-audit-base-cache-";
@@ -1237,7 +1237,7 @@ const resolveTmpfsRoots = Effect.fnUntraced(function* (
  * **Example** (Build a dry-run janitor effect)
  *
  * ```ts
- * import { runTmpfsReap } from "@beep/repo-cli/test/RepoRun"
+ * import { runTmpfsReap } from "@beep/repo-cli/test/Worktree"
  * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(runTmpfsReap())) // true
  * ```

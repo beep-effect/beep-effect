@@ -115,6 +115,7 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
+import { REPO_CLI_ENTRY_PATH } from "../../../internal/cli/EntryPath.ts";
 import { aiMetricsDataRootEnvVar } from "../../../internal/cli/Flags.ts";
 import { printLines } from "../../../internal/cli/Printer.ts";
 import {
@@ -2027,7 +2028,7 @@ const makeForwarderTimerProgram = Effect.fn("AIMetrics.makeForwarderTimerProgram
     AiMetricsForwarderTimerInput.make({
       command: [
         executable,
-        "packages/tooling/tool/cli/src/bin.ts",
+        REPO_CLI_ENTRY_PATH,
         "--",
         "ai-metrics",
         "forwarder",

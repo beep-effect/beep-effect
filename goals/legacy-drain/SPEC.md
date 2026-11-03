@@ -27,7 +27,7 @@ Higher sources outrank lower sources when they conflict.
 
 ## Target Surfaces
 
-- `packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts` (new reap class) and its schemas
+- `packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts` (new reap class) and its schemas
 - `beep worktree remove --archive`, `yeet sweep --retire` live-checkout fence (reuse)
 - `standards/git-worktrees.md`, `AGENTS.md` Quality Operator worktree bullet
 

@@ -24,6 +24,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { REPO_CLI_ENTRY_PATH } from "../../../internal/cli/EntryPath.ts";
 import { ghOutput } from "../../../internal/github/index.ts";
 import { runCapturedStreams } from "../../../internal/process/index.ts";
 import {
@@ -49,9 +50,6 @@ import type { SweepGitState } from "./Sweep.ts";
 const decodeWorktreeName = S.decodeUnknownEffect(WorktreeRemovalRequest.fields.name);
 const decodeRetirePlan = S.decodeUnknownEffect(YeetRetirePlan);
 const decodeVerdictTip = S.decodeUnknownOption(YeetRetireVerdict.cases["pr-less-on-main"].fields.tip);
-
-// The lane's own CLI always carries --retire, whatever branch the clone sits on.
-const REPO_CLI_ENTRY_PATH = "packages/tooling/tool/cli/src/bin.ts";
 
 // The retirement's git reads run through `Git`; a failure keeps the capture's wording: a run git
 // never reached "could not run", a run git reported names its exit code and stderr

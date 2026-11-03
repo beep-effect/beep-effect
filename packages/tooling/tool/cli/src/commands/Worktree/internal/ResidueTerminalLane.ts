@@ -12,7 +12,7 @@ import type * as Effect from "effect/Effect";
 import type * as O from "effect/Option";
 import type { ResidueTerminalLaneAuthority } from "./ResidueReap.schemas.ts";
 
-const $I = $RepoCliId.create("internal/repo-run/ResidueTerminalLane");
+const $I = $RepoCliId.create("commands/Worktree/internal/ResidueTerminalLane");
 
 /**
  * Service contract: prove, live, that one checkout is a finished lane.
@@ -27,7 +27,7 @@ const $I = $RepoCliId.create("internal/repo-run/ResidueTerminalLane");
  * **Example** (Describe a probe that proves nothing)
  *
  * ```ts
- * import type { ResidueTerminalLaneProbeShape } from "@beep/repo-cli/test/RepoRun"
+ * import type { ResidueTerminalLaneProbeShape } from "@beep/repo-cli/test/Worktree"
  * import * as Effect from "effect/Effect"
  *
  * const unproven: ResidueTerminalLaneProbeShape = { verify: () => Effect.succeedNone }
@@ -53,7 +53,7 @@ export type ResidueTerminalLaneProbeShape = {
  * **Example** (Request the probe)
  *
  * ```ts
- * import { ResidueTerminalLaneProbe } from "@beep/repo-cli/test/RepoRun"
+ * import { ResidueTerminalLaneProbe } from "@beep/repo-cli/test/Worktree"
  * import * as Effect from "effect/Effect"
  *
  * const program = Effect.gen(function* () {
@@ -77,7 +77,7 @@ export class ResidueTerminalLaneProbe extends Context.Service<
  * **Example** (Provide a probe that never proves a lane)
  *
  * ```ts
- * import { layerResidueTerminalLaneProbeTest } from "@beep/repo-cli/test/RepoRun"
+ * import { layerResidueTerminalLaneProbeTest } from "@beep/repo-cli/test/Worktree"
  * import * as Effect from "effect/Effect"
  *
  * const unproven = layerResidueTerminalLaneProbeTest(() => Effect.succeedNone)

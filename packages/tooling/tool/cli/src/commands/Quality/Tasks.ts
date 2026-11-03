@@ -34,6 +34,7 @@ import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
+import { REPO_CLI_ENTRY_PATH } from "../../internal/cli/EntryPath.ts";
 import {
   canUseTurboCacheSecretSession,
   configStringEqualsSync,
@@ -224,7 +225,6 @@ const COVERAGE_REPLACE_ALL_ARG = "--replace-all";
 const QUALITY_CAPTURE_TIMEOUT_MILLIS = PosInt.make(Duration.toMillis("15 minutes"));
 const QUALITY_CAPTURE_FORCE_KILL_AFTER: Duration.Input = "5 seconds";
 const QUALITY_CAPTURE_TIMEOUT_EXIT_CODE = 124;
-const REPO_CLI_ENTRY_PATH = "packages/tooling/tool/cli/src/bin.ts";
 
 const capturedTimeoutResult = (error: CaptureCommandTimedOutError): CapturedStep =>
   CapturedStep.make({

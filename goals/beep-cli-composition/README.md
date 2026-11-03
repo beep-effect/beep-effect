@@ -31,12 +31,15 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research is complete: the operator grill settled D1 to D20 (2026-10-21 to
-2026-10-28) and an adversarial pass verified the package map. P1 starts with
-the gate fix lanes G1 to G4 and the W0 retirements.
+P1 Implement: G1 to G4 and W0 are done; W1 is running in two PRs (D25).
+W1a clears every library-to-tool edge in `src/internal/**` and adds the
+full-edge census; W1b works the verifier's must-fix list.
 
 ## Latest Evidence
 
+- [`research/w1-edge-census.md`](./research/w1-edge-census.md): the W1 full-edge
+  census (`ops/edge-census.ts`); library-to-tool edges 7 to 0, cross-tool
+  edges 127 to 124.
 - [`research/g4-task-fingerprint.md`](./research/g4-task-fingerprint.md): G4
   per-task policy fingerprint; 0 stale-green replays over 400 commits and
   task-instance invalidations halved, with the replay script in
@@ -55,6 +58,5 @@ the gate fix lanes G1 to G4 and the W0 retirements.
 
 ## Notes
 
-- W1 onward waits for `goals/effected-promotion` to close (D16). Its remaining
-  waves edit the same repo-cli files.
+- `goals/effected-promotion` closed (#2476), so W1 onward is unblocked (D16).
 - Supersedes `goals/repo-cli-modularization`.
