@@ -895,3 +895,15 @@ observed schema difference changed the matrix and next qualification work.
   the scan, then reuse its value for baseline comparison. Preserve its Git
   arguments, optional-evidence fallback, cache and gate semantics. This repairs
   the diagnostic attribution; it does not establish the timeout root cause.
+
+
+### 2026-11-03 — map captured console output before the assertion helper
+
+- Hosted Check job 126192712570 found one introduced `yieldInCallArgument`
+  diagnostic in the warning-test correction. The behavioral shard passed,
+  but its helper call yielded the console effect directly as an argument.
+- Map `TestConsole.errorLines` through the existing curried `A.drop` helper.
+  Keep the preceding snapshot, exact two-warning count, message checks and
+  spy restoration. This fixes the Effect diagnostic without changing the
+  tested behavior. Push for fresh hosted Check; do not infer compile proof
+  from the earlier passing runtime tests or run a competing local suite.

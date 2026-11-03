@@ -883,7 +883,7 @@ describe("knowledge doctor sealed baseline", () => {
           yield* warnKnowledgeLeases("/synthetic-checkout");
           yield* warnKnowledgeLeases("/synthetic-checkout");
           yield* warnKnowledgeLeases("/synthetic-checkout");
-          const errors = A.drop(yield* TestConsole.errorLines, A.length(previousErrors));
+          const errors = yield* Effect.map(TestConsole.errorLines, A.drop(A.length(previousErrors)));
           assert.strictEqual(A.length(errors), 2);
           assert.include(errors[0] ?? "", "exit 1");
           assert.include(errors[1] ?? "", "did not start");
