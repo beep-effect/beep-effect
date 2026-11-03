@@ -855,3 +855,18 @@ observed schema difference changed the matrix and next qualification work.
 - Keep the unchanged bounded collector AST and immutable original evidence.
   Fresh observations record the repaired driver bytes rather than re-hashing
   an older observation onto them. A new source binding requires its own replay.
+
+
+### 2026-11-03 — distinguish doctor timeout phases from mint context
+
+- Hosted policy retry job 126142873504 preserved the new timeout tail, but its
+  last output was the normal non-mint gate-selection message. It then exceeded
+  900,000 ms. That message does not establish an authentication failure, and
+  the timed-out operation remains unknown. The same command in successful
+  policy job 125996929042 took about 380.5 seconds; equivalent doctor code and
+  nearly equal tracked corpus sizes do not establish the cause of the spread.
+- Emit fourteen fixed phase labels to CI stderr from the live check. The bounded
+  timeout tail can then distinguish archive, scan and comparison work without
+  logging paths, refs, document contents, findings or credentials. Preserve
+  the deadline and fail-closed baseline/mint rules; instrumentation is not a
+  timeout fix or hosted-green proof. Local quality runs remain operator-skipped.

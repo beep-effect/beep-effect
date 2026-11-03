@@ -742,3 +742,22 @@ results. Six controlled source changes must refuse before client selection; the
 legacy prefixes lack that refusal. No task body executes, feature/tuple is
 qualified or runtime setting changes. Reverse the driver/registration wave
 through Git while retaining both source envelopes and their observations.
+
+
+### CI doctor timeout phase diagnostics, 2026-11-03
+
+The actual second policy attempt on #2688 failed both the inherited
+ClaimElement effect-vitest policy and a 900-second knowledge-doctor timeout.
+The first attempt's runner-loss attribution applies only to that attempt.
+The new capture tail correctly retained the normal non-mint gate-selection
+output; it did not identify the stalled doctor phase or a permission failure.
+
+Use fourteen fixed phase messages on CI stderr in the live doctor check. Keep
+ordinary local output, report stdout, the command deadline, ordered operations,
+error propagation and all seal/mint gate rules. No file contents, paths, refs,
+identifiers, tokens, environment values or per-document messages are logged.
+This prepares the next hosted execution to identify a phase; it does not claim
+the timeout is repaired. Reverse by removing these phase emissions while
+retaining the actual timeout evidence and its unresolved hold. No local quality
+suite, generator, new runner capacity or paid service is authorized by this
+diagnostic change.
