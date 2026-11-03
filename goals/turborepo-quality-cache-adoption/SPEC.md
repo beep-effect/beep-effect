@@ -635,3 +635,19 @@ original immutable whole-driver source, and bind new observations separately.
   nor final feature acceptance. Reopen runtime changes only with the complete
   current caller, tuple and hosted evidence. Reverse this research/comment wave
   through a reviewed Git revert, retaining the native reports.
+
+
+### Retain absent prune global-file copying, 2026-11-02
+
+- Keep `futureFlags.pruneIncludesGlobalFiles` absent. The bounded tracked-source
+  review found no named production Turbo prune caller. Classify ordinary Git,
+  Docker, retention and directory-walker pruning separately.
+- The exact stable/current-canary fixtures show global-file copying only with
+  the flag enabled in both legacy and global configuration layouts, including
+  both Docker output trees. Frozen offline installation and explicit missing-file
+  refusals establish fixture input presence; no real pruned build was executed.
+- Reopen for a named consumer with actual global-input and sensitive/ignored-file
+  rules, pruned build, portability and qualification controls. Keep the broad
+  pruning/deployment rows and every whole-goal acceptance criterion pending.
+- Reverse through a reviewed Git revert of this decision and registration,
+  retaining the observations. No runtime setting or deployment changes.
