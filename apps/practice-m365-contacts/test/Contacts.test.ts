@@ -284,7 +284,8 @@ describe("contact seeding", () => {
           );
           expect(run.created).toBe(1);
           const created = O.getOrThrow(A.head(run.inventory.contacts));
-          assertSome(created.contact.rawJson, expect.objectContaining({ businessPhones: ["+12025550123"] }));
+          const payload = O.getOrThrow(created.contact.rawJson);
+          expect(payload).toMatchObject({ businessPhones: ["+12025550123"] });
         })
       )
     );

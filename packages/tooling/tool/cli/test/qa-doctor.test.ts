@@ -8,6 +8,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as PlatformError from "effect/PlatformError";
+import * as P from "effect/Predicate";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const unavailable = PlatformError.systemError({
@@ -29,9 +30,17 @@ const Platform = Layer.mergeAll(
 it.layer(Platform, { timeout: "30 seconds" })("QA environment probes", (it) => {
   it.effect("reports an unavailable OBS socket as an optional warning without rejecting the doctor report", () =>
     Effect.gen(function* () {
-      const connect = yield* Effect.acquireRelease(
-        Effect.sync(() => vi.spyOn(Bun, "connect").mockRejectedValueOnce(unavailable)),
-        (spy) => Effect.sync(() => spy.mockRestore())
+      const connection = yield* Effect.acquireRelease(
+        Effect.sync(() => {
+          if (P.isFunction(Bun.connect)) {
+            const connect = vi.spyOn(Bun, "connect").mockRejectedValueOnce(unavailable);
+            return { connect, restore: () => connect.mockRestore() };
+          }
+          const connect = vi.fn().mockRejectedValueOnce(unavailable);
+          vi.stubGlobal("Bun", { ...Bun, version: "synthetic-test-runtime", connect });
+          return { connect, restore: () => vi.unstubAllGlobals() };
+        }),
+        (connection) => Effect.sync(connection.restore)
       );
       const probes = yield* runQaDoctor();
       expect(A.findFirst(probes, (probe) => probe.name === "obs-websocket")).toMatchObject({
@@ -39,7 +48,7 @@ it.layer(Platform, { timeout: "30 seconds" })("QA environment probes", (it) => {
         value: { status: "warn", required: false },
       });
       expect(probes).toHaveLength(6);
-      expect(connect).toHaveBeenCalledOnce();
+      expect(connection.connect).toHaveBeenCalledOnce();
     })
   );
 });
