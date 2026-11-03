@@ -1171,3 +1171,18 @@ This repairs preparation, not its unexecuted build or independent approval.
   approval. Actual secret delivery, protected execution, independent acceptance
   and every whole-goal gate remain required. Reverse with the enable unset and
   removal of this optional caller/mode, retaining ordinary CI and all evidence.
+
+
+### Candidate host compiler prerequisite, 2026-11-03
+
+The first actual portable build reached its runner but host Rust build scripts
+failed with `linker cc not found`. Zig handles the target-musl link; host
+procedural/build-script compilation still needs the native compiler. Install or
+verify `cc`, `ld` and `readelf` through the existing noninteractive dnf/apt route
+before compilation, preserving Debian source pruning. Record their executable
+digests, sizes and versions alongside Rust, cargo-zigbuild and Zig. Keep source
+and patch checks, two Cargo jobs, twenty-minute build, ELF refusal and artifact
+bounds intact. Preserve the failed run and successful cleanup; a fresh accepted
+source build and independent artifact inspection are required before approval.
+Reverse with the preparation mode disabled and removal of this prerequisite;
+never relabel the failed run or increase limits to make it pass.

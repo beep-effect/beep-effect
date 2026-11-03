@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "7060a242e7318a6dc82ebf9c25da6920d5eca71bd520b88c55e65ed431d06f89",
+  "specSha256": "d4c40df7c1c70fe540d4d4699870c0c8dc2e81ee49edf0b5523519c15f0eea8c",
   "acceptance": [
     {
       "id": "AC-01",
@@ -520,7 +520,7 @@
   "priorSpecSha256AtProtectedWorkflowPreparation": "e5157183e7007be1ceb7f4312b91d9d0a9a46c38cac501a5e7732b9a9556ac7e",
   "protectedProducerWorkflowPreparation": {
     "path": "research/protected-producer-workflow-preparation-2026-11-03.json",
-    "sha256": "a856924f7ba83254b8bc5bfcbb2ac28731c195e1be168173f63e6b314726465e",
+    "sha256": "dfa47c0c7f077622eb1988d36b959f2f2a21ecf74776b7531bdb0496647545a7",
     "authority": "Closed workflow wiring only. No installed issuer, runtime credential delivery, protected execution, published observation, qualification or whole-goal acceptance."
   }
 }

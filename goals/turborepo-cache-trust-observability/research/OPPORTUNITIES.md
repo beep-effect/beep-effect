@@ -2092,3 +2092,12 @@ comment (`UnicodeEncodeError`). The first-cohort authenticated workflow reader
 requires ASCII before byte hashing. Normalize that comment and assert ASCII
 plus the original combined 64-KiB bound; do not widen the verifier or drop the
 resolved reusable workflow from approval. No executable lane behavior changed.
+
+
+### Native cross-builds still need the host linker, 2026-11-03
+
+The first credential-free candidate build failed at Rust host build scripts with
+`linker cc not found`. Installing target-musl tools does not supply host `cc`.
+Add a noninteractive compiler/binutils prerequisite and retain actual host tool
+identities in the manifest. Keep the failed run, skipped artifact and successful
+cleanup as evidence; only retry after the reviewed source repair lands.

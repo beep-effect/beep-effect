@@ -443,6 +443,33 @@ jobs:
           printf 'XDG_CACHE_HOME=%s/cache\n' "$build_root" >> "$GITHUB_ENV"
           printf 'CARGO_TARGET_DIR=%s/target\n' "$build_root" >> "$GITHUB_ENV"
 
+      - name: Ensure native host compiler and ELF inspection tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v cc >/dev/null || ! command -v ld >/dev/null || ! command -v readelf >/dev/null; then
+            privilege=()
+            if [[ "$EUID" -ne 0 ]]; then
+              privilege=(sudo -n)
+            fi
+            if command -v dnf >/dev/null 2>&1; then
+              "${privilege[@]}" dnf install -y gcc binutils
+            elif command -v apt-get >/dev/null 2>&1; then
+              bash scripts/ci-prune-apt-sources.sh
+              "${privilege[@]}" apt-get update
+              "${privilege[@]}" apt-get install -y --no-install-recommends gcc binutils
+            else
+              echo "::error::No supported native host compiler installer."
+              exit 1
+            fi
+          fi
+          command -v cc
+          command -v ld
+          command -v readelf
+          cc --version
+          ld --version
+          readelf --version
+
       - name: Setup pinned Rust without shared caches
         uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
         with:
@@ -514,7 +541,10 @@ jobs:
           tool_paths={
               'rustc':subprocess.check_output(['rustup','which','rustc'],text=True).strip(),
               'cargoZigbuild':shutil.which('cargo-zigbuild'),
-              'zig':shutil.which('zig')
+              'zig':shutil.which('zig'),
+              'hostCc':shutil.which('cc'),
+              'hostLinker':shutil.which('ld'),
+              'readelf':shutil.which('readelf')
           }
           report={
               'schemaVersion':'cache-producer-adapter-build/v1',
@@ -530,7 +560,8 @@ jobs:
               'sourceInputs':{p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in inputs},
               'toolExecutables':{name:executable_digest(path) for name,path in tool_paths.items()},
               'tools':{name:subprocess.check_output(args,text=True).strip() for name,args in [
-                  ('rustc',['rustc','-vV']),('cargoZigbuild',['cargo-zigbuild','--version']),('zig',['zig','version'])]}
+                  ('rustc',['rustc','-vV']),('cargoZigbuild',['cargo-zigbuild','--version']),('zig',['zig','version']),
+                  ('hostCc',['cc','--version']),('hostLinker',['ld','--version']),('readelf',['readelf','--version'])]}
           }
           encoded=(json.dumps(report,indent=2)+'\n').encode()
           if len(encoded)>64*1024 or size+len(encoded)>16*1024*1024:

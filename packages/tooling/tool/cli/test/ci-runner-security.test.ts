@@ -1771,6 +1771,15 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         override: "false",
         matcher: "false",
       });
+      const hostTools = "Ensure native host compiler and ELF inspection tools";
+      const hostSetup = stepRun(steps, hostTools);
+      expect(hostSetup).toContain("command -v cc");
+      expect(hostSetup).toContain("command -v ld");
+      expect(hostSetup).toContain("command -v readelf");
+      expect(hostSetup).toContain("dnf install -y gcc binutils");
+      expect(hostSetup).toContain("apt-get install -y --no-install-recommends gcc binutils");
+      assertPrunesAptSourcesBefore(hostSetup, '"${privilege[@]}" apt-get update');
+      expect(stepIndexByName(steps, hostTools)).toBeLessThan(stepIndexByName(steps, "Build pinned portable candidate"));
       const install = stepByName(steps, "Install pinned portable build tools");
       expect(install.run).toContain("--require-hashes");
       expect(install.run).toContain("--only-binary=:all:");
@@ -1792,6 +1801,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(build.run).toContain("independent approval and runtime qualification are required");
       expect(build.run).toContain("'toolExecutables':{name:executable_digest(path)");
       expect(build.run).toContain("['rustup','which','rustc']");
+      expect(build.run).toContain("'hostCc':shutil.which('cc')");
+      expect(build.run).toContain("'hostLinker':shutil.which('ld')");
+      expect(build.run).toContain("'readelf':shutil.which('readelf')");
       expect(stepByName(steps, "Retain candidate for at most one day").with).toEqual({
         name: "cache-producer-adapter-${{ github.run_id }}-${{ github.run_attempt }}",
         path: "${{ steps.scratch.outputs.artifact }}",

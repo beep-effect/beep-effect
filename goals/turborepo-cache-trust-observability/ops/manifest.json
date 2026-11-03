@@ -148,7 +148,8 @@
     "research/ordinary-native-matrix-checkpoint-2026-11-02.json",
     "research/worker-git-startup-checkpoint-2026-11-02.json",
     "research/protected-producer-workflow-preparation-2026-11-03.json",
-    "research/protected-producer-workflow-preparation-2026-11-03.md"
+    "research/protected-producer-workflow-preparation-2026-11-03.md",
+    "research/candidate-host-compiler-failure-2026-11-03.json"
   ],
   "agentLaunchers": [
     {

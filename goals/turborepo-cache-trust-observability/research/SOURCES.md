@@ -683,6 +683,12 @@ protected producer provenance, current-main qualification or production rollout.
 - [Pinned download-artifact inputs](https://raw.githubusercontent.com/actions/download-artifact/9000827ccba6bdab643e8b6fd33ac0654aef8333/action.yml)
   support exact artifact IDs, authenticated cross-run selection and a failing
   digest mismatch. Independent executable/source approval remains separate.
-- Syntax-only inspection covers both YAML files, ten shell blocks and four
+- Syntax-only inspection covers both YAML files, fifteen shell blocks and five
   Python bodies. The authored source/secret/publication checks and seven real
   Bash-selection cases still require exact-head hosted execution.
+
+- [Actual host-compiler failure](candidate-host-compiler-failure-2026-11-03.json):
+  authenticated run/job metadata and a SHA-256-bound private log identify the
+  missing host linker. The build step failed, artifact retention skipped and
+  scratch cleanup succeeded. The 2,503-second queue and 43-second execution are
+  this operational job's timings only. No native comparison or savings claim.
