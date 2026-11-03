@@ -520,7 +520,7 @@
   "priorSpecSha256AtSavedStorageGrantReview": "e5157183e7007be1ceb7f4312b91d9d0a9a46c38cac501a5e7732b9a9556ac7e",
   "savedStorageGrantCheckpoint": {
     "path": "research/saved-storage-grants-checkpoint-2026-11-03.json",
-    "sha256": "fbdc0090b55bd988975fceae16b4c804e532bc0c1c729462e0068ace5a1ef440",
+    "sha256": "41c702008f15524729c1cb7653b0f0286b4e6020d7a30f646bce3eea844a1d9d",
     "scope": "Current small-object role capabilities only. No current management-policy inspection, deployed adapter trust, native signed restoration, protected producer, qualification or whole-goal acceptance."
   }
 }
