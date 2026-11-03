@@ -19,7 +19,10 @@ describe("XdgBase laws", () => {
     [Kind],
     ([kind]) =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* S.decodeEffect(XdgBaseKind)(yield* S.encodeEffect(XdgBaseKind)(kind)), kind);
+        const argument = S.decodeEffect(XdgBaseKind);
+        const value2 = yield* S.encodeEffect(XdgBaseKind)(kind);
+        const value1 = yield* argument(value2);
+        assert.strictEqual(value1, kind);
       }),
     runs
   );

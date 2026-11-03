@@ -16,7 +16,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -44,7 +45,8 @@ it.effect.prop(
       const canonical = { ...input, message: parsed.reason, errors: parsed.errors };
       const normalized = GitHubGraphQLError.fromThrowable("query", canonical, 0);
       const text = yield* S.encodeEffect(ThrowableJson)(canonical);
-      const reparsed = GitHubGraphQLError.fromThrowable("query", yield* S.decodeEffect(ThrowableJson)(text), 0);
+      const value2 = yield* S.decodeEffect(ThrowableJson)(text);
+      const reparsed = GitHubGraphQLError.fromThrowable("query", value2, 0);
       for (const error of [normalized, reparsed]) {
         assert.strictEqual(error.kind, parsed.kind);
         assert.strictEqual(error.reason, parsed.reason);
@@ -71,8 +73,13 @@ it.effect.prop(
       const parsed = yield* Document.decode(encoded);
       assert.isTrue(S.toEquivalence(Response)(parsed, value));
       const json = Response.pipe(S.toEncoded, S.fromJsonString);
-      const wire = yield* S.decodeEffect(json)(yield* S.encodeEffect(json)(yield* S.encodeEffect(Response)(parsed)));
-      assert.deepStrictEqual(yield* Document.decode(wire), parsed);
+      const argument = S.decodeEffect(json);
+      const argument1 = S.encodeEffect(json);
+      const value3 = yield* S.encodeEffect(Response)(parsed);
+      const argument11 = yield* argument1(value3);
+      const wire = yield* argument(argument11);
+      const decoded3 = yield* Document.decode(wire);
+      assert.deepStrictEqual(decoded3, parsed);
     }),
   runs
 );
@@ -89,7 +96,8 @@ it.effect.prop(
       }>((input) => ({ owner: Str.trim(input.owner) }));
       const encoded = custom.encodeVariables(variables);
       assert.deepStrictEqual(encoded, { owner: Str.trim(variables.owner) });
-      assert.deepStrictEqual(custom.encodeVariables(yield* S.decodeUnknownEffect(Variables)(encoded)), encoded);
+      const value4 = yield* S.decodeUnknownEffect(Variables)(encoded);
+      assert.deepStrictEqual(custom.encodeVariables(value4), encoded);
     }),
   runs
 );

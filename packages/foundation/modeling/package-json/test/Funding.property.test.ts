@@ -19,7 +19,8 @@ const roundTrips = <T, E>(
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(equivalent(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -71,7 +72,8 @@ it.effect.prop(
   ([wire]) =>
     Effect.gen(function* () {
       const entries = yield* S.decodeEffect(Funding.FromField)(wire);
-      assert.deepStrictEqual(yield* S.encodeEffect(Funding.FromField)(entries), wire);
+      const value2 = yield* S.encodeEffect(Funding.FromField)(entries);
+      assert.deepStrictEqual(value2, wire);
     }),
   runs
 );

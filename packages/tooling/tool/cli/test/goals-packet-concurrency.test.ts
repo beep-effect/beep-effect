@@ -103,7 +103,8 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
         const failure = PacketStreamError.new(locator.packet, "caller refused publication");
         const result = yield* withPacketEventLock(locator, () => Effect.fail(failure)).pipe(Effect.flip);
         expect(result).toBe(failure);
-        expect(yield* fs.exists(path.join(locator.packetPath, "ops", ".packet-events.lock"))).toBe(false);
+        const exists1 = yield* fs.exists(path.join(locator.packetPath, "ops", ".packet-events.lock"));
+        expect(exists1).toBe(false);
       })
     );
 
@@ -117,10 +118,12 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
         const operation = Effect.sync(() => {
           calls++;
         }).pipe(Effect.andThen(Effect.fail(failure)));
-        expect(
-          yield* withJournalFileLock(path.join(locator.packetPath, "callback.lock"), () => operation).pipe(Effect.flip)
-        ).toBe(failure);
-        expect(yield* withPacketEventLock(locator, () => operation).pipe(Effect.flip)).toBe(failure);
+        const pipe2 = yield* withJournalFileLock(path.join(locator.packetPath, "callback.lock"), () => operation).pipe(
+          Effect.flip
+        );
+        expect(pipe2).toBe(failure);
+        const pipe3 = yield* withPacketEventLock(locator, () => operation).pipe(Effect.flip);
+        expect(pipe3).toBe(failure);
         expect(calls).toBe(2);
       })
     );
@@ -157,10 +160,13 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
           Deferred.succeed(entered, undefined).pipe(Effect.andThen(Effect.never))
         ).pipe(Effect.forkChild);
         yield* Deferred.await(entered);
-        expect(yield* fs.exists(lockPath)).toBe(true);
+        const exists4 = yield* fs.exists(lockPath);
+        expect(exists4).toBe(true);
         yield* Fiber.interrupt(writer);
-        expect(yield* fs.exists(lockPath)).toBe(false);
-        expect(yield* withJournalFileLock(lockPath, () => Effect.succeed("reacquired"))).toBe("reacquired");
+        const exists5 = yield* fs.exists(lockPath);
+        expect(exists5).toBe(false);
+        const withJournalFileLock6 = yield* withJournalFileLock(lockPath, () => Effect.succeed("reacquired"));
+        expect(withJournalFileLock6).toBe("reacquired");
       })
     );
 
@@ -176,12 +182,15 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
         yield* fs.remove(eventsDirectory, { recursive: true });
         yield* fs.makeDirectory(residue);
         yield* fs.writeFileString(path.join(residue, "receipt.txt"), "preserved repair receipt");
-        expect(yield* withPacketEventLock(locator, () => Effect.succeed("inspected"))).toBe("inspected");
+        const withPacketEventLock7 = yield* withPacketEventLock(locator, () => Effect.succeed("inspected"));
+        expect(withPacketEventLock7).toBe("inspected");
         const failure = yield* store.append(locator, genesis("missing-stream")).pipe(Effect.flip);
         expect(failure.message).toContain("does not exist");
         expect(failure.message).not.toContain("Interrupted fork replacement");
-        expect(yield* fs.exists(eventsDirectory)).toBe(false);
-        expect(yield* fs.readFileString(path.join(residue, "receipt.txt"))).toBe("preserved repair receipt");
+        const exists8 = yield* fs.exists(eventsDirectory);
+        expect(exists8).toBe(false);
+        const readFileString9 = yield* fs.readFileString(path.join(residue, "receipt.txt"));
+        expect(readFileString9).toBe("preserved repair receipt");
       })
     );
 
@@ -212,7 +221,8 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
           Effect.flip
         );
         expect(failure.message).toContain("event-stream recovery inspection failed");
-        expect(yield* fs.exists(path.join(locator.packetPath, "ops", ".packet-events.lock"))).toBe(false);
+        const exists10 = yield* fs.exists(path.join(locator.packetPath, "ops", ".packet-events.lock"));
+        expect(exists10).toBe(false);
         yield* assertStream(locator, 0);
       })
     );
@@ -240,15 +250,14 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
               : fs.exists(target)
           ),
         });
-        const isolated = Context.get(
-          yield* PacketEventStoreLive.pipe(
-            Layer.fresh,
-            Layer.build,
-            Effect.provideService(FileSystem.FileSystem, unreadableFs)
-          ),
-          PacketEventStore
+        const pipe11 = yield* PacketEventStoreLive.pipe(
+          Layer.fresh,
+          Layer.build,
+          Effect.provideService(FileSystem.FileSystem, unreadableFs)
         );
-        expect(yield* isolated.hasStream(locator.packetPath)).toBe(false);
+        const isolated = Context.get(pipe11, PacketEventStore);
+        const hasStream12 = yield* isolated.hasStream(locator.packetPath);
+        expect(hasStream12).toBe(false);
         const failure = yield* isolated.append(locator, genesis("unreadable-ops")).pipe(Effect.flip);
         expect(failure.message).toContain("injected stream probe failure");
         yield* assertStream(locator, 0);
@@ -280,14 +289,12 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
               : fs.readDirectory(directory, options)
           ),
         });
-        const isolated = Context.get(
-          yield* PacketEventStoreLive.pipe(
-            Layer.fresh,
-            Layer.build,
-            Effect.provideService(FileSystem.FileSystem, unreadableFs)
-          ),
-          PacketEventStore
+        const pipe13 = yield* PacketEventStoreLive.pipe(
+          Layer.fresh,
+          Layer.build,
+          Effect.provideService(FileSystem.FileSystem, unreadableFs)
         );
+        const isolated = Context.get(pipe13, PacketEventStore);
         const failure = yield* isolated.append(locator, genesis("refused")).pipe(Effect.flip);
         expect(failure.message).toContain("stream could not be read before append");
         yield* assertStream(locator, 1);
@@ -326,15 +333,18 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
         const path = yield* Path.Path;
         const locator = yield* makePacket();
         const first = yield* startWriter(locator, "first", "afterRead");
-        assertSome(yield* first.stdout.pipe(Stream.decodeText(), Stream.splitLines, Stream.runHead), "PAUSED");
+        const pipe14 = yield* first.stdout.pipe(Stream.decodeText(), Stream.splitLines, Stream.runHead);
+        assertSome(pipe14, "PAUSED");
         const second = yield* startWriter(locator, "second");
         const output = yield* second.stdout.pipe(Stream.decodeText(), Stream.mkString);
-        expect(yield* second.exitCode).toBe(0);
+        const exitCode15 = yield* second.exitCode;
+        expect(exitCode15).toBe(0);
         expect(output).toContain("REFUSED:");
         expect(output).toContain("another active writer");
         yield* assertStream(locator, 0);
         yield* fs.writeFileString(path.join(locator.packetPath, "release-writer"), "release");
-        expect(yield* first.exitCode).toBe(0);
+        const exitCode16 = yield* first.exitCode;
+        expect(exitCode16).toBe(0);
         yield* assertStream(locator, 1);
       }),
       20_000
@@ -348,14 +358,17 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
         const store = yield* PacketEventStore;
         const locator = yield* makePacket();
         const child = yield* startWriter(locator, "killed", "beforePublish");
-        assertSome(yield* child.stdout.pipe(Stream.decodeText(), Stream.splitLines, Stream.runHead), "PAUSED");
+        const pipe17 = yield* child.stdout.pipe(Stream.decodeText(), Stream.splitLines, Stream.runHead);
+        assertSome(pipe17, "PAUSED");
         yield* assertStream(locator, 0);
         yield* child.kill({ killSignal: "SIGKILL" });
         yield* child.exitCode.pipe(Effect.result);
-        expect(yield* fs.exists(path.join(locator.packetPath, "ops", ".packet-events.lock"))).toBe(true);
+        const exists18 = yield* fs.exists(path.join(locator.packetPath, "ops", ".packet-events.lock"));
+        expect(exists18).toBe(true);
         yield* store.append(locator, genesis("recovered"));
         yield* assertStream(locator, 1);
-        expect(yield* fs.exists(path.join(locator.packetPath, "ops", ".packet-events.lock"))).toBe(false);
+        const exists19 = yield* fs.exists(path.join(locator.packetPath, "ops", ".packet-events.lock"));
+        expect(exists19).toBe(false);
       }),
       20_000
     );
@@ -366,7 +379,8 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
         const store = yield* PacketEventStore;
         const locator = yield* makePacket();
         const child = yield* startWriter(locator, "published", "afterPublish");
-        assertSome(yield* child.stdout.pipe(Stream.decodeText(), Stream.splitLines, Stream.runHead), "PAUSED");
+        const pipe20 = yield* child.stdout.pipe(Stream.decodeText(), Stream.splitLines, Stream.runHead);
+        assertSome(pipe20, "PAUSED");
         yield* assertStream(locator, 1);
         yield* child.kill({ killSignal: "SIGKILL" });
         yield* child.exitCode.pipe(Effect.result);

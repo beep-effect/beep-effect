@@ -121,7 +121,8 @@ describe("CSV", () => {
     Effect.fnUntraced(function* () {
       const csv = CSV({ trim: true })(OptionalUserRow);
 
-      expect(yield* S.decodeEffect(csv)("")).toEqual([]);
+      const value1 = yield* S.decodeEffect(csv)("");
+      expect(value1).toEqual([]);
 
       const rows = yield* S.decodeEffect(csv)("id, first_name, nickname\n1, Ada");
 

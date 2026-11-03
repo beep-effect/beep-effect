@@ -16,7 +16,8 @@ describe("internal/osc8/detect schema property floor", () => {
         const encoded = yield* S.encodeEffect(Osc8Reason)(value);
         const decoded = yield* S.decodeEffect(Osc8Reason)(encoded);
         assert.isTrue(S.toEquivalence(Osc8Reason)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(Osc8Reason)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(Osc8Reason)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -28,7 +29,8 @@ describe("internal/osc8/detect schema property floor", () => {
         const encoded = yield* S.encodeEffect(Osc8Detection)(value);
         const decoded = yield* S.decodeEffect(Osc8Detection)(encoded);
         assert.isTrue(S.toEquivalence(Osc8Detection)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(Osc8Detection)(decoded), encoded);
+        const value2 = yield* S.encodeEffect(Osc8Detection)(decoded);
+        assert.deepStrictEqual(value2, encoded);
       }),
     runs
   );
@@ -54,9 +56,12 @@ describe("OSC8 snapshot and projection fidelity", () => {
         const projection = detectOsc8(snap.env, snap.isStdoutTTY, snap.isStderrTTY);
         assert.strictEqual(projection.stdout, info.supported);
         assert.strictEqual(projection.stderr, info.supportedForStderr);
-        const decoded = yield* S.decodeEffect(Osc8Detection)(yield* S.encodeEffect(Osc8Detection)(projection));
+        const argument = S.decodeEffect(Osc8Detection);
+        const value4 = yield* S.encodeEffect(Osc8Detection)(projection);
+        const decoded = yield* argument(value4);
         assert.isTrue(S.toEquivalence(Osc8Detection)(decoded, projection));
-        assert.strictEqual(yield* S.encodeEffect(snapshotJson)(restored), text);
+        const value3 = yield* S.encodeEffect(snapshotJson)(restored);
+        assert.strictEqual(value3, text);
       }),
     runs
   );

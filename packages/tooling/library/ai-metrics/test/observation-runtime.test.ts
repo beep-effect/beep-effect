@@ -95,28 +95,35 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
   it.effect("distinguishes stopped, paused and idle without implicitly opening intake", () =>
     Effect.gen(function* () {
       const f = yield* fixture(false);
-      expect(yield* f.runtime.health).toMatchObject({
+      const health1 = yield* f.runtime.health;
+      expect(health1).toMatchObject({
         phase: "stopped",
         running: false,
         lastCycle: { _tag: "None" },
         sourceCoverage: "unknown",
       });
       const running = yield* f.runtime.run.pipe(Effect.forkChild);
-      expect(yield* waitForCycle(f.runtime)).toMatchObject({
+      const waitForCycle2 = yield* waitForCycle(f.runtime);
+      expect(waitForCycle2).toMatchObject({
         phase: "paused",
         lastCycle: { value: { result: { _tag: "Paused" } } },
       });
-      expect(yield* Ref.get(f.calls)).toBe(0);
+      const got = yield* Ref.get(f.calls);
+      expect(got).toBe(0);
       yield* Ref.update(f.control, (s) => ObservationControlState.make({ ...s, accepting: true }));
       yield* TestClock.adjust(150);
-      expect(yield* f.runtime.health).toMatchObject({
+      const health3 = yield* f.runtime.health;
+      expect(health3).toMatchObject({
         phase: "idle",
         lastCycle: { value: { result: { _tag: "Completed", summary: { examined: 0 }, retained: { pages: 0 } } } },
       });
       yield* Fiber.interrupt(running);
-      expect(yield* f.runtime.health).toMatchObject({ phase: "stopped", running: false });
-      expect(yield* Ref.get(f.control)).toMatchObject({ accepting: false });
-      expect(yield* Ref.get(f.pauses)).toBe(1);
+      const health4 = yield* f.runtime.health;
+      expect(health4).toMatchObject({ phase: "stopped", running: false });
+      const got5 = yield* Ref.get(f.control);
+      expect(got5).toMatchObject({ accepting: false });
+      const got6 = yield* Ref.get(f.pauses);
+      expect(got6).toBe(1);
     })
   )
 );
@@ -128,17 +135,22 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
       yield* Ref.set(f.hang, true);
       const running = yield* f.runtime.run.pipe(Effect.forkChild);
       yield* Deferred.await(f.entered);
-      expect(yield* f.runtime.run.pipe(Effect.flip)).toMatchObject({ reason: "busy" });
+      const pipe7 = yield* f.runtime.run.pipe(Effect.flip);
+      expect(pipe7).toMatchObject({ reason: "busy" });
       yield* TestClock.adjust(policy.cycleTimeoutMillis);
-      expect(yield* waitForCycle(f.runtime)).toMatchObject({
+      const waitForCycle8 = yield* waitForCycle(f.runtime);
+      expect(waitForCycle8).toMatchObject({
         phase: "degraded",
         lastCycle: { value: { result: { _tag: "Deadline" } } },
       });
-      expect(yield* Ref.get(f.calls)).toBe(1);
+      const got9 = yield* Ref.get(f.calls);
+      expect(got9).toBe(1);
       yield* Ref.set(f.hang, false);
       yield* TestClock.adjust(150);
-      expect(yield* f.runtime.health).toMatchObject({ phase: "idle" });
-      expect(yield* Ref.get(f.calls)).toBe(2);
+      const health10 = yield* f.runtime.health;
+      expect(health10).toMatchObject({ phase: "idle" });
+      const got11 = yield* Ref.get(f.calls);
+      expect(got11).toBe(2);
       yield* Fiber.interrupt(running);
     })
   )
@@ -150,14 +162,17 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
       const f = yield* fixture();
       yield* Ref.set(f.fail, true);
       const running = yield* f.runtime.run.pipe(Effect.forkChild);
-      expect(yield* waitForCycle(f.runtime)).toMatchObject({
+      const waitForCycle12 = yield* waitForCycle(f.runtime);
+      expect(waitForCycle12).toMatchObject({
         phase: "degraded",
         lastCycle: { value: { result: { _tag: "Failed" } } },
       });
-      expect(yield* Ref.get(f.calls)).toBe(0);
+      const got13 = yield* Ref.get(f.calls);
+      expect(got13).toBe(0);
       yield* Ref.set(f.fail, false);
       yield* TestClock.adjust(150);
-      expect(yield* f.runtime.health).toMatchObject({ phase: "idle" });
+      const health14 = yield* f.runtime.health;
+      expect(health14).toMatchObject({ phase: "idle" });
       yield* Fiber.interrupt(running);
     })
   )
@@ -171,12 +186,14 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
       const initial = yield* waitForCycle(f.runtime);
       if (O.isNone(initial.lastCycle)) return yield* Effect.die("Missing fixture cycle");
       const future = yield* clockAt(initial.lastCycle.value.completedAt + 10000);
-      expect(yield* f.runtime.health.pipe(Effect.provideService(Clock.Clock, future))).toMatchObject({
+      const pipe15 = yield* f.runtime.health.pipe(Effect.provideService(Clock.Clock, future));
+      expect(pipe15).toMatchObject({
         phase: "stale",
         lastCycleAgeMillis: { value: 10000 },
       });
       const past = yield* clockAt(initial.lastCycle.value.startedAt - 1);
-      expect(yield* f.runtime.health.pipe(Effect.provideService(Clock.Clock, past))).toMatchObject({
+      const pipe16 = yield* f.runtime.health.pipe(Effect.provideService(Clock.Clock, past));
+      expect(pipe16).toMatchObject({
         phase: "clock-regression",
         lastCycleAgeMillis: { _tag: "None" },
       });
@@ -255,16 +272,20 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
   it.effect("omits unknown counts and terminates on a defect while closing admission", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
-      const before = renderObservationRuntimeMetrics(yield* f.runtime.health);
+      const health17 = yield* f.runtime.health;
+      const before = renderObservationRuntimeMetrics(health17);
       expect(before).not.toContain("beep_observation_retained_pages");
       expect(before).not.toContain("beep_observation_delivery_pass_examined");
       expect(before).toContain("beep_observation_source_coverage_known 0");
       yield* Ref.set(f.crash, true);
       const crashed = yield* Effect.exit(f.runtime.run);
       assertTrue(crashed._tag === "Failure");
-      expect(yield* f.runtime.health).toMatchObject({ phase: "stopped", running: false, lastCycle: { _tag: "None" } });
-      expect(yield* Ref.get(f.control)).toMatchObject({ accepting: false });
-      expect(yield* Ref.get(f.pauses)).toBe(1);
+      const health18 = yield* f.runtime.health;
+      expect(health18).toMatchObject({ phase: "stopped", running: false, lastCycle: { _tag: "None" } });
+      const got19 = yield* Ref.get(f.control);
+      expect(got19).toMatchObject({ accepting: false });
+      const got20 = yield* Ref.get(f.pauses);
+      expect(got20).toBe(1);
     })
   )
 );
@@ -306,7 +327,8 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
       expect((yield* f.runtime.health).sources).toMatchObject({ _tag: "NotConfigured" });
       const running = yield* runtime.run.pipe(Effect.forkChild);
       yield* TestClock.adjust(150);
-      expect(yield* Ref.get(calls)).toBe(0);
+      const got21 = yield* Ref.get(calls);
+      expect(got21).toBe(0);
       expect((yield* runtime.health).sources).toMatchObject({ _tag: "Configured", phase: "paused" });
       yield* Ref.update(f.control, (s) => ObservationControlState.make({ ...s, accepting: true }));
       yield* TestClock.adjust(150);
@@ -320,10 +342,12 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
       const failed = yield* runtime.health;
       expect(failed.sources).toMatchObject({ phase: "degraded", lastCycle: { value: { result: { _tag: "Failed" } } } });
       expect(renderObservationRuntimeMetrics(failed)).not.toContain("beep_observation_sources_pass_accepted_pages");
-      expect(yield* Ref.get(f.calls)).toBeGreaterThan(0);
+      const got22 = yield* Ref.get(f.calls);
+      expect(got22).toBeGreaterThan(0);
       yield* Fiber.interrupt(running);
       expect((yield* runtime.health).sources).toMatchObject({ phase: "stopped" });
-      expect(yield* Ref.get(f.pauses)).toBe(1);
+      const got23 = yield* Ref.get(f.pauses);
+      expect(got23).toBe(1);
     })
   )
 );
@@ -335,7 +359,8 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
       const runtime = yield* makeObservationRuntime(f.worker, policy, O.some({ poll: Effect.never, policy }));
       const running = yield* runtime.run.pipe(Effect.forkChild);
       yield* TestClock.adjust(350);
-      expect(yield* Ref.get(f.calls)).toBeGreaterThan(1);
+      const got24 = yield* Ref.get(f.calls);
+      expect(got24).toBeGreaterThan(1);
       expect((yield* runtime.health).sources).toMatchObject({
         phase: "degraded",
         lastCycle: { value: { result: { _tag: "Deadline" } } },
@@ -350,7 +375,8 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
         phase: "clock-regression",
       });
       yield* Fiber.interrupt(running);
-      expect(yield* Ref.get(f.control)).toMatchObject({ accepting: false });
+      const got25 = yield* Ref.get(f.control);
+      expect(got25).toMatchObject({ accepting: false });
     })
   )
 );
@@ -360,7 +386,8 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
     Effect.gen(function* () {
       const f = yield* fixture(true, 3);
       const running = yield* f.runtime.run.pipe(Effect.forkChild);
-      expect(yield* waitForCycle(f.runtime)).toMatchObject({
+      const waitForCycle26 = yield* waitForCycle(f.runtime);
+      expect(waitForCycle26).toMatchObject({
         phase: "scanning",
         lastCycle: { value: { result: { _tag: "Completed", summary: { examined: 0 }, retained: { pages: 3 } } } },
       });
@@ -477,13 +504,15 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
       expect(metrics).not.toContain("max_source_age_seconds");
       yield* Ref.set(f.nextTick, completeTick([visible, sent(DeliveryOutcome.cases.Accepted.make({})), held]));
       yield* TestClock.adjust(150);
-      expect(yield* f.runtime.health).toMatchObject({
+      const health27 = yield* f.runtime.health;
+      expect(health27).toMatchObject({
         phase: "active",
         lastCycle: { value: { result: { summary: { examined: 3, held: 1, unhealthy: false } } } },
       });
       yield* Ref.set(f.nextTick, completeTick([sent(DeliveryOutcome.cases.Retryable.make({ status: 503 }))]));
       yield* TestClock.adjust(150);
-      expect(yield* f.runtime.health).toMatchObject({
+      const health28 = yield* f.runtime.health;
+      expect(health28).toMatchObject({
         phase: "degraded",
         lastCycle: { value: { result: { summary: { sent: 1, unhealthy: true } } } },
       });
@@ -499,7 +528,8 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
       yield* Ref.set(f.hang, true);
       const running = yield* f.runtime.run.pipe(Effect.forkChild);
       yield* Deferred.await(f.entered);
-      expect(yield* f.runtime.health).toMatchObject({ phase: "starting", running: true, lastCycle: { _tag: "None" } });
+      const health29 = yield* f.runtime.health;
+      expect(health29).toMatchObject({ phase: "starting", running: true, lastCycle: { _tag: "None" } });
       yield* Fiber.interrupt(running);
       const g = yield* fixture();
       yield* Ref.set(g.nextTick, NativeScheduleTick.cases.Deadline.make({}));
@@ -548,14 +578,16 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
       yield* Ref.set(refuse, true);
       yield* Ref.set(f.refusal, O.some(ObservationControlError.make({ reason: "paused" })));
       yield* TestClock.adjust(150);
-      expect(yield* runtime.health).toMatchObject({
+      const health30 = yield* runtime.health;
+      expect(health30).toMatchObject({
         phase: "paused",
         lastCycle: { value: { result: { _tag: "Paused" } } },
         sources: { phase: "paused", lastCycle: { value: { result: { _tag: "Paused" } } } },
       });
       yield* Ref.update(f.control, (s) => ObservationControlState.make({ ...s, accepting: false, closed: true }));
       yield* TestClock.adjust(150);
-      expect(yield* runtime.health).toMatchObject({
+      const health31 = yield* runtime.health;
+      expect(health31).toMatchObject({
         phase: "degraded",
         lastCycle: { value: { result: { _tag: "Failed" } } },
         sources: { phase: "degraded", lastCycle: { value: { result: { _tag: "Failed" } } } },

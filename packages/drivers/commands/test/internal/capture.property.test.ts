@@ -25,7 +25,8 @@ describe("capture property floor", () => {
         const encoded = yield* S.encodeEffect(OutputTooLarge)(value);
         const decoded = yield* S.decodeEffect(OutputTooLarge)(encoded);
         assertTrue(S.toEquivalence(OutputTooLarge)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(OutputTooLarge)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(OutputTooLarge)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -44,7 +45,8 @@ describe("capture property floor", () => {
         const rendered = encoder.encode(`\uFEFF${parsed}`);
         const reparsed = yield* collectBounded(Stream.make(rendered), rendered.length);
         assert.strictEqual(reparsed, parsed);
-        assert.strictEqual(yield* collectBounded(rendered.length)(Stream.make(rendered)), parsed);
+        const value2 = yield* collectBounded(rendered.length)(Stream.make(rendered));
+        assert.strictEqual(value2, parsed);
       }),
     runs
   );
@@ -67,7 +69,8 @@ describe("capture property floor", () => {
         const error = yield* Effect.flip(collectBounded(stream, prefix.length));
         assert.instanceOf(error, OutputTooLarge);
         assert.deepStrictEqual(error, OutputTooLarge.make({ limit: prefix.length }));
-        assert.strictEqual(yield* Ref.get(pulled), prefix.length + 1);
+        const got = yield* Ref.get(pulled);
+        assert.strictEqual(got, prefix.length + 1);
       }),
     runs
   );
@@ -79,10 +82,8 @@ describe("capture property floor", () => {
       Effect.gen(function* () {
         const bytes = encoder.encode(text);
         const chunks = [new Uint8Array(), ...byteChunks(bytes), new Uint8Array()];
-        assert.strictEqual(
-          yield* collectBounded(Stream.fromIterable(chunks), bytes.length),
-          new TextDecoder().decode(bytes)
-        );
+        const collectBounded3 = yield* collectBounded(Stream.fromIterable(chunks), bytes.length);
+        assert.strictEqual(collectBounded3, new TextDecoder().decode(bytes));
       }),
     runs
   );

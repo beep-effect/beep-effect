@@ -39,12 +39,17 @@ describe("SqlRunnerStorage", () => {
             const runner = Runner.make({ address, groups: ["default"], weight: 1 });
             const shards = [ShardId.make("default", 1)];
 
-            assert.deepStrictEqual(yield* storage.getRunners, []);
+            const gotRunners = yield* storage.getRunners;
+            assert.deepStrictEqual(gotRunners, []);
             yield* storage.register(runner, true);
-            assert.deepStrictEqual(yield* storage.getRunners, [[runner, true]]);
-            assert.deepStrictEqual(yield* storage.acquire(address, shards), shards);
-            assert.deepStrictEqual(yield* storage.refresh(address, shards), shards);
-            assert.deepStrictEqual(yield* sql`SELECT 2 AS n`, [{ n: 2 }]);
+            const gotRunners1 = yield* storage.getRunners;
+            assert.deepStrictEqual(gotRunners1, [[runner, true]]);
+            const acquire2 = yield* storage.acquire(address, shards);
+            assert.deepStrictEqual(acquire2, shards);
+            const refresh3 = yield* storage.refresh(address, shards);
+            assert.deepStrictEqual(refresh3, shards);
+            const value = yield* sql`SELECT 2 AS n`;
+            assert.deepStrictEqual(value, [{ n: 2 }]);
           }).pipe(Effect.timeout("5 seconds")),
         { timeout: 30_000 }
       );

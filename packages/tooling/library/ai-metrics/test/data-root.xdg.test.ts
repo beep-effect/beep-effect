@@ -128,14 +128,16 @@ describe("aiMetricsStateHome env matrix", () => {
   for (const [name, input, expected] of stateHomeRows) {
     it.effect(name, () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* stateHomeOf(input), expected);
+        const stateHomeOf1 = yield* stateHomeOf(input);
+        assert.strictEqual(stateHomeOf1, expected);
       })
     );
   }
   for (const [name, input, , after] of stateHomeDivergent) {
     it.effect(`${name} (diverges on purpose: XDG absolute-only)`, () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* stateHomeOf(input), after);
+        const stateHomeOf2 = yield* stateHomeOf(input);
+        assert.strictEqual(stateHomeOf2, after);
       })
     );
   }
@@ -145,7 +147,8 @@ describe("aiMetricsStateHome Windows roots", () => {
   for (const [name, input, expected] of windowsRootRows) {
     it.effect(name, () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* stateHomeOf(input), expected);
+        const stateHomeOf3 = yield* stateHomeOf(input);
+        assert.strictEqual(stateHomeOf3, expected);
       })
     );
   }
@@ -155,14 +158,16 @@ it.layer(Path.layer, { timeout: "10 seconds" })("resolveForwarderEvidenceRoot en
   for (const [name, input, expected] of evidenceRows) {
     it.effect(name, () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* evidenceRootOf(input), expected);
+        const evidenceRootOf4 = yield* evidenceRootOf(input);
+        assert.strictEqual(evidenceRootOf4, expected);
       })
     );
   }
   for (const [name, input, , after] of evidenceDivergent) {
     it.effect(`${name} (diverges on purpose: XDG absolute-only)`, () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* evidenceRootOf(input), after);
+        const evidenceRootOf5 = yield* evidenceRootOf(input);
+        assert.strictEqual(evidenceRootOf5, after);
       })
     );
   }

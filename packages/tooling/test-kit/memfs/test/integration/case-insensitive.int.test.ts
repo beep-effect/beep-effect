@@ -20,7 +20,8 @@ layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
       const fs = yield* FileSystem.FileSystem;
       const probe = yield* fs.makeTempDirectoryScoped({ prefix: "memfs-case-" });
       yield* fs.writeFileString(`${probe}/probe`, "");
-      return Exit.isSuccess(yield* Effect.exit(fs.realPath(`${probe}/PROBE`)));
+      const exit1 = yield* Effect.exit(fs.realPath(`${probe}/PROBE`));
+      return Exit.isSuccess(exit1);
     })
   );
 

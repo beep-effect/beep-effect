@@ -56,7 +56,8 @@ describe("ActionEnvironment", () => {
       it.effect("reads a present variable", () =>
         Effect.gen(function* () {
           const env = yield* ActionEnvironment;
-          assert.strictEqual(yield* env.get("GITHUB_ACTOR"), "octocat");
+          const got = yield* env.get("GITHUB_ACTOR");
+          assert.strictEqual(got, "octocat");
         })
       );
     });
@@ -83,7 +84,8 @@ describe("ActionEnvironment", () => {
         Effect.gen(function* () {
           const env = yield* ActionEnvironment;
           for (const name of ["toString", "constructor", "__proto__"]) {
-            assertNone(yield* env.getOptional(name));
+            const gotOptional = yield* env.getOptional(name);
+            assertNone(gotOptional);
             const error = yield* Effect.flip(env.get(name));
             assert.strictEqual(error.reason, "missing");
             assert.strictEqual(error.variable, name);
@@ -104,11 +106,16 @@ describe("ActionEnvironment", () => {
         Effect.gen(function* () {
           const env = yield* ActionEnvironment;
           for (const name of ["toString", "constructor", "__proto__"]) {
-            assertSome(yield* env.getOptional(name), "configured");
-            assert.strictEqual(yield* env.get(name), "configured");
-            assert.strictEqual(yield* env.withEnv({ [name]: "override" }, env.get(name)), "override");
-            assertNone(yield* env.withEnv({ [name]: "" }, env.getOptional(name)));
-            assert.strictEqual(yield* env.get(name), "configured");
+            const gotOptional1 = yield* env.getOptional(name);
+            assertSome(gotOptional1, "configured");
+            const got2 = yield* env.get(name);
+            assert.strictEqual(got2, "configured");
+            const withEnv3 = yield* env.withEnv({ [name]: "override" }, env.get(name));
+            assert.strictEqual(withEnv3, "override");
+            const withEnv4 = yield* env.withEnv({ [name]: "" }, env.getOptional(name));
+            assertNone(withEnv4);
+            const got5 = yield* env.get(name);
+            assert.strictEqual(got5, "configured");
           }
         })
       );
@@ -120,7 +127,8 @@ describe("ActionEnvironment", () => {
       it.effect("treats an empty variable as absent, as the runner does", () =>
         Effect.gen(function* () {
           const env = yield* ActionEnvironment;
-          assertNone(yield* env.getOptional("EMPTY"));
+          const gotOptional6 = yield* env.getOptional("EMPTY");
+          assertNone(gotOptional6);
           assert.strictEqual((yield* Effect.flip(env.get("EMPTY"))).reason, "missing");
         })
       );
@@ -132,8 +140,10 @@ describe("ActionEnvironment", () => {
       it.effect("getOptional never fails", () =>
         Effect.gen(function* () {
           const env = yield* ActionEnvironment;
-          assertNone(yield* env.getOptional("NOPE"));
-          assertSome(yield* env.getOptional("GITHUB_JOB"), "build");
+          const gotOptional7 = yield* env.getOptional("NOPE");
+          assertNone(gotOptional7);
+          const gotOptional8 = yield* env.getOptional("GITHUB_JOB");
+          assertSome(gotOptional8, "build");
         })
       );
     });
@@ -258,8 +268,10 @@ describe("ActionEnvironment", () => {
     )((it) => {
       it.effect("reports debug from RUNNER_DEBUG", () =>
         Effect.gen(function* () {
-          assert.isFalse(yield* yield* BaseDebug);
-          assert.isTrue(yield* yield* RunnerDebug);
+          const value9 = yield* yield* BaseDebug;
+          assert.isFalse(value9);
+          const value10 = yield* yield* RunnerDebug;
+          assert.isTrue(value10);
         })
       );
     });
@@ -325,10 +337,12 @@ describe("ActionEnvironment", () => {
       it.effect("overrides for the duration of the effect and no longer", () =>
         Effect.gen(function* () {
           const env = yield* ActionEnvironment;
-          assert.strictEqual(yield* env.get("GITHUB_ACTOR"), "octocat");
+          const got11 = yield* env.get("GITHUB_ACTOR");
+          assert.strictEqual(got11, "octocat");
           const inner = yield* env.withEnv({ GITHUB_ACTOR: "someone-else" }, env.get("GITHUB_ACTOR"));
           assert.strictEqual(inner, "someone-else");
-          assert.strictEqual(yield* env.get("GITHUB_ACTOR"), "octocat");
+          const got12 = yield* env.get("GITHUB_ACTOR");
+          assert.strictEqual(got12, "octocat");
         })
       );
     });
@@ -355,8 +369,10 @@ describe("ActionEnvironment", () => {
       it.effect("adds a variable the base environment does not have", () =>
         Effect.gen(function* () {
           const env = yield* ActionEnvironment;
-          assert.strictEqual(yield* env.withEnv({ NEW: "v" }, env.get("NEW")), "v");
-          assertNone(yield* env.getOptional("NEW"));
+          const withEnv13 = yield* env.withEnv({ NEW: "v" }, env.get("NEW"));
+          assert.strictEqual(withEnv13, "v");
+          const gotOptional14 = yield* env.getOptional("NEW");
+          assertNone(gotOptional14);
         })
       );
     });
@@ -474,7 +490,8 @@ describe("ActionEnvironment", () => {
           // so a payload arriving through a file read would fail here. Seeding the
           // path as WELL as the payload must change nothing — the served value
           // replaces the read rather than backing it.
-          assert.deepStrictEqual(yield* env.payload, { served: true });
+          const payload15 = yield* env.payload;
+          assert.deepStrictEqual(payload15, { served: true });
         })
       );
     });
@@ -494,7 +511,8 @@ describe("ActionEnvironment", () => {
     it.layer(ActionEnvironment.layerTest({}, []), { timeout: "30 seconds" })((it) => {
       it.effect("a served payload may be any JSON value, not only an object", () =>
         Effect.gen(function* () {
-          assert.deepStrictEqual(yield* (yield* ActionEnvironment).payload, []);
+          const payload16 = yield* (yield* ActionEnvironment).payload;
+          assert.deepStrictEqual(payload16, []);
         })
       );
     });
@@ -514,7 +532,8 @@ describe("ActionEnvironment", () => {
       it.effect("makeTest over a seeded volume exercises the actual GITHUB_EVENT_PATH read", () =>
         Effect.gen(function* () {
           const env = yield* ActionEnvironment;
-          assert.deepStrictEqual(yield* env.payload, { action: "opened" });
+          const payload17 = yield* env.payload;
+          assert.deepStrictEqual(payload17, { action: "opened" });
         })
       );
     });

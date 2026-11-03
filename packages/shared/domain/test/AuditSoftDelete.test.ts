@@ -28,7 +28,8 @@ describe("canonical audit soft-delete codecs", () => {
       const row = yield* decode({ deletedAt: null, deletedByPrincipal: null });
       assertNone(row.deletedAt);
       assertNone(row.deletedByPrincipal);
-      expect(yield* encode(row)).toEqual({ deletedAt: null, deletedByPrincipal: null });
+      const encoded = yield* encode(row);
+      expect(encoded).toEqual({ deletedAt: null, deletedByPrincipal: null });
       const legacy = yield* decode({});
       assertNone(legacy.deletedAt);
       assertNone(legacy.deletedByPrincipal);
@@ -45,11 +46,13 @@ describe("canonical audit soft-delete codecs", () => {
       const row = yield* decode({ deletedAt: 1_700_000_000_000, deletedByPrincipal: { kind: "User", userId: 7 } });
       assertSome(row.deletedAt, DateTime.makeUnsafe(1_700_000_000_000));
       assertSome(row.deletedByPrincipal, principal);
-      expect(yield* encode(row)).toEqual({
+      const encoded1 = yield* encode(row);
+      expect(encoded1).toEqual({
         deletedAt: 1_700_000_000_000,
         deletedByPrincipal: { kind: "User", userId: 7 },
       });
-      expect(yield* encode(DeletionRow.make({ deletedAt: O.none(), deletedByPrincipal: O.none() }))).toEqual({
+      const encoded2 = yield* encode(DeletionRow.make({ deletedAt: O.none(), deletedByPrincipal: O.none() }));
+      expect(encoded2).toEqual({
         deletedAt: null,
         deletedByPrincipal: null,
       });
@@ -60,7 +63,9 @@ describe("canonical audit soft-delete codecs", () => {
     "round-trips schema-derived nullable deletion values",
     [DeletionRow],
     Effect.fnUntraced(function* ([row]) {
-      assertTrue(equivalent(row, yield* decode(yield* encode(row))));
+      const encoded3 = yield* encode(row);
+      const decoded = yield* decode(encoded3);
+      assertTrue(equivalent(row, decoded));
     }),
     { arbitrary: fcRuns(50) }
   );

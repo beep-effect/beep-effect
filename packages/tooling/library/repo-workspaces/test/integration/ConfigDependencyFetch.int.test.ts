@@ -99,7 +99,8 @@ const PnpmRunLine = S.fromJsonString(PnpmRun);
 const pnpmRuns = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   if (!(yield* fs.exists(pnpmLog))) return A.empty<typeof PnpmRun.Type>();
-  const lines = A.filter(Str.split(yield* fs.readFileString(pnpmLog), "\n"), Str.isNonEmpty);
+  const readFileString1 = yield* fs.readFileString(pnpmLog);
+  const lines = A.filter(Str.split(readFileString1, "\n"), Str.isNonEmpty);
   return yield* Effect.forEach(lines, (line) => S.decodeEffect(PnpmRunLine)(line));
 });
 
@@ -221,7 +222,8 @@ describe("effected#842 — the base side of a config-dependency bump", () => {
         assert.include(run?.lockfile, `resolution: {integrity: "${BASE_SRI}"}`);
         // The scratch workspace is gone.
         const scratch = run?.argv[run.argv.indexOf("--dir") + 1] ?? "";
-        assert.isFalse(yield* (yield* FileSystem.FileSystem).exists(scratch));
+        const exists2 = yield* (yield* FileSystem.FileSystem).exists(scratch);
+        assert.isFalse(exists2);
         // The checkout has no `.npmrc` and no registry keys, so none are invented.
         assert.isNull(run?.npmrc);
         assert.notInclude(run?.workspaceYaml, "registry");
@@ -264,7 +266,8 @@ describe("effected#842 — the base side of a config-dependency bump", () => {
         assert.include(run?.workspaceYaml, 'registry: "https://mirror.example/"');
         assert.include(run?.workspaceYaml, 'registries:\n  "@acme": "https://npm.acme.example/"');
         // The copy goes with the scratch.
-        assert.isFalse(yield* fs.exists(run?.argv[run.argv.indexOf("--dir") + 1] ?? ""));
+        const exists3 = yield* fs.exists(run?.argv[run.argv.indexOf("--dir") + 1] ?? "");
+        assert.isFalse(exists3);
       }).pipe(
         Effect.ensuring(
           Effect.gen(function* () {
@@ -355,7 +358,8 @@ describe("effected#842 — the fetch is never unverified", () => {
         // pnpm ran once, pinned to the tampered record, and installed nothing.
         assert.strictEqual((yield* pnpmRuns).length, 1);
         assert.include((yield* pnpmRuns)[0]?.lockfile, OTHER_SRI);
-        assert.isFalse(yield* (yield* FileSystem.FileSystem).exists(join(store, "links", NAME, "0.11.1")));
+        const exists4 = yield* (yield* FileSystem.FileSystem).exists(join(store, "links", NAME, "0.11.1"));
+        assert.isFalse(exists4);
       })
     );
   });

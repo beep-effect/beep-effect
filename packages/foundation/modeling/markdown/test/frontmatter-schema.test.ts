@@ -235,7 +235,8 @@ describe("frontmatter round-trip property", () => {
     ([data]) =>
       Effect.gen(function* () {
         const block = yield* Yaml.stringify(data);
-        assert.deepStrictEqual(yield* decodeVia(fenced("---", block, "---"), YamlFrontmatter), data);
+        const decodedVia = yield* decodeVia(fenced("---", block, "---"), YamlFrontmatter);
+        assert.deepStrictEqual(decodedVia, data);
       }),
     { arbitrary: fcRuns(60) }
   );
@@ -246,7 +247,8 @@ describe("frontmatter round-trip property", () => {
     ([data]) =>
       Effect.gen(function* () {
         const block = yield* Toml.stringify(data);
-        assert.deepStrictEqual(yield* decodeVia(fenced("+++", block, "+++"), TomlFrontmatter), data);
+        const decodedVia1 = yield* decodeVia(fenced("+++", block, "+++"), TomlFrontmatter);
+        assert.deepStrictEqual(decodedVia1, data);
       }),
     { arbitrary: fcRuns(60) }
   );
@@ -257,7 +259,8 @@ describe("frontmatter round-trip property", () => {
     ([data]) =>
       Effect.gen(function* () {
         const block = yield* Jsonc.stringify(data);
-        assert.deepStrictEqual(yield* decodeVia(fenced("---json", block, "---"), JsonFrontmatter), data);
+        const decodedVia2 = yield* decodeVia(fenced("---json", block, "---"), JsonFrontmatter);
+        assert.deepStrictEqual(decodedVia2, data);
       }),
     { arbitrary: fcRuns(60) }
   );

@@ -666,7 +666,8 @@ const makeHostedExtractor = Effect.gen(function* () {
         );
       }
 
-      const cacheKey = O.some(yield* hostedCacheKey(request, model).pipe(Effect.orDie));
+      const pipe1 = yield* hostedCacheKey(request, model).pipe(Effect.orDie);
+      const cacheKey = O.some(pipe1);
       return yield* groundHostedExtractions(
         canonicalizer,
         canonical,
@@ -713,18 +714,17 @@ const patternClaim = Effect.fn("PatternExtractor.patternClaim")(function* (
     quote,
     startChar: S.Natural.make(start),
   });
-  return Result.succeed(
-    yield* makeClaim(
-      canonicalizer,
-      canonical,
-      chunks,
-      body,
-      Confidence.make(O.fromUndefinedOr(entity.confidence).pipe(O.getOrElse(() => 1))),
-      "pattern-wink",
-      PATTERN_MODEL_IDENTITY,
-      O.none()
-    )
+  const madeClaim = yield* makeClaim(
+    canonicalizer,
+    canonical,
+    chunks,
+    body,
+    Confidence.make(O.fromUndefinedOr(entity.confidence).pipe(O.getOrElse(() => 1))),
+    "pattern-wink",
+    PATTERN_MODEL_IDENTITY,
+    O.none()
   );
+  return Result.succeed(madeClaim);
 });
 
 const makePatternExtractor = Effect.gen(function* () {

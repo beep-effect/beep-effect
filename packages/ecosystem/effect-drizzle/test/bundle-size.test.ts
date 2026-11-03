@@ -18,11 +18,21 @@ import {
 } from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { buildBundleConsumer } from "./bundle-build.ts";
 import { compareBundleSize, formatBundleSizeLine } from "./bundle-size.ts";
 import type * as Effect from "effect/Effect";
+
+class BundleSizeTestOperationError extends S.TaggedError<
+  BundleSizeTestOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "BundleSizeTestOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in bundle-size.test.ts." }
+) {}
 
 describe("bundle size comparison", () => {
   it("passes when the current size equals the baseline", () => {
@@ -52,7 +62,10 @@ describe("bundle size probe", () => {
   it.effect(
     "measures the sole artifact as raw UTF-8 bytes",
     fnUntraced(function* () {
-      const artifact = yield* tryPromise(buildBundleConsumer).pipe(withSpan("EffectDrizzle.bundle.build"));
+      const artifact = yield* tryPromise({
+        try: buildBundleConsumer,
+        catch: (cause) => BundleSizeTestOperationError.make({ cause }),
+      }).pipe(withSpan("EffectDrizzle.bundle.build"));
       expect(artifact.rawBytes).toBe(new TextEncoder().encode(artifact.text).byteLength);
       expect(artifact.rawBytes).toBeGreaterThan(1000);
     })
@@ -65,21 +78,27 @@ const hasBunSpawn = typeof Bun !== "undefined" && typeof Bun.spawn === "function
 
 const acquireProbe = fnUntraced(function* (command: Array<string>) {
   return yield* acquireRelease(
-    tryPromise(() => {
-      const process = Bun.spawn(command, {
-        cwd: NodeURL.fileURLToPath(new URL("../", import.meta.url)),
-        stdout: "pipe",
-        stderr: "pipe",
-      });
-      return Promise.resolve({
-        process,
-        output: Tuple.make(process.exited, new Response(process.stdout).text(), new Response(process.stderr).text()),
-      });
+    tryPromise({
+      try: () => {
+        const process = Bun.spawn(command, {
+          cwd: NodeURL.fileURLToPath(new URL("../", import.meta.url)),
+          stdout: "pipe",
+          stderr: "pipe",
+        });
+        return Promise.resolve({
+          process,
+          output: Tuple.make(process.exited, new Response(process.stdout).text(), new Response(process.stderr).text()),
+        });
+      },
+      catch: (cause) => BundleSizeTestOperationError.make({ cause }),
     }).pipe(withSpan("EffectDrizzle.bundle.spawn")),
     ({ process, output }) =>
-      tryPromise(() => {
-        if (process.exitCode === null) process.kill("SIGKILL");
-        return Promise.allSettled(output);
+      tryPromise({
+        try: () => {
+          if (process.exitCode === null) process.kill("SIGKILL");
+          return Promise.allSettled(output);
+        },
+        catch: (cause) => BundleSizeTestOperationError.make({ cause }),
       }).pipe(withSpan("EffectDrizzle.bundle.cleanup"), orDie)
   );
 });
@@ -89,23 +108,33 @@ describe.runIf(hasBunSpawn)("bundle size probe process", () => {
     "exits nonzero for an injected one-byte regression without mutating the baseline",
     fnUntraced(function* () {
       const baselineFile = Bun.file(new URL("./bundle-size.baseline.json", import.meta.url));
-      const baselineBefore = yield* tryPromise(() => baselineFile.bytes());
+      const baselineBefore = yield* tryPromise({
+        try: () => baselineFile.bytes(),
+        catch: (cause) => BundleSizeTestOperationError.make({ cause }),
+      });
       yield* addFinalizer(() =>
         gen(function* () {
-          const baselineAfter = yield* tryPromise(() => baselineFile.bytes());
+          const baselineAfter = yield* tryPromise({
+            try: () => baselineFile.bytes(),
+            catch: (cause) => BundleSizeTestOperationError.make({ cause }),
+          });
           expect(baselineAfter).toEqual(baselineBefore);
         }).pipe(orDie)
       );
-      const artifact = yield* tryPromise(buildBundleConsumer).pipe(withSpan("EffectDrizzle.bundle.build"));
+      const artifact = yield* tryPromise({
+        try: buildBundleConsumer,
+        catch: (cause) => BundleSizeTestOperationError.make({ cause }),
+      }).pipe(withSpan("EffectDrizzle.bundle.build"));
       const baselineRawBytes = artifact.rawBytes - 1;
       const probe = yield* acquireProbe([
         Bun.which("bun") ?? "bun",
         NodeURL.fileURLToPath(new URL("./bundle-size.probe.ts", import.meta.url)),
         `--test-baseline-raw-bytes=${baselineRawBytes}`,
       ]);
-      const [exitCode, stdout, stderr] = yield* tryPromise(() => Promise.all(probe.output)).pipe(
-        withSpan("EffectDrizzle.bundle.drain")
-      );
+      const [exitCode, stdout, stderr] = yield* tryPromise({
+        try: () => Promise.all(probe.output),
+        catch: (cause) => BundleSizeTestOperationError.make({ cause }),
+      }).pipe(withSpan("EffectDrizzle.bundle.drain"));
       yield* sync(() => {
         expect(exitCode).not.toBe(0);
         const lines = Str.split("\n")(stdout);
@@ -131,9 +160,12 @@ describe.runIf(hasBunSpawn)("bundle size probe process", () => {
       ).pipe(forkChild);
       const probe = yield* Deferred.await(acquired);
       yield* addFinalizer(() =>
-        tryPromise(() => {
-          if (probe.process.exitCode === null) probe.process.kill("SIGKILL");
-          return Promise.allSettled(probe.output);
+        tryPromise({
+          try: () => {
+            if (probe.process.exitCode === null) probe.process.kill("SIGKILL");
+            return Promise.allSettled(probe.output);
+          },
+          catch: (cause) => BundleSizeTestOperationError.make({ cause }),
         }).pipe(orDie)
       );
       expect(probe.process.exitCode).toBeNull();
@@ -141,9 +173,10 @@ describe.runIf(hasBunSpawn)("bundle size probe process", () => {
       const interrupted = yield* Fiber.await(fiber);
       interrupted.pipe(Exit.hasInterrupts, assertTrue);
       expect(probe.process.signalCode).toBe("SIGKILL");
-      const [exitCode, stdout, stderr] = yield* tryPromise(() => Promise.all(probe.output)).pipe(
-        withSpan("EffectDrizzle.bundle.drain")
-      );
+      const [exitCode, stdout, stderr] = yield* tryPromise({
+        try: () => Promise.all(probe.output),
+        catch: (cause) => BundleSizeTestOperationError.make({ cause }),
+      }).pipe(withSpan("EffectDrizzle.bundle.drain"));
       expect(exitCode).not.toBe(0);
       expect(stdout).toBeTypeOf("string");
       expect(stderr).toBeTypeOf("string");

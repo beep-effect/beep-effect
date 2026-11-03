@@ -117,10 +117,10 @@ describe("explore --check", () => {
             root: "goals",
             events: healthyStored,
           });
-          yield* writeProjectFile(
-            "goals/sound/ops/trace.json",
-            yield* renderPacketTraceFile(projectPacketTrace(healthyDerived, healthyStored))
+          const renderPacketTraceFile1 = yield* renderPacketTraceFile(
+            projectPacketTrace(healthyDerived, healthyStored)
           );
+          yield* writeProjectFile("goals/sound/ops/trace.json", renderPacketTraceFile1);
 
           // Fourth stream: trace that is not JSON at all.
           const garbled = PacketEvent.make({ ...healthy, packet: "garbled" });

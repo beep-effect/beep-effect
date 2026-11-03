@@ -82,7 +82,8 @@ const assertRenderRoundtrip = Effect.fn(function* (text: string, comment: string
   const reparsed = yield* YamlDocument.parse(rendered);
   assert.deepStrictEqual(reparsed.toValue(), doc.toValue());
   assert.strictEqual(Str.includes(`# ${comment}`)(rendered), true);
-  assert.strictEqual(yield* reparsed.stringify(), rendered);
+  const stringify1 = yield* reparsed.stringify();
+  assert.strictEqual(stringify1, rendered);
 });
 
 describe("block composer property floor", () => {

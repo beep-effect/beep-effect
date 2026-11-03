@@ -172,16 +172,12 @@ describe("SyncItem table", () => {
       const syncItem = yield* decodeUnknownSyncItem(fileRow);
       const insert = yield* Effect.fromResult(toSyncItemInsert(syncItem));
 
-      expectConverterFailure(
-        yield* converterFailure(toSyncItemInsert(withUnencodablePublicId(syncItem))),
-        "SyncItemConverterError"
+      const converterFailure1 = yield* converterFailure(toSyncItemInsert(withUnencodablePublicId(syncItem)));
+      expectConverterFailure(converterFailure1, "SyncItemConverterError");
+      const converterFailure2 = yield* converterFailure(
+        fromSyncItemRow({ ...syncItemRow(insert, 10), publicId: 42 } as unknown as SyncItemRow)
       );
-      expectConverterFailure(
-        yield* converterFailure(
-          fromSyncItemRow({ ...syncItemRow(insert, 10), publicId: 42 } as unknown as SyncItemRow)
-        ),
-        "SyncItemConverterError"
-      );
+      expectConverterFailure(converterFailure2, "SyncItemConverterError");
     })
   );
 });

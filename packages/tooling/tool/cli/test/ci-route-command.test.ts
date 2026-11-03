@@ -155,7 +155,8 @@ it.layer(CliLayer, { timeout: "30 seconds" })("beep ci route command", (it) => {
       Effect.gen(function* () {
         const { run } = yield* harness([atom("unknown", "mystery.bin"), atom("pkg:catalog", "package.json", "biome")]);
         yield* run(["plan", "--base", "base0", "--head", "head1"]);
-        const lines = A.map(yield* TestConsole.logLines, String);
+        const logLines1 = yield* TestConsole.logLines;
+        const lines = A.map(logLines1, String);
         expect(lines[0]).toMatch(/^\[ci route\] plan head1 against base0 \(footprint [0-9a-f]{12}\)$/u);
         expect(lines[1]).toBe("  atoms: 2; affected packages: 2");
         expect(lines[2]).toBe("    unknown  mystery.bin");
@@ -171,7 +172,8 @@ it.layer(CliLayer, { timeout: "30 seconds" })("beep ci route command", (it) => {
       Effect.gen(function* () {
         const { run } = yield* harness([]);
         yield* run(["plan"]);
-        const lines = A.map(yield* TestConsole.logLines, String);
+        const logLines2 = yield* TestConsole.logLines;
+        const lines = A.map(logLines2, String);
         expect(lines[0]).toMatch(/^\[ci route\] plan HEAD against mb0 /u);
         expect(lines).toContain("    security  <- (external input)");
         assertSome(
@@ -222,12 +224,14 @@ it.layer(CliLayer, { timeout: "30 seconds" })("beep ci route command", (it) => {
           O.flatMap(O.fromUndefinedOr(second), (options) => options.until),
           "2026-10-05"
         );
-        const lines = A.map(yield* TestConsole.logLines, String);
+        const logLines3 = yield* TestConsole.logLines;
+        const lines = A.map(logLines3, String);
         expect(lines[0]).toBe(
           "[ci route] corpus goals/verification-route/research/corpus/runs.json (7 runs, 6 heads, 2026-09-01..2026-10-30, workflows Check, Heavy)"
         );
         expect(lines[1]).toBe("  sha256 c0ffee");
-        expect(yield* decodeReceipt(String(lines[2]))).toEqual(receipt);
+        const decodedReceipt = yield* decodeReceipt(String(lines[2]));
+        expect(decodedReceipt).toEqual(receipt);
       })
     )
   );
@@ -237,17 +241,21 @@ it.layer(CliLayer, { timeout: "30 seconds" })("beep ci route command", (it) => {
       Effect.gen(function* () {
         const { recorded, run } = yield* harness([atom("pkg:catalog", "package.json")]);
         yield* run(["census"]);
-        const text = A.map(yield* TestConsole.logLines, String);
+        const logLines4 = yield* TestConsole.logLines;
+        const text = A.map(logLines4, String);
         expect(text[0]).toMatch(
           /^\[ci route\] census over 3 pull-request heads \(3 classified; 0 unresolved; unknown atom share 0\.0%; /u
         );
         expect(text).toContain("  lane cost sources:");
 
         yield* run(["census", "--corpus", "/abs/RECEIPTS.json", "--json"]);
-        const json = A.map(yield* TestConsole.logLines, String);
-        const census = yield* decodeCensus(yield* Effect.fromOption(A.last(json)));
+        const logLines5 = yield* TestConsole.logLines;
+        const json = A.map(logLines5, String);
+        const fromOption6 = yield* Effect.fromOption(A.last(json));
+        const census = yield* decodeCensus(fromOption6);
         expect([census.heads, census.corpusSha256]).toEqual([3, "c0ffee"]);
-        expect(yield* Ref.get(recorded.loads)).toEqual([DEFAULT_RECEIPT, "/abs/RECEIPTS.json"]);
+        const got = yield* Ref.get(recorded.loads);
+        expect(got).toEqual([DEFAULT_RECEIPT, "/abs/RECEIPTS.json"]);
       })
     )
   );
@@ -257,15 +265,18 @@ it.layer(CliLayer, { timeout: "30 seconds" })("beep ci route command", (it) => {
       Effect.gen(function* () {
         const { run } = yield* harness([]);
         yield* run(["replay"]);
-        const lines = A.map(yield* TestConsole.logLines, String);
+        const logLines7 = yield* TestConsole.logLines;
+        const lines = A.map(logLines7, String);
         expect(lines[0]).toMatch(/^\[ci route\] replay over 3 pull-request heads: recall \d+\.\d{2}% \(3 skipped red/u);
         expect(lines).toContain("  a1  skipped reds: check");
         expect(lines).toContain("  b2  skipped reds: sast");
         expect(lines).toContain("  c3  skipped reds: lint  (base unknown)");
 
         yield* run(["replay", "--json"]);
-        const json = A.map(yield* TestConsole.logLines, String);
-        const replay = yield* decodeReplay(yield* Effect.fromOption(A.last(json)));
+        const logLines8 = yield* TestConsole.logLines;
+        const json = A.map(logLines8, String);
+        const fromOption9 = yield* Effect.fromOption(A.last(json));
+        const replay = yield* decodeReplay(fromOption9);
         expect([replay.heads, replay.skippedReds, replay.baseUnknownHeads]).toEqual([3, 3, 1]);
       })
     )
@@ -275,9 +286,12 @@ it.layer(CliLayer, { timeout: "30 seconds" })("beep ci route command", (it) => {
     withConsole(
       Effect.gen(function* () {
         const { run } = yield* harness([]);
-        expectReportedExit(yield* run(["census", "--corpus", "missing/RECEIPTS.json"]).pipe(Effect.exit));
-        expectReportedExit(yield* run(["plan", "--head", "unknown-head"]).pipe(Effect.exit));
-        expect(yield* TestConsole.errorLines).toEqual([
+        const pipe10 = yield* run(["census", "--corpus", "missing/RECEIPTS.json"]).pipe(Effect.exit);
+        expectReportedExit(pipe10);
+        const pipe11 = yield* run(["plan", "--head", "unknown-head"]).pipe(Effect.exit);
+        expectReportedExit(pipe11);
+        const errorLines12 = yield* TestConsole.errorLines;
+        expect(errorLines12).toEqual([
           `[ci route] corpus-pin: no receipt at ${ROOT}/missing/RECEIPTS.json`,
           "[ci route] git: no merge base for unknown-head",
         ]);

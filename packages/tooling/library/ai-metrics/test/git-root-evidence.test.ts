@@ -102,8 +102,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", concurrent: false })("Git 
         "origin",
         "https://synthetic-user:synthetic-secret@EXAMPLE.invalid/project.git?token=synthetic-token#private",
       ]);
-      const a = observed(yield* observeAiMetricsGitRoot(input(first)));
-      const b = observed(yield* observeAiMetricsGitRoot(input(second)));
+      const observeAiMetricsGitRoot1 = yield* observeAiMetricsGitRoot(input(first));
+      const a = observed(observeAiMetricsGitRoot1);
+      const observeAiMetricsGitRoot2 = yield* observeAiMetricsGitRoot(input(second));
+      const b = observed(observeAiMetricsGitRoot2);
       expect(a.repositoryIdHash).toBe(b.repositoryIdHash);
       expect(a.owningCloneIdHash).not.toBe(b.owningCloneIdHash);
       expect(a.worktreeIdHash).not.toBe(b.worktreeIdHash);
@@ -122,13 +124,16 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", concurrent: false })("Git 
       yield* init(root, `${directory}/metadata`);
       yield* fs.symlink(root, `${directory}/alias`);
       yield* fs.makeDirectory(`${root}/nested`);
-      const actual = observed(yield* observeAiMetricsGitRoot(input(root)));
-      const alias = observed(yield* observeAiMetricsGitRoot(input(`${directory}/alias`)));
+      const observeAiMetricsGitRoot3 = yield* observeAiMetricsGitRoot(input(root));
+      const actual = observed(observeAiMetricsGitRoot3);
+      const observeAiMetricsGitRoot4 = yield* observeAiMetricsGitRoot(input(`${directory}/alias`));
+      const alias = observed(observeAiMetricsGitRoot4);
       expect(actual.linkedWorktree).toBe(false);
       expect(actual.repositoryIdentityScope).toBe("local-clone");
       expect(actual.owningCloneIdHash).toBe(alias.owningCloneIdHash);
       expect(actual.worktreeIdHash).toBe(alias.worktreeIdHash);
-      expect(yield* observeAiMetricsGitRoot(input(`${root}/nested`))).toEqual({
+      const observeAiMetricsGitRoot5 = yield* observeAiMetricsGitRoot(input(`${root}/nested`));
+      expect(observeAiMetricsGitRoot5).toEqual({
         _tag: "Unknown",
         reason: "not-a-checkout-root",
       });
@@ -137,8 +142,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", concurrent: false })("Git 
   it.effect("keeps unsupported roots and missing salt explicit", () =>
     Effect.gen(function* () {
       const directory = yield* temporaryDirectory;
-      expect(yield* observeAiMetricsGitRoot(input(directory))).toEqual({ _tag: "Unknown", reason: "probe-failed" });
-      expect(yield* observeAiMetricsGitRoot(AiMetricsCanonicalRootInput.make({ rootPath: directory }))).toEqual({
+      const observeAiMetricsGitRoot6 = yield* observeAiMetricsGitRoot(input(directory));
+      expect(observeAiMetricsGitRoot6).toEqual({ _tag: "Unknown", reason: "probe-failed" });
+      const observeAiMetricsGitRoot7 = yield* observeAiMetricsGitRoot(
+        AiMetricsCanonicalRootInput.make({ rootPath: directory })
+      );
+      expect(observeAiMetricsGitRoot7).toEqual({
         _tag: "Unknown",
         reason: "missing-hash-salt",
       });
@@ -163,7 +172,8 @@ it.layer(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer), { timeout: "30 se
       expect(decoded.gitEvidence).toEqual({ _tag: "Unknown", reason: "not-observed" });
       expect(decoded.cloneIdHash).toBe(legacy.cloneIdHash);
       expect(decoded.worktreeIdHash).toBe(legacy.worktreeIdHash);
-      expect(yield* observeAiMetricsGitRoot(input("/unused-synthetic-root"))).toEqual({
+      const observeAiMetricsGitRoot8 = yield* observeAiMetricsGitRoot(input("/unused-synthetic-root"));
+      expect(observeAiMetricsGitRoot8).toEqual({
         _tag: "Unknown",
         reason: "git-unavailable",
       });
@@ -208,7 +218,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, TestClock.layer()), { timeout: "30 s
           )
         );
         expect(result).toEqual({ _tag: "Unknown", reason: "probe-failed" });
-        expect(yield* Ref.get(released)).toBe(1);
+        const got = yield* Ref.get(released);
+        expect(got).toBe(1);
       })
     );
   }
@@ -228,8 +239,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, TestClock.layer()), { timeout: "30 s
         );
         yield* Deferred.await(started);
         yield* TestClock.adjust("5 seconds");
-        expect(yield* Fiber.join(fiber)).toEqual({ _tag: "Unknown", reason: "timed-out" });
-        expect(yield* Ref.get(released)).toBe(1);
+        const join9 = yield* Fiber.join(fiber);
+        expect(join9).toEqual({ _tag: "Unknown", reason: "timed-out" });
+        const got10 = yield* Ref.get(released);
+        expect(got10).toBe(1);
       })
     );
   }

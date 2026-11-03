@@ -76,24 +76,22 @@ export const scanLawsPackage = Effect.fn("LawsPackage.scan")(function* (scope: L
   const fsUtils = yield* FsUtils;
   const path = yield* Path.Path;
   const service = yield* TSMorphService;
-  const files = A.sort(
-    yield* fsUtils.globFiles(
-      [`${scope.packageDir}/**/*.{ts,tsx}`],
-      GlobOptions.make({
-        cwd: scope.repoRoot,
-        ignore: [
-          "**/node_modules/**",
-          "**/dist/**",
-          "**/build/**",
-          "**/.turbo/**",
-          "**/coverage/**",
-          "**/*.d.ts",
-          "**/*.d.tsx",
-        ],
-      })
-    ),
-    Order.String
+  const globFiles1 = yield* fsUtils.globFiles(
+    [`${scope.packageDir}/**/*.{ts,tsx}`],
+    GlobOptions.make({
+      cwd: scope.repoRoot,
+      ignore: [
+        "**/node_modules/**",
+        "**/dist/**",
+        "**/build/**",
+        "**/.turbo/**",
+        "**/coverage/**",
+        "**/*.d.ts",
+        "**/*.d.tsx",
+      ],
+    })
   );
+  const files = A.sort(globFiles1, Order.String);
   if (A.isReadonlyArrayEmpty(files)) {
     yield* Console.log(`lint laws: skipping four laws for ${scope.packageDir}; no TypeScript source files.`);
     const findings = A.empty<LawsPackageFinding>();

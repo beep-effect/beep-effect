@@ -40,6 +40,15 @@ import { ProfileStore } from "./ProfileStore.ts";
 import { profileSelects } from "./Requirements.ts";
 import { WindowsHost } from "./WindowsHost.ts";
 
+class BoxDriveToolsOperationError extends S.TaggedError<
+  BoxDriveToolsOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "BoxDriveToolsOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in BoxDriveTools.ts." }
+) {}
+
 const $I = $PracticeGatewayId.create("BoxDriveTools");
 
 /**
@@ -569,7 +578,10 @@ const truncate = (text: string) =>
 
 const metadataOnly = (reason: string) => BoxMetadataOnly.make({ reason });
 
-const loadDocText = Effect.tryPromise(() => import("@beep/doc-text"));
+const loadDocText = Effect.tryPromise({
+  try: () => import("@beep/doc-text"),
+  catch: (cause) => BoxDriveToolsOperationError.make({ cause }),
+});
 
 const sha256Hex = (bytes: Uint8Array) =>
   Effect.promise(() => crypto.subtle.digest("SHA-256", bytes.slice().buffer)).pipe(

@@ -111,7 +111,8 @@ const makeCacheWaitProbe = Effect.fn("ProviderCacheTest.makeWaitProbe")(function
           Fiber.await(fiber).pipe(Effect.as(O.none<Duration.Duration>()))
         );
         if (O.isNone(next)) return;
-        expect(A.length(yield* Ref.get(delays)), "production lock-wait retry limit").toBeLessThanOrEqual(7);
+        const got = yield* Ref.get(delays);
+        expect(A.length(got), "production lock-wait retry limit").toBeLessThanOrEqual(7);
         yield* clock.adjust(next.value);
         yield* afterAdvance;
       }
@@ -278,7 +279,8 @@ describe("C0 provider cache and language-model boundary", () => {
             });
             yield* cache.store(entry);
             yield* cache.store(entry);
-            assertSome(yield* cache.lookup(key), entry);
+            const lookup1 = yield* cache.lookup(key);
+            assertSome(lookup1, entry);
 
             const conflict = ProviderCacheEntry.make({
               cacheKey,
@@ -315,8 +317,10 @@ describe("C0 provider cache and language-model boundary", () => {
             yield* fs.makeDirectory(orphanLock);
             yield* fs.utimes(orphanLock, 0, 0);
             yield* cache.store(orphanEntry);
-            assertSome(yield* cache.lookup(orphanKey), orphanEntry);
-            pipe(yield* fs.exists(orphanLock), assertFalse);
+            const lookup2 = yield* cache.lookup(orphanKey);
+            assertSome(lookup2, orphanEntry);
+            const exists3 = yield* fs.exists(orphanLock);
+            pipe(exists3, assertFalse);
 
             const raceKey = makeKey("concurrent write-once");
             const raceCacheKey = yield* contentDigest(ProviderCacheKey)(raceKey);
@@ -350,7 +354,8 @@ describe("C0 provider cache and language-model boundary", () => {
               })
             );
             expect(responses).toEqual(["stub-response-1", "stub-response-1"]);
-            expect(yield* calls.pipe(Ref.get)).toBe(1);
+            const pipe4 = yield* calls.pipe(Ref.get);
+            expect(pipe4).toBe(1);
 
             const replay = ReplayLanguageModelLive.pipe(Layer.provide(identity));
             const replayed = yield* provideScopedLayer(replay)(
@@ -405,7 +410,8 @@ describe("C0 provider cache and language-model boundary", () => {
         )
       );
       expect(String(failure)).toContain("empty generation");
-      expect(yield* Ref.get(stored)).toBe(0);
+      const got5 = yield* Ref.get(stored);
+      expect(got5).toBe(0);
     })
   );
 
@@ -452,7 +458,8 @@ describe("C0 provider cache and language-model boundary", () => {
             yield* Fiber.join(contender);
             yield* Fiber.join(winner);
 
-            assertSome(yield* cache.lookup(key), entry);
+            const lookup6 = yield* cache.lookup(key);
+            assertSome(lookup6, entry);
           })
         );
       })
@@ -541,16 +548,23 @@ describe("C0 provider cache and language-model boundary", () => {
 
         const reclaimedPaths = yield* Ref.get(tombstones);
         expect(A.filter(results, Result.isSuccess)).toHaveLength(2);
-        expect(yield* Ref.get(reclaimAttempts)).toBe(2);
-        expect(yield* Ref.get(reclaimWins)).toBe(1);
-        expect(yield* Ref.get(reclaimLosses)).toBe(1);
-        expect(yield* Ref.get(competingWriteReads)).toBe(1);
+        const got7 = yield* Ref.get(reclaimAttempts);
+        expect(got7).toBe(2);
+        const got8 = yield* Ref.get(reclaimWins);
+        expect(got8).toBe(1);
+        const got9 = yield* Ref.get(reclaimLosses);
+        expect(got9).toBe(1);
+        const got10 = yield* Ref.get(competingWriteReads);
+        expect(got10).toBe(1);
         expect(reclaimedPaths).toEqual(
           expect.arrayContaining([`${lock}.reclaim-${process.pid}-1`, `${lock}.reclaim-${process.pid}-2`])
         );
-        expect(yield* Effect.forEach(reclaimedPaths, fs.exists)).toEqual([false, false]);
-        pipe(yield* fs.exists(lock), assertFalse);
-        expect(yield* fs.readFileString(target)).toBe(`${yield* encodeProviderCacheEntry(entry)}\n`);
+        const forEach11 = yield* Effect.forEach(reclaimedPaths, fs.exists);
+        expect(forEach11).toEqual([false, false]);
+        const exists12 = yield* fs.exists(lock);
+        pipe(exists12, assertFalse);
+        const readFileString13 = yield* fs.readFileString(target);
+        expect(readFileString13).toBe(`${yield* encodeProviderCacheEntry(entry)}\n`);
       })
     );
   });
@@ -637,14 +651,22 @@ describe("C0 provider cache and language-model boundary", () => {
         );
 
         const reclaimedPaths = yield* Ref.get(tombstones);
-        expect(yield* Ref.get(reclaimSwaps)).toBe(1);
-        expect(yield* Ref.get(renameBackAttempts)).toBe(1);
-        expect(yield* Ref.get(replacementLockRemovals)).toBe(0);
-        expect(yield* Ref.get(tombstoneRemovals)).toBe(blockRenameBack ? 1 : 0);
-        expect(yield* Ref.get(promotionAttempts)).toBe(0);
-        expect(yield* fs.readFileString(ownerPath)).toBe(blockRenameBack ? newerOwner : displacedOwner);
-        expect(yield* Effect.forEach(reclaimedPaths, fs.exists)).toEqual([false]);
-        expect(yield* fs.readFileString(target)).toBe(`${json}\n`);
+        const got14 = yield* Ref.get(reclaimSwaps);
+        expect(got14).toBe(1);
+        const got15 = yield* Ref.get(renameBackAttempts);
+        expect(got15).toBe(1);
+        const got16 = yield* Ref.get(replacementLockRemovals);
+        expect(got16).toBe(0);
+        const got17 = yield* Ref.get(tombstoneRemovals);
+        expect(got17).toBe(blockRenameBack ? 1 : 0);
+        const got18 = yield* Ref.get(promotionAttempts);
+        expect(got18).toBe(0);
+        const readFileString19 = yield* fs.readFileString(ownerPath);
+        expect(readFileString19).toBe(blockRenameBack ? newerOwner : displacedOwner);
+        const forEach20 = yield* Effect.forEach(reclaimedPaths, fs.exists);
+        expect(forEach20).toEqual([false]);
+        const readFileString21 = yield* fs.readFileString(target);
+        expect(readFileString21).toBe(`${json}\n`);
       })
     );
   });
@@ -700,8 +722,10 @@ describe("C0 provider cache and language-model boundary", () => {
 
         expect(ownerReads).toBe(2);
         expect(lockRemovalAttempts).toBe(0);
-        expect(yield* fs.readFileString(ownerPath)).toBe(replacementOwner);
-        pipe(yield* fs.exists(lock), assertTrue);
+        const readFileString22 = yield* fs.readFileString(ownerPath);
+        expect(readFileString22).toBe(replacementOwner);
+        const exists23 = yield* fs.exists(lock);
+        pipe(exists23, assertTrue);
       })
     );
   });
@@ -764,9 +788,12 @@ describe("C0 provider cache and language-model boundary", () => {
         expect(ownerReads).toBe(2);
         expect(lockRemovalAttempts).toBe(0);
         expect(promotionAttempts).toBe(0);
-        expect(yield* fs.readFileString(ownerPath)).toBe(replacementOwner);
-        pipe(yield* fs.exists(lock), assertTrue);
-        expect(yield* fs.readFileString(target)).toBe(`${json}\n`);
+        const readFileString24 = yield* fs.readFileString(ownerPath);
+        expect(readFileString24).toBe(replacementOwner);
+        const exists25 = yield* fs.exists(lock);
+        pipe(exists25, assertTrue);
+        const readFileString26 = yield* fs.readFileString(target);
+        expect(readFileString26).toBe(`${json}\n`);
       })
     );
   });
@@ -798,14 +825,16 @@ describe("C0 provider cache and language-model boundary", () => {
               .store(entry)
               .pipe(Effect.provideService(Clock.Clock, probe.clock), Effect.flip, Effect.forkChild);
             yield* probe.drive(contender, "live-lock timeout");
-            expect(yield* Ref.get(probe.delays)).toEqual([200, 400, 800, 1600, 3200, 6400, 12800]);
+            const got27 = yield* Ref.get(probe.delays);
+            expect(got27).toEqual([200, 400, 800, 1600, 3200, 6400, 12800]);
             const error = yield* Fiber.join(contender);
 
             expect(error).toBeInstanceOf(ProviderCacheCorrupt);
             expect(error.message).toBe(
               "Timed out waiting for the live provider cache write lock to promote its entry."
             );
-            pipe(yield* fs.exists(lock), assertTrue);
+            const exists28 = yield* fs.exists(lock);
+            pipe(exists28, assertTrue);
           })
         );
       })
@@ -867,12 +896,15 @@ describe("C0 provider cache and language-model boundary", () => {
 
           const stored = yield* cache.store(entry).pipe(Effect.result);
 
+          const got29 = yield* Ref.get(stages);
           assertSome(
-            HashMap.get(yield* Ref.get(stages), target),
+            HashMap.get(got29, target),
             CompetingStage.make({ json: competingJson, publishOnRead, reads: publishOnRead, promotions: 0 })
           );
-          expect(yield* fs.readFileString(target)).toBe(`${competingJson}\n`);
-          expect(yield* fs.exists(lock)).toBe(liveLock);
+          const readFileString30 = yield* fs.readFileString(target);
+          expect(readFileString30).toBe(`${competingJson}\n`);
+          const exists31 = yield* fs.exists(lock);
+          expect(exists31).toBe(liveLock);
           expect(
             Result.match(stored, {
               onFailure: (error) => O.some(error.message),

@@ -75,7 +75,8 @@ export const readLedgerRows = Effect.fn("HarnessLedger.readLedgerRows")(function
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const dir = yield* ledgerRowsDir(repoRoot);
-  const files = pipe(yield* listDirectorySorted(dir), A.filter(isRowsFile));
+  const listDirectorySorted1 = yield* listDirectorySorted(dir);
+  const files = pipe(listDirectorySorted1, A.filter(isRowsFile));
   const perFile = yield* Effect.forEach(
     files,
     Effect.fnUntraced(function* (name: string) {

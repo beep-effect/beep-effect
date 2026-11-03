@@ -61,13 +61,13 @@ describe("panel and group updates", () => {
       "updates a title and reports an identical replacement without advancing revision",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const opened = yield* requireChanged(yield* engine.transition(DockWorkspace.empty, openPanelOne));
-        const changed = yield* requireChanged(
-          yield* engine.transition(
-            opened.state,
-            updatePanel("update-title", panelOne.id, PanelPatch.make({ title: O.some("Renamed") }))
-          )
+        const transition1 = yield* engine.transition(DockWorkspace.empty, openPanelOne);
+        const opened = yield* requireChanged(transition1);
+        const transition2 = yield* engine.transition(
+          opened.state,
+          updatePanel("update-title", panelOne.id, PanelPatch.make({ title: O.some("Renamed") }))
         );
+        const changed = yield* requireChanged(transition2);
         expect(changed.events).toEqual([
           { kind: "panelTitleChanged", panelId: panelOne.id, groupId: groupOne, title: "Renamed" },
         ]);
@@ -88,17 +88,17 @@ describe("panel and group updates", () => {
       "emits one event for each changed panel facet in a combined patch",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const opened = yield* requireChanged(yield* engine.transition(DockWorkspace.empty, openPanelOne));
-        const changed = yield* requireChanged(
-          yield* engine.transition(
-            opened.state,
-            updatePanel(
-              "update-title-view",
-              panelOne.id,
-              PanelPatch.make({ title: O.some("Combined"), view: O.some(TextPanelView.make({ text: "changed" })) })
-            )
+        const transition3 = yield* engine.transition(DockWorkspace.empty, openPanelOne);
+        const opened = yield* requireChanged(transition3);
+        const transition4 = yield* engine.transition(
+          opened.state,
+          updatePanel(
+            "update-title-view",
+            panelOne.id,
+            PanelPatch.make({ title: O.some("Combined"), view: O.some(TextPanelView.make({ text: "changed" })) })
           )
         );
+        const changed = yield* requireChanged(transition4);
         expect(A.map(changed.events, (event) => event.kind)).toEqual(["panelTitleChanged", "panelViewChanged"]);
       })
     );
@@ -107,21 +107,22 @@ describe("panel and group updates", () => {
       "round-trips render mode and tab component through the snapshot envelope",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const opened = yield* requireChanged(yield* engine.transition(DockWorkspace.empty, openPanelOne));
-        const changed = yield* requireChanged(
-          yield* engine.transition(
-            opened.state,
-            updatePanel(
-              "update-render-contract",
-              panelOne.id,
-              PanelPatch.make({
-                renderMode: O.some("always"),
-                tabComponent: O.some(O.some(RendererKey.make("custom-tab"))),
-              })
-            )
+        const transition5 = yield* engine.transition(DockWorkspace.empty, openPanelOne);
+        const opened = yield* requireChanged(transition5);
+        const transition6 = yield* engine.transition(
+          opened.state,
+          updatePanel(
+            "update-render-contract",
+            panelOne.id,
+            PanelPatch.make({
+              renderMode: O.some("always"),
+              tabComponent: O.some(O.some(RendererKey.make("custom-tab"))),
+            })
           )
         );
-        const restored = yield* engine.decodeSnapshot(yield* engine.encodeSnapshot(changed.state));
+        const changed = yield* requireChanged(transition6);
+        const encodedSnapshot = yield* engine.encodeSnapshot(changed.state);
+        const restored = yield* engine.decodeSnapshot(encodedSnapshot);
         const panel = O.getOrThrow(DockWorkspace.findPanel(restored, panelOne.id));
         expect(panel.renderMode).toBe("always");
         assertSome(panel.tabComponent, RendererKey.make("custom-tab"));
@@ -132,18 +133,14 @@ describe("panel and group updates", () => {
       "updates and clears panel constraints through PanelPatch",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const opened = yield* requireChanged(yield* engine.transition(DockWorkspace.empty, openPanelOne));
+        const transition7 = yield* engine.transition(DockWorkspace.empty, openPanelOne);
+        const opened = yield* requireChanged(transition7);
         const constraints = PanelConstraints.make({ minWidth: O.some(240), maxHeight: O.some(720) });
-        const constrained = yield* requireChanged(
-          yield* engine.transition(
-            opened.state,
-            updatePanel(
-              "update-constraints",
-              panelOne.id,
-              PanelPatch.make({ constraints: O.some(O.some(constraints)) })
-            )
-          )
+        const transition8 = yield* engine.transition(
+          opened.state,
+          updatePanel("update-constraints", panelOne.id, PanelPatch.make({ constraints: O.some(O.some(constraints)) }))
         );
+        const constrained = yield* requireChanged(transition8);
         deepStrictEqual(constrained.events, [
           PanelConstraintsChangedEvent.make({
             kind: "panelConstraintsChanged",
@@ -153,12 +150,11 @@ describe("panel and group updates", () => {
           }),
         ]);
         assertSome(O.getOrThrow(DockWorkspace.findPanel(constrained.state, panelOne.id)).constraints, constraints);
-        const cleared = yield* requireChanged(
-          yield* engine.transition(
-            constrained.state,
-            updatePanel("clear-constraints", panelOne.id, PanelPatch.make({ constraints: O.some(O.none()) }))
-          )
+        const transition9 = yield* engine.transition(
+          constrained.state,
+          updatePanel("clear-constraints", panelOne.id, PanelPatch.make({ constraints: O.some(O.none()) }))
         );
+        const cleared = yield* requireChanged(transition9);
         assertNone(O.getOrThrow(DockWorkspace.findPanel(cleared.state, panelOne.id)).constraints);
       })
     );
@@ -178,13 +174,13 @@ describe("panel and group updates", () => {
       "updates group metadata and reports an identical replacement without advancing revision",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const opened = yield* requireChanged(yield* engine.transition(DockWorkspace.empty, openPanelOne));
-        const changed = yield* requireChanged(
-          yield* engine.transition(
-            opened.state,
-            updateGroup("lock-group", groupOne, GroupPatch.make({ locked: O.some("locked") }))
-          )
+        const transition10 = yield* engine.transition(DockWorkspace.empty, openPanelOne);
+        const opened = yield* requireChanged(transition10);
+        const transition11 = yield* engine.transition(
+          opened.state,
+          updateGroup("lock-group", groupOne, GroupPatch.make({ locked: O.some("locked") }))
         );
+        const changed = yield* requireChanged(transition11);
         expect(changed.events).toEqual([{ kind: "groupUpdated", groupId: groupOne }]);
         const noOp = yield* engine.transition(
           changed.state,
@@ -202,105 +198,100 @@ describe("panel and group updates", () => {
       "preserves metadata through reorder, panel moves, relocation, and destination-owned merge",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        let state = (yield* requireChanged(yield* engine.transition(DockWorkspace.empty, openPanelOne))).state;
-        state = (yield* requireChanged(yield* engine.transition(state, openPanelTwo))).state;
-        state = (yield* requireChanged(yield* engine.transition(state, openPanelThreeSplitRight))).state;
-        state = (yield* requireChanged(
-          yield* engine.transition(
-            state,
-            envelope(
-              "open-fourth-group",
-              OpenPanelCommand.make({
-                panel: Panel.make({
-                  id: PanelId.make("panel-four"),
-                  title: "Panel Four",
-                  view: TextPanelView.make({ text: "four" }),
-                }),
-                placement: RootSplitPlacement.make({
-                  side: "bottom",
-                  splitId: splitTwo,
-                  newGroupId: groupThree,
-                }),
-              })
-            )
+        const transition12 = yield* engine.transition(DockWorkspace.empty, openPanelOne);
+        let state = (yield* requireChanged(transition12)).state;
+        const transition13 = yield* engine.transition(state, openPanelTwo);
+        state = (yield* requireChanged(transition13)).state;
+        const transition14 = yield* engine.transition(state, openPanelThreeSplitRight);
+        state = (yield* requireChanged(transition14)).state;
+        const transition15 = yield* engine.transition(
+          state,
+          envelope(
+            "open-fourth-group",
+            OpenPanelCommand.make({
+              panel: Panel.make({
+                id: PanelId.make("panel-four"),
+                title: "Panel Four",
+                view: TextPanelView.make({ text: "four" }),
+              }),
+              placement: RootSplitPlacement.make({
+                side: "bottom",
+                splitId: splitTwo,
+                newGroupId: groupThree,
+              }),
+            })
           )
-        )).state;
-        state = (yield* requireChanged(
-          yield* engine.transition(
-            state,
-            updateGroup(
-              "metadata-source",
-              groupOne,
-              GroupPatch.make({ locked: O.some("locked"), hideHeader: O.some(true), headerPosition: O.some("bottom") })
-            )
+        );
+        state = (yield* requireChanged(transition15)).state;
+        const transition16 = yield* engine.transition(
+          state,
+          updateGroup(
+            "metadata-source",
+            groupOne,
+            GroupPatch.make({ locked: O.some("locked"), hideHeader: O.some(true), headerPosition: O.some("bottom") })
           )
-        )).state;
-        state = (yield* requireChanged(
-          yield* engine.transition(
-            state,
-            envelope(
-              "reorder-source",
-              MovePanelCommand.make({
-                panelId: panelOne.id,
-                target: TabPlacement.make({ groupId: groupOne, index: O.some(S.Natural.make(1)) }),
-              })
-            )
+        );
+        state = (yield* requireChanged(transition16)).state;
+        const transition17 = yield* engine.transition(
+          state,
+          envelope(
+            "reorder-source",
+            MovePanelCommand.make({
+              panelId: panelOne.id,
+              target: TabPlacement.make({ groupId: groupOne, index: O.some(S.Natural.make(1)) }),
+            })
           )
-        )).state;
-        state = (yield* requireChanged(
-          yield* engine.transition(
-            state,
-            envelope(
-              "move-out",
-              MovePanelCommand.make({ panelId: panelOne.id, target: TabPlacement.make({ groupId: groupTwo }) })
-            )
+        );
+        state = (yield* requireChanged(transition17)).state;
+        const transition18 = yield* engine.transition(
+          state,
+          envelope(
+            "move-out",
+            MovePanelCommand.make({ panelId: panelOne.id, target: TabPlacement.make({ groupId: groupTwo }) })
           )
-        )).state;
-        state = (yield* requireChanged(
-          yield* engine.transition(
-            state,
-            envelope(
-              "move-in",
-              MovePanelCommand.make({ panelId: panelOne.id, target: TabPlacement.make({ groupId: groupOne }) })
-            )
+        );
+        state = (yield* requireChanged(transition18)).state;
+        const transition19 = yield* engine.transition(
+          state,
+          envelope(
+            "move-in",
+            MovePanelCommand.make({ panelId: panelOne.id, target: TabPlacement.make({ groupId: groupOne }) })
           )
-        )).state;
-        state = (yield* requireChanged(
-          yield* engine.transition(
-            state,
-            envelope(
-              "relocate-source",
-              MoveGroupCommand.make({
-                groupId: groupOne,
-                target: GroupSplitPlacement.make({
-                  referenceGroupId: groupThree,
-                  side: "left",
-                  splitId: SplitId.make("metadata-relocation"),
-                }),
-              })
-            )
+        );
+        state = (yield* requireChanged(transition19)).state;
+        const transition20 = yield* engine.transition(
+          state,
+          envelope(
+            "relocate-source",
+            MoveGroupCommand.make({
+              groupId: groupOne,
+              target: GroupSplitPlacement.make({
+                referenceGroupId: groupThree,
+                side: "left",
+                splitId: SplitId.make("metadata-relocation"),
+              }),
+            })
           )
-        )).state;
+        );
+        state = (yield* requireChanged(transition20)).state;
         expect(O.getOrThrow(DockWorkspace.findTabs(state, groupOne)).metadata).toMatchObject({
           locked: "locked",
           hideHeader: true,
           headerPosition: "bottom",
         });
-        state = (yield* requireChanged(
-          yield* engine.transition(
-            state,
-            updateGroup("metadata-destination", groupTwo, GroupPatch.make({ locked: O.some("no-drop-target") }))
-          )
-        )).state;
-        const merged = yield* requireChanged(
-          yield* engine.transition(
-            state,
-            envelope(
-              "merge-source",
-              MoveGroupCommand.make({ groupId: groupOne, target: TabPlacement.make({ groupId: groupTwo }) })
-            )
+        const transition21 = yield* engine.transition(
+          state,
+          updateGroup("metadata-destination", groupTwo, GroupPatch.make({ locked: O.some("no-drop-target") }))
+        );
+        state = (yield* requireChanged(transition21)).state;
+        const transition22 = yield* engine.transition(
+          state,
+          envelope(
+            "merge-source",
+            MoveGroupCommand.make({ groupId: groupOne, target: TabPlacement.make({ groupId: groupTwo }) })
           )
         );
+        const merged = yield* requireChanged(transition22);
         expect(O.getOrThrow(DockWorkspace.findTabs(merged.state, groupTwo)).metadata.locked).toBe("no-drop-target");
       })
     );

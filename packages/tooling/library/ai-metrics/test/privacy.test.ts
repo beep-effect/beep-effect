@@ -33,8 +33,12 @@ describe("AI metrics privacy boundaries", () => {
       const salted = yield* hashPrivateIdentifier(value, O.some(salt));
       const unsalted = yield* hashPrivateIdentifier(value, O.none());
 
-      expect(salted).toBe(yield* hashPublicTextSha256(`${salt}\u0000${value}`));
-      expect(unsalted).toBe(yield* hashPublicTextSha256(`${AI_METRICS_LOCAL_INSECURE_HASH_SALT}\u0000${value}`));
+      const expectation = expect(salted);
+      const hashPublicTextSha2561 = yield* hashPublicTextSha256(`${salt}\u0000${value}`);
+      expectation.toBe(hashPublicTextSha2561);
+      const expectation1 = expect(unsalted);
+      const hashPublicTextSha2562 = yield* hashPublicTextSha256(`${AI_METRICS_LOCAL_INSECURE_HASH_SALT}\u0000${value}`);
+      expectation1.toBe(hashPublicTextSha2562);
     })
   );
 

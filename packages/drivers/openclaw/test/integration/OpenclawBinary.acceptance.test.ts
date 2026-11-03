@@ -114,9 +114,8 @@ const ambientProcess = (executable: string, args: ReadonlyArray<string>): ChildP
 const resolveCacheRoot = Effect.gen(function* () {
   const path = yield* Path.Path;
   const home = yield* Config.String("HOME");
-  return O.getOrElse(yield* Config.option(Config.String("BEEP_OPENCLAW_IT_CACHE")), () =>
-    path.join(home, ".cache", "beep-openclaw-driver")
-  );
+  const option1 = yield* Config.option(Config.String("BEEP_OPENCLAW_IT_CACHE"));
+  return O.getOrElse(option1, () => path.join(home, ".cache", "beep-openclaw-driver"));
 });
 
 /** Stage the pinned npm package once; reuse the cache when already staged. */
@@ -245,8 +244,9 @@ const resolveNodeBinDirectory = Effect.gen(function* () {
   if (yield* isUsableNodeDirectory(miseNodeBin)) {
     return O.some(miseNodeBin);
   }
+  const option2 = yield* Config.option(Config.String("PATH"));
   const pathEntries = pipe(
-    yield* Config.option(Config.String("PATH")),
+    option2,
     O.map((value) => Str.split(value, ":")),
     O.getOrElse(() => [] as ReadonlyArray<string>)
   );
@@ -256,7 +256,8 @@ const resolveNodeBinDirectory = Effect.gen(function* () {
       return O.some(directory);
     }
   }
-  return O.some(yield* ensurePinnedNodeStaged);
+  const ensurePinnedNodeStaged3 = yield* ensurePinnedNodeStaged;
+  return O.some(ensurePinnedNodeStaged3);
 });
 
 const acquisitionTraceEnabled = Effect.gen(function* () {

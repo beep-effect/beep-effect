@@ -188,7 +188,8 @@ describe("@beep/professional-desktop chat contract", () => {
         yield* Stream.runDrain(operations.sendMessage(truncated.id, userDocument(longTitle)));
         yield* Stream.runDrain(operations.sendMessage(existing.id, userDocument("Replacement title")));
 
-        const titles = A.map(yield* operations.listThreads(workspaceId), (thread) => thread.title);
+        const listThreads1 = yield* operations.listThreads(workspaceId);
+        const titles = A.map(listThreads1, (thread) => thread.title);
         expect(titles).toEqual(
           expect.arrayContaining([
             "Draft fee memo",
@@ -249,7 +250,8 @@ describe("@beep/professional-desktop chat contract", () => {
 
         yield* Stream.runDrain(operations.editMessage(thread.id, firstUserTurn.turnId, userDocument("Edited title")));
 
-        const titles = A.map(yield* operations.listThreads(workspaceId), (item) => item.title);
+        const listThreads2 = yield* operations.listThreads(workspaceId);
+        const titles = A.map(listThreads2, (item) => item.title);
         expect(titles).toContain("Edited title");
       })
     );
@@ -269,7 +271,8 @@ describe("@beep/professional-desktop chat contract", () => {
 
         yield* Stream.runDrain(operations.editMessage(thread.id, firstUserTurn.turnId, userDocument("Final memo")));
 
-        const titles = A.map(yield* operations.listThreads(workspaceId), (item) => item.title);
+        const listThreads3 = yield* operations.listThreads(workspaceId);
+        const titles = A.map(listThreads3, (item) => item.title);
         expect(titles).toContain("Final memo");
         expect(titles).not.toContain("Draft memo");
       })
@@ -293,7 +296,8 @@ describe("@beep/professional-desktop chat contract", () => {
           operations.editMessage(thread.id, laterUserTurn.turnId, userDocument("Later edited title"))
         );
 
-        const titles = A.map(yield* operations.listThreads(workspaceId), (item) => item.title);
+        const listThreads4 = yield* operations.listThreads(workspaceId);
+        const titles = A.map(listThreads4, (item) => item.title);
         expect(titles).toContain("New thread");
         expect(titles).not.toContain("Later edited title");
       })
@@ -403,7 +407,8 @@ describe("@beep/professional-desktop chat contract", () => {
             ),
         });
         const operations = yield* makeChatOperations(store, kernel, sink);
-        const thread = yield* operations.createThread(yield* decodeWorkspaceId(1), "Redacted failure");
+        const decodedWorkspaceId = yield* decodeWorkspaceId(1);
+        const thread = yield* operations.createThread(decodedWorkspaceId, "Redacted failure");
         const error = yield* Stream.runDrain(operations.sendMessage(thread.id, userDocument("fail safely"))).pipe(
           Effect.flip
         );
@@ -438,14 +443,17 @@ describe("@beep/professional-desktop chat contract", () => {
           ),
         });
         const operations = yield* makeChatOperations(assistantFailingStore, capturingKernel, sink);
-        const thread = yield* operations.createThread(yield* decodeWorkspaceId(1), "Persistence failure");
+        const decodedWorkspaceId5 = yield* decodeWorkspaceId(1);
+        const thread = yield* operations.createThread(decodedWorkspaceId5, "Persistence failure");
 
         yield* Stream.runDrain(
           operations.sendMessage(thread.id, userDocument("Keep the durable prompt"), "after-user-append")
         ).pipe(Effect.exit);
 
-        expect(yield* operations.getTurnRequestStatus("after-user-append")).toBe("user_persisted");
-        expect(yield* operations.getTurnRequestStatus("after-user-append")).toBe("user_persisted");
+        const gotTurnRequestStatus = yield* operations.getTurnRequestStatus("after-user-append");
+        expect(gotTurnRequestStatus).toBe("user_persisted");
+        const gotTurnRequestStatus6 = yield* operations.getTurnRequestStatus("after-user-append");
+        expect(gotTurnRequestStatus6).toBe("user_persisted");
         yield* Stream.runDrain(
           operations.sendMessage(thread.id, userDocument("Do not append this yet"), "after-orphaned-user")
         ).pipe(Effect.exit);
@@ -478,7 +486,8 @@ describe("@beep/professional-desktop chat contract", () => {
           ),
         });
         const operations = yield* makeChatOperations(gatedStore, kernel, sink);
-        const thread = yield* operations.createThread(yield* decodeWorkspaceId(1), "Committed assistant");
+        const decodedWorkspaceId7 = yield* decodeWorkspaceId(1);
+        const thread = yield* operations.createThread(decodedWorkspaceId7, "Committed assistant");
         const send = yield* operations
           .sendMessage(thread.id, userDocument("Keep the answer"), "assistant-committed")
           .pipe(Stream.runDrain, Effect.forkChild);
@@ -489,8 +498,10 @@ describe("@beep/professional-desktop chat contract", () => {
         yield* Deferred.succeed(releaseAssistantAppend, undefined);
         yield* Fiber.join(interrupt);
 
-        expect(yield* operations.getTurnRequestStatus("assistant-committed")).toBe("persisted");
-        expect(yield* operations.getTurnRequestStatus("assistant-committed")).toBe("persisted");
+        const gotTurnRequestStatus8 = yield* operations.getTurnRequestStatus("assistant-committed");
+        expect(gotTurnRequestStatus8).toBe("persisted");
+        const gotTurnRequestStatus9 = yield* operations.getTurnRequestStatus("assistant-committed");
+        expect(gotTurnRequestStatus9).toBe("persisted");
         const timeline = yield* operations.getTimeline(thread.id);
         expect(A.map(messageItems(timeline), (item) => item.role)).toEqual(["user", "assistant"]);
       })
@@ -642,7 +653,8 @@ describe("@beep/professional-desktop chat contract", () => {
             ),
         });
         const operations = yield* makeChatOperations(store, kernel, sink);
-        const thread = yield* operations.createThread(yield* decodeWorkspaceId(1), "Two windows");
+        const decodedWorkspaceId10 = yield* decodeWorkspaceId(1);
+        const thread = yield* operations.createThread(decodedWorkspaceId10, "Two windows");
         const first = yield* operations
           .sendMessage(thread.id, userDocument("ALPHA"), "window-a")
           .pipe(Stream.runDrain, Effect.forkChild);
@@ -656,8 +668,10 @@ describe("@beep/professional-desktop chat contract", () => {
         yield* Fiber.join(first);
         yield* Fiber.join(interrupt);
 
-        expect(yield* operations.getTurnRequestStatus("window-b")).toBe("not_persisted");
-        expect(yield* operations.getTurnRequestStatus("window-b")).toBe("not_persisted");
+        const gotTurnRequestStatus11 = yield* operations.getTurnRequestStatus("window-b");
+        expect(gotTurnRequestStatus11).toBe("not_persisted");
+        const gotTurnRequestStatus12 = yield* operations.getTurnRequestStatus("window-b");
+        expect(gotTurnRequestStatus12).toBe("not_persisted");
         const timeline = yield* operations.getTimeline(thread.id);
         expect(
           A.some(timeline.turns, (turn) =>
@@ -677,12 +691,15 @@ describe("@beep/professional-desktop chat contract", () => {
         const { sink } = yield* makeInMemoryUsageRecordSink;
         const first = yield* makeChatOperations(store, kernel, sink);
         const second = yield* makeChatOperations(store, kernel, sink);
-        const thread = yield* first.createThread(yield* decodeWorkspaceId(1), "Isolated coordinators");
+        const decodedWorkspaceId13 = yield* decodeWorkspaceId(1);
+        const thread = yield* first.createThread(decodedWorkspaceId13, "Isolated coordinators");
 
         yield* Stream.runDrain(first.sendMessage(thread.id, userDocument("ALPHA"), "isolated-request"));
 
-        expect(yield* first.getTurnRequestStatus("isolated-request")).toBe("persisted");
-        expect(yield* second.getTurnRequestStatus("isolated-request")).toBe("unknown");
+        const gotTurnRequestStatus14 = yield* first.getTurnRequestStatus("isolated-request");
+        expect(gotTurnRequestStatus14).toBe("persisted");
+        const gotTurnRequestStatus15 = yield* second.getTurnRequestStatus("isolated-request");
+        expect(gotTurnRequestStatus15).toBe("unknown");
       })
     );
   });
@@ -692,14 +709,17 @@ describe("@beep/professional-desktop chat contract", () => {
       "expires terminal request receipts without detached cleanup fibers",
       Effect.fnUntraced(function* () {
         const { operations } = yield* makeStack;
-        const thread = yield* operations.createThread(yield* decodeWorkspaceId(1), "Receipt expiry");
+        const decodedWorkspaceId16 = yield* decodeWorkspaceId(1);
+        const thread = yield* operations.createThread(decodedWorkspaceId16, "Receipt expiry");
 
         yield* Stream.runDrain(operations.sendMessage(thread.id, userDocument("ALPHA"), "expiring-request"));
-        expect(yield* operations.getTurnRequestStatus("expiring-request")).toBe("persisted");
+        const gotTurnRequestStatus17 = yield* operations.getTurnRequestStatus("expiring-request");
+        expect(gotTurnRequestStatus17).toBe("persisted");
 
         yield* TestClock.adjust(Duration.minutes(5));
 
-        expect(yield* operations.getTurnRequestStatus("expiring-request")).toBe("unknown");
+        const gotTurnRequestStatus18 = yield* operations.getTurnRequestStatus("expiring-request");
+        expect(gotTurnRequestStatus18).toBe("unknown");
       })
     );
   });

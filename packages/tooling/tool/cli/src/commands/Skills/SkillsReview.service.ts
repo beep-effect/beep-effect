@@ -514,7 +514,8 @@ const hunkTextsOf = Effect.fn("SkillsReview.hunkTextsOf")(function* (
   const listed = yield* Effect.forEach(
     series,
     Effect.fnUntraced(function* (patch) {
-      return yield* listSkillPatchHunks(patch.path, yield* decodePatchText(skill, patch));
+      const decodedPatchText = yield* decodePatchText(skill, patch);
+      return yield* listSkillPatchHunks(patch.path, decodedPatchText);
     })
   );
   return A.flatten(listed);

@@ -164,11 +164,10 @@ export const makeTesseractPageOcrEngine = Effect.fn("Tesseract.makePageOcrEngine
     O.filter(Str.isNonEmpty),
     O.getOrElse(() => "unknown")
   );
-  const installedLanguages = parseTesseractLanguages(
-    yield* run(["--list-langs"]).pipe(
-      Effect.mapError(() => fail("engine-unavailable", "Tesseract could not list its language models."))
-    )
+  const pipe1 = yield* run(["--list-langs"]).pipe(
+    Effect.mapError(() => fail("engine-unavailable", "Tesseract could not list its language models."))
   );
+  const installedLanguages = parseTesseractLanguages(pipe1);
   const identity = PageOcrEngineIdentity.make({ engineId: TESSERACT_ENGINE_ID, family: "tesseract", version });
 
   return {

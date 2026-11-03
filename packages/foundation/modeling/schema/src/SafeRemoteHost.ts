@@ -425,13 +425,7 @@ export const assertAllowedRemoteUrl: {
         }),
     });
 
-    const hostname = yield* pipe(
-      parsed,
-      Result.match({
-        onFailure: Effect.fail,
-        onSuccess: Effect.succeed,
-      })
-    );
+    const hostname = yield* Effect.fromResult(parsed);
 
     const host = normalizeHost(hostname);
     if (isBlockedRemoteHost(hostname, options)) {

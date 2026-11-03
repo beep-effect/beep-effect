@@ -49,14 +49,18 @@ it.layer(platform, { timeout: "30 seconds" })((it) => {
               const sources = yield* config.discover;
               for (const source of sources) seeded = source.path;
               assert.strictEqual(path.basename(seeded), "config.json");
-              assert.isTrue(yield* fs.exists(seeded));
-              assert.deepStrictEqual(yield* config.load, { port: 4242 });
+              const exists1 = yield* fs.exists(seeded);
+              assert.isTrue(exists1);
+              const loaded = yield* config.load;
+              assert.deepStrictEqual(loaded, { port: 4242 });
               assert.strictEqual(validations, 2);
             }),
           (scope, exit) => Scope.close(scope, exit)
         );
-        assert.isFalse(yield* fs.exists(seeded));
-        assert.isFalse(yield* fs.exists(path.dirname(path.dirname(seeded))));
+        const exists2 = yield* fs.exists(seeded);
+        assert.isFalse(exists2);
+        const exists3 = yield* fs.exists(path.dirname(path.dirname(seeded)));
+        assert.isFalse(exists3);
       })
     );
   });
@@ -116,7 +120,8 @@ it.layer(
       const fs = yield* FileSystem.FileSystem;
       yield* fs.makeDirectory("/app");
       yield* config.write({ port: 3 }, "/app/config.json");
-      assert.deepStrictEqual(yield* ConfigFile.read("/app/config.json", { schema: Document, codec: JsonCodec }), {
+      const read4 = yield* ConfigFile.read("/app/config.json", { schema: Document, codec: JsonCodec });
+      assert.deepStrictEqual(read4, {
         port: 3,
       });
     })
@@ -183,7 +188,8 @@ it.layer(
   it.effect("discovery uses match-only resolver metadata and loadOrDefault uses the found value", () =>
     Effect.gen(function* () {
       const config = yield* Service;
-      assert.deepStrictEqual(yield* config.loadOrDefault({ port: 99 }), { port: 7 });
+      const loadedOrDefault = yield* config.loadOrDefault({ port: 99 });
+      assert.deepStrictEqual(loadedOrDefault, { port: 7 });
       const sources = yield* config.discover;
       assert.deepStrictEqual(sources, [
         {

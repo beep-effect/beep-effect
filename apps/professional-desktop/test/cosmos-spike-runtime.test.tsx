@@ -29,9 +29,8 @@ describe("Cosmos spike runtime failure", () => {
       );
       const screen = within(container);
 
-      expect(
-        yield* Effect.promise(() => screen.findByText("failed", undefined, { timeout: 5_000 }))
-      ).toBeInTheDocument();
+      const promise1 = yield* Effect.promise(() => screen.findByText("failed", undefined, { timeout: 5_000 }));
+      expect(promise1).toBeInTheDocument();
       expect(container.textContent).not.toContain("cosmos-worker-secret");
       expect(container.textContent).not.toContain("/home/operator");
     })

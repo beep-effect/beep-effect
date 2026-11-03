@@ -118,7 +118,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), {
           },
           extendEnv: true,
         });
-        expect(yield* fs.exists(reportPath), result.output).toBe(true);
+        const exists1 = yield* fs.exists(reportPath);
+        expect(exists1, result.output).toBe(true);
         const reportText = yield* fs.readFileString(reportPath);
         const report = yield* decodeReport(reportText);
         const failures = A.flatMap(report.testResults, (suite) => [

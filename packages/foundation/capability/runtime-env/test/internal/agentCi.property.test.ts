@@ -16,7 +16,8 @@ describe("internal/agentCi schema property floor", () => {
         const encoded = yield* S.encodeEffect(CiName)(value);
         const decoded = yield* S.decodeEffect(CiName)(encoded);
         assert.isTrue(S.toEquivalence(CiName)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(CiName)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(CiName)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -31,7 +32,9 @@ describe("agent and CI detector fidelity", () => {
     [Arbitrary.schema(Environment)],
     ([env]) =>
       Effect.gen(function* () {
-        const restored = yield* S.decodeEffect(json)(yield* S.encodeEffect(json)(env));
+        const argument = S.decodeEffect(json);
+        const value2 = yield* S.encodeEffect(json)(env);
+        const restored = yield* argument(value2);
         assert.deepStrictEqual(detectAgent(restored), detectAgent(env));
         assert.deepStrictEqual(detectCi(restored), detectCi(env));
         assert.deepStrictEqual(detectCi({ ...env, GITHUB_ACTIONS: "1", CI: "1" }), detectCi({ GITHUB_ACTIONS: "1" }));

@@ -7,16 +7,26 @@ import {
 import { assert, describe, layer } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { platform } from "./support/fixtures.ts";
 import type { Tree } from "./support/fixtures.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const detectorOver = (tree: Tree) => PackageManagerDetector.layer.pipe(Layer.provideMerge(platform(tree)));
 
-const corepack = (spec: string) => JSON.stringify({ name: "root", version: "0.0.0", packageManager: spec });
+const corepack = (spec: string) =>
+  Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0", packageManager: spec }),
+    identity
+  );
 
 /** A root manifest carrying any combination of the two manager-declaring fields. */
-const manifestWith = (fields: Record<string, unknown>) => JSON.stringify({ name: "root", version: "0.0.0", ...fields });
+const manifestWith = (fields: Record<string, unknown>) =>
+  Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0", ...fields }), identity);
 
 describe("PackageManagerDetector — pnpm", () => {
   layer(
@@ -43,7 +53,10 @@ describe("PackageManagerDetector — pnpm with no corepack field", () => {
   layer(
     detectorOver({
       "/repo/pnpm-workspace.yaml": "packages:\n  - 'packages/*'\n",
-      "/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0" }),
+      "/repo/package.json": Result.getOrThrowWith(
+        S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0" }),
+        identity
+      ),
     }),
     { timeout: "30 seconds" }
   )((it) => {
@@ -103,7 +116,14 @@ describe("PackageManagerDetector — a bun lockfile WITHOUT the corepack field",
   layer(
     detectorOver({
       "/repo/bun.lock": "",
-      "/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0", workspaces: ["packages/*"] }),
+      "/repo/package.json": Result.getOrThrowWith(
+        S.encodeUnknownResult(UnknownJson)({
+          name: "root",
+          version: "0.0.0",
+          workspaces: ["packages/*"],
+        }),
+        identity
+      ),
     }),
     { timeout: "30 seconds" }
   )((it) => {
@@ -137,12 +157,15 @@ describe("PackageManagerDetector — yarn", () => {
 describe("PackageManagerDetector — npm", () => {
   layer(
     detectorOver({
-      "/repo/package.json": JSON.stringify({
-        name: "root",
-        version: "0.0.0",
-        workspaces: ["packages/*"],
-        packageManager: "npm@11.0.0",
-      }),
+      "/repo/package.json": Result.getOrThrowWith(
+        S.encodeUnknownResult(UnknownJson)({
+          name: "root",
+          version: "0.0.0",
+          workspaces: ["packages/*"],
+          packageManager: "npm@11.0.0",
+        }),
+        identity
+      ),
     }),
     { timeout: "30 seconds" }
   )((it) => {
@@ -162,9 +185,17 @@ describe("PackageManagerDetector — NO EVIDENCE AT ALL", () => {
   // The genuine no-evidence case: a manifest that declares nothing, and not a
   // single lockfile. Distinct from the standalone-repo cases below, which have
   // evidence but no workspace.
-  layer(detectorOver({ "/repo/package.json": JSON.stringify({ name: "solo", version: "1.0.0" }) }), {
-    timeout: "30 seconds",
-  })((it) => {
+  layer(
+    detectorOver({
+      "/repo/package.json": Result.getOrThrowWith(
+        S.encodeUnknownResult(UnknownJson)({ name: "solo", version: "1.0.0" }),
+        identity
+      ),
+    }),
+    {
+      timeout: "30 seconds",
+    }
+  )((it) => {
     it.effect("fails typed, listing the markers it probed", () =>
       Effect.gen(function* () {
         const detector = yield* PackageManagerDetector;
@@ -225,7 +256,10 @@ describe("PackageManagerDetector — standalone pnpm repo with no manifest hint"
   layer(
     detectorOver({
       "/repo/pnpm-lock.yaml": "lockfileVersion: '9.0'\n",
-      "/repo/package.json": JSON.stringify({ name: "solo", version: "1.0.0" }),
+      "/repo/package.json": Result.getOrThrowWith(
+        S.encodeUnknownResult(UnknownJson)({ name: "solo", version: "1.0.0" }),
+        identity
+      ),
     }),
     { timeout: "30 seconds" }
   )((it) => {
@@ -246,7 +280,10 @@ describe("PackageManagerDetector — standalone npm repo", () => {
   layer(
     detectorOver({
       "/repo/package-lock.json": "{}",
-      "/repo/package.json": JSON.stringify({ name: "solo", version: "1.0.0" }),
+      "/repo/package.json": Result.getOrThrowWith(
+        S.encodeUnknownResult(UnknownJson)({ name: "solo", version: "1.0.0" }),
+        identity
+      ),
     }),
     { timeout: "30 seconds" }
   )((it) => {
@@ -300,7 +337,10 @@ describe("PackageManagerDetector — a STRAY yarn.lock in a standalone repo", ()
   layer(
     detectorOver({
       "/repo/yarn.lock": "",
-      "/repo/package.json": JSON.stringify({ name: "solo", version: "1.0.0" }),
+      "/repo/package.json": Result.getOrThrowWith(
+        S.encodeUnknownResult(UnknownJson)({ name: "solo", version: "1.0.0" }),
+        identity
+      ),
     }),
     { timeout: "30 seconds" }
   )((it) => {
@@ -404,7 +444,10 @@ describe("PackageManagerDetector — the workspace tier still wins", () => {
     detectorOver({
       "/repo/pnpm-workspace.yaml": "packages: []\n",
       "/repo/package-lock.json": "{}",
-      "/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0" }),
+      "/repo/package.json": Result.getOrThrowWith(
+        S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0" }),
+        identity
+      ),
     }),
     { timeout: "30 seconds" }
   )((it) => {
@@ -472,7 +515,10 @@ describe("PackageManagerDetector — a malformed corepack field", () => {
   layer(
     detectorOver({
       "/repo/pnpm-workspace.yaml": "packages: []\n",
-      "/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0", packageManager: "pnpm" }),
+      "/repo/package.json": Result.getOrThrowWith(
+        S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0", packageManager: "pnpm" }),
+        identity
+      ),
     }),
     { timeout: "30 seconds" }
   )((it) => {

@@ -188,11 +188,12 @@ const appendFiling = Effect.fnUntraced(function* (
   seed: number,
   orgId: number
 ) {
-  const event = yield* repository.recordEvent(yield* eventFixture(seed, citingApplication, orgId));
-  const disposition = yield* repository.recordDisposition(yield* dispositionFixture(seed, citingApplication, orgId));
-  const submissionFact = yield* repository.recordSubmissionFact(
-    yield* submissionFactFixture(seed, citingApplication, orgId)
-  );
+  const eventFixture1 = yield* eventFixture(seed, citingApplication, orgId);
+  const event = yield* repository.recordEvent(eventFixture1);
+  const dispositionFixture2 = yield* dispositionFixture(seed, citingApplication, orgId);
+  const disposition = yield* repository.recordDisposition(dispositionFixture2);
+  const submissionFactFixture3 = yield* submissionFactFixture(seed, citingApplication, orgId);
+  const submissionFact = yield* repository.recordSubmissionFact(submissionFactFixture3);
 
   return { disposition, event, submissionFact };
 });
@@ -372,9 +373,12 @@ if (!shouldRunPgliteIntegration) {
           expect(A.map(dispositions, (disposition) => disposition.disposes.textDigest)).toEqual([digest]);
           expect(A.map(submissionFacts, (fact) => fact.submissionKind)).toEqual(["initial"]);
 
-          expect(ids(yield* repository.listEvents(filingB))).toEqual([other.event.id]);
-          expect(ids(yield* repository.listDispositions(filingB))).toEqual([other.disposition.id]);
-          expect(ids(yield* repository.listSubmissionFacts(filingB))).toEqual([other.submissionFact.id]);
+          const listEvents4 = yield* repository.listEvents(filingB);
+          expect(ids(listEvents4)).toEqual([other.event.id]);
+          const listDispositions5 = yield* repository.listDispositions(filingB);
+          expect(ids(listDispositions5)).toEqual([other.disposition.id]);
+          const listSubmissionFacts6 = yield* repository.listSubmissionFacts(filingB);
+          expect(ids(listSubmissionFacts6)).toEqual([other.submissionFact.id]);
         }),
         PgliteIntegrationTimeout
       );
@@ -408,12 +412,18 @@ if (!shouldRunPgliteIntegration) {
           expect(orgIds(tenantOneDispositions)).toEqual([1, 1]);
           expect(orgIds(tenantOneFacts)).toEqual([1, 1]);
 
-          expect(orgIds(yield* repository.listEvents(tenantTwo))).toEqual([2]);
-          expect(orgIds(yield* repository.listDispositions(tenantTwo))).toEqual([2]);
-          expect(orgIds(yield* repository.listSubmissionFacts(tenantTwo))).toEqual([2]);
-          expect(ids(yield* repository.listEvents(tenantTwo))).toEqual([foreign.event.id]);
-          expect(ids(yield* repository.listDispositions(tenantTwo))).toEqual([foreign.disposition.id]);
-          expect(ids(yield* repository.listSubmissionFacts(tenantTwo))).toEqual([foreign.submissionFact.id]);
+          const listEvents7 = yield* repository.listEvents(tenantTwo);
+          expect(orgIds(listEvents7)).toEqual([2]);
+          const listDispositions8 = yield* repository.listDispositions(tenantTwo);
+          expect(orgIds(listDispositions8)).toEqual([2]);
+          const listSubmissionFacts9 = yield* repository.listSubmissionFacts(tenantTwo);
+          expect(orgIds(listSubmissionFacts9)).toEqual([2]);
+          const listEvents10 = yield* repository.listEvents(tenantTwo);
+          expect(ids(listEvents10)).toEqual([foreign.event.id]);
+          const listDispositions11 = yield* repository.listDispositions(tenantTwo);
+          expect(ids(listDispositions11)).toEqual([foreign.disposition.id]);
+          const listSubmissionFacts12 = yield* repository.listSubmissionFacts(tenantTwo);
+          expect(ids(listSubmissionFacts12)).toEqual([foreign.submissionFact.id]);
         }),
         PgliteIntegrationTimeout
       );
@@ -440,15 +450,12 @@ if (!shouldRunPgliteIntegration) {
           yield* forceSequentialScans();
           const filing = yield* scopeFor(FILING_A, 1);
 
-          expect(ids(yield* repository.listEvents(filing))).toEqual([earlier.event.id, later.event.id]);
-          expect(ids(yield* repository.listDispositions(filing))).toEqual([
-            earlier.disposition.id,
-            later.disposition.id,
-          ]);
-          expect(ids(yield* repository.listSubmissionFacts(filing))).toEqual([
-            earlier.submissionFact.id,
-            later.submissionFact.id,
-          ]);
+          const listEvents13 = yield* repository.listEvents(filing);
+          expect(ids(listEvents13)).toEqual([earlier.event.id, later.event.id]);
+          const listDispositions14 = yield* repository.listDispositions(filing);
+          expect(ids(listDispositions14)).toEqual([earlier.disposition.id, later.disposition.id]);
+          const listSubmissionFacts15 = yield* repository.listSubmissionFacts(filing);
+          expect(ids(listSubmissionFacts15)).toEqual([earlier.submissionFact.id, later.submissionFact.id]);
         }),
         PgliteIntegrationTimeout
       );

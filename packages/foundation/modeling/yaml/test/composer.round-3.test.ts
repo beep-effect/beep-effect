@@ -166,7 +166,8 @@ describe("round-3 empty-key comment fidelity", () => {
         const rendered = yield* document.stringify();
         assert.strictEqual(rendered, source);
         const reparsed = yield* YamlDocument.parse(rendered);
-        assert.strictEqual(yield* reparsed.stringify(), source);
+        const stringify1 = yield* reparsed.stringify();
+        assert.strictEqual(stringify1, source);
       })
     );
   }
@@ -179,7 +180,8 @@ describe("round-3 empty-key comment fidelity", () => {
       assert.strictEqual(map.items.length, 2);
       assert.strictEqual(map.items[0]?.value, null);
       assert.strictEqual(map.items[1]?.key.commentBefore, " next");
-      assert.strictEqual(yield* document.stringify(), source);
+      const stringify2 = yield* document.stringify();
+      assert.strictEqual(stringify2, source);
     })
   );
 });
@@ -280,7 +282,8 @@ describe("round-3 physical comment lines", () => {
         for (const newline of ["\r", "\r\n"]) {
           const twin = withLineEnding(source, newline);
           const document = yield* YamlDocument.parse(twin);
-          assert.strictEqual(yield* document.stringify(), expected);
+          const stringify3 = yield* document.stringify();
+          assert.strictEqual(stringify3, expected);
           assert.strictEqual(YamlFormat.formatToString(twin), YamlFormat.formatToString(source));
           assert.strictEqual(
             YamlFormat.formatToString(YamlFormat.formatToString(twin)),

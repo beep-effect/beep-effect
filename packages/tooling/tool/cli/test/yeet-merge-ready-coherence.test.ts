@@ -245,7 +245,8 @@ describe("YeetVerdictJson merge-readiness coherence", () => {
       );
       const decoded = yield* YeetVerdictJson.decode(json);
 
-      expect(yield* YeetVerdictJson.encode(decoded)).toBe(json);
+      const encoded = yield* YeetVerdictJson.encode(decoded);
+      expect(encoded).toBe(json);
     })
   );
 

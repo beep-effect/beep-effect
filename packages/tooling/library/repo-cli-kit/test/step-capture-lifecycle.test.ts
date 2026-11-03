@@ -271,12 +271,15 @@ describe("StepExec capture pipe lifecycle", () => {
 
   it.effect("collects decoded text and distinguishes zero from nonzero exits", () =>
     Effect.gen(function* () {
-      expect(yield* collectText(Stream.make(encoder.encode("a"), encoder.encode("b")))).toBe("ab");
-      expect(yield* ensureZeroExit({ exitCode: 0, value: "ok" }, (exitCode) => `exit ${exitCode}`)).toEqual({
+      const collectText1 = yield* collectText(Stream.make(encoder.encode("a"), encoder.encode("b")));
+      expect(collectText1).toBe("ab");
+      const ensureZeroExit2 = yield* ensureZeroExit({ exitCode: 0, value: "ok" }, (exitCode) => `exit ${exitCode}`);
+      expect(ensureZeroExit2).toEqual({
         exitCode: 0,
         value: "ok",
       });
-      expect(yield* ensureZeroExit({ exitCode: 7 }, (exitCode) => `exit ${exitCode}`).pipe(Effect.flip)).toBe("exit 7");
+      const pipe3 = yield* ensureZeroExit({ exitCode: 7 }, (exitCode) => `exit ${exitCode}`).pipe(Effect.flip);
+      expect(pipe3).toBe("exit 7");
     })
   );
 
@@ -434,7 +437,8 @@ describe("StepExec capture pipe lifecycle", () => {
                 );
                 const nested = yield* fs.readFileString(nestedPath);
                 expect(nested).toContain('"leaseId":"nested-lease"');
-                expect(yield* fs.readFileString(outerPath)).toBe(outer);
+                const readFileString4 = yield* fs.readFileString(outerPath);
+                expect(readFileString4).toBe(outer);
               }),
             (root) => fs.remove(root, { recursive: true }).pipe(Effect.orDie)
           );
@@ -487,8 +491,10 @@ describe("StepExec capture pipe lifecycle", () => {
                   },
                 }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
 
-                expect(yield* fs.exists(inheritedPath)).toBe(false);
-                expect(yield* fs.readFileString(ownedPath)).toContain('"status":"active"');
+                const exists5 = yield* fs.exists(inheritedPath);
+                expect(exists5).toBe(false);
+                const readFileString6 = yield* fs.readFileString(ownedPath);
+                expect(readFileString6).toContain('"status":"active"');
               }),
             () =>
               Effect.sync(() => {
@@ -547,9 +553,12 @@ BunRuntime.runMain(
                   );
                 expect(ready).toBe(true);
 
-                const workload = yield* decodeActiveAdmissionWorkload(yield* fs.readFileString(workloadPath));
-                const nestedPid = Number(yield* fs.readFileString(readyPath));
-                const nestedGroup = processGroupFromStat(yield* fs.readFileString(`/proc/${nestedPid}/stat`));
+                const readFileString7 = yield* fs.readFileString(workloadPath);
+                const workload = yield* decodeActiveAdmissionWorkload(readFileString7);
+                const readFileString8 = yield* fs.readFileString(readyPath);
+                const nestedPid = Number(readFileString8);
+                const readFileString9 = yield* fs.readFileString(`/proc/${nestedPid}/stat`);
+                const nestedGroup = processGroupFromStat(readFileString9);
                 expect(nestedGroup).toBe(workload.processGroupId);
 
                 yield* Fiber.interrupt(outer);
@@ -581,7 +590,8 @@ BunRuntime.runMain(
         const result = yield* Fiber.join(fiber);
         expect(result.exitCode).toBe(0);
         expect(result.output).toContain("partial output");
-        expect(yield* Ref.get(killCount)).toBe(1);
+        const got = yield* Ref.get(killCount);
+        expect(got).toBe(1);
       })
     );
   });
@@ -605,7 +615,8 @@ BunRuntime.runMain(
         const rendered = Exit.isFailure(exit) ? Cause.pretty(exit.cause) : "";
         expect(rendered).toContain("CapturePipeWedgedError");
         expect(rendered).toContain("fake-step --flag");
-        expect(yield* Ref.get(killCount)).toBe(1);
+        const got10 = yield* Ref.get(killCount);
+        expect(got10).toBe(1);
       })
     );
   });
@@ -623,7 +634,8 @@ BunRuntime.runMain(
 
         expect(result.exitCode).toBe(0);
         expect(result.output).toBe("clean");
-        expect(yield* Ref.get(killCount)).toBe(0);
+        const got11 = yield* Ref.get(killCount);
+        expect(got11).toBe(0);
       })
     );
   });
@@ -649,9 +661,12 @@ BunRuntime.runMain(
         const rendered = Exit.isFailure(exit) ? Cause.pretty(exit.cause) : "";
         expect(rendered).toContain("CaptureCommandTimedOutError");
         expect(rendered).toContain("fake-step --flag");
-        expect(yield* Ref.get(killCount)).toBe(1);
-        expect(yield* Ref.get(killOptions)).toEqual([{ forceKillAfter: "1 second" }]);
-        expect(yield* Ref.get(unrefCount)).toBe(1);
+        const got12 = yield* Ref.get(killCount);
+        expect(got12).toBe(1);
+        const got13 = yield* Ref.get(killOptions);
+        expect(got13).toEqual([{ forceKillAfter: "1 second" }]);
+        const got14 = yield* Ref.get(unrefCount);
+        expect(got14).toBe(1);
       })
     );
   });
@@ -671,8 +686,10 @@ BunRuntime.runMain(
 
         yield* TestClock.adjust("1 minute");
 
-        expect(yield* Fiber.join(fiber)).toBe("watchdog tripped");
-        expect(yield* Ref.get(killCount)).toBe(1);
+        const join15 = yield* Fiber.join(fiber);
+        expect(join15).toBe("watchdog tripped");
+        const got16 = yield* Ref.get(killCount);
+        expect(got16).toBe(1);
       })
     );
   });
@@ -699,8 +716,10 @@ BunRuntime.runMain(
         if (isCaptureCommandTimedOutError(error)) {
           expect(error.commandLine).toBe("fake-step --flag");
         }
-        expect(yield* Ref.get(killCount)).toBe(1);
-        expect(yield* Ref.get(unrefCount)).toBe(1);
+        const got17 = yield* Ref.get(killCount);
+        expect(got17).toBe(1);
+        const got18 = yield* Ref.get(unrefCount);
+        expect(got18).toBe(1);
       })
     );
   });
@@ -722,8 +741,10 @@ BunRuntime.runMain(
         yield* TestClock.adjust("1 minute");
         yield* Fiber.interrupt(fiber);
 
-        expect(yield* Ref.get(killCount)).toBe(1);
-        expect(yield* Ref.get(unrefCount)).toBe(1);
+        const got19 = yield* Ref.get(killCount);
+        expect(got19).toBe(1);
+        const got20 = yield* Ref.get(unrefCount);
+        expect(got20).toBe(1);
       })
     );
   });

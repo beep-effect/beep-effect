@@ -254,8 +254,10 @@ describe("WorkflowInfo return-model compatibility", () => {
         (workflows) => workflows.list
       );
       assert.deepStrictEqual(value, [workflow]);
-      assert.deepStrictEqual(yield* S.decodeEffect(WorkflowInfo)(workflow), workflow);
-      assert.deepStrictEqual(yield* S.encodeEffect(WorkflowInfo)(workflow), workflow);
+      const value1 = yield* S.decodeEffect(WorkflowInfo)(workflow);
+      assert.deepStrictEqual(value1, workflow);
+      const value2 = yield* S.encodeEffect(WorkflowInfo)(workflow);
+      assert.deepStrictEqual(value2, workflow);
       assert.isTrue(S.is(WorkflowInfo)(value[0]));
       assert.isFalse(S.is(WorkflowInfo)({ id: 123, name: "CI", path: ".github/workflows/ci.yml" }));
     })

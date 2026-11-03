@@ -143,7 +143,8 @@ export const sessionRegisterAddCommand = Command.make(
       });
       const facts = yield* sessionCheckoutFacts(process.cwd());
       const register = yield* OrchestratorRegister;
-      const prior = currentRegisterRow(yield* register.list(facts.repository), patch);
+      const list1 = yield* register.list(facts.repository);
+      const prior = currentRegisterRow(list1, patch);
       const resolved = mergeRegisterNote(RegisterMergeInput.make({ prior, patch, now }));
       if (O.isNone(resolved)) {
         return yield* sessionUsageError("--orphan-plan must say what a successor does when it cannot reach the unit.");
@@ -181,7 +182,8 @@ export const sessionRegisterListCommand = Command.make(
     const program = Effect.gen(function* () {
       const facts = yield* sessionCheckoutFacts(process.cwd());
       const register = yield* OrchestratorRegister;
-      const rows = currentRegisterRows(yield* register.list(facts.repository));
+      const list2 = yield* register.list(facts.repository);
+      const rows = currentRegisterRows(list2);
       if (json) {
         const report = RegisterReport.make({
           schemaVersion: "orchestrator-register-report/v1",

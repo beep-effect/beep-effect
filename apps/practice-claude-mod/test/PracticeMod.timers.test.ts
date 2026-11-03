@@ -90,7 +90,8 @@ describe("TimerLog", () => {
       Effect.fnUntraced(function* () {
         const log = yield* TimerLog;
         const { store } = yield* FakeHostState;
-        expect(yield* log.exportJsonl).toBe("");
+        const exportJsonl1 = yield* log.exportJsonl;
+        expect(exportJsonl1).toBe("");
         assertNone(MutableHashMap.get(store, "timer-intervals"));
       })
     );

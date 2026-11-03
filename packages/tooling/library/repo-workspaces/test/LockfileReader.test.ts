@@ -9,6 +9,7 @@ import { assert, describe, it } from "@effect/vitest";
 import { assertFailure, assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -28,7 +29,10 @@ const workspacesOver = (tree: Tree) => Workspaces.layer({ cwd: "/repo" }).pipe(L
 // than a failure, which is the worst shape a bug can take.
 const multiDocument: Tree = {
   "/repo/pnpm-workspace.yaml": "packages:\n  - 'packages/*'\ncatalog:\n  effect: ^4.0.0\n",
-  "/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0" }),
+  "/repo/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", version: "0.0.0" }),
+    identity
+  ),
   "/repo/packages/a/package.json": manifest("@x/a"),
   "/repo/packages/b/package.json": manifest("@x/b"),
   "/repo/pnpm-lock.yaml": A.join(
@@ -99,7 +103,8 @@ describe("LockfileReader — a multi-document pnpm lockfile", () => {
     it.effect("resolvedVersion is none for a package the lockfile does not record", () =>
       Effect.gen(function* () {
         const reader = yield* LockfileReader;
-        assertNone(yield* reader.resolvedVersion("not-in-the-lockfile"));
+        const resolvedVersion1 = yield* reader.resolvedVersion("not-in-the-lockfile");
+        assertNone(resolvedVersion1);
       })
     );
 
@@ -119,8 +124,9 @@ describe("LockfileReader — a multi-document pnpm lockfile", () => {
         // The root importer is not a workspace *package* in the lockfile model
         // (`@effected/lockfiles` emits only the non-root importers), so the
         // comparison is against discovery's non-root members.
+        const listPackages2 = yield* discovery.listPackages;
         const discovered = A.map(
-          A.filter(yield* discovery.listPackages, (pkg) => !pkg.isRootWorkspace),
+          A.filter(listPackages2, (pkg) => !pkg.isRootWorkspace),
           (pkg) => pkg.name
         ).sort();
         const locked = A.map(
@@ -177,11 +183,14 @@ const configOnlyWorkspace: Tree = {
 
 const interruptedInstall: Tree = {
   ...configOnlyWorkspace,
-  "/repo/package.json": JSON.stringify({
-    name: "probe-root",
-    private: true,
-    dependencies: { "@effected/this-package-does-not-exist-xyz": "^1.0.0" },
-  }),
+  "/repo/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+      name: "probe-root",
+      private: true,
+      dependencies: { "@effected/this-package-does-not-exist-xyz": "^1.0.0" },
+    }),
+    identity
+  ),
 };
 
 describe("LockfileReader — a config-dependency-only workspace (no root package.json)", () => {
@@ -195,7 +204,8 @@ describe("LockfileReader — a config-dependency-only workspace (no root package
         assert.deepStrictEqual(lockfile.packages, []);
         assert.deepStrictEqual(lockfile.importers, []);
         // The preamble's config dependency is not a workspace package.
-        assertNone(yield* reader.resolvedVersion("@effected/pnpm-plugin-effect"));
+        const resolvedVersion3 = yield* reader.resolvedVersion("@effected/pnpm-plugin-effect");
+        assertNone(resolvedVersion3);
       })
     );
   });
@@ -240,7 +250,10 @@ describe("LockfileReader — the root package.json probe itself fails", () => {
 
 const noLockfile: Tree = {
   "/repo/pnpm-workspace.yaml": "packages:\n  - 'packages/*'\n",
-  "/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0" }),
+  "/repo/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", version: "0.0.0" }),
+    identity
+  ),
   "/repo/packages/a/package.json": manifest("@x/a"),
 };
 
@@ -261,7 +274,8 @@ describe("LockfileReader — no lockfile on disk", () => {
     it.effect("discovery is unaffected — a missing lockfile is not a missing workspace", () =>
       Effect.gen(function* () {
         const discovery = yield* WorkspaceDiscovery;
-        const names = A.map(yield* discovery.listPackages, (pkg) => pkg.name);
+        const listPackages4 = yield* discovery.listPackages;
+        const names = A.map(listPackages4, (pkg) => pkg.name);
         assert.include(names, "@x/a");
       })
     );

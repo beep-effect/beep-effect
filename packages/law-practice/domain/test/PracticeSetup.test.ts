@@ -36,8 +36,11 @@ describe("PracticeProfile", () => {
     "round-trips any profile through its encoded form",
     { profile: Arbitrary.schema(PracticeProfile) },
     Effect.fnUntraced(function* ({ profile }) {
-      const decoded = yield* decodeProfile(yield* encodeProfile(profile));
-      deepStrictEqual(yield* encodeProfile(decoded), yield* encodeProfile(profile));
+      const encodedProfile = yield* encodeProfile(profile);
+      const decoded = yield* decodeProfile(encodedProfile);
+      const encodedProfile1 = yield* encodeProfile(decoded);
+      const encodedProfile2 = yield* encodeProfile(profile);
+      deepStrictEqual(encodedProfile1, encodedProfile2);
     }),
     { arbitrary: fcRuns(50) }
   );

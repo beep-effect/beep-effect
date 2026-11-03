@@ -61,7 +61,8 @@ export const collectWatch = Effect.fnUntraced(function* (
     .pipe(Stream.take(count), Stream.runCollect, Effect.forkChild({ startImmediately: true }));
   yield* Effect.yieldNow;
   yield* mutation;
-  return Array.from(yield* Fiber.join(events));
+  const join1 = yield* Fiber.join(events);
+  return Array.from(join1);
 });
 
 /**
@@ -82,6 +83,7 @@ export const firstEvent = Effect.fnUntraced(function* (
   yield* Effect.yieldNow;
   yield* probe;
   yield* sentinel;
-  const [event] = Array.from(yield* Fiber.join(events));
+  const join2 = yield* Fiber.join(events);
+  const [event] = Array.from(join2);
   return event;
 });

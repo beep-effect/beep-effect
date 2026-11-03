@@ -414,7 +414,8 @@ export const runCacheConformance = Effect.fn("CacheConformance.run")(function* (
   bearers: CacheConformanceBearers
 ) {
   yield* assertCacheConformanceTargetBoundary(target);
-  const startedAt = DateTime.formatIso(yield* DateTime.now);
+  const now1 = yield* DateTime.now;
+  const startedAt = DateTime.formatIso(now1);
   const cases = yield* Effect.forEach(corpus.cases, (entry) => scoreCase(entry, corpus, target, bearers));
   return assembleCacheConformanceRun({
     corpus,
@@ -521,7 +522,8 @@ export const runCacheConformanceLab = Effect.fn("CacheConformance.runLab")(funct
   envelope: CacheConformanceLoadEnvelope
 ) {
   yield* assertCacheConformanceTargetBoundary(target);
-  const startedAt = DateTime.formatIso(yield* DateTime.now);
+  const now2 = yield* DateTime.now;
+  const startedAt = DateTime.formatIso(now2);
   const proxy = yield* makeCacheConformanceFaultProxy(
     CacheConformanceProxyOptions.make({ target, bearers, holdMs: labHoldMs })
   );

@@ -112,10 +112,8 @@ const httpValidationErrorWire: typeof HTTPValidationError.Encoded = {
 describe("@beep/ontology models", () => {
   it.effect("owns constructive HTTP URL metadata and codec statics", () =>
     Effect.gen(function* () {
-      pipe(
-        A.every(yield* Arbitrary.sampleEffect(Arbitrary.schema(HttpUrl), { count: 20, seed: 0x5eed }), isHttpUrl),
-        assertTrue
-      );
+      const sampleEffect1 = yield* Arbitrary.sampleEffect(Arbitrary.schema(HttpUrl), { count: 20, seed: 0x5eed });
+      pipe(A.every(sampleEffect1, isHttpUrl), assertTrue);
       expect(Result.getOrThrow(S.decodeResult(HttpUrl)("https://example.com/ontology.owl"))).toBe(
         "https://example.com/ontology.owl"
       );

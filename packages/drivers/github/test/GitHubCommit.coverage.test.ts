@@ -37,24 +37,27 @@ for (const [name, invalid] of [
     it.effect(`returns typed get/list/compare decode failures for invalid ${name}`, () =>
       Effect.gen(function* () {
         const service = yield* GitHubCommit;
+        const result1 = yield* Effect.result(service.get("c"));
         assertFailure(
-          Result.mapError(yield* Effect.result(service.get("c")), (error) => ({
+          Result.mapError(result1, (error) => ({
             tag: error._tag,
             kind: error.kind,
             operation: error.operation,
           })),
           { tag: "GitHubError", kind: "decode", operation: "GitHubCommit.get" }
         );
+        const result2 = yield* Effect.result(service.list());
         assertFailure(
-          Result.mapError(yield* Effect.result(service.list()), (error) => ({
+          Result.mapError(result2, (error) => ({
             tag: error._tag,
             kind: error.kind,
             operation: error.operation,
           })),
           { tag: "GitHubError", kind: "decode", operation: "GitHubCommit.list" }
         );
+        const result3 = yield* Effect.result(service.compare("a", "b"));
         assertFailure(
-          Result.mapError(yield* Effect.result(service.compare("a", "b")), (error) => ({
+          Result.mapError(result3, (error) => ({
             tag: error._tag,
             kind: error.kind,
             operation: error.operation,
@@ -89,8 +92,9 @@ for (const [field, value] of [
     it.effect(`returns a typed comparison decode failure for invalid ${field}`, () =>
       Effect.gen(function* () {
         const service = yield* GitHubCommit;
+        const result4 = yield* Effect.result(service.compare("a", "b"));
         assertFailure(
-          Result.mapError(yield* Effect.result(service.compare("a", "b")), (error) => ({
+          Result.mapError(result4, (error) => ({
             tag: error._tag,
             kind: error.kind,
             operation: error.operation,
@@ -147,10 +151,14 @@ describe("GitHubCommit coverage", () => {
     it.effect("test layer preserves every override", () =>
       Effect.gen(function* () {
         const commits = yield* GitHubCommit;
-        assert.strictEqual(yield* commits.get("c"), summary);
-        assert.deepStrictEqual(yield* commits.list(), [summary]);
-        assert.strictEqual(yield* commits.compare("a", "b"), comparison);
-        assert.deepStrictEqual(yield* commits.changedFiles("c"), []);
+        const got = yield* commits.get("c");
+        assert.strictEqual(got, summary);
+        const list5 = yield* commits.list();
+        assert.deepStrictEqual(list5, [summary]);
+        const compare6 = yield* commits.compare("a", "b");
+        assert.strictEqual(compare6, comparison);
+        const changedFiles7 = yield* commits.changedFiles("c");
+        assert.deepStrictEqual(changedFiles7, []);
       })
     );
   });
@@ -197,7 +205,8 @@ describe("GitHubCommit coverage", () => {
         const compared = yield* commits.compare("a", "b");
         assert.deepStrictEqual(compared.files, []);
         assert.strictEqual(compared.commits[0]?.author, "Unknown");
-        assert.deepStrictEqual(yield* commits.changedFiles("c"), []);
+        const changedFiles8 = yield* commits.changedFiles("c");
+        assert.deepStrictEqual(changedFiles8, []);
         const files = yield* commits.changedFiles("c", { page: PageOptions.make({ perPage: 1 }) });
         assert.strictEqual(files[0]?.path, "a");
         assert.strictEqual(script.queryOf(5).get("page"), "1");

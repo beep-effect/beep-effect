@@ -216,7 +216,8 @@ const makeGitRoot = Effect.fn("AiMetricsTest.makeGitRoot")(function* (repoRoot: 
     ["add", "--", "AGENTS.md"],
   ]) {
     const child = yield* ChildProcess.make("git", args, { cwd: repoRoot, stdout: "ignore", stderr: "ignore" });
-    expect(yield* child.exitCode).toBe(0);
+    const exitCode1 = yield* child.exitCode;
+    expect(exitCode1).toBe(0);
   }
 });
 
@@ -441,7 +442,8 @@ const fixtureStamp = Sha256Hex.make(Str.repeat(64)("b"));
 const fixtureOtherStamp = Sha256Hex.make(Str.repeat(64)("c"));
 const decodeHookPulse = S.decodeEffect(HookPulseV1FromRawEvent);
 const encodeHookPulseRows = Effect.fnUntraced(function* (rows: ReadonlyArray<HookPulseV1>) {
-  return A.join(yield* Effect.forEach(rows, (row) => HookPulseV1.encodeJsonEffect(row)), "\n");
+  const forEach2 = yield* Effect.forEach(rows, (row) => HookPulseV1.encodeJsonEffect(row));
+  return A.join(forEach2, "\n");
 });
 // Scenarios whose stamp survives the join; every other scenario stores no stamp.
 const stampKeepingScenarios = ["qualified", "closed-before-refusal", "corrupt", "unreadable", "rejected-refusal"];
@@ -502,65 +504,74 @@ const scenarioPulseRows = (
   });
 const writeScenarioSentinel = Effect.fnUntraced(function* (scenario: StampScenario, hookRoot: string) {
   const path = yield* Path.Path;
-  if (scenario === "empty-sentinel") yield* writeText(path.join(hookRoot, "hook-pulse.disarmed"), "");
-  if (scenario === "custom-sentinel") yield* writeText(path.join(hookRoot, "custom.disarmed"), "");
-  if (scenario === "future-sentinel")
-    yield* writeText(
-      path.join(hookRoot, "hook-pulse.disarmed"),
-      yield* HookPulseDisarmSentinel.encodeJsonEffect(
-        HookPulseDisarmSentinel.make({
-          disarmedAt: "2099-01-01T00:00:00Z",
-          reason: "fixture",
-          evidenceTier: "unknown",
-        })
-      )
+  if (scenario === "empty-sentinel") {
+    yield* writeText(path.join(hookRoot, "hook-pulse.disarmed"), "");
+  }
+  if (scenario === "custom-sentinel") {
+    yield* writeText(path.join(hookRoot, "custom.disarmed"), "");
+  }
+  if (scenario === "future-sentinel") {
+    const argument = path.join(hookRoot, "hook-pulse.disarmed");
+    const encodedJsonEffect1 = yield* HookPulseDisarmSentinel.encodeJsonEffect(
+      HookPulseDisarmSentinel.make({
+        disarmedAt: "2099-01-01T00:00:00Z",
+        reason: "fixture",
+        evidenceTier: "unknown",
+      })
     );
+    yield* writeText(argument, encodedJsonEffect1);
+  }
 });
 const writeRejectedRefusalFixture = Effect.fnUntraced(function* (scenario: StampScenario, hookRoot: string) {
   const path = yield* Path.Path;
-  if (scenario === "mixed-refusal" || scenario === "rejected-refusal")
+  if (scenario === "mixed-refusal" || scenario === "rejected-refusal") {
     yield* writeText(
       path.join(hookRoot, "hook-pulse-refusals-fixture.ndjson"),
       scenario === "mixed-refusal"
         ? 'not JSON\n{"ts":"2026-10-09T10:00:30Z","agentKind":"codex-cli","reason":"timeout"}\n'
         : 'not JSON\n{"ts":"2026-10-09T09:00:00Z","agentKind":"codex-cli","reason":"timeout"}\n'
     );
+  }
 });
 const writeScenarioRefusal = Effect.fnUntraced(function* (scenario: StampScenario, hookRoot: string) {
   const path = yield* Path.Path;
-  if (A.contains(["refused", "trailing-refusal", "closed-before-refusal"], scenario))
-    yield* writeText(
-      path.join(hookRoot, "hook-pulse-refusals-fixture.ndjson"),
-      yield* encodeHookPulseRefusal(
-        HookPulseRefusal.make({
-          ts: DateTime.makeUnsafe(scenario === "refused" ? "2026-10-09T10:00:30Z" : "2026-10-09T10:02:00Z"),
-          agentKind: "codex-cli",
-          reason: "timeout",
-        })
-      )
+  if (A.contains(["refused", "trailing-refusal", "closed-before-refusal"], scenario)) {
+    const argument1 = path.join(hookRoot, "hook-pulse-refusals-fixture.ndjson");
+    const encodedHookPulseRefusal = yield* encodeHookPulseRefusal(
+      HookPulseRefusal.make({
+        ts: DateTime.makeUnsafe(scenario === "refused" ? "2026-10-09T10:00:30Z" : "2026-10-09T10:02:00Z"),
+        agentKind: "codex-cli",
+        reason: "timeout",
+      })
     );
+    yield* writeText(argument1, encodedHookPulseRefusal);
+  }
 });
 const writeScenarioDisarmWindow = Effect.fnUntraced(function* (scenario: StampScenario, hookRoot: string) {
   const path = yield* Path.Path;
-  if (scenario === "disarmed")
-    yield* writeText(
-      path.join(hookRoot, "hook-pulse-disarm-windows.ndjson"),
-      yield* HookPulseDisarmWindow.encodeJsonEffect(
-        HookPulseDisarmWindow.make({
-          disarmedAt: O.some("2026-10-09T10:00:30Z"),
-          rearmedAt: "2026-10-09T10:00:45Z",
-          reason: O.none(),
-          evidenceTier: "unknown",
-          schemaVersion: "hook-pulse-disarm-window/v1",
-        })
-      )
+  if (scenario === "disarmed") {
+    const argument2 = path.join(hookRoot, "hook-pulse-disarm-windows.ndjson");
+    const encodedJsonEffect2 = yield* HookPulseDisarmWindow.encodeJsonEffect(
+      HookPulseDisarmWindow.make({
+        disarmedAt: O.some("2026-10-09T10:00:30Z"),
+        rearmedAt: "2026-10-09T10:00:45Z",
+        reason: O.none(),
+        evidenceTier: "unknown",
+        schemaVersion: "hook-pulse-disarm-window/v1",
+      })
     );
+    yield* writeText(argument2, encodedJsonEffect2);
+  }
 });
 const writeScenarioGaps = Effect.fnUntraced(function* (scenario: StampScenario, hookRoot: string, hookDir: string) {
   const path = yield* Path.Path;
   const fs = yield* FileSystem.FileSystem;
-  if (scenario === "corrupt") yield* writeText(path.join(hookDir, "bad.ndjson"), "not JSON\n");
-  if (scenario === "unreadable") yield* fs.makeDirectory(path.join(hookDir, "bad.ndjson"));
+  if (scenario === "corrupt") {
+    yield* writeText(path.join(hookDir, "bad.ndjson"), "not JSON\n");
+  }
+  if (scenario === "unreadable") {
+    yield* fs.makeDirectory(path.join(hookDir, "bad.ndjson"));
+  }
   yield* writeScenarioRefusal(scenario, hookRoot);
   yield* writeScenarioDisarmWindow(scenario, hookRoot);
   yield* writeRejectedRefusalFixture(scenario, hookRoot);
@@ -593,12 +604,12 @@ const assertScenarioVerdict = Effect.fnUntraced(function* (
   const completeness = result.hookCollectionComplete && result.stampGapCollectionComplete ? "complete" : "partial";
   const unresolved = A.contains(unevaluableScenarios, scenario) ? "unknown" : "unqualified";
   const qualification = expected === null ? unresolved : "qualified";
-  for (const table of ["ai_metrics_sessions", "ai_metrics_source_files"])
-    expect(
-      yield* db.query(
-        `SELECT session_stamp_completeness AS completeness, session_stamp_qualification AS qualification FROM ${table}`
-      )
-    ).toEqual([{ completeness, qualification }]);
+  for (const table of ["ai_metrics_sessions", "ai_metrics_source_files"]) {
+    const query5 = yield* db.query(
+      `SELECT session_stamp_completeness AS completeness, session_stamp_qualification AS qualification FROM ${table}`
+    );
+    expect(query5).toEqual([{ completeness, qualification }]);
+  }
   for (const span of (yield* readAiMetricsOtlpSpanProjections).projections) {
     expect(span.attributes["ai_metrics.session_stamp_completeness"]).toBe(completeness);
     expect(span.attributes["ai_metrics.session_stamp_qualification"]).toBe(qualification);
@@ -607,12 +618,10 @@ const assertScenarioVerdict = Effect.fnUntraced(function* (
 });
 const assertScenarioStampStorage = Effect.fnUntraced(function* (expected: string | null) {
   const db = yield* DuckDb;
-  expect(yield* db.query("SELECT session_harness_hash AS stamp FROM ai_metrics_sessions")).toEqual([
-    { stamp: expected },
-  ]);
-  expect(yield* db.query("SELECT session_harness_hash AS stamp FROM ai_metrics_source_files")).toEqual([
-    { stamp: expected },
-  ]);
+  const query3 = yield* db.query("SELECT session_harness_hash AS stamp FROM ai_metrics_sessions");
+  expect(query3).toEqual([{ stamp: expected }]);
+  const query4 = yield* db.query("SELECT session_harness_hash AS stamp FROM ai_metrics_source_files");
+  expect(query4).toEqual([{ stamp: expected }]);
   const projection = yield* readAiMetricsOtlpSpanProjections;
   expect(projection.projections.length).toBeGreaterThan(0);
   for (const span of projection.projections) {
@@ -648,25 +657,31 @@ const assertStoredStampLifecycle = Effect.fnUntraced(function* (
   yield* fs.rename(ownShard, `${ownShard}.parked`);
   yield* writeText(unrelatedShard, "not JSON\n");
   expect((yield* runAiMetricsForwarder(forwarderInput)).hookCollectionComplete).toBe(false);
-  expect(yield* readSessionVerdict()).toEqual([verifiedStampVerdict]);
-  expect(yield* readLatestSourceVerdict()).toEqual([{ completeness: "partial", qualification: "unknown" }]);
+  const readSessionVerdict5 = yield* readSessionVerdict();
+  expect(readSessionVerdict5).toEqual([verifiedStampVerdict]);
+  const readLatestSourceVerdict6 = yield* readLatestSourceVerdict();
+  expect(readLatestSourceVerdict6).toEqual([{ completeness: "partial", qualification: "unknown" }]);
   // (c) hook-events offline: also unevaluable, the stored stamp stays.
   yield* fs.remove(unrelatedShard);
   yield* fs.rename(`${ownShard}.parked`, ownShard);
   yield* fs.rename(hookDir, `${hookDir}.offline`);
   expect((yield* runAiMetricsForwarder(forwarderInput)).hookCollectionComplete).toBe(false);
-  expect(yield* readSessionVerdict()).toEqual([verifiedStampVerdict]);
-  expect(yield* readLatestSourceVerdict()).toEqual([{ completeness: "partial", qualification: "unknown" }]);
+  const readSessionVerdict7 = yield* readSessionVerdict();
+  expect(readSessionVerdict7).toEqual([verifiedStampVerdict]);
+  const readLatestSourceVerdict8 = yield* readLatestSourceVerdict();
+  expect(readLatestSourceVerdict8).toEqual([{ completeness: "partial", qualification: "unknown" }]);
   // Restored, complete evidence re-qualifies the same stamp.
   yield* fs.rename(`${hookDir}.offline`, hookDir);
   yield* runAiMetricsForwarder(forwarderInput);
-  expect(yield* readSessionVerdict()).toEqual([verifiedStampVerdict]);
+  const readSessionVerdict9 = yield* readSessionVerdict();
+  expect(readSessionVerdict9).toEqual([verifiedStampVerdict]);
   // (a) The same undecodable unrelated line, but this session's own shard now carries a
   // second stamp: its own evidence disqualifies, so a partial run still clears the stamp.
   yield* writeText(unrelatedShard, "not JSON\n");
   yield* writeText(ownShard, mixedShard);
   expect((yield* runAiMetricsForwarder(forwarderInput)).hookCollectionComplete).toBe(false);
-  expect(yield* readSessionVerdict()).toEqual([{ stamp: null, completeness: "partial", qualification: "unqualified" }]);
+  const readSessionVerdict10 = yield* readSessionVerdict();
+  expect(readSessionVerdict10).toEqual([{ stamp: null, completeness: "partial", qualification: "unqualified" }]);
 });
 const writeScenarioTranscript = Effect.fnUntraced(function* (scenario: StampScenario, sourcePath: string) {
   yield* writeText(
@@ -736,10 +751,9 @@ const runStampScenario = Effect.fnUntraced(function* (scenario: StampScenario) {
   });
   return yield* Effect.gen(function* () {
     const { start, tool } = yield* makeScenarioPulses(scenario, sourcePath, repoRoot);
-    yield* writeText(
-      path.join(hookDir, "fixture.ndjson"),
-      yield* encodeHookPulseRows(scenarioPulseRows(scenario, start, tool))
-    );
+    const argument3 = path.join(hookDir, "fixture.ndjson");
+    const encodedHookPulseRows = yield* encodeHookPulseRows(scenarioPulseRows(scenario, start, tool));
+    yield* writeText(argument3, encodedHookPulseRows);
     yield* writeScenarioGaps(scenario, hookRoot, hookDir);
     const forwarderInput = AiMetricsForwarderInput.make({
       homeDir,
@@ -753,17 +767,19 @@ const runStampScenario = Effect.fnUntraced(function* (scenario: StampScenario) {
       rawArchiveKey: Redacted.make(Base64.encode(new Uint8Array(32).fill(7))),
     });
     const result = yield* runAiMetricsForwarder(forwarderInput);
-    const status = yield* decodeForwarderRunResult(yield* forwarderRunResultToJson(result));
+    const forwarderRunResultToJson11 = yield* forwarderRunResultToJson(result);
+    const status = yield* decodeForwarderRunResult(forwarderRunResultToJson11);
     assertScenarioCollection(scenario, result, status);
     const expected = A.contains(stampKeepingScenarios, scenario) ? fixtureStamp : null;
     const verdict = yield* assertScenarioVerdict(scenario, result, expected);
     yield* assertScenarioStampStorage(expected);
-    if (scenario === "qualified")
-      yield* assertStoredStampLifecycle(
-        forwarderInput,
-        hookDir,
-        yield* encodeHookPulseRows([start, HookPulseV1.make({ ...start, harnessHash: O.some(fixtureOtherStamp) })])
-      );
+    if (scenario === "qualified") {
+      const encodedHookPulseRows6 = yield* encodeHookPulseRows([
+        start,
+        HookPulseV1.make({ ...start, harnessHash: O.some(fixtureOtherStamp) }),
+      ]);
+      yield* assertStoredStampLifecycle(forwarderInput, hookDir, encodedHookPulseRows6);
+    }
     return verdict;
   }).pipe(
     Effect.provideService(ConfigProvider.ConfigProvider, provider),
@@ -900,15 +916,18 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("@beep/repo-ai-metrics", (i
 
   it.effect("preserves crispened schema wire shapes and arbitrary round trips", () =>
     Effect.gen(function* () {
-      expect(yield* CodexTranscriptLine.encodeJsonEffect(CodexTranscriptLine.make({ type: "event_msg" }))).toBe(
-        '{"type":"event_msg"}'
+      const encodedJsonEffect = yield* CodexTranscriptLine.encodeJsonEffect(
+        CodexTranscriptLine.make({ type: "event_msg" })
       );
-      expect(yield* ClaudeTranscriptLine.encodeJsonEffect(ClaudeTranscriptLine.make({ type: O.some("message") }))).toBe(
-        '{"type":"message"}'
+      expect(encodedJsonEffect).toBe('{"type":"event_msg"}');
+      const encodedJsonEffect12 = yield* ClaudeTranscriptLine.encodeJsonEffect(
+        ClaudeTranscriptLine.make({ type: O.some("message") })
       );
-      expect(
-        yield* OpenClawTranscriptLine.encodeJsonEffect(OpenClawTranscriptLine.make({ event: O.some("message") }))
-      ).toBe('{"event":"message"}');
+      expect(encodedJsonEffect12).toBe('{"type":"message"}');
+      const encodedJsonEffect13 = yield* OpenClawTranscriptLine.encodeJsonEffect(
+        OpenClawTranscriptLine.make({ event: O.some("message") })
+      );
+      expect(encodedJsonEffect13).toBe('{"event":"message"}');
     })
   );
   it.effect.prop(
@@ -1000,9 +1019,12 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("@beep/repo-ai-metrics", (i
       expect(attribution.sourceRole).toBe("subagent");
       assertNone(attribution.agentNicknameHash);
       assertNone(attribution.parentSessionIdHash);
-      assertSome(attribution.agentRoleHash, yield* hashPrivateIdentifier("reviewer", hashSalt));
-      assertSome(attribution.parentThreadIdHash, yield* hashPrivateIdentifier("thread-1", hashSalt));
-      assertSome(attribution.sessionIdHash, yield* hashPrivateIdentifier("session-1", hashSalt));
+      const hashPrivateIdentifier14 = yield* hashPrivateIdentifier("reviewer", hashSalt);
+      assertSome(attribution.agentRoleHash, hashPrivateIdentifier14);
+      const hashPrivateIdentifier15 = yield* hashPrivateIdentifier("thread-1", hashSalt);
+      assertSome(attribution.parentThreadIdHash, hashPrivateIdentifier15);
+      const hashPrivateIdentifier16 = yield* hashPrivateIdentifier("session-1", hashSalt);
+      assertSome(attribution.sessionIdHash, hashPrivateIdentifier16);
     })
   );
 
@@ -1070,15 +1092,18 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("@beep/repo-ai-metrics", (i
                 }),
               ])
             );
-            expect(yield* forwarderRunResultToJson(result)).toContain(result.ingestRunId);
+            const forwarderRunResultToJson17 = yield* forwarderRunResultToJson(result);
+            expect(forwarderRunResultToJson17).toContain(result.ingestRunId);
             expect(result.parquetExportMode).toBe("snapshot");
             const parquetExportDir = result.parquetExportDir;
             pipe(parquetExportDir, O.isSome, assertTrue);
             if (O.isNone(parquetExportDir)) {
               return;
             }
-            pipe(yield* fs.exists(path.join(parquetExportDir.value, "ai_metrics_turns.parquet")), assertTrue);
-            pipe(yield* fs.exists(path.join(dataRoot, "config-snapshots/latest.json")), assertTrue);
+            const exists18 = yield* fs.exists(path.join(parquetExportDir.value, "ai_metrics_turns.parquet"));
+            pipe(exists18, assertTrue);
+            const exists19 = yield* fs.exists(path.join(dataRoot, "config-snapshots/latest.json"));
+            pipe(exists19, assertTrue);
 
             const duckdb = yield* DuckDb;
             const turnRows = yield* duckdb.query("SELECT count(*) AS count FROM ai_metrics_turns");
@@ -1110,7 +1135,8 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("@beep/repo-ai-metrics", (i
     it.effect(
       `binds session stamps through hook namespace, storage and OTLP without borrowing ambiguous identities: ${scenario}`,
       Effect.fnUntraced(function* () {
-        expect(yield* runStampScenario(scenario)).toBe(expectedStampVerdict(scenario));
+        const resultStampScenario = yield* runStampScenario(scenario);
+        expect(resultStampScenario).toBe(expectedStampVerdict(scenario));
       })
     );
   }
@@ -1187,7 +1213,8 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("@beep/repo-ai-metrics", (i
             expect(disabled.parquetExportMode).toBe("none");
             assertNone(disabled.parquetExportDir);
             expect(disabled.parquetTables).toEqual([]);
-            pipe(yield* fs.exists(path.join(dataRoot, "derived/parquet")), assertFalse);
+            const exists20 = yield* fs.exists(path.join(dataRoot, "derived/parquet"));
+            pipe(exists20, assertFalse);
 
             const latest = yield* writeAiMetricsDerivedStorage(
               AiMetricsDerivedStorageWriteInput.make({
@@ -1198,7 +1225,8 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("@beep/repo-ai-metrics", (i
             );
             expect(latest.parquetExportMode).toBe("latest");
             assertSome(latest.parquetExportDir, path.join(dataRoot, "derived/parquet/latest"));
-            pipe(yield* fs.exists(path.join(dataRoot, "derived/parquet/latest/ai_metrics_turns.parquet")), assertTrue);
+            const exists21 = yield* fs.exists(path.join(dataRoot, "derived/parquet/latest/ai_metrics_turns.parquet"));
+            pipe(exists21, assertTrue);
 
             yield* writeText(path.join(dataRoot, "derived/parquet/latest/stale.tmp"), "stale\n");
             yield* writeAiMetricsDerivedStorage(
@@ -1208,8 +1236,10 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("@beep/repo-ai-metrics", (i
                 parquetExportMode: AiMetricsParquetExportMode.Enum.latest,
               })
             );
-            pipe(yield* fs.exists(path.join(dataRoot, "derived/parquet/latest/stale.tmp")), assertFalse);
-            pipe(yield* fs.exists(path.join(dataRoot, "derived/parquet/forwarder-latest-2")), assertFalse);
+            const exists22 = yield* fs.exists(path.join(dataRoot, "derived/parquet/latest/stale.tmp"));
+            pipe(exists22, assertFalse);
+            const exists23 = yield* fs.exists(path.join(dataRoot, "derived/parquet/forwarder-latest-2"));
+            pipe(exists23, assertFalse);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
       );
@@ -1259,9 +1289,10 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("@beep/repo-ai-metrics", (i
         expect(successful.sourceFileCount).toBe(1);
         yield* Effect.gen(function* () {
           const database = yield* DuckDb;
-          expect(
-            yield* database.query('SELECT CAST(COUNT(*) AS INTEGER) AS "count" FROM ai_metrics_source_files')
-          ).toEqual([{ count: 1 }]);
+          const query24 = yield* database.query(
+            'SELECT CAST(COUNT(*) AS INTEGER) AS "count" FROM ai_metrics_source_files'
+          );
+          expect(query24).toEqual([{ count: 1 }]);
         }).pipe(provideScopedLayer(databaseLayer));
         // The unreadable source comes back next round; no failure was promoted to
         // an ingestion watermark simply because its scheduling cursor advanced.
@@ -1347,11 +1378,10 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("@beep/repo-ai-metrics", (i
             expect(coverage).toEqual([{ count: 4 }]);
             // These global transcripts carry no verified repository identity.
             // The checkout running collection must not become their source.
-            expect(
-              yield* database.query(
-                'SELECT CAST(COUNT(*) AS INTEGER) AS "count" FROM ai_metrics_agent_tasks WHERE repo_root_hash IS NULL'
-              )
-            ).toEqual([{ count: 4 }]);
+            const query25 = yield* database.query(
+              'SELECT CAST(COUNT(*) AS INTEGER) AS "count" FROM ai_metrics_agent_tasks WHERE repo_root_hash IS NULL'
+            );
+            expect(query25).toEqual([{ count: 4 }]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
       );
@@ -2239,7 +2269,8 @@ volumes:
 
       expect(error.message).toContain("Cannot resolve hook evidence root");
       // No identity registry, config snapshot or raw archive object was written.
-      assertFalse(yield* fs.exists(dataRoot));
+      const exists26 = yield* fs.exists(dataRoot);
+      assertFalse(exists26);
     })
   );
 
@@ -2477,17 +2508,15 @@ volumes:
         ) VALUES ('legacy-task', 'Synthetic legacy task', 'codex', 'source-hash', 'primary',
           'collector-checkout-hash', 'snapshot-1', 1)`);
           yield* ensureAiMetricsDerivedStorage;
-          expect(
-            yield* database.query(`SELECT agent_task_id AS "id", repo_root_hash AS "sourceRoot",
-          collector_root_hash AS "collectorRoot" FROM ai_metrics_agent_tasks`)
-          ).toEqual([{ id: "legacy-task", sourceRoot: null, collectorRoot: "collector-checkout-hash" }]);
+          const query27 = yield* database.query(`SELECT agent_task_id AS "id", repo_root_hash AS "sourceRoot",
+          collector_root_hash AS "collectorRoot" FROM ai_metrics_agent_tasks`);
+          expect(query27).toEqual([{ id: "legacy-task", sourceRoot: null, collectorRoot: "collector-checkout-hash" }]);
           // A later evidence-based attribution must survive repeated schema ensure.
           yield* database.run("UPDATE ai_metrics_agent_tasks SET repo_root_hash = 'verified-source-root'");
           yield* ensureAiMetricsDerivedStorage;
-          expect(
-            yield* database.query(`SELECT repo_root_hash AS "sourceRoot",
-          collector_root_hash AS "collectorRoot" FROM ai_metrics_agent_tasks`)
-          ).toEqual([{ sourceRoot: "verified-source-root", collectorRoot: "collector-checkout-hash" }]);
+          const query28 = yield* database.query(`SELECT repo_root_hash AS "sourceRoot",
+          collector_root_hash AS "collectorRoot" FROM ai_metrics_agent_tasks`);
+          expect(query28).toEqual([{ sourceRoot: "verified-source-root", collectorRoot: "collector-checkout-hash" }]);
         }).pipe(
           provideScopedLayer(
             DuckDb.makeNodeLayer(
@@ -2979,7 +3008,8 @@ volumes:
             const retried = yield* Fiber.join(retryFiber);
 
             expect(retried.spanCount).toBe(1);
-            expect(yield* Ref.get(retryCalls)).toBe(2);
+            const got = yield* Ref.get(retryCalls);
+            expect(got).toBe(2);
 
             // A collector that rejects the batch must surface as a typed failure, never a
             // silent success. That confirmation is the whole reason delivery moved off
@@ -3625,7 +3655,8 @@ volumes:
           expect(result.snapshot.configHash).toBe(again.snapshot.configHash);
           expect(json).not.toContain(".repos/effect-v4/AGENTS.md");
           expect(json).not.toContain("node_modules/pkg/CLAUDE.md");
-          pipe(yield* fs.exists(path.join(snapshotDir, "latest.json.tmp")), assertFalse);
+          const exists29 = yield* fs.exists(path.join(snapshotDir, "latest.json.tmp"));
+          pipe(exists29, assertFalse);
 
           yield* writeText(path.join(tmpDir, ".codex/config.toml"), 'model = "gpt-5.1"\n');
           const changed = yield* makeAiMetricsConfigSnapshot(
@@ -3650,27 +3681,29 @@ volumes:
         Effect.fn(function* (tmpDir) {
           const path = yield* Path.Path;
           yield* writeText(path.join(tmpDir, "AGENTS.md"), "current agent guide\n");
-          yield* writeText(
-            path.join(tmpDir, ".beep/ai-metrics/config-snapshots/latest.json"),
-            // TODO(effect-native-migration): model schema
-            yield* encodeUnknownJsonEffect({
-              excludedDirectoryNames: [],
-              fileCount: 1,
-              files: [
-                {
-                  contentHash: "legacy-hash",
-                  relativePath: "AGENTS.md",
-                  sizeBytes: 18,
-                },
-              ],
-              snapshot: {
-                changedPaths: ["AGENTS.md"],
-                configHash: "legacy-hash",
-                includedPaths: ["AGENTS.md"],
-                label: "repo-local-agent-config",
-                snapshotId: "config-legacy",
+          const argument4 = path.join(tmpDir, ".beep/ai-metrics/config-snapshots/latest.json");
+          const encodedUnknownJsonEffect = yield* encodeUnknownJsonEffect({
+            excludedDirectoryNames: [],
+            fileCount: 1,
+            files: [
+              {
+                contentHash: "legacy-hash",
+                relativePath: "AGENTS.md",
+                sizeBytes: 18,
               },
-            })
+            ],
+            snapshot: {
+              changedPaths: ["AGENTS.md"],
+              configHash: "legacy-hash",
+              includedPaths: ["AGENTS.md"],
+              label: "repo-local-agent-config",
+              snapshotId: "config-legacy",
+            },
+          });
+          yield* writeText(
+            argument4,
+            // TODO(effect-native-migration): model schema
+            encodedUnknownJsonEffect
           );
 
           const result = yield* makeAiMetricsConfigSnapshot(
@@ -3749,7 +3782,8 @@ volumes:
           const snapshotFiles = yield* fs.readDirectory(snapshotDir);
 
           expect(error.message).toContain("Failed to write encrypted AI metrics raw archive object");
-          pipe(yield* fs.exists(path.join(snapshotDir, "latest.json")), assertFalse);
+          const exists30 = yield* fs.exists(path.join(snapshotDir, "latest.json"));
+          pipe(exists30, assertFalse);
           pipe(A.some(snapshotFiles, Str.endsWith(".json")), assertTrue);
         })
       );
@@ -4103,12 +4137,17 @@ volumes:
           pipe(bundle.manifest.privacyProof.safe, assertTrue);
           expect(bundle.manifest.omittedTables).toContain("ai_metrics_raw_archive_objects");
           expect(bundle.manifest.includedTables).not.toContain("ai_metrics_raw_archive_objects");
-          expect(yield* locateLatestAiMetricsMirrorBundle(dataRoot)).toBe(bundle.bundleDir);
-          pipe(yield* fs.exists(path.join(bundle.parquetDir, "ai_metrics_ingest_runs.parquet")), assertTrue);
-          pipe(yield* fs.exists(path.join(bundle.parquetDir, "ai_metrics_raw_archive_objects.parquet")), assertFalse);
-          pipe(yield* fs.exists(path.join(bundle.bundleDir, "mirror.duckdb")), assertFalse);
+          const locateLatestAiMetricsMirrorBundle31 = yield* locateLatestAiMetricsMirrorBundle(dataRoot);
+          expect(locateLatestAiMetricsMirrorBundle31).toBe(bundle.bundleDir);
+          const exists32 = yield* fs.exists(path.join(bundle.parquetDir, "ai_metrics_ingest_runs.parquet"));
+          pipe(exists32, assertTrue);
+          const exists33 = yield* fs.exists(path.join(bundle.parquetDir, "ai_metrics_raw_archive_objects.parquet"));
+          pipe(exists33, assertFalse);
+          const exists34 = yield* fs.exists(path.join(bundle.bundleDir, "mirror.duckdb"));
+          pipe(exists34, assertFalse);
           expect(bundle.mirrorDuckDbPath).not.toContain(bundle.bundleDir);
-          pipe(yield* fs.exists(bundle.mirrorDuckDbPath), assertFalse);
+          const exists35 = yield* fs.exists(bundle.mirrorDuckDbPath);
+          pipe(exists35, assertFalse);
           expect(sourceFileColumns).toContain("source_path_hash");
           expect(sourceFileColumns).not.toContain("archive_path");
           expect(labelColumns).toContain("note_hash");
@@ -4180,7 +4219,8 @@ volumes:
           pipe(drill.hashMatches, assertTrue);
           expect(drill.replayedObjectCount).toBe(1);
           pipe(drill.transcriptTextPrinted, assertFalse);
-          pipe(yield* fs.exists(drill.derivedDuckDbPath), assertTrue);
+          const exists36 = yield* fs.exists(drill.derivedDuckDbPath);
+          pipe(exists36, assertTrue);
         })
       );
     })
@@ -4214,7 +4254,8 @@ volumes:
           expect(dryRun.deletedDerivedExportCount).toBe(2);
           pipe(dryRun.dryRun, assertTrue);
           expect(dryRunJson).toContain("beep.ai_metrics.retention_enforcement.v1");
-          pipe(yield* fs.exists(path.join(parquetRoot, "forwarder-old")), assertTrue);
+          const exists37 = yield* fs.exists(path.join(parquetRoot, "forwarder-old"));
+          pipe(exists37, assertTrue);
 
           const applied = yield* enforceAiMetricsRetentionPolicy(
             AiMetricsRetentionEnforcementPolicy.make({
@@ -4225,9 +4266,12 @@ volumes:
           );
           expect(applied.deletedDerivedExportCount).toBe(2);
           expect(applied.keptDerivedExportCount).toBe(0);
-          pipe(yield* fs.exists(path.join(parquetRoot, "forwarder-old")), assertFalse);
-          pipe(yield* fs.exists(path.join(parquetRoot, "forwarder-new")), assertFalse);
-          pipe(yield* fs.exists(path.join(parquetRoot, "latest")), assertTrue);
+          const exists38 = yield* fs.exists(path.join(parquetRoot, "forwarder-old"));
+          pipe(exists38, assertFalse);
+          const exists39 = yield* fs.exists(path.join(parquetRoot, "forwarder-new"));
+          pipe(exists39, assertFalse);
+          const exists40 = yield* fs.exists(path.join(parquetRoot, "latest"));
+          pipe(exists40, assertTrue);
         })
       );
     })
@@ -4264,22 +4308,22 @@ volumes:
           );
           expect(dryRun.deletedDerivedExportCount).toBe(1);
           expect(dryRun.keptDerivedExportCount).toBe(2);
-          expect(forwarderCount(yield* fs.readDirectory(parquetRoot))).toBe(3);
-          expect(A.sort(yield* fs.readDirectory(parquetRoot), Str.Order)).toEqual([
-            "forwarder-1",
-            "forwarder-2",
-            "forwarder-3",
-            "latest",
-          ]);
-          expect(yield* fs.readFileString(path.join(parquetRoot, "forwarder-1/ai_metrics_turns.parquet"))).toBe(
-            "one\n"
+          const readDirectory41 = yield* fs.readDirectory(parquetRoot);
+          expect(forwarderCount(readDirectory41)).toBe(3);
+          const readDirectory42 = yield* fs.readDirectory(parquetRoot);
+          expect(A.sort(readDirectory42, Str.Order)).toEqual(["forwarder-1", "forwarder-2", "forwarder-3", "latest"]);
+          const readFileString43 = yield* fs.readFileString(
+            path.join(parquetRoot, "forwarder-1/ai_metrics_turns.parquet")
           );
-          expect(yield* fs.readFileString(path.join(parquetRoot, "forwarder-2/ai_metrics_turns.parquet"))).toBe(
-            "two\n"
+          expect(readFileString43).toBe("one\n");
+          const readFileString44 = yield* fs.readFileString(
+            path.join(parquetRoot, "forwarder-2/ai_metrics_turns.parquet")
           );
-          expect(yield* fs.readFileString(path.join(parquetRoot, "forwarder-3/ai_metrics_turns.parquet"))).toBe(
-            "three\n"
+          expect(readFileString44).toBe("two\n");
+          const readFileString45 = yield* fs.readFileString(
+            path.join(parquetRoot, "forwarder-3/ai_metrics_turns.parquet")
           );
+          expect(readFileString45).toBe("three\n");
 
           const applied = yield* enforceAiMetricsRetentionPolicy(
             AiMetricsRetentionEnforcementPolicy.make({
@@ -4290,21 +4334,23 @@ volumes:
           );
           expect(applied.deletedDerivedExportCount).toBe(1);
           expect(applied.keptDerivedExportCount).toBe(2);
-          expect(forwarderCount(yield* fs.readDirectory(parquetRoot))).toBe(2);
-          expect(A.sort(yield* fs.readDirectory(parquetRoot), Str.Order)).toEqual([
-            "forwarder-1",
-            "forwarder-3",
-            "latest",
-          ]);
-          expect(yield* fs.readFileString(path.join(parquetRoot, "forwarder-1/ai_metrics_turns.parquet"))).toBe(
-            "one\n"
+          const readDirectory46 = yield* fs.readDirectory(parquetRoot);
+          expect(forwarderCount(readDirectory46)).toBe(2);
+          const readDirectory47 = yield* fs.readDirectory(parquetRoot);
+          expect(A.sort(readDirectory47, Str.Order)).toEqual(["forwarder-1", "forwarder-3", "latest"]);
+          const readFileString48 = yield* fs.readFileString(
+            path.join(parquetRoot, "forwarder-1/ai_metrics_turns.parquet")
           );
-          expect(yield* fs.readFileString(path.join(parquetRoot, "forwarder-3/ai_metrics_turns.parquet"))).toBe(
-            "three\n"
+          expect(readFileString48).toBe("one\n");
+          const readFileString49 = yield* fs.readFileString(
+            path.join(parquetRoot, "forwarder-3/ai_metrics_turns.parquet")
           );
-          expect(yield* fs.readFileString(path.join(parquetRoot, "latest/ai_metrics_turns.parquet"))).toBe("latest\n");
+          expect(readFileString49).toBe("three\n");
+          const readFileString50 = yield* fs.readFileString(path.join(parquetRoot, "latest/ai_metrics_turns.parquet"));
+          expect(readFileString50).toBe("latest\n");
 
-          pipe(yield* fs.exists(path.join(parquetRoot, "latest")), assertTrue);
+          const exists51 = yield* fs.exists(path.join(parquetRoot, "latest"));
+          pipe(exists51, assertTrue);
         })
       );
     })
@@ -4471,8 +4517,10 @@ volumes:
           pipe(compactResult.dryRun, assertFalse);
           expect(compactResult.deletedDerivedExportCount).toBe(1);
           expect(compactResult.deletedReportCount).toBe(1);
-          pipe(yield* fs.exists(path.join(dataRoot, "derived/parquet")), assertTrue);
-          pipe(yield* fs.exists(path.join(dataRoot, "reports/weekly.md")), assertFalse);
+          const exists52 = yield* fs.exists(path.join(dataRoot, "derived/parquet"));
+          pipe(exists52, assertTrue);
+          const exists53 = yield* fs.exists(path.join(dataRoot, "reports/weekly.md"));
+          pipe(exists53, assertFalse);
 
           const deleteResult = yield* runAiMetricsRetentionDelete(selector, false).pipe(
             provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath })))

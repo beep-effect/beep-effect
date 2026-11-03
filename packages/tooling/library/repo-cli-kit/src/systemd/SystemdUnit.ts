@@ -313,5 +313,6 @@ export const readInstalledSystemdUnit = Effect.fn("SystemdUnit.readInstalledUnit
   if (!present) {
     return O.none<SystemdInstalledUnit>();
   }
-  return O.some(parseSystemdUnit(yield* fs.readFileString(file), options.fileName));
+  const readFileString1 = yield* fs.readFileString(file);
+  return O.some(parseSystemdUnit(readFileString1, options.fileName));
 });

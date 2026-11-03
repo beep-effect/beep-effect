@@ -741,7 +741,8 @@ const buildEffectRootMapping = Effect.fn("EffectImports.buildEffectRootMapping")
   let mappings = R.empty<string, ImportTargetCandidates>();
   for (const { subpath, sourceTarget } of publicEffectBarrels(exports.value)) {
     const barrelPath = path.resolve(packageDirectory, sourceTarget);
-    const barrel = barrelProject.createSourceFile(barrelPath, yield* fs.readFileString(barrelPath));
+    const readFileString1 = yield* fs.readFileString(barrelPath);
+    const barrel = barrelProject.createSourceFile(barrelPath, readFileString1);
     const candidates = yield* buildEffectBarrelMapping(exports.value, subpath, barrel);
     mappings = R.set(mappings, subpath === "." ? "effect" : `effect${Str.slice(1)(subpath)}`, candidates);
   }

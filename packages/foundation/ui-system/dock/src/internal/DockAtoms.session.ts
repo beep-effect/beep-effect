@@ -133,7 +133,8 @@ export const makeDockAtomSessionLayer: {
               });
             }),
             restoreSnapshot: Effect.fn("DockAtomSession.restoreSnapshot")(function* ({ request }) {
-              const snapshot = yield* requireSnapshot(yield* store.load);
+              const loaded = yield* store.load;
+              const snapshot = yield* requireSnapshot(loaded);
               const outcome = yield* engine.restore(registry.get(stateAtom), snapshot, request);
               return yield* publishMutation(outcome);
             }),

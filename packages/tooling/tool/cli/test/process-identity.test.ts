@@ -59,31 +59,42 @@ it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })("ProcessIdentity", (
       const inspect = (recorded: string, current: O.Option<string>) =>
         processIdentityStatusWithStartForTesting({ pid: process.pid, procStart: recorded }, current);
 
-      expect(yield* inspect("proc:one", O.some("proc:one"))).toBe("alive");
-      expect(yield* inspect("proc:one", O.some("proc:two"))).toBe("dead");
-      expect(yield* inspect("one", O.some("two"))).toBe("dead");
-      expect(yield* inspect("proc:one", O.some("ps:one"))).toBe("unknown");
-      expect(yield* inspect("ps:one", O.some("proc:one"))).toBe("unknown");
-      expect(yield* inspect("win:one", O.some("ps:one"))).toBe("unknown");
-      expect(yield* inspect("proc:one", O.none())).toBe("unknown");
-      expect(yield* inspect("", O.none())).toBe("alive");
-      expect(
-        yield* processIdentityStatusWithStartForTesting({ pid: DEAD_PID, procStart: "proc:one" }, O.some("proc:one"))
-      ).toBe("dead");
+      const inspect1 = yield* inspect("proc:one", O.some("proc:one"));
+      expect(inspect1).toBe("alive");
+      const inspect2 = yield* inspect("proc:one", O.some("proc:two"));
+      expect(inspect2).toBe("dead");
+      const inspect3 = yield* inspect("one", O.some("two"));
+      expect(inspect3).toBe("dead");
+      const inspect4 = yield* inspect("proc:one", O.some("ps:one"));
+      expect(inspect4).toBe("unknown");
+      const inspect5 = yield* inspect("ps:one", O.some("proc:one"));
+      expect(inspect5).toBe("unknown");
+      const inspect6 = yield* inspect("win:one", O.some("ps:one"));
+      expect(inspect6).toBe("unknown");
+      const inspect7 = yield* inspect("proc:one", O.none());
+      expect(inspect7).toBe("unknown");
+      const inspect8 = yield* inspect("", O.none());
+      expect(inspect8).toBe("alive");
+      const processIdentityStatusWithStartForTesting9 = yield* processIdentityStatusWithStartForTesting(
+        { pid: DEAD_PID, procStart: "proc:one" },
+        O.some("proc:one")
+      );
+      expect(processIdentityStatusWithStartForTesting9).toBe("dead");
     })
   );
 
   it.effect("retains inconclusive identities and rejects proven reuse", () =>
     Effect.gen(function* () {
-      expect(
-        yield* isProcessIdentityAliveWithStartForTesting({ pid: process.pid, procStart: "proc:one" }, O.none())
-      ).toBe(true);
-      expect(
-        yield* isProcessIdentityAliveWithStartForTesting(
-          { pid: process.pid, procStart: "proc:one" },
-          O.some("proc:two")
-        )
-      ).toBe(false);
+      const isProcessIdentityAliveWithStartForTesting10 = yield* isProcessIdentityAliveWithStartForTesting(
+        { pid: process.pid, procStart: "proc:one" },
+        O.none()
+      );
+      expect(isProcessIdentityAliveWithStartForTesting10).toBe(true);
+      const isProcessIdentityAliveWithStartForTesting11 = yield* isProcessIdentityAliveWithStartForTesting(
+        { pid: process.pid, procStart: "proc:one" },
+        O.some("proc:two")
+      );
+      expect(isProcessIdentityAliveWithStartForTesting11).toBe(false);
     })
   );
 
@@ -93,7 +104,8 @@ it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })("ProcessIdentity", (
         throw Object.assign(new Error("permission denied"), { code: "EPERM" });
       });
       try {
-        expect(yield* isProcessPidAlive(process.pid)).toBe(true);
+        const isProcessPidAlive12 = yield* isProcessPidAlive(process.pid);
+        expect(isProcessPidAlive12).toBe(true);
       } finally {
         kill.mockRestore();
       }
@@ -102,11 +114,15 @@ it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })("ProcessIdentity", (
 
   it.effect("reads proc identities and uses the recorded source without substitution", () =>
     Effect.gen(function* () {
-      expect(O.getOrThrow(yield* withProcStat(PROC_STAT, processStartTimeForPid(process.pid)))).toBe("8241991");
-      expect(O.getOrThrow(yield* withProcStat(PROC_STAT, processStartIdentityForPid(process.pid)))).toBe("8241991");
-      expect(
-        O.getOrThrow(yield* withProcStat(PROC_STAT, processStartIdentityForPid(process.pid, O.some("proc:8241991"))))
-      ).toBe("proc:8241991");
+      const withProcStat13 = yield* withProcStat(PROC_STAT, processStartTimeForPid(process.pid));
+      expect(O.getOrThrow(withProcStat13)).toBe("8241991");
+      const withProcStat14 = yield* withProcStat(PROC_STAT, processStartIdentityForPid(process.pid));
+      expect(O.getOrThrow(withProcStat14)).toBe("8241991");
+      const withProcStat15 = yield* withProcStat(
+        PROC_STAT,
+        processStartIdentityForPid(process.pid, O.some("proc:8241991"))
+      );
+      expect(O.getOrThrow(withProcStat15)).toBe("proc:8241991");
       (yield* withProcStat("", processStartIdentityForPid(process.pid, O.some("proc:recorded-start")))).pipe(
         assertNone
       );

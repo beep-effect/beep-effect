@@ -117,9 +117,12 @@ describe("CliTheme.layer", () => {
   )("glyphs auto", (it) => {
     it.effect("is ascii only when TERM=dumb", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* DumbGlyphs, "ascii");
-        assert.strictEqual(yield* XtermGlyphs, "unicode");
-        assert.strictEqual(yield* MissingGlyphs, "unicode");
+        const DumbGlyphs1 = yield* DumbGlyphs;
+        assert.strictEqual(DumbGlyphs1, "ascii");
+        const XtermGlyphs2 = yield* XtermGlyphs;
+        assert.strictEqual(XtermGlyphs2, "unicode");
+        const MissingGlyphs3 = yield* MissingGlyphs;
+        assert.strictEqual(MissingGlyphs3, "unicode");
       })
     );
   });

@@ -195,7 +195,8 @@ const makeScenario = Effect.gen(function* () {
     listFailures: [],
   });
   const index = yield* Effect.orDie(matterIndex);
-  const platform = Layer.succeedContext(yield* Effect.context<FileSystem.FileSystem | Path.Path>());
+  const context1 = yield* Effect.context<FileSystem.FileSystem | Path.Path>();
+  const platform = Layer.succeedContext(context1);
   const ports = Layer.mergeAll(
     Layer.succeed(Mailbox, makeMailbox(outlook)),
     Layer.succeed(MatterDirectory, MatterDirectoryShape.make({ snapshot: Effect.succeed(index) })),

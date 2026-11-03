@@ -11,17 +11,23 @@ import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 
-const json = (value: unknown): string => `${JSON.stringify(value)}\n`;
+const encodeJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
+
+const json = (value: unknown): string => `${Result.getOrThrowWith(encodeJson(value), identity)}\n`;
 
 // A scratch repository: `files` maps repo-relative paths to contents.
 const repository = Effect.fnUntraced(function* (files: Readonly<Record<string, string>>) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-tsmorph-" }));
+  const resolved1 = yield* fs.makeTempDirectoryScoped({ prefix: "beep-tsmorph-" });
+  const root = yield* fs.realPath(resolved1);
   for (const [relative, content] of R.toEntries(files)) {
     const file = path.join(root, relative);
     yield* fs.makeDirectory(path.dirname(file), { recursive: true });

@@ -68,7 +68,8 @@ const orgs = Effect.fn("Identification.rdapEntities")(function* (
 export const registrantFromRdap = Effect.fn("Identification.registrantFromRdap")(function* (input: unknown) {
   const response = yield* S.decodeUnknownEffect(RdapResponse)(input).pipe(Effect.mapError(invalid));
   if ((response.redacted?.length ?? 0) > 0) return O.none<string>();
-  const names = A.dedupe(yield* orgs(response.entities ?? []));
+  const orgs1 = yield* orgs(response.entities ?? []);
+  const names = A.dedupe(orgs1);
   return names.length === 1 ? A.head(names) : O.none<string>();
 });
 const makeDomainRegistrantLookupLive = Effect.fn("DocumentIdentification.Identification.rdap.make")(function* () {
@@ -84,7 +85,8 @@ const makeDomainRegistrantLookupLive = Effect.fn("DocumentIdentification.Identif
       if (response.status === 404) return O.none<string>();
       if (response.status < 200 || response.status >= 300)
         return yield* IdentificationError.make({ operation: "rdap-query", reason: "unavailable" });
-      return yield* registrantFromRdap(yield* response.json.pipe(Effect.mapError(invalid)));
+      const pipe2 = yield* response.json.pipe(Effect.mapError(invalid));
+      return yield* registrantFromRdap(pipe2);
     }),
   });
 });

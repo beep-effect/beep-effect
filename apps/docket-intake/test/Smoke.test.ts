@@ -35,13 +35,19 @@ const runSmoke = Effect.fnUntraced(function* (script: Partial<M365Script>, write
   const fake = yield* FakeM365;
   yield* Ref.set(fake.script, { ...passingScript, ...script });
   const exit = yield* Effect.exit(smoke(fixtureConfig, write));
+  const argument = yield* Ref.get(fake.calls);
+  const argument1 = O.map(
+    Exit.match(exit, { onFailure: Cause.findErrorOption, onSuccess: O.none }),
+    (error) => error.failed
+  );
+  const logLines1 = yield* TestConsole.logLines;
   return {
-    calls: yield* Ref.get(fake.calls),
-    failed: O.map(Exit.match(exit, { onFailure: Cause.findErrorOption, onSuccess: O.none }), (error) => error.failed),
+    calls: argument,
+    failed: argument1,
     // The console also carries Effect log lines when a runner turns logging on; only the
     // check's own PASS/FAIL report is asserted.
     lines: A.filter(
-      yield* TestConsole.logLines,
+      logLines1,
       (line): line is string => Str.isString(line) && (Str.startsWith("PASS ")(line) || Str.startsWith("FAIL ")(line))
     ),
   };

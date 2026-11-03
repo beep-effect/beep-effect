@@ -1217,7 +1217,7 @@ export const createPackageCommand = Command.make(
     }
 
     const appKind: O.Option<AppKind> = Str.isNonEmpty(appKindOption)
-      ? O.some(yield* decodeAppKindEffect(appKindOption))
+      ? yield* Effect.asSome(decodeAppKindEffect(appKindOption))
       : O.none();
 
     // ── Validate lab mode (lab-apps P2-D20) ────────────────────────────
@@ -1235,7 +1235,7 @@ export const createPackageCommand = Command.make(
       });
     }
     const requestedPackageFamily = Str.isNonEmpty(familyOption)
-      ? O.some(yield* decodePackageFamilyEffect(familyOption))
+      ? yield* Effect.asSome(decodePackageFamilyEffect(familyOption))
       : O.none();
 
     if (packageTypeEquivalence(packageType, "app") && O.isSome(requestedPackageFamily)) {
@@ -1261,7 +1261,7 @@ export const createPackageCommand = Command.make(
     }
     const foundationKind =
       O.isSome(requestedPackageFamily) && packageFamilyEquivalence(requestedPackageFamily.value, "foundation")
-        ? O.some(yield* decodeFoundationKindEffect(kindOption))
+        ? yield* Effect.asSome(decodeFoundationKindEffect(kindOption))
         : O.none<FoundationKind>();
     if (
       O.isSome(requestedPackageFamily) &&
@@ -1274,7 +1274,7 @@ export const createPackageCommand = Command.make(
     }
     const explicitToolingKind =
       O.isSome(requestedPackageFamily) && packageFamilyEquivalence(requestedPackageFamily.value, "tooling")
-        ? O.some(yield* decodeToolingKindEffect(kindOption))
+        ? yield* Effect.asSome(decodeToolingKindEffect(kindOption))
         : O.none<ToolingKind>();
     if (
       O.isSome(requestedPackageFamily) &&
@@ -1549,7 +1549,9 @@ export const createPackageCommand = Command.make(
       portlessLabel,
       ecosystemEffectPeerVersion
     );
-    const labManifestFiles = lab ? A.of(yield* labManifestPlannedFile(description)) : A.empty<PlannedFile>();
+    const labManifestFiles = lab
+      ? yield* Effect.map(labManifestPlannedFile(description), A.of)
+      : A.empty<PlannedFile>();
 
     const plan = fileGenerationPlanService.createPlan(
       FileGenerationPlanInput.make({

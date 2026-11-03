@@ -94,7 +94,9 @@ const fixture = Effect.fn("SecurityTest.fixture")(function* (coverage = "complet
       artifacts,
     },
   };
-  yield* fs.writeFileString(path.join(root, "scan-manifest.json"), yield* encode(manifest));
+  const argument = path.join(root, "scan-manifest.json");
+  const encoded = yield* encode(manifest);
+  yield* fs.writeFileString(argument, encoded);
   return { root, manifest, findings, coverageDocument };
 });
 
@@ -103,7 +105,9 @@ type Manifest = Effect.Success<ReturnType<typeof fixture>>["manifest"];
 const writeJson = Effect.fn("SecurityTest.writeJson")(function* (root: string, name: string, contents: unknown) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  yield* fs.writeFileString(path.join(root, name), yield* encode(contents));
+  const argument1 = path.join(root, name);
+  const encoded1 = yield* encode(contents);
+  yield* fs.writeFileString(argument1, encoded1);
 });
 
 const replaceArtifact = Effect.fn("SecurityTest.replaceArtifact")(function* (
@@ -141,7 +145,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("sealed local security findings",
     ({ repository }) =>
       Effect.gen(function* () {
         const remote = yield* encodeRepository(repository);
-        expect(yield* decodeRepository(remote)).toBe(repository);
+        const decodedRepository = yield* decodeRepository(remote);
+        expect(decodedRepository).toBe(repository);
       }),
     { arbitrary: { runs: 100 } }
   );
@@ -160,7 +165,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("sealed local security findings",
         ]) {
           const decoded = yield* decodeRepository(remote);
           expect(decoded).toBe(slug);
-          expect(yield* encodeRepository(decoded)).toBe(canonical);
+          const encodedRepository = yield* encodeRepository(decoded);
+          expect(encodedRepository).toBe(canonical);
         }
       }),
     { arbitrary: { runs: 100 } }
@@ -168,16 +174,19 @@ it.layer(testLayer, { timeout: "30 seconds" })("sealed local security findings",
   it.effect(
     "requires an explicit transport suffix to preserve a repository name ending in .git",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeRepository("https://github.com/example/project.git")).toBe("example/project");
+      const decodedRepository1 = yield* decodeRepository("https://github.com/example/project.git");
+      expect(decodedRepository1).toBe("example/project");
       const canonical = yield* encodeRepository("example/project.git");
       expect(canonical).toBe("https://github.com/example/project.git.git");
-      expect(yield* decodeRepository(canonical)).toBe("example/project.git");
+      const decodedRepository2 = yield* decodeRepository(canonical);
+      expect(decodedRepository2).toBe("example/project.git");
     })
   );
   it.effect(
     "encodes canonical repository identity and rejects a foreign origin",
     Effect.fnUntraced(function* () {
-      expect(yield* encodeRepository("example/project")).toBe("https://github.com/example/project.git");
+      const encodedRepository3 = yield* encodeRepository("example/project");
+      expect(encodedRepository3).toBe("https://github.com/example/project.git");
       const rejected = yield* securityRepositoryFromRemote("https://example.invalid/project").pipe(Effect.result);
       expect(rejected._tag).toBe("Failure");
     })

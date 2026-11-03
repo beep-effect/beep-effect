@@ -77,7 +77,9 @@ const readKernel = Effect.fn("ObservationProcess.readKernel")((file: string, lim
 const privateFile = Effect.fn("ObservationProcess.privateFile")(function* (file: string, uid: number) {
   const fs = yield* FileSystem.FileSystem;
   const info = yield* fs.lstat(file).pipe(Effect.mapError(() => failure("ownership")));
-  if (!isPrivateObservationFile(info, uid) || O.isNone(info.ino)) return yield* failure("ownership");
+  if (!isPrivateObservationFile(info, uid) || O.isNone(info.ino)) {
+    return yield* failure("ownership");
+  }
   return info;
 });
 const sameFileIdentity = (left: FileSystem.File.Info, right: FileSystem.File.Info) =>
@@ -103,7 +105,9 @@ const requireInheritedLock = Effect.fnUntraced(function* (directory: string, uid
   const fs = yield* FileSystem.FileSystem;
   const lock = yield* privateFile(`${directory}/worker.lock`, uid);
   const descriptors = yield* fs.readDirectory("/proc/self/fd");
-  if (descriptors.length > 256) return yield* failure("resources");
+  if (descriptors.length > 256) {
+    return yield* failure("resources");
+  }
   for (const descriptor of descriptors) {
     if (yield* descriptorOwnsLock(descriptor, lock)) return;
   }
@@ -120,23 +124,32 @@ const ProcessPopulationLimits = S.Struct({
 );
 const isProcessPopulationLimits = S.is(ProcessPopulationLimits);
 const requireMemoryAndTasks = Effect.fnUntraced(function* (memory: number, swap: number, pids: number) {
-  if (!isProcessPopulationLimits({ memory, swap, pids })) return yield* failure("resources");
+  if (!isProcessPopulationLimits({ memory, swap, pids })) {
+    return yield* failure("resources");
+  }
 });
 const validCpuRatio = (quota: number, period: number) => quota > 0 && period > 0 && quota <= period;
 const requireCpuLimit = Effect.fnUntraced(function* (value: string) {
   const cpu = O.getOrNull(Str.match(/^(\d+) (\d+)\n?$/)(value));
-  if (cpu === null) return yield* failure("resources");
-  if (!validCpuRatio(Number(cpu[1]), Number(cpu[2]))) return yield* failure("resources");
+  if (cpu === null) {
+    return yield* failure("resources");
+  }
+  if (!validCpuRatio(Number(cpu[1]), Number(cpu[2]))) {
+    return yield* failure("resources");
+  }
 });
 const decodeFiniteLimit = S.decodeEffect(S.FiniteFromString);
 const requireCgroupLimits = Effect.fnUntraced(function* () {
-  const group = O.getOrUndefined(Str.match(/^0::(\/[^\n]+)\n?$/)(yield* readKernel("/proc/self/cgroup")))?.[1];
-  if (group === undefined || Str.includes("..")(group)) return yield* failure("resources");
+  const argument = Str.match(/^0::(\/[^\n]+)\n?$/);
+  const readKernel2 = yield* readKernel("/proc/self/cgroup");
+  const group = O.getOrUndefined(argument(readKernel2))?.[1];
+  if (group === undefined || Str.includes("..")(group)) {
+    return yield* failure("resources");
+  }
   const root = `/sys/fs/cgroup${group}`;
   const number = Effect.fn("ObservationProcess.limit")(function* (name: string) {
-    return yield* decodeFiniteLimit(Str.trim(yield* readKernel(`${root}/${name}`))).pipe(
-      Effect.mapError(() => failure("resources"))
-    );
+    const readKernel1 = yield* readKernel(`${root}/${name}`);
+    return yield* decodeFiniteLimit(Str.trim(readKernel1)).pipe(Effect.mapError(() => failure("resources")));
   });
   const memory = yield* number("memory.max");
   const swap = yield* number("memory.swap.max");
@@ -147,25 +160,32 @@ const requireCgroupLimits = Effect.fnUntraced(function* () {
 });
 const requireDescriptorLimit = Effect.fnUntraced(function* (limits: string) {
   const descriptorsLimit = O.getOrNull(Str.match(/^Max open files\s+(\d+)\s+(\d+)\s+files[ \t]*$/m)(limits));
-  if (descriptorsLimit === null || Number(descriptorsLimit[2]) > 256) return yield* failure("resources");
+  if (descriptorsLimit === null || Number(descriptorsLimit[2]) > 256) {
+    return yield* failure("resources");
+  }
 });
 const requireFileLimit = Effect.fnUntraced(function* (limits: string, dbPages: number) {
   const fileLimit = O.getOrNull(Str.match(/^Max file size\s+(\d+)\s+(\d+)\s+bytes[ \t]*$/m)(limits));
-  if (fileLimit === null || Number(fileLimit[2]) > 67108864 || Number(fileLimit[1]) < dbPages * 8192)
+  if (fileLimit === null || Number(fileLimit[2]) > 67108864 || Number(fileLimit[1]) < dbPages * 8192) {
     return yield* failure("resources");
+  }
 });
 const requireProcessLimits = Effect.fnUntraced(function* (dbPages: number) {
   const limits = yield* readKernel("/proc/self/limits");
   yield* requireDescriptorLimit(limits);
   yield* requireFileLimit(limits, dbPages);
-  if (!/^Max core file size\s+0\s+0\s+bytes[ \t]*$/m.test(limits)) return yield* failure("resources");
+  if (!/^Max core file size\s+0\s+0\s+bytes[ \t]*$/m.test(limits)) {
+    return yield* failure("resources");
+  }
 });
 const qualify = Effect.fn("ObservationProcess.qualify")(function* (directory: string, uid: number, dbPages: number) {
   yield* requireInheritedLock(directory, uid);
   yield* requireCgroupLimits();
   yield* requireProcessLimits(dbPages);
   const status = yield* readKernel("/proc/self/status");
-  if (!/^NoNewPrivs:\s+1$/m.test(status) || !/^Umask:\s+0077$/m.test(status)) return yield* failure("resources");
+  if (!/^NoNewPrivs:\s+1$/m.test(status) || !/^Umask:\s+0077$/m.test(status)) {
+    return yield* failure("resources");
+  }
 });
 const resolveObservationCredentials = Effect.fnUntraced(function* (uid: number) {
   const fs = yield* FileSystem.FileSystem;
@@ -183,14 +203,20 @@ const resolveObservationCredentials = Effect.fnUntraced(function* (uid: number) 
     }
     const path = yield* Path.Path;
     const directory = credentialDirectory.value;
-    if (!path.isAbsolute(directory) || path.normalize(directory) !== directory)
+    if (!path.isAbsolute(directory) || path.normalize(directory) !== directory) {
       return yield* failure("secret-environment");
+    }
     const info = yield* fs.lstat(directory);
-    if (info.type !== "Directory" || O.isNone(info.uid) || info.uid.value !== uid || (info.mode & 0o077) !== 0)
+    if (info.type !== "Directory" || O.isNone(info.uid) || info.uid.value !== uid || (info.mode & 0o077) !== 0) {
       return yield* failure("secret-environment");
+    }
     const names = yield* fs.readDirectory(directory);
-    if (!A.contains(names, "hash-salt") || A.some(names, (name) => name !== "hash-salt" && name !== "phoenix-api-key"))
+    if (
+      !A.contains(names, "hash-salt") ||
+      A.some(names, (name) => name !== "hash-salt" && name !== "phoenix-api-key")
+    ) {
       return yield* failure("secret-environment");
+    }
     const read = Effect.fn("ObservationProcess.readCredential")(function* (name: string) {
       const file = path.join(directory, name);
       const info = yield* fs.lstat(file);
@@ -203,16 +229,19 @@ const resolveObservationCredentials = Effect.fnUntraced(function* (uid: number) 
         info.nlink.value !== BigInt(1) ||
         info.size < 1 ||
         info.size > 4096
-      )
+      ) {
         return yield* failure("secret-environment");
+      }
       const value = yield* readKernel(file, 4096);
-      if (Str.includes("\u0000")(value) || Str.includes("\n")(value) || Str.includes("\r")(value))
+      if (Str.includes("\u0000")(value) || Str.includes("\n")(value) || Str.includes("\r")(value)) {
         return yield* failure("secret-environment");
+      }
       return Redacted.make(value);
     });
+    const argument1 = yield* read("hash-salt");
     return {
-      salt: yield* read("hash-salt"),
-      apiKey: A.contains(names, "phoenix-api-key") ? O.some(yield* read("phoenix-api-key")) : O.none(),
+      salt: argument1,
+      apiKey: A.contains(names, "phoenix-api-key") ? yield* Effect.asSome(read("phoenix-api-key")) : O.none(),
     };
   }).pipe(Effect.mapError(() => failure("secret-environment")));
   return secrets;
@@ -230,9 +259,14 @@ const prepareObservationStorage = Effect.fnUntraced(function* (directory: string
   const socket = `${directory}/worker.sock`;
   if (!A.contains(names, "worker.sock")) return socket;
   const info = yield* fs.lstat(socket);
-  if (!isOwnedPrivateSocket(info, uid)) return yield* failure("socket");
-  if (A.some(Str.split("\n")(yield* readKernel("/proc/net/unix", 1048576)), (line) => Str.endsWith(` ${socket}`)(line)))
+  if (!isOwnedPrivateSocket(info, uid)) {
     return yield* failure("socket");
+  }
+  const argument2 = Str.split("\n");
+  const readKernel3 = yield* readKernel("/proc/net/unix", 1048576);
+  if (A.some(argument2(readKernel3), (line) => Str.endsWith(` ${socket}`)(line))) {
+    return yield* failure("socket");
+  }
   yield* fs.remove(socket);
   return socket;
 });
@@ -255,7 +289,9 @@ const prepareObservationStorage = Effect.fnUntraced(function* (directory: string
  */
 export const runObservationWorkerProcess = Effect.fn("AIMetrics.runObservationWorkerProcess")(
   function* (directory: string) {
-    if (process.platform !== "linux" || process.geteuid === undefined) return yield* failure("resources");
+    if (process.platform !== "linux" || process.geteuid === undefined) {
+      return yield* failure("resources");
+    }
     const uid = process.geteuid();
     const fs = yield* FileSystem.FileSystem;
     const config = yield* readObservationLaunchConfig(directory, uid).pipe(
@@ -271,15 +307,14 @@ export const runObservationWorkerProcess = Effect.fn("AIMetrics.runObservationWo
     yield* fs.chmod(`${directory}/journal.sqlite`, 0o600);
     const worker = yield* makeObservationWorker(workerConfig).pipe(Effect.provideService(SqlClient.SqlClient, sql));
     const maintenance = yield* makeObservationMaintenanceHttp(worker, workerConfig, directory);
-    const sourceWork = O.isSome(config.discovery)
+    const discovery = config.discovery;
+    const sourceWork = O.isSome(discovery)
       ? O.some({
-          poll: worker.discover(
-            yield* makeTranscriptDiscovery(
-              TranscriptDiscoveryInput.make({ ...config.discovery.value, hashSalt: secrets.salt })
-            ),
-            config.discovery.value.read
+          poll: yield* Effect.map(
+            makeTranscriptDiscovery(TranscriptDiscoveryInput.make({ ...discovery.value, hashSalt: secrets.salt })),
+            (value) => worker.discover(value, discovery.value.read)
           ),
-          policy: config.discovery.value.runtime,
+          policy: discovery.value.runtime,
         })
       : O.none();
     const runtime = yield* makeObservationRuntime(worker, config.runtime, sourceWork);
@@ -291,15 +326,17 @@ export const runObservationWorkerProcess = Effect.fn("AIMetrics.runObservationWo
         if (O.isNone(ownedSocket)) return;
         const owner = ownedSocket.value;
         const current = yield* fs.lstat(socket).pipe(Effect.option);
-        if (O.exists(current, (info) => info.type === "Socket" && sameFileIdentity(info, owner)))
+        if (O.exists(current, (info) => info.type === "Socket" && sameFileIdentity(info, owner))) {
           yield* fs.remove(socket);
+        }
       }).pipe(Effect.orDie)
     );
-    const server = Context.get(
-      yield* Layer.build(BunHttpServer.layer({ unix: socket, maxRequestBodySize: 524288, idleTimeout: 2 })),
-      HttpServer.HttpServer
+    const build2 = yield* Layer.build(
+      BunHttpServer.layer({ unix: socket, maxRequestBodySize: 524288, idleTimeout: 2 })
     );
-    ownedSocket = O.some(yield* fs.lstat(socket));
+    const server = Context.get(build2, HttpServer.HttpServer);
+    const lstat3 = yield* fs.lstat(socket);
+    ownedSocket = O.some(lstat3);
     yield* fs.chmod(socket, 0o600);
     const handler = Effect.gen(function* () {
       const request = yield* HttpServerRequest.HttpServerRequest;
@@ -317,11 +354,12 @@ export const runObservationWorkerProcess = Effect.fn("AIMetrics.runObservationWo
         Match.when(
           { method: "GET", url: "/metrics" },
           Effect.fnUntraced(function* () {
-            return HttpServerResponse.text(
-              renderObservationRuntimeMetrics(yield* runtime.health) +
-                renderNativeHttpMetrics(yield* worker.intakeHealth),
-              { contentType: "text/plain; version=0.0.4; charset=utf-8" }
-            );
+            const health4 = yield* runtime.health;
+            const argument3 = renderObservationRuntimeMetrics(health4);
+            const intakeHealth4 = yield* worker.intakeHealth;
+            return HttpServerResponse.text(argument3 + renderNativeHttpMetrics(intakeHealth4), {
+              contentType: "text/plain; version=0.0.4; charset=utf-8",
+            });
           })
         ),
         Match.when({ method: "POST", url: "/control/resume" }, () =>

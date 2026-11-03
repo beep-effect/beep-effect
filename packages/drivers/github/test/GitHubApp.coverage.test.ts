@@ -7,11 +7,15 @@ import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
+import { identity } from "effect/Function";
 import * as Redacted from "effect/Redacted";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { scriptedFetch } from "./support/fixtures.ts";
 import type { Reply } from "./support/fixtures.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const key = await crypto.subtle.generateKey(
   { name: "RSASSA-PKCS1-v1_5", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" },
@@ -75,26 +79,32 @@ describe("GitHubApp uncovered contracts", () => {
       })
   );
   for (const permissions of [null, ["read", 42], { contents: "write", invalid: 42 }]) {
-    withApp(`permissions normalize ${JSON.stringify(permissions)}`, [minted(permissions)], (app) =>
-      Effect.gen(function* () {
-        const token = yield* app.token(request);
-        assert.deepStrictEqual(
-          token.permissions,
-          permissions === null ? {} : A.isArray(permissions) ? { "0": "read" } : { contents: "write" }
-        );
-      })
+    withApp(
+      `permissions normalize ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(permissions), identity)}`,
+      [minted(permissions)],
+      (app) =>
+        Effect.gen(function* () {
+          const token = yield* app.token(request);
+          assert.deepStrictEqual(
+            token.permissions,
+            permissions === null ? {} : A.isArray(permissions) ? { "0": "read" } : { contents: "write" }
+          );
+        })
     );
   }
   for (const installations of [[], [{ id: 7, account: null }]]) {
-    withApp(`missing owner in ${JSON.stringify(installations)}`, [{ status: 200, body: installations }], (app) =>
-      Effect.gen(function* () {
-        const error = yield* Effect.flip(app.token({ ...credentials, owner: "missing" }));
-        assert.strictEqual(error.kind, "installation");
-        assert.strictEqual(
-          error.reason,
-          `the app is not installed on missing (installed on: ${installations.length === 0 ? "nothing" : "7"})`
-        );
-      })
+    withApp(
+      `missing owner in ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(installations), identity)}`,
+      [{ status: 200, body: installations }],
+      (app) =>
+        Effect.gen(function* () {
+          const error = yield* Effect.flip(app.token({ ...credentials, owner: "missing" }));
+          assert.strictEqual(error.kind, "installation");
+          assert.strictEqual(
+            error.reason,
+            `the app is not installed on missing (installed on: ${installations.length === 0 ? "nothing" : "7"})`
+          );
+        })
     );
   }
   withApp("null app identity is typed", [{ status: 200, body: null }], (app) =>
@@ -111,10 +121,8 @@ describe("GitHubApp uncovered contracts", () => {
     ],
     (app) =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(
-          yield* app.identity(credentials),
-          AppIdentity.make({ slug: "", name: "App", userId: 9 })
-        );
+        const identity1 = yield* app.identity(credentials);
+        assert.deepStrictEqual(identity1, AppIdentity.make({ slug: "", name: "App", userId: 9 }));
       })
   );
   withApp("non Error signing failure has a useful fallback", [], (app) =>
@@ -152,17 +160,21 @@ it.layer(GitHubApp.clientLayer(request, { fetch: script.fetch, retry: RetryPolic
     it.effect("decodes, paginates, streams and executes GraphQL with the held token", () =>
       Effect.gen(function* () {
         const client = yield* GitHubClient;
-        assertNone(yield* client.rateLimit);
-        assert.deepStrictEqual(
-          yield* client.requestDecoded("GET /repos/{owner}/{repo}", params, S.Struct({ default_branch: S.String })),
-          { default_branch: "main" }
+        const rateLimit2 = yield* client.rateLimit;
+        assertNone(rateLimit2);
+        const requestDecoded3 = yield* client.requestDecoded(
+          "GET /repos/{owner}/{repo}",
+          params,
+          S.Struct({ default_branch: S.String })
         );
+        assert.deepStrictEqual(requestDecoded3, { default_branch: "main" });
         assert.strictEqual((yield* client.paginate("GET /repos/{owner}/{repo}/issues", params)).length, 1);
         assert.strictEqual(
           (yield* Stream.runCollect(client.paginateStream("GET /repos/{owner}/{repo}/issues", params))).length,
           1
         );
-        assert.deepStrictEqual(yield* client.graphql(doc, {}), { viewer: { login: "bot" } });
+        const graphql4 = yield* client.graphql(doc, {});
+        assert.deepStrictEqual(graphql4, { viewer: { login: "bot" } });
         for (const call of script.calls.slice(1)) assert.strictEqual(call.headers.authorization, "token ghs_test");
       })
     );

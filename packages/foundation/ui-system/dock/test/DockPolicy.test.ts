@@ -176,7 +176,8 @@ describe("DockPolicy", () => {
             ResizeSplitCommand.make({ splitId: SplitId.make(splitOne), ratio: SplitRatio.make(6_000) })
           )
         );
-        const snapshot = yield* engine.encodeSnapshot(yield* requireChangedState(resized));
+        const requireChangedState1 = yield* requireChangedState(resized);
+        const snapshot = yield* engine.encodeSnapshot(requireChangedState1);
 
         expect(allowedSplit.result._tag).toBe("Changed");
         expect(splitRejection).toMatchObject({ _tag: "DockCommandRejected", reason: "group-locked" });

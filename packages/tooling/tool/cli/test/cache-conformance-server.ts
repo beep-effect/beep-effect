@@ -120,8 +120,9 @@ const readArtifact = Effect.fnUntraced(function* (
 ) {
   if (request.method !== "GET" && request.method !== "HEAD") return status(405);
   if (request.method === "GET" && O.isSome(state.mode.readFault)) return status(state.mode.readFault.value);
+  const got = yield* Ref.get(state.store);
   const stored = O.filter(
-    HashMap.get(yield* Ref.get(state.store), key),
+    HashMap.get(got, key),
     (entry) => !state.mode.hideUntagged || R.has(entry.headers, "x-artifact-tag")
   );
   if (O.isNone(stored)) return status(404);

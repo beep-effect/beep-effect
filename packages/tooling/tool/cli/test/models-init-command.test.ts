@@ -39,8 +39,10 @@ layer(testLayer, { timeout: "30 seconds" })("models init command", (it) => {
 
       yield* runModelsCommand(["init", "--home", home, "--repo", home, "--manifest", manifestPath]);
 
-      expect(yield* fs.exists(manifestPath)).toBe(true);
-      const lines = A.filter(yield* TestConsole.logLines, P.isString);
+      const exists1 = yield* fs.exists(manifestPath);
+      expect(exists1).toBe(true);
+      const logLines2 = yield* TestConsole.logLines;
+      const lines = A.filter(logLines2, P.isString);
       expect(A.some(lines, Str.startsWith("models: seeded"))).toBe(true);
     }).pipe(withFreshConsole)
   );
@@ -61,10 +63,12 @@ layer(testLayer, { timeout: "30 seconds" })("models init command", (it) => {
       const siblings = yield* fs.readDirectory(path.dirname(manifestPath));
       const backups = A.filter(siblings, Str.startsWith("models.yaml.bak-"));
       expect(backups).toHaveLength(1);
-      expect(yield* fs.readFileString(path.join(path.dirname(manifestPath), O.getOrThrow(A.head(backups))))).toContain(
-        "bindings: []"
+      const readFileString3 = yield* fs.readFileString(
+        path.join(path.dirname(manifestPath), O.getOrThrow(A.head(backups)))
       );
-      const lines = A.filter(yield* TestConsole.logLines, P.isString);
+      expect(readFileString3).toContain("bindings: []");
+      const logLines4 = yield* TestConsole.logLines;
+      const lines = A.filter(logLines4, P.isString);
       expect(A.some(lines, Str.startsWith("models: adopted the seed into"))).toBe(true);
     }).pipe(withFreshConsole)
   );
@@ -87,7 +91,8 @@ layer(testLayer, { timeout: "30 seconds" })("models init command", (it) => {
       const siblings = yield* fs.readDirectory(path.dirname(manifestPath));
       expect(A.filter(siblings, Str.startsWith("models.yaml.bak-"))).toHaveLength(2);
       expect(A.filter(siblings, Str.startsWith("models.yaml.tmp-"))).toHaveLength(0);
-      expect(yield* fs.readFileString(manifestPath)).toContain("gpt-6.1-sol");
+      const readFileString5 = yield* fs.readFileString(manifestPath);
+      expect(readFileString5).toContain("gpt-6.1-sol");
     }).pipe(withFreshConsole)
   );
 
@@ -100,10 +105,12 @@ layer(testLayer, { timeout: "30 seconds" })("models init command", (it) => {
 
       yield* runModelsCommand(["init", "--adopt", "--home", home, "--repo", home, "--manifest", manifestPath]);
 
-      expect(yield* fs.exists(manifestPath)).toBe(true);
+      const exists6 = yield* fs.exists(manifestPath);
+      expect(exists6).toBe(true);
       const siblings = yield* fs.readDirectory(path.dirname(manifestPath));
       expect(A.filter(siblings, Str.startsWith("models.yaml.bak-"))).toHaveLength(0);
-      const lines = A.filter(yield* TestConsole.logLines, P.isString);
+      const logLines7 = yield* TestConsole.logLines;
+      const lines = A.filter(logLines7, P.isString);
       expect(A.some(lines, Str.startsWith("models: seeded"))).toBe(true);
     }).pipe(withFreshConsole)
   );
@@ -136,7 +143,8 @@ layer(testLayer, { timeout: "30 seconds" })("models init command", (it) => {
         ])
       );
       exit.pipe(Exit.isFailure, assertTrue);
-      expect(yield* fs.readFileString(sentinel)).toBe("operator routing stays intact\n");
+      const readFileString8 = yield* fs.readFileString(sentinel);
+      expect(readFileString8).toBe("operator routing stays intact\n");
     }).pipe(withFreshConsole)
   );
 });

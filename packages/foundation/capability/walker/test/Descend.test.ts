@@ -135,21 +135,24 @@ layer(platform(mainTree), { timeout: "10 seconds" })("descend, literal fast-path
   it.effect("returns the source when it resolves to a file", () =>
     Effect.gen(function* () {
       const pattern = yield* GlobPattern.compile("readme.md");
-      assert.deepStrictEqual(yield* descend(pattern, { cwd: "/proj" }), ["readme.md"]);
+      const descend1 = yield* descend(pattern, { cwd: "/proj" });
+      assert.deepStrictEqual(descend1, ["readme.md"]);
     })
   );
 
   it.effect("returns empty when the literal resolves to a directory", () =>
     Effect.gen(function* () {
       const pattern = yield* GlobPattern.compile("src");
-      assert.deepStrictEqual(yield* descend(pattern, { cwd: "/proj" }), []);
+      const descend2 = yield* descend(pattern, { cwd: "/proj" });
+      assert.deepStrictEqual(descend2, []);
     })
   );
 
   it.effect("returns empty when the literal is missing — zero matches, not an error", () =>
     Effect.gen(function* () {
       const pattern = yield* GlobPattern.compile("no-such-file.md");
-      assert.deepStrictEqual(yield* descend(pattern, { cwd: "/proj" }), []);
+      const descend3 = yield* descend(pattern, { cwd: "/proj" });
+      assert.deepStrictEqual(descend3, []);
     })
   );
 });
@@ -160,30 +163,24 @@ layer(platform(mainTree), { timeout: "10 seconds" })("descend, magic patterns", 
       const pattern = yield* GlobPattern.compile("src/**/*.ts");
       // Walk order is breadth-first (lib/util.ts before lib/deep/core.ts);
       // sorted output pins deep/core.ts BEFORE util.ts.
-      assert.deepStrictEqual(yield* descend(pattern, { cwd: "/proj" }), [
-        "src/index.ts",
-        "src/lib/deep/core.ts",
-        "src/lib/util.ts",
-      ]);
+      const descend4 = yield* descend(pattern, { cwd: "/proj" });
+      assert.deepStrictEqual(descend4, ["src/index.ts", "src/lib/deep/core.ts", "src/lib/util.ts"]);
     })
   );
 
   it.effect("matches a single-level * pattern one level only", () =>
     Effect.gen(function* () {
       const pattern = yield* GlobPattern.compile("src/*.ts");
-      assert.deepStrictEqual(yield* descend(pattern, { cwd: "/proj" }), ["src/index.ts"]);
+      const descend5 = yield* descend(pattern, { cwd: "/proj" });
+      assert.deepStrictEqual(descend5, ["src/index.ts"]);
     })
   );
 
   it.effect("never descends the default prune list (node_modules, .git)", () =>
     Effect.gen(function* () {
       const pattern = yield* GlobPattern.compile("**/*.ts");
-      assert.deepStrictEqual(yield* descend(pattern, { cwd: "/proj" }), [
-        "dist/out.ts",
-        "src/index.ts",
-        "src/lib/deep/core.ts",
-        "src/lib/util.ts",
-      ]);
+      const descend6 = yield* descend(pattern, { cwd: "/proj" });
+      assert.deepStrictEqual(descend6, ["dist/out.ts", "src/index.ts", "src/lib/deep/core.ts", "src/lib/util.ts"]);
     })
   );
 
@@ -200,15 +197,18 @@ layer(platform(mainTree), { timeout: "10 seconds" })("descend, magic patterns", 
       // Dotfile semantics live in the COMPILED pattern, never in the walker.
       const plain = yield* GlobPattern.compile("src/*.ts");
       const dotted = yield* GlobPattern.compile("src/*.ts", GlobPatternOptions.make({ dot: true }));
-      assert.deepStrictEqual(yield* descend(plain, { cwd: "/proj" }), ["src/index.ts"]);
-      assert.deepStrictEqual(yield* descend(dotted, { cwd: "/proj" }), ["src/.hidden.ts", "src/index.ts"]);
+      const descend7 = yield* descend(plain, { cwd: "/proj" });
+      assert.deepStrictEqual(descend7, ["src/index.ts"]);
+      const descend8 = yield* descend(dotted, { cwd: "/proj" });
+      assert.deepStrictEqual(descend8, ["src/.hidden.ts", "src/index.ts"]);
     })
   );
 
   it.effect("returns empty when the pattern's base directory is missing", () =>
     Effect.gen(function* () {
       const pattern = yield* GlobPattern.compile("missing/**/*.ts");
-      assert.deepStrictEqual(yield* descend(pattern, { cwd: "/proj" }), []);
+      const descend9 = yield* descend(pattern, { cwd: "/proj" });
+      assert.deepStrictEqual(descend9, []);
     })
   );
 
@@ -276,7 +276,8 @@ layer(platformWith(symlinkTree, symlinkOptions), { timeout: "10 seconds" })("des
   it.effect("matches a symlink that resolves to a file and skips a dangling one", () =>
     Effect.gen(function* () {
       const pattern = yield* GlobPattern.compile("src/*.ts");
-      assert.deepStrictEqual(yield* descend(pattern, { cwd: "/proj" }), ["src/a.ts", "src/link.ts"]);
+      const descend10 = yield* descend(pattern, { cwd: "/proj" });
+      assert.deepStrictEqual(descend10, ["src/a.ts", "src/link.ts"]);
     })
   );
 
@@ -285,19 +286,16 @@ layer(platformWith(symlinkTree, symlinkOptions), { timeout: "10 seconds" })("des
       const pattern = yield* GlobPattern.compile("src/**/*.ts");
       // linkdir/inner.ts must NOT appear; the same file is reachable (and
       // matched) only through its real path.
-      assert.deepStrictEqual(yield* descend(pattern, { cwd: "/proj" }), ["src/a.ts", "src/link.ts"]);
+      const descend11 = yield* descend(pattern, { cwd: "/proj" });
+      assert.deepStrictEqual(descend11, ["src/a.ts", "src/link.ts"]);
     })
   );
 
   it.effect("still matches the symlinked directory's files through their real path", () =>
     Effect.gen(function* () {
       const pattern = yield* GlobPattern.compile("**/*.ts");
-      assert.deepStrictEqual(yield* descend(pattern, { cwd: "/proj" }), [
-        "real/dir/inner.ts",
-        "real/file.ts",
-        "src/a.ts",
-        "src/link.ts",
-      ]);
+      const descend12 = yield* descend(pattern, { cwd: "/proj" });
+      assert.deepStrictEqual(descend12, ["real/dir/inner.ts", "real/file.ts", "src/a.ts", "src/link.ts"]);
     })
   );
 });
@@ -323,21 +321,16 @@ layer(platformWith(followTree, followOptions), { timeout: "10 seconds" })("desce
   it.effect("descends into a symlinked directory under followSymlinks: true", () =>
     Effect.gen(function* () {
       const pattern = yield* GlobPattern.compile("src/**/*.ts");
-      assert.deepStrictEqual(yield* descend(pattern, { cwd: "/proj", followSymlinks: true }), [
-        "src/a.ts",
-        "src/link.ts",
-        "src/linkdir/inner.ts",
-      ]);
+      const descend13 = yield* descend(pattern, { cwd: "/proj", followSymlinks: true });
+      assert.deepStrictEqual(descend13, ["src/a.ts", "src/link.ts", "src/linkdir/inner.ts"]);
     })
   );
 
   it.effect("explicit followSymlinks: false keeps the never-descend default", () =>
     Effect.gen(function* () {
       const pattern = yield* GlobPattern.compile("src/**/*.ts");
-      assert.deepStrictEqual(yield* descend(pattern, { cwd: "/proj", followSymlinks: false }), [
-        "src/a.ts",
-        "src/link.ts",
-      ]);
+      const descend14 = yield* descend(pattern, { cwd: "/proj", followSymlinks: false });
+      assert.deepStrictEqual(descend14, ["src/a.ts", "src/link.ts"]);
     })
   );
 
@@ -370,11 +363,8 @@ layer(platformWith(siblingLinkTree, siblingLinkOptions), { timeout: "10 seconds"
     it.effect("two links to one target both enumerate — the guard is per-branch, not walk-global", () =>
       Effect.gen(function* () {
         const pattern = yield* GlobPattern.compile("src/**/*.ts");
-        assert.deepStrictEqual(yield* descend(pattern, { cwd: "/proj", followSymlinks: true }), [
-          "src/a.ts",
-          "src/one/inner.ts",
-          "src/two/inner.ts",
-        ]);
+        const descend15 = yield* descend(pattern, { cwd: "/proj", followSymlinks: true });
+        assert.deepStrictEqual(descend15, ["src/a.ts", "src/one/inner.ts", "src/two/inner.ts"]);
       })
     );
   }
@@ -427,12 +417,8 @@ layer(platformWith(mutualCycleTree, mutualCycleOptions), { timeout: "10 seconds"
     it.effect("terminates on a two-directory link cycle, matching files through both link paths", () =>
       Effect.gen(function* () {
         const pattern = yield* GlobPattern.compile("**/*.ts");
-        assert.deepStrictEqual(yield* descend(pattern, { cwd: "/proj", followSymlinks: true }), [
-          "a/to-b/y.ts",
-          "a/x.ts",
-          "b/to-a/x.ts",
-          "b/y.ts",
-        ]);
+        const descend16 = yield* descend(pattern, { cwd: "/proj", followSymlinks: true });
+        assert.deepStrictEqual(descend16, ["a/to-b/y.ts", "a/x.ts", "b/to-a/x.ts", "b/y.ts"]);
       })
     );
   }
@@ -489,7 +475,8 @@ layer(platformWith(unresolvableTree, unresolvableOptions), { timeout: "10 second
     it.effect("the resolve never happens under followSymlinks: false, so the fault is unreachable", () =>
       Effect.gen(function* () {
         const pattern = yield* GlobPattern.compile("src/**/*.ts");
-        assert.deepStrictEqual(yield* descend(pattern, { cwd: "/proj" }), ["src/a.ts"]);
+        const descend17 = yield* descend(pattern, { cwd: "/proj" });
+        assert.deepStrictEqual(descend17, ["src/a.ts"]);
       })
     );
   }
@@ -507,7 +494,8 @@ layer(platformWith(unresolvableTree, vanishedLinkOptions), { timeout: "10 second
     it.effect("a NotFound on the resolve is a benign race: silent under fail, never recorded", () =>
       Effect.gen(function* () {
         const pattern = yield* GlobPattern.compile("src/**/*.ts");
-        assert.deepStrictEqual(yield* descend(pattern, { cwd: "/proj", followSymlinks: true }), ["src/a.ts"]);
+        const descend18 = yield* descend(pattern, { cwd: "/proj", followSymlinks: true });
+        assert.deepStrictEqual(descend18, ["src/a.ts"]);
         const result = yield* descend(pattern, { cwd: "/proj", followSymlinks: true, onUnreadable: "record" });
         assert.deepStrictEqual(result.matches, ["src/a.ts"]);
         assert.deepStrictEqual(result.unreadable, []);
@@ -550,7 +538,8 @@ layer(platformWith(unreadableTree, unreadableOptions), { timeout: "10 seconds" }
         // src/*.ts cannot match below one level, so descend never descends —
         // and the unreadable directory cannot fail a walk that never reads it.
         const pattern = yield* GlobPattern.compile("src/*.ts");
-        assert.deepStrictEqual(yield* descend(pattern, { cwd: "/proj" }), ["src/a.ts"]);
+        const descend19 = yield* descend(pattern, { cwd: "/proj" });
+        assert.deepStrictEqual(descend19, ["src/a.ts"]);
       })
     );
 
@@ -601,39 +590,46 @@ layer(platformWith(scopedTree, scopedOptions), { timeout: "10 seconds" })("desce
   it.effect("a fixed-depth pattern never reads an unrelated unreadable directory", () =>
     Effect.gen(function* () {
       const pattern = yield* GlobPattern.compile("*/x/package.json");
-      assert.deepStrictEqual(yield* descend(pattern, { cwd: "/proj" }), ["apps/x/package.json"]);
+      const descend20 = yield* descend(pattern, { cwd: "/proj" });
+      assert.deepStrictEqual(descend20, ["apps/x/package.json"]);
     })
   );
 
   it.effect("a brace-rooted globstar walks only its alternatives' branches", () =>
     Effect.gen(function* () {
       const pattern = yield* GlobPattern.compile("{apps,packages,infra}/**/test/**/*.ts");
-      assert.deepStrictEqual(yield* descend(pattern, { cwd: "/proj" }), ["packages/a/test/x.test.ts"]);
+      const descend21 = yield* descend(pattern, { cwd: "/proj" });
+      assert.deepStrictEqual(descend21, ["packages/a/test/x.test.ts"]);
     })
   );
 
   it.effect("a brace-rooted single-level pattern descends one level into each alternative", () =>
     Effect.gen(function* () {
       const pattern = yield* GlobPattern.compile("{src,dist}/*.ts");
-      assert.deepStrictEqual(yield* descend(pattern, { cwd: "/proj" }), ["dist/out.ts", "src/index.ts"]);
+      const descend22 = yield* descend(pattern, { cwd: "/proj" });
+      assert.deepStrictEqual(descend22, ["dist/out.ts", "src/index.ts"]);
       const slashed = yield* GlobPattern.compile("{src/*,docs/*}.ts");
-      assert.deepStrictEqual(yield* descend(slashed, { cwd: "/proj" }), ["docs/q.ts", "src/index.ts"]);
+      const descend23 = yield* descend(slashed, { cwd: "/proj" });
+      assert.deepStrictEqual(descend23, ["docs/q.ts", "src/index.ts"]);
     })
   );
 
   it.effect("a brace pattern without other magic walks every alternative instead of stating its source", () =>
     Effect.gen(function* () {
       const leaf = yield* GlobPattern.compile("src/{index,other}.ts");
-      assert.deepStrictEqual(yield* descend(leaf, { cwd: "/proj" }), ["src/index.ts"]);
+      const descend24 = yield* descend(leaf, { cwd: "/proj" });
+      assert.deepStrictEqual(descend24, ["src/index.ts"]);
       const spanning = yield* GlobPattern.compile("{src/index,dist/out}.ts");
-      assert.deepStrictEqual(yield* descend(spanning, { cwd: "/proj" }), ["dist/out.ts", "src/index.ts"]);
+      const descend25 = yield* descend(spanning, { cwd: "/proj" });
+      assert.deepStrictEqual(descend25, ["dist/out.ts", "src/index.ts"]);
     })
   );
 
   it.effect("an escaped literal stats the path it names, not its source text", () =>
     Effect.gen(function* () {
       const pattern = yield* GlobPattern.compile(GlobPattern.escape("lit/a*b.ts"));
-      assert.deepStrictEqual(yield* descend(pattern, { cwd: "/proj" }), ["lit/a*b.ts"]);
+      const descend26 = yield* descend(pattern, { cwd: "/proj" });
+      assert.deepStrictEqual(descend26, ["lit/a*b.ts"]);
     })
   );
 
@@ -662,7 +658,8 @@ layer(platformWith(vanishedTree, vanishedOptions), { timeout: "10 seconds" })("d
   it.effect("treats a NotFound mid-walk as a benign race, even under onUnreadable: fail", () =>
     Effect.gen(function* () {
       const pattern = yield* GlobPattern.compile("src/**/*.ts");
-      assert.deepStrictEqual(yield* descend(pattern, { cwd: "/proj" }), ["src/a.ts"]);
+      const descend27 = yield* descend(pattern, { cwd: "/proj" });
+      assert.deepStrictEqual(descend27, ["src/a.ts"]);
     })
   );
 
@@ -718,7 +715,8 @@ layer(platform(deepTree), { timeout: "10 seconds" })("descend, depth cap", (it) 
   it.effect("succeeds when maxDepth admits the whole tree", () =>
     Effect.gen(function* () {
       const pattern = yield* GlobPattern.compile("**/*.ts");
-      assert.deepStrictEqual(yield* descend(pattern, { cwd: "/proj", maxDepth: 3 }), ["a/b/c/d.ts"]);
+      const descend28 = yield* descend(pattern, { cwd: "/proj", maxDepth: 3 });
+      assert.deepStrictEqual(descend28, ["a/b/c/d.ts"]);
     })
   );
 });
@@ -735,14 +733,16 @@ layer(platform(escapeTree), { timeout: "10 seconds" })("descend, cwd confinement
   it.effect("a literal pattern climbing above cwd is zero matches, never a read outside", () =>
     Effect.gen(function* () {
       const pattern = yield* GlobPattern.compile("../secret/token.txt");
-      assert.deepStrictEqual(yield* descend(pattern, { cwd: "/proj" }), []);
+      const descend29 = yield* descend(pattern, { cwd: "/proj" });
+      assert.deepStrictEqual(descend29, []);
     })
   );
 
   it.effect("a magic pattern whose prefix climbs above cwd is zero matches", () =>
     Effect.gen(function* () {
       const pattern = yield* GlobPattern.compile("../secret/**");
-      assert.deepStrictEqual(yield* descend(pattern, { cwd: "/proj" }), []);
+      const descend30 = yield* descend(pattern, { cwd: "/proj" });
+      assert.deepStrictEqual(descend30, []);
     })
   );
 
@@ -752,7 +752,8 @@ layer(platform(escapeTree), { timeout: "10 seconds" })("descend, cwd confinement
       // paths carry no "..", so this is still zero matches, but it must not
       // be conflated with an escape defect: both answers are [] by contract.
       const pattern = yield* GlobPattern.compile("src/../../secret/token.txt");
-      assert.deepStrictEqual(yield* descend(pattern, { cwd: "/proj" }), []);
+      const descend31 = yield* descend(pattern, { cwd: "/proj" });
+      assert.deepStrictEqual(descend31, []);
     })
   );
 });

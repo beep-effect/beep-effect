@@ -668,10 +668,11 @@ const mdListItemChildrenToPandocBlocks = Effect.fn("mdListItemChildrenToPandocBl
   let pendingStartIndex = 0;
   const flushInlines = Effect.fnUntraced(function* () {
     if (pendingInlines.length > 0) {
-      A.appendInPlace(
-        blocks,
-        yield* mdInlinesToPandocPlain(pendingInlines, appendIndex(path, "children", pendingStartIndex))
+      const mdInlinesToPandocPlain1 = yield* mdInlinesToPandocPlain(
+        pendingInlines,
+        appendIndex(path, "children", pendingStartIndex)
       );
+      A.appendInPlace(blocks, mdInlinesToPandocPlain1);
       pendingInlines = [];
     }
   });
@@ -683,7 +684,8 @@ const mdListItemChildrenToPandocBlocks = Effect.fn("mdListItemChildrenToPandocBl
       A.appendInPlace(pendingInlines, child);
     } else {
       yield* flushInlines();
-      A.appendInPlace(blocks, yield* mdBlockToPandoc(child, appendIndex(path, "children", index)));
+      const mdBlockToPandoc2 = yield* mdBlockToPandoc(child, appendIndex(path, "children", index));
+      A.appendInPlace(blocks, mdBlockToPandoc2);
     }
   }
 

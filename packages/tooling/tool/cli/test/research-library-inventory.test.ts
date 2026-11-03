@@ -166,15 +166,22 @@ it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 second
             }),
           ],
         });
-        yield* fs.writeFileString(path.join(root, "catalog.json"), yield* S.encodeEffect(LibraryCatalogJson)(legacy));
+        const argument = path.join(root, "catalog.json");
+        const value1 = yield* S.encodeEffect(LibraryCatalogJson)(legacy);
+        yield* fs.writeFileString(argument, value1);
         yield* withCatalog(root, Effect.succeed);
-        expect(yield* hashBytes(yield* fs.readFile(path.join(root, "objects/sha256", sha256)))).toBe(sha256);
-        expect(yield* hashBytes(yield* fs.readFile(path.join(root, "qualifications/legacy.txt")))).toBe(sha256);
+        const readFile23 = yield* fs.readFile(path.join(root, "objects/sha256", sha256));
+        const hashBytes1 = yield* hashBytes(readFile23);
+        expect(hashBytes1).toBe(sha256);
+        const readFile24 = yield* fs.readFile(path.join(root, "qualifications/legacy.txt"));
+        const hashBytes2 = yield* hashBytes(readFile24);
+        expect(hashBytes2).toBe(sha256);
         yield* fs.remove(path.join(root, "objects/sha256", sha256));
         yield* fs.writeFileString(path.join(root, "qualifications/legacy.txt"), "corrupted legacy evidence");
         const rejected = yield* withCatalog(root, Effect.succeed).pipe(Effect.flip);
         expect(rejected.message).toContain("differs from its immutable receipt");
-        expect(yield* fs.exists(path.join(root, "objects/sha256", sha256))).toBe(false);
+        const exists3 = yield* fs.exists(path.join(root, "objects/sha256", sha256));
+        expect(exists3).toBe(false);
       })
     );
 
@@ -327,7 +334,8 @@ it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 second
         expect(original).toBeDefined();
         if (original !== undefined) {
           const snapshot = path.join(root, original.snapshotPath);
-          expect(yield* fs.readFileString(snapshot)).toContain("# One");
+          const readFileString4 = yield* fs.readFileString(snapshot);
+          expect(readFileString4).toContain("# One");
           yield* fs.writeFileString(snapshot, "corrupted");
           yield* fs.writeFileString(report, "# One\nhttps://github.com/owner/repo/issues/1\n");
           const failed = yield* inventoryLibrary(options).pipe(Effect.flip);
@@ -344,7 +352,8 @@ it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 second
         yield* saveImmutable(root, "snapshot.md", new TextEncoder().encode("first"));
         const failed = yield* saveImmutable(root, "snapshot.md", new TextEncoder().encode("second")).pipe(Effect.flip);
         expect(failed.message).toContain("Immutable artifact content differs");
-        expect(yield* fs.readFileString(path.join(root, "snapshot.md"))).toBe("first");
+        const readFileString5 = yield* fs.readFileString(path.join(root, "snapshot.md"));
+        expect(readFileString5).toBe("first");
         yield* withCatalog(root, Effect.succeed);
         yield* fs.makeDirectory(path.join(root, ".writer-lock"));
         const locked = yield* withCatalog(root, Effect.succeed).pipe(Effect.flip);
@@ -366,7 +375,8 @@ it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 second
           Effect.flip
         );
         expect(rejected.message).toContain("escapes library");
-        expect(yield* fs.exists(path.join(outside, "new"))).toBe(false);
+        const exists6 = yield* fs.exists(path.join(outside, "new"));
+        expect(exists6).toBe(false);
         const traversal = yield* saveImmutable(root, "../escape.md", new Uint8Array()).pipe(Effect.flip);
         expect(traversal.message).toContain("inside the library");
       })
@@ -393,9 +403,15 @@ it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 second
         );
         expect(rejected.message).toBe("Cannot publish immutable artifact atomically.");
         expect(rejected.cause).toMatchObject({ message: "Concurrent immutable artifact escapes library via symlink." });
-        expect(yield* hashBytes(yield* fs.readFile(outside))).toBe(yield* hashBytes(bytes));
-        expect(yield* fs.realPath(target)).toBe(outside);
-        expect(yield* fs.readDirectory(path.join(root, "objects/sha256"))).toHaveLength(1);
+        const readFile25 = yield* fs.readFile(outside);
+        const hashBytes7 = yield* hashBytes(readFile25);
+        const expectation = expect(hashBytes7);
+        const hashBytes3 = yield* hashBytes(bytes);
+        expectation.toBe(hashBytes3);
+        const realPath8 = yield* fs.realPath(target);
+        expect(realPath8).toBe(outside);
+        const readDirectory9 = yield* fs.readDirectory(path.join(root, "objects/sha256"));
+        expect(readDirectory9).toHaveLength(1);
       })
     );
     it.effect("counts every reference-style Markdown use and preserves definition and use spans", () =>
@@ -432,13 +448,11 @@ it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 second
           // Remove the original so only the manifest-relative copy can satisfy the import.
           yield* f.fs.remove(f.proofPath);
           const manifest = f.path.join(directory, "resolution.json");
-          yield* f.fs.writeFileString(
-            manifest,
-            yield* fixtureJson({
-              ...f.payload,
-              evidence: { ...f.payload.evidence, path: mode === "relative" ? "proof.json" : proofPath },
-            })
-          );
+          const fixtureJson10 = yield* fixtureJson({
+            ...f.payload,
+            evidence: { ...f.payload.evidence, path: mode === "relative" ? "proof.json" : proofPath },
+          });
+          yield* f.fs.writeFileString(manifest, fixtureJson10);
           const result = yield* importLibraryResult(f.root, manifest);
           const resolved = A.findFirst(result.sources, (entry) => entry.id === f.preexisting.id);
           expect(resolved).toMatchObject({ _tag: "Some", value: { aliasIds: expect.arrayContaining([f.source.id]) } });
@@ -465,34 +479,32 @@ it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 second
             payload,
             payloadPath,
           } = yield* resolutionFixture();
-          yield* fs.writeFileString(
-            payloadPath,
-            yield* fixtureJson({ ...payload, evidence: { ...payload.evidence, sha256: Str.repeat(64)("0") } })
-          );
+          const fixtureJson11 = yield* fixtureJson({
+            ...payload,
+            evidence: { ...payload.evidence, sha256: Str.repeat(64)("0") },
+          });
+          yield* fs.writeFileString(payloadPath, fixtureJson11);
           expect((yield* importLibraryResult(root, payloadPath).pipe(Effect.flip)).message).toContain("hash differs");
-          yield* fs.writeFileString(
-            payloadPath,
-            yield* fixtureJson({
-              ...payload,
-              canonicalUrl: "https://github.com/modelcontextprotocol/conformance/issues/330",
-            })
-          );
+          const fixtureJson12 = yield* fixtureJson({
+            ...payload,
+            canonicalUrl: "https://github.com/modelcontextprotocol/conformance/issues/330",
+          });
+          yield* fs.writeFileString(payloadPath, fixtureJson12);
           expect((yield* importLibraryResult(root, payloadPath).pipe(Effect.flip)).message).toContain("object differs");
-          yield* fs.writeFileString(
-            payloadPath,
-            yield* fixtureJson({
-              ...payload,
-              context: {
-                ...payload.context,
-                occurrences: [{ ...A.getUnsafe(payload.context.occurrences, 0), context: "fabricated" }],
-              },
-            })
-          );
+          const fixtureJson13 = yield* fixtureJson({
+            ...payload,
+            context: {
+              ...payload.context,
+              occurrences: [{ ...A.getUnsafe(payload.context.occurrences, 0), context: "fabricated" }],
+            },
+          });
+          yield* fs.writeFileString(payloadPath, fixtureJson13);
           expect((yield* importLibraryResult(root, payloadPath).pipe(Effect.flip)).message).toContain(
             "context differs"
           );
           expect(A.getUnsafe((yield* loadCatalog(root)).sources, 0)?.kind).toBe("unresolved");
-          yield* fs.writeFileString(payloadPath, yield* fixtureJson(payload));
+          const fixtureJson14 = yield* fixtureJson(payload);
+          yield* fs.writeFileString(payloadPath, fixtureJson14);
           yield* importLibraryResult(root, payloadPath);
           const resolved = yield* loadCatalog(root);
           const target = O.getOrThrowWith(
@@ -507,7 +519,8 @@ it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 second
           expect(A.some(resolved.sources, (s) => s.kind === "github-repository")).toBe(true);
           expect(A.filter(resolved.artifacts, (a) => Str.startsWith("reference-resolution")(a.role))).toHaveLength(2);
           yield* importLibraryResult(root, payloadPath);
-          expect(yield* loadCatalog(root)).toEqual(resolved);
+          const loadedCatalog = yield* loadCatalog(root);
+          expect(loadedCatalog).toEqual(resolved);
           const missingSecondReport = () => new Error("Missing second report fixture");
           const other = O.getOrThrowWith(
             A.findFirst(before.occurrences, (o) => o.sourceId !== source.id),
@@ -549,7 +562,8 @@ it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 second
               ],
             },
           };
-          yield* fs.writeFileString(payloadPath, yield* fixtureJson(secondPayload));
+          const fixtureJson15 = yield* fixtureJson(secondPayload);
+          yield* fs.writeFileString(payloadPath, fixtureJson15);
           yield* importLibraryResult(root, payloadPath);
           const merged = yield* loadCatalog(root);
           expect(A.filter(merged.sources, (s) => s.kind === "github-pr")).toHaveLength(1);
@@ -558,13 +572,13 @@ it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 second
           );
           expect(A.every(merged.occurrences, (o) => o.sourceId === preexisting.id)).toBe(true);
           yield* importLibraryResult(root, payloadPath);
-          expect(yield* loadCatalog(root)).toEqual(merged);
+          const loadedCatalog16 = yield* loadCatalog(root);
+          expect(loadedCatalog16).toEqual(merged);
           const rerun = yield* inventoryLibrary(options);
           expect(A.some(rerun.sources, (s) => s.kind === "unresolved")).toBe(false);
           expect(rerun.occurrences).toEqual(merged.occurrences);
-          expect(yield* fs.readFileString(path.join(root, document.snapshotPath))).toBe(
-            "# Report\nCites modelcontextprotocol/conformance#330.\n"
-          );
+          const readFileString17 = yield* fs.readFileString(path.join(root, document.snapshotPath));
+          expect(readFileString17).toBe("# Report\nCites modelcontextprotocol/conformance#330.\n");
         })
     );
     it.effect("repairs Markdown URL label boundaries and explicitly expands cited arxiv category alternatives", () =>
@@ -769,10 +783,14 @@ it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 second
         ).toMatchObject({
           findingId: "f-law-01",
         });
-        expect(yield* fs.exists(path.join(root, "catalog/library.json"))).toBe(true);
-        expect(yield* fs.exists(path.join(root, "library.json"))).toBe(true);
-        for (const document of catalog.documents)
-          expect(yield* fs.exists(path.join(root, "objects/sha256", document.sha256))).toBe(true);
+        const exists18 = yield* fs.exists(path.join(root, "catalog/library.json"));
+        expect(exists18).toBe(true);
+        const exists19 = yield* fs.exists(path.join(root, "library.json"));
+        expect(exists19).toBe(true);
+        for (const document of catalog.documents) {
+          const exists4 = yield* fs.exists(path.join(root, "objects/sha256", document.sha256));
+          expect(exists4).toBe(true);
+        }
       })
     );
     it.effect("migrates legacy catalog IDs without overwriting original evidence or losing capture bindings", () =>
@@ -834,8 +852,10 @@ it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 second
           requestedRevision: "v1",
           capturedRevision: "v1",
         });
-        expect(yield* fs.readFileString(path.join(root, "catalog.json"))).toBe(text);
-        expect(yield* fs.exists(path.join(root, "catalog/library.json"))).toBe(true);
+        const readFileString20 = yield* fs.readFileString(path.join(root, "catalog.json"));
+        expect(readFileString20).toBe(text);
+        const exists21 = yield* fs.exists(path.join(root, "catalog/library.json"));
+        expect(exists21).toBe(true);
       })
     );
     it.effect("reconciles stale derived occurrences and topics while retaining the identical document snapshot", () =>
@@ -963,7 +983,8 @@ it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 second
           { concurrency: 2 }
         );
         expect(A.getUnsafe(results, 0)?.sha256).toBe(A.getUnsafe(results, 1)?.sha256);
-        expect(yield* fs.readDirectory(path.join(root, "objects/sha256"))).toHaveLength(1);
+        const readDirectory22 = yield* fs.readDirectory(path.join(root, "objects/sha256"));
+        expect(readDirectory22).toHaveLength(1);
       })
     );
   }

@@ -43,9 +43,12 @@ it.layer(Layer.merge(GitTag.layerTest(overrides), Repo.layer(RepoRef.make({ owne
       yield* tags.create("v1", "sha");
       yield* tags.upsert("v1", "sha");
       yield* tags.delete("v1");
-      assert.deepStrictEqual(yield* tags.list(), [TagRef.make({ tag: "v1", sha: "sha" })]);
-      assert.strictEqual(yield* tags.resolve("v1"), "sha");
-      assertNone(yield* tags.latestSemver());
+      const list1 = yield* tags.list();
+      assert.deepStrictEqual(list1, [TagRef.make({ tag: "v1", sha: "sha" })]);
+      const resolved = yield* tags.resolve("v1");
+      assert.strictEqual(resolved, "sha");
+      const latestSemver2 = yield* tags.latestSemver();
+      assertNone(latestSemver2);
     })
   );
 });
@@ -84,7 +87,8 @@ it.layer(Layer.merge(GitTag.layerTest(overrides), Repo.layer(RepoRef.make({ owne
     it.effect("list without options preserves all names and commits", () =>
       Effect.gen(function* () {
         const tags = yield* GitTag;
-        assert.deepStrictEqual(yield* tags.list(), [
+        const list3 = yield* tags.list();
+        assert.deepStrictEqual(list3, [
           TagRef.make({ tag: "v1.0.0", sha: "one" }),
           TagRef.make({ tag: "nightly", sha: "two" }),
         ]);

@@ -183,7 +183,8 @@ describe("Parcels.read host-pressure", () => {
       Effect.gen(function* () {
         yield* NOW.pipe(DateTime.toEpochMillis, TestClock.setTime);
         yield* Parcels.use((parcels) => parcels.read("host-pressure"));
-        const gauges = A.filter(yield* Metric.snapshot, (metric) => metric.id === HostPressureStall.name);
+        const snapshot1 = yield* Metric.snapshot;
+        const gauges = A.filter(snapshot1, (metric) => metric.id === HostPressureStall.name);
         expect(A.map(gauges, (metric) => metric.attributes?.["beep.resource"]).sort()).toEqual(["cpu", "io", "memory"]);
         const io = A.findFirst(gauges, (metric) => metric.attributes?.["beep.resource"] === "io");
         assertSome(
@@ -202,10 +203,12 @@ describe("Parcels.read host-pressure", () => {
       );
       yield* NOW.pipe(DateTime.toEpochMillis, TestClock.setTime);
       yield* parcels.read("host-pressure");
-      expect(yield* resources).toHaveLength(3);
+      const resources2 = yield* resources;
+      expect(resources2).toHaveLength(3);
       yield* TestClock.adjust("5 minutes");
       yield* parcels.read("host-pressure");
-      expect(yield* resources).toEqual([]);
+      const resources3 = yield* resources;
+      expect(resources3).toEqual([]);
     }).pipe(Effect.provideService(Metric.MetricRegistry, new Map()))
   );
 
@@ -215,7 +218,8 @@ describe("Parcels.read host-pressure", () => {
         yield* DateTime.add(NOW, { minutes: 5 }).pipe(DateTime.toEpochMillis, TestClock.setTime);
         const parcel = yield* Parcels.use((parcels) => parcels.read("host-pressure"));
         expect(reasonOf(parcel.freshness)).toBe("stale");
-        const gauges = A.filter(yield* Metric.snapshot, (metric) => metric.id === HostPressureStall.name);
+        const snapshot4 = yield* Metric.snapshot;
+        const gauges = A.filter(snapshot4, (metric) => metric.id === HostPressureStall.name);
         expect(gauges).toEqual([]);
       }).pipe(Effect.provideService(Metric.MetricRegistry, new Map()))
     );

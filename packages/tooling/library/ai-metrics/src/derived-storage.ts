@@ -1304,7 +1304,8 @@ const runDerivedStorageMigrationOnce: (migration: DerivedStorageMigration) => Ef
       return;
     }
 
-    const appliedAtEpochMillis = globalThis.String(yield* Clock.currentTimeMillis);
+    const currentTimeMillis1 = yield* Clock.currentTimeMillis;
+    const appliedAtEpochMillis = globalThis.String(currentTimeMillis1);
     const recordMigration = (client: Pick<DuckDbAdapter, "run">): Effect.Effect<void, DuckDbError> =>
       client.run(
         `INSERT OR REPLACE INTO ai_metrics_schema_migrations (

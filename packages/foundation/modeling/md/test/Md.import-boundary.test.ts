@@ -108,7 +108,8 @@ describe("@beep/md import boundary", () => {
 
   it.effect("re-exports exactly the eight pre-bridge modules from the package root", () =>
     Effect.gen(function* () {
-      expect(sorted(yield* ImportGraph.moduleImportsOf(SOURCES, "index.ts"))).toStrictEqual(ROOT_MODULES);
+      const moduleImportsOf1 = yield* ImportGraph.moduleImportsOf(SOURCES, "index.ts");
+      expect(sorted(moduleImportsOf1)).toStrictEqual(ROOT_MODULES);
       const modules: ReadonlyArray<Readonly<Record<string, unknown>>> = [
         MdBehavior,
         MdConformance,

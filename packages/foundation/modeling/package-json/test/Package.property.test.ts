@@ -15,7 +15,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>, sample: S.Codec<T
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -71,7 +72,8 @@ it.effect("serialization retains control-character and lone-surrogate dependency
       "x-custom": [{}, true],
     });
     const text = pkg.toJsonString();
-    const parsed = yield* Package.decode(yield* S.decodeEffect(Json)(text));
+    const value2 = yield* S.decodeEffect(Json)(text);
+    const parsed = yield* Package.decode(value2);
     assert.strictEqual(parsed.toJsonString(), text, `before: ${text}\nafter: ${parsed.toJsonString()}`);
   })
 );
@@ -97,12 +99,10 @@ it.effect.prop(
       const parsed = yield* Package.decode(wire);
       assert.strictEqual(parsed.toJsonString(), text, `before: ${text}\nafter: ${parsed.toJsonString()}`);
       assert.isTrue(S.toEquivalence(Package)(parsed, pkg));
-      assert.isTrue(
-        S.toEquivalence(S.Unknown)(
-          yield* S.encodeEffect(Package.schema)(parsed),
-          yield* S.encodeEffect(Package.schema)(pkg)
-        )
-      );
+      const argument = S.toEquivalence(S.Unknown);
+      const argument1 = yield* S.encodeEffect(Package.schema)(parsed);
+      const value3 = yield* S.encodeEffect(Package.schema)(pkg);
+      assert.isTrue(argument(argument1, value3));
     }),
   runs
 );

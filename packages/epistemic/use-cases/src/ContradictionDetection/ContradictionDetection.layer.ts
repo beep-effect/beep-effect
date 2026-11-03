@@ -147,13 +147,12 @@ const detectPair = Effect.fnUntraced(function* (
     ContradictionMatchBasis.make(content.matchBasis)
   );
   const candidateDigest = yield* Effect.fromResult(contradictionCandidateDigest(content));
-  return O.some(
-    yield* S.decodeEffect(DetectedContradiction)({
-      ...(yield* S.encodeEffect(ContradictionCandidateContent)(content)),
-      candidateKey,
-      candidateDigest,
-    })
-  );
+  const value1 = yield* S.decodeEffect(DetectedContradiction)({
+    ...(yield* S.encodeEffect(ContradictionCandidateContent)(content)),
+    candidateKey,
+    candidateDigest,
+  });
+  return O.some(value1);
 });
 const detect = Effect.fn("ContradictionDetection.detect")(
   function* (input: ContradictionDetectionSnapshot) {

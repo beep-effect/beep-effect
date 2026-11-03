@@ -35,7 +35,9 @@ it.layer(Layer.merge(DuckDbTestLayer, Digest.layerWebCrypto), { timeout: "30 sec
         yield* storage.write(publicKey, storeId, [batch]);
         const digest = yield* Digest.Digest;
         const scopeKey = `${publicKey}/${storeId}`;
-        const hash = Str.slice(0, 16)(yield* digest.digestHex(Digest.sha256, new TextEncoder().encode(scopeKey)));
+        const argument = Str.slice(0, 16);
+        const digestHex1 = yield* digest.digestHex(Digest.sha256, new TextEncoder().encode(scopeKey));
+        const hash = argument(digestHex1);
         const sql = yield* SqlClient.SqlClient;
         const epoch = 1793151157372;
         yield* sql`UPDATE ${sql(`width_encrypted_${hash}`)} SET sequence = ${epoch}, last_sequence = ${epoch}`;
@@ -43,7 +45,8 @@ it.layer(Layer.merge(DuckDbTestLayer, Digest.layerWebCrypto), { timeout: "30 sec
         const next = { ...batch, entryIds: A.of(second) };
         const written = yield* storage.write(publicKey, storeId, [next]);
         assert.strictEqual(A.getUnsafe(written, 0).sequence, epoch + 1);
-        assert.deepStrictEqual(yield* storage.write(publicKey, storeId, [next]), []);
+        const write1 = yield* storage.write(publicKey, storeId, [next]);
+        assert.deepStrictEqual(write1, []);
         const acks = yield* storage.entrySequences(publicKey, storeId, [first, second]);
         assert.deepStrictEqual(
           A.map(acks, (a) => a.sequence),
@@ -61,17 +64,25 @@ it.layer(Layer.merge(DuckDbTestLayer, Digest.layerWebCrypto), { timeout: "30 sec
         const options = { entryTablePrefix: "auth_encrypted", remoteIdTable: "auth_encrypted_remote" };
         const first = yield* DuckDbEventLogServerEncrypted.makeStorage(options);
         const second = yield* DuckDbEventLogServerEncrypted.makeStorage(options);
-        assert.deepStrictEqual(yield* first.getId, yield* second.getId);
+        const gotId = yield* first.getId;
+        const gotId6 = yield* second.getId;
+        assert.deepStrictEqual(gotId, gotId6);
         const key = Uint8Array.of(1, 2, 3);
-        assert.deepStrictEqual(yield* first.getOrCreateSessionAuthBinding("identity", key), key);
-        assert.deepStrictEqual(yield* second.getOrCreateSessionAuthBinding("identity", Uint8Array.of(4)), key);
+        const gotOrCreateSessionAuthBinding = yield* first.getOrCreateSessionAuthBinding("identity", key);
+        assert.deepStrictEqual(gotOrCreateSessionAuthBinding, key);
+        const gotOrCreateSessionAuthBinding2 = yield* second.getOrCreateSessionAuthBinding(
+          "identity",
+          Uint8Array.of(4)
+        );
+        assert.deepStrictEqual(gotOrCreateSessionAuthBinding2, key);
       })
     );
     it.effect("defaults table names, skips empty writes and stores a repeated id once", () =>
       Effect.gen(function* () {
         const storage = yield* DuckDbEventLogServerEncrypted.makeStorage();
         const storeId = StoreId.make("defaults");
-        assert.deepStrictEqual(yield* storage.write("carol", storeId, []), []);
+        const write3 = yield* storage.write("carol", storeId, []);
+        assert.deepStrictEqual(write3, []);
         const id = EventJournal.makeEntryIdUnsafe();
         const batch = { entryIds: A.make(id, id), iv: new Uint8Array(12), encryptedBatch: Uint8Array.of(3) };
         yield* storage.write("carol", storeId, [batch]);
@@ -115,8 +126,11 @@ it.layer(DuckDbTestLayer, { timeout: "30 seconds" })("DuckDB encrypted storage l
   it.effect("layerStorageSubtle supplies Web Crypto encryption", () =>
     Effect.gen(function* () {
       const layer = DuckDbEventLogServerEncrypted.layerStorageSubtle({ entryTablePrefix: "subtle_encrypted" });
-      const storage = Context.get(yield* Layer.build(layer), EventLogServerEncrypted.Storage);
-      assert.deepStrictEqual(yield* storage.getId, yield* storage.getId);
+      const build4 = yield* Layer.build(layer);
+      const storage = Context.get(build4, EventLogServerEncrypted.Storage);
+      const gotId5 = yield* storage.getId;
+      const gotId7 = yield* storage.getId;
+      assert.deepStrictEqual(gotId5, gotId7);
     })
   );
 });

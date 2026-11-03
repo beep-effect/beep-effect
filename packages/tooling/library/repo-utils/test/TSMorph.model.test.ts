@@ -141,22 +141,24 @@ describe("TSMorph model taxonomy", () => {
     it.effect(
       "accepts repo and workspace directory paths",
       Effect.fnUntraced(function* () {
-        expect(yield* decodeRepoRootPath("/repo/root")).toBe("/repo/root");
-        expect(yield* decodeWorkspaceDirectoryPath("/repo/root/packages/tooling/library/repo-utils")).toBe(
+        const decodedRepoRootPath = yield* decodeRepoRootPath("/repo/root");
+        expect(decodedRepoRootPath).toBe("/repo/root");
+        const decodedWorkspaceDirectoryPath = yield* decodeWorkspaceDirectoryPath(
           "/repo/root/packages/tooling/library/repo-utils"
         );
+        expect(decodedWorkspaceDirectoryPath).toBe("/repo/root/packages/tooling/library/repo-utils");
       })
     );
 
     it.effect(
       "validates tsconfig file paths",
       Effect.fnUntraced(function* () {
-        expect(yield* decodeTsConfigFilePath("packages/tooling/library/repo-utils/tsconfig.json")).toBe(
+        const decodedTsConfigFilePath = yield* decodeTsConfigFilePath(
           "packages/tooling/library/repo-utils/tsconfig.json"
         );
-        expect(yield* decodeTsConfigFilePath("packages/foo/tsconfig.build.json")).toBe(
-          "packages/foo/tsconfig.build.json"
-        );
+        expect(decodedTsConfigFilePath).toBe("packages/tooling/library/repo-utils/tsconfig.json");
+        const decodedTsConfigFilePath1 = yield* decodeTsConfigFilePath("packages/foo/tsconfig.build.json");
+        expect(decodedTsConfigFilePath1).toBe("packages/foo/tsconfig.build.json");
         (yield* Effect.exit(decodeTsConfigFilePath("packages/foo/tsconfig.ts"))).pipe(Exit.isFailure, assertTrue);
         (yield* Effect.exit(decodeTsConfigFilePath("packages/foo/tsconfig#dev.json"))).pipe(Exit.isFailure, assertTrue);
       })
@@ -165,25 +167,35 @@ describe("TSMorph model taxonomy", () => {
     it.effect(
       "splits implementation and declaration TypeScript file paths strictly",
       Effect.fnUntraced(function* () {
-        expect(yield* decodeTypeScriptImplementationFilePath("src/main.ts")).toBe("src/main.ts");
-        expect(yield* decodeTypeScriptImplementationFilePath("src/component.tsx")).toBe("src/component.tsx");
-        expect(yield* decodeTypeScriptImplementationFilePath("src/module.mts")).toBe("src/module.mts");
+        const decodedTypeScriptImplementationFilePath = yield* decodeTypeScriptImplementationFilePath("src/main.ts");
+        expect(decodedTypeScriptImplementationFilePath).toBe("src/main.ts");
+        const decodedTypeScriptImplementationFilePath2 =
+          yield* decodeTypeScriptImplementationFilePath("src/component.tsx");
+        expect(decodedTypeScriptImplementationFilePath2).toBe("src/component.tsx");
+        const decodedTypeScriptImplementationFilePath3 =
+          yield* decodeTypeScriptImplementationFilePath("src/module.mts");
+        expect(decodedTypeScriptImplementationFilePath3).toBe("src/module.mts");
         (yield* Effect.exit(decodeTypeScriptImplementationFilePath("src/types.d.ts"))).pipe(Exit.isFailure, assertTrue);
         (yield* Effect.exit(decodeTypeScriptImplementationFilePath("src/main.js"))).pipe(Exit.isFailure, assertTrue);
 
-        expect(yield* decodeTypeScriptDeclarationFilePath("src/types.d.ts")).toBe("src/types.d.ts");
-        expect(yield* decodeTypeScriptDeclarationFilePath("src/types.d.mts")).toBe("src/types.d.mts");
+        const decodedTypeScriptDeclarationFilePath = yield* decodeTypeScriptDeclarationFilePath("src/types.d.ts");
+        expect(decodedTypeScriptDeclarationFilePath).toBe("src/types.d.ts");
+        const decodedTypeScriptDeclarationFilePath4 = yield* decodeTypeScriptDeclarationFilePath("src/types.d.mts");
+        expect(decodedTypeScriptDeclarationFilePath4).toBe("src/types.d.mts");
         (yield* Effect.exit(decodeTypeScriptDeclarationFilePath("src/main.ts"))).pipe(Exit.isFailure, assertTrue);
 
-        expect(yield* decodeTypeScriptFilePath("src/main.ts")).toBe("src/main.ts");
-        expect(yield* decodeTypeScriptFilePath("src/types.d.ts")).toBe("src/types.d.ts");
+        const decodedTypeScriptFilePath = yield* decodeTypeScriptFilePath("src/main.ts");
+        expect(decodedTypeScriptFilePath).toBe("src/main.ts");
+        const decodedTypeScriptFilePath5 = yield* decodeTypeScriptFilePath("src/types.d.ts");
+        expect(decodedTypeScriptFilePath5).toBe("src/types.d.ts");
       })
     );
 
     it.effect(
       "keeps SymbolFilePath implementation-only and delimiter-safe",
       Effect.fnUntraced(function* () {
-        expect(yield* decodeSymbolFilePath("src/main.ts")).toBe("src/main.ts");
+        const decodedSymbolFilePath = yield* decodeSymbolFilePath("src/main.ts");
+        expect(decodedSymbolFilePath).toBe("src/main.ts");
         (yield* Effect.exit(decodeSymbolFilePath("src/types.d.ts"))).pipe(Exit.isFailure, assertTrue);
         (yield* Effect.exit(decodeSymbolFilePath("src::main.ts"))).pipe(Exit.isFailure, assertTrue);
         (yield* Effect.exit(decodeSymbolFilePath("src/main#one.ts"))).pipe(Exit.isFailure, assertTrue);
@@ -195,13 +207,21 @@ describe("TSMorph model taxonomy", () => {
     it.effect(
       "refines generic file paths into stricter TypeScript path schemas",
       Effect.fnUntraced(function* () {
-        expect(yield* decodeFilePathToTsConfigFilePath("packages/tooling/library/repo-utils/tsconfig.json")).toBe(
+        const decodedFilePathToTsConfigFilePath = yield* decodeFilePathToTsConfigFilePath(
           "packages/tooling/library/repo-utils/tsconfig.json"
         );
-        expect(yield* decodeFilePathToTypeScriptImplementationFilePath("src/main.ts")).toBe("src/main.ts");
-        expect(yield* decodeFilePathToTypeScriptDeclarationFilePath("src/types.d.ts")).toBe("src/types.d.ts");
-        expect(yield* decodeFilePathToTypeScriptFilePath("src/types.d.ts")).toBe("src/types.d.ts");
-        expect(yield* decodeTypeScriptImplementationFilePathToSymbolFilePath("src/main.ts")).toBe("src/main.ts");
+        expect(decodedFilePathToTsConfigFilePath).toBe("packages/tooling/library/repo-utils/tsconfig.json");
+        const decodedFilePathToTypeScriptImplementationFilePath =
+          yield* decodeFilePathToTypeScriptImplementationFilePath("src/main.ts");
+        expect(decodedFilePathToTypeScriptImplementationFilePath).toBe("src/main.ts");
+        const decodedFilePathToTypeScriptDeclarationFilePath =
+          yield* decodeFilePathToTypeScriptDeclarationFilePath("src/types.d.ts");
+        expect(decodedFilePathToTypeScriptDeclarationFilePath).toBe("src/types.d.ts");
+        const decodedFilePathToTypeScriptFilePath = yield* decodeFilePathToTypeScriptFilePath("src/types.d.ts");
+        expect(decodedFilePathToTypeScriptFilePath).toBe("src/types.d.ts");
+        const decodedTypeScriptImplementationFilePathToSymbolFilePath =
+          yield* decodeTypeScriptImplementationFilePathToSymbolFilePath("src/main.ts");
+        expect(decodedTypeScriptImplementationFilePathToSymbolFilePath).toBe("src/main.ts");
       })
     );
 
@@ -211,8 +231,10 @@ describe("TSMorph model taxonomy", () => {
         expect(symbolCategoryFromKind("FunctionDeclaration")).toBe(SymbolCategory.Enum.function);
         expect(symbolCategoryFromKind("Constructor")).toBe(SymbolCategory.Enum.member);
         expect(symbolCategoryFromKind("EnumDeclaration")).toBe(SymbolCategory.Enum.type);
-        expect(yield* decodeSymbolKindToCategory("MethodDeclaration")).toBe("member");
-        expect(yield* decodeSymbolCategory("member")).toBe("member");
+        const decodedSymbolKindToCategory = yield* decodeSymbolKindToCategory("MethodDeclaration");
+        expect(decodedSymbolKindToCategory).toBe("member");
+        const decodedSymbolCategory = yield* decodeSymbolCategory("member");
+        expect(decodedSymbolCategory).toBe("member");
       })
     );
 
@@ -220,13 +242,8 @@ describe("TSMorph model taxonomy", () => {
       "roundtrips symbol ids and scope ids through parsed tuple parts",
       Effect.fnUntraced(function* () {
         const symbolId = yield* decodeSymbolId("src/main.ts::UserService.login#MethodDeclaration");
-        expect(yield* decodeSymbolIdParts(symbolId)).toEqual([
-          "src/main.ts",
-          "::",
-          "UserService.login",
-          "#",
-          "MethodDeclaration",
-        ]);
+        const decodedSymbolIdParts = yield* decodeSymbolIdParts(symbolId);
+        expect(decodedSymbolIdParts).toEqual(["src/main.ts", "::", "UserService.login", "#", "MethodDeclaration"]);
 
         const scopeId = makeProjectScopeId(
           ProjectIdentityParts.make({
@@ -237,8 +254,10 @@ describe("TSMorph model taxonomy", () => {
         );
 
         expect(scopeId).toBe("packages/tooling/library/repo-utils/tsconfig.json::syntax#workspaceOnly");
-        expect(yield* decodeProjectScopeId(scopeId)).toBe(scopeId);
-        expect(yield* decodeProjectScopeIdParts(scopeId)).toEqual([
+        const decodedProjectScopeId = yield* decodeProjectScopeId(scopeId);
+        expect(decodedProjectScopeId).toBe(scopeId);
+        const decodedProjectScopeIdParts = yield* decodeProjectScopeIdParts(scopeId);
+        expect(decodedProjectScopeIdParts).toEqual([
           "packages/tooling/library/repo-utils/tsconfig.json",
           "::",
           "syntax",
@@ -266,7 +285,8 @@ describe("TSMorph model taxonomy", () => {
           const decoded = yield* decodeProjectIdentityParts(encoded);
 
           expect(decoded).toEqual(value);
-          expect(yield* decodeProjectScopeId(makeProjectScopeId(decoded))).toBe(makeProjectScopeId(decoded));
+          const decodedProjectScopeId6 = yield* decodeProjectScopeId(makeProjectScopeId(decoded));
+          expect(decodedProjectScopeId6).toBe(makeProjectScopeId(decoded));
 
           return true;
         }),
@@ -282,7 +302,8 @@ describe("TSMorph model taxonomy", () => {
           const decoded = yield* decodeSymbolIdentityParts(encoded);
 
           expect(decoded).toEqual(value);
-          expect(yield* decodeSymbolId(makeSymbolId(decoded))).toBe(makeSymbolId(decoded));
+          const decodedSymbolId = yield* decodeSymbolId(makeSymbolId(decoded));
+          expect(decodedSymbolId).toBe(makeSymbolId(decoded));
 
           return true;
         }),
@@ -311,9 +332,12 @@ describe("TSMorph model taxonomy", () => {
         );
         const classDeclaration = sourceFile.getClassOrThrow("UserService");
 
-        expect(yield* decodeInternalProject(project)).toBe(project);
-        expect(yield* decodeInternalSourceFile(sourceFile)).toBe(sourceFile);
-        expect(yield* decodeInternalNode(classDeclaration)).toBe(classDeclaration);
+        const decodedInternalProject = yield* decodeInternalProject(project);
+        expect(decodedInternalProject).toBe(project);
+        const decodedInternalSourceFile = yield* decodeInternalSourceFile(sourceFile);
+        expect(decodedInternalSourceFile).toBe(sourceFile);
+        const decodedInternalNode = yield* decodeInternalNode(classDeclaration);
+        expect(decodedInternalNode).toBe(classDeclaration);
         (yield* Effect.exit(decodeInternalProject({}))).pipe(Exit.isFailure, assertTrue);
         (yield* Effect.exit(decodeInternalSourceFile({}))).pipe(Exit.isFailure, assertTrue);
         (yield* Effect.exit(decodeInternalNode({}))).pipe(Exit.isFailure, assertTrue);
@@ -325,15 +349,18 @@ describe("TSMorph model taxonomy", () => {
     it.effect(
       "accepts strict qualified names and exact kinds",
       Effect.fnUntraced(function* () {
-        expect(yield* decodeSymbolQualifiedName("UserService")).toBe("UserService");
-        expect(yield* decodeSymbolQualifiedName("UserService.login")).toBe("UserService.login");
+        const decodedSymbolQualifiedName = yield* decodeSymbolQualifiedName("UserService");
+        expect(decodedSymbolQualifiedName).toBe("UserService");
+        const decodedSymbolQualifiedName7 = yield* decodeSymbolQualifiedName("UserService.login");
+        expect(decodedSymbolQualifiedName7).toBe("UserService.login");
         (yield* Effect.exit(decodeSymbolQualifiedName("UserService.#login"))).pipe(Exit.isFailure, assertTrue);
         (yield* Effect.exit(decodeSymbolQualifiedName("UserService.[Symbol.iterator]"))).pipe(
           Exit.isFailure,
           assertTrue
         );
 
-        expect(yield* decodeSymbolKind("MethodDeclaration")).toBe("MethodDeclaration");
+        const decodedSymbolKind = yield* decodeSymbolKind("MethodDeclaration");
+        expect(decodedSymbolKind).toBe("MethodDeclaration");
         (yield* Effect.exit(decodeSymbolKind("QualifiedName"))).pipe(Exit.isFailure, assertTrue);
         (yield* Effect.exit(decodeSymbolKind("Identifier"))).pipe(Exit.isFailure, assertTrue);
       })
@@ -346,7 +373,8 @@ describe("TSMorph model taxonomy", () => {
         Effect.gen(function* () {
           const decoded = yield* decodeSymbolId(symbolId);
           expect(decoded).toBe(symbolId);
-          expect(yield* decodeSymbolIdParts(symbolId)).toEqual([...(yield* decodeSymbolIdParts(decoded))]);
+          const decodedSymbolIdParts8 = yield* decodeSymbolIdParts(symbolId);
+          expect(decodedSymbolIdParts8).toEqual([...(yield* decodeSymbolIdParts(decoded))]);
 
           return true;
         }),
@@ -444,9 +472,12 @@ describe("TSMorph model taxonomy", () => {
       "decodes symbol lookup, search, source, and diagnostics results",
       Effect.fnUntraced(function* () {
         const baseSymbolEncoded = yield* encodeSymbol(baseSymbol);
-        expect(yield* decodeSearchLimit(25)).toBe(25);
-        expect(yield* decodeLineNumber(1)).toBe(1);
-        expect(yield* decodeColumnNumber(2)).toBe(2);
+        const decodedSearchLimit = yield* decodeSearchLimit(25);
+        expect(decodedSearchLimit).toBe(25);
+        const decodedLineNumber = yield* decodeLineNumber(1);
+        expect(decodedLineNumber).toBe(1);
+        const decodedColumnNumber = yield* decodeColumnNumber(2);
+        expect(decodedColumnNumber).toBe(2);
 
         expect(
           (yield* decodeTsMorphSymbolLookupResult({

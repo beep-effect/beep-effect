@@ -17,11 +17,13 @@ describe("git command collection coverage", () => {
   )("completed process", (it) => {
     it.effect("keeps the streams and nonzero exit code separate and untrimmed", () =>
       Effect.gen(function* () {
+        const resultCollected = yield* runCollected(command);
         assert.deepStrictEqual(
-          yield* runCollected(command),
+          resultCollected,
           Collected.make({ stdout: "out\nλ\n", stderr: "err\r\n", exitCode: 17 })
         );
-        assertTrue(yield* available(command));
+        const available1 = yield* available(command);
+        assertTrue(available1);
       })
     );
   });
@@ -32,8 +34,10 @@ describe("git command collection coverage", () => {
   )("missing executable", (it) => {
     it.effect("preserves the exact spawn failure while availability maps it to false", () =>
       Effect.gen(function* () {
-        assertExitFailure(yield* runCollected(command).pipe(Effect.exit), Cause.fail(failure));
-        assertFalse(yield* available(command));
+        const pipe2 = yield* runCollected(command).pipe(Effect.exit);
+        assertExitFailure(pipe2, Cause.fail(failure));
+        const available3 = yield* available(command);
+        assertFalse(available3);
       })
     );
   });

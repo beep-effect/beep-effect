@@ -187,7 +187,8 @@ describe("GitHubClient.request", () => {
     [{ status: 200, body: {}, headers: rateLimitHeaders({ remaining: 4_321, resetEpochSeconds: 1_700_000_090 }) }],
     (client) =>
       Effect.gen(function* () {
-        assertNone(yield* client.rateLimit);
+        const rateLimit1 = yield* client.rateLimit;
+        assertNone(rateLimit1);
         yield* client.request("GET /repos/{owner}/{repo}", { owner: "o", repo: "r" });
         const snapshot = yield* client.rateLimit;
         assertSome(
@@ -566,7 +567,8 @@ describe("GitHubClient.makeTest", () => {
 
   it.effect("reports no rate-limit observation by default", () =>
     Effect.gen(function* () {
-      assertNone(yield* GitHubClient.makeTest({}).rateLimit);
+      const rateLimit2 = yield* GitHubClient.makeTest({}).rateLimit;
+      assertNone(rateLimit2);
     })
   );
 });

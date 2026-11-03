@@ -179,7 +179,7 @@ export class HookPulseNamespaceProjection extends S.Opaque<
     })
   )
 ) {
-  static readonly decodeJsonResult = S.decodeUnknownResult(S.fromJsonString(HookPulseNamespaceProjection));
+  static readonly decodeJsonResult = S.decodeResult(S.fromJsonString(HookPulseNamespaceProjection));
   static readonly decodeJsonEffect = S.decodeUnknownEffect(S.fromJsonString(HookPulseNamespaceProjection));
   static readonly encodeJsonEffect = S.encodeEffect(S.fromJsonString(HookPulseNamespaceProjection));
 }
@@ -323,11 +323,10 @@ export const readHookPulseNamespaceProjection: Effect.Effect<
   const text = yield* fs
     .readFileString(file.value)
     .pipe(Effect.mapError(HookPulseNamespaceError.wrap("Cannot read the hook-pulse namespace projection.")));
-  return O.some(
-    yield* HookPulseNamespaceProjection.decodeJsonEffect(text).pipe(
-      Effect.mapError(HookPulseNamespaceError.wrap("Hook-pulse namespace projection does not decode."))
-    )
+  const pipe1 = yield* HookPulseNamespaceProjection.decodeJsonEffect(text).pipe(
+    Effect.mapError(HookPulseNamespaceError.wrap("Hook-pulse namespace projection does not decode."))
   );
+  return O.some(pipe1);
 });
 
 /**

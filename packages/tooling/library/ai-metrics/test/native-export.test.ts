@@ -117,7 +117,8 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
       const { input, span } = yield* fixture();
       expect(span.kind).toBe("LLM");
       const encoded = yield* encodeNativeTraceBatch(input);
-      expect(yield* encodeNativeTraceBatch(input)).toEqual(encoded);
+      const encodedNativeTraceBatch = yield* encodeNativeTraceBatch(input);
+      expect(encodedNativeTraceBatch).toEqual(encoded);
       const decoded = yield* read(encoded.body);
       const row = decoded.resourceSpans[0].scopeSpans[0].spans[0];
       expect(row).toMatchObject({

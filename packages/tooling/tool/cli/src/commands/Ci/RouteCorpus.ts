@@ -382,7 +382,8 @@ const decodeCorpus = Effect.fnUntraced(function* (
   bytes: Uint8Array,
   file: string
 ): Effect.fn.Return<ReadonlyArray<HostedRun>, RouteError> {
-  const lines = yield* corpusLines(yield* gunzipText(bytes, file), file);
+  const gunzipText1 = yield* gunzipText(bytes, file);
+  const lines = yield* corpusLines(gunzipText1, file);
   return yield* Effect.forEach(lines, (line, index) =>
     decodeHostedRunLine(line).pipe(
       Effect.mapError(RouteError.mapError("corpus-pin", `${file} line ${index + 1} is not a HostedRun.`))
@@ -513,9 +514,11 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
   const readExisting = Effect.fnUntraced(function* (corpusPath: string): Effect.fn.Return<CaptureState, RouteError> {
     const bytes = yield* readCorpusBytes(corpusPath);
     const runs = yield* decodeCorpus(bytes, corpusPath);
+    const argument1 = HashMap.fromIterable(A.map(runs, (run): readonly [number, HostedRun] => [run.runId, run]));
+    const digest1 = yield* digest(bytes, corpusPath);
     return {
-      runs: HashMap.fromIterable(A.map(runs, (run): readonly [number, HostedRun] => [run.runId, run])),
-      pinned: O.some(yield* digest(bytes, corpusPath)),
+      runs: argument1,
+      pinned: O.some(digest1),
       covered: "",
       open: true,
     };
@@ -677,7 +680,7 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
         `since ${options.since} is after until ${DateTime.formatIsoDateUtc(until)}.`
       );
     }
-    const loaded = (yield* exists(receiptPath)) ? O.some(yield* load(receiptPath)) : O.none();
+    const loaded = (yield* exists(receiptPath)) ? yield* Effect.asSome(load(receiptPath)) : O.none();
     const previous = O.map(loaded, (value) => value.receipt);
     const plan = yield* capturePlan(
       previous,
@@ -756,11 +759,10 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
       state: CaptureState,
       day: string
     ): Effect.fn.Return<CaptureState, RouteError> {
-      const listed = A.flatten(
-        yield* Effect.forEach(plan.workflows, (workflow) => listDay(options.repoRoot, workflow, day), {
-          concurrency: ROUTE_CORPUS_FETCH_CONCURRENCY,
-        })
-      );
+      const forEach2 = yield* Effect.forEach(plan.workflows, (workflow) => listDay(options.repoRoot, workflow, day), {
+        concurrency: ROUTE_CORPUS_FETCH_CONCURRENCY,
+      });
+      const listed = A.flatten(forEach2);
       const eligible = A.filter(listed, isEligibleRun);
       const pending = pipe(
         eligible,

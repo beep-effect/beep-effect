@@ -732,5 +732,6 @@ export const runPracticeKgPrivacyReceipt = Effect.fn("PracticeKgPrivacyReceipt.r
 export const printPracticeKgPrivacyReceipt = Effect.fn("PracticeKgPrivacyReceipt.print")(function* <E, R>(
   receipt: Effect.Effect<PracticeKgPrivacyReceipt, E, R>
 ) {
-  yield* Console.log(renderPracticeKgPrivacyReceipt(yield* receipt));
+  const receipt1 = yield* receipt;
+  yield* Console.log(renderPracticeKgPrivacyReceipt(receipt1));
 });

@@ -69,7 +69,8 @@ describe("SyncConflict entity", () => {
       assertSome<string>(decoded.remoteEventId, "evt-1");
       assertSome<string>(decoded.localRelPath, "matters/client-default/complaint.pdf");
       expect(decoded.remotePayload).toEqual({ eventType: "ITEM_MODIFY", itemId: "9001" });
-      expect(yield* encodeSyncConflict(decoded)).toStrictEqual({
+      const encodedSyncConflict = yield* encodeSyncConflict(decoded);
+      expect(encodedSyncConflict).toStrictEqual({
         ...mappedDriftRow,
         deletedAt: null,
         deletedByPrincipal: null,

@@ -16,7 +16,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(CheckConclusion)(value);
       const decoded = yield* S.decodeEffect(CheckConclusion)(encoded);
       assert.isTrue(S.toEquivalence(CheckConclusion)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(CheckConclusion)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(CheckConclusion)(decoded);
+      assert.deepStrictEqual(value1, encoded);
     }),
   runs
 );
@@ -29,7 +30,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(AnnotationLevel)(value);
       const decoded = yield* S.decodeEffect(AnnotationLevel)(encoded);
       assert.isTrue(S.toEquivalence(AnnotationLevel)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(AnnotationLevel)(decoded), encoded);
+      const value2 = yield* S.encodeEffect(AnnotationLevel)(decoded);
+      assert.deepStrictEqual(value2, encoded);
     }),
   runs
 );
@@ -42,7 +44,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(Annotation)(value);
       const decoded = yield* S.decodeEffect(Annotation)(encoded);
       assert.isTrue(S.toEquivalence(Annotation)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(Annotation)(decoded), encoded);
+      const value3 = yield* S.encodeEffect(Annotation)(decoded);
+      assert.deepStrictEqual(value3, encoded);
     }),
   runs
 );
@@ -55,7 +58,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(CheckRunOutput)(value);
       const decoded = yield* S.decodeEffect(CheckRunOutput)(encoded);
       assert.isTrue(S.toEquivalence(CheckRunOutput)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(CheckRunOutput)(decoded), encoded);
+      const value4 = yield* S.encodeEffect(CheckRunOutput)(decoded);
+      assert.deepStrictEqual(value4, encoded);
     }),
   runs
 );
@@ -68,7 +72,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(CheckRunRef)(value);
       const decoded = yield* S.decodeEffect(CheckRunRef)(encoded);
       assert.isTrue(S.toEquivalence(CheckRunRef)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(CheckRunRef)(decoded), encoded);
+      const value5 = yield* S.encodeEffect(CheckRunRef)(decoded);
+      assert.deepStrictEqual(value5, encoded);
     }),
   runs
 );

@@ -57,7 +57,8 @@ const question = {
 
 const roundTrips = Effect.fn("roundTrips")(function* <A, I>(schema: S.Codec<A, I>, input: unknown) {
   const decoded = yield* S.decodeUnknownEffect(schema)(input);
-  expect(yield* S.encodeEffect(schema)(decoded)).toStrictEqual(input);
+  const value = yield* S.encodeEffect(schema)(decoded);
+  expect(value).toStrictEqual(input);
   return decoded;
 });
 
@@ -84,7 +85,8 @@ describe("@beep/law-practice-use-cases QuestionQueue schemas", () => {
       expect(A.map(failures, ({ _tag }) => _tag)).toStrictEqual(A.replicate("SchemaError", 3));
 
       const decided = yield* decode({ state: "decided", itemId, optionId: "keep-date", revision: 1, recordedAt: 0 });
-      expect(yield* S.encodeEffect(RecordAnswerInput)(decided)).toStrictEqual({
+      const value1 = yield* S.encodeEffect(RecordAnswerInput)(decided);
+      expect(value1).toStrictEqual({
         state: "decided",
         itemId,
         optionId: "keep-date",
@@ -171,7 +173,9 @@ describe("@beep/law-practice-use-cases question-loop schema properties", () => {
     { answer: Arbitrary.schema(RecordAnswerInput) },
     ({ answer }) =>
       Effect.gen(function* () {
-        const decoded = yield* S.decodeEffect(RecordAnswerInput)(yield* S.encodeEffect(RecordAnswerInput)(answer));
+        const argument = S.decodeEffect(RecordAnswerInput);
+        const value2 = yield* S.encodeEffect(RecordAnswerInput)(answer);
+        const decoded = yield* argument(value2);
         expect(S.toEquivalence(RecordAnswerInput)(decoded, answer)).toBe(true);
       }),
     { arbitrary: fcRuns(25) }
@@ -182,7 +186,9 @@ describe("@beep/law-practice-use-cases question-loop schema properties", () => {
     { batch: Arbitrary.schema(ProposedWriteBatch) },
     ({ batch }) =>
       Effect.gen(function* () {
-        const decoded = yield* S.decodeEffect(ProposedWriteBatch)(yield* S.encodeEffect(ProposedWriteBatch)(batch));
+        const argument1 = S.decodeEffect(ProposedWriteBatch);
+        const value3 = yield* S.encodeEffect(ProposedWriteBatch)(batch);
+        const decoded = yield* argument1(value3);
         expect(S.toEquivalence(ProposedWriteBatch)(decoded, batch)).toBe(true);
       }),
     { arbitrary: fcRuns(25) }
@@ -193,7 +199,9 @@ describe("@beep/law-practice-use-cases question-loop schema properties", () => {
     { approval: Arbitrary.schema(OperatorApproval) },
     ({ approval: generated }) =>
       Effect.gen(function* () {
-        const decoded = yield* S.decodeEffect(OperatorApproval)(yield* S.encodeEffect(OperatorApproval)(generated));
+        const argument2 = S.decodeEffect(OperatorApproval);
+        const value4 = yield* S.encodeEffect(OperatorApproval)(generated);
+        const decoded = yield* argument2(value4);
         expect(S.toEquivalence(OperatorApproval)(decoded, generated)).toBe(true);
       }),
     { arbitrary: fcRuns(25) }

@@ -167,7 +167,8 @@ export const repoCardImpl = Effect.fn("Research.repoCardImpl")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const databasePath = yield* catalogDbPath(options.vaultRoot);
-  const capturedAt = DateTime.formatIso(yield* DateTime.now);
+  const now1 = yield* DateTime.now;
+  const capturedAt = DateTime.formatIso(now1);
   const collection: RepoCardCollection = { cards: [], cardsSkipped: 0, reposScanned: 0, starsScanned: 0 };
 
   const cardExists = (relativePath: string) =>

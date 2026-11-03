@@ -25,10 +25,8 @@ it.effect.prop(
       });
       assert.deepStrictEqual(registrySettingsOf(parsed), normalized);
       assert.strictEqual(scratchWorkspaceYaml(name, version, registrySettingsOf(parsed)), formatted);
-      assert.deepStrictEqual(
-        yield* Yaml.parse(scratchWorkspaceYaml(name, version, registrySettingsOf(parsed))),
-        parsed
-      );
+      const parsed1 = yield* Yaml.parse(scratchWorkspaceYaml(name, version, registrySettingsOf(parsed)));
+      assert.deepStrictEqual(parsed1, parsed);
     }),
   runs
 );

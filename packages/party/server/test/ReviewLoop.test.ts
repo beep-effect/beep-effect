@@ -219,12 +219,14 @@ describe("scoped review application", () => {
       const current = yield* seal("Alex", [1, 2]);
       const earlier = decision(current, [[1], [2]], 9);
       const later = decision(current, [[1, 2]], 10);
-      expect(A.map(yield* apply([current], [later, earlier]), (row) => row.status)).toEqual(["reviewed-same"]);
-      expect(A.map(yield* apply([current], [later, decision(current, [[1], [2]], 10)]), (row) => row.status)).toEqual([
-        "conflicting-review",
-      ]);
-      expect(A.map(yield* apply([current], [later, later]), (row) => row.status)).toEqual(["reviewed-same"]);
-      expect(A.map(yield* apply([current], [later], 9), (row) => row.status)).toEqual(["unreviewed"]);
+      const resolved1 = yield* apply([current], [later, earlier]);
+      expect(A.map(resolved1, (row) => row.status)).toEqual(["reviewed-same"]);
+      const resolved2 = yield* apply([current], [later, decision(current, [[1], [2]], 10)]);
+      expect(A.map(resolved2, (row) => row.status)).toEqual(["conflicting-review"]);
+      const resolved3 = yield* apply([current], [later, later]);
+      expect(A.map(resolved3, (row) => row.status)).toEqual(["reviewed-same"]);
+      const resolved4 = yield* apply([current], [later], 9);
+      expect(A.map(resolved4, (row) => row.status)).toEqual(["unreviewed"]);
     })
   );
   it.effect("keeps an explicit expired validity interval out of the current view", () =>
@@ -234,8 +236,10 @@ describe("scoped review application", () => {
         ...decision(current, [[1, 2]]),
         validity: { validFrom: at(0), validTo: O.some(at(20)) },
       });
-      expect(A.map(yield* apply([current], [bounded], 100, 19), (row) => row.status)).toEqual(["reviewed-same"]);
-      expect(A.map(yield* apply([current], [bounded], 100, 20), (row) => row.status)).toEqual(["out-of-scope"]);
+      const resolved5 = yield* apply([current], [bounded], 100, 19);
+      expect(A.map(resolved5, (row) => row.status)).toEqual(["reviewed-same"]);
+      const resolved6 = yield* apply([current], [bounded], 100, 20);
+      expect(A.map(resolved6, (row) => row.status)).toEqual(["out-of-scope"]);
     })
   );
 });

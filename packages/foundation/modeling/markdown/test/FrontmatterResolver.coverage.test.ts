@@ -55,14 +55,11 @@ it.effect("canonical version collisions reject the registry while distinct ariti
       /collide on version 2/
     );
     const resolver = SchemaResolver.fromRegistry({ skill: S.Boolean, "skill@02": S.String, "skill@2.0": S.Finite });
-    assert.strictEqual(yield* resolver.resolve(SchemaDeclarationByName.make({ name: "skill" }), {}), S.Boolean);
-    assert.strictEqual(
-      yield* resolver.resolve(SchemaDeclarationByName.make({ name: "skill", version: "002" }), {}),
-      S.String
-    );
-    assert.strictEqual(
-      yield* resolver.resolve(SchemaDeclarationByName.make({ name: "skill", version: "02.00" }), {}),
-      S.Finite
-    );
+    const resolved = yield* resolver.resolve(SchemaDeclarationByName.make({ name: "skill" }), {});
+    assert.strictEqual(resolved, S.Boolean);
+    const resolved1 = yield* resolver.resolve(SchemaDeclarationByName.make({ name: "skill", version: "002" }), {});
+    assert.strictEqual(resolved1, S.String);
+    const resolved2 = yield* resolver.resolve(SchemaDeclarationByName.make({ name: "skill", version: "02.00" }), {});
+    assert.strictEqual(resolved2, S.Finite);
   })
 );

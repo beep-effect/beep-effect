@@ -6,6 +6,15 @@ import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Protobuf from "protobufjs";
 
+class NativeTraceWireOperationError extends S.TaggedError<
+  NativeTraceWireOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "NativeTraceWireOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in native-trace-wire.ts." }
+) {}
+
 // Selective OTLP proto v1.9.0 wire shape. Recursive AnyValue bodies stay opaque.
 // AnyValue keeps the upstream `oneof`: it gives `false`, `0` and "" explicit
 // presence, which protobufjs 8 otherwise drops on encode and decode.
@@ -54,25 +63,27 @@ export const encodeObservationTraceWire = Effect.fnUntraced(function* (
   version: string,
   spans: ReadonlyArray<unknown>
 ) {
-  return yield* Effect.try(() =>
-    nativeTraceWire
-      .encode({
-        resourceSpans: [
-          {
-            resource: {
-              attributes: [
-                otlpStringAttribute("service.name", "beep-agent-observability"),
-                otlpStringAttribute("openinference.project.name", project),
-                otlpStringAttribute("ai_metrics.host_id", hostId),
-                otlpStringAttribute("ai_metrics.namespace_id", namespaceId),
-              ],
+  return yield* Effect.try({
+    try: () =>
+      nativeTraceWire
+        .encode({
+          resourceSpans: [
+            {
+              resource: {
+                attributes: [
+                  otlpStringAttribute("service.name", "beep-agent-observability"),
+                  otlpStringAttribute("openinference.project.name", project),
+                  otlpStringAttribute("ai_metrics.host_id", hostId),
+                  otlpStringAttribute("ai_metrics.namespace_id", namespaceId),
+                ],
+              },
+              scopeSpans: [{ scope: { name: "beep.agent-observation", version }, spans }],
             },
-            scopeSpans: [{ scope: { name: "beep.agent-observation", version }, spans }],
-          },
-        ],
-      })
-      .finish()
-  );
+          ],
+        })
+        .finish(),
+    catch: (cause) => NativeTraceWireOperationError.make({ cause }),
+  });
 });
 
 const decodeSha256Hex = S.decodeUnknownEffect(Sha256Hex);

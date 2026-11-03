@@ -196,7 +196,8 @@ describe("@beep/law-practice-server DocketIntake journal", () => {
         const text = yield* fs.readFileString(JOURNAL);
 
         expect(before).toStrictEqual([]);
-        expect(kinds(yield* journalLines)).toStrictEqual(["event-created", "message-marked", "undo-event-kept"]);
+        const journalLines1 = yield* journalLines;
+        expect(kinds(journalLines1)).toStrictEqual(["event-created", "message-marked", "undo-event-kept"]);
         assertSome(
           A.head(Str.split("\n")(text)),
           '{"runId":"run-19700101T000000000Z","kind":"event-created","at":"1970-01-01T00:00:00.000Z","eventId":"event-0"}'
@@ -221,7 +222,8 @@ describe("@beep/law-practice-server DocketIntake journal", () => {
         yield* recordDocketRunCompleted(
           DocketPollReport.make({ entered: 0, failed: 0, needsReview: 0, notDocket: 2, processed: 2, seen: 3 })
         );
-        const summaries = summarizeDocketRuns(yield* journalLines);
+        const journalLines2 = yield* journalLines;
+        const summaries = summarizeDocketRuns(journalLines2);
 
         expect(
           A.map(summaries, (summary) => [
@@ -278,7 +280,9 @@ describe("@beep/law-practice-server DocketIntake journal", () => {
         const lines = yield* journalLines;
 
         expect(kinds(lines)).toStrictEqual(["event-created", "message-marked", "undo-event-kept"]);
-        expect(Str.endsWith("\n")(yield* fs.readFileString(JOURNAL))).toBe(true);
+        const argument = Str.endsWith("\n");
+        const readFileString1 = yield* fs.readFileString(JOURNAL);
+        expect(argument(readFileString1)).toBe(true);
       })
     );
   });
@@ -341,9 +345,12 @@ describe("@beep/law-practice-server DocketIntake journal", () => {
           [RUN, null, null, null, "m1", "2030-01-09T10:00:00.000Z"],
         ]);
         // Reads pass through to the ports below.
-        expect(yield* mailbox.receivedSince(O.none())).toStrictEqual([message]);
-        expect(yield* mailbox.sourceDocuments(message)).toStrictEqual([]);
-        assertNone(yield* calendar.findByKey(entry.key));
+        const receivedSince3 = yield* mailbox.receivedSince(O.none());
+        expect(receivedSince3).toStrictEqual([message]);
+        const sourceDocuments4 = yield* mailbox.sourceDocuments(message);
+        expect(sourceDocuments4).toStrictEqual([]);
+        const foundByKey = yield* calendar.findByKey(entry.key);
+        assertNone(foundByKey);
       })
     );
   });
@@ -362,7 +369,8 @@ describe("@beep/law-practice-server DocketIntake journal", () => {
 
         assertSome(lost, ambiguous);
         expect(recovered).toStrictEqual(written);
-        expect(kinds(yield* journalLines)).toStrictEqual(["event-created"]);
+        const journalLines5 = yield* journalLines;
+        expect(kinds(journalLines5)).toStrictEqual(["event-created"]);
       })
     );
   });
@@ -404,7 +412,8 @@ describe("@beep/law-practice-server DocketIntake journal", () => {
 
         yield* calendar.findByKey(entry.key);
 
-        expect(kinds(yield* journalLines)).toStrictEqual(["event-created"]);
+        const journalLines6 = yield* journalLines;
+        expect(kinds(journalLines6)).toStrictEqual(["event-created"]);
       })
     );
   });
@@ -424,7 +433,8 @@ describe("@beep/law-practice-server DocketIntake journal", () => {
         yield* Ref.set(inner.found, O.some(written));
         yield* calendar.findByKey(entry.key);
         yield* calendar.findByKey(entry.key);
-        expect(A.map(yield* journalLines, (line) => [line.kind, line.runId, O.getOrNull(line.eventId)])).toStrictEqual([
+        const journalLines7 = yield* journalLines;
+        expect(A.map(journalLines7, (line) => [line.kind, line.runId, O.getOrNull(line.eventId)])).toStrictEqual([
           ["event-created", "run-19691231T235959000Z", "event-1"],
           ["event-reused", RUN, "event-1"],
         ]);

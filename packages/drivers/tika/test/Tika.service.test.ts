@@ -109,11 +109,13 @@ describe("@beep/tika", () => {
     Effect.fnUntraced(function* ({ sourceArtifact, extractOperation, errorReason, errorOptions, error }) {
       const encodedSourceArtifact = yield* encodeSourceArtifact(sourceArtifact);
       const decodedSourceArtifact = yield* decodeSourceArtifact(encodedSourceArtifact);
-      expect(yield* encodeSourceArtifact(decodedSourceArtifact)).toEqual(encodedSourceArtifact);
+      const encodedSourceArtifact1 = yield* encodeSourceArtifact(decodedSourceArtifact);
+      expect(encodedSourceArtifact1).toEqual(encodedSourceArtifact);
 
       const encodedExtractOperation = yield* encodeExtractFileOperation(extractOperation);
       const decodedExtractOperation = yield* decodeExtractFileOperation(encodedExtractOperation);
-      expect(yield* encodeExtractFileOperation(decodedExtractOperation)).toEqual(encodedExtractOperation);
+      const encodedExtractFileOperation = yield* encodeExtractFileOperation(decodedExtractOperation);
+      expect(encodedExtractFileOperation).toEqual(encodedExtractOperation);
 
       expectRoundTrip(TikaErrorReason, errorReason);
       expectRoundTrip(TikaErrorOptions, errorOptions);

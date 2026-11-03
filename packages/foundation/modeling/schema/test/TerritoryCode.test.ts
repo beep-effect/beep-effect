@@ -28,8 +28,10 @@ describe("TerritoryCode", () => {
   it.effect(
     "decodes CLDR territory codes and names from generated @beep/data values",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeTerritoryCode("US")).toBe("US");
-      expect(yield* decodeTerritoryName("United States")).toBe("United States");
+      const decodedTerritoryCode = yield* decodeTerritoryCode("US");
+      expect(decodedTerritoryCode).toBe("US");
+      const decodedTerritoryName = yield* decodeTerritoryName("United States");
+      expect(decodedTerritoryName).toBe("United States");
       expect(TerritoryCode.literals).toContain("GB");
       expect(TerritoryName.literals).toContain("United Kingdom");
     })
@@ -38,10 +40,14 @@ describe("TerritoryCode", () => {
   it.effect(
     "maps territory codes and names in both directions",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeTerritoryNameFromCode("US")).toBe("United States");
-      expect(yield* encodeTerritoryNameFromCode("United States")).toBe("US");
-      expect(yield* decodeTerritoryCodeFromName("United States")).toBe("US");
-      expect(yield* encodeTerritoryCodeFromName("US")).toBe("United States");
+      const decodedTerritoryNameFromCode = yield* decodeTerritoryNameFromCode("US");
+      expect(decodedTerritoryNameFromCode).toBe("United States");
+      const encodedTerritoryNameFromCode = yield* encodeTerritoryNameFromCode("United States");
+      expect(encodedTerritoryNameFromCode).toBe("US");
+      const decodedTerritoryCodeFromName = yield* decodeTerritoryCodeFromName("United States");
+      expect(decodedTerritoryCodeFromName).toBe("US");
+      const encodedTerritoryCodeFromName = yield* encodeTerritoryCodeFromName("US");
+      expect(encodedTerritoryCodeFromName).toBe("United States");
     })
   );
 });
@@ -50,10 +56,14 @@ describe("CountryCode", () => {
   it.effect(
     "aliases the CLDR territory code and name schemas for country-facing callers",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeCountryCode("US")).toBe("US");
-      expect(yield* decodeCountryName("United States")).toBe("United States");
-      expect(yield* decodeCountryNameFromCode("GB")).toBe("United Kingdom");
-      expect(yield* decodeCountryCodeFromName("United Kingdom")).toBe("GB");
+      const decodedCountryCode = yield* decodeCountryCode("US");
+      expect(decodedCountryCode).toBe("US");
+      const decodedCountryName = yield* decodeCountryName("United States");
+      expect(decodedCountryName).toBe("United States");
+      const decodedCountryNameFromCode = yield* decodeCountryNameFromCode("GB");
+      expect(decodedCountryNameFromCode).toBe("United Kingdom");
+      const decodedCountryCodeFromName = yield* decodeCountryCodeFromName("United Kingdom");
+      expect(decodedCountryCodeFromName).toBe("GB");
     })
   );
 
@@ -69,8 +79,10 @@ describe("ContinentCode", () => {
   it.effect(
     "decodes CLDR top-level containment codes and names",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeContinentCode("019")).toBe("019");
-      expect(yield* decodeContinentName("Americas")).toBe("Americas");
+      const decodedContinentCode = yield* decodeContinentCode("019");
+      expect(decodedContinentCode).toBe("019");
+      const decodedContinentName = yield* decodeContinentName("Americas");
+      expect(decodedContinentName).toBe("Americas");
       expect(ContinentCode.literals).toContain("150");
       expect(ContinentName.literals).toContain("Europe");
     })
@@ -79,10 +91,14 @@ describe("ContinentCode", () => {
   it.effect(
     "maps continent codes and names in both directions",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeContinentNameFromCode("019")).toBe("Americas");
-      expect(yield* encodeContinentNameFromCode("Americas")).toBe("019");
-      expect(yield* decodeContinentCodeFromName("Europe")).toBe("150");
-      expect(yield* encodeContinentCodeFromName("150")).toBe("Europe");
+      const decodedContinentNameFromCode = yield* decodeContinentNameFromCode("019");
+      expect(decodedContinentNameFromCode).toBe("Americas");
+      const encodedContinentNameFromCode = yield* encodeContinentNameFromCode("Americas");
+      expect(encodedContinentNameFromCode).toBe("019");
+      const decodedContinentCodeFromName = yield* decodeContinentCodeFromName("Europe");
+      expect(decodedContinentCodeFromName).toBe("150");
+      const encodedContinentCodeFromName = yield* encodeContinentCodeFromName("150");
+      expect(encodedContinentCodeFromName).toBe("Europe");
     })
   );
 });

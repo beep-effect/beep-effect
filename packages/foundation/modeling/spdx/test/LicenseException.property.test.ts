@@ -18,7 +18,8 @@ describe("LicenseException property floor", () => {
         const encoded = yield* S.encodeEffect(LicenseException)(value);
         const decoded = yield* S.decodeEffect(LicenseException)(encoded);
         assertTrue(S.toEquivalence(LicenseException)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(LicenseException)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(LicenseException)(decoded);
+        assert.deepStrictEqual(value1, encoded);
         assert.strictEqual(decoded.toString(), value.id);
       }),
     runs

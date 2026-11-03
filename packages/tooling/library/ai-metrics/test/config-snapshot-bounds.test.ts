@@ -219,7 +219,8 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
               const result = yield* snapshot;
               expect(snapshotPaths(result.files)).toEqual(legitimatePaths);
             }
-            expect(yield* Ref.get(requested)).toEqual(fixture.requests);
+            const got = yield* Ref.get(requested);
+            expect(got).toEqual(fixture.requests);
           })
         );
       }
@@ -571,7 +572,8 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
           const repoRoot = pathApi.join(tmpDir, "repo");
           const previousSnapshotPath = pathApi.join(tmpDir, "store/config-snapshots/latest.json");
           yield* makeFixtureRepo(repoRoot);
-          yield* writeText(previousSnapshotPath, yield* encodeUnknownJson(legacyLatest));
+          const encodedUnknownJson = yield* encodeUnknownJson(legacyLatest);
+          yield* writeText(previousSnapshotPath, encodedUnknownJson);
 
           const result = yield* makeAiMetricsConfigSnapshot(
             AiMetricsConfigSnapshotInput.make({
@@ -623,7 +625,8 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
         totalBytes: 0,
         truncated: false,
       });
-      expect(yield* encodeConfigSnapshotBoundsReport(bounds)).toEqual({
+      const encodedConfigSnapshotBoundsReport = yield* encodeConfigSnapshotBoundsReport(bounds);
+      expect(encodedConfigSnapshotBoundsReport).toEqual({
         budget: {
           maxDepth: 8,
           maxFileBytes: 524288,
@@ -653,7 +656,8 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
           snapshotId: "config-1",
         }),
       });
-      expect(yield* AiMetricsConfigSnapshotResult.encodeJsonEffect(result)).not.toContain('"previousSnapshotId"');
+      const encodedJsonEffect = yield* AiMetricsConfigSnapshotResult.encodeJsonEffect(result);
+      expect(encodedJsonEffect).not.toContain('"previousSnapshotId"');
     })
   );
 
@@ -682,7 +686,8 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
           );
 
           expect(result.fileCount).toBe(A.length(legitimatePaths));
-          expect(yield* Ref.get(statCount)).toBeLessThan(100);
+          const got1 = yield* Ref.get(statCount);
+          expect(got1).toBeLessThan(100);
           const observedPaths = yield* Ref.get(statPaths);
           expect(observedPaths).toContain(pathApi.join(repoRoot, "AGENTS.md"));
           const forbiddenPaths = A.map(A.range(1, 400), (index) =>

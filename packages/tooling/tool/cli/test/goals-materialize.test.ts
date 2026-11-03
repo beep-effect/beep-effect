@@ -41,7 +41,8 @@ const input = BootstrapInput.make({
 
 const listGoals = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
-  return A.sort(yield* fs.readDirectory("goals"), (left: string, right: string) => (left < right ? -1 : 1));
+  const readDirectory1 = yield* fs.readDirectory("goals");
+  return A.sort(readDirectory1, (left: string, right: string) => (left < right ? -1 : 1));
 });
 
 const commandTestLayer = PacketEventStoreLive.pipe(
@@ -61,11 +62,13 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
 
           const creates = A.filter(plan.entries, (entry) => entry.action === "create");
           for (const entry of creates) {
-            strictEqual(yield* fs.readFileString(entry.path), entry.payload);
+            const readFileString2 = yield* fs.readFileString(entry.path);
+            strictEqual(readFileString2, entry.payload);
           }
           expect(A.map(receipt.written, (file) => file.path)).toEqual(A.map(creates, (entry) => entry.path));
           expect(receipt.validations).toEqual(["manifest-decodes", "goal-md-within-budget", "readme-lifecycle-line"]);
-          expect(yield* listGoals).toEqual(["fresh-goal"]);
+          const listGoals3 = yield* listGoals;
+          expect(listGoals3).toEqual(["fresh-goal"]);
         })
       )
     );
@@ -81,8 +84,10 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
           const exit = yield* Effect.exit(publishBootstrapPlan(conflicted));
           exit.pipe(Exit.isFailure, assertTrue);
           expect(String(exit)).toContain("a conflicted plan never writes");
-          expect(yield* fs.readDirectory("goals/fresh-goal")).toEqual([]);
-          expect(yield* listGoals).toEqual(["fresh-goal"]);
+          const readDirectory4 = yield* fs.readDirectory("goals/fresh-goal");
+          expect(readDirectory4).toEqual([]);
+          const listGoals5 = yield* listGoals;
+          expect(listGoals5).toEqual(["fresh-goal"]);
         })
       )
     );
@@ -104,7 +109,8 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
           const exit = yield* Effect.exit(publishBootstrapPlan(tampered));
           exit.pipe(Exit.isFailure, assertTrue);
           expect(String(exit)).toContain("does not decode");
-          expect(yield* listGoals).toEqual([]);
+          const listGoals6 = yield* listGoals;
+          expect(listGoals6).toEqual([]);
         })
       )
     );
@@ -120,8 +126,10 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
           const exit = yield* Effect.exit(publishBootstrapPlan(plan));
           exit.pipe(Exit.isFailure, assertTrue);
           expect(String(exit)).toContain("already exists");
-          expect(yield* fs.readDirectory("goals/fresh-goal")).toEqual(["NOTES.md"]);
-          expect(yield* listGoals).toEqual(["fresh-goal"]);
+          const readDirectory7 = yield* fs.readDirectory("goals/fresh-goal");
+          expect(readDirectory7).toEqual(["NOTES.md"]);
+          const listGoals8 = yield* listGoals;
+          expect(listGoals8).toEqual(["fresh-goal"]);
         })
       )
     );
@@ -140,12 +148,15 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
           yield* fs.makeDirectory("goals/fresh-goal", { recursive: true });
 
           // E11: the inventory does not count the abandoned claim as a packet.
-          expect(A.map(yield* listGoalPackets(), (record) => record.slug)).toEqual([]);
+          const listGoalPackets9 = yield* listGoalPackets();
+          expect(A.map(listGoalPackets9, (record) => record.slug)).toEqual([]);
 
           const receipt = yield* publishBootstrapPlan(plan);
           expect(receipt.slug).toBe("fresh-goal");
-          expect(yield* listGoals).toEqual(["fresh-goal"]);
-          expect(A.map(yield* listGoalPackets(), (record) => record.slug)).toEqual(["fresh-goal"]);
+          const listGoals10 = yield* listGoals;
+          expect(listGoals10).toEqual(["fresh-goal"]);
+          const listGoalPackets11 = yield* listGoalPackets();
+          expect(A.map(listGoalPackets11, (record) => record.slug)).toEqual(["fresh-goal"]);
         })
       )
     );
@@ -159,7 +170,8 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
           yield* fs.makeDirectory("goals/abandoned", { recursive: true });
           // An unlistable directory is not an abandoned claim.
           yield* fs.chmod("goals/locked-goal", 0o111);
-          const slugs = A.map(yield* listGoalPackets(), (record) => record.slug);
+          const listGoalPackets12 = yield* listGoalPackets();
+          const slugs = A.map(listGoalPackets12, (record) => record.slug);
           yield* fs.chmod("goals/locked-goal", 0o755);
           expect(slugs).toEqual(["locked-goal"]);
         })
@@ -179,7 +191,8 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
           yield* fs.chmod("goals", 0o755);
           exit.pipe(Exit.isFailure, assertTrue);
           expect(String(exit)).toContain("could not remove stale staging directory goals/.staging-0000000000000000");
-          expect(yield* listGoals).toEqual([".staging-0000000000000000"]);
+          const listGoals13 = yield* listGoals;
+          expect(listGoals13).toEqual([".staging-0000000000000000"]);
         })
       )
     );
@@ -196,7 +209,8 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
           const exit = yield* Effect.exit(publishBootstrapPlan(plan));
           exit.pipe(Exit.isFailure, assertTrue);
           expect(String(exit)).toContain("symlinked goals root");
-          strictEqual(yield* fs.readFileString("outside/.staging-keep/data.txt"), "keep\n");
+          const readFileString14 = yield* fs.readFileString("outside/.staging-keep/data.txt");
+          strictEqual(readFileString14, "keep\n");
         })
       )
     );
@@ -219,16 +233,19 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           yield* seedHandRolled;
-          const plan = yield* compileAdoptionPlan(yield* readPacketSnapshot("hand-rolled"), O.none());
+          const readPacketSnapshot15 = yield* readPacketSnapshot("hand-rolled");
+          const plan = yield* compileAdoptionPlan(readPacketSnapshot15, O.none());
           const receipt = yield* applyAdoptionPlan(plan);
           const creates = A.filter(plan.entries, (entry) => entry.action === "create");
           assertTrue(A.isReadonlyArrayNonEmpty(creates));
           expect(A.map(receipt.written, (file) => file.path)).toEqual(A.map(creates, (entry) => entry.path));
           for (const entry of creates) {
-            strictEqual(yield* fs.readFileString(entry.path), entry.payload);
+            const readFileString16 = yield* fs.readFileString(entry.path);
+            strictEqual(readFileString16, entry.payload);
           }
+          const readFileString17 = yield* fs.readFileString("goals/hand-rolled/README.md");
           strictEqual(
-            yield* fs.readFileString("goals/hand-rolled/README.md"),
+            readFileString17,
             "# Hand Rolled\n\n## Status\n\nLifecycle: `active`\n\n## Mission\n\nA hand-rolled packet.\n"
           );
         })
@@ -241,11 +258,13 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           yield* seedHandRolled;
-          const plan = yield* compileAdoptionPlan(yield* readPacketSnapshot("hand-rolled"), O.none());
+          const readPacketSnapshot18 = yield* readPacketSnapshot("hand-rolled");
+          const plan = yield* compileAdoptionPlan(readPacketSnapshot18, O.none());
           yield* writeProjectFile("goals/hand-rolled/research/.gitkeep", "racing writer\n");
           const exit = yield* Effect.exit(applyAdoptionPlan(plan));
           exit.pipe(Exit.isFailure, assertTrue);
-          strictEqual(yield* fs.readFileString("goals/hand-rolled/research/.gitkeep"), "racing writer\n");
+          const readFileString19 = yield* fs.readFileString("goals/hand-rolled/research/.gitkeep");
+          strictEqual(readFileString19, "racing writer\n");
         })
       )
     );
@@ -259,7 +278,8 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
             "goals/hand-rolled/ops/manifest.json",
             '{"initiative":{"id":"hand-rolled","status":"active"},"completionGate":{"operator":"yeet","requiresPullRequest":true,"requiresMergeable":true,"statement":"s","grandfathered":false},"steward":"x"}\n'
           );
-          const plan = yield* compileAdoptionPlan(yield* readPacketSnapshot("hand-rolled"), O.none());
+          const readPacketSnapshot20 = yield* readPacketSnapshot("hand-rolled");
+          const plan = yield* compileAdoptionPlan(readPacketSnapshot20, O.none());
           assertTrue(A.isReadonlyArrayNonEmpty(plan.preservations));
           yield* writeProjectFile("goals/hand-rolled/ops/manifest.json", "{}\n");
           const exit = yield* Effect.exit(applyAdoptionPlan(plan));
@@ -277,12 +297,14 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
           yield* seedHandRolled;
           yield* fs.makeDirectory("outside", { recursive: true });
           yield* fs.symlink(`${process.cwd()}/outside`, "goals/hand-rolled/ops");
-          const plan = yield* compileAdoptionPlan(yield* readPacketSnapshot("hand-rolled"), O.none());
+          const readPacketSnapshot21 = yield* readPacketSnapshot("hand-rolled");
+          const plan = yield* compileAdoptionPlan(readPacketSnapshot21, O.none());
 
           const exit = yield* Effect.exit(applyAdoptionPlan(plan));
           exit.pipe(Exit.isFailure, assertTrue);
           expect(String(exit)).toContain("Refusing to write");
-          expect(yield* fs.readDirectory("outside")).toEqual([]);
+          const readDirectory22 = yield* fs.readDirectory("outside");
+          expect(readDirectory22).toEqual([]);
         })
       )
     );
@@ -308,22 +330,26 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           yield* fs.makeDirectory("goals", { recursive: true });
-          expectReportedExit(yield* Effect.exit(runGoalsCommand(bootstrapArgs)));
-          expectReportedExit(yield* Effect.exit(runGoalsCommand([...bootstrapArgs, "--plan", "--write"])));
-          expectReportedExit(yield* Effect.exit(runGoalsCommand([...bootstrapArgs, "--write"])));
-          expectReportedExit(
-            yield* Effect.exit(
-              runGoalsCommand([...bootstrapArgs, "--write", "--expect", `goal-plan/v1:${Str.repeat(64)("0")}`])
-            )
+          const exit23 = yield* Effect.exit(runGoalsCommand(bootstrapArgs));
+          expectReportedExit(exit23);
+          const exit24 = yield* Effect.exit(runGoalsCommand([...bootstrapArgs, "--plan", "--write"]));
+          expectReportedExit(exit24);
+          const exit25 = yield* Effect.exit(runGoalsCommand([...bootstrapArgs, "--write"]));
+          expectReportedExit(exit25);
+          const exit26 = yield* Effect.exit(
+            runGoalsCommand([...bootstrapArgs, "--write", "--expect", `goal-plan/v1:${Str.repeat(64)("0")}`])
           );
-          expect(yield* listGoals).toEqual([]);
+          expectReportedExit(exit26);
+          const listGoals27 = yield* listGoals;
+          expect(listGoals27).toEqual([]);
 
           const plan = yield* compileMaterializationPlan(input, []);
           (yield* Effect.exit(runGoalsCommand([...bootstrapArgs, "--write", "--expect", plan.planId]))).pipe(
             Exit.isSuccess,
             assertTrue
           );
-          expect(yield* listGoals).toEqual(["fresh-goal"]);
+          const listGoals28 = yield* listGoals;
+          expect(listGoals28).toEqual(["fresh-goal"]);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -352,8 +378,10 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
           );
           strictEqual(refused._tag, "GoalPlanOperationalError");
           expect(refused.message).toContain("Refusing to replace pinned/state.json");
-          strictEqual(yield* fs.readFileString("pinned/state.json"), preImage);
-          expect(yield* fs.readDirectory("pinned")).toEqual(["state.json"]);
+          const readFileString29 = yield* fs.readFileString("pinned/state.json");
+          strictEqual(readFileString29, preImage);
+          const readDirectory30 = yield* fs.readDirectory("pinned");
+          expect(readDirectory30).toEqual(["state.json"]);
         })
       ).pipe(TestClock.withLive)
     );
@@ -374,9 +402,11 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
           const successes = A.filter(outcomes, Result.isSuccess);
           strictEqual(A.length(successes), 1);
           strictEqual(A.length(A.filter(outcomes, Result.isFailure)), 1);
-          const finalDigest = yield* sha256Hex(yield* fs.readFileString("pinned/state.json"));
+          const readFileString31 = yield* fs.readFileString("pinned/state.json");
+          const finalDigest = yield* sha256Hex(readFileString31);
           strictEqual(successes[0]?.success.afterDigest, finalDigest);
-          expect(yield* fs.readDirectory("pinned")).toEqual(["state.json"]);
+          const readDirectory32 = yield* fs.readDirectory("pinned");
+          expect(readDirectory32).toEqual(["state.json"]);
         })
       ).pipe(TestClock.withLive)
     );

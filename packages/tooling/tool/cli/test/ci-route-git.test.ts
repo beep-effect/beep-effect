@@ -63,12 +63,17 @@ it.layer(NodeCommandTestLayer, { timeout: "60 seconds" })("route git over a real
       const { work, c0, c1, p1 } = yield* fixture();
       const git = yield* makeRouteGit(work);
 
-      expect(yield* git.repoRoot).toBe(work);
+      const repoRoot1 = yield* git.repoRoot;
+      expect(repoRoot1).toBe(work);
       // p1 is only reachable through refs/pull/1/head; c1 is already local.
-      expect(yield* git.ensureHeads([p1, c1])).toEqual([]);
-      expect(yield* git.mergeBase(p1)).toBe(c0);
-      expect(yield* git.isAncestor(c0, c1)).toBe(true);
-      expect(yield* git.isAncestor(c1, c0)).toBe(false);
+      const ensureHeads2 = yield* git.ensureHeads([p1, c1]);
+      expect(ensureHeads2).toEqual([]);
+      const mergeBase3 = yield* git.mergeBase(p1);
+      expect(mergeBase3).toBe(c0);
+      const isAncestor4 = yield* git.isAncestor(c0, c1);
+      expect(isAncestor4).toBe(true);
+      const isAncestor5 = yield* git.isAncestor(c1, c0);
+      expect(isAncestor5).toBe(false);
 
       const unknownAncestor = yield* Effect.flip(git.isAncestor(ABSENT, c1));
       expect(unknownAncestor.reason).toBe("git");
@@ -82,7 +87,8 @@ it.layer(NodeCommandTestLayer, { timeout: "60 seconds" })("route git over a real
     Effect.gen(function* () {
       const { work } = yield* fixture();
       const git = yield* makeRouteGit(work);
-      expect(yield* git.ensureHeads([ABSENT])).toEqual([ABSENT]);
+      const ensureHeads6 = yield* git.ensureHeads([ABSENT]);
+      expect(ensureHeads6).toEqual([ABSENT]);
     })
   );
 

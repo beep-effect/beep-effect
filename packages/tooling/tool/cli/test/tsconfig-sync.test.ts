@@ -66,7 +66,8 @@ const decodeTsconfigPaths = S.decodeUnknownEffect(TsconfigPaths);
 
 const expectTsconfigReferencesRoundTrip = Effect.fnUntraced(function* (value: typeof TsconfigReferences.Type) {
   const encoded = yield* encodeUnknownTsconfigReferencesEffect(value);
-  expect(yield* decodeTsconfigReferences(encoded)).toEqual(value);
+  const decodedTsconfigReferences = yield* decodeTsconfigReferences(encoded);
+  expect(decodedTsconfigReferences).toEqual(value);
 });
 
 const temporaryRepository = Effect.gen(function* () {
@@ -94,12 +95,14 @@ const writeJsonFile = Effect.fn(function* (filePath: string, value: unknown) {
 
 const readJsonFile = Effect.fn(function* (filePath: string) {
   const fs = yield* FileSystem.FileSystem;
-  return yield* decodeUnknownJson(yield* fs.readFileString(filePath));
+  const readFileString1 = yield* fs.readFileString(filePath);
+  return yield* decodeUnknownJson(readFileString1);
 });
 
 const readJsoncFile = Effect.fn(function* (filePath: string) {
   const fs = yield* FileSystem.FileSystem;
-  return yield* Jsonc.parse(yield* fs.readFileString(filePath));
+  const readFileString2 = yield* fs.readFileString(filePath);
+  return yield* Jsonc.parse(readFileString2);
 });
 
 const writeSyncpackConfig = (filePath: string, sources: ReadonlyArray<string>) =>
@@ -247,9 +250,8 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
 
             yield* runTsconfigSyncCommand(["--write", "--filter", "@beep/example-domain"]);
 
-            const refs = yield* decodeTsconfigReferences(
-              yield* readJsoncFile(path.join(rootDir, "tsconfig.packages.json"))
-            );
+            const readJsoncFile3 = yield* readJsoncFile(path.join(rootDir, "tsconfig.packages.json"));
+            const refs = yield* decodeTsconfigReferences(readJsoncFile3);
             expect(A.map(refs.references, (entry) => entry.path)).toEqual(["packages/example-domain"]);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
@@ -333,15 +335,15 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
             "root-references",
           ]);
 
-          const refs = yield* decodeTsconfigReferences(
-            yield* readJsoncFile(path.join(rootDir, "tsconfig.packages.json"))
-          );
+          const readJsoncFile4 = yield* readJsoncFile(path.join(rootDir, "tsconfig.packages.json"));
+          const refs = yield* decodeTsconfigReferences(readJsoncFile4);
           expect(A.map(refs.references, (entry) => entry.path)).toEqual([
             "packages/example-domain",
             "packages/foundation/modeling/identity",
           ]);
 
-          const paths = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+          const readJsoncFile5 = yield* readJsoncFile(path.join(rootDir, "tsconfig.json"));
+          const paths = yield* decodeTsconfigPaths(readJsoncFile5);
           expect(paths.compilerOptions.paths).toMatchObject({
             "@beep/identity": ["./packages/foundation/modeling/identity/src/index.ts"],
             "@beep/identity/*": ["./packages/foundation/modeling/identity/src/*"],
@@ -391,7 +393,8 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
                 })
               );
 
-              const paths = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+              const readJsoncFile6 = yield* readJsoncFile(path.join(rootDir, "tsconfig.json"));
+              const paths = yield* decodeTsconfigPaths(readJsoncFile6);
               assert.deepStrictEqual(paths.compilerOptions.paths["@beep/repo-cli/test/Knowledge"], [
                 "./packages/tooling/tool/cli/src/test/Knowledge.test-kit.ts",
               ]);
@@ -434,7 +437,8 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
                   verbose: false,
                 })
               );
-              const paths = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+              const readJsoncFile7 = yield* readJsoncFile(path.join(rootDir, "tsconfig.json"));
+              const paths = yield* decodeTsconfigPaths(readJsoncFile7);
               assert.deepStrictEqual(paths.compilerOptions.paths["@beep/mcp-kit/test/Conformance"], [
                 "./packages/foundation/capability/mcp-kit/src/test/Conformance.test-kit.ts",
               ]);
@@ -493,7 +497,8 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
             )
           ).toEqual(["package-docgen", "root-aliases"]);
 
-          const paths = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+          const readJsoncFile8 = yield* readJsoncFile(path.join(rootDir, "tsconfig.json"));
+          const paths = yield* decodeTsconfigPaths(readJsoncFile8);
           expect(paths.compilerOptions.paths).toMatchObject({
             "@beep/example-use-cases": ["./packages/example-use-cases/src/index.ts"],
             "@beep/example-use-cases/public": ["./packages/example-use-cases/src/public.ts"],
@@ -589,7 +594,8 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
             })
           );
 
-          const paths = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+          const readJsoncFile9 = yield* readJsoncFile(path.join(rootDir, "tsconfig.json"));
+          const paths = yield* decodeTsconfigPaths(readJsoncFile9);
           expect(paths.compilerOptions.paths).toMatchObject({
             "@beep/example-slices/flat/*": ["./packages/example-slices/src/flat/*"],
           });
@@ -933,9 +939,10 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
             const referenceChanges = A.filter(syncResult.changes, (change) => change.section === "package-references");
             expect(referenceChanges).toHaveLength(1);
 
-            const refs = yield* decodeTsconfigReferences(
-              yield* readJsoncFile(path.join(rootDir, "packages", "example-domain", "tsconfig.json"))
+            const readJsoncFile10 = yield* readJsoncFile(
+              path.join(rootDir, "packages", "example-domain", "tsconfig.json")
             );
+            const refs = yield* decodeTsconfigReferences(readJsoncFile10);
             expect(A.map(refs.references, (entry) => entry.path)).toEqual([
               "../foundation/modeling/identity/tsconfig.json",
             ]);
@@ -1029,12 +1036,14 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
             );
 
             const expectedReferences = ["../foundation/modeling/identity/tsconfig.json"];
-            const canonicalRefs = yield* decodeTsconfigReferences(
-              yield* readJsoncFile(path.join(rootDir, "packages", "example-domain", "tsconfig.json"))
+            const readJsoncFile11 = yield* readJsoncFile(
+              path.join(rootDir, "packages", "example-domain", "tsconfig.json")
             );
+            const canonicalRefs = yield* decodeTsconfigReferences(readJsoncFile11);
             expect(A.map(canonicalRefs.references, (entry) => entry.path)).toEqual(expectedReferences);
             const overlayPath = path.join(rootDir, "packages", "example-domain", "tsconfig.check.json");
-            const overlayRefs = yield* decodeTsconfigReferences(yield* readJsoncFile(overlayPath));
+            const readJsoncFile12 = yield* readJsoncFile(overlayPath);
+            const overlayRefs = yield* decodeTsconfigReferences(readJsoncFile12);
             expect(A.map(overlayRefs.references, (entry) => entry.path)).toEqual(expectedReferences);
             // The overlay is edited in place: its comment and unrelated keys survive.
             const overlayText = yield* fs.readFileString(overlayPath);
@@ -1130,9 +1139,10 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
             expect(syncResult.changes[0]?.section).toBe("package-check-references");
             expect(syncResult.changes[0]?.summary).toBe("references: 2 -> 1 (add 0, remove 1)");
 
-            const overlayRefs = yield* decodeTsconfigReferences(
-              yield* readJsoncFile(path.join(rootDir, "packages", "example-domain", "tsconfig.check.json"))
+            const readJsoncFile13 = yield* readJsoncFile(
+              path.join(rootDir, "packages", "example-domain", "tsconfig.check.json")
             );
+            const overlayRefs = yield* decodeTsconfigReferences(readJsoncFile13);
             expect(A.map(overlayRefs.references, (entry) => entry.path)).toEqual([
               "../foundation/modeling/identity/tsconfig.json",
             ]);
@@ -1318,21 +1328,20 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
 
             // Ratified lab-apps row 2: the hand-added lab root reference is
             // actively removed while non-lab workspaces stay referenced.
-            const rootRefs = yield* decodeTsconfigReferences(
-              yield* readJsoncFile(path.join(rootDir, "tsconfig.packages.json"))
-            );
+            const readJsoncFile14 = yield* readJsoncFile(path.join(rootDir, "tsconfig.packages.json"));
+            const rootRefs = yield* decodeTsconfigReferences(readJsoncFile14);
             expect(A.map(rootRefs.references, (entry) => entry.path)).toEqual(["packages/example-domain"]);
 
             // Package-local reference planning still sees the lab workspace.
-            const labRefs = yield* decodeTsconfigReferences(
-              yield* readJsoncFile(path.join(rootDir, "apps", "labs", "probe", "tsconfig.json"))
-            );
+            const readJsoncFile15 = yield* readJsoncFile(path.join(rootDir, "apps", "labs", "probe", "tsconfig.json"));
+            const labRefs = yield* decodeTsconfigReferences(readJsoncFile15);
             expect(A.map(labRefs.references, (entry) => entry.path)).toEqual([
               "../../../packages/example-domain/tsconfig.json",
             ]);
 
             // The exportless lab produces zero root aliases; non-lab aliases land.
-            const paths = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+            const readJsoncFile16 = yield* readJsoncFile(path.join(rootDir, "tsconfig.json"));
+            const paths = yield* decodeTsconfigPaths(readJsoncFile16);
             expect(paths.compilerOptions.paths).toMatchObject({
               "@beep/example-domain": ["./packages/example-domain/src/index.ts"],
               "@beep/example-domain/*": ["./packages/example-domain/src/*"],
@@ -1443,7 +1452,8 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
               A.map(result.changes, (change) => change.section)
             );
             const boundaryRuleFor = Effect.fnUntraced(function* (packageName: string) {
-              const boundaries = yield* decodeFallowBoundaries(yield* readJsoncFile(boundariesPath));
+              const readJsoncFile17 = yield* readJsoncFile(boundariesPath);
+              const boundaries = yield* decodeFallowBoundaries(readJsoncFile17);
               return A.findFirst(boundaries.boundaries.rules, (rule) => rule.from === packageName);
             });
 
@@ -1468,13 +1478,17 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
 
             yield* runMode("sync");
 
-            const rootPaths = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
-            expect(yield* readJsonFile(aliasesPath)).toEqual(rootPaths.compilerOptions.paths);
+            const readJsoncFile18 = yield* readJsoncFile(path.join(rootDir, "tsconfig.json"));
+            const rootPaths = yield* decodeTsconfigPaths(readJsoncFile18);
+            const readJsonFile19 = yield* readJsonFile(aliasesPath);
+            expect(readJsonFile19).toEqual(rootPaths.compilerOptions.paths);
             expect(R.keys(rootPaths.compilerOptions.paths)).toContain("@beep/app");
-            const boundaries = yield* decodeFallowBoundaries(yield* readJsoncFile(boundariesPath));
+            const readJsoncFile20 = yield* readJsoncFile(boundariesPath);
+            const boundaries = yield* decodeFallowBoundaries(readJsoncFile20);
             expect(A.map(boundaries.boundaries.zones, (zone) => zone.name)).toEqual(["@beep/app", "@beep/core"]);
+            const boundaryRuleFor21 = yield* boundaryRuleFor("@beep/app");
             assertSome(
-              O.map(yield* boundaryRuleFor("@beep/app"), (rule) => rule.allow),
+              O.map(boundaryRuleFor21, (rule) => rule.allow),
               ["@beep/app"]
             );
             expect((yield* runMode("check")).changedFiles).toBe(0);
@@ -1482,22 +1496,26 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
 
             // A new workspace dependency edge leaves tsconfig aliases alone but stales the boundary rules.
             const appManifestPath = path.join(rootDir, "packages", "app", "package.json");
-            const appManifest = yield* decodeUnknownRecord(yield* readJsonFile(appManifestPath));
+            const readJsonFile22 = yield* readJsonFile(appManifestPath);
+            const appManifest = yield* decodeUnknownRecord(readJsonFile22);
             yield* writeJsonFile(appManifestPath, { ...appManifest, dependencies: { "@beep/core": "workspace:^" } });
 
-            expect(yield* driftSections).toContain("root-fallow-boundaries");
+            const driftSections23 = yield* driftSections;
+            expect(driftSections23).toContain("root-fallow-boundaries");
             expect((yield* runMode("check").pipe(Effect.flip))._tag).toBe("TsconfigSyncDriftError");
 
             yield* runMode("sync");
 
+            const boundaryRuleFor24 = yield* boundaryRuleFor("@beep/app");
             assertSome(
-              O.map(yield* boundaryRuleFor("@beep/app"), (rule) => rule.allow),
+              O.map(boundaryRuleFor24, (rule) => rule.allow),
               ["@beep/app", "@beep/core"]
             );
             expect((yield* runMode("check")).changedFiles).toBe(0);
             const boundariesAfterRepair = yield* fs.readFileString(boundariesPath);
             expect((yield* runMode("sync")).changedFiles).toBe(0);
-            expect(yield* fs.readFileString(boundariesPath)).toBe(boundariesAfterRepair);
+            const readFileString25 = yield* fs.readFileString(boundariesPath);
+            expect(readFileString25).toBe(boundariesAfterRepair);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       20_000
@@ -1528,13 +1546,15 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
 
             // `beep quality tsgo-rules` compares the mirror with `Equal.equals`;
             // a hand-placed entry (as #1470 did) must not red `config-sync:check`.
-            const rootPaths = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+            const readJsoncFile26 = yield* readJsoncFile(path.join(rootDir, "tsconfig.json"));
+            const rootPaths = yield* decodeTsconfigPaths(readJsoncFile26);
             const reversed = R.fromEntries(A.reverse(R.toEntries(rootPaths.compilerOptions.paths)));
             expect(R.keys(reversed)).not.toEqual(R.keys(rootPaths.compilerOptions.paths));
             yield* writeJsonFile(aliasesPath, reversed);
 
             expect((yield* runMode("check")).changedFiles).toBe(0);
-            expect(yield* readJsonFile(aliasesPath)).toEqual(reversed);
+            const readJsonFile27 = yield* readJsonFile(aliasesPath);
+            expect(readJsonFile27).toEqual(reversed);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       20_000
@@ -1565,8 +1585,10 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
 
             expect(A.map(result.changes, (change) => change.section)).not.toContain("root-vitest-aliases");
             expect(A.map(result.changes, (change) => change.section)).not.toContain("root-fallow-boundaries");
-            expect(yield* fs.exists(path.join(rootDir, "vitest.aliases.generated.json"))).toBe(false);
-            expect(yield* fs.exists(path.join(rootDir, "standards", "fallow.boundaries.generated.jsonc"))).toBe(false);
+            const exists28 = yield* fs.exists(path.join(rootDir, "vitest.aliases.generated.json"));
+            expect(exists28).toBe(false);
+            const exists29 = yield* fs.exists(path.join(rootDir, "standards", "fallow.boundaries.generated.jsonc"));
+            expect(exists29).toBe(false);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       20_000
@@ -1698,7 +1720,8 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
             );
 
             expect(result.changedFiles).toBe(0);
-            expect(yield* fs.readFileString(rootReferencesPath)).toBe(before);
+            const readFileString30 = yield* fs.readFileString(rootReferencesPath);
+            expect(readFileString30).toBe(before);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       20_000

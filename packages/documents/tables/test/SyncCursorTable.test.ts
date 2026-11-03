@@ -155,22 +155,18 @@ describe("SyncCursor table", () => {
       const syncCursor = yield* decodeUnknownSyncCursor(activeCursorRow);
       const insert = yield* Effect.fromResult(toSyncCursorInsert(syncCursor));
 
-      expectConverterFailure(
-        yield* converterFailure(toSyncCursorInsert(withUnencodablePublicId(syncCursor))),
-        "SyncCursorConverterError"
+      const converterFailure1 = yield* converterFailure(toSyncCursorInsert(withUnencodablePublicId(syncCursor)));
+      expectConverterFailure(converterFailure1, "SyncCursorConverterError");
+      const converterFailure2 = yield* converterFailure(
+        fromSyncCursorRow({
+          ...insert,
+          id: 30,
+          lastError: insert.lastError ?? null,
+          lastEventId: insert.lastEventId ?? null,
+          publicId: 42,
+        } as unknown as SyncCursorRow)
       );
-      expectConverterFailure(
-        yield* converterFailure(
-          fromSyncCursorRow({
-            ...insert,
-            id: 30,
-            lastError: insert.lastError ?? null,
-            lastEventId: insert.lastEventId ?? null,
-            publicId: 42,
-          } as unknown as SyncCursorRow)
-        ),
-        "SyncCursorConverterError"
-      );
+      expectConverterFailure(converterFailure2, "SyncCursorConverterError");
     })
   );
 });

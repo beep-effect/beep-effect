@@ -81,11 +81,14 @@ describe("practice KG process metrics", () => {
       yield* Layer.build(layerPracticeKgProcessMetrics.pipe(Layer.provide(scriptedSampler(script))));
       yield* TestClock.adjust(Duration.millis(Duration.toMillis(Duration.minutes(5)) - 10_000));
       // The first window is still open: nothing is recorded yet.
-      expect(yield* gauges).toEqual([0, 0]);
+      const gauges1 = yield* gauges;
+      expect(gauges1).toEqual([0, 0]);
       yield* TestClock.adjust(Duration.seconds(10));
-      expect(yield* gauges).toEqual([20, 96 * mebibyte]);
+      const gauges2 = yield* gauges;
+      expect(gauges2).toEqual([20, 96 * mebibyte]);
       yield* TestClock.adjust(Duration.minutes(5));
-      expect(yield* gauges).toEqual([20, 1024 * mebibyte]);
+      const gauges3 = yield* gauges;
+      expect(gauges3).toEqual([20, 1024 * mebibyte]);
     }).pipe(Effect.provideService(Metric.MetricRegistry, new Map()))
   );
 

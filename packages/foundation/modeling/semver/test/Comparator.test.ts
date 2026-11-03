@@ -78,7 +78,8 @@ describe("Comparator", () => {
     it.effect("ignores build metadata when matching", () =>
       Effect.gen(function* () {
         const c = yield* Comparator.parse("1.5.0+abc");
-        assert.isTrue(c.test(yield* SemVer.parse("1.5.0+xyz")));
+        const parsed = yield* SemVer.parse("1.5.0+xyz");
+        assert.isTrue(c.test(parsed));
       })
     );
   });

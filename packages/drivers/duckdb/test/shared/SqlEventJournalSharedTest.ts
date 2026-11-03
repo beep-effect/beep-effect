@@ -68,8 +68,9 @@ export const suite: {
           yield* Fiber.join(importA);
 
           assert.isTrue(waited, "the import committed while an older local write was in flight");
+          const entries1 = yield* journalA.entries;
           assert.deepStrictEqual(
-            A.map(yield* journalA.entries, (entry) => entry.idString),
+            A.map(entries1, (entry) => entry.idString),
             [local.idString, newer.idString]
           );
         })

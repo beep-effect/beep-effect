@@ -1,8 +1,8 @@
 # Schema inventory index
 
-Pin: `bc492f0965dc0f6a83cefd141071c5ead10f7efa` (inventoryPin: root package.json catalog `effect` or `config.effectSource`; sources read with `git -C .repos/effect show <pin>:<file>`). TypeScript parser: `6.0.2`. Counts include direct public members at one level; barrel namespace re-exports are one row each and are not expanded. Module list: `packages/tooling/tool/cli/src/commands/Lint/internal/EffectSchemaInventoryModules.ts`.
+Pin: `506eef143bcc1750ce58920aac1e45da7265d103` (inventoryPin: root package.json catalog `effect` or `config.effectSource`; sources read with `git -C .repos/effect show <pin>:<file>`). TypeScript parser: `6.0.2`. Counts include direct public members at one level; barrel namespace re-exports are one row each and are not expanded. Module list: `packages/tooling/tool/cli/src/commands/Lint/internal/EffectSchemaInventoryModules.ts`.
 
-Row digest: `864ec6e0b963ebaa664e92e7ac6e54041f973dd273d7b4b94cdaa7a76ae19a9d` (SHA-256 over the module JSONL files concatenated byte for byte in Module totals order).
+Row digest: `49a214408a2515ddb6dc7b7695de07ab75d10ef1b206d3ed26bcbdd13a545929` (SHA-256 over the module JSONL files concatenated byte for byte in Module totals order).
 
 Regenerate from repo root (offline):
 
@@ -26,7 +26,7 @@ Importable `no` marks provenance-only modules whose path effect's exports map nu
 | [effect/SchemaTransformation](effect-SchemaTransformation.jsonl) | yes | 62 | 32559 |
 | [effect/SchemaRepresentation](effect-SchemaRepresentation.jsonl) | yes | 228 | 102149 |
 | [effect/Arbitrary](effect-Arbitrary.jsonl) | yes | 78 | 31512 |
-| [effect/JsonSchema](effect-JsonSchema.jsonl) | yes | 27 | 11872 |
+| [effect/JsonSchema](effect-JsonSchema.jsonl) | yes | 29 | 13235 |
 | [effect/Equivalence](effect-Equivalence.jsonl) | yes | 20 | 9316 |
 | [effect/StandardSchema](effect-StandardSchema.jsonl) | yes | 30 | 13265 |
 | [effect/ChannelSchema](effect-ChannelSchema.jsonl) | yes | 8 | 5135 |
@@ -42,7 +42,7 @@ Importable `no` marks provenance-only modules whose path effect's exports map nu
 | [effect/internal/schema/codegen](effect-internal-schema-codegen.jsonl) | no | 11 | 4352 |
 | [effect/internal/schema/compilerRegistry](effect-internal-schema-compilerRegistry.jsonl) | no | 26 | 10888 |
 | [effect/internal/schema/interpreter](effect-internal-schema-interpreter.jsonl) | no | 3 | 1487 |
-| **Total** | | **2396** | **1070931** |
+| **Total** | | **2398** | **1072294** |
 
 ## Per-module kinds and categories
 
@@ -58,7 +58,7 @@ Every cell verified with `rg --no-ignore --no-heading -F -c '"kind":"<kind>"' <m
 | effect/SchemaTransformation | call: 1; const: 30; function: 20; interface: 2; method: 2; property: 7 | (untagged): 12; combining: 1; constructors: 6; converting: 4; decoding: 3; encoding: 5; guards: 1; models: 2; transforming: 28 |
 | effect/SchemaRepresentation | const: 87; function: 14; interface: 45; namespace: 2; property: 69; type: 11 | (untagged): 71; annotations: 2; configuration: 1; constructors: 8; decoding: 2; encoding: 2; models: 53; schemas: 32; transforming: 6; validation: 51 |
 | effect/Arbitrary | call: 4; const: 8; function: 6; interface: 13; property: 43; type: 4 | (untagged): 47; configuration: 1; constructors: 4; converting: 1; errors: 1; filtering: 2; guards: 1; mapping: 1; models: 15; running: 2; sequencing: 1; type IDs: 2 |
-| effect/JsonSchema | const: 4; function: 10; interface: 4; property: 7; type: 2 | (untagged): 11; constants: 3; decoding: 4; encoding: 3; models: 6 |
+| effect/JsonSchema | const: 4; function: 12; interface: 4; property: 7; type: 2 | (untagged): 13; constants: 3; decoding: 4; encoding: 3; models: 6 |
 | effect/Equivalence | call: 2; const: 10; function: 5; interface: 1; property: 1; type: 1 | (untagged): 3; combinators: 4; combining: 2; constructors: 3; instances: 5; mapping: 1; models: 1; utility types: 1 |
 | effect/StandardSchema | interface: 16; namespace: 3; property: 3; type: 8 | (untagged): 30 |
 | effect/ChannelSchema | call: 2; const: 6 | (untagged): 2; combinators: 2; constructors: 4 |

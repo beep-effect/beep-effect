@@ -33,7 +33,8 @@ describe("MarkdownVisitor traversal properties", () => {
       Effect.gen(function* () {
         const stream = MarkdownVisitor.visit(root);
         const events = yield* Stream.runCollect(stream);
-        assert.deepStrictEqual(yield* Stream.runCollect(stream), events);
+        const resultCollect = yield* Stream.runCollect(stream);
+        assert.deepStrictEqual(resultCollect, events);
         const entered = A.filter(events, MarkdownVisitorEvent.guards.Enter);
         const exited = A.filter(events, MarkdownVisitorEvent.guards.Exit);
         assert.strictEqual(entered.length, countNodes(root));
@@ -44,7 +45,8 @@ describe("MarkdownVisitor traversal properties", () => {
           const exit = A.findFirst(exited, (event) => event.node === enter.node);
           assertSome(exit, visitorEvent("Exit", enter.node, enter.path, enter.depth));
         }
-        assert.deepStrictEqual(yield* Stream.runCollect(Stream.take(stream, 1)), [visitorEvent("Enter", root, [], 0)]);
+        const resultCollect1 = yield* Stream.runCollect(Stream.take(stream, 1));
+        assert.deepStrictEqual(resultCollect1, [visitorEvent("Enter", root, [], 0)]);
       }),
     runs
   );

@@ -436,7 +436,9 @@ const decideCiParityReuse = Effect.fn("Yeet.decideCiParityReuse")(function* (
 ) {
   const parity = yield* collectProofEnvironment(step.id, previewRoot, effectiveStepEnvironment(step), previewBaseSha);
   yield* recordProofEnvironment(context, parity);
-  const proven = provenLanesForAttempt(yield* readInnerLaneReports(context), yield* readProofEnvironments(context));
+  const innerLaneReports = yield* readInnerLaneReports(context);
+  const proofEnvironments = yield* readProofEnvironments(context);
+  const proven = provenLanesForAttempt(innerLaneReports, proofEnvironments);
   const decisions = yield* decideParityLaneReuse(
     ciParityLaneCandidates(
       previewRoot,
@@ -1446,23 +1448,24 @@ export const assertMergeOnlyPublish = Effect.fn("Yeet.assertMergeOnlyPublish")(f
           "yeet publish --push-only requires --reuse-verified unless HEAD is a reproducible merge of the base into the published branch.",
       })
     );
-  const parents = Str.split(
-    Str.trim(yield* runGitOutput(context.repoRoot, ["show", "-s", "--format=%P", "HEAD"])),
-    " "
-  );
+  const parentOutput = yield* runGitOutput(context.repoRoot, ["show", "-s", "--format=%P", "HEAD"]);
+  const parents = Str.split(Str.trim(parentOutput), " ");
   if (parents.length !== 2) return yield* refuse();
   const first = A.get(parents, 0);
   const second = A.get(parents, 1);
   if (O.isNone(first) || O.isNone(second)) return yield* refuse();
   // FETCH_HEAD avoids trusting a stale tracking ref or updating any other checkout.
   yield* runGitOutput(context.repoRoot, ["fetch", "--quiet", "--no-tags", "origin", `refs/heads/${context.branch}`]);
-  const published = Str.trim(yield* runGitOutput(context.repoRoot, ["rev-parse", "FETCH_HEAD"]));
-  const baseAncestor = Str.trim(yield* runGitOutput(context.repoRoot, ["merge-base", second.value, context.base]));
+  const publishedOutput = yield* runGitOutput(context.repoRoot, ["rev-parse", "FETCH_HEAD"]);
+  const published = Str.trim(publishedOutput);
+  const baseAncestorOutput = yield* runGitOutput(context.repoRoot, ["merge-base", second.value, context.base]);
+  const baseAncestor = Str.trim(baseAncestorOutput);
   if (first.value !== published || baseAncestor !== second.value) return yield* refuse();
   const merged = yield* runGitOutput(context.repoRoot, ["merge-tree", "--write-tree", first.value, second.value]).pipe(
     Effect.catchTag("YeetCommandError", () => refuse())
   );
-  const tree = Str.trim(yield* runGitOutput(context.repoRoot, ["rev-parse", "HEAD^{tree}"]));
+  const treeOutput = yield* runGitOutput(context.repoRoot, ["rev-parse", "HEAD^{tree}"]);
+  const tree = Str.trim(treeOutput);
   if (Str.trim(merged) !== tree) return yield* refuse();
 });
 
@@ -1503,7 +1506,8 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
     extras,
     reusableSkipCommit
   );
-  const committedAttempt = attemptAtCommittedHead(attempt, yield* Ref.get(extras));
+  const committedExtras = yield* Ref.get(extras);
+  const committedAttempt = attemptAtCommittedHead(attempt, committedExtras);
 
   if (!options.pr) {
     yield* Console.error(
@@ -2115,7 +2119,8 @@ const runPublishPushPhase = Effect.fn("Yeet.runPublishPushPhase")(function* (
   const verifyHead = O.match(before, {
     onNone: () => Effect.void,
     onSome: Effect.fn("Yeet.verifyPublishedHead")(function* (expected) {
-      if (!S.toEquivalence(GitObjectId)(yield* readPublishedHead(context), expected))
+      const publishedHead = yield* readPublishedHead(context);
+      if (!S.toEquivalence(GitObjectId)(publishedHead, expected))
         return yield* YeetCommandError.make({
           message:
             "The checkout head changed during publication; the pushed commit is unproven. Inspect the remote before retrying.",
@@ -2234,9 +2239,10 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
   // changed-package tripwire (rulings 69, 70); it never fails.
   const changedPackages = yield* changedPackagesForAttempt(plan.context);
   yield* Console.log(`[yeet] ${renderProofChangedPackages(changedPackages)}`);
-  const environmentDigests = proofEnvironmentDigests(
-    yield* readProofEnvironments(plan.context).pipe(Effect.orElseSucceed(A.empty<ProofEnvironment>))
+  const proofEnvironments = yield* readProofEnvironments(plan.context).pipe(
+    Effect.orElseSucceed(A.empty<ProofEnvironment>)
   );
+  const environmentDigests = proofEnvironmentDigests(proofEnvironments);
   yield* recordProofShadowForAttempt(
     plan.context.repoRoot,
     proofShadowAttemptFacts(reached),

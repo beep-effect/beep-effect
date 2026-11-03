@@ -94,26 +94,24 @@ describe("Next route schemas", () => {
         type: "host",
         value: "example.com",
       });
-      expect(
-        yield* decodeRewrite({
-          source: "/old",
-          destination: "/new",
-          has: [{ type: "query", key: "draft" }],
-          internal: true,
-          regex: "^/old$",
-        })
-      ).toEqual({
+      const decodedRewrite = yield* decodeRewrite({
+        source: "/old",
+        destination: "/new",
+        has: [{ type: "query", key: "draft" }],
+        internal: true,
+        regex: "^/old$",
+      });
+      expect(decodedRewrite).toEqual({
         source: "/old",
         destination: "/new",
         has: [{ type: "query", key: "draft" }],
       });
-      expect(
-        yield* decodeHeader({
-          source: "/secure",
-          headers: [{ key: "x-frame-options", value: "deny" }],
-          internal: true,
-        })
-      ).toEqual({
+      const decodedHeader = yield* decodeHeader({
+        source: "/secure",
+        headers: [{ key: "x-frame-options", value: "deny" }],
+        internal: true,
+      });
+      expect(decodedHeader).toEqual({
         source: "/secure",
         headers: [{ key: "x-frame-options", value: "deny" }],
       });
@@ -131,7 +129,8 @@ describe("Next route schemas", () => {
         destination: "/new",
         statusCode: 307,
       });
-      expect(yield* decodeMiddleware({ source: "/admin/:path*", locale: false })).toEqual({
+      const decodedMiddleware = yield* decodeMiddleware({ source: "/admin/:path*", locale: false });
+      expect(decodedMiddleware).toEqual({
         source: "/admin/:path*",
         locale: false,
       });
@@ -258,7 +257,8 @@ describe("Next image schemas", () => {
 describe("Next config primitive schemas", () => {
   it.effect("accepts logging config with empty incoming request options", () =>
     Effect.gen(function* () {
-      expect(yield* decodeLoggingConfig({ incomingRequests: {} })).toEqual({
+      const decodedLoggingConfig = yield* decodeLoggingConfig({ incomingRequests: {} });
+      expect(decodedLoggingConfig).toEqual({
         incomingRequests: {},
       });
     })
@@ -272,7 +272,8 @@ describe("Next compiler schemas", () => {
         implementation: "sass",
         silenceDeprecations: ["legacy-js-api"],
       };
-      expect(yield* decodeSassOptions(options)).toEqual(options);
+      const decodedSassOptions = yield* decodeSassOptions(options);
+      expect(decodedSassOptions).toEqual(options);
     })
   );
 

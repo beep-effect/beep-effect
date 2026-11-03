@@ -144,8 +144,9 @@ describe("@beep/html browser conformance", () => {
           rule: "foreignIntegration",
         })
       );
+      const exit1 = yield* Effect.exit(conform(root));
       assertExitFailure(
-        Exit.match(yield* Effect.exit(conform(root)), {
+        Exit.match(exit1, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(
@@ -158,8 +159,9 @@ describe("@beep/html browser conformance", () => {
         }),
         Cause.fail("HtmlConformanceError")
       );
+      const exit2 = yield* Effect.exit(serialize(root));
       assertExitFailure(
-        Exit.match(yield* Effect.exit(serialize(root)), {
+        Exit.match(exit2, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(
@@ -204,8 +206,9 @@ describe("@beep/html browser conformance", () => {
             rule: "foreignIntegration",
           })
         );
+        const exit3 = yield* Effect.exit(serialize(root));
         assertExitFailure(
-          Exit.match(yield* Effect.exit(serialize(root)), {
+          Exit.match(exit3, {
             onSuccess: Exit.succeed,
             onFailure: (cause) =>
               Exit.failCause(
@@ -271,8 +274,9 @@ describe("@beep/html browser conformance", () => {
             rule: "foreignIntegration",
           })
         );
+        const exit4 = yield* Effect.exit(serialize(root));
         assertExitFailure(
-          Exit.match(yield* Effect.exit(serialize(root)), {
+          Exit.match(exit4, {
             onSuccess: Exit.succeed,
             onFailure: (cause) =>
               Exit.failCause(
@@ -333,8 +337,9 @@ describe("@beep/html browser conformance", () => {
             rule: "foreignIntegration",
           })
         );
+        const exit5 = yield* Effect.exit(serialize(invalid));
         assertExitFailure(
-          Exit.match(yield* Effect.exit(serialize(invalid)), {
+          Exit.match(exit5, {
             onSuccess: Exit.succeed,
             onFailure: (cause) =>
               Exit.failCause(
@@ -482,8 +487,9 @@ describe("@beep/html browser conformance", () => {
             rule: "foreignIntegration",
           })
         );
+        const exit6 = yield* Effect.exit(serialize(invalidForeign));
         assertExitFailure(
-          Exit.match(yield* Effect.exit(serialize(invalidForeign)), {
+          Exit.match(exit6, {
             onSuccess: Exit.succeed,
             onFailure: (cause) =>
               Exit.failCause(
@@ -570,8 +576,9 @@ describe("@beep/html browser conformance", () => {
           rule: "foreignIntegration",
         })
       );
+      const exit7 = yield* Effect.exit(serialize(encodedMathChild));
       assertExitFailure(
-        Exit.match(yield* Effect.exit(serialize(encodedMathChild)), {
+        Exit.match(exit7, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(
@@ -648,8 +655,9 @@ describe("@beep/html browser conformance", () => {
           rule: "foreignIntegration",
         })
       );
+      const exit8 = yield* Effect.exit(serialize(wrongSvgNamespace));
       assertExitFailure(
-        Exit.match(yield* Effect.exit(serialize(wrongSvgNamespace)), {
+        Exit.match(exit8, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(
@@ -703,8 +711,9 @@ describe("@beep/html browser conformance", () => {
           }),
         ],
       });
+      const exit9 = yield* Effect.exit(serialize(drifting));
       assertExitFailure(
-        Exit.match(yield* Effect.exit(serialize(drifting)), {
+        Exit.match(exit9, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(

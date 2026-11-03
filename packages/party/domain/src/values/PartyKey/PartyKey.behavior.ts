@@ -150,7 +150,8 @@ export const canonicalJson = Effect.fn("PartyKey.canonicalJson")(function* (inpu
  * @since 0.0.0
  */
 export const canonicalBytes = Effect.fn("PartyKey.canonicalBytes")(function* (input: unknown) {
-  return utf8ToBytes(yield* canonicalJson(input));
+  const canonicalJson1 = yield* canonicalJson(input);
+  return utf8ToBytes(canonicalJson1);
 });
 
 /**
@@ -227,7 +228,8 @@ export const identifierBasis = Effect.fn("PartyKey.identifierBasis")(function* (
  * @since 0.0.0
  */
 export const partyKeyOf = Effect.fn("PartyKey.partyKeyOf")(function* (identifier: Identifier) {
-  return yield* partyKeyOfBasis(yield* identifierBasis(identifier));
+  const identifierBasis2 = yield* identifierBasis(identifier);
+  return yield* partyKeyOfBasis(identifierBasis2);
 });
 
 const sourceRecordPart = (field: IdentifierIssueField) => (failure: IdentifierIssue) =>

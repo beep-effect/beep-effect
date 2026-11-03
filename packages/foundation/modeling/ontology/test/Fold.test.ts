@@ -175,7 +175,8 @@ describe("Ontology.fold", () => {
 describe("Ontology.fold projections", () => {
   it.effect("projects JSON-LD context terms from class and predicate annotations", () =>
     Effect.gen(function* () {
-      const context = toContext(yield* assemble);
+      const assemble1 = yield* assemble;
+      const context = toContext(assemble1);
 
       expect(context.prefLabel).toBe("http://www.w3.org/2004/02/skos/core#prefLabel");
       expect(context.children).toEqual({ "@reverse": "http://www.w3.org/2000/01/rdf-schema#subClassOf" });
@@ -185,7 +186,8 @@ describe("Ontology.fold projections", () => {
 
   it.effect("projects bounded JSON-LD graph nodes and reverse facts", () =>
     Effect.gen(function* () {
-      const jsonLd = toJsonLd(yield* assemble);
+      const assemble2 = yield* assemble;
+      const jsonLd = toJsonLd(assemble2);
       const claimNode = pipe(
         jsonLd["@graph"],
         A.findFirst((node) => node["@id"] === "https://beep-effect.com/ns/patent/Claim"),

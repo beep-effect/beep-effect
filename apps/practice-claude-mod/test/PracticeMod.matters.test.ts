@@ -46,7 +46,8 @@ describe("matter lookup", () => {
         result({ data: { columns, rows: [["12345.10008", "12345.10008US01", "ambiguous", "12345"]] } })
       );
       assertNone(chosenMatterOf(rows, "10008"));
-      assertNone(chosenMatterOf(yield* decodeMatterLookup(result({ data: { columns, rows: [] } })), "missing"));
+      const decodedMatterLookup = yield* decodeMatterLookup(result({ data: { columns, rows: [] } }));
+      assertNone(chosenMatterOf(decodedMatterLookup, "missing"));
     })
   );
   it.effect(

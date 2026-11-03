@@ -46,7 +46,8 @@ const scratchCheckout = Effect.fnUntraced(function* (tmpDir: string) {
     yield* fs.writeFileString(filePath, text);
   });
   const writeJson = Effect.fnUntraced(function* (relativePath: string, value: unknown) {
-    yield* write(relativePath, yield* encodeJson(value));
+    const encodedJson = yield* encodeJson(value);
+    yield* write(relativePath, encodedJson);
   });
   return { env, path, write, writeJson };
 });
@@ -58,7 +59,8 @@ layer(Layer.mergeAll(NodeServices.layer, BunCrypto.layer), { timeout: "30 second
       "skips git-ignored residue but checks tracked and untracked files",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const tmpDir = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-tsgo-visibility-" }));
+        const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped({ prefix: "beep-tsgo-visibility-" });
+        const tmpDir = yield* fs.realPath(madeTempDirectoryScoped);
         const { env, path, write, writeJson } = yield* scratchCheckout(tmpDir);
         const repoRoot = path.join(tmpDir, "repo");
 
@@ -91,7 +93,8 @@ layer(Layer.mergeAll(NodeServices.layer, BunCrypto.layer), { timeout: "30 second
       "fails instead of passing vacuously when git answers for an enclosing work tree",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const tmpDir = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-tsgo-nested-" }));
+        const madeTempDirectoryScoped1 = yield* fs.makeTempDirectoryScoped({ prefix: "beep-tsgo-nested-" });
+        const tmpDir = yield* fs.realPath(madeTempDirectoryScoped1);
         const { env, path, write, writeJson } = yield* scratchCheckout(tmpDir);
         const parentRoot = path.join(tmpDir, "parent");
         const repoRoot = path.join(parentRoot, "export");

@@ -159,8 +159,10 @@ describe("D21: the Effect forms evaluate when run, not when built", () => {
       const piped = pipe({ at, event: "snapshot", data }, Envelope.encode(snapshots));
       data.v = "at-run";
       const expected = `{${AT},"event":"snapshot","data":{"v":"at-run"}}\n`;
-      assert.strictEqual(yield* direct, expected);
-      assert.strictEqual(yield* piped, expected);
+      const direct1 = yield* direct;
+      assert.strictEqual(direct1, expected);
+      const piped2 = yield* piped;
+      assert.strictEqual(piped2, expected);
     })
   );
 
@@ -199,7 +201,8 @@ describe("D15: an explicitly undefined scope is omitted, as upstream does", () =
       const data = { round: 3, label: "x" };
       const omitted = yield* Envelope.encode({ at, event: "noted", data }, events);
       assert.strictEqual(omitted, `{${AT},"event":"noted","data":{"round":3,"label":"x"}}\n`);
-      assert.strictEqual(yield* Envelope.encode({ at, event: "noted", scope: undefined, data }, events), omitted);
+      const encoded = yield* Envelope.encode({ at, event: "noted", scope: undefined, data }, events);
+      assert.strictEqual(encoded, omitted);
       assertSuccess(Envelope.encodeResult({ at, event: "noted", scope: undefined, data }, events), omitted);
       assertSuccess(
         Envelope.encodeResult({ at, event: "noted", scope: "box", data }, events),

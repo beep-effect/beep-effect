@@ -94,27 +94,34 @@ const program = Effect.gen(function* () {
   yield* fs.makeDirectory(`${databasePath}.discovery-parent`, { recursive: true });
   const socketPath = `${databasePath}.sock`;
   yield* fs.remove(socketPath, { force: true });
-  const server = Context.get(
-    yield* Layer.build(BunHttpServer.layer({ unix: socketPath, maxRequestBodySize: 524288, idleTimeout: 2 })),
-    HttpServer.HttpServer
+  const build1 = yield* Layer.build(
+    BunHttpServer.layer({ unix: socketPath, maxRequestBodySize: 524288, idleTimeout: 2 })
   );
+  const server = Context.get(build1, HttpServer.HttpServer);
   const handler = Effect.gen(function* () {
     const request = yield* HttpServerRequest.HttpServerRequest;
-    if (request.url === "/__fixture/state")
+    if (request.url === "/__fixture/state") {
       return yield* HttpServerResponse.json({ control: yield* worker.status, stats: yield* worker.stats });
-    if (request.url === "/__fixture/resume" && request.method === "POST")
-      return yield* HttpServerResponse.json(yield* worker.resume);
+    }
+    if (request.url === "/__fixture/resume" && request.method === "POST") {
+      const resume1 = yield* worker.resume;
+      return yield* HttpServerResponse.json(resume1);
+    }
     if (request.url === "/__fixture/backup" && request.method === "POST") {
       yield* worker.pause;
-      return yield* HttpServerResponse.json(
-        yield* worker.backup(ObservationBackupPolicy.make({ maxBytes: 1048576 }), `${databasePath}.backup`)
+      const backup2 = yield* worker.backup(
+        ObservationBackupPolicy.make({ maxBytes: 1048576 }),
+        `${databasePath}.backup`
       );
+      return yield* HttpServerResponse.json(backup2);
     }
     if (request.url === "/__fixture/discovery" && request.method === "POST") {
       const result = yield* Effect.scoped(
         Effect.gen(function* () {
           const directory = yield* fs.makeTempDirectoryScoped({ directory: `${databasePath}.discovery-parent` });
-          for (const n of A.range(1, 12)) yield* fs.writeFileString(`${directory}/ignored-${n}.txt`, "");
+          for (const n of A.range(1, 12)) {
+            yield* fs.writeFileString(`${directory}/ignored-${n}.txt`, "");
+          }
           const discovery = yield* makeTranscriptDiscovery(
             TranscriptDiscoveryInput.make({
               roots: [{ path: directory, source: "codex", retired: false }],

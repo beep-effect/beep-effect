@@ -133,7 +133,9 @@ const canonicalRepositoryIdentity = (repositoryIdentity: string): string => {
 export const safeArtifactName: (value: string) => string = repoRunSafeArtifactName;
 
 const artifactNameHash = Effect.fnUntraced(function* (value: string) {
-  return Str.takeLeft(12)(yield* sha256Hex(value));
+  const argument = Str.takeLeft(12);
+  const sha256Hex1 = yield* sha256Hex(value);
+  return argument(sha256Hex1);
 });
 
 const effectiveUserId = (): number => NodeOS.userInfo().uid;
@@ -187,9 +189,10 @@ export const proofCoordinatorLockPath = Effect.fn("Yeet.proofCoordinatorLockPath
 ): Effect.fn.Return<string, YeetCommandError, FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const path = yield* Path.Path;
   const runtimeRoot = yield* proofCoordinatorRuntimeRoot();
+  const proofCoordinatorDirectoryName1 = yield* proofCoordinatorDirectoryName();
   return path.join(
     runtimeRoot,
-    yield* proofCoordinatorDirectoryName(),
+    proofCoordinatorDirectoryName1,
     `${yield* artifactNameHash(canonicalRepositoryIdentity(repositoryIdentity))}.lock`
   );
 });
@@ -352,7 +355,8 @@ const owningCloneRoot = Effect.fnUntraced(function* (
   if (info.type !== "File") {
     return originRoot;
   }
-  const target = gitfileTarget(yield* readGitMetadata(fs, dotGit));
+  const readGitMetadata2 = yield* readGitMetadata(fs, dotGit);
+  const target = gitfileTarget(readGitMetadata2);
   if (O.isNone(target)) {
     return yield* YeetCommandError.make({
       message: `Git metadata "${dotGit}" is a file without a "gitdir:" line.`,
@@ -364,7 +368,11 @@ const owningCloneRoot = Effect.fnUntraced(function* (
   const hasCommonDir = yield* fs
     .exists(commonDirFile)
     .pipe(Effect.mapError(YeetCommandError.new(`Failed to inspect Git metadata "${commonDirFile}".`)));
-  const commonDir = hasCommonDir ? path.resolve(gitDir, Str.trim(yield* readGitMetadata(fs, commonDirFile))) : gitDir;
+  const commonDir = hasCommonDir
+    ? yield* Effect.map(Effect.map(readGitMetadata(fs, commonDirFile), Str.trim), (value) =>
+        path.resolve(gitDir, value)
+      )
+    : gitDir;
   // `<clone>/.git` gives the clone. A common dir with any other name (a bare
   // `<name>.git`, a separated git dir) keeps the ledger inside itself: its
   // parent may hold other repositories, and they must not share one sample.

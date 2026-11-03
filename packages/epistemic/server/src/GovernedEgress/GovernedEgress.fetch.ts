@@ -377,7 +377,8 @@ export const makeGovernedEgressFetch = Effect.fn("Epistemic.GovernedEgress.make"
   // it *with* the build context is what keeps the boundary's own logs and spans
   // inside the application's logger and tracer instead of a bare default
   // runtime — the decision log is the only place a denial's reason survives.
-  const runInContext = Effect.runPromiseWith(yield* Effect.context<never>());
+  const context1 = yield* Effect.context<never>();
+  const runInContext = Effect.runPromiseWith(context1);
 
   // `Fetch` is `typeof globalThis.fetch`, so the contract is a promise-returning
   // function and this cannot be an Effect. It is written as a `.then` chain

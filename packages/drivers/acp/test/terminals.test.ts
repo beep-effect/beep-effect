@@ -137,8 +137,10 @@ it.layer(SpawnerLayer, { timeout: "30 seconds" })("AcpClientTerminals", (it) => 
         return (yield* terminals.output({ sessionId, terminalId })).output;
       });
 
-      assert.strictEqual(yield* read("a", []), "base,session-a,no-home");
-      assert.strictEqual(yield* read("b", [{ name: "OVERRIDDEN", value: "request" }]), "base,request,no-home");
+      const read1 = yield* read("a", []);
+      assert.strictEqual(read1, "base,session-a,no-home");
+      const read2 = yield* read("b", [{ name: "OVERRIDDEN", value: "request" }]);
+      assert.strictEqual(read2, "base,request,no-home");
     })
   );
 
@@ -356,27 +358,31 @@ it.layer(SpawnerLayer, { excludeTestServices: true, timeout: "30 seconds" })(
           return response.result;
         });
 
-        const terminals = Context.get(yield* Layer.build(layer({ defaultCwd: cwd })), AcpClientTerminals);
+        const build3 = yield* Layer.build(layer({ defaultCwd: cwd }));
+        const terminals = Context.get(build3, AcpClientTerminals);
         yield* register.pipe(
           Effect.provideService(AcpClient.AcpClient, acp),
           Effect.provideService(AcpClientTerminals, terminals)
         );
 
-        const { terminalId } = yield* decodeTerminalId(
-          yield* call(1, "terminal/create", {
-            sessionId: "session",
-            ...script("process.stdout.write('served over acp'); process.exit(5);"),
-          })
-        );
+        const call4 = yield* call(1, "terminal/create", {
+          sessionId: "session",
+          ...script("process.stdout.write('served over acp'); process.exit(5);"),
+        });
+        const { terminalId } = yield* decodeTerminalId(call4);
         const terminal = { sessionId: "session", terminalId };
-        assert.deepEqual(yield* call(2, "terminal/wait_for_exit", terminal), { exitCode: 5, signal: null });
-        assert.deepEqual(yield* call(3, "terminal/output", terminal), {
+        const call5 = yield* call(2, "terminal/wait_for_exit", terminal);
+        assert.deepEqual(call5, { exitCode: 5, signal: null });
+        const call6 = yield* call(3, "terminal/output", terminal);
+        assert.deepEqual(call6, {
           output: "served over acp",
           truncated: false,
           exitStatus: { exitCode: 5, signal: null },
         });
-        assert.deepEqual(yield* call(4, "terminal/kill", terminal), {});
-        assert.deepEqual(yield* call(5, "terminal/release", terminal), {});
+        const call7 = yield* call(4, "terminal/kill", terminal);
+        assert.deepEqual(call7, {});
+        const call8 = yield* call(5, "terminal/release", terminal);
+        assert.deepEqual(call8, {});
       })
     );
 

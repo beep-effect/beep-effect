@@ -1636,6 +1636,7 @@
           "@beep/box",
           "@beep/box-provisioning",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils"
@@ -1644,6 +1645,7 @@
           "@beep/box",
           "@beep/box-provisioning",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils"

@@ -31,7 +31,8 @@ describe("@beep/repo-ai-metrics OTLP projection invariants", () => {
       expect(AiMetricsOtlpSpanProjection.turnIdsFor([projection])).toEqual(["turn-1"]);
       expect(projection.attributes).toEqual(attributes);
       expect(projection.attributes).not.toHaveProperty("ai_metrics.turn_id");
-      expect(yield* encodeProjection(projection)).toEqual({
+      const encodedProjection = yield* encodeProjection(projection);
+      expect(encodedProjection).toEqual({
         attributes,
         parentSpanId: "1122334455667788",
         spanId: "8877665544332211",

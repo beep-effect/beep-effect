@@ -133,7 +133,8 @@ if (!shouldRunPgliteIntegration) {
 
           const sink = yield* UsageRecordSink;
 
-          const record = appendTurnFinalizationUsageRecord(yield* decodeUsageAppend(usageAppendInput));
+          const decodedUsageAppend = yield* decodeUsageAppend(usageAppendInput);
+          const record = appendTurnFinalizationUsageRecord(decodedUsageAppend);
           yield* sink.append(record);
 
           const rows = yield* db.select().from(UsageRecordTable.Table);

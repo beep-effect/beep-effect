@@ -91,7 +91,8 @@ describe("signed pilot capture boundary", () => {
         cacheEnabled: true,
         stdout: `${prefix}cache hit, replaying logs 0123456789abcdef\n${prefix}cache miss, executing 0123456789abcdef\n${prefix}task output\n`,
       });
-      expect(yield* extractCacheSignedPilotLog(remote)).toBe("cache miss, executing 0123456789abcdef\ntask output\n");
+      const extractCacheSignedPilotLog1 = yield* extractCacheSignedPilotLog(remote);
+      expect(extractCacheSignedPilotLog1).toBe("cache miss, executing 0123456789abcdef\ntask output\n");
       expect(S.is(CachePilotLogInput)(remote)).toBe(false);
       expect(S.is(CacheSignedPilotLogInput)({ ...remote, origin: "local-hit" })).toBe(false);
     })

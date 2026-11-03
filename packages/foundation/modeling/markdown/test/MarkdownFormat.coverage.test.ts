@@ -19,10 +19,8 @@ describe("MarkdownFormat coverage", () => {
       const doc = yield* MarkdownDocument.parse("[outer](/a)\n");
       const target = doc.find("text");
       assertDefined(target);
-      assert.strictEqual(
-        yield* MarkdownFormat.modifyToString(doc, target, Text.make({ value: "inner" })),
-        "[inner](/a)\n"
-      );
+      const modifyToString1 = yield* MarkdownFormat.modifyToString(doc, target, Text.make({ value: "inner" }));
+      assert.strictEqual(modifyToString1, "[inner](/a)\n");
     })
   );
   it.effect("retains bullet spellings and rejects flow edits when contextual parsing fails", () =>

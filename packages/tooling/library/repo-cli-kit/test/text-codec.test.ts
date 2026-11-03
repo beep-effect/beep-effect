@@ -13,7 +13,8 @@ const decodeCodexConfig = decodeTomlTextWith(S.decodeUnknownEffect(CodexConfig))
 describe("TextCodec", () => {
   it.effect("decodes YAML text into the target schema", () =>
     Effect.gen(function* () {
-      deepStrictEqual(yield* decodeWorkflow("name: ci\non:\n  - push\n  - pull_request\n"), {
+      const decodedWorkflow = yield* decodeWorkflow("name: ci\non:\n  - push\n  - pull_request\n");
+      deepStrictEqual(decodedWorkflow, {
         name: "ci",
         on: ["push", "pull_request"],
       });
@@ -22,7 +23,8 @@ describe("TextCodec", () => {
 
   it.effect("decodes TOML text into the target schema", () =>
     Effect.gen(function* () {
-      deepStrictEqual(yield* decodeCodexConfig('model = "o3"\n\n[features]\nweb_search = true\n'), {
+      const decodedCodexConfig = yield* decodeCodexConfig('model = "o3"\n\n[features]\nweb_search = true\n');
+      deepStrictEqual(decodedCodexConfig, {
         model: "o3",
         features: { web_search: true },
       });

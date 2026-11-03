@@ -54,7 +54,9 @@ describe("@beep/law-practice-server PracticeKgHost bundle loading", () => {
         const path = yield* Path.Path;
         const bundleDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-practice-kg-host-" });
         const corpusRoot = path.join(bundleDir, "corpus");
-        yield* fs.writeFileString(path.join(bundleDir, "bundle.manifest.json"), yield* encodeManifest(manifest));
+        const argument = path.join(bundleDir, "bundle.manifest.json");
+        const encodedManifest = yield* encodeManifest(manifest);
+        yield* fs.writeFileString(argument, encodedManifest);
 
         const context = yield* loadPracticeKgBundleContext(bundleDir, corpusRoot);
 
@@ -70,7 +72,9 @@ describe("@beep/law-practice-server PracticeKgHost bundle loading", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const bundleDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-practice-kg-host-" });
-        yield* fs.writeFileString(path.join(bundleDir, "bundle.manifest.json"), yield* encodeManifest(manifest));
+        const argument1 = path.join(bundleDir, "bundle.manifest.json");
+        const encodedManifest1 = yield* encodeManifest(manifest);
+        yield* fs.writeFileString(argument1, encodedManifest1);
 
         const context = yield* loadPracticeKgBundleContext(bundleDir);
 
@@ -174,7 +178,9 @@ describe("@beep/law-practice-server PracticeKgHost self-check refusals", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const bundleDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-practice-kg-host-self-check-" });
-        yield* fs.writeFileString(path.join(bundleDir, "bundle.manifest.json"), yield* encodeManifest(manifest));
+        const argument2 = path.join(bundleDir, "bundle.manifest.json");
+        const encodedManifest2 = yield* encodeManifest(manifest);
+        yield* fs.writeFileString(argument2, encodedManifest2);
 
         const missing = yield* Effect.flip(runPracticeKgSelfCheck({ extensionVersion: "0.4.0", bundleDir }));
 
@@ -182,7 +188,8 @@ describe("@beep/law-practice-server PracticeKgHost self-check refusals", () => {
         expect(missing.message).toBe(
           `Practice KG graph store (kg.pglite) at "${bundleDir}" is missing or not an initialised store; install the bundle that matches this server.`
         );
-        expect(yield* fs.exists(path.join(bundleDir, "kg.pglite"))).toBe(false);
+        const exists1 = yield* fs.exists(path.join(bundleDir, "kg.pglite"));
+        expect(exists1).toBe(false);
       })
     );
 
@@ -192,13 +199,17 @@ describe("@beep/law-practice-server PracticeKgHost self-check refusals", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const bundleDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-practice-kg-host-self-check-" });
-        yield* fs.writeFileString(path.join(bundleDir, "bundle.manifest.json"), yield* encodeManifest(manifest));
+        const argument3 = path.join(bundleDir, "bundle.manifest.json");
+        const encodedManifest3 = yield* encodeManifest(manifest);
+        yield* fs.writeFileString(argument3, encodedManifest3);
         yield* fs.writeFileString(path.join(bundleDir, "kg.pglite"), "not a directory");
         const error = yield* Effect.flip(runPracticeKgSelfCheck({ extensionVersion: "0.4.0", bundleDir }));
         expect(error.message).toContain("graph store (kg.pglite)");
         expect(error.message).toContain("missing or not an initialised store");
-        expect(yield* fs.readFileString(path.join(bundleDir, "kg.pglite"))).toBe("not a directory");
-        expect(yield* fs.exists(path.join(bundleDir, "practice.duckdb"))).toBe(false);
+        const readFileString2 = yield* fs.readFileString(path.join(bundleDir, "kg.pglite"));
+        expect(readFileString2).toBe("not a directory");
+        const exists3 = yield* fs.exists(path.join(bundleDir, "practice.duckdb"));
+        expect(exists3).toBe(false);
       })
     );
 
@@ -209,7 +220,9 @@ describe("@beep/law-practice-server PracticeKgHost self-check refusals", () => {
         const path = yield* Path.Path;
         const bundleDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-practice-kg-host-self-check-" });
         const graphStore = path.join(bundleDir, "kg.pglite");
-        yield* fs.writeFileString(path.join(bundleDir, "bundle.manifest.json"), yield* encodeManifest(manifest));
+        const argument4 = path.join(bundleDir, "bundle.manifest.json");
+        const encodedManifest4 = yield* encodeManifest(manifest);
+        yield* fs.writeFileString(argument4, encodedManifest4);
         yield* fs.makeDirectory(graphStore);
         yield* fs.writeFileString(path.join(graphStore, "PG_VERSION"), "17\n");
         const denied = PlatformError.systemError({
@@ -234,8 +247,10 @@ describe("@beep/law-practice-server PracticeKgHost self-check refusals", () => {
           `Practice KG graph store (kg.pglite) at "${bundleDir}" could not be opened; check that no other process holds the bundle (close Claude Desktop) and that the store is readable and not corrupt.`
         );
         expect(error.message).not.toContain("install the bundle");
-        expect(yield* fs.readFileString(path.join(graphStore, "PG_VERSION"))).toBe("17\n");
-        expect(yield* fs.exists(path.join(bundleDir, "practice.duckdb"))).toBe(false);
+        const readFileString4 = yield* fs.readFileString(path.join(graphStore, "PG_VERSION"));
+        expect(readFileString4).toBe("17\n");
+        const exists5 = yield* fs.exists(path.join(bundleDir, "practice.duckdb"));
+        expect(exists5).toBe(false);
       })
     );
 
@@ -245,7 +260,9 @@ describe("@beep/law-practice-server PracticeKgHost self-check refusals", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const bundleDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-practice-kg-host-self-check-" });
-        yield* fs.writeFileString(path.join(bundleDir, "bundle.manifest.json"), yield* encodeManifest(manifest));
+        const argument5 = path.join(bundleDir, "bundle.manifest.json");
+        const encodedManifest5 = yield* encodeManifest(manifest);
+        yield* fs.writeFileString(argument5, encodedManifest5);
         yield* fs.makeDirectory(path.join(bundleDir, "kg.pglite"));
         yield* fs.writeFileString(path.join(bundleDir, "kg.pglite", "PG_VERSION"), "17\n");
         yield* fs.writeFileString(path.join(bundleDir, "practice.duckdb"), "");

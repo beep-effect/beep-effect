@@ -16,7 +16,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(value, decoded));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -51,10 +52,14 @@ describe("SemVer property floor", () => {
         const text = value.toString();
         assert.strictEqual(inspect(value), text);
         const parsed = yield* SemVer.parse(` ${text} `);
-        assert.deepStrictEqual(yield* S.encodeEffect(SemVer)(parsed), yield* S.encodeEffect(SemVer)(value));
+        const value2 = yield* S.encodeEffect(SemVer)(parsed);
+        const value4 = yield* S.encodeEffect(SemVer)(value);
+        assert.deepStrictEqual(value2, value4);
         assert.strictEqual(parsed.toString(), text);
         const again = yield* Effect.fromResult(SemVer.parseResult(parsed.toString()));
-        assert.deepStrictEqual(yield* S.encodeEffect(SemVer)(again), yield* S.encodeEffect(SemVer)(parsed));
+        const value3 = yield* S.encodeEffect(SemVer)(again);
+        const value5 = yield* S.encodeEffect(SemVer)(parsed);
+        assert.deepStrictEqual(value3, value5);
       }),
     runs
   );

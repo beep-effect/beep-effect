@@ -30,13 +30,17 @@ export const suite: {
 
         yield* kv.set("key", "value");
 
-        assert.strictEqual(yield* kv.get("key"), "value");
-        assert.strictEqual(yield* kv.size, 1);
+        const got = yield* kv.get("key");
+        assert.strictEqual(got, "value");
+        const size1 = yield* kv.size;
+        assert.strictEqual(size1, 1);
 
         yield* kv.set("key", "value-2");
 
-        assert.strictEqual(yield* kv.get("key"), "value-2");
-        assert.strictEqual(yield* kv.size, 1);
+        const got2 = yield* kv.get("key");
+        assert.strictEqual(got2, "value-2");
+        const size3 = yield* kv.size;
+        assert.strictEqual(size3, 1);
       })
     );
 
@@ -48,8 +52,10 @@ export const suite: {
 
         yield* kv.set("binary", bytes);
 
-        assert.strictEqual(yield* kv.get("binary"), Base64.encode(bytes));
-        assert.deepStrictEqual(yield* kv.getUint8Array("binary"), bytes);
+        const got4 = yield* kv.get("binary");
+        assert.strictEqual(got4, Base64.encode(bytes));
+        const gotUint8Array = yield* kv.getUint8Array("binary");
+        assert.deepStrictEqual(gotUint8Array, bytes);
       })
     );
 
@@ -61,8 +67,10 @@ export const suite: {
 
         yield* kv.set("string", value);
 
-        assert.strictEqual(yield* kv.get("string"), value);
-        assert.deepStrictEqual(yield* kv.getUint8Array("string"), new TextEncoder().encode(value));
+        const got5 = yield* kv.get("string");
+        assert.strictEqual(got5, value);
+        const gotUint8Array6 = yield* kv.getUint8Array("string");
+        assert.deepStrictEqual(gotUint8Array6, new TextEncoder().encode(value));
       })
     );
 
@@ -74,8 +82,10 @@ export const suite: {
 
         yield* kv.set("utf8", value);
 
-        assert.strictEqual(yield* kv.get("utf8"), value);
-        assert.deepStrictEqual(yield* kv.getUint8Array("utf8"), new TextEncoder().encode(value));
+        const got7 = yield* kv.get("utf8");
+        assert.strictEqual(got7, value);
+        const gotUint8Array8 = yield* kv.getUint8Array("utf8");
+        assert.deepStrictEqual(gotUint8Array8, new TextEncoder().encode(value));
       })
     );
 
@@ -87,8 +97,10 @@ export const suite: {
         yield* kv.set("a", "1");
         yield* kv.remove("a");
 
-        assert.strictEqual(yield* kv.get("a"), undefined);
-        assert.strictEqual(yield* kv.size, 0);
+        const got9 = yield* kv.get("a");
+        assert.strictEqual(got9, undefined);
+        const size10 = yield* kv.size;
+        assert.strictEqual(size10, 0);
       })
     );
 
@@ -101,9 +113,12 @@ export const suite: {
         yield* kv.set("b", "2");
         yield* kv.clear;
 
-        assert.strictEqual(yield* kv.size, 0);
-        assert.strictEqual(yield* kv.get("a"), undefined);
-        assert.strictEqual(yield* kv.get("b"), undefined);
+        const size11 = yield* kv.size;
+        assert.strictEqual(size11, 0);
+        const got12 = yield* kv.get("a");
+        assert.strictEqual(got12, undefined);
+        const got13 = yield* kv.get("b");
+        assert.strictEqual(got13, undefined);
       })
     );
   })

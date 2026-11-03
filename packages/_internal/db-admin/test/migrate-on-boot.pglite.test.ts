@@ -18,10 +18,12 @@ it.layer(Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_g
         const db = yield* makeDrizzle();
         const sql = (yield* SqlClient.SqlClient).withoutTransforms();
         const boot = migrateOnBoot.pipe(Effect.provideService(PostgresDrizzle, db));
-        expect(yield* boot).toBeUndefined();
+        const boot1 = yield* boot;
+        expect(boot1).toBeUndefined();
         const first = yield* sql`SELECT id, hash, created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
         expect(first.length).toBeGreaterThan(0);
-        expect(yield* boot).toBeUndefined();
+        const boot2 = yield* boot;
+        expect(boot2).toBeUndefined();
         const second = yield* sql`SELECT id, hash, created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
         expect(second).toEqual(first);
       }),

@@ -61,22 +61,27 @@ const satisfied = ProbeSatisfied.make({});
 describe("gateway probes", () => {
   it.effect("finds Claude Desktop by executable, uninstall entry or MSIX package", () =>
     Effect.gen(function* () {
-      expect(
-        yield* probe("claude-desktop-installed", probesFor({ files: ["/local/AnthropicClaude/claude.exe"] }))
-      ).toEqual(satisfied);
-      expect(
-        yield* probe(
-          "claude-desktop-installed",
-          probesFor({ registry: [[`${CLAUDE_UNINSTALL_KEY}|DisplayVersion`, "0.14.10"]] })
-        )
-      ).toEqual(satisfied);
-      expect(
-        yield* probe("claude-desktop-installed", probesFor({ appx: [["Claude", "Claude_pzs8sxrjxfjjc"]] }))
-      ).toEqual(satisfied);
-      expect(yield* probe("claude-desktop-installed", probesFor({ appx: [["Claude", "Claude_other"]] }))).toEqual(
+      const probe1 = yield* probe(
+        "claude-desktop-installed",
+        probesFor({ files: ["/local/AnthropicClaude/claude.exe"] })
+      );
+      expect(probe1).toEqual(satisfied);
+      const probe2 = yield* probe(
+        "claude-desktop-installed",
+        probesFor({ registry: [[`${CLAUDE_UNINSTALL_KEY}|DisplayVersion`, "0.14.10"]] })
+      );
+      expect(probe2).toEqual(satisfied);
+      const probe3 = yield* probe(
+        "claude-desktop-installed",
+        probesFor({ appx: [["Claude", "Claude_pzs8sxrjxfjjc"]] })
+      );
+      expect(probe3).toEqual(satisfied);
+      const probe4 = yield* probe("claude-desktop-installed", probesFor({ appx: [["Claude", "Claude_other"]] }));
+      expect(probe4).toEqual(
         ProbeMissing.make({ detail: "Claude Desktop is not installed for this Windows account." })
       );
-      expect(yield* probe("claude-desktop-installed", probesFor({}))).toEqual(
+      const probe5 = yield* probe("claude-desktop-installed", probesFor({}));
+      expect(probe5).toEqual(
         ProbeMissing.make({ detail: "Claude Desktop is not installed for this Windows account." })
       );
     })
@@ -93,9 +98,8 @@ describe("gateway probes", () => {
   it.effect("counts a calling MCP client as a signed-in Claude session", () =>
     Effect.gen(function* () {
       const layer = probesFor({});
-      expect(yield* probe("claude-signed-in", layer)).toEqual(
-        ProbeMissing.make({ detail: "Claude Desktop is not signed in to a Claude account." })
-      );
+      const probe6 = yield* probe("claude-signed-in", layer);
+      expect(probe6).toEqual(ProbeMissing.make({ detail: "Claude Desktop is not signed in to a Claude account." }));
       const inSession = yield* probe("claude-signed-in", layer).pipe(
         Effect.provideService(
           McpSchema.McpRequestContext,
@@ -127,19 +131,19 @@ describe("gateway probes", () => {
   it.effect("probes Box Drive install, process and folder", () =>
     Effect.gen(function* () {
       const ready = probesFor({ files: ["/pf/Box/Box/Box.exe", "/home/lawyer/Box"], processes: ["Box.exe"] });
-      expect(yield* probe("box-drive-installed", ready)).toEqual(satisfied);
-      expect(yield* probe("box-drive-signed-in", ready)).toEqual(satisfied);
-      expect(yield* probe("box-drive-folder-available", ready)).toEqual(satisfied);
+      const probe7 = yield* probe("box-drive-installed", ready);
+      expect(probe7).toEqual(satisfied);
+      const probe8 = yield* probe("box-drive-signed-in", ready);
+      expect(probe8).toEqual(satisfied);
+      const probe9 = yield* probe("box-drive-folder-available", ready);
+      expect(probe9).toEqual(satisfied);
       const bare = probesFor({});
-      expect(yield* probe("box-drive-installed", bare)).toEqual(
-        ProbeMissing.make({ detail: "Box Drive is not installed." })
-      );
-      expect(yield* probe("box-drive-signed-in", bare)).toEqual(
-        ProbeMissing.make({ detail: "Box Drive is not running, so it cannot be signed in." })
-      );
-      expect(yield* probe("box-drive-folder-available", bare)).toEqual(
-        ProbeMissing.make({ detail: "The Box folder is not in your user folder yet." })
-      );
+      const probe10 = yield* probe("box-drive-installed", bare);
+      expect(probe10).toEqual(ProbeMissing.make({ detail: "Box Drive is not installed." }));
+      const probe11 = yield* probe("box-drive-signed-in", bare);
+      expect(probe11).toEqual(ProbeMissing.make({ detail: "Box Drive is not running, so it cannot be signed in." }));
+      const probe12 = yield* probe("box-drive-folder-available", bare);
+      expect(probe12).toEqual(ProbeMissing.make({ detail: "The Box folder is not in your user folder yet." }));
     })
   );
 
@@ -147,11 +151,12 @@ describe("gateway probes", () => {
     Effect.gen(function* () {
       const cache = "/data/m365/token-cache.dpapi";
       const cached = probesFor({ fileBytes: [[cache, new Uint8Array([1, 2, 3])]] });
-      expect(yield* probe("m365-consented", cached)).toEqual(satisfied);
-      expect(yield* probe("m365-token-cached", cached)).toEqual(satisfied);
-      expect(yield* probe("m365-token-cached", probesFor({}))).toEqual(
-        ProbeMissing.make({ detail: "No saved Microsoft 365 sign-in was found." })
-      );
+      const probe13 = yield* probe("m365-consented", cached);
+      expect(probe13).toEqual(satisfied);
+      const probe14 = yield* probe("m365-token-cached", cached);
+      expect(probe14).toEqual(satisfied);
+      const probe15 = yield* probe("m365-token-cached", probesFor({}));
+      expect(probe15).toEqual(ProbeMissing.make({ detail: "No saved Microsoft 365 sign-in was found." }));
       const noStore = yield* probe(
         "m365-token-cached",
         probesFor({ fileBytes: [[cache, new Uint8Array([1])]] }, {}, Layer.empty)
@@ -169,19 +174,19 @@ describe("gateway probes", () => {
         WindowsSecretStore.layerMemory,
         fakeM365SignIn({ configured: false })
       );
-      expect(yield* probe("m365-app-configured", unconfigured)).toEqual(
-        ProbeMissing.make({ detail: m365NotConfigured })
-      );
-      expect(yield* probe("m365-app-configured", probesFor({}))).toEqual(satisfied);
+      const probe16 = yield* probe("m365-app-configured", unconfigured);
+      expect(probe16).toEqual(ProbeMissing.make({ detail: m365NotConfigured }));
+      const probe17 = yield* probe("m365-app-configured", probesFor({}));
+      expect(probe17).toEqual(satisfied);
     })
   );
 
   it.effect("reads BitLocker protection", () =>
     Effect.gen(function* () {
-      expect(yield* probe("bitlocker-on", probesFor({ bitLocker: "on" }))).toEqual(satisfied);
-      expect(yield* probe("bitlocker-on", probesFor({ bitLocker: "off" }))).toEqual(
-        ProbeMissing.make({ detail: "BitLocker is off for drive C:." })
-      );
+      const probe18 = yield* probe("bitlocker-on", probesFor({ bitLocker: "on" }));
+      expect(probe18).toEqual(satisfied);
+      const probe19 = yield* probe("bitlocker-on", probesFor({ bitLocker: "off" }));
+      expect(probe19).toEqual(ProbeMissing.make({ detail: "BitLocker is off for drive C:." }));
     })
   );
 
@@ -195,18 +200,21 @@ describe("gateway probes", () => {
         "m365-token-cached",
         "bitlocker-on",
       ] as const) {
-        expect(yield* probe(id, linux)).toEqual(onlyWindows);
+        const probe20 = yield* probe(id, linux);
+        expect(probe20).toEqual(onlyWindows);
       }
     })
   );
 
   it.effect("checks the practice knowledge-graph bundle", () =>
     Effect.gen(function* () {
-      expect(yield* probe("practice-kg-bundle-present", probesFor({}))).toEqual(
+      const probe21 = yield* probe("practice-kg-bundle-present", probesFor({}));
+      expect(probe21).toEqual(
         ProbeMissing.make({ detail: "No knowledge-graph bundle folder is set in the extension settings." })
       );
       const configured = probesFor({ files: ["/bundle/bundle.manifest.json"] }, { bundleDir: "/bundle" });
-      expect(yield* probe("practice-kg-bundle-present", configured)).toEqual(satisfied);
+      const probe22 = yield* probe("practice-kg-bundle-present", configured);
+      expect(probe22).toEqual(satisfied);
       // The real self-check reads the file system, where /bundle does not exist.
       const selfCheck = yield* probe("practice-kg-self-check", configured);
       expect(ProbeResult.guards.broken(selfCheck)).toBe(true);

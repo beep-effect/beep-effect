@@ -843,7 +843,8 @@ const submitCandidate = Effect.fn("ContradictionQaSeed.submitCandidate")(functio
     left: () => left,
     right: () => right,
   });
-  const proposalId = ContradictionProposalId.make(yield* digestText(specification.proposalSeed));
+  const digestText1 = yield* digestText(specification.proposalSeed);
+  const proposalId = ContradictionProposalId.make(digestText1);
   const proposalContent = {
     fact: factRecord(specification.proposalFact),
     losingBelief,
@@ -862,17 +863,19 @@ const submitCandidate = Effect.fn("ContradictionQaSeed.submitCandidate")(functio
     proposalDigest,
   });
 
+  const argument = ContradictionAssessment.make({
+    confidence: Confidence.make(specification.confidence),
+    proposals: [proposal],
+  });
+  const digestText2 = yield* digestText(specification.receiptSeed);
   yield* repository
     .submit(
       SubmitContradictionCandidate.make({
-        assessment: ContradictionAssessment.make({
-          confidence: Confidence.make(specification.confidence),
-          proposals: [proposal],
-        }),
+        assessment: argument,
         matchBasis,
         orgId: desktopOrganizationId,
         pair,
-        receiptKey: ContradictionReceiptKey.make(yield* digestText(specification.receiptSeed)),
+        receiptKey: ContradictionReceiptKey.make(digestText2),
         recordedAt: instant(specification.recordedAt),
         receivedBy: systemPrincipal,
         schemaVersion,

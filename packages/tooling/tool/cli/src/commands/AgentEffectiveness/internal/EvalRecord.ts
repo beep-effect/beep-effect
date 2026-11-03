@@ -114,7 +114,9 @@ const candidateSkillDigest = Effect.fn("AgentEffectivenessEvalScorer.candidateSk
   if (A.isReadonlyArrayEmpty(listing)) {
     return O.none<string>();
   }
-  return O.some(yield* hashPublicTextSha256(yield* encodeCandidateSkillListing(listing)));
+  const encodedCandidateSkillListing = yield* encodeCandidateSkillListing(listing);
+  const hashPublicTextSha2561 = yield* hashPublicTextSha256(encodedCandidateSkillListing);
+  return O.some(hashPublicTextSha2561);
 });
 
 /**

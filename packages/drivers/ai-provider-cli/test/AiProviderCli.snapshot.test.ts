@@ -303,7 +303,8 @@ describe("@beep/ai-provider-cli executable overrides", () => {
             "claude",
             AiProviderCliProbeOptions.make({ executable: O.some("~/bin/claude") })
           );
-          const request = O.getOrThrow(yield* Ref.get(lastRunRequest));
+          const got = yield* Ref.get(lastRunRequest);
+          const request = O.getOrThrow(got);
           expect(request.executable).toBe(HostPath.join(NodeOS.homedir(), "bin/claude"));
         })
       );
@@ -331,7 +332,8 @@ describe("@beep/ai-provider-cli executable overrides", () => {
           }).pipe(Effect.flip);
 
           expect(isAiProviderCliError(error)).toBe(true);
-          expect(yield* Ref.get(runnerInvoked)).toBe(false);
+          const got1 = yield* Ref.get(runnerInvoked);
+          expect(got1).toBe(false);
         })
       );
     });

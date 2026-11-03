@@ -437,8 +437,10 @@ describe("MergeStrategy schema properties", () => {
         const sources = [src("/a", "walk", higher), src("/etc", "system", lower)] as const;
         const merged = yield* MergeStrategy.layeredMerge<typeof Document.Type>().resolve(sources);
         assert.isTrue(S.toEquivalence(Document)(merged, higher));
-        assert.deepStrictEqual(yield* S.decodeEffect(Document)(merged), merged);
-        assert.strictEqual(yield* MergeStrategy.firstMatch<typeof Document.Type>().resolve(sources), higher);
+        const value1 = yield* S.decodeEffect(Document)(merged);
+        assert.deepStrictEqual(value1, merged);
+        const resolved = yield* MergeStrategy.firstMatch<typeof Document.Type>().resolve(sources);
+        assert.strictEqual(resolved, higher);
       }),
     { arbitrary: fcRuns(100) }
   );

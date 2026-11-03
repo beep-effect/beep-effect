@@ -252,7 +252,8 @@ describe("promises port", () => {
       assert.isFalse(link?.isDirectory());
       assert.isFalse(link?.isFile());
       assert.isTrue(O.getOrUndefined(A.findFirst(dirents, (d) => d.name === "file.txt"))?.isFile());
-      assert.deepStrictEqual(yield* Effect.promise(() => fsp.readdir("/r/dir")), ["inner.txt"]);
+      const promise1 = yield* Effect.promise(() => fsp.readdir("/r/dir"));
+      assert.deepStrictEqual(promise1, ["inner.txt"]);
     })
   );
 
@@ -290,7 +291,8 @@ describe("promises port", () => {
       const fsp = MemoryFileSystem.promisesFileSystem(volume);
       assert.isTrue((yield* Effect.promise(() => fsp.stat("/r/to-dir"))).isDirectory());
       assert.isTrue((yield* Effect.promise(() => fsp.lstat("/r/to-dir"))).isSymbolicLink());
-      assert.strictEqual(yield* Effect.promise(() => fsp.readFile("/r/to-dir/inner.txt", "utf8")), "x");
+      const promise2 = yield* Effect.promise(() => fsp.readFile("/r/to-dir/inner.txt", "utf8"));
+      assert.strictEqual(promise2, "x");
     })
   );
 
@@ -326,7 +328,8 @@ describe("promises port", () => {
             path === "/r/dir" && options === undefined ? Promise.resolve(["fake.txt"]) : undefined,
         },
       });
-      assert.deepStrictEqual(yield* Effect.promise(() => fsp.readdir("/r/dir")), ["fake.txt"]);
+      const promise3 = yield* Effect.promise(() => fsp.readdir("/r/dir"));
+      assert.deepStrictEqual(promise3, ["fake.txt"]);
       const dirents = yield* Effect.promise(() => fsp.readdir("/r/dir", { withFileTypes: true }));
       assert.deepStrictEqual(
         A.map(dirents, (d) => d.name),
@@ -342,9 +345,12 @@ describe("promises port", () => {
       const bytes = yield* Effect.promise(() => fsp.readFile("/r/file.txt"));
       assert.instanceOf(bytes, Uint8Array);
       assert.deepStrictEqual([...bytes], [...new TextEncoder().encode("hello")]);
-      assert.strictEqual(yield* Effect.promise(() => fsp.readFile("/r/file.txt", "utf8")), "hello");
-      assert.strictEqual(yield* Effect.promise(() => fsp.readFile("/r/file.txt", "utf-8")), "hello");
-      assert.strictEqual(yield* Effect.promise(() => fsp.readFile("/r/file.txt", { encoding: "utf8" })), "hello");
+      const promise4 = yield* Effect.promise(() => fsp.readFile("/r/file.txt", "utf8"));
+      assert.strictEqual(promise4, "hello");
+      const promise5 = yield* Effect.promise(() => fsp.readFile("/r/file.txt", "utf-8"));
+      assert.strictEqual(promise5, "hello");
+      const promise6 = yield* Effect.promise(() => fsp.readFile("/r/file.txt", { encoding: "utf8" }));
+      assert.strictEqual(promise6, "hello");
     })
   );
 
@@ -353,9 +359,12 @@ describe("promises port", () => {
       const { volume } = yield* tree;
       const fsp = MemoryFileSystem.promisesFileSystem(volume);
       const loose = deliberatelyInvalid<(path: string, options?: unknown) => Promise<unknown>>(fsp.readFile);
-      assert.instanceOf(yield* Effect.promise(() => loose("/r/file.txt", { flag: "r" })), Uint8Array);
-      assert.instanceOf(yield* Effect.promise(() => loose("/r/file.txt", null)), Uint8Array);
-      assert.strictEqual(yield* Effect.promise(() => loose("/r/file.txt", { encoding: "utf8" })), "hello");
+      const promise7 = yield* Effect.promise(() => loose("/r/file.txt", { flag: "r" }));
+      assert.instanceOf(promise7, Uint8Array);
+      const promise8 = yield* Effect.promise(() => loose("/r/file.txt", null));
+      assert.instanceOf(promise8, Uint8Array);
+      const promise9 = yield* Effect.promise(() => loose("/r/file.txt", { encoding: "utf8" }));
+      assert.strictEqual(promise9, "hello");
     })
   );
 
@@ -408,10 +417,12 @@ describe("promises port", () => {
     Effect.gen(function* () {
       const { volume } = yield* tree;
       const { readdir, stat, lstat, readFile } = MemoryFileSystem.promisesFileSystem(volume);
-      assert.deepStrictEqual(yield* Effect.promise(() => readdir("/r/dir")), ["inner.txt"]);
+      const promise10 = yield* Effect.promise(() => readdir("/r/dir"));
+      assert.deepStrictEqual(promise10, ["inner.txt"]);
       assert.isTrue((yield* Effect.promise(() => stat("/r/file.txt"))).isFile());
       assert.isTrue((yield* Effect.promise(() => lstat("/r/to-dir"))).isSymbolicLink());
-      assert.strictEqual(yield* Effect.promise(() => readFile("/r/file.txt", "utf8")), "hello");
+      const promise11 = yield* Effect.promise(() => readFile("/r/file.txt", "utf8"));
+      assert.strictEqual(promise11, "hello");
     })
   );
 });

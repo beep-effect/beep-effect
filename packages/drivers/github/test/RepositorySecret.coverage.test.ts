@@ -80,12 +80,18 @@ describe("RepositorySecret test doubles", () => {
       Effect.gen(function* () {
         const service = yield* RepositorySecret;
         const start = calls.length;
-        assert.strictEqual(yield* service.set("TOKEN", value, "dependabot"), undefined);
-        assert.deepStrictEqual(yield* service.list("codespaces"), [SecretInfo.make({ name: "TOKEN" })]);
-        assert.strictEqual(yield* service.delete("TOKEN", "actions"), undefined);
-        assert.strictEqual(yield* service.setForEnvironment("prod", "TOKEN", value), undefined);
-        assert.deepStrictEqual(yield* service.listForEnvironment("prod"), [SecretInfo.make({ name: "ENV_TOKEN" })]);
-        assert.strictEqual(yield* service.deleteForEnvironment("prod", "TOKEN"), undefined);
+        const set1 = yield* service.set("TOKEN", value, "dependabot");
+        assert.strictEqual(set1, undefined);
+        const list2 = yield* service.list("codespaces");
+        assert.deepStrictEqual(list2, [SecretInfo.make({ name: "TOKEN" })]);
+        const delete3 = yield* service.delete("TOKEN", "actions");
+        assert.strictEqual(delete3, undefined);
+        const setForEnvironment4 = yield* service.setForEnvironment("prod", "TOKEN", value);
+        assert.strictEqual(setForEnvironment4, undefined);
+        const listForEnvironment5 = yield* service.listForEnvironment("prod");
+        assert.deepStrictEqual(listForEnvironment5, [SecretInfo.make({ name: "ENV_TOKEN" })]);
+        const deleteForEnvironment6 = yield* service.deleteForEnvironment("prod", "TOKEN");
+        assert.strictEqual(deleteForEnvironment6, undefined);
         assert.deepStrictEqual(calls.slice(start), [
           ["set", "TOKEN", value, "dependabot"],
           ["list", "codespaces"],
@@ -109,8 +115,10 @@ describe("RepositorySecret default write scope", () => {
     it.effect("omitted set and delete scopes use Actions and keep the repository coordinate", () =>
       Effect.gen(function* () {
         const service = yield* RepositorySecret;
-        assert.strictEqual(yield* service.set("TOKEN", value), undefined);
-        assert.strictEqual(yield* service.delete("TOKEN"), undefined);
+        const set7 = yield* service.set("TOKEN", value);
+        assert.strictEqual(set7, undefined);
+        const delete8 = yield* service.delete("TOKEN");
+        assert.strictEqual(delete8, undefined);
         assert.deepStrictEqual(
           A.map(script.calls, (call) => [call.method, call.path]),
           [

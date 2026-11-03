@@ -162,19 +162,18 @@ const projectStoredSpan = Effect.fnUntraced(function* (decoded: typeof page.Type
   const attributes = yield* S.decodeUnknownEffect(PhoenixStoredSpan.fields.attributes)(
     R.filter(found.attributes, (_value, key) => A.contains(input.attributeKeys, key))
   ).pipe(Effect.mapError(() => fail("invalid-response")));
-  return O.some(
-    yield* S.decodeEffect(PhoenixStoredSpan)({
-      traceId: found.context.trace_id,
-      spanId: found.context.span_id,
-      parentId: found.parent_id,
-      name: found.name,
-      kind: found.span_kind,
-      startTime: found.start_time,
-      endTime: found.end_time,
-      status: found.status_code,
-      attributes,
-    }).pipe(Effect.mapError(() => fail("invalid-response")))
-  );
+  const pipe1 = yield* S.decodeEffect(PhoenixStoredSpan)({
+    traceId: found.context.trace_id,
+    spanId: found.context.span_id,
+    parentId: found.parent_id,
+    name: found.name,
+    kind: found.span_kind,
+    startTime: found.start_time,
+    endTime: found.end_time,
+    status: found.status_code,
+    attributes,
+  }).pipe(Effect.mapError(() => fail("invalid-response")));
+  return O.some(pipe1);
 });
 
 /**

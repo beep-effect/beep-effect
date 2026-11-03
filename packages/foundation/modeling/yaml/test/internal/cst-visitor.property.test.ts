@@ -50,7 +50,8 @@ describe("CST visitor property floor", () => {
         const source = yield* Yaml.stringify(values);
         const parsed = yield* Yaml.parse(source);
         const rendered = yield* Yaml.stringify(parsed);
-        assert.deepStrictEqual(yield* Yaml.parse(rendered), parsed);
+        const parsed1 = yield* Yaml.parse(rendered);
+        assert.deepStrictEqual(parsed1, parsed);
         assert.deepStrictEqual(parsed, values);
         assert.deepStrictEqual(projection(rendered), projection(source));
         assert.deepStrictEqual([...cstEvents(rendered)], [...cstEvents(source)]);

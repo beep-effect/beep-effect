@@ -186,8 +186,10 @@ describe("@beep/exiftool service", () => {
           );
 
           expect(result.tagsWritten).toBe(1);
-          expect(yield* fs.readFileString(filePath)).toBe("staged bytes");
-          expect(yield* fs.readDirectory(tmpDir)).toEqual(["frame.png"]);
+          const readFileString1 = yield* fs.readFileString(filePath);
+          expect(readFileString1).toBe("staged bytes");
+          const readDirectory2 = yield* fs.readDirectory(tmpDir);
+          expect(readDirectory2).toEqual(["frame.png"]);
 
           const args = commands[0]?.args ?? [];
           expect(args[0]).toBe("-config");
@@ -226,7 +228,8 @@ describe("@beep/exiftool service", () => {
           );
 
           expect(result.tagsWritten).toBe(4);
-          expect(yield* fs.readFileString(filePath)).toBe("staged bytes");
+          const readFileString3 = yield* fs.readFileString(filePath);
+          expect(readFileString3).toBe("staged bytes");
 
           const args = commands[0]?.args ?? [];
           expect(A.contains(args, "-XMP-beepQA:sessionId=sess-1")).toBe(true);
@@ -262,7 +265,8 @@ describe("@beep/exiftool service", () => {
           expect(error).toBeInstanceOf(ExiftoolError);
           expect(error.operation).toBe("writeTags");
           expect(pipe(error.message, Str.includes("FFmpeg.writeContainerMetadata"))).toBe(true);
-          expect(yield* fs.readFileString(filePath)).toBe("webm bytes");
+          const readFileString4 = yield* fs.readFileString(filePath);
+          expect(readFileString4).toBe("webm bytes");
           expect(A.length(commands)).toBe(0);
 
           const emptyError = yield* Effect.flip(
@@ -301,8 +305,10 @@ describe("@beep/exiftool service", () => {
           expect(error).toBeInstanceOf(ExiftoolError);
           expect(pipe(error.message, Str.includes("could not write tags"))).toBe(true);
           assertSome(error.exitCode, 7);
-          expect(yield* fs.readFileString(filePath)).toBe("original bytes");
-          expect(yield* fs.readDirectory(tmpDir)).toEqual(["frame.png"]);
+          const readFileString5 = yield* fs.readFileString(filePath);
+          expect(readFileString5).toBe("original bytes");
+          const readDirectory6 = yield* fs.readDirectory(tmpDir);
+          expect(readDirectory6).toEqual(["frame.png"]);
         })
       );
     });

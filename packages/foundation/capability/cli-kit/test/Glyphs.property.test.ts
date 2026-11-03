@@ -14,7 +14,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(GlyphSet)(value);
       const decoded = yield* S.decodeEffect(GlyphSet)(encoded);
       assertTrue(S.toEquivalence(GlyphSet)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(GlyphSet)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(GlyphSet)(decoded);
+      assert.deepStrictEqual(value1, encoded);
     }),
   { arbitrary: fcRuns(100) }
 );

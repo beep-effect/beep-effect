@@ -35,10 +35,13 @@ describe("MemoryFileSystem.layerFaulty", () => {
     it.effect("an empty fault map is a transparent passthrough over the volume", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        assert.strictEqual(yield* fs.readFileString("/repos/blocked/src/a.ts"), "export {}\n");
+        const readFileString1 = yield* fs.readFileString("/repos/blocked/src/a.ts");
+        assert.strictEqual(readFileString1, "export {}\n");
         yield* fs.writeFileString("/scratch.txt", "written");
-        assert.strictEqual(yield* fs.readFileString("/scratch.txt"), "written");
-        assert.isTrue(yield* fs.exists("/repos/blocked"));
+        const readFileString2 = yield* fs.readFileString("/scratch.txt");
+        assert.strictEqual(readFileString2, "written");
+        const exists3 = yield* fs.exists("/repos/blocked");
+        assert.isTrue(exists3);
         assert.deepStrictEqual((yield* fs.readDirectory("/repos/blocked/src")).sort(), ["a.ts", "b.ts"]);
       })
     );
@@ -58,9 +61,11 @@ describe("MemoryFileSystem.layerFaulty", () => {
 
         // None of these methods carry a fault handler: all must reach the volume.
         assert.deepStrictEqual((yield* fs.readDirectory("/repos/blocked/src")).sort(), ["a.ts", "b.ts"]);
-        assert.strictEqual(yield* fs.readFileString("/repos/blocked/src/a.ts"), "export {}\n");
+        const readFileString4 = yield* fs.readFileString("/repos/blocked/src/a.ts");
+        assert.strictEqual(readFileString4, "export {}\n");
         yield* fs.writeFileString("/repos/blocked/src/c.ts", "export const c = 1;\n");
-        assert.strictEqual(yield* fs.readFileString("/repos/blocked/src/c.ts"), "export const c = 1;\n");
+        const readFileString5 = yield* fs.readFileString("/repos/blocked/src/c.ts");
+        assert.strictEqual(readFileString5, "export const c = 1;\n");
         assert.strictEqual((yield* fs.stat("/repos/blocked")).type, "Directory");
       })
     );
@@ -112,7 +117,8 @@ describe("MemoryFileSystem.layerFaulty", () => {
         const fs = yield* FileSystem.FileSystem;
         const error = yield* Effect.flip(fs.readFileString("/repos/blocked/src/a.ts"));
         assert.strictEqual(error.reason._tag, "PermissionDenied");
-        assert.strictEqual(yield* fs.readFileString("/repos/blocked/src/b.ts"), "export {}\n");
+        const readFileString6 = yield* fs.readFileString("/repos/blocked/src/b.ts");
+        assert.strictEqual(readFileString6, "export {}\n");
       })
     );
   });
@@ -137,9 +143,11 @@ describe("MemoryFileSystem.layerFaulty", () => {
       const derived = yield* Effect.flip(faulty.readFileString("/data.bin"));
       assert.strictEqual(derived.reason._tag, "PermissionDenied");
       // exists is derived from access: an injected NotFound reads as false.
-      assert.isFalse(yield* faulty.exists("/data.bin"));
+      const exists7 = yield* faulty.exists("/data.bin");
+      assert.isFalse(exists7);
       // The wrapped volume itself is untouched.
-      assert.strictEqual(yield* base.readFileString("/data.bin"), "payload");
+      const readFileString8 = yield* base.readFileString("/data.bin");
+      assert.strictEqual(readFileString8, "payload");
     })
   );
 
@@ -151,7 +159,8 @@ describe("MemoryFileSystem.layerFaulty", () => {
       });
       const error = yield* Effect.flip(faulty.remove("/kept.txt"));
       assert.strictEqual(error.reason._tag, "PermissionDenied");
-      assert.strictEqual(yield* faulty.readFileString("/kept.txt"), "kept");
+      const readFileString9 = yield* faulty.readFileString("/kept.txt");
+      assert.strictEqual(readFileString9, "kept");
     })
   );
 
@@ -182,7 +191,8 @@ describe("MemoryFileSystem.layerFaulty", () => {
         const sinkError = yield* Effect.flip(Stream.make(new Uint8Array([1])).pipe(Stream.run(faulty.sink("/f.txt"))));
         assert.strictEqual(sinkError.reason._tag, "PermissionDenied");
         // The primitives beneath them are untouched: readFile still answers.
-        assert.deepStrictEqual(yield* faulty.readFile("/f.txt"), new TextEncoder().encode("content"));
+        const readFile10 = yield* faulty.readFile("/f.txt");
+        assert.deepStrictEqual(readFile10, new TextEncoder().encode("content"));
       })
   );
 
@@ -195,9 +205,8 @@ describe("MemoryFileSystem.layerFaulty", () => {
       });
 
       // Replacement: the canned stream, no volume involvement.
-      assert.deepStrictEqual(yield* Stream.runCollect(faulty.watch("/synthetic")), [
-        { _tag: "Create", path: "/synthetic/event" },
-      ]);
+      const resultCollect = yield* Stream.runCollect(faulty.watch("/synthetic"));
+      assert.deepStrictEqual(resultCollect, [{ _tag: "Create", path: "/synthetic/event" }]);
 
       // Delegation (undefined): a real watch on the volume still delivers
       // real events. The yield parks the parent behind the forked child so
@@ -207,7 +216,8 @@ describe("MemoryFileSystem.layerFaulty", () => {
         .pipe(Stream.take(1), Stream.runCollect, Effect.forkChild({ startImmediately: true }));
       yield* Effect.yieldNow;
       yield* faulty.writeFileString("/watched/new.txt", "y");
-      assert.deepStrictEqual(Array.from(yield* Fiber.join(events)), [{ _tag: "Create", path: "/watched/new.txt" }]);
+      const join11 = yield* Fiber.join(events);
+      assert.deepStrictEqual(Array.from(join11), [{ _tag: "Create", path: "/watched/new.txt" }]);
     })
   );
 
@@ -256,8 +266,10 @@ describe("MemoryFileSystem.failTimes", () => {
         assert.strictEqual(second.reason._tag, "Busy");
 
         // Third call delegates — and keeps delegating.
-        assert.strictEqual(yield* fs.readFileString("/config.json"), "{}");
-        assert.strictEqual(yield* fs.readFileString("/config.json"), "{}");
+        const readFileString12 = yield* fs.readFileString("/config.json");
+        assert.strictEqual(readFileString12, "{}");
+        const readFileString13 = yield* fs.readFileString("/config.json");
+        assert.strictEqual(readFileString13, "{}");
       })
     );
   });
@@ -269,10 +281,12 @@ describe("MemoryFileSystem.failTimes", () => {
         { faults: { readFileString: MemoryFileSystem.failTimes(1, busy) } }
       );
       const probe = Effect.fnUntraced(function* (layer: typeof Flaky) {
-        const fs = Context.get(yield* Layer.build(layer), FileSystem.FileSystem);
+        const build14 = yield* Layer.build(layer);
+        const fs = Context.get(build14, FileSystem.FileSystem);
         const first = yield* Effect.flip(fs.readFileString("/config.json"));
         assert.strictEqual(first.reason._tag, "Busy");
-        assert.strictEqual(yield* fs.readFileString("/config.json"), "{}");
+        const readFileString15 = yield* fs.readFileString("/config.json");
+        assert.strictEqual(readFileString15, "{}");
       });
 
       // Layer memoization is per-build: each build arms a fresh counter.
@@ -312,7 +326,8 @@ describe("MemoryFileSystem.failTimes", () => {
       const two = MemoryFileSystem.makeFaulty(base, faults);
 
       assert.strictEqual((yield* Effect.flip(one.readFileString("/config.json"))).reason._tag, "Busy");
-      assert.strictEqual(yield* one.readFileString("/config.json"), "{}");
+      const readFileString16 = yield* one.readFileString("/config.json");
+      assert.strictEqual(readFileString16, "{}");
       // `two` was armed independently and still owes its failure.
       assert.strictEqual((yield* Effect.flip(two.readFileString("/config.json"))).reason._tag, "Busy");
     })
@@ -330,7 +345,8 @@ describe("MemoryFileSystem.failTimes", () => {
       const faulty = MemoryFileSystem.makeFaulty(base, {
         readFileString: MemoryFileSystem.failTimes(0, busy),
       });
-      assert.strictEqual(yield* faulty.readFileString("/config.json"), "{}");
+      const readFileString17 = yield* faulty.readFileString("/config.json");
+      assert.strictEqual(readFileString17, "{}");
     })
   );
 });
@@ -364,7 +380,8 @@ describe("MemoryFileSystem.die", () => {
       const fs = MemoryFileSystem.makeFaulty(base, { readDirectory: MemoryFileSystem.die(defect) });
       const exit = yield* Effect.exit(fs.readDirectory("/repos/blocked/src"));
       assertExitFailure(exit, Cause.die(defect));
-      assert.strictEqual(yield* fs.readFileString("/repos/blocked/src/a.ts"), "export {}\n");
+      const readFileString18 = yield* fs.readFileString("/repos/blocked/src/a.ts");
+      assert.strictEqual(readFileString18, "export {}\n");
     })
   );
 });
@@ -389,7 +406,8 @@ describe("MemoryFileSystem fault factories", () => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         assert.strictEqual((yield* fs.stat("/Docs.json")).type, "File");
-        assert.strictEqual(yield* fs.readFileString("/DOCS.JSON"), "{}");
+        const readFileString19 = yield* fs.readFileString("/DOCS.JSON");
+        assert.strictEqual(readFileString19, "{}");
       })
     );
   });
@@ -403,7 +421,8 @@ describe("MemoryFileSystem fault factories", () => {
             ? inner.readFileString("/a.txt", encoding)
             : Effect.fail(denied("readFileString", path)),
       }));
-      assert.strictEqual(yield* fs.readFileString("/alias.txt"), "a");
+      const readFileString20 = yield* fs.readFileString("/alias.txt");
+      assert.strictEqual(readFileString20, "a");
       assert.strictEqual((yield* Effect.flip(fs.readFileString("/a.txt"))).reason._tag, "PermissionDenied");
     })
   );
@@ -416,12 +435,15 @@ describe("MemoryFileSystem fault factories", () => {
         return { readFileString: MemoryFileSystem.failTimes(1, denied("readFileString", "/config.json")) };
       }).pipe(Layer.provide(MemoryFileSystem.layerWith({ "/config.json": "{}" })));
       const readTwice = Effect.fnUntraced(function* () {
-        const fs = Context.get(yield* Layer.build(flaky), FileSystem.FileSystem);
+        const build21 = yield* Layer.build(flaky);
+        const fs = Context.get(build21, FileSystem.FileSystem);
         yield* Effect.flip(fs.readFileString("/config.json"));
         return yield* fs.readFileString("/config.json");
       });
-      assert.strictEqual(yield* readTwice(), "{}");
-      assert.strictEqual(yield* readTwice(), "{}");
+      const readTwice22 = yield* readTwice();
+      assert.strictEqual(readTwice22, "{}");
+      const readTwice23 = yield* readTwice();
+      assert.strictEqual(readTwice23, "{}");
       assert.strictEqual(calls, 2);
     })
   );

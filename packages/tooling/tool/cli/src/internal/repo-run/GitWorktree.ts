@@ -23,7 +23,8 @@ const resolvedPath = Effect.fnUntraced(function* (
 ): Effect.fn.Return<string, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  return O.getOrElse(yield* fs.realPath(candidate).pipe(Effect.option), () => path.resolve(candidate));
+  const pipe1 = yield* fs.realPath(candidate).pipe(Effect.option);
+  return O.getOrElse(pipe1, () => path.resolve(candidate));
 });
 
 /**

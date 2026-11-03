@@ -114,7 +114,7 @@ const laneTimingsResponse = (rendered: string): string =>
       ? '{"jobs":[{"completed_at":"2026-08-06T12:10:00Z","conclusion":"success","created_at":"2026-08-06T12:00:00Z","id":991,"labels":["self-hosted"],"name":"Test Unit","run_attempt":1,"run_id":42,"runner_name":"runner-1","started_at":"2026-08-06T12:00:30Z","status":"completed","steps":[]}],"total_count":2}'
       : '{"jobs":[{"completed_at":"2026-08-06T12:11:00Z","conclusion":"success","created_at":"2026-08-06T12:01:00Z","id":992,"labels":["self-hosted"],"name":"Test Unit 2","run_attempt":1,"run_id":42,"runner_name":"runner-1","started_at":"2026-08-06T12:01:30Z","status":"completed","steps":[]}],"total_count":2}';
 
-const decodeJsonText = flow(S.decodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
+const decodeJsonText = flow(S.decodeResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const REPO_PATH = "/repos/beep-effect/beep-effect";
 // The endpoint a call reads, spelled as the Ci readers spell it.
 const endpointOf = (call: GithubFetchCall): string =>
@@ -362,7 +362,8 @@ const windowGithubClient = (
   CiLaneTimingGithubClient.of({
     getJson: Effect.fn("TestCiLaneTimingGithubClient.getJson")(function* (endpoint) {
       A.appendInPlace(commands, endpoint);
-      return decodeJsonText(yield* response(endpoint));
+      const response1 = yield* response(endpoint);
+      return decodeJsonText(response1);
     }),
   });
 
@@ -384,15 +385,18 @@ const runLaneTimingsCommand = Command.runWith(ciLaneTimingsCommand, { version: "
 const isString = (value: unknown): value is string => typeof value === "string";
 
 const testConsoleText = Effect.fn("TestCiLaneTimings.consoleText")(function* () {
-  const logs = A.filter(yield* TestConsole.logLines, isString);
-  const errors = A.filter(yield* TestConsole.errorLines, isString);
+  const logLines2 = yield* TestConsole.logLines;
+  const logs = A.filter(logLines2, isString);
+  const errorLines3 = yield* TestConsole.errorLines;
+  const errors = A.filter(errorLines3, isString);
   return A.join(A.appendAll(logs, errors), "\n");
 });
 
 // One `Console.log` per render, so the newest line is the whole output of the
 // command that just ran — what a preview assertion about "starts with" needs.
 const lastLaneTimingsLog = Effect.fn("TestCiLaneTimings.lastLog")(function* () {
-  const logs = A.filter(yield* TestConsole.logLines, isString);
+  const logLines4 = yield* TestConsole.logLines;
+  const logs = A.filter(logLines4, isString);
   return O.getOrElse(A.last(logs), () => "");
 });
 

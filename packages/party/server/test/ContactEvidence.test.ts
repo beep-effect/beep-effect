@@ -74,7 +74,8 @@ it.layer(PartyLedgerMemory)("contact data quality", (it) => {
       );
       TestUtils.assertNone(rejected.party);
       expect(rejected.issues[0]?.reason).toBe("missing-source-record-identity");
-      expect(yield* ledger.snapshot).toEqual(before);
+      const resolved1 = yield* ledger.snapshot;
+      expect(resolved1).toEqual(before);
     })
   );
 });
@@ -94,7 +95,8 @@ it.layer(PartyLedgerMemory)("contact replay", (it) => {
       const before = yield* ledger.snapshot;
       const failure = yield* ingestContact(request(input, "ordered")).pipe(Effect.flip);
       expect(failure._tag).toBe("LedgerConflict");
-      expect(yield* ledger.snapshot).toEqual(before);
+      const resolved2 = yield* ledger.snapshot;
+      expect(resolved2).toEqual(before);
     })
   );
 });

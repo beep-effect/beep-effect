@@ -149,10 +149,8 @@ it.layer(platform, { timeout: "30 seconds" })("wave-exempt row kinds", (test) =>
       });
       const paths = yield* yeetInboxPaths(root);
       yield* fs.makeDirectory(paths.dir, { recursive: true });
-      yield* fs.writeFileString(
-        yield* yeetDispatchStatePath(root),
-        `${yield* YeetRemediationWaveJson.encode(wave(newHead))}\n`
-      );
+      const yeetDispatchStatePath1 = yield* yeetDispatchStatePath(root);
+      yield* fs.writeFileString(yeetDispatchStatePath1, `${yield* YeetRemediationWaveJson.encode(wave(newHead))}\n`);
       const view = yield* loadYeetInboxView(root);
       expect(A.map(view.entries, (entry) => [entry.row.kind, entry.liveness])).toStrictEqual([
         ["check-failed", "superseded"],
@@ -180,10 +178,8 @@ it.layer(platform, { timeout: "30 seconds" })("wave-exempt review-thread rows un
         });
       const pinWave = Effect.fnUntraced(function* (headSha: string) {
         yield* fs.makeDirectory((yield* yeetInboxPaths(root)).dir, { recursive: true });
-        yield* fs.writeFileString(
-          yield* yeetDispatchStatePath(root),
-          `${yield* YeetRemediationWaveJson.encode(wave(headSha))}\n`
-        );
+        const yeetDispatchStatePath2 = yield* yeetDispatchStatePath(root);
+        yield* fs.writeFileString(yeetDispatchStatePath2, `${yield* YeetRemediationWaveJson.encode(wave(headSha))}\n`);
       });
       // The head each live, unacknowledged review-thread row was written on.
       const liveThreadHeads = Effect.gen(function* () {
@@ -201,7 +197,8 @@ it.layer(platform, { timeout: "30 seconds" })("wave-exempt review-thread rows un
       yield* convergeYeetInbox(context, observe(newHead), at);
       const held = yield* yeetInboxReviewThreadRowIds(root, 7, "PRRT_1");
       expect(held).toHaveLength(1);
-      expect(yield* liveThreadHeads).toStrictEqual([oldHead]);
+      const liveThreadHeads3 = yield* liveThreadHeads;
+      expect(liveThreadHeads3).toStrictEqual([oldHead]);
 
       // Once that row is acknowledged, a thread still outstanding on the next
       // head gets a fresh row.
@@ -218,7 +215,8 @@ it.layer(platform, { timeout: "30 seconds" })("wave-exempt review-thread rows un
       const thirdHead = "ccccccc3333333";
       yield* pinWave(thirdHead);
       yield* convergeYeetInbox(context, observe(thirdHead), at);
-      expect(yield* liveThreadHeads).toStrictEqual([thirdHead]);
+      const liveThreadHeads4 = yield* liveThreadHeads;
+      expect(liveThreadHeads4).toStrictEqual([thirdHead]);
     })
   );
 });

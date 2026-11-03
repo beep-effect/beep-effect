@@ -46,9 +46,12 @@ const backticked = (body: string) =>
 describe("practice-onboarding skill", () => {
   it.effect("has spec-conformant frontmatter matching its folder and plugin", () =>
     Effect.gen(function* () {
-      const { frontmatter } = splitSkill(yield* readText(skillUrl));
+      const readText1 = yield* readText(skillUrl);
+      const { frontmatter } = splitSkill(readText1);
       const skill = yield* S.decodeUnknownEffect(SkillFrontmatter)(frontmatter, { onExcessProperty: "error" });
-      const plugin = yield* S.decodeEffect(PluginManifestJson)(yield* readText(pluginUrl));
+      const argument = S.decodeEffect(PluginManifestJson);
+      const readText5 = yield* readText(pluginUrl);
+      const plugin = yield* argument(readText5);
       expect(skill.name).toBe("practice-onboarding");
       assertSome(R.get(skill.metadata, "version"), plugin.version);
     })
@@ -56,14 +59,16 @@ describe("practice-onboarding skill", () => {
 
   it.effect("stays under the 500-line skill budget", () =>
     Effect.gen(function* () {
-      const lines = A.length(Str.split(yield* readText(skillUrl), "\n"));
+      const readText2 = yield* readText(skillUrl);
+      const lines = A.length(Str.split(readText2, "\n"));
       expect(lines).toBeLessThan(500);
     })
   );
 
   it.effect("names exactly the gateway's setup tools", () =>
     Effect.gen(function* () {
-      const { body } = splitSkill(yield* readText(skillUrl));
+      const readText3 = yield* readText(skillUrl);
+      const { body } = splitSkill(readText3);
       const named = A.filter(backticked(body), Str.startsWith("setup_"));
       expect(A.sort(named, Str.Order)).toEqual(A.sort(R.keys(SetupToolkit.tools), Str.Order));
     })
@@ -71,7 +76,8 @@ describe("practice-onboarding skill", () => {
 
   it.effect("lists every profile capability and provider literal", () =>
     Effect.gen(function* () {
-      const words = backticked(splitSkill(yield* readText(skillUrl)).body);
+      const readText4 = yield* readText(skillUrl);
+      const words = backticked(splitSkill(readText4).body);
       expect(A.every(PracticeCapability.literals, (literal) => A.contains(words, literal))).toBe(true);
       expect(A.every(PracticeProvider.literals, (literal) => A.contains(words, literal))).toBe(true);
     })
@@ -79,7 +85,9 @@ describe("practice-onboarding skill", () => {
 
   it.effect("serves the same text the skill ships (run `bun run sync:onboarding-skill` after editing SKILL.md)", () =>
     Effect.gen(function* () {
-      expect(ONBOARDING_SKILL_BODY).toBe(skillBody(yield* readText(skillUrl)));
+      const expectation = expect(ONBOARDING_SKILL_BODY);
+      const readText6 = yield* readText(skillUrl);
+      expectation.toBe(skillBody(readText6));
     })
   );
 });

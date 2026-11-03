@@ -118,7 +118,8 @@ const decodeJson = S.decodeEffect(JsonValue);
 /** A realpath'd temporary directory, removed when the suite closes. */
 const scratchDirectory = Effect.fnUntraced(function* (prefix: string) {
   const fs = yield* FileSystem.FileSystem;
-  return yield* fs.realPath(yield* fixture.tempDirectory(prefix));
+  const tempDirectory1 = yield* fixture.tempDirectory(prefix);
+  return yield* fs.realPath(tempDirectory1);
 });
 
 /**
@@ -350,7 +351,8 @@ const guards = (...runs: ReadonlyArray<PackedInstallBudget.Encoded>) => {
 
 const readJson = Effect.fnUntraced(function* (file: string) {
   const fs = yield* FileSystem.FileSystem;
-  return yield* decodeJson(yield* fs.readFileString(file));
+  const readFileString2 = yield* fs.readFileString(file);
+  return yield* decodeJson(readFileString2);
 });
 
 /** The `package/package.json` a tarball packs, read back with the host `tar` (bsdtar on macOS). */
@@ -373,7 +375,8 @@ const assertConsumer = Effect.fn("assertConsumer")(function* (
   const path = yield* Path.Path;
   const scratch = path.dirname(consumer.directory);
   // The realpath'd scratch: file: specs and the install cwd agree.
-  assert.strictEqual(consumer.directory, yield* fs.realPath(consumer.directory), consumer.manager);
+  const realPath3 = yield* fs.realPath(consumer.directory);
+  assert.strictEqual(consumer.directory, realPath3, consumer.manager);
   // The host platform comes from the HostProcessPlatform reference, which defaults to this runner's.
   if ((yield* HostProcessPlatform) === "darwin") assert.match(consumer.directory, /^\/private\//, consumer.manager);
   for (const tarball of R.values(tarballs)) assert.isTrue(Str.startsWith(`${scratch}/`)(tarball), tarball);
@@ -464,11 +467,13 @@ describe("PackedInstall against a real fixture workspace", () => {
             assert.deepStrictEqual(manifest.dependencies, { [LIB]: VERSION });
             for (const consumer of result.consumers) yield* assertConsumer(consumer, result.tarballs);
             const scratch = path.dirname(O.getOrElse(A.head(A.map(result.consumers, (c) => c.directory)), () => ""));
-            assert.isTrue(yield* fs.exists(scratch), "the scratch directory exists while the scope is open");
+            const exists4 = yield* fs.exists(scratch);
+            assert.isTrue(exists4, "the scratch directory exists while the scope is open");
             return scratch;
           }).pipe(Scope.provide(scope));
           yield* Scope.close(scope, Exit.void);
-          assert.isFalse(yield* fs.exists(seen), `${seen} survived the scope`);
+          const exists5 = yield* fs.exists(seen);
+          assert.isFalse(exists5, `${seen} survived the scope`);
         }).pipe(Effect.timeout("150 seconds")),
       180_000
     );

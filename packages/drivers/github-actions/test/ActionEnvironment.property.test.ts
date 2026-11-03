@@ -18,7 +18,8 @@ const roundTrips = <A, I>(name: string, schema: S.Codec<A, I>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -46,13 +47,18 @@ it.layer(
         const env = yield* ActionEnvironment;
         const encoded = yield* S.encodeEffect(Json)(value);
         yield* fs.writeFileString("/event.json", encoded);
-        const parsed = yield* S.decodeUnknownEffect(S.Json)(yield* env.payload);
+        const argument = S.decodeUnknownEffect(S.Json);
+        const payload1 = yield* env.payload;
+        const parsed = yield* argument(payload1);
         assert.isTrue(S.toEquivalence(S.Json)(parsed, value));
         const formatted = yield* S.encodeEffect(Json)(parsed);
         yield* fs.writeFileString("/event.json", formatted);
-        const reparsed = yield* S.decodeUnknownEffect(S.Json)(yield* env.payload);
+        const argument1 = S.decodeUnknownEffect(S.Json);
+        const payload2 = yield* env.payload;
+        const reparsed = yield* argument1(payload2);
         assert.isTrue(S.toEquivalence(S.Json)(reparsed, parsed));
-        assert.strictEqual(yield* S.encodeEffect(Json)(reparsed), formatted);
+        const value2 = yield* S.encodeEffect(Json)(reparsed);
+        assert.strictEqual(value2, formatted);
       }),
     runs
   );

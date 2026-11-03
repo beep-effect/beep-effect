@@ -184,15 +184,14 @@ describe("renderYeetDispatchLine", () => {
   it.layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
     it.effect("announces each decision distinctly", () =>
       Effect.gen(function* () {
-        const started = renderYeetDispatchLine(
-          yield* report(YeetRemediationOutcome.make({ decision: "start-session", wave: wave() }))
+        const report1 = yield* report(YeetRemediationOutcome.make({ decision: "start-session", wave: wave() }));
+        const started = renderYeetDispatchLine(report1);
+        const report2 = yield* report(
+          YeetRemediationOutcome.make({ decision: "queue", wave: wave({ capsuleIds: ["a", "b"] }) })
         );
-        const queued = renderYeetDispatchLine(
-          yield* report(YeetRemediationOutcome.make({ decision: "queue", wave: wave({ capsuleIds: ["a", "b"] }) }))
-        );
-        const duplicate = renderYeetDispatchLine(
-          yield* report(YeetRemediationOutcome.make({ decision: "duplicate", wave: wave() }))
-        );
+        const queued = renderYeetDispatchLine(report2);
+        const report3 = yield* report(YeetRemediationOutcome.make({ decision: "duplicate", wave: wave() }));
+        const duplicate = renderYeetDispatchLine(report3);
 
         expect(started).toContain("repair session opened");
         expect(started).toContain('"Check / Coverage"');
@@ -303,7 +302,8 @@ describe("supersedeYeetDispatchState", () => {
             if (O.isSome(persisted)) {
               expect(persisted.value.headSha).toBe("bbb222");
             }
-            expect(A.length(yield* TestConsole.errorLines)).toBe(0);
+            const errorLines4 = yield* TestConsole.errorLines;
+            expect(A.length(errorLines4)).toBe(0);
           })
         )
       );
@@ -322,7 +322,8 @@ describe("supersedeYeetDispatchState", () => {
 
             yield* supersedeYeetDispatchState(root, "bbb222", 751, LATER);
 
-            const errors = A.map(yield* TestConsole.errorLines, String);
+            const errorLines5 = yield* TestConsole.errorLines;
+            const errors = A.map(errorLines5, String);
             expect(A.some(errors, (line) => Str.includes("1-capsule wave for aaa111 is superseded")(line))).toBe(true);
           })
         )
@@ -343,12 +344,15 @@ describe("supersedeYeetDispatchState", () => {
             const outsideDispatch = `${outsideRoot}/dispatch.json`;
             const sentinel = "outside target must stay unchanged\n";
             yield* fs.writeFileString(outsideDispatch, sentinel);
-            yield* fs.symlink(outsideDispatch, yield* yeetDispatchStatePath(repoRoot));
+            const yeetDispatchStatePath6 = yield* yeetDispatchStatePath(repoRoot);
+            yield* fs.symlink(outsideDispatch, yeetDispatchStatePath6);
 
             yield* supersedeYeetDispatchState(repoRoot, "bbb222", 751, LATER);
 
-            expect(yield* fs.readFileString(outsideDispatch)).toBe(sentinel);
-            const errors = A.map(yield* TestConsole.errorLines, String);
+            const readFileString7 = yield* fs.readFileString(outsideDispatch);
+            expect(readFileString7).toBe(sentinel);
+            const errorLines8 = yield* TestConsole.errorLines;
+            const errors = A.map(errorLines8, String);
             expect(A.some(errors, (line) => Str.includes("could not persist the remediation wave record")(line))).toBe(
               true
             );
@@ -375,8 +379,10 @@ describe("supersedeYeetDispatchState", () => {
 
             yield* supersedeYeetDispatchState(repoRoot, "bbb222", 751, LATER);
 
-            expect(yield* fs.readFileString(outsideDispatch)).toBe(sentinel);
-            const errors = A.map(yield* TestConsole.errorLines, String);
+            const readFileString9 = yield* fs.readFileString(outsideDispatch);
+            expect(readFileString9).toBe(sentinel);
+            const errorLines10 = yield* TestConsole.errorLines;
+            const errors = A.map(errorLines10, String);
             expect(A.some(errors, (line) => Str.includes("could not persist the remediation wave record")(line))).toBe(
               true
             );
@@ -424,7 +430,8 @@ describe("dispatchYeetCheckFailure", () => {
 
             const persisted = yield* loadYeetRemediationWave(root);
             persisted.pipe(O.isSome, assertTrue);
-            const errors = A.map(yield* TestConsole.errorLines, String);
+            const errorLines11 = yield* TestConsole.errorLines;
+            const errors = A.map(errorLines11, String);
             expect(A.some(errors, (line) => Str.includes("repair session opened")(line))).toBe(true);
           })
         )
@@ -467,7 +474,8 @@ describe("dispatchYeetCheckFailure", () => {
             yield* dispatchYeetCheckFailure(root, snapshotWithFailure(failingCheck), failingCheck, AT);
 
             (yield* loadYeetRemediationWave(root)).pipe(assertNone);
-            const errors = A.map(yield* TestConsole.errorLines, String);
+            const errorLines12 = yield* TestConsole.errorLines;
+            const errors = A.map(errorLines12, String);
             expect(A.some(errors, (line) => Str.includes("failed to deliver capsule")(line))).toBe(true);
             expect(A.some(errors, (line) => Str.includes("NOT queued")(line))).toBe(true);
           })
@@ -488,8 +496,10 @@ describe("dispatchYeetCheckFailure", () => {
 
             yield* dispatchYeetCheckFailure(root, snapshotWithFailure(failingCheck), failingCheck, AT);
 
-            expect(A.length(yield* readInboxRows(root))).toBe(1);
-            const errors = A.map(yield* TestConsole.errorLines, String);
+            const readInboxRows13 = yield* readInboxRows(root);
+            expect(A.length(readInboxRows13)).toBe(1);
+            const errorLines14 = yield* TestConsole.errorLines;
+            const errors = A.map(errorLines14, String);
             expect(A.some(errors, (line) => Str.includes("could not persist the remediation wave record")(line))).toBe(
               true
             );

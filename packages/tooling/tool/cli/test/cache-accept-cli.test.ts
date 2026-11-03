@@ -92,7 +92,8 @@ it.layer(
         yield* fs.makeDirectory(directory, { mode: 0o700 });
         const requestPath = path.join(root, "request.json");
         const referencePath = path.join(root, "reference.json");
-        yield* fs.writeFileString(requestPath, yield* S.encodeEffect(ProducerImportRequestJson)(request), {
+        const value = yield* S.encodeEffect(ProducerImportRequestJson)(request);
+        yield* fs.writeFileString(requestPath, value, {
           mode: 0o600,
         });
         const args = [
@@ -120,8 +121,10 @@ it.layer(
         expect((yield* fs.stat(requestPath)).size).toBeGreaterThan(BigInt(64 * 1024));
         expect(accepted.exitCode).not.toBe(0);
         expect(new TextDecoder().decode(accepted.stderr)).toContain("complete reviewed policy");
-        expect(yield* fs.exists(referencePath)).toBe(false);
-        expect(yield* fs.readDirectory(directory)).toEqual([]);
+        const exists1 = yield* fs.exists(referencePath);
+        expect(exists1).toBe(false);
+        const readDirectory2 = yield* fs.readDirectory(directory);
+        expect(readDirectory2).toEqual([]);
         const publishedTrust = CacheProducerTrustLocations.make({
           stable: path.join(root, "published-stable"),
           canary: path.join(root, "published-canary"),
@@ -134,7 +137,8 @@ it.layer(
           canary,
           canaryBinding
         );
-        yield* fs.writeFileString(requestPath, yield* S.encodeEffect(ProducerImportRequestJson)(published.request), {
+        const value3 = yield* S.encodeEffect(ProducerImportRequestJson)(published.request);
+        yield* fs.writeFileString(requestPath, value3, {
           mode: 0o600,
         });
         yield* Effect.gen(function* () {
@@ -154,16 +158,19 @@ it.layer(
           const result = yield* readCacheProducerAcceptance(directory, reference, publishedTrust);
           expect(result.contract).toEqual(contract);
           expect(result.failures).toEqual([]);
-          expect(yield* fs.readDirectory(directory)).toEqual([`${reference.sha256}.json`]);
+          const readDirectory4 = yield* fs.readDirectory(directory);
+          expect(readDirectory4).toEqual([`${reference.sha256}.json`]);
           const alteredReferences = yield* Arbitrary.checkEffect(
             Arbitrary.schema(Sha256Hex),
             (sha256) =>
               Effect.gen(function* () {
                 const altered = CacheProducerAcceptanceReference.make({ ...reference, sha256 });
-                expect(
-                  yield* readCacheProducerAcceptance(directory, altered, publishedTrust).pipe(Effect.isSuccess)
-                ).toBe(sha256 === reference.sha256);
-                expect(yield* fs.readFileString(referencePath)).toBe(marker);
+                const pipe5 = yield* readCacheProducerAcceptance(directory, altered, publishedTrust).pipe(
+                  Effect.isSuccess
+                );
+                expect(pipe5).toBe(sha256 === reference.sha256);
+                const readFileString6 = yield* fs.readFileString(referencePath);
+                expect(readFileString6).toBe(marker);
                 return true;
               }),
             fcRuns(10)
@@ -180,7 +187,8 @@ it.layer(
             stderr: "pipe",
           });
           expect(revoked.exitCode).not.toBe(0);
-          expect(yield* fs.readFileString(referencePath)).toBe(marker);
+          const readFileString7 = yield* fs.readFileString(referencePath);
+          expect(readFileString7).toBe(marker);
         }).pipe(Effect.provideService(CacheHostedProducerVerifier, published.verifier));
       })
   );

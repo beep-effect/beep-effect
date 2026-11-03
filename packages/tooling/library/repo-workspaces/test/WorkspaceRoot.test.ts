@@ -49,7 +49,8 @@ describe("WorkspaceRoot.find — ascent bounds", () => {
         const roots = yield* WorkspaceRoot;
         // Not a bug being asserted as correct — this is the documented default,
         // and the control that proves the bounded case below is doing work.
-        assert.strictEqual(yield* roots.find("/host/fixtures/wsp/packages/a"), "/host");
+        const found1 = yield* roots.find("/host/fixtures/wsp/packages/a");
+        assert.strictEqual(found1, "/host");
       })
     );
 
@@ -66,7 +67,8 @@ describe("WorkspaceRoot.find — ascent bounds", () => {
     it.effect("stopAt is inclusive — a marked ceiling is itself probed", () =>
       Effect.gen(function* () {
         const roots = yield* WorkspaceRoot;
-        assert.strictEqual(yield* roots.find("/host/packages", { stopAt: "/host" }), "/host");
+        const found2 = yield* roots.find("/host/packages", { stopAt: "/host" });
+        assert.strictEqual(found2, "/host");
       })
     );
 
@@ -126,7 +128,8 @@ describe("WorkspaceRoot.find — malformed ancestor manifest", () => {
     it.effect("continues past a null manifest to the valid workspace root above it", () =>
       Effect.gen(function* () {
         const roots = yield* WorkspaceRoot;
-        assert.strictEqual(yield* roots.find("/ws/packages/a/src"), "/ws");
+        const found3 = yield* roots.find("/ws/packages/a/src");
+        assert.strictEqual(found3, "/ws");
       })
     );
   });
@@ -180,7 +183,8 @@ describe("WorkspaceRoot.find — pnpm marker files", () => {
       it.effect(label, () =>
         Effect.gen(function* () {
           const roots = yield* WorkspaceRoot;
-          assert.strictEqual(yield* roots.find("/repo/packages/a"), expected);
+          const found4 = yield* roots.find("/repo/packages/a");
+          assert.strictEqual(found4, expected);
         })
       );
     });
@@ -218,14 +222,16 @@ describe("WorkspaceRoot.find — marker stat failures", () => {
     it.effect("checks the same directory's manifest after a marker stat failure", () =>
       Effect.gen(function* () {
         const roots = yield* WorkspaceRoot;
-        assert.strictEqual(yield* roots.find("/repo/packages/a"), "/repo/packages/a");
+        const found5 = yield* roots.find("/repo/packages/a");
+        assert.strictEqual(found5, "/repo/packages/a");
       })
     );
 
     it.effect("continues past marker stat failures to a valid ancestor", () =>
       Effect.gen(function* () {
         const roots = yield* WorkspaceRoot;
-        assert.strictEqual(yield* roots.find("/repo/packages/b"), "/repo");
+        const found6 = yield* roots.find("/repo/packages/b");
+        assert.strictEqual(found6, "/repo");
       })
     );
   });
@@ -301,15 +307,18 @@ describe("WorkspaceRoot.layerTest", () => {
     it.effect("resolves any cwd to the configured root, with no filesystem", () =>
       Effect.gen(function* () {
         const roots = yield* WorkspaceRoot;
-        assert.strictEqual(yield* roots.find("/repo/packages/utils/src"), "/repo");
-        assert.strictEqual(yield* roots.find("/somewhere/else"), "/repo");
+        const found7 = yield* roots.find("/repo/packages/utils/src");
+        assert.strictEqual(found7, "/repo");
+        const found8 = yield* roots.find("/somewhere/else");
+        assert.strictEqual(found8, "/repo");
       })
     );
 
     it.effect("honours a stopAt that contains the root", () =>
       Effect.gen(function* () {
         const roots = yield* WorkspaceRoot;
-        assert.strictEqual(yield* roots.find("/repo/packages/a", { stopAt: "/repo" }), "/repo");
+        const found9 = yield* roots.find("/repo/packages/a", { stopAt: "/repo" });
+        assert.strictEqual(found9, "/repo");
       })
     );
 
@@ -334,7 +343,8 @@ describe("WorkspaceRoot.makeTest — ceiling containment", () => {
     it.effect("treats the ceiling itself as containing the root", () =>
       Effect.gen(function* () {
         const double = yield* WorkspaceRoot.makeTest("/repo");
-        assert.strictEqual(yield* double.find("/repo", { stopAt: "/repo" }), "/repo");
+        const found10 = yield* double.find("/repo", { stopAt: "/repo" });
+        assert.strictEqual(found10, "/repo");
       })
     );
 
@@ -358,10 +368,8 @@ describe("WorkspaceRoot.makeTest — ceiling containment", () => {
         // match that spelling against the root and would wrongly fail — the exact
         // test/live divergence this double exists to prevent.
         const double = yield* WorkspaceRoot.makeTest("/repo/packages/a");
-        assert.strictEqual(
-          yield* double.find("/repo/packages/a", { stopAt: "/repo/packages/../packages" }),
-          "/repo/packages/a"
-        );
+        const found11 = yield* double.find("/repo/packages/a", { stopAt: "/repo/packages/../packages" });
+        assert.strictEqual(found11, "/repo/packages/a");
       })
     );
   });
@@ -381,7 +389,9 @@ describe("WorkspaceRoot.layerTest — agrees with the live service", () => {
         // The surrounding layer exposes `Path` for the double too.
         const double = yield* WorkspaceRoot.makeTest("/repo");
 
-        assert.strictEqual(yield* live.find("/repo/packages/alpha"), yield* double.find("/repo/packages/alpha"));
+        const found12 = yield* live.find("/repo/packages/alpha");
+        const found13 = yield* double.find("/repo/packages/alpha");
+        assert.strictEqual(found12, found13);
 
         const liveError = yield* Effect.flip(live.find("/repo/packages/alpha", { stopAt: "/repo/packages" }));
         const doubleError = yield* Effect.flip(double.find("/repo/packages/alpha", { stopAt: "/repo/packages" }));

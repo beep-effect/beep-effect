@@ -164,7 +164,8 @@ const makeQuestionCalendar = (m365: M365Shape, config: QuestionCalendarConfig) =
   });
 
   const updateNamed = Effect.fnUntraced(function* (eventId: string, dueOn: LocalDate, title: string) {
-    return yield* rewrite(eventId, yield* readEvent(eventId, "calendar-unavailable"), dueOn, title);
+    const readEvent1 = yield* readEvent(eventId, "calendar-unavailable");
+    return yield* rewrite(eventId, readEvent1, dueOn, title);
   });
 
   // Create the event under its key, or bring the event an earlier apply created back to the write.

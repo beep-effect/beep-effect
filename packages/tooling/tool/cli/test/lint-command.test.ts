@@ -112,7 +112,8 @@ const writeDeprecatedApiLintFixture = Effect.fn("writeDeprecatedApiLintFixture")
 
 const nativeInvocations = Effect.fn("LintTest.nativeInvocations")(function* () {
   const fs = yield* FileSystem.FileSystem;
-  return A.filter(Str.split(yield* fs.readFileString("native-invocations.txt"), "\n"), Str.isNonEmpty);
+  const readFileString1 = yield* fs.readFileString("native-invocations.txt");
+  return A.filter(Str.split(readFileString1, "\n"), Str.isNonEmpty);
 });
 
 const writeCircularLintFixture = Effect.fn("LintTest.circularFixture")(function* (cycle: boolean) {
@@ -159,7 +160,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
       Effect.gen(function* () {
         yield* writeCircularLintFixture(false);
         yield* runLintCommand(["circular"]);
-        expect(yield* TestConsole.logLines).toContain("No circular dependencies found.");
+        const logLines2 = yield* TestConsole.logLines;
+        expect(logLines2).toContain("No circular dependencies found.");
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
@@ -176,7 +178,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           'import type { A } from "./a.ts"; export type B = { a: A };'
         );
         yield* runLintCommand(["circular"]);
-        expect(yield* TestConsole.logLines).toContain("No circular dependencies found.");
+        const logLines3 = yield* TestConsole.logLines;
+        expect(logLines3).toContain("No circular dependencies found.");
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
@@ -293,7 +296,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
         yield* writeDeprecatedApiLintFixture(true, false);
         const exit = yield* Effect.exit(runLintCommand(["deprecated-apis", "--full"]));
         expectReportedExit(exit, 7);
-        expect(yield* nativeInvocations()).toHaveLength(1);
+        const nativeInvocations4 = yield* nativeInvocations();
+        expect(nativeInvocations4).toHaveLength(1);
       })
     );
     it.effect("keeps the full apps scope when the labs directory is absent", () =>
@@ -349,7 +353,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           expectReportedExit(exit);
         }
         const fs = yield* FileSystem.FileSystem;
-        expect(yield* fs.exists("native-invocations.txt")).toBe(false);
+        const exists5 = yield* fs.exists("native-invocations.txt");
+        expect(exists5).toBe(false);
       })
     );
   });
@@ -357,7 +362,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
   describe("policy lint command", () => {
     it.effect("rejects --full beside --affected", () =>
       Effect.gen(function* () {
-        expectReportedExit(yield* Effect.exit(runLintCommand(["policy", "--full", "--affected"])));
+        const exit6 = yield* Effect.exit(runLintCommand(["policy", "--full", "--affected"]));
+        expectReportedExit(exit6);
       })
     );
   });
@@ -458,12 +464,12 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           yield* runLintCommand(["schema-first"]);
           const scannedLine = (lines: ReadonlyArray<unknown>) =>
             A.filter(lines, (line) => P.isString(line) && Str.startsWith("[schema-first:scanned] ")(line));
-          expect(scannedLine(yield* TestConsole.logLines)).toEqual([]);
+          const logLines7 = yield* TestConsole.logLines;
+          expect(scannedLine(logLines7)).toEqual([]);
 
           yield* runLintCommand(["schema-first", "--report-scanned-files"]);
-          expect(scannedLine(yield* TestConsole.logLines)).toEqual([
-            '[schema-first:scanned] ["packages/example/src/Example.ts"]',
-          ]);
+          const logLines8 = yield* TestConsole.logLines;
+          expect(scannedLine(logLines8)).toEqual(['[schema-first:scanned] ["packages/example/src/Example.ts"]']);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -1646,10 +1652,10 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
 
           yield* runLintCommand(["package-test-imports", "--include-root", selected]);
 
-          expect(yield* TestConsole.logLines).toEqual([
-            "[check-package-test-imports] OK: package test imports use package aliases.",
-          ]);
-          expect(yield* TestConsole.errorLines).toEqual([]);
+          const logLines9 = yield* TestConsole.logLines;
+          expect(logLines9).toEqual(["[check-package-test-imports] OK: package test imports use package aliases."]);
+          const errorLines10 = yield* TestConsole.errorLines;
+          expect(errorLines10).toEqual([]);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );

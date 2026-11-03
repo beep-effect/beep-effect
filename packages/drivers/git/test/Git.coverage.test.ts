@@ -225,30 +225,35 @@ describe("Git parser edge contracts", () => {
       const git = Effect.flatMap(Git, (git) => git.nameStatus(cwd, { base: "HEAD" }));
       // No trailing NUL: a line-delimited (non -z) or truncated stream.
       for (const text of ["Q", "R", "R\0old", "M"]) {
-        assertUnparseable(yield* run(git, { stdout: text }).pipe(Effect.result), "name-status", /NUL terminator/);
+        const pipe1 = yield* run(git, { stdout: text }).pipe(Effect.result);
+        assertUnparseable(pipe1, "name-status", /NUL terminator/);
       }
       // Terminated, but the record is short of its path tokens or opens with a code git never emits.
-      assertUnparseable(yield* run(git, { stdout: "M\0" }).pipe(Effect.result), "name-status", /fewer path tokens/);
-      assertUnparseable(yield* run(git, { stdout: "R100\0old\0" }).pipe(Effect.result), "name-status", /fewer path/);
-      assertUnparseable(yield* run(git, { stdout: "Q\0file\0" }).pipe(Effect.result), "name-status", /"Q"/);
+      const pipe2 = yield* run(git, { stdout: "M\0" }).pipe(Effect.result);
+      assertUnparseable(pipe2, "name-status", /fewer path tokens/);
+      const pipe3 = yield* run(git, { stdout: "R100\0old\0" }).pipe(Effect.result);
+      assertUnparseable(pipe3, "name-status", /fewer path/);
+      const pipe4 = yield* run(git, { stdout: "Q\0file\0" }).pipe(Effect.result);
+      assertUnparseable(pipe4, "name-status", /"Q"/);
       // Well-formed input is unchanged, empty output stays the empty listing.
-      assert.deepStrictEqual(yield* run(git, { stdout: "" }), []);
-      assert.deepStrictEqual(yield* run(git, { stdout: "M\0file\0" }), [
-        GitModule.NameStatusEntry.make({ status: "modified", path: "file" }),
-      ]);
+      const result5 = yield* run(git, { stdout: "" });
+      assert.deepStrictEqual(result5, []);
+      const result6 = yield* run(git, { stdout: "M\0file\0" });
+      assert.deepStrictEqual(result6, [GitModule.NameStatusEntry.make({ status: "modified", path: "file" })]);
       // A rename code without digits is still a rename, with no score to report.
-      assert.deepStrictEqual(yield* run(git, { stdout: "R\0old\0new\0" }), [
+      const result7 = yield* run(git, { stdout: "R\0old\0new\0" });
+      assert.deepStrictEqual(result7, [
         GitModule.NameStatusEntry.make({ status: "renamed", oldPath: "old", path: "new" }),
       ]);
       const status = Effect.flatMap(Git, (git) => git.status(cwd));
-      assertUnparseable(yield* run(status, { stdout: "R  new" }).pipe(Effect.result), "status", /NUL terminator/);
-      assertUnparseable(yield* run(status, { stdout: "R  new\0" }).pipe(Effect.result), "status", /no original path/);
-      assertUnparseable(yield* run(status, { stdout: "M\0" }).pipe(Effect.result), "status", /XY <path>/);
-      assertUnparseable(
-        yield* run(status, { stdout: "ZZ file\0" }).pipe(Effect.result),
-        "status",
-        /porcelain does not/
-      );
+      const pipe8 = yield* run(status, { stdout: "R  new" }).pipe(Effect.result);
+      assertUnparseable(pipe8, "status", /NUL terminator/);
+      const pipe9 = yield* run(status, { stdout: "R  new\0" }).pipe(Effect.result);
+      assertUnparseable(pipe9, "status", /no original path/);
+      const pipe10 = yield* run(status, { stdout: "M\0" }).pipe(Effect.result);
+      assertUnparseable(pipe10, "status", /XY <path>/);
+      const pipe11 = yield* run(status, { stdout: "ZZ file\0" }).pipe(Effect.result);
+      assertUnparseable(pipe11, "status", /porcelain does not/);
     })
   );
 
@@ -256,11 +261,8 @@ describe("Git parser edge contracts", () => {
     Effect.gen(function* () {
       const worktrees = Effect.flatMap(Git, (git) => git.worktreeList(cwd));
       // A second blank record after a whole block flushes a draft that never named anything.
-      assertUnparseable(
-        yield* run(worktrees, { stdout: "worktree /repo\0bare\0\0\0" }).pipe(Effect.result),
-        "worktree list",
-        /no `worktree <path>` line: ""/
-      );
+      const pipe12 = yield* run(worktrees, { stdout: "worktree /repo\0bare\0\0\0" }).pipe(Effect.result);
+      assertUnparseable(pipe12, "worktree list", /no `worktree <path>` line: ""/);
     })
   );
 
@@ -283,41 +285,31 @@ describe("Git parser edge contracts", () => {
   it.effect("refuses tree and index records missing header fields; unterminated config values still parse", () =>
     Effect.gen(function* () {
       const tree = Effect.flatMap(Git, (git) => git.lsTree(cwd, "HEAD"));
-      assertUnparseable(yield* run(tree, { stdout: "100644\tfile\0" }).pipe(Effect.result), "ls-tree", /<oid>/);
-      assertUnparseable(
-        yield* run(tree, { stdout: "100644 blob abc file\0" }).pipe(Effect.result),
-        "ls-tree",
-        /tab|<path>/
-      );
-      assertUnparseable(
-        yield* run(tree, { stdout: "100644 thing abc\tfile\0" }).pipe(Effect.result),
-        "ls-tree",
-        /"100644 thing abc\\tfile"/
-      );
-      assertUnparseable(yield* run(tree, { stdout: "100644 blob abc\tfile" }).pipe(Effect.result), "ls-tree", /NUL/);
+      const pipe13 = yield* run(tree, { stdout: "100644\tfile\0" }).pipe(Effect.result);
+      assertUnparseable(pipe13, "ls-tree", /<oid>/);
+      const pipe14 = yield* run(tree, { stdout: "100644 blob abc file\0" }).pipe(Effect.result);
+      assertUnparseable(pipe14, "ls-tree", /tab|<path>/);
+      const pipe15 = yield* run(tree, { stdout: "100644 thing abc\tfile\0" }).pipe(Effect.result);
+      assertUnparseable(pipe15, "ls-tree", /"100644 thing abc\\tfile"/);
+      const pipe16 = yield* run(tree, { stdout: "100644 blob abc\tfile" }).pipe(Effect.result);
+      assertUnparseable(pipe16, "ls-tree", /NUL/);
       const files = Effect.flatMap(Git, (git) => git.lsFiles(cwd));
-      assertUnparseable(yield* run(files, { stdout: "100644\tfile\0" }).pipe(Effect.result), "ls-files", /<stage>/);
-      assertUnparseable(
-        yield* run(files, { stdout: "100644 abc 7\tfile\0" }).pipe(Effect.result),
-        "ls-files",
-        /<stage>/
-      );
-      assertUnparseable(
-        yield* run(files, { stdout: "100644 abc x\tfile\0" }).pipe(Effect.result),
-        "ls-files",
-        /<stage>/
-      );
-      assert.deepStrictEqual(yield* run(files, { stdout: "100644 abc 3\tfile\0" }), [
+      const pipe17 = yield* run(files, { stdout: "100644\tfile\0" }).pipe(Effect.result);
+      assertUnparseable(pipe17, "ls-files", /<stage>/);
+      const pipe18 = yield* run(files, { stdout: "100644 abc 7\tfile\0" }).pipe(Effect.result);
+      assertUnparseable(pipe18, "ls-files", /<stage>/);
+      const pipe19 = yield* run(files, { stdout: "100644 abc x\tfile\0" }).pipe(Effect.result);
+      assertUnparseable(pipe19, "ls-files", /<stage>/);
+      const result20 = yield* run(files, { stdout: "100644 abc 3\tfile\0" });
+      assert.deepStrictEqual(result20, [
         GitModule.LsFilesEntry.make({ mode: "100644", oid: "abc", stage: 3, path: "file" }),
       ]);
       // configGetAll is a value list, not an entry parser: it keeps its total contract.
-      assert.deepStrictEqual(
-        yield* run(
-          Effect.flatMap(Git, (git) => git.configGetAll(cwd, "a.b")),
-          { stdout: "value" }
-        ),
-        ["value"]
+      const result21 = yield* run(
+        Effect.flatMap(Git, (git) => git.configGetAll(cwd, "a.b")),
+        { stdout: "value" }
       );
+      assert.deepStrictEqual(result21, ["value"]);
     })
   );
 
@@ -352,22 +344,14 @@ describe("Git parser edge contracts", () => {
   it.effect("refuses worktree output without its block terminator, its worktree line, or its trailing NUL", () =>
     Effect.gen(function* () {
       const list = Effect.flatMap(Git, (git) => git.worktreeList(cwd));
-      assertUnparseable(
-        yield* run(list, { stdout: "worktree /a\0bare\0" }).pipe(Effect.result),
-        "worktree list",
-        /not terminated/
-      );
-      assertUnparseable(
-        yield* run(list, { stdout: "HEAD abc\0detached\0\0" }).pipe(Effect.result),
-        "worktree list",
-        /no `worktree <path>` line/
-      );
-      assertUnparseable(
-        yield* run(list, { stdout: "worktree /a\0bare" }).pipe(Effect.result),
-        "worktree list",
-        /NUL terminator/
-      );
-      assert.deepStrictEqual(yield* run(list, { stdout: "" }), []);
+      const pipe22 = yield* run(list, { stdout: "worktree /a\0bare\0" }).pipe(Effect.result);
+      assertUnparseable(pipe22, "worktree list", /not terminated/);
+      const pipe23 = yield* run(list, { stdout: "HEAD abc\0detached\0\0" }).pipe(Effect.result);
+      assertUnparseable(pipe23, "worktree list", /no `worktree <path>` line/);
+      const pipe24 = yield* run(list, { stdout: "worktree /a\0bare" }).pipe(Effect.result);
+      assertUnparseable(pipe24, "worktree list", /NUL terminator/);
+      const result25 = yield* run(list, { stdout: "" });
+      assert.deepStrictEqual(result25, []);
     })
   );
 
@@ -386,13 +370,11 @@ describe("Git parser edge contracts", () => {
 
   it.effect("keeps non-origin symbolic default branches and commonDir failures", () =>
     Effect.gen(function* () {
-      assertSome(
-        yield* run(
-          Effect.flatMap(Git, (git) => git.defaultBranch(cwd)),
-          { stdout: "main\n" }
-        ),
-        "main"
+      const result26 = yield* run(
+        Effect.flatMap(Git, (git) => git.defaultBranch(cwd)),
+        { stdout: "main\n" }
       );
+      assertSome(result26, "main");
       const result = yield* run(
         Effect.flatMap(Git, (git) => git.commonDir(cwd)),
         { exit: 2, stderr: "failure" }

@@ -159,8 +159,10 @@ describe("package scripts policy", () => {
         const fs = yield* FileSystem.FileSystem;
         const before = yield* fs.readFileString(`${root}/scratchpad/package.json`);
         const policy = yield* PackageScriptsPolicy.make(root);
-        expect(yield* policy.kindOf("infra/lambda/x/package.json").pipe(Effect.isFailure)).toBe(true);
-        expect(yield* policy.kindOf("infra/package.json")).toBe("infra");
+        const pipe1 = yield* policy.kindOf("infra/lambda/x/package.json").pipe(Effect.isFailure);
+        expect(pipe1).toBe(true);
+        const kindOf2 = yield* policy.kindOf("infra/package.json");
+        expect(kindOf2).toBe("infra");
         const initial = yield* policy.check(root);
         expect(initial.manifests).toBe(4);
         expect(HashMap.size(initial.drift)).toBe(3);
@@ -174,8 +176,10 @@ describe("package scripts policy", () => {
         expect(a).not.toContain('"doctest"');
         expect(b).toContain('"doctest": "bun run beep:doctest"');
         expect(b).toContain('"beep:doctest": "BEEP_VITEST_DOCTEST=1 bunx vitest run"');
-        expect(yield* fs.readFileString(`${root}/scratchpad/package.json`)).toBe(before);
-        expect(yield* fs.readFileString(`${root}/infra/lambda/x/package.json`)).toContain("out of domain");
+        const readFileString3 = yield* fs.readFileString(`${root}/scratchpad/package.json`);
+        expect(readFileString3).toBe(before);
+        const readFileString4 = yield* fs.readFileString(`${root}/infra/lambda/x/package.json`);
+        expect(readFileString4).toContain("out of domain");
       })
     );
   });
@@ -224,14 +228,13 @@ describe("package scripts policy", () => {
         expect(HashMap.size(initial.implDrift)).toBe(0);
         yield* policy.write(root);
         const file = `${root}/packages/a/package.json`;
-        const manifest = yield* decodeManifest(yield* fs.readFileString(file));
-        yield* fs.writeFileString(
-          file,
-          yield* jsonStringifyPretty({
-            name: "@beep/a",
-            scripts: { ...manifest.scripts, "beep:check": "tsrs -p tsconfig.check.json" },
-          })
-        );
+        const readFileString5 = yield* fs.readFileString(file);
+        const manifest = yield* decodeManifest(readFileString5);
+        const jsonStringifyPretty6 = yield* jsonStringifyPretty({
+          name: "@beep/a",
+          scripts: { ...manifest.scripts, "beep:check": "tsrs -p tsconfig.check.json" },
+        });
+        yield* fs.writeFileString(file, jsonStringifyPretty6);
         const before = yield* fs.readFileString(file);
         for (const report of [yield* policy.check(root), yield* policy.write(root)]) {
           expect(HashMap.size(report.drift)).toBe(0);
@@ -245,7 +248,8 @@ describe("package scripts policy", () => {
           ]);
           expect(HashSet.size(report.written)).toBe(0);
         }
-        expect(yield* fs.readFileString(file)).toBe(before);
+        const readFileString7 = yield* fs.readFileString(file);
+        expect(readFileString7).toBe(before);
       })
     );
   });
@@ -339,9 +343,8 @@ describe("package scripts policy", () => {
         ];
         const policy = yield* PackageScriptsPolicy.make(root, exemptions);
         yield* policy.write(root);
-        expect(checkerRows(yield* policy.check(root))).toEqual(
-          A.filter(allRows, (entry) => entry.name !== "beep:check")
-        );
+        const check8 = yield* policy.check(root);
+        expect(checkerRows(check8)).toEqual(A.filter(allRows, (entry) => entry.name !== "beep:check"));
       })
     );
   });
@@ -399,7 +402,8 @@ describe("package scripts policy", () => {
         expect(manifest.scripts.docgen).toBe("bun run beep:docgen");
         expect(manifest.scripts["beep:docgen"]).toBe("bun run src/bin.ts");
         expect(HashSet.size((yield* policy.write(root)).written)).toBe(0);
-        expect(yield* fs.readFileString(file)).toBe(first);
+        const readFileString9 = yield* fs.readFileString(file);
+        expect(readFileString9).toBe(first);
         for (const scripts of [{}, { docgen: "bun run beep:docgen" }]) {
           const codec = O.getOrThrow(R.get(codecs, "tool"));
           const actual = yield* codec.decode(scripts);
@@ -429,13 +433,15 @@ describe("package scripts policy", () => {
         const report = yield* policy.write(root);
         expect(HashMap.size(report.drift)).toBe(0);
         const file = `${root}/packages/drivers/gov-legal-mcp/package.json`;
-        const manifest = yield* decodeManifest(yield* fs.readFileString(file));
+        const readFileString10 = yield* fs.readFileString(file);
+        const manifest = yield* decodeManifest(readFileString10);
         expect(manifest.scripts.codegen).toBe("bun run generate");
         expect(manifest.scripts.generate).toBe("bun run scripts/generate.ts");
-        yield* fs.writeFileString(
-          file,
-          yield* jsonStringifyPretty({ name: "@beep/gov-legal-mcp", scripts: R.remove(manifest.scripts, "codegen") })
-        );
+        const jsonStringifyPretty11 = yield* jsonStringifyPretty({
+          name: "@beep/gov-legal-mcp",
+          scripts: R.remove(manifest.scripts, "codegen"),
+        });
+        yield* fs.writeFileString(file, jsonStringifyPretty11);
         const missing = yield* policy.check(root);
         assertSome(HashMap.get(missing.drift, "packages/drivers/gov-legal-mcp/package.json"), [
           { _tag: "missing-task", name: "codegen" },

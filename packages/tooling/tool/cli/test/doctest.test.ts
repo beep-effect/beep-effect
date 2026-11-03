@@ -328,7 +328,8 @@ const changedSourceLayer = Layer.mergeAll(
 layer(changedSourceLayer, { timeout: "30 seconds" })("changed Doctest discovery", (it) => {
   it.effect("drops deleted Git paths before source analysis", () =>
     Effect.gen(function* () {
-      expect(yield* discoverChangedDoctestFilesForTesting("/repo")).toEqual(["packages/example/src/existing.ts"]);
+      const discoverChangedDoctestFilesForTesting1 = yield* discoverChangedDoctestFilesForTesting("/repo");
+      expect(discoverChangedDoctestFilesForTesting1).toEqual(["packages/example/src/existing.ts"]);
     })
   );
 });

@@ -18,11 +18,16 @@ import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((it) => {
   describe("SchemaFirstPolicyFinding wire contract", { concurrent: false }, () => {
@@ -63,7 +68,8 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
           message: "m",
           remediation: "r",
         });
-        const decoded = decodeSchemaFirstPolicyFindingLine(yield* line(finding));
+        const line1 = yield* line(finding);
+        const decoded = decodeSchemaFirstPolicyFindingLine(line1);
         assertSome(
           O.map(decoded, (f) => f.severity),
           "error"
@@ -74,13 +80,16 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
     it("represents both the 'warn' and 'warning' severity spellings", () => {
       expect(SchemaFirstPolicySeverity.is.warn("warn")).toBe(true);
       expect(SchemaFirstPolicySeverity.is.warning("warning")).toBe(true);
-      const warnLine = `${SchemaFirstPolicyIssuePrefix}${JSON.stringify({
-        category: "schema-first-policy",
-        ruleId: "native-runtime",
-        severity: "warn",
-        file: "a.ts",
-        message: "m",
-      })}`;
+      const warnLine = `${SchemaFirstPolicyIssuePrefix}${Result.getOrThrowWith(
+        S.encodeUnknownResult(UnknownJson)({
+          category: "schema-first-policy",
+          ruleId: "native-runtime",
+          severity: "warn",
+          file: "a.ts",
+          message: "m",
+        }),
+        identity
+      )}`;
       const decoded = decodeSchemaFirstPolicyFindingLine(warnLine);
       assertSome(
         O.map(decoded, (f) => f.severity),
@@ -89,12 +98,15 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
     });
 
     it("decodes a line with severity and remediation omitted", () => {
-      const bare = `${SchemaFirstPolicyIssuePrefix}${JSON.stringify({
-        category: "schema-first-policy",
-        ruleId: "r",
-        file: "a.ts",
-        message: "m",
-      })}`;
+      const bare = `${SchemaFirstPolicyIssuePrefix}${Result.getOrThrowWith(
+        S.encodeUnknownResult(UnknownJson)({
+          category: "schema-first-policy",
+          ruleId: "r",
+          file: "a.ts",
+          message: "m",
+        }),
+        identity
+      )}`;
       const decoded = decodeSchemaFirstPolicyFindingLine(bare);
       decoded.pipe(O.isSome, assertTrue);
       if (O.isSome(decoded)) {
