@@ -315,7 +315,7 @@ const makeService = Effect.fn("CodegenKit.make")(function* (extraRenderers: Extr
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const httpClient = yield* HttpClient.HttpClient;
-  const formatter = yield* makeFormatter();
+  const formatter = yield* makeFormatter(false);
   const projectFormatter = yield* makeFormatter(true);
   const openApiGenerator = yield* OpenApiGenerator.make;
 

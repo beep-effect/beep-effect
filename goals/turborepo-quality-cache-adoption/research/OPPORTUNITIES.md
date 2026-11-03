@@ -850,6 +850,12 @@ when adding the workspace edge; repairing package scripts alone does not update
 references or generated boundaries. The canonical repair applied those five
 files in about nine seconds; no local verification suite was run.
 
+The formatter hook then removed the attempted default-parameter boolean
+annotation under `noInferrableTypes`. The committed diff exposed that loss
+before any proof claim: make the private formatter's boolean argument required
+and pass `false` explicitly from the existing OpenAPI caller. This preserves
+the annotation without a rule suppression or behavior change.
+
 Fallow's retained hosted artifact identified a further visibility problem:
 HTML's authored generator was globally excluded, hiding its real CodegenKit
 import. Restore that script to dependency analysis while retaining its existing

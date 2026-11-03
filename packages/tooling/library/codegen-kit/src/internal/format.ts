@@ -20,7 +20,7 @@ const formatFailure = (message: string, cause: unknown): CodegenFormatError =>
 // VCS ignore files, including a clone's `.git/info/exclude`, which Turbo never
 // hashes, so an ambient ignore rule could turn a drift check red under an unchanged
 // key (time-to-certainty ruling 83).
-export const makeFormatter = Effect.fn("CodegenKit.makeFormatter")(function* (projectConfiguration = false) {
+export const makeFormatter = Effect.fn("CodegenKit.makeFormatter")(function* (projectConfiguration: boolean) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
