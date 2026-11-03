@@ -484,10 +484,10 @@
         "scope": "Actual repaired-driver synthetic native behavior only; original per-feature and tuple acceptance requirements remain unchanged."
       },
       "currentNativeWorktreeObservation": {
-        "checkpoint": "worktree-native-checkpoint-2026-11-03.json",
-        "report": "native-worktree-controls-2026-11-03.json",
-        "scope": "36 pinned local Git-worktree invocations: bidirectional portable sharing and explicit isolation, plus absolute-path and permission-mode counterexamples. Full content/mode/log comparisons and body markers retained.",
-        "authority": "Synthetic only; acceptance remains pending and real permission-sensitive/absolute-output qualification is not granted."
+        "checkpoint": "guarded-native-replay-checkpoint-2026-11-03.json",
+        "report": "native-worktree-controls-2026-11-03-guarded.json",
+        "scope": "Fresh guarded 36-invocation local-worktree matrix and 6 actual startup refusals; absolute-path and0755-to-0700 counterexamples retained.",
+        "authority": "Synthetic only; real task/profile acceptance stays pending."
       }
     },
     {
@@ -664,10 +664,10 @@
         }
       },
       "currentNativeWorktreeObservation": {
-        "checkpoint": "worktree-native-checkpoint-2026-11-03.json",
-        "report": "native-worktree-controls-2026-11-03.json",
-        "scope": "36 pinned local Git-worktree invocations: bidirectional portable sharing and explicit isolation, plus absolute-path and permission-mode counterexamples. Full content/mode/log comparisons and body markers retained.",
-        "authority": "Synthetic only; acceptance remains pending and real permission-sensitive/absolute-output qualification is not granted."
+        "checkpoint": "guarded-native-replay-checkpoint-2026-11-03.json",
+        "report": "native-worktree-controls-2026-11-03-guarded.json",
+        "scope": "Fresh guarded 36-invocation local-worktree matrix and 6 actual startup refusals; absolute-path and0755-to-0700 counterexamples retained.",
+        "authority": "Synthetic only; real task/profile acceptance stays pending."
       }
     },
     {
@@ -891,15 +891,10 @@
         }
       },
       "currentNativeSemanticObservation": {
-        "checkpoint": "boundaries-native-checkpoint-2026-11-03.json",
-        "report": "native-boundaries-controls-2026-11-03.json",
-        "driver": "native-boundaries-controls.py",
-        "caseKinds": 12,
-        "checks": 24,
-        "positive": 10,
-        "expectedNegative": 14,
-        "scope": "Declared and undeclared imports, relative package escapes, dependency/dependent tag allow/deny, package-name rules and transitive denials in network-isolated synthetic workspaces.",
-        "authority": "Synthetic native semantics only; Beep applicability, configuration, value and profile qualification remain pending."
+        "checkpoint": "guarded-native-replay-checkpoint-2026-11-03.json",
+        "report": "native-boundaries-controls-2026-11-03-guarded.json",
+        "scope": "Fresh guarded 24-case native boundary matrix and 6 actual startup refusals; no fixture tasks.",
+        "authority": "Synthetic semantics only; acceptance stays pending."
       }
     },
     {

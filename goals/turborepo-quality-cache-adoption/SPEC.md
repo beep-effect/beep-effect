@@ -891,3 +891,14 @@ controls; never accept bytes-only equality as full metadata equivalence. This
 extends the bounded matrix to 36 tiny invocations, without changing its token,
 time, retention or isolation limits. Both counterexample families keep real
 portability and permission-sensitive computation qualification open.
+
+
+### Unconditional native-driver startup refusal, 2026-11-03
+
+Before parser, fixture, source, tool or report work, both new boundary/worktree
+drivers must unconditionally reject disabled assertions or a non-Linux platform.
+An assertion cannot guard assertion-dependent evidence because optimized Python
+removes it. Preserve the refusal message and apply the same existing experiment
+bounds. Optimized flags/environment and simulated platform branches must create
+no output parents. Normal guarded replays retain their exact source envelopes;
+old reports remain historical and no feature/task qualification is promoted.

@@ -996,3 +996,13 @@ the attempted fresh control therefore did not execute. Use `--force` alone
 inside the same credential-free, network-isolated fixture. The default local
 cache remains available; remote access remains impossible. Its refusal and
 original source bytes stay with the partial evidence.
+
+
+### 2026-11-03 — assertions cannot protect assertion-dependent evidence
+
+Review found that the two new drivers used an assertion to refuse optimized
+Python. Under optimization, both that guard and the source/result assertions
+disappear, permitting unsupported claims. Replace the startup guard with an
+unconditional check before any fixture/source/tool/report work. Preserve old
+reports; twelve actual early refusals and fresh source-bound native replays
+validate the repair. Keep the existing experiment limits and qualification holds.

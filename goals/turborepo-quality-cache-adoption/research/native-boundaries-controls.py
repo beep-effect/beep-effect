@@ -19,7 +19,8 @@ import tempfile
 import time
 from pathlib import Path
 
-assert __debug__ and sys.platform == "linux", "Linux and assertions are required."
+if not __debug__ or sys.platform != "linux":
+    raise SystemExit("Linux and assertions are required.")
 os.umask(0o077)
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--output", type=Path, required=True)

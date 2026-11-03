@@ -889,3 +889,19 @@ No live cache setting, global umask, key, epoch, remote transport or deployment
 changes. Feature decisions remain 11 scoped / 25 pending and all whole-goal criteria,
 real computation adoption, independent-clone/remote-box proof and observation
 windows remain unfinished.
+
+
+### Guarded native-driver review repair, 2026-11-03
+
+Both new drivers now use unconditional Linux/assertion startup checks. Twelve
+actual optimized/environment/simulated-platform refusals create no output or
+raw-evidence parents and execute no native client or fixture body. A fresh
+24-case boundary matrix and 36-invocation worktree matrix pass under the updated
+captured sources. The latter still reproduces absolute-path and permission-mode
+counterexamples; 22 tiny fixture bodies execute only in that normal replay. One
+existing admission token covers the shared batch and is released afterward.
+
+See `research/guarded-native-replay-checkpoint-2026-11-03.json`. Earlier reports
+remain unchanged under their original bytes. The simulated platform cases test
+startup branching, not native operation on Darwin. No real task/profile, feature
+acceptance, production reuse or timing benefit is established.
