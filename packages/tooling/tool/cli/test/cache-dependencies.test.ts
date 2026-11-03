@@ -1,6 +1,11 @@
 import { CacheCensusWorkspace, CacheDependencyMaterialization } from "@beep/repo-cli/commands/Cache";
-import { inspectCacheDependencyTree, readCacheDependencyMaterialization } from "@beep/repo-cli/test/Cache";
+import {
+  CacheRuntimeProcess,
+  inspectCacheDependencyTree,
+  readCacheDependencyMaterialization,
+} from "@beep/repo-cli/test/Cache";
 import { CacheEvidenceReference } from "@beep/repo-configs/cache";
+import { findRepoRoot } from "@beep/repo-utils/Root";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
@@ -8,6 +13,7 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { expect, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -31,6 +37,36 @@ const fixture = Effect.fn("CacheDependenciesTest.fixture")(function* () {
 });
 
 it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("installed cache dependency integrity", (it) => {
+  it.effect("binds package diagnostics to the production digest and exercises real tiny-tree refusal controls", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const root = yield* findRepoRoot();
+      const dependencies = yield* inspectCacheDependencyTree(f.root, []);
+      const source = f.path.join(f.root, "source.json");
+      const report = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+        schemaVersion: "cache-producer-workflow/v2",
+        revision: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        toolchain: { installedDependencies: dependencies },
+      });
+      yield* f.fs.writeFileString(source, report);
+      const result = yield* CacheRuntimeProcess.runCaptured({
+        command: "/usr/bin/python3",
+        args: [
+          "-I",
+          "-S",
+          `${root}/goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.test.py`,
+          source,
+        ],
+        cwd: f.root,
+        extendEnv: false,
+        env: { PATH: "/usr/bin" },
+        source: "merge",
+        timeout: Duration.seconds(30),
+      });
+      expect(result.exitCode).toBe(0);
+    })
+  );
+
   it.prop(
     "roundtrips materialization evidence through its schema",
     { value: Arbitrary.schema(CacheDependencyMaterialization) },

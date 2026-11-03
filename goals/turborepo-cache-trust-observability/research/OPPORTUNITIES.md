@@ -2253,3 +2253,36 @@ toolchain is already present. Follow upstream package guidance (`perl-core` on
 RPM systems, `perl` on Debian), keep the existing bounds and retain an actual
 accepted-source build as the gate. Do not convert a source regression check into
 compiled-artifact proof.
+
+
+### Installed dependency digest differs across protected inspections, 2026-11-03
+
+- Work: independently freeze the actual protected source/toolchain profile.
+- Evidence: successful runs 41625676572 and 41628708153 report 246,290 entries,
+  225,121 files, 4,130,937,152 payload bytes and 400 equal link records, but
+  different canonical GNU tar hashes. Only four Party test source files changed;
+  the other observed toolchain components and inspection tools match.
+- Attribution: unknown. Aggregate counts cannot distinguish same-size content,
+  permissions or archive metadata; neither observation authorizes normalizing
+  the difference away. Preserve both exact source-bound reports.
+- Prevention: add bounded package-level content/mode/link/header digests to the
+  existing credential-free inspection, require two stable reads, and keep its
+  result separate from producer approval. Hosted fixture regressions and two
+  actual accepted-source diagnostic observations remain required.
+- No local verification, cache trial, signing activation or capacity expansion.
+
+
+### 2026-11-03 — distinguish source movement from a failed preparation
+
+- Actual candidate run41622376983 passed in4m43s after queue pickup. Its
+  authenticated immutable binary and all four Rust inputs are retained.
+- Source inspection41625676572 passed in2m26s and covers15,153 entries at4d.
+  Accepted2676 then changed four declared Party test files ondc4. The old
+  source report remains bound to4d and is not relabeled as current.
+- The three inspection controls, seven CLI/dependency inputs and four Rust
+  inputs still match. Review the exact declared-source delta before another
+  allocation: reuse the inspected candidate and refresh source observation
+  only. A main movement is not a compiler regression or grounds to rebuild
+  unchanged Rust inputs.
+- These timings describe two owned operational gates only. They are not a
+  competing CI economics baseline, a p95 estimate or evidence of cache savings.
