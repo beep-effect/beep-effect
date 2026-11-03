@@ -6,6 +6,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
+import { resolveShardScope, shardScopeIncludes, stageGeneratedFiles } from "@beep/repo-cli-kit/cli/ShardScope";
 import { FsUtils, GlobOptions } from "@beep/repo-utils/FsUtils";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
@@ -26,9 +29,6 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
 import { Node, Project, SyntaxKind } from "ts-morph";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { optionalProp } from "../../internal/cli/OptionRecord.ts";
-import { resolveShardScope, shardScopeIncludes, stageGeneratedFiles } from "../../internal/cli/ShardScope.ts";
 import { literalMemberEquals, makeSchemaFirstOwnerResolver, SchemaFirstIncludedGlobs } from "./SchemaFirst.ts";
 import type {
   CallExpression,

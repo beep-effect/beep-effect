@@ -13,6 +13,8 @@
 import { Exiftool } from "@beep/exiftool";
 import { FFmpeg } from "@beep/ffmpeg";
 import { CaptureLane, ClockCorrelator, Collector, ExtractionRuleSet, SessionStore, Witness } from "@beep/qa-capture";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import { A } from "@beep/utils";
 import * as Argument from "effect/cli/Argument";
 import * as Command from "effect/cli/Command";
@@ -21,8 +23,6 @@ import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { printLines } from "../../internal/cli/Printer.ts";
 import { markLiveSession, stopLiveSession } from "./Control.ts";
 import { isBlockingProbe, renderDoctorReport, runQaDoctor } from "./Doctor.ts";
 import { runQaExtract } from "./Extract.ts";

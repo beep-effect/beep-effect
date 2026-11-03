@@ -858,6 +858,12 @@
         ]
       },
       {
+        "name": "@beep/repo-cli-kit",
+        "patterns": [
+          "packages/tooling/library/repo-cli-kit/src/**"
+        ]
+      },
+      {
         "name": "@beep/repo-configs",
         "patterns": [
           "packages/tooling/policy-pack/repo-configs/src/**"
@@ -4473,6 +4479,7 @@
           "@beep/qa-capture",
           "@beep/repo-ai-metrics",
           "@beep/repo-cli",
+          "@beep/repo-cli-kit",
           "@beep/repo-configs",
           "@beep/repo-docgen",
           "@beep/repo-tsconfig",
@@ -4537,6 +4544,7 @@
           "@beep/qa-capture",
           "@beep/repo-ai-metrics",
           "@beep/repo-cli",
+          "@beep/repo-cli-kit",
           "@beep/repo-configs",
           "@beep/repo-docgen",
           "@beep/repo-tsconfig",
@@ -4559,6 +4567,45 @@
           "@beep/walker",
           "@beep/xdg",
           "@beep/yaml"
+        ]
+      },
+      {
+        "from": "@beep/repo-cli-kit",
+        "allow": [
+          "@beep/cli-kit",
+          "@beep/duckdb",
+          "@beep/file-processing",
+          "@beep/git",
+          "@beep/identity",
+          "@beep/jsonc",
+          "@beep/memfs",
+          "@beep/package-json",
+          "@beep/repo-cli-kit",
+          "@beep/repo-utils",
+          "@beep/repo-workspaces",
+          "@beep/runtime-env",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/cli-kit",
+          "@beep/duckdb",
+          "@beep/file-processing",
+          "@beep/git",
+          "@beep/identity",
+          "@beep/jsonc",
+          "@beep/memfs",
+          "@beep/package-json",
+          "@beep/repo-cli-kit",
+          "@beep/repo-utils",
+          "@beep/repo-workspaces",
+          "@beep/runtime-env",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
+          "@beep/utils"
         ]
       },
       {

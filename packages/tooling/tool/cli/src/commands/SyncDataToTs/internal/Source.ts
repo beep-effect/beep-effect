@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { formatJsonValue } from "@beep/repo-cli-kit/cli/Json";
 import { CSV } from "@beep/schema/Csv";
 import { parseCsvRows } from "@beep/schema/CsvParser";
 import { ParserOptions } from "@beep/schema/ParserOptions";
@@ -21,7 +22,6 @@ import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { formatJsonValue } from "../../../internal/cli/Json.ts";
 import { SyncDataToTsError } from "../SyncDataToTs.errors.ts";
 import { SyncDataOutputFile, SyncDataSourceMetadata } from "../SyncDataToTs.schemas.ts";
 

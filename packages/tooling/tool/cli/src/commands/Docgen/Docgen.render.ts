@@ -5,6 +5,8 @@
  * @since 0.0.0
  */
 
+import { encodeCommandJson, renderPrettyCommandJson } from "@beep/repo-cli-kit/cli/Json";
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import { DomainError } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
 import * as Console from "effect/Console";
@@ -13,8 +15,6 @@ import { dual, pipe } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { encodeCommandJson, renderPrettyCommandJson } from "../../internal/cli/Json.ts";
-import { printLines } from "../../internal/cli/Printer.ts";
 import type * as Path from "effect/Path";
 import type {
   DocgenAggregateResult,

@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../../tsconfig.base.json",
+  "include": ["src"],
+  "compilerOptions": {
+    "types": ["node", "bun"],
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "references": [
+    {
+      "path": "../../../drivers/duckdb/tsconfig.json"
+    },
+    {
+      "path": "../../../drivers/git/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/capability/cli-kit/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/capability/file-processing/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/capability/runtime-env/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/jsonc/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/package-json/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/utils/tsconfig.json"
+    },
+    {
+      "path": "../repo-utils/tsconfig.json"
+    },
+    {
+      "path": "../repo-workspaces/tsconfig.json"
+    },
+    {
+      "path": "../../test-kit/memfs/tsconfig.json"
+    },
+    {
+      "path": "../../test-kit/test-runner/tsconfig.json"
+    },
+    {
+      "path": "../../test-kit/test-utils/tsconfig.json"
+    }
+  ]
+}

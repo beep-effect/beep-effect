@@ -14,11 +14,11 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { Fn, LiteralKit, Sha256Hex } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
-import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { CorpusProvenanceRecord } from "./Salvage.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Corpus/internal/Preservation.schemas");

@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { createRepoTsMorphProject } from "@beep/repo-cli-kit/tsmorph/index";
 import {
   getAllowlistDiagnostics,
   getAllowlistEntries,
@@ -30,7 +31,6 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Node } from "ts-morph";
-import { createRepoTsMorphProject } from "../../internal/tsmorph/index.ts";
 import { isEcosystemMemberSourcePath, isExcludedLawScanPath, LawScanProject } from "./internal/LawScan.ts";
 import { NoNativeRuntimeRulesExecutionError } from "./Laws.errors.ts";
 import type {

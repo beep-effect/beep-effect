@@ -1,5 +1,7 @@
 /** Full syntax-only Effect Vitest scan and ratchet orchestration. @packageDocumentation @since 0.0.0 */
 
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { createWorkspaceOwnerResolver } from "@beep/repo-cli-kit/tsmorph/index";
 import { findRepoRoot } from "@beep/repo-utils";
 import { FsUtils, GlobOptions } from "@beep/repo-utils/FsUtils";
 import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
@@ -18,8 +20,6 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
-import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
-import { createWorkspaceOwnerResolver } from "../../../internal/tsmorph/index.ts";
 import { EffectVitestLintError } from "../Lint.errors.ts";
 import {
   EffectVitestCensusRow,

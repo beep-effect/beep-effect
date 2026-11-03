@@ -1,8 +1,8 @@
 import { GlobString } from "@beep/glob/GlobString";
+import { isLabsWorkspacePath, LAB_MANIFEST_FILENAME } from "@beep/repo-cli-kit/cli/Labs/index";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { A, Str } from "@beep/utils";
 import * as O from "effect/Option";
-import { isLabsWorkspacePath, LAB_MANIFEST_FILENAME } from "../../../../internal/cli/Labs/index.ts";
 import {
   AuthoredReferenceSurface,
   DataResourceSurface,

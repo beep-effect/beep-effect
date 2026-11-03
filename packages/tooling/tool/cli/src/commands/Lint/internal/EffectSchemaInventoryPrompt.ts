@@ -12,6 +12,7 @@
  * @since 0.0.0
  */
 
+import { writeArtifact } from "@beep/repo-cli-kit/artifacts/index";
 import { A, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -24,7 +25,6 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import { ts } from "ts-morph";
-import { writeArtifact } from "../../../internal/artifacts/index.ts";
 import {
   EffectSchemaInventoryFile,
   EffectSchemaInventoryFixturePath,

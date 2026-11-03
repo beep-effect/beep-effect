@@ -21,14 +21,14 @@
  */
 
 import { Jsonc } from "@beep/jsonc/Jsonc";
+import { qualityStepOutputBound, runCaptured } from "@beep/repo-cli-kit/process/index";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { A, Str } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { qualityStepOutputBound, runCaptured } from "../../../internal/process/index.ts";
-import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { QualityTaskConfigurationError } from "../Quality.errors.ts";
 
 /**

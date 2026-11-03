@@ -9,10 +9,10 @@
  * @since 0.0.0
  */
 
+import { applyJsoncModification, JsoncModification } from "@beep/repo-cli-kit/cli/Jsonc";
 import { Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { applyJsoncModification, JsoncModification } from "../../../../internal/cli/Jsonc.ts";
 import { VersionSyncError } from "../../VersionSync.schemas.ts";
 
 /**

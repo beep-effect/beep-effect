@@ -29,6 +29,7 @@ import { GitHubRepository } from "@beep/github/GitHubRepository";
 import { PullRequest } from "@beep/github/PullRequest";
 import { outstanding, ReviewThread } from "@beep/github/ReviewThread";
 import { $RepoCliId } from "@beep/identity/packages";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -45,7 +46,6 @@ import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as SynchronizedRef from "effect/SynchronizedRef";
-import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import {
   GithubCheckRunRecord,
   GithubClientRequest,
@@ -68,10 +68,10 @@ import { ensureProvenanceFooter, ProvenanceStampOutcome, recordMonitoredPrSessio
 import { readYeetReviewWindow, YeetReviewWindowUnknown } from "./ReviewWindow.ts";
 import type { GitHubError } from "@beep/github/GitHubError";
 import type { Repo } from "@beep/github/Repo";
+import type { CliReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
-import type { CliReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import type { GithubIdentityError, GithubRestShape, GraphqlBudgetExhausted } from "../../../internal/github/index.ts";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { PrNumber } from "./Provenance.ts";

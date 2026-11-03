@@ -7,6 +7,16 @@
 
 import { isResolvedPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
+import { writeContainedFileString } from "@beep/repo-cli-kit/cli/FsGuards";
+import {
+  boundedChunkReducer,
+  CapturedStreams,
+  emptyBoundedOutput,
+  OutputBound,
+  runCapturedStreams,
+  runFoldedStdout,
+} from "@beep/repo-cli-kit/process/index";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { CacheClientPin } from "@beep/repo-configs/cache";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { O } from "@beep/utils";
@@ -23,18 +33,8 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { writeContainedFileString } from "../../internal/cli/FsGuards.ts";
-import {
-  boundedChunkReducer,
-  CapturedStreams,
-  emptyBoundedOutput,
-  OutputBound,
-  runCapturedStreams,
-  runFoldedStdout,
-} from "../../internal/process/index.ts";
 import { AdmissionRequest } from "../../internal/repo-run/QualityScheduler.schemas.ts";
 import { noAdmissionOriginGate, withQualityAdmission } from "../../internal/repo-run/QualityScheduler.ts";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { withCacheProducerAdapter } from "./Cache.adapter.ts";
 import { CacheConformanceProxyOptions, makeCacheConformanceSocketProxy } from "./Cache.conformance.proxy.ts";
 import { CacheConformanceTarget } from "./Cache.conformance.schemas.ts";
@@ -57,7 +57,7 @@ import {
 import { validateCacheSignedPilotReceipt } from "./Cache.pilot.signed.ts";
 import { CacheProducerUploadRuntime } from "./Cache.workflow.schemas.ts";
 import { joinCacheProducerUpload } from "./Cache.workflow.upload.ts";
-import type { BoundedOutput } from "../../internal/process/index.ts";
+import type { BoundedOutput } from "@beep/repo-cli-kit/process/index";
 import type { CacheProducerBinding } from "./Cache.producer.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.pilot.runner");

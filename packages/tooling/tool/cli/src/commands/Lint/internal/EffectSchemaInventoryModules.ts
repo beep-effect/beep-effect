@@ -12,13 +12,13 @@
  */
 
 import { StringListField } from "@beep/package-json/ManifestFields";
+import { manifestParser } from "@beep/repo-cli-kit/ManifestRead";
 import { A, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { manifestParser } from "../../../internal/ManifestRead.ts";
 import { EffectSchemaInventoryModule, EffectSchemaInventoryPin } from "../EffectSchemaInventory.schemas.ts";
 import { EffectSchemaInventoryCatalogPinError } from "../Lint.errors.ts";
 

@@ -16,6 +16,8 @@
 
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
+import { REPO_CLI_ENTRY_PATH } from "@beep/repo-cli-kit/cli/EntryPath";
+import { runCapturedStreams } from "@beep/repo-cli-kit/process/index";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
@@ -24,9 +26,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { REPO_CLI_ENTRY_PATH } from "../../../internal/cli/EntryPath.ts";
 import { ghOutput } from "../../../internal/github/index.ts";
-import { runCapturedStreams } from "../../../internal/process/index.ts";
 import {
   adaptGitKitError,
   fallowAuditCacheEnv,

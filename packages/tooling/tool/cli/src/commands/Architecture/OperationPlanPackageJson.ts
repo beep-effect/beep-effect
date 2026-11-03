@@ -6,12 +6,12 @@
  * @since 0.0.0
  */
 
+import { scaffoldPackageScripts } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas";
 import { jsonStringifyPretty } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as R from "effect/Record";
-import { scaffoldPackageScripts } from "../../internal/package-scripts/PackageScripts.schemas.ts";
 import type { ArchitecturePackageRole, WritePackageJsonOperation } from "./Architecture.schemas.ts";
 
 const isRootExportSubpath = (subpath: string): boolean => subpath === ".";

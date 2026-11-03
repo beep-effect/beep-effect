@@ -514,6 +514,9 @@
       "path": "packages/tooling/library/qa-capture"
     },
     {
+      "path": "packages/tooling/library/repo-cli-kit"
+    },
+    {
       "path": "packages/tooling/library/repo-tsconfig"
     },
     {

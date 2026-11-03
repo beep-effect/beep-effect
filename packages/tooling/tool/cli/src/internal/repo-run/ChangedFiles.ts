@@ -13,13 +13,13 @@
 
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
+import { formatCommandLine } from "@beep/repo-cli-kit/process/StepExec";
 import { DomainError } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Effect from "effect/Effect";
 import { flow, pipe } from "effect/Function";
 import * as Order from "effect/Order";
-import { formatCommandLine } from "../process/StepExec.ts";
 import { adaptGitKitError } from "./GitExec.ts";
 import type { GitInvocation } from "@beep/git/GitCommand";
 import type { GitCommandErrorAdapter, GitKitError } from "./GitExec.ts";

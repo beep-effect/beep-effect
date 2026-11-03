@@ -7,19 +7,19 @@
 
 import defaultChalk from "@beep/chalk";
 import defaultColors from "@beep/colors";
-import { A } from "@beep/utils";
-import * as Effect from "effect/Effect";
-import { dual } from "effect/Function";
-import * as Ref from "effect/Ref";
-import * as Semaphore from "effect/Semaphore";
-import * as Terminal from "effect/Terminal";
 import {
   clearLine,
   isProgressEnabled,
   progressFraction,
   progressPercent,
   renderProgressBar,
-} from "../../internal/cli/Progress.ts";
+} from "@beep/repo-cli-kit/cli/Progress";
+import { A } from "@beep/utils";
+import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
+import * as Ref from "effect/Ref";
+import * as Semaphore from "effect/Semaphore";
+import * as Terminal from "effect/Terminal";
 import type { Chalk } from "@beep/chalk";
 import type { Colors } from "@beep/colors";
 

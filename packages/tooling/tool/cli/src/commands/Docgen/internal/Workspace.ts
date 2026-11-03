@@ -5,6 +5,8 @@
  * @since 0.0.0
  */
 
+import { isLabsWorkspacePath, LABS_PATH_IGNORE_GLOB } from "@beep/repo-cli-kit/cli/Labs/index";
+import { workspaceDirectories } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { DomainError, FsUtils, findRepoRoot, GlobOptions } from "@beep/repo-utils";
 import {
   CanonicalDocgenConfigInput,
@@ -22,8 +24,6 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { isLabsWorkspacePath, LABS_PATH_IGNORE_GLOB } from "../../../internal/cli/Labs/index.ts";
-import { workspaceDirectories } from "../../../internal/RepoWorkspaces.ts";
 import { byRelativePathAscending, DocgenConfigDocument, DocgenWorkspacePackage } from "../Docgen.schemas.ts";
 import type { NoSuchFileError } from "@beep/repo-utils";
 import type { DocgenPackageStatus, ResolveDocgenWorkspacePackageOptions } from "../Docgen.schemas.ts";

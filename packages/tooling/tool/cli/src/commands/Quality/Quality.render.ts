@@ -5,12 +5,12 @@
  * @since 0.0.0
  */
 
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import { jsonStringifyPretty } from "@beep/repo-utils";
 import { A } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
-import { printLines } from "../../internal/cli/Printer.ts";
 import { QualityScriptCommandError } from "./Quality.errors.ts";
 import type { QualityProfileConfig, QualityProfileDetection } from "./Quality.schemas.ts";
 

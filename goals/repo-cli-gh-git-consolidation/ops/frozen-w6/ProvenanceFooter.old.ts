@@ -7,6 +7,7 @@
 
 import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
+import { writeContainedFileString } from "@beep/repo-cli-kit/cli/FsGuards";
 import { LiteralKit } from "@beep/schema";
 import { thunkTrue } from "@beep/utils";
 import * as A from "effect/Array";
@@ -40,7 +41,6 @@ import {
 } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/Provenance.ts";
 import { makePrSessionRegistryLive } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/PrSessionRegistry.ts";
 import { YeetCommandError } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/Yeet.errors.ts";
-import { writeContainedFileString } from "../../../../packages/tooling/tool/cli/src/internal/cli/FsGuards.ts";
 import { runRepoCommandCapture } from "../../../../packages/tooling/tool/cli/src/internal/repo-run/index.ts";
 import type { DomainError } from "@beep/repo-utils";
 import type * as Digest from "effect/crypto/Digest";

@@ -11,6 +11,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { OpaqueDefect } from "@beep/repo-cli-kit/schema/OpaqueDefect";
+import { UUID } from "@beep/repo-cli-kit/schema/Uuid";
 import { LiteralKit } from "@beep/schema";
 import { ArrayKeyDefaultEmpty } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import * as O from "@beep/utils/Option";
@@ -18,8 +20,6 @@ import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
-import { OpaqueDefect } from "../schema/OpaqueDefect.ts";
-import { UUID } from "../schema/Uuid.ts";
 import { RunScopeRecord } from "./RunScope.schemas.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/QualityScheduler.schemas");

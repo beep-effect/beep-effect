@@ -6,11 +6,11 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { turboCachePullRequestPosture } from "@beep/repo-cli-kit/cli/TurboCache";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { turboCachePullRequestPosture } from "../../../internal/cli/TurboCache.ts";
 
 const $I = $RepoCliId.create("commands/Quality/internal/CoverageEnvironment");
 

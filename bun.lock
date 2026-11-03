@@ -3831,6 +3831,37 @@
         "bun-types": "catalog:",
       },
     },
+    "packages/tooling/library/repo-cli-kit": {
+      "name": "@beep/repo-cli-kit",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/cli-kit": "workspace:^",
+        "@beep/duckdb": "workspace:^",
+        "@beep/file-processing": "workspace:^",
+        "@beep/git": "workspace:^",
+        "@beep/identity": "workspace:^",
+        "@beep/jsonc": "workspace:^",
+        "@beep/package-json": "workspace:^",
+        "@beep/repo-utils": "workspace:^",
+        "@beep/repo-workspaces": "workspace:^",
+        "@beep/runtime-env": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "@effect/platform-bun": "catalog:",
+        "@effect/platform-node": "catalog:",
+        "@noble/hashes": "catalog:",
+        "effect": "catalog:",
+        "ts-morph": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/memfs": "workspace:^",
+        "@beep/test-runner": "workspace:^",
+        "@beep/test-utils": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/tooling/library/repo-tsconfig": {
       "name": "@beep/repo-tsconfig",
       "version": "0.0.0",
@@ -4073,6 +4104,7 @@
         "@beep/poppler": "workspace:^",
         "@beep/qa-capture": "workspace:^",
         "@beep/repo-ai-metrics": "workspace:^",
+        "@beep/repo-cli-kit": "workspace:^",
         "@beep/repo-configs": "workspace:^",
         "@beep/repo-docgen": "workspace:^",
         "@beep/repo-tsconfig": "workspace:^",
@@ -5015,6 +5047,8 @@
     "@beep/repo-ai-metrics": ["@beep/repo-ai-metrics@workspace:packages/tooling/library/ai-metrics"],
 
     "@beep/repo-cli": ["@beep/repo-cli@workspace:packages/tooling/tool/cli"],
+
+    "@beep/repo-cli-kit": ["@beep/repo-cli-kit@workspace:packages/tooling/library/repo-cli-kit"],
 
     "@beep/repo-configs": ["@beep/repo-configs@workspace:packages/tooling/policy-pack/repo-configs"],
 

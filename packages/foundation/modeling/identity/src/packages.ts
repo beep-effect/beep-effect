@@ -244,7 +244,8 @@ const generatedComposers = $I.compose(
   "sbom",
   "github-actions",
   "beep-effect-web",
-  "party-domain"
+  "party-domain",
+  "repo-cli-kit"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -3586,3 +3587,20 @@ export const $BeepEffectWebId: Identity.IdentityComposer<"@beep/beep-effect-web"
  * @since 0.0.0
  */
 export const $PartyDomainId: Identity.IdentityComposer<"@beep/party-domain"> = composers.$PartyDomainId;
+
+/**
+ * Identity composer for `@beep/repo-cli-kit`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $RepoCliKitId } from "@beep/identity/packages"
+ *
+ * const id = $RepoCliKitId.make("RepoCliKit")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $RepoCliKitId: Identity.IdentityComposer<"@beep/repo-cli-kit"> = composers.$RepoCliKitId;

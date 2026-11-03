@@ -6,6 +6,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { commandErrorFields } from "@beep/repo-cli-kit/cli/CommandErrorFields";
+import { runCaptured } from "@beep/repo-cli-kit/process/index";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -15,8 +17,6 @@ import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { commandErrorFields } from "../../../internal/cli/CommandErrorFields.ts";
-import { runCaptured } from "../../../internal/process/index.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 
 export { QualityArtifactGeneratorError } from "./QualityArtifactSupport.ts";

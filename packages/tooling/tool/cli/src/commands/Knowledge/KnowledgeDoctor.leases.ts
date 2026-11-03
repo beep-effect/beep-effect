@@ -7,6 +7,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { matchCodeownersOwners } from "@beep/repo-cli-kit/Codeowners";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -17,7 +18,6 @@ import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
-import { matchCodeownersOwners } from "../../internal/Codeowners.ts";
 import { KnowledgeDoctorInputError } from "./Knowledge.errors.ts";
 import { KnowledgeCommitSha } from "./Knowledge.refs.ts";
 import { KnowledgeBaselineKey } from "./KnowledgeDoctor.schemas.ts";

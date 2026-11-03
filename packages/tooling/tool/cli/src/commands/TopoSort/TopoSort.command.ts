@@ -5,11 +5,11 @@
  * @since 0.0.0
  */
 
+import { workspaceDependencyGraph } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { findRepoRoot } from "@beep/repo-utils";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
-import { workspaceDependencyGraph } from "../../internal/RepoWorkspaces.ts";
 
 /**
  * CLI command that builds the workspace dependency graph and prints package names
