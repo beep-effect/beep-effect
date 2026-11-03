@@ -27,6 +27,7 @@ import { makeNativeIntakeJournal } from "./native-intake.ts";
 import { NativeTraceRequest, projectNativeTraceRequest } from "./native-trace.ts";
 import { makeObservationControl, ObservationControlPolicy } from "./observation-control.ts";
 import { makeObservationLaunchFacts, ObservationLaunchFact } from "./observation-launch-facts.ts";
+import type { NativeTraceMetadata } from "./native-trace.ts";
 import type { ObservationControl } from "./observation-control.ts";
 import type { ObservationLaunchHttpPolicy } from "./observation-launch-http.ts";
 import type { TranscriptIntakeConfig } from "./transcript-intake.ts";
@@ -298,21 +299,13 @@ export const makeNativeHttpIntake = Effect.fn("AiMetrics.makeNativeHttpIntake")(
       })
     );
   });
-  const accept = Effect.fnUntraced(function* (
-    request: HttpServerRequest.HttpServerRequest,
-    contentType: NativeTraceRequest["contentType"],
-    encoding: typeof NativeContentEncoding.Type
-  ) {
-    return yield* Effect.gen(function* () {
-      const body = yield* readBody(request, encoding);
-      const batch = yield* projectNativeTraceRequest(NativeTraceRequest.make({ ...policy, contentType, body }));
-      if (batch.spans.length === 0 && batch.rejections.length === 0)
-        return yield* count("accepted").pipe(Effect.andThen(response(contentType, 200)));
-      for (const span of batch.spans) {
-        if (O.isNone(span.managedController)) continue;
-        const observed = span.managedController.value;
-        const facts = yield* launchFacts.read(observed.launchId, (yield* journal.evidenceWindow).epoch);
-        const correlated =
+  const managedSpansCorrelate = Effect.fnUntraced(function* (spans: ReadonlyArray<NativeTraceMetadata>) {
+    for (const span of spans) {
+      if (O.isNone(span.managedController)) continue;
+      const observed = span.managedController.value;
+      const facts = yield* launchFacts.read(observed.launchId, (yield* journal.evidenceWindow).epoch);
+      const correlated = A.every(
+        [
           A.some(
             facts,
             ({ fact }) =>
@@ -326,25 +319,41 @@ export const makeNativeHttpIntake = Effect.fn("AiMetrics.makeNativeHttpIntake")(
                   route.harness === fact.identity.harness &&
                   route.surface === fact.identity.surface
               )
-          ) &&
+          ),
           A.some(
             facts,
             ({ fact }) =>
               ObservationLaunchFact.guards.Started(fact) && fact.processInstanceId === observed.processInstanceId
-          ) &&
+          ),
           A.some(
             facts,
             ({ fact }) =>
               ObservationLaunchFact.guards.SessionBound(fact) && fact.sourceSessionId === observed.sourceSessionId
-          ) &&
+          ),
           A.some(
             facts,
             ({ fact }) =>
               ObservationLaunchFact.guards.Finished(fact) &&
               (fact.outcome === "succeeded" || fact.outcome === "cancelled")
-          );
-        if (!correlated) return yield* refused(contentType, 400, "malformed");
-      }
+          ),
+        ],
+        (matched) => matched
+      );
+      if (!correlated) return false;
+    }
+    return true;
+  });
+  const accept = Effect.fnUntraced(function* (
+    request: HttpServerRequest.HttpServerRequest,
+    contentType: NativeTraceRequest["contentType"],
+    encoding: typeof NativeContentEncoding.Type
+  ) {
+    return yield* Effect.gen(function* () {
+      const body = yield* readBody(request, encoding);
+      const batch = yield* projectNativeTraceRequest(NativeTraceRequest.make({ ...policy, contentType, body }));
+      if (batch.spans.length === 0 && batch.rejections.length === 0)
+        return yield* count("accepted").pipe(Effect.andThen(response(contentType, 200)));
+      if (!(yield* managedSpansCorrelate(batch.spans))) return yield* refused(contentType, 400, "malformed");
       const receipt = yield* journal.acceptBatch(batch);
       yield* count(receipt.rejected > 0 ? "partial" : "accepted");
       return yield* response(contentType, 200, receipt.rejected, receipt.page.receiptId, receipt.expiredIndices.length);

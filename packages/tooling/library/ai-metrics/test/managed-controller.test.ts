@@ -7,8 +7,11 @@ import { NativeTraceBatch, NativeTraceRequest, projectNativeTraceRequest } from 
 import { hashPrivateIdentifier, hashPublicTextSha256 } from "@beep/repo-ai-metrics/privacy";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { expect } from "@effect/vitest";
+import { assertFalse, assertNone, assertSome, deepStrictEqual } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -39,6 +42,7 @@ const request = (body: Uint8Array, managed = true) =>
     usageConvention: "unknown",
     approvedModels: [],
   });
+const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
 const encodeBatch = S.encodeEffect(S.fromJsonString(NativeTraceBatch));
 const decoded = S.Struct({
   resourceSpans: S.Array(
@@ -65,6 +69,21 @@ const read = (bytes: Uint8Array) =>
   S.decodeUnknownEffect(decoded)(wire.toObject(wire.decode(bytes), { longs: String }));
 
 it.layer(NodeCrypto.layer)((it) => {
+  it.effect.prop(
+    "preserves arbitrary admitted launch and prehashed session identities through controller transport",
+    [Arbitrary.schema(Sha256Hex), Arbitrary.schema(Sha256Hex)],
+    Effect.fnUntraced(function* ([launchId, sourceSessionId]) {
+      const sample = ManagedControllerObservation.make({ ...observation, launchId, sourceSessionId });
+      const body = yield* encodeManagedControllerObservation(sample);
+      const batch = yield* projectNativeTraceRequest(request(body));
+      expect(batch.rejections).toEqual([]);
+      expect(batch.spans).toHaveLength(1);
+      const span = yield* Effect.fromOption(A.head(batch.spans));
+      assertSome(span.sessionHash, sourceSessionId);
+      assertSome(span.managedController, sample);
+    }),
+    { arbitrary: fcRuns(25) }
+  );
   it.effect(
     "preserves prehashed session correlation and explicit controller origin without model or token claims",
     () =>
@@ -74,12 +93,12 @@ it.layer(NodeCrypto.layer)((it) => {
         expect(batch.rejections).toEqual([]);
         const span = O.getOrThrow(A.head(batch.spans));
         expect(span.kind).toBe("AGENT");
-        expect(span.sessionHash).toEqual(O.some(observation.sourceSessionId));
-        expect(span.sessionHash).not.toEqual(
-          O.some(yield* hashPrivateIdentifier(observation.sourceSessionId, O.some(salt)))
+        assertSome(span.sessionHash, observation.sourceSessionId);
+        assertFalse(
+          O.contains(span.sessionHash, yield* hashPrivateIdentifier(observation.sourceSessionId, O.some(salt)))
         );
-        expect(span.managedController).toEqual(O.some(observation));
-        expect(span.usage).toEqual({
+        assertSome(span.managedController, observation);
+        deepStrictEqual(span.usage, {
           convention: "unknown",
           input: O.none(),
           output: O.none(),
@@ -115,7 +134,7 @@ it.layer(NodeCrypto.layer)((it) => {
 
   it.effect("keeps legacy native event/request IDs, canonical bytes and export digest exact to pre-change source", () =>
     Effect.gen(function* () {
-      const body = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+      const body = yield* encodeJsonValue({
         resourceSpans: [
           {
             scopeSpans: [
@@ -169,8 +188,8 @@ it.layer(NodeCrypto.layer)((it) => {
       const native = yield* projectNativeTraceRequest(request(body, false));
       const managed = yield* projectNativeTraceRequest(request(body));
       const legacy = O.getOrThrow(A.head(native.spans));
-      expect(legacy.managedController).toEqual(O.none());
-      expect(legacy.sessionHash).toEqual(O.none());
+      assertNone(legacy.managedController);
+      assertNone(legacy.sessionHash);
       expect(legacy.eventId).toBe(
         yield* hashPrivateIdentifier(`native-span/v1:${id("e")}:${legacy.traceId}:${legacy.spanId}`, O.some(salt))
       );

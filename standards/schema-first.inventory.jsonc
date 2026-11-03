@@ -1545,7 +1545,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 79,
+      "line": 101,
       "owner": "@beep/repo-ai-metrics",
       "reason": "Real-socket regressions qualify exact JSON/protobuf acknowledgments, gzip/streaming limits, malformed input, concurrent admission, commit failure and expired-event rejection. Codecs construct controlled wire fixtures and inspect receipt identity. Exit: reusable codec laws move here; generated transport testing must retain the malformed/incomplete-body and controlled fault cases. Independent Astra review: intentional deterministic integration/regression coverage; no unverified property coverage elsewhere is claimed."
     },
