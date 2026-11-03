@@ -6,7 +6,7 @@
     "title": "repo-cli gh/git consolidation",
     "status": "active",
     "created": "2026-11-01",
-    "updated": "2026-11-02",
+    "updated": "2026-11-03",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/repo-cli-gh-git-consolidation",
@@ -19,7 +19,18 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/chore_repo-cli-gh-git-consolidation-closeout-a17236589b0f/verdict.json",
+        "gating": true
+      }
+    ]
+  },
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2654
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -41,7 +52,8 @@
     "research/yeet-remainder-differential-w2b.json",
     "research/reviewer-ci-github-differential-w3.json",
     "research/review-thread-differential-w4.json",
-    "research/yeet-gh-seams-differential-w6.json"
+    "research/yeet-gh-seams-differential-w6.json",
+    "history/closeout-ledger.md"
   ],
   "agentLaunchers": [
     {
@@ -63,22 +75,22 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "in-progress"
     }
   ],
   "verificationCommands": [

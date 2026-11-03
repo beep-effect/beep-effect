@@ -30,8 +30,8 @@ zero unclassified differences). Each PR flips its own row.
 | W3 | G2 down-scoped App token; the `gh auth token` and `op read` spawns onto `@beep/commands` `Run` (D-05) | `Reviewer/*` (#74, #75, #76, #124, #247, #303), `Ci/LaneTimings.ts` (#248), `Ci/CiGovernance.ts` and `Ci/CiRerunRunnerLoss.ts` (#249) | kit merged (#2556); sites merged (#2614, D-12) |
 | W4 | G3 `ReviewThread` resource in `@beep/github` | `internal/github/GithubGraphql.ts` (#77) folds into the kit; `Yeet/internal/{Status,WatchMode,MergeGate,Reply,closeout/GhCollect}.ts` (#78 to #82) and the Yeet REST surface (#250) onto `GithubRest` and `PullRequest`; `GhCall.ts` deleted, `GhCommand.ts` (#83) shrinks | kit merged (#2600); sites merged (#2622, D-13) |
 | W5 | none (`@beep/commands` `ScriptedSpawner` as-is) | the hand-rolled scripted spawners in repo-cli tests (#125, #279), ai-metrics tests and `tailscale.test.ts` (#300); #291 records that `@beep/test-utils` adds no second double | merged, #2642 (D-14) |
-| W6 | none (the W4 kit; `GithubRest` merge title optional, check suites `per_page: 100`) | the Yeet `gh` sites D-13 deferred: `PullRequest.ts`, `ProvenanceFooter.ts`, `ReviewWindow.ts`, `Merge.ts`, `MonitorLoop.ts`, `MonitorComments.ts` and their `capture` seams | in review, this PR (D-15) |
-| C | none | Closeout: ledger of every site-list row (migrated or kept with reason), reflection, `proposedCloseout` | pending |
+| W6 | none (the W4 kit; `GithubRest` merge title optional, check suites `per_page: 100`) | the Yeet `gh` sites D-13 deferred: `PullRequest.ts`, `ProvenanceFooter.ts`, `ReviewWindow.ts`, `Merge.ts`, `MonitorLoop.ts`, `MonitorComments.ts` and their `capture` seams | merged, #2648 (D-15) |
+| C | none | Closeout: ledger of every site-list row (migrated or kept with reason), reflection, `proposedCloseout` | in review, this PR (#2654) |
 
 ## Closeout Checklist
 
