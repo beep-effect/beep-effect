@@ -40,11 +40,11 @@ are fixed, never before.
 
 ## Current Blockers
 
-PR #2609 merged manually before positive pre-merge readiness was retained. Its final Check and Policy retry passed after merge, while canonical completion remained unknown. [The retained incident](history/2026-11-02-manual-merge-2609.md) records user-confirmed attribution and exact verification timing without changing earlier receipts.
+The implementation and CI repairs are merged. [#2626](https://github.com/beep-effect/beep-effect/pull/2626) merged before final Policy success and positive exact-head readiness were retained; its canonical verdict also referenced an older head. [The incident](history/2026-11-03-2626-closeout-gap.md) preserves the successful terminal runs and unsatisfied completion receipt without rewriting prior evidence.
 
-The user authorized [final follow-up PR #2626](https://github.com/beep-effect/beep-effect/pull/2626). Its own current-head hosted proof, resolved reviews, ordinary review window and positive monitor verdict must be archived before strict merge; canonical completion must verify afterward. P4/P5 remain in progress. The follow-up does not waive historical gaps, request S11, or change the completion verifier. Attorney attendance and local full-proof queues are not dependencies.
+Current [owner-controlled final #2656](https://github.com/beep-effect/beep-effect/pull/2656) must earn all current-head non-Vercel hosted checks, resolved review threads, the ordinary review window, and a positive exact-head monitor verdict archived before strict merge. The goal-chat owner performs that merge, refreshes the actual completion receipt, and verifies completed-retained. Explicitly rebind closeout after the final content/review-request push and after any repair push. No generic merger, S11 exception, forced window, or verifier change is authorized by a passing process exit.
 
-The retained v27 replay remains 37/538 with all 34 protected and all 37 previous matches. The 29-file freeze identifies its measured environment; later repository revisions are not silently relabelled as new benchmark environments. All prior human-gated notes below are historical, superseded by autonomous acceptance v1.
+P4/P5 remain in progress. The retained v27 replay stays 37/538, with all 34 protected and all 37 prior passes. Labels, earlier results, fixtures and source freezes remain unchanged. The frozen environment is historical. No new benchmark or actual attorney review is claimed. Attorney attendance and local full-proof queues are not dependencies.
 
 ## Historical checkpoints and superseded holds
 

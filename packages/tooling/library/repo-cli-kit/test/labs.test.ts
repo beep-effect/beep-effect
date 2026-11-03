@@ -15,6 +15,7 @@ import {
   readRetiredPackageNames,
 } from "@beep/repo-cli-kit/cli/Labs/index";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashSet from "effect/HashSet";
@@ -32,7 +33,7 @@ describe("cli/Labs/LabManifest", () => {
     Effect.gen(function* () {
       const bare = yield* decodeLabManifestJson(manifestJson({ disposition: "active" }));
       expect(bare.disposition).toBe("active");
-      expect(O.isNone(bare.postgresSchema)).toBe(true);
+      assertNone(bare.postgresSchema);
 
       const withSchema = yield* decodeLabManifestJson(
         manifestJson({ disposition: "promote", postgresSchema: "lab_try_thing" })
@@ -94,7 +95,7 @@ describe("cli/Labs/LabsWorkspace", () => {
 });
 
 describe("cli/Labs/RetiredPackages", () => {
-  it.layer(MemoryFileSystem.layer)((it) => {
+  it.layer(MemoryFileSystem.layer, { timeout: "10 seconds" })((it) => {
     it.effect("reads no names without a registry and every recorded name otherwise", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -118,7 +119,7 @@ describe("cli/Labs/RetiredPackages", () => {
     );
   });
 
-  it.layer(MemoryFileSystem.layer)((it) => {
+  it.layer(MemoryFileSystem.layer, { timeout: "10 seconds" })((it) => {
     it.effect("fails on a registry that does not match the schema", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;

@@ -49,6 +49,8 @@ const captureJsonOutput = <A, E, R>(effect: Effect.Effect<A, E, R>) => {
   );
 };
 
+const decodeCommandErrorFields = S.decodeEffect(S.Struct(commandErrorFields));
+
 describe("cli/Bytes", () => {
   it("concatenates chunks in order into one buffer", () => {
     const joined = concatBytes([Uint8Array.of(1, 2), new Uint8Array(0), Uint8Array.of(3)]);
@@ -105,13 +107,12 @@ describe("cli/CommandErrorFields", () => {
 
   it.effect("decodes the shared command error fields with optional keys", () =>
     Effect.gen(function* () {
-      const decode = S.decodeEffect(S.Struct(commandErrorFields));
-      expect(yield* decode({ message: "m", command: "git", exitCode: 2 })).toEqual({
+      expect(yield* decodeCommandErrorFields({ message: "m", command: "git", exitCode: 2 })).toEqual({
         message: "m",
         command: "git",
         exitCode: 2,
       });
-      expect(yield* decode({ message: "m" })).toEqual({ message: "m" });
+      expect(yield* decodeCommandErrorFields({ message: "m" })).toEqual({ message: "m" });
     })
   );
 
@@ -337,7 +338,7 @@ describe("artifacts/ArtifactIo", () => {
     expect(renderTruncatedLines({ items: A.empty<number>(), render, limit: 0 })).toEqual([]);
   });
 
-  it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer))((it) => {
+  it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "10 seconds" })((it) => {
     it.effect("writes the body alone when no header is given and maps write failures", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;

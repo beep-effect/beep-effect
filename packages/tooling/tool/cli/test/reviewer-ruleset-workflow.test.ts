@@ -1,3 +1,4 @@
+import * as NodeOS from "node:os";
 import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { GitHubClient } from "@beep/github/GitHubClient";
 import {
@@ -21,6 +22,7 @@ import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Stdio from "effect/Stdio";
@@ -131,21 +133,48 @@ const respond = (fixture: GithubFixture, call: GithubFetchCall, priorCalls: Read
   );
 };
 
-// The `reviewer` commands read the operator token through `gh auth token`; nothing else is spawned, which
-// `withFakeGithub` asserts on the recorded spawns.
-const ghAuthToken = () => ScriptedSpawner.make(() => ({ stdout: "gho_operator-fixture\n" }));
+// Ruleset commands read the operator token through gh; activated merge checks also run the owner reservation helper.
 const isGhAuthToken = (spawn: SpawnRecord) => spawn.command === "gh" && A.join(spawn.args, " ") === "auth token";
 
 // Runs a program against the fake GitHub API and a test console, returning its exit, recorded calls, and log lines.
 // The direct calls take the client from the context; the CLI builds its own from `gh auth token`, so the global
 // `fetch` that client falls back to is the same fake.
-const withFakeGithub = Effect.fnUntraced(function* <A, E, R>(fixture: GithubFixture, program: Effect.Effect<A, E, R>) {
+const withFakeGithub = Effect.fnUntraced(function* <A, E, R>(
+  fixture: GithubFixture,
+  program: Effect.Effect<A, E, R>,
+  reservation: {
+    readonly active: boolean;
+    readonly exit: number;
+    readonly unreadable?: boolean;
+    readonly missing?: boolean;
+  } = {
+    active: false,
+    exit: 0,
+  }
+) {
   const api = githubFetch((call) => respond(fixture, call, A.dropRight(api.calls, 1)));
-  const spawner = ghAuthToken();
+  const spawner = ScriptedSpawner.make((command) =>
+    command === "python3"
+      ? reservation.missing === true
+        ? ScriptedSpawner.notFound(command)
+        : { exit: reservation.exit }
+      : { stdout: "gho_operator-fixture\n" }
+  );
   const client = yield* Layer.build(
     GitHubClient.layerFromToken({ token: Redacted.make("gho_fixture"), retry: "off", fetch: api.fetch })
   );
   const exit = yield* program.pipe(
+    Effect.provideService(
+      FileSystem.FileSystem,
+      FileSystem.makeNoop({
+        exists: () =>
+          reservation.unreadable === true
+            ? Effect.fail(
+                PlatformError.systemError({ _tag: "PermissionDenied", module: "FileSystem", method: "exists" })
+              )
+            : Effect.succeed(reservation.active),
+      })
+    ),
     Effect.provideContext(client),
     Effect.provideService(GithubTransportFetch, O.some(api.fetch)),
     provideSpawner(spawner),
@@ -153,8 +182,8 @@ const withFakeGithub = Effect.fnUntraced(function* <A, E, R>(fixture: GithubFixt
     Effect.provideServiceEffect(Console.Console, TestConsole.make),
     Effect.exit
   );
-  expect(A.every(spawner.spawns, isGhAuthToken)).toBe(true);
-  return { exit, calls: A.copy(api.calls) };
+  expect(A.every(spawner.spawns, (spawn) => isGhAuthToken(spawn) || spawn.command === "python3")).toBe(true);
+  return { exit, calls: A.copy(api.calls), spawns: A.copy(spawner.spawns) };
 }, Effect.scoped);
 
 const putCalls = (calls: ReadonlyArray<GithubFetchCall>) => A.filter(calls, (call) => call.method === "PUT");
@@ -185,6 +214,67 @@ describe("reviewer ruleset workflow", () => {
       );
       yield* result.exit;
       expect(callKeys(result.calls)).toEqual([`GET ${ROOT}/pulls/7`, `GET ${ROOT}/rules/branches/main`]);
+    })
+  );
+
+  it.effect("an active reservation holds before any GitHub read or subsequent merge mutation", () =>
+    Effect.gen(function* () {
+      let merged = false;
+      const result = yield* withFakeGithub(
+        defaults,
+        enforceReviewerGate(7, Str.repeat(40)("a")).pipe(
+          Effect.andThen(
+            Effect.sync(() => {
+              merged = true;
+            })
+          )
+        ),
+        { active: true, exit: 73 }
+      );
+      expect(O.getOrThrow(failureMessage(result.exit))).toContain("Merge reservation held");
+      expect(result.calls).toEqual([]);
+      expect(merged).toBe(false);
+      expect(result.spawns).toHaveLength(1);
+      expect(O.getOrThrow(A.head(result.spawns)).args).toEqual([
+        `${NodeOS.userInfo().homedir}/.cache/beep/orchestrator/bin/merge-reservations.py`,
+        "check",
+        "--repo",
+        "beep-effect/beep-effect",
+        "--pr",
+        "7",
+        "--head",
+        Str.repeat(40)("a"),
+      ]);
+    })
+  );
+
+  it.effect("helper errors and an unreadable activation sentinel hold without reaching GitHub", () =>
+    Effect.gen(function* () {
+      for (const reservation of [
+        { active: true, exit: 2 },
+        { active: true, exit: 0, missing: true },
+        { active: true, exit: 0, unreadable: true },
+      ]) {
+        const result = yield* withFakeGithub(defaults, enforceReviewerGate(7, Str.repeat(40)("a")), reservation);
+        expect(O.getOrThrow(failureMessage(result.exit))).toContain("Merge reservation held");
+        expect(result.calls).toEqual([]);
+      }
+    })
+  );
+
+  it.effect("a successful reservation check still evaluates the reviewer gate", () =>
+    Effect.gen(function* () {
+      const result = yield* withFakeGithub(
+        { ...defaults, branchRules: [] },
+        enforceReviewerGate(7, Str.repeat(40)("a")),
+        {
+          active: true,
+          exit: 0,
+        }
+      );
+      yield* result.exit;
+      expect(result.calls).toHaveLength(2);
+      expect(result.spawns).toHaveLength(1);
     })
   );
 

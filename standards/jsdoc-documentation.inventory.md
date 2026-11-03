@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-03T06:31:10.810Z
+Generated: 2026-11-03T07:58:24.709Z
 
 ## Scope
 
@@ -10,31 +10,31 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 
 | Metric | Count |
 |---|---:|
-| packages | 185 |
+| packages | 186 |
 | cleanPackages | 168 |
 | packagesWithoutPublicSrcSurface | 2 |
-| packagesNeedingRemediation | 15 |
-| publicModules | 3607 |
-| publicExports | 25595 |
-| openModules | 114 |
-| openExports | 88 |
-| missingExportExamples | 0 |
-| missingExportCategories | 0 |
-| missingExportSince | 0 |
+| packagesNeedingRemediation | 16 |
+| publicModules | 3661 |
+| publicExports | 25943 |
+| openModules | 133 |
+| openExports | 129 |
+| missingExportExamples | 35 |
+| missingExportCategories | 1 |
+| missingExportSince | 1 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
 | exampleImportFindings | 44 |
-| unsafeExampleFindings | 0 |
+| unsafeExampleFindings | 1 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 1 |
-| multiple-description-paragraphs | 157 |
-| leading-blank | 0 |
-| trailing-blank | 0 |
+| multiple-description-paragraphs | 181 |
+| leading-blank | 1 |
+| trailing-blank | 1 |
 | invalid-heading | 1 |
 | section-out-of-order | 0 |
 | duplicate-section | 0 |
 | empty-section | 0 |
-| section-after-example | 0 |
+| section-after-example | 2 |
 | invalid-when-to-use-prefix | 0 |
 | malformed-example | 0 |
 | duplicate-example | 0 |
@@ -60,7 +60,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 2 | `@beep/tsgo-shim` | `tools/tsgo-shim` | no-public-src-surface | 0 | 0 | 0 | 0 |
 | 3 | `@beep/types` | `packages/foundation/primitive/types` | needs-remediation | 5 | 12 | 1 | 12 |
 | 4 | `@beep/test-runner` | `packages/tooling/test-kit/test-runner` | clean | 4 | 6 | 0 | 0 |
-| 5 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 8 | 282 | 0 | 0 |
+| 5 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 8 | 283 | 0 | 0 |
 | 6 | `@beep/github-commands` | `packages/foundation/modeling/github-commands` | clean | 3 | 6 | 0 | 0 |
 | 7 | `@beep/ontology-config` | `packages/ontology/config` | clean | 7 | 18 | 0 | 0 |
 | 8 | `@beep/spdx` | `packages/foundation/modeling/spdx` | clean | 4 | 16 | 0 | 0 |
@@ -181,66 +181,67 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 123 | `@beep/ontology-domain` | `packages/ontology/domain` | clean | 6 | 40 | 0 | 0 |
 | 124 | `@beep/qa-capture` | `packages/tooling/library/qa-capture` | needs-remediation | 12 | 174 | 10 | 0 |
 | 125 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | clean | 66 | 822 | 0 | 0 |
-| 126 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 10 | 98 | 0 | 3 |
-| 127 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | clean | 8 | 56 | 0 | 0 |
-| 128 | `@beep/infra` | `infra` | needs-remediation | 11 | 109 | 3 | 19 |
-| 129 | `@beep/oxigraph` | `packages/drivers/oxigraph` | clean | 3 | 6 | 0 | 0 |
-| 130 | `@beep/palantiri` | `packages/tooling/library/palantiri` | clean | 20 | 156 | 0 | 0 |
-| 131 | `@beep/rdf-canonize` | `packages/drivers/rdf-canonize` | clean | 2 | 2 | 0 | 0 |
-| 132 | `@beep/shacl` | `packages/drivers/shacl` | clean | 3 | 6 | 0 | 0 |
-| 133 | `@beep/shared-domain` | `packages/shared/domain` | clean | 106 | 374 | 0 | 0 |
-| 134 | `@beep/wink` | `packages/drivers/wink` | clean | 14 | 72 | 0 | 0 |
-| 135 | `@beep/agents-domain` | `packages/agents/domain` | clean | 16 | 75 | 0 | 0 |
-| 136 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 47 | 0 | 0 |
-| 137 | `@beep/documents-domain` | `packages/documents/domain` | clean | 26 | 81 | 0 | 0 |
-| 138 | `@beep/epistemic-domain` | `packages/epistemic/domain` | clean | 54 | 262 | 0 | 0 |
-| 139 | `@beep/law-practice-domain` | `packages/law-practice/domain` | clean | 253 | 954 | 0 | 0 |
-| 140 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | clean | 9 | 123 | 0 | 0 |
-| 141 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | clean | 4 | 16 | 0 | 0 |
-| 142 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | clean | 23 | 217 | 0 | 0 |
-| 143 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 499 | 4569 | 45 | 29 |
-| 144 | `@beep/shared-tables` | `packages/shared/tables` | clean | 9 | 12 | 0 | 0 |
-| 145 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 30 | 58 | 0 | 0 |
-| 146 | `@beep/agents-tables` | `packages/agents/tables` | clean | 7 | 15 | 0 | 0 |
-| 147 | `@beep/architecture-lab-tables` | `packages/architecture-lab/tables` | clean | 7 | 20 | 0 | 0 |
-| 148 | `@beep/architecture-lab-ui` | `packages/architecture-lab/ui` | clean | 3 | 6 | 0 | 0 |
-| 149 | `@beep/architecture-lab-use-cases` | `packages/architecture-lab/use-cases` | clean | 18 | 63 | 0 | 0 |
-| 150 | `@beep/documents-tables` | `packages/documents/tables` | clean | 19 | 48 | 0 | 0 |
-| 151 | `@beep/documents-use-cases` | `packages/documents/use-cases` | clean | 23 | 124 | 0 | 0 |
-| 152 | `@beep/epistemic-config` | `packages/epistemic/config` | clean | 7 | 20 | 0 | 0 |
-| 153 | `@beep/epistemic-tables` | `packages/epistemic/tables` | clean | 34 | 99 | 0 | 0 |
-| 154 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | clean | 41 | 158 | 0 | 0 |
-| 155 | `@beep/law-practice-tables` | `packages/law-practice/tables` | clean | 34 | 88 | 0 | 0 |
-| 156 | `@beep/ontology-server` | `packages/ontology/server` | clean | 8 | 23 | 0 | 0 |
-| 157 | `@beep/practice-claude-mod` | `apps/practice-claude-mod` | clean | 8 | 30 | 0 | 0 |
-| 158 | `@beep/workspace-tables` | `packages/workspace/tables` | clean | 23 | 56 | 0 | 0 |
-| 159 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | clean | 12 | 45 | 0 | 0 |
-| 160 | `@beep/agents-use-cases` | `packages/agents/use-cases` | clean | 31 | 129 | 0 | 0 |
-| 161 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 6 | 0 | 0 |
-| 162 | `@beep/architecture-lab-server` | `packages/architecture-lab/server` | clean | 13 | 33 | 0 | 0 |
-| 163 | `@beep/db-admin` | `packages/_internal/db-admin` | needs-remediation | 13 | 46 | 2 | 0 |
-| 164 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 35 | 123 | 2 | 0 |
-| 165 | `@beep/epistemic-client` | `packages/epistemic/client` | clean | 4 | 24 | 0 | 0 |
-| 166 | `@beep/epistemic-server` | `packages/epistemic/server` | clean | 28 | 62 | 0 | 0 |
-| 167 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | clean | 104 | 657 | 0 | 0 |
-| 168 | `@beep/workspace-server` | `packages/workspace/server` | clean | 12 | 31 | 0 | 0 |
-| 169 | `@beep/agents-client` | `packages/agents/client` | clean | 6 | 39 | 0 | 0 |
-| 170 | `@beep/agents-server` | `packages/agents/server` | clean | 11 | 42 | 0 | 0 |
-| 171 | `@beep/architecture-lab-proof` | `apps/architecture-lab-proof` | clean | 1 | 2 | 0 | 0 |
-| 172 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 6 | 14 | 0 | 0 |
-| 173 | `@beep/law-practice-server` | `packages/law-practice/server` | clean | 73 | 346 | 0 | 0 |
-| 174 | `@beep/scratchpad` | `scratchpad` | clean | 1 | 5 | 0 | 0 |
-| 175 | `@beep/docket-intake` | `apps/docket-intake` | clean | 12 | 34 | 0 | 0 |
-| 176 | `@beep/ontology-client` | `packages/ontology/client` | clean | 3 | 92 | 0 | 0 |
-| 177 | `@beep/practice-gateway` | `apps/practice-gateway` | clean | 20 | 143 | 0 | 0 |
-| 178 | `@beep/practice-identify` | `apps/practice-identify` | clean | 3 | 10 | 0 | 0 |
-| 179 | `@beep/practice-kg-mcp` | `apps/practice-kg-mcp` | clean | 16 | 75 | 0 | 0 |
-| 180 | `@beep/practice-m365-contacts` | `apps/practice-m365-contacts` | clean | 8 | 28 | 0 | 0 |
-| 181 | `@beep/practice-mail-tagging` | `apps/practice-mail-tagging` | clean | 8 | 44 | 0 | 0 |
-| 182 | `@beep/practice-review-hub` | `apps/practice-review-hub` | clean | 3 | 12 | 0 | 0 |
-| 183 | `@beep/storybook` | `apps/storybook` | no-public-src-surface | 0 | 0 | 0 | 0 |
-| 184 | `@beep/ontology-ui` | `packages/ontology/ui` | clean | 15 | 27 | 0 | 0 |
-| 185 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 65 | 241 | 25 | 0 |
+| 126 | `@beep/repo-cli-kit` | `packages/tooling/library/repo-cli-kit` | needs-remediation | 54 | 347 | 19 | 41 |
+| 127 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 10 | 98 | 0 | 3 |
+| 128 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | clean | 8 | 56 | 0 | 0 |
+| 129 | `@beep/infra` | `infra` | needs-remediation | 11 | 109 | 3 | 19 |
+| 130 | `@beep/oxigraph` | `packages/drivers/oxigraph` | clean | 3 | 6 | 0 | 0 |
+| 131 | `@beep/palantiri` | `packages/tooling/library/palantiri` | clean | 20 | 156 | 0 | 0 |
+| 132 | `@beep/rdf-canonize` | `packages/drivers/rdf-canonize` | clean | 2 | 2 | 0 | 0 |
+| 133 | `@beep/shacl` | `packages/drivers/shacl` | clean | 3 | 6 | 0 | 0 |
+| 134 | `@beep/shared-domain` | `packages/shared/domain` | clean | 106 | 374 | 0 | 0 |
+| 135 | `@beep/wink` | `packages/drivers/wink` | clean | 14 | 72 | 0 | 0 |
+| 136 | `@beep/agents-domain` | `packages/agents/domain` | clean | 16 | 75 | 0 | 0 |
+| 137 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 47 | 0 | 0 |
+| 138 | `@beep/documents-domain` | `packages/documents/domain` | clean | 26 | 81 | 0 | 0 |
+| 139 | `@beep/epistemic-domain` | `packages/epistemic/domain` | clean | 54 | 262 | 0 | 0 |
+| 140 | `@beep/law-practice-domain` | `packages/law-practice/domain` | clean | 253 | 954 | 0 | 0 |
+| 141 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | clean | 9 | 123 | 0 | 0 |
+| 142 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | clean | 4 | 16 | 0 | 0 |
+| 143 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | clean | 23 | 217 | 0 | 0 |
+| 144 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 499 | 4569 | 45 | 29 |
+| 145 | `@beep/shared-tables` | `packages/shared/tables` | clean | 9 | 12 | 0 | 0 |
+| 146 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 30 | 58 | 0 | 0 |
+| 147 | `@beep/agents-tables` | `packages/agents/tables` | clean | 7 | 15 | 0 | 0 |
+| 148 | `@beep/architecture-lab-tables` | `packages/architecture-lab/tables` | clean | 7 | 20 | 0 | 0 |
+| 149 | `@beep/architecture-lab-ui` | `packages/architecture-lab/ui` | clean | 3 | 6 | 0 | 0 |
+| 150 | `@beep/architecture-lab-use-cases` | `packages/architecture-lab/use-cases` | clean | 18 | 63 | 0 | 0 |
+| 151 | `@beep/documents-tables` | `packages/documents/tables` | clean | 19 | 48 | 0 | 0 |
+| 152 | `@beep/documents-use-cases` | `packages/documents/use-cases` | clean | 23 | 124 | 0 | 0 |
+| 153 | `@beep/epistemic-config` | `packages/epistemic/config` | clean | 7 | 20 | 0 | 0 |
+| 154 | `@beep/epistemic-tables` | `packages/epistemic/tables` | clean | 34 | 99 | 0 | 0 |
+| 155 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | clean | 41 | 158 | 0 | 0 |
+| 156 | `@beep/law-practice-tables` | `packages/law-practice/tables` | clean | 34 | 88 | 0 | 0 |
+| 157 | `@beep/ontology-server` | `packages/ontology/server` | clean | 8 | 23 | 0 | 0 |
+| 158 | `@beep/practice-claude-mod` | `apps/practice-claude-mod` | clean | 8 | 30 | 0 | 0 |
+| 159 | `@beep/workspace-tables` | `packages/workspace/tables` | clean | 23 | 56 | 0 | 0 |
+| 160 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | clean | 12 | 45 | 0 | 0 |
+| 161 | `@beep/agents-use-cases` | `packages/agents/use-cases` | clean | 31 | 129 | 0 | 0 |
+| 162 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 6 | 0 | 0 |
+| 163 | `@beep/architecture-lab-server` | `packages/architecture-lab/server` | clean | 13 | 33 | 0 | 0 |
+| 164 | `@beep/db-admin` | `packages/_internal/db-admin` | needs-remediation | 13 | 46 | 2 | 0 |
+| 165 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 35 | 123 | 2 | 0 |
+| 166 | `@beep/epistemic-client` | `packages/epistemic/client` | clean | 4 | 24 | 0 | 0 |
+| 167 | `@beep/epistemic-server` | `packages/epistemic/server` | clean | 28 | 62 | 0 | 0 |
+| 168 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | clean | 104 | 657 | 0 | 0 |
+| 169 | `@beep/workspace-server` | `packages/workspace/server` | clean | 12 | 31 | 0 | 0 |
+| 170 | `@beep/agents-client` | `packages/agents/client` | clean | 6 | 39 | 0 | 0 |
+| 171 | `@beep/agents-server` | `packages/agents/server` | clean | 11 | 42 | 0 | 0 |
+| 172 | `@beep/architecture-lab-proof` | `apps/architecture-lab-proof` | clean | 1 | 2 | 0 | 0 |
+| 173 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 6 | 14 | 0 | 0 |
+| 174 | `@beep/law-practice-server` | `packages/law-practice/server` | clean | 73 | 346 | 0 | 0 |
+| 175 | `@beep/scratchpad` | `scratchpad` | clean | 1 | 5 | 0 | 0 |
+| 176 | `@beep/docket-intake` | `apps/docket-intake` | clean | 12 | 34 | 0 | 0 |
+| 177 | `@beep/ontology-client` | `packages/ontology/client` | clean | 3 | 92 | 0 | 0 |
+| 178 | `@beep/practice-gateway` | `apps/practice-gateway` | clean | 20 | 143 | 0 | 0 |
+| 179 | `@beep/practice-identify` | `apps/practice-identify` | clean | 3 | 10 | 0 | 0 |
+| 180 | `@beep/practice-kg-mcp` | `apps/practice-kg-mcp` | clean | 16 | 75 | 0 | 0 |
+| 181 | `@beep/practice-m365-contacts` | `apps/practice-m365-contacts` | clean | 8 | 28 | 0 | 0 |
+| 182 | `@beep/practice-mail-tagging` | `apps/practice-mail-tagging` | clean | 8 | 44 | 0 | 0 |
+| 183 | `@beep/practice-review-hub` | `apps/practice-review-hub` | clean | 3 | 12 | 0 | 0 |
+| 184 | `@beep/storybook` | `apps/storybook` | no-public-src-surface | 0 | 0 | 0 | 0 |
+| 185 | `@beep/ontology-ui` | `packages/ontology/ui` | clean | 15 | 27 | 0 | 0 |
+| 186 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 65 | 241 | 25 | 0 |
 
 ## Open Findings
 
@@ -377,6 +378,74 @@ Module findings:
 - `src/SessionStore.service.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Witness.service.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/index.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+
+### @beep/repo-cli-kit
+
+Path: `packages/tooling/library/repo-cli-kit`
+
+Module findings:
+- `src/Codeowners.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/ManifestRead.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/PathContainment.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/RepoWorkspaces.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/WholeToken.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/cli/EnvConfig.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/cli/FailureRendering.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/cli/Jsonc.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/cli/Labs/LabManifest.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/cli/Labs/LabsWorkspace.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/cli/Labs/RetiredPackages.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/cli/OptionRecord.ts:1` (none) - missing summary; missing @since
+- `src/cli/PolicyFindingLogger.ts:1` (none) - missing summary; missing @since
+- `src/duckdb/WithDuckDb.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/process/StepExec.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/schema/JsonCodec.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/schema/TextCodec.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/schema/Uuid.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/systemd/SystemdUnit.schemas.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+
+Export findings:
+- `src/RepoWorkspaces.ts:60` `UnsafeWorkspacePatternReason` (const) - missing @example
+- `src/RepoWorkspaces.ts:222` `workspacePackages` (const) - missing @example
+- `src/RepoWorkspaces.ts:249` `workspaceMembers` (const) - missing @example
+- `src/RepoWorkspaces.ts:268` `workspaceDirectories` (const) - missing @example
+- `src/RepoWorkspaces.ts:294` `DecodedWorkspaceMember` (class) - missing @example
+- `src/RepoWorkspaces.ts:320` `workspaceManifests` (const) - missing @example
+- `src/RepoWorkspaces.ts:354` `workspaceDependencyGraph` (const) - missing @example
+- `src/cli/EnvConfig.ts:79` `configStringOptionSync` (const) - 1 documentation section/link violation(s)
+- `src/cli/EnvConfig.ts:407` `isPlannedTurboCommand` (const) - 1 documentation section/link violation(s)
+- `src/cli/FsGuards.ts:60` `ContainedTarget` (class) - missing @example
+- `src/cli/Json.ts:99` `DEFAULT_JSON_PRETTY_MAX_LENGTH` (const) - 1 documentation section/link violation(s)
+- `src/cli/Json.ts:193` `encodeCommandJson` (const) - 1 documentation section/link violation(s)
+- `src/cli/Json.ts:239` `renderPrettyCommandJson` (const) - 1 documentation section/link violation(s)
+- `src/cli/Labs/LabManifest.ts:27` `LAB_MANIFEST_FILENAME` (const) - missing @example
+- `src/cli/Labs/LabManifest.ts:36` `LabDisposition` (const) - missing @example
+- `src/cli/Labs/LabManifest.ts:57` `LabPostgresSchemaName` (const) - missing @example
+- `src/cli/Labs/LabManifest.ts:78` `isLabPostgresSchemaName` (const) - missing @example
+- `src/cli/Labs/LabManifest.ts:87` `LabManifest` (class) - missing @example
+- `src/cli/Labs/LabManifest.ts:108` `LabManifestFromJsonString` (const) - missing @example
+- `src/cli/Labs/LabManifest.ts:119` `decodeLabManifestJson` (const) - missing @example; 1 documentation section/link violation(s)
+- `src/cli/Labs/LabManifest.ts:131` `encodeLabManifestJson` (const) - missing @example; 1 documentation section/link violation(s)
+- `src/cli/Labs/LabsWorkspace.ts:27` `LABS_WORKSPACE_ROOT` (const) - missing @example
+- `src/cli/Labs/LabsWorkspace.ts:35` `LABS_WORKSPACE_GLOB` (const) - missing @example
+- `src/cli/Labs/LabsWorkspace.ts:43` `LABS_PATH_IGNORE_GLOB` (const) - missing @example
+- `src/cli/Labs/LabsWorkspace.ts:55` `LABS_TURBO_EXCLUDE_FILTER` (const) - missing @example; 1 documentation section/link violation(s)
+- `src/cli/Labs/LabsWorkspace.ts:64` `LABS_TURBO_SELECT_FILTER` (const) - missing @example
+- `src/cli/Labs/LabsWorkspace.ts:72` `LabsWorkspaceDir` (const) - missing @example
+- `src/cli/Labs/LabsWorkspace.ts:93` `isLabsWorkspaceDir` (const) - missing @example
+- `src/cli/Labs/LabsWorkspace.ts:106` `isLabsWorkspacePath` (const) - missing @example; 1 documentation section/link violation(s)
+- `src/cli/Labs/RetiredPackages.ts:26` `RETIRED_REGISTRY_PATH` (const) - missing @example
+- `src/cli/Labs/RetiredPackages.ts:34` `RetiredPackageRecord` (class) - missing @example
+- `src/cli/Labs/RetiredPackages.ts:51` `RetiredPackagesRegistry` (class) - missing @example
+- `src/cli/Labs/RetiredPackages.ts:70` `readRetiredPackageNames` (const) - missing @example
+- `src/cli/LintRouting.ts:18` `LINT_POLICY_SUBCOMMANDS` (const) - missing summary; missing @example, @category, @since; 2 documentation section/link violation(s)
+- `src/process/StepExec.ts:512` `AdmissionWorkloadBinding` (class) - missing @example
+- `src/process/StepExec.ts:531` `ResolvedAdmissionWorkload` (class) - missing @example
+- `src/process/StepExec.ts:559` `withAdmissionWorkloadBinding` (const) - missing @example
+- `src/process/StepExec.ts:782` `CapturePipeWedgedError` (class) - missing @example
+- `src/process/StepExec.ts:802` `CaptureCommandTimedOutError` (class) - missing @example
+- `src/process/StepExec.ts:899` `settleCapturedStepForTesting` (const) - 1 unsafe example violation(s)
+- `src/schema/OpaqueDefect.ts:33` `OpaqueDefect` (const) - missing @example
 
 ### @beep/repo-docgen
 

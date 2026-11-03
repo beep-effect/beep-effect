@@ -5,7 +5,7 @@
     "title": "Trustworthy agent observability foundation",
     "status": "active",
     "created": "2026-10-27",
-    "updated": "2026-11-02",
+    "updated": "2026-11-03",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/agent-observability-foundation",
@@ -21,7 +21,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Achieved only after final PR2649 is merged with final-head hosted checks and review/window requirements satisfied, a positive exact-head readiness verdict preserved before merge, and a canonical completion receipt actually verified for the accepted head.",
+    "statement": "Achieved only after final PR2655 is merged with final-head hosted checks and review/window requirements satisfied, a positive exact-head readiness verdict preserved before merge, and a canonical completion receipt actually verified for the accepted head.",
     "grandfathered": false,
     "pullRequests": [
       {
@@ -86,13 +86,17 @@
       },
       {
         "number": 2649,
+        "role": "supporting"
+      },
+      {
+        "number": 2655,
         "role": "final"
       }
     ],
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/fix_observability-final-checkpoint-080fb0fc60c7/verdict.json",
+        "ref": ".beep/yeet/runs/fix_observability-merge-coordination-90980b84b560/verdict.json",
         "gating": true
       },
       {
@@ -162,13 +166,13 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "Routine CI queues, failing checks, local admission refusals and publish/verify sequencing are autonomous repair or routing work. Keep the authoritative observer; do not pause merely because a blocker repeats. Escalate concrete missing authority or required operator input after authorized paths are exhausted."
   ],
-  "statusNote": "PR2649 is the sole final checkpoint. The operator explicitly retained the pre-merge rule and reserved this final merge to this chat. PR2644 retains its unknown canonical result despite forty eventually successful check runs; its positive readiness field was absent and its observer finalized after merge. Completion remains pending actual final-head checks, resolved review, normal window, successfully finalized readiness, an archived positive exact-head verdict before strict owner merge, then actual verified canonical completion. Selected source sets remain 234/249, 82/84, 86/90 and 85/89. Eleven baseline identities relocate with all values preserved; two identities are added. This is not full dependency closure or fresh execution transfer. Historical2364/2508/2578/2612/2644 results are unchanged. Current exact-root admission remains false. Recovery service and timer remain masked/inactive. All seven real-harness populations remain Unknown.",
+  "statusNote": "PR2655 is the sole final checkpoint after the operator directed an executable merge coordination repair. PR2649 retains canonical unknown:15requiredcontexts passed before merge, coverage finished80seconds later, and its observer finalized after merged detection without positive readiness. Shared wrapper/app loops and maintained native merge paths enforce an exact-head cooperative owner reservation; direct website and independent credential access remain outside it. Native focused197tests and quicklint/check passed; full final-head hosted checks, resolved review, normal window, terminal-ready finalization and positive canonical readiness before strict owner merge remain required. Current selected comparisons are232/249,80/84,84/90,83/89; historical evidence retains original scopes, no complete dependency closure. Existing baseline values are preserved across prior relocations and two newer identities; no floor weakening. Prior negative outcomes remain unchanged. Current exact-root admission remains false. Recovery service and timer remain masked/inactive. All seven real-harness populations remain Unknown.",
   "resumeConditions": [
     "Explicit launch of this packet after dependency proof; refresh live state before changes."
   ],
   "dependencies": [],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2649
+    "finalPullRequest": 2655
   }
 }

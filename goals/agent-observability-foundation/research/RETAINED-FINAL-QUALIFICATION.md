@@ -1,6 +1,6 @@
 # Retained final qualification
 
-[PR2649](https://github.com/beep-effect/beep-effect/pull/2649) is the operator-reserved
+[PR2655](https://github.com/beep-effect/beep-effect/pull/2655) is the operator-reserved
 final readiness checkpoint. The base lifecycle remains active until its actual
 canonical accepted-head receipt verifies the declared completion evidence.
 Readiness and source qualification remain distinct from real-harness enrollment.
@@ -246,7 +246,7 @@ The operator subsequently confirmed personally merging PR2612. The
 supplements the earlier unknown-caller observation without rewriting it. Its
 canonical completion result remains unsatisfied. At that earlier checkpoint,
 the clarification resolved the identity question while PR2644 was still open,
-and its merge reservation applied to PR2644. The current sole final is PR2649,
+and its merge reservation applied to PR2644. The current sole final is PR2655,
 whose merge remains reserved to the owning chat.
 
 ## Preserve PR2644's unknown completion result
@@ -266,7 +266,7 @@ whose merge remains with the owning chat. Preserve the original verdict,
 chronology and receipt. Do not grandfather the packet or supply retrospective
 readiness. Lifecycle remains active until the next actual accepted checkpoint.
 
-## Current PR2649 source comparison
+## Historical PR2649 source comparison
 
 The [new comparison](../ops/history/final-checkpoint-source-applicability-20261103.json)
 consumes accepted main `f9654ae19315316a1cf66aa89b4f0f7bd022f7d0`. Every selected
@@ -283,3 +283,11 @@ source and runtime boundaries. Current exact-root admission remains false; all
 seven real-harness populations remain Unknown. Canonical completion is pending
 actual final-head readiness, positive evidence archived before this chat's
 strict merge, and actual post-merge verification. The recovery hold stays intact.
+
+## Current PR2655 coordination checkpoint
+
+PR2649 retains [canonical unknown](../ops/history/pr2649-completion-unknown-20261103.json): fifteen required contexts and the normal window were satisfied before merge, but coverage finished eighty seconds later and the observer finalized after detecting merge. No positive exact-head readiness verdict existed. The operator directed an executable coordination repair and final PR2655, to be merged by the owning chat after verification.
+
+The [current source comparison](../ops/history/merge-coordination-source-applicability-20261103.json) records 232/249,80/84, 84/90, 83/89 selected exact inputs at accepted main e81a5399. Seven selected paths differ from V5, including the extraction of shell quoting into repo-utils and its dependency bindings. Two additional baseline identities preserve every existing value. This is selected applicability, not fresh execution or complete dependency closure. Completion.ts remains exact at accepted main, while merge transports and vocabulary changed; the new reservation guard receives its own focused and final-head hosted proof.
+
+The [coordination repair](./MERGE-COORDINATION.md) removes raw fallback merges and enforces a private exact-head reservation in maintained workstation merge routes. Its cooperative authority boundary excludes direct website and independent credentials. Native focused 197tests, quick lint/check, portable denial checks and independent review support the repair; they do not supply final-head hosted readiness. Lifecycle remains active pending actual pre-merge terminal readiness, positive canonical evidence, strict owner merge and verified completion. The recovery hold, seven Unknown populations and false exact-root admission remain unchanged.
