@@ -130,6 +130,7 @@ attempts; report an actual external blocker without claiming usefulness.
 | 2026-11-03 | Legacy >=270/538 and new >=70% strict | Require substantial structural improvement plus separate generalization evidence | Explicit user revision, never retrospective relabeling |
 | 2026-11-03 | Conservative unknowns and nonempty output/recall minima | Prevent success through silence, omitted hard inputs or optimistic adjudication | Versioned protocol amendment with sensitivity analysis |
 | 2026-11-03 | Automated independent source review; attorney optional | User directs autonomous completion | Optional separate human overlay, no rewriting automated receipts |
+| 2026-11-03 | Add explicit source-record and sparse-context contracts for partial inspection | One malformed sibling currently rejects an entire source set; dropping rows would violate PatentClaims | Remove additive inspection APIs while retaining strict behavior and all results |
 
 ## Exception Ledger
 

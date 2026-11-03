@@ -11,5 +11,6 @@ export * from "./AntecedentFinding.model.ts";
 export * from "./ClaimElement.behavior.ts";
 export * from "./ClaimElement.edge.model.ts";
 export * from "./ClaimElement.errors.ts";
+export * from "./ClaimElement.input.model.ts";
 export * from "./ClaimElement.model.ts";
 export * from "./ClaimElement.tree.model.ts";

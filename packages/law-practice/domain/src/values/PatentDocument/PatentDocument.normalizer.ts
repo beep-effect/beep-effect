@@ -18,6 +18,7 @@ import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { PosInt } from "../../internal/PosInt.ts";
+import { ClaimInputNormalization, ClaimInputRecord } from "../ClaimElement/ClaimElement.input.model.ts";
 import {
   PatentApplicationDocument,
   PatentApplicationSection,
@@ -26,6 +27,7 @@ import {
   PatentClaimTransition,
 } from "./PatentDocument.model.ts";
 import type { Block, Document } from "@beep/md";
+import type { ClaimInputCollection } from "../ClaimElement/ClaimElement.input.model.ts";
 import type { PatentApplicationSectionRole } from "./PatentDocument.model.ts";
 
 const decodeUnknownPatentApplicationDocument = S.decodeUnknownEffect(PatentApplicationDocument);
@@ -530,6 +532,51 @@ const parseClaim = Effect.fn("PatentDocument.parseClaim")(function* (
         transition,
       })
     : PatentClaim.cases.independent.make({ body, claimNumber, claimText, preamble, transition });
+});
+
+/**
+ * Normalize every preserved record independently through the strict claim parser.
+ *
+ * **Details**
+ * A malformed sibling cannot erase valid text. This result is deliberately not
+ * PatentClaims: duplicate numbers and missing ancestors still need separate
+ * context qualification before any check. No source number is inferred.
+ *
+ * **Example** (Inspect the normalization operation)
+ *
+ * ```ts
+ * import { normalizeClaimInput } from "@beep/law-practice-domain/values/PatentDocument"
+ * console.log(typeof normalizeClaimInput) // function
+ * ```
+ *
+ * @category normalization
+ * @since 0.0.0
+ */
+export const normalizeClaimInput = Effect.fn("PatentDocument.normalizeClaimInput")(function* (
+  input: ClaimInputCollection
+): Effect.fn.Return<ReadonlyArray<ClaimInputNormalization>> {
+  return yield* Effect.forEach(input.records, (record) =>
+    ClaimInputRecord.match(record, {
+      unavailable: (record) => Effect.succeed(ClaimInputNormalization.cases["extraction-failed"].make({ record })),
+      text: (record) =>
+        O.match(record.numberText, {
+          onNone: () =>
+            Effect.succeed(
+              ClaimInputNormalization.cases["normalization-failed"].make({
+                record,
+                message: "The source record has no claim number; its source position is not a replacement number.",
+              })
+            ),
+          onSome: (numberText) =>
+            parseClaim(numberText, record.canonicalText).pipe(
+              Effect.map((claim) => ClaimInputNormalization.cases.normalized.make({ record, claim })),
+              Effect.catchTag("PatentDocumentNormalizationError", ({ message }) =>
+                Effect.succeed(ClaimInputNormalization.cases["normalization-failed"].make({ record, message }))
+              )
+            ),
+        }),
+    })
+  );
 });
 
 /**
