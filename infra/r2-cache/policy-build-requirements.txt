@@ -1,2 +1,7 @@
-cargo-zigbuild==0.20.1
-ziglang==0.14.1
+# Reviewed Linux x86_64 wheels; unsupported host wheels must fail hash checking.
+# https://pypi.org/pypi/cargo-zigbuild/0.20.1/json
+cargo-zigbuild==0.20.1 \
+    --hash=sha256:cb9508149ee63d60e5110ff24b527ab25ed418a6329252aa4f86868197c55bf6
+# https://pypi.org/pypi/ziglang/0.14.1/json
+ziglang==0.14.1 \
+    --hash=sha256:6eb9d4d759b292c83810dbee2e9e8e3fbfbf01d864e6e9811bae711fd74e1c2f

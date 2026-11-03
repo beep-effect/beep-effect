@@ -1,0 +1,248 @@
+{
+  "schemaVersion": "cache-producer-environment-preparation/v1",
+  "sourceBaseRevision": "71bc36fcb49a3b274dfb7bf9d22b60988439e5cb",
+  "status": "source-prepared-unverified",
+  "implementation": "Existing producer-install with explicit --from-environment; private-file installation remains the default.",
+  "sourceBindings": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "sha256": "44e6842fb3b73a66d8a0a707f67bb0a04401b9ca601daacc666617e733ad38e3"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-dispatch.test.ts",
+      "sha256": "c8198c1d847455b0d9639e064d71e1b80634a80ff7cf322b36dd7305b81bface"
+    },
+    {
+      "path": ".github/workflows/cache-producer-prepare.yml",
+      "sha256": "494b65ee582d2e0826838b6f99d3640feeb58940987852b3af1cd21982f9d1b1"
+    },
+    {
+      "path": ".github/workflows/heavy.yml",
+      "sha256": "d03361d0bd4b034c83256ef3225188c986b2c4fc1a40b2dbaa8033d3e6b6ee46"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/ci-runner-security.test.ts",
+      "sha256": "5f8cdd3472aa08c82cc9b02c989c680bbcf48e994ee9eab0354f51ccb8f09203"
+    },
+    {
+      "path": "infra/r2-cache/policy-build-requirements.txt",
+      "sha256": "8270e2e179f2b0abbaea61f6a08ad8b1770322408e032122d2bece32413d194a"
+    }
+  ],
+  "environmentRecords": {
+    "approval": "BEEP_CACHE_PRODUCER_APPROVAL_JSON",
+    "runtime": "BEEP_CACHE_PRODUCER_RUNTIME_JSON",
+    "material": "BEEP_CACHE_PRODUCER_ISSUER_MATERIAL_BASE64",
+    "store": "BEEP_CACHE_PRODUCER_STORE"
+  },
+  "bounds": {
+    "approvalUtf8Bytes": 16384,
+    "runtimeUtf8Bytes": 16384,
+    "materialEncodedCharacters": 128,
+    "materialDecodedBytes": 96
+  },
+  "reusedAuthority": [
+    "CacheProducerApproval",
+    "CacheProducerExecutionProfile",
+    "validateCacheProducerApproval",
+    "initializeCacheProducerExecution"
+  ],
+  "authoredControls": {
+    "positiveDispatch": 1,
+    "explicitOptInAndProvisioningDenial": 1,
+    "negativeEnvironmentCases": 12,
+    "executed": false
+  },
+  "verification": {
+    "targetedFormatting": "completed",
+    "normalGitHooks": "passed on source commit 1c21ef7c80; hook organized imports; binding refreshed afterward",
+    "packageVerify": "not run per operator push-only instruction",
+    "localYeetVerifyPublishFinalCheck": "not run",
+    "hostedChecks": "pending; fresh hosted checks required on the submitted PR head"
+  },
+  "activation": {
+    "runtimeChanged": false,
+    "credentialsReadOrProvisioned": false,
+    "cloudChanged": false,
+    "protectedWorkflowExecuted": false,
+    "signedQualificationGranted": false,
+    "wholeGoalAcceptanceGranted": false
+  },
+  "remaining": [
+    "Fresh hosted package and negative-control proof on the submitted head.",
+    "Actual protected-main inspection and independently approved source/tool/profile bindings.",
+    "Fixed protected workflow and step-scoped secret delivery outside every worker mount.",
+    "Current portable executable source/digest and real runner qualification.",
+    "Real bounded signed R2 production/publication/acceptance, capability/epoch/rollback/telemetry controls and representative windows."
+  ],
+  "priorSourceBindingsBeforeCommitHook": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "sha256": "8215b9d6f278438aeb5118bc8169663ddb4c4907f2a721288cca96970f2499de"
+    }
+  ],
+  "acceptedMainIntegration": {
+    "revision": "0be0bfc6e7b864877e362c9421499ec12ac3bbc1",
+    "environmentSourceBindingsUnchanged": true,
+    "consumedAcceptedComponents": [
+      "resolved Heavy approval (#2603)",
+      "narrowed policy-seal, role and transit hashes (#2633)",
+      "optional exporter default review (#2636)",
+      "merge-preview and stronger storage coverage controls (#2624)",
+      "root-input cacheability contract (#2625)",
+      "constrained dispatch process controls (#2640)",
+      "hosted queue and cache consumer repair (#2627)"
+    ],
+    "acceptanceGranted": false
+  },
+  "protectedSourceInspection": "research/protected-source-inspection-2026-11-02.json",
+  "priorSourceBindingsBeforeDispatchPolicyRepair": [
+    {
+      "path": "packages/tooling/tool/cli/test/cache-dispatch.test.ts",
+      "sha256": "d4c1e3342a4eaa5db87f3490e9beff4623801ee43cd648c7a76ee918aab03ef1"
+    }
+  ],
+  "dispatchPolicyRepair": {
+    "sourceReview": "Hoist the three encoders to module scope and use Effect.flip for newly authored failure controls. No new helper or assertion wrapper.",
+    "controlsChanged": false,
+    "controlsExecuted": false
+  },
+  "priorSourceBindingsBeforeHostedErrorRepair": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "sha256": "b5fed4a449d723d736ab6b22ee907f5b83396d7e99843d60a33316ed9dbfe177"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-dispatch.test.ts",
+      "sha256": "244aaebc74eda859b8f63423eeb5133c3fca5b16c42ebb7487eaa1e247e4700e"
+    }
+  ],
+  "priorAuthoredControlsBeforeHostedErrorRepair": {
+    "positiveDispatch": 1,
+    "explicitOptInAndProvisioningDenial": 1,
+    "negativeEnvironmentCases": 11,
+    "executed": false
+  },
+  "hostedErrorRepair": {
+    "failedHead": "ca7b59d358ab7f978c3d0db0cd013ede0c6de2fa",
+    "classification": "introduced",
+    "cause": "Approval contract validation can fail with SchemaError; its error channel escaped the CLI error renderer. The material decoder also had a missed pipeable call.",
+    "repair": "Map only SchemaError to the fixed redacted approval diagnostic, preserve typed policy refusal, and pipe the redacted material into its decoder.",
+    "newControl": "A schema error containing a private marker is refused before missing material lookup and initialization; its input is absent from both captured outputs.",
+    "newControlExecuted": false,
+    "hostedRepairProof": {
+      "head": "f13ffb0610dece2a4c4acbf5499acd0c9e759978",
+      "runId": 41565878998,
+      "result": "Check, Build, Test Integration, Docgen and Repo Sanity succeeded; coverage failed for the separately owned episode26. Current changed head requires fresh proof."
+    },
+    "boundedInventoryRefresh": "Canonical existing per-file analyzer refreshed only current Cache.command.ts locations; all semantic entries, totals, findings and original full-scan timestamp are preserved.",
+    "failedJobIds": [
+      125680220625, 125680220610, 125680220605, 125680220768, 125679616334
+    ]
+  },
+  "priorSourceBindingsBeforeCandidatePreparation": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "sha256": "44e6842fb3b73a66d8a0a707f67bb0a04401b9ca601daacc666617e733ad38e3"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-dispatch.test.ts",
+      "sha256": "c8198c1d847455b0d9639e064d71e1b80634a80ff7cf322b36dd7305b81bface"
+    }
+  ],
+  "candidateBuildPreparation": {
+    "status": "source-prepared-unexecuted",
+    "caller": ".github/workflows/cache-producer-prepare.yml",
+    "admittedLeaf": ".github/workflows/heavy.yml@main",
+    "sourceCheckout": "github.sha",
+    "repository": "beep-effect/beep-effect",
+    "ref": "refs/heads/main",
+    "event": "workflow_dispatch",
+    "modeDefault": false,
+    "ordinaryQualityMatrixPreserved": true,
+    "inspectionMutuallyExclusive": true,
+    "environment": null,
+    "cacheIssuerApplicationCredentials": false,
+    "sharedActionsCache": false,
+    "bounds": {
+      "concurrentJobs": 1,
+      "totalMinutes": 20,
+      "cargoJobs": 2,
+      "artifactBytes": 16777216,
+      "manifestBytes": 65536,
+      "artifactRetentionDays": 1
+    },
+    "toolchain": {
+      "rust": "1.96.0",
+      "cargoZigbuild": "0.20.1",
+      "zig": "0.14.1",
+      "target": "x86_64-unknown-linux-musl",
+      "wheelSha256": {
+        "cargo-zigbuild": "cb9508149ee63d60e5110ff24b527ab25ed418a6329252aa4f86868197c55bf6",
+        "ziglang": "6eb9d4d759b292c83810dbee2e9e8e3fbfbf01d864e6e9811bae711fd74e1c2f"
+      },
+      "installedExecutableDigestsRecorded": true
+    },
+    "builder": "infra/r2-cache/policy.sh cargo-build-musl",
+    "postBuildSourcePatchRecheck": true,
+    "refuseElfInterpreter": true,
+    "scratchCleanup": "Only frozen scratch output from this job, always on success/failure.",
+    "controls": "Workflow policy/isolation assertions authored; not run locally.",
+    "qualifyingAuthority": false,
+    "workflowExecuted": false
+  },
+  "currentAcceptedMainIntegration": {
+    "revision": "070ac7bf111648e6d9779a56243ae733856efc9a",
+    "mergeCommit": "5c869fdef6431361823a8384e45f90cd9678ef8a",
+    "priorProducerImplementationUnchangedByMerge": true,
+    "allParentEvidenceRegistrationsRetained": true,
+    "wholeGoalAcceptanceGranted": false
+  },
+  "priorSourceBindingsBeforeWheelHashReview": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "sha256": "44e6842fb3b73a66d8a0a707f67bb0a04401b9ca601daacc666617e733ad38e3"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-dispatch.test.ts",
+      "sha256": "c8198c1d847455b0d9639e064d71e1b80634a80ff7cf322b36dd7305b81bface"
+    },
+    {
+      "path": ".github/workflows/cache-producer-prepare.yml",
+      "sha256": "494b65ee582d2e0826838b6f99d3640feeb58940987852b3af1cd21982f9d1b1"
+    },
+    {
+      "path": ".github/workflows/heavy.yml",
+      "sha256": "0cd3bb56322229d2001fd63863e72186fe0def07ae61c4f709ad0fd195cdc7a9"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/ci-runner-security.test.ts",
+      "sha256": "7675754a1cb62f397a3d73705afa305f1b797f3d77b31609b41e73f3975ea284"
+    }
+  ],
+  "wheelHashReview": {
+    "thread": "https://github.com/beep-effect/beep-effect/pull/2643#discussion_r4450530140",
+    "classification": "valid",
+    "repair": "Published Linux x86_64 wheel hashes, pip --require-hashes and actual compiler/linker executable digests in build.json.",
+    "publishedWheels": {
+      "cargo-zigbuild": {
+        "filename": "cargo_zigbuild-0.20.1-py3-none-manylinux_2_5_x86_64.manylinux1_x86_64.whl",
+        "sha256": "cb9508149ee63d60e5110ff24b527ab25ed418a6329252aa4f86868197c55bf6",
+        "bytes": 1679876,
+        "url": "https://files.pythonhosted.org/packages/32/dd/ccec85254c252a784ed795639b51f7ea75dadbcba6b0a8c58b983ff20c96/cargo_zigbuild-0.20.1-py3-none-manylinux_2_5_x86_64.manylinux1_x86_64.whl",
+        "requiresPython": null,
+        "yanked": false
+      },
+      "ziglang": {
+        "filename": "ziglang-0.14.1-py3-none-manylinux_2_12_x86_64.manylinux2010_x86_64.musllinux_1_1_x86_64.whl",
+        "sha256": "6eb9d4d759b292c83810dbee2e9e8e3fbfbf01d864e6e9811bae711fd74e1c2f",
+        "bytes": 83184072,
+        "url": "https://files.pythonhosted.org/packages/9d/ef/494f128ea7ec3345850bbd75d2cb7b987006fb5601c37543e8fa83e5e3d4/ziglang-0.14.1-py3-none-manylinux_2_12_x86_64.manylinux2010_x86_64.musllinux_1_1_x86_64.whl",
+        "requiresPython": "~=3.5",
+        "yanked": false
+      }
+    },
+    "candidateBuildExecuted": false,
+    "currentHostedProof": "pending"
+  }
+}
