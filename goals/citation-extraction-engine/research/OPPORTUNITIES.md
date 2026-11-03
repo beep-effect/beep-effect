@@ -282,3 +282,12 @@ history/evidence/2026-11-03-edition-inference.md.
   assertion delimiter. New replay-helper complexity and an unused helper export
   were corrected by sharing the existing row/capture assertions and keeping
   their inner helper private, without changing a gate or adding suppressions.
+
+- 2026-11-03 journal composition: a generic callback requirement incorrectly
+  listed Clock as a service, while installed Effect exposes it as a
+  Context.Reference. Type checking caught the artificial remaining Clock
+  requirement; the dependency union now lists only real required services while
+  the captured Clock is explicitly provided. Fallow source/test duplication was
+  eliminated through shared owned context/captures, calendar/admission setup and
+  deadline assertions. A configuration codec was hoisted after Oxlint identified
+  repeated inline schema compilation. All fixes preserve existing quality floors.

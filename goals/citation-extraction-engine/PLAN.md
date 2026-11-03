@@ -925,3 +925,9 @@ accounting checker.
   with independent profiles and original raw/anchored journal patterns. Ten
   focused tests pass; complete hosted replay remains pending. Journal metadata
   field assignment is next; family safety/scaling duties remain unchanged.
+
+- 2026-11-03: full journal metadata now composes native source helper updates and
+  superclass edition selection. Shared publication ownership/processors also
+  serve law metadata. Corpus: 1152 source observations; nineteen focused tests
+  pass. Full hosted replay and broader goal acceptance remain pending; see
+  history/evidence/2026-11-03-journal-metadata.md.

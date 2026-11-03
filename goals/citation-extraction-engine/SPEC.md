@@ -1442,3 +1442,12 @@ adds only noncapturing structure around assertions. Raw identity/admission and
 process containment remain with existing owners. Source-invalid spaced openers
 reject. Other assertions, nullable finditer and unqualified repeated profiles
 remain explicit open work; journal metadata composition is a separate stage.
+
+### Full journal metadata composition (2026-11-03)
+
+The journal stage writes only its source pin, parenthetical and year fields,
+uses the helper's resulting numeric year for superclass edition selection, and
+publishes both stages together. Law/journal share source-authenticated pattern
+snapshots, owned context/captures, string/year processors, admission, deadlines,
+fresh native scopes and invocation budgets. Returned methods require no caller
+services. Untouched inherited metadata fields stay outside the journal patch.

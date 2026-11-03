@@ -4,45 +4,35 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEditionRef } from "@beep/law-practice-domain/values";
 import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
-import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
-import * as A from "effect/Array";
-import * as Bytes from "effect/Bytes";
-import * as Clock from "effect/Clock";
-import * as Context from "effect/Context";
-import * as Digest from "effect/crypto/Digest";
+import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { CitationOperationAdmission } from "./Admission.ts";
-import { makeCitationContextMatcher } from "./ContextMatcher.ts";
 import {
   CitationEditionInferenceInput,
   makeCitationEditionInference,
   prepareCitationEditionInferenceInput,
 } from "./EditionInference.ts";
-import { makeCitationMetadataStrings } from "./MetadataStrings.ts";
-import { CitationMetadataYearBound, makeCitationMetadataYearFromBound } from "./MetadataYear.ts";
-import { CitationNativeProcessAdmission, makeCitationNativeProcessAdmission } from "./NativeAdmission.ts";
-import { CitationNativeProcessRuntime } from "./NativeProcess.ts";
+import {
+  CitationMetadataStringConfiguration,
+  CitationMetadataStringFields,
+  CitationPublicationMetadataConfiguration,
+  makeCitationMetadataOperation,
+  matchCitationMetadataContext,
+  prepareCitationPublicationMetadata,
+  processCitationMetadataStrings,
+} from "./MetadataComposition.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
-import { CitationRegexPatternDescriptor, copyCitationRegexDescriptor } from "./RegexDescriptors.ts";
-import { makeCitationRegexInput } from "./RegexInput.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
-import { CitationTextBudget, makeCitationTextBudget } from "./TextBudget.ts";
+import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
+import { decodeCitationRegexPolicy } from "./RegexPolicy.ts";
 import { CitationTokenContextInput } from "./TokenContext.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
-import type { CitationContextMatch } from "./ContextMatcher.ts";
-import type { CitationPreparedRegexInput } from "./RegexInput.ts";
+import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/LawMetadata");
 const max = CitationEngineAbsoluteMaxima;
 const Position = S.Natural.check(S.isLessThanOrEqualTo(max.sourceUtf16)).pipe(
   $I.annoteSchema("Position", { description: "Unverified source point within the input ceiling." })
-);
-const Names = LiteralKit(["pin_cite", "publisher", "day", "month", "parenthetical", "year"]).pipe(
-  $I.annoteSchema("Names", { description: "Exact source law metadata capture names." })
 );
 const Reason = LiteralKit(["invalid-input", "invalid-configuration", "missing-capture"]).pipe(
   $I.annoteSchema("Reason", { description: "Closed law metadata preparation failures without source text." })
@@ -68,10 +58,8 @@ export class CitationLawMetadataConfiguration extends S.Opaque<
 >()(
   S.Struct({
     lawPattern: CitationPythonUnicodeStorage,
-    yearPattern: CitationPythonUnicodeStorage,
+    ...CitationMetadataStringConfiguration.fields,
     lawBindings: S.Array(CitationRegexPatternDescriptor).check(S.isBetweenLength(2, 2)),
-    yearBindings: S.Array(CitationRegexPatternDescriptor).check(S.isBetweenLength(2, 2)),
-    highestValidYear: CitationMetadataYearBound,
   }).pipe(
     $I.annoteSchema("CitationLawMetadataConfiguration", {
       description: "Source-bound private law/year patterns, descriptors and captured calendar data.",
@@ -130,29 +118,8 @@ export class CitationLawMetadataResult extends S.Opaque<CitationLawMetadataResul
     })
   )
 ) {}
-const LawDigest = S.tag("bcfd81892211f7373d1a515cebf32c58ad43da653d5f20dab85df00dbcc6edef");
-const YearDigest = S.tag("82554a3e0f705f6f6a95a3920c1c93da975dee85e28a60956fdd0c70a8220fa9");
 const Config = S.toType(CitationLawMetadataConfiguration);
 const Input = S.toType(CitationLawMetadataInput);
-const empty = CitationPythonUnicodeStorage.make({ width: 1, bytes: new Uint8Array() });
-const nonempty = (value: CitationPythonUnicodeStorage | null) => value !== null && value.bytes.length > 0;
-const captured = Effect.fn("Citation.captureLawMetadataValue")(function* (
-  matched: CitationContextMatch,
-  source: CitationPreparedRegexInput,
-  name: typeof Names.Type
-) {
-  const match = yield* Effect.fromNullishOr(matched.match).pipe(Effect.mapError(() => fail("missing-capture")));
-  const ordinal = yield* Effect.fromOption(R.get(match.names, name), () => fail("missing-capture"));
-  const span = yield* Effect.fromOption(A.get(match.captures, ordinal), () => fail("missing-capture"));
-  if (span._tag === "Unmatched") return null;
-  return yield* source.slice(span, () => Effect.void);
-});
-const fingerprint = Effect.fn("Citation.fingerprintLawMetadataPattern")((pattern: CitationPythonUnicodeStorage) =>
-  S.decodeEffect(Sha256HexFromBytes)(Bytes.concat([new Uint8Array([pattern.width]), pattern.bytes])).pipe(
-    Effect.mapError(() => fail("invalid-configuration")),
-    Effect.catchDefect(() => Effect.fail(fail("invalid-configuration")))
-  )
-);
 const prepareConfiguration = Effect.fn("Citation.prepareLawMetadataConfiguration")(function* (
   limits: CitationEngineLimits,
   runtimeInput: unknown,
@@ -161,42 +128,21 @@ const prepareConfiguration = Effect.fn("Citation.prepareLawMetadataConfiguration
   const decoded = yield* S.decodeUnknownEffect(Config)(configurationInput).pipe(
     Effect.mapError(() => fail("invalid-configuration"))
   );
-  const highestValidYear = decoded.highestValidYear;
-  const lawBindings = A.map(decoded.lawBindings, copyCitationRegexDescriptor);
-  const yearBindings = A.map(decoded.yearBindings, copyCitationRegexDescriptor);
-  const decodedRuntime = yield* S.decodeUnknownEffect(CitationNativeProcessRuntime)(runtimeInput).pipe(
-    Effect.mapError(() => fail("invalid-configuration"))
+  const prepared = yield* prepareCitationPublicationMetadata(
+    limits,
+    runtimeInput,
+    { ...decoded, pattern: decoded.lawPattern, bindings: decoded.lawBindings },
+    "bcfd81892211f7373d1a515cebf32c58ad43da653d5f20dab85df00dbcc6edef",
+    () => fail("invalid-configuration")
   );
-  const runtime = CitationNativeProcessRuntime.make({ ...decodedRuntime });
-  const patterns = yield* makeCitationRegexInput(limits, "pattern");
-  const lawPattern = (yield* patterns.prepareUnicode(decoded.lawPattern, () => Effect.void)).value.storage;
-  const yearPattern = (yield* patterns.prepareUnicode(decoded.yearPattern, () => Effect.void)).value.storage;
-  const lawHash = yield* fingerprint(lawPattern);
-  const yearHash = yield* fingerprint(yearPattern);
-  yield* S.decodeUnknownEffect(LawDigest)(lawHash).pipe(Effect.mapError(() => fail("invalid-configuration")));
-  yield* S.decodeUnknownEffect(YearDigest)(yearHash).pipe(Effect.mapError(() => fail("invalid-configuration")));
-  const config = CitationLawMetadataConfiguration.make({
-    lawPattern,
-    yearPattern,
-    lawBindings,
-    yearBindings,
-    highestValidYear,
-  });
-  return { runtime, config };
-});
-const captureDependencies = Effect.fn("Citation.captureLawMetadataDependencies")(function* (
-  limits: CitationEngineLimits
-) {
-  const supplied = yield* Effect.serviceOption(CitationNativeProcessAdmission);
-  const admission = O.isSome(supplied) ? supplied.value : yield* makeCitationNativeProcessAdmission(limits);
-  const clock = yield* Clock.Clock;
-  const digest = yield* Digest.Digest;
-  const spawner = yield* ChildProcessSpawner;
-  return Context.make(Clock.Clock, clock).pipe(
-    Context.add(Digest.Digest, digest),
-    Context.add(ChildProcessSpawner, spawner),
-    Context.add(CitationNativeProcessAdmission, admission)
-  );
+  return {
+    runtime: prepared.runtime,
+    config: CitationLawMetadataConfiguration.make({
+      ...prepared.config,
+      lawPattern: prepared.config.pattern,
+      lawBindings: prepared.config.bindings,
+    }),
+  };
 });
 const preparePatch = Effect.fn("Citation.prepareLawMetadataPatch")(function* (
   limits: CitationEngineLimits,
@@ -204,45 +150,41 @@ const preparePatch = Effect.fn("Citation.prepareLawMetadataPatch")(function* (
   config: CitationLawMetadataConfiguration,
   request: CitationLawMetadataInput
 ) {
-  const matcher = yield* makeCitationContextMatcher(limits, runtime, config.lawPattern, 64, config.lawBindings);
-  const matched = yield* matcher.search({
-    words: request.words,
-    prefix: empty,
-    startIndex: request.index + 1,
-    forward: true,
-    stringsOnly: true,
-  });
-  if (matched.match === null) return O.none<CitationLawMetadataPatch>();
-  const whole = yield* Effect.fromOption(A.head(matched.match.captures), () => fail("missing-capture"));
-  if (whole._tag === "Unmatched") return yield* fail("missing-capture");
-  const input = yield* makeCitationRegexInput(limits);
-  const source = yield* input.prepareUnicode(matched.context, () => Effect.void);
-  const value = (name: typeof Names.Type) => captured(matched, source, name);
-  const pin = yield* value("pin_cite");
-  const publisher = yield* value("publisher");
-  const day = yield* value("day");
-  const month = yield* value("month");
-  const parenthetical = yield* value("parenthetical");
-  const rawYear = yield* value("year");
-  const strings = yield* makeCitationMetadataStrings(limits, runtime, config.yearPattern, config.yearBindings);
-  const cleanedPin = yield* strings.cleanPinCite(pin);
-  const processedParenthetical = yield* strings.parenthetical(parenthetical);
-  const years = yield* makeCitationMetadataYearFromBound(limits, config.highestValidYear);
-  let year = request.year;
-  if (nonempty(rawYear)) {
-    const parsedYear = yield* years.getYear(rawYear);
-    year = O.getOrNull(parsedYear);
-  }
+  const owned = yield* matchCitationMetadataContext(
+    limits,
+    runtime,
+    CitationPublicationMetadataConfiguration.make({
+      ...config,
+      pattern: config.lawPattern,
+      bindings: config.lawBindings,
+    }),
+    request,
+    () => fail("missing-capture")
+  );
+  if (O.isNone(owned)) return O.none<CitationLawMetadataPatch>();
+  const pin = yield* owned.value.capture("pin_cite");
+  const publisher = yield* owned.value.capture("publisher");
+  const day = yield* owned.value.capture("day");
+  const month = yield* owned.value.capture("month");
+  const parenthetical = yield* owned.value.capture("parenthetical");
+  const rawYear = yield* owned.value.capture("year");
+  const common = yield* processCitationMetadataStrings(
+    limits,
+    runtime,
+    CitationMetadataStringConfiguration.make(config),
+    CitationMetadataStringFields.make({ pinCite: pin, parenthetical, year: rawYear }),
+    request.year
+  );
   const patch = CitationLawMetadataPatch.make({
-    fullSpanEnd: request.spanEnd + whole.end,
-    year,
+    fullSpanEnd: request.spanEnd + owned.value.end,
+    year: common.numericYear,
     metadata: {
-      pinCite: nonempty(cleanedPin) ? cleanedPin : null,
+      pinCite: common.pinCite,
       publisher,
       day,
       month,
-      parenthetical: processedParenthetical,
-      year: rawYear,
+      parenthetical: common.parenthetical,
+      year: common.year,
     },
   });
   return O.some(patch);
@@ -254,22 +196,16 @@ const installLawMetadata = Effect.fn("Citation.installLawMetadata")(function* (
 ) {
   const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-configuration"));
   const { runtime, config } = yield* prepareConfiguration(limits, runtimeInput, configurationInput);
-  const operation = yield* CitationOperationAdmission;
-  const dependencies = yield* captureDependencies(limits);
-  const enclosing = yield* Effect.serviceOption(CitationTextBudget);
-  if (O.isSome(enclosing) && enclosing.value.maximum > limits.producedTextUtf16)
-    return yield* fail("invalid-configuration");
-  const timing = yield* makeCitationRegexTiming(limits, true);
+  const installed = yield* makeCitationMetadataOperation(
+    limits,
+    (request: CitationLawMetadataInput) => preparePatch(limits, runtime, config, request),
+    () => fail("invalid-configuration")
+  );
   const run = Effect.fn("Citation.runLawMetadata")(function* (request: CitationLawMetadataInput) {
-    const budget = O.isSome(enclosing) ? enclosing.value : yield* makeCitationTextBudget(limits);
-    const patch = yield* Effect.scoped(preparePatch(limits, runtime, config, request)).pipe(
-      Effect.provideContext(dependencies),
-      Effect.provideService(CitationTextBudget, budget)
-    );
-    const reservedUnits = yield* budget.snapshot;
+    const [patch, reservedUnits] = yield* installed.run(request);
     return CitationLawMetadataResult.make({ patch, reservedUnits });
   });
-  return { limits, operation, timing, run };
+  return { ...installed, limits, run };
 });
 /** Install immutable source configuration and shared admission. Each call uses
  * a fresh Scope and captures no outer Scope in its dependency Context. An

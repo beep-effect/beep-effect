@@ -838,3 +838,8 @@ Positive-lookahead structure and regex-lookahead observations adapt pinned
 CPython re parsing (PSF-2.0), regex 2023.12.25 V0 parsing (Apache-2.0 and retained
 CNRI notices), and eyecite 2.7.6's journal/pin patterns (Free Law Project,
 BSD-2-Clause). See the existing full source/license attributions above.
+
+JournalMetadata.ts, shared publication metadata processing and the journal
+metadata corpus derive from eyecite 2.7.6 FullJournalCitation.add_metadata,
+add_journal_metadata and the shared source helper behavior at the pinned
+revision above (Free Law Project, BSD-2-Clause).

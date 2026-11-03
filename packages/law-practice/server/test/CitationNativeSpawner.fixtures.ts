@@ -233,3 +233,18 @@ export const makeCitationNativeWorkerFixture = Effect.fn("WorkerTest.fixture")(f
   const executable = runtimeKind === "node" ? yield* citationNodeTestExecutable : process.execPath;
   return { fs, cwd, workerFile, marker, release, kind: runtimeKind, executable };
 });
+
+/** Freeze wall time while retaining the installed Clock's real sleep and monotonic methods.
+ * @internal @category testing @since 0.0.0
+ */
+export const makeCitationNativeWallClock = Effect.fn("WorkerTest.wallClock")(function* (epochMillis: number) {
+  const clock = yield* Clock.Clock;
+  const nanos = BigInt(epochMillis) * 1000000n;
+  return {
+    ...clock,
+    currentTimeMillisUnsafe: () => epochMillis,
+    currentTimeMillis: Effect.succeed(epochMillis),
+    currentTimeNanosUnsafe: () => nanos,
+    currentTimeNanos: Effect.succeed(nanos),
+  } satisfies Clock.Clock;
+});

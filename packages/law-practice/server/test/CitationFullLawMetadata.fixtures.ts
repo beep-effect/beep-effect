@@ -2,10 +2,6 @@ import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEditionRef } from "@beep/law-practice-domain/values";
 import {
-  CitationOperationAdmission,
-  makeCitationOperationAdmission,
-} from "@beep/law-practice-server/internal/Citation/Admission";
-import {
   CitationFrozenEditionFailure,
   CitationFrozenEditions,
   makeCitationFrozenEditions,
@@ -17,7 +13,6 @@ import {
 import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
-import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -25,7 +20,11 @@ import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 import { loadCitationLawMetadataFixtures } from "./CitationLawMetadata.fixtures.ts";
-import { assertCitationWorkerCompositionReleased, setupCitationRegexRuntime } from "./CitationRegexWorker.fixtures.ts";
+import {
+  assertCitationWorkerCompositionReleased,
+  makeCitationMetadataTestContext,
+  setupCitationRegexRuntime,
+} from "./CitationRegexWorker.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
 const $I = $LawPracticeServerId.create("test/CitationFullLawMetadata");
@@ -83,22 +82,8 @@ const install = Effect.fn("FullLawMetadataTest.install")(function* (
     }),
   });
   const limits = { ...setup.limits, candidates: candidateLimit ?? setup.limits.candidates };
-  const operation = yield* makeCitationOperationAdmission(limits).pipe(Effect.provideContext(setup.context));
-  const instant = yield* Effect.fromOption(DateTime.make("2026-11-03T00:00:00Z"));
-  const epoch = DateTime.toEpochMillis(instant);
-  const clock = Context.get(setup.context, Clock.Clock);
-  const frozen = {
-    ...clock,
-    currentTimeMillisUnsafe: () => epoch,
-    currentTimeMillis: Effect.succeed(epoch),
-    currentTimeNanosUnsafe: () => BigInt(epoch) * 1000000n,
-    currentTimeNanos: Effect.succeed(BigInt(epoch) * 1000000n),
-  } satisfies Clock.Clock;
-  const context = setup.context.pipe(
-    Context.add(Clock.Clock, frozen),
-    Context.add(CitationFrozenEditions, observedOwner),
-    Context.add(CitationOperationAdmission, operation)
-  );
+  const { operation, context: base } = yield* makeCitationMetadataTestContext(setup.context, limits);
+  const context = Context.add(base, CitationFrozenEditions, observedOwner);
   const metadata = yield* makeCitationFullLawMetadata(limits, setup.runtime, law.configuration).pipe(
     Effect.provideContext(context),
     DateTime.withCurrentZoneOffset(0)

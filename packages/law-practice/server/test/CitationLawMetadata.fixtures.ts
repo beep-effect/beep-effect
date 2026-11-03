@@ -14,18 +14,19 @@ import { CitationTextBudget, makeCitationTextBudget } from "@beep/law-practice-s
 import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
-import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
-import { makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
-import { assertCitationWorkerCompositionReleased, setupCitationRegexRuntime } from "./CitationRegexWorker.fixtures.ts";
+import {
+  assertCitationWorkerCapturedDeadline,
+  assertCitationWorkerCompositionReleased,
+  setupCitationRegexRuntime,
+} from "./CitationRegexWorker.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
 const $I = $LawPracticeServerId.create("test/CitationLawMetadata");
@@ -170,19 +171,16 @@ export const assertCitationLawMetadataLifetime = Effect.fn("LawMetadataTest.life
   const observed = yield* closed.observed.snapshot;
   expect(observed).toEqual({ spawned: 0, confirmed: 0 });
   const timed = yield* install("bun", corpus.configuration, undefined, false, true);
-  const disabled = yield* makeCitationNativeSleepClock(() => Effect.never);
-  const pending = yield* timed.metadata
-    .apply({
+  yield* assertCitationWorkerCapturedDeadline(
+    timed.metadata.apply({
       ...row.request,
       words: [
         { kind: "CitationToken", data: { width: 1, bytes: new TextEncoder().encode("1 X 1") } },
         { kind: "Text", data: { width: 1, bytes: new TextEncoder().encode(Str.repeat(65536)("x")) } },
       ],
-    })
-    .pipe(Effect.provideService(Clock.Clock, disabled), Effect.forkChild);
-  yield* timed.timer.trigger;
-  const expired = yield* Fiber.join(pending).pipe(Effect.flip);
-  expect(expired).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "extractDeadline" });
+    }),
+    timed.timer.trigger
+  );
   const none = yield* timed.observed.snapshot;
   expect(none).toEqual({ spawned: 0, confirmed: 0 });
 });
