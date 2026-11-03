@@ -21,8 +21,14 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "statement": "Complete only after all declared route acceptance is demonstrated at its actual scope, a designated final delivery retains positive exact-head pre-merge readiness and successful terminal observer finalization, strict owner merge and genuinely verified canonical completion. Supporting PR2663 proves current-source admission and bounded tooling only; it does not complete real enrollment.",
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 2663,
+        "role": "supporting"
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
