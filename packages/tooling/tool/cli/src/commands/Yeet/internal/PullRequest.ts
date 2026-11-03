@@ -7,6 +7,8 @@
 
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
+import { GitHubRepository } from "@beep/github/GitHubRepository";
+import { PullRequest as GithubPullRequest } from "@beep/github/PullRequest";
 import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -17,8 +19,8 @@ import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { GhPrView, ghOutput } from "../../../internal/github/index.ts";
-import { RepoStepRunResult, runRepoCommandCapture, sortedUniquePaths } from "../../../internal/repo-run/index.ts";
+import { GhPrView, GithubRest, ghOutput } from "../../../internal/github/index.ts";
+import { RepoStepRunResult, sortedUniquePaths } from "../../../internal/repo-run/index.ts";
 import { HEAVY_ADMISSION_LABEL, isHeavyDocsOnlyPath } from "../../Ci/HeavyAdmission.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import {
@@ -40,22 +42,26 @@ import {
   YeetPullRequestTitleSyncStatus,
 } from "./PullRequestTitle.ts";
 import { YeetExecutedStep } from "./Verdict.ts";
+import type { PullRequestInfo as GithubPullRequestInfo } from "@beep/github/PullRequest";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { GhCommandFailure } from "../../../internal/github/index.ts";
+import type { GhCommandFailure, GithubPullRequestRecord } from "../../../internal/github/index.ts";
 import type { RepoPlanStep, RepoRunContext } from "../../../internal/repo-run/index.ts";
+import type { YeetGithubServices } from "./GhOps.ts";
 import type { PrNumber } from "./Provenance.ts";
 import type { PrSessionRegistryShape } from "./PrSessionRegistry.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/PullRequest");
 
+// KEEP (W6): `gh pr view` of the checked-out branch resolves the pull request
+// from the branch itself, which no kit member does; it stays the fallback for a
+// REST lookup that failed.
 const ghPullRequestViewArgs = ["pr", "view", "--json", "number,headRefName,state,url,title"] as const;
 const ghPullRequestViewCommand = "gh pr view --json number,headRefName,state,url,title";
 const decodeGhPullRequestView = S.decodeUnknownEffect(S.fromJsonString(GhPrView));
-const decodeGhPullRequestList = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhPrView)));
 const isGraphQlRateLimitOutput = (output: string) => /GraphQL: API rate limit (already )?exceeded/.test(output);
 const graphQlRateLimited = (failure: GhCommandFailure) =>
   failure._tag === "nonzero-exit" && isGraphQlRateLimitOutput(failure.output);
@@ -65,6 +71,19 @@ const ghPullRequestViewOutput = (context: RepoRunContext) =>
     cwd: context.repoRoot,
     label: ghPullRequestViewCommand,
     onFailure: (failure) => failure,
+  });
+
+// A REST pull request in the `gh pr view --json` shape the callers read: the
+// REST lookup's former `--jq` projection.
+const restPullRequestView = (pull: GithubPullRequestRecord): GhPrView =>
+  GhPrView.make({
+    number: pull.number,
+    headRefName: pull.headRef,
+    state: Str.toUpperCase(pull.state),
+    url: pull.htmlUrl,
+    headRefOid: pull.headSha,
+    isDraft: pull.draft,
+    title: pull.title,
   });
 
 const originPushOwner = Effect.fn("Yeet.originPushOwner")(function* (context: RepoRunContext) {
@@ -110,38 +129,24 @@ const originPushOwner = Effect.fn("Yeet.originPushOwner")(function* (context: Re
  */
 export const findOpenPullRequestViaRest = Effect.fn("Yeet.findOpenPullRequestViaRest")(function* (
   context: RepoRunContext
-): Effect.fn.Return<
-  O.Option<GhPrView>,
-  YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
-> {
+): Effect.fn.Return<O.Option<GhPrView>, YeetCommandError, YeetGithubServices | Git> {
   const headOwner = yield* originPushOwner(context);
   const endpoint = `repos/{owner}/{repo}/pulls?head=${encodeURIComponent(headOwner)}%3A${encodeURIComponent(context.branch)}&state=open&per_page=100`;
-  const output = yield* ghOutput({
-    args: [
-      "api",
-      endpoint,
-      "--jq",
-      "map({number, headRefName: .head.ref, state: (.state | ascii_upcase), url: .html_url, headRefOid: .head.sha, isDraft: .draft, title})",
-    ],
-    cwd: context.repoRoot,
-    label: `gh api ${endpoint}`,
-    onFailure: (failure) =>
-      failure._tag === "spawn"
-        ? YeetCommandError.new("Failed to inspect current branch pull request through GitHub REST.")(failure.cause)
-        : YeetCommandError.make({
-            message:
-              failure._tag === "truncated"
-                ? "GitHub REST pull request lookup output exceeded the repo-run capture limit."
-                : `Failed to inspect current branch pull request through GitHub REST: ${Str.trim(failure.output)}`,
-            command: `gh api ${endpoint}`,
-            exitCode: failure._tag === "truncated" ? 1 : failure.exitCode,
-          }),
-  });
-  const views = yield* decodeGhPullRequestList(output).pipe(
-    Effect.mapError(YeetCommandError.new("Failed to decode GitHub REST pull request JSON."))
+  const pulls = yield* GithubRest.use((rest) => rest.openPullRequestForBranch(headOwner, context.branch)).pipe(
+    Effect.mapError((error) =>
+      YeetCommandError.make({
+        message: `Failed to inspect current branch pull request through GitHub REST: ${error.message}`,
+        command: `gh api ${endpoint}`,
+        exitCode: 1,
+        cause: error,
+      })
+    )
   );
-  return A.findFirst(views, (view) => view.state === "OPEN" && view.headRefName === context.branch);
+  return pipe(
+    pulls,
+    O.map(restPullRequestView),
+    O.filter((view) => view.state === "OPEN" && view.headRefName === context.branch)
+  );
 });
 
 const ghPullRequestViewFailure = (failure: GhCommandFailure): YeetCommandError => {
@@ -197,7 +202,7 @@ export const runGhPullRequestView = Effect.fn("Yeet.runGhPullRequestView")(funct
 ): Effect.fn.Return<
   GhPrView,
   YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git | YeetGithubServices
 > {
   // REST first: its budget is separate from the shared GraphQL budget that
   // `gh pr view` spends. `gh pr view` stays as the fallback for a REST failure.
@@ -257,7 +262,7 @@ export const findOpenPullRequest = Effect.fn("Yeet.findOpenPullRequest")(functio
 ): Effect.fn.Return<
   O.Option<GhPrView>,
   YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git | YeetGithubServices
 > {
   // REST first (separate budget); `gh pr view` only when the REST read failed,
   // and a spent GraphQL budget then reports the REST failure, never "no PR".
@@ -325,7 +330,7 @@ const branchCommitRange = Effect.fn("Yeet.branchCommitRange")(function* (
  * artifact path.
  * @param recorder - Ref containing proof lanes already executed before PR
  * creation.
- * @returns Markdown body text for `gh pr create`.
+ * @returns Markdown body text for the pull request the publish opens.
  * @category formatting
  * @since 0.0.0
  */
@@ -388,10 +393,8 @@ export class YeetEnsuredPullRequest extends S.Opaque<YeetEnsuredPullRequest, { r
 ) {}
 
 interface EnsurePullRequestDependencies {
-  readonly capture?: typeof runRepoCommandCapture;
   readonly findOpen?: typeof findOpenPullRequest;
   readonly registry?: PrSessionRegistryShape;
-  readonly view?: typeof runGhPullRequestView;
 }
 
 /**
@@ -521,7 +524,6 @@ const stampPullRequestProvenance = Effect.fn("Yeet.stampPullRequestProvenance")(
   number: number,
   url: O.Option<string>,
   state: "pushed" | "created",
-  capture: typeof runRepoCommandCapture,
   registry: EnsurePullRequestDependencies["registry"]
 ): Effect.fn.Return<
   void,
@@ -532,10 +534,11 @@ const stampPullRequestProvenance = Effect.fn("Yeet.stampPullRequestProvenance")(
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
   | Git
+  | YeetGithubServices
 > {
   const recording = yield* recordCurrentPrSession(context, number, url, state, registry);
   const outcome = O.isSome(recording)
-    ? yield* ensureProvenanceFooter(context, recording.value.repository, number, capture, registry)
+    ? yield* ensureProvenanceFooter(context, recording.value.repository, number, registry)
     : ProvenanceStampOutcome.make({
         status: "skipped",
         message: `[yeet] provenance footer stamp skipped for PR #${number}: session recording was unavailable`,
@@ -544,58 +547,44 @@ const stampPullRequestProvenance = Effect.fn("Yeet.stampPullRequestProvenance")(
 });
 
 const finishCreatedPullRequest = Effect.fn("Yeet.finishCreatedPullRequest")(function* (
-  context: RepoRunContext,
   recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
   prStep: O.Option<RepoPlanStep>,
-  view: NonNullable<EnsurePullRequestDependencies["view"]>,
-  printed: string,
-  draft: boolean,
-  throughRest: boolean
-): Effect.fn.Return<
-  YeetEnsuredPullRequest,
-  YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
-> {
-  yield* Console.log(
-    `[yeet] --pr: created ${draft ? "draft " : ""}pull request${throughRest ? " through REST" : ""} -> ${printed}`
-  );
-  yield* recordPrCreateLane(
-    recorder,
-    prStep,
-    printed,
-    throughRest ? "gh api -X POST repos/{owner}/{repo}/pulls" : "gh pr create"
-  );
-  const created = yield* view(context);
+  created: GithubPullRequestInfo,
+  draft: boolean
+): Effect.fn.Return<YeetEnsuredPullRequest> {
+  yield* Console.log(`[yeet] --pr: created ${draft ? "draft " : ""}pull request through REST -> ${created.url}`);
+  yield* recordPrCreateLane(recorder, prStep, created.url, pullRequestCreateCommand);
   return YeetEnsuredPullRequest.make({
     number: created.number,
-    url: O.orElse(O.liftPredicate(printed, Str.isNonEmpty), () => O.fromUndefinedOr(created.url)),
+    url: O.liftPredicate(created.url, Str.isNonEmpty),
     created: true,
   });
 });
 
-// Every new PR targets the repository default branch, read once through REST
-// and passed to both creation paths. Neither `--base` (the affected-planning
-// base) nor a `branch.<name>.gh-merge-base` setting may pick the target, and a
-// GraphQL rate limit must not change where the PR opens. A failed or empty read
-// is an error, not a guessed `main`.
-const resolveDefaultBranchViaRest = Effect.fn("Yeet.resolveDefaultBranchViaRest")(function* (
-  context: RepoRunContext,
-  capture: typeof runRepoCommandCapture
-): Effect.fn.Return<string, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  const result = yield* capture(
-    "gh",
-    ["api", "repos/{owner}/{repo}", "--jq", ".default_branch"],
-    context.repoRoot
-  ).pipe(Effect.mapError(YeetCommandError.new("Failed to read the repository default branch through GitHub REST.")));
+const pullRequestCreateCommand = "gh api -X POST repos/{owner}/{repo}/pulls";
+
+// Every new PR targets the repository default branch, read once through REST.
+// Neither `--base` (the affected-planning base) nor a
+// `branch.<name>.gh-merge-base` setting may pick the target. A failed or empty
+// read is an error, not a guessed `main`.
+const resolveDefaultBranchViaRest = Effect.fn("Yeet.resolveDefaultBranchViaRest")(function* (): Effect.fn.Return<
+  string,
+  YeetCommandError,
+  YeetGithubServices
+> {
   const command = "gh api repos/{owner}/{repo} --jq .default_branch";
-  if (result.exitCode !== 0) {
-    return yield* YeetCommandError.make({
-      message: `GitHub REST default branch read failed:\n${result.output}`,
-      command,
-      exitCode: result.exitCode,
-    });
-  }
-  const branch = Str.trim(result.output);
+  const branch = yield* GitHubRepository.use((repository) => repository.defaultBranch).pipe(
+    Effect.mapBoth({
+      onFailure: (error) =>
+        YeetCommandError.make({
+          message: `GitHub REST default branch read failed:\n${error.message}`,
+          command,
+          exitCode: 1,
+          cause: error,
+        }),
+      onSuccess: Str.trim,
+    })
+  );
   if (Str.isEmpty(branch)) {
     return yield* YeetCommandError.make({
       message: "GitHub REST default branch read returned no branch.",
@@ -606,73 +595,17 @@ const resolveDefaultBranchViaRest = Effect.fn("Yeet.resolveDefaultBranchViaRest"
   return branch;
 });
 
-const createPullRequestViaRest = Effect.fn("Yeet.createPullRequestViaRest")(function* (
-  context: RepoRunContext,
-  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
-  prStep: O.Option<RepoPlanStep>,
-  capture: typeof runRepoCommandCapture,
-  view: NonNullable<EnsurePullRequestDependencies["view"]>,
-  input: { readonly title: string; readonly bodyPath: string; readonly draft: boolean; readonly base: string }
-): Effect.fn.Return<
-  YeetEnsuredPullRequest,
-  YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
-> {
-  const existing = yield* findOpenPullRequestViaRest(context);
-  if (O.isSome(existing)) {
-    yield* Console.log(`[yeet] --pr: open pull request #${existing.value.number} already exists for ${context.branch}`);
-    yield* recordPrCreateLane(recorder, prStep, `skipped: open pull request #${existing.value.number} already exists`);
-    return YeetEnsuredPullRequest.make({
-      number: existing.value.number,
-      url: O.fromUndefinedOr(existing.value.url),
-      created: false,
-    });
-  }
-  const headOwner = yield* originPushOwner(context);
-  const rest = yield* capture(
-    "gh",
-    [
-      "api",
-      "-X",
-      "POST",
-      "repos/{owner}/{repo}/pulls",
-      "-f",
-      `title=${input.title}`,
-      "-f",
-      `head=${headOwner}:${context.branch}`,
-      "-f",
-      `base=${input.base}`,
-      "-F",
-      `body=@${input.bodyPath}`,
-      "-F",
-      `draft=${input.draft}`,
-      "--jq",
-      ".html_url",
-    ],
-    context.repoRoot
-  ).pipe(Effect.mapError(YeetCommandError.new("Failed to create pull request through GitHub REST.")));
-  if (rest.exitCode !== 0) {
-    return yield* YeetCommandError.make({
-      message: `GitHub REST pull request creation failed:\n${rest.output}`,
-      command: "gh api -X POST repos/{owner}/{repo}/pulls",
-      exitCode: rest.exitCode,
-    });
-  }
-  return yield* finishCreatedPullRequest(context, recorder, prStep, view, Str.trim(rest.output), input.draft, true);
-});
-
-// Run `gh pr create` (draft when the planned step says so) and return the
-// created pull request with the URL `gh` printed. The title comes from the
-// `--message` first line, else the first non-merge commit subject: the head
-// commit may be a merge commit publish did not create, and the squash-merge
-// subject is taken from this title.
+// Open the pull request through REST (draft when the planned step says so) on
+// the default branch, headed by the pushed origin owner's branch. The title
+// comes from the `--message` first line, else the first non-merge commit
+// subject: the head commit may be a merge commit publish did not create, and
+// the squash-merge subject is taken from this title. The REST create spends no
+// GraphQL budget, so a rate limit cannot move it onto another path.
 const createPullRequest = Effect.fn("Yeet.createPullRequest")(function* (
   context: RepoRunContext,
   recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
   prStep: O.Option<RepoPlanStep>,
-  message: O.Option<string>,
-  capture: typeof runRepoCommandCapture,
-  view: NonNullable<EnsurePullRequestDependencies["view"]>
+  message: O.Option<string>
 ): Effect.fn.Return<
   YeetEnsuredPullRequest,
   YeetCommandError,
@@ -682,75 +615,53 @@ const createPullRequest = Effect.fn("Yeet.createPullRequest")(function* (
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
   | Git
+  | YeetGithubServices
 > {
   const resolved = yield* resolvePullRequestTitle(context, message, yield* branchCommitRange(context));
   const title = resolved.title;
   yield* Console.log(`[yeet] --pr: title from ${resolved.source}: ${title}`);
   const bodyPath = yield* runOutputPathForContext(context, "pr-body.md");
-  yield* writeTextFile(bodyPath, yield* buildPrBody(context, recorder));
+  const body = yield* buildPrBody(context, recorder);
+  yield* writeTextFile(bodyPath, body);
   const draft = O.exists(prStep, (step) => A.contains(step.args, "--draft"));
-  const base = yield* resolveDefaultBranchViaRest(context, capture);
-  const result = yield* capture(
-    "gh",
-    ["pr", "create", ...(draft ? ["--draft"] : []), "--base", base, "--title", title, "--body-file", bodyPath],
-    context.repoRoot
-  ).pipe(Effect.mapError(YeetCommandError.new("Failed to run gh pr create.")));
-  if (result.exitCode !== 0) {
-    if (isGraphQlRateLimitOutput(result.output)) {
-      return yield* createPullRequestViaRest(context, recorder, prStep, capture, view, {
-        title,
-        bodyPath,
-        draft,
-        base,
-      });
-    }
-    return yield* YeetCommandError.make({
-      message: `gh pr create failed:\n${result.output}`,
-      command: `gh pr create --base ${base} --title <subject> --body-file ${bodyPath}`,
-      exitCode: result.exitCode,
-    });
-  }
-  return yield* finishCreatedPullRequest(context, recorder, prStep, view, Str.trim(result.output), draft, false);
+  const base = yield* resolveDefaultBranchViaRest();
+  const headOwner = yield* originPushOwner(context);
+  const created = yield* GithubPullRequest.use((pulls) =>
+    pulls.create({ title, head: `${headOwner}:${context.branch}`, base, body, draft })
+  ).pipe(
+    Effect.mapError((error) =>
+      YeetCommandError.make({
+        message: `GitHub REST pull request creation failed:\n${error.message}`,
+        command: pullRequestCreateCommand,
+        exitCode: 1,
+        cause: error,
+      })
+    )
+  );
+  return yield* finishCreatedPullRequest(recorder, prStep, created, draft);
 });
 
-// Replace an existing pull request's title through `gh pr edit`, falling back
-// to the REST PATCH when GraphQL is rate limited. A non-zero exit is reported,
-// never fatal: the branch is already pushed and the owner can rename by hand.
+// Replace an existing pull request's title through the REST PATCH. A failure
+// is reported, never fatal: the branch is already pushed and the owner can
+// rename by hand.
 const editPullRequestTitle = Effect.fn("Yeet.editPullRequestTitle")(function* (
-  context: RepoRunContext,
   number: number,
-  title: string,
-  capture: typeof runRepoCommandCapture
-): Effect.fn.Return<
-  YeetPullRequestTitleSync,
-  YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-> {
-  const edited = yield* capture("gh", ["pr", "edit", `${number}`, "--title", title], context.repoRoot).pipe(
-    Effect.mapError(YeetCommandError.new("Failed to run gh pr edit --title."))
+  title: string
+): Effect.fn.Return<YeetPullRequestTitleSync, never, YeetGithubServices> {
+  return yield* GithubRest.use((rest) => rest.updatePullRequest(number, { title })).pipe(
+    Effect.match({
+      onFailure: (error) =>
+        YeetPullRequestTitleSync.make({
+          status: "failed",
+          message: `could not replace the merge-commit subject on pull request #${number} through REST; review and edit its title in GitHub.\n${error.message}`,
+        }),
+      onSuccess: () =>
+        YeetPullRequestTitleSync.make({
+          status: "updated",
+          message: `replaced the merge-commit subject on pull request #${number} with: ${title}`,
+        }),
+    })
   );
-  const updated = YeetPullRequestTitleSync.make({
-    status: "updated",
-    message: `replaced the merge-commit subject on pull request #${number} with: ${title}`,
-  });
-  if (edited.exitCode === 0) return updated;
-  if (!isGraphQlRateLimitOutput(edited.output)) {
-    return YeetPullRequestTitleSync.make({
-      status: "failed",
-      message: `could not replace the merge-commit subject on pull request #${number}; review and edit its title in GitHub.\n${edited.output}`,
-    });
-  }
-  const patched = yield* capture(
-    "gh",
-    ["api", "-X", "PATCH", `repos/{owner}/{repo}/pulls/${number}`, "-f", `title=${title}`, "--jq", ".title"],
-    context.repoRoot
-  ).pipe(Effect.mapError(YeetCommandError.new("Failed to patch the pull request title through GitHub REST.")));
-  return patched.exitCode === 0
-    ? updated
-    : YeetPullRequestTitleSync.make({
-        status: "failed",
-        message: `could not replace the merge-commit subject on pull request #${number} through REST; review and edit its title in GitHub.\n${patched.output}`,
-      });
 });
 
 // A re-publish keeps the pull request title it finds unless that title is a
@@ -760,12 +671,11 @@ const editPullRequestTitle = Effect.fn("Yeet.editPullRequestTitle")(function* (
 const syncExistingPullRequestTitle = Effect.fn("Yeet.syncExistingPullRequestTitle")(function* (
   context: RepoRunContext,
   existing: GhPrView,
-  message: O.Option<string>,
-  capture: typeof runRepoCommandCapture
+  message: O.Option<string>
 ): Effect.fn.Return<
   YeetPullRequestTitleSync,
   YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git | YeetGithubServices
 > {
   const current = O.fromUndefinedOr(existing.title);
   if (!O.exists(current, isMergeCommitSubject)) {
@@ -792,7 +702,7 @@ const syncExistingPullRequestTitle = Effect.fn("Yeet.syncExistingPullRequestTitl
       message: `pull request #${existing.number} keeps its title`,
     });
   }
-  return yield* editPullRequestTitle(context, existing.number, resolved.value.title, capture);
+  return yield* editPullRequestTitle(existing.number, resolved.value.title);
 });
 
 // Reuse the open pull request a re-publish found: record the skipped create
@@ -802,17 +712,16 @@ const reuseExistingPullRequest = Effect.fn("Yeet.reuseExistingPullRequest")(func
   recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
   prStep: O.Option<RepoPlanStep>,
   existing: GhPrView,
-  message: O.Option<string>,
-  capture: typeof runRepoCommandCapture
+  message: O.Option<string>
 ): Effect.fn.Return<
   YeetEnsuredPullRequest,
   YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git | YeetGithubServices
 > {
   yield* Console.log(
     `[yeet] --pr: open pull request #${existing.number} already exists for ${context.branch}; skipping create`
   );
-  const sync = yield* syncExistingPullRequestTitle(context, existing, message, capture);
+  const sync = yield* syncExistingPullRequestTitle(context, existing, message);
   yield* YeetPullRequestTitleSyncStatus.match(sync.status, {
     kept: () => Effect.void,
     updated: () => Console.log(`[yeet] --pr: ${sync.message}`),
@@ -874,7 +783,7 @@ const reuseExistingPullRequest = Effect.fn("Yeet.reuseExistingPullRequest")(func
  * or skipped.
  * @param prStep - Optional planned PR creation lane for recorder metadata.
  * @param stampStep - Optional planned provenance-stamp lane for recorder metadata.
- * @param dependencies - Injectable GitHub runners and registry for deterministic tests.
+ * @param dependencies - Injectable open pull request lookup and registry for deterministic tests.
  * @param message - The publish `--message`, whose first line titles the pull request.
  * @returns The open pull request the branch now has, and whether this call
  * created it. A create step whose args carry `--draft` opens a draft.
@@ -897,12 +806,12 @@ export const ensurePullRequest = Effect.fn("Yeet.ensurePullRequest")(function* (
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
   | Git
+  | YeetGithubServices
 > {
-  const capture = dependencies.capture ?? runRepoCommandCapture;
   const existing = yield* (dependencies.findOpen ?? findOpenPullRequest)(context);
   const pullRequest = O.isSome(existing)
-    ? yield* reuseExistingPullRequest(context, recorder, prStep, existing.value, message, capture)
-    : yield* createPullRequest(context, recorder, prStep, message, capture, dependencies.view ?? runGhPullRequestView);
+    ? yield* reuseExistingPullRequest(context, recorder, prStep, existing.value, message)
+    : yield* createPullRequest(context, recorder, prStep, message);
   // A failed provenance stamp must not stop the heavy-admission label or the
   // readiness monitor that follow: the pull request already exists on the
   // remote, so record the failure and carry on.
@@ -913,7 +822,6 @@ export const ensurePullRequest = Effect.fn("Yeet.ensurePullRequest")(function* (
     pullRequest.number,
     pullRequest.created ? pullRequest.url : O.none(),
     pullRequest.created ? "created" : "pushed",
-    capture,
     dependencies.registry
   ).pipe(
     Effect.catch((error) =>
@@ -934,7 +842,6 @@ export const ensurePullRequest = Effect.fn("Yeet.ensurePullRequest")(function* (
 });
 
 interface HeavyAdmissionLabelDependencies {
-  readonly capture?: typeof runRepoCommandCapture;
   readonly changedPaths?: (
     context: RepoRunContext
   ) => Effect.Effect<
@@ -1011,7 +918,7 @@ const branchChangedPaths = (context: RepoRunContext) =>
  * @param recorder - Execution recorder updated with the label lane.
  * @param labelStep - Planned label step; `None` skips the edit entirely.
  * @param pullRequest - The pull request the publish created or found.
- * @param dependencies - Injectable GitHub runner and changed-path reader for tests.
+ * @param dependencies - Injectable changed-path reader for tests.
  * @returns An Effect that completes after the label lane is recorded.
  * @category workflows
  * @since 0.0.0
@@ -1022,7 +929,11 @@ export const applyHeavyAdmissionLabel = Effect.fn("Yeet.applyHeavyAdmissionLabel
   labelStep: O.Option<RepoPlanStep>,
   pullRequest: YeetEnsuredPullRequest,
   dependencies: HeavyAdmissionLabelDependencies = {}
-): Effect.fn.Return<void, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git> {
+): Effect.fn.Return<
+  void,
+  YeetCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git | YeetGithubServices
+> {
   if (O.isNone(labelStep)) return;
   if (!pullRequest.created) {
     yield* recordPrLabelLane(
@@ -1040,6 +951,7 @@ export const applyHeavyAdmissionLabel = Effect.fn("Yeet.applyHeavyAdmissionLabel
     return;
   }
   // REST, not `gh pr edit` (GraphQL): labelling must not fail when the shared GraphQL budget is spent.
+  // `args` is the equivalent `gh` call the warning hands the operator.
   const args = [
     "api",
     "-X",
@@ -1050,18 +962,18 @@ export const applyHeavyAdmissionLabel = Effect.fn("Yeet.applyHeavyAdmissionLabel
     "--jq",
     'map(.name) | join(",")',
   ];
-  const result = yield* (dependencies.capture ?? runRepoCommandCapture)("gh", args, context.repoRoot).pipe(
-    Effect.mapError(YeetCommandError.new("Failed to add the heavy admission label through GitHub REST."))
+  const result = yield* Effect.result(
+    GithubRest.use((rest) => rest.addLabels(pullRequest.number, [HEAVY_ADMISSION_LABEL]))
   );
-  if (result.exitCode !== 0) {
+  if (Result.isFailure(result)) {
     yield* Console.error(
-      `[yeet] warning: could not apply ${HEAVY_ADMISSION_LABEL} to PR #${pullRequest.number}; run: gh ${A.join(args, " ")}\n${result.output}`
+      `[yeet] warning: could not apply ${HEAVY_ADMISSION_LABEL} to PR #${pullRequest.number}; run: gh ${A.join(args, " ")}\n${result.failure.message}`
     );
-    yield* recordPrLabelLane(recorder, labelStep.value, "failed", result.output);
+    yield* recordPrLabelLane(recorder, labelStep.value, "failed", result.failure.message);
     return;
   }
   yield* Console.log(`[yeet] applied ${HEAVY_ADMISSION_LABEL} to PR #${pullRequest.number}`);
-  yield* recordPrLabelLane(recorder, labelStep.value, "passed", Str.trim(result.output));
+  yield* recordPrLabelLane(recorder, labelStep.value, "passed", A.join(result.success, ","));
 });
 
 /**
@@ -1095,7 +1007,11 @@ export const applyHeavyAdmissionLabel = Effect.fn("Yeet.applyHeavyAdmissionLabel
  */
 export const validateOpenPullRequest = Effect.fn("Yeet.validateOpenPullRequest")(function* (
   context: RepoRunContext
-): Effect.fn.Return<void, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git> {
+): Effect.fn.Return<
+  void,
+  YeetCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git | YeetGithubServices
+> {
   const pullRequest = yield* runGhPullRequestView(context);
 
   if (pullRequest.state !== "OPEN") {

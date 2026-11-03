@@ -29,6 +29,7 @@ import * as NodeURL from "node:url";
 import { Git } from "@beep/git/Git";
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { GitHubRepository } from "@beep/github/GitHubRepository";
+import { PullRequest } from "@beep/github/PullRequest";
 import { Repo, RepoRef } from "@beep/github/Repo";
 import { RetryPolicy } from "@beep/github/Resilience";
 import { outstanding, ReviewThread } from "@beep/github/ReviewThread";
@@ -471,11 +472,13 @@ const tableFetch = Object.assign(
   { preconnect: () => undefined }
 );
 
+// W6 (SPEC D-15) added the kit's `PullRequest` to the Yeet GitHub services.
 const githubLayer: Layer.Layer<YeetGithubServices> = Layer.mergeAll(
   layerGithubRest,
   layerGraphqlBudget,
   ReviewThread.layer,
-  GitHubRepository.layer
+  GitHubRepository.layer,
+  PullRequest.layer
 ).pipe(
   Layer.provideMerge(
     Layer.mergeAll(

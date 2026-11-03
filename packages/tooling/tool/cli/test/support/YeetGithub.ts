@@ -7,8 +7,10 @@
  * read that already requires them.
  */
 
+import { Run } from "@beep/commands/Run";
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { GitHubRepository } from "@beep/github/GitHubRepository";
+import { PullRequest } from "@beep/github/PullRequest";
 import { Repo, RepoRef } from "@beep/github/Repo";
 import { RetryPolicy } from "@beep/github/Resilience";
 import { ReviewThread } from "@beep/github/ReviewThread";
@@ -19,10 +21,12 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as ChildProcess from "effect/process/ChildProcess";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as Str from "effect/String";
 import type { YeetGithubServices } from "@beep/repo-cli/test/Yeet";
+import type * as Context from "effect/Context";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
@@ -119,7 +123,15 @@ export interface RecordedGithub {
  */
 export const recordedGithub = (routes: GithubRoutes): RecordedGithub => {
   const calls: Array<GithubCall> = [];
-  const layer = Layer.mergeAll(layerGithubRest, layerGraphqlBudget, ReviewThread.layer, GitHubRepository.layer).pipe(
+  // Fresh: a recorded GitHub provided inside another must not reuse that one's
+  // memoized services (`Layer.build` forks the surrounding memo map).
+  const layer = Layer.mergeAll(
+    layerGithubRest,
+    layerGraphqlBudget,
+    ReviewThread.layer,
+    GitHubRepository.layer,
+    PullRequest.layer
+  ).pipe(
     Layer.provideMerge(
       Layer.mergeAll(
         GitHubClient.layerFromToken({
@@ -129,7 +141,8 @@ export const recordedGithub = (routes: GithubRoutes): RecordedGithub => {
         }),
         Repo.layer(YEET_GITHUB_REPO)
       )
-    )
+    ),
+    Layer.fresh
   );
   return {
     calls,
@@ -225,7 +238,7 @@ const pageOf = (key: string, pages: ReadonlyArray<object>) => {
   return { total_count: A.length(items), [key]: items };
 };
 
-const PAGED_KEYS = ["check_runs", "workflow_runs"] as const;
+const PAGED_KEYS = ["check_runs", "workflow_runs", "jobs"] as const;
 
 /** A `gh --paginate --slurp` page list folded back into the one page GitHub sends. */
 const foldSlurpedPages = (value: unknown): unknown => {
@@ -339,35 +352,183 @@ export const legacyGhAnswer = ({
   return { body: O.isSome(call.graphql) ? kitThreadsFromLegacy(body) : foldSlurpedPages(body) };
 };
 
+// A job log routinely runs past the repo-run capture bound, and its reader
+// bounds it itself, so the scripted `gh` answers it whole and raw.
+const isJobLogRead = (call: GithubCall): boolean => /^\{repo\}\/actions\/jobs\/\d+\/logs$/u.test(call.path);
+
+// What the scripted `gh` printed for a call, or `None` when it could not be started.
+const legacyGhOutput = (
+  call: GithubCall
+): Effect.Effect<O.Option<GhCapture>, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> =>
+  isJobLogRead(call)
+    ? Run.collect(ChildProcess.make("gh", legacyGhArgs(call)), { maxOutputBytes: 64 * 1024 * 1024 }).pipe(
+        Effect.map((result) => ({ exitCode: result.exitCode, output: `${result.stdout}${result.stderr}` })),
+        Effect.option
+      )
+    : runRepoCommandCapture("gh", legacyGhArgs(call), ".").pipe(Effect.option);
+
+const legacyGhReply = (call: GithubCall) =>
+  legacyGhOutput(call).pipe(
+    Effect.map(
+      O.match({
+        onNone: (): GithubAnswer => ({ unreachable: "gh could not be started" }),
+        onSome: (result) => legacyGhAnswer({ call, exitCode: result.exitCode, output: result.output }),
+      })
+    )
+  );
+
 // A client whose calls the ambient (scripted) spawner answers as the `gh`
 // calls they replaced.
-const legacyGhGithub = Effect.map(
+const legacyGhRecorded = Effect.map(
   Effect.context<ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom>(),
-  (context) =>
-    O.some(
-      recordedGithub((call) =>
-        Effect.runPromise(
-          runRepoCommandCapture("gh", legacyGhArgs(call), ".").pipe(
-            Effect.map((result) => legacyGhAnswer({ call, exitCode: result.exitCode, output: result.output })),
-            Effect.orElseSucceed((): GithubAnswer => ({ unreachable: "gh could not be started" })),
-            Effect.provideContext(context)
-          )
-        )
-      ).layer
-    )
+  (context) => recordedGithub((call) => Effect.runPromise(legacyGhReply(call).pipe(Effect.provideContext(context))))
 );
 
 /**
  * Hand every gh-login Yeet surface a client whose calls the suite's scripted
  * spawner answers as the `gh` calls they replaced.
  */
-export const legacyGhGithubLayer = Layer.effect(YeetGithubLayer, legacyGhGithub);
+export const legacyGhGithubLayer = Layer.effect(
+  YeetGithubLayer,
+  Effect.map(legacyGhRecorded, (recorded) => O.some(recorded.layer))
+);
 
 /**
- * {@link legacyGhGithubLayer} for one effect: the spawner and `SecureRandom`
+ * {@link legacyGhGithubLayer} plus the services themselves, for a suite whose
+ * reads require them directly.
+ */
+export const legacyGhLayer: Layer.Layer<
+  YeetGithubServices,
+  never,
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+> = Layer.unwrap(
+  Effect.map(legacyGhRecorded, (recorded) =>
+    Layer.merge(recorded.layer, Layer.succeed(YeetGithubLayer, O.some(recorded.layer)))
+  )
+);
+
+/**
+ * {@link legacyGhGithubLayer} for one effect, which also receives the services
+ * directly (for a read that requires them): the spawner and `SecureRandom`
  * come from the effect's surroundings.
  */
 export const provideLegacyGh = <A, E, R>(
   effect: Effect.Effect<A, E, R>
-): Effect.Effect<A, E, R | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> =>
-  Effect.provideServiceEffect(effect, YeetGithubLayer, legacyGhGithub);
+): Effect.Effect<
+  A,
+  E,
+  Exclude<R, YeetGithubServices> | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+> => Effect.flatMap(legacyGhRecorded, (recorded) => recorded.provide(effect));
+
+/**
+ * A REST `pulls/{n}` payload in the shape `GithubRest` and the kit's
+ * `PullRequest` decode, with GitHub's values for every field a suite does not
+ * name.
+ */
+export const restPullRequest = (overrides: Readonly<Record<string, unknown>> = {}): Record<string, unknown> => ({
+  number: 7,
+  node_id: "PR_kw7",
+  title: "feat: a change",
+  body: "",
+  state: "open",
+  draft: false,
+  merged: false,
+  merged_at: null,
+  mergeable_state: "clean",
+  head: { ref: "feat/a-change", sha: "abc1234def" },
+  base: { ref: "main", sha: "base000000" },
+  html_url: "https://github.com/beep-effect/beep-effect/pull/7",
+  user: { login: "kriegcloud" },
+  labels: [],
+  created_at: "2026-10-06T10:00:00Z",
+  updated_at: "2026-10-06T10:00:00Z",
+  ...overrides,
+});
+
+/** What a `runRepoCommandCapture`-shaped fake printed for one `gh` call. */
+export interface GhCapture {
+  readonly exitCode: number;
+  readonly output: string;
+}
+
+/** A `runRepoCommandCapture`-shaped fake: the argv in, what `gh` printed out. */
+export type GhCaptureFake = (command: string, args: ReadonlyArray<string>, cwd: string) => Effect.Effect<GhCapture>;
+
+/**
+ * A recorded GitHub whose calls a `runRepoCommandCapture`-shaped fake answers
+ * as the `gh` argv they replaced (`legacyGhArgs`), its output read back as
+ * GitHub's answer (`legacyGhAnswer`).
+ */
+export const captureGithub = (capture: GhCaptureFake): RecordedGithub =>
+  recordedGithub((call) =>
+    Effect.runPromise(
+      capture("gh", legacyGhArgs(call), ".").pipe(
+        Effect.map((result) => legacyGhAnswer({ call, exitCode: result.exitCode, output: result.output }))
+      )
+    )
+  );
+
+// --- The monitor loop's former `capture` seam ----------------------------------
+//
+// Before W6 the merge loop read the head commit's committer date and the acting
+// login through an injected `capture`; every other `gh` call went to the
+// spawner. A suite keeps its fake: those two reads reach it as the argv they
+// had (with their `--jq`), and its printed answer is lifted into GitHub's JSON;
+// every other kit call reaches the suite's scripted spawner as `legacyGhArgs`.
+
+const monitorSeamArgs = (call: GithubCall): O.Option<ReadonlyArray<string>> => {
+  if (call.method !== "GET") return O.none();
+  if (call.path === "/user") return O.some(["api", "user", "--jq", ".login"]);
+  return O.map(Str.match(/^\{repo\}\/commits\/([^/]+)$/u)(call.path), (match) => [
+    "api",
+    `repos/{owner}/{repo}/commits/${match[1] ?? ""}`,
+    "--jq",
+    ".commit.committer.date",
+  ]);
+};
+
+const monitorSeamAnswer = (call: GithubCall, result: GhCapture): GithubAnswer => {
+  if (result.exitCode !== 0) return { status: 500, body: { message: result.output } };
+  const printed = Str.trim(result.output);
+  return call.path === "/user" ? { body: { login: printed } } : { body: { commit: { committer: { date: printed } } } };
+};
+
+const monitorGithub = (
+  capture: GhCaptureFake,
+  context: Context.Context<ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom>
+): RecordedGithub =>
+  recordedGithub((call) =>
+    Effect.runPromise(
+      O.match(monitorSeamArgs(call), {
+        onSome: (args) => capture("gh", args, ".").pipe(Effect.map((result) => monitorSeamAnswer(call, result))),
+        onNone: () => legacyGhReply(call).pipe(Effect.provideContext(context)),
+      })
+    )
+  );
+
+const monitorGithubLayerOf = (capture: GhCaptureFake) =>
+  Effect.map(Effect.context<ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom>(), (context) =>
+    O.some(monitorGithub(capture, context).layer)
+  );
+
+/**
+ * Hand the merge loop's gh login a client whose head-commit and acting-login
+ * reads `capture` answers, and whose other calls the scripted spawner answers.
+ */
+export const monitorGithubLayer = (capture: GhCaptureFake) =>
+  Layer.effect(YeetGithubLayer, monitorGithubLayerOf(capture));
+
+/** {@link monitorGithubLayer} for one effect. */
+export const provideMonitorGh =
+  (capture: GhCaptureFake) =>
+  <A, E, R>(
+    effect: Effect.Effect<A, E, R>
+  ): Effect.Effect<A, E, R | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> =>
+    Effect.provideServiceEffect(effect, YeetGithubLayer, monitorGithubLayerOf(capture));
+
+/**
+ * Hand every gh-login Yeet surface a GitHub that answers every call 404, for a
+ * suite whose seams keep GitHub out of the path but whose surface still builds
+ * the gh login.
+ */
+export const offlineGithubLayer = Layer.succeed(YeetGithubLayer, O.some(recordedGithub(() => undefined).layer));
