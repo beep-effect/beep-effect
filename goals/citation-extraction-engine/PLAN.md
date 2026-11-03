@@ -306,6 +306,17 @@ Raw regex-result/extra binding, native full-source gap ownership, general custom
 class/mutation protocols and public tokenizer integration remain open. See
 [native token evidence](history/evidence/2026-11-03-token-objects.md).
 
+Latest native-gap checkpoint (2026-11-03): the text planner now prepares one
+owned full native source and plans absolute Python-coordinate gaps against a
+cumulative text-token ceiling. Effect Semaphore serializes budget updates; the
+captured deadline includes permit acquisition. All 116 independent native
+subrange observations match, retaining the 1,561 whole-text cases. All 407 mixed
+assembly cases use this source owner rather than gap string projection/copy.
+Eleven focused tests pass with ownership, invalid-range and cumulative-ceiling
+controls. Whole-operation produced-text/mixed-output reservations and final
+regex-result/extra binding remain open. See
+[native gap evidence](history/evidence/2026-11-03-native-token-gaps.md).
+
 Latest worker evidence (2026-10-31): private process ownership now covers bounded
 schema frames, captured Clock timers, queue/active limits, forced stop,
 acknowledged cleanup and quarantine without permit reuse. Real-process tests

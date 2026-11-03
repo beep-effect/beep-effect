@@ -31,7 +31,9 @@ from the pinned eyecite `tokenizers.py`, using Effect Trie and HashSet.
 `ExtractorOrdering.ts` connects source match introductions to the existing
 PSF-attributed CPython set adapter using frozen source hash/equality facts.
 `TokenText.ts` adapts literal-space append_text as native source-point spans,
-retaining literal surrogate words separately from Unicode scalars.
+retaining literal surrogate words separately from Unicode scalars. Prepared
+native-source owners now plan absolute gap spans with a shared text-token
+budget, without repeatedly copying or projecting individual gaps.
 `TokenAssembly.ts` adapts stable match sorting, merge/overlap dispatch and
 special-token indexing. `TokenObjects.ts` adapts the nine built-in token classes'
 normalized first-capture fields, group equality, merge identity/truth and

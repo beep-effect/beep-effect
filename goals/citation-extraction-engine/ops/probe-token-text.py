@@ -42,12 +42,27 @@ def main():
         assert cursor == len(text)
         width = 1 if max(map(ord, text), default=0) <= 255 else 2 if max(map(ord, text), default=0) <= 65535 else 4
         cases.append({"id": index, "source": {"width": width, "bytes": b"".join(ord(c).to_bytes(width, "little") for c in text).hex()}, "spans": spans})
-    out = {"schemaVersion": "citation-token-text/v1", "oracleCommit": PIN, "oracleTree": TREE,
+    ranges = []
+    range_texts = ["", "a b  c", "x\t y\nz", "a\u00a0b c", "\ud835\udfce \U0001d7ce", "\U0001f600 x", " a ", "x" * 8193 + " y"]
+    for text in range_texts:
+        bounds = [(start, end) for start in range(len(text) + 1) for end in range(start, len(text) + 1)] if len(text) < 100 else [(0, 8193), (4095, 8194), (8193, 8195)]
+        width = 1 if max(map(ord, text), default=0) <= 255 else 2 if max(map(ord, text), default=0) <= 65535 else 4
+        source = {"width": width, "bytes": b"".join(ord(c).to_bytes(width, "little") for c in text).hex()}
+        for start, end in bounds:
+            parts = []
+            Tokenizer.append_text(parts, text[start:end])
+            cursor, spans = start, []
+            for part in parts:
+                spans.append([cursor, cursor + len(part)])
+                cursor += len(part)
+            assert cursor == end
+            ranges.append({"id": len(ranges), "source": source, "start": start, "end": end, "spans": spans})
+    out = {"schemaVersion": "citation-token-text/v2", "oracleCommit": PIN, "oracleTree": TREE,
            "producerSha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
            "tokenizerSourceSha256": hashlib.sha256((root / "eyecite/tokenizers.py").read_bytes()).hexdigest(),
-           "python": "3.11.15", "cases": cases}
+           "python": "3.11.15", "cases": cases, "ranges": ranges}
     args.output.write_text(json.dumps(out, sort_keys=True, indent=2) + "\n")
-    print(json.dumps({"cases": len(cases)}))
+    print(json.dumps({"cases": len(cases), "ranges": len(ranges)}))
 
 
 if __name__ == "__main__":

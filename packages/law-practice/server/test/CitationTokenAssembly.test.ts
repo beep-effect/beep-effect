@@ -86,6 +86,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestSer
           const objects = yield* makeCitationTokenObjects(limits, corpus.editionBindings);
           const created = yield* Effect.forEach(corpus.tokenSeeds, objects.create, { concurrency: 1 });
           expect(created).toEqual(A.range(0, 7));
+          const sourceOwner = yield* text.prepare({ width: 1, bytes: new TextEncoder().encode(row.source) });
           let cursor = 0;
           const next = (kind: typeof Decision.Type) => {
             const event = A.getUnsafe(row.trace, cursor++);
@@ -116,10 +117,9 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestSer
               Effect.gen(function* () {
                 const source = Str.slice(start, end)(row.source);
                 expect(source).toBe(next("text").text);
-                const plan = yield* text
-                  .plan({ width: 1, bytes: new TextEncoder().encode(source) })
-                  .pipe(Effect.mapError(failure));
-                return A.map(plan.spans, ([a, b]) => Tuple.make(start + a, start + b));
+                return yield* sourceOwner
+                  .range({ start, end })
+                  .pipe(Effect.catchTag("CitationPythonUnicodeFailure", () => Effect.fail(failure())));
               })
             ),
           });
