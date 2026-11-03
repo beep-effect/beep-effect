@@ -9,8 +9,9 @@ describe("review-source quote contract after citation locator retirement", () =>
   it.effect.prop(
     "preserves generated exact selector text and optional context through its codec",
     [TextQuote],
-    ([quote]) =>
+    ([generated]) =>
       Effect.gen(function* () {
+        const quote = TextQuote.make(generated);
         const encoded = yield* S.encodeEffect(TextQuote)(quote);
         const decoded = yield* S.decodeEffect(TextQuote)(encoded);
         expect(S.toEquivalence(TextQuote)(decoded, quote)).toBe(true);

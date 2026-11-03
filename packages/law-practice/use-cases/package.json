@@ -30,7 +30,7 @@
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
     "beep:test": "bunx --bun vitest run --passWithNoTests",
-    "beep:check:tests": "tsrs -p tsconfig.test.json --noEmit",
+    "beep:check:tests": "tsrs -p test/tsconfig.json --noEmit",
     "citation:parity-check": "bun run ../../../goals/citation-extraction-engine/ops/check-parity.ts"
   },
   "exports": {

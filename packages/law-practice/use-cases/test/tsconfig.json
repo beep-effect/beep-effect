@@ -1,4 +1,19 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": "../tsconfig.test.json"
+  "extends": "../../../../tsconfig.base.json",
+  "include": ["../src", "."],
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "incremental": false,
+    "noEmit": true,
+    "outDir": "../dist-test",
+    "rootDir": "..",
+    "sourceMap": false,
+    "types": ["node", "bun-types"],
+    "paths": {
+      "@beep/law-practice-use-cases/internal/*": ["../src/internal/*.ts"]
+    }
+  }
 }

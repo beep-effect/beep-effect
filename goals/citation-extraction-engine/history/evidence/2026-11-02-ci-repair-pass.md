@@ -52,3 +52,16 @@ findings and 23 duplication groups; those require refactoring and remain open.
 Coverage floor gaps from older measured heads are not waived or lowered. Fresh
 hosted unit, integration and coverage results are required before claiming the
 corresponding jobs green. The full citation-engine goal remains incomplete.
+
+## Latest hosted follow-up
+
+At `ebca14fe02`, Check job 125712880876 rejected SourceRefQuote's
+unbranded generated structural value; construct the opaque value with its own
+schema before typed encoding. Job 125712454367 rejected the extra nested test
+configs because they were not declared compiler programs. Consolidate each
+package's test program into `test/tsconfig.json`, update relative paths and the
+canonical package check script, and remove the redundant root test config.
+This retains private aliases and compiler coverage with one owning program.
+Domain/server/use-cases test type checking passes; the exact failing inventory
+test passes, and all three SourceRefQuote tests pass. No production exports,
+check expectations or quality thresholds are weakened.
