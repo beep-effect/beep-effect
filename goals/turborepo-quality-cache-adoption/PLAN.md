@@ -696,3 +696,25 @@ modules declare the option, but no native watch behavior is claimed.
 Eleven of 35 feature decisions now have scoped final reviews; 24 remain
 pending. The computation census, broader persistence/watch review, qualification,
 measured value, real observation windows and all whole-goal criteria remain open.
+
+
+### Current native population after accepted retirements, 2026-11-03
+
+A fresh five-second, read-only Cache census at `fae5b2098c` reports 191
+workspaces, 4,459 graph nodes, 2,400 executable computations and 1,646 configured
+cache-enabled computations. No task ran and no cache flag changed. The net
+reduction of 34 comprises 47 removed and 13 added entries: 35 root fingerprint
+commands and twelve T3 tasks disappear; twelve Party domain tasks and one root
+schema-catalog task enter. All historical reviews are retained byte-identically.
+
+Source review renews 197 surviving whole-task freshness decisions and explicitly
+classifies the new Party fixer: 186 mutating fixers plus twelve persistent
+services. Keep 2,202 other native reviews pending and retain all five original
+qualification exclusions. Four existing fixer variants use manifest-specific
+write scopes; their exact implementations are preserved individually.
+
+The graph-only population is 2,059. Native graph inventory does not close the
+two unresolved entrypoint obligations or prove non-Turbo/nested execution
+coverage. Feature decisions remain eleven scoped reviews and 24 pending;
+qualification, supported adoption, owner-measured value, real observation
+windows and every whole-goal criterion remain incomplete.

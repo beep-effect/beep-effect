@@ -596,3 +596,18 @@ production qualification.
 - `watch-source-review.py` inspects tracked source and public references only.
   `watch-source-driver-controls.json` records three early refusals;
   `watch-feature-review.json` classifies every hit and bounds the decision.
+
+
+### Current source population, 2026-11-03
+
+- [Current source checkpoint](population-current-source-checkpoint-2026-11-03.json):
+  native census, complete source bindings, source delta, unchanged qualification
+  ledger and byte-preserved prior snapshot.
+- [Current literal freshness review](current-source-fresh-disposition-review-2026-11-03.json):
+  197 retained exact operations plus the explicitly inspected Party fixer. No
+  pure counterpart is qualified.
+- [Preserved prior population](population-before-t3-refresh-2026-11-03.json):
+  exact accepted bytes with the older review/history chain intact.
+- Installed Turbo 2.11.10 `docs/reference/run.mdx` documents `--dry=json` as
+  planning without task execution. Cache's current collector uses strict
+  environment mode and `--cache=local:` for that plan.
