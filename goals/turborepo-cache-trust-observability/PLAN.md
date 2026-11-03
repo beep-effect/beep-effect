@@ -1369,3 +1369,20 @@ Heavy, and inspect environment values, action inputs and script bodies. Preserve
 producer. The earlier d256 hosted unit and official coverage passes remain
 bound to that source; this source requires fresh hosted proof. No protected
 execution, credential activation or whole-goal acceptance is claimed.
+
+
+### Actual preparation startup failure, 2026-11-03
+
+The fresh accepted-main preparation run
+[41604614900](https://github.com/beep-effect/beep-effect/actions/runs/41604614900)
+resolved Heavy at `7438cf69c6` but failed before scheduling a job. GitHub rejected
+the execution leaf's `actions: read` request against the caller's `actions: none`
+ceiling. No compilation, artifact or credential delivery occurred.
+
+Repair the two affected caller jobs' read-only ceilings while retaining the
+workflow/Heavy defaults at `contents: read`, then use exact-head hosted
+regressions and one fresh accepted-source preparation dispatch. Do not retry the
+unchanged failed source or treat conditional job guards as permission validation.
+The source-inspection caller has the same source defect but has not been
+dispatched in this round. Protected execution, signed trials, deployed trust,
+qualification, real observation windows and full-goal closeout remain open.

@@ -1221,3 +1221,22 @@ script bodies and action inputs as well as environment values, including dotted
 and indexed secret references with whitespace. No runtime or credential is
 activated by this repair. Reverse by disabling the optional producer route;
 retain explicit secret names and fail-closed channel separation.
+
+
+### Reusable workflow permission ceiling, 2026-11-03
+
+Actual preparation run `41604614900` failed GitHub validation before any job
+started. Heavy's gated execution leaf requests `actions: read`; GitHub checks
+that permission against the caller even for credential-free preparation. Give
+only the preparation and inspection calling jobs `contents: read` and
+`actions: read`. Keep each workflow's default and Heavy's default at
+`contents: read`, so selected build/inspection leaves inherit that narrower
+token. Preserve all mode/caller/main guards and omit secret mappings.
+
+Bind regression assertions to the actual execution leaf's requested permission
+map and retain the narrower selected-leaf default. Hosted CI proves those
+assertions; a fresh accepted-main dispatch must separately prove GitHub startup.
+The failed run remains failed and supplies no build, artifact, approval or
+qualification evidence. Reverse by disabling the optional callers and reverting
+the two job permission maps. No storage/issuer grant, signing setting or bound
+changes; all whole-goal criteria remain incomplete.

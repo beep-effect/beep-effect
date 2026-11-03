@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "cache-caller-permission-startup-repair/v1",
+  "recordedAt": "2026-11-03T08:41:11.201463+00:00",
+  "sourceBaseRevision": "7438cf69c6eff3ef23f99b3fef735b8c6d14e96b",
+  "authority": "Actual failed startup and source-level repair only; hosted regressions and a fresh accepted-source operational run remain required.",
+  "failedRun": {
+    "id": 41604614900,
+    "url": "https://github.com/beep-effect/beep-effect/actions/runs/41604614900",
+    "sourceRevision": "7438cf69c6eff3ef23f99b3fef735b8c6d14e96b",
+    "resolvedHeavyRevision": "7438cf69c6eff3ef23f99b3fef735b8c6d14e96b",
+    "conclusion": "startup_failure",
+    "jobs": 0,
+    "artifactProduced": false,
+    "diagnosis": "The gated execution leaf requests actions: read but the preparation caller ceiling allows actions: none."
+  },
+  "repair": {
+    "callingJobs": [
+      "cache-producer-prepare.yml#prepare",
+      "cache-producer-inspect.yml#inspect"
+    ],
+    "callingJobCeiling": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "workflowDefault": {
+      "contents": "read"
+    },
+    "heavyDefault": {
+      "contents": "read"
+    },
+    "selectedLeavesOverrideDefaults": false,
+    "secretMappingsAdded": false,
+    "writePermissionAdded": false,
+    "modeGuardsChanged": false,
+    "boundsChanged": false
+  },
+  "inspectionCallerEvidence": "Same source permission defect; no new inspection run was dispatched.",
+  "regressions": "Authored comparison to actual execution-leaf permission request, plus narrower Heavy default and no selected-leaf override; not executed locally.",
+  "sourceBindings": [
+    {
+      "path": ".github/workflows/cache-producer-prepare.yml",
+      "sha256": "fac8c4dcf3f6c873ab6f7f8cc863a1ade574212b340a225fc69dcbad9ad4bc3f"
+    },
+    {
+      "path": ".github/workflows/cache-producer-inspect.yml",
+      "sha256": "4cd6c64edda311d61014eda0a7d62840ed40cc317f87faf9adfcf4b8bb7e4495"
+    },
+    {
+      "path": ".github/workflows/heavy.yml",
+      "sha256": "4909a7d77fb946af0734bb54650dae5ee193b203077ff9ffa523acd072d996ec"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/ci-runner-security.test.ts",
+      "sha256": "7bf23b2d94b4f5fcf200c7c13ee213a79a3a5269c4f895a657bb1945f352f09f"
+    }
+  ],
+  "specSha256": "af64c5c04adc073350842d89922d448c8754f84b03e63454211b7f1b3f1e5126",
+  "localVerification": "No verify, publish, package verification or repository test suite; normal Git hooks and targeted formatting only.",
+  "hostedProofStatus": "pending new PR",
+  "freshOperationalStartup": "not yet run",
+  "wholeGoalAcceptanceChanged": false,
+  "rollback": "Disable optional callers and revert their job permission maps; retain defaults, failed run and earlier evidence."
+}

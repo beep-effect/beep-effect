@@ -14,6 +14,11 @@ jobs:
   inspect:
     name: Inspect producer sources and tools
     if: github.ref == 'refs/heads/main'
+    # GitHub validates every nested leaf's permission ceiling before job guards.
+    # Heavy still defaults the selected credential-free inspection to contents: read.
+    permissions:
+      contents: read
+      actions: read
     # Runner-group workflow access is granted to the reusable Heavy leaf.
     uses: beep-effect/beep-effect/.github/workflows/heavy.yml@main
     with:

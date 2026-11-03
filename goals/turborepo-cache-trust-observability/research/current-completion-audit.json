@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "bd9f5591fbb4337d83402b8dfd384c47d95ad98c6cb5030dae67595808bcac76",
+  "specSha256": "af64c5c04adc073350842d89922d448c8754f84b03e63454211b7f1b3f1e5126",
   "acceptance": [
     {
       "id": "AC-01",
@@ -531,5 +531,11 @@
   },
   "acceptedMainSpecSha256AtSavedStorageIntegration": "2c028c5adce1ad31f59feb958ef90386fe13f2409bb5611c757f2aafdca17c77",
   "priorSpecSha256BeforeSavedStorageIntegration": "d4c40df7c1c70fe540d4d4699870c0c8dc2e81ee49edf0b5523519c15f0eea8c",
-  "priorSpecSha256BeforeChannelReferenceReview": "19f4abd3f84a9e5ec056799b595dfe5b8911d34d4490d75c423668dd91b9efa8"
+  "priorSpecSha256BeforeChannelReferenceReview": "19f4abd3f84a9e5ec056799b595dfe5b8911d34d4490d75c423668dd91b9efa8",
+  "priorSpecDigestBeforeCallerPermissionRepair": "bd9f5591fbb4337d83402b8dfd384c47d95ad98c6cb5030dae67595808bcac76",
+  "callerPermissionStartupRepair": {
+    "path": "research/caller-permission-startup-repair-2026-11-03.json",
+    "sha256": "c8831aa7ac69cdc265971ad33476c3d4ed2f271fda58bad1b3ce9ab5b5fdd8a3",
+    "authority": "Actual failed startup and source-level repair only; hosted regressions and a fresh accepted-source operational run remain required."
+  }
 }

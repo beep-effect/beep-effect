@@ -2200,3 +2200,19 @@ local verify/publish or repository test suite; require fresh hosted proof.
 The normal secret scanner initially classified a prior SPEC digest under a new
 secret-related field name as `generic-api-key`. Rename the metadata field while
 preserving the same digest; no scanner configuration or allowlist changes.
+
+
+### 2026-11-03 — inactive reusable leaf still blocks startup
+
+- Work: dispatch the bounded credential-free candidate build after accepted #2650.
+- Evidence: run `41604614900`, source/resolved Heavy `7438cf69c6`,
+  `startup_failure` with zero jobs. GitHub's annotation says the execution leaf
+  requests `actions: read` beyond the caller's allowed `actions: none`.
+- Cause: earlier source assertions pinned each caller's default but missed
+  GitHub's permission validation across the entire reusable workflow.
+- Prevention: bind both affected caller jobs to the actual leaf permission
+  ceiling; retain and assert the narrower build/inspection defaults. Require a
+  real accepted-main startup before advancing runtime evidence. The source
+  inspection caller receives the same repair without spending a known-bad run.
+- Result: focused repair authored for hosted CI; no local verify/publish,
+  automatic rerun, secret delivery, new capacity or qualification claim.

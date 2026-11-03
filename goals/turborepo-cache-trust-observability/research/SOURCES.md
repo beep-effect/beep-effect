@@ -727,3 +727,16 @@ protected producer provenance, current-main qualification or production rollout.
   missing stable material cannot fall through to a canary value.
 - The source-bound preparation report records both review threads and the
   expanded unprivileged environment/input/script regression boundary.
+
+
+### Caller permission ceiling, 2026-11-03
+
+- [Actual preparation startup failure](https://github.com/beep-effect/beep-effect/actions/runs/41604614900):
+  authenticated metadata reports `startup_failure`, zero jobs and the exact
+  source/resolved Heavy revision. The public validation annotation identifies
+  the execution leaf's read permission exceeding the caller ceiling.
+- [GitHub reusable workflow permission propagation](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows#nesting-reusable-workflows):
+  nested workflows can maintain or reduce caller permissions, not elevate them.
+- [Source-bound repair checkpoint](caller-permission-startup-repair-2026-11-03.json):
+  preserve the failed run and distinguish authored regressions from hosted
+  execution and a later successful operational dispatch.

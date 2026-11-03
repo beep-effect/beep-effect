@@ -14,6 +14,11 @@ jobs:
   prepare:
     name: Build candidate producer adapter
     if: github.ref == 'refs/heads/main'
+    # GitHub validates every nested leaf's permission ceiling before job guards.
+    # Heavy still defaults the selected credential-free build to contents: read.
+    permissions:
+      contents: read
+      actions: read
     # The runner group admits the reusable Heavy leaf, not this caller.
     uses: beep-effect/beep-effect/.github/workflows/heavy.yml@main
     with:
