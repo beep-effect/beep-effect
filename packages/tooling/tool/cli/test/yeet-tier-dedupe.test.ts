@@ -23,7 +23,10 @@ import {
   headInstallReceiptRefusals,
   loadHeadInstallReceipt,
   ParityLaneCandidate,
+  ParityLaneDecision,
+  ProofEnvironment,
   ProvenLane,
+  proofEnvironmentDifferences,
   proofEnvironmentPosture,
   provenLanesForAttempt,
   RepoRunContext,
@@ -169,6 +172,46 @@ describe("same-attempt CI parity reuse (M12)", () => {
     expect(posture.AUTH_SECRET).toBe("set");
     expect(posture.DATABASE_URL).toBe("unset");
     expect(posture.TURBO_CACHE).toBe("unset");
+  });
+
+  it("names every differing environment component and renders each decision kind", () => {
+    const environment = (overrides: Partial<Parameters<typeof ProofEnvironment.make>[0]> = {}) =>
+      ProofEnvironment.make({
+        stepId: "full:01-pre-push",
+        platform: "linux",
+        architecture: "x64",
+        bunVersion: "1.4.4",
+        nodeVersion: "v24.22.1",
+        treeSha: Str.repeat(40)("t"),
+        baseSha: Str.repeat(40)("b"),
+        posture: proofEnvironmentPosture({}),
+        digest: "d",
+        ...overrides,
+      });
+    expect(
+      proofEnvironmentDifferences(
+        environment(),
+        environment({ baseSha: Str.repeat(40)("c"), bunVersion: "1.4.5", architecture: "arm64" })
+      )
+    ).toEqual(["base", "toolchain", "host"]);
+    const decision = (overrides: Partial<Parameters<typeof ParityLaneDecision.make>[0]>) =>
+      ParityLaneDecision.make({
+        laneId: "lint",
+        commandDigest: Str.repeat(64)("c"),
+        environmentDigest: Str.repeat(64)("e"),
+        reuse: false,
+        differences: [],
+        ...overrides,
+      });
+    assertSome(
+      renderParityLaneDecision(decision({ reuse: true })),
+      `[yeet] ci-parity: reusing lint, proven by ? in this attempt (command ${Str.repeat(12)("c")}, environment ${Str.repeat(12)("e")})`
+    );
+    assertSome(
+      renderParityLaneDecision(decision({ reason: "environment-changed", differences: ["CI"] })),
+      `[yeet] ci-parity: not reusing lint: environment differs from ? (CI; command ${Str.repeat(12)("c")}, environment ${Str.repeat(12)("e")})`
+    );
+    assertNone(renderParityLaneDecision(decision({ reason: "no-proven-twin" })));
   });
 
   it("plans parity lanes with the same command line as their pre-push twins", () => {
