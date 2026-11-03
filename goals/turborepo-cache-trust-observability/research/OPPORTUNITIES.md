@@ -2160,8 +2160,10 @@ must establish the current policy before that acceptance gate can pass.
 ### Protected producer lint-policy boundary repairs, 2026-11-03
 
 Run 41584463472 passed all unit shards and Fallow, then Lint Policy found one
-introduced boolean-indirection assertion and two live host-path observations.
-Assert exact selection-shell exit status 0/1 instead of reducing it to a boolean.
+introduced EV006 Option-shape assertion and two live host-path observations.
+Use assertSome with the independently expected secret-reference value, reusing
+the existing secretReference helper. Also strengthen selection-shell refusal
+checks to exact exit status 0/1 instead of any nonzero failure.
 Replace the host-specific temporary root and exact cleanup comparator with the
 same fixed HOME-cache path, retaining exclusive creation and guarded cleanup.
 Author path assertions and preserve every policy check; no knowledge exemption,

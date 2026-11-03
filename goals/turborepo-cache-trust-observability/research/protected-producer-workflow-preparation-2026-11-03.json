@@ -15,7 +15,7 @@
     },
     {
       "path": "packages/tooling/tool/cli/test/ci-runner-security.test.ts",
-      "sha256": "cabaf8ec9608d24645bd053380a2f434bc69e52abff4608c5224cc97cc61f1a9"
+      "sha256": "f938bdd07d42f6fab534664aa267d5568e7a528a86dce3c749e5c04a43787400"
     }
   ],
   "route": {
@@ -184,7 +184,7 @@
     "failedHead": "e6472d940435440c267434737f8aa95504e52321",
     "runId": 41584463472,
     "jobId": 125747400599,
-    "effectVitest": "One introduced boolean-indirection finding in the selection-shell control. Assert exact exit status 0 or 1, strengthening refusal from any nonzero exit to the intended guard exit.",
+    "effectVitest": "One introduced EV006 Option-shape assertion in forwarded secret checking. Use assertSome with the independently expected secret-reference value and the existing secretReference helper. Also strengthen selection-shell refusals to exact exit 0/1 instead of any nonzero failure.",
     "knowledgeReferences": "Two introduced actionable host-path findings on the fixed temporary root and its cleanup comparator. Use one fixed HOME-cache path, preserving exclusive creation, ownership and exact cleanup; no exemption or baseline change.",
     "syntax": "Both workflows and 15 Bash / 5 Python bodies parse; no workflow body, local quality gate or test suite executed.",
     "hostedProof": "pending"

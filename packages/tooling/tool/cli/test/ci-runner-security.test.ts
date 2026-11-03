@@ -12,7 +12,7 @@ import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { assert, expect } from "@effect/vitest";
-import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
@@ -1882,7 +1882,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const forwarded = yield* decodeYamlRecord(yamlAt(caller, ["jobs", "produce", "secrets"]));
       expect(A.sort(R.keys(forwarded), Order.String)).toEqual(A.sort(secretNames, Order.String));
       for (const name of secretNames) {
-        expect(R.get(forwarded, name)).toEqual(O.some(`\${{ secrets.${name} }}`));
+        assertSome(R.get(forwarded, name), secretReference(name));
         expect(yamlAt(heavy, ["on", "workflow_call", "secrets", name, "required"])).toBe(false);
       }
       expect(yamlAt(heavy, ["on", "workflow_call", "inputs", "producer_execution", "default"])).toBe(false);
