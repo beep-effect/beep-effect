@@ -203,7 +203,7 @@
     "finalDisposition": null,
     "taskQualificationGranted": false
   },
-  "rowSemantics": "Each row is a named script entrypoint outside the requested configured graph projection. A directConfiguredCallers edge exists only when the complete parent command is exactly bun run <script> in the same workspace. It is not a semantic-equivalence, deduplication or qualification grant. Unlisted dynamic and composite callers are not inferred absent.",
+  "rowSemantics": "Each row is a named script entrypoint outside the requested configured graph projection. A directConfiguredCallers edge exists only when the complete parent command is exactly bun run <script> in the same workspace. It is not a semantic-equivalence, deduplication or qualification grant. Unlisted dynamic and composite callers are not inferred absent. An explicit currentSemanticReview and finalDisposition on a row overrides rowDefaults; these source-only whole-mutator decisions grant no qualification to the separate read-only counterpart.",
   "digestSemantics": "literalCommandSha256 hashes UTF-8 command text only. Existing census commandDigest hashes the entire workspace script map and remains unchanged.",
   "rows": [
     {
@@ -549,7 +549,15 @@
     {
       "entrypoint": "@beep/acp#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/acp#lint:fix"]
+      "directConfiguredCallers": ["@beep/acp#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/acp#lint"
+      }
     },
     {
       "entrypoint": "@beep/acp#beep:test",
@@ -607,7 +615,15 @@
     {
       "entrypoint": "@beep/agents-client#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/agents-client#lint:fix"]
+      "directConfiguredCallers": ["@beep/agents-client#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/agents-client#lint"
+      }
     },
     {
       "entrypoint": "@beep/agents-client#beep:test",
@@ -650,7 +666,15 @@
     {
       "entrypoint": "@beep/agents-domain#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/agents-domain#lint:fix"]
+      "directConfiguredCallers": ["@beep/agents-domain#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/agents-domain#lint"
+      }
     },
     {
       "entrypoint": "@beep/agents-domain#beep:test",
@@ -693,7 +717,15 @@
     {
       "entrypoint": "@beep/agents-server#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/agents-server#lint:fix"]
+      "directConfiguredCallers": ["@beep/agents-server#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/agents-server#lint"
+      }
     },
     {
       "entrypoint": "@beep/agents-server#beep:test",
@@ -741,7 +773,15 @@
     {
       "entrypoint": "@beep/agents-tables#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/agents-tables#lint:fix"]
+      "directConfiguredCallers": ["@beep/agents-tables#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/agents-tables#lint"
+      }
     },
     {
       "entrypoint": "@beep/agents-tables#beep:test",
@@ -781,7 +821,15 @@
     {
       "entrypoint": "@beep/agents-use-cases#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/agents-use-cases#lint:fix"]
+      "directConfiguredCallers": ["@beep/agents-use-cases#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/agents-use-cases#lint"
+      }
     },
     {
       "entrypoint": "@beep/agents-use-cases#beep:test",
@@ -824,7 +872,15 @@
     {
       "entrypoint": "@beep/ai-provider-cli#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/ai-provider-cli#lint:fix"]
+      "directConfiguredCallers": ["@beep/ai-provider-cli#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/ai-provider-cli#lint"
+      }
     },
     {
       "entrypoint": "@beep/ai-provider-cli#beep:test",
@@ -882,7 +938,15 @@
     {
       "entrypoint": "@beep/ai-sync#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/ai-sync#lint:fix"]
+      "directConfiguredCallers": ["@beep/ai-sync#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/ai-sync#lint"
+      }
     },
     {
       "entrypoint": "@beep/ai-sync#beep:test",
@@ -945,7 +1009,15 @@
     {
       "entrypoint": "@beep/anthropic#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/anthropic#lint:fix"]
+      "directConfiguredCallers": ["@beep/anthropic#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/anthropic#lint"
+      }
     },
     {
       "entrypoint": "@beep/anthropic#beep:test",
@@ -978,7 +1050,15 @@
     {
       "entrypoint": "@beep/api-docs#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/api-docs#lint:fix"]
+      "directConfiguredCallers": ["@beep/api-docs#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/api-docs#lint"
+      }
     },
     {
       "entrypoint": "@beep/api-docs#beep:test",
@@ -1023,7 +1103,15 @@
     {
       "entrypoint": "@beep/api-transport#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/api-transport#lint:fix"]
+      "directConfiguredCallers": ["@beep/api-transport#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/api-transport#lint"
+      }
     },
     {
       "entrypoint": "@beep/api-transport#beep:test",
@@ -1071,7 +1159,15 @@
     {
       "entrypoint": "@beep/architecture-lab-client#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/architecture-lab-client#lint:fix"]
+      "directConfiguredCallers": ["@beep/architecture-lab-client#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/architecture-lab-client#lint"
+      }
     },
     {
       "entrypoint": "@beep/architecture-lab-client#beep:test",
@@ -1118,7 +1214,15 @@
     {
       "entrypoint": "@beep/architecture-lab-config#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/architecture-lab-config#lint:fix"]
+      "directConfiguredCallers": ["@beep/architecture-lab-config#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/architecture-lab-config#lint"
+      }
     },
     {
       "entrypoint": "@beep/architecture-lab-config#beep:test",
@@ -1168,7 +1272,15 @@
     {
       "entrypoint": "@beep/architecture-lab-domain#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/architecture-lab-domain#lint:fix"]
+      "directConfiguredCallers": ["@beep/architecture-lab-domain#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/architecture-lab-domain#lint"
+      }
     },
     {
       "entrypoint": "@beep/architecture-lab-domain#beep:test",
@@ -1218,7 +1330,15 @@
     {
       "entrypoint": "@beep/architecture-lab-proof#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/architecture-lab-proof#lint:fix"]
+      "directConfiguredCallers": ["@beep/architecture-lab-proof#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/architecture-lab-proof#lint"
+      }
     },
     {
       "entrypoint": "@beep/architecture-lab-proof#beep:test",
@@ -1268,7 +1388,15 @@
     {
       "entrypoint": "@beep/architecture-lab-server#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/architecture-lab-server#lint:fix"]
+      "directConfiguredCallers": ["@beep/architecture-lab-server#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/architecture-lab-server#lint"
+      }
     },
     {
       "entrypoint": "@beep/architecture-lab-server#beep:test",
@@ -1319,7 +1447,15 @@
     {
       "entrypoint": "@beep/architecture-lab-tables#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/architecture-lab-tables#lint:fix"]
+      "directConfiguredCallers": ["@beep/architecture-lab-tables#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/architecture-lab-tables#lint"
+      }
     },
     {
       "entrypoint": "@beep/architecture-lab-tables#beep:test",
@@ -1369,7 +1505,15 @@
     {
       "entrypoint": "@beep/architecture-lab-ui#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/architecture-lab-ui#lint:fix"]
+      "directConfiguredCallers": ["@beep/architecture-lab-ui#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/architecture-lab-ui#lint"
+      }
     },
     {
       "entrypoint": "@beep/architecture-lab-ui#beep:test",
@@ -1417,7 +1561,15 @@
     {
       "entrypoint": "@beep/architecture-lab-use-cases#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/architecture-lab-use-cases#lint:fix"]
+      "directConfiguredCallers": ["@beep/architecture-lab-use-cases#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/architecture-lab-use-cases#lint"
+      }
     },
     {
       "entrypoint": "@beep/architecture-lab-use-cases#beep:test",
@@ -1452,7 +1604,15 @@
     {
       "entrypoint": "@beep/beep-effect-web#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/beep-effect-web#lint:fix"]
+      "directConfiguredCallers": ["@beep/beep-effect-web#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/beep-effect-web#lint"
+      }
     },
     {
       "entrypoint": "@beep/beep-effect-web#beep:test",
@@ -1497,7 +1657,15 @@
     {
       "entrypoint": "@beep/box#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/box#lint:fix"]
+      "directConfiguredCallers": ["@beep/box#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/box#lint"
+      }
     },
     {
       "entrypoint": "@beep/box#beep:test",
@@ -1550,7 +1718,15 @@
     {
       "entrypoint": "@beep/box-provisioning#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/box-provisioning#lint:fix"]
+      "directConfiguredCallers": ["@beep/box-provisioning#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/box-provisioning#lint"
+      }
     },
     {
       "entrypoint": "@beep/box-provisioning#beep:test",
@@ -1595,7 +1771,15 @@
     {
       "entrypoint": "@beep/brand#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/brand#lint:fix"]
+      "directConfiguredCallers": ["@beep/brand#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/brand#lint"
+      }
     },
     {
       "entrypoint": "@beep/brand#beep:test",
@@ -1650,7 +1834,15 @@
     {
       "entrypoint": "@beep/chalk#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/chalk#lint:fix"]
+      "directConfiguredCallers": ["@beep/chalk#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/chalk#lint"
+      }
     },
     {
       "entrypoint": "@beep/chalk#beep:test",
@@ -1683,7 +1875,15 @@
     {
       "entrypoint": "@beep/ciops#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/ciops#lint:fix"]
+      "directConfiguredCallers": ["@beep/ciops#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/ciops#lint"
+      }
     },
     {
       "entrypoint": "@beep/ciops#beep:test",
@@ -1773,7 +1973,15 @@
     {
       "entrypoint": "@beep/cli-kit#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/cli-kit#lint:fix"]
+      "directConfiguredCallers": ["@beep/cli-kit#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/cli-kit#lint"
+      }
     },
     {
       "entrypoint": "@beep/cli-kit#beep:test",
@@ -1818,7 +2026,15 @@
     {
       "entrypoint": "@beep/codegen-kit#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/codegen-kit#lint:fix"]
+      "directConfiguredCallers": ["@beep/codegen-kit#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/codegen-kit#lint"
+      }
     },
     {
       "entrypoint": "@beep/codegen-kit#beep:test",
@@ -1868,7 +2084,15 @@
     {
       "entrypoint": "@beep/colors#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/colors#lint:fix"]
+      "directConfiguredCallers": ["@beep/colors#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/colors#lint"
+      }
     },
     {
       "entrypoint": "@beep/colors#beep:test",
@@ -1911,7 +2135,15 @@
     {
       "entrypoint": "@beep/commands#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/commands#lint:fix"]
+      "directConfiguredCallers": ["@beep/commands#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/commands#lint"
+      }
     },
     {
       "entrypoint": "@beep/commands#beep:test",
@@ -1956,7 +2188,15 @@
     {
       "entrypoint": "@beep/config-file#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/config-file#lint:fix"]
+      "directConfiguredCallers": ["@beep/config-file#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/config-file#lint"
+      }
     },
     {
       "entrypoint": "@beep/config-file#beep:test",
@@ -2001,7 +2241,15 @@
     {
       "entrypoint": "@beep/cosmos#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/cosmos#lint:fix"]
+      "directConfiguredCallers": ["@beep/cosmos#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/cosmos#lint"
+      }
     },
     {
       "entrypoint": "@beep/cosmos#beep:test",
@@ -2046,7 +2294,15 @@
     {
       "entrypoint": "@beep/data#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/data#lint:fix"]
+      "directConfiguredCallers": ["@beep/data#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/data#lint"
+      }
     },
     {
       "entrypoint": "@beep/data#beep:test",
@@ -2086,7 +2342,15 @@
     {
       "entrypoint": "@beep/db-admin#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/db-admin#lint:fix"]
+      "directConfiguredCallers": ["@beep/db-admin#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/db-admin#lint"
+      }
     },
     {
       "entrypoint": "@beep/db-admin#beep:test",
@@ -2152,7 +2416,15 @@
     {
       "entrypoint": "@beep/discord#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/discord#lint:fix"]
+      "directConfiguredCallers": ["@beep/discord#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/discord#lint"
+      }
     },
     {
       "entrypoint": "@beep/discord#beep:test",
@@ -2200,7 +2472,15 @@
     {
       "entrypoint": "@beep/doc-text#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/doc-text#lint:fix"]
+      "directConfiguredCallers": ["@beep/doc-text#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/doc-text#lint"
+      }
     },
     {
       "entrypoint": "@beep/doc-text#beep:test",
@@ -2253,7 +2533,15 @@
     {
       "entrypoint": "@beep/dock#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/dock#lint:fix"]
+      "directConfiguredCallers": ["@beep/dock#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/dock#lint"
+      }
     },
     {
       "entrypoint": "@beep/dock#beep:test",
@@ -2303,7 +2591,15 @@
     {
       "entrypoint": "@beep/dock-react#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/dock-react#lint:fix"]
+      "directConfiguredCallers": ["@beep/dock-react#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/dock-react#lint"
+      }
     },
     {
       "entrypoint": "@beep/dock-react#beep:test",
@@ -2333,7 +2629,15 @@
     {
       "entrypoint": "@beep/docket-intake#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/docket-intake#lint:fix"]
+      "directConfiguredCallers": ["@beep/docket-intake#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/docket-intake#lint"
+      }
     },
     {
       "entrypoint": "@beep/docket-intake#beep:test",
@@ -2378,7 +2682,15 @@
     {
       "entrypoint": "@beep/documents-domain#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/documents-domain#lint:fix"]
+      "directConfiguredCallers": ["@beep/documents-domain#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/documents-domain#lint"
+      }
     },
     {
       "entrypoint": "@beep/documents-domain#beep:test",
@@ -2423,7 +2735,15 @@
     {
       "entrypoint": "@beep/documents-server#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/documents-server#lint:fix"]
+      "directConfiguredCallers": ["@beep/documents-server#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/documents-server#lint"
+      }
     },
     {
       "entrypoint": "@beep/documents-server#beep:test",
@@ -2471,7 +2791,15 @@
     {
       "entrypoint": "@beep/documents-tables#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/documents-tables#lint:fix"]
+      "directConfiguredCallers": ["@beep/documents-tables#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/documents-tables#lint"
+      }
     },
     {
       "entrypoint": "@beep/documents-tables#beep:test",
@@ -2519,7 +2847,15 @@
     {
       "entrypoint": "@beep/documents-use-cases#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/documents-use-cases#lint:fix"]
+      "directConfiguredCallers": ["@beep/documents-use-cases#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/documents-use-cases#lint"
+      }
     },
     {
       "entrypoint": "@beep/documents-use-cases#beep:test",
@@ -2564,7 +2900,15 @@
     {
       "entrypoint": "@beep/drizzle#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/drizzle#lint:fix"]
+      "directConfiguredCallers": ["@beep/drizzle#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/drizzle#lint"
+      }
     },
     {
       "entrypoint": "@beep/drizzle#beep:test",
@@ -2615,7 +2959,15 @@
     {
       "entrypoint": "@beep/duckdb#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/duckdb#lint:fix"]
+      "directConfiguredCallers": ["@beep/duckdb#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/duckdb#lint"
+      }
     },
     {
       "entrypoint": "@beep/duckdb#beep:test",
@@ -2663,7 +3015,15 @@
     {
       "entrypoint": "@beep/ecfr#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/ecfr#lint:fix"]
+      "directConfiguredCallers": ["@beep/ecfr#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/ecfr#lint"
+      }
     },
     {
       "entrypoint": "@beep/ecfr#beep:test",
@@ -2723,7 +3083,15 @@
     {
       "entrypoint": "@beep/editor#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/editor#lint:fix"]
+      "directConfiguredCallers": ["@beep/editor#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/editor#lint"
+      }
     },
     {
       "entrypoint": "@beep/editor#beep:test",
@@ -2834,7 +3202,15 @@
     {
       "entrypoint": "@beep/epistemic-client#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/epistemic-client#lint:fix"]
+      "directConfiguredCallers": ["@beep/epistemic-client#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/epistemic-client#lint"
+      }
     },
     {
       "entrypoint": "@beep/epistemic-client#beep:test",
@@ -2879,7 +3255,15 @@
     {
       "entrypoint": "@beep/epistemic-config#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/epistemic-config#lint:fix"]
+      "directConfiguredCallers": ["@beep/epistemic-config#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/epistemic-config#lint"
+      }
     },
     {
       "entrypoint": "@beep/epistemic-config#beep:test",
@@ -2924,7 +3308,15 @@
     {
       "entrypoint": "@beep/epistemic-domain#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/epistemic-domain#lint:fix"]
+      "directConfiguredCallers": ["@beep/epistemic-domain#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/epistemic-domain#lint"
+      }
     },
     {
       "entrypoint": "@beep/epistemic-domain#beep:test",
@@ -2962,7 +3354,15 @@
     {
       "entrypoint": "@beep/epistemic-server#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/epistemic-server#lint:fix"]
+      "directConfiguredCallers": ["@beep/epistemic-server#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/epistemic-server#lint"
+      }
     },
     {
       "entrypoint": "@beep/epistemic-server#beep:test",
@@ -3010,7 +3410,15 @@
     {
       "entrypoint": "@beep/epistemic-tables#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/epistemic-tables#lint:fix"]
+      "directConfiguredCallers": ["@beep/epistemic-tables#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/epistemic-tables#lint"
+      }
     },
     {
       "entrypoint": "@beep/epistemic-tables#beep:test",
@@ -3058,7 +3466,15 @@
     {
       "entrypoint": "@beep/epistemic-ui#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/epistemic-ui#lint:fix"]
+      "directConfiguredCallers": ["@beep/epistemic-ui#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/epistemic-ui#lint"
+      }
     },
     {
       "entrypoint": "@beep/epistemic-ui#beep:test",
@@ -3103,7 +3519,15 @@
     {
       "entrypoint": "@beep/epistemic-use-cases#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/epistemic-use-cases#lint:fix"]
+      "directConfiguredCallers": ["@beep/epistemic-use-cases#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/epistemic-use-cases#lint"
+      }
     },
     {
       "entrypoint": "@beep/epistemic-use-cases#beep:test",
@@ -3146,7 +3570,15 @@
     {
       "entrypoint": "@beep/epistemics#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/epistemics#lint:fix"]
+      "directConfiguredCallers": ["@beep/epistemics#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/epistemics#lint"
+      }
     },
     {
       "entrypoint": "@beep/epistemics#beep:test",
@@ -3191,7 +3623,15 @@
     {
       "entrypoint": "@beep/exiftool#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/exiftool#lint:fix"]
+      "directConfiguredCallers": ["@beep/exiftool#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/exiftool#lint"
+      }
     },
     {
       "entrypoint": "@beep/exiftool#beep:test",
@@ -3239,7 +3679,15 @@
     {
       "entrypoint": "@beep/fc-runs#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/fc-runs#lint:fix"]
+      "directConfiguredCallers": ["@beep/fc-runs#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/fc-runs#lint"
+      }
     },
     {
       "entrypoint": "@beep/fc-runs#beep:test",
@@ -3284,7 +3732,15 @@
     {
       "entrypoint": "@beep/ffmpeg#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/ffmpeg#lint:fix"]
+      "directConfiguredCallers": ["@beep/ffmpeg#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/ffmpeg#lint"
+      }
     },
     {
       "entrypoint": "@beep/ffmpeg#beep:test",
@@ -3340,7 +3796,15 @@
     {
       "entrypoint": "@beep/file-processing#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/file-processing#lint:fix"]
+      "directConfiguredCallers": ["@beep/file-processing#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/file-processing#lint"
+      }
     },
     {
       "entrypoint": "@beep/file-processing#beep:test",
@@ -3388,7 +3852,15 @@
     {
       "entrypoint": "@beep/freshbooks#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/freshbooks#lint:fix"]
+      "directConfiguredCallers": ["@beep/freshbooks#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/freshbooks#lint"
+      }
     },
     {
       "entrypoint": "@beep/freshbooks#beep:test",
@@ -3438,7 +3910,15 @@
     {
       "entrypoint": "@beep/git#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/git#lint:fix"]
+      "directConfiguredCallers": ["@beep/git#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/git#lint"
+      }
     },
     {
       "entrypoint": "@beep/git#beep:test",
@@ -3483,7 +3963,15 @@
     {
       "entrypoint": "@beep/github#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/github#lint:fix"]
+      "directConfiguredCallers": ["@beep/github#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/github#lint"
+      }
     },
     {
       "entrypoint": "@beep/github#beep:test",
@@ -3528,7 +4016,15 @@
     {
       "entrypoint": "@beep/github-actions#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/github-actions#lint:fix"]
+      "directConfiguredCallers": ["@beep/github-actions#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/github-actions#lint"
+      }
     },
     {
       "entrypoint": "@beep/github-actions#beep:test",
@@ -3573,7 +4069,15 @@
     {
       "entrypoint": "@beep/github-commands#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/github-commands#lint:fix"]
+      "directConfiguredCallers": ["@beep/github-commands#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/github-commands#lint"
+      }
     },
     {
       "entrypoint": "@beep/github-commands#beep:test",
@@ -3618,7 +4122,15 @@
     {
       "entrypoint": "@beep/github-references#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/github-references#lint:fix"]
+      "directConfiguredCallers": ["@beep/github-references#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/github-references#lint"
+      }
     },
     {
       "entrypoint": "@beep/github-references#beep:test",
@@ -3663,7 +4175,15 @@
     {
       "entrypoint": "@beep/github-reporting#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/github-reporting#lint:fix"]
+      "directConfiguredCallers": ["@beep/github-reporting#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/github-reporting#lint"
+      }
     },
     {
       "entrypoint": "@beep/github-reporting#beep:test",
@@ -3708,7 +4228,15 @@
     {
       "entrypoint": "@beep/glob#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/glob#lint:fix"]
+      "directConfiguredCallers": ["@beep/glob#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/glob#lint"
+      }
     },
     {
       "entrypoint": "@beep/glob#beep:test",
@@ -3753,7 +4281,15 @@
     {
       "entrypoint": "@beep/gov-legal-mcp#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/gov-legal-mcp#lint:fix"]
+      "directConfiguredCallers": ["@beep/gov-legal-mcp#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/gov-legal-mcp#lint"
+      }
     },
     {
       "entrypoint": "@beep/gov-legal-mcp#beep:test",
@@ -3808,7 +4344,15 @@
     {
       "entrypoint": "@beep/govinfo#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/govinfo#lint:fix"]
+      "directConfiguredCallers": ["@beep/govinfo#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/govinfo#lint"
+      }
     },
     {
       "entrypoint": "@beep/govinfo#beep:test",
@@ -3871,7 +4415,15 @@
     {
       "entrypoint": "@beep/graph-3d#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/graph-3d#lint:fix"]
+      "directConfiguredCallers": ["@beep/graph-3d#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/graph-3d#lint"
+      }
     },
     {
       "entrypoint": "@beep/graph-3d#beep:test",
@@ -3926,7 +4478,15 @@
     {
       "entrypoint": "@beep/html#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/html#lint:fix"]
+      "directConfiguredCallers": ["@beep/html#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/html#lint"
+      }
     },
     {
       "entrypoint": "@beep/html#beep:test",
@@ -3986,7 +4546,15 @@
     {
       "entrypoint": "@beep/hubspot#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/hubspot#lint:fix"]
+      "directConfiguredCallers": ["@beep/hubspot#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/hubspot#lint"
+      }
     },
     {
       "entrypoint": "@beep/hubspot#beep:test",
@@ -4039,7 +4607,15 @@
     {
       "entrypoint": "@beep/identity#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/identity#lint:fix"]
+      "directConfiguredCallers": ["@beep/identity#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/identity#lint"
+      }
     },
     {
       "entrypoint": "@beep/identity#beep:lint:verbose",
@@ -4087,7 +4663,15 @@
     {
       "entrypoint": "@beep/infra#beep:lint:fix",
       "literalCommandSha256": "8cb8df26b62ff6774443ae6d37b84e846a1d5a15c0e22a12d616baea883c01c4",
-      "directConfiguredCallers": ["@beep/infra#lint:fix"]
+      "directConfiguredCallers": ["@beep/infra#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/infra#lint"
+      }
     },
     {
       "entrypoint": "@beep/infra#beep:test",
@@ -4137,7 +4721,15 @@
     {
       "entrypoint": "@beep/jsonc#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/jsonc#lint:fix"]
+      "directConfiguredCallers": ["@beep/jsonc#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/jsonc#lint"
+      }
     },
     {
       "entrypoint": "@beep/jsonc#beep:test",
@@ -4187,7 +4779,15 @@
     {
       "entrypoint": "@beep/jsonl#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/jsonl#lint:fix"]
+      "directConfiguredCallers": ["@beep/jsonl#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/jsonl#lint"
+      }
     },
     {
       "entrypoint": "@beep/jsonl#beep:test",
@@ -4237,7 +4837,15 @@
     {
       "entrypoint": "@beep/langextract#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/langextract#lint:fix"]
+      "directConfiguredCallers": ["@beep/langextract#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/langextract#lint"
+      }
     },
     {
       "entrypoint": "@beep/langextract#beep:test",
@@ -4275,7 +4883,15 @@
     {
       "entrypoint": "@beep/law-practice-domain#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/law-practice-domain#lint:fix"]
+      "directConfiguredCallers": ["@beep/law-practice-domain#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/law-practice-domain#lint"
+      }
     },
     {
       "entrypoint": "@beep/law-practice-domain#beep:test",
@@ -4318,7 +4934,15 @@
     {
       "entrypoint": "@beep/law-practice-server#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/law-practice-server#lint:fix"]
+      "directConfiguredCallers": ["@beep/law-practice-server#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/law-practice-server#lint"
+      }
     },
     {
       "entrypoint": "@beep/law-practice-server#beep:test",
@@ -4358,7 +4982,15 @@
     {
       "entrypoint": "@beep/law-practice-tables#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/law-practice-tables#lint:fix"]
+      "directConfiguredCallers": ["@beep/law-practice-tables#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/law-practice-tables#lint"
+      }
     },
     {
       "entrypoint": "@beep/law-practice-tables#beep:test",
@@ -4398,7 +5030,15 @@
     {
       "entrypoint": "@beep/law-practice-use-cases#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/law-practice-use-cases#lint:fix"]
+      "directConfiguredCallers": ["@beep/law-practice-use-cases#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/law-practice-use-cases#lint"
+      }
     },
     {
       "entrypoint": "@beep/law-practice-use-cases#beep:test",
@@ -4431,7 +5071,15 @@
     {
       "entrypoint": "@beep/lejeune-bolt-workbench#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/lejeune-bolt-workbench#lint:fix"]
+      "directConfiguredCallers": ["@beep/lejeune-bolt-workbench#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/lejeune-bolt-workbench#lint"
+      }
     },
     {
       "entrypoint": "@beep/lejeune-bolt-workbench#beep:test",
@@ -4486,7 +5134,15 @@
     {
       "entrypoint": "@beep/lexical-schema#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/lexical-schema#lint:fix"]
+      "directConfiguredCallers": ["@beep/lexical-schema#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/lexical-schema#lint"
+      }
     },
     {
       "entrypoint": "@beep/lexical-schema#beep:test",
@@ -4534,7 +5190,15 @@
     {
       "entrypoint": "@beep/libpff#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/libpff#lint:fix"]
+      "directConfiguredCallers": ["@beep/libpff#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/libpff#lint"
+      }
     },
     {
       "entrypoint": "@beep/libpff#beep:test",
@@ -4580,7 +5244,15 @@
     {
       "entrypoint": "@beep/lint-rules#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/lint-rules#lint:fix"]
+      "directConfiguredCallers": ["@beep/lint-rules#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/lint-rules#lint"
+      }
     },
     {
       "entrypoint": "@beep/lint-rules#beep:test",
@@ -4623,7 +5295,15 @@
     {
       "entrypoint": "@beep/lockfiles#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/lockfiles#lint:fix"]
+      "directConfiguredCallers": ["@beep/lockfiles#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/lockfiles#lint"
+      }
     },
     {
       "entrypoint": "@beep/lockfiles#beep:test",
@@ -4668,7 +5348,15 @@
     {
       "entrypoint": "@beep/m365#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/m365#lint:fix"]
+      "directConfiguredCallers": ["@beep/m365#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/m365#lint"
+      }
     },
     {
       "entrypoint": "@beep/m365#beep:test",
@@ -4716,7 +5404,15 @@
     {
       "entrypoint": "@beep/m365-mcp#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/m365-mcp#lint:fix"]
+      "directConfiguredCallers": ["@beep/m365-mcp#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/m365-mcp#lint"
+      }
     },
     {
       "entrypoint": "@beep/m365-mcp#beep:test",
@@ -4764,7 +5460,15 @@
     {
       "entrypoint": "@beep/managed-section#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/managed-section#lint:fix"]
+      "directConfiguredCallers": ["@beep/managed-section#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/managed-section#lint"
+      }
     },
     {
       "entrypoint": "@beep/managed-section#beep:test",
@@ -4814,7 +5518,15 @@
     {
       "entrypoint": "@beep/markdown#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/markdown#lint:fix"]
+      "directConfiguredCallers": ["@beep/markdown#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/markdown#lint"
+      }
     },
     {
       "entrypoint": "@beep/markdown#beep:test",
@@ -4869,7 +5581,15 @@
     {
       "entrypoint": "@beep/mcp-kit#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/mcp-kit#lint:fix"]
+      "directConfiguredCallers": ["@beep/mcp-kit#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/mcp-kit#lint"
+      }
     },
     {
       "entrypoint": "@beep/mcp-kit#beep:test",
@@ -4917,7 +5637,15 @@
     {
       "entrypoint": "@beep/mcpb-kit#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/mcpb-kit#lint:fix"]
+      "directConfiguredCallers": ["@beep/mcpb-kit#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/mcpb-kit#lint"
+      }
     },
     {
       "entrypoint": "@beep/mcpb-kit#beep:test",
@@ -4967,7 +5695,15 @@
     {
       "entrypoint": "@beep/md#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/md#lint:fix"]
+      "directConfiguredCallers": ["@beep/md#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/md#lint"
+      }
     },
     {
       "entrypoint": "@beep/md#beep:test",
@@ -5007,7 +5743,15 @@
     {
       "entrypoint": "@beep/memfs#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/memfs#lint:fix"]
+      "directConfiguredCallers": ["@beep/memfs#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/memfs#lint"
+      }
     },
     {
       "entrypoint": "@beep/memfs#beep:test",
@@ -5052,7 +5796,15 @@
     {
       "entrypoint": "@beep/n3#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/n3#lint:fix"]
+      "directConfiguredCallers": ["@beep/n3#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/n3#lint"
+      }
     },
     {
       "entrypoint": "@beep/n3#beep:test",
@@ -5097,7 +5849,15 @@
     {
       "entrypoint": "@beep/nlp#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/nlp#lint:fix"]
+      "directConfiguredCallers": ["@beep/nlp#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/nlp#lint"
+      }
     },
     {
       "entrypoint": "@beep/nlp#beep:test",
@@ -5137,7 +5897,15 @@
     {
       "entrypoint": "@beep/nlp-mcp#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/nlp-mcp#lint:fix"]
+      "directConfiguredCallers": ["@beep/nlp-mcp#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/nlp-mcp#lint"
+      }
     },
     {
       "entrypoint": "@beep/nlp-mcp#beep:test",
@@ -5193,7 +5961,15 @@
     {
       "entrypoint": "@beep/nlp-processing#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/nlp-processing#lint:fix"]
+      "directConfiguredCallers": ["@beep/nlp-processing#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/nlp-processing#lint"
+      }
     },
     {
       "entrypoint": "@beep/nlp-processing#beep:test",
@@ -5236,7 +6012,15 @@
     {
       "entrypoint": "@beep/npm-spec#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/npm-spec#lint:fix"]
+      "directConfiguredCallers": ["@beep/npm-spec#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/npm-spec#lint"
+      }
     },
     {
       "entrypoint": "@beep/npm-spec#beep:test",
@@ -5281,7 +6065,15 @@
     {
       "entrypoint": "@beep/obs#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/obs#lint:fix"]
+      "directConfiguredCallers": ["@beep/obs#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/obs#lint"
+      }
     },
     {
       "entrypoint": "@beep/obs#beep:test",
@@ -5339,7 +6131,15 @@
     {
       "entrypoint": "@beep/observability#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/observability#lint:fix"]
+      "directConfiguredCallers": ["@beep/observability#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/observability#lint"
+      }
     },
     {
       "entrypoint": "@beep/observability#beep:test",
@@ -5382,7 +6182,15 @@
     {
       "entrypoint": "@beep/occt#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/occt#lint:fix"]
+      "directConfiguredCallers": ["@beep/occt#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/occt#lint"
+      }
     },
     {
       "entrypoint": "@beep/occt#beep:test",
@@ -5412,7 +6220,15 @@
     {
       "entrypoint": "@beep/oip-web#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/oip-web#lint:fix"]
+      "directConfiguredCallers": ["@beep/oip-web#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/oip-web#lint"
+      }
     },
     {
       "entrypoint": "@beep/oip-web#beep:test",
@@ -5465,7 +6281,15 @@
     {
       "entrypoint": "@beep/onepassword-cli#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/onepassword-cli#lint:fix"]
+      "directConfiguredCallers": ["@beep/onepassword-cli#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/onepassword-cli#lint"
+      }
     },
     {
       "entrypoint": "@beep/onepassword-cli#beep:test",
@@ -5518,7 +6342,15 @@
     {
       "entrypoint": "@beep/ontology#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/ontology#lint:fix"]
+      "directConfiguredCallers": ["@beep/ontology#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/ontology#lint"
+      }
     },
     {
       "entrypoint": "@beep/ontology#beep:test",
@@ -5566,7 +6398,15 @@
     {
       "entrypoint": "@beep/ontology-client#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/ontology-client#lint:fix"]
+      "directConfiguredCallers": ["@beep/ontology-client#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/ontology-client#lint"
+      }
     },
     {
       "entrypoint": "@beep/ontology-client#beep:test",
@@ -5616,7 +6456,15 @@
     {
       "entrypoint": "@beep/ontology-config#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/ontology-config#lint:fix"]
+      "directConfiguredCallers": ["@beep/ontology-config#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/ontology-config#lint"
+      }
     },
     {
       "entrypoint": "@beep/ontology-config#beep:test",
@@ -5661,7 +6509,15 @@
     {
       "entrypoint": "@beep/ontology-domain#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/ontology-domain#lint:fix"]
+      "directConfiguredCallers": ["@beep/ontology-domain#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/ontology-domain#lint"
+      }
     },
     {
       "entrypoint": "@beep/ontology-domain#beep:test",
@@ -5706,7 +6562,15 @@
     {
       "entrypoint": "@beep/ontology-server#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/ontology-server#lint:fix"]
+      "directConfiguredCallers": ["@beep/ontology-server#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/ontology-server#lint"
+      }
     },
     {
       "entrypoint": "@beep/ontology-server#beep:test",
@@ -5754,7 +6618,15 @@
     {
       "entrypoint": "@beep/ontology-ui#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/ontology-ui#lint:fix"]
+      "directConfiguredCallers": ["@beep/ontology-ui#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/ontology-ui#lint"
+      }
     },
     {
       "entrypoint": "@beep/ontology-ui#beep:test",
@@ -5799,7 +6671,15 @@
     {
       "entrypoint": "@beep/ontology-use-cases#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/ontology-use-cases#lint:fix"]
+      "directConfiguredCallers": ["@beep/ontology-use-cases#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/ontology-use-cases#lint"
+      }
     },
     {
       "entrypoint": "@beep/ontology-use-cases#beep:test",
@@ -5847,7 +6727,15 @@
     {
       "entrypoint": "@beep/openai#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/openai#lint:fix"]
+      "directConfiguredCallers": ["@beep/openai#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/openai#lint"
+      }
     },
     {
       "entrypoint": "@beep/openai#beep:test",
@@ -5892,7 +6780,15 @@
     {
       "entrypoint": "@beep/openai-compat#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/openai-compat#lint:fix"]
+      "directConfiguredCallers": ["@beep/openai-compat#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/openai-compat#lint"
+      }
     },
     {
       "entrypoint": "@beep/openai-compat#beep:test",
@@ -5940,7 +6836,15 @@
     {
       "entrypoint": "@beep/openclaw#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/openclaw#lint:fix"]
+      "directConfiguredCallers": ["@beep/openclaw#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/openclaw#lint"
+      }
     },
     {
       "entrypoint": "@beep/openclaw#beep:test",
@@ -5988,7 +6892,15 @@
     {
       "entrypoint": "@beep/oxigraph#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/oxigraph#lint:fix"]
+      "directConfiguredCallers": ["@beep/oxigraph#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/oxigraph#lint"
+      }
     },
     {
       "entrypoint": "@beep/oxigraph#beep:test",
@@ -6028,7 +6940,15 @@
     {
       "entrypoint": "@beep/pacer#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/pacer#lint:fix"]
+      "directConfiguredCallers": ["@beep/pacer#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/pacer#lint"
+      }
     },
     {
       "entrypoint": "@beep/pacer#beep:test",
@@ -6076,7 +6996,15 @@
     {
       "entrypoint": "@beep/package-json#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/package-json#lint:fix"]
+      "directConfiguredCallers": ["@beep/package-json#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/package-json#lint"
+      }
     },
     {
       "entrypoint": "@beep/package-json#beep:test",
@@ -6121,7 +7049,15 @@
     {
       "entrypoint": "@beep/palantiri#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/palantiri#lint:fix"]
+      "directConfiguredCallers": ["@beep/palantiri#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/palantiri#lint"
+      }
     },
     {
       "entrypoint": "@beep/palantiri#beep:test",
@@ -6171,7 +7107,15 @@
     {
       "entrypoint": "@beep/pandoc-ast#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/pandoc-ast#lint:fix"]
+      "directConfiguredCallers": ["@beep/pandoc-ast#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/pandoc-ast#lint"
+      }
     },
     {
       "entrypoint": "@beep/pandoc-ast#beep:test",
@@ -6222,7 +7166,15 @@
     {
       "entrypoint": "@beep/party-domain#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/party-domain#lint:fix"]
+      "directConfiguredCallers": ["@beep/party-domain#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/party-domain#lint"
+      }
     },
     {
       "entrypoint": "@beep/party-domain#beep:test",
@@ -6267,7 +7219,15 @@
     {
       "entrypoint": "@beep/party-server#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/party-server#lint:fix"]
+      "directConfiguredCallers": ["@beep/party-server#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/party-server#lint"
+      }
     },
     {
       "entrypoint": "@beep/party-server#beep:test",
@@ -6312,7 +7272,15 @@
     {
       "entrypoint": "@beep/party-use-cases#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/party-use-cases#lint:fix"]
+      "directConfiguredCallers": ["@beep/party-use-cases#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/party-use-cases#lint"
+      }
     },
     {
       "entrypoint": "@beep/party-use-cases#beep:test",
@@ -6357,7 +7325,15 @@
     {
       "entrypoint": "@beep/pdf-tools#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/pdf-tools#lint:fix"]
+      "directConfiguredCallers": ["@beep/pdf-tools#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/pdf-tools#lint"
+      }
     },
     {
       "entrypoint": "@beep/pdf-tools#beep:test",
@@ -6405,7 +7381,15 @@
     {
       "entrypoint": "@beep/pglite#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/pglite#lint:fix"]
+      "directConfiguredCallers": ["@beep/pglite#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/pglite#lint"
+      }
     },
     {
       "entrypoint": "@beep/pglite#beep:test",
@@ -6456,7 +7440,15 @@
     {
       "entrypoint": "@beep/phoenix#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/phoenix#lint:fix"]
+      "directConfiguredCallers": ["@beep/phoenix#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/phoenix#lint"
+      }
     },
     {
       "entrypoint": "@beep/phoenix#beep:test",
@@ -6504,7 +7496,15 @@
     {
       "entrypoint": "@beep/poppler#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/poppler#lint:fix"]
+      "directConfiguredCallers": ["@beep/poppler#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/poppler#lint"
+      }
     },
     {
       "entrypoint": "@beep/poppler#beep:test",
@@ -6549,7 +7549,15 @@
     {
       "entrypoint": "@beep/postgres#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/postgres#lint:fix"]
+      "directConfiguredCallers": ["@beep/postgres#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/postgres#lint"
+      }
     },
     {
       "entrypoint": "@beep/postgres#beep:test",
@@ -6585,7 +7593,15 @@
     {
       "entrypoint": "@beep/practice-claude-mod#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/practice-claude-mod#lint:fix"]
+      "directConfiguredCallers": ["@beep/practice-claude-mod#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/practice-claude-mod#lint"
+      }
     },
     {
       "entrypoint": "@beep/practice-claude-mod#beep:test",
@@ -6635,7 +7651,15 @@
     {
       "entrypoint": "@beep/practice-gateway#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/practice-gateway#lint:fix"]
+      "directConfiguredCallers": ["@beep/practice-gateway#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/practice-gateway#lint"
+      }
     },
     {
       "entrypoint": "@beep/practice-gateway#beep:test",
@@ -6685,7 +7709,15 @@
     {
       "entrypoint": "@beep/practice-identify#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/practice-identify#lint:fix"]
+      "directConfiguredCallers": ["@beep/practice-identify#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/practice-identify#lint"
+      }
     },
     {
       "entrypoint": "@beep/practice-identify#beep:test",
@@ -6720,7 +7752,15 @@
     {
       "entrypoint": "@beep/practice-kg-mcp#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/practice-kg-mcp#lint:fix"]
+      "directConfiguredCallers": ["@beep/practice-kg-mcp#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/practice-kg-mcp#lint"
+      }
     },
     {
       "entrypoint": "@beep/practice-kg-mcp#beep:test",
@@ -6760,7 +7800,15 @@
     {
       "entrypoint": "@beep/practice-m365-contacts#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/practice-m365-contacts#lint:fix"]
+      "directConfiguredCallers": ["@beep/practice-m365-contacts#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/practice-m365-contacts#lint"
+      }
     },
     {
       "entrypoint": "@beep/practice-m365-contacts#beep:test",
@@ -6785,7 +7833,15 @@
     {
       "entrypoint": "@beep/practice-mail-tagging#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/practice-mail-tagging#lint:fix"]
+      "directConfiguredCallers": ["@beep/practice-mail-tagging#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/practice-mail-tagging#lint"
+      }
     },
     {
       "entrypoint": "@beep/practice-mail-tagging#beep:test",
@@ -6810,7 +7866,15 @@
     {
       "entrypoint": "@beep/practice-review-hub#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/practice-review-hub#lint:fix"]
+      "directConfiguredCallers": ["@beep/practice-review-hub#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/practice-review-hub#lint"
+      }
     },
     {
       "entrypoint": "@beep/practice-review-hub#beep:test",
@@ -6835,7 +7899,15 @@
     {
       "entrypoint": "@beep/practice-setup#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/practice-setup#lint:fix"]
+      "directConfiguredCallers": ["@beep/practice-setup#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/practice-setup#lint"
+      }
     },
     {
       "entrypoint": "@beep/practice-setup#beep:test",
@@ -6880,7 +7952,15 @@
     {
       "entrypoint": "@beep/pretext#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/pretext#lint:fix"]
+      "directConfiguredCallers": ["@beep/pretext#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/pretext#lint"
+      }
     },
     {
       "entrypoint": "@beep/pretext#beep:test",
@@ -6915,7 +7995,15 @@
     {
       "entrypoint": "@beep/professional-desktop#beep:lint:fix",
       "literalCommandSha256": "43f2226d659e4f86b31b123cc03376ffca87d3e9130a45cb6fc005f9ec63866c",
-      "directConfiguredCallers": ["@beep/professional-desktop#lint:fix"]
+      "directConfiguredCallers": ["@beep/professional-desktop#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/professional-desktop#lint"
+      }
     },
     {
       "entrypoint": "@beep/professional-desktop#beep:test",
@@ -7001,7 +8089,15 @@
     {
       "entrypoint": "@beep/provenance#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/provenance#lint:fix"]
+      "directConfiguredCallers": ["@beep/provenance#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/provenance#lint"
+      }
     },
     {
       "entrypoint": "@beep/provenance#beep:test",
@@ -7049,7 +8145,15 @@
     {
       "entrypoint": "@beep/public-site#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/public-site#lint:fix"]
+      "directConfiguredCallers": ["@beep/public-site#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/public-site#lint"
+      }
     },
     {
       "entrypoint": "@beep/public-site#beep:test",
@@ -7094,7 +8198,15 @@
     {
       "entrypoint": "@beep/qa-capture#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/qa-capture#lint:fix"]
+      "directConfiguredCallers": ["@beep/qa-capture#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/qa-capture#lint"
+      }
     },
     {
       "entrypoint": "@beep/qa-capture#beep:test",
@@ -7147,7 +8259,15 @@
     {
       "entrypoint": "@beep/rdf#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/rdf#lint:fix"]
+      "directConfiguredCallers": ["@beep/rdf#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/rdf#lint"
+      }
     },
     {
       "entrypoint": "@beep/rdf#beep:test",
@@ -7187,7 +8307,15 @@
     {
       "entrypoint": "@beep/rdf-canonize#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/rdf-canonize#lint:fix"]
+      "directConfiguredCallers": ["@beep/rdf-canonize#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/rdf-canonize#lint"
+      }
     },
     {
       "entrypoint": "@beep/rdf-canonize#beep:test",
@@ -7230,7 +8358,15 @@
     {
       "entrypoint": "@beep/repo-ai-metrics#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/repo-ai-metrics#lint:fix"]
+      "directConfiguredCallers": ["@beep/repo-ai-metrics#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/repo-ai-metrics#lint"
+      }
     },
     {
       "entrypoint": "@beep/repo-ai-metrics#beep:test",
@@ -7273,7 +8409,15 @@
     {
       "entrypoint": "@beep/repo-cli#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/repo-cli#lint:fix"]
+      "directConfiguredCallers": ["@beep/repo-cli#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/repo-cli#lint"
+      }
     },
     {
       "entrypoint": "@beep/repo-cli#beep:lint:python",
@@ -7331,7 +8475,15 @@
     {
       "entrypoint": "@beep/repo-cli-kit#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/repo-cli-kit#lint:fix"]
+      "directConfiguredCallers": ["@beep/repo-cli-kit#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/repo-cli-kit#lint"
+      }
     },
     {
       "entrypoint": "@beep/repo-cli-kit#beep:test",
@@ -7381,7 +8533,15 @@
     {
       "entrypoint": "@beep/repo-configs#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/repo-configs#lint:fix"]
+      "directConfiguredCallers": ["@beep/repo-configs#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/repo-configs#lint"
+      }
     },
     {
       "entrypoint": "@beep/repo-configs#beep:test",
@@ -7424,7 +8584,15 @@
     {
       "entrypoint": "@beep/repo-docgen#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/repo-docgen#lint:fix"]
+      "directConfiguredCallers": ["@beep/repo-docgen#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/repo-docgen#lint"
+      }
     },
     {
       "entrypoint": "@beep/repo-docgen#beep:test",
@@ -7472,7 +8640,15 @@
     {
       "entrypoint": "@beep/repo-tsconfig#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/repo-tsconfig#lint:fix"]
+      "directConfiguredCallers": ["@beep/repo-tsconfig#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/repo-tsconfig#lint"
+      }
     },
     {
       "entrypoint": "@beep/repo-tsconfig#beep:test",
@@ -7517,7 +8693,15 @@
     {
       "entrypoint": "@beep/repo-utils#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/repo-utils#lint:fix"]
+      "directConfiguredCallers": ["@beep/repo-utils#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/repo-utils#lint"
+      }
     },
     {
       "entrypoint": "@beep/repo-utils#beep:test",
@@ -7560,7 +8744,15 @@
     {
       "entrypoint": "@beep/repo-workspaces#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/repo-workspaces#lint:fix"]
+      "directConfiguredCallers": ["@beep/repo-workspaces#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/repo-workspaces#lint"
+      }
     },
     {
       "entrypoint": "@beep/repo-workspaces#beep:test",
@@ -7610,7 +8802,15 @@
     {
       "entrypoint": "@beep/runpod#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/runpod#lint:fix"]
+      "directConfiguredCallers": ["@beep/runpod#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/runpod#lint"
+      }
     },
     {
       "entrypoint": "@beep/runpod#beep:test",
@@ -7671,7 +8871,15 @@
     {
       "entrypoint": "@beep/runtime-env#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/runtime-env#lint:fix"]
+      "directConfiguredCallers": ["@beep/runtime-env#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/runtime-env#lint"
+      }
     },
     {
       "entrypoint": "@beep/runtime-env#beep:test",
@@ -7716,7 +8924,15 @@
     {
       "entrypoint": "@beep/sanity#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/sanity#lint:fix"]
+      "directConfiguredCallers": ["@beep/sanity#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/sanity#lint"
+      }
     },
     {
       "entrypoint": "@beep/sanity#beep:test",
@@ -7764,7 +8980,15 @@
     {
       "entrypoint": "@beep/sbom#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/sbom#lint:fix"]
+      "directConfiguredCallers": ["@beep/sbom#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/sbom#lint"
+      }
     },
     {
       "entrypoint": "@beep/sbom#beep:test",
@@ -7814,7 +9038,15 @@
     {
       "entrypoint": "@beep/schema#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/schema#lint:fix"]
+      "directConfiguredCallers": ["@beep/schema#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/schema#lint"
+      }
     },
     {
       "entrypoint": "@beep/schema#beep:test",
@@ -7862,7 +9094,15 @@
     {
       "entrypoint": "@beep/schema-org#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/schema-org#lint:fix"]
+      "directConfiguredCallers": ["@beep/schema-org#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/schema-org#lint"
+      }
     },
     {
       "entrypoint": "@beep/schema-org#beep:test",
@@ -7947,7 +9187,15 @@
     {
       "entrypoint": "@beep/semantic-web#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/semantic-web#lint:fix"]
+      "directConfiguredCallers": ["@beep/semantic-web#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/semantic-web#lint"
+      }
     },
     {
       "entrypoint": "@beep/semantic-web#beep:test",
@@ -7980,7 +9228,15 @@
     {
       "entrypoint": "@beep/semantica#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/semantica#lint:fix"]
+      "directConfiguredCallers": ["@beep/semantica#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/semantica#lint"
+      }
     },
     {
       "entrypoint": "@beep/semantica#beep:test",
@@ -8045,7 +9301,15 @@
     {
       "entrypoint": "@beep/semver#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/semver#lint:fix"]
+      "directConfiguredCallers": ["@beep/semver#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/semver#lint"
+      }
     },
     {
       "entrypoint": "@beep/semver#beep:test",
@@ -8090,7 +9354,15 @@
     {
       "entrypoint": "@beep/shacl#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/shacl#lint:fix"]
+      "directConfiguredCallers": ["@beep/shacl#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/shacl#lint"
+      }
     },
     {
       "entrypoint": "@beep/shacl#beep:test",
@@ -8130,7 +9402,15 @@
     {
       "entrypoint": "@beep/shared-domain#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/shared-domain#lint:fix"]
+      "directConfiguredCallers": ["@beep/shared-domain#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/shared-domain#lint"
+      }
     },
     {
       "entrypoint": "@beep/shared-domain#beep:test",
@@ -8173,7 +9453,15 @@
     {
       "entrypoint": "@beep/shared-tables#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/shared-tables#lint:fix"]
+      "directConfiguredCallers": ["@beep/shared-tables#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/shared-tables#lint"
+      }
     },
     {
       "entrypoint": "@beep/shared-tables#beep:test",
@@ -8213,7 +9501,15 @@
     {
       "entrypoint": "@beep/shared-use-cases#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/shared-use-cases#lint:fix"]
+      "directConfiguredCallers": ["@beep/shared-use-cases#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/shared-use-cases#lint"
+      }
     },
     {
       "entrypoint": "@beep/shared-use-cases#beep:test",
@@ -8266,7 +9562,15 @@
     {
       "entrypoint": "@beep/skill-contract#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/skill-contract#lint:fix"]
+      "directConfiguredCallers": ["@beep/skill-contract#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/skill-contract#lint"
+      }
     },
     {
       "entrypoint": "@beep/skill-contract#beep:test",
@@ -8311,7 +9615,15 @@
     {
       "entrypoint": "@beep/spdx#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/spdx#lint:fix"]
+      "directConfiguredCallers": ["@beep/spdx#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/spdx#lint"
+      }
     },
     {
       "entrypoint": "@beep/spdx#beep:test",
@@ -8341,7 +9653,15 @@
     {
       "entrypoint": "@beep/storybook#beep:lint:fix",
       "literalCommandSha256": "394e654ef95873fdf9bbf69d2525e37952e115fa53f49a28c7669e383d042fc3",
-      "directConfiguredCallers": ["@beep/storybook#lint:fix"]
+      "directConfiguredCallers": ["@beep/storybook#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/storybook#lint"
+      }
     },
     {
       "entrypoint": "@beep/storybook#beep:test",
@@ -8401,7 +9721,15 @@
     {
       "entrypoint": "@beep/tailscale#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/tailscale#lint:fix"]
+      "directConfiguredCallers": ["@beep/tailscale#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/tailscale#lint"
+      }
     },
     {
       "entrypoint": "@beep/tailscale#beep:test",
@@ -8451,7 +9779,15 @@
     {
       "entrypoint": "@beep/technical-drawing#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/technical-drawing#lint:fix"]
+      "directConfiguredCallers": ["@beep/technical-drawing#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/technical-drawing#lint"
+      }
     },
     {
       "entrypoint": "@beep/technical-drawing#beep:test",
@@ -8511,7 +9847,15 @@
     {
       "entrypoint": "@beep/tesseract#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/tesseract#lint:fix"]
+      "directConfiguredCallers": ["@beep/tesseract#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/tesseract#lint"
+      }
     },
     {
       "entrypoint": "@beep/tesseract#beep:test",
@@ -8556,7 +9900,15 @@
     {
       "entrypoint": "@beep/test-runner#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/test-runner#lint:fix"]
+      "directConfiguredCallers": ["@beep/test-runner#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/test-runner#lint"
+      }
     },
     {
       "entrypoint": "@beep/test-runner#beep:test",
@@ -8601,7 +9953,15 @@
     {
       "entrypoint": "@beep/test-utils#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/test-utils#lint:fix"]
+      "directConfiguredCallers": ["@beep/test-utils#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/test-utils#lint"
+      }
     },
     {
       "entrypoint": "@beep/test-utils#beep:test",
@@ -8652,7 +10012,15 @@
     {
       "entrypoint": "@beep/tika#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/tika#lint:fix"]
+      "directConfiguredCallers": ["@beep/tika#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/tika#lint"
+      }
     },
     {
       "entrypoint": "@beep/tika#beep:test",
@@ -8685,7 +10053,15 @@
     {
       "entrypoint": "@beep/todox#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/todox#lint:fix"]
+      "directConfiguredCallers": ["@beep/todox#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/todox#lint"
+      }
     },
     {
       "entrypoint": "@beep/todox#beep:test",
@@ -8730,7 +10106,15 @@
     {
       "entrypoint": "@beep/toml#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/toml#lint:fix"]
+      "directConfiguredCallers": ["@beep/toml#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/toml#lint"
+      }
     },
     {
       "entrypoint": "@beep/toml#beep:test",
@@ -8765,7 +10149,15 @@
     {
       "entrypoint": "@beep/trustgraph-workbench#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/trustgraph-workbench#lint:fix"]
+      "directConfiguredCallers": ["@beep/trustgraph-workbench#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/trustgraph-workbench#lint"
+      }
     },
     {
       "entrypoint": "@beep/trustgraph-workbench#beep:test",
@@ -8805,7 +10197,15 @@
     {
       "entrypoint": "@beep/tsconfig#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/tsconfig#lint:fix"]
+      "directConfiguredCallers": ["@beep/tsconfig#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/tsconfig#lint"
+      }
     },
     {
       "entrypoint": "@beep/tsconfig#beep:test",
@@ -8855,7 +10255,15 @@
     {
       "entrypoint": "@beep/types#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/types#lint:fix"]
+      "directConfiguredCallers": ["@beep/types#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/types#lint"
+      }
     },
     {
       "entrypoint": "@beep/types#beep:test",
@@ -8900,7 +10308,15 @@
     {
       "entrypoint": "@beep/ui#beep:lint:fix",
       "literalCommandSha256": "2bb118299831c30b1cb5673222c04201641265fa824c39527570b04226acc5eb",
-      "directConfiguredCallers": ["@beep/ui#lint:fix"]
+      "directConfiguredCallers": ["@beep/ui#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/ui#lint"
+      }
     },
     {
       "entrypoint": "@beep/ui#beep:test",
@@ -8945,7 +10361,15 @@
     {
       "entrypoint": "@beep/uspto#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/uspto#lint:fix"]
+      "directConfiguredCallers": ["@beep/uspto#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/uspto#lint"
+      }
     },
     {
       "entrypoint": "@beep/uspto#beep:test",
@@ -8993,7 +10417,15 @@
     {
       "entrypoint": "@beep/uspto-mcp#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/uspto-mcp#lint:fix"]
+      "directConfiguredCallers": ["@beep/uspto-mcp#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/uspto-mcp#lint"
+      }
     },
     {
       "entrypoint": "@beep/uspto-mcp#beep:test",
@@ -9046,7 +10478,15 @@
     {
       "entrypoint": "@beep/utils#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/utils#lint:fix"]
+      "directConfiguredCallers": ["@beep/utils#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/utils#lint"
+      }
     },
     {
       "entrypoint": "@beep/utils#beep:test",
@@ -9089,7 +10529,15 @@
     {
       "entrypoint": "@beep/walker#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/walker#lint:fix"]
+      "directConfiguredCallers": ["@beep/walker#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/walker#lint"
+      }
     },
     {
       "entrypoint": "@beep/walker#beep:test",
@@ -9134,7 +10582,15 @@
     {
       "entrypoint": "@beep/windows-secrets#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/windows-secrets#lint:fix"]
+      "directConfiguredCallers": ["@beep/windows-secrets#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/windows-secrets#lint"
+      }
     },
     {
       "entrypoint": "@beep/windows-secrets#beep:test",
@@ -9184,7 +10640,15 @@
     {
       "entrypoint": "@beep/wink#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/wink#lint:fix"]
+      "directConfiguredCallers": ["@beep/wink#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/wink#lint"
+      }
     },
     {
       "entrypoint": "@beep/wink#beep:test",
@@ -9224,7 +10688,15 @@
     {
       "entrypoint": "@beep/workspace-domain#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/workspace-domain#lint:fix"]
+      "directConfiguredCallers": ["@beep/workspace-domain#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/workspace-domain#lint"
+      }
     },
     {
       "entrypoint": "@beep/workspace-domain#beep:test",
@@ -9267,7 +10739,15 @@
     {
       "entrypoint": "@beep/workspace-server#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/workspace-server#lint:fix"]
+      "directConfiguredCallers": ["@beep/workspace-server#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/workspace-server#lint"
+      }
     },
     {
       "entrypoint": "@beep/workspace-server#beep:test",
@@ -9318,7 +10798,15 @@
     {
       "entrypoint": "@beep/workspace-tables#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/workspace-tables#lint:fix"]
+      "directConfiguredCallers": ["@beep/workspace-tables#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/workspace-tables#lint"
+      }
     },
     {
       "entrypoint": "@beep/workspace-tables#beep:test",
@@ -9366,7 +10854,15 @@
     {
       "entrypoint": "@beep/workspace-use-cases#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/workspace-use-cases#lint:fix"]
+      "directConfiguredCallers": ["@beep/workspace-use-cases#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/workspace-use-cases#lint"
+      }
     },
     {
       "entrypoint": "@beep/workspace-use-cases#beep:test",
@@ -9414,7 +10910,15 @@
     {
       "entrypoint": "@beep/xdg#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/xdg#lint:fix"]
+      "directConfiguredCallers": ["@beep/xdg#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/xdg#lint"
+      }
     },
     {
       "entrypoint": "@beep/xdg#beep:test",
@@ -9459,7 +10963,15 @@
     {
       "entrypoint": "@beep/xstate#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/xstate#lint:fix"]
+      "directConfiguredCallers": ["@beep/xstate#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/xstate#lint"
+      }
     },
     {
       "entrypoint": "@beep/xstate#beep:test",
@@ -9504,7 +11016,15 @@
     {
       "entrypoint": "@beep/yaml#beep:lint:fix",
       "literalCommandSha256": "3703db7c1786a93e766f4b76393d235f2cc96e821fb927824bfd7feb06cea346",
-      "directConfiguredCallers": ["@beep/yaml#lint:fix"]
+      "directConfiguredCallers": ["@beep/yaml#lint:fix"],
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-entrypoint",
+        "review": "research/nested-source-fixer-review-2026-11-03.json",
+        "pureCounterpart": "@beep/yaml#lint"
+      }
     },
     {
       "entrypoint": "@beep/yaml#beep:test",
@@ -9540,5 +11060,10 @@
   "cacheConfigurationChanged": false,
   "taskQualificationGranted": false,
   "featureAcceptanceGranted": false,
-  "fullGoalAcceptanceChanged": false
+  "fullGoalAcceptanceChanged": false,
+  "reviewCounts": {
+    "reviewedCurrentSourceKeepFresh": 190,
+    "pending": 1609
+  },
+  "sourceReviewReports": ["research/nested-source-fixer-review-2026-11-03.json"]
 }

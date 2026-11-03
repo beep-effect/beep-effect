@@ -843,3 +843,20 @@ Two native queries took 90 and 89 milliseconds and executed no task bodies.
 The initial wider query hit its output bound; the reduced field selection
 kept the original limits. Query feature acceptance, task qualification and
 every whole-goal acceptance criterion remain incomplete.
+
+
+### Nested mutation boundaries: 2026-11-03
+
+The [nested fixer source review](research/nested-source-fixer-review-2026-11-03.json)
+applies the existing whole-mutator rule to 190 additional script entrypoints.
+Every command explicitly uses Biome `--write`; every complete configured
+wrapper command is `bun run beep:lint:fix`, already source-reviewed with caching
+disabled. All 190 manifest files match accepted source independently, and all
+458 census source bindings still match. Source mutation must execute fresh.
+
+The inventory now records 190 keep-fresh source dispositions and 1,609 pending
+script-only reviews. Each named separate read-only lint counterpart remains
+pending qualification. The existing 204 configured keep-fresh dispositions and
+2,232 pending configured reviews are unchanged; entrypoint rows are not added
+to them as distinct semantic computations. No task body, cache setting or
+qualification transition ran. All whole-goal criteria remain incomplete.

@@ -64510,7 +64510,9 @@
     "scriptOnlyEntrypoints": 1799,
     "withLiteralConfiguredCaller": 1309,
     "withoutLiteralConfiguredCaller": 490,
-    "reviewState": "pending",
-    "countsDoNotMeanDistinctSemanticComputations": true
+    "reviewState": "partial-source-review",
+    "countsDoNotMeanDistinctSemanticComputations": true,
+    "sourceReviewedKeepFresh": 190,
+    "pendingSemanticReviews": 1609
   }
 }
