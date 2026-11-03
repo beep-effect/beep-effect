@@ -741,3 +741,19 @@ results. Six controlled source changes must refuse before client selection; the
 legacy prefixes lack that refusal. No task body executes, feature/tuple is
 qualified or runtime setting changes. Reverse the driver/registration wave
 through Git while retaining both source envelopes and their observations.
+
+
+### Refresh the accepted population without carrying stale grants, 2026-11-03
+
+Use Cache's source-bound census at accepted main `31e2ac20f3`. Retain the prior
+population byte-identically before replacing the current review queue. Check
+every prior literal keep-fresh operation against its current manifest and
+effective configuration; review the three new package fixers explicitly. Keep
+all pure counterparts and other computations pending, preserve the original
+qualification records and leave every runtime flag unchanged.
+
+Consume the CI lane economics owner's preview with its source and measurement
+limits. Lint and unit-layout repairs confound a cache-only speed comparison;
+the missing final full-week verdict is not an implied pass. Reverse this
+registration through Git to the retained population and reports. Historical
+receipts and qualification evidence keep their original source and authority.

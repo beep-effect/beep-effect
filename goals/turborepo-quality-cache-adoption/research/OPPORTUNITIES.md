@@ -838,3 +838,16 @@ observed schema difference changed the matrix and next qualification work.
 - Keep the unchanged bounded collector AST and immutable original evidence.
   Fresh observations record the repaired driver bytes rather than re-hashing
   an older observation onto them. A new source binding requires its own replay.
+
+
+### 2026-11-03 — keep the adoption queue aligned with accepted packages
+
+- Accepted main added 36 executable computations after the published population.
+  A configured cache flag and an old workspace-wide script-map digest cannot
+  decide whether those computations are safe to reuse.
+- Consume the existing Cache census, retain the prior reviewed population, and
+  recheck literal wrappers and effective configuration. Three new source-writing
+  fixers remain fresh; their pure lint counterparts still need qualification.
+- Consume the existing economics report rather than attributing its lint/test
+  repairs to cache hits. Keep preview measurements separate from the absent
+  final full-week verdict and from any new cache-specific before/after proof.

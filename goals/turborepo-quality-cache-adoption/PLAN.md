@@ -767,3 +767,22 @@ pin/collector/schema mutations refuse before client selection, while the retaine
 legacy prefixes do not. Original reports and the prior checkpoint remain retained
 under their exact published source head. No local quality suite or qualification
 ran; the feature stays disabled and pending.
+
+
+### Accepted-source population and economics checkpoint, 2026-11-03
+
+[The census checkpoint](research/accepted31e-population-checkpoint-2026-11-03.json)
+binds accepted main `31e2ac20f3`, 194 workspaces and 2,436 executable
+computations. All 458 source bindings match. The prior population is retained
+byte-identically, and the source review checks the literal wrappers, fixer
+implementations and effective disabled-cache configuration again. The three
+new package fixers bring whole-task keep-fresh decisions to 201; 2,235 reviews,
+two entrypoint obligations and all pure counterpart qualifications remain open.
+No task body executed or runtime setting changed.
+
+[The economics consumer receipt](research/ci-economics-consumer-checkpoint-2026-11-03.json)
+uses the existing CI lane owner. Its window-4 preview includes lint scan removal,
+test re-binning and two-wide package producers, so the observed speed gains
+cannot be credited solely to Turbo. The accepted source has no final full-week
+window-4 verdict. Consume that owner report and the real post-repair window
+before claiming measured value or warming benefits. No competing census ran.
