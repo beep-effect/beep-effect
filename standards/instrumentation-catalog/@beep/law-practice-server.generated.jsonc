@@ -93,6 +93,7 @@
     {"name":"Citation.consumeCleanerText","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.copyHtmlTransport","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.createFullPair","owner":"@beep/law-practice-server","family":"slice","conforms":true},
+    {"name":"Citation.createRuntimeSet","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.decodeHtmlJob","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.decodeHtmlReply","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.decodeRegexJob","owner":"@beep/law-practice-server","family":"slice","conforms":true},

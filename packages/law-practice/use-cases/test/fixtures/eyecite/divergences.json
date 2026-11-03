@@ -276,7 +276,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationRuntimeSet.test.ts",
-          "sha256": "48c711c505378f3a9a9e36785478f67a6365b9c2106f416c9bf70f144e68096f"
+          "sha256": "85cddf84ea386e39b6a8d9d988d0eabc5d6e174616d252a40ff0565d33bf6273"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-default-branch-observations.md",
@@ -1069,7 +1069,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationRuntimeSet.test.ts",
-          "sha256": "48c711c505378f3a9a9e36785478f67a6365b9c2106f416c9bf70f144e68096f"
+          "sha256": "85cddf84ea386e39b6a8d9d988d0eabc5d6e174616d252a40ff0565d33bf6273"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-insertion-entry-receipts.md",

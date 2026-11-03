@@ -247,6 +247,14 @@ source membership vectors. Full installation replay, Python set order,
 family/scaling approval and public tokenizer integration remain open. See
 [extractor selection](history/evidence/2026-11-03-extractor-selection.md).
 
+Latest tokenizer-order prerequisite (2026-11-03): the existing source RuntimeSet
+adapter now copies tables with cached hashes and CPython copy sizing, rather
+than rebuilding by incremental add. Twenty independent cases, 100 subsequent
+mutation traces and nested copies pass; sixteen source orders differ from a
+rebuild. Existing 71 add/growth events remain required. Eleven focused set,
+selector and lowercase tests pass. Extractor repr/hash binding and source key
+event order remain open. See [set copy evidence](history/evidence/2026-11-03-runtime-set-copy.md).
+
 Latest worker evidence (2026-10-31): private process ownership now covers bounded
 schema frames, captured Clock timers, queue/active limits, forced stop,
 acknowledged cleanup and quarantine without permit reuse. Real-process tests

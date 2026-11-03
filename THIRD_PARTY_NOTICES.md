@@ -308,8 +308,14 @@ stored-hash growth and bucket iteration:
 <https://github.com/python/cpython/blob/v3.11.15/Objects/setobject.c>.
 Source SHA-256:
 `01462829ff1e731582656adf49ef1d662a5f48002ac49114acdae1ea3674ce57`.
-Only the candidate-construction operations used by the resolver are exposed;
+The helper exposes bounded add, bucket iteration and add-only copying;
 set deletion and reentrant mutation are not implemented by this helper.
+
+`RuntimeSet.ts` also adapts add-only `set.copy` / fresh-set `set_merge` sizing,
+source-bucket traversal and cached-hash clean insertion from the same pinned
+`Objects/setobject.c`. Effect persistent bucket storage is shared safely when
+layouts match; mutation roots and work guards remain independent. Deletion,
+dummy-slot compaction and arbitrary set merges are not part of this profile.
 
 The cleaner text allocation helpers in `CleanerTextIdentity.ts`,
 `CleanerValues.ts` and `LiteralCleaners.ts` also adapt CPython 3.11.15

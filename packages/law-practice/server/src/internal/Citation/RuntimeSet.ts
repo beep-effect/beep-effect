@@ -1,5 +1,5 @@
 /**
- * Add-only candidate set adapted from CPython 3.11.15 setobject.c.
+ * Candidate set construction and copying adapted from CPython 3.11.15 setobject.c.
  * Python Software Foundation License Version 2; see THIRD_PARTY_NOTICES.md.
  * Effect adaptation: bounded work, schema-owned keys and captured comparison.
  * Deletion, general set APIs and reentrant comparison are separate obligations.
@@ -26,19 +26,18 @@ const CitationRuntimeDictionaryKeyType = S.toType(CitationRuntimeDictionaryKey);
 const failure = (reason: CitationRuntimeDictionaryFailure["reason"]) =>
   CitationRuntimeDictionaryFailure.make({ reason });
 const indexOf = (value: bigint, size: number) => Number(value & BigInt(size - 1));
-/**
- * Build one fresh set for a source candidate-comprehension/list construction.
- * Only add and iteration are exposed: no delete/dummy behavior is implied.
- * Comparison and work are captured with R = never; keys contain no host object.
- * @internal
- * @category operations
- * @since 0.0.0
- */
-export const makeCitationRuntimeSet = Effect.fn("Citation.makeRuntimeSet")(function* (input: unknown) {
-  const limits = yield* S.decodeUnknownEffect(CitationRuntimeDictionaryLimitsType)(input).pipe(
-    Effect.mapError(() => failure("invalid-input"))
-  );
-  const comparison = yield* CitationRuntimeDictionaryComparison;
+interface RuntimeSetService {
+  readonly add: (key: CitationRuntimeDictionaryKey) => Effect.Effect<void, CitationRuntimeDictionaryFailure>;
+  readonly copy: Effect.Effect<RuntimeSetService, CitationRuntimeDictionaryFailure>;
+  readonly read: Effect.Effect<ReadonlyArray<CitationRuntimeDictionaryKey>>;
+}
+const createRuntimeSet = Effect.fn("Citation.createRuntimeSet")(function* (
+  limits: CitationRuntimeDictionaryLimits,
+  comparison: typeof CitationRuntimeDictionaryComparison.Service,
+  sourceSize: number,
+  sourceUsed: number,
+  sourceBuckets: HashMap.HashMap<number, CitationRuntimeDictionaryKey>
+): Effect.fn.Return<RuntimeSetService, CitationRuntimeDictionaryFailure> {
   const mutex = yield* Semaphore.make(1);
   let size = 8;
   let used = 0;
@@ -125,8 +124,50 @@ export const makeCitationRuntimeSet = Effect.fn("Citation.makeRuntimeSet")(funct
       )
     )
   );
+  // CPython set_merge pre-sizes before copying, without rehash/comparison.
+  const copyCapacity = Effect.gen(function* () {
+    if (sourceUsed * 5 >= (size - 1) * 3) {
+      while (size <= sourceUsed * 2) {
+        yield* step;
+        size *= 2;
+      }
+    }
+  });
+  const copyBuckets = Effect.gen(function* () {
+    for (let bucket = 0; bucket < sourceSize; bucket++) {
+      yield* step;
+      const key = HashMap.get(sourceBuckets, bucket);
+      if (O.isSome(key)) buckets = yield* cleanInsert(buckets, size, key.value);
+    }
+  });
+  if (sourceUsed > 0) {
+    yield* copyCapacity;
+    if (size === sourceSize) {
+      for (let bucket = 0; bucket < sourceSize; bucket++) yield* step;
+      // Persistent Effect storage can share immutable cells; each set keeps
+      // independent roots, semaphore, used count and work state.
+      buckets = sourceBuckets;
+    } else yield* copyBuckets;
+    used = sourceUsed;
+  }
   return {
     add: Effect.fn("Citation.serialSetAdd")((key: CitationRuntimeDictionaryKey) => mutex.withPermit(add(key))),
     read: mutex.withPermit(read),
+    copy: mutex.withPermit(Effect.suspend(() => createRuntimeSet(limits, comparison, size, used, buckets))),
   };
+});
+
+/**
+ * Fresh source set with add, bucket-order read and exact add-only set copying.
+ * Copies retain cached hashes and object identity, acquire independent mutation
+ * and work state, and capture comparison with R = never. Deletion/dummies and
+ * arbitrary set update/union behavior remain outside this compatibility profile.
+ * @internal @category operations @since 0.0.0
+ */
+export const makeCitationRuntimeSet = Effect.fn("Citation.makeRuntimeSet")(function* (input: unknown) {
+  const limits = yield* S.decodeUnknownEffect(CitationRuntimeDictionaryLimitsType)(input).pipe(
+    Effect.mapError(() => failure("invalid-input"))
+  );
+  const comparison = yield* CitationRuntimeDictionaryComparison;
+  return yield* createRuntimeSet(limits, comparison, 8, 0, HashMap.empty());
 });
