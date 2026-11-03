@@ -1,7 +1,7 @@
 {
   "name": "@beep/ai-provider-cli",
   "version": "0.0.1",
-  "description": "Product-neutral provider CLI auth discovery and owned native agent session bridges.",
+  "description": "Product-neutral provider CLI auth discovery and home-layout isolation.",
   "license": "MIT",
   "private": true,
   "type": "module",
@@ -42,15 +42,7 @@
     ".": "./src/index.ts",
     "./*": "./src/*.ts",
     "./internal/*": null,
-    "./package.json": "./package.json",
-    "./AiProviderCliSession.lifecycle": null,
-    "./AiProviderCliSession.profile.service": null,
-    "./AiProviderCliSession.wire.models": null,
-    "./AiProviderCliSession.claude.service": null,
-    "./AiProviderCliSession.codex.service": null,
-    "./AiProviderCliSession.grok.service": null,
-    "./AiProviderCliSession.cursor.service": null,
-    "./AiProviderCliSession.stdio.service": null
+    "./package.json": "./package.json"
   },
   "files": [
     "src/**/*.ts",
@@ -67,19 +59,10 @@
       ".": "./dist/index.ts",
       "./*": "./dist/*.js",
       "./internal/*": null,
-      "./package.json": "./package.json",
-      "./AiProviderCliSession.lifecycle": null,
-      "./AiProviderCliSession.profile.service": null,
-      "./AiProviderCliSession.wire.models": null,
-      "./AiProviderCliSession.claude.service": null,
-      "./AiProviderCliSession.codex.service": null,
-      "./AiProviderCliSession.grok.service": null,
-      "./AiProviderCliSession.cursor.service": null,
-      "./AiProviderCliSession.stdio.service": null
+      "./package.json": "./package.json"
     }
   },
   "dependencies": {
-    "@beep/acp": "workspace:^",
     "@beep/identity": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",

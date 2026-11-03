@@ -1165,3 +1165,59 @@ This repairs preparation, not its unexecuted build or independent approval.
 - Reverse by reverting this research entrypoint and registration while preserving
   the observations. Existing token management, credentials, services and every
   signed production and qualification gate remain unchanged.
+
+
+### Closed protected-main producer workflow, 2026-11-03
+
+- Route the manual stable/canary choice through the existing admitted Heavy leaf,
+  an optional default-off execution mode and the existing protected writer
+  environment. Require the exact repository, main ref, event and caller. Keep
+  operational modes mutually exclusive and all ordinary quality contexts intact.
+- Forward only eleven named trial fields. Require explicit enable, independently
+  selected exact source and candidate identities before private setup. Verify the
+  candidate before delivering the three approval/runtime/issuer records only to
+  the existing installer. Keep verifier ownership off the runner.
+- Prepare only the fixed full identity-lint pilot using the canonical activation
+  and dependency commands, two same-source sibling worktrees and pinned native
+  clients. Never accept an arbitrary command, report, source override or signing
+  payload from the caller. Use the existing closed executor and private publisher.
+- Allow one existing runner for sixty minutes and a fifty-minute producer command,
+  preserving the existing twenty/fifteen/ten-minute comparison/protocol/upload
+  bounds. Preserve trial storage/operation limits in the concrete activation
+  preview. Publish only the bounded digest report for one day and clean only this
+  job's frozen private paths/worktrees. No capacity or cloud grant change.
+- Before activation, verify live environment protection, inspect the authenticated
+  candidate and independently freeze current source/tool/profile/target/epoch
+  approval. Actual secret delivery, protected execution, independent acceptance
+  and every whole-goal gate remain required. Reverse with the enable unset and
+  removal of this optional caller/mode, retaining ordinary CI and all evidence.
+
+
+### Candidate host compiler prerequisite, 2026-11-03
+
+The first actual portable build reached its runner but host Rust build scripts
+failed with `linker cc not found`. Zig handles the target-musl link; host
+procedural/build-script compilation still needs the native compiler. Install or
+verify `cc`, `ld` and `readelf` through the existing noninteractive dnf/apt route
+before compilation, preserving Debian source pruning. Record their executable
+digests, sizes and versions alongside Rust, cargo-zigbuild and Zig. Keep source
+and patch checks, two Cargo jobs, twenty-minute build, ELF refusal and artifact
+bounds intact. Preserve the failed run and successful cleanup; a fresh accepted
+source build and independent artifact inspection are required before approval.
+Reverse with the preparation mode disabled and removal of this prerequisite;
+never relabel the failed run or increase limits to make it pass.
+
+
+### Static protected secret selection, 2026-11-03
+
+Name each approved stable/canary secret explicitly in the installer environment.
+Guard both branches by the selected channel and end with an empty value: missing
+stable material must never select canary material. Avoid computed access to the
+entire secrets context. The caller retains eleven named fields but supplies
+empty values for the unselected channel before invoking Heavy; only three
+channel records and five shared trial values are nonempty for a selected run.
+Keep the step-only installer boundary. Extend the unprivileged-step regression check to
+script bodies and action inputs as well as environment values, including dotted
+and indexed secret references with whitespace. No runtime or credential is
+activated by this repair. Reverse by disabling the optional producer route;
+retain explicit secret names and fail-closed channel separation.

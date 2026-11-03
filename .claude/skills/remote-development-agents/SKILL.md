@@ -1,10 +1,11 @@
 ---
 name: remote-development-agents
 description: >
-  Run development and coding-agent work on beep-worker, tbk-worker or dankserver.
-  Use for selecting a worker, connecting securely, launching a bounded job,
-  observing an existing remote job, or collecting its result. Covers host-specific
-  readiness, YubiKey access, credential boundaries and durable job receipts.
+  Run development and coding-agent work on beep-worker, tbk-worker, dankserver
+  or tom-pc-1. Use for selecting a worker, choosing its T3 or SSH route,
+  launching a bounded job, observing an existing remote job, or collecting its
+  result. Covers host-specific readiness, YubiKey access, credential boundaries
+  and durable job receipts.
 ---
 
 # Remote development agents
@@ -25,7 +26,14 @@ versioned source belongs to Beep; each target checkout supplies its own rules.
    health check. Do not send work to `tbk-ubuntu`: its development target is the
    separate `tbk-worker` guest. Dankserver admits one substantive job at a time
    under its smaller budget; its profile records provider proof and quota holds.
-2. **Connect without administrative forwarding.** Use the profile's canonical
+2. **Pick the route, then connect without administrative forwarding.** A host
+   whose T3 environment is linked (its row in the profiles table names a T3
+   route and `t3_environment_links` lists it) is driven from this T3 session:
+   `orchestrator_capabilities` with that `environmentId`, then `delegate_task`
+   with `target.environmentId` (and `projectId`) or `t3_thread_launch` with
+   `environmentId`; `t3_thread_send`, `t3_thread_wait` and `t3_thread_read`
+   carry the same id. Until `goals/t3code-fleet-rollout` links a host, or for
+   the shell steps a T3 thread cannot do, use the profile's canonical
    workstation SSH wrapper. Announce hardware touches; serialize requests to the
    physical key. Resume a pending terminal instead of opening another. Retry
    expired authentication at most three times, never an uncertain mutation.
@@ -43,12 +51,14 @@ versioned source belongs to Beep; each target checkout supplies its own rules.
    failure is not a reason to switch models or buy additional usage.
 5. **Launch and capture identity.** Start one substantive job at a time in the
    admitted shared user slice, with finite runtime and explicit limits. Record
-   its systemd unit or the repository's durable job ID immediately. Remove
+   its systemd unit, the repository's durable job ID, or (on the T3 route) the
+   `taskId` and thread `link` that `delegate_task` returned, immediately. Remove
    administrative and secret-service environment variables from the child to
    prevent ambient inheritance; this does not revoke worker-owned vault access.
    Fail closed if the user manager or required slice is unavailable.
 6. **Observe the same job.** Poll its recorded identity, not a replacement
-   invocation. A disconnected SSH session does not mean the job failed. Inspect
+   invocation: on the T3 route, wait for the completion to wake you, then
+   `task_status` or `t3_thread_read` with the recorded `environmentId`. A disconnected SSH session does not mean the job failed. Inspect
    exit status, resource failures, changed files and the requested acceptance
    evidence. Keep provider quota, authentication, inference and tool execution
    as separate claims. Stop only a job owned by this task.

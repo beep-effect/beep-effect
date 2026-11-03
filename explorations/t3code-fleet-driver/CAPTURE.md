@@ -59,8 +59,8 @@ Same-session context (2026-11-01, before this packet opened):
   medium agent with Codex `gpt-6.1-sol` medium fallback. Script:
   `update-t3code-source` in the operator's local bin directory. Fork customizations therefore ship to
   the workstation install; other hosts have no equivalent yet.
-- Prior art in this repo: `explorations/cross-provider-agent-communication`
+- Prior art in this repo: `retired:cross-provider-agent-communication` ([last tree](https://github.com/beep-effect/beep-effect/tree/6bb8584b6dbc9aee927a200901c9eebc0abd63b1/explorations/cross-provider-agent-communication))
   (graduated 2026-10-09) qualified a T3-owned desktop host for autonomous
   Claude <-> Codex messaging through T3's MCP tools
   (`research/T3CODE-QUALIFICATION.md`), and graduated
-  `goals/agent-message-router` + `goals/agent-session-bridges`.
+  `retired:agent-message-router` ([last tree](https://github.com/beep-effect/beep-effect/tree/6bb8584b6dbc9aee927a200901c9eebc0abd63b1/goals/agent-message-router)) + `retired:agent-session-bridges` ([last tree](https://github.com/beep-effect/beep-effect/tree/6bb8584b6dbc9aee927a200901c9eebc0abd63b1/goals/agent-session-bridges)).
