@@ -9,16 +9,21 @@ import {
   loadYeetMonitorCommentWatermark,
   openYeetMonitorCommentStream,
   RepoRunContext,
+  ReviewBodyGreptile,
   readYeetReviewLaneLedger,
+  renderYeetMonitorCommentReplay,
+  renderYeetMonitorCommentStateWarning,
   renderYeetMonitorCommentStreamStopped,
+  renderYeetMonitorReviewBodySignal,
   replayYeetMonitorComments,
+  replayYeetMonitorCommentsAsGhLogin,
   runStatusModeForTesting,
   runYeetPullRequestCommentMonitor,
-  salvageYeetMonitorClippedJson,
   YeetMonitorCommentCursor,
   YeetMonitorCommentState,
   YeetMonitorCommentStateJson,
   YeetMonitorCommentWatermark,
+  YeetReviewBodyFindingCounts,
   yeetMonitorCommentStatePath,
 } from "@beep/repo-cli/test/Yeet";
 import { it } from "@beep/test-runner";
@@ -39,7 +44,7 @@ import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { legacyGhGithubLayer } from "./support/YeetGithub.ts";
+import { githubCallLine, legacyGhGithubLayer, legacyGhLayer, recordedGithub } from "./support/YeetGithub.ts";
 
 const isStoppedPollMessage = S.is(
   S.String.check(
@@ -78,12 +83,16 @@ const recordingSpawnerLayer = (respond: (commandLine: string) => CommandStub) =>
       const commandLines = Effect.sync(() =>
         A.map(spawner.spawns, (spawn) => A.join([spawn.command, ...spawn.args], " "))
       );
-      return Layer.merge(spawner.layer, Layer.succeed(RecordedCommands, commandLines));
+      // The kit's comment reads reach the spawner as the `gh api` argv they replaced (W6).
+      return Layer.provideMerge(
+        legacyGhLayer,
+        Layer.mergeAll(spawner.layer, Layer.succeed(RecordedCommands, commandLines), BunCrypto.layer)
+      );
     })
   );
 
-// `gh api --paginate --slurp` answers with one array OF PAGES, so every stub
-// here wraps its rows in a page the way the real command does.
+// `gh api --paginate --slurp` answered with one array OF PAGES; the stubs keep
+// that shape, and the legacy transport folds the pages back into GitHub's one.
 const pages = (rows: ReadonlyArray<unknown>): string => JSON.stringify([rows]);
 const EMPTY_PAGE = pages([]);
 
@@ -392,10 +401,31 @@ describe("yeet monitor comment cursor persistence", () => {
 
             const secondRunCommands = A.drop(yield* recordedCommands, firstRunCommandCount);
             const issuePoll = A.findFirst(secondRunCommands, Str.includes("/issues/"));
-            assertSome(O.map(issuePoll, Str.includes(`since=${LATER_COMMENT_AT}`)), true);
+            // The kit sends `since` as a query parameter, percent-encoded.
+            assertSome(O.map(issuePoll, Str.includes(`since=${encodeURIComponent(LATER_COMMENT_AT)}`)), true);
           }),
         removeTempDirectory
       )
+    );
+  });
+});
+
+describe("yeet monitor comment lines", () => {
+  it("names a replay with nothing new, a cursor it could not persist, and a Greptile round", () => {
+    expect(renderYeetMonitorCommentReplay(0, "2026-08-16T12:00:00.000Z")).toBe(
+      "[yeet] comment replay: nothing new since 2026-08-16T12:00:00.000Z"
+    );
+    expect(renderYeetMonitorCommentStateWarning("disk is full")).toContain(
+      "could not persist the PR comment cursor (disk is full)"
+    );
+    assertSome(
+      renderYeetMonitorReviewBodySignal(
+        ReviewBodyGreptile.make({
+          signal: "greptile",
+          newFindings: YeetReviewBodyFindingCounts.make({ p0: 0, p1: 1, p2: 2 }),
+        })
+      ),
+      "greptile: confidence unknown, new P0:0 P1:1 P2:2 (advisory)"
     );
   });
 });
@@ -622,50 +652,99 @@ describe("yeet monitor comment replay", () => {
   });
 });
 
-describe("yeet monitor comment truncation", () => {
-  const FIRST_AT = "2026-08-16T12:30:00.000Z";
-  const SECOND_AT = "2026-08-16T12:40:00.000Z";
+describe("yeet monitor comment replay as the gh login", () => {
+  const MISSED_AT = "2026-08-16T12:00:00.000Z";
+  const missedIssueStub = (commandLine: string): CommandStub =>
+    endpointOf(commandLine) === "issues"
+      ? { exitCode: 0, output: issueCommentJson(44, "2026-08-16T12:31:00.000Z") }
+      : { exitCode: 0, output: EMPTY_PAGE };
 
-  it("keeps the elements a clipped capture read in full", () => {
-    expect(salvageYeetMonitorClippedJson('[[{"id":1}],[{"id":2')).toBe('[[{"id":1}]]');
-    expect(salvageYeetMonitorClippedJson('[[{"id":1},{"id":2')).toBe('[[{"id":1}]]');
-    expect(salvageYeetMonitorClippedJson('[[{"id":1}]]')).toBe('[[{"id":1}]]');
-    // Nothing closed before the cut, so nothing can honestly be kept.
-    expect(salvageYeetMonitorClippedJson('[[{"id":')).toBe("[]");
-  });
-
-  const clipped = JSON.stringify([
-    [
-      {
-        body: "the one that fits",
-        created_at: FIRST_AT,
-        html_url: `https://github.com/o/r/pull/${PR_NUMBER}#issuecomment-1`,
-        id: 1,
-        user: { login: "octocat" },
-      },
-      {
-        body: Str.repeat(600 * 1024)("x"),
-        created_at: SECOND_AT,
-        html_url: `https://github.com/o/r/pull/${PR_NUMBER}#issuecomment-2`,
-        id: 2,
-        user: { login: "octocat" },
-      },
-    ],
-  ]);
   it.layer(
     Layer.provideMerge(
       Git.layer,
-      Layer.mergeAll(
-        PlatformLayer,
-        TestConsole.layer,
-        recordingSpawnerLayer((commandLine) =>
-          endpointOf(commandLine) === "issues" ? { exitCode: 0, output: clipped } : { exitCode: 0, output: EMPTY_PAGE }
-        )
-      )
+      Layer.mergeAll(PlatformLayer, TestConsole.layer, recordingSpawnerLayer(missedIssueStub))
     ),
     { timeout: "30 seconds" }
   )((it) => {
-    it.effect("advances only to the last comment a clipped read decoded", () =>
+    it.effect("replays through the operator's gh login", () =>
+      Effect.acquireUseRelease(
+        makeTempDirectory,
+        (root) =>
+          Effect.gen(function* () {
+            const context = monitorContext(root);
+            yield* writeState(context, stateAt(PR_NUMBER, MISSED_AT, 1));
+            yield* replayYeetMonitorCommentsAsGhLogin(context, PR_NUMBER);
+            const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+            expect(printed).toContain("comment replay: 1 comment(s)");
+            assertSome(
+              O.map(yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER), (mark) => mark.issue.id),
+              44
+            );
+          }),
+        removeTempDirectory
+      )
+    );
+  });
+
+  // No suite login and a `gh` that answers nothing: the login does not build.
+  it.layer(
+    Layer.provideMerge(
+      Git.layer,
+      Layer.mergeAll(PlatformLayer, TestConsole.layer, ScriptedSpawner.make(() => ({ exit: 1 })).layer)
+    ),
+    { timeout: "30 seconds" }
+  )((it) => {
+    it.effect("reports a login that does not build as an unavailable replay and keeps the position", () =>
+      Effect.acquireUseRelease(
+        makeTempDirectory,
+        (root) =>
+          Effect.gen(function* () {
+            const context = monitorContext(root);
+            yield* writeState(context, stateAt(PR_NUMBER, MISSED_AT, 1));
+            yield* replayYeetMonitorCommentsAsGhLogin(context, PR_NUMBER);
+            const warnings = A.join(A.map(yield* TestConsole.errorLines, String), "\n");
+            expect(warnings).toContain("comment replay unavailable: GitHub access failed (");
+            assertSome(
+              O.map(yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER), (mark) => mark.issue.id),
+              1
+            );
+          }),
+        removeTempDirectory
+      )
+    );
+  });
+});
+
+describe("yeet monitor comment long reads", () => {
+  const FIRST_AT = "2026-08-16T12:30:00.000Z";
+  const SECOND_AT = "2026-08-16T12:40:00.000Z";
+  const issueComment = (id: number, createdAt: string, body: string) => ({
+    body,
+    created_at: createdAt,
+    html_url: `https://github.com/o/r/pull/${PR_NUMBER}#issuecomment-${id}`,
+    id,
+    user: { login: "octocat" },
+  });
+  // The kit reads every page whole, so a comment past the old capture bound is
+  // streamed like any other and nothing is clipped (W6).
+  const github = recordedGithub((call) =>
+    Str.includes("/issues/")(call.path)
+      ? {
+          body: [
+            issueComment(1, FIRST_AT, "the one that used to fit"),
+            issueComment(2, SECOND_AT, Str.repeat(600 * 1024)("x")),
+          ],
+        }
+      : { body: [] }
+  );
+  it.layer(
+    Layer.provideMerge(
+      Git.layer,
+      Layer.mergeAll(PlatformLayer, TestConsole.layer, ScriptedSpawner.make(() => ({ exit: 1 })).layer)
+    ),
+    { timeout: "30 seconds" }
+  )((it) => {
+    it.effect("streams a comment past the old capture bound and advances the cursor to it", () =>
       Effect.acquireUseRelease(
         makeTempDirectory,
         (root) =>
@@ -677,16 +756,14 @@ describe("yeet monitor comment truncation", () => {
             const comments = yield* collectNewYeetMonitorComments(context, PR_NUMBER, watermarkRef);
             yield* acknowledgeYeetMonitorComments(context, PR_NUMBER, watermarkRef, comments);
 
-            // A clipped read is no longer a failed read: what was read is streamed,
-            // and the cursor stops at it so the rest repeats rather than vanishing.
-            expect(A.map(comments, (comment) => comment.id)).toStrictEqual([1]);
+            expect(A.map(comments, (comment) => comment.id)).toStrictEqual([1, 2]);
             assertSome(
               O.map(yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER), (mark) => mark.issue.id),
-              1
+              2
             );
-            const warned = A.join(A.map(yield* TestConsole.errorLines, String), "\n");
-            expect(warned).toContain("was clipped by the capture bound");
-          }),
+            expect(A.join(A.map(yield* TestConsole.errorLines, String), "\n")).not.toContain("clipped");
+            expect(A.map(github.calls, githubCallLine)).toContain(`GET {repo}/issues/${PR_NUMBER}/comments`);
+          }).pipe(github.provide),
         removeTempDirectory
       )
     );

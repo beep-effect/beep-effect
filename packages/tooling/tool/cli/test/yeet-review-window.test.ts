@@ -11,7 +11,9 @@ import {
   PrCloseoutReportJson,
   RepoRunContext,
   readYeetReviewWindow,
+  readYeetReviewWindowAsGhLogin,
   renderYeetReviewWindow,
+  renderYeetReviewWindowHold,
   renderYeetStatusSummary,
   runArtifactPathForContext,
   YEET_REVIEW_WINDOW_DEFAULT,
@@ -38,12 +40,14 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
-import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
-import { provideLegacyGh } from "./support/YeetGithub.ts";
+import { githubCallLine, provideLegacyGh, recordedGithub, restPullRequest } from "./support/YeetGithub.ts";
 import type { YeetReviewWindow } from "@beep/repo-cli/test/Yeet";
+import type { GithubAnswer } from "./support/YeetGithub.ts";
 
 const headSha = "abc1234def";
 const instant = (iso: string) => DateTime.makeUnsafe(iso);
@@ -143,7 +147,10 @@ describe("review window decision", () => {
   });
 });
 
-// One scripted GitHub answer: the printed lines, or a failed or clipped call.
+// One scripted GitHub answer, written as the lines the pre-W6 `gh api --jq`
+// read printed (`<event>\t<created_at>` timeline lines, one check-suite
+// instant per line, the pull request's `created_at`), a failed call, or a
+// payload that does not decode (what a clipped capture was).
 type Answer = string | "fail" | "clipped";
 interface Answers {
   readonly pull?: Answer;
@@ -151,24 +158,43 @@ interface Answers {
   readonly timeline?: Answer;
 }
 
-const answerFor = (answers: Answers, args: ReadonlyArray<string>): Answer => {
-  const endpoint = O.getOrElse(A.findFirst(args, Str.startsWith("repos/")), () => "");
-  if (Str.includes("/timeline")(endpoint)) return answers.timeline ?? "fail";
-  if (Str.includes("/check-suites")(endpoint)) return answers.suites ?? "fail";
-  return answers.pull ?? "fail";
+type Endpoint = "pull" | "suites" | "timeline";
+
+const endpointOf = (path: string): Endpoint =>
+  Str.includes("/timeline")(path) ? "timeline" : Str.includes("/check-suites")(path) ? "suites" : "pull";
+
+const linesOf = (text: string): ReadonlyArray<string> =>
+  A.filter(A.map(Str.split(text, "\n"), Str.trim), Str.isNonEmpty);
+
+// The REST payload GitHub would have sent for the printed lines.
+const restBody = (endpoint: Endpoint, text: string): unknown => {
+  if (endpoint === "timeline") {
+    return A.map(linesOf(text), (line) => {
+      const [event, createdAt] = Str.split(line, "\t");
+      return { event, created_at: createdAt };
+    });
+  }
+  if (endpoint === "suites") {
+    const instants = linesOf(text);
+    return { total_count: A.length(instants), check_suites: A.map(instants, (created_at) => ({ created_at })) };
+  }
+  return restPullRequest({ number: 42, created_at: Str.trim(text) });
 };
 
-const scripted =
-  (answers: Answers, calls: Ref.Ref<ReadonlyArray<string>>) => (_command: string, args: ReadonlyArray<string>) => {
-    const answer = answerFor(answers, args);
-    return Ref.update(calls, A.append(A.join(args, " "))).pipe(
-      Effect.as({
-        exitCode: answer === "fail" ? 1 : 0,
-        output: answer === "fail" ? "gh: API rate limit exceeded" : answer === "clipped" ? "2026-10-06T10:" : answer,
-        truncated: answer === "clipped",
-      })
-    );
-  };
+const answerOf = (answers: Answers, endpoint: Endpoint): Answer => answers[endpoint] ?? "fail";
+
+const restAnswer = (answer: Answer, endpoint: Endpoint): GithubAnswer =>
+  answer === "fail"
+    ? { status: 403, body: { message: "API rate limit exceeded" } }
+    : answer === "clipped"
+      ? { body: endpoint === "timeline" ? [{ event: 42 }] : { clipped: true } }
+      : { body: restBody(endpoint, answer) };
+
+const reviewGithub = (answers: Answers) =>
+  recordedGithub((call) => {
+    const endpoint = endpointOf(call.path);
+    return restAnswer(answerOf(answers, endpoint), endpoint);
+  });
 
 const reviewReadPlatform = Layer.provideMerge(
   Git.layer,
@@ -176,9 +202,9 @@ const reviewReadPlatform = Layer.provideMerge(
 );
 
 const readWith = Effect.fn("readWith")(function* (answers: Answers) {
-  const calls = yield* Ref.make<ReadonlyArray<string>>([]);
-  const window = yield* readYeetReviewWindow(context, { prNumber: 42, headSha }, scripted(answers, calls));
-  return { window, calls: yield* Ref.get(calls) };
+  const github = reviewGithub(answers);
+  const window = yield* readYeetReviewWindow({ prNumber: 42, headSha }).pipe(github.provide);
+  return { window, calls: A.map(github.calls, githubCallLine) };
 });
 
 it.layer(reviewReadPlatform, { timeout: "30 seconds" })("review window read", (it) => {
@@ -239,12 +265,13 @@ it.layer(reviewReadPlatform, { timeout: "30 seconds" })("review window read", (i
         suites: "2026-10-06T10:05:00Z",
       });
       expect(older.window).toMatchObject({ _tag: "elapsed", anchoredAt: "2026-10-06T10:05:00.000Z" });
-      // A timeline line naming any other event voids the read: unknown, never elapsed.
+      // Any other timeline event is not a push and moves nothing: the window still
+      // runs from the head's first receipt.
       const other = yield* readWith({
         timeline: "ready_for_review\t2026-10-06T10:00:00Z\nlabeled\t2026-10-06T10:35:00Z",
         suites: "2026-10-06T10:05:00Z",
       });
-      expect(other.window._tag).toBe("unknown");
+      expect(other.window).toMatchObject({ _tag: "elapsed", anchoredAt: "2026-10-06T10:05:00.000Z" });
     }).pipe(noOverride)
   );
 
@@ -268,21 +295,41 @@ it.layer(reviewReadPlatform, { timeout: "30 seconds" })("review window read", (i
         pull: "2026-10-06T10:12:00Z\n",
       });
       expect(window).toMatchObject({ _tag: "open", anchor: "pr-opened", remainingMs: 2 * 60_000 });
-      expect(A.some(calls, Str.includes("repos/{owner}/{repo}/pulls/42"))).toBe(true);
+      expect(A.some(calls, Str.includes("GET {repo}/pulls/42"))).toBe(true);
     }).pipe(noOverride)
   );
 
   it.effect.each([
     ["a failed timeline query", { suites: "2026-10-06T10:00:00Z" }, "timeline of pull request #42"],
     [
-      "a clipped timeline query",
+      "a timeline that does not decode",
       { timeline: "clipped", suites: "2026-10-06T10:00:00Z" },
       "timeline of pull request #42",
     ],
+    // Fail closed: one event the window counts from without an instant voids the
+    // read, so a push that cannot be dated never lets the window look elapsed.
     [
-      "a timeline line that is not an instant",
-      { timeline: "ready_for_review\tnot-a-date", suites: "2026-10-06T10:00:00Z" },
-      "timeline",
+      "a ready event whose instant does not parse",
+      { timeline: "ready_for_review\tnot-a-date", suites: "2026-10-06T10:00:00Z", pull: "2026-10-06T09:00:00Z" },
+      "timeline of pull request #42",
+    ],
+    [
+      "a force-push whose instant does not parse beside a datable flip",
+      {
+        timeline: "ready_for_review\t2026-10-06T09:00:00Z\nhead_ref_force_pushed\tnot-a-date",
+        suites: "2026-10-06T10:00:00Z",
+      },
+      "timeline of pull request #42",
+    ],
+    [
+      "a force-push with no instant at all",
+      { timeline: "ready_for_review\t2026-10-06T09:00:00Z\nhead_ref_force_pushed", suites: "2026-10-06T10:00:00Z" },
+      "timeline of pull request #42",
+    ],
+    [
+      "check suites that do not decode",
+      { timeline: "ready_for_review\t2026-10-06T09:00:00Z", suites: "clipped" },
+      `check suites of head ${headSha}`,
     ],
     [
       "a failed check-suite query",
@@ -329,6 +376,52 @@ it.layer(reviewReadPlatform, { timeout: "30 seconds" })("review window read", (i
       expect(invalid.calls).toEqual([]);
       expect(renderYeetReviewWindow(invalid.window)).toContain(YEET_REVIEW_WINDOW_ENV);
     })
+  );
+});
+
+describe("review window lines", () => {
+  it("names a pull request opened ready, and the hold detail only when the window is the blocker", () => {
+    const opened = YeetReviewWindowElapsed.make({
+      anchor: "pr-opened",
+      anchoredAt: "2026-10-06T10:00:00.000Z",
+      windowMs: 20 * 60_000,
+    });
+    expect(renderYeetReviewWindow(opened)).toBe(
+      "review window elapsed (20 min after it was opened ready for review at 2026-10-06T10:00:00.000Z)"
+    );
+    expect(renderYeetReviewWindowHold(O.some("review-window-elapsed"), O.none())).toBe(": review window not read");
+    expect(renderYeetReviewWindowHold(O.some("review-window-elapsed"), O.some(opened))).toBe(
+      `: ${renderYeetReviewWindow(opened)}`
+    );
+    expect(renderYeetReviewWindowHold(O.some("threads-resolved"), O.some(opened))).toBe("");
+  });
+});
+
+// The wrapper the status and watch surfaces read the window through.
+it.layer(reviewReadPlatform, { timeout: "30 seconds" })("review window read as the gh login", (it) => {
+  it.effect("reads the window through the surface's gh login", () =>
+    Effect.gen(function* () {
+      yield* TestClock.setTime(millis("2027-01-01T00:00:00Z"));
+      const github = reviewGithub({
+        timeline: "ready_for_review\t2026-10-06T09:00:00Z",
+        suites: "2026-10-06T10:00:00Z",
+      });
+      const window = yield* readYeetReviewWindowAsGhLogin(context, { prNumber: 42, headSha }).pipe(github.provide);
+      expect(window._tag).toBe("elapsed");
+      expect(A.length(github.calls)).toBe(2);
+    }).pipe(noOverride)
+  );
+
+  it.effect("reads a login that does not build as unknown, never as elapsed", () =>
+    Effect.gen(function* () {
+      yield* TestClock.setTime(millis("2027-01-01T00:00:00Z"));
+      const window = yield* readYeetReviewWindowAsGhLogin({ prNumber: 42, headSha })(context).pipe(
+        provideSpawner(ScriptedSpawner.make(() => ({ exit: 1 })))
+      );
+      expect(window._tag).toBe("unknown");
+      expect(renderYeetReviewWindow(window)).toContain("review window unknown: GitHub access failed (");
+      expect(renderYeetReviewWindow(window)).not.toContain(".;");
+    }).pipe(noOverride)
   );
 });
 
@@ -415,13 +508,20 @@ const statusAnswers = (bucket: "pass" | "pending"): Record<string, string> => ({
   "run list": "[]",
 });
 const ghRoute = (args: ReadonlyArray<string>) => A.join(A.take(args, 2), " ");
-const restAnswer = (answer: Answer) =>
-  answer === "fail" ? { stdout: "gh: API rate limit exceeded", exit: 1 } : { stdout: answer };
+// A kit REST read reaches the scripted `gh` as `api repos/{owner}/{repo}/<path>`;
+// it prints GitHub's JSON, or fails.
+const ghRestAnswer = (answers: Answers, args: ReadonlyArray<string>) => {
+  const endpoint = endpointOf(O.getOrElse(A.findFirst(args, Str.startsWith("repos/")), () => ""));
+  const answer = restAnswer(answerOf(answers, endpoint), endpoint);
+  return answer.status === undefined
+    ? { stdout: Result.getOrThrow(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(answer.body)) }
+    : { stdout: "gh: API rate limit exceeded", exit: 1 };
+};
 const ghRunner = (answers: Answers, bucket: "pass" | "pending") =>
   ScriptedSpawner.make((command, args) =>
     command === "gh"
       ? O.match(R.get(statusAnswers(bucket), ghRoute(args)), {
-          onNone: () => restAnswer(answerFor(answers, args)),
+          onNone: () => ghRestAnswer(answers, args),
           onSome: (stdout) => ({ stdout }),
         })
       : {}

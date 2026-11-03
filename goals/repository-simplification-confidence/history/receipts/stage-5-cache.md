@@ -46,7 +46,8 @@ No workstation-wide read-only posture claim is made before E-02/E-03.
 
 ## Remote hit
 
-Not run. Requires a resolvable read-only token and the historical fixture at
+Met 2026-11-03: see `2026-11-03-cold-remote-read.md`. Original 2026-10-09 state:
+not run. Requires a resolvable read-only token and the historical fixture at
 `602e28d3ab` in the sibling worktree root. This worker is confined to its lane.
 Trusted expected hashes from the private sweep are `0d8ccf62fa69d324`
 (`@beep/fc-runs#build`) and `7d05d61faf1b47a2` (`@beep/types#build`).

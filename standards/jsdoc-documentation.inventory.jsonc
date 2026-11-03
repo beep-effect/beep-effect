@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-03T05:24:58.436Z",
+  "generatedAt": "2026-11-03T06:07:09.059Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -533192,8 +533192,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.diff.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.diff.ts",
-          "line": 188,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-diff-ts-188-mergelayers",
+          "line": 189,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-diff-ts-189-mergelayers",
           "currentTags": [
             "@param",
             "@returns",
@@ -533216,8 +533216,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.diff.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.diff.ts",
-          "line": 243,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-diff-ts-243-catalogmodelsbyid",
+          "line": 244,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-diff-ts-244-catalogmodelsbyid",
           "currentTags": [
             "@param",
             "@returns",
@@ -533240,8 +533240,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.diff.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.diff.ts",
-          "line": 280,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-diff-ts-280-diffsnapshots",
+          "line": 281,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-diff-ts-281-diffsnapshots",
           "currentTags": [
             "@param",
             "@returns",

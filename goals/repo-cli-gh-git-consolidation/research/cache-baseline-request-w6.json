@@ -1,0 +1,20 @@
+{
+  "previous": "b4e8c77e50195d09bf8e68aff5b5709d9796ee112406507d12ce81b3d16739db",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W6, feat/gh-git-w6-yeet-gh)",
+    "reason": "Record the W6 seal drift: MonitorComments.ts, ReviewWindow.ts and ProvenanceFooter.ts now take their GitHub services from the Yeet gh-login edge (GhOps.ts) and read through @beep/github, so GhOps.ts, Provenance.ts and the kit's GitHubCommit, GitHubRepository, PullRequest, Rest and ReviewThread modules join the goals-doctor, knowledge and quality policy seals; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
+    "basis": {
+      "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w6.md",
+      "sha256": "f09c4fec1a770efcbe1fb46e998da98514a843d590b666d021ce5804d3f123f7"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//", "@beep/repo-cli"]
+}

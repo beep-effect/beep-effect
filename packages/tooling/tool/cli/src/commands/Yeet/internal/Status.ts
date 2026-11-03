@@ -39,7 +39,7 @@ import type { Git } from "@beep/git/Git";
 
 export { deriveYeetMergeReady } from "./MergeReadiness.policy.ts";
 
-import { provideYeetGhLogin } from "./GhOps.ts";
+import { provideYeetGhLogin, readYeetReviewWindowAsGhLogin } from "./GhOps.ts";
 import { NO_CHECKS_REPORTED } from "./MonitorChecks.ts";
 import { yeetCommentExcerpt } from "./MonitorComments.schemas.ts";
 import { YeetHeadTimeline } from "./MonitorPolicy.ts";
@@ -55,7 +55,7 @@ import {
   yeetReviewCommentAuthorKind,
   yeetReviewThreadStateInput,
 } from "./ReviewThreadState.ts";
-import { readYeetReviewWindow, renderYeetReviewWindowHold, yeetReviewWindowDue } from "./ReviewWindow.ts";
+import { renderYeetReviewWindowHold, yeetReviewWindowDue } from "./ReviewWindow.ts";
 import {
   YeetStatusArtifact,
   YeetStatusLaneDigest,
@@ -1119,7 +1119,7 @@ const readRemotePullRequest = Effect.fn("YeetStatus.readRemotePullRequest")(func
   );
   if (Result.isSuccess(primary)) return O.some(primary.success);
   return yield* Effect.gen(function* () {
-    const found = yield* findOpenPullRequestViaRest(context);
+    const found = yield* findOpenPullRequestViaRest(context).pipe(provideYeetGhLogin(context.repoRoot));
     if (O.isNone(found)) return O.none<GhStatusPullRequest>();
     const output = yield* ghOutput({
       args: [
@@ -1314,7 +1314,7 @@ const withReviewWindow = Effect.fn("YeetStatus.withReviewWindow")(function* (
     O.flatMap(() => O.all({ prNumber: O.fromUndefinedOr(remote.number), headSha: remote.headSha }))
   );
   if (O.isNone(target)) return remote;
-  const reviewWindow = yield* readYeetReviewWindow(context, target.value);
+  const reviewWindow = yield* readYeetReviewWindowAsGhLogin(context, target.value);
   return YeetStatusRemote.make({ ...remote, reviewWindow: O.some(reviewWindow) });
 });
 

@@ -1,6 +1,10 @@
 /**
  * Frozen pre-W4 body for `ops/review-thread-differential-w4.ts`: `packages/tooling/tool/cli/src/commands/Yeet/internal/WatchMode.ts`, verbatim from
  * main 930758e06b except for import paths and the identity namespace. The watch stream and tick declare `Git`, which W2b (#2606) added to the live readers they call.
+ * W6 (SPEC D-15) moved the review-window and comment reads onto the kit; this body takes them as
+ * the operator's gh login (`readYeetReviewWindowAsGhLogin`, `provideYeetGhLogin`), as the live watch does.
+ * Imports follow later moves only (beep-cli-composition W1b #2645 and the W6 login wrappers in `GhOps.ts`);
+ * the replayed logic is unchanged.
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
@@ -32,6 +36,10 @@ import {
   convergeYeetInbox,
   YeetConvergeObservation,
 } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/Converge.ts";
+import {
+  provideYeetGhLogin,
+  readYeetReviewWindowAsGhLogin,
+} from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/GhOps.ts";
 import { NO_CHECKS_REPORTED } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorChecks.ts";
 import {
   acknowledgeYeetMonitorComments,
@@ -51,7 +59,6 @@ import {
   yeetReviewThreadStateOutstanding,
 } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewThreadState.ts";
 import {
-  readYeetReviewWindow,
   yeetReviewWindowDue,
   yeetReviewWindowElapsed,
 } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewWindow.ts";
@@ -486,7 +493,7 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
   // Same lazy read the status gate takes: the review window is read only once
   // it is the last criterion standing, and an unknown window stays unmet.
   const reviewWindow = yeetReviewWindowDue(unwindowed)
-    ? O.some(yield* readYeetReviewWindow(context, { prNumber: view.number, headSha: view.headRefOid }))
+    ? O.some(yield* readYeetReviewWindowAsGhLogin(context, { prNumber: view.number, headSha: view.headRefOid }))
     : O.none();
   const criteria = YeetMergeReadyCriteria.make({
     ...unwindowed,
@@ -746,7 +753,11 @@ const emitWatchCommentRows = Effect.fn("Yeet.emitWatchCommentRows")(function* (
   if (yield* Ref.get(session.stoppedRef)) {
     return 0;
   }
-  const polled = yield* Effect.result(collectNewYeetMonitorComments(context, snapshot.prNumber, session.watermarkRef));
+  const polled = yield* Effect.result(
+    collectNewYeetMonitorComments(context, snapshot.prNumber, session.watermarkRef).pipe(
+      provideYeetGhLogin(context.repoRoot)
+    )
+  );
   if (Result.isFailure(polled)) {
     const failures = yield* Ref.updateAndGet(session.failuresRef, (count) => count + 1);
     yield* Console.error(

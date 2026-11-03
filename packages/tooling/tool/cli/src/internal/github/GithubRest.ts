@@ -281,17 +281,21 @@ export interface GithubRestShape {
    * resolution, which only GraphQL reports.
    */
   readonly hasReviewComments: (number: number) => Effect.Effect<boolean, GitHubError>;
-  /** First GitHub check-suite receipt for the head, unknown when none exists. */
+  /**
+   * First GitHub check-suite receipt for the head (its first 100 suites),
+   * unknown when none exists.
+   */
   readonly headFirstReceivedAt: (sha: string) => Effect.Effect<O.Option<DateTime.Utc>, GitHubError>;
   /**
    * Squash-merge (or another method) pinned to a head sha. Without a
-   * `commitMessage` GitHub writes the body its squash settings prescribe.
+   * `commitTitle` or `commitMessage` GitHub writes the subject or body its
+   * merge settings prescribe.
    */
   readonly mergePullRequest: (
     number: number,
     options: {
       readonly sha: string;
-      readonly commitTitle: string;
+      readonly commitTitle?: string | undefined;
       readonly commitMessage?: string | undefined;
       readonly method: "merge" | "squash" | "rebase";
     }
@@ -311,7 +315,11 @@ export interface GithubRestShape {
   readonly requiredStatusContexts: (branch: string) => Effect.Effect<ReadonlyArray<string>, GitHubError>;
   /** Re-run the failed jobs of one workflow run. */
   readonly rerunFailedJobs: (runId: number) => Effect.Effect<void, GitHubError>;
-  /** GitHub-owned ready and force-push timeline instants for the pull request. */
+  /**
+   * GitHub-owned ready and force-push timeline instants for the pull request.
+   * A ready or force-push event without a parseable instant fails the read
+   * (`decode`), so a merge gate reading it fails closed.
+   */
   readonly reviewTimeline: (number: number) => Effect.Effect<
     {
       readonly readyAt: O.Option<DateTime.Utc>;
@@ -374,7 +382,7 @@ const makeGithubRest = Effect.gen(function* () {
       Effect.map(
         flow(
           A.map(toPullRequestRecord),
-          A.findFirst((pull) => pull.headRef === branch)
+          A.findFirst((pull) => pull.headRef === branch && pull.state === "open")
         )
       )
     );
@@ -463,28 +471,41 @@ const makeGithubRest = Effect.gen(function* () {
       )
     );
 
+  // Fail closed: a ready or force-push event whose instant is missing or does not
+  // parse fails the read, so a push that cannot be dated never lets a review
+  // window look elapsed early. Other events carry no instant the window reads.
+  const timelineOperation = "GET /repos/{owner}/{repo}/issues/{issue_number}/timeline";
+  const datedEvents = (events: ReadonlyArray<typeof TimelineEventWire.Type>, eventName: string) =>
+    pipe(
+      events,
+      A.filter((event) => event.event === eventName),
+      A.map((event) => utcFromIso(event.created_at)),
+      O.all,
+      Effect.fromOption,
+      Effect.mapBoth({
+        onFailure: () => GitHubError.decode(timelineOperation, `a ${eventName} event has no instant`, eventName),
+        onSuccess: flow(A.sort(DateTime.Order), A.last),
+      })
+    );
+
   const reviewTimeline = (number: number) =>
     client.paginate("GET /repos/{owner}/{repo}/issues/{issue_number}/timeline", { ...at, issue_number: number }).pipe(
-      Effect.flatMap(
-        decodeWith(S.Array(TimelineEventWire), "GET /repos/{owner}/{repo}/issues/{issue_number}/timeline")
-      ),
-      Effect.map((events) => {
-        const latest = (eventName: string) =>
-          pipe(
-            events,
-            A.filter((event) => event.event === eventName),
-            A.map((event) => utcFromIso(event.created_at)),
-            A.getSomes,
-            A.sort(DateTime.Order),
-            A.last
-          );
-        return { readyAt: latest("ready_for_review"), forcedAt: latest("head_ref_force_pushed") };
-      })
+      Effect.flatMap(decodeWith(S.Array(TimelineEventWire), timelineOperation)),
+      Effect.flatMap((events) =>
+        Effect.all({
+          readyAt: datedEvents(events, "ready_for_review"),
+          forcedAt: datedEvents(events, "head_ref_force_pushed"),
+        })
+      )
     );
 
   const headFirstReceivedAt = (sha: string) =>
     client
-      .requestDecoded("GET /repos/{owner}/{repo}/commits/{ref}/check-suites", { ...at, ref: sha }, CheckSuitesWire)
+      .requestDecoded(
+        "GET /repos/{owner}/{repo}/commits/{ref}/check-suites",
+        { ...at, ref: sha, per_page: 100 },
+        CheckSuitesWire
+      )
       .pipe(
         Effect.map((response) =>
           pipe(
@@ -501,7 +522,7 @@ const makeGithubRest = Effect.gen(function* () {
     number: number,
     options: {
       readonly sha: string;
-      readonly commitTitle: string;
+      readonly commitTitle?: string | undefined;
       readonly commitMessage?: string | undefined;
       readonly method: "merge" | "squash" | "rebase";
     }
@@ -514,7 +535,7 @@ const makeGithubRest = Effect.gen(function* () {
           pull_number: number,
           sha: options.sha,
           merge_method: options.method,
-          commit_title: options.commitTitle,
+          ...OptionUtils.getSomesStruct({ commit_title: O.fromUndefinedOr(options.commitTitle) }),
           ...OptionUtils.getSomesStruct({ commit_message: O.fromUndefinedOr(options.commitMessage) }),
         },
         MergeWire
