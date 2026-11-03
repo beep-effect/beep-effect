@@ -136,6 +136,14 @@ an early-reply/stalled-write negative control. See
 A reusable shared regex/HTML backend, native regex execution and exhaustive
 parity remain required work.
 
+Latest regex result checkpoint (2026-11-03): incremental native capture
+collection preflights remaining match capacity and complete frame bytes before
+row decoding or buffer growth, retaining source-point validation and complete
+publication. Twenty-nine result/request/input tests pass. The isolated native
+qualifier now uses collection/decoding for its controlled capture observations;
+that full branch remains hosted proof. See
+[capture collection](history/evidence/2026-11-03-regex-capture-collection.md).
+
 Latest worker evidence (2026-10-31): private process ownership now covers bounded
 schema frames, captured Clock timers, queue/active limits, forced stop,
 acknowledged cleanup and quarantine without permit reuse. Real-process tests

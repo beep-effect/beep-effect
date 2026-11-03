@@ -85,6 +85,7 @@
     {"name":"Citation.caseHashString","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.checkRegexResultCounts","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.cleanHtmlProcess","owner":"@beep/law-practice-server","family":"slice","conforms":true},
+    {"name":"Citation.collectRegexCaptures","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.compileRegexProgram","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.completeHtml","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.consumeCleanerText","owner":"@beep/law-practice-server","family":"slice","conforms":true},

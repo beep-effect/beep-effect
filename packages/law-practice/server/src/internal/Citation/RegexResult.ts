@@ -3,7 +3,10 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Num from "effect/Number";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
@@ -23,6 +26,11 @@ const Position = S.Natural.check(S.isLessThanOrEqualTo(max.producedTextUtf16)).p
   $I.annoteSchema("Position", { description: "Python source-point offset within the absolute source ceiling." })
 );
 const Index = S.Natural.pipe($I.annoteSchema("Index", { description: "Nonnegative contextual capture-table index." }));
+const NativeCapture = S.UndefinedOr(S.Tuple([Position, Position])).pipe(
+  $I.annoteSchema("NativeCapture", {
+    description: "One native indices pair or an unmatched group, before contextual range validation.",
+  })
+);
 const paddedLength = (bytes: number) => 4 * ((bytes + 2 - ((bytes + 2) % 3)) / 3);
 const Wire = S.TaggedStruct("Complete", {
   version: S.tag("citation-regex-result/v1"),
@@ -89,6 +97,10 @@ export const CitationRegexCapture = S.Union([CitationRegexCapturedRange, Citatio
  * All offsets are Python source points; projected display text is not consulted.
  * Trusted callers keep borrowed encode/frame buffers immutable during each call;
  * successful decoding owns a separate native capture buffer.
+ * collect pulls one trusted native indices row at a time and preflights complete
+ * result size before decoding/growing storage. It returns only a complete frame.
+ * The pull effect runs in an isolated child: a synchronous native call still
+ * requires the parent's independent regex deadline and retirement authority.
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationRegexResult = Effect.fn("Citation.makeRegexResult")(function* (
@@ -125,8 +137,7 @@ export const makeCitationRegexResult = Effect.fn("Citation.makeRegexResult")(fun
     if (start > end || end > sourcePoints) return yield* invalid();
     return true;
   });
-  const validate = Effect.fn("Citation.validateRegexCaptures")(function* (matches: number, bytes: Uint8Array) {
-    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const makeValidation = () => {
     let previousStart = -1;
     let previousEnd = -1;
     const wholeMatch = Effect.fnUntraced(function* (start: number, end: number) {
@@ -136,9 +147,9 @@ export const makeCitationRegexResult = Effect.fn("Citation.makeRegexResult")(fun
       previousStart = start;
       previousEnd = end;
     });
-    const matchCaptures = Effect.fnUntraced(function* (match: number) {
+    return Effect.fnUntraced(function* (view: DataView, rowOffset: number) {
       for (let group = 0; group <= groups; group++) {
-        const offset = (match * (groups + 1) + group) * 8;
+        const offset = rowOffset + group * 8;
         if (offset % 4096 === 0) yield* Effect.yieldNow;
         const start = view.getUint32(offset, true);
         const end = view.getUint32(offset + 4, true);
@@ -147,7 +158,11 @@ export const makeCitationRegexResult = Effect.fn("Citation.makeRegexResult")(fun
         // Lookaround captures can lie outside the whole-match range.
       }
     });
-    for (let match = 0; match < matches; match++) yield* matchCaptures(match);
+  };
+  const validate = Effect.fn("Citation.validateRegexCaptures")(function* (matches: number, bytes: Uint8Array) {
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const matchCaptures = makeValidation();
+    for (let match = 0; match < matches; match++) yield* matchCaptures(view, match * (groups + 1) * 8);
   });
 
   const decode = Effect.fn("Citation.decodeRegexResult")(function* (body: Uint8Array) {
@@ -189,5 +204,54 @@ export const makeCitationRegexResult = Effect.fn("Citation.makeRegexResult")(fun
     if (frame.byteLength !== layout.completeBytes) return yield* invalid();
     return frame;
   }, timed);
-  return { decode, encode };
+  const Row = S.Array(NativeCapture)
+    .check(S.isBetweenLength(groups + 1, groups + 1))
+    .pipe(
+      $I.annoteSchema("NativeCaptureRow", { description: "Exactly the contextual whole-match and group indices." })
+    );
+  const copyRow = Effect.fnUntraced(function* (view: DataView, offset: number, captures: typeof Row.Type) {
+    for (let group = 0; group <= groups; group++) {
+      if (group % 512 === 0) yield* Effect.yieldNow;
+      const capture = O.fromUndefinedOr(captures[group]);
+      view.setUint32(offset + group * 8, O.isSome(capture) ? capture.value[0] : absent, true);
+      view.setUint32(offset + group * 8 + 4, O.isSome(capture) ? capture.value[1] : absent, true);
+    }
+  });
+  const decodeRow = Effect.fnUntraced(function* (input: unknown) {
+    if (!A.isArray(input) || input.length !== groups + 1) return yield* invalid();
+    return yield* S.decodeUnknownEffect(Row)(input).pipe(Effect.mapError(invalid));
+  });
+  const collect = Effect.fn("Citation.collectRegexCaptures")(function* <E>(
+    pull: Effect.Effect<O.Option<unknown>, E>,
+    maximumMatchesInput: unknown = limits.patternMatches
+  ) {
+    const maximumMatches = yield* S.decodeUnknownEffect(Count)(maximumMatchesInput).pipe(Effect.mapError(invalid));
+    if (maximumMatches > limits.patternMatches) return yield* safety("patternMatches");
+    yield* counts(0);
+    let matches = 0;
+    let bytes = new Uint8Array(0);
+    const checkRow = makeValidation();
+    while (true) {
+      yield* Effect.yieldNow;
+      const next = yield* pull;
+      if (O.isNone(next)) break;
+      if (matches === maximumMatches) return yield* safety("patternMatches");
+      // Count and complete-envelope preflight precede row decoding or growth.
+      const layout = yield* counts(matches + 1);
+      const captures = yield* decodeRow(next.value);
+      if (layout.bytes > bytes.byteLength) {
+        const capacity = Num.min(limits.processMessageBytes, Num.max(layout.bytes, bytes.byteLength * 2));
+        const grown = new Uint8Array(capacity);
+        grown.set(bytes);
+        bytes = grown;
+      }
+      const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+      const offset = matches * (groups + 1) * 8;
+      yield* copyRow(view, offset, captures);
+      yield* checkRow(view, offset);
+      matches++;
+    }
+    return yield* encode(matches, bytes.subarray(0, matches * (groups + 1) * 8));
+  }, timed);
+  return { decode, encode, collect };
 });

@@ -9,6 +9,7 @@ import { expect } from "@effect/vitest";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const encoder = new TextEncoder();
@@ -26,6 +27,13 @@ const words = (values: ReadonlyArray<number>) => {
   return bytes;
 };
 const absent = 0xffffffff;
+const Participations = S.Array(S.Boolean)
+  .check(S.isMaxLength(64))
+  .pipe(
+    $I.annoteSchema("Participations", {
+      description: "Generated participating-empty versus unmatched capture histories.",
+    })
+  );
 const wire = Effect.fn("RegexResultTest.wire")(function* (groups: number, matches: number, spans: string) {
   return encoder.encode(
     yield* encodeObject({
@@ -168,6 +176,99 @@ it.effect("captures its deadline Clock and gives total-operation timing preceden
       _tag: "CitationSafetyLimitExceeded",
       operation: "extract",
       limit: "operationDeadline",
+    });
+    expect(
+      yield* result.collect(Effect.never).pipe(Effect.provideService(Clock.Clock, disabled), Effect.flip)
+    ).toMatchObject({ operation: "extract", limit: "operationDeadline" });
+  })
+);
+
+it.effect.prop(
+  "collects generated native capture histories without losing empty or unmatched groups",
+  [Participations],
+  ([participates]) =>
+    Effect.gen(function* () {
+      const result = yield* makeCitationRegexResult(
+        (yield* defaultCitationEnginePolicy).limits,
+        1,
+        participates.length
+      );
+      let index = 0;
+      const frame = yield* result.collect(
+        Effect.sync(() => {
+          if (index === participates.length) return O.none();
+          const start = index++;
+          return O.some([[start, start + 1], participates[start] === true ? [start, start] : undefined]);
+        })
+      );
+      const decoded = yield* result.decode(frame.subarray(0, -1));
+      expect(decoded.matches).toBe(participates.length);
+      for (let match = 0; match < participates.length; match++) {
+        expect(yield* decoded.capture(match, 0)).toEqual({ _tag: "Range", start: match, end: match + 1 });
+        expect(yield* decoded.capture(match, 1)).toEqual(
+          participates[match] === true ? { _tag: "Range", start: match, end: match } : { _tag: "Unmatched" }
+        );
+      }
+    })
+);
+
+it.effect("rejects the next raw match before decoding its captures and allows a complete zero-match result", () =>
+  Effect.gen(function* () {
+    const policy = (yield* defaultCitationEnginePolicy).limits;
+    const result = yield* makeCitationRegexResult({ ...policy, patternMatches: 1 }, 0, 1);
+    let pulls = 0;
+    const failed = yield* result
+      .collect(Effect.sync(() => O.some(++pulls === 1 ? [[0, 1]] : "invalid capture data")))
+      .pipe(Effect.flip);
+    expect(failed).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "patternMatches" });
+    expect(pulls).toBe(2);
+    const zero = yield* makeCitationRegexResult(policy, 0, 0);
+    expect((yield* zero.decode((yield* zero.collect(Effect.succeedNone, 0)).subarray(0, -1))).matches).toBe(0);
+    expect(yield* zero.collect(Effect.succeedSome([[0, 0]]), 0).pipe(Effect.flip)).toMatchObject({
+      limit: "patternMatches",
+    });
+  })
+);
+
+it.effect("checks the complete result ceiling before capture allocation and publishes no partial table", () =>
+  Effect.gen(function* () {
+    const policy = (yield* defaultCitationEnginePolicy).limits;
+    const result = yield* makeCitationRegexResult(policy, 0, 1);
+    const frame = yield* result.encode(1, words([0, 1]));
+    const pull = () => {
+      let emitted = false;
+      return Effect.sync(() => {
+        if (emitted) return O.none();
+        emitted = true;
+        return O.some([[0, 1]]);
+      });
+    };
+    const exact = yield* makeCitationRegexResult({ ...policy, processMessageBytes: frame.byteLength }, 0, 1);
+    expect(yield* exact.collect(pull())).toEqual(frame);
+    const short = yield* makeCitationRegexResult({ ...policy, processMessageBytes: frame.byteLength - 1 }, 0, 1);
+    expect(yield* short.collect(pull()).pipe(Effect.flip)).toMatchObject({ limit: "processMessageBytes" });
+    expect(yield* short.collect(Effect.succeedSome("malformed capture row")).pipe(Effect.flip)).toMatchObject({
+      limit: "processMessageBytes",
+    });
+    let calls = 0;
+    expect(
+      yield* result
+        .collect(Effect.suspend(() => (++calls === 1 ? Effect.succeedSome([[0, 1]]) : Effect.fail("pull-failed"))))
+        .pipe(Effect.flip)
+    ).toBe("pull-failed");
+  })
+);
+
+it.effect("rejects malformed native rows and overlapping whole matches during collection", () =>
+  Effect.gen(function* () {
+    const result = yield* makeCitationRegexResult((yield* defaultCitationEnginePolicy).limits, 0, 2);
+    for (const row of [[], [undefined], [[0, 3]], [[-1, 0]], [[0, 1, 2]], [[2, 1]], "private source"]) {
+      const failed = yield* result.collect(Effect.succeedSome(row)).pipe(Effect.flip);
+      expect(failed).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-frame" });
+      expect(failed.message).not.toContain("private source");
+    }
+    expect(yield* result.collect(Effect.succeedSome([[0, 1]])).pipe(Effect.flip)).toMatchObject({
+      reason: "invalid-frame",
     });
   })
 );

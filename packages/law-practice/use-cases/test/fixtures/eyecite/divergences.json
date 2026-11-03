@@ -60,11 +60,11 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexResult.ts",
-          "sha256": "f4098af0b07b5a26daeb018dc7d00697da8eb70f4bc09bf2e0250007218e3296"
+          "sha256": "99cc8e1ff817fcf587fb11ab84eb97711db3fdc4fe398c2dce07448f6ad8b51d"
         },
         {
           "path": "packages/law-practice/server/test/CitationRegexResult.test.ts",
-          "sha256": "941f40012164e0a917519774620b744da3f26ad82c3f9d950bbc0a8d7ef0aed2"
+          "sha256": "8a0157f3cf70fca8d86fbc659758e5cc6cbe2b0f18bbef1fcd136e3ad1ac2153"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-02-regex-result-transport.md",
