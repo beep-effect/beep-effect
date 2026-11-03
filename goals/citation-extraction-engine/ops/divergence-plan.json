@@ -41,7 +41,10 @@
         "goals/citation-extraction-engine/history/evidence/2026-11-03-native-regex-worker.md",
         "goals/citation-extraction-engine/ops/probe-regex-match-witnesses.py",
         "packages/law-practice/use-cases/test/fixtures/eyecite/regex-match-witnesses.json",
-        "goals/citation-extraction-engine/history/evidence/2026-11-03-source-extractor-capture-witnesses.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-03-source-extractor-capture-witnesses.md",
+        "goals/citation-extraction-engine/ops/probe-regex-modes.py",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/regex-modes.json",
+        "goals/citation-extraction-engine/history/evidence/2026-11-03-regex-modes-and-source-engines.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

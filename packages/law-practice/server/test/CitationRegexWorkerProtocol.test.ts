@@ -1,6 +1,7 @@
 import { readCitationByteFrames } from "@beep/law-practice-server/internal/Citation/ByteFrames";
 import { makeCitationRegexInput } from "@beep/law-practice-server/internal/Citation/RegexInput";
 import {
+  CitationRegexMatchMode,
   CitationRegexWorkerJob,
   decodeCitationRegexJob,
   encodeCitationRegexJob,
@@ -99,6 +100,7 @@ it.effect("preserves distinct native source and pattern carriers with identical 
     for (const pattern of sources)
       for (const source of sources) {
         const job = CitationRegexWorkerJob.make({
+          mode: "finditer",
           patternWidth: pattern.layout.width,
           patternBytes: pattern.value.storage.bytes,
           sourceWidth: source.layout.width,
@@ -126,6 +128,7 @@ it.effect("charges both base64 residues and the full envelope before payload enc
     for (let length = 0; length < 40; length++) {
       const source = yield* input.prepareText(Str.repeat(length)("A"), nothing);
       const job = CitationRegexWorkerJob.make({
+        mode: "finditer",
         patternWidth: pattern.layout.width,
         patternBytes: pattern.value.storage.bytes,
         sourceWidth: source.layout.width,
@@ -150,6 +153,7 @@ it.effect("handles every split and one-byte input fragments without accepting pa
     const { input, pattern } = yield* setup();
     const source = yield* input.prepareText("A😀B", nothing);
     const job = CitationRegexWorkerJob.make({
+      mode: "finditer",
       patternWidth: pattern.layout.width,
       patternBytes: pattern.value.storage.bytes,
       sourceWidth: source.layout.width,
@@ -178,18 +182,65 @@ it.effect("handles every split and one-byte input fragments without accepting pa
   })
 );
 
+it.effect("preflights the exact frame for each mode and rejects unknown modes before reservation", () =>
+  Effect.gen(function* () {
+    const preparation = yield* makeCitationRegexJobPreparation((yield* defaultCitationEnginePolicy).limits);
+    const input = { width: 1, bytes: utf8.encode("b") };
+    for (const mode of CitationRegexMatchMode.literals) {
+      const prepared = yield* preparation.prepare(input, input, 0, 1, nothing, mode);
+      const count = yield* preflightCitationRegexJob(
+        prepared.pattern.layout,
+        prepared.source.layout,
+        0,
+        1,
+        prepared.frame.byteLength,
+        mode
+      );
+      expect(count).toBe(prepared.frame.byteLength);
+      expect((yield* decodeCitationRegexJob(prepared.frame.subarray(0, -1))).mode).toBe(mode);
+      expect(
+        yield* preflightCitationRegexJob(prepared.pattern.layout, prepared.source.layout, 0, 1, count - 1, mode).pipe(
+          Effect.flip
+        )
+      ).toMatchObject({ limit: "processMessageBytes" });
+    }
+    let reserved = false;
+    expect(
+      yield* preparation
+        .prepare(
+          input,
+          input,
+          0,
+          1,
+          () =>
+            Effect.sync(() => {
+              reserved = true;
+            }),
+          "unknown"
+        )
+        .pipe(Effect.flip)
+    ).toMatchObject({ reason: "invalid-frame" });
+    expect(reserved).toBe(false);
+  })
+);
+
 it.effect("rejects structural amplification, malformed UTF-8, unknown fields and invalid encoded carriers", () =>
   Effect.gen(function* () {
     const header =
-      '"_tag":"Evaluate","version":"citation-regex-worker/v1","patternWidth":1,"patternBytes":"YQ==","sourceWidth":1,"sourceBytes":"Yg==","flags":0,"maxMatches":1';
+      '"_tag":"Evaluate","version":"citation-regex-worker/v2","patternWidth":1,"patternBytes":"YQ==","sourceWidth":1,"sourceBytes":"Yg==","flags":0,"maxMatches":1,"mode":"finditer"';
     for (const bytes of [
       utf8.encode(Str.repeat(20000)("[") + Str.repeat(20000)("]")),
       utf8.encode(`{${header},"callback":"private source"}`),
+      utf8.encode(`{${Str.replace('"mode":"finditer"', '"mode":"unknown"')(header)}}`),
+      utf8.encode(`{${Str.replace(',"mode":"finditer"', "")(header)}}`),
+      utf8.encode(
+        `{${Str.replace('"version":"citation-regex-worker/v2"', '"version":"citation-regex-worker/v1"')(header)}}`
+      ),
       utf8.encode(`{${header},"sourceBytes":{"nested":0}}`),
       utf8.encode(`{${Str.replace('"sourceBytes":"Yg=="', '"sourceBytes":"!"')(header)}}`),
       utf8.encode(`{${Str.replace('"flags":0', '"flags":8')(header)}}`),
-      utf8.encode(`{${Str.replace('"version":"citation-regex-worker/v1"', '"version":"unknown"')(header)}}`),
-      utf8.encode(`{${Str.replace('"version":"citation-regex-worker/v1",', "")(header)}}`),
+      utf8.encode(`{${Str.replace('"version":"citation-regex-worker/v2"', '"version":"unknown"')(header)}}`),
+      utf8.encode(`{${Str.replace('"version":"citation-regex-worker/v2",', "")(header)}}`),
       utf8.encode(`{${Str.replace('"patternBytes":"YQ=="', `"patternBytes":"${Str.repeat(43692)("A")}"`)(header)}}`),
       utf8.encode(`{${Str.slice(0, -1)(header)}`),
       new Uint8Array([255]),

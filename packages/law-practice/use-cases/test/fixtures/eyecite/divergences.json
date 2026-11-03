@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "39c4ce0ba6331c8f49671855970b3b16f17808e3007d111067b6d97c9a637c85",
+  "planSha256": "665383f402880f2524fccb0aa5070921d115d02f7293da1baa595285f04516a3",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -48,7 +48,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexWorkerProtocol.ts",
-          "sha256": "5c22d54f457b694a66937a1b8040bd0bc5c26e1b60cc32d9d09293a19666c3a1"
+          "sha256": "d9ac7ca72e94f5505679c5ed96cd8aabc971d10737ab03bdfafa6a1ac234e775"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/ByteFrames.ts",
@@ -56,7 +56,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationRegexWorkerProtocol.test.ts",
-          "sha256": "029211cc707dd3213be0ecce60ea1ea30ff8c642905bf5c78d4a87d38c4a143b"
+          "sha256": "29897e441880f1e117a26f3435ed8213e284c2fc81d51aa51eaf4b7a28695086"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexResult.ts",
@@ -120,7 +120,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexWorker.ts",
-          "sha256": "7c60cb5e5d89d625f6adb3331c36a2af4d76792f92b5a11dd5a50ee46a316d43"
+          "sha256": "d2f59d54100efd7ededa04a2f6e3fa1d55ec5e67006e55d0826dd94f88ace8e7"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexWorker.entry.ts",
@@ -132,7 +132,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexWorkerEvaluation.ts",
-          "sha256": "b052c8d270d4357ce92b7a74e63fd732b70aa8482e7f431d1740721c2e5a38ef"
+          "sha256": "64717a266ae3ff3a4f3b9562d481b0d247cfff8be3ae3c179375e7f9c600ba6a"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexWorkerProgram.ts",
@@ -140,11 +140,11 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexWorkerRpc.ts",
-          "sha256": "976eb2027661c37cdc12542c0aa061954322e144ed285eb6b20e67e72f7f373c"
+          "sha256": "a69c7646b26c3cc6527b501fda0604066641de3390d62237ddefdb920276b506"
         },
         {
           "path": "packages/law-practice/server/test/CitationRegexWorker.test.ts",
-          "sha256": "8a117b4e6d0e885ca7a0599d0509394013cf14318aebf5e4fdfcd65d2b7ebb91"
+          "sha256": "dc4fde6676b3728190c190a0761db819587ce5e39c31c108f53027f7c082a903"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-03-native-regex-worker.md",
@@ -161,6 +161,18 @@
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-03-source-extractor-capture-witnesses.md",
           "sha256": "a2854b8e54eb73cda42694a8e5d953dadc24b7fb3743ef754dfd16ea6e71e9a1"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/probe-regex-modes.py",
+          "sha256": "5d22a03ce21756269d96660e4e219e84d02b89b9cb5d42e858d913ab4d13898f"
+        },
+        {
+          "path": "packages/law-practice/use-cases/test/fixtures/eyecite/regex-modes.json",
+          "sha256": "6176aed02afda7ca709db880b438b2a8174e689ef97048a3ee018ccc487ba506"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-03-regex-modes-and-source-engines.md",
+          "sha256": "3ab0f48d19dafa5afb0292f2d77ac0f4a162ed33ffa3dee7af232abee4089a88"
         }
       ],
       "workflowState": "audit",
@@ -934,7 +946,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationNativeSpawner.fixtures.ts",
-          "sha256": "40c42737938e9ee502e740e63130f5319b8993ea2c1d4441a6dd0d2433bfe3cc"
+          "sha256": "248397dfc40b040d6d277de5a6a0b153532d2385e39f958f889e9a21365489ac"
         },
         {
           "path": "packages/law-practice/server/test/integration/CitationCleanerNamedHtml.test.ts",

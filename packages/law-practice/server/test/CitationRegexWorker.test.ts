@@ -1,15 +1,19 @@
 import * as NodeURL from "node:url";
+import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationNativeProcessAdmission,
   makeCitationNativeProcessAdmission,
 } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
+import { CitationRegexPatternProfile } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
 import { makeCitationRegexWorker } from "@beep/law-practice-server/internal/Citation/RegexWorker";
+import { CitationRegexMatchMode } from "@beep/law-practice-server/internal/Citation/RegexWorkerProtocol";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { expect } from "@effect/vitest";
 import * as Clock from "effect/Clock";
+import * as Digest from "effect/crypto/Digest";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -18,6 +22,7 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
+import * as S from "effect/Schema";
 import {
   makeCitationNativeManualClock,
   makeCitationNativeSleepClock,
@@ -26,6 +31,30 @@ import {
   waitForCitationNativeTest,
 } from "./CitationNativeSpawner.fixtures.ts";
 
+const $I = $LawPracticeServerId.create("test/CitationRegexWorker");
+const ExpectedMatches = S.Array(S.Array(S.Tuple([S.Int, S.Int])).check(S.isMaxLength(3))).check(S.isMaxLength(2));
+const ModeControls = S.fromJsonString(
+  S.Struct({
+    schemaVersion: S.tag("citation-regex-mode-controls/v1"),
+    scope: S.tag("Synthetic CPython operation-selection controls; no source-family approval."),
+    pythonVersion: S.tag("3.11.15"),
+    unicodeVersion: S.tag("14.0.0"),
+    producerSha256: S.tag("5d22a03ce21756269d96660e4e219e84d02b89b9cb5d42e858d913ab4d13898f"),
+    pattern: S.tag("(?P<maybe>a)?(b)"),
+    patternSha256: S.tag("b07d89ba5ecfc4ef7c8c6208e879a81454b1cc89203805eceef7e16b55117bb7"),
+    flags: S.tag(0),
+    profile: CitationRegexPatternProfile,
+    cases: S.Array(
+      S.Struct({
+        id: S.Natural,
+        width: S.Literals([1, 4]),
+        sourceWords: S.Uint8ArrayFromBase64,
+        sourcePoints: S.Natural,
+        modes: S.Record(CitationRegexMatchMode, ExpectedMatches),
+      })
+    ).check(S.isBetweenLength(5, 5)),
+  })
+).pipe($I.annoteSchema("ModeControls", { description: "Pinned independent CPython mode/capture observations." }));
 const native = (text: string) => ({ width: 1, bytes: new TextEncoder().encode(text) });
 const pointWords = (points: ReadonlyArray<number>) => {
   const bytes = new Uint8Array(points.length * 4);
@@ -46,7 +75,12 @@ const descriptor = {
   },
 };
 const setup = Effect.fn("RegexWorkerTest.setup")(function* (bindings: unknown) {
-  const limits = { ...(yield* defaultCitationEnginePolicy).limits, regexDeadline: Duration.seconds(1) };
+  // Distinct from the default one-second cleanup timer: only native execution
+  // time is manually controlled in functional tests.
+  const limits = { ...(yield* defaultCitationEnginePolicy).limits, regexDeadline: Duration.millis(997) };
+  // These cases compare results, not real-time cold-start performance. The
+  // entered-child controls below exercise actual deadline firing separately.
+  const timer = yield* makeCitationNativeManualClock(limits.regexDeadline);
   const admission = yield* makeCitationNativeProcessAdmission(limits);
   const observed = yield* makeCitationObservedSpawner();
   const runtime = {
@@ -55,6 +89,7 @@ const setup = Effect.fn("RegexWorkerTest.setup")(function* (bindings: unknown) {
     workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/RegexWorker.entry.ts", import.meta.url)),
   };
   const worker = yield* makeCitationRegexWorker(limits, runtime, bindings).pipe(
+    Effect.provideService(Clock.Clock, timer.clock),
     Effect.provideService(CitationNativeProcessAdmission, admission),
     Effect.provideService(ChildProcessSpawner, observed.spawner)
   );
@@ -93,6 +128,23 @@ const controlled = Effect.fn("RegexWorkerTest.controlled")(function* (
   return { worker, admission, observed, fixture, timer };
 });
 
+type CompletedRegex = Effect.Success<
+  ReturnType<Effect.Success<ReturnType<typeof makeCitationRegexWorker>>["evaluate"]>
+>;
+const assertModeCaptures = Effect.fn("RegexWorkerTest.assertModeCaptures")(function* (
+  completed: CompletedRegex,
+  expected: typeof ExpectedMatches.Type,
+  groups: number
+) {
+  expect(completed.result.matches).toBe(expected.length);
+  for (let match = 0; match < expected.length; match++) {
+    for (let group = 0; group <= groups; group++) {
+      const capture = yield* completed.result.capture(match, group);
+      expect(capture._tag === "Range" ? [capture.start, capture.end] : [-1, -1]).toEqual(expected[match]?.[group]);
+    }
+  }
+});
+
 it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices: true })("owned native regex", (it) => {
   it.effect("executes real matching and returns native captures only after confirmed retirement", () =>
     Effect.gen(function* () {
@@ -111,6 +163,43 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
       expect(yield* observed.snapshot).toEqual({ spawned: 1, confirmed: 1 });
       expect(yield* admission.snapshot).toMatchObject({ active: 0, regexActive: 0, queued: 0, quarantined: 0 });
     })
+  );
+
+  it.effect(
+    "matches pinned CPython iteration, search and prefix semantics through real children",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const crypto = yield* Digest.Digest;
+        const file = NodeURL.fileURLToPath(
+          new URL("../../use-cases/test/fixtures/eyecite/regex-modes.json", import.meta.url)
+        );
+        const bytes = yield* fs.readFile(file);
+        expect(yield* crypto.digestHex(Digest.sha256, bytes)).toBe(
+          "6176aed02afda7ca709db880b438b2a8174e689ef97048a3ee018ccc487ba506"
+        );
+        const corpus = yield* S.decodeEffect(ModeControls)(new TextDecoder().decode(bytes));
+        const { worker, admission, observed } = yield* setup([
+          { patternSha256: corpus.patternSha256, flags: corpus.flags, profile: corpus.profile },
+        ]);
+        for (const row of corpus.cases) {
+          for (const mode of CitationRegexMatchMode.literals) {
+            const expected = row.modes[mode];
+            const completed = yield* worker.evaluate(
+              native(corpus.pattern),
+              { width: row.width, bytes: row.sourceWords },
+              corpus.flags,
+              expected.length,
+              mode
+            );
+            expect(completed.source.layout.pythonLength).toBe(row.sourcePoints);
+            yield* assertModeCaptures(completed, expected, corpus.profile.groups);
+          }
+        }
+        expect(yield* observed.snapshot).toEqual({ spawned: 15, confirmed: 15 });
+        expect(yield* admission.snapshot).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
+      }),
+    { timeout: 30_000 }
   );
 
   it.effect("distinguishes a scalar from literal surrogate words before projecting captures", () =>

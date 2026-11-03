@@ -55,7 +55,7 @@ export const CitationRegexExecutionFailure = S.Union([
 export type CitationRegexExecutionFailure = typeof CitationRegexExecutionFailure.Type;
 /** @internal @category models @since 0.0.0 */
 export class CitationRegexWorkerReady extends S.Opaque<CitationRegexWorkerReady, { readonly brand: unique symbol }>()(
-  S.TaggedStruct("Ready", { version: S.tag("citation-regex-worker/v1") }).pipe(
+  S.TaggedStruct("Ready", { version: S.tag("citation-regex-worker/v2") }).pipe(
     $I.annoteSchema("CitationRegexWorkerReady", { description: "Explicit startup configuration was decoded." })
   )
 ) {}
@@ -64,14 +64,14 @@ export class CitationRegexWorkerStarted extends S.Opaque<
   CitationRegexWorkerStarted,
   { readonly brand: unique symbol }
 >()(
-  S.TaggedStruct("Started", { version: S.tag("citation-regex-worker/v1") }).pipe(
+  S.TaggedStruct("Started", { version: S.tag("citation-regex-worker/v2") }).pipe(
     $I.annoteSchema("CitationRegexWorkerStarted", { description: "One complete job was decoded before evaluation." })
   )
 ) {}
 /** @internal @category models @since 0.0.0 */
 export class CitationRegexWorkerError extends S.Opaque<CitationRegexWorkerError, { readonly brand: unique symbol }>()(
   S.TaggedStruct("Failure", {
-    version: S.tag("citation-regex-worker/v1"),
+    version: S.tag("citation-regex-worker/v2"),
     failure: CitationRegexExecutionFailure,
   }).pipe(
     $I.annoteSchema("CitationRegexWorkerError", {

@@ -191,9 +191,19 @@ producer supplies positive capture witnesses for every one of the 13,610 source
 extractor instances (27,216 matches), plus empty-input no-match observations.
 Repeat generation is byte-identical. The actual production evaluator passes
 three fixed smoke cases/six matches and three zero-quota no-match controls.
-Full replay is added to the existing bounded hosted shards and remains pending.
+Full replay passes in hosted Integration job 125795643246 on `369c98b458`;
+all original aggregates and independent child exit assertions remain required.
 No static family, scaling or exhaustive matching approval is inferred. See
 [source capture witnesses](history/evidence/2026-11-03-source-extractor-capture-witnesses.md).
+
+Latest operation-mode checkpoint (2026-11-03): the private worker supports closed
+iteration/search/prefix modes using Effect RegExp and native sticky matching.
+Protocol v2 requires the mode and retains exact pre-allocation frame checks.
+Fifteen real-child comparisons match pinned CPython controls; 28 focused tests
+pass. Source review distinguishes the helper module's third-party regex engine
+from standard re, construction/escape rows and Hyperscan lifecycle/refinement.
+No family proof or unsupported source-engine behavior is promoted. See
+[modes and source engines](history/evidence/2026-11-03-regex-modes-and-source-engines.md).
 
 Latest worker evidence (2026-10-31): private process ownership now covers bounded
 schema frames, captured Clock timers, queue/active limits, forced stop,

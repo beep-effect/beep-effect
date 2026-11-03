@@ -54,6 +54,14 @@ const SourceBytes = bytesCodec("SourceBytes", 4 * CitationEngineAbsoluteMaxima.p
 const Flags = LiteralKit([0, 2]).pipe(
   $I.annoteSchema("Flags", { description: "Captured tokenizer Python re flags; Unicode is implicit." })
 );
+/** Source operation selection is closed data, independent of regex flags.
+ * @internal @category models @since 0.0.0
+ */
+export const CitationRegexMatchMode = LiteralKit(["finditer", "search", "match"]).pipe(
+  $I.annoteSchema("CitationRegexMatchMode", {
+    description: "All non-overlapping matches, first search result, or an anchored prefix match.",
+  })
+);
 const Matches = S.Natural.check(S.isLessThanOrEqualTo(CitationEngineAbsoluteMaxima.patternMatches)).pipe(
   $I.annoteSchema("Matches", {
     description: "Remaining raw-match capacity; zero permits a complete no-match result only.",
@@ -69,13 +77,14 @@ const Limit = S.Int.check(S.isBetween({ minimum: 1, maximum: CitationEngineAbsol
  */
 export class CitationRegexWorkerJob extends S.Opaque<CitationRegexWorkerJob, { readonly brand: unique symbol }>()(
   S.TaggedStruct("Evaluate", {
-    version: S.tag("citation-regex-worker/v1"),
+    version: S.tag("citation-regex-worker/v2"),
     patternWidth: CitationPythonUnicodeStorage.fields.width,
     patternBytes: PatternBytes,
     sourceWidth: CitationPythonUnicodeStorage.fields.width,
     sourceBytes: SourceBytes,
     flags: Flags,
     maxMatches: Matches,
+    mode: CitationRegexMatchMode,
   }).pipe(
     $I.annoteSchema("CitationRegexWorkerJob", {
       description:
@@ -93,7 +102,8 @@ const emptyJobHeader = Effect.fnUntraced(function* (
   patternWidth: CitationRegexWorkerJob["patternWidth"],
   sourceWidth: CitationRegexWorkerJob["sourceWidth"],
   flags: CitationRegexWorkerJob["flags"],
-  maxMatches: CitationRegexWorkerJob["maxMatches"]
+  maxMatches: CitationRegexWorkerJob["maxMatches"],
+  mode: CitationRegexWorkerJob["mode"]
 ) {
   return yield* S.encodeEffect(JobJson)(
     CitationRegexWorkerJob.make({
@@ -101,6 +111,7 @@ const emptyJobHeader = Effect.fnUntraced(function* (
       sourceWidth,
       flags,
       maxMatches,
+      mode,
       patternBytes: new Uint8Array(0),
       sourceBytes: new Uint8Array(0),
     })
@@ -115,8 +126,10 @@ export const preflightCitationRegexJob = Effect.fn("Citation.preflightRegexJob")
   sourceInput: CitationRegexInputLayout,
   flagsInput: unknown,
   maxMatchesInput: unknown,
-  maximum: number
+  maximum: number,
+  modeInput: unknown = "finditer"
 ) {
+  const mode = yield* S.decodeUnknownEffect(CitationRegexMatchMode)(modeInput).pipe(Effect.mapError(invalid));
   const pattern = yield* S.decodeEffect(Layout)(patternInput).pipe(Effect.mapError(invalid));
   const source = yield* S.decodeEffect(Layout)(sourceInput).pipe(Effect.mapError(invalid));
   if (pattern.utf16Units > CitationEngineAbsoluteMaxima.patternUtf16)
@@ -124,7 +137,7 @@ export const preflightCitationRegexJob = Effect.fn("Citation.preflightRegexJob")
   const flags = yield* S.decodeUnknownEffect(Flags)(flagsInput).pipe(Effect.mapError(invalid));
   const maxMatches = yield* S.decodeUnknownEffect(Matches)(maxMatchesInput).pipe(Effect.mapError(invalid));
   const limit = yield* S.decodeEffect(Limit)(maximum).pipe(Effect.mapError(invalid));
-  const header = yield* emptyJobHeader(pattern.width, source.width, flags, maxMatches);
+  const header = yield* emptyJobHeader(pattern.width, source.width, flags, maxMatches, mode);
   const bytes =
     encoder.encode(header).byteLength + 1 + paddedLength(pattern.byteLength) + paddedLength(source.byteLength);
   if (bytes > limit) return yield* exceeded();
@@ -140,7 +153,7 @@ export const encodeCitationRegexJob = Effect.fn("Citation.encodeRegexJob")(funct
 ) {
   const job = yield* S.decodeEffect(JobType)(input).pipe(Effect.mapError(invalid));
   const limit = yield* S.decodeEffect(Limit)(maximum).pipe(Effect.mapError(invalid));
-  const header = yield* emptyJobHeader(job.patternWidth, job.sourceWidth, job.flags, job.maxMatches);
+  const header = yield* emptyJobHeader(job.patternWidth, job.sourceWidth, job.flags, job.maxMatches, job.mode);
   const count =
     encoder.encode(header).byteLength +
     1 +
@@ -249,8 +262,10 @@ export const makeCitationRegexJobPreparation = Effect.fn("Citation.makeRegexJobP
     maxMatchesInput: unknown,
     beforeAllocate: (
       completeBytes: number
-    ) => Effect.Effect<void, CitationRegexWorkerFailure | CitationSafetyLimitExceeded>
+    ) => Effect.Effect<void, CitationRegexWorkerFailure | CitationSafetyLimitExceeded>,
+    modeInput: unknown = "finditer"
   ) {
+    const mode = yield* S.decodeUnknownEffect(CitationRegexMatchMode)(modeInput).pipe(Effect.mapError(invalid));
     const flags = yield* S.decodeUnknownEffect(Flags)(flagsInput).pipe(Effect.mapError(invalid));
     const maxMatches = yield* S.decodeUnknownEffect(Matches)(maxMatchesInput).pipe(Effect.mapError(invalid));
     let preparedSource = O.none<CitationPreparedRegexInput>();
@@ -258,9 +273,14 @@ export const makeCitationRegexJobPreparation = Effect.fn("Citation.makeRegexJobP
       .prepareUnicode(pattern, (patternLayout) =>
         sourceInput
           .prepareUnicode(source, (sourceLayout) =>
-            preflightCitationRegexJob(patternLayout, sourceLayout, flags, maxMatches, limits.processMessageBytes).pipe(
-              Effect.flatMap(beforeAllocate)
-            )
+            preflightCitationRegexJob(
+              patternLayout,
+              sourceLayout,
+              flags,
+              maxMatches,
+              limits.processMessageBytes,
+              mode
+            ).pipe(Effect.flatMap(beforeAllocate))
           )
           .pipe(
             Effect.tap((value) =>
@@ -280,6 +300,7 @@ export const makeCitationRegexJobPreparation = Effect.fn("Citation.makeRegexJobP
       sourceBytes: sourceValue.value.storage.bytes,
       flags,
       maxMatches,
+      mode,
     });
     const frame = yield* encodeCitationRegexJob(job, limits.processMessageBytes);
     return { job, frame, pattern: preparedPattern, source: sourceValue };

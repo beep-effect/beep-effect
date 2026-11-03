@@ -195,6 +195,7 @@ await Effect.runPromise(
         );
         const body = yield* evaluator.evaluate(
           CitationRegexWorkerJob.make({
+            mode: "finditer",
             patternWidth: native.width,
             patternBytes: native.bytes,
             sourceWidth: 4,
@@ -214,6 +215,7 @@ await Effect.runPromise(
         }
         const emptyBody = yield* evaluator.evaluate(
           CitationRegexWorkerJob.make({
+            mode: "finditer",
             patternWidth: native.width,
             patternBytes: native.bytes,
             sourceWidth: 1,

@@ -128,8 +128,9 @@ export const makeCitationNativeWorkerFixture = Effect.fn("WorkerTest.fixture")(f
   kind: "busy" | "released",
   family: "html" | "regex" = "html"
 ) {
-  const ready = `{"_tag":"Ready","version":"citation-${family}-worker/v1"}\\n`;
-  const started = `{"_tag":"Started","version":"citation-${family}-worker/v1"}\\n`;
+  const version = family === "regex" ? "v2" : "v1";
+  const ready = `{"_tag":"Ready","version":"citation-${family}-worker/${version}"}\\n`;
+  const started = `{"_tag":"Started","version":"citation-${family}-worker/${version}"}\\n`;
   const success = '{"_tag":"Success","version":"citation-html-worker/v1","text":"released"}\\n';
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

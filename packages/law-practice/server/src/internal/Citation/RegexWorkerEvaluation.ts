@@ -55,11 +55,14 @@ export const makeCitationRegexEvaluation = Effect.fn("Citation.makeRegexEvaluati
       const pattern = yield* compiler.render(program, encoded);
       const result = yield* makeCitationRegexResult(limits, program.groups, source.layout.pythonLength);
       const native = yield* Effect.try({
-        try: () => new RegExp.RegExp(pattern, encoded.flags),
+        try: () => new RegExp.RegExp(pattern, job.mode === "match" ? `${encoded.flags}y` : encoded.flags),
         catch: nativeFailure,
       });
+      let finished = false;
       const pull = Effect.gen(function* () {
+        if (finished) return O.none();
         const match = yield* Effect.try({ try: () => native.exec(encoded.source), catch: nativeFailure });
+        if (job.mode !== "finditer") finished = true;
         const next = O.fromNullishOr(match);
         if (O.isNone(next)) return O.none();
         const indices = yield* Effect.fromOption(O.fromUndefinedOr(next.value.indices)).pipe(

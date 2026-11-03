@@ -63,7 +63,13 @@ export const makeCitationRegexWorker = Effect.fn("Citation.makeRegexWorker")(fun
   const regexDeadline = limits.regexDeadline.pipe(Duration.toMillis, Duration.millis);
   yield* preflightCitationRegexControlFrames(limits.processMessageBytes);
   const evaluate = Effect.fn("Citation.evaluateRegexProcess")(
-    (pattern: unknown, source: unknown, flags: unknown, maximumMatches: unknown = limits.patternMatches) =>
+    (
+      pattern: unknown,
+      source: unknown,
+      flags: unknown,
+      maximumMatches: unknown = limits.patternMatches,
+      mode: unknown = "finditer"
+    ) =>
       Effect.uninterruptibleMask(
         Effect.fnUntraced(function* (restore) {
           yield* owner.ensureOpen;
@@ -77,20 +83,26 @@ export const makeCitationRegexWorker = Effect.fn("Citation.makeRegexWorker")(fun
                   maximumMatches
                 ).pipe(Effect.mapError(() => failure("invalid-runtime")));
                 if (quota > limits.patternMatches) return yield* safety("patternMatches");
-                const prepared = yield* preparation.prepare(pattern, source, flags, quota, () =>
-                  admission.acquireRegex("extract").pipe(
-                    Effect.mapError((error) =>
-                      error._tag === "CitationSafetyLimitExceeded"
-                        ? error
-                        : failure(error.reason === "quarantined" ? "quarantined" : "closed")
+                const prepared = yield* preparation.prepare(
+                  pattern,
+                  source,
+                  flags,
+                  quota,
+                  () =>
+                    admission.acquireRegex("extract").pipe(
+                      Effect.mapError((error) =>
+                        error._tag === "CitationSafetyLimitExceeded"
+                          ? error
+                          : failure(error.reason === "quarantined" ? "quarantined" : "closed")
+                      ),
+                      Effect.tap((lease) =>
+                        Effect.sync(() => {
+                          permit = O.some(lease);
+                        })
+                      ),
+                      Effect.uninterruptible
                     ),
-                    Effect.tap((lease) =>
-                      Effect.sync(() => {
-                        permit = O.some(lease);
-                      })
-                    ),
-                    Effect.uninterruptible
-                  )
+                  mode
                 );
                 const bound = yield* registry.bind(prepared.pattern.value.storage, flags);
                 const argument = yield* encodeCitationRegexStartup(
