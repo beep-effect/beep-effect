@@ -2200,3 +2200,40 @@ local verify/publish or repository test suite; require fresh hosted proof.
 The normal secret scanner initially classified a prior SPEC digest under a new
 secret-related field name as `generic-api-key`. Rename the metadata field while
 preserving the same digest; no scanner configuration or allowlist changes.
+
+
+### 2026-11-03 — inactive reusable leaf still blocks startup
+
+- Work: dispatch the bounded credential-free candidate build after accepted #2650.
+- Evidence: run `41604614900`, source/resolved Heavy `7438cf69c6`,
+  `startup_failure` with zero jobs. GitHub's annotation says the execution leaf
+  requests `actions: read` beyond the caller's allowed `actions: none`.
+- Cause: earlier source assertions pinned each caller's default but missed
+  GitHub's permission validation across the entire reusable workflow.
+- Prevention: bind both affected caller jobs to the actual leaf permission
+  ceiling; retain and assert the narrower build/inspection defaults. Require a
+  real accepted-main startup before advancing runtime evidence. The source
+  inspection caller receives the same repair without spending a known-bad run.
+- Result: focused repair authored for hosted CI; no local verify/publish,
+  automatic rerun, secret delivery, new capacity or qualification claim.
+
+- Expanded attribution: Check run `41605514358` at repair head `d657d857d1`
+  also failed validation with zero jobs. The accepted execution leaf affects
+  every Heavy caller, not only optional preparation. Inventory found five
+  current callers; four need read ceilings and the execution caller already
+  has one. Extend the same PR and pin all five in one regression. Ordinary
+  verification leaves retain Heavy's narrower default. Primary was notified
+  that this is the shared main unblocker; no duplicate repair was opened.
+
+
+### 2026-11-03 — consolidate overlapping startup repairs
+
+- Evidence: accepted #2666 changed the same four callers; #2667 conflicted only
+  in explanatory comments on Check and label admission. Its pre-integration CI
+  was green, including 49 security tests and 187-package coverage with no floors
+  lowered, but that does not prove the new merged head.
+- Resolution: preserve index stages, retain accepted workflow bytes and combine
+  the duplicate fixture into one stronger all-caller regression.
+- Prevention: inspect the current consolidated unblocker and confirm ownership
+  before starting a parallel shared repair. The replacement coordination rule
+  requires T3 MCP; those tools are absent here, so no alternate relay is used.

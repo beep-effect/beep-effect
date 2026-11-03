@@ -1,0 +1,206 @@
+{
+  "schemaVersion": "claim-completed-retained-evidence/v1",
+  "date": "2026-11-03",
+  "status": "completed-retained",
+  "completionReceiptOutcome": "verified",
+  "declarationDigest": "d5c5db8ab93a155705c9b035d181d55af922fac9a5f01e6ffcd1ce009b1b46b6",
+  "acceptedDeclarationDigest": "d5c5db8ab93a155705c9b035d181d55af922fac9a5f01e6ffcd1ce009b1b46b6",
+  "finalPullRequest": 2656,
+  "acceptedHead": "3788988864abaeb2d0b19fa04e27c45949e7ef65",
+  "merge": {
+    "mergeCommit": "470d609298c518814930fdbd84be16aa54e96e5a",
+    "tree": "5e0e8ef339a5c12359b5d827780dd0e8851568eb",
+    "mergedAt": "2026-11-03T07:10:23.000Z",
+    "method": null,
+    "baseRef": "main"
+  },
+  "readiness": {
+    "mode": "monitor",
+    "outcome": "success",
+    "resolvedHeadSha": "3788988864abaeb2d0b19fa04e27c45949e7ef65",
+    "createdAt": "2026-11-03T07:09:27.001Z",
+    "mergeReady": {
+      "ready": true,
+      "criteria": {
+        "prOpen": true,
+        "notDraft": true,
+        "closeoutRun": true,
+        "requiredChecksGreen": true,
+        "threadsResolved": true,
+        "mergeable": true,
+        "mergeStateAcceptable": true,
+        "reviewDecisionAcceptable": true,
+        "reviewWindowElapsed": true
+      }
+    },
+    "verdictSha256": "936e5d9da8f0908449832cb772635a7168ffb582f9b8238609c2596cb6e30faa",
+    "capturedBeforeMerge": true,
+    "successfulUntilReadyJob": "c26e6543-4d91-4d10-9a99-c95cdbb7cc24"
+  },
+  "evidence": [
+    {
+      "ref": {
+        "kind": "hosted-required-checks",
+        "ref": "required",
+        "gating": true
+      },
+      "outcome": "verified",
+      "observedHead": "3788988864abaeb2d0b19fa04e27c45949e7ef65",
+      "detail": "Required contexts observed at accepted head before merge; 15 contexts. Merge-time evidence verified: complete rule-suite inventory and 15 green required contexts at the accepted head. The merge-push rule suite supplies the merge-time ruleset inventory, including rulesets deleted since then; GitHub lists rule suites for one month."
+    },
+    {
+      "ref": {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/docs_claim-element-retained-final-1103-d521e6dca988/verdict.json",
+        "gating": true
+      },
+      "outcome": "verified",
+      "observedHead": "3788988864abaeb2d0b19fa04e27c45949e7ef65",
+      "detail": "Yeet verdict checked against resolvedHeadSha and mergeReady.ready."
+    },
+    {
+      "ref": {
+        "kind": "hosted-required-checks",
+        "ref": "required",
+        "gating": true
+      },
+      "outcome": "verified",
+      "observedHead": "3788988864abaeb2d0b19fa04e27c45949e7ef65",
+      "detail": "Hosted required checks at accepted head."
+    }
+  ],
+  "requiredCheckFacts": [
+    {
+      "context": "Codegen Drift",
+      "head": "3788988864abaeb2d0b19fa04e27c45949e7ef65",
+      "checkRunId": 125771533091,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "Commitlint",
+      "head": "3788988864abaeb2d0b19fa04e27c45949e7ef65",
+      "checkRunId": 125771533225,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "Heavy / Check",
+      "head": "3788988864abaeb2d0b19fa04e27c45949e7ef65",
+      "checkRunId": 125771948441,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "Heavy / Docgen",
+      "head": "3788988864abaeb2d0b19fa04e27c45949e7ef65",
+      "checkRunId": 125771948503,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "Heavy / Doctest",
+      "head": "3788988864abaeb2d0b19fa04e27c45949e7ef65",
+      "checkRunId": 125771948371,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "Heavy / Test Integration",
+      "head": "3788988864abaeb2d0b19fa04e27c45949e7ef65",
+      "checkRunId": 125771948426,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "JSDoc Ratchet",
+      "head": "3788988864abaeb2d0b19fa04e27c45949e7ef65",
+      "checkRunId": 125771533036,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "Lint",
+      "head": "3788988864abaeb2d0b19fa04e27c45949e7ef65",
+      "checkRunId": 125772011746,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "Nix Shell",
+      "head": "3788988864abaeb2d0b19fa04e27c45949e7ef65",
+      "checkRunId": 125771532845,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "Professional Desktop IPC Stdio",
+      "head": "3788988864abaeb2d0b19fa04e27c45949e7ef65",
+      "checkRunId": 125771532975,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "Repo Sanity",
+      "head": "3788988864abaeb2d0b19fa04e27c45949e7ef65",
+      "checkRunId": 125771533014,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "SAST",
+      "head": "3788988864abaeb2d0b19fa04e27c45949e7ef65",
+      "checkRunId": 125771533112,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "Secret Scanning",
+      "head": "3788988864abaeb2d0b19fa04e27c45949e7ef65",
+      "checkRunId": 125771533102,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "Security",
+      "head": "3788988864abaeb2d0b19fa04e27c45949e7ef65",
+      "checkRunId": 125771533052,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "Test Unit",
+      "head": "3788988864abaeb2d0b19fa04e27c45949e7ef65",
+      "checkRunId": 125775582937,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    }
+  ],
+  "retainedEvaluation": {
+    "strictMatches": 37,
+    "selectedClaims": 538,
+    "allPriorPassingRetained": 37,
+    "protectedPassingRetained": 34,
+    "referenceLabelsChanged": false,
+    "previousResultsChanged": false,
+    "freshBenchmarkClaimed": false
+  },
+  "actualAttorneyAgreementRecorded": false,
+  "actualAttorneyAdjudicationRecorded": false,
+  "limitations": "Poor structural recovery and high automated erroneous-alert bounds remain; no held-out generalization or legal reliability is inferred."
+}

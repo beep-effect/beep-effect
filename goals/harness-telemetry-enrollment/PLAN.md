@@ -1,11 +1,11 @@
 # Qualify every agent harness and surface — plan
 
-Execution: **paused, authored but not started**. All phase work is pending.
+Execution: **active**, explicitly launched 2026-11-03. Preserve the recovery hold; complete current-source root admission before dependent real collection canaries.
 
 | Phase | Status | Work | Exit evidence |
 | --- | --- | --- | --- |
-| P0 Research | pending | Refresh audit, dependencies and exact source; reproduce assigned failure mechanics | Bounded plan and synthetic regression receipts |
-| P1 Implement | pending | Implement the smallest legal changes in SPEC, reuse existing components | Acceptance implementation and rollback ready |
+| P0 Research | in-progress | Refresh audit, dependencies and exact source; reproduce assigned failure mechanics | Bounded plan and synthetic regression receipts |
+| P1 Implement | in-progress | Implement the smallest legal changes in SPEC, reuse existing components | Acceptance implementation and rollback ready |
 | P2 Verify | pending | Fixture, integration, privacy, interpretation and route proof | Required checks and explicit residual limitations |
 | P3 Yeet: PR to mergeable | pending | Publish through current Yeet policy, answer reviews, hosted readiness and merge gate | Current exact-head delivery evidence |
 | P4 Close | pending | Reflection, source/goal status and operational handoff | Merged delivery and accepted closeout; then completed-retained |
@@ -21,3 +21,7 @@ Execution: **paused, authored but not started**. All phase work is pending.
 ## P4 closeout
 
 Use the repo reflection workflow/template. Keep operative lifecycle until exact-head merge evidence exists, then use the canonical goal status writer. Record runtime rollout separately from source merge. No new raw transcripts or credentials in evidence.
+
+## Accepted orchestration cutover
+
+Main PR2594 intentionally removes the managed-session/message broker and orphaned launch claims/client/population APIs. The initial prototype and its local tests remain retained evidence at their original revision; they are removed from the active support tree. Do not restore or rename that messaging stack. Requalify current source after this cutover and use a narrow standalone native one-shot or a properly authorized T3 route for real observation. The enrollment goal and all actual-route gates remain active.

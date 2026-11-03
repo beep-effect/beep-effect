@@ -106,27 +106,27 @@ Reference edits only: the kept packets in removal map §5c,
 
 ## Acceptance Criteria
 
-- [ ] `rg -n -i 'agent-message|agent_message|AgentMessage|@beep/t3-code|session-bridge'`
+- [x] `rg -n -i 'agent-message|agent_message|AgentMessage|@beep/t3-code|session-bridge'`
       outside `**/history/**` matches only `retired:` records, Decision Log
       rows, ACP protocol vocabulary (`agent_message_chunk` in `@beep/acp`),
       dated prose in closed packets and `docs/reports`, and this packet's own
       files (Decision Log 2026-11-02).
-- [ ] The packets listed above are gone, and no non-archival markdown link
+- [x] The packets listed above are gone, and no non-archival markdown link
       points at them. `knowledge semantic-delta` passes.
-- [ ] `bun run beep goals doctor` and `bun run beep explore atlas --check` pass.
-- [ ] The rewritten `orchestrate` skill gives a complete T3-native procedure:
+- [x] `bun run beep goals doctor` and `bun run beep explore atlas --check` pass.
+- [x] The rewritten `orchestrate` skill gives a complete T3-native procedure:
       capabilities and configuration check, launch with a pinned
       provider/model/effort, send with a stable `clientRequestId`, a
       wait/read correlation rule, interrupt, scheduled-task wakes, and a
       cross-environment `environmentId` placeholder for the fleet goal.
-- [ ] Live receipt: from a T3 session on DankStation, an orchestrator
+- [x] Live receipt: from a T3 session on DankStation, an orchestrator
       following the new skill launches one Codex thread
       (`gpt-6.1-sol` medium) and one Claude thread (`claude-opus-5-5`
       medium), completes a send/reply/ack round trip through T3 tools, and
       records a sanitized receipt in `history/`.
-- [ ] The PR is mergeable through `/yeet`: green checks and zero unresolved
+- [x] The PR is mergeable through `/yeet`: green checks and zero unresolved
       review threads.
-- [ ] After merge, the local state in removal map §8 is deleted on
+- [x] After merge, the local state in removal map §8 is deleted on
       DankStation, and the deleted paths are listed in a `history/` note.
 
 ## Verification Matrix

@@ -1,0 +1,20 @@
+{
+  "previous": "eb126714bdb0323bf1a780eaaa4f2567d42fc6978203dd474055b0907a323872",
+  "review": {
+    "reviewer": "Codex (party-slice completion owner)",
+    "reason": "Record the policy-fingerprint input inventory for the two new party package manifests; preserve qualification.",
+    "basis": {
+      "path": "goals/party-slice/research/cache-policy-fingerprint-review-2026-11-03.md",
+      "sha256": "7cde52f2fef5bb20438dac7533f547692656dc23aa3816dd875a1b10266c9b64"
+    }
+  },
+  "subjects": ["//"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}
