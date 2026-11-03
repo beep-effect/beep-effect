@@ -238,3 +238,12 @@ remain necessary. Older component and backend executions retain their original
 heads. Current exact-root admission remains false, all seven real harnesses
 remain Unknown, and the recovery hold stays intact. The original PR2612 result
 is unsatisfied. PR2644 has no completion claim until actual acceptance occurs.
+
+## Later merge-attribution clarification (2026-11-02 local)
+
+The operator subsequently confirmed personally merging PR2612. The
+[clarification](../ops/history/pr2612-merge-attribution-clarified-20261102.json)
+supplements the earlier unknown-caller observation without rewriting it. Its
+canonical completion result remains unsatisfied. There is no outstanding need
+to identify a competing agent before PR2644 proceeds through normal verification.
+The existing reservation of PR2644's final merge to this chat remains in force.
