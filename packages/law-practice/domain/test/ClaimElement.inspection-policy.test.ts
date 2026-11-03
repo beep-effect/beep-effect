@@ -8,11 +8,17 @@ import {
 } from "@beep/law-practice-domain/values/ClaimElement";
 import { normalizePatentClaims } from "@beep/law-practice-domain/values/PatentDocument";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { assert, describe } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+
+const inspectionJson = S.fromJsonString(ClaimInputInspectionReport);
+const inspectionType = S.toType(ClaimInputInspectionReport);
+const equivalentInspection = S.toEquivalence(ClaimInputInspectionReport);
 
 const inputOf = (...texts: readonly [readonly [string, string], ...ReadonlyArray<readonly [string, string]>]) =>
   ClaimInputCollection.make({
@@ -30,6 +36,26 @@ const findingsOf = (report: ClaimInputInspectionReport) =>
   A.flatMap(report.records, (record) => (record.status === "unchecked" ? [] : record.findings));
 
 describe("failure-preserving source inspection policy", () => {
+  it.effect.prop(
+    "retains arbitrary source record content through inspection and its report codec",
+    [Arbitrary.schema(ClaimInputRecord)],
+    ([record]) =>
+      Effect.gen(function* () {
+        const ordered = ClaimInputRecord.match(record, {
+          text: (value) => ClaimInputRecord.cases.text.make({ ...value, sourceOrdinal: 1 }),
+          unavailable: (value) => ClaimInputRecord.cases.unavailable.make({ ...value, sourceOrdinal: 1 }),
+        });
+        const input = ClaimInputCollection.make({ sourceKey: "arbitrary-inspection-source", records: [ordered] });
+        const report = yield* inspectClaimInput(input);
+        const encoded = yield* S.encodeEffect(inspectionJson)(report);
+        const decoded = yield* S.decodeEffect(inspectionJson)(encoded);
+        assert.deepStrictEqual(decoded.input, input);
+        assert.strictEqual(decoded.records.length, 1);
+        assert.deepStrictEqual(decoded.records[0].decomposition.qualification.record, ordered);
+      }),
+    { arbitrary: { ...fcRuns(100), seed: "inspection-ledger-preservation-v1" } }
+  );
+
   it.effect("checks usable siblings, preserves failures, and never treats incomplete global coverage as clean", () =>
     Effect.gen(function* () {
       const input = inputOf(
@@ -84,10 +110,9 @@ describe("failure-preserving source inspection policy", () => {
         if (record.status === "unchecked")
           assert.deepStrictEqual(record.coverage, [{ kind: "ancestor-unavailable", parentClaimNumber }]);
       }
-      const codec = S.fromJsonString(ClaimInputInspectionReport);
-      const encoded = yield* S.encodeEffect(codec)(report);
-      const decoded = yield* S.decodeEffect(codec)(encoded);
-      assert.isTrue(S.toEquivalence(ClaimInputInspectionReport)(decoded, report));
+      const encoded = yield* S.encodeEffect(inspectionJson)(report);
+      const decoded = yield* S.decodeEffect(inspectionJson)(encoded);
+      assert.isTrue(equivalentInspection(decoded, report));
     })
   );
 
@@ -146,9 +171,8 @@ describe("failure-preserving source inspection policy", () => {
       assert.strictEqual(report.indexStatus, "complete");
       assert.isTrue(A.every(report.records, (record) => record.status === "complete"));
       assert.deepStrictEqual(findingsOf(report), antecedentPolicy(trees, strict));
-      const codec = S.fromJsonString(ClaimInputInspectionReport);
-      const encoded = yield* S.encodeEffect(codec)(report);
-      const decoded = yield* S.decodeEffect(codec)(encoded);
+      const encoded = yield* S.encodeEffect(inspectionJson)(report);
+      const decoded = yield* S.decodeEffect(inspectionJson)(encoded);
       assert.deepStrictEqual(decoded, report);
     })
   );
@@ -200,7 +224,7 @@ describe("failure-preserving source inspection policy", () => {
       const report = yield* inspectClaimInput(
         inputOf(["1", "A fixture comprising a sensor."], ["2", "Unsupported fragment."])
       );
-      const decode = S.decodeUnknownEffect(S.toType(ClaimInputInspectionReport));
+      const decode = S.decodeUnknownEffect(inspectionType);
       const omitted = yield* Effect.flip(decode({ ...report, records: A.take(report.records, 1) }));
       assert.strictEqual(omitted._tag, "SchemaError");
       const mislabeled = yield* Effect.flip(decode({ ...report, indexStatus: "complete" }));
