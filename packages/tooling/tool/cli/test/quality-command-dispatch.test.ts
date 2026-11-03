@@ -190,10 +190,7 @@ it.layer(CommandTestLayer, { timeout: "10 seconds" })("quality command dispatch"
       expect(A.some(spawnedLines(spawner), isFallowHealth)).toBe(true);
       const envelope = yield* decodeEnvelopeStatus(yield* fs.readFileString(out));
       expect(envelope).toEqual({ advisory: true, status: "tool-failed", exitStatus: 2 });
-    }).pipe(
-      provideSpawner(spawner),
-      Effect.provideServiceEffect(Console.Console, TestConsole.make)
-    );
+    }).pipe(provideSpawner(spawner), Effect.provideServiceEffect(Console.Console, TestConsole.make));
   });
 
   it.effect("dispatches scheduler status and dry-run/apply branches in an isolated runtime root", () =>

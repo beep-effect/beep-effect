@@ -51,14 +51,19 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+import { commandArgs } from "./support/commandArgs.ts";
 import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
 import type { SpawnRecord } from "@beep/commands/ScriptedSpawner";
 
-// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
 const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
 const gitPlatform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer);
 
@@ -1926,6 +1931,23 @@ const FALLOW_STATUS_LANES = ["audit", "dead-code", "health", "boundaries", "flag
 
 const fallowLaneProbe = (): FallowLaneProbe => ({ started: [], inFlight: 0, maxInFlight: 0, status: "" });
 
+// Own double: the Fallow concurrency probe holds each sub-lane's exit on a latch and counts
+// the lanes in flight, which a `ScriptCompletion` cannot express (SPEC D-14 KEEP).
+const fallowLaneHandle = (exitCode: Effect.Effect<ChildProcessSpawner.ExitCode>) =>
+  ChildProcessSpawner.makeHandle({
+    all: Stream.empty,
+    exitCode,
+    getInputFd: () => Sink.drain,
+    getOutputFd: () => Stream.empty,
+    isRunning: Effect.succeed(false),
+    kill: () => Effect.void,
+    pid: ChildProcessSpawner.ProcessId(1),
+    stderr: Stream.empty,
+    stdin: Sink.drain,
+    stdout: Stream.empty,
+    unref: Effect.succeed(Effect.void),
+  });
+
 // Each fake Fallow `turbo run` holds its exit until three sub-lanes are in flight, so
 // a runner that waits for one sub-lane before starting the next never gets past the
 // first and the test times out.
@@ -1948,7 +1970,8 @@ const fallowCiLayer = (probe: FallowLaneProbe, failingTask?: string) => {
       }
       const task = A.findFirst(commandArgs(command), Str.startsWith("fallow:"));
       if (O.isNone(task)) {
-        return Effect.succeed(commandHandle());
+        const idle = fallowLaneHandle(Effect.succeed(ChildProcessSpawner.ExitCode(0)));
+        return Effect.succeed(idle);
       }
       A.appendInPlace(probe.started, task.value);
       probe.inFlight += 1;
@@ -1960,9 +1983,8 @@ const fallowCiLayer = (probe: FallowLaneProbe, failingTask?: string) => {
         probe.inFlight -= 1;
         return ChildProcessSpawner.ExitCode(task.value === failingTask ? 1 : 0);
       });
-      return Effect.succeed(
-        ChildProcessSpawner.makeHandle({ ...commandHandle(), exitCode: Latch.whenOpen(threeInFlight, exit) })
-      );
+      const held = fallowLaneHandle(Latch.whenOpen(threeInFlight, exit));
+      return Effect.succeed(held);
     })
   );
   const fileSystemAndPath = Layer.merge(fileSystemLayer, Path.layer);

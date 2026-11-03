@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-03T02:51:18.625Z",
+  "generatedAt": "2026-11-03T03:26:16.290Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 15,
     "publicModules": 3600,
-    "publicExports": 25572,
+    "publicExports": 25574,
     "openModules": 115,
     "openExports": 94,
     "missingExportExamples": 0,
@@ -297759,7 +297759,7 @@
         "srcDir": "src",
         "sourceFileCount": 72,
         "publicModuleCount": 72,
-        "publicExportCount": 622
+        "publicExportCount": 623
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -299286,7 +299286,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 1,
+          "exportCount": 2,
           "remediationStatus": "resolved"
         },
         {
@@ -311598,12 +311598,36 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "renderBiomeJsonAt",
+          "exportKind": "const",
+          "filePath": "src/schemas/BiomeJson.ts",
+          "repoPath": "packages/tooling/library/repo-utils/src/schemas/BiomeJson.ts",
+          "line": 78,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-biomejson-ts-78-renderbiomejsonat",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "renderBiomeJson",
           "exportKind": "const",
           "filePath": "src/schemas/BiomeJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/BiomeJson.ts",
-          "line": 63,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-biomejson-ts-63-renderbiomejson",
+          "line": 186,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-biomejson-ts-186-renderbiomejson",
           "currentTags": [
             "@effects",
             "@category",
@@ -451537,7 +451561,7 @@
         "srcDir": "src",
         "sourceFileCount": 502,
         "publicModuleCount": 499,
-        "publicExportCount": 4713
+        "publicExportCount": 4714
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -459917,7 +459941,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 9,
+          "exportCount": 10,
           "remediationStatus": "resolved"
         },
         {
@@ -478360,8 +478384,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 120,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-120-ci-lane-class-values",
+          "line": 122,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-122-ci-lane-class-values",
           "currentTags": [
             "@category",
             "@since"
@@ -478382,8 +478406,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 136,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-136-cilaneclass",
+          "line": 138,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-138-cilaneclass",
           "currentTags": [
             "@category",
             "@since"
@@ -478404,8 +478428,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 157,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-157-cilaneclass",
+          "line": 159,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-159-cilaneclass",
           "currentTags": [
             "@category",
             "@since"
@@ -478426,8 +478450,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 173,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-173-ci-lane-replay-values",
+          "line": 175,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-175-ci-lane-replay-values",
           "currentTags": [
             "@category",
             "@since"
@@ -478448,8 +478472,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 189,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-189-cilanereplay",
+          "line": 191,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-191-cilanereplay",
           "currentTags": [
             "@category",
             "@since"
@@ -478470,8 +478494,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 210,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-210-cilanereplay",
+          "line": 212,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-212-cilanereplay",
           "currentTags": [
             "@category",
             "@since"
@@ -478492,8 +478516,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 226,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-226-ci-lane-id-values",
+          "line": 228,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-228-ci-lane-id-values",
           "currentTags": [
             "@category",
             "@since"
@@ -478514,8 +478538,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 267,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-267-cilaneid",
+          "line": 269,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-269-cilaneid",
           "currentTags": [
             "@category",
             "@since"
@@ -478536,8 +478560,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 288,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-288-cilaneid",
+          "line": 290,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-290-cilaneid",
           "currentTags": [
             "@category",
             "@since"
@@ -478558,8 +478582,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 306,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-306-docgen-lane-mode-values",
+          "line": 308,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-308-docgen-lane-mode-values",
           "currentTags": [
             "@category",
             "@since"
@@ -478580,8 +478604,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 322,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-322-docgenlanemode",
+          "line": 324,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-324-docgenlanemode",
           "currentTags": [
             "@category",
             "@since"
@@ -478602,8 +478626,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 343,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-343-docgenlanemode",
+          "line": 345,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-345-docgenlanemode",
           "currentTags": [
             "@category",
             "@since"
@@ -478624,8 +478648,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 371,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-371-cilanedescriptor",
+          "line": 373,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-373-cilanedescriptor",
           "currentTags": [
             "@category",
             "@since"
@@ -478646,8 +478670,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 411,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-411-ci-lane-descriptors",
+          "line": 413,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-413-ci-lane-descriptors",
           "currentTags": [
             "@category",
             "@since"
@@ -478672,8 +478696,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 715,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-715-cilanerunoptions",
+          "line": 717,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-717-cilanerunoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -478694,8 +478718,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 906,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-906-cilanepartitionproof",
+          "line": 908,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-908-cilanepartitionproof",
           "currentTags": [
             "@category",
             "@since"
@@ -478716,8 +478740,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1154,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1154-provecilanepartition",
+          "line": 1156,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1156-provecilanepartition",
           "currentTags": [
             "@param",
             "@returns",
@@ -478740,8 +478764,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1275,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1275-cilanepartitionargs",
+          "line": 1277,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1277-cilanepartitionargs",
           "currentTags": [
             "@category",
             "@since"
@@ -478762,8 +478786,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1307,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1307-cilanedefaultplacementlinesfortesting",
+          "line": 1309,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1309-cilanedefaultplacementlinesfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -478786,8 +478810,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1354,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1354-cilanepartitionargsfortesting",
+          "line": 1356,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1356-cilanepartitionargsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -478810,8 +478834,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1561,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1561-cilanestepsfortesting",
+          "line": 1570,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1570-cilanestepsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -478838,8 +478862,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1904,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1904-docgenlanemodeforchangedpaths",
+          "line": 1919,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1919-docgenlanemodeforchangedpaths",
           "currentTags": [
             "@param",
             "@returns",
@@ -478862,8 +478886,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2347,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2347-runcilane",
+          "line": 2362,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2362-runcilane",
           "currentTags": [
             "@param",
             "@returns",
@@ -478886,8 +478910,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2425,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2425-cilanecommand",
+          "line": 2440,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2440-cilanecommand",
           "currentTags": [
             "@category",
             "@since"
@@ -478908,8 +478932,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2671,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2671-cilocalstepplan",
+          "line": 2686,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2686-cilocalstepplan",
           "currentTags": [
             "@category",
             "@since"
@@ -478930,8 +478954,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2753,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2753-cilanedispatchstep",
+          "line": 2768,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2768-cilanedispatchstep",
           "currentTags": [
             "@param",
             "@returns",
@@ -478954,8 +478978,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2791,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2791-cilocalstepsfortesting",
+          "line": 2806,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2806-cilocalstepsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -478978,8 +479002,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2827,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2827-cilocallaneinputsfortesting",
+          "line": 2842,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2842-cilocallaneinputsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -479002,8 +479026,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2858,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2858-runcilocal",
+          "line": 2873,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2873-runcilocal",
           "currentTags": [
             "@param",
             "@returns",
@@ -479026,8 +479050,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2894,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2894-cilocalcommand",
+          "line": 2909,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2909-cilocalcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -542670,8 +542694,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/FallowQuality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
-          "line": 530,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-530-workflowyamlvaluefortesting",
+          "line": 535,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-535-workflowyamlvaluefortesting",
           "currentTags": [
             "@internal",
             "@category",
@@ -542693,9 +542717,33 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/FallowQuality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
-          "line": 775,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-775-inheritedcodemodduplicationcountfortesting",
+          "line": 780,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-780-inheritedcodemodduplicationcountfortesting",
           "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "fallowReportPathsForTesting",
+          "exportKind": "const",
+          "filePath": "src/commands/Quality/FallowQuality.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+          "line": 1124,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-1124-fallowreportpathsfortesting",
+          "currentTags": [
+            "@param",
+            "@returns",
             "@category",
             "@since"
           ],
@@ -542715,8 +542763,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/FallowQuality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
-          "line": 1218,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-1218-fallowfeatureargsfortesting",
+          "line": 1252,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-1252-fallowfeatureargsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -542739,8 +542787,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/FallowQuality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
-          "line": 1249,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-1249-fallowauditdifffallbackargsfortesting",
+          "line": 1283,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-1283-fallowauditdifffallbackargsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -542763,8 +542811,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/FallowQuality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
-          "line": 1323,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-1323-fallowauditneedsdifffallbackfortesting",
+          "line": 1357,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-1357-fallowauditneedsdifffallbackfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -542787,8 +542835,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/FallowQuality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
-          "line": 1526,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-1526-collectauditdiffinputfortesting",
+          "line": 1560,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-1560-collectauditdiffinputfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -542811,8 +542859,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/FallowQuality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
-          "line": 2098,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-2098-reportinvariantdiagnosticsfortesting",
+          "line": 2134,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-2134-reportinvariantdiagnosticsfortesting",
           "currentTags": [
             "@internal",
             "@category",
@@ -542834,8 +542882,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/FallowQuality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
-          "line": 2887,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-2887-qualityfallowcommand",
+          "line": 2923,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-2923-qualityfallowcommand",
           "currentTags": [
             "@category",
             "@since"
