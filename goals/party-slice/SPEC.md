@@ -80,23 +80,23 @@ Higher sources outrank lower sources when they conflict.
 
 ## Acceptance Criteria
 
-- [ ] `@beep/shared-domain/identity/Party` exports `PartyId`; no `LawPractice.PartyId` importer remains
+- [x] `@beep/shared-domain/identity/Party` exports `PartyId`; no `LawPractice.PartyId` importer remains
   (separate prerequisite PR).
-- [ ] `@beep/party-domain`, `@beep/party-use-cases` and `@beep/party-server` exist, created by
+- [x] `@beep/party-domain`, `@beep/party-use-cases` and `@beep/party-server` exist, created by
   `beep create-package`, with the module placement above.
-- [ ] Party claims bind `makeClaimEnvelope` and the P1b factories to party ids and supply the slice-owned,
+- [x] Party claims bind `makeClaimEnvelope` and the P1b factories to party ids and supply the slice-owned,
   unambiguous `logicalKey` function for the party proposition union. Tests prove the binding emits
   identifiers distinct from the epistemic slice's and rejects a key inconsistent with its proposition.
-- [ ] The scratchpad competency tests (identity, admission, hierarchy, ledger, resolution) pass against
+- [x] The scratchpad competency tests (identity, admission, hierarchy, ledger, resolution) pass against
   the slice packages on the synthetic fixtures.
-- [ ] The ingestion adapters run end to end on a synthetic mail index through the memory ledger, and the
+- [x] The ingestion adapters run end to end on a synthetic mail index through the memory ledger, and the
   law-practice contact port is implemented in law-practice.
-- [ ] Law-practice's `Party` aggregate is renamed `LegalPartyReference` (no table, so no migration). No
+- [x] Law-practice's `Party` aggregate is renamed `LegalPartyReference` (no table, so no migration). No
   second aggregate named `Party` exists outside `@beep/party-domain`.
-- [ ] All five boundary scans in the Verification Matrix return no matches, and the server boundary
+- [x] All five boundary scans in the Verification Matrix return no matches, and the server boundary
   test passes. `@beep/law-practice-server` is the only law-practice package that imports from party, and it imports `@beep/party-use-cases` and nothing else.
   The contact-source port's input and output types reach it through the use-cases public surface.
-- [ ] Parties carry an integer `PartyId` plus deterministic `PartyKey`s, and resolution follows the identity
+- [x] Parties carry an integer `PartyId` plus deterministic `PartyKey`s, and resolution follows the identity
   rules in the Decision Log. Tests cover:
   - the surviving-id choice, and replay producing the same view;
   - an absorbed `PartyId` and its keys resolving to the survivor inside party (a `LegalPartyReference` keeps
@@ -105,8 +105,8 @@ Higher sources outrank lower sources when they conflict.
   - `DistinctParty` vetoing a merge, including a later veto and equal-time conflicts;
   - a retraction recomputing components: a simple merge splits again, a cycle stays merged through its other
     edges, and a retraction that re-enables a vetoed merge yields the new component.
-- [ ] `bun run beep quality package-verify` passes for the three party packages.
-- [ ] No unrelated refactors or formatting churn.
+- [x] `bun run beep quality package-verify` passes for the three party packages.
+- [x] No unrelated refactors or formatting churn.
 
 ## P1 contract tests (settled for #2045)
 

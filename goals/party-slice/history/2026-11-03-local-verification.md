@@ -37,10 +37,14 @@ review validity and instance-local memory storage.
 
 The first regenerated documentation ratchet found ten additional multi-paragraph
 leads, 77 trailing-blank findings and three missing runtime schema aliases. The
-comments and aliases were repaired; the fresh regenerated ratchet is pending.
+comments and aliases were repaired; the fresh regenerated ratchet passed all 21
+tracked metrics with zero increases and zero legacy findings.
 The final content audit, committed-head verification, publication, review, merge
-and completion refresh remain required. Main was six commits ahead at the latest
-fetch; base synchronization must precede publication.
+and completion refresh remain required. Main was six commits ahead and was merged locally in `551a84dcc5`, after
+implementation checkpoint `07904cb62f`. The two conflicts were generated cache
+and Fallow inventories; both were regenerated from merged inputs. Frozen-lockfile
+installation passed, the merged cache audit has zero blocking findings, and
+schema catalog regeneration reports no additional shard drift.
 
 ## Scope
 
