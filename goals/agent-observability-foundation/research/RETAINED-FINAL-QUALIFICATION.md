@@ -244,9 +244,10 @@ is unsatisfied. PR2644 has no completion claim until actual acceptance occurs.
 The operator subsequently confirmed personally merging PR2612. The
 [clarification](../ops/history/pr2612-merge-attribution-clarified-20261102.json)
 supplements the earlier unknown-caller observation without rewriting it. Its
-canonical completion result remains unsatisfied. There is no outstanding need
-to identify a competing agent before PR2644 proceeds through normal verification.
-The existing reservation of PR2644's final merge to this chat remains in force.
+canonical completion result remains unsatisfied. At that earlier checkpoint,
+the clarification resolved the identity question while PR2644 was still open,
+and its merge reservation applied to PR2644. The current sole final is PR2649,
+whose merge remains reserved to the owning chat.
 
 ## Preserve PR2644's unknown completion result
 
