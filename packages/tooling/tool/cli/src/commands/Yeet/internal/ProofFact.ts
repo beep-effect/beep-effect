@@ -199,6 +199,11 @@ export class ProofInputDigest extends S.Opaque<ProofInputDigest, { readonly bran
     inputSource: ProofInputSource,
     epochDigest: S.NonEmptyString,
     key: S.NonEmptyString,
+    // The environment identity the lane ran under (posture variables, tree,
+    // base, toolchain), recorded beside `commandDigest` so same-attempt reuse
+    // can be audited. It is evidence only and never enters `key`; rows written
+    // before it existed simply omit it.
+    environmentDigest: S.optionalKey(S.NonEmptyString),
   }).pipe(
     $I.annoteSchema("ProofInputDigest", {
       description:

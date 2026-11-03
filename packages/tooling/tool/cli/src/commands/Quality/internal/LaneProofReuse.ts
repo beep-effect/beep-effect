@@ -8,6 +8,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { HostProcessArchitecture, HostProcessPlatform } from "@beep/utils";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import * as Digest from "effect/crypto/Digest";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
@@ -20,12 +21,71 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { turboEnvExtendsAmbient } from "../../../internal/cli/EnvConfig.ts";
 import { runCapturedStreams } from "../../../internal/process/StepExec.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
+import { QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV, QUALITY_TASK_LANE_RUN_PARENT_ID_ENV } from "../Quality.schemas.ts";
 import type { GithubCheckLaneSpec } from "../Quality.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Quality/internal/LaneProofReuse");
+
+/**
+ * Environment variable that carries the proof base into a lane battery.
+ *
+ * **Details**
+ *
+ * Yeet resolves its base ref once per run and passes the commit SHA here, so
+ * every tier of one run identifies proofs against the same base. A ref name
+ * (`origin/main`) is still accepted and resolved per battery.
+ *
+ * @category configuration
+ */
+export const LANE_PROOF_BASE_ENV = "BEEP_YEET_PROOF_BASE" as const;
+
+const LANE_PROOF_MODE_ENV = "BEEP_YEET_LANE_PROOF_MODE" as const;
+
+// The ref every local lane reads its base from (changeset-status `--since`,
+// the `ci lane` affected shape, the Fallow base snapshot).
+const LANE_BASE_REF = "origin/main" as const;
+
+// Run bookkeeping a parent Yeet step adds to the battery environment: where the
+// inner-lane report goes, which step the rows belong to, and the proof mode and
+// base (the base enters the identity on its own). None of it changes a lane's
+// verdict, and the parent id differs per tier, so hashing it would make every
+// lane look changed between the cheap-gates and pre-push tiers of one run.
+const LANE_PROOF_BOOKKEEPING_ENV = [
+  QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
+  QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
+  LANE_PROOF_MODE_ENV,
+  LANE_PROOF_BASE_ENV,
+] as const;
+
+// A pinned base is a full commit SHA; anything else is a ref to resolve.
+const isPinnedBaseSha = S.is(S.String.check(S.isPattern(/^[0-9a-f]{40}$/u)));
+
+/**
+ * Read the base commit a parent Yeet run pinned for this battery.
+ *
+ * **Details**
+ *
+ * Present only when {@link LANE_PROOF_BASE_ENV} holds a full commit SHA. A ref
+ * name means nothing was pinned and the battery resolves the ref itself.
+ *
+ * **Example** (Read the pinned base)
+ *
+ * ```ts
+ * import { pinnedLaneProofBaseSha } from "@beep/repo-cli/test/Quality"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isOption(pinnedLaneProofBaseSha())) // true
+ * ```
+ *
+ * @returns The pinned base SHA, or none when the base is a ref or unset.
+ * @category configuration
+ */
+export const pinnedLaneProofBaseSha = (): O.Option<string> =>
+  O.filter(O.fromUndefinedOr(Bun.env[LANE_PROOF_BASE_ENV]), isPinnedBaseSha);
 
 const LaneProofMode = LiteralKit(["off", "shadow", "active"]);
 type LaneProofMode = typeof LaneProofMode.Type;
@@ -138,10 +198,13 @@ const laneCommandHash = (lane: GithubCheckLaneSpec) =>
     )
   );
 
+const inheritedEnvironment = (): Readonly<Record<string, string | undefined>> =>
+  R.filter(Bun.env, (_, key) => !A.contains(LANE_PROOF_BOOKKEEPING_ENV, key));
+
 const environmentProfileHash = Effect.fnUntraced(function* (lane: GithubCheckLaneSpec) {
   const inheritedEnvironmentHash =
     lane.step.useLocalEnv === true || turboEnvExtendsAmbient(lane.step.command, lane.step.args)
-      ? yield* hashText(stableRecordText(Bun.env))
+      ? yield* hashText(stableRecordText(inheritedEnvironment()))
       : undefined;
   return yield* hashText(
     stableRecordText({
@@ -193,11 +256,40 @@ const virtualTreeSha = Effect.fn("LaneProofReuse.virtualTreeSha")(function* (rep
   );
 });
 
+/**
+ * Hash a checkout's virtual tree: `HEAD` plus every non-ignored change, read
+ * through a temporary index so the real index is never touched.
+ *
+ * @param repoRoot - Checkout to identify.
+ * @returns The tree object id `git write-tree` produced.
+ * @category diagnostics
+ */
+export const laneProofVirtualTreeSha = virtualTreeSha;
+
 const laneProofMode = (): LaneProofMode => {
-  // biome-ignore lint/suspicious/noUndeclaredEnvVars: Declared in turbo.json global.passThroughEnv, which Biome cannot read. Owner: @beep/repo-cli. Exit: Biome reads turbo global.* declarations, or the name joins allowedEnvVars (#1855).
-  const candidate = Bun.env.BEEP_YEET_LANE_PROOF_MODE ?? "off";
+  const candidate = Bun.env[LANE_PROOF_MODE_ENV] ?? "off";
   return isLaneProofMode(candidate) ? candidate : "off";
 };
+
+const shortSha = Str.takeLeft(12);
+
+// A pinned base is the commit the parent run fetched. Lanes still read
+// `origin/main` by name, so when another fetch in the shared clone moved that
+// ref, the lanes would prove against a base the identity does not name.
+const resolveProofBase = Effect.fnUntraced(function* (repoRoot: string) {
+  const pinned = pinnedLaneProofBaseSha();
+  if (O.isNone(pinned)) {
+    return O.some(yield* runGit(repoRoot, ["rev-parse", Bun.env[LANE_PROOF_BASE_ENV] ?? LANE_BASE_REF]));
+  }
+  const laneBase = yield* runGit(repoRoot, ["rev-parse", LANE_BASE_REF]);
+  if (laneBase === pinned.value) {
+    return pinned;
+  }
+  yield* Console.log(
+    `[lane-proof] reuse disabled: ${LANE_BASE_REF} moved from the run's pinned base ${shortSha(pinned.value)} to ${shortSha(laneBase)}`
+  );
+  return O.none<string>();
+});
 
 const LaneProofStoreJson = JsonStringCodec(LaneProofStore);
 
@@ -221,7 +313,11 @@ export const prepareLaneProofSession = Effect.fn("LaneProofReuse.prepareSession"
   // Lanes that can never be reused never pay for the virtual-tree hash.
   const reusableLanes = A.filter(lanes, (lane) => !isNonReusableLaneProofId(lane.id));
   const first = A.head(reusableLanes);
-  if (mode === "off" || O.isNone(first) || A.some(reusableLanes, (lane) => lane.step.cwd !== first.value.step.cwd)) {
+  if (mode === "off" || O.isNone(first)) {
+    return O.none<LaneProofSession>();
+  }
+  if (A.some(reusableLanes, (lane) => lane.step.cwd !== first.value.step.cwd)) {
+    yield* Console.log("[lane-proof] reuse disabled: the battery's lanes run from more than one directory");
     return O.none<LaneProofSession>();
   }
 
@@ -229,19 +325,23 @@ export const prepareLaneProofSession = Effect.fn("LaneProofReuse.prepareSession"
   const path = yield* Path.Path;
   const repoRoot = first.value.step.cwd;
   const storePath = path.join(repoRoot, ".beep", "yeet", "lane-proofs.json");
-  // biome-ignore lint/suspicious/noUndeclaredEnvVars: Declared in turbo.json global.passThroughEnv, which Biome cannot read. Owner: @beep/repo-cli. Exit: Biome reads turbo global.* declarations, or the name joins allowedEnvVars (#1855).
-  const proofBase = Bun.env.BEEP_YEET_PROOF_BASE ?? "origin/main";
   const prepared = yield* Effect.all(
     {
-      baseSha: runGit(repoRoot, ["rev-parse", proofBase]),
+      baseSha: resolveProofBase(repoRoot),
       headSha: runGit(repoRoot, ["rev-parse", "HEAD"]),
       tree: virtualTreeSha(repoRoot),
     },
     { concurrency: "unbounded" }
-  ).pipe(Effect.option);
-  if (O.isNone(prepared)) return O.none<LaneProofSession>();
+  ).pipe(
+    Effect.tapError((error) =>
+      Console.log(`[lane-proof] reuse disabled: could not identify the lane tree (${error.message})`)
+    ),
+    Effect.option
+  );
+  if (O.isNone(prepared) || O.isNone(prepared.value.baseSha)) return O.none<LaneProofSession>();
 
-  const { baseSha, headSha, tree } = prepared.value;
+  const { headSha, tree } = prepared.value;
+  const baseSha = prepared.value.baseSha.value;
   const store = yield* loadStore(storePath);
   const identities = yield* Effect.forEach(
     reusableLanes,
@@ -273,22 +373,172 @@ export const prepareLaneProofSession = Effect.fn("LaneProofReuse.prepareSession"
   );
 });
 
-const identityMatchesIdentity = (
-  left: Omit<LaneProofRecord, "brand" | "durationMs" | "verifiedAt">,
-  right: Omit<LaneProofRecord, "brand" | "durationMs" | "verifiedAt">
-): boolean =>
-  left.laneId === right.laneId &&
-  left.commandHash === right.commandHash &&
-  left.inputHash === right.inputHash &&
-  left.mergedTreeSha === right.mergedTreeSha &&
-  left.headSha === right.headSha &&
-  left.baseSha === right.baseSha &&
-  left.envProfileHash === right.envProfileHash;
+/**
+ * Why one lane's proof identity differs from another identity of the same lane.
+ *
+ * **Example** (Name a refusal reason)
+ *
+ * ```ts
+ * import { LaneProofRefusalReason } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(LaneProofRefusalReason.is["base-moved"]("base-moved")) // true
+ * ```
+ *
+ * @category models
+ */
+export const LaneProofRefusalReason = LiteralKit([
+  "command-changed",
+  "tree-changed",
+  "head-moved",
+  "base-moved",
+  "environment-changed",
+]).pipe(
+  $I.annoteSchema("LaneProofRefusalReason", {
+    description: "One identity component that stops a lane proof from being reused or recorded.",
+  })
+);
 
-const recordMatchesIdentity = (
-  record: LaneProofRecord,
-  identity: Omit<LaneProofRecord, "brand" | "durationMs" | "verifiedAt">
-): boolean => identityMatchesIdentity(record, identity);
+/**
+ * Type of {@link LaneProofRefusalReason}.
+ *
+ * @category models
+ */
+export type LaneProofRefusalReason = typeof LaneProofRefusalReason.Type;
+
+/**
+ * A prior lane proof that exists but does not match the current identity.
+ *
+ * **Example** (Describe a moved base)
+ *
+ * ```ts
+ * import { LaneProofRefusal } from "@beep/repo-cli/test/Quality"
+ *
+ * const refusal = LaneProofRefusal.make({
+ *   laneId: "fallow:health",
+ *   reasons: ["base-moved"],
+ *   priorBaseSha: "a".repeat(40),
+ *   currentBaseSha: "b".repeat(40),
+ * })
+ * console.log(refusal.reasons) // ["base-moved"]
+ * ```
+ *
+ * @category models
+ */
+export class LaneProofRefusal extends S.Opaque<LaneProofRefusal, { readonly brand: unique symbol }>()(
+  S.Struct({
+    laneId: S.String,
+    reasons: S.NonEmptyArray(LaneProofRefusalReason),
+    priorBaseSha: S.String,
+    currentBaseSha: S.String,
+  }).pipe(
+    $I.annoteSchema("LaneProofRefusal", {
+      description: "The identity components that differ between a lane's prior proof and its current identity.",
+    })
+  )
+) {}
+
+type LaneProofIdentityFields = Omit<LaneProofRecord, "brand" | "durationMs" | "verifiedAt">;
+
+const laneProofRefusalReasons = (
+  prior: LaneProofIdentityFields,
+  current: LaneProofIdentityFields
+): ReadonlyArray<LaneProofRefusalReason> =>
+  A.getSomes([
+    O.liftPredicate(LaneProofRefusalReason.Enum["command-changed"], () => prior.commandHash !== current.commandHash),
+    O.liftPredicate(
+      LaneProofRefusalReason.Enum["tree-changed"],
+      () => prior.inputHash !== current.inputHash || prior.mergedTreeSha !== current.mergedTreeSha
+    ),
+    O.liftPredicate(LaneProofRefusalReason.Enum["head-moved"], () => prior.headSha !== current.headSha),
+    O.liftPredicate(LaneProofRefusalReason.Enum["base-moved"], () => prior.baseSha !== current.baseSha),
+    O.liftPredicate(
+      LaneProofRefusalReason.Enum["environment-changed"],
+      () => prior.envProfileHash !== current.envProfileHash
+    ),
+  ]);
+
+const laneProofRefusal = (
+  prior: LaneProofIdentityFields,
+  current: LaneProofIdentityFields
+): O.Option<LaneProofRefusal> =>
+  pipe(
+    laneProofRefusalReasons(prior, current),
+    O.liftPredicate(A.isReadonlyArrayNonEmpty),
+    O.map((reasons) =>
+      LaneProofRefusal.make({
+        laneId: current.laneId,
+        reasons,
+        priorBaseSha: prior.baseSha,
+        currentBaseSha: current.baseSha,
+      })
+    )
+  );
+
+const identityMatchesIdentity = (left: LaneProofIdentityFields, right: LaneProofIdentityFields): boolean =>
+  left.laneId === right.laneId && O.isNone(laneProofRefusal(left, right));
+
+const recordMatchesIdentity = (record: LaneProofRecord, identity: LaneProofIdentityFields): boolean =>
+  identityMatchesIdentity(record, identity);
+
+const renderRefusalReasons = (refusal: LaneProofRefusal): string =>
+  A.join(
+    A.map(refusal.reasons, (reason) =>
+      LaneProofRefusalReason.is["base-moved"](reason)
+        ? `base moved (${shortSha(refusal.priorBaseSha)} -> ${shortSha(refusal.currentBaseSha)})`
+        : Str.replaceAll("-", " ")(reason)
+    ),
+    ", "
+  );
+
+/**
+ * Render the log line for a prior lane proof that was not reused.
+ *
+ * **Example** (Render a moved-base refusal)
+ *
+ * ```ts
+ * import { LaneProofRefusal, renderLaneProofRefusal } from "@beep/repo-cli/test/Quality"
+ *
+ * const refusal = LaneProofRefusal.make({
+ *   laneId: "fallow:health",
+ *   reasons: ["base-moved", "environment-changed"],
+ *   priorBaseSha: "a".repeat(40),
+ *   currentBaseSha: "b".repeat(40),
+ * })
+ * console.log(renderLaneProofRefusal(refusal))
+ * // [lane-proof] not reusing fallow:health: base moved (aaaaaaaaaaaa -> bbbbbbbbbbbb), environment changed
+ * ```
+ *
+ * @param refusal - The refused prior proof.
+ * @returns One `[lane-proof]` log line naming every differing component.
+ * @category formatting
+ */
+export const renderLaneProofRefusal = (refusal: LaneProofRefusal): string =>
+  `[lane-proof] not reusing ${refusal.laneId}: ${renderRefusalReasons(refusal)}`;
+
+/**
+ * Explain why a lane with a prior proof in the store will not reuse it.
+ *
+ * **Details**
+ *
+ * Returns none when the lane has no prior proof (nothing was refused) or when
+ * its proof is reusable.
+ *
+ * @category diagnostics
+ */
+export const explainLaneProofRefusal: {
+  (laneId: string): (session: LaneProofSession) => O.Option<LaneProofRefusal>;
+  (session: LaneProofSession, laneId: string): O.Option<LaneProofRefusal>;
+} = dual(
+  2,
+  (session: LaneProofSession, laneId: string): O.Option<LaneProofRefusal> =>
+    pipe(
+      O.all({
+        identity: A.findFirst(session.identities, (identity) => identity.laneId === laneId),
+        record: A.findFirst(session.records, (record) => record.laneId === laneId),
+      }),
+      O.flatMap(({ identity, record }) => laneProofRefusal(record, identity))
+    )
+);
 
 /**
  * Test whether one lane has an exact reusable proof in the prepared session.
@@ -337,23 +587,29 @@ export const persistLaneProofs = Effect.fn("LaneProofReuse.persist")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const verifiedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-  const replacements = A.getSomes(
+  const identified = A.getSomes(
     A.map(successes, ([lane, durationMs]) =>
-      pipe(
-        O.all({
-          original: A.findFirst(session.identities, (identity) => identity.laneId === lane.id),
-          refreshed: A.findFirst(refreshedSession.identities, (identity) => identity.laneId === lane.id),
-        }),
-        O.filter(({ original, refreshed: current }) => identityMatchesIdentity(original, current)),
-        O.map(({ refreshed: identity }) =>
-          LaneProofRecord.make({
-            ...identity,
-            durationMs: S.Natural.make(Math.max(0, Math.round(durationMs))),
-            verifiedAt,
-          })
-        )
-      )
+      O.all({
+        durationMs: O.some(durationMs),
+        original: A.findFirst(session.identities, (identity) => identity.laneId === lane.id),
+        refreshed: A.findFirst(refreshedSession.identities, (identity) => identity.laneId === lane.id),
+      })
     )
+  );
+  yield* Effect.forEach(
+    A.getSomes(A.map(identified, ({ original, refreshed: current }) => laneProofRefusal(original, current))),
+    (refusal) =>
+      Console.log(`[lane-proof] not recording ${refusal.laneId}: ${renderRefusalReasons(refusal)} while it ran`),
+    { discard: true }
+  );
+  const replacements = A.map(
+    A.filter(identified, ({ original, refreshed: current }) => identityMatchesIdentity(original, current)),
+    ({ durationMs, refreshed: identity }) =>
+      LaneProofRecord.make({
+        ...identity,
+        durationMs: S.Natural.make(Math.max(0, Math.round(durationMs))),
+        verifiedAt,
+      })
   );
   if (A.isReadonlyArrayEmpty(replacements)) return;
   const replacementIds = A.map(replacements, (record) => record.laneId);

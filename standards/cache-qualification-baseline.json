@@ -11,7 +11,7 @@
   "reviews": {
     "//": {
       "reviewer": "Claude Opus 5.5 (W1b lane, refactor/beep-cli-w1b-verifier)",
-      "reason": "Re-record the root and repo-ai-metrics subjects after merging main (#2628 landed): policy seals name the W1b split modules, and repo-ai-metrics gains the repo-utils dependency for shellQuote; no qualification is granted.",
+      "reason": "Re-record the root and repo-ai-metrics subjects after merging main (f9654ae193): policy seals name the W1b split modules, and repo-ai-metrics gains the repo-utils dependency for shellQuote; no qualification is granted.",
       "basis": {
         "path": "goals/beep-cli-composition/research/w1b-cache-baseline-review.md",
         "sha256": "c99e29e8db2f2f90ad49fbc8d869fa5170cb2202272ea78948774ca125d53c7f"
@@ -1139,7 +1139,7 @@
     },
     "@beep/repo-ai-metrics": {
       "reviewer": "Claude Opus 5.5 (W1b lane, refactor/beep-cli-w1b-verifier)",
-      "reason": "Re-record the root and repo-ai-metrics subjects after merging main (#2628 landed): policy seals name the W1b split modules, and repo-ai-metrics gains the repo-utils dependency for shellQuote; no qualification is granted.",
+      "reason": "Re-record the root and repo-ai-metrics subjects after merging main (f9654ae193): policy seals name the W1b split modules, and repo-ai-metrics gains the repo-utils dependency for shellQuote; no qualification is granted.",
       "basis": {
         "path": "goals/beep-cli-composition/research/w1b-cache-baseline-review.md",
         "sha256": "c99e29e8db2f2f90ad49fbc8d869fa5170cb2202272ea78948774ca125d53c7f"

@@ -162,7 +162,12 @@ export const executeStepWithArtifacts = Effect.fn("Yeet.executeStepWithArtifacts
 ): Effect.fn.Return<
   RepoStepRunResult,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | Git
+  | Digest.Digest
 > {
   const rawOutputPath = yield* rawOutputPathForStep(context, step);
   return yield* step.id === HEAD_INSTALL_PREFLIGHT_STEP_ID

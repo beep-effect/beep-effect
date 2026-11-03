@@ -281,6 +281,10 @@ export class RepoRunContext extends S.Opaque<RepoRunContext, { readonly brand: u
     repoRoot: S.String,
     cwd: S.String,
     base: S.String,
+    // The commit `base` resolved to right after the run refreshed it. Proof
+    // steps identify lanes against this one SHA, so a base ref that moves
+    // mid-run cannot split one run's tiers. Absent in plan-only runs.
+    baseSha: S.optionalKey(S.String),
     head: S.String,
     branch: S.String,
     packetDir: S.String,

@@ -32444,6 +32444,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.step.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 95.65,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 1,
+            "functions": 0
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.ts": {
           "lines": 100,
           "statements": 100,
@@ -42921,6 +42933,18 @@
           }
         },
         "packages/tooling/library/repo-utils/src/Sha256Hex.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-utils/src/Shell.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

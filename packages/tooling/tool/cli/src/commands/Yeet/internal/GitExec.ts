@@ -396,6 +396,43 @@ export const refreshBaseRef = Effect.fn("Yeet.refreshBaseRef")(function* (
 });
 
 /**
+ * Refresh the configured base ref once, then pin the commit it resolved to.
+ *
+ * **Details**
+ *
+ * The pin is what a run's proof steps identify lanes against
+ * (`BEEP_YEET_PROOF_BASE`), so the cheap-gates and pre-push tiers of one run
+ * share a base even when another checkout of the clone fetches `origin/main`
+ * between them. Refresh failures keep {@link refreshBaseRef}'s errors; a base
+ * that refreshed but cannot be resolved pins nothing and the proof steps fall
+ * back to resolving the ref themselves.
+ *
+ * **Example** (Pin the refreshed main ref)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect";
+ * import * as O from "effect/Option";
+ * import { refreshAndPinBaseRef } from "@beep/repo-cli/test/Yeet"
+ *
+ * const pinned = refreshAndPinBaseRef(".", "origin/main").pipe(Effect.map(O.isSome))
+ * ```
+ *
+ * @param repoRoot - Checkout whose base ref is refreshed.
+ * @param base - Base ref, such as `origin/main`.
+ * @returns The pinned base commit SHA, or none when it could not be resolved.
+ * @category execution
+ * @since 0.0.0
+ */
+export const refreshAndPinBaseRef = Effect.fn("Yeet.refreshAndPinBaseRef")(function* (
+  repoRoot: string,
+  base: string
+): Effect.fn.Return<O.Option<string>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  yield* refreshBaseRef(repoRoot, base);
+  const git = yield* patientGit;
+  return yield* git.revParse(repoRoot, `${base}^{commit}`).pipe(Effect.option);
+});
+
+/**
  * Read the current branch using Yeet's historical `rev-parse --abbrev-ref`.
  *
  * **Example** (Read trimmed branch name)
