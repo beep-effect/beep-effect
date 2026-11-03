@@ -252,3 +252,12 @@ receiving copies now connect these stages without new process infrastructure.
 A source calendar ceiling is captured once and can be reinstalled under a fresh
 invocation budget. Complete compositor adoption remains required; see
 history/evidence/2026-11-03-composed-text-budget.md.
+
+
+### Reuse authenticated artifact payloads in secondary source corpora
+
+The first edition-inference capture duplicated all canonical payloads and exceeded
+Biome's 1 MiB input limit. Keeping canonical references and independent source
+outcomes reduces it to 889700 bytes; existing authenticated fixtures still own
+payload verification. No formatter exclusion or limit change is needed. See
+history/evidence/2026-11-03-edition-inference.md.

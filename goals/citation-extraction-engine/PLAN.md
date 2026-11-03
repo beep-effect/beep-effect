@@ -1,5 +1,13 @@
 # Citation Extraction Engine Plan
 
+Edition inference checkpoint (2026-11-03): built-in selection preserves exact
+priority, duplicate occurrences, truthy-year filtering and existing guesses.
+All 2480 source selections compare; six tests pass including 101 canonical date
+controls and live/captured calendar tests. Source capture retains 25718 boundary
+results across all 2533 editions; full replay is hosted. Complete metadata-to-
+edition composition and reporter/page correction remain open. See
+[edition inference evidence](history/evidence/2026-11-03-edition-inference.md).
+
 Law metadata checkpoint (2026-11-03): the private compositor connects source
 context/captures, string helpers and year conversion under shared invocation
 accounting and a fresh Scope. The original helper supplies 128 mutations and

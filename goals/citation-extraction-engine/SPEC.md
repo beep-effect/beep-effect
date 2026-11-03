@@ -548,6 +548,16 @@ instead of silently splitting delivery or weakening scope.
 
 ## Decision Log
 
+- **2026-11-03 edition inference:** select built-in source edition references
+  without deduplication, preserve prior guesses when no unique choice exists,
+  and read the current calendar per date predicate. Capture configured Clock
+  and zone at installation; use the authenticated owner for date payloads and
+  retain Python datetime year prefixes. Do not replace source precedence with
+  a fallback-after-filter strategy or get_year's import-time bound. Reversal
+  removes this private adapter and reopens superclass selection; full class
+  composition and custom protocols remain required. See
+  `history/evidence/2026-11-03-edition-inference.md`.
+
 - **2026-11-03 law metadata composition:** return owned source-native field
   updates under existing operation/native admission and one invocation budget.
   Each call owns a fresh Scope; the captured dependency Context excludes the
