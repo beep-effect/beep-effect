@@ -1,4 +1,9 @@
 import { fileURLToPath } from "node:url";
+import { CitationCaseResourceHash } from "@beep/law-practice-server/internal/Citation/CaseResourceHash";
+import {
+  CitationPublicationResourceHashInput,
+  makeCitationPublicationResourceHash,
+} from "@beep/law-practice-server/internal/Citation/PublicationResourceHash";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -11,11 +16,6 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
-import { CitationCaseResourceHash } from "../src/internal/Citation/CaseResourceHash.ts";
-import {
-  CitationPublicationResourceHashInput,
-  makeCitationPublicationResourceHash,
-} from "../src/internal/Citation/PublicationResourceHash.ts";
 import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 
 const Cases = S.Struct({

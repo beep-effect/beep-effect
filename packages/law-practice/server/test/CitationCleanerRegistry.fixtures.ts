@@ -1,30 +1,36 @@
 /** Scoped registry protocol test harness. @internal @packageDocumentation @since 0.0.0 */
 import * as NodeURL from "node:url";
+import {
+  CitationBuiltinCleaners,
+  makeCitationBuiltinCleaners,
+} from "@beep/law-practice-server/internal/Citation/BuiltinCleaners";
+import {
+  CitationCleanerFailure,
+  CitationCleanerRuntime,
+  makeCitationCleanerPipeline,
+} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import {
+  CitationCleanerProtocols,
+  makeCitationCleanerRegistry,
+} from "@beep/law-practice-server/internal/Citation/CleanerRegistry";
+import {
+  CitationBuiltinCleanerName,
+  CitationCleanerValues,
+  makeCitationCleanerValues,
+} from "@beep/law-practice-server/internal/Citation/CleanerValues";
+import { makeCitationPythonHash } from "@beep/law-practice-server/internal/Citation/PythonHash";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
-import { CitationBuiltinCleaners, makeCitationBuiltinCleaners } from "../src/internal/Citation/BuiltinCleaners.ts";
-import {
-  CitationCleanerFailure,
-  CitationCleanerRuntime,
-  makeCitationCleanerPipeline,
-} from "../src/internal/Citation/CleanerPipeline.ts";
-import { CitationCleanerProtocols, makeCitationCleanerRegistry } from "../src/internal/Citation/CleanerRegistry.ts";
-import {
-  CitationBuiltinCleanerName,
-  CitationCleanerValues,
-  makeCitationCleanerValues,
-} from "../src/internal/Citation/CleanerValues.ts";
-import { makeCitationPythonHash } from "../src/internal/Citation/PythonHash.ts";
-import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import type {
   CitationCleanerObject,
   CitationCleanerProduced,
   CitationCleanerWork,
-} from "../src/internal/Citation/CleanerPipeline.ts";
+} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 
 type BuiltinObservation = (
   name: CitationBuiltinCleanerName,
@@ -53,7 +59,9 @@ export const makeCitationCleanerRegistryHarness = Effect.fn("CleanerRegistryTest
   const builtin = yield* makeCitationBuiltinCleaners(limits, {
     executable: process.execPath,
     cwd: process.cwd(),
-    workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
+    workerFile: NodeURL.fileURLToPath(
+      new URL("@beep/law-practice-server/internal/Citation/HtmlWorker.entry", import.meta.url)
+    ),
   }).pipe(
     Effect.provideService(CitationCleanerValues, values),
     Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)

@@ -50,8 +50,9 @@ export const readCitationByteFrames = Effect.fn("Citation.readByteFrames")(funct
     used = 0;
     buffer = new Uint8Array(0);
   });
-  yield* Stream.runForEach(source.pipe(Stream.mapError(channelFailed)), (chunk) =>
-    Effect.gen(function* () {
+  yield* Stream.runForEach(
+    source.pipe(Stream.mapError(channelFailed)),
+    Effect.fnUntraced(function* (chunk) {
       for (let index = 0; index < chunk.byteLength; index++) {
         if (index % 4096 === 0) yield* Effect.yieldNow;
         yield* consumeByte(chunk[index]);

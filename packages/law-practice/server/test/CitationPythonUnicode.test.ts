@@ -1,4 +1,6 @@
 import * as NodeURL from "node:url";
+import { makeCitationPythonHash } from "@beep/law-practice-server/internal/Citation/PythonHash";
+import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -16,8 +18,6 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { makeCitationPythonHash } from "../src/internal/Citation/PythonHash.ts";
-import { makeCitationPythonUnicode } from "../src/internal/Citation/PythonUnicode.ts";
 
 const Snapshot = S.Struct({
   width: S.Literals([1, 2, 4]),

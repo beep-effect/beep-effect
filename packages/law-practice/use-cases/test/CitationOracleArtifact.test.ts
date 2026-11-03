@@ -1,9 +1,12 @@
+import {
+  ModelValueArtifact,
+  TokenizerExtractorsArtifact,
+} from "@beep/law-practice-use-cases/internal/citationOracleJson";
 import { CitationOracleArtifact } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { ModelValueArtifact, TokenizerExtractorsArtifact } from "../src/internal/citationOracleJson.ts";
 
 const ObjectText = S.fromJsonString(S.JsonObject);
 const ArrayText = S.JsonObject.pipe(S.Array, S.fromJsonString);

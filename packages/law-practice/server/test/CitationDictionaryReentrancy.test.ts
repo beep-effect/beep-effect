@@ -1,5 +1,11 @@
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import {
+  CitationRuntimeDictionaryComparison,
+  CitationRuntimeDictionaryFailure,
+  CitationRuntimeDictionaryKey,
+  makeCitationRuntimeDictionary,
+} from "@beep/law-practice-server/internal/Citation/RuntimeDictionary";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -13,13 +19,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import {
-  CitationRuntimeDictionaryComparison,
-  CitationRuntimeDictionaryFailure,
-  CitationRuntimeDictionaryKey,
-  makeCitationRuntimeDictionary,
-} from "../src/internal/Citation/RuntimeDictionary.ts";
-import type { CitationRuntimeDictionary } from "../src/internal/Citation/RuntimeDictionary.ts";
+import type { CitationRuntimeDictionary } from "@beep/law-practice-server/internal/Citation/RuntimeDictionary";
 
 const $I = $LawPracticeServerId.create("test/CitationDictionaryReentrancy");
 const Operation = S.Union([

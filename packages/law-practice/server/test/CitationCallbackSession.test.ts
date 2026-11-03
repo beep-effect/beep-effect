@@ -1,5 +1,19 @@
 import * as NodeURL from "node:url";
 import { Citation, CitationDetachedId, CitationGroupMember, CitationMentionId } from "@beep/law-practice-domain/values";
+import { CitationCallbackResult } from "@beep/law-practice-server/internal/Citation/CallbackResource";
+import {
+  CitationCallbackDictionary,
+  CitationCallbackFailure,
+  CitationCallbackList,
+  CitationResolutionCallbacks,
+  CitationResolutionWork,
+  makeCitationCallbackDictionary,
+  makeCitationResolutionWork,
+  runCitationCallbackSession,
+  runPreparedCitationCallbackSession,
+} from "@beep/law-practice-server/internal/Citation/CallbackSession";
+import { makeDefaultCitationResolutionCallbacks } from "@beep/law-practice-server/internal/Citation/DefaultCallbacks";
+import { prepareCitationResolution } from "@beep/law-practice-server/internal/Citation/ResolutionInput";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -21,20 +35,6 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { CitationCallbackResult } from "../src/internal/Citation/CallbackResource.ts";
-import {
-  CitationCallbackDictionary,
-  CitationCallbackFailure,
-  CitationCallbackList,
-  CitationResolutionCallbacks,
-  CitationResolutionWork,
-  makeCitationCallbackDictionary,
-  makeCitationResolutionWork,
-  runCitationCallbackSession,
-  runPreparedCitationCallbackSession,
-} from "../src/internal/Citation/CallbackSession.ts";
-import { makeDefaultCitationResolutionCallbacks } from "../src/internal/Citation/DefaultCallbacks.ts";
-import { prepareCitationResolution } from "../src/internal/Citation/ResolutionInput.ts";
 import {
   prepareCallbackObservation as context,
   callbackNoneResource as none,
@@ -48,7 +48,7 @@ import type {
   CitationCallbackGroup,
   CitationFullsCallbackInput,
   CitationIdCallbackInput,
-} from "../src/internal/Citation/CallbackSession.ts";
+} from "@beep/law-practice-server/internal/Citation/CallbackSession";
 
 const Corpus = S.Struct({ schemaVersion: S.tag("citation-custom-resolution-observations/v1"), cases: S.Array(Row) });
 const CorpusJson = S.fromJsonString(Corpus);

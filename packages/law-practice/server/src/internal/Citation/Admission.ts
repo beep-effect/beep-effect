@@ -103,8 +103,8 @@ export const makeCitationOperationAdmission = Effect.fn("Citation.makeOperationA
   );
   const run = Effect.fn("Citation.admitOperation")(
     function* <A, E>(operation: CitationSafetyLimitExceeded["operation"], body: Effect.Effect<A, E>) {
-      return yield* Effect.uninterruptibleMask((restore) =>
-        Effect.gen(function* () {
+      return yield* Effect.uninterruptibleMask(
+        Effect.fnUntraced(function* (restore) {
           const claimed = yield* Ref.make(false);
           const activate = Ref.set(claimed, true).pipe(Effect.andThen(Ref.update(active, (count) => count + 1)));
           const release = Effect.gen(function* () {

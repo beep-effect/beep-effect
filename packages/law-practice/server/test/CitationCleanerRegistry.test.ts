@@ -1,11 +1,14 @@
+import {
+  CitationCleanerObject,
+  CitationCleanerProduced,
+} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import { CitationPythonUnicodeStorage } from "@beep/law-practice-server/internal/Citation/PythonHash";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import { CitationCleanerObject, CitationCleanerProduced } from "../src/internal/Citation/CleanerPipeline.ts";
-import { CitationPythonUnicodeStorage } from "../src/internal/Citation/PythonHash.ts";
 import { makeCitationCleanerRegistryHarness as setup } from "./CitationCleanerRegistry.fixtures.ts";
 
 describe("live cleaner registry", () => {

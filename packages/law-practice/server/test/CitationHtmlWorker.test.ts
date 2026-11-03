@@ -1,4 +1,9 @@
 import * as NodeURL from "node:url";
+import { makeCitationHtmlWorker } from "@beep/law-practice-server/internal/Citation/HtmlWorker";
+import {
+  CitationNativeProcessAdmission,
+  makeCitationNativeProcessAdmission,
+} from "@beep/law-practice-server/internal/Citation/NativeAdmission";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
@@ -18,18 +23,13 @@ import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
-import { makeCitationHtmlWorker } from "../src/internal/Citation/HtmlWorker.ts";
-import {
-  CitationNativeProcessAdmission,
-  makeCitationNativeProcessAdmission,
-} from "../src/internal/Citation/NativeAdmission.ts";
+import type { CitationHtmlCompletionFailure } from "@beep/law-practice-server/internal/Citation/HtmlCompletion";
+import type { CitationHtmlInputFailure } from "@beep/law-practice-server/internal/Citation/HtmlInput";
+import type { CitationHtmlKernelFailure } from "@beep/law-practice-server/internal/Citation/HtmlKernel";
+import type { CitationHtmlWorkerSnapshot } from "@beep/law-practice-server/internal/Citation/HtmlWorker";
+import type { CitationHtmlWorkerFailure } from "@beep/law-practice-server/internal/Citation/HtmlWorkerProtocol";
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import type * as PlatformError from "effect/PlatformError";
-import type { CitationHtmlCompletionFailure } from "../src/internal/Citation/HtmlCompletion.ts";
-import type { CitationHtmlInputFailure } from "../src/internal/Citation/HtmlInput.ts";
-import type { CitationHtmlKernelFailure } from "../src/internal/Citation/HtmlKernel.ts";
-import type { CitationHtmlWorkerSnapshot } from "../src/internal/Citation/HtmlWorker.ts";
-import type { CitationHtmlWorkerFailure } from "../src/internal/Citation/HtmlWorkerProtocol.ts";
 
 const StringJson = S.fromJsonString(S.String);
 
@@ -98,7 +98,9 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
         const worker = yield* makeCitationHtmlWorker((yield* defaultCitationEnginePolicy).limits, {
           executable: process.execPath,
           cwd,
-          workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
+          workerFile: NodeURL.fileURLToPath(
+            new URL("@beep/law-practice-server/internal/Citation/HtmlWorker.entry", import.meta.url)
+          ),
         }).pipe(
           Effect.provideService(ChildProcessSpawner, {
             ...real,

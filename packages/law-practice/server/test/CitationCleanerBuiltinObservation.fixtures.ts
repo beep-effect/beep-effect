@@ -3,14 +3,14 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import * as Effect from "effect/Effect";
-import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
-import type * as S from "effect/Schema";
 import type {
   CitationCleanerFailure,
   CitationCleanerObject,
   CitationCleanerProduced,
-} from "../src/internal/Citation/CleanerPipeline.ts";
-import type { CitationBuiltinCleanerName } from "../src/internal/Citation/CleanerValues.ts";
+} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import type { CitationBuiltinCleanerName } from "@beep/law-practice-server/internal/Citation/CleanerValues";
+import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import type * as S from "effect/Schema";
 
 const sourceFailureType = (error: CitationCleanerFailure) => {
   if (error.reason === "builtin-input-type") return "builtins.TypeError";

@@ -2,6 +2,11 @@
  * Free Law Project, BSD-2-Clause; see THIRD_PARTY_NOTICES.md.
  * @internal @packageDocumentation @since 0.0.0
  */
+
+import {
+  CitationCleanerFailure,
+  CitationCleanerProduced,
+} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
@@ -9,16 +14,15 @@ import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { CitationCleanerFailure, CitationCleanerProduced } from "../src/internal/Citation/CleanerPipeline.ts";
 import { makeCitationBuiltinObservation } from "./CitationCleanerBuiltinObservation.fixtures.ts";
 import { makeCitationCleanerRegistryHarness } from "./CitationCleanerRegistry.fixtures.ts";
-import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
-import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type {
   CitationCleanerCursor,
   CitationCleanerObject,
   CitationCleanerWork,
-} from "../src/internal/Citation/CleanerPipeline.ts";
+} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 /** Explicit source scenes that do not invoke native HTML.
  * @internal @category testing @since 0.0.0

@@ -1,4 +1,14 @@
 import * as NodeURL from "node:url";
+import { CitationHtmlInputLayout, makeCitationHtmlInput } from "@beep/law-practice-server/internal/Citation/HtmlInput";
+import { makeCitationHtmlWorker } from "@beep/law-practice-server/internal/Citation/HtmlWorker";
+import {
+  CitationHtmlWorkerJob,
+  decodeCitationHtmlJob,
+  encodeCitationHtmlJob,
+  preflightCitationHtmlControlFrames,
+  preflightCitationHtmlJob,
+} from "@beep/law-practice-server/internal/Citation/HtmlWorkerProtocol";
+import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -13,16 +23,6 @@ import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
-import { CitationHtmlInputLayout, makeCitationHtmlInput } from "../src/internal/Citation/HtmlInput.ts";
-import { makeCitationHtmlWorker } from "../src/internal/Citation/HtmlWorker.ts";
-import {
-  CitationHtmlWorkerJob,
-  decodeCitationHtmlJob,
-  encodeCitationHtmlJob,
-  preflightCitationHtmlControlFrames,
-  preflightCitationHtmlJob,
-} from "../src/internal/Citation/HtmlWorkerProtocol.ts";
-import { makeCitationPythonUnicode } from "../src/internal/Citation/PythonUnicode.ts";
 import { loadCitationUnicodeHistories } from "./CitationUnicodePipeline.fixtures.ts";
 
 it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("native HTML preparation and framing", (it) => {
@@ -143,7 +143,9 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("native HTML preparati
       const worker = yield* makeCitationHtmlWorker(policy, {
         executable: process.execPath,
         cwd: process.cwd(),
-        workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
+        workerFile: NodeURL.fileURLToPath(
+          new URL("@beep/law-practice-server/internal/Citation/HtmlWorker.entry", import.meta.url)
+        ),
       }).pipe(
         Effect.provideService(ChildProcessSpawner, {
           ...real,

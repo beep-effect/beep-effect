@@ -3,6 +3,12 @@
  */
 
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import {
+  CitationOperationAdmission,
+  makeCitationOperationAdmission,
+} from "@beep/law-practice-server/internal/Citation/Admission";
+import { makeCitationCleanerOperation } from "@beep/law-practice-server/internal/Citation/CleanerOperation";
+import { CitationCleanerRuntime } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -12,13 +18,13 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { CitationOperationAdmission, makeCitationOperationAdmission } from "../src/internal/Citation/Admission.ts";
-import { makeCitationCleanerOperation } from "../src/internal/Citation/CleanerOperation.ts";
-import { CitationCleanerRuntime } from "../src/internal/Citation/CleanerPipeline.ts";
 import { makeControlledLiteralScene } from "./CitationCleanerCustom.fixtures.ts";
 import { loadCitationCleanerSource } from "./CitationCleanerSource.fixtures.ts";
+import type {
+  CitationCleanerObject,
+  CitationCleanerWork,
+} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { CitationCleanerObject, CitationCleanerWork } from "../src/internal/Citation/CleanerPipeline.ts";
 
 const Outcome = S.Union([
   S.Struct({ kind: S.tag("success"), value: S.Json, sameAsInput: S.Boolean }),

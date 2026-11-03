@@ -107,8 +107,8 @@ export const makeCitationNativeProcessAdmission = Effect.fn("Citation.makeNative
   );
   const acquireKind = Effect.fn("Citation.acquireNativeProcessKind")(
     function* (operation: CitationSafetyLimitExceeded["operation"], regex: boolean) {
-      return yield* Effect.uninterruptibleMask(() =>
-        Effect.gen(function* () {
+      return yield* Effect.uninterruptibleMask(
+        Effect.fnUntraced(function* () {
           const claimed = yield* Ref.make(false);
           const isolated = yield* Ref.make(false);
           const release = Effect.gen(function* () {
@@ -159,8 +159,8 @@ export const makeCitationNativeProcessAdmission = Effect.fn("Citation.makeNative
                     return yield* CitationSafetyLimitExceeded.make({ operation, limit: "queuedOperations" });
                 }),
                 () =>
-                  Effect.uninterruptibleMask((restore) =>
-                    Effect.gen(function* () {
+                  Effect.uninterruptibleMask(
+                    Effect.fnUntraced(function* (restore) {
                       while (true) {
                         // Capture the notification before testing capacity: release,
                         // quarantine or closure cannot be lost between claim and sleep.

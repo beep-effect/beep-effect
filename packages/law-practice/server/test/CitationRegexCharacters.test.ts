@@ -1,5 +1,6 @@
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { citationPythonRegexData } from "@beep/law-practice-server/internal/Citation/PythonRegexData";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -12,7 +13,6 @@ import * as Layer from "effect/Layer";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { citationPythonRegexData } from "../src/internal/Citation/PythonRegexData.ts";
 
 const $I = $LawPracticeServerId.create("test/CitationRegexCharacters");
 const Counts = S.Struct({ points: S.Natural, ranges: S.Natural, utf16Units: S.Natural, sha256: Sha256Hex }).pipe(

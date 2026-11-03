@@ -1,4 +1,15 @@
 import { fileURLToPath } from "node:url";
+import { makeCitationBuiltinCleaners } from "@beep/law-practice-server/internal/Citation/BuiltinCleaners";
+import {
+  CitationCleanerFailure,
+  CitationCleanerProduced,
+  CitationCleanerRuntime,
+  makeCitationCleanerPipeline,
+} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import {
+  CitationCleanerValues,
+  makeCitationCleanerValues,
+} from "@beep/law-practice-server/internal/Citation/CleanerValues";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -15,15 +26,7 @@ import * as O from "effect/Option";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { makeCitationBuiltinCleaners } from "../src/internal/Citation/BuiltinCleaners.ts";
-import {
-  CitationCleanerFailure,
-  CitationCleanerProduced,
-  CitationCleanerRuntime,
-  makeCitationCleanerPipeline,
-} from "../src/internal/Citation/CleanerPipeline.ts";
-import { CitationCleanerValues, makeCitationCleanerValues } from "../src/internal/Citation/CleanerValues.ts";
-import type { CitationCleanerObject } from "../src/internal/Citation/CleanerPipeline.ts";
+import type { CitationCleanerObject } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 
 const Row = S.Struct({
   name: S.String,
@@ -82,7 +85,9 @@ it.layer(TestRuntime, { excludeTestServices: true })("captured builtin cleaner i
         const builtins = yield* makeCitationBuiltinCleaners(policy, {
           executable: process.execPath,
           cwd: yield* fs.makeTempDirectoryScoped({ prefix: "citation-builtins-" }),
-          workerFile: fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
+          workerFile: fileURLToPath(
+            new URL("@beep/law-practice-server/internal/Citation/HtmlWorker.entry", import.meta.url)
+          ),
         }).pipe(
           Effect.provideService(CitationCleanerValues, values),
           Effect.provideService(ChildProcessSpawner, {

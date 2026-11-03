@@ -224,16 +224,25 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
             refs = HashMap.set(refs, key.slot, key);
             callbackFailure = O.none();
           }),
-          () =>
-            Effect.gen(function* () {
-              const text = yield* values.getText(key);
-              const bytes = yield* values.getBytes(key);
-              const hash =
-                O.isSome(text) && text.value.subtype === "plain"
-                  ? yield* hashes
-                      .unicode(
-                        (yield* Effect.fromOption(yield* values.getUnicode(key), () => fail("unissued-value"))).storage
+          Effect.fnUntraced(function* () {
+            const text = yield* values.getText(key);
+            const bytes = yield* values.getBytes(key);
+            const hash =
+              O.isSome(text) && text.value.subtype === "plain"
+                ? yield* hashes
+                    .unicode(
+                      (yield* Effect.fromOption(yield* values.getUnicode(key), () => fail("unissued-value"))).storage
+                    )
+                    .pipe(
+                      Effect.mapError((error) =>
+                        error.reason === "deadline-exceeded"
+                          ? CitationSafetyLimitExceeded.make({ operation: "clean", limit: deadlineLimit })
+                          : fail("runtime-failed")
                       )
+                    )
+                : O.isSome(bytes)
+                  ? yield* hashes
+                      .bytes(bytes.value)
                       .pipe(
                         Effect.mapError((error) =>
                           error.reason === "deadline-exceeded"
@@ -241,20 +250,10 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
                             : fail("runtime-failed")
                         )
                       )
-                  : O.isSome(bytes)
-                    ? yield* hashes
-                        .bytes(bytes.value)
-                        .pipe(
-                          Effect.mapError((error) =>
-                            error.reason === "deadline-exceeded"
-                              ? CitationSafetyLimitExceeded.make({ operation: "clean", limit: deadlineLimit })
-                              : fail("runtime-failed")
-                          )
-                        )
-                    : yield* protocols.hash(key);
-              const normalized = yield* S.decodeEffect(Hash)(hash).pipe(Effect.mapError(() => fail("callback-failed")));
-              return yield* body(CitationRuntimeDictionaryKey.make({ objectId: key.slot, hash: normalized }));
-            }),
+                  : yield* protocols.hash(key);
+            const normalized = yield* S.decodeEffect(Hash)(hash).pipe(Effect.mapError(() => fail("callback-failed")));
+            return yield* body(CitationRuntimeDictionaryKey.make({ objectId: key.slot, hash: normalized }));
+          }),
           () =>
             Effect.sync(() => {
               active = previous;

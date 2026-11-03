@@ -1,4 +1,5 @@
 import { fileURLToPath } from "node:url";
+import { completeCitationHtml } from "@beep/law-practice-server/internal/Citation/HtmlCompletion";
 import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -11,8 +12,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
-import { completeCitationHtml } from "../src/internal/Citation/HtmlCompletion.ts";
-import type { CitationHtmlCompletionFailure } from "../src/internal/Citation/HtmlCompletion.ts";
+import type { CitationHtmlCompletionFailure } from "@beep/law-practice-server/internal/Citation/HtmlCompletion";
 
 const CorpusJson = S.fromJsonString(
   S.Struct({

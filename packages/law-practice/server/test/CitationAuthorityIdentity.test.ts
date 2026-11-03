@@ -1,4 +1,8 @@
 import { CitationAuthorityId } from "@beep/law-practice-domain/values";
+import {
+  CitationAuthorityIdentityInput,
+  makeCitationAuthorityId,
+} from "@beep/law-practice-server/internal/Citation/AuthorityIdentity";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
@@ -11,7 +15,6 @@ import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import fixture from "../../use-cases/test/fixtures/eyecite/authority-identity-cases.json" with { type: "json" };
-import { CitationAuthorityIdentityInput, makeCitationAuthorityId } from "../src/internal/Citation/AuthorityIdentity.ts";
 import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 
 const Cases = S.Struct({

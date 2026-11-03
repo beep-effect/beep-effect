@@ -1,4 +1,10 @@
 import { FullCitation, IdCitation } from "@beep/law-practice-domain/values";
+import { citationPythonTextData } from "@beep/law-practice-server/internal/Citation/PythonTextData";
+import {
+  hasInvalidCitationPinCite,
+  isCitationPythonDigit,
+  stripCitationAntecedentPunctuation,
+} from "@beep/law-practice-server/internal/Citation/ResolverText";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -7,12 +13,6 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import authorities from "../../use-cases/test/fixtures/eyecite/authority-identity-cases.json" with { type: "json" };
 import cases from "../../use-cases/test/fixtures/eyecite/resolver-text-cases.json" with { type: "json" };
-import { citationPythonTextData } from "../src/internal/Citation/PythonTextData.ts";
-import {
-  hasInvalidCitationPinCite,
-  isCitationPythonDigit,
-  stripCitationAntecedentPunctuation,
-} from "../src/internal/Citation/ResolverText.ts";
 
 const Cases = S.Struct({
   schemaVersion: S.tag("citation-resolver-text-cases/v1"),

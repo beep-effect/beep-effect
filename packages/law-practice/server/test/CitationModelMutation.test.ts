@@ -1,6 +1,17 @@
 import { fileURLToPath } from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { Citation, CitationGroupMember, CitationMention, CitationMentionId } from "@beep/law-practice-domain/values";
+import {
+  CitationCallbackDictionary,
+  CitationCallbackFailure,
+  CitationResolutionCallbacks,
+  CitationResolutionWork,
+  makeCitationCallbackDictionary,
+  makeCitationResolutionWork,
+  runPreparedCitationCallbackSession,
+} from "@beep/law-practice-server/internal/Citation/CallbackSession";
+import { makeDefaultCitationResolutionCallbacks } from "@beep/law-practice-server/internal/Citation/DefaultCallbacks";
+import { prepareCitationResolution } from "@beep/law-practice-server/internal/Citation/ResolutionInput";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -16,23 +27,15 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import {
-  CitationCallbackDictionary,
-  CitationCallbackFailure,
-  CitationResolutionCallbacks,
-  CitationResolutionWork,
-  makeCitationCallbackDictionary,
-  makeCitationResolutionWork,
-  runPreparedCitationCallbackSession,
-} from "../src/internal/Citation/CallbackSession.ts";
-import { makeDefaultCitationResolutionCallbacks } from "../src/internal/Citation/DefaultCallbacks.ts";
-import { prepareCitationResolution } from "../src/internal/Citation/ResolutionInput.ts";
-import {
   CitationCallbackObservation,
   callbackResourcePresentation,
   normalizeCallbackFixtureResource,
   prepareCallbackObservation,
 } from "./CitationCallbackSession.fixtures.ts";
-import type { CitationFullsCallbackInput, CitationIdCallbackInput } from "../src/internal/Citation/CallbackSession.ts";
+import type {
+  CitationFullsCallbackInput,
+  CitationIdCallbackInput,
+} from "@beep/law-practice-server/internal/Citation/CallbackSession";
 
 const JsonMetadata = S.Record(S.String, S.Json);
 

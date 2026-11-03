@@ -1,6 +1,11 @@
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { convertTextOffsetRange, TextOffsetRange } from "@beep/langextract/VerifiedSpan";
+import {
+  CitationRegexInputLayout,
+  CitationRegexProjection,
+  makeCitationRegexInput,
+} from "@beep/law-practice-server/internal/Citation/RegexInput";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -16,13 +21,11 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
-import {
-  CitationRegexInputLayout,
-  CitationRegexProjection,
-  makeCitationRegexInput,
-} from "../src/internal/Citation/RegexInput.ts";
+import type {
+  CitationPreparedRegexInput,
+  CitationRegexInputFailure,
+} from "@beep/law-practice-server/internal/Citation/RegexInput";
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
-import type { CitationPreparedRegexInput, CitationRegexInputFailure } from "../src/internal/Citation/RegexInput.ts";
 
 const $I = $LawPracticeServerId.create("test/CitationRegexInput");
 const Storage = S.Struct({ width: S.Literals([1, 2, 4]), nativeHex: S.String }).pipe(

@@ -282,8 +282,8 @@ export const makeCitationLiteralCleaners = Effect.fn("Citation.makeLiteralCleane
           const output = MutableList.make<string>();
           let produced = 0;
           let allocation: CitationCleanerTextAllocation = "unchanged";
-          const append = Effect.fn("Citation.appendCleanedText")((size: number, render: () => string) =>
-            Effect.gen(function* () {
+          const append = Effect.fn("Citation.appendCleanedText")(
+            Effect.fnUntraced(function* (size: number, render: () => string) {
               if (size > outputCeiling - produced) return yield* failure("limit-exceeded");
               if (size > 0) yield* reserve(size);
               produced += size;

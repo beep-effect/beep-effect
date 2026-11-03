@@ -239,51 +239,50 @@ export const makeCitationHtmlKernel = Effect.fn("Citation.makeHtmlKernel")(funct
             if (!natural(address) || address === 0) return yield* nativeResource();
             return address;
           }),
-          (address) =>
-            Effect.gen(function* () {
-              const status = yield* Effect.try({
-                try: () => {
-                  new Uint8Array(abi.memory.buffer, address, input.bytes.byteLength + 4).fill(0);
-                  new Uint8Array(abi.memory.buffer, address, input.bytes.byteLength).set(input.bytes);
-                  const kind = Match.value(input.encoding).pipe(
-                    Match.when("UTF-8", () => 0),
-                    Match.when("ISO-8859-1", () => 1),
-                    Match.when("UTF-16LE", () => 2),
-                    Match.when("UTF-32LE", () => 3),
-                    Match.when("AUTO", () => 4),
-                    Match.exhaustive
-                  );
-                  return abi.html_clean(address, input.bytes.byteLength, kind, outputUtf16, input.fullHtml ? 1 : 0);
-                },
-                catch: () => fail("kernel-failed"),
-              });
-              if (status === 3 || status === 6) return yield* nativeResource();
-              if (status === 4)
-                return yield* CitationSafetyLimitExceeded.make({ operation: "clean", limit: "producedTextUtf16" });
-              if (status === 1) return yield* fail("parse-error");
-              if (status === 7) return yield* fail("unicode-decode-error");
-              if (status !== 0) return yield* fail("kernel-failed");
-              const text = yield* Effect.try({
-                try: () => {
-                  const length = abi.html_output_length();
-                  const units = abi.html_output_units();
-                  const pointer = abi.html_output();
-                  if (
-                    !natural(length) ||
-                    !natural(units) ||
-                    !natural(pointer) ||
-                    units > outputUtf16 ||
-                    length > 4 * units
-                  )
-                    return O.none<string>();
-                  const value = decodeText.decode(new Uint8Array(abi.memory.buffer, pointer, length));
-                  return Str.length(value) === units ? O.some(value) : O.none<string>();
-                },
-                catch: () => fail("kernel-failed"),
-              });
-              const value = yield* Effect.fromOption(text).pipe(Effect.mapError(() => fail("kernel-failed")));
-              return yield* completeCitationHtml({ text: value, diagnostics: [] });
-            }),
+          Effect.fnUntraced(function* (address) {
+            const status = yield* Effect.try({
+              try: () => {
+                new Uint8Array(abi.memory.buffer, address, input.bytes.byteLength + 4).fill(0);
+                new Uint8Array(abi.memory.buffer, address, input.bytes.byteLength).set(input.bytes);
+                const kind = Match.value(input.encoding).pipe(
+                  Match.when("UTF-8", () => 0),
+                  Match.when("ISO-8859-1", () => 1),
+                  Match.when("UTF-16LE", () => 2),
+                  Match.when("UTF-32LE", () => 3),
+                  Match.when("AUTO", () => 4),
+                  Match.exhaustive
+                );
+                return abi.html_clean(address, input.bytes.byteLength, kind, outputUtf16, input.fullHtml ? 1 : 0);
+              },
+              catch: () => fail("kernel-failed"),
+            });
+            if (status === 3 || status === 6) return yield* nativeResource();
+            if (status === 4)
+              return yield* CitationSafetyLimitExceeded.make({ operation: "clean", limit: "producedTextUtf16" });
+            if (status === 1) return yield* fail("parse-error");
+            if (status === 7) return yield* fail("unicode-decode-error");
+            if (status !== 0) return yield* fail("kernel-failed");
+            const text = yield* Effect.try({
+              try: () => {
+                const length = abi.html_output_length();
+                const units = abi.html_output_units();
+                const pointer = abi.html_output();
+                if (
+                  !natural(length) ||
+                  !natural(units) ||
+                  !natural(pointer) ||
+                  units > outputUtf16 ||
+                  length > 4 * units
+                )
+                  return O.none<string>();
+                const value = decodeText.decode(new Uint8Array(abi.memory.buffer, pointer, length));
+                return Str.length(value) === units ? O.some(value) : O.none<string>();
+              },
+              catch: () => fail("kernel-failed"),
+            });
+            const value = yield* Effect.fromOption(text).pipe(Effect.mapError(() => fail("kernel-failed")));
+            return yield* completeCitationHtml({ text: value, diagnostics: [] });
+          }),
           (address) =>
             Effect.sync(() => {
               abi.html_release();

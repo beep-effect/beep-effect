@@ -1,4 +1,18 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import {
+  CitationOperationAdmission,
+  makeCitationOperationAdmission,
+} from "@beep/law-practice-server/internal/Citation/Admission";
+import { makeCitationCleanerOperation } from "@beep/law-practice-server/internal/Citation/CleanerOperation";
+import { CitationCleanerRuntime } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import {
+  CitationNativeProcessAdmission,
+  makeCitationNativeProcessAdmission,
+} from "@beep/law-practice-server/internal/Citation/NativeAdmission";
+import {
+  CitationPythonUnicodeStorage,
+  makeCitationPythonHash,
+} from "@beep/law-practice-server/internal/Citation/PythonHash";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -9,14 +23,6 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
-import { CitationOperationAdmission, makeCitationOperationAdmission } from "../../src/internal/Citation/Admission.ts";
-import { makeCitationCleanerOperation } from "../../src/internal/Citation/CleanerOperation.ts";
-import { CitationCleanerRuntime } from "../../src/internal/Citation/CleanerPipeline.ts";
-import {
-  CitationNativeProcessAdmission,
-  makeCitationNativeProcessAdmission,
-} from "../../src/internal/Citation/NativeAdmission.ts";
-import { CitationPythonUnicodeStorage, makeCitationPythonHash } from "../../src/internal/Citation/PythonHash.ts";
 import {
   loadCitationUnicodeHistories,
   makeCitationUnicodePipelineHarness,

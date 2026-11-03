@@ -2,6 +2,16 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import {
+  CitationOperationAdmission,
+  makeCitationOperationAdmission,
+} from "@beep/law-practice-server/internal/Citation/Admission";
+import { makeCitationCleanerOperation } from "@beep/law-practice-server/internal/Citation/CleanerOperation";
+import {
+  CitationCleanerFailure,
+  CitationCleanerRuntime,
+} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import { CitationBuiltinCleanerName } from "@beep/law-practice-server/internal/Citation/CleanerValues";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { LiteralKit } from "@beep/schema";
 import { expect } from "@effect/vitest";
@@ -10,15 +20,11 @@ import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { CitationOperationAdmission, makeCitationOperationAdmission } from "../src/internal/Citation/Admission.ts";
-import { makeCitationCleanerOperation } from "../src/internal/Citation/CleanerOperation.ts";
-import { CitationCleanerFailure, CitationCleanerRuntime } from "../src/internal/Citation/CleanerPipeline.ts";
-import { CitationBuiltinCleanerName } from "../src/internal/Citation/CleanerValues.ts";
 import { makeCitationBuiltinObservation } from "./CitationCleanerBuiltinObservation.fixtures.ts";
 import { makeCitationCleanerRegistryHarness } from "./CitationCleanerRegistry.fixtures.ts";
 import { loadCitationCleanerSource } from "./CitationCleanerSource.fixtures.ts";
+import type { CitationCleanerObject } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { CitationCleanerObject } from "../src/internal/Citation/CleanerPipeline.ts";
 
 const $I = $LawPracticeServerId.create("test/CitationCleanerNamedReplay");
 const SourceText = S.Struct({ kind: S.tag("text"), text: S.String, subtype: S.tag("plain") }).pipe(

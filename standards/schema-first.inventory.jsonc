@@ -1430,6 +1430,14 @@
       "reason": "Schema-heavy test file has 4 Schema codec assertions but no schema-derived property coverage."
     },
     {
+      "file": "packages/law-practice/server/src/internal/Citation/RegexInput.ts",
+      "symbol": "CitationPreparedRegexInput",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/law-practice-server",
+      "reason": "Private live capability combines schema-owned layout and Python Unicode value with a closure over the owned point-boundary map. Data halves already use annotated schemas; decoding data must not manufacture the project operation. This interface never crosses the worker wire, whose job is a separate closed schema."
+    },
+    {
       "file": "packages/law-practice/server/test/CandorRecord.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",

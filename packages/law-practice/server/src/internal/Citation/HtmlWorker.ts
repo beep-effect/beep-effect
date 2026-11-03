@@ -246,8 +246,8 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
       );
       if (outputUtf16 > limits.producedTextUtf16) return yield* safety("producedTextUtf16");
       yield* preflightCitationHtmlControlFrames(limits.processMessageBytes);
-      return yield* Effect.uninterruptibleMask((restore) =>
-        Effect.gen(function* () {
+      return yield* Effect.uninterruptibleMask(
+        Effect.fnUntraced(function* (restore) {
           yield* ensureOpen;
           const claimed = yield* Ref.make(false);
           const activate = Ref.set(claimed, true).pipe(Effect.andThen(Ref.update(active, (value) => value + 1)));
@@ -386,8 +386,11 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
               .pipe(Effect.uninterruptible);
             let step = 0;
             let reply = O.none<CitationHtmlWorkerReply>();
-            const receive = readCitationHtmlFrames(resource.stdout, limits.processMessageBytes, 3, (bytes) =>
-              Effect.gen(function* () {
+            const receive = readCitationHtmlFrames(
+              resource.stdout,
+              limits.processMessageBytes,
+              3,
+              Effect.fnUntraced(function* (bytes) {
                 const message = yield* decodeCitationHtmlReply(bytes);
                 if (
                   (step === 0 && !CitationHtmlWorkerReply.guards.Ready(message)) ||

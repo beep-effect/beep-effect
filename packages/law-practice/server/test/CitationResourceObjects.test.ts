@@ -7,6 +7,27 @@ import {
   CitationMentionId,
   FullCaseCitation,
 } from "@beep/law-practice-domain/values";
+import {
+  CitationResolutionWork,
+  makeCitationCallbackDictionary,
+  makeCitationResolutionWork,
+} from "@beep/law-practice-server/internal/Citation/CallbackSession";
+import {
+  CitationFrozenEditionFailure,
+  CitationFrozenEditions,
+} from "@beep/law-practice-server/internal/Citation/FrozenEditions";
+import { prepareCitationResolution } from "@beep/law-practice-server/internal/Citation/ResolutionInput";
+import {
+  CitationResourceModelInput,
+  CitationResourceModels,
+  CitationResourceObject,
+  CitationResourceObjectFailure,
+  makeCitationResourceObjects,
+} from "@beep/law-practice-server/internal/Citation/ResourceObjects";
+import {
+  CitationRuntimeDictionaryComparison,
+  makeCitationRuntimeDictionary,
+} from "@beep/law-practice-server/internal/Citation/RuntimeDictionary";
 import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
@@ -22,29 +43,11 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import {
-  CitationResolutionWork,
-  makeCitationCallbackDictionary,
-  makeCitationResolutionWork,
-} from "../src/internal/Citation/CallbackSession.ts";
-import { CitationFrozenEditionFailure, CitationFrozenEditions } from "../src/internal/Citation/FrozenEditions.ts";
-import { prepareCitationResolution } from "../src/internal/Citation/ResolutionInput.ts";
-import {
-  CitationResourceModelInput,
-  CitationResourceModels,
-  CitationResourceObject,
-  CitationResourceObjectFailure,
-  makeCitationResourceObjects,
-} from "../src/internal/Citation/ResourceObjects.ts";
-import {
-  CitationRuntimeDictionaryComparison,
-  makeCitationRuntimeDictionary,
-} from "../src/internal/Citation/RuntimeDictionary.ts";
 import { CitationCallbackObservation, prepareCallbackObservation } from "./CitationCallbackSession.fixtures.ts";
 
 const $I = $LawPracticeServerId.create("test/CitationResourceObjects");
 class MissingReporterOutcome extends S.Opaque<MissingReporterOutcome, { readonly brand: unique symbol }>()(
-  S.Struct({ status: S.Literal("error"), field: S.Literal("reporter") }).pipe(
+  S.Struct({ status: S.tag("error"), field: S.tag("reporter") }).pipe(
     $I.annoteSchema("MissingReporterOutcome", {
       description: "Frozen source missing-reporter outcome used to select the expected failure direction.",
     })

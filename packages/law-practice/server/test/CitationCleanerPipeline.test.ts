@@ -1,4 +1,16 @@
 import * as NodeURL from "node:url";
+import {
+  CitationCleanerFailure,
+  CitationCleanerObject,
+  CitationCleanerProduced,
+  CitationCleanerRuntime,
+  CitationCleanerTextCharge,
+  makeCitationCleanerPipeline,
+} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import {
+  CitationLiteralCleaner,
+  makeCitationLiteralCleaners,
+} from "@beep/law-practice-server/internal/Citation/LiteralCleaners";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -21,17 +33,11 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
-import {
-  CitationCleanerFailure,
-  CitationCleanerObject,
-  CitationCleanerProduced,
-  CitationCleanerRuntime,
-  CitationCleanerTextCharge,
-  makeCitationCleanerPipeline,
-} from "../src/internal/Citation/CleanerPipeline.ts";
-import { CitationLiteralCleaner, makeCitationLiteralCleaners } from "../src/internal/Citation/LiteralCleaners.ts";
+import type {
+  CitationCleanerCursor,
+  CitationCleanerWork,
+} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
-import type { CitationCleanerCursor, CitationCleanerWork } from "../src/internal/Citation/CleanerPipeline.ts";
 
 const CorpusJson = S.fromJsonString(
   S.Struct({

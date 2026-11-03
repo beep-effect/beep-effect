@@ -1,4 +1,11 @@
 import { fileURLToPath } from "node:url";
+import { makeCitationHtmlInput } from "@beep/law-practice-server/internal/Citation/HtmlInput";
+import {
+  CitationHtmlWorkerJob,
+  encodeCitationHtmlJob,
+  preflightCitationHtmlJob,
+} from "@beep/law-practice-server/internal/Citation/HtmlWorkerProtocol";
+import { citationPythonTextData } from "@beep/law-practice-server/internal/Citation/PythonTextData";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -17,15 +24,11 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { makeCitationHtmlInput } from "../src/internal/Citation/HtmlInput.ts";
-import {
-  CitationHtmlWorkerJob,
-  encodeCitationHtmlJob,
-  preflightCitationHtmlJob,
-} from "../src/internal/Citation/HtmlWorkerProtocol.ts";
-import { citationPythonTextData } from "../src/internal/Citation/PythonTextData.ts";
+import type {
+  CitationHtmlInput,
+  CitationHtmlInputFailure,
+} from "@beep/law-practice-server/internal/Citation/HtmlInput";
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
-import type { CitationHtmlInput, CitationHtmlInputFailure } from "../src/internal/Citation/HtmlInput.ts";
 
 const CorpusJson = S.fromJsonString(
   S.Struct({

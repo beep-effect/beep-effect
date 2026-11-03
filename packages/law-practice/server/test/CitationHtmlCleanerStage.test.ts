@@ -1,4 +1,12 @@
 import * as NodeURL from "node:url";
+import {
+  CitationCleanerFailure,
+  CitationCleanerObject,
+  CitationCleanerProduced,
+  CitationCleanerRuntime,
+  makeCitationCleanerPipeline,
+} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import { makeCitationHtmlWorker } from "@beep/law-practice-server/internal/Citation/HtmlWorker";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
@@ -13,15 +21,7 @@ import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import {
-  CitationCleanerFailure,
-  CitationCleanerObject,
-  CitationCleanerProduced,
-  CitationCleanerRuntime,
-  makeCitationCleanerPipeline,
-} from "../src/internal/Citation/CleanerPipeline.ts";
-import { makeCitationHtmlWorker } from "../src/internal/Citation/HtmlWorker.ts";
-import type { CitationCleanerWork } from "../src/internal/Citation/CleanerPipeline.ts";
+import type { CitationCleanerWork } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 
 const StringJson = S.fromJsonString(S.String);
 
@@ -95,7 +95,9 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         const paths = {
           executable: process.execPath,
           cwd: yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped({ prefix: "citation-html-stage-" }),
-          workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
+          workerFile: NodeURL.fileURLToPath(
+            new URL("@beep/law-practice-server/internal/Citation/HtmlWorker.entry", import.meta.url)
+          ),
         };
         const policy = {
           ...limits,
@@ -234,7 +236,9 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         const worker = yield* makeCitationHtmlWorker(limits, {
           executable: process.execPath,
           cwd: yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped({ prefix: "citation-byte-stage-" }),
-          workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
+          workerFile: NodeURL.fileURLToPath(
+            new URL("@beep/law-practice-server/internal/Citation/HtmlWorker.entry", import.meta.url)
+          ),
         });
         const h = owned(worker, 0, () => new TextEncoder().encode("<div>A</div>"));
         const pipeline = yield* makeCitationCleanerPipeline(limits).pipe(

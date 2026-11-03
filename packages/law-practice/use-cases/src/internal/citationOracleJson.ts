@@ -110,11 +110,3 @@ export const CitationOracleArtifact = S.Union([TokenizerExtractorsArtifact, Mode
       "Shared tokenizer configuration or immutable reporter/edition data, identified by the SHA-256 of its exact encoded payload.",
   })
 );
-
-/**
- * Decoded shared oracle artifact with its original payload bytes.
- *
- * @category testing
- * @since 0.0.0
- */
-export type CitationOracleArtifact = typeof CitationOracleArtifact.Type;

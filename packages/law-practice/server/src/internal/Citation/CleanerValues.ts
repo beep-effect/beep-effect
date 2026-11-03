@@ -252,8 +252,9 @@ export const makeCitationCleanerValues = Effect.fn("Citation.makeCleanerValues")
             ? freshUnicode(explicit.value)
             : fresh(result.text)
       ),
-      Match.when("unchanged", () =>
-        Effect.gen(function* () {
+      Match.when(
+        "unchanged",
+        Effect.fnUntraced(function* () {
           if (entry.kind !== "text" || result.text !== entry.unicode.text)
             return yield* fail("invalid-text-allocation");
           if (O.isSome(explicit) && !(yield* sameNative(entry.unicode, explicit.value)))

@@ -297,17 +297,16 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
                 })
               )
             ),
-            () =>
-              Effect.gen(function* () {
-                const remaining = limits.producedTextUtf16 - (yield* Ref.get(state)).producedTextUtf16;
-                const result = yield* produce(remaining);
-                const units = yield* S.decodeEffect(Units)(result.units).pipe(
-                  Effect.mapError(() => fail("invalid-reservation"))
-                );
-                yield* ensureOpen;
-                const charges = units === 0 ? [] : [yield* reserveUnlocked(units)];
-                return { value: result.value, charges };
-              }),
+            Effect.fnUntraced(function* () {
+              const remaining = limits.producedTextUtf16 - (yield* Ref.get(state)).producedTextUtf16;
+              const result = yield* produce(remaining);
+              const units = yield* S.decodeEffect(Units)(result.units).pipe(
+                Effect.mapError(() => fail("invalid-reservation"))
+              );
+              yield* ensureOpen;
+              const charges = units === 0 ? [] : [yield* reserveUnlocked(units)];
+              return { value: result.value, charges };
+            }),
             () =>
               Effect.sync(() => {
                 borrower = O.none();

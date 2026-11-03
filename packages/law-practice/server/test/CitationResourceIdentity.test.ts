@@ -1,3 +1,8 @@
+import { CitationAuthorityIdentityInput } from "@beep/law-practice-server/internal/Citation/AuthorityIdentity";
+import {
+  CitationResourceIdentity,
+  makeCitationResourceAuthorityId,
+} from "@beep/law-practice-server/internal/Citation/ResourceIdentity";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -9,11 +14,6 @@ import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import fixture from "../../use-cases/test/fixtures/eyecite/authority-identity-cases.json" with { type: "json" };
-import { CitationAuthorityIdentityInput } from "../src/internal/Citation/AuthorityIdentity.ts";
-import {
-  CitationResourceIdentity,
-  makeCitationResourceAuthorityId,
-} from "../src/internal/Citation/ResourceIdentity.ts";
 import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 
 const a = Sha256Hex.make(Str.repeat(64)("a"));

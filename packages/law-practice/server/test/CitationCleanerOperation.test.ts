@@ -1,3 +1,13 @@
+import {
+  CitationOperationAdmission,
+  makeCitationOperationAdmission,
+} from "@beep/law-practice-server/internal/Citation/Admission";
+import { makeCitationCleanerOperation } from "@beep/law-practice-server/internal/Citation/CleanerOperation";
+import {
+  CitationCleanerFailure,
+  CitationCleanerProduced,
+  CitationCleanerRuntime,
+} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -9,13 +19,6 @@ import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as O from "effect/Option";
 import * as TestClock from "effect/testing/TestClock";
-import { CitationOperationAdmission, makeCitationOperationAdmission } from "../src/internal/Citation/Admission.ts";
-import { makeCitationCleanerOperation } from "../src/internal/Citation/CleanerOperation.ts";
-import {
-  CitationCleanerFailure,
-  CitationCleanerProduced,
-  CitationCleanerRuntime,
-} from "../src/internal/Citation/CleanerPipeline.ts";
 import { makeCitationCleanerRegistryHarness } from "./CitationCleanerRegistry.fixtures.ts";
 
 it.layer(BunCrypto.layer)("admitted cleaner operations", (it) => {

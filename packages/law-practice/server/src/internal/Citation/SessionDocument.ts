@@ -234,8 +234,9 @@ export const makeCitationSessionDocumentProjector = Effect.fn("Citation.makeSess
           state.limits.resolutionEdges
         )
           return yield* limit();
-        const resourceBindings = yield* Effect.forEach(order, (id) =>
-          Effect.gen(function* () {
+        const resourceBindings = yield* Effect.forEach(
+          order,
+          Effect.fnUntraced(function* (id) {
             const identity = yield* Effect.fromOption(HashMap.get(identities, id), failed);
             const decisions = yield* Effect.fromOption(HashMap.get(decisionSets, id), failed);
             const expected = yield* Effect.fromOption(HashMap.get(groupSets, id), failed);

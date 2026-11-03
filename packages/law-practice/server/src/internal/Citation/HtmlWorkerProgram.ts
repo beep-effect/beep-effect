@@ -84,8 +84,11 @@ export const citationHtmlWorkerProgram = Effect.gen(function* () {
   );
   yield* send(CitationHtmlWorkerReady.make({}));
   let request = O.none<CitationHtmlWorkerJob>();
-  yield* readCitationHtmlFrames(stdio.stdin, maximum, 1, (bytes) =>
-    Effect.gen(function* () {
+  yield* readCitationHtmlFrames(
+    stdio.stdin,
+    maximum,
+    1,
+    Effect.fnUntraced(function* (bytes) {
       request = O.some(yield* decodeCitationHtmlJob(bytes));
     })
   );

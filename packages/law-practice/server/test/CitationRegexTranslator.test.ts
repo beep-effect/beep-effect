@@ -1,10 +1,10 @@
+import { citationPythonRegexData } from "@beep/law-practice-server/internal/Citation/PythonRegexData";
+import { makeCitationRegexTranslator } from "@beep/law-practice-server/internal/Citation/RegexTranslator";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Str from "effect/String";
-import { citationPythonRegexData } from "../src/internal/Citation/PythonRegexData.ts";
-import { makeCitationRegexTranslator } from "../src/internal/Citation/RegexTranslator.ts";
 
 it.effect("translates named groups without altering names and preserves Python dot/end semantics", () =>
   Effect.gen(function* () {

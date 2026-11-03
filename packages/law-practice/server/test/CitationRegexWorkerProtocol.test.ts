@@ -1,3 +1,13 @@
+import { readCitationByteFrames } from "@beep/law-practice-server/internal/Citation/ByteFrames";
+import { makeCitationRegexInput } from "@beep/law-practice-server/internal/Citation/RegexInput";
+import {
+  CitationRegexWorkerJob,
+  decodeCitationRegexJob,
+  encodeCitationRegexJob,
+  makeCitationRegexJobPreparation,
+  preflightCitationRegexJob,
+  readCitationRegexFrames,
+} from "@beep/law-practice-server/internal/Citation/RegexWorkerProtocol";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
@@ -9,16 +19,6 @@ import * as Fiber from "effect/Fiber";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
-import { readCitationByteFrames } from "../src/internal/Citation/ByteFrames.ts";
-import { makeCitationRegexInput } from "../src/internal/Citation/RegexInput.ts";
-import {
-  CitationRegexWorkerJob,
-  decodeCitationRegexJob,
-  encodeCitationRegexJob,
-  makeCitationRegexJobPreparation,
-  preflightCitationRegexJob,
-  readCitationRegexFrames,
-} from "../src/internal/Citation/RegexWorkerProtocol.ts";
 
 const utf8 = new TextEncoder();
 const nothing = () => Effect.void;

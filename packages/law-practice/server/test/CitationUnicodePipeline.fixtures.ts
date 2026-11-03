@@ -3,6 +3,24 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import * as NodeURL from "node:url";
+import {
+  CitationBuiltinCleaners,
+  makeCitationBuiltinCleaners,
+} from "@beep/law-practice-server/internal/Citation/BuiltinCleaners";
+import {
+  CitationCleanerFailure,
+  CitationCleanerRuntime,
+  makeCitationCleanerPipeline,
+} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import {
+  CitationCleanerProtocols,
+  makeCitationCleanerRegistry,
+} from "@beep/law-practice-server/internal/Citation/CleanerRegistry";
+import {
+  CitationCleanerValues,
+  makeCitationCleanerValues,
+} from "@beep/law-practice-server/internal/Citation/CleanerValues";
+import { CitationPythonUnicodeStorage } from "@beep/law-practice-server/internal/Citation/PythonHash";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
@@ -13,16 +31,10 @@ import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
-import { CitationBuiltinCleaners, makeCitationBuiltinCleaners } from "../src/internal/Citation/BuiltinCleaners.ts";
-import {
-  CitationCleanerFailure,
-  CitationCleanerRuntime,
-  makeCitationCleanerPipeline,
-} from "../src/internal/Citation/CleanerPipeline.ts";
-import { CitationCleanerProtocols, makeCitationCleanerRegistry } from "../src/internal/Citation/CleanerRegistry.ts";
-import { CitationCleanerValues, makeCitationCleanerValues } from "../src/internal/Citation/CleanerValues.ts";
-import { CitationPythonUnicodeStorage } from "../src/internal/Citation/PythonHash.ts";
-import type { CitationCleanerObject, CitationCleanerWork } from "../src/internal/Citation/CleanerPipeline.ts";
+import type {
+  CitationCleanerObject,
+  CitationCleanerWork,
+} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 
 const Snapshot = S.Struct({
   codepoints: S.Array(S.Natural),
@@ -74,7 +86,9 @@ export const makeCitationUnicodePipelineHarness = Effect.fn("UnicodePipelineTest
   const builtins = yield* makeCitationBuiltinCleaners(limits, {
     executable: process.execPath,
     cwd: process.cwd(),
-    workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
+    workerFile: NodeURL.fileURLToPath(
+      new URL("@beep/law-practice-server/internal/Citation/HtmlWorker.entry", import.meta.url)
+    ),
   }).pipe(
     Effect.provideService(CitationCleanerValues, values),
     Effect.provideService(ChildProcessSpawner, {

@@ -1,4 +1,10 @@
 import * as NodeURL from "node:url";
+import { CitationCleanerObject } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import { citationCleanerHtmlTextOutput } from "@beep/law-practice-server/internal/Citation/CleanerTextIdentity";
+import { makeCitationCleanerValues } from "@beep/law-practice-server/internal/Citation/CleanerValues";
+import { makeCitationHtmlInput } from "@beep/law-practice-server/internal/Citation/HtmlInput";
+import { makeCitationHtmlKernel } from "@beep/law-practice-server/internal/Citation/HtmlKernel";
+import { makeCitationLiteralCleaners } from "@beep/law-practice-server/internal/Citation/LiteralCleaners";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -14,12 +20,6 @@ import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
-import { CitationCleanerObject } from "../src/internal/Citation/CleanerPipeline.ts";
-import { citationCleanerHtmlTextOutput } from "../src/internal/Citation/CleanerTextIdentity.ts";
-import { makeCitationCleanerValues } from "../src/internal/Citation/CleanerValues.ts";
-import { makeCitationHtmlInput } from "../src/internal/Citation/HtmlInput.ts";
-import { makeCitationHtmlKernel } from "../src/internal/Citation/HtmlKernel.ts";
-import { makeCitationLiteralCleaners } from "../src/internal/Citation/LiteralCleaners.ts";
 
 const Relations = S.Struct({
   sameInput: S.Boolean,

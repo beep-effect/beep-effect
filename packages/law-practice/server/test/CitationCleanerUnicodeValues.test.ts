@@ -1,4 +1,8 @@
 import * as NodeURL from "node:url";
+import { CitationCleanerObject } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import { makeCitationCleanerValues } from "@beep/law-practice-server/internal/Citation/CleanerValues";
+import { makeCitationPythonHash } from "@beep/law-practice-server/internal/Citation/PythonHash";
+import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -16,10 +20,6 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
-import { CitationCleanerObject } from "../src/internal/Citation/CleanerPipeline.ts";
-import { makeCitationCleanerValues } from "../src/internal/Citation/CleanerValues.ts";
-import { makeCitationPythonHash } from "../src/internal/Citation/PythonHash.ts";
-import { makeCitationPythonUnicode } from "../src/internal/Citation/PythonUnicode.ts";
 
 const Snapshot = S.Struct({
   width: S.Literals([1, 2, 4]),

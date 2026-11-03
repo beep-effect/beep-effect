@@ -7,6 +7,8 @@
 import { fileURLToPath } from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { Citation } from "@beep/law-practice-domain/values";
+import { CitationCallbackResource } from "@beep/law-practice-server/internal/Citation/CallbackSession";
+import { CitationResourceIdentity } from "@beep/law-practice-server/internal/Citation/ResourceIdentity";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -18,8 +20,6 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { CitationCallbackResource } from "../src/internal/Citation/CallbackSession.ts";
-import { CitationResourceIdentity } from "../src/internal/Citation/ResourceIdentity.ts";
 import { CitationResolutionContext, prepareCitationResolutionContext as prepare } from "./CitationResolve.fixtures.ts";
 import type * as Digest from "effect/crypto/Digest";
 

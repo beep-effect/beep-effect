@@ -1,3 +1,11 @@
+import {
+  CitationCleanerRuntime,
+  makeCitationCleanerPipeline,
+} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import {
+  CitationPythonUnicodeStorage,
+  makeCitationPythonHash,
+} from "@beep/law-practice-server/internal/Citation/PythonHash";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -8,8 +16,6 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
-import { CitationCleanerRuntime, makeCitationCleanerPipeline } from "../src/internal/Citation/CleanerPipeline.ts";
-import { CitationPythonUnicodeStorage, makeCitationPythonHash } from "../src/internal/Citation/PythonHash.ts";
 import {
   makeCitationUnicodePipelineHarness as harness,
   loadCitationUnicodeHistories,

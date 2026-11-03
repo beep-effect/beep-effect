@@ -264,26 +264,25 @@ const verifyAuthorities = Effect.fn("Citation.verifyDocumentAuthorities")(functi
   let verified = custom.pipe(HashMap.keys, HashSet.fromIterable);
   yield* Effect.forEach(
     snapshot.receipt.mentions,
-    (mention) =>
-      Effect.gen(function* () {
-        const citation = mention.citation;
-        const resolution = HashMap.get(resolutions, mention.id);
-        if (O.isNone(resolution) || resolution.value.status !== "Resolved") return;
-        const binding = HashMap.get(custom, resolution.value.authorityId);
-        if (O.isSome(binding)) {
-          if (!HashSet.has(binding.value, mention.id))
-            return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
-          return;
-        }
-        if (!isFull(citation)) return;
-        const selectedEdition = O.flatMap(citation.publication.selectedEdition, (id) => HashMap.get(editions, id));
-        const expected = yield* makeCitationAuthorityId({ citation, mentionId: mention.id, selectedEdition }).pipe(
-          Effect.mapError(identityFailure)
-        );
-        if (expected !== resolution.value.authorityId)
+    Effect.fnUntraced(function* (mention) {
+      const citation = mention.citation;
+      const resolution = HashMap.get(resolutions, mention.id);
+      if (O.isNone(resolution) || resolution.value.status !== "Resolved") return;
+      const binding = HashMap.get(custom, resolution.value.authorityId);
+      if (O.isSome(binding)) {
+        if (!HashSet.has(binding.value, mention.id))
           return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
-        verified = HashSet.add(verified, expected);
-      }),
+        return;
+      }
+      if (!isFull(citation)) return;
+      const selectedEdition = O.flatMap(citation.publication.selectedEdition, (id) => HashMap.get(editions, id));
+      const expected = yield* makeCitationAuthorityId({ citation, mentionId: mention.id, selectedEdition }).pipe(
+        Effect.mapError(identityFailure)
+      );
+      if (expected !== resolution.value.authorityId)
+        return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
+      verified = HashSet.add(verified, expected);
+    }),
     { concurrency: 1, discard: true }
   );
   if (!A.every(snapshot.receipt.authorities, (authority) => HashSet.has(verified, authority.id)))
@@ -368,15 +367,14 @@ export const projectCitationDocumentReceipt = Effect.fn("Citation.projectDocumen
   const snapshot = yield* S.decodeEffect(SnapshotJson)(json).pipe(Effect.mapError(invalid));
   yield* Effect.forEach(
     A.zip(snapshot.receipt.mentions, anchors),
-    ([mention, anchor]) =>
-      Effect.gen(function* () {
-        const expected = yield* makeCitationMentionId({
-          anchor,
-          engineArtifact: mention.engineArtifact,
-          semanticKind: mention.citation.type,
-        }).pipe(Effect.mapError(identityFailure));
-        if (expected !== mention.id) return yield* CitationDocumentFailure.make({ reason: "stale-mention" });
-      }),
+    Effect.fnUntraced(function* ([mention, anchor]) {
+      const expected = yield* makeCitationMentionId({
+        anchor,
+        engineArtifact: mention.engineArtifact,
+        semanticKind: mention.citation.type,
+      }).pipe(Effect.mapError(identityFailure));
+      if (expected !== mention.id) return yield* CitationDocumentFailure.make({ reason: "stale-mention" });
+    }),
     { concurrency: 1, discard: true }
   );
   yield* verifyAuthorities(snapshot);

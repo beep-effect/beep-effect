@@ -1,4 +1,7 @@
 import { fileURLToPath } from "node:url";
+import { makeCitationHtmlInput } from "@beep/law-practice-server/internal/Citation/HtmlInput";
+import { makeCitationHtmlKernel } from "@beep/law-practice-server/internal/Citation/HtmlKernel";
+import { makeCitationHtmlWorker } from "@beep/law-practice-server/internal/Citation/HtmlWorker";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -12,14 +15,11 @@ import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
-import { makeCitationHtmlInput } from "../src/internal/Citation/HtmlInput.ts";
-import { makeCitationHtmlKernel } from "../src/internal/Citation/HtmlKernel.ts";
-import { makeCitationHtmlWorker } from "../src/internal/Citation/HtmlWorker.ts";
+import type { CitationHtmlCompletionFailure } from "@beep/law-practice-server/internal/Citation/HtmlCompletion";
+import type { CitationHtmlInputFailure } from "@beep/law-practice-server/internal/Citation/HtmlInput";
+import type { CitationHtmlKernelFailure } from "@beep/law-practice-server/internal/Citation/HtmlKernel";
+import type { CitationHtmlWorkerFailure } from "@beep/law-practice-server/internal/Citation/HtmlWorkerProtocol";
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
-import type { CitationHtmlCompletionFailure } from "../src/internal/Citation/HtmlCompletion.ts";
-import type { CitationHtmlInputFailure } from "../src/internal/Citation/HtmlInput.ts";
-import type { CitationHtmlKernelFailure } from "../src/internal/Citation/HtmlKernel.ts";
-import type { CitationHtmlWorkerFailure } from "../src/internal/Citation/HtmlWorkerProtocol.ts";
 
 type NativeFailure =
   | CitationHtmlInputFailure
@@ -136,7 +136,9 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
             {
               executable: process.execPath,
               cwd: yield* fs.makeTempDirectoryScoped({ prefix: "citation-html-bytes-" }),
-              workerFile: fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
+              workerFile: fileURLToPath(
+                new URL("@beep/law-practice-server/internal/Citation/HtmlWorker.entry", import.meta.url)
+              ),
             }
           ).pipe(
             Effect.provideService(ChildProcessSpawner, {

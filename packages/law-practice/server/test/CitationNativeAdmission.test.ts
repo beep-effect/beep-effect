@@ -1,3 +1,4 @@
+import { makeCitationNativeProcessAdmission } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
@@ -8,7 +9,6 @@ import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as Scope from "effect/Scope";
 import * as TestClock from "effect/testing/TestClock";
-import { makeCitationNativeProcessAdmission } from "../src/internal/Citation/NativeAdmission.ts";
 
 it.effect("bounds shared native ownership and returns cancelled queue capacity", () =>
   Effect.gen(function* () {
