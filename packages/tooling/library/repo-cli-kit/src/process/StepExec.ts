@@ -1198,13 +1198,14 @@ export const runCaptured: RunCaptured = Effect.fn("StepExec.runCaptured")(functi
               })
             )
       );
+      const tail = yield* Ref.get(timeoutTail);
       return yield* settleCapturedStep({
         captured,
         commandLine,
         elapsed,
         exitCode,
         timeout,
-        timeoutTail: yield* Ref.get(timeoutTail),
+        timeoutTail: tail,
         trim: options.trim,
       });
     })
