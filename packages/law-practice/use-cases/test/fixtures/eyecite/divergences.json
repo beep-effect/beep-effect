@@ -92,11 +92,11 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexProgram.ts",
-          "sha256": "4acf24c0e7b4d346e6611887c293ae07ba875458c38938cdbd164ca91c53deff"
+          "sha256": "64aec818106a561c9f7baffc7c643032d923ab8d4f531062fb42f22825931409"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexPointSets.ts",
-          "sha256": "dde30492e24d5d7030c5d5fee664db27f20b6e720108ab8e656b52d62486e351"
+          "sha256": "e864033b0570aefde41fee8dd554b529952cfed5026f2fc60192788fdad4077a"
         },
         {
           "path": "packages/law-practice/server/test/CitationRegexProgram.test.ts",

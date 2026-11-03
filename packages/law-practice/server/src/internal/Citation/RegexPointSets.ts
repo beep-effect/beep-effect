@@ -54,14 +54,26 @@ export const complementCitationRegexRanges = (input: ReadonlyArray<CitationRegex
   if (start <= 0x10ffff) output.push(range(start, 0x10ffff));
   return output;
 };
-const hex = (point: number) =>
-  point >= 48 && point <= 57
-    ? point - 48
-    : point >= 65 && point <= 70
-      ? point - 55
-      : point >= 97 && point <= 102
-        ? point - 87
-        : -1;
+/** @internal @category utilities @since 0.0.0 */
+export const citationRegexHexDigit = (point: number): number =>
+  point < 0 || point > 127
+    ? -1
+    : O.getOrElse(Str.indexOf(Str.toLowerCase(String.fromCharCode(point)))("0123456789abcdef"), () => -1);
+const shiftedLetters = (start: number, end: number, first: number, last: number, shift: number) =>
+  start > last || end < first ? [] : [range(Num.max(start, first) + shift, Num.min(end, last) + shift)];
+const caseExtras = (start: number, end: number) => {
+  const contains = (upper: number, lower: number) =>
+    (start <= upper && end >= upper) || (start <= lower && end >= lower);
+  const output = A.empty<CitationRegexPointRange>();
+  if (contains(73, 105)) output.push(range(0x130, 0x131));
+  if (contains(83, 115)) output.push(range(0x17f));
+  if (contains(75, 107)) output.push(range(0x212a));
+  return output;
+};
+const reviewedNonAscii = Effect.fnUntraced(function* (start: number, end: number) {
+  if (start >= 0x2013 && end <= 0x2014) return [range(start, end)];
+  return yield* unsupported();
+});
 const frozenRanges = Effect.fn("Citation.readFrozenRegexClass")(function* (text: string) {
   let index = 0;
   const point = () => O.getOrElse(Str.codePointAt(text, index), () => -1);
@@ -71,9 +83,9 @@ const frozenRanges = Effect.fn("Citation.readFrozenRegexClass")(function* (text:
     if (value === 92) {
       if (point() !== 120) return yield* unsupported();
       index++;
-      const first = hex(point());
+      const first = citationRegexHexDigit(point());
       index++;
-      const second = hex(point());
+      const second = citationRegexHexDigit(point());
       index++;
       if (first < 0 || second < 0) return yield* unsupported();
       value = first * 16 + second;
@@ -108,18 +120,13 @@ export const makeCitationRegexPointSets = Effect.fn("Citation.makeRegexPointSets
   const literal = Effect.fn("Citation.regexLiteralSet")(function* (start: number, end: number, insensitive: boolean) {
     if (start > end || start < 0 || end > 0x10ffff) return yield* unsupported();
     if (!insensitive) return [range(start, end)];
-    if (end > 127) {
-      if (start >= 0x2013 && end <= 0x2014) return [range(start, end)];
-      return yield* unsupported();
-    }
-    const output = [range(start, end)];
-    if (start <= 90 && end >= 65) output.push(range(Num.max(start, 65) + 32, Num.min(end, 90) + 32));
-    if (start <= 122 && end >= 97) output.push(range(Num.max(start, 97) - 32, Num.min(end, 122) - 32));
-    const contains = (upper: number, lower: number) =>
-      (start <= upper && end >= upper) || (start <= lower && end >= lower);
-    if (contains(73, 105)) output.push(range(0x130, 0x131));
-    if (contains(83, 115)) output.push(range(0x17f));
-    if (contains(75, 107)) output.push(range(0x212a));
+    if (end > 127) return yield* reviewedNonAscii(start, end);
+    const output = [
+      range(start, end),
+      ...shiftedLetters(start, end, 65, 90, 32),
+      ...shiftedLetters(start, end, 97, 122, -32),
+      ...caseExtras(start, end),
+    ];
     return normalizeCitationRegexRanges(output);
   });
   return { digit, space, word, literal };
