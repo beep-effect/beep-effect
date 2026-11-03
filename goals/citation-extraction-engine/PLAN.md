@@ -287,6 +287,15 @@ result accessor owns decoded bytes; its ranges remain unverified. Actual regex
 execution, group descriptors, source-derived semantic replay and public span
 mapping remain open.
 
+The [source-point alphabet](./history/evidence/2026-11-02-regex-alphabet.md)
+now partitions complete atomic predicates over native Python points, retaining
+one encoded UTF-16 unit per original point, including literal surrogates. The
+independent source parse inventory covers all 13,610 instances and records the
+reviewed feature domain and maximum ten capture groups. Four focused suites
+pass 23 tests; hosted qualification is strengthened with 4,456,448 additional
+atomic checks and two mixed astral/surrogate capture controls. Compiler lowering,
+actual worker execution, family semantics/safety and verified mapping remain open.
+
 The [admitted named-cleaner replay](./history/evidence/2026-11-02-admitted-named-cleaners.md)
 now matches all 600 non-HTML named/official outcomes in the original 1,155-case
 cleaner corpus, including 599 result/identity observations and the invalid-name

@@ -18,7 +18,12 @@
         "packages/law-practice/server/test/CitationRegexWorkerProtocol.test.ts",
         "packages/law-practice/server/src/internal/Citation/RegexResult.ts",
         "packages/law-practice/server/test/CitationRegexResult.test.ts",
-        "goals/citation-extraction-engine/history/evidence/2026-11-02-regex-result-transport.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-02-regex-result-transport.md",
+        "packages/law-practice/server/src/internal/Citation/RegexAlphabet.ts",
+        "packages/law-practice/server/test/CitationRegexAlphabet.test.ts",
+        "goals/citation-extraction-engine/ops/probe-regex-program.py",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/regex-program-facts.json",
+        "goals/citation-extraction-engine/history/evidence/2026-11-02-regex-alphabet.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

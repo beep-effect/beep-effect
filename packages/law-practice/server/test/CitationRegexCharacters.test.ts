@@ -42,6 +42,37 @@ const Facts = S.fromJsonString(
   })
 );
 
+const ProgramFacts = S.fromJsonString(
+  S.Struct({
+    schemaVersion: S.tag("citation-regex-program-facts/v1"),
+    scope: S.tag("Complete parsed feature inventory; not target matching or family safety proof."),
+    oracleCommit: S.tag("04d82c032ad5fd0f9ab72a61c87110c46ee8f52e"),
+    oracleTree: S.tag("a35a58fac03400f71a93a93485b77f1d56f2b02f"),
+    pythonVersion: S.tag("3.11.15"),
+    unicodeVersion: S.tag("14.0.0"),
+    producerSha256: Sha256Hex,
+    sourceReaderSha256: Sha256Hex,
+    sources: S.Struct({
+      operationsSha256: S.tag("ae441000ddc90537864e3fdd4a9dfc4aa81af37a65818b48ce9bf37d95d1eeb1"),
+      inventorySha256: S.tag("b0e75c4cd10ee153aeafe4f1b40750415c7f32ca0fabaaadc740b9f69f35fa83"),
+    }),
+    instances: S.tag(13610),
+    maximumCaptureGroups: S.tag(10),
+    flags: S.Struct({ "0": S.tag(13602), "2": S.tag(8) }),
+    instanceFeatureVectorSha256: S.tag("82a584bde4d3e8e991d3bbda59f1842aa2639b5d7183e213cc006a0ce1866df8"),
+    minimumWidthCounts: S.Record(S.String, S.Natural),
+    zeroWidthInstances: S.tag(0),
+    instancesWithRepeatedCaptures: S.tag(0),
+    instancesWithNullableMultiRepeats: S.tag(0),
+    instanceProfileVectorSha256: S.tag("4f46f82500b6096d244ceac0c266e1ee67327a45f707c5ed1a181045fde7f1ab"),
+    features: S.Record(S.String, S.Natural),
+  })
+).pipe(
+  $I.annoteSchema("ProgramFacts", {
+    description: "Authenticated complete source parse domain without claiming target semantics.",
+  })
+);
+
 it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("frozen tokenizer regex facts", (it) => {
   it.effect("binds production classes to exact source observations and their maintainer producer", () =>
     Effect.gen(function* () {
@@ -79,6 +110,49 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("frozen tokenizer rege
       }
       expect(facts.asciiIgnoreCasePoints).toHaveLength(56);
       expect(facts.cases).toHaveLength(28);
+    })
+  );
+  it.effect("binds the complete source parse domain and its independent producer", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const facts = yield* fs
+        .readFileString(
+          NodeURL.fileURLToPath(
+            new URL("../../use-cases/test/fixtures/eyecite/regex-program-facts.json", import.meta.url)
+          )
+        )
+        .pipe(Effect.flatMap(S.decodeEffect(ProgramFacts)));
+      expect(A.reduce(R.values(facts.minimumWidthCounts), 0, (sum, count) => sum + count)).toBe(13610);
+      expect(facts.minimumWidthCounts["0"]).toBeUndefined();
+      expect(facts.features).toEqual({
+        ANY: 96,
+        AT: 27208,
+        "AT/AT_BEGINNING": 13604,
+        "AT/AT_END": 13604,
+        BRANCH: 97352,
+        "CATEGORY/CATEGORY_DIGIT": 31146,
+        "CATEGORY/CATEGORY_NOT_SPACE": 4,
+        "CATEGORY/CATEGORY_SPACE": 6746,
+        "CATEGORY/CATEGORY_WORD": 12,
+        IN: 92721,
+        "IN/CATEGORY": 37908,
+        "IN/LITERAL": 55808,
+        "IN/NEGATE": 27204,
+        "IN/RANGE": 82628,
+        LITERAL: 689857,
+        MAX_REPEAT: 183648,
+        SUBPATTERN: 67814,
+        "SUBPATTERN/flags/0/0": 67814,
+      });
+      for (const [file, digest] of [
+        ["probe-regex-program.py", facts.producerSha256],
+        ["probe-regex-compatibility.py", facts.sourceReaderSha256],
+      ]) {
+        const bytes = yield* fs.readFile(
+          NodeURL.fileURLToPath(new URL(`../../../../goals/citation-extraction-engine/ops/${file}`, import.meta.url))
+        );
+        expect(yield* S.decodeEffect(Sha256HexFromBytes)(bytes)).toBe(digest);
+      }
     })
   );
 });

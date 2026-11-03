@@ -16,6 +16,8 @@ const Reply = S.fromJsonString(
     instances: S.Natural,
     maxUtf16: S.Natural,
     codePointChecks: S.Natural,
+    alphabetPointChecks: S.Natural,
+    alphabetCaptureMatches: S.Natural,
     cases: S.Natural,
     captureMatches: S.Natural,
   })
@@ -83,6 +85,8 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native regex transla
           instances: 13610,
           maxUtf16: 3183,
           codePointChecks: 4456448,
+          alphabetPointChecks: 4456448,
+          alphabetCaptureMatches: 2,
           cases: 28,
           captureMatches: 23,
         });

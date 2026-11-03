@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "1aa061bd723d254cb907397fb75813868e8ef2fce876dcade1b798a1a9ef52ba",
+  "planSha256": "4f93e2440f7574a7f4760fff2e96b6283b22dddf96395cec16fa56c8de2ae5a1",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -69,6 +69,26 @@
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-02-regex-result-transport.md",
           "sha256": "d0878b636dee742bce5db8ac802522a836e04c66cb245aaa8cfa8691729f337a"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/RegexAlphabet.ts",
+          "sha256": "a425134d9d9bc1244b0b938ed30e9f98fdafb855aafcc46a0194d93421456918"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationRegexAlphabet.test.ts",
+          "sha256": "0a862349702e5c345ae51d80d82b6fdd24177ca988720743ec592fb0a0d73e9c"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/probe-regex-program.py",
+          "sha256": "31db50067cc6479d2caf5654f296ce6b259856c9fac827c0812691b5e8ec0edd"
+        },
+        {
+          "path": "packages/law-practice/use-cases/test/fixtures/eyecite/regex-program-facts.json",
+          "sha256": "4ba313b6e7a05fc28f698116cc49bba19b5e4140820dfe6ab7dc8eaa7d7f1629"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-02-regex-alphabet.md",
+          "sha256": "17992f8e41c0669ab7b4ce5634990c907954d921e7c3409e9874a115e2cbbc71"
         }
       ],
       "workflowState": "audit",
