@@ -12,7 +12,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
-import { makeCitationPythonUnicode, sliceCitationPythonStorage } from "./PythonUnicode.ts";
+import { makeCitationPythonUnicode, measureCitationPythonSlice, sliceCitationPythonStorage } from "./PythonUnicode.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import type {
   CitationPythonSliceLayout,
@@ -165,6 +165,9 @@ export type CitationRegexProjection = typeof CitationRegexProjection.Type;
  */
 export interface CitationPreparedRegexInput {
   readonly layout: CitationRegexInputLayout;
+  readonly measure: (
+    input: unknown
+  ) => Effect.Effect<CitationPythonSliceLayout, CitationRegexInputFailure | CitationSafetyLimitExceeded>;
   readonly project: (input: unknown) => Effect.Effect<CitationRegexProjection, CitationRegexInputFailure>;
   readonly slice: <E>(
     input: unknown,
@@ -233,9 +236,13 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
       previous = point;
     }
     if (ambiguous !== expected.projectionAmbiguous) return yield* fail("invalid-input");
-    const project = Effect.fn("Citation.projectRegexOffsets")(function* (input: unknown) {
+    const rangeOf = Effect.fn("Citation.validateOwnedSourceRange")(function* (input: unknown) {
       const range = yield* S.decodeUnknownEffect(RangeInput)(input).pipe(Effect.mapError(() => fail("invalid-range")));
       if (range.end < range.start || range.end > value.pythonLength) return yield* fail("invalid-range");
+      return range;
+    });
+    const project = Effect.fn("Citation.projectRegexOffsets")(function* (input: unknown) {
+      const range = yield* rangeOf(input);
       const startChar = offsets[range.start];
       const endChar = offsets[range.end];
       if (startChar === undefined || endChar === undefined) return yield* fail("invalid-range");
@@ -248,14 +255,17 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
       input: unknown,
       beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E>
     ) {
-      const range = yield* S.decodeUnknownEffect(RangeInput)(input).pipe(Effect.mapError(() => fail("invalid-range")));
-      if (range.end < range.start || range.end > value.pythonLength) return yield* fail("invalid-range");
+      const range = yield* rangeOf(input);
       return yield* sliceCitationPythonStorage(value.storage, range.start, range.end, beforeAllocate);
     });
     return {
       layout: expected,
       value,
       project,
+      measure: Effect.fn("Citation.measurePreparedSourceSlice")(function* (input: unknown) {
+        const range = yield* rangeOf(input);
+        return yield* measureCitationPythonSlice(value.storage, range.start, range.end);
+      }, timed),
       slice: Effect.fn("Citation.capturePreparedSourceSlice")(function* <E>(
         input: unknown,
         beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E>

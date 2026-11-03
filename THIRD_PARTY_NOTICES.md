@@ -45,6 +45,8 @@ citation-engine packet. `TokenCapture.ts` binds native source captures and named
 ordinals to these built-in constructors, preserving source failure order and
 frozen array/bool extras. `ExtractorRecipes.ts` preserves the actual bound built-in
 constructor class and ordered edition references of the canonical extractors.
+`Tokenizer.ts` composes these source stages with owned native matching, raw
+capture construction, mixed assembly and invocation-wide output accounting.
 Fresh-process hash production, general custom protocols
 and complete public tokenizer integration remain open.
 

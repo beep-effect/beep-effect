@@ -344,6 +344,18 @@ worker/capture/assembly composition, aggregate output reservation and general
 custom protocols remain open. See
 [recipe evidence](history/evidence/2026-11-03-extractor-recipes.md).
 
+Latest owned tokenizer checkpoint (2026-11-03): source ordering, recipes, owned
+native worker results, raw capture construction and mixed text/token assembly now
+compose under one admitted invocation. A shared transactional produced-text
+counter covers captured fields and native gaps; raw-match/candidate quotas span
+extractors and assembly bounds the combined output. Eleven focused tests pass,
+including real Bun and actual Node smoke/ownership checks and aggregate-budget
+refusals. Hosted integration requires all twenty independent source cases and
+35 confirmed child exits per runtime. The fixture uses seven controlled built-in
+extractors; full canonical citation/edition composition and complete engine work
+accounting remain open. See
+[composition evidence](history/evidence/2026-11-03-native-tokenizer-composition.md).
+
 Latest worker evidence (2026-10-31): private process ownership now covers bounded
 schema frames, captured Clock timers, queue/active limits, forced stop,
 acknowledged cleanup and quarantine without permit reuse. Real-process tests

@@ -199,3 +199,13 @@ Keep that original snapshot within its declared comparison scope; add independen
 receiver-class observations before using it as a constructor recipe. The new
 source probe checks all 6,805 default records and preserves ordered edition refs.
 See history/evidence/2026-11-03-extractor-recipes.md.
+
+### Keep configuration encoding separate from native installation
+
+The composed tokenizer accepts decoded native configuration, including bigint
+hashes and byte arrays. Decode persisted fixture codecs once, then validate the
+installation through S.toType of the model. Reapplying the encoded codec would
+reject valid owned native data. Source Aho filter construction also reads global
+EXTRACTORS, so controlled source setup must explicitly install and restore that
+global rather than assume the dataclass constructor argument controls filtering.
+See history/evidence/2026-11-03-native-tokenizer-composition.md.

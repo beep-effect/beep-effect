@@ -126,7 +126,11 @@ export class CitationPythonSliceLayout extends S.Opaque<CitationPythonSliceLayou
     })
   )
 ) {}
-const measureSlice = Effect.fn("Citation.measureNativeSlice")(function* (
+/** Measure validated native Python-point bounds without allocating a payload.
+ * The prepared source owner validates bounds before delegating here.
+ * @internal @category operations @since 0.0.0
+ */
+export const measureCitationPythonSlice = Effect.fn("Citation.measureNativeSlice")(function* (
   source: CitationPythonUnicodeStorage,
   start: number,
   end: number
@@ -178,7 +182,7 @@ export const sliceCitationPythonStorage = Effect.fn("Citation.slicePythonStorage
   end: number,
   beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E>
 ) {
-  const layout = yield* measureSlice(source, start, end);
+  const layout = yield* measureCitationPythonSlice(source, start, end);
   yield* beforeAllocate(layout);
   return yield* materializeSlice(source, start, end, layout);
 });
