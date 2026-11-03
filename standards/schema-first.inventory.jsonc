@@ -2222,6 +2222,16 @@
       "line": 51,
       "owner": "@beep/repo-cli",
       "reason": "Graduation write and crash-recovery regression decodes the receipts the CLI prints and the manifest it rewrites through S.fromJsonString codecs; the codec calls read real command output from temporary repositories and assert no schema law, so schema-derived arbitrary coverage does not apply."
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/fallow-turbo-cache.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 24,
+      "owner": "@beep/repo-cli",
+      "reason": "Turbo cache restore regression decodes turbo.json, package.json, Turbo dry-run JSON, fallow list output and the fixture envelopes it restores; the codec calls read real tool output and assert no schema law, so schema-derived arbitrary coverage does not apply."
     }
   ],
   "backlog": []

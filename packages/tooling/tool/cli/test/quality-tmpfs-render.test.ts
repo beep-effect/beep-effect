@@ -1,5 +1,4 @@
-import { renderTmpfsReportLinesForTesting } from "@beep/repo-cli/test/Quality";
-import { TmpfsReapCandidate, TmpfsReapReport } from "@beep/repo-cli/test/RepoRun";
+import { renderTmpfsReportLinesForTesting, TmpfsReapCandidate, TmpfsReapReport } from "@beep/repo-cli/test/Worktree";
 import { describe, expect, it } from "@effect/vitest";
 import { pipe } from "effect/Function";
 import * as Struct from "effect/Struct";

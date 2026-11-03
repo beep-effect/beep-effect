@@ -2,17 +2,17 @@
 
 ## Status
 
-Status: `in-progress`. P0 is complete: the design grill settled D1 to D20 on
+Status: `in-progress`. P1 is running W1 (W1a in review). P0 is complete: the design grill settled D1 to D20 on
 2026-10-28 and an adversarial pass verified the package map
 (`research/design-record.md`). The gate fix lanes G1 to G4 and the W0 retirements are
-done; W1 waits for `goals/effected-promotion` to close (D16).
+done; `goals/effected-promotion` closed (#2476), which unblocked W1 (D16).
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Measure the gate cost, map the coupling, grill the design, verify the package map. | D1 to D20 recorded; design record written. |
-| P1 Implement | pending | Land the gate fixes and the waves below, one PR each. | Acceptance criteria in `SPEC.md` are met, or the checkpoint stops the program. |
+| P1 Implement | in-progress | Land the gate fixes and the waves below, one PR each. | Acceptance criteria in `SPEC.md` are met, or the checkpoint stops the program. |
 | P2 Verify | pending | Re-run the edge classifier, the command-surface snapshot and the invalidation simulation. | Results recorded under `research/`. |
 | P3 Yeet: PR to mergeable | pending | Drive every wave PR to mergeable through yeet. | Each PR merged with zero unresolved review threads. |
 | P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
@@ -32,7 +32,7 @@ and rewrites JSDoc example imports in the same change.
 | G3 | Argv-first lazy dispatch with a static help manifest in `bin-main.ts` and `commands/Root.ts`, written so it moves to the composition app unchanged. Done: 501 of 501 help paths byte-identical; `beep --help` 1.61 s / 511 MB to 0.25 s / 115 MB (`research/g3-lazy-dispatch.md`). | now |
 | G4 | Per-task policy fingerprint from each command's import graph instead of the repo-cli package closure. Done: one generated seal per command-path prefix; 0 stale-green replays over 400 commits; task-instance invalidations 145,200 to 71,391 (`research/g4-task-fingerprint.md`). | done |
 | W0 | Done 2026-10-31: 13 commands retired after the D11 zero-consumer check (cache `synthetic` and `inspect`, both docgen worker evals with the Runpod dependency, `quality jsdoc-migrate` and its model role, `lint goal-packets`, `docs aggregate`, three yeet hook commands, `goals migrate-conventions` and `repair-fork`, `codex quality-review-fix-loop`). Kept because of live consumers (D22): cache tier B and the `activation`, `dependencies` and `fingerprint` producers (active cache goals), `lint schema-parity-codemod` (exact-optional-keys and EF-40), and the jsdoc rewrite core (effected port runner; retired 2026-11-01 by D24 once that runner was deleted). Census: `research/w0-retirements.md`. Post-merge: run `bun run beep models apply --write` to drop the retired role from the home doctrine blocks, then `bun run beep models check` (same note). | now |
-| W1 | In-package hygiene: a shared entry-path constant for the ten self paths, misfiled subcommands moved (tmpfs-reap and residue-reap under worktree, cache-policy under cache), the schema and engine splits, and the verifier's must-fix list below. Exit gate: zero library-to-tool edges. | effected-promotion close |
+| W1 | W1a (D25, D26): census at 0 library-to-tool edges (from 7; `research/w1-edge-census.md`), shared entry path, janitors and cache-policy refiled. W1b: the must-fix list. In-package hygiene: a shared entry-path constant for the ten self paths, misfiled subcommands moved (tmpfs-reap and residue-reap under worktree, cache-policy under cache), the schema and engine splits, and the verifier's must-fix list below. Exit gate: zero library-to-tool edges. | effected-promotion close |
 | W2 | Leaf libraries in parallel: `@beep/repo-utils` extensions, `@beep/ai-sync` (skills lock closure, model ids), `@beep/qa-capture` (QA inventory schemas). | W1 |
 | W3 | `@beep/repo-cli-kit`: the repo-specific CLI helpers left after adopting `@beep/cli-kit`, plus the shared test kits. | W2 |
 | W4 | `@beep/repo-run`. | W3 |

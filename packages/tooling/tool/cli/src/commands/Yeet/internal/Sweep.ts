@@ -112,10 +112,10 @@ import {
   adaptGitKitError,
   RepoRunContext,
   runRepoCommandCapture,
-  runTmpfsReap,
   safeOriginBranchFromBase,
 } from "../../../internal/repo-run/index.ts";
 import { recordSweepDone } from "../../Session/SessionLedger.service.ts";
+import { runTmpfsReap } from "../../Worktree/internal/TmpfsReap.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { artifactDirForContext } from "./ArtifactPaths.ts";
 import { optionFromNonEmpty, patientGit } from "./GitExec.ts";

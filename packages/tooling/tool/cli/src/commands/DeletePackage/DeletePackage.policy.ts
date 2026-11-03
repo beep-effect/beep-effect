@@ -10,12 +10,12 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import { isLabsWorkspacePath } from "../../internal/cli/Labs/index.ts";
 import { DeletePackageRefusal } from "./DeletePackage.schemas.ts";
+import type { DeletePackagePolicy } from "./DeletePackage.schemas.ts";
 import type {
   DependentsReport,
   RegistrationObservation,
   RegistrationTarget,
-} from "../../internal/cli/RegistrationGeometry/index.ts";
-import type { DeletePackagePolicy } from "./DeletePackage.schemas.ts";
+} from "./internal/RegistrationGeometry/index.ts";
 
 const PROTECTED_SLUGS = ["identity", "schema", "utils", "types", "repo-cli", "repo-utils", "repo-configs"];
 const HARD_DEPENDENT_KINDS = [

@@ -1,0 +1,20 @@
+{
+  "previous": "da962e06626be77930bdc9e57a54d9654e5f3f573a13f4efad01e6c708bbad3f",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (perf-fallow K2, perf/fallow-k2-cache-concurrency)",
+    "reason": "Record eight Fallow root tasks flipping to cache: true (quality audit K2) with one shared input set that adds the baselines, discovered code outside the source trees, .gitignore files and root plugin configs; fallow:audit:check stays uncached. Commands, outputs and dependency edges are unchanged; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/perf-fallow-k2-cache-review-2026-11-02.md",
+      "sha256": "5dfd1191a973bf2ab696ff59ea385c9f146bd989ec1ad91d00351397690332a4"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//"]
+}

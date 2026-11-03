@@ -4,6 +4,8 @@
  * @internal
  * @since 0.0.0
  */
+
+export * from "../commands/Models/internal/PublicationLedger.ts";
 export * from "../commands/Skills/internal/SkillFrontmatterCheck.ts";
 export * from "../internal/Codeowners.ts";
 export * from "../internal/cli/EnvConfig.ts";
@@ -14,7 +16,6 @@ export * from "../internal/duckdb/WithDuckDb.ts";
 export * from "../internal/github/index.ts";
 export * from "../internal/ManifestRead.ts";
 export * from "../internal/PathContainment.ts";
-export * from "../internal/publication/PublicationLedger.ts";
 export * from "../internal/quality/SchemaFirstPolicyFinding.ts";
 export * from "../internal/quality/TestTypecheckCoverage.ts";
 export * from "../internal/RepoWorkspaces.ts";

@@ -65,7 +65,6 @@ import {
   desktopTerminalShellState,
   invokerAncestryPids,
   invokerSessionRoot,
-  isRetainedCheckoutResidueName,
   ProcessAttachmentKind,
   ProcessTable,
   processLineage,
@@ -77,6 +76,7 @@ import {
   sessionRootOf,
 } from "../../internal/repo-run/index.ts";
 import { PosInt } from "../../internal/schema/PosInt.ts";
+import { isRetainedCheckoutResidueName } from "./internal/ResidueReap.ts";
 import { CLAUDE_WORKTREES_RELATIVE_ROOT } from "./Worktree.constants.ts";
 import { WorktreeCommandError, WorktreeDirtyError, WorktreePreservationError } from "./Worktree.errors.ts";
 import {

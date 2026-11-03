@@ -7,6 +7,7 @@
 
 export * from "../internal/cli/Bytes.ts";
 export * from "../internal/cli/CommandErrorFields.ts";
+export * from "../internal/cli/EntryPath.ts";
 export * from "../internal/cli/ExitCodeError.ts";
 export * from "../internal/cli/FailureRendering.ts";
 export * from "../internal/cli/Flags.ts";

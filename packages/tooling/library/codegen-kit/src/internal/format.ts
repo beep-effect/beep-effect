@@ -16,6 +16,10 @@ interface Formatter {
 const formatFailure = (message: string, cause: unknown): CodegenFormatError =>
   CodegenFormatError.make({ message, cause });
 
+// Generated output is formatted by explicit path. Biome would otherwise apply the
+// VCS ignore files, including a clone's `.git/info/exclude`, which Turbo never
+// hashes, so an ambient ignore rule could turn a drift check red under an unchanged
+// key (time-to-certainty ruling 83).
 export const makeFormatter = Effect.fn("CodegenKit.makeFormatter")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -37,6 +41,7 @@ export const makeFormatter = Effect.fn("CodegenKit.makeFormatter")(function* () 
             "--javascript-formatter-indent-width=2",
             "--javascript-formatter-line-width=80",
             "--trailing-commas=all",
+            "--vcs-use-ignore-file=false",
             filePath,
           ],
           {
@@ -71,6 +76,7 @@ export const makeFormatter = Effect.fn("CodegenKit.makeFormatter")(function* () 
             "--javascript-formatter-indent-width=2",
             "--javascript-formatter-line-width=80",
             "--trailing-commas=all",
+            "--vcs-use-ignore-file=false",
             "--stdin-file-path",
             formatterPath,
           ],

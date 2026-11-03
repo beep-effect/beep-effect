@@ -72,10 +72,10 @@ goal-portfolio-driver, which is uneconomic at hours-per-iteration.
 [`time-to-certainty`](../goals/time-to-certainty/README.md) finished what it
 can without a live sample (P0, P1 and P3 complete; P2 complete except C4.2;
 P4 in progress) and paused on ruling 80. It resumes only when
-`bun run beep yeet proof-report --since <round-25 merge instant>` in the
+`bun run beep yeet proof-report --since <ruling-83 merge instant>` in the
 owning clone reads ready (200 attempts, 10 branches, 0 disagreements, counting
 only rows recorded after that merge) with `malformed rows: 0` on the sample,
-every C5 fixture green (ruling 82 closed the ruling-69 root-input gap on 2026-11-02); that flip PR turns reuse on and closes the
+every C5 fixture green (ruling 82 closed the ruling-69 root-input gap; ruling 83 restarted the sample on 2026-11-03 after its first disagreement); that flip PR turns reuse on and closes the
 packet. The chain is paid up to the sample: CI speed + control-plane state
 truth + shadow proof reuse (C4.1 and the owning-clone ledger) → the
 goal-portfolio-driver revisit once the flip lands.
@@ -394,7 +394,7 @@ renders their current local status view.
 | [`attributed-multi-claim-span`](../goals/attributed-multi-claim-span/README.md) | Paused 2026-09-12 (graduated 2026-08-13, zero execution, no blocker recorded). Resumes when `citation-verified-span-substrate` closes and a Lane 2 slot pulls the LangExtract-to-ClaimGate proof. |
 | [`effect-native-legal-eval`](../goals/effect-native-legal-eval/README.md) | Paused 2026-09-12 (graduated 2026-08-13, zero execution). Resumes when a Lane 2 slot pulls the C&H baseline; `tracked-changes-ingest-wedge` is blockedBy it and waits with it. |
 | [`patent-drafting-episode-ledger`](../goals/patent-drafting-episode-ledger/README.md) | Paused 2026-09-12 (graduated 2026-08-13, zero execution). Resumes after practice-kg-mcp P8 hands off and `agentic-professional-runtime` closes; also needs `citation-verified-span-substrate`. |
-| [`time-to-certainty`](../goals/time-to-certainty/README.md) | Paused 2026-09-28 on ruling 80 (P0, P1, P3 complete; P2 complete except C4.2). Resumes when `bun run beep yeet proof-report --since <round-25 merge instant>` in the owning clone reads ready (200 attempts, 10 branches, 0 disagreements, counting only rows recorded after that merge) with `malformed rows: 0` on the sample, every C5 fixture green (ruling 82 closed the ruling-69 root-input gap); the flip PR turns reuse on, retires the legacy stores and closes the packet. |
+| [`time-to-certainty`](../goals/time-to-certainty/README.md) | Paused 2026-09-28 on ruling 80 (P0, P1, P3 complete; P2 complete except C4.2). Resumes when `bun run beep yeet proof-report --since <ruling-83 merge instant>` in the owning clone reads ready (200 attempts, 10 branches, 0 disagreements, counting only rows recorded after that merge) with `malformed rows: 0` on the sample, every C5 fixture green (ruling 82 closed the ruling-69 root-input gap); the flip PR turns reuse on, retires the legacy stores and closes the packet. |
 | [`turborepo-quality-cache-adoption`](../goals/turborepo-quality-cache-adoption/README.md) | Scaffolded paused 2026-09-08, unstarted. Resumes behind the two active cache packets (conformance, trust-observability) once their shared Cache contracts ship. |
 | [`knowledge-freshness-audit`](../goals/knowledge-freshness-audit/README.md) | Paused 2026-09-25 after the planning packet (#1218). Resumes on explicit operator activation of P1 reporting; audited-content mutation follows each report and its false-positive review. |
 | [`agent-pool-picker`](../goals/agent-pool-picker/README.md) | Scaffolded paused 2026-09-16. Resumes when `agent-pool-doctrine` ships its seat map and floors (P1 implement there). |

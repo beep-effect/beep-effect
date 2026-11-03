@@ -9,7 +9,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 
-const $I = $RepoCliId.create("internal/repo-run/TmpfsReap.schemas");
+const $I = $RepoCliId.create("commands/Worktree/internal/TmpfsReap.schemas");
 
 const TmpfsSystemRoot = S.String.pipe(
   $I.annoteSchema("TmpfsSystemRoot", {
@@ -23,7 +23,7 @@ const TmpfsSystemRoot = S.String.pipe(
  * **Example** (Recognize a worktree class)
  *
  * ```ts
- * import { TmpfsReapClass } from "@beep/repo-cli/test/RepoRun"
+ * import { TmpfsReapClass } from "@beep/repo-cli/test/Worktree"
  *
  * console.log(TmpfsReapClass.is["git-worktree"]("git-worktree")) // true
  * ```
@@ -58,7 +58,7 @@ export type TmpfsReapClass = typeof TmpfsReapClass.Type;
  * **Example** (Inspect the removal actions)
  *
  * ```ts
- * import { TmpfsReapAction } from "@beep/repo-cli/test/RepoRun"
+ * import { TmpfsReapAction } from "@beep/repo-cli/test/Worktree"
  *
  * console.log(TmpfsReapAction.literals) // ["worktree-remove", "remove-dir", "skip"]
  * ```
@@ -86,7 +86,7 @@ export type TmpfsReapAction = typeof TmpfsReapAction.Type;
  * **Example** (Recognize an age refusal)
  *
  * ```ts
- * import { TmpfsReapSkipReason } from "@beep/repo-cli/test/RepoRun"
+ * import { TmpfsReapSkipReason } from "@beep/repo-cli/test/Worktree"
  *
  * console.log(TmpfsReapSkipReason.is["too-young"]("too-young")) // true
  * ```
@@ -127,7 +127,7 @@ export type TmpfsReapSkipReason = typeof TmpfsReapSkipReason.Type;
  * **Example** (Describe an idle cache)
  *
  * ```ts
- * import { TmpfsReapCandidate } from "@beep/repo-cli/test/RepoRun"
+ * import { TmpfsReapCandidate } from "@beep/repo-cli/test/Worktree"
  *
  * const candidate = TmpfsReapCandidate.make({
  *   root: "/tmp",
@@ -169,7 +169,7 @@ export class TmpfsReapCandidate extends S.Opaque<TmpfsReapCandidate, { readonly 
  * **Example** (Construct an empty dry-run report)
  *
  * ```ts
- * import { TmpfsReapReport } from "@beep/repo-cli/test/RepoRun"
+ * import { TmpfsReapReport } from "@beep/repo-cli/test/Worktree"
  *
  * const report = TmpfsReapReport.make({
  *   scannedAt: "2026-08-29T12:00:00.000Z",
