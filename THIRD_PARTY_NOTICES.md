@@ -325,6 +325,14 @@ The literal cleaner adapter retains source code points selected by its existing
 substring/replacement scans and rebuilds canonical native storage without a
 round trip through JavaScript text.
 
+`PythonCase.ts` also adapts the same pinned `Objects/unicodeobject.c`
+`lower_ucs4` / contextual capital-sigma behavior. `PythonCaseData.ts` contains
+observed lowercase mappings and cased/case-ignorable predicate ranges from the
+pinned interpreter, not interpreter implementation source. Native surrogate
+words remain distinct, output size is measured before allocation, and Effect
+owns interruption and captured deadlines. The host Unicode version is not used
+as a substitute for the pinned Python behavior.
+
 Changes: the adaptation uses schema-owned TypeScript data, captured Effect
 comparison/work services, bounded probes and allocations, typed redacted
 failures, serialized operations and operation-local insertion identities.

@@ -230,6 +230,14 @@ adapter proof. Verified executable discovery fixes that gap; 12 worker tests and
 two bounded source smoke tests pass on the actual runtimes. Full replay remains
 hosted and pending. See [runtime proof correction and qualification](history/evidence/2026-11-03-node-source-corpus-qualification.md).
 
+Latest extractor-selection prerequisite (2026-11-03): the source filter uses
+pinned Python lowercase behavior, including contextual sigma. A native-word
+adapter now uses all 1,433 observed mappings and complete frozen cased/ignored
+predicates; 1,453 independent cases and limit/captured-clock controls pass.
+Host Unicode behavior is not substituted. Selector integration, ordering,
+family/scaling approval and full engine parity remain open. See
+[Python lowercase evidence](history/evidence/2026-11-03-python-lowercase.md).
+
 Latest worker evidence (2026-10-31): private process ownership now covers bounded
 schema frames, captured Clock timers, queue/active limits, forced stop,
 acknowledged cleanup and quarantine without permit reuse. Real-process tests
