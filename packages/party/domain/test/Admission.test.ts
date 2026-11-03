@@ -84,7 +84,7 @@ describe("independent evidence and admission tiers", () => {
             }),
           }),
         });
-        expect(Result.isFailure(refused)).toBe(true);
+        pipe(refused, Result.isFailure, TestUtils.assertTrue);
         if (Result.isFailure(refused))
           expect(A.map(refused.failure.unmet, (row) => row.clause._tag)).toEqual([
             "RequireReviewerAcceptance",
