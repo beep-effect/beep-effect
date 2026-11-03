@@ -88,6 +88,7 @@
       // Python-owned descriptor bytes; the fixed native qualifier authenticates
       // the file and every source instance binding. Preserve producer formatting.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/regex-program-facts.json",
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/regex-match-witnesses.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/typescript-extensions.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/vocabulary-mapping.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/regex-adversarial-corpus.json",

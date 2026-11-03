@@ -23,6 +23,9 @@ const Reply = S.fromJsonString(
     programInstances: S.Natural,
     programMaxUtf16: S.Int.check(S.isBetween({ minimum: 0, maximum: 4096 })),
     programCaptureMatches: S.Natural,
+    witnessInstances: S.Natural,
+    witnessMatches: S.Natural,
+    witnessEmptyInstances: S.Natural,
     cases: S.Natural,
     captureMatches: S.Natural,
   })
@@ -105,6 +108,9 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native regex transla
           alphabetCaptureMatches: sum((reply) => reply.alphabetCaptureMatches),
           programInstances: sum((reply) => reply.programInstances),
           programCaptureMatches: sum((reply) => reply.programCaptureMatches),
+          witnessInstances: sum((reply) => reply.witnessInstances),
+          witnessMatches: sum((reply) => reply.witnessMatches),
+          witnessEmptyInstances: sum((reply) => reply.witnessEmptyInstances),
           cases: sum((reply) => reply.cases),
           captureMatches: sum((reply) => reply.captureMatches),
         };
@@ -116,6 +122,9 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native regex transla
           alphabetCaptureMatches: 2,
           programInstances: 13610,
           programCaptureMatches: 26,
+          witnessInstances: 13610,
+          witnessMatches: 27216,
+          witnessEmptyInstances: 13610,
           cases: 28,
           captureMatches: 23,
         });

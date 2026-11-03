@@ -186,6 +186,15 @@ all four metrics. Hosted coverage also reports 88 deliberately retired/replaced
 domain paths and server package drops; those remain open, with no floor or
 scope change. See [lifecycle and coverage](history/evidence/2026-11-03-regex-lifecycle-and-coverage.md).
 
+Latest source matching checkpoint (2026-11-03): an independent pinned CPython
+producer supplies positive capture witnesses for every one of the 13,610 source
+extractor instances (27,216 matches), plus empty-input no-match observations.
+Repeat generation is byte-identical. The actual production evaluator passes
+three fixed smoke cases/six matches and three zero-quota no-match controls.
+Full replay is added to the existing bounded hosted shards and remains pending.
+No static family, scaling or exhaustive matching approval is inferred. See
+[source capture witnesses](history/evidence/2026-11-03-source-extractor-capture-witnesses.md).
+
 Latest worker evidence (2026-10-31): private process ownership now covers bounded
 schema frames, captured Clock timers, queue/active limits, forced stop,
 acknowledged cleanup and quarantine without permit reuse. Real-process tests

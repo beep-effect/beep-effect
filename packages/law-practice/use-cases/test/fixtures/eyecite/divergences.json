@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "af50e275246edb3d8427b3edaf53a0a6c779382ca8f9e9834e5093281fb1d28e",
+  "planSha256": "39c4ce0ba6331c8f49671855970b3b16f17808e3007d111067b6d97c9a637c85",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -144,11 +144,23 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationRegexWorker.test.ts",
-          "sha256": "2ea6d14dd43959e0ed718d71799363ea4451e088a153e4d36e93635f503006b1"
+          "sha256": "8a117b4e6d0e885ca7a0599d0509394013cf14318aebf5e4fdfcd65d2b7ebb91"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-03-native-regex-worker.md",
           "sha256": "02af07575a95bb53b0d96dad9db261dc708122ecf6f95fba7c9bc43c5dbbd51a"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/probe-regex-match-witnesses.py",
+          "sha256": "820158212b34c160898d32d754925dd7161e6843e7481ac6264c566d997cc7bd"
+        },
+        {
+          "path": "packages/law-practice/use-cases/test/fixtures/eyecite/regex-match-witnesses.json",
+          "sha256": "5967ecb29a91966896395287932688b4bfbc91f15d2d0b8231911aa517f48060"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-03-source-extractor-capture-witnesses.md",
+          "sha256": "a2854b8e54eb73cda42694a8e5d953dadc24b7fb3743ef754dfd16ea6e71e9a1"
         }
       ],
       "workflowState": "audit",
@@ -561,7 +573,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlWorker.test.ts",
-          "sha256": "be6080b3d374b5c33bdcb23945486ee06427def304f192f8806b73a4b71c5661"
+          "sha256": "cb5b0bac1e9966963d151f5384b9f8881e5709ca29925b855d1b6be42445be04"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-31-owned-html-worker.md",
@@ -922,7 +934,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationNativeSpawner.fixtures.ts",
-          "sha256": "4a311dbcd89aeccdf44e501698eba5903b125abe2658bee32e35cb4aaa8d0c59"
+          "sha256": "40c42737938e9ee502e740e63130f5319b8993ea2c1d4441a6dd0d2433bfe3cc"
         },
         {
           "path": "packages/law-practice/server/test/integration/CitationCleanerNamedHtml.test.ts",
@@ -958,7 +970,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlWorker.test.ts",
-          "sha256": "be6080b3d374b5c33bdcb23945486ee06427def304f192f8806b73a4b71c5661"
+          "sha256": "cb5b0bac1e9966963d151f5384b9f8881e5709ca29925b855d1b6be42445be04"
         }
       ],
       "workflowState": "audit",

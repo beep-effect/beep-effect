@@ -13,17 +13,24 @@ import { makeCitationRegexInput } from "../../../packages/law-practice/server/sr
 import { makeCitationRegexProgram } from "../../../packages/law-practice/server/src/internal/Citation/RegexProgram.ts";
 import { makeCitationRegexResult } from "../../../packages/law-practice/server/src/internal/Citation/RegexResult.ts";
 import { makeCitationRegexTranslator } from "../../../packages/law-practice/server/src/internal/Citation/RegexTranslator.ts";
+import { makeCitationRegexEvaluation } from "../../../packages/law-practice/server/src/internal/Citation/RegexWorkerEvaluation.ts";
+import { CitationRegexWorkerJob } from "../../../packages/law-practice/server/src/internal/Citation/RegexWorkerProtocol.ts";
+import { CitationRegexWorkerStartup } from "../../../packages/law-practice/server/src/internal/Citation/RegexWorkerRpc.ts";
 
 const option = process.argv[2];
 const translateOnly = option === "--translate-only";
 const baselineOnly = option === "--baseline";
+const witnessSmoke = option === "--witness-smoke";
 const programShard = option?.startsWith("--program-shard=")
   ? Number(option.slice("--program-shard=".length))
   : undefined;
 assert.ok(
   process.argv.length === 2 ||
     (process.argv.length === 3 &&
-      (translateOnly || baselineOnly || (Number.isInteger(programShard) && programShard >= 0 && programShard < 16)))
+      (translateOnly ||
+        baselineOnly ||
+        witnessSmoke ||
+        (Number.isInteger(programShard) && programShard >= 0 && programShard < 16)))
 );
 
 const fixture = (name, digest) => {
@@ -42,6 +49,33 @@ const programFacts = fixture(
   "regex-program-facts.json",
   "5b93d0172fc9a24f364a89d2ccaab193506b68c10458f962857badb630d32d52"
 );
+const witnesses = fixture(
+  "regex-match-witnesses.json",
+  "5967ecb29a91966896395287932688b4bfbc91f15d2d0b8231911aa517f48060"
+);
+assert.equal(witnesses.oracleCommit, operations.commit);
+assert.equal(witnesses.sources.operationsSha256, "ae441000ddc90537864e3fdd4a9dfc4aa81af37a65818b48ce9bf37d95d1eeb1");
+assert.equal(witnesses.instances, 13610);
+assert.equal(witnesses.matches, 27216);
+assert.equal(witnesses.emptyInstances, 13610);
+assert.deepEqual(
+  witnesses.cases.map((row) => row.id),
+  inventory.extractorInstances.map((row) => row.id)
+);
+assert.equal(createHash("sha256").update(JSON.stringify(witnesses.cases)).digest("hex"), witnesses.vectorSha256);
+assert.equal(
+  createHash("sha256")
+    .update(readFileSync(new URL("./probe-regex-match-witnesses.py", import.meta.url)))
+    .digest("hex"),
+  witnesses.producerSha256
+);
+assert.equal(
+  createHash("sha256")
+    .update(readFileSync(new URL("./probe-regex-compatibility.py", import.meta.url)))
+    .digest("hex"),
+  witnesses.sourceReaderSha256
+);
+const witnessesById = new Map(witnesses.cases.map((row) => [row.id, row]));
 let phase = "setup";
 let instance = 0;
 await Effect.runPromise(
@@ -52,7 +86,7 @@ await Effect.runPromise(
     let codePointChecks = 0;
     let captureMatches = 0;
     phase = "compile";
-    if (programShard === undefined) {
+    if (programShard === undefined && !witnessSmoke) {
       for (const [identity, artifact] of Object.entries(operations.artifacts)) {
         if (artifact.kind !== "tokenizer-extractors") continue;
         assert.equal(createHash("sha256").update(artifact.payload).digest("hex"), identity);
@@ -79,6 +113,9 @@ await Effect.runPromise(
     const descriptorVector = [];
     let programInstances = 0;
     let programMaxUtf16 = 0;
+    let witnessInstances = 0;
+    let witnessMatches = 0;
+    let witnessEmptyInstances = 0;
     if (!baselineOnly) {
       const shard = programShard === undefined ? undefined : programFacts.qualificationShards[programShard];
       if (programShard !== undefined) {
@@ -88,7 +125,24 @@ await Effect.runPromise(
         assert.equal(shard.start, Math.floor((programShard * 13610) / 16));
         assert.equal(shard.end, Math.floor(((programShard + 1) * 13610) / 16));
       }
-      const rows = shard ? inventory.extractorInstances.slice(shard.start, shard.end) : inventory.extractorInstances;
+      if (shard) {
+        const expected = witnesses.shards[programShard];
+        assert.equal(witnesses.shards.length, 16);
+        assert.equal(expected.index, shard.index);
+        assert.equal(expected.start, shard.start);
+        assert.equal(expected.end, shard.end);
+        assert.equal(
+          createHash("sha256")
+            .update(JSON.stringify(witnesses.cases.slice(shard.start, shard.end)))
+            .digest("hex"),
+          expected.vectorSha256
+        );
+      }
+      const rows = witnessSmoke
+        ? [0, 6800, 13609].map((index) => inventory.extractorInstances[index])
+        : shard
+          ? inventory.extractorInstances.slice(shard.start, shard.end)
+          : inventory.extractorInstances;
       const fieldsById = new Map();
       const registries = new Map();
       for (const [artifact, indices] of Object.entries(programFacts.artifactDescriptorIndices)) {
@@ -129,22 +183,68 @@ await Effect.runPromise(
         const encoded = yield* programAlphabet.prepare(program.sets, { width: 1, bytes: new Uint8Array(0) });
         const pattern = yield* compiler.render(program, encoded);
         new RegExp(pattern, encoded.flags);
+        const witness = witnessesById.get(row.id);
+        assert.ok(witness);
+        const sourceBytes = new Uint8Array(Buffer.from(witness.sourceWords, "base64"));
+        assert.equal(sourceBytes.byteLength, 4 * witness.sourcePoints);
+        const preparedSource = yield* sourceInput.prepareUnicode({ width: 4, bytes: sourceBytes }, () => Effect.void);
+        assert.equal(preparedSource.layout.pythonLength, witness.sourcePoints);
+        assert.equal(preparedSource.layout.utf16Units, witness.sourceUtf16);
+        const evaluator = yield* makeCitationRegexEvaluation(
+          CitationRegexWorkerStartup.make({ limits, descriptor: bound.descriptor })
+        );
+        const body = yield* evaluator.evaluate(
+          CitationRegexWorkerJob.make({
+            patternWidth: native.width,
+            patternBytes: native.bytes,
+            sourceWidth: 4,
+            sourceBytes,
+            flags: fields.flags,
+            maxMatches: 8,
+          })
+        );
+        const result = yield* makeCitationRegexResult(limits, program.groups, witness.sourcePoints);
+        const completed = yield* result.decode(body, 8);
+        assert.equal(completed.matches, witness.captures.length);
+        for (let match = 0; match < completed.matches; match++) {
+          for (let group = 0; group <= completed.groups; group++) {
+            const span = yield* completed.capture(match, group);
+            assert.deepEqual(span._tag === "Range" ? [span.start, span.end] : [-1, -1], witness.captures[match][group]);
+          }
+        }
+        const emptyBody = yield* evaluator.evaluate(
+          CitationRegexWorkerJob.make({
+            patternWidth: native.width,
+            patternBytes: native.bytes,
+            sourceWidth: 1,
+            sourceBytes: new Uint8Array(0),
+            flags: fields.flags,
+            maxMatches: 0,
+          })
+        );
+        const emptyResult = yield* makeCitationRegexResult(limits, program.groups, 0);
+        assert.equal((yield* emptyResult.decode(emptyBody, 0)).matches, 0);
+        witnessEmptyInstances++;
+        witnessInstances++;
+        witnessMatches += completed.matches;
         programInstances++;
         programMaxUtf16 = Math.max(programMaxUtf16, pattern.length);
       }
-      assert.equal(programInstances, shard ? shard.end - shard.start : 13610);
-      assert.equal(
-        createHash("sha256").update(JSON.stringify(bindingVector)).digest("hex"),
-        shard ? shard.bindingVectorSha256 : programFacts.instanceBindingVectorSha256
-      );
-      assert.equal(
-        createHash("sha256").update(JSON.stringify(descriptorVector)).digest("hex"),
-        shard ? shard.descriptorVectorSha256 : programFacts.instanceDescriptorVectorSha256
-      );
+      assert.equal(programInstances, witnessSmoke ? 3 : shard ? shard.end - shard.start : 13610);
+      if (!witnessSmoke) {
+        assert.equal(
+          createHash("sha256").update(JSON.stringify(bindingVector)).digest("hex"),
+          shard ? shard.bindingVectorSha256 : programFacts.instanceBindingVectorSha256
+        );
+        assert.equal(
+          createHash("sha256").update(JSON.stringify(descriptorVector)).digest("hex"),
+          shard ? shard.descriptorVectorSha256 : programFacts.instanceDescriptorVectorSha256
+        );
+      }
     }
-    if (programShard !== undefined) {
+    if (programShard !== undefined || witnessSmoke) {
       process.stdout.write(
-        `${JSON.stringify({ instances: 0, maxUtf16: 0, codePointChecks: 0, alphabetPointChecks: 0, alphabetCaptureMatches: 0, programInstances, programMaxUtf16, programCaptureMatches: 0, cases: 0, captureMatches: 0 })}\n`
+        `${JSON.stringify({ instances: 0, maxUtf16: 0, codePointChecks: 0, alphabetPointChecks: 0, alphabetCaptureMatches: 0, programInstances, programMaxUtf16, programCaptureMatches: 0, witnessInstances, witnessMatches, witnessEmptyInstances, cases: 0, captureMatches: 0 })}\n`
       );
       return;
     }
@@ -310,7 +410,7 @@ await Effect.runPromise(
       captureMatches += matches.length;
     }
     process.stdout.write(
-      `${JSON.stringify({ instances, maxUtf16, codePointChecks, alphabetPointChecks, alphabetCaptureMatches, programInstances, programMaxUtf16, programCaptureMatches, cases: facts.cases.length, captureMatches })}\n`
+      `${JSON.stringify({ instances, maxUtf16, codePointChecks, alphabetPointChecks, alphabetCaptureMatches, programInstances, programMaxUtf16, programCaptureMatches, witnessInstances, witnessMatches, witnessEmptyInstances, cases: facts.cases.length, captureMatches })}\n`
     );
   }).pipe(Effect.provide(BunCrypto.layer))
 ).catch(() => {
