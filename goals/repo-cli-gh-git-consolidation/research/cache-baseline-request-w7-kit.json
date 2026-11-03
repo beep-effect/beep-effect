@@ -1,5 +1,5 @@
 {
-  "previous": "9e5641866b964bbd17327ec83dc19085a442f1366c00f3622b50239fc8b16db7",
+  "previous": "ef390b78722a13417e2a0566601c65d3d7c13c33534286814bbd1ab23d927435",
   "review": {
     "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W7 kit, feat/gh-git-w7-kit)",
     "reason": "Record the W7 kit seal drift: patientGit moved from the Yeet tool file GitExec.ts into the library file internal/repo-run/PatientGit.ts, re-exported from the repo-run barrel, so PatientGit.ts joins the goals-doctor, holds, knowledge and quality policy seals; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",

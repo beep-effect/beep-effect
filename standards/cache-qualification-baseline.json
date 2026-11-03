@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Fable 5.1 (t3-native-orchestration)",
-      "reason": "Re-record the legacy cache posture of the four subjects that drifted when the agent-message CLI, the AiProviderCliSession adapters and @beep/t3-code were deleted: manifest bytes and tsconfig references changed; no command, output, cache flag or env key changed; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W7 kit, feat/gh-git-w7-kit)",
+      "reason": "Record the W7 kit seal drift: patientGit moved from the Yeet tool file GitExec.ts into the library file internal/repo-run/PatientGit.ts, re-exported from the repo-run barrel, so PatientGit.ts joins the goals-doctor, holds, knowledge and quality policy seals; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
       "basis": {
-        "path": "docs/reports/t3-native-orchestration-cache-review-2026-11-02.md",
-        "sha256": "e73ebd855c4912225d2a6043d97699581e9c35a67a28df48c10ec30832b16cdd"
+        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w7-kit.md",
+        "sha256": "fd4321872fad85d0bb70837dc0157929f35d370583d2a843af8d733da24135bf"
       }
     },
     "@beep/acp": {
@@ -1146,11 +1146,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Claude Fable 5.1 (t3-native-orchestration)",
-      "reason": "Re-record the legacy cache posture of the four subjects that drifted when the agent-message CLI, the AiProviderCliSession adapters and @beep/t3-code were deleted: manifest bytes and tsconfig references changed; no command, output, cache flag or env key changed; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W7 kit, feat/gh-git-w7-kit)",
+      "reason": "Record the W7 kit seal drift: patientGit moved from the Yeet tool file GitExec.ts into the library file internal/repo-run/PatientGit.ts, re-exported from the repo-run barrel, so PatientGit.ts joins the goals-doctor, holds, knowledge and quality policy seals; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
       "basis": {
-        "path": "docs/reports/t3-native-orchestration-cache-review-2026-11-02.md",
-        "sha256": "e73ebd855c4912225d2a6043d97699581e9c35a67a28df48c10ec30832b16cdd"
+        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w7-kit.md",
+        "sha256": "fd4321872fad85d0bb70837dc0157929f35d370583d2a843af8d733da24135bf"
       }
     },
     "@beep/repo-configs": {
@@ -119715,7 +119715,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "f696714ce1fdafba689bc0ab7659cf09fd64f55fc4f74c102c82e7b9ddccfdf3"
+        "sha256": "79f8ff322681c8879c0b01ef2ada22f7fc10e8520098f09ac518ae8d06043563"
       }
     ]
   }

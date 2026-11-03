@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-03T07:25:26.831Z
+Generated: 2026-11-03T08:26:38.172Z
 
 ## Scope
 
@@ -15,7 +15,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 15 |
 | publicModules | 3575 |
-| publicExports | 25424 |
+| publicExports | 25426 |
 | openModules | 114 |
 | openExports | 88 |
 | missingExportExamples | 0 |
@@ -71,7 +71,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 13 | `@beep/commands` | `packages/drivers/commands` | clean | 8 | 58 | 0 | 0 |
 | 14 | `@beep/cosmos` | `packages/drivers/cosmos` | clean | 6 | 22 | 0 | 0 |
 | 15 | `@beep/freshbooks` | `packages/drivers/freshbooks` | clean | 6 | 49 | 0 | 0 |
-| 16 | `@beep/git` | `packages/drivers/git` | clean | 7 | 53 | 0 | 0 |
+| 16 | `@beep/git` | `packages/drivers/git` | clean | 7 | 55 | 0 | 0 |
 | 17 | `@beep/github-references` | `packages/foundation/modeling/github-references` | clean | 4 | 28 | 0 | 0 |
 | 18 | `@beep/glob` | `packages/foundation/modeling/glob` | clean | 4 | 9 | 0 | 0 |
 | 19 | `@beep/graph-3d` | `packages/drivers/graph-3d` | clean | 7 | 17 | 0 | 0 |
