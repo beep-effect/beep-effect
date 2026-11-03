@@ -23,8 +23,6 @@ jobs:
       - name: Setup monorepo CI
         uses: ./.github/actions/setup-monorepo-ci
         with:
-          cache-turbo: "true"
-          cache-write: "false"
           turbo-remote-cache: "true"
           turbo-api: ${{ vars.TURBO_API }}
           turbo-team: ${{ vars.TURBO_TEAM }}

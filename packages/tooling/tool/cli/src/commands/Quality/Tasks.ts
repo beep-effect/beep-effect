@@ -109,6 +109,7 @@ import {
   readTurboLaneDigest,
   readTurboLaneLedger,
   TURBO_LANE_LEDGER_ENV,
+  turboLaneDigestCacheable,
   turboLaneDigestPackages,
 } from "./internal/TurboLaneDigest.ts";
 import { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroupFailed } from "./Quality.errors.ts";
@@ -1898,12 +1899,14 @@ export type QualityTaskLaneInput = readonly [
 ];
 
 /**
- * What a lane's Turbo inputs resolved to: the digest it can be reused by, and
- * the workspace packages that digest folds (ruling 68).
+ * What a lane's Turbo inputs resolved to: the digest it can be reused by, the
+ * workspace packages that digest folds (ruling 68), and whether Turbo caches
+ * every task it folds (ruling 69's lock).
  */
 type LaneInputResolution = {
   readonly inputDigest: O.Option<string>;
   readonly inputPackages: ReadonlyArray<string>;
+  readonly inputsCacheable: boolean;
 };
 
 const qualityTaskLaneRunFromOutcome = (
@@ -1928,6 +1931,7 @@ const qualityTaskLaneRunFromOutcome = (
     ),
     inputDigest: inputs.inputDigest,
     inputPackages: inputs.inputPackages,
+    inputsCacheable: inputs.inputsCacheable,
     redSchedulingDecision: O.isSome(outcome.failure) ? redSchedulingDecision : O.none(),
     commandText: O.some(commandText(outcome.step.command, outcome.step.args)),
   });
@@ -2007,14 +2011,17 @@ const digestValue = (digest: TurboLaneDigest): string => digest.digest;
 // the same wrapper-ledger or direct-Turbo path as a pass, so its key is the one
 // a pass of the same inputs records, the ledger can see a hit-versus-failed
 // disagreement, and the changed-package tripwire sees a failed lane's scope.
+// Such a lane is not cacheable either: no Turbo definition vouches for its digest.
 const unscopedLaneInputs = (inputDigest: O.Option<string>): LaneInputResolution => ({
   inputDigest,
   inputPackages: A.empty<string>(),
+  inputsCacheable: false,
 });
 
 const laneInputsFromTurboDigest = (digest: O.Option<TurboLaneDigest>): LaneInputResolution => ({
   inputDigest: O.map(digest, digestValue),
   inputPackages: O.match(digest, { onNone: A.empty<string>, onSome: turboLaneDigestPackages }),
+  inputsCacheable: O.exists(digest, turboLaneDigestCacheable),
 });
 
 const readLaneInputs = <Failure, Requirements>(
@@ -2038,7 +2045,7 @@ const readLaneInputs = <Failure, Requirements>(
  * @param outcome - The finished lane step.
  * @param declared - Digest the caller declared, if any.
  * @param ledger - Wrapper lane ledger path, if the step carries one.
- * @returns The lane's input digest and package scope (ruling 68).
+ * @returns The lane's input digest, package scope (ruling 68) and cacheability (ruling 69).
  */
 const resolveLaneInputDigestSource = Effect.fn("QualityTasks.resolveLaneInputDigestSource")(function* (
   outcome: StreamingStepOutcome,
