@@ -91,7 +91,8 @@ layer(nativeLayer, { timeout: "30 seconds" })("exact law-practice party boundary
       import trailing from '@beep/party-use-cases/';
       const text = "@beep/party-domain/not-an-import";
       /* import ignored from '@beep/party-domain/comment'; */`;
-      expect(A.filter(yield* moduleSpecifiers(source), forbiddenModule)).toEqual([
+      const resolved1 = yield* moduleSpecifiers(source);
+      expect(A.filter(resolved1, forbiddenModule)).toEqual([
         "@beep/party-domain",
         "@beep/party-use-cases-extra",
         "@beep/party-server/Ledger",
@@ -104,13 +105,13 @@ layer(nativeLayer, { timeout: "30 seconds" })("exact law-practice party boundary
   it.effect("checks every source file but excludes test fixtures", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const files = A.filter(yield* fs.readDirectory("src", { recursive: true }), (file) =>
-        /\.(?:[cm]?ts|tsx)$/u.test(file)
-      );
+      const resolved2 = yield* fs.readDirectory("src", { recursive: true });
+      const files = A.filter(resolved2, (file) => /\.(?:[cm]?ts|tsx)$/u.test(file));
       expect(files).toContain("PartyContactSource/PartyContactSource.layer.ts");
       const violations = yield* Effect.forEach(files, (file) =>
         Effect.gen(function* () {
-          const specifiers = yield* moduleSpecifiers(yield* fs.readFileString(`src/${file}`));
+          const resolved3 = yield* fs.readFileString(`src/${file}`);
+          const specifiers = yield* moduleSpecifiers(resolved3);
           return A.map(A.filter(specifiers, forbiddenModule), (specifier) => ({ file, specifier }));
         })
       );
@@ -120,7 +121,8 @@ layer(nativeLayer, { timeout: "30 seconds" })("exact law-practice party boundary
   it.effect("checks both manifest dependency sections with exact package names", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const manifest = yield* decodeManifest(yield* fs.readFileString("package.json"));
+      const resolved4 = yield* fs.readFileString("package.json");
+      const manifest = yield* decodeManifest(resolved4);
       expect(forbiddenManifest(manifest)).toEqual([]);
       for (const section of ["dependencies", "devDependencies"]) {
         expect(forbiddenManifest({ [section]: { "@beep/party-use-cases": "workspace:^" } })).toEqual([]);

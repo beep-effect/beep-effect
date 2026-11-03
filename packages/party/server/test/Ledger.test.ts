@@ -269,7 +269,8 @@ it.layer(PartyLedgerMemory)("corrected propositions and source history", (it) =>
       const before = yield* ledger.snapshot;
       expect((yield* ledger.recordObservation(observation).pipe(Effect.flip)).reason).toBe("duplicate-observation");
       expect((yield* ledger.recordAssertion(assertion).pipe(Effect.flip)).reason).toBe("duplicate-assertion");
-      expect(yield* ledger.snapshot).toEqual(before);
+      const resolved1 = yield* ledger.snapshot;
+      expect(resolved1).toEqual(before);
       expect(before.observations).toEqual([observation]);
       expect(before.assertions).toEqual([assertion]);
     })
@@ -301,14 +302,16 @@ it.layer(PartyLedgerMemory)("atomic evidence batches", (it) => {
         )
         .pipe(Effect.flip);
       expect(failed.reason).toBe("duplicate-version");
-      expect(yield* ledger.snapshot).toEqual(before);
+      const resolved2 = yield* ledger.snapshot;
+      expect(resolved2).toEqual(before);
       const repeated = yield* ledger
         .appendEvidence(
           LedgerSnapshot.make({ observations: [observation, observation], assertions: [], versions: [fresh] })
         )
         .pipe(Effect.flip);
       expect(repeated.reason).toBe("duplicate-observation");
-      expect(yield* ledger.snapshot).toEqual(before);
+      const resolved3 = yield* ledger.snapshot;
+      expect(resolved3).toEqual(before);
       yield* ledger.appendEvidence(
         LedgerSnapshot.make({ observations: [observation], assertions: [], versions: [fresh] })
       );

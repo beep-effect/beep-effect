@@ -22,12 +22,18 @@ const box = (domains: ReadonlyArray<string>, span: O.Option<ObservedSpan>) =>
 describe("organization-domain leads", () => {
   it.effect("normalizes mailbox domains while excluding free mail and malformed input", () =>
     Effect.gen(function* () {
-      TestUtils.assertSome(yield* organizationDomain("riley@mail.acme.example"), "acme.example");
-      TestUtils.assertSome(yield* organizationDomain("pat@firm.co.uk"), "firm.co.uk");
-      TestUtils.assertNone(yield* organizationDomain("someone@gmail.com"));
-      TestUtils.assertNone(yield* organizationDomain("not-an-address"));
-      TestUtils.assertNone(yield* organizationDomain("bare.example"));
-      TestUtils.assertSome(yield* organizationDomain("Dana <Dana@BÜCHER.example>"), "xn--bcher-kva.example");
+      const resolved1 = yield* organizationDomain("riley@mail.acme.example");
+      TestUtils.assertSome(resolved1, "acme.example");
+      const resolved2 = yield* organizationDomain("pat@firm.co.uk");
+      TestUtils.assertSome(resolved2, "firm.co.uk");
+      const resolved3 = yield* organizationDomain("someone@gmail.com");
+      TestUtils.assertNone(resolved3);
+      const resolved4 = yield* organizationDomain("not-an-address");
+      TestUtils.assertNone(resolved4);
+      const resolved5 = yield* organizationDomain("bare.example");
+      TestUtils.assertNone(resolved5);
+      const resolved6 = yield* organizationDomain("Dana <Dana@BÜCHER.example>");
+      TestUtils.assertSome(resolved6, "xn--bcher-kva.example");
     })
   );
   it("reads a shared domain as an alias lead", () => {
