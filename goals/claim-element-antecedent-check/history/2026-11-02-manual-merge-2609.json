@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "claim-check-manual-merge-observation/v1",
+  "pullRequest": 2609,
+  "acceptedHead": "dbe90a59d1b2c655941030e915bdced6e5c7cec1",
+  "merge": {
+    "mergeCommit": "5e061d6b88c5d75c6b98323ce7f86a1903d9a7cf",
+    "tree": "f9611c525d4c13bf06a70707b30001c0ed19e0bf",
+    "mergedAt": "2026-11-02T21:55:40.000Z",
+    "method": null,
+    "baseRef": "main"
+  },
+  "initiator": {
+    "authority": "user-confirmation-in-goal-chat",
+    "statement": "I merged it manually.",
+    "kind": "manual-user-merge"
+  },
+  "policyRetry": {
+    "id": 125573891053,
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-11-02T21:50:27Z",
+    "completed_at": "2026-11-02T22:00:45Z"
+  },
+  "workflow": {
+    "id": 41527713358,
+    "head_sha": "dbe90a59d1b2c655941030e915bdced6e5c7cec1",
+    "run_attempt": 2,
+    "status": "completed",
+    "conclusion": "success",
+    "updated_at": "2026-11-02T22:00:46Z"
+  },
+  "policyTaskSummary": {
+    "successful": 231,
+    "total": 231,
+    "cached": 220
+  },
+  "completionAfterPolicy": {
+    "outcome": "unknown",
+    "evidence": [
+      {
+        "ref": {
+          "kind": "hosted-required-checks",
+          "ref": "required",
+          "gating": true
+        },
+        "outcome": "verified",
+        "observedHead": "dbe90a59d1b2c655941030e915bdced6e5c7cec1",
+        "detail": "Required contexts observed at accepted head before merge; 15 contexts. Merge-time evidence verified: complete rule-suite inventory and 15 green required contexts at the accepted head. The merge-push rule suite supplies the merge-time ruleset inventory, including rulesets deleted since then; GitHub lists rule suites for one month."
+      },
+      {
+        "ref": {
+          "kind": "yeet-verdict",
+          "ref": ".beep/yeet/runs/docs_claim-element-readiness-recovery-744539fbc89e/verdict.json",
+          "gating": true
+        },
+        "outcome": "unknown",
+        "observedHead": "dbe90a59d1b2c655941030e915bdced6e5c7cec1",
+        "detail": "Yeet verdict checked against resolvedHeadSha and mergeReady.ready."
+      },
+      {
+        "ref": {
+          "kind": "hosted-required-checks",
+          "ref": "required",
+          "gating": true
+        },
+        "outcome": "verified",
+        "observedHead": "dbe90a59d1b2c655941030e915bdced6e5c7cec1",
+        "detail": "Hosted required checks at accepted head."
+      }
+    ],
+    "nonRequiredReds": []
+  },
+  "retainedEvaluation": {
+    "exactMatches": 37,
+    "selectedClaims": 538,
+    "protectedRetained": 34,
+    "previousPassingRetained": 37,
+    "newEvaluation": false
+  },
+  "attorneyReviewClaimed": false
+}
