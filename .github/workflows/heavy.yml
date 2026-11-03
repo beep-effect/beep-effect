@@ -637,7 +637,8 @@ jobs:
         run: |
           set -euo pipefail
           umask 077
-          trial_root=/var/tmp/beep-cache-producer-trial-v1
+          mkdir -p "$HOME/.cache/beep"
+          trial_root="$HOME/.cache/beep/cache-producer-trial-v1"
           # An old or competing directory is a refusal, never an overwrite.
           mkdir "$trial_root"
           printf 'root=%s\n' "$trial_root" >> "$GITHUB_OUTPUT"
@@ -893,7 +894,7 @@ jobs:
               cleanup_status=1
             fi
           fi
-          if [[ "$TRIAL_ROOT" == /var/tmp/beep-cache-producer-trial-v1 ]]; then
+          if [[ "$TRIAL_ROOT" == "$HOME/.cache/beep/cache-producer-trial-v1" ]]; then
             rm -rf -- "$TRIAL_ROOT"
           else
             echo "::error::Refusing unexpected private producer directory."

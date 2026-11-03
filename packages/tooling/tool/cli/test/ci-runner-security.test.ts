@@ -1931,6 +1931,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const installName = "Install independently approved issuer only";
       const runName = "Execute closed signed trial and retain private observation";
       const publishName = "Publish issued observation using storage capabilities only";
+      expect(stepRun(steps, "Reserve exclusive private trial directory")).toContain(
+        'trial_root="$HOME/.cache/beep/cache-producer-trial-v1"'
+      );
       const install = stepByName(steps, installName);
       expect(A.sort(R.keys(install.env ?? {}), Order.String)).toEqual([
         "BEEP_CACHE_PRODUCER_APPROVAL_JSON",
@@ -1998,6 +2001,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(stepByName(steps, "Remove only this trial's private files and worktrees").if).toBe(
         "always() && steps.private.outputs.root != ''"
       );
+      expect(stepRun(steps, "Remove only this trial's private files and worktrees")).toContain(
+        '"$TRIAL_ROOT" == "$HOME/.cache/beep/cache-producer-trial-v1"'
+      );
     })
   );
 
@@ -2039,7 +2045,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           stdout: "pipe",
           stderr: "pipe",
         });
-        expect(result.exitCode === 0).toBe(succeeds);
+        expect(result.exitCode).toBe(succeeds ? 0 : 1);
         const record = yield* fs.readFileString(output);
         if (succeeds) expect(record).toContain("run=12\nartifact=34\n");
         else expect(record).toBe("");

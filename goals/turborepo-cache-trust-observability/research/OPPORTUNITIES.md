@@ -2156,3 +2156,15 @@ a non-private output parent before any request; an exclusive mode-0700 folder
 resolved that local preflight without changing the containing state directory.
 Stop this credential path; a separately authorized existing management route
 must establish the current policy before that acceptance gate can pass.
+
+### Protected producer lint-policy boundary repairs, 2026-11-03
+
+Run 41584463472 passed all unit shards and Fallow, then Lint Policy found one
+introduced boolean-indirection assertion and two live host-path observations.
+Assert exact selection-shell exit status 0/1 instead of reducing it to a boolean.
+Replace the host-specific temporary root and exact cleanup comparator with the
+same fixed HOME-cache path, retaining exclusive creation and guarded cleanup.
+Author path assertions and preserve every policy check; no knowledge exemption,
+Effect-Vitest baseline or proof threshold changes. Workflow/Bash/Python syntax
+parses; fresh hosted proof remains required, with no local verify/publish or
+repository test suite.

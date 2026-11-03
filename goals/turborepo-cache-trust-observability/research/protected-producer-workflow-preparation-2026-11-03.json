@@ -11,11 +11,11 @@
     },
     {
       "path": ".github/workflows/heavy.yml",
-      "sha256": "e0f32e26ca4c1b50b8fc6050e4e95162357f36299e418fd8b7eea11bd4a660ff"
+      "sha256": "7a1779aa085b20de78039ace40789b856f4d05578050ca2941bf20a7388946c6"
     },
     {
       "path": "packages/tooling/tool/cli/test/ci-runner-security.test.ts",
-      "sha256": "c20cb923a8ac8a0daa488eaf0b6e43440463aab8d36ab992a1fd87d8fecd2cbc"
+      "sha256": "cabaf8ec9608d24645bd053380a2f434bc69e52abff4608c5224cc97cc61f1a9"
     }
   ],
   "route": {
@@ -36,7 +36,7 @@
   },
   "execution": {
     "independentSelection": "Explicit enable plus exact per-channel source SHA and independently selected candidate run/artifact/binary digest. Missing or malformed values refuse before private setup.",
-    "privateRoot": "/var/tmp/beep-cache-producer-trial-v1",
+    "privateRoot": "$HOME/.cache/beep/cache-producer-trial-v1",
     "privateRootExclusive": true,
     "candidateDownload": "Immutable reviewed download-artifact action, exact artifact ID/run, digest mismatch is an error; binary hash and four current source-input hashes checked before issuer delivery.",
     "request": "Fixed @beep/identity#lint activation preview, materialized dependencies, two same-source registered sibling worktrees and the complete selection; no arbitrary command or caller request file.",
@@ -61,7 +61,7 @@
     "artifactRetentionDays": 1,
     "nativeArchiveBytes": 67108864,
     "nativeExecutableBytes": 67108864,
-    "combinedHostedWorkflowTextBytes": 45969,
+    "combinedHostedWorkflowTextBytes": 46020,
     "hostedWorkflowTextLimitBytes": 65536,
     "existingTrialStorageAndOperationLimitsExpanded": false,
     "newRunnerCapacity": false
@@ -177,6 +177,16 @@
     "healthFinding": "The same complexity finding also blocks the health envelope.",
     "thresholdsOrBaselinesChanged": false,
     "localTestsExecuted": false,
+    "hostedProof": "pending"
+  },
+  "lintPolicyRepair": {
+    "recordedAt": "2026-11-03T05:56:07.142490+00:00",
+    "failedHead": "e6472d940435440c267434737f8aa95504e52321",
+    "runId": 41584463472,
+    "jobId": 125747400599,
+    "effectVitest": "One introduced boolean-indirection finding in the selection-shell control. Assert exact exit status 0 or 1, strengthening refusal from any nonzero exit to the intended guard exit.",
+    "knowledgeReferences": "Two introduced actionable host-path findings on the fixed temporary root and its cleanup comparator. Use one fixed HOME-cache path, preserving exclusive creation, ownership and exact cleanup; no exemption or baseline change.",
+    "syntax": "Both workflows and 15 Bash / 5 Python bodies parse; no workflow body, local quality gate or test suite executed.",
     "hostedProof": "pending"
   }
 }
