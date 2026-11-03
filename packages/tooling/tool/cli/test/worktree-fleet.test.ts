@@ -367,18 +367,21 @@ describe("worktree reference linking", () => {
           expect(lines).toHaveLength(3);
           for (const name of ["effect", "effect-tsgo", "effect-workspace"]) {
             const link = f.path.join(target, ".repos", name);
-            expect(yield* f.fs.readLink(link)).toBe(name === "effect-workspace" ? f.root : f.path.join(f.root, name));
+            const readLink1 = yield* f.fs.readLink(link);
+            expect(readLink1).toBe(name === "effect-workspace" ? f.root : f.path.join(f.root, name));
             yield* f.fs.remove(link);
             yield* f.fs.symlink(f.path.join(f.temp, "missing"), link);
           }
-          expect(yield* linkReferences(f.owner, target)).toEqual(lines);
+          const linkReferences2 = yield* linkReferences(f.owner, target);
+          expect(linkReferences2).toEqual(lines);
           const collision = f.path.join(target, ".repos/effect");
           yield* f.fs.remove(collision);
           yield* f.fs.makeDirectory(collision);
           yield* f.fs.writeFileString(f.path.join(collision, "keep"), "preserve");
           const preserved = yield* linkReferences(f.owner, target);
           expect(preserved[0]).toContain("warning:");
-          expect(yield* f.fs.readFileString(f.path.join(collision, "keep"))).toBe("preserve");
+          const readFileString3 = yield* f.fs.readFileString(f.path.join(collision, "keep"));
+          expect(readFileString3).toBe("preserve");
         })
       );
     }
@@ -396,7 +399,8 @@ describe("worktree reference linking", () => {
           yield* f.fs.makeDirectory(target);
           const lines = yield* linkReferences(f.owner, target);
           expect(lines[0]).toContain("warning: Reference root is missing");
-          expect(yield* f.fs.exists(f.path.join(target, ".repos"))).toBe(false);
+          const exists4 = yield* f.fs.exists(f.path.join(target, ".repos"));
+          expect(exists4).toBe(false);
         })
       );
     }
@@ -478,12 +482,12 @@ esac
     );
     expect(exitCode, stderr).toBe(0);
     const target = f.path.join(f.temp, "owner-worktrees/topic");
-    expect(yield* f.fs.readFileString(f.path.join(target, ".env"))).toBe("COPIED=yes\n");
+    const readFileString5 = yield* f.fs.readFileString(f.path.join(target, ".env"));
+    expect(readFileString5).toBe("COPIED=yes\n");
     for (const name of ["effect", "effect-tsgo", "effect-workspace"]) {
       expect(stdout).toContain(`reference: .repos/${name} ->`);
-      expect(yield* f.fs.readLink(f.path.join(target, ".repos", name))).toBe(
-        name === "effect-workspace" ? f.root : f.path.join(f.root, name)
-      );
+      const readLink6 = yield* f.fs.readLink(f.path.join(target, ".repos", name));
+      expect(readLink6).toBe(name === "effect-workspace" ? f.root : f.path.join(f.root, name));
     }
   }, testPlatform),
   30000

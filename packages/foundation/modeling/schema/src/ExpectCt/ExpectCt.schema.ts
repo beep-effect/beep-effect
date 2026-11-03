@@ -271,7 +271,8 @@ export const ExpectCTHeader = S.Union([ExpectCTOption, S.Undefined]).pipe(
         )
       );
 
-      return O.some(yield* formatExpectCTValue(enabled[1]));
+      const formatExpectCTValue1 = yield* formatExpectCTValue(enabled[1]);
+      return O.some(formatExpectCTValue1);
     });
 
     const create: (

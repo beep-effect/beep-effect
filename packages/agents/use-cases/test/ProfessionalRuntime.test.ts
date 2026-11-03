@@ -248,7 +248,8 @@ describe("@beep/agents-use-cases", { concurrent: false }, () => {
         _tag: "ProfessionalRuntimePromotionBlocked",
         reason: "vertical-policy-revision-advanced",
       });
-      expect(yield* Ref.get(evaluations)).toBe(2);
+      const got = yield* Ref.get(evaluations);
+      expect(got).toBe(2);
     })
   );
 

@@ -416,7 +416,7 @@ export const runCiRerunRunnerLoss = Effect.fn("Ci.runCiRerunRunnerLoss")(functio
       })
     );
   const unchecked = decide(RunnerLossHead.make({ status: "unchecked" }));
-  const decision = unchecked.reason === "head-unchecked" ? decide(yield* readHead(run)) : unchecked;
+  const decision = unchecked.reason === "head-unchecked" ? yield* Effect.map(readHead(run), decide) : unchecked;
   if (O.isSome(decision.rerunJob) && !input.dryRun) {
     yield* requestRerun(decision.rerunJob.value.id);
   }

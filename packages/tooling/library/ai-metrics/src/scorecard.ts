@@ -959,6 +959,7 @@ export const upsertAiMetricsBenchmarkCase: (
     promptRef: input.promptRef,
   });
   const duckdb = yield* DuckDb;
+  const currentTimeMillis1 = yield* Clock.currentTimeMillis;
   yield* duckdb
     .run(
       `INSERT OR REPLACE INTO ai_metrics_benchmark_cases (
@@ -978,7 +979,7 @@ export const upsertAiMetricsBenchmarkCase: (
         )`,
       {
         benchmarkCaseId: benchmarkCase.benchmarkCaseId,
-        createdAtEpochMillis: epochMillisParam(yield* Clock.currentTimeMillis),
+        createdAtEpochMillis: epochMillisParam(currentTimeMillis1),
         expectedChecksJson,
         promptHash: benchmarkCase.promptHash,
         promptRef: O.getOrNull(input.promptRef),
@@ -1468,8 +1469,9 @@ const writeWeeklyArtifacts = Effect.fn("AiMetrics.scorecard.writeWeeklyArtifacts
   yield* fs
     .writeFileString(markdownPath, renderMarkdownReport(document))
     .pipe(Effect.mapError((cause) => scorecardFailure("Failed to write AI metrics weekly Markdown report.", cause)));
+  const jsonString2 = yield* jsonString(document);
   yield* fs
-    .writeFileString(jsonPath, yield* jsonString(document))
+    .writeFileString(jsonPath, jsonString2)
     .pipe(Effect.mapError((cause) => scorecardFailure("Failed to write AI metrics weekly JSON report.", cause)));
   return { jsonPath, markdownPath };
 });

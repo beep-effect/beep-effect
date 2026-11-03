@@ -1060,13 +1060,12 @@ export const buildAiMetricsMirrorBundle = Effect.fn("AiMetrics.buildAiMetricsMir
   yield* fs
     .writeFileString(manifestPath, manifestJson)
     .pipe(Effect.mapError((cause) => mirrorFailure("Failed to write AI metrics mirror manifest JSON.", cause)));
+  const argument = path.join(input.dataRoot, "mirror/latest.json");
+  const pipe1 = yield* AiMetricsMirrorLatestPointer.encodeJsonEffect(
+    AiMetricsMirrorLatestPointer.make({ bundleDir, bundleId })
+  ).pipe(Effect.mapError((cause) => mirrorFailure("Failed to encode AI metrics latest mirror pointer.", cause)));
   yield* fs
-    .writeFileString(
-      path.join(input.dataRoot, "mirror/latest.json"),
-      yield* AiMetricsMirrorLatestPointer.encodeJsonEffect(
-        AiMetricsMirrorLatestPointer.make({ bundleDir, bundleId })
-      ).pipe(Effect.mapError((cause) => mirrorFailure("Failed to encode AI metrics latest mirror pointer.", cause)))
-    )
+    .writeFileString(argument, pipe1)
     .pipe(Effect.mapError((cause) => mirrorFailure("Failed to write latest AI metrics mirror pointer.", cause)));
   yield* fs
     .remove(mirrorWorkDir, { force: true, recursive: true })

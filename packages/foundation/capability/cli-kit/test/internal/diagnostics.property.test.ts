@@ -24,8 +24,12 @@ it.effect.prop(
         assert.strictEqual(fields.level, "INFO");
         const parsed = yield* S.decodeEffect(json)(text);
         const normalized = yield* S.encodeEffect(json)(parsed);
-        assert.deepStrictEqual(yield* S.decodeEffect(json)(normalized), parsed);
-        assert.strictEqual(yield* S.encodeEffect(json)(yield* S.decodeEffect(json)(normalized)), normalized);
+        const value = yield* S.decodeEffect(json)(normalized);
+        assert.deepStrictEqual(value, parsed);
+        const argument = S.encodeEffect(json);
+        const value2 = yield* S.decodeEffect(json)(normalized);
+        const value1 = yield* argument(value2);
+        assert.strictEqual(value1, normalized);
         assert.strictEqual(formatNdjson(record), text);
       })
     ),

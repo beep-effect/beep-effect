@@ -109,7 +109,8 @@ const program = Effect.gen(function* () {
     step(
       "DPAPI round-trips empty input",
       Effect.gen(function* () {
-        const opened = yield* store.unprotect(yield* store.protect(new Uint8Array(0)));
+        const protect1 = yield* store.protect(new Uint8Array(0));
+        const opened = yield* store.unprotect(protect1);
         return opened.byteLength === 0;
       })
     ),

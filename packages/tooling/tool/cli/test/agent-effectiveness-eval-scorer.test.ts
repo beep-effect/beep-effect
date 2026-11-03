@@ -285,16 +285,20 @@ it.layer(TestLayer, { concurrent: false, timeout: "10 seconds" })("agent-effecti
       yield* writeText(candidate, "# Candidate A\n");
       const first = yield* identity();
       expect(first).not.toBe(missing);
-      expect(yield* identity()).toBe(first);
+      const identity1 = yield* identity();
+      expect(identity1).toBe(first);
       yield* writeText(candidate, "# Candidate B\n");
-      expect(yield* identity()).not.toBe(first);
+      const identity2 = yield* identity();
+      expect(identity2).not.toBe(first);
       yield* writeText(candidate, "# Candidate A\n");
-      expect(yield* identity()).toBe(first);
+      const identity3 = yield* identity();
+      expect(identity3).toBe(first);
       yield* writeText(path.join(fixtureDir, ".agents", "skills", "skillopt-target", "SKILL.md"), "# Candidate A\n");
       const bothRoots = yield* identity();
       expect(bothRoots).not.toBe(first);
       yield* writeText(path.join(fixtureDir, ".claude", "skills", "skillopt-target", "references", "notes.md"), "n\n");
-      expect(yield* identity()).not.toBe(bothRoots);
+      const identity4 = yield* identity();
+      expect(identity4).not.toBe(bothRoots);
 
       // Two rollout dirs with different candidate content get different ids;
       // identical content in a different dir gets the same id.
@@ -305,7 +309,8 @@ it.layer(TestLayer, { concurrent: false, timeout: "10 seconds" })("agent-effecti
       expect(other).not.toBe(first);
       expect(Str.startsWith("skillopt-scorer-")(other)).toBe(true);
       yield* writeText(path.join(otherDir, ".claude", "skills", "skillopt-target", "SKILL.md"), "# Candidate A\n");
-      expect(yield* otherIdentity()).toBe(first);
+      const otherIdentity5 = yield* otherIdentity();
+      expect(otherIdentity5).toBe(first);
     })
   );
 
@@ -386,10 +391,13 @@ it.layer(TestLayer, { concurrent: false, timeout: "10 seconds" })("agent-effecti
         // decoding then re-encoding reproduces the same bytes.
         const reportJson = yield* encodeAgentEffectivenessEvalScoreReportJson(report);
         const decodedReport = yield* decodeScoreReportJson(reportJson);
-        expect(yield* encodeAgentEffectivenessEvalScoreReportJson(decodedReport)).toBe(reportJson);
+        const encodedAgentEffectivenessEvalScoreReportJson =
+          yield* encodeAgentEffectivenessEvalScoreReportJson(decodedReport);
+        expect(encodedAgentEffectivenessEvalScoreReportJson).toBe(reportJson);
         const laneJson = yield* encodeLaneReportJson(lane);
         const decodedLane = yield* decodeLaneReportJson(laneJson);
-        expect(yield* encodeLaneReportJson(decodedLane)).toBe(laneJson);
+        const encodedLaneReportJson = yield* encodeLaneReportJson(decodedLane);
+        expect(encodedLaneReportJson).toBe(laneJson);
       }),
     { arbitrary: fcRuns(30) }
   );
@@ -720,7 +728,8 @@ it.layer(TestLayer, { concurrent: false, timeout: "10 seconds" })("agent-effecti
       expect(isScorerError(error) ? error.message : "").toBe(
         "Recording an eval score requires an AI metrics data root."
       );
-      expect(A.sort(yield* Ref.get(spawned), Str.Order)).toEqual(["biome", "bun", "tsgo"]);
+      const got = yield* Ref.get(spawned);
+      expect(A.sort(got, Str.Order)).toEqual(["biome", "bun", "tsgo"]);
     })
   );
 
@@ -762,7 +771,8 @@ it.layer(TestLayer, { concurrent: false, timeout: "10 seconds" })("agent-effecti
       const repoRoot = yield* findRepoRoot();
       if ((yield* HostProcessPlatform) === "win32") return;
       yield* writeText(path.join(fixtureDir, "..\\..\\outside.ts"), "export const outside = true;\n");
-      const paths = A.map(yield* readSourceSnapshots(fixtureDir), (snapshot) => snapshot.relativePath);
+      const readSourceSnapshots6 = yield* readSourceSnapshots(fixtureDir);
+      const paths = A.map(readSourceSnapshots6, (snapshot) => snapshot.relativePath);
       expect(paths).toEqual(["../../outside.ts"]);
       const result = yield* evaluateLaw(fixtureDir, repoRoot, paths).pipe(Effect.result);
 
@@ -807,7 +817,8 @@ it.layer(TestLayer, { concurrent: false, timeout: "10 seconds" })("agent-effecti
           path.join(fixtureDir, "biome.json"),
           encodeJson({ root: true, formatter: { enabled: false }, linter: { enabled: false } })
         );
-        expect(yield* score).toEqual(baseline);
+        const score7 = yield* score;
+        expect(score7).toEqual(baseline);
       }),
     { timeout: 120_000 }
   );

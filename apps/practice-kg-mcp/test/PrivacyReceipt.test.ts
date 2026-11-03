@@ -176,7 +176,9 @@ describe("practice KG privacy receipt", () => {
 
   it.effect("counts each refusal series' growth inside the window, never its total", () =>
     Effect.gen(function* () {
-      const { refusals, spool, truncated, unlistedNames } = summarizePracticeKgSpool(window)(yield* makeSurvey);
+      const argument = summarizePracticeKgSpool(window);
+      const madeSurvey = yield* makeSurvey;
+      const { refusals, spool, truncated, unlistedNames } = argument(madeSurvey);
       expect(HashMap.toEntries(refusals)).toEqual(
         expect.arrayContaining([
           ["log-record-dropped", 6],
@@ -284,9 +286,11 @@ describe("practice-kg-mcp --privacy-receipt", () => {
           Effect.provideService(Clock.Clock, clockAt(9 * day + 60_000))
         );
         yield* printPracticeKgPrivacyReceipt(Effect.succeed(receipt));
-        const printed = A.join(yield* TestConsole.logLines.pipe(Effect.map(A.map((line) => `${line}`))), "\n");
+        const pipe1 = yield* TestConsole.logLines.pipe(Effect.map(A.map((line) => `${line}`)));
+        const printed = A.join(pipe1, "\n");
 
-        expect(yield* listTree(telemetryDir)).toEqual(before);
+        const listTree2 = yield* listTree(telemetryDir);
+        expect(listTree2).toEqual(before);
         expect(receipt.telemetryDir).toBe("resolved");
         expect(receipt.key).toEqual({ status: "loaded", protection: "dev-file", epoch: 1 });
         expect(receipt.spool.status).toEqual({ _tag: "read" });
@@ -319,7 +323,8 @@ describe("practice-kg-mcp --privacy-receipt", () => {
         const receipt = yield* runPracticeKgPrivacyReceipt();
         expect(receipt.key).toEqual({ status: "missing" });
         expect(receipt.spool.status).toEqual({ _tag: "no-key" });
-        expect(yield* fs.exists("/fresh")).toBe(false);
+        const exists3 = yield* fs.exists("/fresh");
+        expect(exists3).toBe(false);
         expect(renderPracticeKgPrivacyReceipt(receipt)).toContain("- Spool: not read (no key loaded)");
       }).pipe(
         Effect.provideService(HostProcessPlatform, "linux"),

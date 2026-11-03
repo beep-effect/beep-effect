@@ -100,8 +100,10 @@ const handshake = Effect.fnUntraced(function* <E>(
     const current = yield* Ref.get(stage);
     if (current === 0 && Str.includes(`"id":1`)(output)) {
       yield* Ref.set(stage, 1);
-      yield* Queue.offer(stdin, yield* initializedNotification);
-      yield* Queue.offer(stdin, yield* listRequest);
+      const initializedNotification1 = yield* initializedNotification;
+      yield* Queue.offer(stdin, initializedNotification1);
+      const listRequest2 = yield* listRequest;
+      yield* Queue.offer(stdin, listRequest2);
     } else if (current === 1 && Str.includes(`"id":2`)(output)) {
       yield* Deferred.succeed(done, void 0);
     }
@@ -116,7 +118,8 @@ const handshake = Effect.fnUntraced(function* <E>(
       ),
   });
 
-  yield* Queue.offer(stdin, yield* initializeRequest);
+  const initializeRequest3 = yield* initializeRequest;
+  yield* Queue.offer(stdin, initializeRequest3);
   const fiber = yield* serverOver(stdio).pipe(Layer.launch, Effect.forkChild({ startImmediately: true }));
   yield* Deferred.await(done);
   const output = yield* Ref.get(stdout);

@@ -276,7 +276,8 @@ describe("ClaimElement", () => {
       const tree = yield* decodeTree(claimOneTree);
       expect(tree.elements.length).toBe(3);
       expect(A.map(tree.edges, ({ kind }) => kind)).toEqual(["part-of", "part-of", "antecedent", "functional"]);
-      expect(yield* S.encodeEffect(ClaimElementTree)(tree)).toEqual(claimOneTree);
+      const value1 = yield* S.encodeEffect(ClaimElementTree)(tree);
+      expect(value1).toEqual(claimOneTree);
       yield* roundTrips(ClaimElementTree, tree);
     })
   );
@@ -505,7 +506,8 @@ describe("ClaimElement", () => {
     ({ input }) =>
       Effect.gen(function* () {
         const finding = yield* decodeFinding(input);
-        expect(yield* S.encodeEffect(AntecedentFinding)(finding)).toEqual(input);
+        const value2 = yield* S.encodeEffect(AntecedentFinding)(finding);
+        expect(value2).toEqual(input);
         yield* roundTrips(AntecedentFinding, finding);
       }),
     { arbitrary: fcRuns(20) }
@@ -517,7 +519,8 @@ describe("ClaimElement", () => {
     ({ input }) =>
       Effect.gen(function* () {
         const tree = yield* decodeTree(input);
-        expect(yield* S.encodeEffect(ClaimElementTree)(tree)).toEqual(input);
+        const value3 = yield* S.encodeEffect(ClaimElementTree)(tree);
+        expect(value3).toEqual(input);
         yield* roundTrips(ClaimElementTree, tree);
       }),
     { arbitrary: fcRuns(20) }

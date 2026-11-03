@@ -588,7 +588,8 @@ const derivePackages = Effect.fn("KnowledgeDoctorDomain.packages")(function* (
     oracle.trackedEntries,
     (entry) => isRegularBlob(entry.mode) && isPackageManifestEntry(entry.path) && isWorkspaceManifest(globs, entry.path)
   );
-  return A.getSomes(yield* Effect.forEach(manifests, (entry) => readWorkspacePackage(oracle, entry.path)));
+  const forEach1 = yield* Effect.forEach(manifests, (entry) => readWorkspacePackage(oracle, entry.path));
+  return A.getSomes(forEach1);
 });
 
 const derivePathAliases = (oracle: KnowledgeTreeOracle, paths: HashSet.HashSet<string>) =>
@@ -1083,7 +1084,8 @@ const exportHolds = Effect.fn("KnowledgeDoctorDomain.exportHolds")(function* (
     );
   }
   if (witness.file === KNOWLEDGE_TSCONFIG_PATH) {
-    return A.some(yield* domain.pathAliases, (alias) => alias.key === witness.exportName);
+    const pathAliases2 = yield* domain.pathAliases;
+    return A.some(pathAliases2, (alias) => alias.key === witness.exportName);
   }
   return A.contains((yield* domain.fileExports(witness.file)).names, witness.exportName);
 });

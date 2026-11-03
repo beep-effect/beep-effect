@@ -132,7 +132,8 @@ const applicationClaims = Effect.fn("UsptoClaims.applicationClaims")(function* (
     portError("no-full-text-claims")(`Claims document ${document.documentIdentifier} has no XML download.`)
   );
   const bytes = yield* uspto.downloadDocument(downloadUrl).pipe(Effect.mapError(fromDriver));
-  const claims = yield* claimsFromXml(yield* utf8Text(bytes));
+  const utf8Text1 = yield* utf8Text(bytes);
+  const claims = yield* claimsFromXml(utf8Text1);
   return UsptoClaimSet.make({ claims, documentIdentifier: document.documentIdentifier, source });
 });
 

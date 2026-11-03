@@ -170,7 +170,8 @@ layer(Layer.mergeAll(storeLayer, NodeServices.layer), { timeout: "10 seconds" })
           Effect.flip
         );
         expect(error.message).toContain("Failed to write");
-        expect(yield* fs.readDirectory(home)).toEqual([]);
+        const readDirectory1 = yield* fs.readDirectory(home);
+        expect(readDirectory1).toEqual([]);
       })
     );
     it.effect("reports a YAML parse failure with the manifest path", () =>
@@ -247,7 +248,8 @@ layer(
       const error = yield* Effect.flip(store.init(file, seedModelsManifest));
       expect(error).toMatchObject({ _tag: "ModelsManifestError", path: file });
       expect(error.message).toContain(`Failed to write ${file}`);
-      expect(A.fromIterable(yield* fs.readDirectory(home))).toEqual([]);
+      const readDirectory2 = yield* fs.readDirectory(home);
+      expect(A.fromIterable(readDirectory2)).toEqual([]);
     })
   );
 });

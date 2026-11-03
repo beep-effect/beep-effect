@@ -8,7 +8,7 @@ import * as BunPath from "@effect/platform-bun/BunPath";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { flow, pipe } from "effect/Function";
+import { flow, identity, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
@@ -17,6 +17,7 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ts } from "ts-morph";
@@ -187,9 +188,11 @@ const toIdentifier = flow(
 // crispen: `JSON.stringify` is the exact JS string-literal escaper for codegen; the
 // schema JSON codec is Effect-only and would force this whole sync render layer into
 // Effect for zero correctness gain (see apps/professional-desktop scripts).
-const stringLiteral = (value: string): string => JSON.stringify(value);
+const stringLiteral = (value: string): string =>
+  Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity);
 
-const literalExpression = (value: string | number | boolean): string => JSON.stringify(value);
+const literalExpression = (value: string | number | boolean): string =>
+  Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity);
 
 const schemaArray = (items: ReadonlyArray<string>): string => `[${A.join(items, ", ")}]`;
 
@@ -1577,7 +1580,7 @@ import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
-import type * as S from "effect/Schema";
+import * as S from "effect/Schema";
 import type { BoxError } from "../Box.errors.ts";
 import * as M from "./Box.models.gen.ts";
 

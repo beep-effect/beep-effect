@@ -56,7 +56,8 @@ describe("AtUri", () => {
       validAtUriExamples,
       (candidate) =>
         Effect.gen(function* () {
-          expect(yield* decodeAtUri(candidate)).toBe(candidate);
+          const decodedAtUri = yield* decodeAtUri(candidate);
+          expect(decodedAtUri).toBe(candidate);
         }),
       { discard: true }
     )

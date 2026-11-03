@@ -293,18 +293,21 @@ describe("skills command", () => {
         ]) {
           const link = path.join(root, relative);
           const target = path.join(root, "canonical", path.basename(relative));
-          expect(yield* fs.readLink(link)).toBe(target);
-          expect(yield* fs.readFileString(target)).not.toBe(before);
+          const readLink1 = yield* fs.readLink(link);
+          expect(readLink1).toBe(target);
+          const readFileString2 = yield* fs.readFileString(target);
+          expect(readFileString2).not.toBe(before);
           expect((yield* fs.stat(target)).mode & 0o777).toBe(0o644);
           const backupRoot = path.join(root, ".beep/skills-backups");
-          const backups = A.filter(yield* fs.readDirectory(backupRoot), (entry) =>
-            Str.startsWith(`${path.basename(relative)}.`)(entry)
-          );
+          const readDirectory3 = yield* fs.readDirectory(backupRoot);
+          const backups = A.filter(readDirectory3, (entry) => Str.startsWith(`${path.basename(relative)}.`)(entry));
           const contents = yield* Effect.forEach(backups, (name) => fs.readFileString(path.join(backupRoot, name)));
           expect(contents).toContain(before);
         }
-        expect(yield* fs.readLink(skillLink)).toBe(skillTarget);
-        expect(yield* fs.readFileString(path.join(skillTarget, "SKILL.md"))).toBe(remoteGrillMeSkill);
+        const readLink4 = yield* fs.readLink(skillLink);
+        expect(readLink4).toBe(skillTarget);
+        const readFileString5 = yield* fs.readFileString(path.join(skillTarget, "SKILL.md"));
+        expect(readFileString5).toBe(remoteGrillMeSkill);
       }).pipe(Effect.provideService(HttpClient.HttpClient, makeSkillsClient()))
     );
 
@@ -316,17 +319,25 @@ describe("skills command", () => {
           const path = yield* Path.Path;
           yield* fs.makeDirectory(path.join(root, ".codex"));
           const target = scenario === "outside root" ? yield* fs.makeTempDirectoryScoped() : path.join(root, "absent");
-          if (scenario === "outside root") yield* fs.writeFileString(path.join(target, "config.toml"), "[skills]\n");
+          if (scenario === "outside root") {
+            yield* fs.writeFileString(path.join(target, "config.toml"), "[skills]\n");
+          }
           if (scenario === "dangling parent") {
             yield* fs.remove(path.join(root, ".codex"), { recursive: true });
             yield* fs.symlink(target, path.join(root, ".codex"));
-          } else yield* fs.symlink(path.join(target, "config.toml"), path.join(root, ".codex/config.toml"));
+          } else {
+            yield* fs.symlink(path.join(target, "config.toml"), path.join(root, ".codex/config.toml"));
+          }
           const result = yield* runSkillsUpdate({ mode: "write", skill: O.some("grill-me") }).pipe(Effect.result);
           expect(result._tag).toBe("Failure");
-          expect(yield* fs.exists(path.join(root, ".beep/skills-backups"))).toBe(false);
-          expect(yield* fs.exists(path.join(root, ".claude"))).toBe(false);
-          if (scenario === "outside root")
-            expect(yield* fs.readFileString(path.join(target, "config.toml"))).toBe("[skills]\n");
+          const exists6 = yield* fs.exists(path.join(root, ".beep/skills-backups"));
+          expect(exists6).toBe(false);
+          const exists7 = yield* fs.exists(path.join(root, ".claude"));
+          expect(exists7).toBe(false);
+          if (scenario === "outside root") {
+            const readFileString1 = yield* fs.readFileString(path.join(target, "config.toml"));
+            expect(readFileString1).toBe("[skills]\n");
+          }
         }).pipe(Effect.provideService(HttpClient.HttpClient, makeSkillsClient()))
       );
     }
@@ -378,21 +389,26 @@ describe("skills command", () => {
           const backupRoot = path.join(root, ".beep/skills-backups");
           const entries = yield* fs.readDirectory(backupRoot);
           const skillBackup = O.getOrThrow(A.findFirst(entries, (entry) => Str.startsWith("grill-me.")(entry)));
-          expect(yield* fs.readFileString(path.join(backupRoot, skillBackup, "SKILL.md"))).toBe("old skill\n");
+          const readFileString8 = yield* fs.readFileString(path.join(backupRoot, skillBackup, "SKILL.md"));
+          expect(readFileString8).toBe("old skill\n");
           if (scenario === "backup and mode" || scenario === "cleanup failure") {
             expect(result).toMatchObject({ _tag: "Success" });
-            expect(yield* fs.readFileString(skill)).toBe(remoteGrillMeSkill);
+            const readFileString9 = yield* fs.readFileString(skill);
+            expect(readFileString9).toBe(remoteGrillMeSkill);
             expect((yield* fs.stat(config)).mode & 0o777).toBe(0o644);
             expect((yield* fs.stat(lockfile)).mode & 0o777).toBe(0o644);
             const configBackup = O.getOrThrow(A.findFirst(entries, (entry) => Str.startsWith("config.toml.")(entry)));
-            expect(yield* fs.readFileString(path.join(backupRoot, configBackup))).toBe(
-              "[skills]\ninclude_instructions = false\n"
-            );
+            const readFileString10 = yield* fs.readFileString(path.join(backupRoot, configBackup));
+            expect(readFileString10).toBe("[skills]\ninclude_instructions = false\n");
           } else {
             expect(result._tag).toBe("Failure");
-            if (scenario === "projection drift")
-              expect(yield* fs.readFileString(config)).toContain("new_native_key = true");
-            else expect(yield* fs.readFileString(skill)).toBe("old skill\n");
+            if (scenario === "projection drift") {
+              const readFileString3 = yield* fs.readFileString(config);
+              expect(readFileString3).toContain("new_native_key = true");
+            } else {
+              const readFileString4 = yield* fs.readFileString(skill);
+              expect(readFileString4).toBe("old skill\n");
+            }
           }
         }).pipe(Effect.provideService(HttpClient.HttpClient, makeSkillsClient()))
       );
@@ -485,7 +501,8 @@ describe("skills command", () => {
         yield* writeProjectFile(root, ".codex/config.toml", "[skills]\n  include_instructions = true\n");
 
         const error = yield* runSkillsUpdate({ mode: "write", skill: O.some("grill-me") }).pipe(Effect.flip);
-        const logs = A.filter(yield* TestConsole.logLines, P.isString);
+        const logLines11 = yield* TestConsole.logLines;
+        const logs = A.filter(logLines11, P.isString);
 
         expect(error._tag).toBe("SkillFrontmatterError");
         assert(error._tag === "SkillFrontmatterError");
@@ -513,10 +530,12 @@ describe("skills command", () => {
         yield* writeProjectFile(root, ".codex/config.toml", "[skills]\n  include_instructions = true\n");
 
         const drift = yield* runSkillsUpdate({ mode: "write", skill: O.some("grill-me") });
-        const logs = A.filter(yield* TestConsole.logLines, P.isString);
+        const logLines12 = yield* TestConsole.logLines;
+        const logs = A.filter(logLines12, P.isString);
 
         expect(A.some(drift, (entry) => entry._tag === "RemoteSkillDrift")).toBe(true);
-        expect(yield* readProjectFile(root, ".claude/skills/grill-me/SKILL.md")).toBe(remoteGrillMeSkillWithVersion);
+        const readProjectFile13 = yield* readProjectFile(root, ".claude/skills/grill-me/SKILL.md");
+        expect(readProjectFile13).toBe(remoteGrillMeSkillWithVersion);
         expect(
           A.some(
             logs,
@@ -540,7 +559,8 @@ describe("skills command", () => {
         const path = yield* Path.Path;
 
         expect(result.message).toContain("unsafe file path");
-        expect(yield* fs.exists(path.join(process.cwd(), ".claude", "pwned.md"))).toBe(false);
+        const exists14 = yield* fs.exists(path.join(process.cwd(), ".claude", "pwned.md"));
+        expect(exists14).toBe(false);
       }).pipe(Effect.provideService(HttpClient.HttpClient, makeTraversalSkillsClient()))
     );
   });
@@ -556,7 +576,8 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("skills update over a v2 l
     Effect.gen(function* () {
       const root = yield* temporaryRepository;
       const fs = yield* FileSystem.FileSystem;
-      const fixture = yield* decodeSkillsLockDocumentJson(yield* fs.readFileString(oracleLockFixture));
+      const readFileString15 = yield* fs.readFileString(oracleLockFixture);
+      const fixture = yield* decodeSkillsLockDocumentJson(readFileString15);
       const vendored = fixture.skills.oracle;
       assert(vendored !== undefined);
       // grill-me is a known floating remote source; here the lock already vendors it.
@@ -569,7 +590,8 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("skills update over a v2 l
       expect(error._tag).toBe("SkillVendoredRefetchError");
       expect(error.message).toContain("never refetches it at its floating ref main");
       expect(error.message).toContain("pinned bump");
-      expect(yield* readProjectFile(root, ".claude/skills/grill-me/SKILL.md")).toBe("vendored skill\n");
+      const readProjectFile16 = yield* readProjectFile(root, ".claude/skills/grill-me/SKILL.md");
+      expect(readProjectFile16).toBe("vendored skill\n");
     }).pipe(Effect.provideService(HttpClient.HttpClient, makeSkillsClient()))
   );
 
@@ -583,17 +605,21 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("skills update over a v2 l
       yield* fs.makeDirectory(`${root}/.agents`, { recursive: true });
       yield* fs.symlink("../.claude/skills", `${root}/.agents/skills`);
       yield* runSkillsUpdate({ mode: "write", skill: O.some("grill-me") });
-      const canonical = yield* decodeSkillsLockDocumentJson(yield* readProjectFile(root, "skills-lock.json"));
+      const readProjectFile17 = yield* readProjectFile(root, "skills-lock.json");
+      const canonical = yield* decodeSkillsLockDocumentJson(readProjectFile17);
       // Same document, different bytes: compact JSON instead of the writer's two-space form.
       const reformatted = yield* encodeSkillsLockDocumentJson(canonical);
-      expect(reformatted).not.toBe(yield* readProjectFile(root, "skills-lock.json"));
+      const argument = expect(reformatted).not;
+      const readProjectFile5 = yield* readProjectFile(root, "skills-lock.json");
+      argument.toBe(readProjectFile5);
       yield* writeProjectFile(root, "skills-lock.json", reformatted);
 
       const checked = yield* runSkillsUpdate({ mode: "check", skill: O.some("grill-me") });
       yield* runSkillsUpdate({ mode: "write", skill: O.some("grill-me") });
 
       expect(A.some(checked, (entry) => entry._tag === "LockDrift")).toBe(false);
-      expect(yield* readProjectFile(root, "skills-lock.json")).toBe(reformatted);
+      const readProjectFile18 = yield* readProjectFile(root, "skills-lock.json");
+      expect(readProjectFile18).toBe(reformatted);
     }).pipe(Effect.provideService(HttpClient.HttpClient, makeSkillsClient()))
   );
 
@@ -612,7 +638,8 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("skills update over a v2 l
 
       expect(error._tag).toBe("SkillsCommandError");
       expect(error.message).toContain("neither a valid v2 lock nor a v1 lock");
-      expect(yield* readProjectFile(root, ".claude/skills/grill-me/SKILL.md")).toBe("vendored skill\n");
+      const readProjectFile19 = yield* readProjectFile(root, ".claude/skills/grill-me/SKILL.md");
+      expect(readProjectFile19).toBe("vendored skill\n");
     }).pipe(Effect.provideService(HttpClient.HttpClient, makeSkillsClient()))
   );
 
@@ -624,17 +651,20 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("skills update over a v2 l
       yield* fs.makeDirectory(`${root}/.agents`, { recursive: true });
       yield* fs.symlink("../.claude/skills", `${root}/.agents/skills`);
       yield* writeProjectFile(root, ".claude/skills/demo/SKILL.md", "---\nname: demo\ndescription: Demo.\n---\n");
+      const argument1 = new TextEncoder();
+      const readProjectFile6 = yield* readProjectFile(root, ".claude/skills/demo/SKILL.md");
       const tree = yield* computeSkillTree(
         [
           SkillUpstreamContentFile.make({
             path: "SKILL.md",
             mode: "100644",
-            bytes: new TextEncoder().encode(yield* readProjectFile(root, ".claude/skills/demo/SKILL.md")),
+            bytes: argument1.encode(readProjectFile6),
           }),
         ],
         "demo"
       );
-      const fixture = yield* decodeSkillsLockDocumentJson(yield* fs.readFileString(oracleLockFixture));
+      const readFileString20 = yield* fs.readFileString(oracleLockFixture);
+      const fixture = yield* decodeSkillsLockDocumentJson(readFileString20);
       const base = fixture.skills.oracle;
       assert(base !== undefined && base._tag === "vendored");
       const targets = [".claude/skills/demo", ".agents/skills/demo"];
@@ -655,7 +685,8 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("skills update over a v2 l
         A.filter(drift, (entry) => entry._tag === "HandEditedVendoredOutput");
 
       // The untouched install is not hand-edited output.
-      expect(vendoredDrift(yield* runSkillsUpdate({ mode: "dry-run", skill: O.some("grill-me") }))).toEqual([]);
+      const resultSkillsUpdate = yield* runSkillsUpdate({ mode: "dry-run", skill: O.some("grill-me") });
+      expect(vendoredDrift(resultSkillsUpdate)).toEqual([]);
 
       yield* writeProjectFile(
         root,
@@ -665,12 +696,14 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("skills update over a v2 l
       const error = yield* runSkillsUpdate({ mode: "check", skill: O.some("grill-me") }).pipe(Effect.flip);
 
       expect(error._tag).toBe("SkillsDriftError");
-      const line = A.findFirst(A.filter(yield* TestConsole.logLines, P.isString), Str.startsWith("- hand-edited"));
+      const logLines21 = yield* TestConsole.logLines;
+      const line = A.findFirst(A.filter(logLines21, P.isString), Str.startsWith("- hand-edited"));
       assertSome(
         line,
         "- hand-edited-vendored-output: demo no longer matches its effective tree; revert it with beep skills materialize --skill demo, or keep it as a patch with beep skills patch add --skill demo (plan, then --expect <planDigest>)"
       );
-      expect(yield* readProjectFile(root, ".claude/skills/demo/SKILL.md")).toContain("Edited by hand.");
+      const readProjectFile22 = yield* readProjectFile(root, ".claude/skills/demo/SKILL.md");
+      expect(readProjectFile22).toContain("Edited by hand.");
     }).pipe(Effect.provideService(HttpClient.HttpClient, makeSkillsClient()))
   );
 });
@@ -691,12 +724,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("vendored skill trees in
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const repoRoot = yield* findRepoRoot();
-      const lock = yield* decodeSkillsLockDocumentJson(
-        yield* fs.readFileString(path.join(repoRoot, "skills-lock.json"))
-      );
-      const biome = yield* Jsonc.bind(BiomeFileIncludes).decode(
-        yield* fs.readFileString(path.join(repoRoot, "biome.jsonc"))
-      );
+      const readFileString23 = yield* fs.readFileString(path.join(repoRoot, "skills-lock.json"));
+      const lock = yield* decodeSkillsLockDocumentJson(readFileString23);
+      const argument2 = Jsonc.bind(BiomeFileIncludes);
+      const readFileString7 = yield* fs.readFileString(path.join(repoRoot, "biome.jsonc"));
+      const biome = yield* argument2.decode(readFileString7);
       const vendoredTargets = A.flatMap(R.values(lock.skills), (entry) =>
         entry._tag === "vendored" ? entry.effective.installedTargets : A.empty<string>()
       );
@@ -760,7 +792,10 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("skills fixture ownership"
             return root;
           }),
           makeDirectory: Effect.fn("SkillsCommandTest.fixtureDirectory")(function* (directory, options) {
-            if (scenario === "setup failure" && directory === `${O.getOrThrow(yield* Ref.get(rootRef))}/.git`) {
+            if (
+              scenario === "setup failure" &&
+              directory === `${yield* Effect.map(Ref.get(rootRef), O.getOrThrow)}/.git`
+            ) {
               yield* fs.writeFileString(directory, "setup obstruction");
             }
             return yield* fs
@@ -777,8 +812,12 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("skills fixture ownership"
         const exit = yield* Effect.scopedWith((scope) =>
           Effect.gen(function* () {
             const root = yield* temporaryRepository;
-            if (scenario === "body failure") return yield* Effect.fail("fixture body failure");
-            if (scenario === "interruption") return yield* Effect.interrupt;
+            if (scenario === "body failure") {
+              return yield* Effect.fail("fixture body failure");
+            }
+            if (scenario === "interruption") {
+              return yield* Effect.interrupt;
+            }
             if (scenario === "cleanup failure") {
               yield* fs.makeDirectory(`${root}/blocked`);
               yield* fs.chmod(root, 0o000);
@@ -792,7 +831,8 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("skills fixture ownership"
         // root even if the cause assertion fails.
         yield* Effect.gen(function* () {
           expect(process.cwd()).toBe(previousCwd);
-          assertSome(yield* Ref.get(removeCwd), previousCwd);
+          const got = yield* Ref.get(removeCwd);
+          assertSome(got, previousCwd);
           if (scenario === "body failure") {
             assertExitFailure(exit, Cause.fail("fixture body failure"));
           } else if (scenario === "interruption") {
@@ -815,7 +855,10 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("skills fixture ownership"
               assertExitFailure(exit, Cause.annotate(Cause.die(error), Cause.annotations(exit.cause)));
             }
           }
-          if (scenario !== "cleanup failure") expect(yield* fs.exists(root)).toBe(false);
+          if (scenario !== "cleanup failure") {
+            const exists8 = yield* fs.exists(root);
+            expect(exists8).toBe(false);
+          }
         }).pipe(
           Effect.ensuring(
             scenario === "cleanup failure"
@@ -823,7 +866,8 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("skills fixture ownership"
               : Effect.void
           )
         );
-        expect(yield* fs.exists(root)).toBe(false);
+        const exists24 = yield* fs.exists(root);
+        expect(exists24).toBe(false);
       })
     );
   }
@@ -838,17 +882,17 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("skills command boundary r
         const lock = yield* encodeSkillsLockDocumentJson(emptyLockV2);
         yield* writeProjectFile(root, "skills-lock.json", lock);
         yield* runSkillsCommand(["replay", "--json", "--markdown", "replay.md"]);
-        expect(yield* TestConsole.logLines).toEqual(
-          expect.arrayContaining([expect.stringContaining("skills-replay/v1")])
-        );
-        expect(yield* readProjectFile(root, "replay.md")).toContain("<!-- beep-skills-replay -->");
+        const logLines25 = yield* TestConsole.logLines;
+        expect(logLines25).toEqual(expect.arrayContaining([expect.stringContaining("skills-replay/v1")]));
+        const readProjectFile26 = yield* readProjectFile(root, "replay.md");
+        expect(readProjectFile26).toContain("<!-- beep-skills-replay -->");
         yield* runSkillsCommand(["replay"]);
         const refused = yield* Effect.exit(runSkillsCommand(["replay", "--skill", "not-registered"]));
         refused.pipe(Exit.isFailure, assertTrue);
-        expect(yield* TestConsole.errorLines).toEqual(
-          expect.arrayContaining([expect.stringContaining("skills:replay:")])
-        );
-        expect(yield* readProjectFile(root, "skills-lock.json")).toBe(lock);
+        const errorLines27 = yield* TestConsole.errorLines;
+        expect(errorLines27).toEqual(expect.arrayContaining([expect.stringContaining("skills:replay:")]));
+        const readProjectFile28 = yield* readProjectFile(root, "skills-lock.json");
+        expect(readProjectFile28).toBe(lock);
       },
       Effect.provideService(HttpClient.HttpClient, makeSkillsClient())
     )
@@ -863,10 +907,10 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("skills command boundary r
         yield* writeProjectFile(root, "skills-lock.json", lock);
         const refused = yield* Effect.exit(runSkillsCommand(["relock", "--skill", "not-registered", "--json"]));
         refused.pipe(Exit.isFailure, assertTrue);
-        expect(yield* TestConsole.errorLines).toEqual(
-          expect.arrayContaining([expect.stringContaining("skills:relock:")])
-        );
-        expect(yield* readProjectFile(root, "skills-lock.json")).toBe(lock);
+        const errorLines29 = yield* TestConsole.errorLines;
+        expect(errorLines29).toEqual(expect.arrayContaining([expect.stringContaining("skills:relock:")]));
+        const readProjectFile30 = yield* readProjectFile(root, "skills-lock.json");
+        expect(readProjectFile30).toBe(lock);
       },
       Effect.provideService(HttpClient.HttpClient, makeSkillsClient())
     )
@@ -880,16 +924,17 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("skills command boundary r
         yield* writeProjectFile(root, "prs.json", "[]");
         const args = ["train-issue", "--batch", "2026-W42", "--prs", "prs.json", "--body-out", "issue.md"];
         yield* runSkillsCommand(args);
-        expect(yield* TestConsole.logLines).toEqual(expect.arrayContaining([expect.stringContaining("2026-W42")]));
+        const logLines31 = yield* TestConsole.logLines;
+        expect(logLines31).toEqual(expect.arrayContaining([expect.stringContaining("2026-W42")]));
         const body = yield* readProjectFile(root, "issue.md");
         expect(body).toContain("_No open skill update pull requests");
         yield* writeProjectFile(root, "prs.json", "not-json");
         const refused = yield* Effect.exit(runSkillsCommand(args));
         refused.pipe(Exit.isFailure, assertTrue);
-        expect(yield* TestConsole.errorLines).toEqual(
-          expect.arrayContaining([expect.stringContaining("skills:train-issue:")])
-        );
-        expect(yield* readProjectFile(root, "issue.md")).toBe(body);
+        const errorLines32 = yield* TestConsole.errorLines;
+        expect(errorLines32).toEqual(expect.arrayContaining([expect.stringContaining("skills:train-issue:")]));
+        const readProjectFile33 = yield* readProjectFile(root, "issue.md");
+        expect(readProjectFile33).toBe(body);
       },
       Effect.provideService(HttpClient.HttpClient, makeSkillsClient())
     )
@@ -911,7 +956,8 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("skills command boundary r
             expect.stringContaining("skills:materialize: skills-lock.json is not a skills-lock/v2 document."),
           ])
         );
-        expect(yield* readProjectFile(root, "skills-lock.json")).toBe(lock);
+        const readProjectFile34 = yield* readProjectFile(root, "skills-lock.json");
+        expect(readProjectFile34).toBe(lock);
       },
       Effect.provideService(HttpClient.HttpClient, makeSkillsClient())
     )
@@ -931,7 +977,8 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("skills command boundary r
         expect(errors).toEqual(
           expect.arrayContaining([expect.stringContaining("skills:update: Unknown remote-backed skill")])
         );
-        expect(yield* readProjectFile(root, "skills-lock.json")).toBe(lock);
+        const readProjectFile35 = yield* readProjectFile(root, "skills-lock.json");
+        expect(readProjectFile35).toBe(lock);
       },
       Effect.provideService(HttpClient.HttpClient, makeSkillsClient())
     )
@@ -955,7 +1002,8 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("skills command boundary r
         yield* runSkillsCommand(["lock-plan", "--json"]);
         const lines = yield* TestConsole.logLines;
         expect(lines).toEqual(expect.arrayContaining([expect.stringContaining("skills-lock-migration-plan/v3")]));
-        expect(yield* readProjectFile(root, "skills-lock.json")).toBe(lock);
+        const readProjectFile36 = yield* readProjectFile(root, "skills-lock.json");
+        expect(readProjectFile36).toBe(lock);
         yield* writeProjectFile(root, "skills-lock.json", "not-json");
         const refused = yield* Effect.exit(runSkillsCommand(["lock-plan"]));
         refused.pipe(Exit.isFailure, assertTrue);

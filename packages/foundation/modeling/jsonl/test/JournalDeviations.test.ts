@@ -67,7 +67,8 @@ it.effect("ingestion skips a foreign U+FEFF-led record and keeps physical offset
     yield* externalAppend(fs, foreign);
     const ours = yield* journal.append("noted", { round: 3, label: "ours" });
     assert.strictEqual(ours.line.offset, byteLength(line(1) + foreign));
-    assert.deepStrictEqual(yield* Fiber.join(reader), [ours]);
+    const join1 = yield* Fiber.join(reader);
+    assert.deepStrictEqual(join1, [ours]);
   })
 );
 
@@ -114,7 +115,9 @@ for (const [label, timeout] of [
         .append("noted", { round: 2, label: "b" })
         .pipe(Effect.forkChild({ startImmediately: true }));
       const closing = yield* Scope.close(scope, Exit.void).pipe(Effect.forkChild({ startImmediately: true }));
-      for (let turn = 0; turn < 8; turn++) yield* Effect.yieldNow;
+      for (let turn = 0; turn < 8; turn++) {
+        yield* Effect.yieldNow;
+      }
       yield* TestClock.adjust(Duration.millis(99));
       assert.isUndefined(closing.pollUnsafe(), "shutdown still waits before the bound");
       yield* TestClock.adjust(Duration.millis(1));
@@ -196,7 +199,9 @@ it.effect("an untyped from string fails InvalidSlice on every reader", () =>
       untyped.changes(slice).pipe(Stream.as(undefined)),
       untyped.projection(0, identity, slice).pipe(Stream.as(undefined)),
     ]) {
-      assertTrue(S.is(InvalidSlice)(yield* reading.pipe(Stream.runCollect, Effect.flip)));
+      const argument = S.is(InvalidSlice);
+      const pipe1 = yield* reading.pipe(Stream.runCollect, Effect.flip);
+      assertTrue(argument(pipe1));
     }
   })
 );
@@ -294,7 +299,8 @@ it.effect("a query replaced beneath a paged read keeps returning the sampled fil
       A.map(rows, (row) => [row.data.round, row.data.label]),
       A.makeBy(PAGED, (round) => [round, "old"])
     );
-    assert.strictEqual(yield* fs.readFileString(path), records(PAGED, "new"));
+    const readFileString2 = yield* fs.readFileString(path);
+    assert.strictEqual(readFileString2, records(PAGED, "new"));
   })
 );
 it.effect("a replacement between sampling a range and pinning it fails JournalResync", () =>
@@ -383,12 +389,9 @@ it.effect("a BOM file replaced by a BOM-less one after its BOM probe fails Journ
       ["replaced", byteLength(line(1)), byteLength(replacement)]
     );
     // A retry over the now stable replacement reads it at its own logical offsets.
+    const pipe3 = yield* journal.query({ events: ["noted"] }).pipe(Stream.runCollect);
     assert.deepStrictEqual(
-      A.map(yield* journal.query({ events: ["noted"] }).pipe(Stream.runCollect), (row) => [
-        row.data.round,
-        row.line.offset,
-        row.line.end,
-      ]),
+      A.map(pipe3, (row) => [row.data.round, row.line.offset, row.line.end]),
       [[7, 0, byteLength(replacement)]]
     );
   })
@@ -435,8 +438,9 @@ it.effect("a BOM file replaced by a BOM-less one after the seed's BOM probe resy
     const appended = yield* journal.append("noted", { round: 8, label: "ours" });
     // The seed kept the identity of the file whose BOM it read, so the catch-up
     // sees the replacement instead of reading it with the old file's BOM width.
+    const join4 = yield* Fiber.join(reader);
     assertFailure(
-      Result.mapError(yield* Fiber.join(reader), (error) =>
+      Result.mapError(join4, (error) =>
         error._tag === "JournalResync" ? [error.reason, error.expected, error.actual] : error._tag
       ),
       ["replaced", 0, byteLength(replacement)]
@@ -446,12 +450,9 @@ it.effect("a BOM file replaced by a BOM-less one after the seed's BOM probe resy
       [appended.line.offset, appended.line.end],
       [byteLength(replacement), byteLength(replacement) + byteLength(line(8, "ours"))]
     );
+    const pipe5 = yield* journal.query({ events: ["noted"] }).pipe(Stream.runCollect);
     assert.deepStrictEqual(
-      A.map(yield* journal.query({ events: ["noted"] }).pipe(Stream.runCollect), (row) => [
-        row.data.round,
-        row.line.offset,
-        row.line.end,
-      ]),
+      A.map(pipe5, (row) => [row.data.round, row.line.offset, row.line.end]),
       [
         [7, 0, byteLength(replacement)],
         [8, appended.line.offset, appended.line.end],

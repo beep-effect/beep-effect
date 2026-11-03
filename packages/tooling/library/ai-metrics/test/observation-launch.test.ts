@@ -37,15 +37,17 @@ it.layer(services, { timeout: "30 seconds" })((it) =>
   it.effect("reads explicit private configuration and binds only the matching secret namespace", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
-      expect(yield* readObservationLaunchConfig(f.directory, f.uid)).toEqual(f.config);
+      const readObservationLaunchConfig1 = yield* readObservationLaunchConfig(f.directory, f.uid);
+      expect(readObservationLaunchConfig1).toEqual(f.config);
       const config = yield* observationWorkerConfigFromLaunch(f.config, Redacted.make(syntheticLaunchSalt), O.none());
       expect(config.intake.namespaceId).toBe(f.config.intake.namespaceId);
       expect(config.ledger.targetId).toMatch(/^[a-f0-9]{64}$/);
-      expect(
-        yield* observationWorkerConfigFromLaunch(f.config, Redacted.make("different-synthetic-salt"), O.none()).pipe(
-          Effect.flip
-        )
-      ).toMatchObject({ reason: "namespace" });
+      const pipe2 = yield* observationWorkerConfigFromLaunch(
+        f.config,
+        Redacted.make("different-synthetic-salt"),
+        O.none()
+      ).pipe(Effect.flip);
+      expect(pipe2).toMatchObject({ reason: "namespace" });
     })
   )
 );
@@ -53,33 +55,40 @@ it.layer(services, { timeout: "30 seconds" })((it) =>
   it.effect("refuses exposed paths, wrong owners, symlink files and hardlinked configuration", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
-      expect(yield* readObservationLaunchConfig(`${f.directory}/../unused`, f.uid).pipe(Effect.flip)).toMatchObject({
+      const pipe3 = yield* readObservationLaunchConfig(`${f.directory}/../unused`, f.uid).pipe(Effect.flip);
+      expect(pipe3).toMatchObject({
         reason: "directory",
       });
-      expect(yield* readObservationLaunchConfig(f.directory, f.uid + 1).pipe(Effect.flip)).toMatchObject({
+      const pipe4 = yield* readObservationLaunchConfig(f.directory, f.uid + 1).pipe(Effect.flip);
+      expect(pipe4).toMatchObject({
         reason: "directory",
       });
       yield* f.fs.chmod(f.directory, 0o755);
-      expect(yield* readObservationLaunchConfig(f.directory, f.uid).pipe(Effect.flip)).toMatchObject({
+      const pipe5 = yield* readObservationLaunchConfig(f.directory, f.uid).pipe(Effect.flip);
+      expect(pipe5).toMatchObject({
         reason: "directory",
       });
       yield* f.fs.chmod(f.directory, 0o700);
       yield* f.fs.chmod(f.file, 0o644);
-      expect(yield* readObservationLaunchConfig(f.directory, f.uid).pipe(Effect.flip)).toMatchObject({
+      const pipe6 = yield* readObservationLaunchConfig(f.directory, f.uid).pipe(Effect.flip);
+      expect(pipe6).toMatchObject({
         reason: "configuration",
       });
       yield* f.fs.chmod(f.file, 0o600);
       yield* f.fs.rename(f.file, `${f.directory}/original`);
       yield* f.fs.symlink(`${f.directory}/original`, f.file);
-      expect(yield* readObservationLaunchConfig(f.directory, f.uid).pipe(Effect.flip)).toMatchObject({
+      const pipe7 = yield* readObservationLaunchConfig(f.directory, f.uid).pipe(Effect.flip);
+      expect(pipe7).toMatchObject({
         reason: "configuration",
       });
       yield* f.fs.remove(f.file);
       yield* f.fs.link(`${f.directory}/original`, f.file);
-      expect(yield* readObservationLaunchConfig(f.directory, f.uid).pipe(Effect.flip)).toMatchObject({
+      const pipe8 = yield* readObservationLaunchConfig(f.directory, f.uid).pipe(Effect.flip);
+      expect(pipe8).toMatchObject({
         reason: "configuration",
       });
-      expect(yield* f.fs.readFileString(`${f.directory}/original`)).toBe(f.text);
+      const readFileString9 = yield* f.fs.readFileString(`${f.directory}/original`);
+      expect(readFileString9).toBe(f.text);
     })
   )
 );
@@ -109,11 +118,12 @@ it.layer(services, { timeout: "30 seconds" })((it) =>
         ...f.config,
         destination: { ...f.config.destination, endpoint: "file:///private" },
       });
-      expect(
-        yield* observationWorkerConfigFromLaunch(changed, Redacted.make(syntheticLaunchSalt), O.none()).pipe(
-          Effect.flip
-        )
-      ).toMatchObject({ reason: "configuration" });
+      const pipe10 = yield* observationWorkerConfigFromLaunch(
+        changed,
+        Redacted.make(syntheticLaunchSalt),
+        O.none()
+      ).pipe(Effect.flip);
+      expect(pipe10).toMatchObject({ reason: "configuration" });
     })
   )
 );
@@ -141,8 +151,10 @@ it.layer(services, { timeout: "30 seconds" })((it) =>
           runtime: { intervalMillis: 100, cycleTimeoutMillis: 2000, staleAfterMillis: 3000 },
         },
       };
-      yield* f.fs.writeFileString(f.file, yield* encodeJsonValue(invalid));
-      expect(yield* readObservationLaunchConfig(f.directory, f.uid).pipe(Effect.flip)).toMatchObject({
+      const encodedJsonValue = yield* encodeJsonValue(invalid);
+      yield* f.fs.writeFileString(f.file, encodedJsonValue);
+      const pipe11 = yield* readObservationLaunchConfig(f.directory, f.uid).pipe(Effect.flip);
+      expect(pipe11).toMatchObject({
         reason: "configuration",
       });
     })
@@ -159,9 +171,10 @@ it.layer(services, { timeout: "30 seconds" })((it) =>
           ...f.config,
           intake: TranscriptIntakeConfig.make({ ...f.config.intake, namespaceId }),
         });
-        expect(
-          yield* observationWorkerConfigFromLaunch(config, Redacted.make(salt), O.none()).pipe(Effect.flip)
-        ).toMatchObject({ reason: "namespace" });
+        const pipe12 = yield* observationWorkerConfigFromLaunch(config, Redacted.make(salt), O.none()).pipe(
+          Effect.flip
+        );
+        expect(pipe12).toMatchObject({ reason: "namespace" });
       }
     })
   )

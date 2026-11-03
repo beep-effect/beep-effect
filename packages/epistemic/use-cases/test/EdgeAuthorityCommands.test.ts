@@ -78,7 +78,8 @@ describe("@beep/epistemic-use-cases edge authority commands", () => {
 
       assertNone(decoded.validTo);
       expect(decoded.identity.relation).toBe("supports");
-      expect(yield* encodeRecordEdgeFact(decoded)).toStrictEqual(recordEncoded);
+      const encodedRecordEdgeFact = yield* encodeRecordEdgeFact(decoded);
+      expect(encodedRecordEdgeFact).toStrictEqual(recordEncoded);
     })
   );
 
@@ -88,7 +89,8 @@ describe("@beep/epistemic-use-cases edge authority commands", () => {
 
       expect(decoded.expectedVersion).toBe(1);
       pipe(decoded.validTo, O.isSome, assertTrue);
-      expect(yield* encodeSupersedeEdgeFact(decoded)).toStrictEqual(supersedeEncoded);
+      const encodedSupersedeEdgeFact = yield* encodeSupersedeEdgeFact(decoded);
+      expect(encodedSupersedeEdgeFact).toStrictEqual(supersedeEncoded);
     })
   );
 
@@ -96,7 +98,8 @@ describe("@beep/epistemic-use-cases edge authority commands", () => {
     Effect.gen(function* () {
       const decoded = yield* decodeEdgeAsOfQuery(asOfEncoded);
 
-      expect(yield* encodeEdgeAsOfQuery(decoded)).toStrictEqual(asOfEncoded);
+      const encodedEdgeAsOfQuery = yield* encodeEdgeAsOfQuery(decoded);
+      expect(encodedEdgeAsOfQuery).toStrictEqual(asOfEncoded);
     })
   );
 
@@ -119,7 +122,8 @@ describe("@beep/epistemic-use-cases edge authority commands", () => {
       const decoded = yield* decodeEdgeAsOfQuery(encoded);
 
       // Both axes survive the millis boundary for every generated instant, not just the fixture.
-      expect(yield* encodeEdgeAsOfQuery(decoded)).toStrictEqual(encoded);
+      const encodedEdgeAsOfQuery1 = yield* encodeEdgeAsOfQuery(decoded);
+      expect(encodedEdgeAsOfQuery1).toStrictEqual(encoded);
       expect(typeof encoded.knownAt).toBe("number");
       expect(typeof encoded.validAt).toBe("number");
 
@@ -133,7 +137,8 @@ describe("@beep/epistemic-use-cases edge authority commands", () => {
       const mismatched = { ...recordEncoded, identity: { ...identity, orgScope: "2" } };
 
       assertNone(decodeUnknownRecordEdgeFactOption(mismatched));
-      expectOrgScopeFailure(yield* Effect.exit(decodeUnknownRecordEdgeFact(mismatched)));
+      const exit2 = yield* Effect.exit(decodeUnknownRecordEdgeFact(mismatched));
+      expectOrgScopeFailure(exit2);
     })
   );
 
@@ -142,7 +147,8 @@ describe("@beep/epistemic-use-cases edge authority commands", () => {
       const mismatched = { ...supersedeEncoded, identity: { ...identity, orgScope: "2" } };
 
       assertNone(decodeUnknownSupersedeEdgeFactOption(mismatched));
-      expectOrgScopeFailure(yield* Effect.exit(decodeUnknownSupersedeEdgeFact(mismatched)));
+      const exit3 = yield* Effect.exit(decodeUnknownSupersedeEdgeFact(mismatched));
+      expectOrgScopeFailure(exit3);
     })
   );
 

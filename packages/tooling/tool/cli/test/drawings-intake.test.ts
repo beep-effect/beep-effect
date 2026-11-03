@@ -263,7 +263,8 @@ const corpus = Effect.fnUntraced(function* () {
 
 const listOut = Effect.fnUntraced(function* (out: string) {
   const fs = yield* FileSystem.FileSystem;
-  return A.sort(yield* fs.readDirectory(out), Order.String);
+  const readDirectory1 = yield* fs.readDirectory(out);
+  return A.sort(readDirectory1, Order.String);
 });
 
 const pullWith = (fields: {
@@ -317,12 +318,17 @@ describe("DrawingIntake over a fake mailbox", () => {
           A.map(record.attachments, (row) => row.savedAs),
           [O.some("Fig1.pdf"), O.some("Sheet 2.pdf"), O.none(), O.none(), O.some("_evil_name.pdf")]
         );
-        deepStrictEqual(yield* listOut(out), ["Fig1.pdf", "Sheet 2.pdf", "_evil_name.pdf", "intake.json"]);
-        strictEqual(result.recordPath, path.join(yield* fs.realPath(out), "intake.json"));
-        const written = yield* decodeRecord(yield* fs.readFileString(result.recordPath));
+        const listOut2 = yield* listOut(out);
+        deepStrictEqual(listOut2, ["Fig1.pdf", "Sheet 2.pdf", "_evil_name.pdf", "intake.json"]);
+        const realPath3 = yield* fs.realPath(out);
+        strictEqual(result.recordPath, path.join(realPath3, "intake.json"));
+        const readFileString4 = yield* fs.readFileString(result.recordPath);
+        const written = yield* decodeRecord(readFileString4);
         strictEqual(written.schemaVersion, "drawing-intake/v1");
         const fig1 = yield* fs.readFile(path.join(out, "Fig1.pdf"));
-        assertSome(written.attachments[0]?.sha256 ?? O.none(), yield* sha256Of(fig1));
+        const argument = written.attachments[0]?.sha256 ?? O.none();
+        const sha256Of1 = yield* sha256Of(fig1);
+        assertSome(argument, sha256Of1);
         assertNone(written.attachments[2]?.sha256 ?? O.some("unexpected"));
         strictEqual(written.attachments[2]?.name, "image\u001b[2J\u001b[H.png");
       })
@@ -346,7 +352,8 @@ describe("DrawingIntake over a fake mailbox", () => {
           ]
         );
         assertTrue(Str.endsWith("intake-2.json")(second.recordPath));
-        deepStrictEqual(yield* fs.readFile(path.join(out, "Fig1.pdf")), before);
+        const readFile5 = yield* fs.readFile(path.join(out, "Fig1.pdf"));
+        deepStrictEqual(readFile5, before);
         const error = yield* Effect.flip(pullWith({ ref: conversation, outDir: out, corpusRoot: root, pick: 3 }));
         strictEqual(error.reason, "refused");
         assertInclude(error.message, "--pick 3 is out of range");
@@ -404,8 +411,10 @@ describe("DrawingIntake over a fake mailbox", () => {
         assertNone(result.record.message.fromEmail);
         assertNone(result.record.message.internetMessageId);
         assertNone(result.record.message.receivedAt);
-        deepStrictEqual(yield* listOut(out), ["Internal.pdf", "intake.json"]);
-        const written = yield* decodeRecord(yield* fs.readFileString(result.recordPath));
+        const listOut6 = yield* listOut(out);
+        deepStrictEqual(listOut6, ["Internal.pdf", "intake.json"]);
+        const readFileString7 = yield* fs.readFileString(result.recordPath);
+        const written = yield* decodeRecord(readFileString7);
         assertNone(written.message.internetMessageId);
         const anonymous = yield* pullWith({
           ref: OutlookItemRef.cases.message.make({ id: "AAMkMsgAnon" }),
@@ -429,7 +438,8 @@ describe("DrawingIntake over a fake mailbox", () => {
         const { record } = yield* pullWith({ ref: conversation, outDir: out, corpusRoot: root });
         const saved = O.getOrElse(record.attachments[0]?.savedAs ?? O.none(), () => "");
         assertTrue(/^Fig1 \([0-9a-f]{8}\)\.pdf$/.test(saved));
-        strictEqual(yield* fs.readFileString(path.join(out, "Fig1.pdf")), "an earlier, different sheet");
+        const readFileString8 = yield* fs.readFileString(path.join(out, "Fig1.pdf"));
+        strictEqual(readFileString8, "an earlier, different sheet");
       })
     );
 
@@ -507,7 +517,8 @@ describe("DrawingIntake over a fake mailbox", () => {
         );
         strictEqual(linked.reason, "refused");
         assertInclude(linked.message, "resolves outside the corpus root");
-        deepStrictEqual(yield* listOut(elsewhere), []);
+        const listOut9 = yield* listOut(elsewhere);
+        deepStrictEqual(listOut9, []);
         yield* fs.symlink(root, path.join(root, "self"));
         const rooted = yield* Effect.flip(
           pullWith({ ref: conversation, outDir: path.join(root, "self"), corpusRoot: root })
@@ -525,7 +536,8 @@ describe("DrawingIntake over a fake mailbox", () => {
           A.map(record.attachments, (row) => row.outcome),
           ["skipped-oversize", "skipped-oversize", "skipped-inline", "skipped-item", "skipped-oversize"]
         );
-        deepStrictEqual(yield* listOut(out), ["intake.json"]);
+        const listOut10 = yield* listOut(out);
+        deepStrictEqual(listOut10, ["intake.json"]);
       })
     );
   });
@@ -682,7 +694,9 @@ describe("drawing intake codecs", () => {
     [Arbitrary.schema(IntakeRecord)],
     Effect.fnUntraced(function* ([record]) {
       const json = S.fromJsonString(IntakeRecord);
-      const decoded = yield* S.decodeEffect(json)(yield* S.encodeEffect(json)(record));
+      const argument1 = S.decodeEffect(json);
+      const value2 = yield* S.encodeEffect(json)(record);
+      const decoded = yield* argument1(value2);
       assertTrue(S.toEquivalence(IntakeRecord)(record, decoded));
     }),
     { arbitrary: { runs: 25 } }
@@ -692,7 +706,9 @@ describe("drawing intake codecs", () => {
     "round-trips arbitrary picks through the --pick text codec",
     [Arbitrary.schema(IntakePick)],
     Effect.fnUntraced(function* ([pick]) {
-      const decoded = yield* S.decodeEffect(IntakePickFromString)(yield* S.encodeEffect(IntakePickFromString)(pick));
+      const argument2 = S.decodeEffect(IntakePickFromString);
+      const value3 = yield* S.encodeEffect(IntakePickFromString)(pick);
+      const decoded = yield* argument2(value3);
       strictEqual(decoded, pick);
     }),
     { arbitrary: { runs: 50 } }

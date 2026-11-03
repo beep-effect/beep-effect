@@ -112,7 +112,9 @@ const program = Effect.gen(function* () {
     })
   );
   const event = batch.spans[0];
-  if (event === undefined) return yield* Effect.die("Invalid fixture");
+  if (event === undefined) {
+    return yield* Effect.die("Invalid fixture");
+  }
   const native = yield* makeNativeIntakeJournal(intake).pipe(Effect.provideService(SqlClient.SqlClient, sql));
   const ledger = yield* makeDeliveryLedger(intake, config).pipe(Effect.provideService(SqlClient.SqlClient, sql));
   const reclaimer = yield* makePayloadReclaimer(
@@ -127,14 +129,16 @@ const program = Effect.gen(function* () {
   ).pipe(Effect.provideService(SqlClient.SqlClient, sql));
   const expiry = mode === "before-expiry" || mode === "after-expiry";
   let replayRefusal: string | null = null;
-  if (mode === "retry-expiry") replayRefusal = (yield* native.acceptBatch(batch).pipe(Effect.flip)).reason;
+  if (mode === "retry-expiry") {
+    replayRefusal = (yield* native.acceptBatch(batch).pipe(Effect.flip)).reason;
+  }
   if (mode !== "inspect" && mode !== "retry-expiry") {
     const receipt = yield* native.acceptBatch(batch);
     yield* ledger.registerPage(receipt.page.receiptId);
     yield* ledger.prepareAttempt(
       DeliveryAttempt.make({ attemptId: id("d"), payloadDigest: id("e"), eventIds: [event.eventId] })
     );
-    if (!expiry)
+    if (!expiry) {
       yield* ledger.recordVisibility(
         DeliveryVisibility.make({
           eventId: event.eventId,
@@ -143,6 +147,7 @@ const program = Effect.gen(function* () {
           observedAt: receipt.page.acceptedAt,
         })
       );
+    }
     const clock = yield* Clock.Clock;
     const now = receipt.page.acceptedAt + (expiry ? 86_400_001 : 120_000);
     yield* (expiry ? reclaimer.expire(receipt.page.receiptId) : reclaimer.reclaim(receipt.page.receiptId)).pipe(
@@ -165,10 +170,12 @@ const program = Effect.gen(function* () {
       return yield* Effect.never;
     }
   }
+  const argument = mode === "accept";
+  const state1 = yield* ledger.state(event.eventId);
   yield* writeJson(output, {
-    replayAccepted: mode === "accept",
+    replayAccepted: argument,
     replayRefusal,
-    state: O.getOrNull(yield* ledger.state(event.eventId)),
+    state: O.getOrNull(state1),
     pages: yield* client`SELECT count(*) AS n FROM observation_intake_pages`,
     dispositions: yield* client`SELECT count(*) AS n FROM observation_page_dispositions`,
     integrity: yield* client`PRAGMA integrity_check`,

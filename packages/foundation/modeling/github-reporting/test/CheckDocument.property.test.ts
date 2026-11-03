@@ -23,7 +23,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* encode(value);
         const decoded = yield* decode(encoded);
         assert.isTrue(equivalent(decoded, value));
-        assert.deepStrictEqual(yield* encode(decoded), encoded);
+        const encoded1 = yield* encode(decoded);
+        assert.deepStrictEqual(encoded1, encoded);
       }),
     runs
   );
@@ -58,11 +59,14 @@ it.effect.prop(
           yield* Effect.gen(function* () {
             const document = yield* CheckDocument;
             yield* document.report("check", report);
-            assert.strictEqual(yield* document.flush, "written");
+            const flush2 = yield* document.flush;
+            assert.strictEqual(flush2, "written");
             const first = yield* Ref.get(writes);
             yield* document.report("check", report);
-            assert.strictEqual(yield* document.flush, "unchanged");
-            assert.deepStrictEqual(yield* Ref.get(writes), first);
+            const flush3 = yield* document.flush;
+            assert.strictEqual(flush3, "unchanged");
+            const got = yield* Ref.get(writes);
+            assert.deepStrictEqual(got, first);
           }).pipe(Effect.provideContext(context));
         })
       );

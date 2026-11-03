@@ -35,11 +35,17 @@ describe("ActionInput parser and formatter properties", () => {
     [Arbitrary.schema(S.String.pipe(S.Array))],
     ([values]) =>
       Effect.gen(function* () {
-        const parsed = yield* read(ActionInput.list("value"), yield* S.encodeEffect(JsonList)(values));
+        const argument = ActionInput.list("value");
+        const value2 = yield* S.encodeEffect(JsonList)(values);
+        const parsed = yield* read(argument, value2);
         assert.deepStrictEqual(parsed, values);
-        const reparsed = yield* read(ActionInput.list("value"), yield* S.encodeEffect(JsonList)(parsed));
+        const argument1 = ActionInput.list("value");
+        const value3 = yield* S.encodeEffect(JsonList)(parsed);
+        const reparsed = yield* read(argument1, value3);
         assert.deepStrictEqual(reparsed, parsed);
-        assert.strictEqual(yield* S.encodeEffect(JsonList)(reparsed), yield* S.encodeEffect(JsonList)(parsed));
+        const value1 = yield* S.encodeEffect(JsonList)(reparsed);
+        const value7 = yield* S.encodeEffect(JsonList)(parsed);
+        assert.strictEqual(value1, value7);
       }),
     runs
   );
@@ -48,9 +54,13 @@ describe("ActionInput parser and formatter properties", () => {
     [Arbitrary.schema(S.Json)],
     ([value]) =>
       Effect.gen(function* () {
-        const parsed = yield* read(ActionInput.schema("value", S.Json), yield* S.encodeEffect(Json)(value));
+        const argument2 = ActionInput.schema("value", S.Json);
+        const value4 = yield* S.encodeEffect(Json)(value);
+        const parsed = yield* read(argument2, value4);
         assert.isTrue(S.toEquivalence(S.Json)(parsed, value));
-        const reparsed = yield* read(ActionInput.schema("value", S.Json), yield* S.encodeEffect(Json)(parsed));
+        const argument3 = ActionInput.schema("value", S.Json);
+        const value5 = yield* S.encodeEffect(Json)(parsed);
+        const reparsed = yield* read(argument3, value5);
         assert.isTrue(S.toEquivalence(S.Json)(reparsed, parsed));
       }),
     runs
@@ -112,8 +122,10 @@ describe("ActionInput parser and formatter properties", () => {
         const parsedInteger = yield* read(ActionInput.integer("value"), String(integer));
         assert.strictEqual(parsedBoolean, boolean);
         assert.strictEqual(parsedInteger, integer);
-        assert.strictEqual(yield* read(ActionInput.boolean("value"), String(parsedBoolean)), parsedBoolean);
-        assert.strictEqual(yield* read(ActionInput.integer("value"), String(parsedInteger)), parsedInteger);
+        const read2 = yield* read(ActionInput.boolean("value"), String(parsedBoolean));
+        assert.strictEqual(read2, parsedBoolean);
+        const read3 = yield* read(ActionInput.integer("value"), String(parsedInteger));
+        assert.strictEqual(read3, parsedInteger);
       }),
     runs
   );
@@ -129,7 +141,8 @@ it.effect.prop(
       const secret = yield* read(ActionInput.redacted("value"), nonempty);
       assert.strictEqual(parsed, nonempty);
       assert.strictEqual(Redacted.value(secret), parsed);
-      assert.strictEqual(yield* read(ActionInput.string("value"), parsed), parsed);
+      const read4 = yield* read(ActionInput.string("value"), parsed);
+      assert.strictEqual(read4, parsed);
     }),
   runs
 );
@@ -141,7 +154,8 @@ it.effect.prop(
       const config = ActionInput.literals("value", ["Linux", "Windows", "macOS"]);
       const parsed = yield* read(config, value);
       assert.strictEqual(parsed, value);
-      assert.strictEqual(yield* read(config, String(parsed)), parsed);
+      const read5 = yield* read(config, String(parsed));
+      assert.strictEqual(read5, parsed);
     }),
   runs
 );
@@ -156,7 +170,8 @@ it.effect.prop(
       const formatted = yield* S.encodeEffect(JsonList)(parsed);
       const reparsed = yield* read(ActionInput.list("value"), formatted);
       assert.deepStrictEqual(reparsed, parsed);
-      assert.strictEqual(yield* S.encodeEffect(JsonList)(reparsed), formatted);
+      const value6 = yield* S.encodeEffect(JsonList)(reparsed);
+      assert.strictEqual(value6, formatted);
     }),
   runs
 );

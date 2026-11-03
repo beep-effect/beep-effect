@@ -388,7 +388,8 @@ const makeService = Effect.fn("CodegenKit.make")(function* (extraRenderers: Extr
       Effect.mapError((cause) => generateError(`Could not decode OpenAPI document for ${config.packageName}`, cause))
     );
     const warnings = MutableList.make<OpenApiGenerator.OpenApiGeneratorWarning>();
-    const onEnter = composeTransforms(config.transforms, yield* definitionsFor(document, config));
+    const definitionsFor1 = yield* definitionsFor(document, config);
+    const onEnter = composeTransforms(config.transforms, definitionsFor1);
     // The upstream generator runs synchronously inside its own Effect, so a throwing `onEnter` transform
     // or importer surfaces as a defect. Report it like the schemas branch does: as a typed generate error.
     const generated = yield* openApiGenerator
@@ -484,7 +485,8 @@ const makeService = Effect.fn("CodegenKit.make")(function* (extraRenderers: Extr
     const raw = yield* generate(patched, config);
     const processed = yield* postProcess(raw, config);
     const main = yield* format(GeneratedModule.make({ path: config.output.path, content: processed }));
-    const modules = A.prepend(yield* renderExtras(config, refresh), main);
+    const renderExtras2 = yield* renderExtras(config, refresh);
+    const modules = A.prepend(renderExtras2, main);
     if (mode === "write") {
       yield* Effect.forEach(modules, write, { concurrency: 1, discard: true });
       return A.empty<DriftReport>();

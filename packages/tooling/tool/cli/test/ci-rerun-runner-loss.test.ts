@@ -339,7 +339,7 @@ describe("runner-loss rerun decision", () => {
 type GhReply = readonly [key: string, exitCode: number, output: string];
 const REPO_PATH = "/repos/beep-effect/beep-effect";
 const RERUN_PATH = /^\/repos\/beep-effect\/beep-effect\/actions\/jobs\/(\d+)\/rerun$/u;
-const decodeOutput = S.decodeUnknownResult(S.fromJsonString(S.Unknown));
+const decodeOutput = S.decodeResult(S.fromJsonString(S.Unknown));
 const argvOf = (call: GithubFetchCall): ReadonlyArray<string> =>
   pipe(
     O.fromNullishOr(RERUN_PATH.exec(call.url.pathname)),
@@ -473,7 +473,8 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
       ).pipe(withGh(replies, commands));
       expect(outcome.decision.reason).toBe("runner-loss");
       expect(outcome.dryRun).toBe(false);
-      deepStrictEqual(endpoints(yield* Ref.get(commands)), [
+      const got = yield* Ref.get(commands);
+      deepStrictEqual(endpoints(got), [
         RUN_ENDPOINT,
         jobsEndpoint(1),
         jobsEndpoint(2),
@@ -489,7 +490,8 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
       const summary = summaries[0]?.value ?? "";
       expect(summary).toContain("re-ran Heavy / Job 11 with `gh run rerun --job 11`");
       expect(summary).toContain("| Heavy / Job 12 | `12` | beep-ci-i-12 | failed | 0 | left red: not runner loss |");
-      expect(yield* logs).toContain("## Runner-loss rerun");
+      const logs1 = yield* logs;
+      expect(logs1).toContain("## Runner-loss rerun");
     })
   );
 
@@ -500,14 +502,16 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
         withGh([[RUN_ENDPOINT, 0, runJson({ conclusion: "success" })]], commands)
       );
       expect(green.reason).toBe("run-not-failed");
-      deepStrictEqual(endpoints(yield* Ref.get(commands)), [RUN_ENDPOINT]);
+      const got2 = yield* Ref.get(commands);
+      deepStrictEqual(endpoints(got2), [RUN_ENDPOINT]);
 
       yield* Ref.set(commands, []);
       const capped = yield* decideRun(
         CiRerunRunnerLossInput.make({ runId: 36763005302, attempt: O.some(1), maxAttempt: 1, cwd: "." })
       ).pipe(withGh([[RUN_ENDPOINT, 0, runJson()], ...failedAttemptReplies], commands));
       expect(capped.reason).toBe("attempt-cap");
-      expect(A.contains(endpoints(yield* Ref.get(commands)), "repos/{owner}/{repo}/pulls/1338")).toBe(false);
+      const got3 = yield* Ref.get(commands);
+      expect(A.contains(endpoints(got3), "repos/{owner}/{repo}/pulls/1338")).toBe(false);
     })
   );
 
@@ -526,7 +530,8 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
       );
       const closed = yield* decide([["repos/{owner}/{repo}/pulls/1338", 0, pullJson("closed", SHA)]]);
       expect(closed.reason).toBe("no-open-pull-request");
-      expect(A.some(yield* Ref.get(commands), (args) => args[0] === "run")).toBe(false);
+      const got4 = yield* Ref.get(commands);
+      expect(A.some(got4, (args) => args[0] === "run")).toBe(false);
     })
   );
 
@@ -553,10 +558,12 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
         );
       const runOfA = yield* decide({});
       expect(runOfA.reason).toBe("superseded-head");
-      expect(A.some(yield* Ref.get(commands), (args) => args[0] === "run")).toBe(false);
+      const got5 = yield* Ref.get(commands);
+      expect(A.some(got5, (args) => args[0] === "run")).toBe(false);
       const runOfB = yield* decide({ head_branch: "other/branch" });
       expect(runOfB.reason).toBe("runner-loss");
-      expect(A.contains(endpoints(yield* Ref.get(commands)), "run rerun --job 11")).toBe(true);
+      const got6 = yield* Ref.get(commands);
+      expect(A.contains(endpoints(got6), "run rerun --job 11")).toBe(true);
     })
   );
 
@@ -579,7 +586,8 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
         )
       );
       expect(decision.reason).toBe("runner-loss");
-      expect(A.contains(endpoints(yield* Ref.get(commands)), annotationsEndpoint(11, 2))).toBe(true);
+      const got7 = yield* Ref.get(commands);
+      expect(A.contains(endpoints(got7), annotationsEndpoint(11, 2))).toBe(true);
     })
   );
 
@@ -613,7 +621,8 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
         ],
       ]);
       expect(fork.reason).toBe("runner-loss");
-      expect(A.contains(endpoints(yield* Ref.get(commands)), forkLookup)).toBe(true);
+      const got8 = yield* Ref.get(commands);
+      expect(A.contains(endpoints(got8), forkLookup)).toBe(true);
       const movedFork = yield* decide({ pull_requests: [], head_owner: "contributor" }, [
         [
           forkLookup,
@@ -671,7 +680,8 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
         );
       const requested = yield* rerun(["run rerun --job 11", 0, "✓ Requested"]);
       expect(requested.reason).toBe("runner-loss");
-      expect(A.contains(endpoints(yield* Ref.get(commands)), "run rerun --job 11")).toBe(true);
+      const got9 = yield* Ref.get(commands);
+      expect(A.contains(endpoints(got9), "run rerun --job 11")).toBe(true);
       const unreached = yield* rerun(["run rerun --job 11", -1, "fetch failed"]).pipe(Effect.flip);
       // octokit reports a request that never reached GitHub as status 500.
       expect(unreached.message).toBe("GitHub API rerun of job 11 failed (HTTP 500): fetch failed");
@@ -695,7 +705,8 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
       expect(scheduled.reason).toBe("unsupported-event");
       const branchless = yield* decide({ event: "push", head_branch: null }, []);
       expect(branchless.reason).toBe("unsupported-event");
-      expect(A.some(yield* Ref.get(commands), (args) => args[0] === "run")).toBe(false);
+      const got10 = yield* Ref.get(commands);
+      expect(A.some(got10, (args) => args[0] === "run")).toBe(false);
     })
   );
 
@@ -798,12 +809,10 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
         O.map(third.rerunJob, (job) => job.id),
         33
       );
-      deepStrictEqual(reruns(yield* Ref.get(commands)), [
-        "run rerun --job 11",
-        "run rerun --job 22",
-        "run rerun --job 33",
-      ]);
-      const called = endpoints(yield* Ref.get(commands));
+      const got11 = yield* Ref.get(commands);
+      deepStrictEqual(reruns(got11), ["run rerun --job 11", "run rerun --job 22", "run rerun --job 33"]);
+      const got12 = yield* Ref.get(commands);
+      const called = endpoints(got12);
       expect(A.contains(called, annotationsEndpoint(13))).toBe(true);
     })
   );
@@ -822,7 +831,8 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
       expect(A.map(third.lostJobs, (job) => job.reruns)).toEqual([2]);
       const fourth = yield* evaluate(attempts, [11, 21, 31, 41], commands);
       expect(fourth.reason).toBe("job-reruns-exhausted");
-      deepStrictEqual(reruns(yield* Ref.get(commands)), ["run rerun --job 31"]);
+      const got13 = yield* Ref.get(commands);
+      deepStrictEqual(reruns(got13), ["run rerun --job 31"]);
     })
   );
 
@@ -838,7 +848,8 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
         commands
       );
       expect(capped.reason).toBe("attempt-cap");
-      deepStrictEqual(reruns(yield* Ref.get(commands)), []);
+      const got14 = yield* Ref.get(commands);
+      deepStrictEqual(reruns(got14), []);
     })
   );
 
@@ -856,12 +867,15 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
         ),
         withEnv
       );
-      expect(yield* logs).toContain("attempt 1 (run ceiling 2, 3 reruns per job)");
-      expect(A.some(yield* Ref.get(commands), (args) => args[0] === "run")).toBe(false);
+      const logs15 = yield* logs;
+      expect(logs15).toContain("attempt 1 (run ceiling 2, 3 reruns per job)");
+      const got16 = yield* Ref.get(commands);
+      expect(A.some(got16, (args) => args[0] === "run")).toBe(false);
 
       const exit = yield* runCommand(["--run-id", "1"]).pipe(withGh([], commands), withEnv, Effect.exit);
       expect(exit._tag).toBe("Failure");
-      expect(yield* errors).toContain("[ci] GitHub API repos/{owner}/{repo}/actions/runs/1 failed (HTTP 404)");
+      const errors17 = yield* errors;
+      expect(errors17).toContain("[ci] GitHub API repos/{owner}/{repo}/actions/runs/1 failed (HTTP 404)");
     })
   );
   // The workflow runs on `workflow_run`, whose token can write Actions state
@@ -971,7 +985,8 @@ it.layer(Layer.provideMerge(Layer.provideMerge(DependencyReviewLive, GithubPolic
       const verdict = yield* service.review(DependencyReviewRequest.make({ base: REVIEW_SHA, head: REVIEW_SHA }));
       expect(verdict._tag === "fail" && A.map(verdict.findings, (finding) => finding.name)).toEqual(["urllib3"]);
       const client = yield* GithubPolicyClient;
-      expect(yield* client.request(["repos/{owner}/{repo}/license"])).toEqual({
+      const request18 = yield* client.request(["repos/{owner}/{repo}/license"]);
+      expect(request18).toEqual({
         exitCode: 1,
         output: "gh: unscripted api repos/{owner}/{repo}/license (HTTP 404)",
         truncated: false,

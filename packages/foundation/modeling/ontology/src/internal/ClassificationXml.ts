@@ -184,8 +184,8 @@ const walkIpc = Effect.fnUntraced(function* (
       const symbol = O.map(entry.symbol, ipcNotation);
       const concept =
         admitted && O.isSome(symbol) && Str.isNonEmpty(prefLabel)
-          ? O.some(
-              yield* makeConcept(
+          ? yield* Effect.asSome(
+              makeConcept(
                 pin,
                 symbol.value,
                 prefLabel,
@@ -275,8 +275,8 @@ const walkCpc = Effect.fnUntraced(function* (
       });
       const concept = repeated
         ? O.map(parent, (value) => ClassificationConcept.make({ ...value, prefLabel }))
-        : O.some(
-            yield* makeConcept(pin, notation, prefLabel, parent, depth).pipe(
+        : yield* Effect.asSome(
+            makeConcept(pin, notation, prefLabel, parent, depth).pipe(
               Effect.mapError(() => sourceFailure("Invalid CPC symbol"))
             )
           );
@@ -371,45 +371,44 @@ export const parseNice = Effect.fnUntraced(function* (
       value,
     ])
   );
-  return A.flatten(
-    yield* Effect.forEach(
-      structure.Class,
-      Effect.fnUntraced(function* (entry) {
-        const classText = yield* Effect.fromOption(HashMap.get(classTexts, entry.id), () =>
-          sourceFailure("Nice class title missing")
-        );
-        const classConcept = yield* makeConcept(
-          pin,
-          entry.classNumber,
-          label(
-            A.flatMap(classText.Heading, (heading) =>
-              A.map(heading.HeadingItem, (node) => O.getOrElse(node["#text"], () => ""))
-            )
-          ),
-          O.none(),
-          0
-        ).pipe(Effect.mapError(() => sourceFailure("Invalid Nice class")));
-        const goods = yield* Effect.forEach(
-          entry.GoodOrService,
-          Effect.fnUntraced(function* (good) {
-            const text = yield* Effect.fromOption(HashMap.get(goodTexts, good.id), () =>
-              sourceFailure("Nice basic title missing")
-            );
-            const prefLabel = label(
-              A.flatMap(text.Indication, (value) => A.map(value.Label, (node) => O.getOrElse(node["#text"], () => "")))
-            );
-            return yield* makeConcept(
-              pin,
-              `${Str.padStart(2, "0")(entry.classNumber)}${good.basicNumber}`,
-              prefLabel,
-              O.some(classConcept),
-              1
-            ).pipe(Effect.mapError(() => sourceFailure("Invalid Nice basic number")));
-          })
-        );
-        return A.prepend(goods, classConcept);
-      })
-    )
+  const forEach1 = yield* Effect.forEach(
+    structure.Class,
+    Effect.fnUntraced(function* (entry) {
+      const classText = yield* Effect.fromOption(HashMap.get(classTexts, entry.id), () =>
+        sourceFailure("Nice class title missing")
+      );
+      const classConcept = yield* makeConcept(
+        pin,
+        entry.classNumber,
+        label(
+          A.flatMap(classText.Heading, (heading) =>
+            A.map(heading.HeadingItem, (node) => O.getOrElse(node["#text"], () => ""))
+          )
+        ),
+        O.none(),
+        0
+      ).pipe(Effect.mapError(() => sourceFailure("Invalid Nice class")));
+      const goods = yield* Effect.forEach(
+        entry.GoodOrService,
+        Effect.fnUntraced(function* (good) {
+          const text = yield* Effect.fromOption(HashMap.get(goodTexts, good.id), () =>
+            sourceFailure("Nice basic title missing")
+          );
+          const prefLabel = label(
+            A.flatMap(text.Indication, (value) => A.map(value.Label, (node) => O.getOrElse(node["#text"], () => "")))
+          );
+          return yield* makeConcept(
+            pin,
+            `${Str.padStart(2, "0")(entry.classNumber)}${good.basicNumber}`,
+            prefLabel,
+            O.some(classConcept),
+            1
+          ).pipe(Effect.mapError(() => sourceFailure("Invalid Nice basic number")));
+        })
+      );
+      return A.prepend(goods, classConcept);
+    })
   );
+  return A.flatten(forEach1);
 });
 const NiceNumber = S.Union([NiceClassNumber, NiceBasicNumber]);

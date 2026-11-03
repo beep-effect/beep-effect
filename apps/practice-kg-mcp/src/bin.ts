@@ -1,15 +1,16 @@
 #!/usr/bin/env bun
 
-// First import: DuckDB's native addon must resolve beside the executable (#1959).
-import "./NativeAddon.install.ts";
-import { loadPracticeKgBundleContext, PracticeKgHostError } from "@beep/law-practice-server/PracticeKgHost";
-import * as Bool from "effect/Boolean";
 /**
  * Stdio entrypoint for the portable practice knowledge-graph MCP host.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
+
+// First import: DuckDB's native addon must resolve beside the executable (#1959).
+import "./NativeAddon.install.ts";
+import { loadPracticeKgBundleContext, PracticeKgHostError } from "@beep/law-practice-server/PracticeKgHost";
+import * as Bool from "effect/Boolean";
 import * as Config from "effect/Config";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";

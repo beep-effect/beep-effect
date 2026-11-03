@@ -47,7 +47,8 @@ const scenario = Effect.fn("DeliveryCrashTest.scenario")(function* () {
     );
     if (mode === "before-result" || mode === "after-result") {
       while (!(yield* fs.exists(marker))) {
-        expect(yield* child.isRunning).toBe(true);
+        const isRunning1 = yield* child.isRunning;
+        expect(isRunning1).toBe(true);
         yield* Effect.sleep("10 millis");
       }
       const observed = yield* fs.readFileString(marker).pipe(Effect.flatMap(decodeJsonValue));
@@ -56,13 +57,17 @@ const scenario = Effect.fn("DeliveryCrashTest.scenario")(function* () {
         attempts: [{ n: 1 }],
         results: [{ n: mode === "before-result" ? 0 : 1 }],
       });
-      expect(yield* fs.exists(output)).toBe(false);
+      const exists2 = yield* fs.exists(output);
+      expect(exists2).toBe(false);
       yield* child.kill({ killSignal: "SIGKILL" });
-      expect(Exit.isFailure(yield* Effect.exit(child.exitCode))).toBe(true);
-      expect(yield* child.isRunning).toBe(false);
+      const exit3 = yield* Effect.exit(child.exitCode);
+      expect(Exit.isFailure(exit3)).toBe(true);
+      const isRunning4 = yield* child.isRunning;
+      expect(isRunning4).toBe(false);
       return;
     }
-    expect(yield* child.exitCode).toBe(0);
+    const exitCode5 = yield* child.exitCode;
+    expect(exitCode5).toBe(0);
     return yield* fs.readFileString(output).pipe(Effect.flatMap(decodeInspectionJson));
   });
   return { run };
@@ -72,7 +77,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
     Effect.gen(function* () {
       const { run } = yield* scenario();
       yield* run("before-result");
-      expect(yield* run("inspect")).toMatchObject({
+      const result6 = yield* run("inspect");
+      expect(result6).toMatchObject({
         state: { state: "unresolved", attempts: 1 },
         results: [{ n: 0 }],
       });
@@ -82,7 +88,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
         attempts: [{ n: 1 }],
         results: [{ n: 1 }],
       });
-      expect(yield* run("accept")).toEqual(accepted);
+      const result7 = yield* run("accept");
+      expect(result7).toEqual(accepted);
     }).pipe(Effect.timeout("20 seconds"))
   )
 );
@@ -97,7 +104,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
         attempts: [{ n: 1 }],
         results: [{ n: 1 }],
       });
-      expect(yield* run("accept")).toEqual(accepted);
+      const result8 = yield* run("accept");
+      expect(result8).toEqual(accepted);
     }).pipe(Effect.timeout("20 seconds"))
   )
 );

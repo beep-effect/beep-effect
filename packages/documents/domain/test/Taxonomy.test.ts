@@ -49,7 +49,8 @@ describe("@beep/documents-domain taxonomy seed", () => {
   it.effect(
     "projects an intake batch id into the deterministic inbox path",
     Effect.fnUntraced(function* () {
-      expect(yield* projectIntakeInboxPath("Batch 1")).toBe("00-inbox/batch-1");
+      const projectIntakeInboxPath1 = yield* projectIntakeInboxPath("Batch 1");
+      expect(projectIntakeInboxPath1).toBe("00-inbox/batch-1");
     })
   );
 

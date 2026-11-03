@@ -28,7 +28,10 @@ describe("scalar parser properties", () => {
         expect(C.getScalarValue(node(renderDoubleQuoted(decoded)))).toBe(decoded);
         const formatted = YamlFormat.formatToString(encoded);
         expect(YamlFormat.formatToString(formatted)).toBe(formatted);
-        expect(yield* Yaml.parse(yield* Yaml.stringify(yield* Yaml.parse(encoded)))).toBe(value);
+        const parsed10 = yield* Yaml.parse(encoded);
+        const stringify7 = yield* Yaml.stringify(parsed10);
+        const parsed1 = yield* Yaml.parse(stringify7);
+        expect(parsed1).toBe(value);
       }),
     runs
   );
@@ -42,7 +45,8 @@ describe("scalar parser properties", () => {
         expect(O.getOrUndefined(C.classifyPlainNumeric(source))).toBe("int");
         const decoded = C.resolveScalar(C.getScalarValue(node(source)), ["plain"]);
         expect(decoded).toBe(value + 0);
-        expect(C.resolveScalar(C.getScalarValue(node(yield* Yaml.stringify(decoded))), ["plain"])).toBe(decoded);
+        const stringify2 = yield* Yaml.stringify(decoded);
+        expect(C.resolveScalar(C.getScalarValue(node(stringify2)), ["plain"])).toBe(decoded);
         const formatted = YamlFormat.formatToString(source);
         expect(YamlFormat.formatToString(formatted)).toBe(formatted);
       }),
@@ -83,8 +87,14 @@ describe("scalar parser properties", () => {
         const formatted = YamlFormat.formatToString(source);
         expect(formatted).toContain(`${spelling} # scalar spelling`);
         expect(YamlFormat.formatToString(formatted)).toBe(formatted);
-        expect(yield* Yaml.parse(formatted)).toEqual(yield* Yaml.parse(source));
-        expect(yield* Yaml.parse(yield* Yaml.stringify(yield* Yaml.parse(source)))).toEqual({ key: value + 0 });
+        const parsed3 = yield* Yaml.parse(formatted);
+        const expectation = expect(parsed3);
+        const parsed2 = yield* Yaml.parse(source);
+        expectation.toEqual(parsed2);
+        const parsed11 = yield* Yaml.parse(source);
+        const stringify8 = yield* Yaml.stringify(parsed11);
+        const parsed4 = yield* Yaml.parse(stringify8);
+        expect(parsed4).toEqual({ key: value + 0 });
       }),
     runs
   );
@@ -111,10 +121,13 @@ describe("scalar parser properties", () => {
           expect(state.errors).toEqual([]);
           const parsed = yield* Yaml.parse(source);
           expect(parsed).toBe(expected);
-          expect(yield* Yaml.parse(yield* Yaml.stringify(parsed))).toBe(parsed);
+          const stringify9 = yield* Yaml.stringify(parsed);
+          const parsed5 = yield* Yaml.parse(stringify9);
+          expect(parsed5).toBe(parsed);
           const formatted = YamlFormat.formatToString(source);
           expect(YamlFormat.formatToString(formatted)).toBe(formatted);
-          expect(yield* Yaml.parse(formatted)).toBe(parsed);
+          const parsed6 = yield* Yaml.parse(formatted);
+          expect(parsed6).toBe(parsed);
           expect(formatted).toContain("# header");
         }
       }),

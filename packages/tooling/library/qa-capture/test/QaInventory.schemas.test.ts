@@ -88,7 +88,8 @@ describe("QaInventory.schemas", () => {
         schemaVersion: "qa-inventory/v1",
         sessionRef: "session.json",
       });
-      const decoded = yield* decodeQaInventory(yield* encodeQaInventory(inventory));
+      const encoded = yield* encodeQaInventory(inventory);
+      const decoded = yield* decodeQaInventory(encoded);
       expect(decoded.round).toBe(1);
       expect(A.length(decoded.findings)).toBe(0);
     })

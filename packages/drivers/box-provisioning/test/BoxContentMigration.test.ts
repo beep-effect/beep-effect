@@ -102,7 +102,8 @@ const makeTestLayer = (options: FakeBoxOptions, recordJournal = true): Layer.Lay
     Effect.map(MigrationHarness, ({ failJournalAt, journal: entries, onAppend }) =>
       BoxContentMigrationJournal.of({
         append: Effect.fn("BoxContentMigrationTest.append")(function* (entry) {
-          if (O.contains(yield* Ref.get(failJournalAt), entry.sequence)) {
+          const got = yield* Ref.get(failJournalAt);
+          if (O.contains(got, entry.sequence)) {
             return yield* BoxProvisioningApplyJournalError.make({ operation: "append" });
           }
           yield* (yield* Ref.get(onAppend))(entry);
@@ -180,7 +181,8 @@ const snapshotSources = Effect.fn("BoxContentMigrationTest.snapshotSources")(fun
     Effect.fnUntraced(function* (spec) {
       const target = path.join(sourceRoot, spec.relativePath);
       const info = yield* fs.stat(target);
-      return { mtime: info.mtime, sha256: sha256Hex(yield* fs.readFile(target)) };
+      const readFile1 = yield* fs.readFile(target);
+      return { mtime: info.mtime, sha256: sha256Hex(readFile1) };
     }),
     { concurrency: 1 }
   );
@@ -209,7 +211,8 @@ const planAndApply = Effect.fn("BoxContentMigrationTest.planAndApply")(function*
 ) {
   const migration = yield* BoxContentMigration;
   const plan = yield* migration.plan(mapInput, options);
-  const result = yield* migration.applyReviewedPlan(mapInput, yield* encodeBoxContentMigrationPlan(plan), options);
+  const encodedBoxContentMigrationPlan = yield* encodeBoxContentMigrationPlan(plan);
+  const result = yield* migration.applyReviewedPlan(mapInput, encodedBoxContentMigrationPlan, options);
   return { plan, result };
 });
 
@@ -260,7 +263,8 @@ scenario(
     const second = yield* migration.plan(mapInput);
     const firstJson = yield* encodeBoxContentMigrationPlan(first);
 
-    expect(yield* encodeBoxContentMigrationPlan(second)).toBe(firstJson);
+    const encodedBoxContentMigrationPlan2 = yield* encodeBoxContentMigrationPlan(second);
+    expect(encodedBoxContentMigrationPlan2).toBe(firstJson);
     expect(A.sort(folderTags(first), Str.Order)).toEqual([
       "FolderCreate",
       "FolderCreate",
@@ -344,10 +348,11 @@ scenario(
       "SkipIdentical",
     ]);
 
+    const argument = yield* encodeBoxContentMigrationReceipt(result.receipt);
     const artifacts = A.join(
       [
-        yield* encodeBoxContentMigrationReceipt(result.receipt),
-        ...(yield* Effect.forEach(yield* Ref.get(journal), encodeBoxContentJournalEntry)),
+        argument,
+        ...(yield* yield* Effect.map(Ref.get(journal), (value) => Effect.forEach(value, encodeBoxContentJournalEntry))),
       ],
       "\n"
     );
@@ -383,7 +388,8 @@ scenario(
         Str.Order
       )
     );
-    expect(yield* snapshotSources(sourceRoot, inboxSources)).toEqual(before);
+    const snapshotSources3 = yield* snapshotSources(sourceRoot, inboxSources);
+    expect(snapshotSources3).toEqual(before);
 
     const entries = yield* Ref.get(journal);
     expect(A.map(entries, (entry) => entry.sequence)).toEqual(A.range(0, A.length(entries) - 1));
@@ -504,8 +510,9 @@ scenario(
     // Sequence 4 is the Started entry of the second upload: the run dies with one file stored.
     yield* Ref.set(failJournalAt, O.some(4));
 
+    const encodedBoxContentMigrationPlan4 = yield* encodeBoxContentMigrationPlan(plan);
     const crash = yield* Effect.flip(
-      migration.applyReviewedPlan(mapInput, yield* encodeBoxContentMigrationPlan(plan), sequential)
+      migration.applyReviewedPlan(mapInput, encodedBoxContentMigrationPlan4, sequential)
     );
     yield* Ref.set(failJournalAt, O.none());
     const storedAfterCrash = A.length(A.filter(fake.entries(), (entry) => entry.type === "file"));
@@ -571,9 +578,10 @@ scenario(
     ]);
     expect(A.length(inbox)).toBe(1);
     expect(A.map(fake.uploads(), (upload) => upload.parentId)).toEqual(A.map(inbox, (entry) => entry.id));
+    const got5 = yield* Ref.get(journal);
     expect(
       A.map(
-        A.filter(yield* Ref.get(journal), (entry) => entry.actionKind === "folder"),
+        A.filter(got5, (entry) => entry.actionKind === "folder"),
         (entry) => entry.phase
       )
     ).toEqual(["Started", "AdoptedExistingFolder"]);
@@ -806,7 +814,8 @@ scenario(
     expect(A.filter(fake.entries(), (entry) => entry.name === "empty.bin")).toMatchObject([
       { sha1: sha1Hex(bytes("")), type: "file" },
     ]);
-    expect(yield* Ref.get(journal)).toEqual([]);
+    const got6 = yield* Ref.get(journal);
+    expect(got6).toEqual([]);
   }),
   false
 );
@@ -874,16 +883,17 @@ scenario(
     fake.raceFolder("Inbox");
     const callsBefore = fake.totalCalls();
 
-    const error = yield* Effect.flip(
-      migration.applyReviewedPlan(mapInput, yield* encodeBoxContentMigrationPlan(plan), options)
-    );
+    const encodedBoxContentMigrationPlan7 = yield* encodeBoxContentMigrationPlan(plan);
+    const error = yield* Effect.flip(migration.applyReviewedPlan(mapInput, encodedBoxContentMigrationPlan7, options));
 
     // Seven one-entry pages were needed to re-list the root; the cap allowed four, then stopped the run.
     expect(plan.summary.planProviderCalls).toBe(7);
     expect(error).toMatchObject({ _tag: "BoxContentMigrationBudgetError", maxProviderCalls: 12, phase: "post-plan" });
     expect(fake.totalCalls() - callsBefore).toBe(12);
-    expect(A.map(yield* Ref.get(journal), (entry) => entry.phase)).toEqual(["Started", "Failed", "Skipped"]);
-    expect(A.filter(yield* Ref.get(journal), (entry) => entry.phase === "Failed")).toMatchObject([
+    const got8 = yield* Ref.get(journal);
+    expect(A.map(got8, (entry) => entry.phase)).toEqual(["Started", "Failed", "Skipped"]);
+    const got9 = yield* Ref.get(journal);
+    expect(A.filter(got9, (entry) => entry.phase === "Failed")).toMatchObject([
       { actionKind: "folder", failureKind: "budget-exhausted" },
     ]);
     expect(fake.calls.uploadFile).toBe(0);

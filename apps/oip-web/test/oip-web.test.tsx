@@ -11,7 +11,7 @@ import * as Clock from "effect/Clock";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
@@ -57,7 +57,15 @@ import {
 import { OipAtomProvider } from "@/runtime/OipAtomProvider";
 import { HeroClipMedia } from "../src/components/HeroVideo.tsx";
 
-const encodeCapturedLogs = S.encodeEffect(S.fromJsonString(S.Unknown));
+const UnknownJson = S.fromJsonString(S.Unknown);
+
+class OipWebTestOperationError extends S.TaggedError<OipWebTestOperationError, { readonly brand: unique symbol }>()(
+  "OipWebTestOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in oip-web.test.tsx." }
+) {}
+
+const encodeCapturedLogs = S.encodeEffect(UnknownJson);
 
 const decodeUnknownContactSubmissionAcceptedExit = S.decodeUnknownExit(ContactSubmissionAccepted);
 const decodeUnknownContactSubmissionFormPayloadExit = S.decodeUnknownExit(ContactSubmissionFormPayload);
@@ -301,17 +309,17 @@ describe("@beep/oip-web", { concurrent: false }, () => {
       };
       const decoded = yield* decodeContactSubmission(encoded);
 
-      expect(yield* encodeContactSubmission(decoded)).toEqual(encoded);
-      expect(
-        yield* encodeContactSubmission(
-          ContactSubmission.make({
-            email: encoded.email,
-            message: encoded.message,
-            name: encoded.name,
-            submittedAt,
-          })
-        )
-      ).toEqual({
+      const encodedContactSubmission = yield* encodeContactSubmission(decoded);
+      expect(encodedContactSubmission).toEqual(encoded);
+      const encodedContactSubmission1 = yield* encodeContactSubmission(
+        ContactSubmission.make({
+          email: encoded.email,
+          message: encoded.message,
+          name: encoded.name,
+          submittedAt,
+        })
+      );
+      expect(encodedContactSubmission1).toEqual({
         email: encoded.email,
         message: encoded.message,
         name: encoded.name,
@@ -391,7 +399,7 @@ describe("@beep/oip-web", { concurrent: false }, () => {
   });
 
   it("publishes firm social profiles in JSON-LD, excludes the Discord invite, and keeps the personal LinkedIn on the Person", () => {
-    const json = JSON.stringify(makeJsonLdGraph(oipSiteContent));
+    const json = Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(makeJsonLdGraph(oipSiteContent)), identity);
 
     expect(json).toContain("https://www.instagram.com/oip.law/");
     expect(json).toContain("https://www.linkedin.com/company/oppold-ip-law");
@@ -935,7 +943,10 @@ describe("@beep/oip-web", { concurrent: false }, () => {
       expect(response.status).toBe("accepted");
       expect(fetchSpy).toHaveBeenCalledOnce();
       const [input, init] = pipe(fetchSpy.mock.calls, A.head, O.getOrThrow);
-      const body = yield* Effect.tryPromise(() => new Request(input, init).json());
+      const body = yield* Effect.tryPromise({
+        try: () => new Request(input, init).json(),
+        catch: (cause) => OipWebTestOperationError.make({ cause }),
+      });
       expect(body).toEqual({
         inputs: [
           {

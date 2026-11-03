@@ -1159,12 +1159,18 @@ export const lookupPracticeKgCorrespondents = Effect.fn("PracticeKg.lookupCorres
         })
       )
     );
+  const argument = yield* read(candidatesSql, decodeCandidates);
+  const argument1 = yield* read(contactsSql, decodeContacts);
+  const argument2 = yield* read(linksSql, decodeLinks);
+  const read1 = yield* read(linkedMattersSql, decodeFamilyKeys);
+  const argument3 = A.map(read1, (row) => row.familyKey);
+  const read2 = yield* read(practiceAddressSql, decodePracticeAddress);
   const evidence = PracticeKgCorrespondentEvidence.make({
-    candidates: yield* read(candidatesSql, decodeCandidates),
-    contacts: yield* read(contactsSql, decodeContacts),
-    links: yield* read(linksSql, decodeLinks),
-    matterFamilyKeys: A.map(yield* read(linkedMattersSql, decodeFamilyKeys), (row) => row.familyKey),
-    practiceAddress: A.headNonEmpty(yield* read(practiceAddressSql, decodePracticeAddress)).practiceAddress,
+    candidates: argument,
+    contacts: argument1,
+    links: argument2,
+    matterFamilyKeys: argument3,
+    practiceAddress: A.headNonEmpty(read2).practiceAddress,
   });
   return PracticeKgCorrespondentLookupResult.make({
     ...evidence,

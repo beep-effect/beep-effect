@@ -15,7 +15,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(WorkflowInfo)(value);
       const decoded = yield* S.decodeEffect(WorkflowInfo)(encoded);
       assert.isTrue(S.toEquivalence(WorkflowInfo)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(WorkflowInfo)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(WorkflowInfo)(decoded);
+      assert.deepStrictEqual(value1, encoded);
     }),
   runs
 );
@@ -29,7 +30,8 @@ it.effect.prop(
       const decoded = yield* S.decodeEffect(WorkflowRunStatus)(encoded);
       assert.isTrue(S.toEquivalence(WorkflowRunStatus)(decoded, value));
       assert.strictEqual(decoded.isDone, value.status === "completed");
-      assert.deepStrictEqual(yield* S.encodeEffect(WorkflowRunStatus)(decoded), encoded);
+      const value2 = yield* S.encodeEffect(WorkflowRunStatus)(decoded);
+      assert.deepStrictEqual(value2, encoded);
     }),
   runs
 );

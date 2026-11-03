@@ -393,7 +393,9 @@ describe("MailTagging practice-KG matter directory", () => {
     it.effect(
       "attaches only the addresses the graph resolves unique to a matter, normalized, and no domain",
       Effect.fnUntraced(function* () {
-        expect(yield* contactsOf(yield* seeded)).toStrictEqual([
+        const seeded4 = yield* seeded;
+        const contactsOf1 = yield* contactsOf(seeded4);
+        expect(contactsOf1).toStrictEqual([
           ["1234.10001", ["counsel@acme.example.test", "quoted@acme.example.test"], []],
           ["1234.20002", [], []],
         ]);
@@ -403,7 +405,8 @@ describe("MailTagging practice-KG matter directory", () => {
     it.effect(
       "excludes conflicting owner flags across spellings and unflagged practice subdomain siblings",
       Effect.fnUntraced(function* () {
-        const index = yield* snapshotOf(yield* seeded);
+        const seeded2 = yield* seeded;
+        const index = yield* snapshotOf(seeded2);
         const addresses = A.flatMap(index.entries, (entry) => entry.contactAddresses);
 
         expect(addresses).not.toContain("alias@acme.example.test");
@@ -419,7 +422,8 @@ describe("MailTagging practice-KG matter directory", () => {
         const bundle = yield* seeded;
         yield* writeText(bundle.directory, "matter-contacts.json", "not json");
 
-        expect(yield* contactsOf({ ...bundle, evidence: "off" })).toStrictEqual([
+        const contactsOf3 = yield* contactsOf({ ...bundle, evidence: "off" });
+        expect(contactsOf3).toStrictEqual([
           ["1234.10001", [], []],
           ["1234.20002", [], []],
         ]);

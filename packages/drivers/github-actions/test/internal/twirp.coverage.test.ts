@@ -46,8 +46,10 @@ it.effect(
           { method: "", kind },
           { method: "Read", kind, status: 503, cause: { message: "failure" } },
         ] satisfies ReadonlyArray<TwirpFailure>) {
-          assert.deepStrictEqual(yield* S.decodeEffect(TwirpFailure)(failure), failure);
-          assert.deepStrictEqual(yield* S.encodeEffect(TwirpFailure)(failure), failure);
+          const value1 = yield* S.decodeEffect(TwirpFailure)(failure);
+          assert.deepStrictEqual(value1, failure);
+          const value2 = yield* S.encodeEffect(TwirpFailure)(failure);
+          assert.deepStrictEqual(value2, failure);
         }
         // Exact optional keys (EF-40): an optional key is omitted, never undefined.
         assert.isFalse(S.is(TwirpFailure)({ method: "Read", kind, status: undefined }));

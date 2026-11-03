@@ -8,7 +8,8 @@
  * NUL. These parsers intentionally retain separate wire-format contracts.
  *
  * The entry parsers (`parseNameStatus`, `parseStatus`, `parseWorktreeList`,
- * `parseLsTree`, `parseLsFiles`, `parseLog`, `parseLogNameStatus`) FAIL CLOSED: they answer a
+ * `parseLsTree`, `parseLsFiles`, the `parseLog` family, `parseRevListCount`,
+ * `parseMergeTree`, `parseUpstream`) FAIL CLOSED: they answer a
  * `Result` whose failure names the offending record, and the service maps
  * that to a `GitCommandError` instead of inventing a plausible-looking entry.
  * The plain path-list parsers (`parseNulSeparated`, `parseConfigGetAll`) have
@@ -20,9 +21,10 @@
 import * as O from "@beep/utils/Option";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
-import { constant, pipe } from "effect/Function";
+import { constant, dual, pipe } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
 import {
   BranchEntry,
@@ -32,6 +34,7 @@ import {
   LsFilesEntry,
   LsRemoteEntry,
   LsTreeEntry,
+  MergeTreeResult,
   NameStatusEntry,
   RefEntry,
   StashEntry,
@@ -295,6 +298,12 @@ const LOG_RECORD_SEPARATOR = "\0";
 /** The number of NUL-terminated header fields `GitCommand.log`'s format emits after the record opener. */
 const LOG_HEADER_FIELDS = 6;
 
+/** Which optional pieces a log listing carries: the `--name-status` body, the `%b` header field. */
+type LogShape = {
+  readonly nameStatus?: boolean;
+  readonly includeBody?: boolean;
+};
+
 /**
  * Reads a log record's NUL-terminated body tokens starting at `from`. Only
  * the first token loses git's one separator newline. `next` also consumes the
@@ -328,33 +337,66 @@ const nameStatusBody = (body: ReadonlyArray<string>): Result.Result<LogBody, str
     changes,
   }));
 
-/** Parses the log record whose sha token sits at `index`, plus the index of the record after it. */
+/** The NUL-joined header fields of one log record, read by position; `message` only with `includeBody`. */
+type LogHeader = {
+  readonly authoredAtIso: string;
+  readonly committedAtIso: string;
+  readonly authorName: string;
+  readonly authorEmail: string;
+  readonly subject: string;
+  readonly message: O.Option<string>;
+};
+
+/** Reads the header fields after the sha at `index`, failing when the record is shorter than the format. */
+const readLogHeader = (
+  tokens: ReadonlyArray<string>,
+  index: number,
+  includeBody: boolean
+): Result.Result<LogHeader, string> => {
+  const width = includeBody ? LOG_HEADER_FIELDS : LOG_HEADER_FIELDS - 1;
+  const fields = A.take(A.drop(tokens, index + 1), width);
+  if (fields.length < width) return Result.fail("a log record carried fewer fields than the format declares");
+  const field = (offset: number): string => A.getUnsafe(fields, offset);
+  return Result.succeed({
+    authoredAtIso: field(0),
+    committedAtIso: field(1),
+    authorName: field(2),
+    authorEmail: field(3),
+    subject: field(4),
+    message: includeBody ? O.some(field(5)) : O.none(),
+  });
+};
+
+/**
+ * Parses the log record whose sha token sits at `index`, plus the index of
+ * the record after it. With `includeBody` the header carries a seventh
+ * field, the raw `%b`, read by position like the others.
+ */
 const parseLogRecord = (
   tokens: ReadonlyArray<string>,
   index: number,
-  readBody: (body: ReadonlyArray<string>) => Result.Result<LogBody, string>
+  readBody: (body: ReadonlyArray<string>) => Result.Result<LogBody, string>,
+  includeBody: boolean
+): Result.Result<{ readonly entry: CommitLogEntry; readonly next: number }, string> =>
+  Result.flatMap(readLogHeader(tokens, index, includeBody), (header) =>
+    parseLogRecordWith(tokens, index, readBody, includeBody, header)
+  );
+
+/** Decodes a log record's dates and body once its header fields are read. */
+const parseLogRecordWith = (
+  tokens: ReadonlyArray<string>,
+  index: number,
+  readBody: (body: ReadonlyArray<string>) => Result.Result<LogBody, string>,
+  includeBody: boolean,
+  { authoredAtIso, authorEmail, authorName, committedAtIso, message, subject }: LogHeader
 ): Result.Result<{ readonly entry: CommitLogEntry; readonly next: number }, string> => {
   const sha = A.getUnsafe(tokens, index);
-  const authoredAtIso = tokens[index + 1];
-  const committedAtIso = tokens[index + 2];
-  const authorName = tokens[index + 3];
-  const authorEmail = tokens[index + 4];
-  const subject = tokens[index + 5];
-  if (
-    authoredAtIso === undefined ||
-    committedAtIso === undefined ||
-    authorName === undefined ||
-    authorEmail === undefined ||
-    subject === undefined
-  ) {
-    return Result.fail("a log record carried fewer fields than the format declares");
-  }
   const authoredAt = DateTime.make(authoredAtIso);
   const committedAt = DateTime.make(committedAtIso);
   if (O.isNone(authoredAt) || O.isNone(committedAt)) {
     return Result.fail(`a log record carried an undecodable date ("${authoredAtIso}", "${committedAtIso}")`);
   }
-  const { next, body } = readLogBody(tokens, index + LOG_HEADER_FIELDS);
+  const { next, body } = readLogBody(tokens, index + LOG_HEADER_FIELDS + (includeBody ? 1 : 0));
   return Result.map(readBody(body), (read) => ({
     entry: CommitLogEntry.make({
       sha,
@@ -364,14 +406,15 @@ const parseLogRecord = (
       authorEmail,
       subject,
       ...read,
+      ...O.getSomesStruct({ body: message }),
     }),
     next,
   }));
 };
 
-/** The record walk both log modes share; `readBody` decodes each record's body tokens. */
+/** The record walk every log mode shares; `readBody` decodes each record's body tokens. */
 const parseLogWith =
-  (readBody: (body: ReadonlyArray<string>) => Result.Result<LogBody, string>) =>
+  (readBody: (body: ReadonlyArray<string>) => Result.Result<LogBody, string>, includeBody = false) =>
   (output: string): Result.Result<ReadonlyArray<CommitLogEntry>, string> => {
     if (output === "") return Result.succeed([]);
     if (!Str.startsWith(LOG_RECORD_SEPARATOR)(output)) {
@@ -381,7 +424,7 @@ const parseLogWith =
     const entries: Array<CommitLogEntry> = [];
     let index = 1;
     while (index < tokens.length) {
-      const record = parseLogRecord(tokens, index, readBody);
+      const record = parseLogRecord(tokens, index, readBody, includeBody);
       if (Result.isFailure(record)) return Result.fail(record.failure);
       entries.push(record.success.entry);
       index = record.success.next;
@@ -447,6 +490,182 @@ export const parseLog: (output: string) => Result.Result<ReadonlyArray<CommitLog
  */
 export const parseLogNameStatus: (output: string) => Result.Result<ReadonlyArray<CommitLogEntry>, string> =
   parseLogWith(nameStatusBody);
+
+/**
+ * The `GitCommand.log` parser for a listing's shape: {@link parseLog} or
+ * {@link parseLogNameStatus} for the body, and with `includeBody` the
+ * seventh `%b` header field read into each entry's `body`.
+ *
+ * **Details**
+ *
+ * A listing read with `omitPaths` has no body tokens at all, which either
+ * body reader answers as `paths: []`. With `includeBody` the body field is
+ * kept raw, its trailing newline included, and an empty `%b` is `""`.
+ *
+ * **Example** (Read a commit's body)
+ *
+ * ```ts import.meta.vitest name="Read a commit's body"
+ * import { parseLogFor } from "@beep/git/internal/parsers";
+ * import * as Result from "effect/Result";
+ *
+ * // `\u0000` rather than `\0`: a NUL escape followed by a digit would read as an octal escape.
+ * const header = "\u0000abc\u00002026-01-01T00:00:00Z\u00002026-01-01T00:00:00Z\u0000Ada\u0000ada@example.com\u0000feat: x";
+ * const entry = Result.getOrThrow(parseLogFor({ includeBody: true })(`${header}\u0000why it changed\n\u0000`))[0];
+ * [entry?.subject, entry?.body, entry?.paths] // => ["feat: x", "why it changed\n", []]
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
+export const parseLogFor = (
+  shape: LogShape
+): ((output: string) => Result.Result<ReadonlyArray<CommitLogEntry>, string>) =>
+  parseLogWith(shape.nameStatus === true ? nameStatusBody : nameOnlyBody, shape.includeBody === true);
+
+/** One run of decimal digits, decoded as a whole number: a rev-list count, a merge-tree path count. */
+const decodeDecimalCount = S.decodeUnknownOption(
+  S.String.check(S.isPattern(/^\d+$/)).pipe(S.decodeTo(S.Int, SchemaTransformation.numberFromString))
+);
+
+/**
+ * Parses `GitCommand.revListCount`'s output: one decimal count, its trailing
+ * newline removed. Anything else (an empty answer, a sign, a word) fails
+ * closed rather than reading as zero.
+ *
+ * **Example** (Read a commit count)
+ *
+ * ```ts import.meta.vitest name="Read a commit count"
+ * import { parseRevListCount } from "@beep/git/internal/parsers";
+ * import * as Result from "effect/Result";
+ *
+ * [Result.getOrThrow(parseRevListCount("12\n")), Result.isFailure(parseRevListCount(""))] // => [12, true]
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
+export const parseRevListCount = (output: string): Result.Result<number, string> =>
+  Result.fromOption(
+    decodeDecimalCount(Str.trim(output)),
+    () => `expected one decimal count, received ${quoteRecord(output)}`
+  );
+
+/** A full object id: 40 hex digits (SHA-1) or 64 (SHA-256). */
+const isObjectId = S.is(S.String.check(S.isPattern(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/)));
+
+/** Removes the one newline git ends each merge-tree message with. */
+const stripMessageNewline = Str.replace(/\n$/, "");
+
+/**
+ * Reads the informational-message section of a conflicted merge-tree answer:
+ * repeated `<count>\0<path>...\0<type>\0<message>\0` groups, kept as the
+ * message texts in order.
+ */
+const parseMergeTreeMessages = (tokens: ReadonlyArray<string>): Result.Result<ReadonlyArray<string>, string> => {
+  const messages: Array<string> = [];
+  let index = 0;
+  while (index < tokens.length) {
+    const count = decodeDecimalCount(A.getUnsafe(tokens, index));
+    if (O.isNone(count)) {
+      return Result.fail(
+        `a merge-tree message group opened without a path count: ${quoteRecord(A.getUnsafe(tokens, index))}`
+      );
+    }
+    const message = tokens[index + count.value + 2];
+    if (message === undefined) {
+      return Result.fail("a merge-tree message group carried fewer fields than its path count declares");
+    }
+    messages.push(stripMessageNewline(message));
+    index += count.value + 3;
+  }
+  return Result.succeed(messages);
+};
+
+/**
+ * Parses `GitCommand.mergeTree`'s `-z --name-only` output into a
+ * {@link MergeTreeResult}. `conflicted` is whether git exited 1: a clean
+ * answer is exactly one tree oid, and a conflicted one is the tree oid, the
+ * conflicted paths, an empty token, then the message groups.
+ *
+ * **Example** (Read a clean merge)
+ *
+ * ```ts import.meta.vitest name="Read a clean merge"
+ * import { parseMergeTree } from "@beep/git/internal/parsers";
+ * import * as Result from "effect/Result";
+ *
+ * Result.getOrThrow(parseMergeTree(`${"a".repeat(40)}\u0000`, false))._tag // => "clean"
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
+export const parseMergeTree: {
+  (output: string, conflicted: boolean): Result.Result<MergeTreeResult, string>;
+  (conflicted: boolean): (output: string) => Result.Result<MergeTreeResult, string>;
+} = dual(
+  2,
+  (output: string, conflicted: boolean): Result.Result<MergeTreeResult, string> =>
+    Result.flatMap(nulRecords(output, "merge-tree"), (tokens): Result.Result<MergeTreeResult, string> => {
+      const tree = O.getOrElse(A.head(tokens), constant(""));
+      if (!isObjectId(tree)) {
+        return Result.fail(`merge-tree output did not open with a tree object id: ${quoteRecord(tree)}`);
+      }
+      if (!conflicted) {
+        return tokens.length === 1
+          ? Result.succeed(MergeTreeResult.cases.clean.make({ tree }))
+          : Result.fail("a clean merge-tree answer carried more than its tree object id");
+      }
+      const rest = A.drop(tokens, 1);
+      const separator = A.findFirstIndex(rest, Str.isEmpty);
+      if (O.isNone(separator)) {
+        return Result.fail("a conflicted merge-tree answer carried no end to its conflicted paths");
+      }
+      return Result.map(parseMergeTreeMessages(A.drop(rest, separator.value + 1)), (messages) =>
+        MergeTreeResult.cases.conflicted.make({ tree, paths: A.take(rest, separator.value), messages })
+      );
+    })
+);
+
+/**
+ * Parses `GitCommand.upstream`'s `<refname>\0<upstream>` lines and answers
+ * the upstream of exactly `refname`: `Option.none` when that ref is not
+ * listed or has no upstream. A prefix match for another branch is skipped,
+ * and a line without its NUL separator fails closed.
+ *
+ * **Example** (Read a branch's upstream)
+ *
+ * ```ts import.meta.vitest name="Read a branch's upstream"
+ * import { parseUpstream } from "@beep/git/internal/parsers";
+ * import * as O from "effect/Option";
+ * import * as Result from "effect/Result";
+ *
+ * const output = "refs/heads/main\u0000refs/remotes/origin/main\n";
+ * O.getOrNull(Result.getOrThrow(parseUpstream(output, "refs/heads/main"))) // => "refs/remotes/origin/main"
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
+export const parseUpstream: {
+  (output: string, refname: string): Result.Result<O.Option<string>, string>;
+  (refname: string): (output: string) => Result.Result<O.Option<string>, string>;
+} = dual(2, (output: string, refname: string): Result.Result<O.Option<string>, string> => {
+  const lines = A.filter(Str.split("\n")(output), Str.isNonEmpty);
+  const rows = Result.all(
+    A.map(lines, (line) =>
+      O.match(Str.indexOf("\0")(line), {
+        onNone: () => Result.fail(`a for-each-ref upstream line carried no NUL separator: ${quoteRecord(line)}`),
+        onSome: (at) => Result.succeed<readonly [string, string]>([Str.slice(0, at)(line), Str.slice(at + 1)(line)]),
+      })
+    )
+  );
+  return Result.map(rows, (parsed) =>
+    pipe(
+      A.findFirst(parsed, ([name]) => name === refname),
+      O.flatMap(([, value]) => O.liftPredicate(value, Str.isNonEmpty))
+    )
+  );
+});
 
 const commitInfoInput = S.Struct(CommitInfo.fields);
 

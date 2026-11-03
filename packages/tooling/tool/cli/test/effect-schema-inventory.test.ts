@@ -262,13 +262,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
     it.effect(
       "reads snapshot pins and rejects versions without release provenance",
       Effect.fnUntraced(function* () {
-        strictEqual(yield* parseEffectSchemaInventoryPin(snapshotManifest(PIN)), PIN);
-        strictEqual(
-          yield* parseEffectSchemaInventoryPin(
-            `{"workspaces":{"catalog":{"effect":"https://pkg.pr.new/Effect-TS/effect/effect@${PIN}"}}}`
-          ),
-          PIN
+        const parsedEffectSchemaInventoryPin = yield* parseEffectSchemaInventoryPin(snapshotManifest(PIN));
+        strictEqual(parsedEffectSchemaInventoryPin, PIN);
+        const parsedEffectSchemaInventoryPin1 = yield* parseEffectSchemaInventoryPin(
+          `{"workspaces":{"catalog":{"effect":"https://pkg.pr.new/Effect-TS/effect/effect@${PIN}"}}}`
         );
+        strictEqual(parsedEffectSchemaInventoryPin1, PIN);
         const semver = yield* Effect.flip(parseEffectSchemaInventoryPin('{"catalog":{"effect":"4.0.0-rc.118"}}'));
         strictEqual(semver._tag, "EffectSchemaInventoryCatalogPinError");
         strictEqual(semver.specifier, "4.0.0-rc.118");
@@ -284,18 +283,14 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
     it.effect(
       "reads stable release provenance and rejects stale versions or abbreviated commits",
       Effect.fnUntraced(function* () {
-        strictEqual(
-          yield* parseEffectSchemaInventoryPin(
-            `{"catalog":{"effect":"4.0.1"},"config":{"effectSource":{"version":"4.0.1","commit":"${PIN}"}}}`
-          ),
-          PIN
+        const parsedEffectSchemaInventoryPin2 = yield* parseEffectSchemaInventoryPin(
+          `{"catalog":{"effect":"4.0.1"},"config":{"effectSource":{"version":"4.0.1","commit":"${PIN}"}}}`
         );
-        strictEqual(
-          yield* parseEffectSchemaInventoryPin(
-            `{"workspaces":{"catalog":{"effect":"4.0.1"}},"config":{"effectSource":{"version":"4.0.1","commit":"${PIN}"}}}`
-          ),
-          PIN
+        strictEqual(parsedEffectSchemaInventoryPin2, PIN);
+        const parsedEffectSchemaInventoryPin3 = yield* parseEffectSchemaInventoryPin(
+          `{"workspaces":{"catalog":{"effect":"4.0.1"}},"config":{"effectSource":{"version":"4.0.1","commit":"${PIN}"}}}`
         );
+        strictEqual(parsedEffectSchemaInventoryPin3, PIN);
         for (const manifest of [
           `{"catalog":{"effect":"4.0.2"},"config":{"effectSource":{"version":"4.0.1","commit":"${PIN}"}}}`,
           `{"catalog":{"effect":"^4.0.1"},"config":{"effectSource":{"version":"4.0.1","commit":"${PIN}"}}}`,
@@ -311,14 +306,14 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
     it.effect(
       "digests the concatenated JSONL bytes",
       Effect.fnUntraced(function* () {
+        const digestEffectSchemaInventoryJsonl4 = yield* digestEffectSchemaInventoryJsonl([]);
         strictEqual(
-          yield* digestEffectSchemaInventoryJsonl([]),
+          digestEffectSchemaInventoryJsonl4,
           "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         );
-        strictEqual(
-          yield* digestEffectSchemaInventoryJsonl(["a\n", "", "b\n"]),
-          yield* digestEffectSchemaInventoryJsonl(["a\nb\n"])
-        );
+        const digestEffectSchemaInventoryJsonl5 = yield* digestEffectSchemaInventoryJsonl(["a\n", "", "b\n"]);
+        const digestEffectSchemaInventoryJsonl26 = yield* digestEffectSchemaInventoryJsonl(["a\nb\n"]);
+        strictEqual(digestEffectSchemaInventoryJsonl5, digestEffectSchemaInventoryJsonl26);
       })
     );
 
@@ -393,7 +388,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
         const body = yield* renderEffectSchemaInventoryJsonl(rows);
         assertTrue(Str.endsWith("\n")(body));
         strictEqual(A.filter(Str.split(body, "\n"), Str.isNonEmpty).length, rows.length);
-        strictEqual(yield* renderEffectSchemaInventoryJsonl([]), "");
+        const renderEffectSchemaInventoryJsonl6 = yield* renderEffectSchemaInventoryJsonl([]);
+        strictEqual(renderEffectSchemaInventoryJsonl6, "");
         const drift = diffEffectSchemaInventoryFiles(
           [
             EffectSchemaInventoryFile.make({ name: "effect-Demo.jsonl", content: "same\nexpected line\n" }),
@@ -472,7 +468,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
           )
         );
         strictEqual(absent._tag, "EffectSchemaInventoryPinAbsentError");
-        strictEqual(yield* Ref.get(reads), 0);
+        const got = yield* Ref.get(reads);
+        strictEqual(got, 0);
       })
     );
 
@@ -491,8 +488,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
         // Every module file plus INDEX.md; no prompt directory exists, so no prompt drift.
         strictEqual(failure.drift.length, EffectSchemaInventoryModules.length + 1);
         assertTrue(A.every(failure.drift, (entry) => entry._tag === "missing"));
-        strictEqual(yield* Ref.get(reads), EffectSchemaInventoryModules.length);
-        deepStrictEqual(yield* fs.readDirectory(root), []);
+        const got7 = yield* Ref.get(reads);
+        strictEqual(got7, EffectSchemaInventoryModules.length);
+        const readDirectory8 = yield* fs.readDirectory(root);
+        deepStrictEqual(readDirectory8, []);
       })
     );
 
@@ -636,9 +635,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
             ["INDEX.md", "# index\n"],
           ])
         );
-        deepStrictEqual(yield* listing(directory), ["INDEX.md", "README.md", "effect-Demo.jsonl", "notes.jsonl"]);
-        strictEqual(yield* fs.readFileString(path.join(directory, "README.md")), "contract\n");
-        deepStrictEqual(yield* leftovers, []);
+        const listing9 = yield* listing(directory);
+        deepStrictEqual(listing9, ["INDEX.md", "README.md", "effect-Demo.jsonl", "notes.jsonl"]);
+        const readFileString10 = yield* fs.readFileString(path.join(directory, "README.md"));
+        strictEqual(readFileString10, "contract\n");
+        const leftovers11 = yield* leftovers;
+        deepStrictEqual(leftovers11, []);
 
         // ".." resolves to the staging parent, so the second write fails before the swap.
         const failure = yield* Effect.flip(
@@ -651,8 +653,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
           )
         );
         strictEqual(failure._tag, "EffectSchemaInventoryError");
-        strictEqual(yield* fs.readFileString(path.join(directory, "effect-Demo.jsonl")), "x\n");
-        deepStrictEqual(yield* leftovers, []);
+        const readFileString12 = yield* fs.readFileString(path.join(directory, "effect-Demo.jsonl"));
+        strictEqual(readFileString12, "x\n");
+        const leftovers13 = yield* leftovers;
+        deepStrictEqual(leftovers13, []);
       })
     );
 
@@ -682,14 +686,18 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
         );
 
         assertInclude((yield* write).message, "Unable to move the staged fixture into");
-        deepStrictEqual(yield* fs.readDirectory(parent), []);
+        const readDirectory14 = yield* fs.readDirectory(parent);
+        deepStrictEqual(readDirectory14, []);
 
         yield* fs.makeDirectory(directory);
         yield* fs.writeFileString(path.join(directory, "INDEX.md"), "# old\n");
         assertInclude((yield* write).message, "Unable to move the staged fixture into");
-        deepStrictEqual(yield* fs.readDirectory(parent), [path.basename(directory)]);
-        deepStrictEqual(yield* fs.readDirectory(directory), ["INDEX.md"]);
-        strictEqual(yield* fs.readFileString(path.join(directory, "INDEX.md")), "# old\n");
+        const readDirectory15 = yield* fs.readDirectory(parent);
+        deepStrictEqual(readDirectory15, [path.basename(directory)]);
+        const readDirectory16 = yield* fs.readDirectory(directory);
+        deepStrictEqual(readDirectory16, ["INDEX.md"]);
+        const readFileString17 = yield* fs.readFileString(path.join(directory, "INDEX.md"));
+        strictEqual(readFileString17, "# old\n");
       })
     );
 
@@ -708,7 +716,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
           writeEffectSchemaInventoryFixture(root, renderedFiles([["INDEX.md", "# index\n"]]))
         );
         assertInclude(write.message, "Unable to list");
-        strictEqual(yield* fs.readFileString(directory), "not a directory\n");
+        const readFileString18 = yield* fs.readFileString(directory);
+        strictEqual(readFileString18, "not a directory\n");
       })
     );
 
@@ -732,11 +741,13 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
           [demoModule, demoSource],
           [otherModule, "export const other = 1\n"],
         ]);
-        deepStrictEqual(yield* check, []);
+        const check19 = yield* check;
+        deepStrictEqual(check19, []);
         yield* fs.makeDirectory(directory, { recursive: true });
         yield* fs.writeFileString(path.join(directory, "notes.md"), "hand-written\n");
         yield* fs.writeFileString(file, prompt);
-        deepStrictEqual(yield* check, []);
+        const check20 = yield* check;
+        deepStrictEqual(check20, []);
         yield* fs.writeFileString(file, Str.replace("return `${x}`", "return x")(prompt));
         const drift = yield* check;
         strictEqual(drift.length, 1);
@@ -839,10 +850,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
         const relative = yield* generate("effect/schema/SchemaJITCompiler/enable", O.some("prompts/enable.md"));
         strictEqual(relative.target, "prompts/enable.md");
         strictEqual(relative.rows, 0);
-        assertInclude(
-          yield* fs.readFileString(path.join(root, "prompts/enable.md")),
-          "| Declarations | 0 top-level declarations"
-        );
+        const readFileString21 = yield* fs.readFileString(path.join(root, "prompts/enable.md"));
+        assertInclude(readFileString21, "| Declarations | 0 top-level declarations");
         const defaulted = yield* generate("effect/schema/SchemaJITCompiler/enable", O.none());
         strictEqual(defaulted.target, `${EffectSchemaInventoryPromptRoot}/effect-schema-SchemaJITCompiler-enable.md`);
         const outside = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-outside-" });
@@ -876,12 +885,13 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
         const check = yield* Effect.flip(run(["--check"]));
         assertTrue(check._tag === "EffectSchemaInventoryDriftError");
         assertTrue(A.some(check.drift, (entry) => entry.file === "INDEX.md"));
-        const out = path.join(
-          yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-command-" }),
-          "p.md"
-        );
+        const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped({
+          prefix: "effect-schema-inventory-command-",
+        });
+        const out = path.join(madeTempDirectoryScoped, "p.md");
         yield* run(["--prompt", "effect/schema/SchemaJITCompiler/enable", "--out", out]);
-        assertInclude(yield* fs.readFileString(out), "# Lane prompt: `effect/schema/SchemaJITCompiler/enable`");
+        const readFileString22 = yield* fs.readFileString(out);
+        assertInclude(readFileString22, "# Lane prompt: `effect/schema/SchemaJITCompiler/enable`");
         const conflict = yield* Effect.flip(run(["--write", "--check"]));
         assertTrue(conflict._tag === "EffectSchemaInventoryError");
       })
@@ -928,10 +938,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
             out: O.some("prompts/enable.md"),
           })
         );
-        assertInclude(
-          yield* fs.readFileString(path.join(root, "prompts/enable.md")),
-          "# Lane prompt: `effect/schema/SchemaJITCompiler/enable`"
-        );
+        const readFileString23 = yield* fs.readFileString(path.join(root, "prompts/enable.md"));
+        assertInclude(readFileString23, "# Lane prompt: `effect/schema/SchemaJITCompiler/enable`");
       })
     );
 
@@ -979,9 +987,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-        const head = Str.trim(
-          yield* spawner.string(ChildProcess.make("git", ["rev-parse", "HEAD"], { cwd: repositoryRoot }))
+        const string24 = yield* spawner.string(
+          ChildProcess.make("git", ["rev-parse", "HEAD"], { cwd: repositoryRoot })
         );
+        const head = Str.trim(string24);
 
         const unreadable = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-unreadable-" });
         const noManifest = yield* Effect.flip((yield* EffectSchemaInventorySource.make(unreadable)).readPin);
@@ -998,7 +1007,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
         EffectSchemaInventorySource.layer(linked).pipe(Layer.isLayer, assertTrue);
         const live = yield* EffectSchemaInventorySource.make(linked);
         yield* live.verifyPin(head);
-        assertInclude(yield* live.readPinned(head, "package.json"), '"name": "@beep/root"');
+        const readPinned25 = yield* live.readPinned(head, "package.json");
+        assertInclude(readPinned25, '"name": "@beep/root"');
         assertInclude(
           (yield* Effect.flip(live.readPinned(head, "missing-file.txt"))).message,
           "Unable to read missing-file.txt"

@@ -146,7 +146,8 @@ if (!shouldRunPgliteIntegration) {
           );
 
           expect(result._tag).toBe("Dispatched");
-          expect(yield* Ref.get(observedDuringEffect)).toBe(1);
+          const got = yield* Ref.get(observedDuringEffect);
+          expect(got).toBe(1);
 
           const runKey = yield* newRunKeySince(runKeysBefore);
           const decisions = yield* ledger.readDecisions(runKey);
@@ -158,7 +159,8 @@ if (!shouldRunPgliteIntegration) {
           expect(outcomes).toHaveLength(1);
           expect(outcomes[0]!.settlement).toBe("completed");
           pipe(verifyOutcomeBinding(outcomes[0]!, decisions[0]!), assertTrue);
-          expect(yield* ledger.readUnsettledAllowed(runKey)).toHaveLength(0);
+          const readUnsettledAllowed1 = yield* ledger.readUnsettledAllowed(runKey);
+          expect(readUnsettledAllowed1).toHaveLength(0);
         }),
         pgliteIntegrationTimeoutMillis
       );
@@ -175,7 +177,8 @@ if (!shouldRunPgliteIntegration) {
           const result = yield* dispatchAs(gate, "s-2", ungrantedTool, Ref.set(ran, true));
 
           expect(result._tag).toBe("Refused");
-          pipe(yield* Ref.get(ran), assertFalse);
+          const got2 = yield* Ref.get(ran);
+          pipe(got2, assertFalse);
 
           const runKey = yield* newRunKeySince(runKeysBefore);
           const decisions = yield* ledger.readDecisions(runKey);
@@ -183,10 +186,12 @@ if (!shouldRunPgliteIntegration) {
           const decision = decisions[0]!;
           expect(decision.verdict).toBe("denied");
           expect(decision.verdict === "denied" && decision.reason).toBe("operation-not-granted");
-          expect(yield* ledger.readOutcomes(runKey)).toHaveLength(0);
+          const readOutcomes3 = yield* ledger.readOutcomes(runKey);
+          expect(readOutcomes3).toHaveLength(0);
           // An ordinary denial has no outcome row and must not be reported by
           // the derived unknown-outcome predicate, which is scoped to allowed.
-          expect(yield* ledger.readUnsettledAllowed(runKey)).toHaveLength(0);
+          const readUnsettledAllowed4 = yield* ledger.readUnsettledAllowed(runKey);
+          expect(readUnsettledAllowed4).toHaveLength(0);
         }),
         pgliteIntegrationTimeoutMillis
       );
@@ -213,7 +218,8 @@ if (!shouldRunPgliteIntegration) {
 
           const outcomes = yield* ledger.readOutcomes(runKey);
           expect(A.map(outcomes, (record) => record.decisionHash)).toEqual([decisions[0]!.hash, decisions[2]!.hash]);
-          expect(yield* ledger.readUnsettledAllowed(runKey)).toHaveLength(0);
+          const readUnsettledAllowed5 = yield* ledger.readUnsettledAllowed(runKey);
+          expect(readUnsettledAllowed5).toHaveLength(0);
         }),
         pgliteIntegrationTimeoutMillis
       );
@@ -235,7 +241,8 @@ if (!shouldRunPgliteIntegration) {
           const result = yield* dispatchAs(gate, "s-4", grantedTool, Ref.set(ran, true));
 
           expect(result._tag).toBe("Refused");
-          pipe(yield* Ref.get(ran), assertFalse);
+          const got6 = yield* Ref.get(ran);
+          pipe(got6, assertFalse);
         }),
         pgliteIntegrationTimeoutMillis
       );

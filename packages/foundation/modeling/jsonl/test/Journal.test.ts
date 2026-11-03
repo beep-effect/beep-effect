@@ -38,18 +38,20 @@ it.effect("constructs over a missing file, with explicit create/remove and typed
   Effect.gen(function* () {
     const fs = yield* memory();
     const journal = yield* open(fs);
-    assertNone(yield* SubscriptionRef.get(journal.latest));
-    assertFailure(
-      yield* Effect.result(journal.append("noted", { round: 1, label: "a" })),
-      JournalNotFound.make({ path })
-    );
-    assert.isFalse(yield* fs.exists(path));
+    const got = yield* SubscriptionRef.get(journal.latest);
+    assertNone(got);
+    const result1 = yield* Effect.result(journal.append("noted", { round: 1, label: "a" }));
+    assertFailure(result1, JournalNotFound.make({ path }));
+    const exists2 = yield* fs.exists(path);
+    assert.isFalse(exists2);
     yield* journal.create;
     yield* journal.append("noted", { round: 1, label: "a" });
-    assert.isTrue(yield* fs.exists(path));
+    const exists3 = yield* fs.exists(path);
+    assert.isTrue(exists3);
     yield* journal.remove;
     yield* journal.remove;
-    assert.isFalse(yield* fs.exists(path));
+    const exists4 = yield* fs.exists(path);
+    assert.isFalse(exists4);
   })
 );
 it.effect("stamps the TestClock instant and writes exactly one terminated line", () =>
@@ -60,8 +62,10 @@ it.effect("stamps the TestClock instant and writes exactly one terminated line",
     yield* TestClock.setTime(123456789);
     const appended = yield* journal.append("noted", { round: 1, label: "a" });
     assert.strictEqual(DateTime.toEpochMillis(appended.at), 123456789);
-    assert.strictEqual(yield* fs.readFileString(path), `${appended.line.text}\n`);
-    assertSome(yield* SubscriptionRef.get(journal.latest), appended);
+    const readFileString5 = yield* fs.readFileString(path);
+    assert.strictEqual(readFileString5, `${appended.line.text}\n`);
+    const got6 = yield* SubscriptionRef.get(journal.latest);
+    assertSome(got6, appended);
   })
 );
 it.effect("terminal refusal, quiescence and reopening follow the last event", () =>
@@ -70,13 +74,13 @@ it.effect("terminal refusal, quiescence and reopening follow the last event", ()
     const journal = yield* open(fs);
     yield* journal.create;
     yield* journal.append("ended", null);
-    assert.isTrue(yield* journal.quiescent);
-    assertFailure(
-      yield* Effect.result(journal.append("noted", { round: 1, label: "a" })),
-      TerminalViolation.make({ event: "noted", terminal: "ended" })
-    );
+    const quiescent7 = yield* journal.quiescent;
+    assert.isTrue(quiescent7);
+    const result8 = yield* Effect.result(journal.append("noted", { round: 1, label: "a" }));
+    assertFailure(result8, TerminalViolation.make({ event: "noted", terminal: "ended" }));
     yield* journal.append("reopened", null);
-    assert.isFalse(yield* journal.quiescent);
+    const quiescent9 = yield* journal.quiescent;
+    assert.isFalse(quiescent9);
     yield* journal.append("noted", { round: 2, label: "b" });
     assert.strictEqual((yield* Stream.runCollect(journal.query())).length, 3);
   })
@@ -193,10 +197,8 @@ it.effect("closed journals reject late appends", () =>
     const journal = yield* open(fs).pipe(Effect.provideService(Scope.Scope, scope));
     yield* journal.create;
     yield* Scope.close(scope, Exit.void);
-    assertFailure(
-      yield* Effect.result(journal.append("noted", { round: 1, label: "late" })),
-      JournalClosed.make({ event: "noted" })
-    );
+    const result10 = yield* Effect.result(journal.append("noted", { round: 1, label: "late" }));
+    assertFailure(result10, JournalClosed.make({ event: "noted" }));
   })
 );
 it.effect("layer instances are independent while one bound layer is memoized", () =>
@@ -224,8 +226,9 @@ it.effect("an outer subscriber receives completed appends before scope end", () 
     const reader = yield* journal.changes().pipe(Stream.runCollect, Effect.forkChild({ startImmediately: true }));
     for (const round of A.range(1, 4)) yield* journal.append("noted", { round, label: "a" });
     yield* Scope.close(scope, Exit.void);
+    const join11 = yield* Fiber.join(reader);
     assert.deepStrictEqual(
-      A.map(yield* Fiber.join(reader), (row) => row.data),
+      A.map(join11, (row) => row.data),
       A.map(A.range(1, 4), (round) => ({ round, label: "a" }))
     );
   })
@@ -246,7 +249,8 @@ it.effect("full hub bounds shutdown with TestClock while preserving disk writes"
     const closing = yield* Scope.close(scope, Exit.void).pipe(Effect.forkChild({ startImmediately: true }));
     yield* TestClock.adjust(Duration.seconds(2));
     yield* Fiber.join(closing);
-    assert.include(yield* fs.readFileString(path), '"round":2');
+    const readFileString12 = yield* fs.readFileString(path);
+    assert.include(readFileString12, '"round":2');
     yield* Fiber.interrupt(append);
   })
 );
@@ -335,7 +339,8 @@ it.effect("appendPatch preserves nullable class payloads and rejects invalid pat
     assert.strictEqual(Line.split(persisted).length, 2);
     const failure = yield* Effect.flip(journal.appendPatch("boxed", { round: Number.NaN }));
     assert.strictEqual(failure._tag, "InvalidData");
-    assert.strictEqual(yield* fs.readFileString(path), persisted);
+    const readFileString13 = yield* fs.readFileString(path);
+    assert.strictEqual(readFileString13, persisted);
   })
 );
 
@@ -360,12 +365,14 @@ it.effect("appendPatch preserves transformed class codecs and rejects invalid pa
     assert.include(persisted, '"round":"0.5"');
     const failure = yield* Effect.flip(journal.appendPatch("boxed", { round: Number.NaN }));
     assert.strictEqual(failure._tag, "InvalidData");
-    assert.strictEqual(yield* fs.readFileString(path), persisted);
+    const readFileString14 = yield* fs.readFileString(path);
+    assert.strictEqual(readFileString14, persisted);
     // Infinity encodes to the valid wire value "0", but the original decoder
     // reconstructs Infinity and rejects it through Boxed's finite field check.
     const decodedFailure = yield* Effect.flip(journal.appendPatch("boxed", { round: Number.POSITIVE_INFINITY }));
     assert.strictEqual(decodedFailure._tag, "InvalidData");
-    assert.strictEqual(yield* fs.readFileString(path), persisted);
+    const readFileString15 = yield* fs.readFileString(path);
+    assert.strictEqual(readFileString15, persisted);
   })
 );
 
@@ -416,7 +423,8 @@ for (const [name, data, seedRound, encodedRound] of composedBoxCases) {
       assert.include(persisted, encodedRound);
       assert.notInclude(persisted, "~effect/Schema/Class/");
       assert.strictEqual((yield* Effect.flip(journal.appendPatch("boxed", { round: Number.NaN })))._tag, "InvalidData");
-      assert.strictEqual(yield* fs.readFileString(path), persisted);
+      const readFileString16 = yield* fs.readFileString(path);
+      assert.strictEqual(readFileString16, persisted);
     })
   );
 }
@@ -460,7 +468,8 @@ for (const [name, data] of [
       assert.include(persisted, '"extra":"z"');
       assert.notInclude(persisted, "~effect/Schema/Class/");
       assert.strictEqual((yield* Effect.flip(journal.appendPatch("ambiguous", { n: Number.NaN })))._tag, "InvalidData");
-      assert.strictEqual(yield* fs.readFileString(path), persisted);
+      const readFileString17 = yield* fs.readFileString(path);
+      assert.strictEqual(readFileString17, persisted);
     })
   );
 }
@@ -510,7 +519,8 @@ describe("Journal — the terminal Exit never overtakes a completed append", () 
         Stream.filter((value) => O.exists(value, (row) => row.event === "noted" && row.data.round === 3)),
         Stream.runHead
       );
-      assert.strictEqual(Line.split(yield* fs.readFileString(path)).length, 3, "every write landed");
+      const readFileString18 = yield* fs.readFileString(path);
+      assert.strictEqual(Line.split(readFileString18).length, 3, "every write landed");
       assert.isUndefined(second.pollUnsafe(), "the second append is blocked in publish");
       assert.isUndefined(third.pollUnsafe(), "the third append is blocked behind the second one's baton");
 

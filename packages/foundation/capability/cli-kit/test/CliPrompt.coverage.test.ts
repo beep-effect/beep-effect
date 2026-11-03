@@ -36,8 +36,10 @@ it.layer(CliPrompt.gateTerminal.pipe(Layer.provide(Layer.succeed(Terminal.Termin
         const terminal = yield* Terminal.Terminal;
         const answer = yield* terminal.readLine.pipe(Effect.provideService(CliInteractive, true));
         assert.strictEqual(answer, "person answered");
-        assert.strictEqual(yield* terminal.columns, 80);
-        assert.strictEqual(yield* terminal.rows, 24);
+        const columns1 = yield* terminal.columns;
+        assert.strictEqual(columns1, 80);
+        const rows2 = yield* terminal.rows;
+        assert.strictEqual(rows2, 24);
       })
     );
   }

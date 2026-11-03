@@ -264,8 +264,10 @@ const streamFindings = Effect.fn("Explore.streamFindings")(function* (
       )
     );
   }
-  findings = A.appendAll(findings, yield* statusDriftFindings(root, slug, packetPath, derived));
-  findings = A.appendAll(findings, yield* traceFindings(packetPath, slug, derived, listing.events));
+  const statusDriftFindings1 = yield* statusDriftFindings(root, slug, packetPath, derived);
+  findings = A.appendAll(findings, statusDriftFindings1);
+  const traceFindings2 = yield* traceFindings(packetPath, slug, derived, listing.events);
+  findings = A.appendAll(findings, traceFindings2);
   return { derived, findings };
 });
 
@@ -341,7 +343,8 @@ const scanRootStreams = Effect.fn("Explore.scanRootStreams")(function* (root: Pa
     const result = yield* streamFindings(root, slug, packetPath);
     summaries = A.append(summaries, derivedSummary(root, slug, result.derived));
     findings = A.appendAll(findings, result.findings);
-    findings = A.appendAll(findings, yield* graduationPendingFindings(root, slug, packetPath));
+    const graduationPendingFindings3 = yield* graduationPendingFindings(root, slug, packetPath);
+    findings = A.appendAll(findings, graduationPendingFindings3);
   }
   return { streams, summaries, findings };
 });
@@ -393,6 +396,9 @@ export const runExploreCheck = Effect.fn("Explore.runExploreCheck")(function* ()
       findings: A.appendAll(merged.findings, scan.findings),
     };
   }
-  merged = { ...merged, findings: A.appendAll(merged.findings, yield* fleetLintFindings()) };
+  merged = {
+    ...merged,
+    findings: yield* Effect.map(fleetLintFindings(), (value) => A.appendAll(merged.findings, value)),
+  };
   yield* printCheckReport(merged);
 });

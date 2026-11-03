@@ -34,6 +34,15 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { build } from "esbuild";
 
+class BrowserWorkerImportGraphTestOperationError extends S.TaggedError<
+  BrowserWorkerImportGraphTestOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "BrowserWorkerImportGraphTestOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in BrowserWorkerImportGraph.test.ts." }
+) {}
+
 const WORKER_ENTRY = "@beep/ontology-use-cases/aggregates/Session/worker";
 
 const PACKAGE_ROOT = new URL("..", import.meta.url);
@@ -79,22 +88,24 @@ it.layer(testPlatformLayer, { timeout: "30 seconds" })(
         const path = yield* Path.Path;
         const dynamicModules = yield* DynamicModuleLoader;
         const packageRoot = yield* path.fromFileUrl(PACKAGE_ROOT);
-        const result = yield* Effect.tryPromise(() =>
-          build({
-            entryPoints: [WORKER_ENTRY],
-            absWorkingDir: packageRoot,
-            bundle: true,
-            write: false,
-            format: "esm",
-            platform: "browser",
-            // Vite dev serves the whole graph unbundled and runs every module's
-            // top-level code; tree-shaking would hide exactly the leaks that
-            // crash real dev workers.
-            treeShaking: false,
-            metafile: true,
-            logLevel: "silent",
-          })
-        );
+        const result = yield* Effect.tryPromise({
+          try: () =>
+            build({
+              entryPoints: [WORKER_ENTRY],
+              absWorkingDir: packageRoot,
+              bundle: true,
+              write: false,
+              format: "esm",
+              platform: "browser",
+              // Vite dev serves the whole graph unbundled and runs every module's
+              // top-level code; tree-shaking would hide exactly the leaks that
+              // crash real dev workers.
+              treeShaking: false,
+              metafile: true,
+              logLevel: "silent",
+            }),
+          catch: (cause) => BrowserWorkerImportGraphTestOperationError.make({ cause }),
+        });
 
         const inputs = R.keys(result.metafile.inputs);
 

@@ -76,13 +76,19 @@ describe("DuckDbClient", { concurrent: false }, () => {
         yield* sql`CREATE TABLE stale_plan (singleton INTEGER, v INTEGER)`;
         const select = sql<{ readonly v: number }>`SELECT v FROM stale_plan WHERE singleton = 1`;
         const count = sql<{ readonly n: number }>`SELECT count(*) AS n FROM stale_plan WHERE singleton < 2`;
-        assert.deepStrictEqual(yield* select, []);
-        assert.deepStrictEqual(yield* count.values, [[0]]);
+        const select1 = yield* select;
+        assert.deepStrictEqual(select1, []);
+        const values2 = yield* count.values;
+        assert.deepStrictEqual(values2, [[0]]);
         yield* sql`INSERT INTO stale_plan VALUES (1, 7)`;
-        assert.deepStrictEqual(yield* select, [{ v: 7 }]);
-        assert.deepStrictEqual(yield* sql`SELECT v FROM stale_plan WHERE singleton = 1`, [{ v: 7 }]);
-        assert.deepStrictEqual(yield* count.values, [[1]]);
-        assert.deepStrictEqual(yield* sql`SELECT v FROM stale_plan WHERE singleton = ${1}`, [{ v: 7 }]);
+        const select3 = yield* select;
+        assert.deepStrictEqual(select3, [{ v: 7 }]);
+        const value4 = yield* sql`SELECT v FROM stale_plan WHERE singleton = 1`;
+        assert.deepStrictEqual(value4, [{ v: 7 }]);
+        const values5 = yield* count.values;
+        assert.deepStrictEqual(values5, [[1]]);
+        const value6 = yield* sql`SELECT v FROM stale_plan WHERE singleton = ${1}`;
+        assert.deepStrictEqual(value6, [{ v: 7 }]);
       })
     );
 
@@ -115,7 +121,8 @@ describe("DuckDbClient", { concurrent: false }, () => {
         const inHelper = yield* sql`SELECT id FROM crud_people WHERE id IN ${sql.in([3, 4])} ORDER BY id`;
         assert.deepStrictEqual(inHelper, [{ id: 3 }, { id: 4 }]);
         yield* sql`DELETE FROM crud_people WHERE id = ${3}`;
-        assert.deepStrictEqual(yield* sql`SELECT count(*) AS n FROM crud_people`, [{ n: 3 }]);
+        const value7 = yield* sql`SELECT count(*) AS n FROM crud_people`;
+        assert.deepStrictEqual(value7, [{ n: 3 }]);
       })
     );
 
@@ -136,7 +143,8 @@ describe("DuckDbClient", { concurrent: false }, () => {
           ],
           "data"
         )} WHERE uv_people.id = data.id`;
-        assert.deepStrictEqual(yield* sql`SELECT id, name FROM uv_people ORDER BY id`, [
+        const value8 = yield* sql`SELECT id, name FROM uv_people ORDER BY id`;
+        assert.deepStrictEqual(value8, [
           { id: 1, name: "x" },
           { id: 2, name: "b" },
           { id: 3, name: "z" },
@@ -150,15 +158,17 @@ describe("DuckDbClient", { concurrent: false }, () => {
         const sql = yield* SqlClient.SqlClient;
         yield* sql`CREATE TABLE values_rows (id INTEGER, name VARCHAR)`;
         yield* sql`INSERT INTO values_rows VALUES (1, 'one'), (2, 'two')`;
-        assert.deepStrictEqual(yield* sql`SELECT id, name FROM values_rows ORDER BY id`.values, [
+        const values9 = yield* sql`SELECT id, name FROM values_rows ORDER BY id`.values;
+        assert.deepStrictEqual(values9, [
           [1, "one"],
           [2, "two"],
         ]);
-        assert.deepStrictEqual(yield* sql`SELECT id, name FROM values_rows WHERE id = ${2}`.valuesUnprepared, [
-          [2, "two"],
-        ]);
-        assert.deepStrictEqual(yield* sql`INSERT INTO values_rows VALUES (3, 'three')`.values, []);
-        assert.deepStrictEqual(yield* sql`INSERT INTO values_rows VALUES (4, 'four')`.valuesUnprepared, []);
+        const valuesUnprepared10 = yield* sql`SELECT id, name FROM values_rows WHERE id = ${2}`.valuesUnprepared;
+        assert.deepStrictEqual(valuesUnprepared10, [[2, "two"]]);
+        const values11 = yield* sql`INSERT INTO values_rows VALUES (3, 'three')`.values;
+        assert.deepStrictEqual(values11, []);
+        const valuesUnprepared12 = yield* sql`INSERT INTO values_rows VALUES (4, 'four')`.valuesUnprepared;
+        assert.deepStrictEqual(valuesUnprepared12, []);
       })
     );
 
@@ -166,7 +176,8 @@ describe("DuckDbClient", { concurrent: false }, () => {
       "binds parameters on the unprepared path",
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
-        assert.deepStrictEqual(yield* sql`SELECT ${5} AS v`.unprepared, [{ v: 5 }]);
+        const unprepared13 = yield* sql`SELECT ${5} AS v`.unprepared;
+        assert.deepStrictEqual(unprepared13, [{ v: 5 }]);
       })
     );
 
@@ -174,14 +185,15 @@ describe("DuckDbClient", { concurrent: false }, () => {
       "runs multi-statement SQL without params on both paths",
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
-        assert.deepStrictEqual(
-          yield* sql`CREATE TABLE multi_stmt (i INTEGER); INSERT INTO multi_stmt VALUES (1)`.unprepared,
-          []
-        );
-        assert.deepStrictEqual(yield* sql`INSERT INTO multi_stmt VALUES (2); INSERT INTO multi_stmt VALUES (3)`, []);
+        const unprepared14 = yield* sql`CREATE TABLE multi_stmt (i INTEGER); INSERT INTO multi_stmt VALUES (1)`
+          .unprepared;
+        assert.deepStrictEqual(unprepared14, []);
+        const value15 = yield* sql`INSERT INTO multi_stmt VALUES (2); INSERT INTO multi_stmt VALUES (3)`;
+        assert.deepStrictEqual(value15, []);
         // second run hits the cached RunDirect entry
         yield* sql`INSERT INTO multi_stmt VALUES (2); INSERT INTO multi_stmt VALUES (3)`;
-        assert.deepStrictEqual(yield* sql`SELECT count(*) AS n FROM multi_stmt`, [{ n: 5 }]);
+        const value16 = yield* sql`SELECT count(*) AS n FROM multi_stmt`;
+        assert.deepStrictEqual(value16, [{ n: 5 }]);
       })
     );
 
@@ -189,10 +201,14 @@ describe("DuckDbClient", { concurrent: false }, () => {
       "returns an empty result for blank SQL",
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
-        assert.deepStrictEqual(yield* sql.unsafe("   "), []);
-        assert.deepStrictEqual(yield* sql.unsafe("").unprepared, []);
-        assert.deepStrictEqual(yield* sql.unsafe("  ").values, []);
-        assert.strictEqual(yield* Stream.runCount(sql.unsafe(" ").stream), 0);
+        const unsafe17 = yield* sql.unsafe("   ");
+        assert.deepStrictEqual(unsafe17, []);
+        const unprepared18 = yield* sql.unsafe("").unprepared;
+        assert.deepStrictEqual(unprepared18, []);
+        const values19 = yield* sql.unsafe("  ").values;
+        assert.deepStrictEqual(values19, []);
+        const resultCount = yield* Stream.runCount(sql.unsafe(" ").stream);
+        assert.strictEqual(resultCount, 0);
       })
     );
 
@@ -200,10 +216,14 @@ describe("DuckDbClient", { concurrent: false }, () => {
       "returns [] for DDL and plain DML",
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
-        assert.deepStrictEqual(yield* sql`CREATE TABLE ddl_dml (i INTEGER)`, []);
-        assert.deepStrictEqual(yield* sql`INSERT INTO ddl_dml VALUES (1), (2)`, []);
-        assert.deepStrictEqual(yield* sql`UPDATE ddl_dml SET i = i + 1`, []);
-        assert.deepStrictEqual(yield* sql`DELETE FROM ddl_dml WHERE i = 3`, []);
+        const value20 = yield* sql`CREATE TABLE ddl_dml (i INTEGER)`;
+        assert.deepStrictEqual(value20, []);
+        const value21 = yield* sql`INSERT INTO ddl_dml VALUES (1), (2)`;
+        assert.deepStrictEqual(value21, []);
+        const value22 = yield* sql`UPDATE ddl_dml SET i = i + 1`;
+        assert.deepStrictEqual(value22, []);
+        const value23 = yield* sql`DELETE FROM ddl_dml WHERE i = 3`;
+        assert.deepStrictEqual(value23, []);
       })
     );
 
@@ -212,8 +232,10 @@ describe("DuckDbClient", { concurrent: false }, () => {
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
         yield* sql`CREATE TABLE raw_rows (id INTEGER)`;
-        assert.deepStrictEqual(yield* sql`INSERT INTO raw_rows VALUES (1), (2)`.raw, { changes: 2, rows: [] });
-        assert.deepStrictEqual(yield* sql`INSERT INTO raw_rows VALUES (3) RETURNING id`.raw, {
+        const raw24 = yield* sql`INSERT INTO raw_rows VALUES (1), (2)`.raw;
+        assert.deepStrictEqual(raw24, { changes: 2, rows: [] });
+        const raw25 = yield* sql`INSERT INTO raw_rows VALUES (3) RETURNING id`.raw;
+        assert.deepStrictEqual(raw25, {
           changes: 0,
           rows: [{ id: 3 }],
         });
@@ -225,7 +247,8 @@ describe("DuckDbClient", { concurrent: false }, () => {
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
         const query = sql`SELECT 9007199254740993::BIGINT AS b, 7::HUGEINT AS h, 8::UBIGINT AS u, [1::BIGINT] AS l, (SELECT count(*) FROM range(3)) AS c`;
-        assert.deepStrictEqual(yield* query, [{ b: 9007199254740992, h: 7, u: 8, l: [1], c: 3 }]);
+        const query26 = yield* query;
+        assert.deepStrictEqual(query26, [{ b: 9007199254740992, h: 7, u: 8, l: [1], c: 3 }]);
         const safe = yield* query.pipe(Effect.provideService(SqlClient.SafeIntegers, true));
         assert.deepStrictEqual(safe, [
           {
@@ -313,15 +336,17 @@ describe("DuckDbClient", { concurrent: false }, () => {
         yield* sql`CREATE TABLE lead_null (id INTEGER, tags INTEGER[], names VARCHAR[])`;
         yield* sql`INSERT INTO lead_null ${sql.insert({ id: 1, tags: [null, 7, 8], names: [null, "x"] })}`;
         yield* sql.unsafe("INSERT INTO lead_null VALUES (?, ?, ?)", [2, [undefined, 9], [undefined, "a"]]);
-        assert.deepStrictEqual(yield* sql`SELECT * FROM lead_null ORDER BY id`, [
+        const value27 = yield* sql`SELECT * FROM lead_null ORDER BY id`;
+        assert.deepStrictEqual(value27, [
           { id: 1, tags: [null, 7, 8], names: [null, "x"] },
           { id: 2, tags: [null, 9], names: [null, "a"] },
         ]);
-        assert.deepStrictEqual(yield* sql`SELECT ${[null, 1]} AS l`, [{ l: [null, 1] }]);
-        assert.deepStrictEqual(yield* sql.unsafe("SELECT ? AS l", [[[null], null, [null, 2]]]), [
-          { l: [[null], null, [null, 2]] },
-        ]);
-        assert.deepStrictEqual(yield* sql`SELECT ${[null, null]} AS l`, [{ l: [null, null] }]);
+        const value28 = yield* sql`SELECT ${[null, 1]} AS l`;
+        assert.deepStrictEqual(value28, [{ l: [null, 1] }]);
+        const unsafe29 = yield* sql.unsafe("SELECT ? AS l", [[[null], null, [null, 2]]]);
+        assert.deepStrictEqual(unsafe29, [{ l: [[null], null, [null, 2]] }]);
+        const value30 = yield* sql`SELECT ${[null, null]} AS l`;
+        assert.deepStrictEqual(value30, [{ l: [null, null] }]);
       })
     );
 
@@ -333,17 +358,16 @@ describe("DuckDbClient", { concurrent: false }, () => {
         yield* sql`INSERT INTO widen_list ${sql.insert({ id: 1, xs: [1, 2.5], grid: [[1], [2.5]] })}`;
         yield* sql.unsafe("INSERT INTO widen_list VALUES (?, ?, ?)", [2, [null, 3, 0.5], [[null, 4], null]]);
         yield* sql.unsafe("INSERT INTO widen_list VALUES (?, ?, ?)", [3, [3e9, 1.5], [[2.5, 1]]]).unprepared;
-        assert.deepStrictEqual(yield* sql`SELECT * FROM widen_list ORDER BY id`, [
+        const value31 = yield* sql`SELECT * FROM widen_list ORDER BY id`;
+        assert.deepStrictEqual(value31, [
           { id: 1, xs: [1, 2.5], grid: [[1], [2.5]] },
           { id: 2, xs: [null, 3, 0.5], grid: [[null, 4], null] },
           { id: 3, xs: [3e9, 1.5], grid: [[2.5, 1]] },
         ]);
-        assert.deepStrictEqual(yield* sql`SELECT ${[1, 2.5]} AS l, typeof(${[1, 2.5]}) AS t`, [
-          { l: [1, 2.5], t: "DOUBLE[]" },
-        ]);
-        assert.deepStrictEqual(yield* sql`SELECT typeof(${[1, 3e9]}) AS t, typeof(${[[1], [2.5]]}) AS g`, [
-          { t: "BIGINT[]", g: "DOUBLE[][]" },
-        ]);
+        const value32 = yield* sql`SELECT ${[1, 2.5]} AS l, typeof(${[1, 2.5]}) AS t`;
+        assert.deepStrictEqual(value32, [{ l: [1, 2.5], t: "DOUBLE[]" }]);
+        const value33 = yield* sql`SELECT typeof(${[1, 3e9]}) AS t, typeof(${[[1], [2.5]]}) AS g`;
+        assert.deepStrictEqual(value33, [{ t: "BIGINT[]", g: "DOUBLE[][]" }]);
       })
     );
 
@@ -355,14 +379,18 @@ describe("DuckDbClient", { concurrent: false }, () => {
         yield* sql`INSERT INTO empty_list_bind ${sql.insert({ id: 1, tags: [], names: [], grid: [] })}`;
         yield* sql.unsafe("INSERT INTO empty_list_bind VALUES (?, ?, ?, ?)", [2, [], [], [[], [3]]]);
         yield* sql.unsafe("INSERT INTO empty_list_bind VALUES (?, ?, ?, ?)", [3, [], ["a"], [[]]]).unprepared;
-        assert.deepStrictEqual(yield* sql`SELECT * FROM empty_list_bind ORDER BY id`, [
+        const value34 = yield* sql`SELECT * FROM empty_list_bind ORDER BY id`;
+        assert.deepStrictEqual(value34, [
           { id: 1, tags: [], names: [], grid: [] },
           { id: 2, tags: [], names: [], grid: [[], [3]] },
           { id: 3, tags: [], names: ["a"], grid: [[]] },
         ]);
-        assert.deepStrictEqual(yield* sql`SELECT ${[]} AS l, len(${[]}) AS n`, [{ l: [], n: 0 }]);
-        assert.deepStrictEqual(yield* sql.unsafe("SELECT ?::VARCHAR[] AS l", [[]]), [{ l: [] }]);
-        assert.deepStrictEqual(yield* sql`SELECT count(*) AS n FROM empty_list_bind WHERE tags = ${[]}`, [{ n: 3 }]);
+        const value35 = yield* sql`SELECT ${[]} AS l, len(${[]}) AS n`;
+        assert.deepStrictEqual(value35, [{ l: [], n: 0 }]);
+        const unsafe36 = yield* sql.unsafe("SELECT ?::VARCHAR[] AS l", [[]]);
+        assert.deepStrictEqual(unsafe36, [{ l: [] }]);
+        const value37 = yield* sql`SELECT count(*) AS n FROM empty_list_bind WHERE tags = ${[]}`;
+        assert.deepStrictEqual(value37, [{ n: 3 }]);
       })
     );
 
@@ -464,7 +492,8 @@ describe("DuckDbClient", { concurrent: false }, () => {
       "reads BIT as its bit string",
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
-        assert.deepStrictEqual(yield* sql`SELECT '101'::BIT AS b`, [{ b: "101" }]);
+        const value38 = yield* sql`SELECT '101'::BIT AS b`;
+        assert.deepStrictEqual(value38, [{ b: "101" }]);
       })
     );
 
@@ -472,7 +501,8 @@ describe("DuckDbClient", { concurrent: false }, () => {
       "binds JavaScript values",
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
-        assert.deepStrictEqual(yield* sql.unsafe("SELECT ?::INTEGER IS NULL AS n", [undefined]), [{ n: true }]);
+        const unsafe39 = yield* sql.unsafe("SELECT ?::INTEGER IS NULL AS n", [undefined]);
+        assert.deepStrictEqual(unsafe39, [{ n: true }]);
 
         const instant = BIND_INSTANT;
         yield* sql`CREATE TABLE bind_dates (ts TIMESTAMP, tz TIMESTAMPTZ)`;
@@ -490,20 +520,21 @@ describe("DuckDbClient", { concurrent: false }, () => {
 
         yield* sql`CREATE TABLE bind_bigints (b BIGINT)`;
         yield* sql`INSERT INTO bind_bigints VALUES (${BigInt("9007199254740993")})`;
-        assert.deepStrictEqual(
-          yield* sql`SELECT b FROM bind_bigints`.pipe(Effect.provideService(SqlClient.SafeIntegers, true)),
-          [{ b: BigInt("9007199254740993") }]
-        );
+        const pipe40 = yield* sql`SELECT b FROM bind_bigints`.pipe(Effect.provideService(SqlClient.SafeIntegers, true));
+        assert.deepStrictEqual(pipe40, [{ b: BigInt("9007199254740993") }]);
 
-        assert.deepStrictEqual(yield* sql.unsafe("SELECT ?::INTEGER[] AS l", [[1, 2, 3]]), [{ l: [1, 2, 3] }]);
-        assert.deepStrictEqual(yield* sql.unsafe("SELECT list_sum(?) AS s", [[4, 5]]), [{ s: 9 }]);
+        const unsafe41 = yield* sql.unsafe("SELECT ?::INTEGER[] AS l", [[1, 2, 3]]);
+        assert.deepStrictEqual(unsafe41, [{ l: [1, 2, 3] }]);
+        const unsafe42 = yield* sql.unsafe("SELECT list_sum(?) AS s", [[4, 5]]);
+        assert.deepStrictEqual(unsafe42, [{ s: 9 }]);
 
-        assert.deepStrictEqual(yield* sql.unsafe("SELECT ? AS j", [{ a: 1, b: "x" }]), [{ j: '{"a":1,"b":"x"}' }]);
-        assert.deepStrictEqual(yield* sql.unsafe("SELECT (?::JSON)->>'a' AS a", [{ a: 1 }]), [{ a: "1" }]);
+        const unsafe43 = yield* sql.unsafe("SELECT ? AS j", [{ a: 1, b: "x" }]);
+        assert.deepStrictEqual(unsafe43, [{ j: '{"a":1,"b":"x"}' }]);
+        const unsafe44 = yield* sql.unsafe("SELECT (?::JSON)->>'a' AS a", [{ a: 1 }]);
+        assert.deepStrictEqual(unsafe44, [{ a: "1" }]);
 
-        assert.deepStrictEqual(yield* sql.unsafe("SELECT ? AS d", [decimalValue(BigInt(12345), 5, 2)]), [
-          { d: 123.45 },
-        ]);
+        const unsafe45 = yield* sql.unsafe("SELECT ? AS d", [decimalValue(BigInt(12345), 5, 2)]);
+        assert.deepStrictEqual(unsafe45, [{ d: 123.45 }]);
       })
     );
 
@@ -511,21 +542,18 @@ describe("DuckDbClient", { concurrent: false }, () => {
       "fails unbindable parameters with UnknownError carrying the method operation",
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
-        assertUnknownError(yield* Effect.flip(sql.unsafe("SELECT ? AS x", [new Map()])), "execute");
-        assertUnknownError(yield* Effect.flip(sql.unsafe("SELECT ? AS x", [INVALID_DATE])), "execute");
-        assertUnknownError(
-          yield* Effect.flip(sql.unsafe("SELECT ? AS x", [new Map()]).unprepared),
-          "executeUnprepared"
-        );
-        assertUnknownError(yield* Effect.flip(sql.unsafe("SELECT ? AS x", [new Map()]).values), "executeValues");
-        assertUnknownError(
-          yield* Effect.flip(sql.unsafe("SELECT ? AS x", [new Map()]).valuesUnprepared),
-          "executeValuesUnprepared"
-        );
-        assertUnknownError(
-          yield* Effect.flip(sql.unsafe("SELECT ? AS x", [new Map()]).raw.pipe(Effect.asVoid)),
-          "executeRaw"
-        );
+        const flip46 = yield* Effect.flip(sql.unsafe("SELECT ? AS x", [new Map()]));
+        assertUnknownError(flip46, "execute");
+        const flip47 = yield* Effect.flip(sql.unsafe("SELECT ? AS x", [INVALID_DATE]));
+        assertUnknownError(flip47, "execute");
+        const flip48 = yield* Effect.flip(sql.unsafe("SELECT ? AS x", [new Map()]).unprepared);
+        assertUnknownError(flip48, "executeUnprepared");
+        const flip49 = yield* Effect.flip(sql.unsafe("SELECT ? AS x", [new Map()]).values);
+        assertUnknownError(flip49, "executeValues");
+        const flip50 = yield* Effect.flip(sql.unsafe("SELECT ? AS x", [new Map()]).valuesUnprepared);
+        assertUnknownError(flip50, "executeValuesUnprepared");
+        const flip51 = yield* Effect.flip(sql.unsafe("SELECT ? AS x", [new Map()]).raw.pipe(Effect.asVoid));
+        assertUnknownError(flip51, "executeRaw");
       })
     );
 
@@ -533,11 +561,15 @@ describe("DuckDbClient", { concurrent: false }, () => {
       "fails the documented number and mixed-array bind limits with UnknownError",
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
-        assert.strictEqual(reasonOf(yield* Effect.flip(sql.unsafe("SELECT ? AS x", [1e20])))._tag, "UnknownError");
-        assert.strictEqual(reasonOf(yield* Effect.flip(sql.unsafe("SELECT ? AS x", [[1, "a"]])))._tag, "UnknownError");
+        const flip52 = yield* Effect.flip(sql.unsafe("SELECT ? AS x", [1e20]));
+        assert.strictEqual(reasonOf(flip52)._tag, "UnknownError");
+        const flip53 = yield* Effect.flip(sql.unsafe("SELECT ? AS x", [[1, "a"]]));
+        assert.strictEqual(reasonOf(flip53)._tag, "UnknownError");
         // A ragged list (a list item next to a scalar item) mixes kinds too.
-        assert.strictEqual(reasonOf(yield* Effect.flip(sql.unsafe("SELECT ? AS x", [[[1], 2]])))._tag, "UnknownError");
-        assert.strictEqual(reasonOf(yield* Effect.flip(sql.unsafe("SELECT ? AS x", [[2, [1]]])))._tag, "UnknownError");
+        const flip54 = yield* Effect.flip(sql.unsafe("SELECT ? AS x", [[[1], 2]]));
+        assert.strictEqual(reasonOf(flip54)._tag, "UnknownError");
+        const flip55 = yield* Effect.flip(sql.unsafe("SELECT ? AS x", [[2, [1]]]));
+        assert.strictEqual(reasonOf(flip55)._tag, "UnknownError");
       })
     );
 
@@ -545,7 +577,8 @@ describe("DuckDbClient", { concurrent: false }, () => {
       "uses UTC as the default session TimeZone",
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
-        assert.deepStrictEqual(yield* sql`SELECT current_setting('TimeZone') AS tz`, [{ tz: "UTC" }]);
+        const value56 = yield* sql`SELECT current_setting('TimeZone') AS tz`;
+        assert.deepStrictEqual(value56, [{ tz: "UTC" }]);
       })
     );
 
@@ -554,10 +587,12 @@ describe("DuckDbClient", { concurrent: false }, () => {
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
         const text = "SELECT ?::INTEGER AS a, ?::INTEGER AS b";
-        assert.deepStrictEqual(yield* sql.unsafe(text, [1, 2]), [{ a: 1, b: 2 }]);
+        const unsafe57 = yield* sql.unsafe(text, [1, 2]);
+        assert.deepStrictEqual(unsafe57, [{ a: 1, b: 2 }]);
         const error = yield* Effect.flip(sql.unsafe(text, [3]));
         assert.strictEqual(reasonOf(error)._tag, "UnknownError");
-        assert.deepStrictEqual(yield* sql.unsafe(text, [4, 5]), [{ a: 4, b: 5 }]);
+        const unsafe58 = yield* sql.unsafe(text, [4, 5]);
+        assert.deepStrictEqual(unsafe58, [{ a: 4, b: 5 }]);
       })
     );
 
@@ -580,20 +615,28 @@ describe("DuckDbClient", { concurrent: false }, () => {
         // the contract with or without the cache clear (D38).
         const select = sql`SELECT * FROM use_t WHERE ${1} = 1`;
         const main = [{ src: "main" }];
-        assert.deepStrictEqual(yield* select, main);
-        assert.deepStrictEqual(yield* select, main);
+        const select59 = yield* select;
+        assert.deepStrictEqual(select59, main);
+        const select60 = yield* select;
+        assert.deepStrictEqual(select60, main);
         yield* sql`USE use_aux`;
-        assert.deepStrictEqual(yield* select, [{ src: 42 }]);
+        const select61 = yield* select;
+        assert.deepStrictEqual(select61, [{ src: 42 }]);
         yield* sql`USE memory`;
-        assert.deepStrictEqual(yield* select, main);
+        const select62 = yield* select;
+        assert.deepStrictEqual(select62, main);
         yield* sql`SET schema = 'use_s2'`;
-        assert.deepStrictEqual(yield* select, [{ src: 2, extra: 3 }]);
+        const select63 = yield* select;
+        assert.deepStrictEqual(select63, [{ src: 2, extra: 3 }]);
         yield* sql`RESET schema`;
-        assert.deepStrictEqual(yield* select, main);
+        const select64 = yield* select;
+        assert.deepStrictEqual(select64, main);
         yield* sql`SET search_path = 'use_s2'`;
-        assert.deepStrictEqual(yield* select, [{ src: 2, extra: 3 }]);
+        const select65 = yield* select;
+        assert.deepStrictEqual(select65, [{ src: 2, extra: 3 }]);
         yield* sql`RESET search_path`;
-        assert.deepStrictEqual(yield* select, main);
+        const select66 = yield* select;
+        assert.deepStrictEqual(select66, main);
         yield* client.detach("use_aux");
       })
     );
@@ -608,13 +651,16 @@ describe("DuckDbClient", { concurrent: false }, () => {
         yield* sql`CREATE TABLE memory.multi_ctx_s.multi_ctx_t (src INTEGER)`;
         yield* sql`INSERT INTO memory.multi_ctx_s.multi_ctx_t VALUES (7)`;
         const select = sql`SELECT src FROM multi_ctx_t WHERE ${1} = 1`;
-        assert.deepStrictEqual(yield* select, [{ src: "main" }]);
+        const select67 = yield* select;
+        assert.deepStrictEqual(select67, [{ src: "main" }]);
         // A catalog-context statement inside multi-statement text is not transaction
         // control, so the text runs and the context switch is still tracked.
         yield* sql.unsafe("SET schema = 'multi_ctx_s'; SELECT 1");
-        assert.deepStrictEqual(yield* select, [{ src: 7 }]);
+        const select68 = yield* select;
+        assert.deepStrictEqual(select68, [{ src: 7 }]);
         yield* sql.unsafe("SELECT 1; RESET schema");
-        assert.deepStrictEqual(yield* select, [{ src: "main" }]);
+        const select69 = yield* select;
+        assert.deepStrictEqual(select69, [{ src: "main" }]);
       })
     );
 
@@ -628,17 +674,18 @@ describe("DuckDbClient", { concurrent: false }, () => {
         yield* sql`CREATE TABLE memory.stream_ctx_s.stream_ctx_t (src INTEGER)`;
         yield* sql`INSERT INTO memory.stream_ctx_s.stream_ctx_t VALUES (7)`;
         const select = sql`SELECT src FROM stream_ctx_t WHERE ${1} = 1`;
-        assert.deepStrictEqual(yield* select, [{ src: "main" }]);
-        assert.deepStrictEqual(
-          yield* sql.unsafe("SET schema = 'stream_ctx_s'; SELECT src FROM stream_ctx_t").stream.pipe(Stream.runCollect),
-          [{ src: 7 }]
-        );
-        assert.deepStrictEqual(yield* select, [{ src: 7 }]);
-        assert.deepStrictEqual(
-          yield* sql.unsafe("RESET schema; SELECT src FROM stream_ctx_t").stream.pipe(Stream.runCollect),
-          [{ src: "main" }]
-        );
-        assert.deepStrictEqual(yield* select, [{ src: "main" }]);
+        const select70 = yield* select;
+        assert.deepStrictEqual(select70, [{ src: "main" }]);
+        const pipe71 = yield* sql
+          .unsafe("SET schema = 'stream_ctx_s'; SELECT src FROM stream_ctx_t")
+          .stream.pipe(Stream.runCollect);
+        assert.deepStrictEqual(pipe71, [{ src: 7 }]);
+        const select72 = yield* select;
+        assert.deepStrictEqual(select72, [{ src: 7 }]);
+        const pipe73 = yield* sql.unsafe("RESET schema; SELECT src FROM stream_ctx_t").stream.pipe(Stream.runCollect);
+        assert.deepStrictEqual(pipe73, [{ src: "main" }]);
+        const select74 = yield* select;
+        assert.deepStrictEqual(select74, [{ src: "main" }]);
       })
     );
 
@@ -650,7 +697,8 @@ describe("DuckDbClient", { concurrent: false }, () => {
         yield* sql`INSERT INTO widen VALUES (1.25), (2.50)`;
         const [row] = yield* sql<Record<string, unknown>>`SELECT x, x * 2 AS d FROM widen WHERE x = 2.5`;
         assert.deepStrictEqual(row, { x: 2.5, d: "5.00" });
-        assert.deepStrictEqual(yield* sql`SELECT sum(x) AS s, avg(x) AS a FROM widen`, [{ s: "3.75", a: 1.875 }]);
+        const value75 = yield* sql`SELECT sum(x) AS s, avg(x) AS a FROM widen`;
+        assert.deepStrictEqual(value75, [{ s: "3.75", a: 1.875 }]);
       })
     );
 
@@ -666,7 +714,8 @@ describe("DuckDbClient", { concurrent: false }, () => {
         );
         pipe(exit, Exit.isFailure, assertTrue);
         assert.isBelow(Duration.toMillis(elapsed), 2000);
-        assert.deepStrictEqual(yield* sql`SELECT 1 AS one`, [{ one: 1 }]);
+        const value76 = yield* sql`SELECT 1 AS one`;
+        assert.deepStrictEqual(value76, [{ one: 1 }]);
       })
     );
 
@@ -674,12 +723,14 @@ describe("DuckDbClient", { concurrent: false }, () => {
       "streams rows incrementally outside a transaction",
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
-        assert.strictEqual(yield* Stream.runCount(sql`SELECT range AS i FROM range(10000)`.stream), 10000);
+        const resultCount77 = yield* Stream.runCount(sql`SELECT range AS i FROM range(10000)`.stream);
+        assert.strictEqual(resultCount77, 10000);
         const firstThree = yield* Stream.runCollect(
           Stream.take(sql<{ readonly i: number }>`SELECT range AS i FROM range(10000)`.stream, 3)
         );
         assert.deepStrictEqual(firstThree, [{ i: 0 }, { i: 1 }, { i: 2 }]);
-        assert.deepStrictEqual(yield* sql`SELECT 1 AS one`, [{ one: 1 }]);
+        const value78 = yield* sql`SELECT 1 AS one`;
+        assert.deepStrictEqual(value78, [{ one: 1 }]);
       })
     );
 
@@ -697,7 +748,8 @@ describe("DuckDbClient", { concurrent: false }, () => {
         );
         pipe(exit, Exit.isFailure, assertTrue);
         assert.isBelow(Duration.toMillis(elapsed), 2000);
-        assert.deepStrictEqual(yield* sql`SELECT ${1} AS n`, [{ n: 1 }]);
+        const value79 = yield* sql`SELECT ${1} AS n`;
+        assert.deepStrictEqual(value79, [{ n: 1 }]);
       })
     );
 
@@ -713,9 +765,11 @@ describe("DuckDbClient", { concurrent: false }, () => {
           TestClock.withLive
         );
         pipe(exit, Exit.isFailure, assertTrue);
-        assert.deepStrictEqual(yield* sql`SELECT ${2} AS n`, [{ n: 2 }]);
+        const value80 = yield* sql`SELECT ${2} AS n`;
+        assert.deepStrictEqual(value80, [{ n: 2 }]);
         yield* sql.withTransaction(sql`INSERT INTO stream_cancel_t VALUES (${1})`);
-        assert.deepStrictEqual(yield* sql`SELECT id FROM stream_cancel_t`, [{ id: 1 }]);
+        const value81 = yield* sql`SELECT id FROM stream_cancel_t`;
+        assert.deepStrictEqual(value81, [{ id: 1 }]);
       })
     );
 
@@ -740,9 +794,11 @@ describe("DuckDbClient", { concurrent: false }, () => {
         yield* sql`CREATE TABLE alter_t (a INTEGER)`;
         yield* sql`INSERT INTO alter_t VALUES (1)`;
         const select = sql`SELECT * FROM alter_t`;
-        assert.deepStrictEqual(yield* select, [{ a: 1 }]);
+        const select82 = yield* select;
+        assert.deepStrictEqual(select82, [{ a: 1 }]);
         yield* sql`ALTER TABLE alter_t ADD COLUMN b INTEGER DEFAULT 7`;
-        assert.deepStrictEqual(yield* select, [{ a: 1, b: 7 }]);
+        const select83 = yield* select;
+        assert.deepStrictEqual(select83, [{ a: 1, b: 7 }]);
       })
     );
 
@@ -757,9 +813,8 @@ describe("DuckDbClient", { concurrent: false }, () => {
             { concurrency: "unbounded" }
           )
         );
-        assert.deepStrictEqual(yield* sql`SELECT count(DISTINCT i) AS n, count(*) AS c FROM conc_tx`, [
-          { n: 20, c: 20 },
-        ]);
+        const value84 = yield* sql`SELECT count(DISTINCT i) AS n, count(*) AS c FROM conc_tx`;
+        assert.deepStrictEqual(value84, [{ n: 20, c: 20 }]);
       })
     );
 
@@ -777,7 +832,8 @@ describe("DuckDbClient", { concurrent: false }, () => {
               .pipe(Effect.andThen(Effect.fail("rollback")))
           )
           .pipe(Effect.flip);
-        assert.deepStrictEqual(yield* client`SELECT id, xs FROM appended ORDER BY id`, [
+        const value85 = yield* client`SELECT id, xs FROM appended ORDER BY id`;
+        assert.deepStrictEqual(value85, [
           { id: 1, xs: [null, 7] },
           { id: 2, xs: [] },
         ]);
@@ -800,16 +856,14 @@ describe("DuckDbClient", { concurrent: false }, () => {
           )
         );
         assertUnknownError(refused, "commitTransaction");
-        assert.deepStrictEqual(yield* client`SELECT id FROM appended ORDER BY id`, [{ id: 1 }, { id: 2 }]);
-        assertUnknownError(yield* Effect.flip(client.appendRows({ table: "appended", rows: [[6]] })), "appendRows");
-        assertUnknownError(
-          yield* Effect.flip(client.appendRows({ table: "appended", rows: [["bad", [], null]] })),
-          "appendRows"
-        );
-        assertUnknownError(
-          yield* Effect.flip(client.appendRows({ table: "appended", rows: [[Symbol("bad"), [], null]] })),
-          "appendRows"
-        );
+        const value86 = yield* client`SELECT id FROM appended ORDER BY id`;
+        assert.deepStrictEqual(value86, [{ id: 1 }, { id: 2 }]);
+        const flip87 = yield* Effect.flip(client.appendRows({ table: "appended", rows: [[6]] }));
+        assertUnknownError(flip87, "appendRows");
+        const flip88 = yield* Effect.flip(client.appendRows({ table: "appended", rows: [["bad", [], null]] }));
+        assertUnknownError(flip88, "appendRows");
+        const flip89 = yield* Effect.flip(client.appendRows({ table: "appended", rows: [[Symbol("bad"), [], null]] }));
+        assertUnknownError(flip89, "appendRows");
         yield* client.appendRows({ table: "appended", rows: [] });
         yield* client`CREATE TABLE append_required (id INTEGER NOT NULL)`;
         const constraint = yield* client.appendRows({ table: "append_required", rows: [[null]] }).pipe(Effect.flip);
@@ -817,7 +871,8 @@ describe("DuckDbClient", { concurrent: false }, () => {
         yield* client`CREATE SCHEMA append_schema`;
         yield* client`CREATE TABLE append_schema.scoped (id INTEGER)`;
         yield* client.appendRows({ table: "scoped", schema: "append_schema", rows: [[42]] });
-        assert.deepStrictEqual(yield* client`SELECT * FROM append_schema.scoped`, [{ id: 42 }]);
+        const value90 = yield* client`SELECT * FROM append_schema.scoped`;
+        assert.deepStrictEqual(value90, [{ id: 42 }]);
       })
     );
 
@@ -830,10 +885,12 @@ describe("DuckDbClient", { concurrent: false }, () => {
             .appendRows({ table: "append_failed_batch", rows: [[1], [bad]] })
             .pipe(Effect.flip);
           assertUnknownError(error, "appendRows");
-          assert.deepStrictEqual(yield* client`SELECT * FROM append_failed_batch`, []);
+          const value91 = yield* client`SELECT * FROM append_failed_batch`;
+          assert.deepStrictEqual(value91, []);
         }
         yield* client.appendRows({ table: "append_failed_batch", rows: [[1], [2]] });
-        assert.deepStrictEqual(yield* client`SELECT * FROM append_failed_batch ORDER BY id`, [{ id: 1 }, { id: 2 }]);
+        const value92 = yield* client`SELECT * FROM append_failed_batch ORDER BY id`;
+        assert.deepStrictEqual(value92, [{ id: 1 }, { id: 2 }]);
       })
     );
 
@@ -848,27 +905,22 @@ describe("DuckDbClient", { concurrent: false }, () => {
         assertUnknownError(refused, "checkpoint");
 
         yield* client.attach(":memory:", "extras_aux");
-        assert.deepStrictEqual(
-          yield* client`SELECT database_name FROM duckdb_databases() WHERE database_name = 'extras_aux'`,
-          [{ database_name: "extras_aux" }]
-        );
+        const value93 = yield* client`SELECT database_name FROM duckdb_databases() WHERE database_name = 'extras_aux'`;
+        assert.deepStrictEqual(value93, [{ database_name: "extras_aux" }]);
         yield* client.detach("extras_aux");
-        assert.deepStrictEqual(
-          yield* client`SELECT database_name FROM duckdb_databases() WHERE database_name = 'extras_aux'`,
-          []
-        );
+        const value94 = yield* client`SELECT database_name FROM duckdb_databases() WHERE database_name = 'extras_aux'`;
+        assert.deepStrictEqual(value94, []);
 
         const rolledBack = yield* Effect.flip(
           client.withTransaction(client.attach(":memory:", "extras_rb").pipe(Effect.andThen(Effect.fail("rollback"))))
         );
         assert.strictEqual(rolledBack, "rollback");
-        assert.deepStrictEqual(
-          yield* client`SELECT database_name FROM duckdb_databases() WHERE database_name = 'extras_rb'`,
-          []
-        );
+        const value95 = yield* client`SELECT database_name FROM duckdb_databases() WHERE database_name = 'extras_rb'`;
+        assert.deepStrictEqual(value95, []);
 
         yield* client.loadExtension("json");
-        assertUnknownError(yield* Effect.flip(client.loadExtension("not_an_extension_xyz")), "loadExtension");
+        const flip96 = yield* Effect.flip(client.loadExtension("not_an_extension_xyz"));
+        assertUnknownError(flip96, "loadExtension");
       })
     );
 
@@ -906,7 +958,8 @@ describe("DuckDbClient", { concurrent: false }, () => {
       Effect.fnUntraced(function* () {
         const client = yield* DuckDbClient.DuckDbClient;
         assert.strictEqual(client[DuckDbClient.TypeId], DuckDbClient.TypeId);
-        assertNone(yield* Effect.serviceOption(SqlClient.SqlClient));
+        const serviceOption97 = yield* Effect.serviceOption(SqlClient.SqlClient);
+        assertNone(serviceOption97);
       })
     );
 
@@ -931,7 +984,8 @@ describe("DuckDbClient", { concurrent: false }, () => {
           [2, "seed"],
         ]);
         const client = yield* DuckDbClient.DuckDbClient;
-        assert.deepStrictEqual(yield* client`SELECT value FROM migrated`, [{ value: "hello" }]);
+        const value98 = yield* client`SELECT value FROM migrated`;
+        assert.deepStrictEqual(value98, [{ value: "hello" }]);
         const again = yield* DuckDbMigrator.run({ loader }).pipe(
           Effect.provideServiceEffect(SqlClient.SqlClient, Effect.service(DuckDbClient.DuckDbClient))
         );
@@ -945,7 +999,8 @@ describe("DuckDbClient", { concurrent: false }, () => {
       "DuckDbTestLayer answers select 1",
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
-        assert.deepStrictEqual(yield* sql`SELECT 1 AS one`, [{ one: 1 }]);
+        const value99 = yield* sql`SELECT 1 AS one`;
+        assert.deepStrictEqual(value99, [{ one: 1 }]);
       })
     );
   });
@@ -956,7 +1011,8 @@ describe("DuckDbClient", { concurrent: false }, () => {
         "keeps TIMESTAMPTZ instants and stores local wall time in naive TIMESTAMP",
         Effect.fnUntraced(function* () {
           const sql = yield* SqlClient.SqlClient;
-          assert.deepStrictEqual(yield* sql`SELECT current_setting('TimeZone') AS tz`, [{ tz: "America/Chicago" }]);
+          const value100 = yield* sql`SELECT current_setting('TimeZone') AS tz`;
+          assert.deepStrictEqual(value100, [{ tz: "America/Chicago" }]);
           const instant = CHICAGO_INSTANT;
           yield* sql`CREATE TABLE chicago_dates (ts TIMESTAMP, tz TIMESTAMPTZ)`;
           yield* sql`INSERT INTO chicago_dates VALUES (${instant}, ${instant})`;
@@ -978,7 +1034,8 @@ describe("DuckDbClient", { concurrent: false }, () => {
       "keeps a databaseOptions TimeZone when timeZone is not given",
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
-        assert.deepStrictEqual(yield* sql`SELECT current_setting('TimeZone') AS tz`, [{ tz: "Asia/Tokyo" }]);
+        const value101 = yield* sql`SELECT current_setting('TimeZone') AS tz`;
+        assert.deepStrictEqual(value101, [{ tz: "Asia/Tokyo" }]);
       })
     );
   });
@@ -998,9 +1055,11 @@ describe("DuckDbClient", { concurrent: false }, () => {
         const sql = client;
         yield* sql`CREATE TABLE ${sql("transformPeople")} (${sql("firstName")} VARCHAR)`;
         yield* sql`INSERT INTO ${sql("transformPeople")} ${sql.insert({ firstName: "ada" })}`;
-        assert.deepStrictEqual(yield* sql`SELECT * FROM transform_people`, [{ firstName: "ada" }]);
+        const value102 = yield* sql`SELECT * FROM transform_people`;
+        assert.deepStrictEqual(value102, [{ firstName: "ada" }]);
         const raw = client.withoutTransforms();
-        assert.deepStrictEqual(yield* raw`SELECT * FROM transform_people`, [{ first_name: "ada" }]);
+        const value103 = yield* raw`SELECT * FROM transform_people`;
+        assert.deepStrictEqual(value103, [{ first_name: "ada" }]);
         assert.strictEqual(raw[DuckDbClient.TypeId], DuckDbClient.TypeId);
         assert.isFunction(raw.checkpoint);
         assert.isFunction(raw.attach);
@@ -1019,9 +1078,12 @@ describe("DuckDbClient", { concurrent: false }, () => {
           someStructs: [null, { innerKey: 1 }],
           someMap: [{ key: "k", value: 1 }],
         };
-        assert.deepStrictEqual(yield* query(), [expected]);
-        assert.deepStrictEqual(yield* query().unprepared, [expected]);
-        assert.deepStrictEqual(yield* Stream.runCollect(query().stream), [expected]);
+        const query104 = yield* query();
+        assert.deepStrictEqual(query104, [expected]);
+        const unprepared105 = yield* query().unprepared;
+        assert.deepStrictEqual(unprepared105, [expected]);
+        const resultCollect = yield* Stream.runCollect(query().stream);
+        assert.deepStrictEqual(resultCollect, [expected]);
       })
     );
 
@@ -1029,11 +1091,8 @@ describe("DuckDbClient", { concurrent: false }, () => {
       "applies transformResultNames to streamed rows",
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
-        assert.deepStrictEqual(yield* Stream.runCollect(sql`SELECT range AS some_value FROM range(3)`.stream), [
-          { someValue: 0 },
-          { someValue: 1 },
-          { someValue: 2 },
-        ]);
+        const resultCollect106 = yield* Stream.runCollect(sql`SELECT range AS some_value FROM range(3)`.stream);
+        assert.deepStrictEqual(resultCollect106, [{ someValue: 0 }, { someValue: 1 }, { someValue: 2 }]);
       })
     );
   });
@@ -1046,7 +1105,8 @@ describe("DuckDbClient", { concurrent: false }, () => {
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
         const raw = sql.withoutTransforms();
-        assert.deepStrictEqual(yield* raw`SELECT 1 AS ${raw("someName")}`, [{ some_name: 1 }]);
+        const value107 = yield* raw`SELECT 1 AS ${raw("someName")}`;
+        assert.deepStrictEqual(value107, [{ some_name: 1 }]);
       })
     );
   });
@@ -1072,14 +1132,18 @@ describe("DuckDbClient", { concurrent: false }, () => {
       "executes statements with the cache disabled",
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
-        assert.deepStrictEqual(yield* sql`SELECT ${1}::INTEGER AS v`, [{ v: 1 }]);
-        assert.deepStrictEqual(yield* sql`SELECT ${2}::INTEGER AS v`, [{ v: 2 }]);
-        assert.deepStrictEqual(yield* sql`CREATE TABLE no_cache (i INTEGER); INSERT INTO no_cache VALUES (1), (2)`, []);
-        assert.deepStrictEqual(yield* sql`SELECT count(*) AS n FROM no_cache`.raw, { changes: 0, rows: [{ n: 2 }] });
-        assert.deepStrictEqual(
-          yield* sql.unsafe("SET schema = 'main'; SELECT i FROM no_cache ORDER BY i").stream.pipe(Stream.runCollect),
-          [{ i: 1 }, { i: 2 }]
-        );
+        const value108 = yield* sql`SELECT ${1}::INTEGER AS v`;
+        assert.deepStrictEqual(value108, [{ v: 1 }]);
+        const value109 = yield* sql`SELECT ${2}::INTEGER AS v`;
+        assert.deepStrictEqual(value109, [{ v: 2 }]);
+        const value110 = yield* sql`CREATE TABLE no_cache (i INTEGER); INSERT INTO no_cache VALUES (1), (2)`;
+        assert.deepStrictEqual(value110, []);
+        const raw111 = yield* sql`SELECT count(*) AS n FROM no_cache`.raw;
+        assert.deepStrictEqual(raw111, { changes: 0, rows: [{ n: 2 }] });
+        const pipe112 = yield* sql
+          .unsafe("SET schema = 'main'; SELECT i FROM no_cache ORDER BY i")
+          .stream.pipe(Stream.runCollect);
+        assert.deepStrictEqual(pipe112, [{ i: 1 }, { i: 2 }]);
       })
     );
   });
@@ -1095,7 +1159,8 @@ describe("DuckDbClient", { concurrent: false }, () => {
       Effect.fnUntraced(function* () {
         const client = yield* DuckDbClient.DuckDbClient;
         assert.strictEqual(client.config.databasePath, ":memory:");
-        assert.deepStrictEqual(yield* client`SELECT 1 AS one`, [{ one: 1 }]);
+        const value113 = yield* client`SELECT 1 AS one`;
+        assert.deepStrictEqual(value113, [{ one: 1 }]);
       })
     );
   });
@@ -1111,7 +1176,8 @@ describe("DuckDbClient", { concurrent: false }, () => {
       Effect.fnUntraced(function* () {
         const client = yield* DuckDbClient.DuckDbClient;
         assert.strictEqual(client.config.databasePath, ":memory:");
-        assertNone(yield* Effect.serviceOption(SqlClient.SqlClient));
+        const serviceOption114 = yield* Effect.serviceOption(SqlClient.SqlClient);
+        assertNone(serviceOption114);
       })
     );
   });
@@ -1137,7 +1203,8 @@ describe("DuckDbClient", { concurrent: false }, () => {
     ([value]) =>
       Effect.gen(function* () {
         const decoded = yield* decodeConfigData(value);
-        const roundTripped = yield* decodeConfigData(yield* encodeConfigData(decoded));
+        const encodedConfigData = yield* encodeConfigData(decoded);
+        const roundTripped = yield* decodeConfigData(encodedConfigData);
         expect(roundTripped).toEqual(decoded);
       }),
     { arbitrary: fcRuns(20) }
@@ -1152,10 +1219,10 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
         yield* sql`CREATE SCHEMA unqualified_probe`;
         yield* sql`SET search_path='unqualified_probe,pg_catalog'`;
         const query = sql`SELECT current_setting('search_path') AS path`;
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), [
-          { path: "memory.unqualified_probe,memory.pg_catalog" },
-        ]);
-        assert.deepStrictEqual(yield* query, [{ path: "unqualified_probe,pg_catalog" }]);
+        const pipe115 = yield* query.stream.pipe(Stream.runCollect);
+        assert.deepStrictEqual(A.fromIterable(pipe115), [{ path: "memory.unqualified_probe,memory.pg_catalog" }]);
+        const query116 = yield* query;
+        assert.deepStrictEqual(query116, [{ path: "unqualified_probe,pg_catalog" }]);
       })
     );
   });
@@ -1171,27 +1238,34 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
         yield* sql`USE memory.probe_s`;
         const query = sql`SELECT v FROM probe_t`;
         const path = sql`SELECT current_setting('search_path') AS path`;
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), [{ v: 42 }]);
+        const pipe117 = yield* query.stream.pipe(Stream.runCollect);
+        assert.deepStrictEqual(A.fromIterable(pipe117), [{ v: 42 }]);
         // DuckDB 2.0 resets the writer's path as soon as its schema is dropped,
         // even uncommitted, and ROLLBACK does not restore it: the lease mirrors that.
         yield* sql`BEGIN`;
         yield* sql`DROP SCHEMA probe_s CASCADE`;
-        assert.deepStrictEqual(yield* path, [{ path: "memory.main" }]);
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), [{ v: 1 }]);
+        const path118 = yield* path;
+        assert.deepStrictEqual(path118, [{ path: "memory.main" }]);
+        const pipe119 = yield* query.stream.pipe(Stream.runCollect);
+        assert.deepStrictEqual(A.fromIterable(pipe119), [{ v: 1 }]);
         yield* sql`ROLLBACK`;
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), [{ v: 1 }]);
+        const pipe120 = yield* query.stream.pipe(Stream.runCollect);
+        assert.deepStrictEqual(A.fromIterable(pipe120), [{ v: 1 }]);
         // The rolled-back schema is still in the reader's committed catalog.
         yield* sql`USE memory.probe_s`;
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), [{ v: 42 }]);
+        const pipe121 = yield* query.stream.pipe(Stream.runCollect);
+        assert.deepStrictEqual(A.fromIterable(pipe121), [{ v: 42 }]);
         // The reused lease must normalize again after COMMIT, then see recreation.
         yield* sql`BEGIN`;
         yield* sql`DROP SCHEMA probe_s CASCADE`;
         yield* sql`COMMIT`;
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), [{ v: 1 }]);
+        const pipe122 = yield* query.stream.pipe(Stream.runCollect);
+        assert.deepStrictEqual(A.fromIterable(pipe122), [{ v: 1 }]);
         yield* sql`CREATE SCHEMA probe_s`;
         yield* sql`CREATE TABLE probe_s.probe_t AS SELECT 99 AS v`;
         yield* sql`USE memory.probe_s`;
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), [{ v: 99 }]);
+        const pipe123 = yield* query.stream.pipe(Stream.runCollect);
+        assert.deepStrictEqual(A.fromIterable(pipe123), [{ v: 99 }]);
       })
     );
   });
@@ -1210,22 +1284,40 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
         const writerPath = yield* sql`SELECT current_setting('search_path') AS path`;
         // DuckDB 2.0 resets the path when its schema is dropped instead of keeping it dangling.
         assert.deepStrictEqual(writerPath, [{ path: "memory.main" }]);
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), yield* query);
+        const pipe124 = yield* query.stream.pipe(Stream.runCollect);
+        const argument = A.fromIterable(pipe124);
+        const query1 = yield* query;
+        assert.deepStrictEqual(argument, query1);
         yield* sql`SET TimeZone='Asia/Tokyo'`;
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), yield* query);
-        assert.deepStrictEqual(yield* sql`SELECT current_setting('search_path') AS path`, writerPath);
+        const pipe125 = yield* query.stream.pipe(Stream.runCollect);
+        const argument1 = A.fromIterable(pipe125);
+        const query2 = yield* query;
+        assert.deepStrictEqual(argument1, query2);
+        const value126 = yield* sql`SELECT current_setting('search_path') AS path`;
+        assert.deepStrictEqual(value126, writerPath);
         yield* sql`CREATE SCHEMA probe_s`;
         yield* sql`CREATE TABLE probe_s.probe_t AS SELECT 42 AS v`;
         yield* sql`USE memory.probe_s`;
-        assert.deepStrictEqual(yield* query, [{ v: 42, zone: "Asia/Tokyo" }]);
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), yield* query);
+        const query127 = yield* query;
+        assert.deepStrictEqual(query127, [{ v: 42, zone: "Asia/Tokyo" }]);
+        const pipe128 = yield* query.stream.pipe(Stream.runCollect);
+        const argument2 = A.fromIterable(pipe128);
+        const query3 = yield* query;
+        assert.deepStrictEqual(argument2, query3);
         yield* sql`DROP SCHEMA probe_s CASCADE`;
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), yield* query);
+        const pipe129 = yield* query.stream.pipe(Stream.runCollect);
+        const argument3 = A.fromIterable(pipe129);
+        const query4 = yield* query;
+        assert.deepStrictEqual(argument3, query4);
         yield* sql`CREATE OR REPLACE SCHEMA probe_s`;
         yield* sql`CREATE TABLE probe_s.probe_t AS SELECT 99 AS v`;
         yield* sql`USE memory.probe_s`;
-        assert.deepStrictEqual(yield* query, [{ v: 99, zone: "Asia/Tokyo" }]);
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), yield* query);
+        const query130 = yield* query;
+        assert.deepStrictEqual(query130, [{ v: 99, zone: "Asia/Tokyo" }]);
+        const pipe131 = yield* query.stream.pipe(Stream.runCollect);
+        const argument4 = A.fromIterable(pipe131);
+        const query5 = yield* query;
+        assert.deepStrictEqual(argument4, query5);
       })
     );
   });
@@ -1243,19 +1335,24 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
         yield* sql`SET search_path='memory.gone,memory."first,.schema",memory."second""schema"'`;
         yield* sql`DROP SCHEMA gone`;
         // DuckDB 2.0 resets the whole path when one of its schemas is dropped.
-        assert.deepStrictEqual(yield* sql`SELECT current_setting('search_path') AS path`, [{ path: "memory.main" }]);
+        const value132 = yield* sql`SELECT current_setting('search_path') AS path`;
+        assert.deepStrictEqual(value132, [{ path: "memory.main" }]);
         yield* sql`SET search_path='memory."first,.schema",memory."second""schema"'`;
         const query = sql`SELECT v FROM probe_t`;
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), [{ v: 42 }]);
-        assert.deepStrictEqual(yield* query, [{ v: 42 }]);
-        assert.deepStrictEqual(
-          A.fromIterable(yield* sql`SELECT current_setting('search_path') AS path`.stream.pipe(Stream.runCollect)),
-          [{ path: 'memory."first,.schema",memory."second""schema"' }]
-        );
+        const pipe133 = yield* query.stream.pipe(Stream.runCollect);
+        assert.deepStrictEqual(A.fromIterable(pipe133), [{ v: 42 }]);
+        const query134 = yield* query;
+        assert.deepStrictEqual(query134, [{ v: 42 }]);
+        const pipe135 = yield* sql`SELECT current_setting('search_path') AS path`.stream.pipe(Stream.runCollect);
+        assert.deepStrictEqual(A.fromIterable(pipe135), [{ path: 'memory."first,.schema",memory."second""schema"' }]);
         yield* sql`SET search_path='MEMORY."FIRST,.SCHEMA",system.pg_catalog,memory."second""schema"'`;
         const settings = sql`SELECT current_setting('search_path') AS path`;
-        assert.deepStrictEqual(A.fromIterable(yield* settings.stream.pipe(Stream.runCollect)), yield* settings);
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), [{ v: 42 }]);
+        const pipe136 = yield* settings.stream.pipe(Stream.runCollect);
+        const argument5 = A.fromIterable(pipe136);
+        const settings6 = yield* settings;
+        assert.deepStrictEqual(argument5, settings6);
+        const pipe137 = yield* query.stream.pipe(Stream.runCollect);
+        assert.deepStrictEqual(A.fromIterable(pipe137), [{ v: 42 }]);
       })
     );
   });
@@ -1270,7 +1367,10 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
         yield* sql`CREATE TABLE detached.main.probe_t AS SELECT 42 AS v`;
         yield* sql`SET search_path='memory.main,detached.main'`;
         const query = sql`SELECT v FROM probe_t`;
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), yield* query);
+        const pipe138 = yield* query.stream.pipe(Stream.runCollect);
+        const argument6 = A.fromIterable(pipe138);
+        const query7 = yield* query;
+        assert.deepStrictEqual(argument6, query7);
         yield* sql`DETACH detached`;
         // DuckDB cannot bind even current_setting() while a detached catalog
         // remains in the path. Snapshot refresh records this native failure.
@@ -1279,13 +1379,20 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
         assert.strictEqual(writerError.reason._tag, "SqlSyntaxError");
         assert.strictEqual(readerError.reason._tag, writerError.reason._tag);
         yield* sql`ATTACH ':memory:' AS detached`;
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), yield* query);
+        const pipe139 = yield* query.stream.pipe(Stream.runCollect);
+        const argument7 = A.fromIterable(pipe139);
+        const query8 = yield* query;
+        assert.deepStrictEqual(argument7, query8);
         yield* sql`DETACH detached`;
         assert.strictEqual((yield* query.stream.pipe(Stream.runCollect, Effect.flip)).reason._tag, "SqlSyntaxError");
         yield* sql`RESET search_path`;
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), [{ v: 1 }]);
+        const pipe140 = yield* query.stream.pipe(Stream.runCollect);
+        assert.deepStrictEqual(A.fromIterable(pipe140), [{ v: 1 }]);
         yield* sql`SET TimeZone='Asia/Tokyo'`;
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), yield* query);
+        const pipe141 = yield* query.stream.pipe(Stream.runCollect);
+        const argument8 = A.fromIterable(pipe141);
+        const query9 = yield* query;
+        assert.deepStrictEqual(argument8, query9);
       })
     );
   });
@@ -1299,9 +1406,8 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
         yield* sql<{ readonly v: number }>`SELECT range AS v FROM range(10000)`.stream.pipe(
           Stream.runForEach((row) => sql`INSERT INTO reader_consumed VALUES (${row.v})`)
         );
-        assert.deepStrictEqual(yield* sql`SELECT count(*) AS n, sum(v) AS total FROM reader_consumed`, [
-          { n: 10000, total: 49995000 },
-        ]);
+        const value142 = yield* sql`SELECT count(*) AS n, sum(v) AS total FROM reader_consumed`;
+        assert.deepStrictEqual(value142, [{ n: 10000, total: 49995000 }]);
       })
     );
 
@@ -1315,8 +1421,10 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
           Effect.flip
         );
         assert.strictEqual(error.reason._tag, "AuthorizationError");
-        assert.deepStrictEqual(yield* sql`SELECT * FROM reader_write`, []);
-        assert.deepStrictEqual(A.fromIterable(yield* sql`SELECT 42 AS v`.stream.pipe(Stream.runCollect)), [{ v: 42 }]);
+        const value143 = yield* sql`SELECT * FROM reader_write`;
+        assert.deepStrictEqual(value143, []);
+        const pipe144 = yield* sql`SELECT 42 AS v`.stream.pipe(Stream.runCollect);
+        assert.deepStrictEqual(A.fromIterable(pipe144), [{ v: 42 }]);
       })
     );
 
@@ -1329,16 +1437,16 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
         yield* sql`CREATE TABLE reader_a.s.t AS SELECT 42 AS v`;
         // The original catalog deliberately has no schema s.
         yield* sql.unsafe("USE reader_a; SET search_path = 's'");
-        assert.deepStrictEqual(A.fromIterable(yield* sql`SELECT v FROM t`.stream.pipe(Stream.runCollect)), [{ v: 42 }]);
+        const pipe145 = yield* sql`SELECT v FROM t`.stream.pipe(Stream.runCollect);
+        assert.deepStrictEqual(A.fromIterable(pipe145), [{ v: 42 }]);
         yield* sql`CREATE SCHEMA memory.s`;
         yield* sql`CREATE TABLE memory.s.t AS SELECT 1 AS v`;
-        assert.deepStrictEqual(A.fromIterable(yield* sql`SELECT v FROM t`.stream.pipe(Stream.runCollect)), [{ v: 42 }]);
+        const pipe146 = yield* sql`SELECT v FROM t`.stream.pipe(Stream.runCollect);
+        assert.deepStrictEqual(A.fromIterable(pipe146), [{ v: 42 }]);
         yield* sql`USE memory`;
         yield* sql.unsafe("USE reader_a; SELECT * FROM missing").pipe(Effect.flip);
-        assert.deepStrictEqual(
-          A.fromIterable(yield* sql`SELECT current_database() AS db`.stream.pipe(Stream.runCollect)),
-          [{ db: "reader_a" }]
-        );
+        const pipe147 = yield* sql`SELECT current_database() AS db`.stream.pipe(Stream.runCollect);
+        assert.deepStrictEqual(A.fromIterable(pipe147), [{ db: "reader_a" }]);
         yield* sql`USE memory`;
         yield* sql`RESET search_path`;
       })
@@ -1353,16 +1461,23 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
         yield* sql`CREATE TABLE reader_drop.reader_drop_t AS SELECT 42 AS v`;
         yield* sql`SET search_path='reader_drop'`;
         const query = sql`SELECT v FROM reader_drop_t`;
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), [{ v: 42 }]);
+        const pipe148 = yield* query.stream.pipe(Stream.runCollect);
+        assert.deepStrictEqual(A.fromIterable(pipe148), [{ v: 42 }]);
         yield* sql.unsafe(
           "DROP SCHEMA reader_drop CASCADE; CREATE SCHEMA reader_drop; CREATE TABLE reader_drop.reader_drop_t AS SELECT 99 AS v"
         );
-        assert.deepStrictEqual(yield* query, [{ v: 1 }]);
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), yield* query);
+        const query149 = yield* query;
+        assert.deepStrictEqual(query149, [{ v: 1 }]);
+        const pipe150 = yield* query.stream.pipe(Stream.runCollect);
+        const argument9 = A.fromIterable(pipe150);
+        const query10 = yield* query;
+        assert.deepStrictEqual(argument9, query10);
         yield* sql`SET search_path='reader_drop'`;
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), [{ v: 99 }]);
+        const pipe151 = yield* query.stream.pipe(Stream.runCollect);
+        assert.deepStrictEqual(A.fromIterable(pipe151), [{ v: 99 }]);
         yield* sql`DROP SCHEMA IF EXISTS reader_drop CASCADE`;
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), [{ v: 1 }]);
+        const pipe152 = yield* query.stream.pipe(Stream.runCollect);
+        assert.deepStrictEqual(A.fromIterable(pipe152), [{ v: 1 }]);
         yield* sql`RESET search_path`;
       })
     );
@@ -1373,15 +1488,28 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
         const sql = yield* DuckDbClient.DuckDbClient;
         const query = sql`SELECT date_trunc('day', TIMESTAMPTZ '2024-01-15 12:00:00+00') AS day, current_setting('TimeZone') AS zone, current_setting('Calendar') AS calendar`;
         yield* sql`PRAGMA TimeZone = 'Asia/Tokyo'`;
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), yield* query);
+        const pipe153 = yield* query.stream.pipe(Stream.runCollect);
+        const argument10 = A.fromIterable(pipe153);
+        const query11 = yield* query;
+        assert.deepStrictEqual(argument10, query11);
         yield* sql`PRAGMA Calendar = 'japanese'`;
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), yield* query);
+        const pipe154 = yield* query.stream.pipe(Stream.runCollect);
+        const argument11 = A.fromIterable(pipe154);
+        const query12 = yield* query;
+        assert.deepStrictEqual(argument11, query12);
         yield* sql`SET TimeZone = 'Pacific/Kiritimati'`;
         yield* sql`SET Calendar = 'japanese'`;
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), yield* query);
+        const pipe155 = yield* query.stream.pipe(Stream.runCollect);
+        const argument12 = A.fromIterable(pipe155);
+        const query13 = yield* query;
+        assert.deepStrictEqual(argument12, query13);
         yield* sql.unsafe("SET TimeZone='Asia/Tokyo'; SELECT * FROM missing").pipe(Effect.flip);
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), yield* query);
-        assert.deepStrictEqual(yield* sql`SELECT current_setting('TimeZone') AS zone`, [{ zone: "Asia/Tokyo" }]);
+        const pipe156 = yield* query.stream.pipe(Stream.runCollect);
+        const argument13 = A.fromIterable(pipe156);
+        const query14 = yield* query;
+        assert.deepStrictEqual(argument13, query14);
+        const value157 = yield* sql`SELECT current_setting('TimeZone') AS zone`;
+        assert.deepStrictEqual(value157, [{ zone: "Asia/Tokyo" }]);
         yield* sql`SET Calendar = 'gregorian'`;
         yield* sql`SET TimeZone = 'UTC'`;
       })
@@ -1404,7 +1532,10 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
           const error = yield* sql.unsafe(text).stream.pipe(Stream.runCollect, Effect.flip);
           assert.strictEqual(error.reason._tag, "AuthorizationError");
           const query = sql`SELECT current_database() AS db, current_setting('search_path') AS path, current_setting('TimeZone') AS zone`;
-          assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), yield* query);
+          const pipe158 = yield* query.stream.pipe(Stream.runCollect);
+          const argument14 = A.fromIterable(pipe158);
+          const query15 = yield* query;
+          assert.deepStrictEqual(argument14, query15);
         }
       })
     );
@@ -1420,7 +1551,8 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
         );
         yield* Deferred.await(started);
         yield* Fiber.interrupt(fiber);
-        assert.deepStrictEqual(A.fromIterable(yield* sql`SELECT 7 AS v`.stream.pipe(Stream.runCollect)), [{ v: 7 }]);
+        const pipe159 = yield* sql`SELECT 7 AS v`.stream.pipe(Stream.runCollect);
+        assert.deepStrictEqual(A.fromIterable(pipe159), [{ v: 7 }]);
       })
     );
 
@@ -1444,7 +1576,8 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
             yield* Deferred.await(finishedRead);
           })
         );
-        assert.deepStrictEqual(A.fromIterable(yield* Fiber.join(fiber)), [{ v: 1 }]);
+        const join160 = yield* Fiber.join(fiber);
+        assert.deepStrictEqual(A.fromIterable(join160), [{ v: 1 }]);
       })
     );
 
@@ -1456,10 +1589,16 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
           yield* sql`BEGIN`;
           yield* sql.unsafe("SET TimeZone='Asia/Tokyo'; SELECT CAST('bad' AS INTEGER)").pipe(Effect.flip);
           yield* sql`SELECT 1`.stream.pipe(Stream.runCollect, Effect.flip);
-          if (finish === "COMMIT") yield* sql.unsafe(finish).pipe(Effect.flip);
-          else yield* sql.unsafe(finish);
+          if (finish === "COMMIT") {
+            yield* sql.unsafe(finish).pipe(Effect.flip);
+          } else {
+            yield* sql.unsafe(finish);
+          }
           const query = sql`SELECT current_setting('TimeZone') AS zone`;
-          assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), yield* query);
+          const pipe161 = yield* query.stream.pipe(Stream.runCollect);
+          const argument15 = A.fromIterable(pipe161);
+          const query16 = yield* query;
+          assert.deepStrictEqual(argument15, query16);
           yield* sql`SET TimeZone='UTC'`;
         }
       })
@@ -1476,7 +1615,8 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
           yield* writer.executeStream("SET TimeZone='Asia/Tokyo'; SELECT 1", [], undefined).pipe(Stream.runDrain);
         }).pipe(Scope.use(successfulLease));
         const query = sql`SELECT current_setting('TimeZone') AS zone`;
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), [{ zone: "Asia/Tokyo" }]);
+        const pipe162 = yield* query.stream.pipe(Stream.runCollect);
+        assert.deepStrictEqual(A.fromIterable(pipe162), [{ zone: "Asia/Tokyo" }]);
         const failedLease = yield* Scope.make();
         yield* Effect.gen(function* () {
           const writer = yield* sql.reserve;
@@ -1484,10 +1624,10 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
             .executeStream("SET TimeZone='Pacific/Kiritimati'; SELECT * FROM missing", [], undefined)
             .pipe(Stream.runDrain, Effect.flip);
         }).pipe(Scope.use(failedLease));
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), [
-          { zone: "Pacific/Kiritimati" },
-        ]);
-        assert.deepStrictEqual(A.fromIterable(yield* sql.unsafe("").stream.pipe(Stream.runCollect)), []);
+        const pipe163 = yield* query.stream.pipe(Stream.runCollect);
+        assert.deepStrictEqual(A.fromIterable(pipe163), [{ zone: "Pacific/Kiritimati" }]);
+        const pipe164 = yield* sql.unsafe("").stream.pipe(Stream.runCollect);
+        assert.deepStrictEqual(A.fromIterable(pipe164), []);
         yield* sql`SET TimeZone='UTC'`;
       })
     );
@@ -1498,7 +1638,8 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
         const sql = yield* DuckDbClient.DuckDbClient;
         yield* sql`CREATE TEMP TABLE reader_temp AS SELECT 1 AS v`;
         yield* sql`CREATE TEMP MACRO reader_temp_macro() AS 1`;
-        assert.deepStrictEqual(yield* sql`SELECT * FROM reader_temp`, [{ v: 1 }]);
+        const value165 = yield* sql`SELECT * FROM reader_temp`;
+        assert.deepStrictEqual(value165, [{ v: 1 }]);
         for (const text of ["SELECT * FROM reader_temp", "SELECT reader_temp_macro() AS v"]) {
           const error = yield* sql.unsafe(text).stream.pipe(Stream.runCollect, Effect.flip);
           assert.strictEqual(error.reason._tag, "SqlSyntaxError");
@@ -1518,7 +1659,10 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
         Effect.fnUntraced(function* () {
           const sql = yield* DuckDbClient.DuckDbClient;
           const query = sql`SELECT current_setting('TimeZone') AS zone`;
-          assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), yield* query);
+          const pipe166 = yield* query.stream.pipe(Stream.runCollect);
+          const argument16 = A.fromIterable(pipe166);
+          const query17 = yield* query;
+          assert.deepStrictEqual(argument16, query17);
         })
       );
     });

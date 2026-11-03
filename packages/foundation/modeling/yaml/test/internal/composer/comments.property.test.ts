@@ -53,7 +53,9 @@ describe("composer comment property floor", () => {
         assert.strictEqual(YamlFormat.formatToString(formatted), formatted);
         assert.strictEqual(Str.startsWith(`${rendered}\n`)(formatted), true);
         const parsed = yield* Yaml.parse(source);
-        assert.deepStrictEqual(yield* Yaml.parse(yield* Yaml.stringify(parsed)), parsed);
+        const stringify3 = yield* Yaml.stringify(parsed);
+        const parsed1 = yield* Yaml.parse(stringify3);
+        assert.deepStrictEqual(parsed1, parsed);
       }),
     runs
   );
@@ -72,7 +74,9 @@ describe("composer comment property floor", () => {
         assert.strictEqual(YamlFormat.formatToString(formatted), formatted);
         assert.strictEqual(Str.startsWith(`#${first}\n#${second}\n`)(formatted), true);
         const parsed = yield* Yaml.parse(source);
-        assert.deepStrictEqual(yield* Yaml.parse(yield* Yaml.stringify(parsed)), parsed);
+        const stringify4 = yield* Yaml.stringify(parsed);
+        const parsed2 = yield* Yaml.parse(stringify4);
+        assert.deepStrictEqual(parsed2, parsed);
       }),
     runs
   );

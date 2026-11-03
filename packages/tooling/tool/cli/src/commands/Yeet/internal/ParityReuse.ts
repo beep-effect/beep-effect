@@ -453,7 +453,8 @@ export const readProofEnvironments = Effect.fn("Yeet.readProofEnvironments")(fun
   FileSystem.FileSystem | Path.Path | Digest.Digest
 > {
   const fs = yield* FileSystem.FileSystem;
-  const text = yield* fs.readFileString(yield* environmentsPathForContext(context)).pipe(Effect.option);
+  const environmentsPathForContext1 = yield* environmentsPathForContext(context);
+  const text = yield* fs.readFileString(environmentsPathForContext1).pipe(Effect.option);
   return pipe(
     text,
     O.flatMap(ProofEnvironmentRecordJson.decodeOption),
@@ -478,8 +479,9 @@ export const recordProofEnvironment = Effect.fn("Yeet.recordProofEnvironment")(f
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const recordPath = yield* environmentsPathForContext(context);
+  const readProofEnvironments2 = yield* readProofEnvironments(context);
   const environments = A.append(
-    A.filter(yield* readProofEnvironments(context), (recorded) => recorded.stepId !== environment.stepId),
+    A.filter(readProofEnvironments2, (recorded) => recorded.stepId !== environment.stepId),
     environment
   );
   const encoded = yield* ProofEnvironmentRecordJson.encode(
@@ -503,7 +505,8 @@ export const recordProofEnvironment = Effect.fn("Yeet.recordProofEnvironment")(f
  */
 export const clearProofEnvironments = Effect.fn("Yeet.clearProofEnvironments")(function* (context: RepoRunContext) {
   const fs = yield* FileSystem.FileSystem;
-  yield* fs.remove(yield* environmentsPathForContext(context), { force: true }).pipe(Effect.ignore);
+  const environmentsPathForContext3 = yield* environmentsPathForContext(context);
+  yield* fs.remove(environmentsPathForContext3, { force: true }).pipe(Effect.ignore);
 });
 
 /**

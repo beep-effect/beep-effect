@@ -16,7 +16,8 @@ describe("truthy schema properties", () => {
         const encoded = yield* S.encodeEffect(truthyOptions)(value);
         const decoded = yield* S.decodeEffect(truthyOptions)(encoded);
         assert.isTrue(S.toEquivalence(truthyOptions)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(truthyOptions)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(truthyOptions)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );

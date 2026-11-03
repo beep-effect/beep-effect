@@ -1,0 +1,195 @@
+{
+  "schemaVersion": "cache-permission-mode-hash-checkpoint/v1",
+  "recordedAt": "2026-11-03T11:00:59.180395+00:00",
+  "sourceBaseRevision": "4d266aa55907265c158239b1ced56becd012c902",
+  "sourceState": "working-tree-bound",
+  "authority": "Synthetic Linux regular-file hash invariants only; aliases are observations. No Windows, output restoration, real computation qualification, activation or performance proof.",
+  "sourceBindings": [
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/native-permission-mode-controls.py",
+      "sha256": "b0d0c161cf64be3034abd13338586515295f30a16235de8923f83779939b36d6"
+    },
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/current-client-pins.json",
+      "sha256": "b3d507054f6e67ae8de5b235f05ae6786aed2f3f4361da20ec49a50d67cacecd"
+    },
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/native-future-flag-availability.py",
+      "sha256": "e2e51ecc6b3a3ca2e0553a13a061ebfc9b39d6239c8d935bbdbd411296c54736"
+    },
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/native-permission-mode-controls-2026-11-03.json",
+      "sha256": "b3f22d819570ef6b0ad4facc261a308f15509759fab7ebe2474f2d42e7c09f19"
+    },
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/permission-mode-driver-controls-2026-11-03.json",
+      "sha256": "e17ea0667b74b4d5abc05e0af05e6e78fa24c37cf8fad64f35c4429d6beabe6e"
+    },
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/current-feature-matrix.json",
+      "sha256": "7bfb2dbaaf5fa3e6be1d852b58443ce48743e03b9fa5d88feca8e0ae3a11ac49"
+    },
+    {
+      "path": "goals/turborepo-quality-cache-adoption/SPEC.md",
+      "sha256": "dfc0b76b82359d3e9ed5fc4892fd78128ef91b82b50d64f31a21d4a88bb1e248"
+    }
+  ],
+  "observation": "native-permission-mode-controls-2026-11-03.json",
+  "driverControls": "permission-mode-driver-controls-2026-11-03.json",
+  "nativeCases": 132,
+  "driverRefusals": 4,
+  "tasksExecuted": 0,
+  "regularFileInvariants": [
+    "Any executable bit changes hashes only with canary flag true",
+    "Non-executable permission bits do not change hashes",
+    "Content changes invalidate",
+    "Repeated baseline hashes match"
+  ],
+  "aliasAuthority": "Observations only; three stable non-Git alias inputs absent and target behavior varies by client and Git state. No symlink-own-mode qualification.",
+  "groups": [
+    {
+      "channel": "stable",
+      "shape": "non-git",
+      "flag": null,
+      "regularExecutableBitChangesHash": false,
+      "nonExecutableModeChangesHash": false,
+      "symlinkIncluded": false,
+      "symlinkTargetModeChangesHash": false,
+      "symlinkDifferentTargetChangesHash": false
+    },
+    {
+      "channel": "stable",
+      "shape": "unstaged-git",
+      "flag": null,
+      "regularExecutableBitChangesHash": false,
+      "nonExecutableModeChangesHash": false,
+      "symlinkIncluded": true,
+      "symlinkTargetModeChangesHash": false,
+      "symlinkDifferentTargetChangesHash": false
+    },
+    {
+      "channel": "stable",
+      "shape": "staged-git",
+      "flag": null,
+      "regularExecutableBitChangesHash": false,
+      "nonExecutableModeChangesHash": false,
+      "symlinkIncluded": true,
+      "symlinkTargetModeChangesHash": false,
+      "symlinkDifferentTargetChangesHash": true
+    },
+    {
+      "channel": "canary",
+      "shape": "non-git",
+      "flag": null,
+      "regularExecutableBitChangesHash": false,
+      "nonExecutableModeChangesHash": false,
+      "symlinkIncluded": true,
+      "symlinkTargetModeChangesHash": false,
+      "symlinkDifferentTargetChangesHash": false
+    },
+    {
+      "channel": "canary",
+      "shape": "non-git",
+      "flag": false,
+      "regularExecutableBitChangesHash": false,
+      "nonExecutableModeChangesHash": false,
+      "symlinkIncluded": true,
+      "symlinkTargetModeChangesHash": false,
+      "symlinkDifferentTargetChangesHash": false
+    },
+    {
+      "channel": "canary",
+      "shape": "non-git",
+      "flag": true,
+      "regularExecutableBitChangesHash": true,
+      "nonExecutableModeChangesHash": false,
+      "symlinkIncluded": true,
+      "symlinkTargetModeChangesHash": true,
+      "symlinkDifferentTargetChangesHash": false
+    },
+    {
+      "channel": "canary",
+      "shape": "unstaged-git",
+      "flag": null,
+      "regularExecutableBitChangesHash": false,
+      "nonExecutableModeChangesHash": false,
+      "symlinkIncluded": true,
+      "symlinkTargetModeChangesHash": false,
+      "symlinkDifferentTargetChangesHash": false
+    },
+    {
+      "channel": "canary",
+      "shape": "unstaged-git",
+      "flag": false,
+      "regularExecutableBitChangesHash": false,
+      "nonExecutableModeChangesHash": false,
+      "symlinkIncluded": true,
+      "symlinkTargetModeChangesHash": false,
+      "symlinkDifferentTargetChangesHash": false
+    },
+    {
+      "channel": "canary",
+      "shape": "unstaged-git",
+      "flag": true,
+      "regularExecutableBitChangesHash": true,
+      "nonExecutableModeChangesHash": false,
+      "symlinkIncluded": true,
+      "symlinkTargetModeChangesHash": true,
+      "symlinkDifferentTargetChangesHash": false
+    },
+    {
+      "channel": "canary",
+      "shape": "staged-git",
+      "flag": null,
+      "regularExecutableBitChangesHash": false,
+      "nonExecutableModeChangesHash": false,
+      "symlinkIncluded": true,
+      "symlinkTargetModeChangesHash": false,
+      "symlinkDifferentTargetChangesHash": false
+    },
+    {
+      "channel": "canary",
+      "shape": "staged-git",
+      "flag": false,
+      "regularExecutableBitChangesHash": false,
+      "nonExecutableModeChangesHash": false,
+      "symlinkIncluded": true,
+      "symlinkTargetModeChangesHash": false,
+      "symlinkDifferentTargetChangesHash": false
+    },
+    {
+      "channel": "canary",
+      "shape": "staged-git",
+      "flag": true,
+      "regularExecutableBitChangesHash": true,
+      "nonExecutableModeChangesHash": false,
+      "symlinkIncluded": true,
+      "symlinkTargetModeChangesHash": true,
+      "symlinkDifferentTargetChangesHash": false
+    }
+  ],
+  "publicReplayMatchesEarlierPrivateHashRows": true,
+  "historicalCalibrationFailuresRetained": true,
+  "privateCalibrationAuthority": "Earlier calibration failures are not passing product tests; their raw captures remain private.",
+  "featureAcceptanceStatus": "pending",
+  "productionChanged": false,
+  "qualificationGranted": false,
+  "wholeGoalCriteriaProven": 0,
+  "localQualitySuitesRun": false,
+  "reproduction": "python3 goals/turborepo-quality-cache-adoption/research/native-permission-mode-controls.py --output <new-report> --raw-dir <new-private-capture-directory>",
+  "publicationEncoding": "Published JSON is decoded-equal to the retained native report; the source bindings and publication map identify each byte envelope.",
+  "publicationMap": [
+    {
+      "publishedPath": "research/native-permission-mode-controls-2026-11-03.json",
+      "nativeCaptureSha256": "b3f22d819570ef6b0ad4facc261a308f15509759fab7ebe2474f2d42e7c09f19",
+      "publishedSha256": "b3f22d819570ef6b0ad4facc261a308f15509759fab7ebe2474f2d42e7c09f19",
+      "decodedEqual": true
+    },
+    {
+      "publishedPath": "research/permission-mode-driver-controls-2026-11-03.json",
+      "nativeCaptureSha256": "e17ea0667b74b4d5abc05e0af05e6e78fa24c37cf8fad64f35c4429d6beabe6e",
+      "publishedSha256": "e17ea0667b74b4d5abc05e0af05e6e78fa24c37cf8fad64f35c4429d6beabe6e",
+      "decodedEqual": true
+    }
+  ]
+}

@@ -262,8 +262,9 @@ export const loadOutboxConfig = Effect.fn("OutboxConfig.load")(function* (): Eff
   const privateKey = yield* requiredText(OUTBOX_ENV.certPrivateKey);
   const mailbox = yield* requiredText(OUTBOX_ENV.mailbox);
   const attachments = yield* attachmentPolicy();
+  const optionalText1 = yield* optionalText(OUTBOX_ENV.auditDirectory);
   const auditDirectory = yield* pipe(
-    yield* optionalText(OUTBOX_ENV.auditDirectory),
+    optionalText1,
     O.match({
       onNone: () => stateRoot("state").pipe(Effect.map((stateHome) => `${stateHome}/${AUDIT_SUFFIX}`)),
       onSome: Effect.succeed,

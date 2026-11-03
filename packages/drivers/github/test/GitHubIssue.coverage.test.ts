@@ -114,13 +114,20 @@ describe("GitHubIssue coverage", () => {
           linkedIssues: () => Effect.succeed([linked]),
           isCrossReferencedBy: dual(2, (_issue: number, _pr: number) => Effect.succeed(false)),
         });
-        assert.deepStrictEqual(yield* stub.get(1), issue);
-        assert.deepStrictEqual(yield* stub.list(), [issue]);
-        assert.strictEqual(yield* stub.close(1), undefined);
-        assert.strictEqual(yield* stub.comment(1, "text"), 2);
-        assert.deepStrictEqual(yield* stub.commentOnce(1, marker, "text"), once);
-        assert.deepStrictEqual(yield* stub.linkedIssues(1), [linked]);
-        assert.strictEqual(yield* stub.isCrossReferencedBy(1, 2), false);
+        const got1 = yield* stub.get(1);
+        assert.deepStrictEqual(got1, issue);
+        const list2 = yield* stub.list();
+        assert.deepStrictEqual(list2, [issue]);
+        const close3 = yield* stub.close(1);
+        assert.strictEqual(close3, undefined);
+        const comment4 = yield* stub.comment(1, "text");
+        assert.strictEqual(comment4, 2);
+        const commentOnce5 = yield* stub.commentOnce(1, marker, "text");
+        assert.deepStrictEqual(commentOnce5, once);
+        const linkedIssues6 = yield* stub.linkedIssues(1);
+        assert.deepStrictEqual(linkedIssues6, [linked]);
+        const isCrossReferencedBy7 = yield* stub.isCrossReferencedBy(1, 2);
+        assert.strictEqual(isCrossReferencedBy7, false);
         const defaults = yield* GitHubIssue;
         assert.throws(() => defaults.get(1), "GitHubIssue.makeTest: get()");
       })
@@ -170,20 +177,21 @@ describe("GitHubIssue coverage", () => {
           const got = yield* service.get(1);
           assert.strictEqual(got.state, "closed");
           assert.deepStrictEqual(got.labels, ["bug", "help"]);
-          assert.deepStrictEqual(yield* service.list(), [IssueInfo.make({ ...got, state: "open" })]);
-          assert.deepStrictEqual(
-            yield* service.list({
-              state: "all",
-              labels: ["bug", "help"],
-              page: PageOptions.make({ perPage: 5, maxPages: 1 }),
-            }),
-            [got]
-          );
+          const list8 = yield* service.list();
+          assert.deepStrictEqual(list8, [IssueInfo.make({ ...got, state: "open" })]);
+          const list9 = yield* service.list({
+            state: "all",
+            labels: ["bug", "help"],
+            page: PageOptions.make({ perPage: 5, maxPages: 1 }),
+          });
+          assert.deepStrictEqual(list9, [got]);
           assert.strictEqual(script.queryOf(2).get("labels"), "bug,help");
           assert.strictEqual(script.queryOf(2).get("state"), "all");
           assert.strictEqual(script.queryOf(2).get("per_page"), "5");
-          assert.deepStrictEqual(yield* service.commentOnce(1, marker, "text"), once);
-          assert.strictEqual(yield* service.isCrossReferencedBy(1, 2), false);
+          const commentOnce10 = yield* service.commentOnce(1, marker, "text");
+          assert.deepStrictEqual(commentOnce10, once);
+          const isCrossReferencedBy11 = yield* service.isCrossReferencedBy(1, 2);
+          assert.strictEqual(isCrossReferencedBy11, false);
         })
     );
   });
@@ -280,8 +288,9 @@ describe("GitHubIssue response decoding", () => {
     it.effect("decodes only inspected bodies and the first matching record, leaving a malformed tail untouched", () =>
       Effect.gen(function* () {
         const service = yield* GitHubIssue;
+        const commentOnce12 = yield* service.commentOnce(1, marker, "text");
         assert.deepStrictEqual(
-          yield* service.commentOnce(1, marker, "text"),
+          commentOnce12,
           CommentOnceResult.make({
             wrote: false,
             comment: CommentRecord.make({ id: 2, body: marker.html, url: "web" }),
@@ -305,7 +314,8 @@ describe("GitHubIssue response decoding", () => {
     it.effect("effectful list projection preserves issue and label order, omitted names, and state normalization", () =>
       Effect.gen(function* () {
         const service = yield* GitHubIssue;
-        assert.deepStrictEqual(yield* service.list(), [
+        const list13 = yield* service.list();
+        assert.deepStrictEqual(list13, [
           IssueInfo.make({
             number: 1,
             title: "Bug",
@@ -392,7 +402,8 @@ describe("GitHubIssue cross-reference pagination", () => {
         () =>
           Effect.gen(function* () {
             const service = yield* GitHubIssue;
-            assert.strictEqual(yield* service.isCrossReferencedBy(1, 2), matchingPage !== 0);
+            const isCrossReferencedBy14 = yield* service.isCrossReferencedBy(1, 2);
+            assert.strictEqual(isCrossReferencedBy14, matchingPage !== 0);
             assert.strictEqual(script.count(), matchingPage === 1 ? 1 : 2);
             const request = yield* S.decodeUnknownEffect(TimelineRequest)(script.calls[0]?.body);
             assert.include(request.query, "itemTypes: CROSS_REFERENCED_EVENT");
@@ -429,7 +440,8 @@ describe("GitHubIssue cross-reference pagination", () => {
     it.effect("stops when an empty timeline supplies no previous cursor", () =>
       Effect.gen(function* () {
         const service = yield* GitHubIssue;
-        assert.strictEqual(yield* service.isCrossReferencedBy(1, 2), false);
+        const isCrossReferencedBy15 = yield* service.isCrossReferencedBy(1, 2);
+        assert.strictEqual(isCrossReferencedBy15, false);
         assert.strictEqual(script.count(), 1);
       })
     );

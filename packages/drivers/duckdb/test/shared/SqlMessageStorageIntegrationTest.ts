@@ -93,7 +93,8 @@ const payloadIds = A.map((message: Message.Incoming<Rpc.Any>) =>
 );
 const expectDuplicateReply = Effect.fnUntraced(function* (tag: "Chunk" | "WithExit") {
   const storage = yield* MessageStorage.MessageStorage;
-  const result = yield* storage.saveRequest(yield* makeStreamRequest());
+  const madeStreamRequest = yield* makeStreamRequest();
+  const result = yield* storage.saveRequest(madeStreamRequest);
   assert(result._tag === "Duplicate" && Option.isSome(result.lastReceivedReply));
   expect(result.lastReceivedReply.value._tag).toEqual(tag);
 });
@@ -167,28 +168,28 @@ describe("SqlMessageStorage", () => {
         const messages = yield* storage.unprocessedMessages(shards);
         assert.strictEqual(messages.length, 1);
         assert.strictEqual(messages[0]?.envelope.requestId, requestId);
-        assert.deepStrictEqual(yield* storage.unprocessedMessages(shards), []);
+        const unprocessedMessages1 = yield* storage.unprocessedMessages(shards);
+        assert.deepStrictEqual(unprocessedMessages1, []);
 
         const reply = yield* makeReply(request);
         yield* storage.saveReply(reply);
-        assert.deepStrictEqual(yield* storage.repliesFor([request]), [reply.reply]);
+        const repliesFor2 = yield* storage.repliesFor([request]);
+        assert.deepStrictEqual(repliesFor2, [reply.reply]);
         yield* storage.resetShards(shards);
-        assert.deepStrictEqual(yield* storage.unprocessedMessages(shards), []);
+        const unprocessedMessages3 = yield* storage.unprocessedMessages(shards);
+        assert.deepStrictEqual(unprocessedMessages3, []);
 
-        const duplicate = yield* storage.saveRequest(
-          yield* makeRequest({ rpc: PrimaryKeyTest, payload: request.envelope.payload })
-        );
+        const madeRequest = yield* makeRequest({ rpc: PrimaryKeyTest, payload: request.envelope.payload });
+        const duplicate = yield* storage.saveRequest(madeRequest);
         assert(duplicate._tag === "Duplicate");
         assert.strictEqual(duplicate.originalId, requestId);
         assert.deepStrictEqual(duplicate.lastReceivedReply, Option.some(reply.reply));
-        assert.deepStrictEqual(
-          yield* storage.requestIdForPrimaryKey({
-            address: request.envelope.address,
-            tag: request.envelope.tag,
-            id: "123",
-          }),
-          Option.some(requestId)
-        );
+        const requestIdForPrimaryKey4 = yield* storage.requestIdForPrimaryKey({
+          address: request.envelope.address,
+          tag: request.envelope.tag,
+          id: "123",
+        });
+        assert.deepStrictEqual(requestIdForPrimaryKey4, Option.some(requestId));
       })
     );
   });
@@ -204,9 +205,11 @@ describe("SqlMessageStorage", () => {
         const storage = yield* MessageStorage.MessageStorage;
         const request = yield* makeRequest();
         yield* storage.saveRequest(request);
-        expect(yield* storage.unprocessedMessages([request.envelope.address.shardId])).toHaveLength(1);
+        const unprocessedMessages5 = yield* storage.unprocessedMessages([request.envelope.address.shardId]);
+        expect(unprocessedMessages5).toHaveLength(1);
         yield* storage.resetRequests([]);
-        expect(yield* storage.unprocessedMessages([request.envelope.address.shardId])).toHaveLength(0);
+        const unprocessedMessages6 = yield* storage.unprocessedMessages([request.envelope.address.shardId]);
+        expect(unprocessedMessages6).toHaveLength(0);
       })
     );
 
@@ -219,11 +222,13 @@ describe("SqlMessageStorage", () => {
         yield* storage.saveRequest(selected);
         yield* storage.saveRequest(unrelated);
         const shards = [selected.envelope.address.shardId];
-        expect(yield* storage.unprocessedMessages(shards)).toHaveLength(2);
+        const unprocessedMessages7 = yield* storage.unprocessedMessages(shards);
+        expect(unprocessedMessages7).toHaveLength(2);
         yield* storage.resetRequests([selected.envelope.requestId]);
         const messages = yield* storage.unprocessedMessages(shards);
         expect(A.map(messages, (message) => message.envelope.requestId)).toEqual([selected.envelope.requestId]);
-        expect(yield* storage.unprocessedMessages(shards)).toHaveLength(0);
+        const unprocessedMessages8 = yield* storage.unprocessedMessages(shards);
+        expect(unprocessedMessages8).toHaveLength(0);
       })
     );
 
@@ -236,12 +241,16 @@ describe("SqlMessageStorage", () => {
         yield* storage.saveRequest(streaming);
         yield* storage.saveRequest(completed);
         const shards = [streaming.envelope.address.shardId];
-        expect(yield* storage.unprocessedMessages(shards)).toHaveLength(2);
-        yield* storage.saveReply(yield* makeChunkReply(streaming));
-        yield* storage.saveReply(yield* makeReply(completed));
+        const unprocessedMessages9 = yield* storage.unprocessedMessages(shards);
+        expect(unprocessedMessages9).toHaveLength(2);
+        const madeChunkReply = yield* makeChunkReply(streaming);
+        yield* storage.saveReply(madeChunkReply);
+        const madeReply = yield* makeReply(completed);
+        yield* storage.saveReply(madeReply);
         const replies = yield* storage.repliesFor([streaming, completed]);
         expect(replies).toHaveLength(2);
-        expect(yield* storage.unprocessedMessages(shards)).toHaveLength(0);
+        const unprocessedMessages10 = yield* storage.unprocessedMessages(shards);
+        expect(unprocessedMessages10).toHaveLength(0);
         const sql = yield* SqlClient.SqlClient;
         // beep: DuckDB storage orders by its seq column; rowid moves when an indexed column is updated.
         const processed = yield* sql`SELECT processed FROM cluster_messages ORDER BY seq`;
@@ -249,8 +258,10 @@ describe("SqlMessageStorage", () => {
         const messages = yield* storage.unprocessedMessages(shards);
         // Replies keep both requests out of the SQL read loop.
         expect(messages).toHaveLength(0);
-        expect(yield* storage.repliesFor([streaming, completed])).toEqual(replies);
-        expect(yield* sql`SELECT processed FROM cluster_messages ORDER BY seq`).toEqual(processed);
+        const repliesFor11 = yield* storage.repliesFor([streaming, completed]);
+        expect(repliesFor11).toEqual(replies);
+        const value12 = yield* sql`SELECT processed FROM cluster_messages ORDER BY seq`;
+        expect(value12).toEqual(processed);
         yield* truncate;
       })
     );
@@ -264,8 +275,10 @@ describe("SqlMessageStorage", () => {
         yield* storage.saveRequest(request);
         yield* storage.saveReply(reply);
         yield* storage.clearReplies(request.envelope.requestId, { expectedReplyId: reply.reply.id });
-        expect(yield* storage.repliesFor([request])).toHaveLength(0);
-        expect(yield* storage.unprocessedMessages([request.envelope.address.shardId])).toHaveLength(1);
+        const repliesFor13 = yield* storage.repliesFor([request]);
+        expect(repliesFor13).toHaveLength(0);
+        const unprocessedMessages14 = yield* storage.unprocessedMessages([request.envelope.address.shardId]);
+        expect(unprocessedMessages14).toHaveLength(1);
       })
     );
 
@@ -285,12 +298,12 @@ describe("SqlMessageStorage", () => {
         )}`.pipe(Effect.provideService(SqlClient.SafeIntegers, true));
         const before = yield* selectState;
         yield* storage.clearReplies(request.envelope.requestId, { expectedReplyId: oldReply.reply.id });
-        expect(A.map(yield* storage.repliesFor([request]), (r) => r.id)).toEqual([
-          oldReply.reply.id,
-          completed.reply.id,
-        ]);
-        expect(yield* selectState).toEqual(before);
-        expect(yield* storage.unprocessedMessages([request.envelope.address.shardId])).toHaveLength(0);
+        const repliesFor15 = yield* storage.repliesFor([request]);
+        expect(A.map(repliesFor15, (r) => r.id)).toEqual([oldReply.reply.id, completed.reply.id]);
+        const selectState16 = yield* selectState;
+        expect(selectState16).toEqual(before);
+        const unprocessedMessages17 = yield* storage.unprocessedMessages([request.envelope.address.shardId]);
+        expect(unprocessedMessages17).toHaveLength(0);
         yield* truncate;
       })
     );
@@ -307,7 +320,8 @@ describe("SqlMessageStorage", () => {
           Effect.flatMap(makeRequest({ payload: { id } }), storage.saveRequest)
         );
 
-        yield* storage.saveReply(yield* makeReply(request));
+        const madeReply18 = yield* makeReply(request);
+        yield* storage.saveReply(madeReply18);
 
         let messages = yield* storage.unprocessedMessages([request.envelope.address.shardId]);
         expect(messages).toHaveLength(4);
@@ -344,12 +358,14 @@ describe("SqlMessageStorage", () => {
         const replies = yield* storage.repliesFor([request]);
         expect(replies).toHaveLength(1);
 
-        yield* storage.saveReply(yield* makeReply(request));
+        const madeReply19 = yield* makeReply(request);
+        yield* storage.saveReply(madeReply19);
 
         yield* expectDuplicateReply("WithExit");
 
         // duplicate WithExit
-        const fiber = yield* storage.saveReply(yield* makeReply(request)).pipe(Effect.forkChild);
+        const madeReply20 = yield* makeReply(request);
+        const fiber = yield* storage.saveReply(madeReply20).pipe(Effect.forkChild);
         yield* TestClock.adjust(1);
         // beep: Effect.repeat replaces the upstream while loop that drives the retry schedule.
         yield* Effect.gen(function* () {
@@ -366,8 +382,10 @@ describe("SqlMessageStorage", () => {
         yield* truncate;
 
         const storage = yield* MessageStorage.MessageStorage;
-        yield* storage.saveRequest(yield* makePrimaryKeyRequest(123));
-        const result = yield* storage.saveRequest(yield* makePrimaryKeyRequest(123));
+        const madePrimaryKeyRequest = yield* makePrimaryKeyRequest(123);
+        yield* storage.saveRequest(madePrimaryKeyRequest);
+        const madePrimaryKeyRequest21 = yield* makePrimaryKeyRequest(123);
+        const result = yield* storage.saveRequest(madePrimaryKeyRequest21);
         expect(result._tag).toEqual("Duplicate");
       })
     );
@@ -382,7 +400,8 @@ describe("SqlMessageStorage", () => {
         const result = yield* storage.saveRequest(request);
         expect(result._tag).toEqual("Success");
 
-        const duplicate = yield* storage.saveRequest(yield* makeLongKeyRequest(longId));
+        const madeLongKeyRequest = yield* makeLongKeyRequest(longId);
+        const duplicate = yield* storage.saveRequest(madeLongKeyRequest);
         expect(duplicate._tag).toEqual("Duplicate");
         yield* expectRequestIdForKey(request, longId);
 
@@ -407,7 +426,8 @@ describe("SqlMessageStorage", () => {
         expect(rows).toHaveLength(1);
         expect(rows[0]?.message_id).toEqual(plaintext);
 
-        yield* expectDuplicateOf(request, yield* makePrimaryKeyRequest(456), "456");
+        const madePrimaryKeyRequest22 = yield* makePrimaryKeyRequest(456);
+        yield* expectDuplicateOf(request, madePrimaryKeyRequest22, "456");
       })
     );
 
@@ -432,7 +452,8 @@ describe("SqlMessageStorage", () => {
           request.envelope.requestId
         )}`;
 
-        yield* expectDuplicateOf(request, yield* makeLongKeyRequest(longId), longId);
+        const madeLongKeyRequest23 = yield* makeLongKeyRequest(longId);
+        yield* expectDuplicateOf(request, madeLongKeyRequest23, longId);
       })
     );
 
@@ -447,7 +468,8 @@ describe("SqlMessageStorage", () => {
         expect(messages).toHaveLength(1);
         messages = yield* storage.unprocessedMessages([request.envelope.address.shardId]);
         expect(messages).toHaveLength(0);
-        yield* storage.saveRequest(yield* makeRequest());
+        const madeRequest24 = yield* makeRequest();
+        yield* storage.saveRequest(madeRequest24);
         messages = yield* storage.unprocessedMessages([request.envelope.address.shardId]);
         expect(messages).toHaveLength(1);
       })
@@ -491,8 +513,10 @@ describe("SqlMessageStorage", () => {
 
         const storage = yield* MessageStorage.MessageStorage;
         const shardTwo = ShardId.make("default", 2);
-        yield* storage.saveRequest(yield* makeRequest({ payload: { id: 1 }, shardId: shardOne }));
-        yield* storage.saveRequest(yield* makeRequest({ payload: { id: 2 }, shardId: shardTwo }));
+        const madeRequest25 = yield* makeRequest({ payload: { id: 1 }, shardId: shardOne });
+        yield* storage.saveRequest(madeRequest25);
+        const madeRequest26 = yield* makeRequest({ payload: { id: 2 }, shardId: shardTwo });
+        yield* storage.saveRequest(madeRequest26);
 
         const messages = yield* storage.unprocessedMessages([shardOne, shardTwo], {
           addresses: [addressFor("1")],
@@ -566,7 +590,8 @@ describe("SqlMessageStorage", () => {
         assert(acknowledgement?._tag === "AckChunk");
         expect(acknowledgement.replyId).toEqual(String(chunk.reply.id));
 
-        yield* storage.saveReply(yield* makeReply(request));
+        const madeReply27 = yield* makeReply(request);
+        yield* storage.saveReply(madeReply27);
         messages = yield* storage.unprocessedMessagesById([request.envelope.requestId]);
         expect(messages).toHaveLength(0);
       })
@@ -615,7 +640,8 @@ describe("SqlMessageStorage", () => {
           // beep: Anchor the virtual timeline to the delayed entity layer's actual start.
           yield* building.await;
           yield* TestClock.adjust(7500);
-          expect(yield* storage.repliesFor([request])).toHaveLength(0);
+          const repliesFor28 = yield* storage.repliesFor([request]);
+          expect(repliesFor28).toHaveLength(0);
 
           yield* TestClock.adjust(2500);
           yield* TestClock.adjust(100);

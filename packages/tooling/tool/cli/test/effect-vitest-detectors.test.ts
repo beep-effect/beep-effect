@@ -32,7 +32,8 @@ const findings = Effect.fnUntraced(function* (body: string) {
   return yield* detectEffectVitestFindings(source, "packages/example/test/fixture.test.ts", "@beep/example");
 });
 const hasRule = Effect.fnUntraced(function* (body: string, ruleId: EffectVitestRuleId) {
-  return A.some(yield* findings(body), (finding) => finding.ruleId === ruleId);
+  const findings1 = yield* findings(body);
+  return A.some(findings1, (finding) => finding.ruleId === ruleId);
 });
 
 // A fixture test file beside the other in-memory sources it imports, resolved like the scan resolves them.
@@ -50,7 +51,8 @@ const hasRuleAcrossFiles = Effect.fnUntraced(function* (
   body: string,
   ruleId: EffectVitestRuleId
 ) {
-  return A.some(yield* findingsAcrossFiles(files, body), (finding) => finding.ruleId === ruleId);
+  const findingsAcrossFiles2 = yield* findingsAcrossFiles(files, body);
+  return A.some(findingsAcrossFiles2, (finding) => finding.ruleId === ruleId);
 });
 
 const findingsWithHarness = Effect.fnUntraced(function* (harnessImport: string, body: string) {
@@ -192,7 +194,8 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'it.effect("functional", () => Fx.gen(function* () { const outcome = yield* Fx.result(program); pipe(outcome, R.isSuccess, assertFalse); }));',
         'it.effect("inline", () => Fx.gen(function* () { (yield* Fx.result(program)).pipe(R.isFailure, assertTrue); }));',
       ]) {
-        assertTrue(yield* hasRule(`${assertionImports}\n${body}`, "EV005"));
+        const hasRule3 = yield* hasRule(`${assertionImports}\n${body}`, "EV005");
+        assertTrue(hasRule3);
       }
     })
   );
@@ -206,49 +209,56 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'it.effect("not assertion", () => Fx.gen(function* () { const outcome = yield* Fx.result(program); outcome.pipe(R.isFailure, consume); }));',
         'it.effect("nested initializer", () => Fx.gen(function* () { const outcomes = [yield* Fx.result(program)]; assertTrue(outcomes.length === 1); }));',
       ]) {
-        assertFalse(yield* hasRule(`${assertionImports}\n${body}`, "EV005"));
+        const hasRule4 = yield* hasRule(`${assertionImports}\n${body}`, "EV005");
+        assertFalse(hasRule4);
       }
     })
   );
   it.effect.each(cases)("$ruleId positive AST fixture", ({ positive, ruleId }) =>
     Effect.gen(function* () {
-      assertTrue(yield* hasRule(positive, ruleId));
+      const hasRule5 = yield* hasRule(positive, ruleId);
+      assertTrue(hasRule5);
     })
   );
   it.effect.each(cases)("$ruleId negative AST fixture", ({ negative, ruleId }) =>
     Effect.gen(function* () {
-      assertFalse(yield* hasRule(negative, ruleId));
+      const hasRule6 = yield* hasRule(negative, ruleId);
+      assertFalse(hasRule6);
     })
   );
 
   it.effect("tracks named Effect and Layer aliases without mistaking lexical shadows", () =>
     Effect.gen(function* () {
-      assertTrue(
-        yield* hasRule(
-          'import { runSync as run, provide as give } from "effect/Effect"; import { scoped as resource } from "effect/Layer"; it("x", () => run(program)); it.effect("y", () => give(program, resource(Service, acquire)));',
-          "EV001"
-        )
+      const hasRule7 = yield* hasRule(
+        'import { runSync as run, provide as give } from "effect/Effect"; import { scoped as resource } from "effect/Layer"; it("x", () => run(program)); it.effect("y", () => give(program, resource(Service, acquire)));',
+        "EV001"
       );
-      assertTrue(
-        yield* hasRule(
-          'import { runSync as run, provide as give } from "effect/Effect"; import { scoped as resource } from "effect/Layer"; it.effect("y", () => give(program, resource(Service, acquire)));',
-          "EV002"
-        )
+      assertTrue(hasRule7);
+      const hasRule8 = yield* hasRule(
+        'import { runSync as run, provide as give } from "effect/Effect"; import { scoped as resource } from "effect/Layer"; it.effect("y", () => give(program, resource(Service, acquire)));',
+        "EV002"
       );
-      assertFalse(
-        yield* hasRule('import { runSync } from "effect/Effect"; it("x", (runSync) => runSync(program));', "EV001")
+      assertTrue(hasRule8);
+      const hasRule9 = yield* hasRule(
+        'import { runSync } from "effect/Effect"; it("x", (runSync) => runSync(program));',
+        "EV001"
       );
+      assertFalse(hasRule9);
     })
   );
 
   it.effect("tracks the root Effect namespace and respects hoisted function shadows", () =>
     Effect.gen(function* () {
-      assertTrue(
-        yield* hasRule('import * as E from "effect"; it("namespace", () => E.Effect.runSync(program));', "EV001")
+      const hasRule10 = yield* hasRule(
+        'import * as E from "effect"; it("namespace", () => E.Effect.runSync(program));',
+        "EV001"
       );
-      assertFalse(
-        yield* hasRule('it("hoisted", () => { expect(() => Fx.runSync()).toThrow(); function Fx() {} });', "EV001")
+      assertTrue(hasRule10);
+      const hasRule11 = yield* hasRule(
+        'it("hoisted", () => { expect(() => Fx.runSync()).toThrow(); function Fx() {} });',
+        "EV001"
       );
+      assertFalse(hasRule11);
     })
   );
 
@@ -262,33 +272,21 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
 
   it.effect("recognizes every public instrumented it form through existing tester provenance", () =>
     Effect.gen(function* () {
-      assertTrue(
-        A.some(
-          yield* findingsWithHarness(
-            'import { it } from "@beep/test-utils/Vitest";',
-            'it("direct", () => Fx.runSync(program));'
-          ),
-          (finding) => finding.ruleId === "EV001"
-        )
+      const findingsWithHarness12 = yield* findingsWithHarness(
+        'import { it } from "@beep/test-utils/Vitest";',
+        'it("direct", () => Fx.runSync(program));'
       );
-      assertTrue(
-        A.some(
-          yield* findingsWithHarness(
-            'import { it as runner } from "@beep/test-utils/Vitest";',
-            'runner.effect("alias", () => Fx.sleep("1 second"));'
-          ),
-          (finding) => finding.ruleId === "EV008"
-        )
+      assertTrue(A.some(findingsWithHarness12, (finding) => finding.ruleId === "EV001"));
+      const findingsWithHarness13 = yield* findingsWithHarness(
+        'import { it as runner } from "@beep/test-utils/Vitest";',
+        'runner.effect("alias", () => Fx.sleep("1 second"));'
       );
-      assertTrue(
-        A.some(
-          yield* findingsWithHarness(
-            'import * as Instrumented from "@beep/test-utils/Vitest";',
-            'Instrumented.it.live("namespace", () => Fx.log("diagnostic"));'
-          ),
-          (finding) => finding.ruleId === "EV009"
-        )
+      assertTrue(A.some(findingsWithHarness13, (finding) => finding.ruleId === "EV008"));
+      const findingsWithHarness14 = yield* findingsWithHarness(
+        'import * as Instrumented from "@beep/test-utils/Vitest";',
+        'Instrumented.it.live("namespace", () => Fx.log("diagnostic"));'
       );
+      assertTrue(A.some(findingsWithHarness14, (finding) => finding.ruleId === "EV009"));
       yield* assertEquivalentFindings(
         'instrumentedIt.each(cases)("each", () => Fx.runSync(program)); instrumentedIt.prop("prop", [], () => Fx.runSync(program));',
         "EV001"
@@ -309,63 +307,51 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'import { expect as candidate } from "@beep/test-utils/Vitest";',
       ];
       for (const harnessImport of negatives) {
-        assertFalse(
-          A.some(
-            yield* findingsWithHarness(harnessImport, 'candidate("negative", () => Fx.runSync(program));'),
-            (finding) => finding.ruleId === "EV001"
-          )
+        const findingsWithHarness15 = yield* findingsWithHarness(
+          harnessImport,
+          'candidate("negative", () => Fx.runSync(program));'
         );
+        assertFalse(A.some(findingsWithHarness15, (finding) => finding.ruleId === "EV001"));
       }
-      assertFalse(
-        A.some(
-          yield* findingsWithHarness(
-            'import * as Instrumented from "@beep/test-utils/Vitest";',
-            'Instrumented.TestHang("negative", () => Fx.runSync(program));'
-          ),
-          (finding) => finding.ruleId === "EV001"
-        )
+      const findingsWithHarness16 = yield* findingsWithHarness(
+        'import * as Instrumented from "@beep/test-utils/Vitest";',
+        'Instrumented.TestHang("negative", () => Fx.runSync(program));'
       );
+      assertFalse(A.some(findingsWithHarness16, (finding) => finding.ruleId === "EV001"));
     })
   );
 
   it.effect("preserves shadowing for direct, renamed, and namespace instrumented imports", () =>
     Effect.gen(function* () {
-      assertFalse(
-        A.some(
-          yield* findingsWithHarness(
-            'import { it as runner } from "@beep/test-utils/Vitest";',
-            'const verify = () => { const runner = subject; runner("shadowed", () => Fx.runSync(program)); };'
-          ),
-          (finding) => finding.ruleId === "EV001"
-        )
+      const findingsWithHarness17 = yield* findingsWithHarness(
+        'import { it as runner } from "@beep/test-utils/Vitest";',
+        'const verify = () => { const runner = subject; runner("shadowed", () => Fx.runSync(program)); };'
       );
-      assertFalse(
-        A.some(
-          yield* findingsWithHarness(
-            'import * as Instrumented from "@beep/test-utils/Vitest";',
-            'const verify = () => { const Instrumented = subject; Instrumented.it("shadowed", () => Fx.runSync(program)); };'
-          ),
-          (finding) => finding.ruleId === "EV001"
-        )
+      assertFalse(A.some(findingsWithHarness17, (finding) => finding.ruleId === "EV001"));
+      const findingsWithHarness18 = yield* findingsWithHarness(
+        'import * as Instrumented from "@beep/test-utils/Vitest";',
+        'const verify = () => { const Instrumented = subject; Instrumented.it("shadowed", () => Fx.runSync(program)); };'
       );
+      assertFalse(A.some(findingsWithHarness18, (finding) => finding.ruleId === "EV001"));
     })
   );
 
   it.effect("does not classify live sleep as a TestClock hang", () =>
     Effect.gen(function* () {
-      assertFalse(yield* hasRule('it.live("sleep", () => Fx.sleep("1 millis"));', "EV008"));
-      assertTrue(yield* hasRule('it.live("sleep", () => Fx.sleep("1 millis"));', "EV009"));
+      const hasRule19 = yield* hasRule('it.live("sleep", () => Fx.sleep("1 millis"));', "EV008");
+      assertFalse(hasRule19);
+      const hasRule20 = yield* hasRule('it.live("sleep", () => Fx.sleep("1 millis"));', "EV009");
+      assertTrue(hasRule20);
     })
   );
 
   it.effect("recognizes a locally constructed Context provision", () =>
     Effect.gen(function* () {
-      assertFalse(
-        yield* hasRule(
-          'const ctx = Context.make(Service, {}); it.effect("context", () => Fx.provide(program, ctx));',
-          "EV002"
-        )
+      const hasRule21 = yield* hasRule(
+        'const ctx = Context.make(Service, {}); it.effect("context", () => Fx.provide(program, ctx));',
+        "EV002"
       );
+      assertFalse(hasRule21);
     })
   );
 
@@ -377,7 +363,8 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'const makeContext = function () { return Context.make(Source, {}); }; it.effect("function", () => Fx.provide(program, makeContext()));',
         'function makeContext() { return Context.add(Context.make(Source, {}), Config, {}); } it.effect("declaration", () => Fx.provide(program, makeContext()));',
       ]) {
-        assertFalse(yield* hasRule(body, "EV002"));
+        const hasRule22 = yield* hasRule(body, "EV002");
+        assertFalse(hasRule22);
       }
       for (const body of [
         'const ctx = Context.make(Source, {}).pipe(mystery); it.effect("unknown stage", () => Fx.provide(program, ctx));',
@@ -387,30 +374,29 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'const makeContext = () => Context.make(Source, {}); it.effect("shadowed", () => { const makeContext = () => liveLayer; return Fx.provide(program, makeContext()); });',
         'const makeContext = (flag: boolean) => (flag ? Context.make(Source, {}) : liveLayer); it.effect("branch", () => Fx.provide(program, makeContext(true)));',
       ]) {
-        assertTrue(yield* hasRule(body, "EV002"));
+        const hasRule23 = yield* hasRule(body, "EV002");
+        assertTrue(hasRule23);
       }
     })
   );
 
   it.effect("keeps property members when an unrelated import uses the same local name", () =>
     Effect.gen(function* () {
-      assertTrue(
-        yield* hasRule(
-          'import * as assert from "@effect/vitest/utils"; it("property", () => fc.assert(fc.property(fc.string(), () => true)));',
-          "EV007"
-        )
+      const hasRule24 = yield* hasRule(
+        'import * as assert from "@effect/vitest/utils"; it("property", () => fc.assert(fc.property(fc.string(), () => true)));',
+        "EV007"
       );
+      assertTrue(hasRule24);
     })
   );
 
   it.effect("reads the expected literal of a node:assert equality over a data shape", () =>
     Effect.gen(function* () {
-      assertTrue(
-        yield* hasRule(
-          'import assert from "node:assert/strict"; it("x", () => assert.strictEqual(O.isSome(value), true));',
-          "EV006"
-        )
+      const hasRule25 = yield* hasRule(
+        'import assert from "node:assert/strict"; it("x", () => assert.strictEqual(O.isSome(value), true));',
+        "EV006"
       );
+      assertTrue(hasRule25);
     })
   );
 
@@ -424,18 +410,16 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
 
   it.effect("recognizes const-arrow and Effect.fnUntraced resource wrapper definitions", () =>
     Effect.gen(function* () {
-      assertTrue(
-        yield* hasRule(
-          'const withOne = (effect) => Fx.acquireRelease(acquire, release).pipe(Fx.flatMap(() => effect)); it.effect("x", withOne(program));',
-          "EV003"
-        )
+      const hasRule26 = yield* hasRule(
+        'const withOne = (effect) => Fx.acquireRelease(acquire, release).pipe(Fx.flatMap(() => effect)); it.effect("x", withOne(program));',
+        "EV003"
       );
-      assertTrue(
-        yield* hasRule(
-          'const withTwo = Fx.fnUntraced((effect) => Fx.acquireRelease(acquire, release).pipe(Fx.flatMap(() => effect))); it.effect("x", withTwo(program));',
-          "EV003"
-        )
+      assertTrue(hasRule26);
+      const hasRule27 = yield* hasRule(
+        'const withTwo = Fx.fnUntraced((effect) => Fx.acquireRelease(acquire, release).pipe(Fx.flatMap(() => effect))); it.effect("x", withTwo(program));',
+        "EV003"
       );
+      assertTrue(hasRule27);
     })
   );
 
@@ -458,14 +442,15 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'const wrap = (use) => Fx.acquireUseRelease(Fx.flatMap(FileSystem.FileSystem, (fs) => { return fs.readFileString("fixture"); }), use, (root) => fs.remove(root));',
         "const wrap = (use) => Fx.acquireUseRelease(Fx.gen(() => fs.makeTempDirectory()), use, (root) => fs.remove(root));",
         "const wrap = (use) => Fx.acquireUseRelease(Fx.gen(function* () { return fs.makeTempDirectory(); }), use, (root) => fs.remove(root));",
-      ])
-        assertTrue(yield* hasRule(`${body} it.effect("resource", () => wrap(program));`, "EV003"));
-      assertFalse(
-        yield* hasRule(
-          'const wrap = (use) => Fx.acquireUseRelease(Fx.flatMap(FileSystem.FileSystem, function (fs) { return fs.makeTempDirectory(); }), use, (root) => fs.remove(root)); it.effect("fresh", () => wrap(program));',
-          "EV003"
-        )
+      ]) {
+        const hasRule1 = yield* hasRule(`${body} it.effect("resource", () => wrap(program));`, "EV003");
+        assertTrue(hasRule1);
+      }
+      const hasRule28 = yield* hasRule(
+        'const wrap = (use) => Fx.acquireUseRelease(Fx.flatMap(FileSystem.FileSystem, function (fs) { return fs.makeTempDirectory(); }), use, (root) => fs.remove(root)); it.effect("fresh", () => wrap(program));',
+        "EV003"
       );
+      assertFalse(hasRule28);
     })
   );
 
@@ -481,7 +466,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'const withTempDirectory = (use) => Fx.acquireUseRelease(fs.makeTempDirectory(), use, Fx.fnUntraced(function* (tmpDir) { yield* fs.remove(tmpDir, { recursive: true }); })); it.effect("x", () => withTempDirectory(program));',
         'const withTempDirectory = (use) => Fx.acquireUseRelease(fs.makeTempDirectory(), use, Fx.fn("release")(function* (tmpDir) { yield* fs.remove(tmpDir); })); it.effect("x", () => withTempDirectory(program));',
       ];
-      for (const body of fresh) assertFalse(yield* hasRule(body, "EV003"));
+      for (const body of fresh) {
+        const hasRule2 = yield* hasRule(body, "EV003");
+        assertFalse(hasRule2);
+      }
 
       const shareable = [
         'const withCatalog = (use) => Fx.acquireUseRelease(fs.readFileString("fixtures/catalog.json"), use, () => Fx.void); it.effect("x", () => withCatalog(program));',
@@ -504,7 +492,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'const restoreEnv = () => { process.env.HOME = savedHome; }; const withTempEnv = (use) => Fx.acquireUseRelease(fs.makeTempDirectory(), use, (root) => Fx.sync(restoreEnv).pipe(Fx.andThen(fs.remove(root)))); it.effect("x", () => withTempEnv(program));',
         'const withTempServer = (use) => Fx.acquireUseRelease(Fx.zip(fs.makeTempDirectory(), startServer), use, ([root]) => fs.remove(root)); it.effect("x", () => withTempServer(program));',
       ];
-      for (const body of shareable) assertTrue(yield* hasRule(body, "EV003"));
+      for (const body of shareable) {
+        const hasRule12 = yield* hasRule(body, "EV003");
+        assertTrue(hasRule12);
+      }
     })
   );
 
@@ -518,7 +509,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         // A function expression owns its returns (#1855 wave 6): ts-morph's isFunctionLikeDeclaration skips it.
         `const withFake = function (adapter) { return L.unwrap(Fx.map(Fake, adapter)); }; it.layer(withFake(mirror))((it) => { ${block} });`,
       ];
-      for (const body of factories) assertFalse(yield* hasRule(body, "EV003"));
+      for (const body of factories) {
+        const hasRule13 = yield* hasRule(body, "EV003");
+        assertFalse(hasRule13);
+      }
 
       const wrappers = [
         'const withStore = (use) => use.pipe(Fx.provide(L.scoped(Store, openStore("a")))); it.effect("x", () => withStore(program));',
@@ -526,31 +520,37 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'const withFake = (adapter) => L.unwrap(Fx.map(Fake, adapter)).pipe(Fx.provide(other)); it.effect("x", () => withFake(mirror));',
         'const withFake = (adapter, use) => { if (adapter) return L.unwrap(Fx.map(Fake, adapter)); return Fx.acquireUseRelease(open, use, close); }; it.effect("x", () => withFake(mirror, program));',
       ];
-      for (const body of wrappers) assertTrue(yield* hasRule(body, "EV003"));
+      for (const body of wrappers) {
+        const hasRule14 = yield* hasRule(body, "EV003");
+        assertTrue(hasRule14);
+      }
     })
   );
 
   it.effect("inspects Option, Result, and Exit values supplied as matcher arguments", () =>
     Effect.gen(function* () {
-      assertTrue(yield* hasRule('it("o", () => expect(value).toEqual(O.none()));', "EV006"));
-      assertTrue(yield* hasRule('it("r", () => expect(value).toEqual(R.succeed(1)));', "EV006"));
-      assertTrue(yield* hasRule('it("e", () => expect(value).toEqual(X.fail(error)));', "EV006"));
+      const hasRule29 = yield* hasRule('it("o", () => expect(value).toEqual(O.none()));', "EV006");
+      assertTrue(hasRule29);
+      const hasRule30 = yield* hasRule('it("r", () => expect(value).toEqual(R.succeed(1)));', "EV006");
+      assertTrue(hasRule30);
+      const hasRule31 = yield* hasRule('it("e", () => expect(value).toEqual(X.fail(error)));', "EV006");
+      assertTrue(hasRule31);
     })
   );
 
   it.effect("reads truthiness matchers as the polarity of the asserted data shape", () =>
     Effect.gen(function* () {
-      assertTrue(yield* hasRule('it("t", () => expect(O.isSome(value)).toBeTruthy());', "EV006"));
-      assertTrue(yield* hasRule('it("f", () => expect(O.isNone(value)).toBeFalsy());', "EV006"));
+      const hasRule32 = yield* hasRule('it("t", () => expect(O.isSome(value)).toBeTruthy());', "EV006");
+      assertTrue(hasRule32);
+      const hasRule33 = yield* hasRule('it("f", () => expect(O.isNone(value)).toBeFalsy());', "EV006");
+      assertTrue(hasRule33);
     })
   );
 
   it.effect("keeps shorter scoped lifetimes as judgments", () =>
     Effect.gen(function* () {
-      const finding = A.findFirst(
-        yield* findings('it.effect("x", () => Fx.flatMap(Fx.scoped(shortLife), () => program));'),
-        (candidate) => candidate.ruleId === "EV004"
-      );
+      const findings34 = yield* findings('it.effect("x", () => Fx.flatMap(Fx.scoped(shortLife), () => program));');
+      const finding = A.findFirst(findings34, (candidate) => candidate.ruleId === "EV004");
       assertTrue(O.isSome(finding), "Expected the resource-lifetime judgment to be present");
       assertTrue(finding.value.mechanization === "judgment");
       assertTrue(finding.value.class === "shorter-scope-lifetime-review");
@@ -559,10 +559,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
 
   it.effect("keeps missing resource-layer timeouts as judgments", () =>
     Effect.gen(function* () {
-      const finding = A.findFirst(
-        yield* findings('it.layer(L.scoped(Service, acquire))("db", (it) => { it.effect("x", () => Fx.void); });'),
-        (candidate) => candidate.ruleId === "EV014"
+      const findings35 = yield* findings(
+        'it.layer(L.scoped(Service, acquire))("db", (it) => { it.effect("x", () => Fx.void); });'
       );
+      const finding = A.findFirst(findings35, (candidate) => candidate.ruleId === "EV014");
       assertTrue(O.isSome(finding), "Expected the resource-lifetime judgment to be present");
       assertTrue(finding.value.mechanization === "judgment");
     })
@@ -574,39 +574,48 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
       for (const body of [
         'it.live("millis", () => Fx.gen(function* () { yield* Clock.currentTimeMillis; }));',
         'it.live("nanos", Fx.fnUntraced(function* () { const now = yield* Clock.currentTimeNanos; }));',
-      ])
-        assertFalse(yield* hasRule(`${clockImport}\n${body}`, "EV009"));
+      ]) {
+        const hasRule15 = yield* hasRule(`${clockImport}\n${body}`, "EV009");
+        assertFalse(hasRule15);
+      }
       for (const body of [
         'it.live("lookalike", () => Fx.gen(function* () { yield* Fixtures.currentTimeMillis; }));',
         'it.live("shadow", () => Fx.gen(function* () { const Clock = fake; yield* Clock.currentTimeMillis; }));',
         'it.live("unrelated", () => Fx.gen(function* () { yield* Fx.sleep("1 millis"); }));',
-      ])
-        assertTrue(yield* hasRule(`${clockImport}\n${body}`, "EV009"));
+      ]) {
+        const hasRule16 = yield* hasRule(`${clockImport}\n${body}`, "EV009");
+        assertTrue(hasRule16);
+      }
       const namedRead = 'it.live("named", () => Fx.gen(function* () { yield* currentTimeMillis; }));';
       for (const named of [
         'import { currentTimeMillis } from "effect/Clock";',
         'import { currentTimeNanos as currentTimeMillis } from "effect/Clock";',
-      ])
-        assertFalse(yield* hasRule(`${named}\n${namedRead}`, "EV009"));
+      ]) {
+        const hasRule17 = yield* hasRule(`${named}\n${namedRead}`, "EV009");
+        assertFalse(hasRule17);
+      }
       for (const named of [
         'import { currentTimeMillis } from "./fixtures";',
         'import { currentTimeMillis } from "effect/Clock"; const shadow = () => { const currentTimeMillis = fake; return currentTimeMillis; };',
-      ])
-        assertTrue(
-          yield* hasRule(
-            `${named}\nit.live("named", () => Fx.gen(function* () { const currentTimeMillis = fake; yield* currentTimeMillis; }));`,
-            "EV009"
-          )
+      ]) {
+        const hasRule18 = yield* hasRule(
+          `${named}\nit.live("named", () => Fx.gen(function* () { const currentTimeMillis = fake; yield* currentTimeMillis; }));`,
+          "EV009"
         );
-      assertTrue(yield* hasRule(`import { currentTimeMillis } from "./fixtures";\n${namedRead}`, "EV009"));
+        assertTrue(hasRule18);
+      }
+      const hasRule36 = yield* hasRule(`import { currentTimeMillis } from "./fixtures";\n${namedRead}`, "EV009");
+      assertTrue(hasRule36);
     })
   );
 
   it.effect("emits deterministic distinct identities for same-line occurrences", () =>
     Effect.gen(function* () {
       const source = 'it("x", () => Fx.zip(Fx.runSync(left), Fx.runSync(right)));';
-      const first = A.filter(yield* findings(source), (finding) => finding.ruleId === "EV001");
-      const second = A.filter(yield* findings(source), (finding) => finding.ruleId === "EV001");
+      const findings37 = yield* findings(source);
+      const first = A.filter(findings37, (finding) => finding.ruleId === "EV001");
+      const findings38 = yield* findings(source);
+      const second = A.filter(findings38, (finding) => finding.ruleId === "EV001");
       assertTrue(first.length === 2);
       assertTrue(first[0]?.id !== first[1]?.id);
       assertTrue(
@@ -632,15 +641,11 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
       assertTrue(A.filter(rows, (row) => row.ruleId === "EV009").length === 1);
       assertTrue(A.filter(rows, (row) => row.ruleId === "EV008").length === 1);
       assertFalse(A.some(rows, (row) => row.ruleId === "EV014"));
-      assertTrue(
-        A.some(
-          yield* findingsWithHarness(
-            'import * as V from "@effect/vitest";',
-            'V.layer(Resource)(verify => { verify.effect("x", () => Fx.runSync(program)); });'
-          ),
-          (row) => row.ruleId === "EV001"
-        )
+      const findingsWithHarness39 = yield* findingsWithHarness(
+        'import * as V from "@effect/vitest";',
+        'V.layer(Resource)(verify => { verify.effect("x", () => Fx.runSync(program)); });'
       );
+      assertTrue(A.some(findingsWithHarness39, (row) => row.ruleId === "EV001"));
     })
   );
 
@@ -658,7 +663,8 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         ],
         ['import * as V from "@effect/vitest";', 'const f = (V) => V.effect("x", () => Fx.runSync(program));'],
       ]) {
-        assertFalse(A.some(yield* findingsWithHarness(header ?? "", body ?? ""), (row) => row.ruleId === "EV001"));
+        const findingsWithHarness40 = yield* findingsWithHarness(header ?? "", body ?? "");
+        assertFalse(A.some(findingsWithHarness40, (row) => row.ruleId === "EV001"));
       }
     })
   );
@@ -670,19 +676,18 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `${header} const services = L.effect(Service, acquire); it.effect("x", Fx.fnUntraced(function* () { yield* Fx.void; }, provide(services)));`
       );
       assertTrue(A.some(resource, (row) => row.ruleId === "EV002" && row.mechanization === "detector"));
-      assertFalse(
-        yield* hasRule(
-          `${header} it.effect("stub", Fx.fnUntraced(function* () { yield* Fx.void; }, provide(L.succeed(Service, {}))));`,
-          "EV002"
-        )
+      const hasRule41 = yield* hasRule(
+        `${header} it.effect("stub", Fx.fnUntraced(function* () { yield* Fx.void; }, provide(L.succeed(Service, {}))));`,
+        "EV002"
       );
-      assertFalse(yield* hasRule(`${header} it.effect("shadow", (provide) => provide(services));`, "EV002"));
-      assertTrue(
-        yield* hasRule(
-          'import * as Kit from "@beep/test-utils"; it.effect("unknown", () => program.pipe(Kit.provideScopedLayer(ImportedLive)));',
-          "EV002"
-        )
+      assertFalse(hasRule41);
+      const hasRule42 = yield* hasRule(`${header} it.effect("shadow", (provide) => provide(services));`, "EV002");
+      assertFalse(hasRule42);
+      const hasRule43 = yield* hasRule(
+        'import * as Kit from "@beep/test-utils"; it.effect("unknown", () => program.pipe(Kit.provideScopedLayer(ImportedLive)));',
+        "EV002"
       );
+      assertTrue(hasRule43);
     })
   );
 
@@ -695,7 +700,8 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
       );
       assertTrue(A.some(rows, (row) => row.ruleId === "EV002" && row.mechanization === "detector"));
       assertTrue(A.some(rows, (row) => row.ruleId === "EV003" && O.contains(row.symbol, "supply")));
-      assertFalse(yield* hasRule(`${helper} it.effect("x", (supply) => supply(Resource));`, "EV002"));
+      const hasRule44 = yield* hasRule(`${helper} it.effect("x", (supply) => supply(Resource));`, "EV002");
+      assertFalse(hasRule44);
     })
   );
 
@@ -706,30 +712,25 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
       );
       assertFalse(A.some(rows, (row) => row.ruleId === "EV002"));
       assertTrue(A.some(rows, (row) => row.ruleId === "EV003"));
-      assertTrue(
-        yield* hasRule(
-          'const supply = (layer, effect) => L.build(layer).pipe(Fx.flatMap(context => effect.pipe(Fx.provide(context)))); it.effect("resource", () => supply(L.effect(Service, acquire), program));',
-          "EV002"
-        )
+      const hasRule45 = yield* hasRule(
+        'const supply = (layer, effect) => L.build(layer).pipe(Fx.flatMap(context => effect.pipe(Fx.provide(context)))); it.effect("resource", () => supply(L.effect(Service, acquire), program));',
+        "EV002"
       );
+      assertTrue(hasRule45);
     })
   );
 
   it.effect("judges imported and unknown layer constructors but permits proven pure compositions", () =>
     Effect.gen(function* () {
-      for (const layer of ["ImportedLive", "NodeServices.layer", "mockLayer()"])
-        assertTrue(
-          A.some(
-            yield* findings(`it.layer(${layer})("x", it => {});`),
-            (row) => row.ruleId === "EV014" && row.mechanization === "judgment"
-          )
-        );
-      assertFalse(
-        yield* hasRule(
-          'const stub = L.mergeAll(L.succeed(A, {}), L.mock(B, {})); it.layer(stub)("x", it => {});',
-          "EV014"
-        )
+      for (const layer of ["ImportedLive", "NodeServices.layer", "mockLayer()"]) {
+        const findings19 = yield* findings(`it.layer(${layer})("x", it => {});`);
+        assertTrue(A.some(findings19, (row) => row.ruleId === "EV014" && row.mechanization === "judgment"));
+      }
+      const hasRule46 = yield* hasRule(
+        'const stub = L.mergeAll(L.succeed(A, {}), L.mock(B, {})); it.layer(stub)("x", it => {});',
+        "EV014"
       );
+      assertFalse(hasRule46);
       for (const pure of [
         // #1855 wave 6: unwrapping a stub layer acquires nothing.
         'it.layer(L.unwrap(Fx.succeed(L.succeed(Service, {}))))("x", it => {});',
@@ -737,25 +738,28 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'it.layer(L.empty, { excludeTestServices: true })("x", it => {});',
         'const stub = L.mergeAll(L.empty, L.succeed(A, {})); it.layer(stub)("x", it => {});',
         'import { empty } from "effect/Layer"; it.layer(empty)("x", it => {});',
-      ])
-        assertFalse(yield* hasRule(pure, "EV014"));
+      ]) {
+        const hasRule34 = yield* hasRule(pure, "EV014");
+        assertFalse(hasRule34);
+      }
       for (const lookalike of [
         'it.layer(Fixtures.empty)("x", it => {});',
         'const f = (L) => it.layer(L.empty)("x", it => {});',
         'it.layer(L.mergeAll(L.empty, ImportedLive))("x", it => {});',
-      ])
-        assertTrue(
-          A.some(yield* findings(lookalike), (row) => row.ruleId === "EV014" && row.mechanization === "judgment")
-        );
-      assertFalse(
-        yield* hasRule(
-          'import { layer as shared } from "@effect/vitest"; shared(ImportedLive, { timeout: "2 seconds" })("x", it => {});',
-          "EV014"
-        )
+      ]) {
+        const findings36 = yield* findings(lookalike);
+        assertTrue(A.some(findings36, (row) => row.ruleId === "EV014" && row.mechanization === "judgment"));
+      }
+      const hasRule47 = yield* hasRule(
+        'import { layer as shared } from "@effect/vitest"; shared(ImportedLive, { timeout: "2 seconds" })("x", it => {});',
+        "EV014"
       );
-      assertTrue(
-        yield* hasRule('it.layer(ImportedLive)("x", it => { const timeout = { timeout: "2 seconds" }; });', "EV014")
+      assertFalse(hasRule47);
+      const hasRule48 = yield* hasRule(
+        'it.layer(ImportedLive)("x", it => { const timeout = { timeout: "2 seconds" }; });',
+        "EV014"
       );
+      assertTrue(hasRule48);
     })
   );
 
@@ -772,8 +776,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'import * as Platform from "@effect/platform-node"; it.layer(Platform.NodeServices.layer)("x", it => {});',
         'import * as NodeServices from "@effect/platform-node/NodeServices"; const platform = NodeServices.layer; it.layer(platform)("x", it => {});',
         'import * as BunPath from "@effect/platform-bun/BunPath"; it.layer(L.merge(BunPath.layer, L.succeed(A, {})))("x", it => {});',
-      ])
-        assertFalse(yield* hasRule(body, "EV014"));
+      ]) {
+        const hasRule37 = yield* hasRule(body, "EV014");
+        assertFalse(hasRule37);
+      }
     })
   );
 
@@ -785,16 +791,20 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'import * as BunCrypto from "@effect/platform-bun/BunCrypto"; it.layer(L.merge(BunCrypto.layerSecureRandom, BunCrypto.layerMac))("x", it => {});',
         'import * as Platform from "@effect/platform-node"; it.layer(Platform.NodeCrypto.layerKdf)("x", it => {});',
         'import * as Digest from "effect/crypto/Digest"; import * as SecureRandom from "effect/crypto/SecureRandom"; const WebCrypto = L.mergeAll(Digest.layerWebCrypto, SecureRandom.layerWebCrypto); it.layer(WebCrypto)("x", it => {});',
-      ])
-        assertFalse(yield* hasRule(body, "EV014"));
+      ]) {
+        const hasRule38 = yield* hasRule(body, "EV014");
+        assertFalse(hasRule38);
+      }
       for (const body of [
         'import * as NodeCrypto from "@effect/platform-node/NodeCrypto"; it.layer(NodeCrypto.layerOther)("x", it => {});',
         'import * as NodeCrypto from "@beep/fake/NodeCrypto"; it.layer(NodeCrypto.layerDigest)("x", it => {});',
         'import * as Digest from "effect/crypto/Digest"; it.layer(Digest.layer)("x", it => {});',
         'import * as Digest from "@beep/fake/Digest"; it.layer(Digest.layerWebCrypto)("x", it => {});',
         'import * as Digest from "effect/crypto/Digest"; it.layer(L.mergeAll(Digest.layerWebCrypto, ImportedLive))("x", it => {});',
-      ])
-        assertTrue(A.some(yield* findings(body), (row) => row.ruleId === "EV014" && row.mechanization === "judgment"));
+      ]) {
+        const findings39 = yield* findings(body);
+        assertTrue(A.some(findings39, (row) => row.ruleId === "EV014" && row.mechanization === "judgment"));
+      }
       for (const body of [
         'it.layer(L.scoped(Service, acquire))("x", it => {});',
         'it.layer(NodeServices.layer)("x", it => {});',
@@ -804,8 +814,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'import * as NodeServices from "@effect/platform-node/NodeServices"; it.layer(L.provide(ImportedLive, NodeServices.layer))("x", it => {});',
         'import * as NodeServices from "@effect/platform-node/NodeServices"; it.layer(NodeServices.other)("x", it => {});',
         'import * as NodeServices from "@effect/platform-node/NodeServices"; const f = (NodeServices) => it.layer(NodeServices.layer)("x", it => {});',
-      ])
-        assertTrue(A.some(yield* findings(body), (row) => row.ruleId === "EV014" && row.mechanization === "judgment"));
+      ]) {
+        const findings40 = yield* findings(body);
+        assertTrue(A.some(findings40, (row) => row.ruleId === "EV014" && row.mechanization === "judgment"));
+      }
     })
   );
 
@@ -844,8 +856,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `import { RenamedLive } from "../src/index.ts"; it.layer(RenamedLive)${block}`,
         `import { Impl } from "../src/index.ts"; it.layer(Impl.ImplLive)${block}`,
         `import { StubLive } from "./layers.ts"; const Local = StubLive.pipe(L.provideMerge(L.sync(B, () => []))); it.layer(Local)${block}`,
-      ])
-        assertFalse(yield* hasRuleAcrossFiles(files, body, "EV014"), body);
+      ]) {
+        const hasRuleAcrossFiles41 = yield* hasRuleAcrossFiles(files, body, "EV014");
+        assertFalse(hasRuleAcrossFiles41, body);
+      }
 
       for (const body of [
         `import { PromiseLive } from "./layers.ts"; it.layer(PromiseLive)${block}`,
@@ -854,15 +868,22 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `import { Absent } from "./layers.ts"; it.layer(Absent)${block}`,
         `import type { StubLive } from "./layers.ts"; it.layer(StubLive)${block}`,
         `import { Runner } from "./layers.ts"; it.layer(Runner.missing(1))${block}`,
-      ])
-        assertTrue(yield* hasRuleAcrossFiles(files, body, "EV014"), body);
+      ]) {
+        const hasRuleAcrossFiles42 = yield* hasRuleAcrossFiles(files, body, "EV014");
+        assertTrue(hasRuleAcrossFiles42, body);
+      }
 
       // Re-export cycles terminate and stay unresolved.
       const cycle = [
         ["/repo/test/a.ts", 'export { Loop } from "./b.ts";'],
         ["/repo/test/b.ts", 'export { Loop } from "./a.ts";'],
       ] as const;
-      assertTrue(yield* hasRuleAcrossFiles(cycle, `import { Loop } from "./a.ts"; it.layer(Loop)${block}`, "EV014"));
+      const hasRuleAcrossFiles49 = yield* hasRuleAcrossFiles(
+        cycle,
+        `import { Loop } from "./a.ts"; it.layer(Loop)${block}`,
+        "EV014"
+      );
+      assertTrue(hasRuleAcrossFiles49);
     })
   );
 
@@ -876,8 +897,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `${helper} it.layer(withDb(L.succeed(Db, {})))${block}`,
         `const withDefault = (db = L.succeed(Db, {})) => db; it.layer(withDefault())${block}`,
         `const first = (db, ...rest) => db; it.layer(first(L.succeed(Db, {}), ...extra))${block}`,
-      ])
-        assertFalse(yield* hasRule(body, "EV014"), body);
+      ]) {
+        const hasRule49 = yield* hasRule(body, "EV014");
+        assertFalse(hasRule49, body);
+      }
       for (const body of [
         `${helper} it.layer(withDb(L.effect(Db, Fx.promise(() => open()))))${block}`,
         `${helper} it.layer(withDb(ImportedLive))${block}`,
@@ -886,8 +909,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         // A spread argument shifts every later parameter: `pick(...pair, pure)` binds `db` to `pair[1]`.
         `const pair = [L.succeed(A, {}), L.effect(Db, Fx.promise(() => open()))]; const pick = (a, db) => db; it.layer(pick(...pair, L.succeed(Db, {})))${block}`,
         `const pair = [L.succeed(A, {}), L.effect(Db, Fx.promise(() => open()))]; const pick = (a, db = L.succeed(Db, {})) => db; it.layer(pick(...pair))${block}`,
-      ])
-        assertTrue(yield* hasRule(body, "EV014"), body);
+      ]) {
+        const hasRule86 = yield* hasRule(body, "EV014");
+        assertTrue(hasRule86, body);
+      }
     })
   );
 
@@ -906,8 +931,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `const makeStore = Fx.gen(function* () { const calls = yield* Recorder; return { calls }; }); const StoreLive = L.effect(Store, makeStore); it.layer(StoreLive)${block}`,
         `it.layer(L.effect(Probe, Fx.acquireRelease(Fx.succeed(1), () => Fx.sync(() => released++))))${block}`,
         `it.layer(L.suspend(() => L.succeed(Svc, {})))${block}`,
-      ])
-        assertFalse(yield* hasRule(`${services}\n${body}`, "EV014"), body);
+      ]) {
+        const hasRule87 = yield* hasRule(`${services}\n${body}`, "EV014");
+        assertFalse(hasRule87, body);
+      }
       for (const body of [
         `it.layer(L.effect(Store, Fx.gen(function* () { yield* Fx.promise(() => open()); })))${block}`,
         `it.layer(L.effect(Store, Fx.gen(function* () { yield* Fx.sleep("1 second"); })))${block}`,
@@ -919,8 +946,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `it.layer(L.unwrap(Fx.promise(() => import("./layer.ts"))))${block}`,
         `it.layer(L.effect(Store, Fx.gen(function* () { return yield* Fx.gen(function* () { yield* Fx.promise(() => open()); }); })))${block}`,
         `it.layer(L.effect(Probe, Fx.acquireRelease(Fx.promise(() => open()), () => Fx.void)))${block}`,
-      ])
-        assertTrue(yield* hasRule(`${services}\n${body}`, "EV014"), body);
+      ]) {
+        const hasRule88 = yield* hasRule(`${services}\n${body}`, "EV014");
+        assertTrue(hasRule88, body);
+      }
     })
   );
 
@@ -959,8 +988,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `import { makeLive } from "./stores.ts"; it.layer(makeLive())${block}`,
         `import { Store } from "./stores.ts"; it.layer(Store.layer)${block}`,
         `it.layer(L.provide(L.succeed(A, {}), [L.succeed(B, {}), L.mock(C, {})]))${block}`,
-      ])
-        assertFalse(yield* hasRuleAcrossFiles(files, body, "EV014"), body);
+      ]) {
+        const hasRuleAcrossFiles89 = yield* hasRuleAcrossFiles(files, body, "EV014");
+        assertFalse(hasRuleAcrossFiles89, body);
+      }
       for (const body of [
         `import { declaredLive } from "./stores.ts"; it.layer(declaredLive())${block}`,
         `import { DestructuredLive } from "./stores.ts"; it.layer(DestructuredLive)${block}`,
@@ -979,8 +1010,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `it.layer(L.succeed(A, {}).pipe(L.provide(L.effect(B, Fx.promise(() => open())))))${block}`,
         `it.layer(L.succeed(A, {}).pipe(L.orDie))${block}`,
         `it.layer(L.merge(L.succeed(A, {}))(L.succeed(B, {})))${block}`,
-      ])
-        assertTrue(yield* hasRuleAcrossFiles(files, body, "EV014"), body);
+      ]) {
+        const hasRuleAcrossFiles90 = yield* hasRuleAcrossFiles(files, body, "EV014");
+        assertTrue(hasRuleAcrossFiles90, body);
+      }
     })
   );
 
@@ -997,8 +1030,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         "Ref.make(0).pipe(Fx.flatMap((ref) => Ref.update(ref, (n) => n + 1)), Fx.map(() => ({})), Fx.asVoid)",
         "Fx.as(Recorder, {})",
         'Fx.serviceOption(Recorder).pipe(Fx.withSpan("acquire"))',
-      ])
-        assertFalse(yield* hasRule(acquire(effect), "EV014"), effect);
+      ]) {
+        const hasRule92 = yield* hasRule(acquire(effect), "EV014");
+        assertFalse(hasRule92, effect);
+      }
       for (const effect of [
         "Fx.flatMap(Ref.make(0), (ref) => Fx.promise(() => persist(ref)))",
         "Fx.flatMap(Ref.make(0))",
@@ -1013,16 +1048,20 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         "Fx.gen(function* () { yield* Plain; }); class Plain extends Base {}",
         "Fx.gen(function* () { yield* notAKey; }); const notAKey = makeKey();",
         "Fx.gen({ self: this })",
-      ])
-        assertTrue(yield* hasRule(acquire(effect), "EV014"), effect);
+      ]) {
+        const hasRule94 = yield* hasRule(acquire(effect), "EV014");
+        assertTrue(hasRule94, effect);
+      }
 
       const unwrap = (effect: string) => `${services}\nit.layer(L.unwrap(${effect}))${block}`;
       for (const effect of [
         "Fx.sync(() => L.succeed(A, {}))",
         "Fx.succeed(L.succeed(A, {}))",
         "freeLayerEffect); const freeLayerEffect = Fx.succeed(L.succeed(A, {})",
-      ])
-        assertFalse(yield* hasRule(unwrap(effect), "EV014"), effect);
+      ]) {
+        const hasRule96 = yield* hasRule(unwrap(effect), "EV014");
+        assertFalse(hasRule96, effect);
+      }
       for (const effect of [
         "Fx.sync(() => L.effect(A, Fx.promise(() => open())))",
         "Fx.map(Fx.promise(() => open()), () => L.succeed(A, {}))",
@@ -1030,8 +1069,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         "Fx.gen(function* () { yield* Recorder; })",
         "Fx.gen(function* () { yield* Fx.promise(() => open()); return L.succeed(A, {}); })",
         "Fx.succeed()",
-      ])
-        assertTrue(yield* hasRule(unwrap(effect), "EV014"), effect);
+      ]) {
+        const hasRule97 = yield* hasRule(unwrap(effect), "EV014");
+        assertTrue(hasRule97, effect);
+      }
     })
   );
 
@@ -1062,8 +1103,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         "Fx.gen(function* () { const calls = yield* Recorder; const sizes = Arr.map(calls, (call) => call.length); return { calls: sizes.length }; })",
         "Fx.map(Recorder, (calls) => ({ calls: calls.length }))",
         "Fx.gen(function* () { return { calls: 0, run: () => readModelFile() }; })",
-      ])
-        assertFalse(yield* hasRule(layer(effect), "EV014"), effect);
+      ]) {
+        const hasRule98 = yield* hasRule(layer(effect), "EV014");
+        assertFalse(hasRule98, effect);
+      }
       for (const effect of [
         "Fx.sync(loadModel)",
         "Fx.sync(loadFromDisk)",
@@ -1081,20 +1124,25 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         "Fx.map(Recorder, loadModel)",
         "Ref.make(0).pipe(Fx.map((ref) => loadModel(ref)))",
         "Fx.flatMap(Ref.make(0), (ref) => { loadModel(ref); return Fx.void; })",
-      ])
-        assertTrue(yield* hasRule(layer(effect), "EV014"), effect);
+      ]) {
+        const hasRule99 = yield* hasRule(layer(effect), "EV014");
+        assertTrue(hasRule99, effect);
+      }
 
-      assertFalse(yield* hasRule(`${services}\nit.layer(L.sync(Recorder, () => []))${block}`, "EV014"));
-      assertTrue(yield* hasRule(`${services}\nit.layer(L.sync(Recorder, loadModel))${block}`, "EV014"));
-      assertTrue(
-        yield* hasRule(`${services}\nit.layer(L.suspend(() => { loadModel(); return L.empty; }))${block}`, "EV014")
+      const hasRule50 = yield* hasRule(`${services}\nit.layer(L.sync(Recorder, () => []))${block}`, "EV014");
+      assertFalse(hasRule50);
+      const hasRule51 = yield* hasRule(`${services}\nit.layer(L.sync(Recorder, loadModel))${block}`, "EV014");
+      assertTrue(hasRule51);
+      const hasRule52 = yield* hasRule(
+        `${services}\nit.layer(L.suspend(() => { loadModel(); return L.empty; }))${block}`,
+        "EV014"
       );
-      assertTrue(
-        yield* hasRule(
-          `${services}\nit.layer(L.unwrap(Fx.sync(() => { loadModel(); return L.empty; })))${block}`,
-          "EV014"
-        )
+      assertTrue(hasRule52);
+      const hasRule53 = yield* hasRule(
+        `${services}\nit.layer(L.unwrap(Fx.sync(() => { loadModel(); return L.empty; })))${block}`,
+        "EV014"
       );
+      assertTrue(hasRule53);
     })
   );
 
@@ -1129,8 +1177,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         "Fx.sync(makeOp)",
         "Fx.map(Recorder, Engine.of)",
         "Fx.map(Recorder, Arr.length)",
-      ])
-        assertFalse(yield* hasRule(layer(effect), "EV014"), effect);
+      ]) {
+        const hasRule100 = yield* hasRule(layer(effect), "EV014");
+        assertFalse(hasRule100, effect);
+      }
       for (const effect of [
         "Fx.gen(function* () { const model = Plain.make(); return { model }; })",
         "Fx.gen(function* () { const model = curry()(); return { model }; })",
@@ -1141,8 +1191,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         "Fx.sync(Fx.runSync)",
         "Fx.sync(() => fetch(url))",
         "Fx.map(Recorder, Plain.make)",
-      ])
-        assertTrue(yield* hasRule(layer(effect), "EV014"), effect);
+      ]) {
+        const hasRule101 = yield* hasRule(layer(effect), "EV014");
+        assertTrue(hasRule101, effect);
+      }
     })
   );
 
@@ -1160,8 +1212,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `import * as Toolkit from "effect/ai/Toolkit"; const Kit = Toolkit.make(); it.layer(Kit.toLayer({ lookup: () => Fx.void }))${block}`,
         `import * as Toolkit from "effect/ai/Toolkit"; class Engine extends Context.Service<Engine, {}>()("Engine") {} const Kit = Toolkit.make(); it.layer(Kit.toLayer(Fx.gen(function* () { const engine = yield* Engine; return { lookup: () => Fx.succeed(engine) }; })))${block}`,
         `import * as LanguageModel from "effect/ai/LanguageModel"; it.layer(L.effect(LanguageModel.LanguageModel, LanguageModel.make({ generateText: () => Fx.succeed([]) })))${block}`,
-      ])
-        assertFalse(yield* hasRule(body, "EV014"), body);
+      ]) {
+        const hasRule103 = yield* hasRule(body, "EV014");
+        assertFalse(hasRule103, body);
+      }
       for (const body of [
         `import * as Path from "@beep/fake/Path"; it.layer(Path.layer)${block}`,
         `import * as ConfigProvider from "effect/ConfigProvider"; it.layer(ConfigProvider.layer(loadProvider))${block}`,
@@ -1169,31 +1223,36 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `const Kit = makeKit(); it.layer(Kit.toLayer({ lookup: () => Fx.void }))${block}`,
         `import * as Toolkit from "effect/ai/Toolkit"; const Kit = Toolkit.make(); it.layer(Kit.toLayer(Fx.promise(() => loadHandlers())))${block}`,
         `import * as McpServer from "effect/ai/McpServer"; it.layer(McpServer.McpServer.layer)${block}`,
-      ])
-        assertTrue(yield* hasRule(body, "EV014"), body);
+      ]) {
+        const hasRule108 = yield* hasRule(body, "EV014");
+        assertTrue(hasRule108, body);
+      }
     })
   );
 
   it.effect("limits withLive exemption to the wrapped wait", () =>
     Effect.gen(function* () {
-      assertFalse(yield* hasRule('it.effect("live", () => TC.withLive(Fx.sleep("1 second")));', "EV008"));
-      assertFalse(
-        yield* hasRule(
-          'it.effect("live", () => Fx.gen(function* () { yield* Fx.sleep("1 second"); }).pipe(TC.withLive));',
-          "EV008"
-        )
+      const hasRule54 = yield* hasRule('it.effect("live", () => TC.withLive(Fx.sleep("1 second")));', "EV008");
+      assertFalse(hasRule54);
+      const hasRule55 = yield* hasRule(
+        'it.effect("live", () => Fx.gen(function* () { yield* Fx.sleep("1 second"); }).pipe(TC.withLive));',
+        "EV008"
       );
-      assertTrue(
-        yield* hasRule(
-          'it.effect("stall", Fx.fnUntraced(function* () { yield* TC.withLive(Fx.succeed(1)); yield* Fx.sleep("1 second"); }));',
-          "EV008"
-        )
+      assertFalse(hasRule55);
+      const hasRule56 = yield* hasRule(
+        'it.effect("stall", Fx.fnUntraced(function* () { yield* TC.withLive(Fx.succeed(1)); yield* Fx.sleep("1 second"); }));',
+        "EV008"
       );
+      assertTrue(hasRule56);
       const sequential = yield* findings(
         'it.effect("stall", Fx.fnUntraced(function* () { yield* Fx.sleep("1 second"); yield* TC.adjust("1 second"); }));'
       );
       assertTrue(A.some(sequential, (row) => row.ruleId === "EV008" && row.mechanization === "detector"));
-      assertFalse(yield* hasRule('it.effect("count", () => Fx.succeed(1).pipe(Fx.repeat(S.recurs(3))));', "EV008"));
+      const hasRule57 = yield* hasRule(
+        'it.effect("count", () => Fx.succeed(1).pipe(Fx.repeat(S.recurs(3))));',
+        "EV008"
+      );
+      assertFalse(hasRule57);
     })
   );
 
@@ -1207,7 +1266,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'const fiber = yield* transaction(() => Fx.sleep("1 hour")).pipe(Fx.forkChild({ startImmediately: true })); yield* Fiber.interrupt(fiber);',
         'const slowFs = { ...fs, read: (file) => Fx.sleep("3 seconds").pipe(Fx.andThen(fs.read(file))) }; const service = yield* makeService().pipe(Fx.provideService(FileSystem.FileSystem, slowFs)); const fiber = yield* Fx.forkChild(service.detect(root)); yield* TC.adjust("2 seconds"); yield* Fiber.join(fiber);',
       ];
-      for (const body of controlled) assertFalse(yield* hasRule(test(body), "EV008"));
+      for (const body of controlled) {
+        const hasRule109 = yield* hasRule(test(body), "EV008");
+        assertFalse(hasRule109);
+      }
 
       const uncontrolled = [
         'const fiber = yield* Fx.forkChild(Fx.sleep("1 second")); yield* Fiber.join(fiber);',
@@ -1218,7 +1280,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'const slow = { read: () => Fx.sleep("3 seconds") }; const fiber = yield* Fx.forkChild(slow.read()); yield* slow.read(); yield* TC.adjust("3 seconds"); yield* Fiber.join(fiber);',
         'const slow = { read: () => Fx.sleep("3 seconds") }; const fiber = yield* Fx.forkChild(slow.read()); const direct = yield* slow.read(); yield* TC.adjust("3 seconds"); yield* Fiber.join(fiber);',
       ];
-      for (const body of uncontrolled) assertTrue(yield* hasRule(test(body), "EV008"));
+      for (const body of uncontrolled) {
+        const hasRule110 = yield* hasRule(test(body), "EV008");
+        assertTrue(hasRule110);
+      }
     })
   );
 
@@ -1235,7 +1300,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `const base = services; const twice = L.mergeAll(base, base); it.layer(twice, { excludeTestServices: true })((it) => { ${poll} });`,
         `const left = L.mergeAll(services, right); const right = L.mergeAll(other, left); it.layer(left, { excludeTestServices: true })((it) => { ${poll} });`,
       ];
-      for (const body of live) assertFalse(yield* hasRule(body, "EV008"));
+      for (const body of live) {
+        const hasRule111 = yield* hasRule(body, "EV008");
+        assertFalse(hasRule111);
+      }
 
       const testClock = [
         `it.layer(services)((it) => { ${poll} });`,
@@ -1251,24 +1319,30 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `const clocked = L.mergeAll(other, TC.layer()); it.layer(services, { excludeTestServices: true })((it) => { it.layer(clocked)((it) => { it.layer(more)((it) => { ${poll} }); }); });`,
         `${until} it.layer(services, { excludeTestServices: true })((it) => { it.effect("live", () => until(probe)); }); it.layer(services)((it) => { it.effect("clock", () => until(probe)); });`,
       ];
-      for (const body of testClock) assertTrue(yield* hasRule(body, "EV008"));
+      for (const body of testClock) {
+        const hasRule112 = yield* hasRule(body, "EV008");
+        assertTrue(hasRule112);
+      }
     })
   );
 
   it.effect("reviews fnUntraced live registrations without treating sleep as proof of necessity", () =>
     Effect.gen(function* () {
-      assertTrue(
-        yield* hasRule('it.live.each([1])("x", Fx.fnUntraced(function* () { yield* Fx.sleep("1 second"); }));', "EV009")
+      const hasRule58 = yield* hasRule(
+        'it.live.each([1])("x", Fx.fnUntraced(function* () { yield* Fx.sleep("1 second"); }));',
+        "EV009"
       );
-      assertFalse(
-        yield* hasRule('it.live("x", Fx.fnUntraced(function* () { yield* Console.log("live console"); }));', "EV009")
+      assertTrue(hasRule58);
+      const hasRule59 = yield* hasRule(
+        'it.live("x", Fx.fnUntraced(function* () { yield* Console.log("live console"); }));',
+        "EV009"
       );
-      assertTrue(
-        yield* hasRule(
-          'it.live("x", Fx.fnUntraced(function* () { const Console = fake; yield* Console.log("shadow"); }));',
-          "EV009"
-        )
+      assertFalse(hasRule59);
+      const hasRule60 = yield* hasRule(
+        'it.live("x", Fx.fnUntraced(function* () { const Console = fake; yield* Console.log("shadow"); }));',
+        "EV009"
       );
+      assertTrue(hasRule60);
     })
   );
 
@@ -1278,35 +1352,41 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         "@effect/platform-bun/BunFileSystem",
         "@effect/platform-node/NodeFileSystem",
         "@effect/platform-node-shared/NodeFileSystem",
-      ])
-        assertTrue(yield* hasRule(`import * as Platform from "${module}";`, "EV010"));
-      assertFalse(yield* hasRule('import * as Fake from "@effect/platform-node-other/NodeFileSystem";', "EV010"));
-      assertTrue(yield* hasRule('const fs = require("node:fs"); const { tmpdir } = require("node:os");', "EV010"));
-      assertFalse(yield* hasRule('function run(require) { const fs = require("node:fs"); }', "EV010"));
-      assertFalse(yield* hasRule('const { require } = mock; const fs = require("node:fs");', "EV010"));
+      ]) {
+        const hasRule113 = yield* hasRule(`import * as Platform from "${module}";`, "EV010");
+        assertTrue(hasRule113);
+      }
+      const hasRule61 = yield* hasRule('import * as Fake from "@effect/platform-node-other/NodeFileSystem";', "EV010");
+      assertFalse(hasRule61);
+      const hasRule62 = yield* hasRule(
+        'const fs = require("node:fs"); const { tmpdir } = require("node:os");',
+        "EV010"
+      );
+      assertTrue(hasRule62);
+      const hasRule63 = yield* hasRule('function run(require) { const fs = require("node:fs"); }', "EV010");
+      assertFalse(hasRule63);
+      const hasRule64 = yield* hasRule('const { require } = mock; const fs = require("node:fs");', "EV010");
+      assertFalse(hasRule64);
     })
   );
 
   it.effect("tracks yielded results to nested assertion arguments through exact lexical bindings", () =>
     Effect.gen(function* () {
-      assertTrue(
-        yield* hasRule(
-          'it.effect("result", Fx.fnUntraced(function* () { const missing = yield* Fx.result(program); expect(R.isFailure(missing)).toBe(true); }));',
-          "EV005"
-        )
+      const hasRule65 = yield* hasRule(
+        'it.effect("result", Fx.fnUntraced(function* () { const missing = yield* Fx.result(program); expect(R.isFailure(missing)).toBe(true); }));',
+        "EV005"
       );
-      assertFalse(
-        yield* hasRule(
-          'it.effect("shadow", Fx.fnUntraced(function* () { const missing = yield* Fx.result(program); { const missing = other; expect(R.isFailure(missing)).toBe(true); } }));',
-          "EV005"
-        )
+      assertTrue(hasRule65);
+      const hasRule66 = yield* hasRule(
+        'it.effect("shadow", Fx.fnUntraced(function* () { const missing = yield* Fx.result(program); { const missing = other; expect(R.isFailure(missing)).toBe(true); } }));',
+        "EV005"
       );
-      assertFalse(
-        yield* hasRule(
-          'it.effect("unasserted", Fx.fnUntraced(function* () { const missing = yield* Fx.result(program); return missing; }));',
-          "EV005"
-        )
+      assertFalse(hasRule66);
+      const hasRule67 = yield* hasRule(
+        'it.effect("unasserted", Fx.fnUntraced(function* () { const missing = yield* Fx.result(program); return missing; }));',
+        "EV005"
       );
+      assertFalse(hasRule67);
     })
   );
 
@@ -1315,25 +1395,27 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
       for (const assertion of [
         'import { assertTrue as check } from "@effect/vitest/utils"; it("x", () => check(O.isSome(value)));',
         'import * as U from "@effect/vitest/utils"; it("x", () => U.assertFalse(X.isFailure(value)));',
-      ])
-        assertFalse(yield* hasRule(assertion, "EV006"));
+      ]) {
+        const hasRule120 = yield* hasRule(assertion, "EV006");
+        assertFalse(hasRule120);
+      }
       for (const assertion of [
         'import { assert as check } from "@effect/vitest"; it("x", () => check.isTrue(R.isFailure(value)));',
         'import { ok as check } from "node:assert/strict"; it("x", () => check(O.isNone(value)));',
-      ])
-        assertTrue(yield* hasRule(assertion, "EV006"));
-      assertFalse(
-        yield* hasRule(
-          'import { assertTrue as check } from "@effect/vitest/utils"; it("x", (check) => check(O.isSome(value)));',
-          "EV006"
-        )
+      ]) {
+        const hasRule122 = yield* hasRule(assertion, "EV006");
+        assertTrue(hasRule122);
+      }
+      const hasRule68 = yield* hasRule(
+        'import { assertTrue as check } from "@effect/vitest/utils"; it("x", (check) => check(O.isSome(value)));',
+        "EV006"
       );
-      assertFalse(
-        yield* hasRule(
-          'import { assertTrue, assertSome } from "@effect/vitest/utils"; it("x", () => { assertTrue(value > 0); assertSome(option, 1); });',
-          "EV006"
-        )
+      assertFalse(hasRule68);
+      const hasRule69 = yield* hasRule(
+        'import { assertTrue, assertSome } from "@effect/vitest/utils"; it("x", () => { assertTrue(value > 0); assertSome(option, 1); });',
+        "EV006"
       );
+      assertFalse(hasRule69);
     })
   );
 
@@ -1354,36 +1436,39 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'import os from "node:os"; it("x", () => os.tmpdir());',
         'const os = require("node:os"); it("x", () => os.tmpdir());',
         'it("x", () => require("node:os").tmpdir());',
-      ])
-        assertTrue(yield* hasRule(text, "EV010"));
-      assertFalse(yield* hasRule('const os = require("node:os"); it("x", (os) => os.tmpdir());', "EV010"));
-      assertFalse(yield* hasRule('for (const require of loaders) { require("node:fs"); }', "EV010"));
-      assertTrue(
-        yield* hasRule('import assert from "node:assert/strict"; it("x", () => assert(O.isSome(value)));', "EV006")
+      ]) {
+        const hasRule125 = yield* hasRule(text, "EV010");
+        assertTrue(hasRule125);
+      }
+      const hasRule70 = yield* hasRule('const os = require("node:os"); it("x", (os) => os.tmpdir());', "EV010");
+      assertFalse(hasRule70);
+      const hasRule71 = yield* hasRule('for (const require of loaders) { require("node:fs"); }', "EV010");
+      assertFalse(hasRule71);
+      const hasRule72 = yield* hasRule(
+        'import assert from "node:assert/strict"; it("x", () => assert(O.isSome(value)));',
+        "EV006"
       );
+      assertTrue(hasRule72);
     })
   );
 
   it.effect("retains root namespace provenance for boolean assertions and live clock wrappers", () =>
     Effect.gen(function* () {
-      assertTrue(
-        yield* hasRule(
-          'import * as V from "@effect/vitest"; it("x", () => V.assert.isFalse(O.isNone(value)));',
-          "EV006"
-        )
+      const hasRule73 = yield* hasRule(
+        'import * as V from "@effect/vitest"; it("x", () => V.assert.isFalse(O.isNone(value)));',
+        "EV006"
       );
-      assertFalse(
-        yield* hasRule(
-          'import * as Testing from "effect/testing"; it.effect("x", () => Fx.sleep("1 second").pipe(Testing.TestClock.withLive));',
-          "EV008"
-        )
+      assertTrue(hasRule73);
+      const hasRule74 = yield* hasRule(
+        'import * as Testing from "effect/testing"; it.effect("x", () => Fx.sleep("1 second").pipe(Testing.TestClock.withLive));',
+        "EV008"
       );
-      assertTrue(
-        yield* hasRule(
-          'import { assertTrue as check } from "@effect/vitest/utils"; it.effect("x", Fx.fnUntraced(function* () { const result = yield* Fx.result(program); check(R.isFailure(result)); }));',
-          "EV005"
-        )
+      assertFalse(hasRule74);
+      const hasRule75 = yield* hasRule(
+        'import { assertTrue as check } from "@effect/vitest/utils"; it.effect("x", Fx.fnUntraced(function* () { const result = yield* Fx.result(program); check(R.isFailure(result)); }));',
+        "EV005"
       );
+      assertTrue(hasRule75);
     })
   );
 
@@ -1391,18 +1476,16 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
     "does not assign allocating-provider findings to local pure layer builds or unrelated imported helpers",
     () =>
       Effect.gen(function* () {
-        assertFalse(
-          yield* hasRule(
-            'const supply = effect => Fx.scoped(L.build(L.succeed(Service, {})).pipe(Fx.flatMap(context => effect.pipe(Fx.provide(context))))); it.effect("x", () => supply(program));',
-            "EV003"
-          )
+        const hasRule76 = yield* hasRule(
+          'const supply = effect => Fx.scoped(L.build(L.succeed(Service, {})).pipe(Fx.flatMap(context => effect.pipe(Fx.provide(context))))); it.effect("x", () => supply(program));',
+          "EV003"
         );
-        assertFalse(
-          yield* hasRule(
-            'import { provideScopedLayer } from "unrelated"; it.effect("x", () => provideScopedLayer(Resource)(program));',
-            "EV002"
-          )
+        assertFalse(hasRule76);
+        const hasRule77 = yield* hasRule(
+          'import { provideScopedLayer } from "unrelated"; it.effect("x", () => provideScopedLayer(Resource)(program));',
+          "EV002"
         );
+        assertFalse(hasRule77);
         const rows = yield* findings(
           'import { provideScopedLayer } from "@beep/test-utils"; it.effect("x", () => provideScopedLayer(L.effect(Service, acquire))(program));'
         );
@@ -1431,26 +1514,31 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
 
   it.effect("respects same-file helper binding shadows, unused definitions and imported runtime aliases", () =>
     Effect.gen(function* () {
-      assertTrue(
-        yield* hasRule(
-          'import { runSync as run } from "effect/Effect"; const helper = () => run(program); it("x", () => helper());',
-          "EV001"
-        )
+      const hasRule78 = yield* hasRule(
+        'import { runSync as run } from "effect/Effect"; const helper = () => run(program); it("x", () => helper());',
+        "EV001"
       );
-      assertFalse(yield* hasRule('const helper = () => Fx.runSync(program); it("x", (helper) => helper());', "EV001"));
-      assertFalse(
-        yield* hasRule(
-          'const helper = () => Fx.runSync(program); const alias = () => { const helper = () => 1; return helper(); }; it("x", () => alias());',
-          "EV001"
-        )
+      assertTrue(hasRule78);
+      const hasRule79 = yield* hasRule(
+        'const helper = () => Fx.runSync(program); it("x", (helper) => helper());',
+        "EV001"
       );
-      assertFalse(
-        yield* hasRule(
-          'const helper = () => { function unused() { Fx.runSync(program); } return 1; }; it("x", () => helper());',
-          "EV001"
-        )
+      assertFalse(hasRule79);
+      const hasRule80 = yield* hasRule(
+        'const helper = () => Fx.runSync(program); const alias = () => { const helper = () => 1; return helper(); }; it("x", () => alias());',
+        "EV001"
       );
-      assertFalse(yield* hasRule('const helper = (Fx) => Fx.runSync(program); it("x", () => helper(fake));', "EV001"));
+      assertFalse(hasRule80);
+      const hasRule81 = yield* hasRule(
+        'const helper = () => { function unused() { Fx.runSync(program); } return 1; }; it("x", () => helper());',
+        "EV001"
+      );
+      assertFalse(hasRule81);
+      const hasRule82 = yield* hasRule(
+        'const helper = (Fx) => Fx.runSync(program); it("x", () => helper(fake));',
+        "EV001"
+      );
+      assertFalse(hasRule82);
     })
   );
 
@@ -1503,7 +1591,8 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
           (row) => row.mechanization === "judgment"
         )
       );
-      assertFalse(yield* hasRule(`${helper} it("plain", () => scoped());`, "EV004"));
+      const hasRule83 = yield* hasRule(`${helper} it("plain", () => scoped());`, "EV004");
+      assertFalse(hasRule83);
       const mixed = yield* findings(`${helper} it("plain", () => scoped()); it.effect("effect", () => scoped());`);
       assertTrue(A.some(mixed, (row) => row.ruleId === "EV004" && row.class === "shared-helper-scope-lifetime-review"));
     })
@@ -1535,18 +1624,18 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
             row.ruleId === "EV004" && row.class === "redundant-whole-body-scope" && row.mechanization === "detector"
         )
       );
-      assertFalse(
-        yield* hasRule(
-          'const stubbed = () => Fx.provide(program, L.succeed(Service, {})); it.effect("x", () => stubbed());',
-          "EV002"
-        )
+      const hasRule84 = yield* hasRule(
+        'const stubbed = () => Fx.provide(program, L.succeed(Service, {})); it.effect("x", () => stubbed());',
+        "EV002"
       );
+      assertFalse(hasRule84);
     })
   );
 
   it.effect("recognizes registered helper callbacks and keeps escaped or uncertain callback uses as judgments", () =>
     Effect.gen(function* () {
-      assertTrue(yield* hasRule('const helper = () => Fx.runSync(program); it.each([1])("x", helper);', "EV001"));
+      const hasRule85 = yield* hasRule('const helper = () => Fx.runSync(program); it.each([1])("x", helper);', "EV001");
+      assertTrue(hasRule85);
       const exported = yield* findings('export const helper = () => Fx.runSync(program); it("x", () => helper());');
       assertTrue(A.some(exported, (row) => row.ruleId === "EV001" && row.mechanization === "judgment"));
       const callback = yield* findings(
@@ -1625,41 +1714,33 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
       const source = project.createSourceFile("first.test.ts", original);
       const first = yield* detectEffectVitestFindings(source, "packages/example/test/first.test.ts", "@beep/example");
       assertTrue(A.filter(first, (row) => row.ruleId === "EV001").length === 1);
-      deepStrictEqual(
-        yield* detectEffectVitestFindings(
-          createWrappedNode(
-            ts.createLanguageServiceSourceFile(
-              source.getFilePath(),
-              ts.ScriptSnapshot.fromString(original),
-              ts.ScriptTarget.Latest,
-              "0",
-              true
-            )
-          ),
-          "packages/example/test/first.test.ts",
-          "@beep/example"
+      const detectEffectVitestFindings86 = yield* detectEffectVitestFindings(
+        createWrappedNode(
+          ts.createLanguageServiceSourceFile(
+            source.getFilePath(),
+            ts.ScriptSnapshot.fromString(original),
+            ts.ScriptTarget.Latest,
+            "0",
+            true
+          )
         ),
-        first
+        "packages/example/test/first.test.ts",
+        "@beep/example"
       );
+      deepStrictEqual(detectEffectVitestFindings86, first);
       const other = project.createSourceFile("other.test.ts", shadowed);
-      assertFalse(
-        A.some(
-          yield* detectEffectVitestFindings(other, "other.test.ts", "@beep/example"),
-          (row) => row.ruleId === "EV001"
-        )
-      );
+      const detectEffectVitestFindings87 = yield* detectEffectVitestFindings(other, "other.test.ts", "@beep/example");
+      assertFalse(A.some(detectEffectVitestFindings87, (row) => row.ruleId === "EV001"));
       source.replaceWithText(shadowed);
-      assertFalse(
-        A.some(
-          yield* detectEffectVitestFindings(source, "first.test.ts", "@beep/example"),
-          (row) => row.ruleId === "EV001"
-        )
-      );
+      const detectEffectVitestFindings88 = yield* detectEffectVitestFindings(source, "first.test.ts", "@beep/example");
+      assertFalse(A.some(detectEffectVitestFindings88, (row) => row.ruleId === "EV001"));
       source.replaceWithText(original);
-      deepStrictEqual(
-        yield* detectEffectVitestFindings(source, "packages/example/test/first.test.ts", "@beep/example"),
-        first
+      const detectEffectVitestFindings89 = yield* detectEffectVitestFindings(
+        source,
+        "packages/example/test/first.test.ts",
+        "@beep/example"
       );
+      deepStrictEqual(detectEffectVitestFindings89, first);
     })
   );
 
@@ -1783,18 +1864,16 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         assertTrue(O.exists(row, (candidate) => candidate.mechanization === "detector"));
         assertTrue(O.exists(row, (candidate) => candidate.replacement.primitive === "it.effect.prop"));
       }
-      assertTrue(
-        yield* hasRule(
-          'import * as Native from "effect"; it.effect("barrel", () => Native.Arbitrary.checkEffect(arb, predicate));',
-          "EV007"
-        )
+      const hasRule90 = yield* hasRule(
+        'import * as Native from "effect"; it.effect("barrel", () => Native.Arbitrary.checkEffect(arb, predicate));',
+        "EV007"
       );
-      assertTrue(
-        yield* hasRule(
-          'import { checkEffect as check } from "effect/Arbitrary"; it.effect("native", () => check(arb, predicate));',
-          "EV007"
-        )
+      assertTrue(hasRule90);
+      const hasRule91 = yield* hasRule(
+        'import { checkEffect as check } from "effect/Arbitrary"; it.effect("native", () => check(arb, predicate));',
+        "EV007"
       );
+      assertTrue(hasRule91);
     })
   );
 
@@ -1805,8 +1884,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'import { Arbitrary as Ar } from "unrelated"; it.effect("other", () => Ar.checkEffect(arb, predicate));',
         'import { Arbitrary as Ar } from "effect"; it.effect("sample", () => Ar.sampleEffect(arb));',
         'import { Arbitrary as Ar } from "effect"; it.effect.prop("canonical", { value: arb }, predicate);',
-      ])
-        assertFalse(yield* hasRule(body, "EV007"));
+      ]) {
+        const hasRule135 = yield* hasRule(body, "EV007");
+        assertFalse(hasRule135);
+      }
     })
   );
 
@@ -1894,7 +1975,8 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         },
       ];
       for (const example of examples) {
-        const rows = A.filter(yield* findings(example.body), (row) => row.ruleId === "EV008");
+        const findings92 = yield* findings(example.body);
+        const rows = A.filter(findings92, (row) => row.ruleId === "EV008");
         deepStrictEqual(
           A.map(rows, (row) => [row.mechanization, row.class]),
           [[example.mode, example.className]]
@@ -1905,23 +1987,20 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
 
   it.effect("retains live-only helper semantics and visible mixed clock ownership", () =>
     Effect.gen(function* () {
-      assertFalse(
-        yield* hasRule(
-          `const wait = Fx.fnUntraced(function* () { yield* Fx.sleep("1 second"); }); it.live("live", function* () { yield* wait(); });`,
-          "EV008"
-        )
+      const hasRule93 = yield* hasRule(
+        `const wait = Fx.fnUntraced(function* () { yield* Fx.sleep("1 second"); }); it.live("live", function* () { yield* wait(); });`,
+        "EV008"
       );
+      assertFalse(hasRule93);
       const registrations = [
         'it.live("live", function* () { yield* wait(); });',
         'it.effect("virtual", function* () { yield* wait(); });',
       ];
       for (const ordered of [registrations, A.reverse(registrations)]) {
-        const rows = A.filter(
-          yield* findings(
-            `const wait = Fx.fnUntraced(function* () { yield* Fx.sleep("1 second"); }); ${A.join(ordered, "\n")}`
-          ),
-          (row) => row.ruleId === "EV008"
+        const findings94 = yield* findings(
+          `const wait = Fx.fnUntraced(function* () { yield* Fx.sleep("1 second"); }); ${A.join(ordered, "\n")}`
         );
+        const rows = A.filter(findings94, (row) => row.ruleId === "EV008");
         deepStrictEqual(
           A.map(rows, (row) => row.mechanization),
           ["judgment"]
@@ -1936,16 +2015,20 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `import * as Wrapped from "@beep/utils/Option"; it("x", () => expect(Wrapped.isNone(value)).toBe(true));`,
         `import { isSome as present } from "@beep/utils/Option"; it("x", () => expect(present(value)).toBe(true));`,
         `import { none as absent, some as present } from "@beep/utils/Option"; it("x", () => { expect(value).toEqual(absent()); expect(value).toEqual(present(1)); });`,
-      ])
-        assertTrue(yield* hasRule(body, "EV006"));
+      ]) {
+        const hasRule137 = yield* hasRule(body, "EV006");
+        assertTrue(hasRule137);
+      }
       for (const body of [
         `import * as Wrapped from "@beep/utils/Option"; it("x", (Wrapped) => expect(Wrapped.isNone(value)).toBe(true));`,
         `import { isSome as present } from "@beep/utils/Option"; it("x", () => { const present = fake; expect(present(value)).toBe(true); });`,
         `import * as Wrapped from "@beep/utils/OptionOther"; it("x", () => expect(Wrapped.isNone(value)).toBe(true));`,
         `import * as Wrapped from "@beep/utils/Option"; it("x", () => expect(Wrapped.getOrElse(value, () => "fallback")).toEqual("label"));`,
         `it("x", () => { expect(O.getOrThrow(value).path).toEqual("label"); expect(R.getOrThrow(result)).toBe(1); });`,
-      ])
-        assertFalse(yield* hasRule(body, "EV006"));
+      ]) {
+        const hasRule138 = yield* hasRule(body, "EV006");
+        assertFalse(hasRule138);
+      }
     })
   );
 
@@ -1954,26 +2037,20 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
       for (const body of [
         'import { vi } from "vitest"; vi.mock("react-dom/client", () => ({ createRoot: vi.fn() }));',
         'import { vi as mocks } from "vitest"; const fake = mocks.hoisted(() => mocks.fn());',
-      ])
-        assertFalse(
-          A.some(
-            yield* findingsWithHarness('import { it, expect } from "@effect/vitest";', body),
-            (row) => row.ruleId === "EV011"
-          )
-        );
+      ]) {
+        const findingsWithHarness139 = yield* findingsWithHarness('import { it, expect } from "@effect/vitest";', body);
+        assertFalse(A.some(findingsWithHarness139, (row) => row.ruleId === "EV011"));
+      }
       for (const body of [
         'import { vi, it } from "vitest"; vi.mock("subject");',
         'import { vi } from "vitest"; vi.fn();',
         'import { vi } from "vitest"; function f(vi) { vi.mock("subject"); }',
         'import * as Vitest from "vitest"; Vitest.vi.mock("subject");',
         'import { describe, expect } from "vitest"; describe("x", () => expect(1).toBe(1));',
-      ])
-        assertTrue(
-          A.some(
-            yield* findingsWithHarness('import { it, expect } from "@effect/vitest";', body),
-            (row) => row.ruleId === "EV011"
-          )
-        );
+      ]) {
+        const findingsWithHarness140 = yield* findingsWithHarness('import { it, expect } from "@effect/vitest";', body);
+        assertTrue(A.some(findingsWithHarness140, (row) => row.ruleId === "EV011"));
+      }
     })
   );
 
@@ -1991,29 +2068,34 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         "assertTrue(decode(input).pipe(R.isFailure))",
         "assertTrue(pipe(value, O.isSome))",
         "assertFalse(value.pipe(O.isNone))",
-      ])
-        assertFalse(yield* hasRule(`${prelude} it("canonical", () => ${assertion});`, "EV006"));
+      ]) {
+        const hasRule142 = yield* hasRule(`${prelude} it("canonical", () => ${assertion});`, "EV006");
+        assertFalse(hasRule142);
+      }
       for (const [assertion, primitive] of [
         ["expect(O.isSome(value)).toBe(true)", "utils.assertTrue"],
         ["expect(ready && O.isSome(value)).toBe(true)", "utils.deepStrictEqual"],
         ["assertTrue(!O.isSome(value))", "utils.deepStrictEqual"],
         ["assertTrue(value.pipe(O.map(f)))", "utils.deepStrictEqual"],
-      ] as const)
+      ] as const) {
+        const findings145 = yield* findings(`${prelude} it("flagged", () => ${assertion});`);
         deepStrictEqual(
           A.map(
-            A.filter(yield* findings(`${prelude} it("flagged", () => ${assertion});`), (row) => row.ruleId === "EV006"),
+            A.filter(findings145, (row) => row.ruleId === "EV006"),
             (row) => row.replacement.primitive
           ),
           [primitive]
         );
-      for (const absence of ["assertTrue(value.pipe(O.isNone))", "assertFalse(value.pipe(O.isSome))"])
-        assertTrue(yield* hasRule(`${prelude} it("absence", () => ${absence});`, "EV006"));
-      assertTrue(
-        yield* hasRule(
-          'import { assert } from "vitest"; it("plain", () => assert.isTrue(ready && O.isSome(value)));',
-          "EV006"
-        )
+      }
+      for (const absence of ["assertTrue(value.pipe(O.isNone))", "assertFalse(value.pipe(O.isSome))"]) {
+        const hasRule146 = yield* hasRule(`${prelude} it("absence", () => ${absence});`, "EV006");
+        assertTrue(hasRule146);
+      }
+      const hasRule95 = yield* hasRule(
+        'import { assert } from "vitest"; it("plain", () => assert.isTrue(ready && O.isSome(value)));',
+        "EV006"
       );
+      assertTrue(hasRule95);
     })
   );
 
@@ -2027,14 +2109,16 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `use(require("@effect/platform-node").NodeFileSystem.layer);`,
         `import * as Platform from "@effect/platform-node"; use(Platform["NodeFileSystem"].layer);`,
         `use(require("@effect/platform-bun")["BunFileSystem"].layer);`,
-      ])
+      ]) {
+        const findings148 = yield* findings(body);
         deepStrictEqual(
           A.map(
-            A.filter(yield* findings(body), (row) => row.ruleId === "EV010"),
+            A.filter(findings148, (row) => row.ruleId === "EV010"),
             (row) => row.class
           ),
           ["platform-filesystem-candidate"]
         );
+      }
       for (const body of [
         `import * as Path from "@effect/platform-node/NodePath"; use(Path.layer);`,
         `import { NodePath, NodeChildProcessSpawner } from "@effect/platform-node"; use(NodePath.layer);`,
@@ -2044,12 +2128,14 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `function f(require) { use(require("@effect/platform-node").NodeFileSystem.layer); }`,
         `const Platform = require("@effect/platform-node"); function f(Platform) { use(Platform.NodeFileSystem.layer); }`,
         `const FS = require("@effect/platform-node-lookalike/NodeFileSystem");`,
-      ])
-        assertFalse(yield* hasRule(body, "EV010"));
-      const residue = A.filter(
-        yield* findings(`import { NodeServices } from "@effect/platform-node"; use(NodeServices.layer);`),
-        (row) => row.ruleId === "EV010"
+      ]) {
+        const hasRule149 = yield* hasRule(body, "EV010");
+        assertFalse(hasRule149);
+      }
+      const findings96 = yield* findings(
+        `import { NodeServices } from "@effect/platform-node"; use(NodeServices.layer);`
       );
+      const residue = A.filter(findings96, (row) => row.ruleId === "EV010");
       deepStrictEqual(
         A.map(residue, (row) => [row.class, row.mechanization]),
         [["platform-resource-provenance-review", "judgment"]]
@@ -2065,8 +2151,9 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
       const consume = (operation: string) =>
         `((it) => { it.effect("x", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; ${operation} })); });`;
       const reviewClasses = Effect.fnUntraced(function* (body: string) {
+        const findings97 = yield* findings(body);
         return A.map(
-          A.filter(yield* findings(body), (row) => row.ruleId === "EV010"),
+          A.filter(findings97, (row) => row.ruleId === "EV010"),
           (row) => row.class
         );
       });
@@ -2081,8 +2168,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `${harness} ${subject} import { pipe } from "effect/Function"; import { NodeServices } from "@effect/platform-node"; layer(pipe(SubjectLive, L.provide(NodeServices.layer)))${consume('yield* fs.readFileString("a");')}`,
         `${harness} import { NodeServices } from "@effect/platform-node"; layer((NodeServices.layer))${consume('yield* fs.symlink("a", "b");')}`,
         `${harness} import * as Platform from "@effect/platform-node"; const path = Platform.NodePath.layer; layer(Platform.NodeServices.layer)${consume('yield* fs.symlink("a", "b");')}`,
-      ])
-        deepStrictEqual(yield* reviewClasses(body), []);
+      ]) {
+        const reviewClasses150 = yield* reviewClasses(body);
+        deepStrictEqual(reviewClasses150, []);
+      }
       for (const body of [
         `${harness} import * as FakeFs from "./fake-fs"; import { NodeServices } from "@effect/platform-node"; layer(NodeServices.layer)((it) => { it.effect("x", () => Fx.gen(function* () { const fs = yield* FakeFs.FileSystem; yield* fs.symlink("a", "b"); })); });`,
         `${harness} import { NodeServices } from "@effect/platform-node"; layer(NodeServices.layer)${consume('yield* fs.readFileString("a");')}`,
@@ -2105,8 +2194,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `${harness} import { NodeServices } from "@effect/platform-node"; const platform = NodeServices.layer;`,
         `${harness} import { NodeServices } from "@effect/platform-node"; layer(NodeServices.layer)(suite);`,
         `${harness} import * as Platform from "@effect/platform-node"; use(Platform); layer(Platform.NodeServices.layer)${consume('yield* fs.symlink("a", "b");')}`,
-      ])
-        deepStrictEqual(yield* reviewClasses(body), ["platform-resource-provenance-review"], body);
+      ]) {
+        const reviewClasses151 = yield* reviewClasses(body);
+        deepStrictEqual(reviewClasses151, ["platform-resource-provenance-review"], body);
+      }
     })
   );
 
@@ -2117,8 +2208,9 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
       const suite = (statements: string) =>
         `layer(NodeServices.layer)((it) => { it.effect("x", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("a"); ${statements} })); });`;
       const reviewClasses = Effect.fnUntraced(function* (body: string) {
+        const findings98 = yield* findings(body);
         return A.map(
-          A.filter(yield* findings(body), (row) => row.ruleId === "EV010"),
+          A.filter(findings98, (row) => row.ruleId === "EV010"),
           (row) => row.class
         );
       });
@@ -2127,8 +2219,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `${imports} const run = Fx.fnUntraced(function* () { const child = yield* ChildProcess.make("bun", []); yield* child.kill(); }); ${suite("yield* run();")}`,
         `${imports} ${suite('const spawn = (mode) => ChildProcess.make("bun", [mode]); const child = yield* spawn("crash"); yield* child.kill();')}`,
         `${imports} layer(NodeServices.layer)((it) => { it.effect("a", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("a"); const child = yield* ChildProcess.make("bun", []); yield* child.kill(); })); }); layer(NodeServices.layer)((it) => { it.effect("b", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("a"); const child = yield* ChildProcess.make("bun", []); yield* child.kill(); })); });`,
-      ])
-        deepStrictEqual(yield* reviewClasses(body), [], body);
+      ]) {
+        const reviewClasses152 = yield* reviewClasses(body);
+        deepStrictEqual(reviewClasses152, [], body);
+      }
       for (const body of [
         `${imports} ${suite('const child = yield* ChildProcess.make("bun", []); expect(yield* child.exitCode).toBe(0);')}`,
         `${imports} ${suite('const child = yield* Fake.make("bun", []); yield* child.kill();')}`,
@@ -2136,8 +2230,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `${imports} ${suite('let child = yield* ChildProcess.make("bun", []); yield* child.kill();')}`,
         `${imports} ${suite('const spawn = (mode) => Fake.make("bun", [mode]); const child = yield* spawn("crash"); yield* child.kill();')}`,
         `${imports} layer(NodeServices.layer)((it) => { it.effect("a", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("a"); const child = yield* ChildProcess.make("bun", []); yield* child.kill(); })); }); layer(NodeServices.layer)((it) => { it.effect("b", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("a"); yield* ChildProcess.make("bun", []); })); });`,
-      ])
-        deepStrictEqual(yield* reviewClasses(body), ["platform-resource-provenance-review"], body);
+      ]) {
+        const reviewClasses153 = yield* reviewClasses(body);
+        deepStrictEqual(reviewClasses153, ["platform-resource-provenance-review"], body);
+      }
     })
   );
 
@@ -2148,8 +2244,9 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
       const suite = (statements: string) =>
         `layer(NodeServices.layer)((it) => { it.effect("x", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; const dir = yield* fs.makeTempDirectoryScoped(); ${statements} })); });`;
       const reviewClasses = Effect.fnUntraced(function* (body: string) {
+        const findings99 = yield* findings(body);
         return A.map(
-          A.filter(yield* findings(body), (row) => row.ruleId === "EV010"),
+          A.filter(findings99, (row) => row.ruleId === "EV010"),
           (row) => row.class
         );
       });
@@ -2158,8 +2255,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `${imports} ${suite("const file = `${dir}/journal.sqlite`; yield* Fx.provide(program, SqliteClient.layer({ filename: file }));")}`,
         `${imports} const reopen = Fx.fnUntraced(function* (file) { return yield* SqliteClient.make({ filename: file }); }); ${suite("yield* reopen(`${dir}/a.sqlite`);")}`,
         `${Str.replace("sql-sqlite-node", "sql-sqlite-bun")(imports)} ${suite("yield* SqliteClient.make({ filename: `${dir}/a.sqlite` });")}`,
-      ])
-        deepStrictEqual(yield* reviewClasses(body), [], body);
+      ]) {
+        const reviewClasses154 = yield* reviewClasses(body);
+        deepStrictEqual(reviewClasses154, [], body);
+      }
       for (const body of [
         `${imports} ${suite('yield* SqliteClient.make({ filename: ":memory:" });')}`,
         `${imports} ${suite("yield* SqliteClient.make(options);")}`,
@@ -2167,8 +2266,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `${imports} import * as Fake from "@beep/fake/SqliteClient"; ${suite("yield* Fake.make({ filename: `${dir}/a.sqlite` });")}`,
         `${imports} ${suite("yield* SqliteClient.other({ filename: `${dir}/a.sqlite` });")}`,
         `${imports} ${suite("yield* SqliteClient.make({ filename: `${dir}/a.sqlite` });")} ${suite('yield* fs.readFileString("a");')}`,
-      ])
-        deepStrictEqual(yield* reviewClasses(body), ["platform-resource-provenance-review"], body);
+      ]) {
+        const reviewClasses155 = yield* reviewClasses(body);
+        deepStrictEqual(reviewClasses155, ["platform-resource-provenance-review"], body);
+      }
     })
   );
 
@@ -2188,8 +2289,9 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
       const stage = (operation: string) =>
         `Fx.fnUntraced(function* () { const fs = yield* FileSystem.FileSystem; ${operation} })`;
       const reviewClasses = Effect.fnUntraced(function* (body: string) {
+        const findings100 = yield* findings(body);
         return A.map(
-          A.filter(yield* findings(body), (row) => row.ruleId === "EV010"),
+          A.filter(findings100, (row) => row.ruleId === "EV010"),
           (row) => row.class
         );
       });
@@ -2217,8 +2319,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `${subjectLayer} import ConsoleTag from "./console-tag"; const stageWorkspace = ${stage('yield* fs.readFileString("a");')}; ${subjectSuite("Fx.provideService(stageWorkspace(), ConsoleTag, testConsole)")}`,
         `${subjectLayer} import * as Logs from "./logs"; const stageWorkspace = ${stage('yield* fs.readFileString("a");')}; ${subjectSuite("stageWorkspace().pipe(Fx.provideService(Logs.Tag, testLogs))")}`,
         `${subjectLayer} const stageWorkspace = ${stage('yield* fs.readFileString("a");')}; layer(L.mergeAll(platform, live))((it) => { it.effect("x", () => stageWorkspace()); });`,
-      ])
-        deepStrictEqual(yield* reviewClasses(body), []);
+      ]) {
+        const reviewClasses156 = yield* reviewClasses(body);
+        deepStrictEqual(reviewClasses156, []);
+      }
       for (const body of [
         `${subjectLayer} import { stageWorkspace } from "./helpers/stage"; ${subjectSuite("stageWorkspace()")}`,
         `${harness} import { NodeServices } from "@effect/platform-node"; import { stageWorkspace } from "./support/CommandTest.ts"; layer(NodeServices.layer)((it) => { it.effect("explore check", () => Fx.gen(function* () { yield* stageWorkspace(); })); });`,
@@ -2271,8 +2375,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         bound("yield* runElsewhere(Fx.map(stageWorkspace(), (value) => value));"),
         bound("yield* Fx.forEach([1], () => stageWorkspace());"),
         bound("yield* Fx.forEach([1], () => { return stageWorkspace(); });"),
-      ])
-        deepStrictEqual(yield* reviewClasses(body), ["platform-resource-provenance-review"], body);
+      ]) {
+        const reviewClasses157 = yield* reviewClasses(body);
+        deepStrictEqual(reviewClasses157, ["platform-resource-provenance-review"], body);
+      }
     })
   );
 
@@ -2425,22 +2531,19 @@ it.layer(NodeServices.layer)((it) => {
         A.map(indexed.loops, (node) => node.getKind()),
         [SyntaxKind.ForOfStatement, SyntaxKind.ForOfStatement, SyntaxKind.ForOfStatement, SyntaxKind.ForInStatement]
       );
-      const rows = A.filter(
-        yield* detectEffectVitestFindings(source, "loops.test.ts", "@beep/example"),
-        (row) => row.ruleId === "EV013"
-      );
+      const detectEffectVitestFindings101 = yield* detectEffectVitestFindings(source, "loops.test.ts", "@beep/example");
+      const rows = A.filter(detectEffectVitestFindings101, (row) => row.ruleId === "EV013");
       deepStrictEqual(
         A.map(rows, (row) => row.mechanization),
         ["judgment", "judgment"]
       );
       assertTrue(Str.includes("attempt")(rows[0]?.evidence ?? ""));
       assertTrue(Str.includes("retry")(rows[1]?.evidence ?? ""));
-      assertFalse(
-        yield* hasRule(
-          `for (const retry in retries) consume(retry); it("x", () => { for (const value of values) consume(value); });`,
-          "EV013"
-        )
+      const hasRule102 = yield* hasRule(
+        `for (const retry in retries) consume(retry); it("x", () => { for (const value of values) consume(value); });`,
+        "EV013"
       );
+      assertFalse(hasRule102);
     })
   );
 
@@ -2450,7 +2553,8 @@ it.layer(NodeServices.layer)((it) => {
         `it.layer(resource)("parent", (it) => { it.layer(child)("single", (it) => { it.effect("timeout", function* () { const fiber = yield* Fx.forkChild(Fx.timeoutOption(work, "1 second")); yield* TC.adjust("1 second"); yield* Fiber.join(fiber); }); }); });`,
         `it.layer(resource)("shared", (it) => { beforeEach(() => TC.setTime(0)); it.effect.concurrent("a", () => TC.adjust("1 second")); it.effect.concurrent("b", () => TC.adjust("2 seconds")); });`,
       ]) {
-        const rows = A.filter(yield* findings(body), (row) => row.ruleId === "EV015");
+        const findings103 = yield* findings(body);
+        const rows = A.filter(findings103, (row) => row.ruleId === "EV015");
         assertTrue(rows.length > 0);
         assertTrue(
           A.every(rows, (row) => row.mechanization === "judgment" && row.replacement.primitive === "TestClock.adjust")
@@ -2477,7 +2581,8 @@ it.layer(NodeServices.layer)((it) => {
         `import { describe, layer } from "@effect/vitest"; describe("suite", () => { layer(resource)((it) => { it.effect("one", () => ${adjust}); }); });`,
         `const pollInterval = "5 seconds"; it.layer(resource)((it) => { const expected = 3; it.effect("one", () => Fx.gen(function* () { yield* TC.adjust(pollInterval); expect(expected).toBe(3); })); });`,
       ]) {
-        assertFalse(yield* hasRule(body, "EV015"));
+        const hasRule104 = yield* hasRule(body, "EV015");
+        assertFalse(hasRule104);
       }
       for (const body of [
         `it.layer(resource)((it) => { it.effect("a", () => ${adjust}); it.effect("b", () => Fx.void); });`,
@@ -2488,7 +2593,8 @@ it.layer(NodeServices.layer)((it) => {
         `it.layer(resource)((it) => { it.effect.prop("p", [fc.string()], () => ${adjust}); });`,
         `it.layer(resource)("parent", (it) => { it.layer(child)("single", (it) => { it.effect("a", () => ${adjust}); }); });`,
       ]) {
-        assertTrue(yield* hasRule(body, "EV015"));
+        const hasRule105 = yield* hasRule(body, "EV015");
+        assertTrue(hasRule105);
       }
     })
   );
@@ -2501,7 +2607,8 @@ it.layer(NodeServices.layer)((it) => {
         `it.layer(resource)((it) => { it.layer(TC.layer(), { timeout: "5 seconds" })("own clock", (it) => { it.effect("a", () => ${adjust}); }); it.effect("b", () => Fx.void); });`,
         `it.layer(resource)((it) => { it.layer(child)((it) => { it.layer(TC.layer({}))((it) => { it.effect("a", () => ${adjust}); }); }); });`,
       ]) {
-        assertFalse(yield* hasRule(body, "EV015"));
+        const hasRule106 = yield* hasRule(body, "EV015");
+        assertFalse(hasRule106);
       }
       for (const body of [
         `it.layer(resource)((it) => { it.layer(TC.layer())((it) => { it.effect("a", () => ${adjust}); it.effect("b", () => Fx.void); }); });`,
@@ -2510,14 +2617,13 @@ it.layer(NodeServices.layer)((it) => {
         `import * as Local from "./clock"; it.layer(resource)((it) => { it.layer(Local.layer())((it) => { it.effect("a", () => ${adjust}); }); });`,
         `it.layer(resource)((it) => { it.layer(TC.layer())((it) => { it.effect("x", () => ${adjust}); it.layer(child)((it) => { it.effect("a", () => ${adjust}); }); }); });`,
       ]) {
-        assertTrue(yield* hasRule(body, "EV015"));
+        const hasRule107 = yield* hasRule(body, "EV015");
+        assertTrue(hasRule107);
       }
-      const rows = A.filter(
-        yield* findings(
-          `it.layer(resource)((it) => { it.layer(TC.layer())((it) => { it.effect("x", () => ${adjust}); it.layer(child)((it) => { it.effect("a", () => ${adjust}); }); }); });`
-        ),
-        (row) => row.ruleId === "EV015"
+      const findings108 = yield* findings(
+        `it.layer(resource)((it) => { it.layer(TC.layer())((it) => { it.effect("x", () => ${adjust}); it.layer(child)((it) => { it.effect("a", () => ${adjust}); }); }); });`
       );
+      const rows = A.filter(findings108, (row) => row.ruleId === "EV015");
       deepStrictEqual(rows.length, 2);
     })
   );
@@ -2526,7 +2632,8 @@ it.layer(NodeServices.layer)((it) => {
     Effect.gen(function* () {
       const scoped = 'import { provideScopedLayer } from "@beep/test-utils";';
       const provisions = Effect.fnUntraced(function* (body: string) {
-        return A.filter(yield* findings(body), (row) => row.ruleId === "EV002");
+        const findings109 = yield* findings(body);
+        return A.filter(findings109, (row) => row.ruleId === "EV002");
       });
       for (const body of [
         'it.effect("reopen", () => Fx.gen(function* () { const dataDir = yield* makeDataDir; yield* write.pipe(Fx.provide(Store.makeLayer({ dataDir }))); yield* read.pipe(Fx.provide(Store.makeLayer({ dataDir }))); }));',
@@ -2539,7 +2646,8 @@ it.layer(NodeServices.layer)((it) => {
         'it.effect("outer binding", () => Fx.gen(function* () { const dataDir = yield* makeDataDir; yield* Fx.gen(function* () { yield* a.pipe(Fx.provide(Store.makeLayer({ dataDir }))); }); yield* Fx.gen(function* () { yield* b.pipe(Fx.provide(Store.makeLayer({ dataDir }))); }); }));',
         'import * as Path from "effect/Path"; it.effect("nested path services", () => Fx.gen(function* () { const root = yield* makeDataDir; yield* Fx.gen(function* () { const path = yield* Path.Path; yield* a.pipe(Fx.provide(Store.makeLayer({ dataDir: path.join(root, "kg") }))); }); yield* Fx.gen(function* () { const path = yield* Path.Path; yield* b.pipe(Fx.provide(Store.makeLayer({ dataDir: path.join(root, "kg") }))); }); }));',
       ]) {
-        deepStrictEqual(yield* provisions(body), []);
+        const provisions110 = yield* provisions(body);
+        deepStrictEqual(provisions110, []);
       }
       for (const [body, count] of [
         [
@@ -2619,7 +2727,8 @@ it.layer(NodeServices.layer)((it) => {
   it.effect("keys EV002 reopens through uninitialized, destructured and repeated test-body bindings", () =>
     Effect.gen(function* () {
       const provisions = Effect.fnUntraced(function* (body: string) {
-        return A.filter(yield* findings(body), (row) => row.ruleId === "EV002").length;
+        const findings111 = yield* findings(body);
+        return A.filter(findings111, (row) => row.ruleId === "EV002").length;
       });
       for (const [body, count] of [
         [
@@ -2647,7 +2756,8 @@ it.layer(NodeServices.layer)((it) => {
           2,
         ],
       ] as const) {
-        deepStrictEqual(yield* provisions(body), count);
+        const provisions112 = yield* provisions(body);
+        deepStrictEqual(provisions112, count);
       }
     })
   );
@@ -2741,16 +2851,15 @@ it.layer(NodeServices.layer)((it) => {
         ["expect(A.every(values, O.isNone)).toBe(true)", "utils.assertTrue", "judgment"],
       ];
       for (const [assertion, primitive, mode] of examples) {
-        const rows = A.filter(
-          yield* findings(`import * as A from "effect/Array"; it("route", () => ${assertion});`),
-          (row) => row.ruleId === "EV006"
-        );
+        const findings113 = yield* findings(`import * as A from "effect/Array"; it("route", () => ${assertion});`);
+        const rows = A.filter(findings113, (row) => row.ruleId === "EV006");
         deepStrictEqual(
           A.map(rows, (row) => [row.replacement.primitive, row.mechanization]),
           [[primitive, mode]]
         );
       }
-      assertFalse(yield* hasRule(`it("plain", () => expect(R.getOrThrow(value).path).toBe("label"));`, "EV006"));
+      const hasRule114 = yield* hasRule(`it("plain", () => expect(R.getOrThrow(value).path).toBe("label"));`, "EV006");
+      assertFalse(hasRule114);
     })
   );
 
@@ -2775,28 +2884,30 @@ it.layer(NodeServices.layer)((it) => {
           (row) => Str.includes("real service key")(row.replacement.sketch)
         )
       );
-      assertFalse(yield* hasRule(`vi.spyOn(Math, "random");`, "EV012"));
-      assertFalse(
-        yield* hasRule(
-          `function test(Context) { class Fake extends Context.Service() {} vi.spyOn(Fake, "method"); }`,
-          "EV012"
-        )
+      const hasRule115 = yield* hasRule(`vi.spyOn(Math, "random");`, "EV012");
+      assertFalse(hasRule115);
+      const hasRule116 = yield* hasRule(
+        `function test(Context) { class Fake extends Context.Service() {} vi.spyOn(Fake, "method"); }`,
+        "EV012"
       );
+      assertFalse(hasRule116);
     })
   );
 
   it.effect("retains CommonJS tmpdir aliases without matching declaration text or shadows", () =>
     Effect.gen(function* () {
-      assertTrue(
-        yield* hasRule(`const { tmpdir: temporary } = require("node:os"); it("x", () => temporary());`, "EV010")
+      const hasRule117 = yield* hasRule(
+        `const { tmpdir: temporary } = require("node:os"); it("x", () => temporary());`,
+        "EV010"
       );
-      assertFalse(
-        yield* hasRule(
-          `const { tmpdir: temporary } = require("node:os"); it("x", (temporary) => temporary());`,
-          "EV010"
-        )
+      assertTrue(hasRule117);
+      const hasRule118 = yield* hasRule(
+        `const { tmpdir: temporary } = require("node:os"); it("x", (temporary) => temporary());`,
+        "EV010"
       );
-      assertFalse(yield* hasRule(`import * as os from "node:os"; const text = "tmpdir";`, "EV010"));
+      assertFalse(hasRule118);
+      const hasRule119 = yield* hasRule(`import * as os from "node:os"; const text = "tmpdir";`, "EV010");
+      assertFalse(hasRule119);
     })
   );
 
@@ -2906,12 +3017,10 @@ it.layer(NodeServices.layer)((it) => {
           `expect(${expression}).toBe(${truth})`,
           `${truth ? "assertTrue" : "assertFalse"}(${expression})`,
         ]) {
-          const rows = A.filter(
-            yield* findings(
-              `import { assertTrue, assertFalse } from "@effect/vitest/utils"; it("residue", () => ${assertion});`
-            ),
-            (row) => row.ruleId === "EV006"
+          const findings120 = yield* findings(
+            `import { assertTrue, assertFalse } from "@effect/vitest/utils"; it("residue", () => ${assertion});`
           );
+          const rows = A.filter(findings120, (row) => row.ruleId === "EV006");
           deepStrictEqual(
             A.map(rows, (row) => [row.replacement.primitive, row.mechanization]),
             assertion === `${truth ? "assertTrue" : "assertFalse"}(${expression})` && primitive !== "utils.assertNone"
@@ -2938,13 +3047,13 @@ it.layer(NodeServices.layer)((it) => {
           const prelude =
             'import * as A from "effect/Array"; import { assertTrue, assertFalse } from "@effect/vitest/utils";';
           const helper = truth ? "assertTrue" : "assertFalse";
-          assertFalse(
-            yield* hasRule(`${prelude} it("canonical", () => ${helper}(${expression}, "preserved message"));`, "EV006")
+          const hasRule121 = yield* hasRule(
+            `${prelude} it("canonical", () => ${helper}(${expression}, "preserved message"));`,
+            "EV006"
           );
-          const rows = A.filter(
-            yield* findings(`${prelude} it("legacy", () => expect(${expression}).toBe(${truth}));`),
-            (row) => row.ruleId === "EV006"
-          );
+          assertFalse(hasRule121);
+          const findings122 = yield* findings(`${prelude} it("legacy", () => expect(${expression}).toBe(${truth}));`);
+          const rows = A.filter(findings122, (row) => row.ruleId === "EV006");
           deepStrictEqual(
             A.map(rows, (row) => [row.mechanization, row.replacement.primitive]),
             [["judgment", `utils.${helper}`]]
@@ -2952,19 +3061,17 @@ it.layer(NodeServices.layer)((it) => {
         }
       }
       for (const expression of ["O.map(value, transform)", "O.filter(value, predicate)", "O.some(value)"]) {
-        assertTrue(
-          yield* hasRule(
-            `import { assertTrue } from "@effect/vitest/utils"; it("notBoolean", () => assertTrue(${expression}));`,
-            "EV006"
-          )
-        );
-      }
-      assertFalse(
-        yield* hasRule(
-          'import { assertTrue } from "@effect/vitest/utils"; it("shadow", (assertTrue) => assertTrue(O.contains(value, expected)));',
+        const hasRule123 = yield* hasRule(
+          `import { assertTrue } from "@effect/vitest/utils"; it("notBoolean", () => assertTrue(${expression}));`,
           "EV006"
-        )
+        );
+        assertTrue(hasRule123);
+      }
+      const hasRule124 = yield* hasRule(
+        'import { assertTrue } from "@effect/vitest/utils"; it("shadow", (assertTrue) => assertTrue(O.contains(value, expected)));',
+        "EV006"
       );
+      assertFalse(hasRule124);
     })
   );
 
@@ -2976,12 +3083,10 @@ it.layer(NodeServices.layer)((it) => {
         "pipe(value, O.isNone, assertTrue)",
         "pipe(value, O.isSome, assertFalse)",
       ]) {
-        const rows = A.filter(
-          yield* findings(
-            `import { pipe } from "effect/Function"; import { assertTrue, assertFalse } from "@effect/vitest/utils"; it("absence", () => ${assertion});`
-          ),
-          (row) => row.ruleId === "EV006"
+        const findings125 = yield* findings(
+          `import { pipe } from "effect/Function"; import { assertTrue, assertFalse } from "@effect/vitest/utils"; it("absence", () => ${assertion});`
         );
+        const rows = A.filter(findings125, (row) => row.ruleId === "EV006");
         deepStrictEqual(
           A.map(rows, (row) => row.replacement.primitive),
           ["utils.assertNone"]
@@ -2993,31 +3098,29 @@ it.layer(NodeServices.layer)((it) => {
         "value.pipe(X.isFailure, assertTrue)",
         "value.pipe(O.isNone, consume)",
       ]) {
-        assertFalse(
-          yield* hasRule(
-            `import { assertTrue, assertFalse } from "@effect/vitest/utils"; it("valid", () => ${assertion});`,
-            "EV006"
-          )
-        );
-      }
-      assertFalse(
-        yield* hasRule(
-          'import { assertTrue } from "@effect/vitest/utils"; it("shadow", (assertTrue) => value.pipe(O.isNone, assertTrue));',
+        const hasRule126 = yield* hasRule(
+          `import { assertTrue, assertFalse } from "@effect/vitest/utils"; it("valid", () => ${assertion});`,
           "EV006"
-        )
+        );
+        assertFalse(hasRule126);
+      }
+      const hasRule127 = yield* hasRule(
+        'import { assertTrue } from "@effect/vitest/utils"; it("shadow", (assertTrue) => value.pipe(O.isNone, assertTrue));',
+        "EV006"
       );
+      assertFalse(hasRule127);
       for (const body of [
         'import { assertTrue } from "@effect/vitest/utils"; it("shadow", (O) => value.pipe(O.isNone, assertTrue));',
         'import { pipe } from "effect/Function"; import { assertTrue } from "@effect/vitest/utils"; it("shadow", (pipe) => pipe(value, O.isNone, assertTrue));',
       ]) {
-        assertFalse(yield* hasRule(body, "EV006"));
+        const hasRule128 = yield* hasRule(body, "EV006");
+        assertFalse(hasRule128);
       }
-      assertTrue(
-        yield* hasRule(
-          'import { pipe as flowValue } from "effect/Function"; import { assertFalse as checkFalse } from "@effect/vitest/utils"; it("alias", () => flowValue(value, O.isSome, checkFalse));',
-          "EV006"
-        )
+      const hasRule129 = yield* hasRule(
+        'import { pipe as flowValue } from "effect/Function"; import { assertFalse as checkFalse } from "@effect/vitest/utils"; it("alias", () => flowValue(value, O.isSome, checkFalse));',
+        "EV006"
       );
+      assertTrue(hasRule129);
     })
   );
 
@@ -3051,12 +3154,11 @@ it.layer(NodeServices.layer)((it) => {
         ],
         ["const first = second; const second = [first, Bun];", "second"],
       ]) {
-        assertTrue(
-          yield* hasRule(
-            `${platform} ${prelude} it.layer(Services.layer)((it) => { it.effect("opaque", () => ${expression}); });`,
-            "EV010"
-          )
+        const hasRule130 = yield* hasRule(
+          `${platform} ${prelude} it.layer(Services.layer)((it) => { it.effect("opaque", () => ${expression}); });`,
+          "EV010"
         );
+        assertTrue(hasRule130);
       }
     })
   );
@@ -3093,12 +3195,11 @@ it.layer(NodeServices.layer)((it) => {
         ["const api = Bun;", "Fx.sync((api) => api.file())"],
         ['const unused = () => import("./bundle-build.ts");', "Fx.succeed(1)"],
       ]) {
-        assertFalse(
-          yield* hasRule(
-            `${platform} ${prelude} it.layer(Services.layer)((it) => { it.effect("pure", () => ${expression}); });`,
-            "EV010"
-          )
+        const hasRule131 = yield* hasRule(
+          `${platform} ${prelude} it.layer(Services.layer)((it) => { it.effect("pure", () => ${expression}); });`,
+          "EV010"
         );
+        assertFalse(hasRule131);
       }
     })
   );
@@ -3112,8 +3213,10 @@ it.layer(NodeServices.layer)((it) => {
         'for (let index = 0; index < 1;) { it.effect("index", () => Fx.succeed(index)); break; }',
         'let counter = 1; it.effect("counter", () => Fx.succeed(counter));',
         'try { it.effect("try", () => Fx.succeed(1)); } catch (error) { it.effect("catch", () => Fx.succeed(error)); }',
-      ])
-        assertFalse(yield* hasRule(`${platform} it.layer(Services.layer)((it) => { ${body} });`, "EV010"));
+      ]) {
+        const hasRule159 = yield* hasRule(`${platform} it.layer(Services.layer)((it) => { ${body} });`, "EV010");
+        assertFalse(hasRule159);
+      }
       for (const body of [
         'let helper = () => 1; helper = () => 2; it.effect("write", () => Fx.sync(helper));',
         'function rewrite() { helper = () => 2; } let helper = () => 1; rewrite(); it.effect("write", () => Fx.sync(helper));',
@@ -3123,8 +3226,10 @@ it.layer(NodeServices.layer)((it) => {
         'let helper = () => 1; ({ helper } = replacement); it.effect("write", () => Fx.sync(helper));',
         'let helper = () => 1; for (helper of helpers) {} it.effect("write", () => Fx.sync(helper));',
         'let name = "pure"; for (name in names) {} it.effect("write", () => Fx.succeed(name));',
-      ])
-        assertTrue(yield* hasRule(`${platform} it.layer(Services.layer)((it) => { ${body} });`, "EV010"));
+      ]) {
+        const hasRule160 = yield* hasRule(`${platform} it.layer(Services.layer)((it) => { ${body} });`, "EV010");
+        assertTrue(hasRule160);
+      }
     })
   );
 
@@ -3141,8 +3246,10 @@ it.layer(NodeServices.layer)((it) => {
         `import { layer as platform } from "${root}/${services}"; it.layer(platform)${suite}`,
         `import { layer as shared } from "@effect/vitest"; import { ${services} } from "${root}"; const platform = ${services}.layer; shared(platform)${suite}`,
         `import { SubjectLive } from "@beep/example/Subject"; import { ${services} } from "${root}"; const live = SubjectLive.pipe(L.provide(${services}.layer)); it.layer(live)${suite}`,
-      ])
-        assertFalse(yield* hasRule(body, "EV010"));
+      ]) {
+        const hasRule162 = yield* hasRule(body, "EV010");
+        assertFalse(hasRule162);
+      }
       for (const body of [
         `import { ${services} } from "${root}"; it.effect("unit", () => program.pipe(Fx.provide(${services}.layer)));`,
         `import { ${services} } from "${root}"; it.layer(${services}.layer)${suite} use(${services}.layer);`,
@@ -3150,8 +3257,10 @@ it.layer(NodeServices.layer)((it) => {
         `import { ${services} } from "${root}"; const platform = ${services}.layer; use(platform); it.layer(platform)${suite}`,
         `import { ${services} } from "${root}"; it.layer(${services}.layer)(suite);`,
         `import { ${services} } from "${root}"; it.layer(${services}.layer)((it) => { it.effect("portable", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("fixture"); })); });`,
-      ])
-        assertTrue(yield* hasRule(body, "EV010"));
+      ]) {
+        const hasRule163 = yield* hasRule(body, "EV010");
+        assertTrue(hasRule163);
+      }
     })
   );
 
@@ -3171,8 +3280,10 @@ it.layer(NodeServices.layer)((it) => {
         `${bundle} import { MemoryFileSystem as Memory } from "@beep/memfs"; const platform = L.mergeAll(${services}.layer, Memory.layer); it.layer(platform)${suite}`,
         `${bundle} import * as Memfs from "@beep/memfs"; it.layer(L.mergeAll(${services}.layer, Memfs.MemoryFileSystem.layerWith({ "/a": "a" })))${suite}`,
         `${bundle} ${memory} import { SubjectLive } from "@beep/example/Subject"; const live = SubjectLive.pipe(L.provideMerge(L.mergeAll(${services}.layer, MemoryFileSystem.layer))); it.layer(live)${suite}`,
-      ])
-        assertFalse(yield* hasRule(body, "EV010"), body);
+      ]) {
+        const hasRule165 = yield* hasRule(body, "EV010");
+        assertFalse(hasRule165, body);
+      }
       for (const body of [
         `${bundle} ${memory} it.layer(L.mergeAll(MemoryFileSystem.layer, ${services}.layer))${suite}`,
         `${bundle} ${memory} it.layer(L.merge(MemoryFileSystem.layer, ${services}.layer))${suite}`,
@@ -3180,8 +3291,10 @@ it.layer(NodeServices.layer)((it) => {
         `${bundle} ${memory} it.layer(L.mergeAll(${services}.layer, MemoryFileSystem.makeVolume))${suite}`,
         `${bundle} ${memory} it.layer(L.provideMerge(${services}.layer, MemoryFileSystem.layer))${suite}`,
         `${bundle} ${memory} it.layer(L.mergeAll(${services}.layer, MemoryFileSystem.layer))${suite} it.layer(${services}.layer)${suite}`,
-      ])
-        assertTrue(yield* hasRule(body, "EV010"), body);
+      ]) {
+        const hasRule167 = yield* hasRule(body, "EV010");
+        assertTrue(hasRule167, body);
+      }
     })
   );
 
@@ -3200,8 +3313,10 @@ it.layer(NodeServices.layer)((it) => {
         `import * as NodeFileSystem from "${module}"; it.layer(NodeFileSystem.layer)${native}`,
         `import { layer as fileSystem } from "${module}"; const platform = L.mergeAll(fileSystem, Paths.layer); it.layer(platform)${native} it.layer(platform)${native}`,
         `import * as NodeFileSystem from "${module}"; const link = () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.realPath("link"); }); it.layer(NodeFileSystem.layer)((it) => { it.effect("helper", () => link()); });`,
-      ])
-        assertFalse(yield* hasRule(body, "EV010"), body);
+      ]) {
+        const hasRule169 = yield* hasRule(body, "EV010");
+        assertFalse(hasRule169, body);
+      }
       for (const body of [
         `import * as NodeFileSystem from "${module}"; it.layer(NodeFileSystem.layer)${portable}`,
         `import * as NodeFileSystem from "${module}"; it.layer(NodeFileSystem.layer)${native} it.layer(NodeFileSystem.layer)${portable}`,
@@ -3209,14 +3324,15 @@ it.layer(NodeServices.layer)((it) => {
         `import * as NodeFileSystem from "${module}"; import { SubjectLive } from "@beep/example/Subject"; it.layer(SubjectLive.pipe(L.provide(NodeFileSystem.layer)))${portable}`,
         `import * as NodeFileSystem from "${module}"; it.layer(NodeFileSystem.layer)((it) => { it.effect("other", () => Fx.sync(() => other.symlink("target", "link"))); });`,
         `import * as NodeFileSystem from "${module}"; import * as os from "node:os"; os.tmpdir(); it.layer(NodeFileSystem.layer)${native}`,
-      ])
-        assertTrue(yield* hasRule(body, "EV010"), body);
-      assertTrue(
-        yield* hasRule(
-          `import * as NodeFS from "node:fs"; it.layer(Platform.layer)${native} NodeFS.existsSync("x");`,
-          "EV010"
-        )
+      ]) {
+        const hasRule170 = yield* hasRule(body, "EV010");
+        assertTrue(hasRule170, body);
+      }
+      const hasRule132 = yield* hasRule(
+        `import * as NodeFS from "node:fs"; it.layer(Platform.layer)${native} NodeFS.existsSync("x");`,
+        "EV010"
       );
+      assertTrue(hasRule132);
     })
   );
 
@@ -3229,35 +3345,25 @@ it.layer(NodeServices.layer)((it) => {
         '((it) => { it.effect("links", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.symlink("target", "link"); })); });';
       const portable =
         '((it) => { it.effect("reads", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("fixture"); })); });';
-      assertFalse(
-        yield* hasRule(
-          `${imports} const platform = process.versions.bun === undefined ? NodeServices.layer : BunServices.layer; it.layer(platform)${native}`,
-          "EV010"
-        )
+      const hasRule133 = yield* hasRule(
+        `${imports} const platform = process.versions.bun === undefined ? NodeServices.layer : BunServices.layer; it.layer(platform)${native}`,
+        "EV010"
       );
-      assertFalse(
-        yield* hasRule(
-          `${imports} it.layer(L.mergeAll(Subject.layer).pipe(L.provideMerge(isBun ? BunServices.layer : NodeServices.layer)))${native}`,
-          "EV010"
-        )
+      assertFalse(hasRule133);
+      const hasRule134 = yield* hasRule(
+        `${imports} it.layer(L.mergeAll(Subject.layer).pipe(L.provideMerge(isBun ? BunServices.layer : NodeServices.layer)))${native}`,
+        "EV010"
       );
-      deepStrictEqual(
-        A.length(
-          A.filter(
-            yield* findings(
-              `${imports} const platform = process.versions.bun === undefined ? NodeServices.layer : BunServices.layer; it.layer(platform)${portable}`
-            ),
-            (row) => row.ruleId === "EV010"
-          )
-        ),
-        2
+      assertFalse(hasRule134);
+      const findings135 = yield* findings(
+        `${imports} const platform = process.versions.bun === undefined ? NodeServices.layer : BunServices.layer; it.layer(platform)${portable}`
       );
-      assertTrue(
-        yield* hasRule(
-          `${imports} const platform = NodeServices.layer ? BunServices.layer : Fallback.layer; it.layer(platform)${native}`,
-          "EV010"
-        )
+      deepStrictEqual(A.length(A.filter(findings135, (row) => row.ruleId === "EV010")), 2);
+      const hasRule136 = yield* hasRule(
+        `${imports} const platform = NodeServices.layer ? BunServices.layer : Fallback.layer; it.layer(platform)${native}`,
+        "EV010"
       );
+      assertTrue(hasRule136);
     })
   );
 
@@ -3266,11 +3372,9 @@ it.layer(NodeServices.layer)((it) => {
     { root: "@effect/platform-bun", services: "BunServices", path: "BunPath", spawner: "BunChildProcessSpawner" },
   ])("retains exact $services root/subpath resource review parity", ({ root, services }) =>
     Effect.gen(function* () {
+      const findings137 = yield* findings(`import { ${services} as Services } from "${root}"; use(Services.layer);`);
       const expected = A.map(
-        A.filter(
-          yield* findings(`import { ${services} as Services } from "${root}"; use(Services.layer);`),
-          (row) => row.ruleId === "EV010"
-        ),
+        A.filter(findings137, (row) => row.ruleId === "EV010"),
         (row) => [row.class, row.mechanization, row.replacement]
       );
       deepStrictEqual(
@@ -3287,7 +3391,8 @@ it.layer(NodeServices.layer)((it) => {
         `const { layer: servicesLayer } = require("${root}/${services}"); use(servicesLayer);`,
         `use(require("${root}/${services}").layer);`,
       ]) {
-        const rows = A.filter(yield* findings(body), (row) => row.ruleId === "EV010");
+        const findings138 = yield* findings(body);
+        const rows = A.filter(findings138, (row) => row.ruleId === "EV010");
         deepStrictEqual(
           A.map(rows, (row) => [row.class, row.mechanization, row.replacement]),
           expected
@@ -3313,8 +3418,10 @@ it.layer(NodeServices.layer)((it) => {
         `import { layer } from "${root}/${path}"; use(layer);`,
         `const { layer } = require("${root}/${spawner}"); use(layer);`,
         `import { layer } from "@effect/platform-node-shared/${services}"; use(layer);`,
-      ])
-        assertFalse(yield* hasRule(body, "EV010"));
+      ]) {
+        const hasRule172 = yield* hasRule(body, "EV010");
+        assertFalse(hasRule172);
+      }
     })
   );
 
@@ -3328,7 +3435,8 @@ it.layer(NodeServices.layer)((it) => {
     `expect(Fx.runSync(Arbitrary.checkEffect(arbitrary, (value) => { const record = makeRecord({ harness: O.some(value) }); expect(render(record)).toEqual(expected); return true; }, fcRuns(20)))._tag).toBe("Passed");`,
   ])("does not infer asserted tagged data from incidental inputs: %s", (body) =>
     Effect.gen(function* () {
-      assertFalse(yield* hasRule(`it.effect("plain", function* () { ${body} });`, "EV006"));
+      const hasRule139 = yield* hasRule(`it.effect("plain", function* () { ${body} });`, "EV006");
+      assertFalse(hasRule139);
     })
   );
 
@@ -3340,12 +3448,11 @@ it.layer(NodeServices.layer)((it) => {
         "A.every(values, O.isNone)",
         "A.some(values, R.isFailure)",
       ]) {
-        assertTrue(
-          yield* hasRule(
-            `import * as A from "effect/Array"; it("compound", () => expect(${expression}).toBe(true));`,
-            "EV006"
-          )
+        const hasRule140 = yield* hasRule(
+          `import * as A from "effect/Array"; it("compound", () => expect(${expression}).toBe(true));`,
+          "EV006"
         );
+        assertTrue(hasRule140);
       }
       for (const expression of [
         "() => O.isSome(value)",
@@ -3353,7 +3460,8 @@ it.layer(NodeServices.layer)((it) => {
         "O.some(value).value",
         "Arbitrary.filter(values, O.isSome)",
       ]) {
-        assertFalse(yield* hasRule(`it("plain", () => expect(${expression}).toEqual(expected));`, "EV006"));
+        const hasRule141 = yield* hasRule(`it("plain", () => expect(${expression}).toEqual(expected));`, "EV006");
+        assertFalse(hasRule141);
       }
     })
   );
@@ -3376,10 +3484,10 @@ it.layer(NodeServices.layer)((it) => {
     "X.mapBoth(exit, { onSuccess: identity, onFailure: identity })",
   ])("retains a completed public tagged transformation as judgment: %s", (expression) =>
     Effect.gen(function* () {
-      const rows = A.filter(
-        yield* findings(`import { pipe } from "effect"; it("tagged", () => expect(${expression}).toEqual(expected));`),
-        (row) => row.ruleId === "EV006"
+      const findings142 = yield* findings(
+        `import { pipe } from "effect"; it("tagged", () => expect(${expression}).toEqual(expected));`
       );
+      const rows = A.filter(findings142, (row) => row.ruleId === "EV006");
       deepStrictEqual(
         A.map(rows, (row) => [row.mechanization, row.replacement.primitive]),
         [["judgment", "utils.deepStrictEqual"]]
@@ -3407,12 +3515,10 @@ it.layer(NodeServices.layer)((it) => {
   ])("retains composed tagged predicates without claiming a payload: %s", (expression) =>
     Effect.gen(function* () {
       for (const truth of [true, false]) {
-        const rows = A.filter(
-          yield* findings(
-            `import { pipe } from "effect"; import { isNone } from "effect/Option"; import * as A from "effect/Array"; import * as Utils from "@beep/utils"; import { A as Wrapped } from "@beep/utils"; it("predicate", () => expect(${expression}).toBe(${truth}));`
-          ),
-          (row) => row.ruleId === "EV006"
+        const findings143 = yield* findings(
+          `import { pipe } from "effect"; import { isNone } from "effect/Option"; import * as A from "effect/Array"; import * as Utils from "@beep/utils"; import { A as Wrapped } from "@beep/utils"; it("predicate", () => expect(${expression}).toBe(${truth}));`
         );
+        const rows = A.filter(findings143, (row) => row.ruleId === "EV006");
         deepStrictEqual(
           A.map(rows, (row) => row.mechanization),
           ["judgment"]
@@ -3430,12 +3536,10 @@ it.layer(NodeServices.layer)((it) => {
     "yield* pipe(program, Fx.exit)",
   ])("recognizes executed tagged outcomes rather than their unevaluated Effects: %s", (expression) =>
     Effect.gen(function* () {
-      const rows = A.filter(
-        yield* findings(
-          `import { pipe } from "effect"; it.effect("outcome", function* () { expect(${expression}).toMatchObject({ _tag: "Failure" }); });`
-        ),
-        (row) => row.ruleId === "EV006"
+      const findings144 = yield* findings(
+        `import { pipe } from "effect"; it.effect("outcome", function* () { expect(${expression}).toMatchObject({ _tag: "Failure" }); });`
       );
+      const rows = A.filter(findings144, (row) => row.ruleId === "EV006");
       deepStrictEqual(
         A.map(rows, (row) => [row.mechanization, row.replacement.primitive]),
         [["judgment", "utils.deepStrictEqual"]]
@@ -3469,12 +3573,11 @@ it.layer(NodeServices.layer)((it) => {
     "A.every(O.isNone)(values)(extra)",
   ])("does not infer tagged return values across a plain or incomplete boundary: %s", (expression) =>
     Effect.gen(function* () {
-      assertFalse(
-        yield* hasRule(
-          `import { pipe } from "effect"; import * as A from "effect/Array"; it.effect("plain", function* () { expect(${expression}).toBeDefined(); });`,
-          "EV006"
-        )
+      const hasRule145 = yield* hasRule(
+        `import { pipe } from "effect"; import * as A from "effect/Array"; it.effect("plain", function* () { expect(${expression}).toBeDefined(); });`,
+        "EV006"
       );
+      assertFalse(hasRule145);
     })
   );
 
@@ -3484,8 +3587,10 @@ it.layer(NodeServices.layer)((it) => {
         `import { map as mapped } from "effect/Option"; it("alias", () => expect(mapped(option, transform)).toEqual(expected));`,
         `import * as Wrapped from "@beep/utils/Option"; it("alias", () => expect(Wrapped.map(option, transform)).toEqual(expected));`,
         `import * as Wrapped from "@beep/utils/Array"; it("alias", () => expect(Wrapped.some(values, O.isSome)).toBe(true));`,
-      ])
-        assertTrue(yield* hasRule(body, "EV006"));
+      ]) {
+        const hasRule173 = yield* hasRule(body, "EV006");
+        assertTrue(hasRule173);
+      }
       for (const body of [
         `import * as Wrapped from "effect/OptionOther"; it("fake", () => expect(Wrapped.map(option, transform)).toEqual(expected));`,
         `import { map as mapped } from "effect/Option"; it("shadow", (mapped) => expect(mapped(option, transform)).toEqual(expected));`,
@@ -3495,8 +3600,10 @@ it.layer(NodeServices.layer)((it) => {
         `import * as Utils from "@beep/utils"; it("fake", () => expect(Utils.every(values, O.isNone)).toBe(true));`,
         `import { A as Wrapped } from "@beep/utils"; it("shadow", (Wrapped) => expect(Wrapped.every(values, O.isNone)).toBe(true));`,
         `it("unknown", () => expect(opaque(O.map(option, transform))).toEqual(expected));`,
-      ])
-        assertFalse(yield* hasRule(body, "EV006"));
+      ]) {
+        const hasRule174 = yield* hasRule(body, "EV006");
+        assertFalse(hasRule174);
+      }
     })
   );
 
@@ -3507,7 +3614,8 @@ it.layer(NodeServices.layer)((it) => {
     'it.live("tika", Fx.fnUntraced(function* () { yield* acquire; }, Fx.scoped));',
   ])("recognizes final whole-body scope application: %s", (source) =>
     Effect.gen(function* () {
-      const rows = A.filter(yield* findings(source), (row) => row.ruleId === "EV004");
+      const findings146 = yield* findings(source);
+      const rows = A.filter(findings146, (row) => row.ruleId === "EV004");
       deepStrictEqual(
         A.map(rows, (row) => [row.class, row.mechanization]),
         [["redundant-whole-body-scope", "detector"]]
@@ -3522,7 +3630,8 @@ it.layer(NodeServices.layer)((it) => {
     'const shared = () => program.pipe(Fx.scoped); shared(); it.effect("shared", () => shared());',
   ])("retains shorter or uncertain scope ownership: %s", (source) =>
     Effect.gen(function* () {
-      const rows = A.filter(yield* findings(source), (row) => row.ruleId === "EV004");
+      const findings147 = yield* findings(source);
+      const rows = A.filter(findings147, (row) => row.ruleId === "EV004");
       deepStrictEqual(
         A.map(rows, (row) => row.mechanization),
         ["judgment"]
@@ -3539,7 +3648,8 @@ it.layer(NodeServices.layer)((it) => {
     "const unused = program.pipe(Fx.scoped);",
   ])("does not invent applied test scopes: %s", (source) =>
     Effect.gen(function* () {
-      assertFalse(yield* hasRule(source, "EV004"));
+      const hasRule148 = yield* hasRule(source, "EV004");
+      assertFalse(hasRule148);
     })
   );
 
@@ -3550,10 +3660,10 @@ it.layer(NodeServices.layer)((it) => {
     'const provideLive = Fx.provide(L.effect(Service, acquire)); const alias = provideLive; it.live("alias", Fx.fnUntraced(function* () { yield* program; }, alias));',
   ])("retains applied immutable provider provenance: %s", (source) =>
     Effect.gen(function* () {
-      const rows = A.filter(
-        yield* findings(`import { provideScopedLayer as provide } from "@beep/test-utils/Layer"; ${source}`),
-        (row) => row.ruleId === "EV002"
+      const findings149 = yield* findings(
+        `import { provideScopedLayer as provide } from "@beep/test-utils/Layer"; ${source}`
       );
+      const rows = A.filter(findings149, (row) => row.ruleId === "EV002");
       deepStrictEqual(
         A.map(rows, (row) => [row.class, row.mechanization, row.replacement.primitive]),
         [["per-test-layer-provide", "detector", "it.layer"]]
@@ -3565,19 +3675,16 @@ it.layer(NodeServices.layer)((it) => {
     Effect.gen(function* () {
       const header = 'import { provideScopedLayer as provide } from "@beep/test-utils";';
       for (const layer of ["L.succeed(Service, {})", "L.mock(Service, {})"]) {
-        assertFalse(
-          yield* hasRule(
-            `${header} const provideLive = provide(${layer}); it.live("stub", Fx.fnUntraced(function* () { yield* program; }, provideLive));`,
-            "EV002"
-          )
+        const hasRule150 = yield* hasRule(
+          `${header} const provideLive = provide(${layer}); it.live("stub", Fx.fnUntraced(function* () { yield* program; }, provideLive));`,
+          "EV002"
         );
+        assertFalse(hasRule150);
       }
-      const rows = A.filter(
-        yield* findings(
-          `${header} const provideLive = provide(ImportedLive); it.live("opaque", Fx.fnUntraced(function* () { yield* program; }, provideLive));`
-        ),
-        (row) => row.ruleId === "EV002"
+      const findings151 = yield* findings(
+        `${header} const provideLive = provide(ImportedLive); it.live("opaque", Fx.fnUntraced(function* () { yield* program; }, provideLive));`
       );
+      const rows = A.filter(findings151, (row) => row.ruleId === "EV002");
       deepStrictEqual(
         A.map(rows, (row) => [row.class, row.mechanization]),
         [["unresolved-layer-provide", "judgment"]]
@@ -3587,33 +3694,30 @@ it.layer(NodeServices.layer)((it) => {
         `${header} let mutable = provide(L.effect(Service, acquire)); it.live("mutable", Fx.fnUntraced(function* () { yield* program; }, mutable));`,
         `${header} const provideLive = provide(L.effect(Service, acquire)); it.live("shadow", (provideLive) => program.pipe(provideLive));`,
         'import { provideScopedLayer as provide } from "lookalike"; const provideLive = provide(Resource); it.live("fake", Fx.fnUntraced(function* () { yield* program; }, provideLive));',
-      ])
-        assertFalse(yield* hasRule(source, "EV002"));
+      ]) {
+        const hasRule177 = yield* hasRule(source, "EV002");
+        assertFalse(hasRule177);
+      }
     })
   );
 
   it.effect("distinguishes nested resource, pure-stub and opaque layer provisions", () =>
     Effect.gen(function* () {
-      const resource = A.filter(
-        yield* findings(
-          'it.effect("nested", () => Fx.succeed(1).pipe(Fx.provide(L.mergeAll(L.effect(Service, acquire), L.empty))))'
-        ),
-        (row) => row.ruleId === "EV002"
+      const findings152 = yield* findings(
+        'it.effect("nested", () => Fx.succeed(1).pipe(Fx.provide(L.mergeAll(L.effect(Service, acquire), L.empty))))'
       );
+      const resource = A.filter(findings152, (row) => row.ruleId === "EV002");
       deepStrictEqual(
         A.map(resource, (row) => [row.class, row.mechanization, row.replacement.primitive]),
         [["per-test-layer-provide", "detector", "it.layer"]]
       );
-      assertFalse(
-        yield* hasRule(
-          'it.effect("stub", () => program.pipe(Fx.provide(L.mergeAll(L.succeed(Service, {}), L.succeed(Other, {})))))',
-          "EV002"
-        )
+      const hasRule153 = yield* hasRule(
+        'it.effect("stub", () => program.pipe(Fx.provide(L.mergeAll(L.succeed(Service, {}), L.succeed(Other, {})))))',
+        "EV002"
       );
-      const unknown = A.filter(
-        yield* findings('it.effect("opaque", () => program.pipe(Fx.provide(wrap(unknownLayer))))'),
-        (row) => row.ruleId === "EV002"
-      );
+      assertFalse(hasRule153);
+      const findings154 = yield* findings('it.effect("opaque", () => program.pipe(Fx.provide(wrap(unknownLayer))))');
+      const unknown = A.filter(findings154, (row) => row.ruleId === "EV002");
       deepStrictEqual(
         A.map(unknown, (row) => [row.class, row.mechanization]),
         [["unresolved-layer-provide", "judgment"]]
@@ -3627,7 +3731,8 @@ it.layer(NodeServices.layer)((it) => {
     'it.effect("unknown", () => expect(Fx.result(program)).toBeDefined());',
   ])("keeps result migration neutral without inventing expected values: %s", (source) =>
     Effect.gen(function* () {
-      const rows = A.filter(yield* findings(source), (row) => row.ruleId === "EV005");
+      const findings155 = yield* findings(source);
+      const rows = A.filter(findings155, (row) => row.ruleId === "EV005");
       deepStrictEqual(
         A.map(rows, (row) => [row.replacement.primitive, row.mechanization]),
         [["readme.exit", "judgment"]]
@@ -3642,7 +3747,8 @@ it.layer(NodeServices.layer)((it) => {
     'it.effect("mixed", Fx.fnUntraced(function* () { const outcome = yield* Fx.result(program); expect(R.isFailure(outcome) || R.isSuccess(outcome)).toBe(true); }));',
   ])("keeps Result operands intact while requiring Exit migration review: %s", (source) =>
     Effect.gen(function* () {
-      const rows = A.filter(yield* findings(source), (row) => row.ruleId === "EV005");
+      const findings156 = yield* findings(source);
+      const rows = A.filter(findings156, (row) => row.ruleId === "EV005");
       deepStrictEqual(
         A.map(rows, (row) => [row.replacement.primitive, row.mechanization]),
         [["readme.exit", "judgment"]]
@@ -3652,21 +3758,25 @@ it.layer(NodeServices.layer)((it) => {
 
   it.effect("does not invent result migration for an unexecuted unasserted effect or a shadow", () =>
     Effect.gen(function* () {
-      assertFalse(
-        yield* hasRule('it.effect("unused", () => { const unused = Fx.result(program); return Fx.void; });', "EV005")
+      const hasRule157 = yield* hasRule(
+        'it.effect("unused", () => { const unused = Fx.result(program); return Fx.void; });',
+        "EV005"
       );
-      assertFalse(yield* hasRule('it.effect("shadow", (Fx) => expect(Fx.result(program)).toBeDefined());', "EV005"));
+      assertFalse(hasRule157);
+      const hasRule158 = yield* hasRule(
+        'it.effect("shadow", (Fx) => expect(Fx.result(program)).toBeDefined());',
+        "EV005"
+      );
+      assertFalse(hasRule158);
     })
   );
 
   it.effect("retains inner helper pipe scopes and ambiguous generator-return lifetimes as judgment", () =>
     Effect.gen(function* () {
-      const inner = A.filter(
-        yield* findings(
-          'const helper = Fx.fnUntraced(function* () { yield* reader.pipe(Fx.scoped); yield* after; }); it.effect("helper", helper);'
-        ),
-        (row) => row.ruleId === "EV004"
+      const findings159 = yield* findings(
+        'const helper = Fx.fnUntraced(function* () { yield* reader.pipe(Fx.scoped); yield* after; }); it.effect("helper", helper);'
       );
+      const inner = A.filter(findings159, (row) => row.ruleId === "EV004");
       deepStrictEqual(
         A.map(inner, (row) => [row.class, row.mechanization]),
         [["inner-helper-scope-lifetime-review", "judgment"]]
@@ -3675,7 +3785,8 @@ it.layer(NodeServices.layer)((it) => {
         'it.effect("returned value", Fx.fnUntraced(function* () { return program.pipe(Fx.scoped); }));',
         'it.live("opaque body", Fx.fnUntraced(body, Fx.scoped));',
       ]) {
-        const rows = A.filter(yield* findings(source), (row) => row.ruleId === "EV004");
+        const findings160 = yield* findings(source);
+        const rows = A.filter(findings160, (row) => row.ruleId === "EV004");
         deepStrictEqual(
           A.map(rows, (row) => row.mechanization),
           ["judgment"]
@@ -3713,12 +3824,11 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         "A.every(O.isNone)",
         "A.every(O.isNone)(values)(extra)",
       ]) {
-        assertFalse(
-          yield* hasRule(
-            `import { pipe } from "effect"; import * as A from "effect/Array"; it.effect("plain", function* () { expect(${expression}).toBeDefined(); });`,
-            "EV006"
-          )
+        const hasRule161 = yield* hasRule(
+          `import { pipe } from "effect"; import * as A from "effect/Array"; it.effect("plain", function* () { expect(${expression}).toBeDefined(); });`,
+          "EV006"
         );
+        assertFalse(hasRule161);
       }
     })
   );
@@ -3729,8 +3839,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `import { map as mapped } from "effect/Option"; it("alias", () => expect(mapped(option, transform)).toEqual(expected));`,
         `import * as Wrapped from "@beep/utils/Option"; it("alias", () => expect(Wrapped.map(option, transform)).toEqual(expected));`,
         `import * as Wrapped from "@beep/utils/Array"; it("alias", () => expect(Wrapped.some(values, O.isSome)).toBe(true));`,
-      ])
-        assertTrue(yield* hasRule(body, "EV006"));
+      ]) {
+        const hasRule178 = yield* hasRule(body, "EV006");
+        assertTrue(hasRule178);
+      }
       for (const body of [
         `import * as Wrapped from "effect/OptionOther"; it("fake", () => expect(Wrapped.map(option, transform)).toEqual(expected));`,
         `import { map as mapped } from "effect/Option"; it("shadow", (mapped) => expect(mapped(option, transform)).toEqual(expected));`,
@@ -3740,8 +3852,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `import * as Utils from "@beep/utils"; it("fake", () => expect(Utils.every(values, O.isNone)).toBe(true));`,
         `import { A as Wrapped } from "@beep/utils"; it("shadow", (Wrapped) => expect(Wrapped.every(values, O.isNone)).toBe(true));`,
         `it("unknown", () => expect(opaque(O.map(option, transform))).toEqual(expected));`,
-      ])
-        assertFalse(yield* hasRule(body, "EV006"));
+      ]) {
+        const hasRule179 = yield* hasRule(body, "EV006");
+        assertFalse(hasRule179);
+      }
     })
   );
 
@@ -3753,7 +3867,8 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'import { scoped as closeScope } from "effect/Effect"; it.effect("health", () => program.pipe(closeScope));',
         'it.live("tika", Fx.fnUntraced(function* () { yield* acquire; }, Fx.scoped));',
       ]) {
-        const rows = A.filter(yield* findings(source), (row) => row.ruleId === "EV004");
+        const findings162 = yield* findings(source);
+        const rows = A.filter(findings162, (row) => row.ruleId === "EV004");
         deepStrictEqual(
           A.map(rows, (row) => [row.class, row.mechanization]),
           [["redundant-whole-body-scope", "detector"]]
@@ -3770,7 +3885,8 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'it.live("tika", Fx.fnUntraced(function* () { yield* acquire; }, Fx.scoped, unknown));',
         'const shared = () => program.pipe(Fx.scoped); shared(); it.effect("shared", () => shared());',
       ]) {
-        const rows = A.filter(yield* findings(source), (row) => row.ruleId === "EV004");
+        const findings163 = yield* findings(source);
+        const rows = A.filter(findings163, (row) => row.ruleId === "EV004");
         deepStrictEqual(
           A.map(rows, (row) => row.mechanization),
           ["judgment"]
@@ -3793,7 +3909,8 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'import { deepStrictEqual } from "@effect/vitest/utils"; it.effect("utils", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); deepStrictEqual(released, true); }));',
         'import { assert } from "@effect/vitest"; it.effect("assert", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); assert.strictEqual(released, true); }));',
       ]) {
-        assertFalse(yield* hasRule(source, "EV004"));
+        const hasRule164 = yield* hasRule(source, "EV004");
+        assertFalse(hasRule164);
       }
     })
   );
@@ -3835,7 +3952,8 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'it.effect("bare expect", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); expect(released); }));',
         'it.effect("unapplied matcher", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); expect(released).toBe; }));',
       ]) {
-        const rows = A.filter(yield* findings(source), (row) => row.ruleId === "EV004");
+        const findings165 = yield* findings(source);
+        const rows = A.filter(findings165, (row) => row.ruleId === "EV004");
         deepStrictEqual(
           A.map(rows, (row) => row.mechanization),
           ["judgment"]
@@ -3853,7 +3971,8 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'it("plain", () => program.pipe(Fx.scoped));',
         "const unused = program.pipe(Fx.scoped);",
       ]) {
-        assertFalse(yield* hasRule(source, "EV004"));
+        const hasRule166 = yield* hasRule(source, "EV004");
+        assertFalse(hasRule166);
       }
     })
   );
@@ -3866,10 +3985,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'const provideLive = provide(L.effect(Service, acquire)); it.effect("call", () => provideLive(program));',
         'const provideLive = Fx.provide(L.effect(Service, acquire)); const alias = provideLive; it.live("alias", Fx.fnUntraced(function* () { yield* program; }, alias));',
       ]) {
-        const rows = A.filter(
-          yield* findings(`import { provideScopedLayer as provide } from "@beep/test-utils/Layer"; ${source}`),
-          (row) => row.ruleId === "EV002"
+        const findings167 = yield* findings(
+          `import { provideScopedLayer as provide } from "@beep/test-utils/Layer"; ${source}`
         );
+        const rows = A.filter(findings167, (row) => row.ruleId === "EV002");
         deepStrictEqual(
           A.map(rows, (row) => [row.class, row.mechanization, row.replacement.primitive]),
           [["per-test-layer-provide", "detector", "it.layer"]]
@@ -3882,19 +4001,16 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
     Effect.gen(function* () {
       const header = 'import { provideScopedLayer as provide } from "@beep/test-utils";';
       for (const layer of ["L.succeed(Service, {})", "L.mock(Service, {})"]) {
-        assertFalse(
-          yield* hasRule(
-            `${header} const provideLive = provide(${layer}); it.live("stub", Fx.fnUntraced(function* () { yield* program; }, provideLive));`,
-            "EV002"
-          )
+        const hasRule168 = yield* hasRule(
+          `${header} const provideLive = provide(${layer}); it.live("stub", Fx.fnUntraced(function* () { yield* program; }, provideLive));`,
+          "EV002"
         );
+        assertFalse(hasRule168);
       }
-      const rows = A.filter(
-        yield* findings(
-          `${header} const provideLive = provide(ImportedLive); it.live("opaque", Fx.fnUntraced(function* () { yield* program; }, provideLive));`
-        ),
-        (row) => row.ruleId === "EV002"
+      const findings169 = yield* findings(
+        `${header} const provideLive = provide(ImportedLive); it.live("opaque", Fx.fnUntraced(function* () { yield* program; }, provideLive));`
       );
+      const rows = A.filter(findings169, (row) => row.ruleId === "EV002");
       deepStrictEqual(
         A.map(rows, (row) => [row.class, row.mechanization]),
         [["unresolved-layer-provide", "judgment"]]
@@ -3904,33 +4020,30 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `${header} let mutable = provide(L.effect(Service, acquire)); it.live("mutable", Fx.fnUntraced(function* () { yield* program; }, mutable));`,
         `${header} const provideLive = provide(L.effect(Service, acquire)); it.live("shadow", (provideLive) => program.pipe(provideLive));`,
         'import { provideScopedLayer as provide } from "lookalike"; const provideLive = provide(Resource); it.live("fake", Fx.fnUntraced(function* () { yield* program; }, provideLive));',
-      ])
-        assertFalse(yield* hasRule(source, "EV002"));
+      ]) {
+        const hasRule180 = yield* hasRule(source, "EV002");
+        assertFalse(hasRule180);
+      }
     })
   );
 
   it.effect("distinguishes nested resource, pure-stub and opaque layer provisions", () =>
     Effect.gen(function* () {
-      const resource = A.filter(
-        yield* findings(
-          'it.effect("nested", () => Fx.succeed(1).pipe(Fx.provide(L.mergeAll(L.effect(Service, acquire), L.empty))))'
-        ),
-        (row) => row.ruleId === "EV002"
+      const findings170 = yield* findings(
+        'it.effect("nested", () => Fx.succeed(1).pipe(Fx.provide(L.mergeAll(L.effect(Service, acquire), L.empty))))'
       );
+      const resource = A.filter(findings170, (row) => row.ruleId === "EV002");
       deepStrictEqual(
         A.map(resource, (row) => [row.class, row.mechanization, row.replacement.primitive]),
         [["per-test-layer-provide", "detector", "it.layer"]]
       );
-      assertFalse(
-        yield* hasRule(
-          'it.effect("stub", () => program.pipe(Fx.provide(L.mergeAll(L.succeed(Service, {}), L.succeed(Other, {})))))',
-          "EV002"
-        )
+      const hasRule171 = yield* hasRule(
+        'it.effect("stub", () => program.pipe(Fx.provide(L.mergeAll(L.succeed(Service, {}), L.succeed(Other, {})))))',
+        "EV002"
       );
-      const unknown = A.filter(
-        yield* findings('it.effect("opaque", () => program.pipe(Fx.provide(wrap(unknownLayer))))'),
-        (row) => row.ruleId === "EV002"
-      );
+      assertFalse(hasRule171);
+      const findings172 = yield* findings('it.effect("opaque", () => program.pipe(Fx.provide(wrap(unknownLayer))))');
+      const unknown = A.filter(findings172, (row) => row.ruleId === "EV002");
       deepStrictEqual(
         A.map(unknown, (row) => [row.class, row.mechanization]),
         [["unresolved-layer-provide", "judgment"]]
@@ -3945,7 +4058,8 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'it.effect("success Boolean", Fx.fnUntraced(function* () { const outcome = yield* Fx.result(program); expect(R.isSuccess(outcome)).not.toBe(false); }));',
         'it.effect("unknown", () => expect(Fx.result(program)).toBeDefined());',
       ]) {
-        const rows = A.filter(yield* findings(source), (row) => row.ruleId === "EV005");
+        const findings173 = yield* findings(source);
+        const rows = A.filter(findings173, (row) => row.ruleId === "EV005");
         deepStrictEqual(
           A.map(rows, (row) => [row.replacement.primitive, row.mechanization]),
           [["readme.exit", "judgment"]]
@@ -3962,7 +4076,8 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'it.effect("known failure", Fx.fnUntraced(function* () { const outcome = yield* Fx.result(Fx.fail(error)); expect(outcome).toEqual(R.fail(error)); }));',
         'it.effect("mixed", Fx.fnUntraced(function* () { const outcome = yield* Fx.result(program); expect(R.isFailure(outcome) || R.isSuccess(outcome)).toBe(true); }));',
       ]) {
-        const rows = A.filter(yield* findings(source), (row) => row.ruleId === "EV005");
+        const findings174 = yield* findings(source);
+        const rows = A.filter(findings174, (row) => row.ruleId === "EV005");
         deepStrictEqual(
           A.map(rows, (row) => [row.replacement.primitive, row.mechanization]),
           [["readme.exit", "judgment"]]
@@ -3973,21 +4088,25 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
 
   it.effect("does not invent result migration for an unexecuted unasserted effect or a shadow", () =>
     Effect.gen(function* () {
-      assertFalse(
-        yield* hasRule('it.effect("unused", () => { const unused = Fx.result(program); return Fx.void; });', "EV005")
+      const hasRule175 = yield* hasRule(
+        'it.effect("unused", () => { const unused = Fx.result(program); return Fx.void; });',
+        "EV005"
       );
-      assertFalse(yield* hasRule('it.effect("shadow", (Fx) => expect(Fx.result(program)).toBeDefined());', "EV005"));
+      assertFalse(hasRule175);
+      const hasRule176 = yield* hasRule(
+        'it.effect("shadow", (Fx) => expect(Fx.result(program)).toBeDefined());',
+        "EV005"
+      );
+      assertFalse(hasRule176);
     })
   );
 
   it.effect("retains inner helper pipe scopes and ambiguous generator-return lifetimes as judgment", () =>
     Effect.gen(function* () {
-      const inner = A.filter(
-        yield* findings(
-          'const helper = Fx.fnUntraced(function* () { yield* reader.pipe(Fx.scoped); yield* after; }); it.effect("helper", helper);'
-        ),
-        (row) => row.ruleId === "EV004"
+      const findings177 = yield* findings(
+        'const helper = Fx.fnUntraced(function* () { yield* reader.pipe(Fx.scoped); yield* after; }); it.effect("helper", helper);'
       );
+      const inner = A.filter(findings177, (row) => row.ruleId === "EV004");
       deepStrictEqual(
         A.map(inner, (row) => [row.class, row.mechanization]),
         [["inner-helper-scope-lifetime-review", "judgment"]]
@@ -3996,7 +4115,8 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'it.effect("returned value", Fx.fnUntraced(function* () { return program.pipe(Fx.scoped); }));',
         'it.live("opaque body", Fx.fnUntraced(body, Fx.scoped));',
       ]) {
-        const rows = A.filter(yield* findings(source), (row) => row.ruleId === "EV004");
+        const findings178 = yield* findings(source);
+        const rows = A.filter(findings178, (row) => row.ruleId === "EV004");
         deepStrictEqual(
           A.map(rows, (row) => row.mechanization),
           ["judgment"]
@@ -4015,42 +4135,26 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
           "EV008",
           module
         );
-        assertTrue(
-          A.some(
-            yield* findingsWithHarness(
-              `import * as Runner from "${module}";`,
-              'Runner.it("namespace", () => Fx.runSync(program));'
-            ),
-            (finding) => finding.ruleId === "EV001"
-          )
+        const findingsWithHarness179 = yield* findingsWithHarness(
+          `import * as Runner from "${module}";`,
+          'Runner.it("namespace", () => Fx.runSync(program));'
         );
-        assertFalse(
-          A.some(
-            yield* findingsWithHarness(
-              `import { it as runner } from "${module}";`,
-              'const run = () => { const runner = subject; runner("shadowed", () => Fx.runSync(program)); };'
-            ),
-            (finding) => finding.ruleId === "EV001"
-          )
+        assertTrue(A.some(findingsWithHarness179, (finding) => finding.ruleId === "EV001"));
+        const findingsWithHarness180 = yield* findingsWithHarness(
+          `import { it as runner } from "${module}";`,
+          'const run = () => { const runner = subject; runner("shadowed", () => Fx.runSync(program)); };'
         );
-        assertFalse(
-          A.some(
-            yield* findingsWithHarness(
-              `import * as Runner from "${module}";`,
-              'Runner.TestHang("unrelated", () => Fx.runSync(program));'
-            ),
-            (finding) => finding.ruleId === "EV001"
-          )
+        assertFalse(A.some(findingsWithHarness180, (finding) => finding.ruleId === "EV001"));
+        const findingsWithHarness181 = yield* findingsWithHarness(
+          `import * as Runner from "${module}";`,
+          'Runner.TestHang("unrelated", () => Fx.runSync(program));'
         );
-        assertFalse(
-          A.some(
-            yield* findingsWithHarness(
-              `import { TestHang as candidate } from "${module}";`,
-              'candidate("error", () => Fx.runSync(program));'
-            ),
-            (finding) => finding.ruleId === "EV001"
-          )
+        assertFalse(A.some(findingsWithHarness181, (finding) => finding.ruleId === "EV001"));
+        const findingsWithHarness182 = yield* findingsWithHarness(
+          `import { TestHang as candidate } from "${module}";`,
+          'candidate("error", () => Fx.runSync(program));'
         );
+        assertFalse(A.some(findingsWithHarness182, (finding) => finding.ruleId === "EV001"));
       }
     })
   );
@@ -4065,7 +4169,8 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'import * as utils from "@effect/vitest/utils"; it("failure", () => utils.assertTrue(R.isFailure(value)));',
         'import { assertFalse } from "@effect/vitest/utils"; it("exit", () => assertFalse(X.isSuccess(value)));',
       ]) {
-        assertFalse(yield* hasRule(body, "EV006"), body);
+        const hasRule183 = yield* hasRule(body, "EV006");
+        assertFalse(hasRule183, body);
       }
       for (const body of [
         'import { assertTrue } from "@effect/vitest/utils"; it("none", () => assertTrue(O.isNone(value)));',
@@ -4073,7 +4178,8 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'it("legacy", () => expect(O.isSome(value)).toBe(true));',
         'import { assert } from "@effect/vitest"; it("legacy", () => assert.isTrue(O.isSome(value)));',
       ]) {
-        assertTrue(yield* hasRule(body, "EV006"), body);
+        const hasRule184 = yield* hasRule(body, "EV006");
+        assertTrue(hasRule184, body);
       }
     })
   );

@@ -176,7 +176,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("quality a
       yield* fs.symlink(external, path.join(root, "escape"));
       yield* fs.symlink(path.join(external, "escape.ts"), path.join(root, "escape.ts"));
 
-      expect(yield* listSourceFiles(root, path)).toEqual([source, source]);
+      const listSourceFiles1 = yield* listSourceFiles(root, path);
+      expect(listSourceFiles1).toEqual([source, source]);
     })
   );
 
@@ -251,9 +252,10 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("quality a
               expect(directory).toBe(path.join(root, targetDirectory));
               if (labs) {
                 // Labs setup must reach its own mkdir after package setup has completed.
-                expect(yield* fs.readFileString(path.join(root, "packages", "demo", "src", "index.ts"))).toBe(
-                  packageSource
+                const readFileString2 = yield* fs.readFileString(
+                  path.join(root, "packages", "demo", "src", "index.ts")
                 );
+                expect(readFileString2).toBe(packageSource);
               }
               yield* Ref.update(injectedDirectories, A.append(relativeDirectory));
               return yield* interrupted ? Effect.interrupt : Effect.fail(failure);
@@ -275,11 +277,12 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("quality a
         }
         const root = yield* Ref.get(allocated);
         expect(root).not.toBe("");
-        expect(yield* Ref.get(attemptedDirectories)).toEqual(
-          labs ? ["packages/demo/src", "apps/labs/demo/src"] : ["packages/demo/src"]
-        );
-        expect(yield* Ref.get(injectedDirectories)).toEqual([targetDirectory]);
-        expect(yield* fs.exists(root)).toBe(false);
+        const got = yield* Ref.get(attemptedDirectories);
+        expect(got).toEqual(labs ? ["packages/demo/src", "apps/labs/demo/src"] : ["packages/demo/src"]);
+        const got3 = yield* Ref.get(injectedDirectories);
+        expect(got3).toEqual([targetDirectory]);
+        const exists4 = yield* fs.exists(root);
+        expect(exists4).toBe(false);
       })
     );
   }
@@ -389,7 +392,8 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
           generatedAt: fixedGeneratedAt,
         })
       );
-      const inventory = parseJsoncText(yield* fs.readFileString(outputJsonPath)) as {
+      const readFileString5 = yield* fs.readFileString(outputJsonPath);
+      const inventory = parseJsoncText(readFileString5) as {
         readonly generatedAt: string;
         readonly packages: ReadonlyArray<{
           readonly packageName: string;
@@ -431,8 +435,14 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
 
       expect(result.outputJsonPath).toBe(outputJsonPath);
       expect(result.outputMarkdownPath).toBe(outputMarkdownPath);
-      expect(yield* fs.readFileString(ciOutputJsonPath)).toBe(yield* fs.readFileString(outputJsonPath));
-      expect(yield* fs.readFileString(ciOutputMarkdownPath)).toBe(yield* fs.readFileString(outputMarkdownPath));
+      const readFileString6 = yield* fs.readFileString(ciOutputJsonPath);
+      const expectation = expect(readFileString6);
+      const readFileString1 = yield* fs.readFileString(outputJsonPath);
+      expectation.toBe(readFileString1);
+      const readFileString7 = yield* fs.readFileString(ciOutputMarkdownPath);
+      const expectation1 = expect(readFileString7);
+      const readFileString3 = yield* fs.readFileString(outputMarkdownPath);
+      expectation1.toBe(readFileString3);
     })
   );
 
@@ -460,10 +470,8 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
       const files = A.flatMap(inventory.packages, (pkg) => A.map(pkg.modules, (entry) => entry.filePath));
       expect(files).toEqual(["src/Untracked.ts", "src/index.ts"]);
       // The ratchet's zero-legacy corpus follows the same rule.
-      expect(yield* zeroLegacyCorpusFiles(repoRoot, false)).toEqual([
-        "packages/demo/src/Untracked.ts",
-        "packages/demo/src/index.ts",
-      ]);
+      const zeroLegacyCorpusFiles8 = yield* zeroLegacyCorpusFiles(repoRoot, false);
+      expect(zeroLegacyCorpusFiles8).toEqual(["packages/demo/src/Untracked.ts", "packages/demo/src/index.ts"]);
     })
   );
 
@@ -484,7 +492,8 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
           generatedAt: fixedGeneratedAt,
         })
       );
-      const inventory = parseJsoncText(yield* fs.readFileString(outputJsonPath)) as {
+      const readFileString9 = yield* fs.readFileString(outputJsonPath);
+      const inventory = parseJsoncText(readFileString9) as {
         readonly packages: ReadonlyArray<{ readonly packageName: string }>;
       };
       const markdown = yield* fs.readFileString(outputMarkdownPath);

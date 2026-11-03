@@ -207,9 +207,8 @@ describe("@beep/doc-text", () => {
       Effect.gen(function* () {
         const ids = yield* fixtureIds;
         const bytes = zipSync(files);
-        const error = yield* Effect.flip(
-          DocTextFileProcessingEngine.extract(yield* makeOperation(ids, "docx", "docx", bytes))
-        );
+        const madeOperation = yield* makeOperation(ids, "docx", "docx", bytes);
+        const error = yield* Effect.flip(DocTextFileProcessingEngine.extract(madeOperation));
         expect(error.reason).toBe("output-limit-exceeded");
       })
     );
@@ -227,9 +226,8 @@ describe("@beep/doc-text", () => {
       archive.add(part);
       part.push(strToU8(`<p>${Str.repeat(9 * 1024 * 1024)("a")}</p>`), true);
       archive.end();
-      const error = yield* Effect.flip(
-        DocTextFileProcessingEngine.extract(yield* makeOperation(ids, "docx", "docx", bytes))
-      );
+      const madeOperation1 = yield* makeOperation(ids, "docx", "docx", bytes);
+      const error = yield* Effect.flip(DocTextFileProcessingEngine.extract(madeOperation1));
       expect(error.reason).toBe("output-limit-exceeded");
     })
   );
@@ -239,9 +237,8 @@ describe("@beep/doc-text", () => {
       const ids = yield* fixtureIds;
       const bytes = zipSync({ "word/document.xml": strToU8(documentXml(Str.repeat(16_384)("a"))) });
       expect(bytes.byteLength).toBeLessThan(4_096);
-      const error = yield* Effect.flip(
-        DocTextFileProcessingEngine.extract(yield* makeOperation(ids, "docx", "docx", bytes, 4_096))
-      );
+      const madeOperation2 = yield* makeOperation(ids, "docx", "docx", bytes, 4_096);
+      const error = yield* Effect.flip(DocTextFileProcessingEngine.extract(madeOperation2));
       expect(error.reason).toBe("output-limit-exceeded");
     })
   );
@@ -258,7 +255,8 @@ describe("@beep/doc-text", () => {
         const name = bytes.subarray(offset + 46, offset + 46 + view.getUint16(offset + 28, true));
         if (new TextDecoder().decode(name) === "word/payload0.bin") name.set(strToU8("word/document.xml"));
       });
-      const result = yield* DocTextFileProcessingEngine.extract(yield* makeOperation(ids, "docx", "docx", bytes));
+      const madeOperation3 = yield* makeOperation(ids, "docx", "docx", bytes);
+      const result = yield* DocTextFileProcessingEngine.extract(madeOperation3);
       expect(result.text).toContain("validated safe text");
     })
   );
@@ -272,7 +270,8 @@ describe("@beep/doc-text", () => {
           if (central) view.setUint32(offset + 24, 0xfffffff0, true);
         }
       );
-      const result = yield* DocTextFileProcessingEngine.extract(yield* makeOperation(ids, "docx", "docx", bytes));
+      const madeOperation4 = yield* makeOperation(ids, "docx", "docx", bytes);
+      const result = yield* DocTextFileProcessingEngine.extract(madeOperation4);
       expect(result.text).toContain("safe text");
     })
   );
@@ -282,9 +281,8 @@ describe("@beep/doc-text", () => {
       Effect.gen(function* () {
         const ids = yield* fixtureIds;
         const bytes = zipSync({ [name]: strToU8(documentXml("ambiguous")) });
-        const error = yield* Effect.flip(
-          DocTextFileProcessingEngine.extract(yield* makeOperation(ids, "docx", "docx", bytes))
-        );
+        const madeOperation5 = yield* makeOperation(ids, "docx", "docx", bytes);
+        const error = yield* Effect.flip(DocTextFileProcessingEngine.extract(madeOperation5));
         expect(error.reason).toBe("file-extraction-failed");
       })
     );
@@ -308,7 +306,8 @@ describe("@beep/doc-text", () => {
           "word/settings.xml": strToU8("<!DOCTYPE ignored><settings/>"),
           "word/fontTable.xml": strToU8("<ignored>"),
         });
-        const result = yield* DocTextFileProcessingEngine.extract(yield* makeOperation(ids, "docx", "docx", bytes));
+        const madeOperation6 = yield* makeOperation(ids, "docx", "docx", bytes);
+        const result = yield* DocTextFileProcessingEngine.extract(madeOperation6);
         expect(result.text).toContain("ordinary contract text");
         expect(Str.length(O.getOrElse(O.fromUndefinedOr(result.text), () => ""))).toBeGreaterThan(pages * 5_000);
       })
@@ -330,7 +329,8 @@ describe("@beep/doc-text", () => {
         ),
         "word/media/photo.png": new Uint8Array(10 * 1024 * 1024),
       });
-      const result = yield* DocTextFileProcessingEngine.extract(yield* makeOperation(ids, "docx", "docx", bytes));
+      const madeOperation7 = yield* makeOperation(ids, "docx", "docx", bytes);
+      const result = yield* DocTextFileProcessingEngine.extract(madeOperation7);
       expect(result.text).toContain("document with embedded photos");
     })
   );
@@ -346,7 +346,8 @@ describe("@beep/doc-text", () => {
         "word/media/image.png": new Uint8Array([137, 80, 78, 71, 60, 0, 255]),
       });
       const original = new Uint8Array(bytes);
-      const result = yield* DocTextFileProcessingEngine.extract(yield* makeOperation(ids, "docx", "docx", bytes));
+      const madeOperation8 = yield* makeOperation(ids, "docx", "docx", bytes);
+      const result = yield* DocTextFileProcessingEngine.extract(madeOperation8);
       expect(result.text).toContain("custom document text");
       expect(bytes).toEqual(original);
     })
@@ -365,7 +366,8 @@ describe("@beep/doc-text", () => {
         ),
         "custom/styles": strToU8('<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"/>'),
       });
-      const result = yield* DocTextFileProcessingEngine.extract(yield* makeOperation(ids, "docx", "docx", bytes));
+      const madeOperation9 = yield* makeOperation(ids, "docx", "docx", bytes);
+      const result = yield* DocTextFileProcessingEngine.extract(madeOperation9);
       expect(result.text).toContain("extensionless document text");
     })
   );
@@ -390,7 +392,8 @@ describe("@beep/doc-text", () => {
         // The later existing match must not displace the first existing target.
         "word/later": strToU8("<!DOCTYPE rejected><invalid/>"),
       });
-      const result = yield* DocTextFileProcessingEngine.extract(yield* makeOperation(ids, "docx", "docx", bytes));
+      const madeOperation10 = yield* makeOperation(ids, "docx", "docx", bytes);
+      const result = yield* DocTextFileProcessingEngine.extract(madeOperation10);
       expect(result.text).toContain("dense relationship text");
     })
   );
@@ -409,7 +412,8 @@ describe("@beep/doc-text", () => {
           ),
           "word/document.xml": strToU8(documentXml("many namespaces")),
         });
-        const result = yield* DocTextFileProcessingEngine.extract(yield* makeOperation(ids, "docx", "docx", bytes));
+        const madeOperation11 = yield* makeOperation(ids, "docx", "docx", bytes);
+        const result = yield* DocTextFileProcessingEngine.extract(madeOperation11);
         expect(result.text).toBe("many namespaces\n\n");
       })
     );
@@ -428,7 +432,8 @@ describe("@beep/doc-text", () => {
         Effect.gen(function* () {
           const ids = yield* fixtureIds;
           const bytes = zipSync({ "word/document.xml": strToU8(xml) });
-          const result = yield* DocTextFileProcessingEngine.extract(yield* makeOperation(ids, "docx", "docx", bytes));
+          const madeOperation12 = yield* makeOperation(ids, "docx", "docx", bytes);
+          const result = yield* DocTextFileProcessingEngine.extract(madeOperation12);
           expect(result.text).toBe("prefix tolerant text\n\n");
         })
       );
@@ -438,9 +443,8 @@ describe("@beep/doc-text", () => {
       Effect.gen(function* () {
         const ids = yield* fixtureIds;
         const bytes = zipSync({ "word/document.xml": strToU8("<w:document><w:body></w:document>") });
-        const error = yield* Effect.flip(
-          DocTextFileProcessingEngine.extract(yield* makeOperation(ids, "docx", "docx", bytes))
-        );
+        const madeOperation13 = yield* makeOperation(ids, "docx", "docx", bytes);
+        const error = yield* Effect.flip(DocTextFileProcessingEngine.extract(madeOperation13));
         expect(error.reason).toBe("file-extraction-failed");
       })
     );
@@ -479,7 +483,8 @@ describe("@beep/doc-text", () => {
             "custom/main.part": strToU8(documentXml("selected custom text")),
             "word/document.xml": strToU8(documentXml("conventional fallback text")),
           });
-          const result = yield* DocTextFileProcessingEngine.extract(yield* makeOperation(ids, "docx", "docx", bytes));
+          const madeOperation14 = yield* makeOperation(ids, "docx", "docx", bytes);
+          const result = yield* DocTextFileProcessingEngine.extract(madeOperation14);
           expect(result.text).toContain(selected ? "selected custom text" : "conventional fallback text");
         })
       );
@@ -498,9 +503,8 @@ describe("@beep/doc-text", () => {
         const name = bytes.subarray(start, start + view.getUint16(offset + (central ? 28 : 26), true));
         if (new TextDecoder().decode(name) === "word/payload0.bin") name.set(strToU8("word/document.xml"));
       });
-      const error = yield* Effect.flip(
-        DocTextFileProcessingEngine.extract(yield* makeOperation(ids, "docx", "docx", bytes))
-      );
+      const madeOperation15 = yield* makeOperation(ids, "docx", "docx", bytes);
+      const error = yield* Effect.flip(DocTextFileProcessingEngine.extract(madeOperation15));
       expect(error.reason).toBe("file-extraction-failed");
     })
   );
@@ -513,9 +517,8 @@ describe("@beep/doc-text", () => {
         Buffer.from(documentXml("Unicode café 文書"), "utf16le"),
       ]);
       const bytes = zipSync({ "word/document.xml": content });
-      const error = yield* Effect.flip(
-        DocTextFileProcessingEngine.extract(yield* makeOperation(ids, "docx", "docx", bytes))
-      );
+      const madeOperation16 = yield* makeOperation(ids, "docx", "docx", bytes);
+      const error = yield* Effect.flip(DocTextFileProcessingEngine.extract(madeOperation16));
       expect(error.reason).toBe("file-extraction-failed");
     })
   );
@@ -537,9 +540,8 @@ describe("@beep/doc-text", () => {
           ),
           [partName]: strToU8(`<p>${Str.repeat(1_000_001)("<p/>")}</p>`),
         });
-        const error = yield* Effect.flip(
-          DocTextFileProcessingEngine.extract(yield* makeOperation(ids, "docx", "docx", bytes))
-        );
+        const madeOperation17 = yield* makeOperation(ids, "docx", "docx", bytes);
+        const error = yield* Effect.flip(DocTextFileProcessingEngine.extract(madeOperation17));
         expect(error.reason).toBe("output-limit-exceeded");
       })
     );
@@ -560,9 +562,8 @@ describe("@beep/doc-text", () => {
           ),
           [partName]: strToU8(`<p>${Str.repeat(1_000_001)("<p/>")}</p>`),
         });
-        const error = yield* Effect.flip(
-          DocTextFileProcessingEngine.extract(yield* makeOperation(ids, "docx", "docx", bytes))
-        );
+        const madeOperation18 = yield* makeOperation(ids, "docx", "docx", bytes);
+        const error = yield* Effect.flip(DocTextFileProcessingEngine.extract(madeOperation18));
         expect(error.reason).toBe("output-limit-exceeded");
       })
     );
@@ -579,9 +580,8 @@ describe("@beep/doc-text", () => {
           "custom.part": strToU8(documentXml("unselected normalized target")),
           "custom/part": strToU8(documentXml("unselected collapsed target")),
         });
-        const error = yield* Effect.flip(
-          DocTextFileProcessingEngine.extract(yield* makeOperation(ids, "docx", "docx", bytes))
-        );
+        const madeOperation19 = yield* makeOperation(ids, "docx", "docx", bytes);
+        const error = yield* Effect.flip(DocTextFileProcessingEngine.extract(madeOperation19));
         expect(error.reason).toBe("file-extraction-failed");
       })
     );
@@ -600,7 +600,8 @@ describe("@beep/doc-text", () => {
         ),
         "nested/custom.part": strToU8(`<p>${Str.repeat(1_000_001)("<p/>")}</p>`),
       });
-      const result = yield* DocTextFileProcessingEngine.extract(yield* makeOperation(ids, "docx", "docx", bytes));
+      const madeOperation20 = yield* makeOperation(ids, "docx", "docx", bytes);
+      const result = yield* DocTextFileProcessingEngine.extract(madeOperation20);
       expect(result.text).toContain("nested document text");
     })
   );
@@ -612,9 +613,8 @@ describe("@beep/doc-text", () => {
       const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
       const payloadStart = 30 + view.getUint16(26, true) + view.getUint16(28, true);
       const truncated = bytes.subarray(0, payloadStart + 1);
-      const error = yield* Effect.flip(
-        DocTextFileProcessingEngine.extract(yield* makeOperation(ids, "docx", "docx", truncated))
-      );
+      const madeOperation21 = yield* makeOperation(ids, "docx", "docx", truncated);
+      const error = yield* Effect.flip(DocTextFileProcessingEngine.extract(madeOperation21));
       expect(error.reason).toBe("file-extraction-failed");
     })
   );
@@ -674,9 +674,8 @@ describe("@beep/doc-text", () => {
     Effect.fnUntraced(function* () {
       const ids = yield* fixtureIds;
       const bytes = yield* Effect.promise(() => makePdf("PDF fixture text"));
-      const result = yield* DocTextFileProcessingEngine.extract(
-        yield* makeOperation(ids, "pdf", "pdf-text-layer", bytes)
-      );
+      const madeOperation22 = yield* makeOperation(ids, "pdf", "pdf-text-layer", bytes);
+      const result = yield* DocTextFileProcessingEngine.extract(madeOperation22);
 
       expect(result.text).toContain("PDF fixture text");
       expect(result.metadata["pdf.totalPages"]).toBe("1");
@@ -691,7 +690,8 @@ describe("@beep/doc-text", () => {
       const ids = yield* fixtureIds;
       const bytes = yield* Effect.promise(() => makePdf("PDF fixture text"));
       const original = new Uint8Array(bytes);
-      yield* DocTextFileProcessingEngine.extract(yield* makeOperation(ids, "pdf", "pdf-text-layer", bytes));
+      const madeOperation23 = yield* makeOperation(ids, "pdf", "pdf-text-layer", bytes);
+      yield* DocTextFileProcessingEngine.extract(madeOperation23);
 
       // pdfjs transfers the buffer it is handed; the engine must extract from a
       // copy so intake can still materialize the source bytes verbatim.
@@ -705,7 +705,8 @@ describe("@beep/doc-text", () => {
     Effect.fnUntraced(function* () {
       const ids = yield* fixtureIds;
       const bytes = yield* Effect.promise(() => makeDocx("DOCX fixture text"));
-      const result = yield* DocTextFileProcessingEngine.extract(yield* makeOperation(ids, "docx", "docx", bytes));
+      const madeOperation24 = yield* makeOperation(ids, "docx", "docx", bytes);
+      const result = yield* DocTextFileProcessingEngine.extract(madeOperation24);
 
       expect(result.text).toContain("DOCX fixture text");
       expect(result.engine).toBe("doc-text-js");
@@ -717,9 +718,8 @@ describe("@beep/doc-text", () => {
     "rejects unsupported formats",
     Effect.fnUntraced(function* () {
       const ids = yield* fixtureIds;
-      const error = yield* DocTextFileProcessingEngine.extract(
-        yield* makeOperation(ids, "txt", "plain-text", new TextEncoder().encode("text"))
-      ).pipe(Effect.flip);
+      const madeOperation25 = yield* makeOperation(ids, "txt", "plain-text", new TextEncoder().encode("text"));
+      const error = yield* DocTextFileProcessingEngine.extract(madeOperation25).pipe(Effect.flip);
 
       expect(error.reason).toBe("unsupported-file-format");
     })
@@ -729,9 +729,8 @@ describe("@beep/doc-text", () => {
     "maps corrupt document bytes to an extraction failure",
     Effect.fnUntraced(function* () {
       const ids = yield* fixtureIds;
-      const error = yield* DocTextFileProcessingEngine.extract(
-        yield* makeOperation(ids, "pdf", "pdf-text-layer", new Uint8Array([0, 1, 2, 3]))
-      ).pipe(Effect.flip);
+      const madeOperation26 = yield* makeOperation(ids, "pdf", "pdf-text-layer", new Uint8Array([0, 1, 2, 3]));
+      const error = yield* DocTextFileProcessingEngine.extract(madeOperation26).pipe(Effect.flip);
 
       expect(error.reason).toBe("file-extraction-failed");
     })
@@ -741,9 +740,8 @@ describe("@beep/doc-text", () => {
     "rejects an over-cap document before parsing",
     Effect.fnUntraced(function* () {
       const ids = yield* fixtureIds;
-      const error = yield* DocTextFileProcessingEngine.extract(
-        yield* makeOperation(ids, "pdf", "pdf-text-layer", new Uint8Array([0, 1]), 1)
-      ).pipe(Effect.flip);
+      const madeOperation27 = yield* makeOperation(ids, "pdf", "pdf-text-layer", new Uint8Array([0, 1]), 1);
+      const error = yield* DocTextFileProcessingEngine.extract(madeOperation27).pipe(Effect.flip);
 
       expect(error.reason).toBe("output-limit-exceeded");
     })
@@ -754,9 +752,8 @@ describe("@beep/doc-text", () => {
     Effect.fnUntraced(function* () {
       const ids = yield* fixtureIds;
       const bytes = yield* Effect.promise(makeEmptyPdf);
-      const error = yield* DocTextFileProcessingEngine.extract(
-        yield* makeOperation(ids, "pdf", "pdf-text-layer", bytes)
-      ).pipe(Effect.flip);
+      const madeOperation28 = yield* makeOperation(ids, "pdf", "pdf-text-layer", bytes);
+      const error = yield* DocTextFileProcessingEngine.extract(madeOperation28).pipe(Effect.flip);
 
       expect(error.reason).toBe("file-extraction-failed");
       expect(error.details).toEqual({ outcome: "empty-text-layer", ocr: "disabled" });

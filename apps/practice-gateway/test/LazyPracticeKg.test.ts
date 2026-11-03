@@ -89,7 +89,8 @@ describe("practice-kg provider without the DuckDB sidecar", () => {
 
         const toolkit = yield* SetupToolkit;
         const stream = yield* toolkit.handle("setup_status", {});
-        const first = O.getOrThrow(yield* Stream.runHead(stream));
+        const resultHead = yield* Stream.runHead(stream);
+        const first = O.getOrThrow(resultHead);
         expect(first.isFailure).toBe(false);
         const status = yield* S.decodeUnknownEffect(SetupStatus)(first.encodedResult);
         const selfCheck = A.findFirst(status.report.checks, (check) => check.requirement === "practice-kg-self-check");

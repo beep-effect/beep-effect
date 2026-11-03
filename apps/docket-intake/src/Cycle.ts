@@ -174,14 +174,16 @@ export const pollCycle = Effect.fn("DocketIntakeApp.pollCycle")(function* (
 ) {
   const intake = yield* DocketIntake;
   const runId = yield* (yield* DocketIntakeJournal).beginRun;
-  const today = docketDayInZone(yield* DateTime.now, config.timeZone);
+  const now1 = yield* DateTime.now;
+  const today = docketDayInZone(now1, config.timeZone);
 
   const report = yield* intake.pollOnce(today, options);
   // Every run gets a line, also one that wrote nothing, so `runs` lists it and `undo` finds it.
   yield* recordDocketRunCompleted(report);
   // Only when the review hub is configured: its questions for every needs-review message.
   const store = yield* DocketIntakeStore;
-  yield* O.match(yield* Effect.serviceOption(DocketQuestionPublisher), {
+  const serviceOption2 = yield* Effect.serviceOption(DocketQuestionPublisher);
+  yield* O.match(serviceOption2, {
     onNone: () => Effect.void,
     onSome: (publisher) => Effect.flatMap(store.load, publisher.publish),
   });

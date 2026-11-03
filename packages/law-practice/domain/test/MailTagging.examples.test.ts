@@ -123,8 +123,12 @@ describe("MailTagging ledger model examples", () => {
       expect(completed._tag).toBe("FilingCompleted");
       expect(FilingLedgerRecord.guards.FilingCompleted(completed) && completed.reconciled).toBe(true);
       expect(intended._tag).toBe("FilingIntended");
-      expect(sameFilingRecord(yield* decodeFilingLine(yield* encodeFilingLine(completed)), completed)).toBe(true);
-      expect(sameFilingRecord(yield* decodeFilingLine(yield* encodeFilingLine(intended)), intended)).toBe(true);
+      const encodedFilingLine = yield* encodeFilingLine(completed);
+      const decodedFilingLine = yield* decodeFilingLine(encodedFilingLine);
+      expect(sameFilingRecord(decodedFilingLine, completed)).toBe(true);
+      const encodedFilingLine5 = yield* encodeFilingLine(intended);
+      const decodedFilingLine1 = yield* decodeFilingLine(encodedFilingLine5);
+      expect(sameFilingRecord(decodedFilingLine1, intended)).toBe(true);
       expect(sameFilingRecord(completed, intended)).toBe(false);
 
       const abandoned = yield* decodeAbandoned({
@@ -145,9 +149,12 @@ describe("MailTagging ledger model examples", () => {
 
       const disowned = FilingAbandoned.make({ ...abandoned, reason: "holder-mismatch" });
 
-      expect(sameFilingRecord(yield* decodeFilingLine(yield* encodeFilingLine(disowned)), disowned)).toBe(true);
+      const encodedFilingLine6 = yield* encodeFilingLine(disowned);
+      const decodedFilingLine2 = yield* decodeFilingLine(encodedFilingLine6);
+      expect(sameFilingRecord(decodedFilingLine2, disowned)).toBe(true);
       expect(sameFilingRecord(disowned, abandoned)).toBe(false);
-      expect(sameFilingRecord(yield* decodeFilingLine(abandonedLine), abandoned)).toBe(true);
+      const decodedFilingLine3 = yield* decodeFilingLine(abandonedLine);
+      expect(sameFilingRecord(decodedFilingLine3, abandoned)).toBe(true);
     })
   );
 
@@ -159,7 +166,8 @@ describe("MailTagging ledger model examples", () => {
         const line = yield* encodeFilingLine(record);
 
         expect(Str.includes("\n")(line)).toBe(false);
-        expect(sameFilingRecord(yield* decodeFilingLine(line), record)).toBe(true);
+        const decodedFilingLine4 = yield* decodeFilingLine(line);
+        expect(sameFilingRecord(decodedFilingLine4, record)).toBe(true);
       }),
     { arbitrary: fcRuns(50) }
   );
@@ -169,7 +177,8 @@ describe("MailTagging ledger model examples", () => {
     { checkpoint: Arbitrary.schema(BackfillCheckpoint) },
     ({ checkpoint }) =>
       Effect.gen(function* () {
-        const decoded = yield* decodeCheckpointJson(yield* encodeCheckpointJson(checkpoint));
+        const encodedCheckpointJson = yield* encodeCheckpointJson(checkpoint);
+        const decoded = yield* decodeCheckpointJson(encodedCheckpointJson);
 
         expect(sameCheckpoint(decoded, checkpoint)).toBe(true);
       }),
@@ -192,7 +201,9 @@ describe("MailTagging ledger model examples", () => {
       );
 
       expect(tied.coveredAtBoundary).toStrictEqual(["msg-0001", "msg-0002"]);
-      expect(yield* decodeCheckpointJson(yield* encodeCheckpointJson(tied))).toStrictEqual(tied);
+      const encodedCheckpointJson7 = yield* encodeCheckpointJson(tied);
+      const decodedCheckpointJson = yield* decodeCheckpointJson(encodedCheckpointJson7);
+      expect(decodedCheckpointJson).toStrictEqual(tied);
     })
   );
 });

@@ -76,7 +76,8 @@ it.effect(
         Effect.provideService(FailureTargetCell, empty)
       );
       assert.strictEqual(MutableRef.get(empty), undefined);
-      assert.strictEqual(yield* currentTarget.pipe(Effect.provideContext(context)), fallbackTarget);
+      const pipe1 = yield* currentTarget.pipe(Effect.provideContext(context));
+      assert.strictEqual(pipe1, fallbackTarget);
       assert.strictEqual(fallbackTarget.ctx.paint("accent", "x"), "x");
       assert.strictEqual(fallbackTarget.ctx.link({ url: "/x" }, "x"), "x");
     })

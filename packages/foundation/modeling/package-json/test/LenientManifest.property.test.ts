@@ -16,7 +16,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -39,7 +40,8 @@ it.effect.prop(
       const rebuilt = yield* S.decodeUnknownEffect(ObjectJson)({ ...rest, ...known });
       assert.isTrue(S.toEquivalence(ObjectJson)(rebuilt, wire));
       assert.deepStrictEqual(issues, parsed.issues);
-      const reparsed = yield* LenientManifest.parse(yield* S.encodeEffect(Json)(rebuilt));
+      const value2 = yield* S.encodeEffect(Json)(rebuilt);
+      const reparsed = yield* LenientManifest.parse(value2);
       assert.isTrue(S.toEquivalence(LenientManifest)(parsed, reparsed));
       const viaResult = yield* Effect.fromResult(LenientManifest.parseResult(text));
       assert.isTrue(S.toEquivalence(LenientManifest)(viaResult, parsed));

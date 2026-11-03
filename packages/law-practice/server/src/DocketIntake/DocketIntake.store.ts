@@ -139,7 +139,8 @@ const isAlive = Effect.fnUntraced(function* (fs: FileSystem.FileSystem, self: Lo
   if (holder.pid === self.pid || holder.bootId !== self.bootId) {
     return false;
   }
-  return O.contains(yield* processStartTime(fs, holder.pid), holder.startTime);
+  const processStartTime1 = yield* processStartTime(fs, holder.pid);
+  return O.contains(processStartTime1, holder.startTime);
 });
 
 const sameContents = O.makeEquivalence(Str.Equivalence);
@@ -194,12 +195,15 @@ const acquireLock = Effect.fnUntraced(function* (
   lockPath: string
 ): Effect.fn.Return<void, DocketIntakeError> {
   const pid = yield* fs.readLink(PROCESS_SELF).pipe(Effect.mapError(storeError("process-id")));
+  const argument = yield* readBootId(fs);
+  const processStartTime2 = yield* processStartTime(fs, pid);
   const self: LockHolder = {
-    bootId: yield* readBootId(fs),
+    bootId: argument,
     pid,
-    startTime: O.getOrElse(yield* processStartTime(fs, pid), thunkEmptyStr),
+    startTime: O.getOrElse(processStartTime2, thunkEmptyStr),
   };
-  const startedAt = DateTime.formatIso(yield* DateTime.now);
+  const now2 = yield* DateTime.now;
+  const startedAt = DateTime.formatIso(now2);
   const contents = yield* encodeLock({ ...self, startedAt }).pipe(Effect.mapError(storeError("encode")));
   const place = placeLock(fs, lockPath, pid, contents);
 

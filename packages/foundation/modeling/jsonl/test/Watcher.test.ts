@@ -34,7 +34,8 @@ const watched = Effect.fn("JsonlTest.watched")(function* (seed: O.Option<string>
       ),
   };
   const journal = yield* open(decorated);
-  assert.strictEqual(yield* Queue.take(registrations), O.isSome(seed) ? path : "/journal");
+  const take1 = yield* Queue.take(registrations);
+  assert.strictEqual(take1, O.isSome(seed) ? path : "/journal");
   return { fs, journal, registrations };
 });
 it.effect("foreign and local appends arrive once in file order with contiguous offsets", () =>
@@ -63,8 +64,9 @@ it.effect("oversized Unicode external writes survive chunk boundaries", () =>
       .pipe(Stream.take(1), Stream.runCollect, Effect.forkChild({ startImmediately: true }));
     const label = Str.repeat(25000)("😀");
     yield* externalAppend(fs, line(7, label));
+    const join2 = yield* Fiber.join(reader);
     assert.deepStrictEqual(
-      A.map(yield* Fiber.join(reader), (row) => row.data),
+      A.map(join2, (row) => row.data),
       [{ round: 7, label }]
     );
     assertSome((yield* SubscriptionRef.get(journal.latest)).pipe(O.map((row) => row.line.offset)), 0);
@@ -81,8 +83,9 @@ it.effect("a torn external tail is consumed only after completion", () =>
     // Complete history remains readable while the original writer finishes.
     assert.strictEqual((yield* journal.query().pipe(Stream.runCollect)).length, 1);
     yield* externalAppend(fs, Str.slice(20)(whole));
+    const join3 = yield* Fiber.join(reader);
     assert.deepStrictEqual(
-      A.map(yield* Fiber.join(reader), (row) => row.data.round),
+      A.map(join3, (row) => row.data.round),
       [2]
     );
   })
@@ -115,10 +118,12 @@ it.effect("creation activates a missing journal and hands off to the file watch"
       .changes({ events: ["noted"] })
       .pipe(Stream.take(1), Stream.runCollect, Effect.forkChild({ startImmediately: true }));
     yield* journal.create;
-    assert.strictEqual(yield* Queue.take(registrations), path);
+    const take4 = yield* Queue.take(registrations);
+    assert.strictEqual(take4, path);
     yield* externalAppend(fs, line(42));
+    const join5 = yield* Fiber.join(reader);
     assert.deepStrictEqual(
-      A.map(yield* Fiber.join(reader), (row) => row.data.round),
+      A.map(join5, (row) => row.data.round),
       [42]
     );
   })
@@ -178,9 +183,11 @@ for (const present of [false, true]) {
       // This append finishes while acquisition is blocked, so the installed
       // watch cannot emit its event. Only catch-up after readiness can see it.
       yield* externalAppend(fs, line(2));
-      assert.isFalse(yield* Deferred.isDone(release));
+      const isDone6 = yield* Deferred.isDone(release);
+      assert.isFalse(isDone6);
       yield* Deferred.succeed(release, undefined);
-      assertSome(O.flatten(yield* Fiber.join(reader)).pipe(O.map((row) => row.data)), { round: 2, label: "seed" });
+      const join7 = yield* Fiber.join(reader);
+      assertSome(O.flatten(join7).pipe(O.map((row) => row.data)), { round: 2, label: "seed" });
     })
   );
 }
@@ -234,7 +241,8 @@ it.effect("closing the journal cancels watch acquisition before readiness", () =
     yield* open(decorated).pipe(Effect.provideService(Scope.Scope, scope));
     yield* Deferred.await(acquiring);
     yield* Scope.close(scope, Exit.void);
-    assert.isTrue(yield* Deferred.isDone(cancelled));
+    const isDone8 = yield* Deferred.isDone(cancelled);
+    assert.isTrue(isDone8);
   })
 );
 
@@ -283,7 +291,8 @@ it.effect("activation handoff drains an ingest staged behind a backpressured cat
     const first = yield* PubSub.take(subscription);
     const second = yield* PubSub.take(subscription);
     yield* Deferred.await(fileArmed);
-    assert.strictEqual(yield* PubSub.size(journal.hub), 1, "handoff must retain B's staged publication");
+    const size9 = yield* PubSub.size(journal.hub);
+    assert.strictEqual(size9, 1, "handoff must retain B's staged publication");
     const third = yield* PubSub.take(subscription);
     assert.deepStrictEqual(
       A.flatMap([first, second, third], (take) =>
@@ -291,6 +300,7 @@ it.effect("activation handoff drains an ingest staged behind a backpressured cat
       ),
       [1, 2, 3]
     );
-    assert.strictEqual(yield* PubSub.size(journal.hub), 0);
+    const size10 = yield* PubSub.size(journal.hub);
+    assert.strictEqual(size10, 0);
   })
 );

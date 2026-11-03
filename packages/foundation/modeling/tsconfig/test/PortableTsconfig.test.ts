@@ -5,10 +5,14 @@ import { ResolvedTsconfig } from "@beep/tsconfig/ResolvedTsconfig";
 import { assert, describe, it } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 describe("PortableTsconfig runtime models", () => {
   it("validates and decodes plain projection results and exact optional options", () => {
@@ -49,7 +53,8 @@ describe("PortableTsconfig runtime models", () => {
         const input = { ...expected, compilerOptions: { ...expected.compilerOptions, ...compilerOptions } };
         const decoded = yield* S.decodeEffect(PortableTsconfig)(input);
         assert.deepStrictEqual(decoded, expected);
-        assert.deepStrictEqual(yield* S.encodeEffect(PortableTsconfig)(decoded), expected);
+        const value = yield* S.encodeEffect(PortableTsconfig)(decoded);
+        assert.deepStrictEqual(value, expected);
       }
     })
   );
@@ -64,7 +69,8 @@ describe("PortableTsconfig runtime models", () => {
         const input = { ...expected, compilerOptions: { ...expected.compilerOptions, lib } };
         const decoded = yield* S.decodeEffect(PortableTsconfig)(input);
         assert.deepStrictEqual(decoded, expected);
-        assert.deepStrictEqual(yield* S.encodeEffect(PortableTsconfig)(decoded), expected);
+        const value1 = yield* S.encodeEffect(PortableTsconfig)(decoded);
+        assert.deepStrictEqual(value1, expected);
       }
     })
   );
@@ -124,8 +130,10 @@ describe("PortableTsconfig runtime models", () => {
           futureOption: "nonportable",
         },
       };
-      assert.deepStrictEqual(yield* S.decodeEffect(PortableTsconfig)(input), portable);
-      assert.deepStrictEqual(yield* S.encodeEffect(PortableTsconfig)(input), portable);
+      const value2 = yield* S.decodeEffect(PortableTsconfig)(input);
+      assert.deepStrictEqual(value2, portable);
+      const value3 = yield* S.encodeEffect(PortableTsconfig)(input);
+      assert.deepStrictEqual(value3, portable);
     })
   );
 });
@@ -276,7 +284,10 @@ describe("PortableTsconfig.make — from a bare CompilerOptions.Type", () => {
 
   it("output survives a JSON.stringify round-trip", () => {
     const portable = PortableTsconfig.make(fullOptionZoo);
-    const roundTripped = JSON.parse(JSON.stringify(portable));
+    const roundTripped = Result.getOrThrowWith(
+      S.decodeResult(UnknownJson)(Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(portable), identity)),
+      identity
+    );
     assert.deepStrictEqual(roundTripped, portable);
   });
 
@@ -382,7 +393,10 @@ describe("PortableTsconfig.make — the includeTypes opt-in", () => {
   it("drops `types` under every non-opted-in call shape (the default is unchanged)", () => {
     for (const options of [undefined, {}, { includeTypes: false }] as const) {
       const { compilerOptions } = PortableTsconfig.make(fullOptionZoo, options);
-      assert.isFalse("types" in compilerOptions, `expected "types" dropped for ${JSON.stringify(options)}`);
+      assert.isFalse(
+        "types" in compilerOptions,
+        `expected "types" dropped for ${Inspectable.toStringUnknown(options)}`
+      );
     }
   });
 

@@ -40,6 +40,7 @@
           "Schema": "S",
           "Equal": "Eq"
         },
+        // Editor capability toggles, kept at their upstream defaults so an upgrade cannot silently flip them.
         "refactors": true,
         "diagnostics": true,
         "quickinfo": true,
@@ -49,12 +50,18 @@
         // Stability allow-lists stay empty: experimentalApiUsage and unstableApiUsage are declared off.
         "allowedExperimentalApis": [],
         "allowedUnstableApis": [],
+        // Inlay hints are an editor concern; the upstream default is kept explicit.
         "inlays": false,
+        // Layer graph hovers may link to the public mermaid.live renderer; this repo is public.
         "mermaidProvider": "mermaid.live",
         "noExternal": false,
+        // Layer graph extraction stops at the declaring symbol; deeper follow is a hover cost with no lint value.
         "layerGraphFollowDepth": 0,
+        // No package prefers barrel named imports: effect, @effect/* and @beep/* are namespace-imported above.
         "barrelImportPackages": [],
+        // Top-level named re-exports are not followed for import resolution; @beep barrels re-export deliberately.
         "topLevelNamedReexports": "ignore",
+        // deterministicKeys formulas: upstream default, made explicit so a changed default cannot move the rule.
         "keyPatterns": [
           {
             "target": "service",
@@ -67,9 +74,20 @@
             "skipLeadingPath": ["src/"]
           }
         ],
+        // @effect-identifier constructor matching stays off; $I identity annotations are the repo's key source.
         "extendedKeyDetection": false,
+        "brandedSchemaClasses": [
+          "Class",
+          "TaggedClass",
+          "Error",
+          "TaggedError",
+          "Opaque"
+        ],
+        // missedPipeableOpportunity fires from two contiguous pipeable calls (upstream default, explicit).
         "pipeableMinArgCount": 2,
+        // No package may ship twice in the graph; duplicatePackage reports every duplicate.
         "allowedDuplicatedPackages": [],
+        // No per-file overrides: every rule is an error everywhere, tests included (tsgo-045 D2).
         "overrides": [],
         "diagnosticSeverity": {
           "abortControllerInEffect": "error",
@@ -104,7 +122,9 @@
           "effectMapFlatten": "error",
           "effectMapVoid": "error",
           "effectSleepZeroToYieldNow": "error",
+          "effectSucceedWithUndefined": "error",
           "effectSucceedWithVoid": "error",
+          "effectTryWithoutCatch": "error",
           "errorPayloadShadowsName": "error",
           "experimentalApiUsage": "off",
           "extendsNativeError": "error",
@@ -125,6 +145,8 @@
           "globalErrorInEffectFailure": "error",
           "globalFetch": "error",
           "globalFetchInEffect": "error",
+          "globalJson": "error",
+          "globalJsonInEffect": "error",
           "globalRandom": "error",
           "globalRandomInEffect": "error",
           "globalTimers": "error",
@@ -137,7 +159,9 @@
           "manualMetricTapToTrack": "error",
           "mapConstToAs": "error",
           "mapMapErrorToMapBoth": "error",
+          "mapSomeCatchNoSuchElement": "error",
           "mapSomeToAsSome": "error",
+          "matchBooleanToIsSuccess": "error",
           "matchEffectToMapBoth": "error",
           "matchEffectToMatch": "error",
           "missedPipeableOpportunity": "error",
@@ -165,7 +189,6 @@
           "preferEffectRecord": "error",
           "preferEffectString": "error",
           "preferNamespaceImport": "off",
-          "preferSchemaOverJson": "error",
           "preferSchemaTaggedError": "error",
           "preferSchemaTypeProperty": "error",
           "preferSucceedSomeOrNone": "error",
@@ -175,10 +198,12 @@
           "processEnvInEffect": "error",
           "promiseInEffectSuccess": "error",
           "provideLayerSucceedToProvideService": "error",
+          "provideMergeAllToArray": "error",
           "raceFirstWithSleepToTimeout": "error",
           "redundantMapError": "error",
           "redundantOrDie": "error",
           "redundantSchemaTagIdentifier": "error",
+          "resultMatchToFromResult": "error",
           "returnEffectInGen": "error",
           "runEffectInsideEffect": "error",
           "runOfExitToRunExit": "error",
@@ -195,9 +220,11 @@
           "serviceNotAsClass": "error",
           "strictBooleanExpressions": "error",
           "strictEffectProvide": "error",
+          "suspendFailToFailSync": "error",
           "syncToSucceed": "error",
           "timeoutCatchTagToTimeoutOrElse": "error",
           "tryCatchInEffectGen": "error",
+          "typeUnionToSchemaUnion": "error",
           "unknownInEffectCatch": "error",
           "unnecessaryArrowBlock": "error",
           "unnecessaryEffectGen": "error",
@@ -206,7 +233,8 @@
           "unnecessaryPipeChain": "error",
           "unnecessaryTypeofType": "error",
           "unsafeEffectTypeAssertion": "error",
-          "unstableApiUsage": "off"
+          "unstableApiUsage": "off",
+          "yieldInCallArgument": "error"
         }
       },
       {

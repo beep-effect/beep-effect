@@ -225,7 +225,8 @@ const underWatchdog = Effect.fnUntraced(
       stdout: "ignore",
       stderr: "inherit",
     });
-    assert.strictEqual(yield* process.exitCode, 0);
+    const exitCode1 = yield* process.exitCode;
+    assert.strictEqual(exitCode1, 0);
   },
   Effect.scoped,
   Effect.timeout("2 seconds")

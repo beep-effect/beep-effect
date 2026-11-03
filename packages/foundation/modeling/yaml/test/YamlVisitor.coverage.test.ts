@@ -13,9 +13,12 @@ describe("YamlVisitor event fidelity", () => {
         A.map(first, (event) => event._tag),
         ["DocumentStart", "MapStart", "Pair", "Scalar", "Scalar", "MapEnd", "DocumentEnd"]
       );
-      assert.deepStrictEqual(yield* Stream.runCollect(stream), first);
-      assert.deepStrictEqual(yield* Stream.runCollect(Stream.take(stream, 1)), first.slice(0, 1));
-      assert.deepStrictEqual(yield* Stream.runCollect(stream), first);
+      const resultCollect = yield* Stream.runCollect(stream);
+      assert.deepStrictEqual(resultCollect, first);
+      const resultCollect1 = yield* Stream.runCollect(Stream.take(stream, 1));
+      assert.deepStrictEqual(resultCollect1, first.slice(0, 1));
+      const resultCollect2 = yield* Stream.runCollect(stream);
+      assert.deepStrictEqual(resultCollect2, first);
     })
   );
 

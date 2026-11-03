@@ -868,7 +868,8 @@ export const readContainedFileBytesNoFollow = Effect.fn("RepoCli.FsGuards.readCo
       let length = 0;
       while (true) {
         // The read is bounded by the remaining Uint8Array capacity, so conversion is exact.
-        const read = Number(yield* file.read(buffer.subarray(length)));
+        const read1 = yield* file.read(buffer.subarray(length));
+        const read = Number(read1);
         length += read;
         if (length > byteLimit)
           return yield* fsGuardError(

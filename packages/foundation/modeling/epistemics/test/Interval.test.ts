@@ -21,8 +21,10 @@ describe("ValidInterval", () => {
       const open = yield* decode({ validFrom: 1_000, validTo: null });
       const closed = yield* decode({ validFrom: 1_000, validTo: 2_000 });
       assertNone(open.validTo);
-      expect(yield* encode(open)).toStrictEqual({ validFrom: 1_000, validTo: null });
-      expect(yield* encode(closed)).toStrictEqual({ validFrom: 1_000, validTo: 2_000 });
+      const encoded1 = yield* encode(open);
+      expect(encoded1).toStrictEqual({ validFrom: 1_000, validTo: null });
+      const encoded2 = yield* encode(closed);
+      expect(encoded2).toStrictEqual({ validFrom: 1_000, validTo: 2_000 });
     })
   );
 
@@ -51,7 +53,8 @@ describe("ValidInterval", () => {
       const encoded = { name: "fact", validFrom: 1_000, validTo: null };
       const row = yield* S.decodeEffect(Row)(encoded);
       expect(holdsAt(row, at(1_000))).toBe(true);
-      expect(yield* S.encodeEffect(Row)(row)).toStrictEqual(encoded);
+      const value3 = yield* S.encodeEffect(Row)(row);
+      expect(value3).toStrictEqual(encoded);
     })
   );
 });
@@ -64,8 +67,10 @@ describe("KnowledgeInterval", () => {
     Effect.gen(function* () {
       const current = yield* decode({ expiredAt: null, recordedAt: 1_000 });
       const expired = yield* decode({ expiredAt: 2_000, recordedAt: 1_000 });
-      expect(yield* encode(current)).toStrictEqual({ expiredAt: null, recordedAt: 1_000 });
-      expect(yield* encode(expired)).toStrictEqual({ expiredAt: 2_000, recordedAt: 1_000 });
+      const encoded4 = yield* encode(current);
+      expect(encoded4).toStrictEqual({ expiredAt: null, recordedAt: 1_000 });
+      const encoded5 = yield* encode(expired);
+      expect(encoded5).toStrictEqual({ expiredAt: 2_000, recordedAt: 1_000 });
     })
   );
 
@@ -94,7 +99,8 @@ describe("KnowledgeInterval", () => {
       const encoded = { expiredAt: null, name: "fact", recordedAt: 1_000 };
       const row = yield* S.decodeEffect(Row)(encoded);
       expect(knownAt(row, at(1_000))).toBe(true);
-      expect(yield* S.encodeEffect(Row)(row)).toStrictEqual(encoded);
+      const value6 = yield* S.encodeEffect(Row)(row);
+      expect(value6).toStrictEqual(encoded);
     })
   );
 });
@@ -105,10 +111,12 @@ describe("interval schema laws", () => {
     [Arbitrary.schema(ValidInterval), Arbitrary.schema(KnowledgeInterval)],
     ([valid, knowledge]) =>
       Effect.gen(function* () {
-        const validRoundTrip = yield* S.decodeEffect(ValidInterval)(yield* S.encodeEffect(ValidInterval)(valid));
-        const knowledgeRoundTrip = yield* S.decodeEffect(KnowledgeInterval)(
-          yield* S.encodeEffect(KnowledgeInterval)(knowledge)
-        );
+        const argument = S.decodeEffect(ValidInterval);
+        const value1 = yield* S.encodeEffect(ValidInterval)(valid);
+        const validRoundTrip = yield* argument(value1);
+        const argument1 = S.decodeEffect(KnowledgeInterval);
+        const value2 = yield* S.encodeEffect(KnowledgeInterval)(knowledge);
+        const knowledgeRoundTrip = yield* argument1(value2);
         expect(S.toEquivalence(ValidInterval)(validRoundTrip, valid)).toBe(true);
         expect(S.toEquivalence(KnowledgeInterval)(knowledgeRoundTrip, knowledge)).toBe(true);
       })
@@ -119,9 +127,12 @@ describe("interval ordering", () => {
   it.effect("rejects empty and inverted intervals", () =>
     Effect.gen(function* () {
       const rejected = (exit: Exit.Exit<unknown, unknown>) => exit.pipe(Exit.isFailure, assertTrue);
-      rejected(yield* Effect.exit(S.decodeEffect(ValidInterval)({ validFrom: 200, validTo: 100 })));
-      rejected(yield* Effect.exit(S.decodeEffect(ValidInterval)({ validFrom: 100, validTo: 100 })));
-      rejected(yield* Effect.exit(S.decodeEffect(KnowledgeInterval)({ recordedAt: 200, expiredAt: 100 })));
+      const exit7 = yield* Effect.exit(S.decodeEffect(ValidInterval)({ validFrom: 200, validTo: 100 }));
+      rejected(exit7);
+      const exit8 = yield* Effect.exit(S.decodeEffect(ValidInterval)({ validFrom: 100, validTo: 100 }));
+      rejected(exit8);
+      const exit9 = yield* Effect.exit(S.decodeEffect(KnowledgeInterval)({ recordedAt: 200, expiredAt: 100 }));
+      rejected(exit9);
     })
   );
 

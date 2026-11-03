@@ -435,7 +435,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 122,
+      "line": 123,
       "owner": "@beep/epistemic-server",
       "reason": "P0 persistence spike decodes fixed commands and rows to prove duplicate suppression, visibility, ordering, and transactional boundaries against PGlite; schema law coverage lives in domain and use-case tests."
     },
@@ -524,6 +524,16 @@
       "reason": "Mixed terminal Chalk runtime: level is data-like, while the recursive styling surface and call signature are executable; color and option domains are already schema-backed."
     },
     {
+      "file": "packages/foundation/capability/cli-kit/test/CliLog.file.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 27,
+      "owner": "@beep/cli-kit",
+      "reason": "Deterministic file-sink integration regressions verify exact NDJSON parity, explicit-path precedence, scope-close flushing, injected filesystem failures, and workflow-command sanitization. Codec calls construct and inspect those fixed boundary cases rather than define schema laws. Owner: @beep/cli-kit. Exit: retire when the detector distinguishes consumer integration codec checks or generated file-sink configuration coverage preserves these fault and byte-parity controls."
+    },
+    {
       "file": "packages/foundation/capability/file-processing/src/PageOcr/PageOcr.service.ts",
       "symbol": "PageOcrEngineShape",
       "kind": "exported-type-literal",
@@ -577,7 +587,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 44,
+      "line": 48,
       "owner": "@beep/mcp-kit",
       "reason": "Golden MCP dispatch regression verifies annotated scalar/union/template fragments against exact valid and invalid tool messages. Arbitrary payloads would not establish the named-fragment compiler failure. Owner: @beep/mcp-kit. Exit: retire when template-fragment compiler property tests cover this named annotation boundary independently."
     },
@@ -1673,7 +1683,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 108,
+      "line": 113,
       "owner": "@beep/law-practice-server",
       "reason": "Read-only integrity audit of frozen public reference fixtures: selected claim ownership, exact source spans and cross-claim endpoints are the subjects. Generated arbitrary claims cannot establish the immutable source corpus. Owner: @beep/law-practice-server. Exit: retire when the detector distinguishes frozen-source integrity tests from schema-law tests."
     },
@@ -1761,7 +1771,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 336,
+      "line": 344,
       "owner": "@beep/law-practice-use-cases",
       "reason": "Service integration regression checks exact source-bound advisory items and their ReviewItem wire round-trip, alongside runtime errors and verdict projection. It does not define a new ReviewItem codec; the schema belongs to domain. Owner: @beep/law-practice-use-cases. Exit: retire when the detector excludes consumer integration round-trips or shared ReviewItem property coverage is directly recognized."
     },
@@ -1797,7 +1807,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 79,
+      "line": 81,
       "owner": "@beep/repo-ai-metrics",
       "reason": "Real-socket regressions qualify exact JSON/protobuf acknowledgments, gzip/streaming limits, malformed input, concurrent admission, commit failure and expired-event rejection. Codecs construct controlled wire fixtures and inspect receipt identity. Exit: reusable codec laws move here; generated transport testing must retain the malformed/incomplete-body and controlled fault cases. Independent Astra review: intentional deterministic integration/regression coverage; no unverified property coverage elsewhere is claimed."
     },
@@ -1817,7 +1827,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 73,
+      "line": 72,
       "owner": "@beep/repo-ai-metrics",
       "reason": "Integration fixtures create specific Git repositories/worktrees and declared retired, missing or inaccessible roots to verify pseudonymous identity, attribution and privacy. Codecs serialize declarations and inspect inventory evidence, not schema laws. Exit: pure schema laws move here or are separated; preserve retired-root no-access and private-path assertions. Independent Astra review: intentional deterministic integration/regression coverage; no unverified property coverage elsewhere is claimed."
     },
@@ -2431,7 +2441,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 51,
+      "line": 53,
       "owner": "@beep/repo-cli",
       "reason": "Graduation write and crash-recovery regression decodes the receipts the CLI prints and the manifest it rewrites through S.fromJsonString codecs; the codec calls read real command output from temporary repositories and assert no schema law, so schema-derived arbitrary coverage does not apply."
     },

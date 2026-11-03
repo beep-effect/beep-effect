@@ -59,14 +59,18 @@ const matrix = (
     for (const [name, env, expected] of rows) {
       it.effect(name, () =>
         Effect.gen(function* () {
-          assert.strictEqual(yield* resolve(env), yield* expectedIn(expected));
+          const resolved1 = yield* resolve(env);
+          const expectedIn3 = yield* expectedIn(expected);
+          assert.strictEqual(resolved1, expectedIn3);
         })
       );
     }
     for (const [name, env, , after] of divergent) {
       it.effect(`${name} (diverges on purpose: XDG absolute-only)`, () =>
         Effect.gen(function* () {
-          assert.strictEqual(yield* resolve(env), yield* expectedIn(after));
+          const resolved2 = yield* resolve(env);
+          const expectedIn4 = yield* expectedIn(after);
+          assert.strictEqual(resolved2, expectedIn4);
         })
       );
     }

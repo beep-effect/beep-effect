@@ -159,7 +159,8 @@ describe("lint policy target probe", () => {
           { task: "lint:deprecated-apis", directory: "packages/c", command: "beep-cli lint deprecated-apis" },
         ],
       };
-      const parsed = yield* lintPolicyAffectedTargetsFromDryRun(yield* encodeJson(plan));
+      const encodedJson = yield* encodeJson(plan);
+      const parsed = yield* lintPolicyAffectedTargetsFromDryRun(encodedJson);
       expect(parsed).toEqual(
         LintPolicyAffectedTargets.make({ jsdoc: ["packages/a", "packages/b"], deprecatedApis: ["packages/c"] })
       );
@@ -317,7 +318,8 @@ layer(testLayer, { timeout: "60 seconds" })("lint policy change facts", (it) => 
       yield* write("packages/demo/src/gone.ts", "export const gone = 1;\n");
       yield* git(root, ["add", "."]);
       yield* git(root, ["commit", "-q", "-m", "base"]);
-      const base = Str.trim(yield* git(root, ["rev-parse", "HEAD"]));
+      const git1 = yield* git(root, ["rev-parse", "HEAD"]);
+      const base = Str.trim(git1);
       yield* fs.remove(path.join(root, "packages/demo/src/gone.ts"));
       yield* write("packages/demo/src/keep.ts", "/** @deprecated use next */\nexport const keep = 1;\n");
       yield* write("docs/notes.md", "@deprecated in prose is not a source\n");
@@ -350,7 +352,9 @@ layer(testLayer, { timeout: "60 seconds" })("lint policy change facts", (it) => 
       // `shared` seals repo-cli assets through `packages/tooling/tool/cli/src/**/*.json`.
       assertSome(probe("packages/tooling/tool/cli/src/commands/Quality/asset.json"), true);
       assertSome(probe("docs/runbooks/turbo-cache-inputs.md"), false);
-      assertNone(yield* readLintPolicySeal(yield* fs.makeTempDirectoryScoped()));
+      const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped();
+      const readLintPolicySeal2 = yield* readLintPolicySeal(madeTempDirectoryScoped);
+      assertNone(readLintPolicySeal2);
     })
   );
 
@@ -362,16 +366,15 @@ layer(testLayer, { timeout: "60 seconds" })("lint policy change facts", (it) => 
       // Past the compile length guard, so the glob cannot be compiled.
       const prefix = `packages/demo/${Str.repeat(70_000)("a")}`;
       yield* fs.makeDirectory(path.join(root, "standards"), { recursive: true });
-      yield* fs.writeFileString(
-        path.join(root, "standards/policy-tools.fingerprint.json"),
-        yield* encodeJson({
-          schemaVersion: "policy-tools-fingerprint/v2",
-          shared: [`${prefix}*.json`],
-          sharedTasks: [],
-          check: [],
-          entries: [],
-        })
-      );
+      const argument = path.join(root, "standards/policy-tools.fingerprint.json");
+      const encodedJson1 = yield* encodeJson({
+        schemaVersion: "policy-tools-fingerprint/v2",
+        shared: [`${prefix}*.json`],
+        sharedTasks: [],
+        check: [],
+        entries: [],
+      });
+      yield* fs.writeFileString(argument, encodedJson1);
       const seal = yield* readLintPolicySeal(root);
       assertSome(
         O.map(seal, (isSealed) => isSealed(`${prefix}/x.json`)),
@@ -393,8 +396,10 @@ layer(testLayer, { timeout: "60 seconds" })("lint policy change facts", (it) => 
       yield* fs.makeDirectory(path.join(root, path.dirname(source)), { recursive: true });
       yield* fs.writeFileString(path.join(root, source), "export default {{{ not typescript\n");
       yield* fs.writeFileString(path.join(root, DOCS_OXLINT_CONFIG), `{ "jsPlugins": ["./${source}"] }`);
-      expect(yield* prepareDocsOxlintConfig(root)).toBe(DOCS_OXLINT_CONFIG);
-      expect(yield* fs.exists(path.join(root, PREBUILT_DOCS_OXLINT_CONFIG))).toBe(false);
+      const prepareDocsOxlintConfig3 = yield* prepareDocsOxlintConfig(root);
+      expect(prepareDocsOxlintConfig3).toBe(DOCS_OXLINT_CONFIG);
+      const exists4 = yield* fs.exists(path.join(root, PREBUILT_DOCS_OXLINT_CONFIG));
+      expect(exists4).toBe(false);
     })
   );
 
@@ -410,7 +415,8 @@ layer(testLayer, { timeout: "60 seconds" })("lint policy change facts", (it) => 
         path.join(root, DOCS_OXLINT_CONFIG),
         `{ // comments are JSONC\n "jsPlugins": ["./${source}"], "ignorePatterns": ["**/dist/**"] }\n`
       );
-      expect(yield* prepareDocsOxlintConfig(root)).toBe(PREBUILT_DOCS_OXLINT_CONFIG);
+      const prepareDocsOxlintConfig5 = yield* prepareDocsOxlintConfig(root);
+      expect(prepareDocsOxlintConfig5).toBe(PREBUILT_DOCS_OXLINT_CONFIG);
       const derived = yield* fs
         .readFileString(path.join(root, PREBUILT_DOCS_OXLINT_CONFIG))
         .pipe(Effect.flatMap(decodeJsonRecord));
@@ -418,15 +424,15 @@ layer(testLayer, { timeout: "60 seconds" })("lint policy change facts", (it) => 
         jsPlugins: ["./packages/tooling/policy-pack/lint-rules/.prebuilt/rules/docs.index.js"],
         ignorePatterns: ["**/dist/**"],
       });
-      expect(
-        yield* fs.readFileString(
-          path.join(root, "packages/tooling/policy-pack/lint-rules/.prebuilt/rules/docs.index.js")
-        )
-      ).toContain("beep");
+      const readFileString6 = yield* fs.readFileString(
+        path.join(root, "packages/tooling/policy-pack/lint-rules/.prebuilt/rules/docs.index.js")
+      );
+      expect(readFileString6).toContain("beep");
       // Only the bundle and the config remain: the staging directory is gone.
-      expect(
-        yield* fs.readDirectory(path.join(root, "packages/tooling/policy-pack/lint-rules/.prebuilt/rules"))
-      ).toEqual(["docs.index.js"]);
+      const readDirectory7 = yield* fs.readDirectory(
+        path.join(root, "packages/tooling/policy-pack/lint-rules/.prebuilt/rules")
+      );
+      expect(readDirectory7).toEqual(["docs.index.js"]);
     })
   );
 
@@ -435,11 +441,14 @@ layer(testLayer, { timeout: "60 seconds" })("lint policy change facts", (it) => 
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const missing = yield* fs.makeTempDirectoryScoped();
-      expect(yield* prepareDocsOxlintConfig(missing)).toBe(DOCS_OXLINT_CONFIG);
+      const prepareDocsOxlintConfig8 = yield* prepareDocsOxlintConfig(missing);
+      expect(prepareDocsOxlintConfig8).toBe(DOCS_OXLINT_CONFIG);
       const other = yield* fs.makeTempDirectoryScoped();
       yield* fs.writeFileString(path.join(other, DOCS_OXLINT_CONFIG), '{ "jsPlugins": ["./elsewhere.ts"] }');
-      expect(yield* prepareDocsOxlintConfig(other)).toBe(DOCS_OXLINT_CONFIG);
-      expect(yield* fs.exists(path.join(other, PREBUILT_DOCS_OXLINT_CONFIG))).toBe(false);
+      const prepareDocsOxlintConfig9 = yield* prepareDocsOxlintConfig(other);
+      expect(prepareDocsOxlintConfig9).toBe(DOCS_OXLINT_CONFIG);
+      const exists10 = yield* fs.exists(path.join(other, PREBUILT_DOCS_OXLINT_CONFIG));
+      expect(exists10).toBe(false);
       expect(A.drop(docsPluginBundleArgs("/out/docs.index.js"), 2)).toEqual([
         "--target=node",
         "--format=esm",

@@ -21,6 +21,15 @@ import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+class VocabularyTestOperationError extends S.TaggedError<
+  VocabularyTestOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "VocabularyTestOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in Vocabulary.test.ts." }
+) {}
+
 const seeds = [DocketingVocabulary, PartyKindVocabulary, LegalRoleVocabulary];
 const context = {
   skos: "http://www.w3.org/2004/02/skos/core#",
@@ -28,7 +37,11 @@ const context = {
   owl: "http://www.w3.org/2002/07/owl#",
 };
 const quote = S.encodeEffect(S.fromJsonString(S.String));
-const read = (path: string) => Effect.tryPromise(() => Bun.file(path).text()).pipe(Effect.orDie);
+const read = (path: string) =>
+  Effect.tryPromise({
+    try: () => Bun.file(path).text(),
+    catch: (cause) => VocabularyTestOperationError.make({ cause }),
+  }).pipe(Effect.orDie);
 const graph = (seed: VocabularySeed) => [
   { "@id": seed.schemeIri, "@type": "skos:ConceptScheme", "dct:title": seed.title, "owl:versionInfo": seed.version },
   ...A.map(seed.concepts, (c) => ({
@@ -76,7 +89,10 @@ it.layer(VocabularyRegistry.layer, { timeout: "30 seconds" })("pinned M3 vocabul
       Effect.fnUntraced(function* () {
         const json = yield* read(`src/seed/${file}.jsonld`).pipe(Effect.flatMap(S.decodeEffect(VocabularyJson)));
         expect(json).toEqual({ "@context": context, "@graph": A.flatMap(selected, graph) });
-        expect(yield* read(`src/seed/${file}.ttl`)).toBe(yield* ttl(selected));
+        const read1 = yield* read(`src/seed/${file}.ttl`);
+        const expectation = expect(read1);
+        const ttl1 = yield* ttl(selected);
+        expectation.toBe(ttl1);
       })
     );
   }
@@ -85,13 +101,13 @@ it.layer(VocabularyRegistry.layer, { timeout: "30 seconds" })("pinned M3 vocabul
     Effect.fnUntraced(function* () {
       const registry = yield* VocabularyRegistry;
       for (const seed of seeds) {
-        expect(yield* registry.load({ kind: seed.kind, version: seed.version })).toEqual(seed);
+        const loaded = yield* registry.load({ kind: seed.kind, version: seed.version });
+        expect(loaded).toEqual(seed);
         expect(seed.version).toBe("1.0.0");
         const own = HashSet.fromIterable(A.map(seed.concepts, (c) => c.iri));
         for (const concept of seed.concepts) {
-          expect(yield* registry.resolve({ kind: seed.kind, version: seed.version }, concept.notation)).toEqual(
-            concept
-          );
+          const resolved = yield* registry.resolve({ kind: seed.kind, version: seed.version }, concept.notation);
+          expect(resolved).toEqual(concept);
           expect(Str.startsWith($BeepId.iri)(concept.iri)).toBe(true);
           expect(Str.startsWith($BeepId.iri)(seed.schemeIri)).toBe(true);
           expect(A.every(concept.broader, (iri) => HashSet.has(own, iri))).toBe(true);
@@ -145,8 +161,9 @@ it.layer(VocabularyRegistry.layer, { timeout: "30 seconds" })("pinned M3 vocabul
       );
       const r = yield* VocabularyRegistry;
       expect(A.dedupe(A.map(fixtures, (f) => f.cq))).toEqual([1, 5, 7, 8, 18]);
-      for (const fixture of fixtures)
+      for (const fixture of fixtures) {
         expect((yield* r.resolve(fixture, fixture.notation)).iri).toBe(fixture.expectedIri);
+      }
     })
   );
   it.effect.prop(

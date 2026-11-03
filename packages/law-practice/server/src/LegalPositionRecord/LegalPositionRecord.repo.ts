@@ -187,21 +187,26 @@ export const makeInMemoryLegalPositionRecordRepository = Effect.fn("LegalPositio
 
   return LegalPositionRecordRepositoryShape.make({
     listCorrections: Effect.fn("LegalPositionRecord.listCorrections")(function* (scope: ActFrameRecordScope) {
-      return citingFrame(yield* Ref.get(corrections), scope);
+      const got = yield* Ref.get(corrections);
+      return citingFrame(got, scope);
     }),
     listExercises: Effect.fn("LegalPositionRecord.listExercises")(function* (scope: ActFrameRecordScope) {
-      return citingFrame(yield* Ref.get(exercises), scope);
+      const got1 = yield* Ref.get(exercises);
+      return citingFrame(got1, scope);
     }),
     listFrames: Effect.fn("LegalPositionRecord.listFrames")(function* (scope: LegalPositionRecordScope) {
-      return heldBy(yield* Ref.get(frames), scope);
+      const got2 = yield* Ref.get(frames);
+      return heldBy(got2, scope);
     }),
     listOppositionCandidates: Effect.fn("LegalPositionRecord.listOppositionCandidates")(function* (
       scope: LegalPositionRecordScope
     ) {
-      return heldBy(yield* Ref.get(candidates), scope);
+      const got3 = yield* Ref.get(candidates);
+      return heldBy(got3, scope);
     }),
     listRelators: Effect.fn("LegalPositionRecord.listRelators")(function* (scope: LegalPositionRecordScope) {
-      return heldBy(yield* Ref.get(relators), scope);
+      const got4 = yield* Ref.get(relators);
+      return heldBy(got4, scope);
     }),
     recordCorrection: Effect.fn("LegalPositionRecord.recordCorrection")(function* (correction: CorrectionDelta) {
       yield* Ref.update(corrections, A.append(correction));

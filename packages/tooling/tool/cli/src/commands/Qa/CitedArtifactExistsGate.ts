@@ -267,7 +267,8 @@ export const evaluateCitedArtifactExists: GateEvaluator<
   });
   const presentPaths = HashSet.fromIterable(A.getSomes(present));
   const missingPaths = A.filter(input.citedPaths, (citedPath) => !HashSet.has(presentPaths, citedPath));
-  const occurredAt = DateTime.formatIso(yield* DateTime.now);
+  const now1 = yield* DateTime.now;
+  const occurredAt = DateTime.formatIso(now1);
 
   return A.match(missingPaths, {
     onEmpty: () =>

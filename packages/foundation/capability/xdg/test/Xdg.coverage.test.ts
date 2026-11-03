@@ -32,10 +32,14 @@ describe("Xdg fallback coverage", () => {
     Effect.gen(function* () {
       const on = (platform: string) => currentPlatform.pipe(Effect.provideService(HostProcessPlatform, platform));
       // HostProcessPlatform reads "browser" when there is no `process` at all.
-      assert.strictEqual(yield* on("browser"), "linux");
-      assert.strictEqual(yield* on("unknown-os"), "linux");
-      assert.strictEqual(yield* on("darwin"), "darwin");
-      assert.strictEqual(yield* on("win32"), "win32");
+      const on1 = yield* on("browser");
+      assert.strictEqual(on1, "linux");
+      const on2 = yield* on("unknown-os");
+      assert.strictEqual(on2, "linux");
+      const on3 = yield* on("darwin");
+      assert.strictEqual(on3, "darwin");
+      const on4 = yield* on("win32");
+      assert.strictEqual(on4, "win32");
     })
   );
 });

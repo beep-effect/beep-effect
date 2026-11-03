@@ -4,11 +4,14 @@ import { decodeTestOperationIdentifiers } from "@beep/file-processing/test";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { O } from "@beep/utils";
 import * as Effect from "effect/Effect";
-import { dual, pipe } from "effect/Function";
+import { dual, identity, pipe } from "effect/Function";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { FileFormatFamily } from "@beep/file-processing/Strategy";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const decodePosixPath = S.decodeEffect(PosixPath);
 
@@ -87,14 +90,17 @@ export const tikaRmetaResponse: {
 } = dual(
   (args) => R.has(fixtureContent, args[0]),
   (format: TikaFixtureFormat, content: string = fixtureContent[format]): string =>
-    JSON.stringify([
-      {
-        "Content-Type": fixtureContentTypes[format],
-        "dc:title": `${format} fixture`,
-        "X-TIKA:Parsed-By": ["org.apache.tika.parser.CompositeParser", "org.apache.tika.parser.DefaultParser"],
-        ...(format === "image-metadata" ? {} : { "X-TIKA:content": content }),
-      },
-    ])
+    Result.getOrThrowWith(
+      S.encodeUnknownResult(UnknownJson)([
+        {
+          "Content-Type": fixtureContentTypes[format],
+          "dc:title": `${format} fixture`,
+          "X-TIKA:Parsed-By": ["org.apache.tika.parser.CompositeParser", "org.apache.tika.parser.DefaultParser"],
+          ...(format === "image-metadata" ? {} : { "X-TIKA:content": content }),
+        },
+      ]),
+      identity
+    )
 );
 
 type ExtractOperationOverrides = {

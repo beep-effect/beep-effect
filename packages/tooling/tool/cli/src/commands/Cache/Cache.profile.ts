@@ -118,5 +118,6 @@ export const verifyCacheIdentityLintProfile = Effect.fn("CacheProfile.verify")(f
 export const writeCacheIdentityLintProfile = Effect.fn("CacheProfile.write")(function* (
   root: string
 ): Effect.fn.Return<void, CacheCommandError | FsGuardError, FileSystem.FileSystem | Path.Path> {
-  yield* writeContainedFileString(root, profilePath, yield* renderFromRoot(root));
+  const renderFromRoot1 = yield* renderFromRoot(root);
+  yield* writeContainedFileString(root, profilePath, renderFromRoot1);
 }, CacheCommandError.mapError("Cannot write the generated identity lint profile."));

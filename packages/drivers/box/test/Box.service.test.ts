@@ -31,7 +31,7 @@ import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
-import { constVoid, pipe } from "effect/Function";
+import { constVoid, identity, pipe } from "effect/Function";
 import * as EffectLayer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -39,6 +39,8 @@ import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const decodeBBoxCcgConfig = S.decodeEffect(B.BoxCcgConfig);
 const decodeBEventEventTypeField = S.decodeEffect(B.EventEventTypeField);
@@ -499,9 +501,9 @@ describe("@beep/box", () => {
 
     for (const error of [sdkFailure, schemaFailure]) {
       const renderedForms = [
-        JSON.stringify(encode(B.BoxError, error)),
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(encode(B.BoxError, error)), identity),
         String(error),
-        JSON.stringify(error),
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(error), identity),
         Cause.fail(error).pipe(Cause.pretty),
       ];
 
@@ -641,7 +643,12 @@ describe("@beep/box", () => {
       makeFakeClient({
         users: {
           getUserMe: (_queryParams, _headersInput, _cancellationToken) =>
-            Promise.resolve(JSON.parse(`{"id":"user-id","type":"user","__proto__":{"polluted":true}}`)),
+            Promise.resolve(
+              Result.getOrThrowWith(
+                S.decodeResult(UnknownJson)(`{"id":"user-id","type":"user","__proto__":{"polluted":true}}`),
+                identity
+              )
+            ),
         },
       })
     ),
@@ -1059,7 +1066,8 @@ describe("@beep/box", () => {
         callerController.abort();
         yield* Effect.promise(() => generatedOptionalsCancellationProbe.aborted.promise);
         generatedOptionalsCancellationProbe.pending.resolve(undefined);
-        expect(yield* Fiber.join(fiber)).toBe("https://box.example/file-id");
+        const join1 = yield* Fiber.join(fiber);
+        expect(join1).toBe("https://box.example/file-id");
       });
     });
   });

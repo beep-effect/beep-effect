@@ -66,8 +66,12 @@ const writePackage = Effect.fnUntraced(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   yield* fs.makeDirectory(dir, { recursive: true });
-  yield* fs.writeFileString(path.join(dir, "package.json"), yield* Effect.orDie(manifestText(name, version)));
-  if (pnpmfile !== undefined) yield* fs.writeFileString(path.join(dir, pnpmfile[0]), pnpmfile[1]);
+  const argument = path.join(dir, "package.json");
+  const orDie1 = yield* Effect.orDie(manifestText(name, version));
+  yield* fs.writeFileString(argument, orDie1);
+  if (pnpmfile !== undefined) {
+    yield* fs.writeFileString(path.join(dir, pnpmfile[0]), pnpmfile[1]);
+  }
   return dir;
 });
 
@@ -90,7 +94,8 @@ export const installConfigDependency = Effect.fnUntraced(function* (
   version: string | undefined,
   pnpmfile?: Pnpmfile
 ): Effect.fn.Return<string, PlatformError.PlatformError, FixtureServices> {
-  return yield* writePackage(yield* installedDir(root, name), name, version, pnpmfile);
+  const installedDir1 = yield* installedDir(root, name);
+  return yield* writePackage(installedDir1, name, version, pnpmfile);
 });
 
 /**

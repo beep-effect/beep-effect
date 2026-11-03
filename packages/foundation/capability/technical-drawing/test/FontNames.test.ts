@@ -19,7 +19,8 @@ it.effect("falls back through platform tables separately for each font-name fiel
       },
     });
 
-    expect(yield* fontNamesOf("fixture.ttf", new Uint8Array([0]))).toEqual({
+    const fontNamesOf1 = yield* fontNamesOf("fixture.ttf", new Uint8Array([0]));
+    expect(fontNamesOf1).toEqual({
       family: "Primary Family",
       subfamily: "Regular",
     });
@@ -35,7 +36,8 @@ it.effect("falls back through platform tables separately for each font-name fiel
       },
     });
 
-    expect(yield* fontNamesOf("fixture.ttf", new Uint8Array([0]))).toEqual({
+    const fontNamesOf2 = yield* fontNamesOf("fixture.ttf", new Uint8Array([0]));
+    expect(fontNamesOf2).toEqual({
       family: "Famille",
       subfamily: "Regular",
     });

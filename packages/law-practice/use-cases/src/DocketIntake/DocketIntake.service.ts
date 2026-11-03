@@ -1348,7 +1348,8 @@ const startReview = Effect.fnUntraced(function* (
     return NotDocketItem.make({ messageId: message.messageId });
   }
   const context = yield* contextOf(ports, message, today);
-  const rounds = A.of(yield* firstRound(context, entry));
+  const firstRound1 = yield* firstRound(context, entry);
+  const rounds = A.of(firstRound1);
   yield* persistRounds(context, rounds);
   return yield* runReview(context, rounds);
 });

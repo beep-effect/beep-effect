@@ -53,7 +53,8 @@ const CommandTestLayer = Layer.effectDiscard(
         new URL(`./fixtures/agent-effectiveness/comparison/${name}`, import.meta.url)
       );
       yield* fs.makeDirectory(path.dirname(target), { recursive: true });
-      yield* fs.writeFileString(target, yield* encodeFixture(receipt));
+      const encodedFixture = yield* encodeFixture(receipt);
+      yield* fs.writeFileString(target, encodedFixture);
     }
   })
 ).pipe(
@@ -66,12 +67,12 @@ const decodeDatasetBundle = S.decodeUnknownEffect(S.fromJsonString(AgentEffectiv
 const decodePhoenixSyncResult = S.decodeUnknownEffect(S.fromJsonString(AgentEffectivenessPhoenixSyncResult));
 const decodePromptBundle = S.decodeUnknownEffect(S.fromJsonString(AgentEffectivenessPromptBundle));
 const decodeConventionComparison = S.decodeUnknownEffect(S.fromJsonString(AgentConventionComparison));
-const decodeDoctorReportResult = S.decodeUnknownResult(S.fromJsonString(AgentEffectivenessDoctorReport));
+const decodeDoctorReportResult = S.decodeResult(S.fromJsonString(AgentEffectivenessDoctorReport));
 const decodeAnnotationCheckReportResult = S.decodeUnknownResult(
   S.fromJsonString(AgentEffectivenessAnnotationCheckReport)
 );
-const decodePhoenixSyncResultResult = S.decodeUnknownResult(S.fromJsonString(AgentEffectivenessPhoenixSyncResult));
-const decodePromptBundleResult = S.decodeUnknownResult(S.fromJsonString(AgentEffectivenessPromptBundle));
+const decodePhoenixSyncResultResult = S.decodeResult(S.fromJsonString(AgentEffectivenessPhoenixSyncResult));
+const decodePromptBundleResult = S.decodeResult(S.fromJsonString(AgentEffectivenessPromptBundle));
 const encodeDoctorReportResult = S.encodeUnknownResult(S.fromJsonString(AgentEffectivenessDoctorReport));
 const encodeAnnotationCheckReportResult = S.encodeUnknownResult(
   S.fromJsonString(AgentEffectivenessAnnotationCheckReport)
@@ -124,7 +125,8 @@ const withPhoenixBaseUrlEnv = <A, E, R>(phoenixBaseUrl: string, use: Effect.Effe
   );
 
 const lastLoggedLine = Effect.fn("AgentEffectivenessCommandTest.lastLoggedLine")(function* () {
-  const last = pipe(yield* TestConsole.logLines, A.last);
+  const logLines1 = yield* TestConsole.logLines;
+  const last = pipe(logLines1, A.last);
   if (last._tag === "Some") {
     return last.value;
   }
@@ -152,7 +154,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("agent-
           candidate,
           "--fail-incomparable",
         ]);
-        const report = yield* decodeConventionComparison(yield* lastLoggedLine());
+        const lastLoggedLine2 = yield* lastLoggedLine();
+        const report = yield* decodeConventionComparison(lastLoggedLine2);
         expect(report.result).toMatchObject({ _tag: "Comparable", changedSurface: "navigation" });
         expect(report.baseline.runId).not.toBe(report.candidate.runId);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -168,14 +171,13 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("agent-
         );
         const args = ["evals", "compare", "--baseline", baseline, "--candidate", baseline];
         yield* runAgentEffectivenessCommand(args);
-        const report = yield* decodeConventionComparison(yield* lastLoggedLine());
+        const lastLoggedLine3 = yield* lastLoggedLine();
+        const report = yield* decodeConventionComparison(lastLoggedLine3);
         expect(report.result).toEqual({ _tag: "Incomparable", reasons: ["run-reused", "surface-count"] });
-        expectReportedExit(
-          yield* Effect.exit(runAgentEffectivenessCommand(A.append(args, "--fail-incomparable"))),
-          1,
-          true
-        );
-        const gatedReport = yield* decodeConventionComparison(yield* lastLoggedLine());
+        const exit4 = yield* Effect.exit(runAgentEffectivenessCommand(A.append(args, "--fail-incomparable")));
+        expectReportedExit(exit4, 1, true);
+        const lastLoggedLine5 = yield* lastLoggedLine();
+        const gatedReport = yield* decodeConventionComparison(lastLoggedLine5);
         expect(gatedReport).toEqual(report);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -196,7 +198,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("agent-
           runAgentEffectivenessCommand(["evals", "compare", "--baseline", malformed, "--candidate", malformed])
         );
         expectReportedExit(exit, 1, true);
-        expect(yield* TestConsole.logLines).toEqual([]);
+        const logLines6 = yield* TestConsole.logLines;
+        expect(logLines6).toEqual([]);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
   });

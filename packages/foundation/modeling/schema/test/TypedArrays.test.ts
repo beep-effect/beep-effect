@@ -28,7 +28,8 @@ describe("Float16Array schemas", () => {
     Effect.fnUntraced(function* () {
       const value = new Float16Array([1, 2, 3]);
 
-      expect(yield* decodeFloat16Arr(value)).toBe(value);
+      const decodedFloat16Arr = yield* decodeFloat16Arr(value);
+      expect(decodedFloat16Arr).toBe(value);
     })
   );
 
@@ -49,7 +50,8 @@ describe("Float16Array schemas", () => {
     [Arbitrary.schema(Float16ArrayFromArray)],
     Effect.fnUntraced(function* ([value]) {
       expect(value).toBeInstanceOf(Float16Array);
-      const decoded = yield* decodeUnknownFloat16ArrayFromArray(yield* encodeFloat16ArrayFromArray(value));
+      const encodedFloat16ArrayFromArray = yield* encodeFloat16ArrayFromArray(value);
+      const decoded = yield* decodeUnknownFloat16ArrayFromArray(encodedFloat16ArrayFromArray);
       expect(decoded).toBeInstanceOf(Float16Array);
       expect(A.fromIterable(decoded)).toEqual(A.fromIterable(value));
 
@@ -65,7 +67,8 @@ describe("Float32Array schemas", () => {
     Effect.fnUntraced(function* () {
       const value = new Float32Array([1, 2, 3]);
 
-      expect(yield* decodeFloat32Arr(value)).toBe(value);
+      const decodedFloat32Arr = yield* decodeFloat32Arr(value);
+      expect(decodedFloat32Arr).toBe(value);
     })
   );
 
@@ -86,7 +89,8 @@ describe("Float32Array schemas", () => {
     [Arbitrary.schema(Float32ArrayFromArray)],
     Effect.fnUntraced(function* ([value]) {
       expect(value).toBeInstanceOf(Float32Array);
-      const decoded = yield* decodeUnknownFloat32ArrayFromArray(yield* encodeFloat32ArrayFromArray(value));
+      const encodedFloat32ArrayFromArray = yield* encodeFloat32ArrayFromArray(value);
+      const decoded = yield* decodeUnknownFloat32ArrayFromArray(encodedFloat32ArrayFromArray);
       expect(decoded).toBeInstanceOf(Float32Array);
       expect(A.fromIterable(decoded)).toEqual(A.fromIterable(value));
 
@@ -102,7 +106,8 @@ describe("Float64Array schemas", () => {
     Effect.fnUntraced(function* () {
       const value = new Float64Array([1, 2, 3]);
 
-      expect(yield* decodeFloat64Arr(value)).toBe(value);
+      const decodedFloat64Arr = yield* decodeFloat64Arr(value);
+      expect(decodedFloat64Arr).toBe(value);
     })
   );
 
@@ -123,7 +128,8 @@ describe("Float64Array schemas", () => {
     [Arbitrary.schema(Float64ArrayFromArray)],
     Effect.fnUntraced(function* ([value]) {
       expect(value).toBeInstanceOf(Float64Array);
-      const decoded = yield* decodeUnknownFloat64ArrayFromArray(yield* encodeFloat64ArrayFromArray(value));
+      const encodedFloat64ArrayFromArray = yield* encodeFloat64ArrayFromArray(value);
+      const decoded = yield* decodeUnknownFloat64ArrayFromArray(encodedFloat64ArrayFromArray);
       expect(decoded).toBeInstanceOf(Float64Array);
       expect(A.fromIterable(decoded)).toEqual(A.fromIterable(value));
 

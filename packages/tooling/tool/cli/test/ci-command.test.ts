@@ -81,7 +81,8 @@ describe("CI commands", () => {
           const result = yield* Effect.exit(runCiLaneCommand(args));
           expect(result._tag).toBe("Failure");
         }
-        const errors = A.join(A.filter(yield* TestConsole.errorLines, isString), "\n");
+        const errorLines1 = yield* TestConsole.errorLines;
+        const errors = A.join(A.filter(errorLines1, isString), "\n");
         expect(errors).toContain("--compare-only and --coverage-input must be used together");
         expect(errors).toContain("Instrumented Test Unit execution requires --partition");
         expect(errors).toContain("--coverage-output requires a Test Unit partition or the Labs lane");
@@ -94,14 +95,16 @@ describe("CI commands", () => {
     it.effect("runs", () =>
       Effect.gen(function* () {
         const exit = yield* Effect.exit(runCiLaneCommand(["lint", "--partition", "unit-a"]));
-        const errors = A.join(A.filter(yield* TestConsole.errorLines, isString), "\n");
+        const errorLines2 = yield* TestConsole.errorLines;
+        const errors = A.join(A.filter(errorLines2, isString), "\n");
 
         expect(exit._tag).toBe("Failure");
         expect(errors).toContain("Partition unit-a does not belong to lane lint");
         expect(errors).toContain("CiLanePartitions.ts");
 
         const shardedExit = yield* Effect.exit(runCiLaneCommand(["lint", "--partition", "repo-cli-2"]));
-        const shardedErrors = A.join(A.filter(yield* TestConsole.errorLines, isString), "\n");
+        const errorLines3 = yield* TestConsole.errorLines;
+        const shardedErrors = A.join(A.filter(errorLines3, isString), "\n");
         expect(shardedExit._tag).toBe("Failure");
         expect(shardedErrors).toContain("Partition repo-cli-2 does not belong to lane lint");
         expect(shardedErrors).not.toContain("Invalid value");
@@ -113,7 +116,8 @@ describe("CI commands", () => {
     it.effect("runs", () =>
       Effect.gen(function* () {
         const exit = yield* Effect.exit(runCiLaneCommand(["lint", "--force"]));
-        const errors = A.join(A.filter(yield* TestConsole.errorLines, isString), "\n");
+        const errorLines4 = yield* TestConsole.errorLines;
+        const errors = A.join(A.filter(errorLines4, isString), "\n");
 
         expect(exit._tag).toBe("Failure");
         expect(errors).toContain("--force requires --partition");
@@ -148,7 +152,8 @@ describe("CI commands", () => {
           yield* runCiLocal({ affected: false, base: "origin/main", fast: false, lanes: O.some(",") }).pipe(
             Effect.provideService(Git, Git.makeTest({ currentBranch: () => Effect.succeedNone }))
           );
-          expect(A.filter(yield* TestConsole.logLines, isString)).toContain("[ci] local battery: ");
+          const logLines5 = yield* TestConsole.logLines;
+          expect(A.filter(logLines5, isString)).toContain("[ci] local battery: ");
         })
       )
     );
@@ -214,7 +219,8 @@ describe("CI commands", () => {
           const recording = ActionOutputs.recording();
           yield* appendTurboSummary(O.some(summaryPath)).pipe(provideScopedLayer(recording.layer), offRunner);
 
-          const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+          const logLines6 = yield* TestConsole.logLines;
+          const output = A.join(A.filter(logLines6, isString), "\n");
           expect(output).toContain("## Turbo Summary");
           expect(output).toContain("Attempted tasks: 1");
           expect(output).toContain("`@beep/repo-cli#test`");
@@ -234,7 +240,8 @@ describe("CI commands", () => {
           const rendered = A.map(published.entries(), (entry) => entry.value);
           expect(A.length(rendered)).toBe(1);
           yield* appendTurboSummary(O.some(summaryPath)).pipe(provideScopedLayer(CiRunnerOutputsLive), onRunner);
-          expect(yield* fs.readFileString(stepSummary)).toBe(`prior\n${rendered[0] ?? ""}`);
+          const readFileString7 = yield* fs.readFileString(stepSummary);
+          expect(readFileString7).toBe(`prior\n${rendered[0] ?? ""}`);
         })
       )
     );
@@ -275,7 +282,8 @@ describe("CI commands", () => {
             offRunner
           );
 
-          const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+          const logLines8 = yield* TestConsole.logLines;
+          const output = A.join(A.filter(logLines8, isString), "\n");
           expect(O.getOrNull(Str.match(/## Turbo Summary/gu)(output)) ?? []).toHaveLength(2);
           expect(output).toContain("`@beep/repo-cli#build`");
           expect(output).toContain("`@beep/repo-cli#coverage`");

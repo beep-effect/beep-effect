@@ -65,12 +65,15 @@ it.layer(nativeLifecycleLayer, { excludeTestServices: true, timeout: "10 seconds
         const handle = yield* Deferred.await(started).pipe(Effect.timeout("5 seconds"));
         // A failing assertion must not leave this deliberately long-lived child.
         yield* Effect.addFinalizer(() => handle.kill({ killSignal: "SIGKILL" }).pipe(Effect.ignore));
-        expect(yield* handle.isRunning).toBe(true);
+        const isRunning1 = yield* handle.isRunning;
+        expect(isRunning1).toBe(true);
 
         yield* Fiber.interrupt(probe).pipe(Effect.timeout("5 seconds"));
 
-        expect(Exit.hasInterrupts(yield* Fiber.await(probe))).toBe(true);
-        expect(yield* handle.isRunning).toBe(false);
+        const await2 = yield* Fiber.await(probe);
+        expect(Exit.hasInterrupts(await2)).toBe(true);
+        const isRunning3 = yield* handle.isRunning;
+        expect(isRunning3).toBe(false);
       }),
       20_000
     );

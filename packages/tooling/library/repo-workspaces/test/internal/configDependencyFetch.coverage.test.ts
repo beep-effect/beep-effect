@@ -47,7 +47,8 @@ const linksAt =
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const scratch = args[args.indexOf("--dir") + 1] ?? "";
-      assert.strictEqual(yield* fs.readFileString(path.join(scratch, "pnpm-lock.yaml")), SCRATCH_LOCKFILE);
+      const readFileString1 = yield* fs.readFileString(path.join(scratch, "pnpm-lock.yaml"));
+      assert.strictEqual(readFileString1, SCRATCH_LOCKFILE);
       const target = path.join(scratch, relative);
       yield* fs.makeDirectory(target, { recursive: true });
       yield* fs.writeFileString(path.join(target, "package.json"), manifest);
@@ -107,7 +108,8 @@ it.effect("own __proto__ and normal registry scopes survive extraction and scrat
       yaml,
       'configDependencies:\n  "config": "1.0.0"\nregistry: "https://default.test"\nregistries:\n  "__proto__": "https://proto.test"\n  "@normal": "https://normal.test"\n'
     );
-    assert.deepStrictEqual(registrySettingsOf(yield* Yaml.parse(yaml)), settings);
+    const parsed = yield* Yaml.parse(yaml);
+    assert.deepStrictEqual(registrySettingsOf(parsed), settings);
     for (const input of [undefined, null, 42, [], { registry: 42, registries: [] }]) {
       assert.deepStrictEqual(registrySettingsOf(input), RegistrySettings.make({ registries: {} }));
     }
@@ -127,7 +129,8 @@ it.effect("string JSON quoting preserves hostile YAML scalar text and the final 
       yaml,
       'configDependencies:\n  "config\\"\\n: #": "1.0.0\\\\\\t"\nregistry: "https://r.test/\\"\\n"\nregistries:\n  "@x\\"\\n": "https://s.test/\\\\"\n'
     );
-    assert.deepStrictEqual(yield* Yaml.parse(yaml), {
+    const parsed2 = yield* Yaml.parse(yaml);
+    assert.deepStrictEqual(parsed2, {
       configDependencies: { [name]: version },
       registry: 'https://r.test/"\n',
       registries: { '@x"\n': "https://s.test/\\" },
@@ -146,7 +149,8 @@ it.effect("string JSON quoting preserves hostile YAML scalar text and the final 
         const resolved = yield* fetchOnce;
         assert.include(resolved, "/links/config/1.0.0/");
         // The store copy lived under the scratch workspace, which is removed.
-        assert.isFalse(yield* fs.exists(resolved));
+        const exists3 = yield* fs.exists(resolved);
+        assert.isFalse(exists3);
       })
     );
   });
@@ -215,7 +219,8 @@ it.effect("string JSON quoting preserves hostile YAML scalar text and the final 
         const resolved = yield* fetchOnce;
         assert.include(resolved, "/links/config/1.0.0/");
         const scratch = world.fake.scripted.spawns.at(-1)?.args[3] ?? "";
-        assert.isTrue(yield* fs.exists(scratch));
+        const exists4 = yield* fs.exists(scratch);
+        assert.isTrue(exists4);
       })
     );
   });

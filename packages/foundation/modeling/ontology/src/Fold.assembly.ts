@@ -324,7 +324,7 @@ const decodeLanguageTag = S.decodeUnknownOption(LanguageTag);
 
 const resolveTypedLiteral = Effect.fnUntraced(function* (vocab: VocabShape, literal: TypedLiteral) {
   const datatypeIri =
-    literal.datatype === undefined ? O.none<IRI>() : O.some(yield* resolveStringTerm(vocab, literal.datatype));
+    literal.datatype === undefined ? O.none<IRI>() : yield* Effect.asSome(resolveStringTerm(vocab, literal.datatype));
 
   return FactLiteral.make({
     value: literal.value,

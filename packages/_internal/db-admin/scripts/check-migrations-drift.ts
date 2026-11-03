@@ -43,7 +43,8 @@ const program = Effect.scoped(
     const scratchRoot = yield* fs.makeTempDirectoryScoped({ prefix: "db-admin-migrations-drift-" });
     const scratch = path.join(scratchRoot, "drizzle");
     yield* fs.copy(drizzleFolder, scratch);
-    const before = HashSet.fromIterable(yield* fs.readDirectory(scratch));
+    const readDirectory1 = yield* fs.readDirectory(scratch);
+    const before = HashSet.fromIterable(readDirectory1);
 
     const exitCode = yield* spawner.exitCode(
       ChildProcess.make(
@@ -71,13 +72,15 @@ const program = Effect.scoped(
       });
     }
 
-    const newFolders = A.filter(yield* fs.readDirectory(scratch), (entry) => !HashSet.has(before, entry));
+    const readDirectory2 = yield* fs.readDirectory(scratch);
+    const newFolders = A.filter(readDirectory2, (entry) => !HashSet.has(before, entry));
     if (A.isReadonlyArrayNonEmpty(newFolders)) {
       yield* Effect.forEach(
         newFolders,
         Effect.fnUntraced(function* (folder) {
           yield* Console.error(`--- pending migration ${folder} ---`);
-          yield* Console.error(yield* fs.readFileString(path.join(scratch, folder, "migration.sql")));
+          const readFileString3 = yield* fs.readFileString(path.join(scratch, folder, "migration.sql"));
+          yield* Console.error(readFileString3);
         }),
         { discard: true }
       );

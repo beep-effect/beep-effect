@@ -428,7 +428,8 @@ describe("SpanFromMatch", () => {
 describe("MatchedTextFromScored", () => {
   it.effect("drops the similarity score on decode", () =>
     Effect.gen(function* () {
-      expect(yield* decodeMatchedTextFromScored([0, "Acme.", 0.8])).toStrictEqual([0, "Acme."]);
+      const decodedMatchedTextFromScored = yield* decodeMatchedTextFromScored([0, "Acme.", 0.8]);
+      expect(decodedMatchedTextFromScored).toStrictEqual([0, "Acme."]);
     })
   );
 
@@ -449,7 +450,8 @@ describe("AlignedMatchFromMatchedText", () => {
       const aligned = yield* decodeExactMatch([0, "Ada"]);
 
       expect(aligned).toStrictEqual(["match_exact", 0, "Ada"]);
-      expect(yield* encodeExactMatch(aligned)).toStrictEqual([0, "Ada"]);
+      const encodedExactMatch = yield* encodeExactMatch(aligned);
+      expect(encodedExactMatch).toStrictEqual([0, "Ada"]);
     })
   );
 });

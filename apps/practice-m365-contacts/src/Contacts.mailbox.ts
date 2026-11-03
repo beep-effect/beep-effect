@@ -171,8 +171,10 @@ export const contactsMailboxLayer = (mailbox: string) =>
           const folder = item.value;
           if (HashSet.has(seen, folder.id)) continue;
           seen = HashSet.add(seen, folder.id);
-          rows = A.appendAll(rows, yield* contactsIn(O.some(folder.id)));
-          folders = A.appendAll(folders, yield* foldersUnder(O.some(folder.id)));
+          const contactsIn1 = yield* contactsIn(O.some(folder.id));
+          rows = A.appendAll(rows, contactsIn1);
+          const foldersUnder2 = yield* foldersUnder(O.some(folder.id));
+          folders = A.appendAll(folders, foldersUnder2);
         }
         return MailboxInventory.make({
           folders: A.dedupeWith(folders, (a, b) => a.id === b.id),

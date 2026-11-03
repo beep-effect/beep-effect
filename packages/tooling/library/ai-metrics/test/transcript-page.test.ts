@@ -49,7 +49,8 @@ const decodeTranscriptCursorJson = S.decodeEffect(S.fromJsonString(TranscriptCur
 const encodeTranscriptCursorJson = S.encodeEffect(S.fromJsonString(TranscriptCursor));
 
 const retryCursor = Effect.fn("TranscriptPageTest.retryCursor")(function* (cursor: TranscriptCursor) {
-  return yield* decodeTranscriptCursorJson(yield* encodeTranscriptCursorJson(cursor));
+  const encodedTranscriptCursorJson = yield* encodeTranscriptCursorJson(cursor);
+  return yield* decodeTranscriptCursorJson(encodedTranscriptCursorJson);
 });
 const encodeTranscriptPageJson = S.encodeEffect(S.fromJsonString(TranscriptPage));
 
@@ -73,9 +74,11 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "20 seconds" })(
         const before = yield* fs.readFile(path);
         const retry = yield* readTranscriptPage(input(path));
         expect(retry.frames).toEqual(first.frames);
-        expect(yield* fs.readFile(path)).toEqual(before);
+        const readFile1 = yield* fs.readFile(path);
+        expect(readFile1).toEqual(before);
         yield* fs.writeFileString(path, '"type":"response_item","payload":{"type":"message"}}\n', { flag: "a" });
-        const second = yield* readTranscriptPage(input(path, O.some(yield* retryCursor(first.cursor))));
+        const retryCursor2 = yield* retryCursor(first.cursor);
+        const second = yield* readTranscriptPage(input(path, O.some(retryCursor2)));
         expect(second.reset).toBe("none");
         expect(second.frames).toHaveLength(1);
         expect(second.cursor.lineNumber).toBe(3);
@@ -149,7 +152,8 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "20 seconds" })(
         expect(first.bytesRead).toBeLessThanOrEqual(2 * 256 + 1281);
         yield* fs.writeFileString(path, '\n{"type":"response_item","payload":{"type":"message"}}\n', { flag: "a" });
         const second = yield* readTranscriptPage(input(path, O.some(first.cursor), 256, 128));
-        const third = yield* readTranscriptPage(input(path, O.some(yield* retryCursor(second.cursor)), 256, 128));
+        const retryCursor3 = yield* retryCursor(second.cursor);
+        const third = yield* readTranscriptPage(input(path, O.some(retryCursor3), 256, 128));
         expect(third.frames[0]).toMatchObject({ _tag: "Rejected", reason: "line-too-long", complete: true });
         expect(third.frames[0]?.occurrenceId).toBe(first.frames[0]?.occurrenceId);
         expect(third.frames[1]?._tag).toBe("Accepted");
@@ -281,7 +285,8 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "20 seconds" })(
         );
         expect(error).toContain("unavailable");
         expect(error).not.toContain(path);
-        expect(yield* fs.readFileString(path)).toBe(`${yield* message}\n`);
+        const readFileString4 = yield* fs.readFileString(path);
+        expect(readFileString4).toBe(`${yield* message}\n`);
       })
     );
     it.effect("refuses directories and symlinks before consuming source bytes", () =>

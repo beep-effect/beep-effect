@@ -27,7 +27,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>, generation: S.Sch
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assertTrue(equivalent(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -74,12 +75,14 @@ it.effect.prop(
     Effect.gen(function* () {
       const parsed = yield* S.decodeEffect(DependencySpecifier.FromString)(text);
       assert.strictEqual(parsed.raw, text);
-      assert.strictEqual(yield* DependencySpecifier.decode(text), text);
+      const decoded2 = yield* DependencySpecifier.decode(text);
+      assert.strictEqual(decoded2, text);
       const formatted = yield* S.encodeEffect(DependencySpecifier.FromString)(parsed);
       assert.strictEqual(formatted, text);
       const reparsed = yield* S.decodeEffect(DependencySpecifier.FromString)(formatted);
       assertTrue(S.toEquivalence(DependencySpecifier.FromString)(parsed, reparsed));
-      assert.strictEqual(yield* S.encodeEffect(DependencySpecifier.FromString)(reparsed), formatted);
+      const value3 = yield* S.encodeEffect(DependencySpecifier.FromString)(reparsed);
+      assert.strictEqual(value3, formatted);
     }),
   runs
 );
@@ -121,7 +124,8 @@ it.effect.prop(
         // Published ranges and npm aliases no longer need workspace resolution.
         assertTrue(DependencySpecifier.isValid(formatted));
         const published = yield* S.decodeEffect(DependencySpecifier.FromString)(formatted);
-        assert.strictEqual(yield* S.encodeEffect(DependencySpecifier.FromString)(published), formatted);
+        const value4 = yield* S.encodeEffect(DependencySpecifier.FromString)(published);
+        assert.strictEqual(value4, formatted);
         assert.strictEqual(DependencySpecifier.resolveWorkspace(formatted, version), formatted);
       }
     }),

@@ -189,7 +189,8 @@ describe("ActionCache", () => {
             [...(O.getOrUndefined(MutableHashMap.get(blobs, url)) ?? []).slice(0, 2)],
             [0x1f, 0x8b]
           );
-          assert.strictEqual(yield* fs.readFileString(file), "cached contents");
+          const readFileString1 = yield* fs.readFileString(file);
+          assert.strictEqual(readFileString1, "cached contents");
         })
       );
     });
@@ -228,7 +229,8 @@ describe("ActionCache", () => {
           yield* fs.remove(file);
           yield* Effect.flatMap(ActionCache, (cache) => cache.restore([file], "k"));
           // The whole claim of a cache, and the one an in-memory double cannot make.
-          assert.strictEqual(yield* fs.readFileString(file), "recovered");
+          const readFileString2 = yield* fs.readFileString(file);
+          assert.strictEqual(readFileString2, "recovered");
         })
       );
     });
@@ -256,8 +258,12 @@ describe("ActionCache", () => {
           // Sorting the paths would be the obvious tidy-up and would compute a
           // version no other cache step in the workflow agrees with — the entry a
           // sibling `actions/cache` step wrote would simply never be found.
-          assert.strictEqual(calls[0]?.body.version, yield* versionOf(["b", "a"]));
-          assert.notStrictEqual(yield* versionOf(["b", "a"]), yield* versionOf(["a", "b"]));
+          const argument = calls[0]?.body.version;
+          const versionOf1 = yield* versionOf(["b", "a"]);
+          assert.strictEqual(argument, versionOf1);
+          const versionOf3 = yield* versionOf(["b", "a"]);
+          const versionOf14 = yield* versionOf(["a", "b"]);
+          assert.notStrictEqual(versionOf3, versionOf14);
         })
       );
     });
@@ -670,10 +676,13 @@ describe("ActionCache", () => {
             yield* fs.remove(join(root, "b"), { recursive: true });
             yield* fs.remove(bystander);
             yield* Effect.flatMap(ActionCache, (cache) => cache.restore([`${root}/**/node_modules`], "k"));
-            assert.strictEqual(yield* fs.readFileString(aDep), `contents of ${aDep}`);
-            assert.strictEqual(yield* fs.readFileString(bDep), `contents of ${bDep}`);
+            const readFileString4 = yield* fs.readFileString(aDep);
+            assert.strictEqual(readFileString4, `contents of ${aDep}`);
+            const readFileString5 = yield* fs.readFileString(bDep);
+            assert.strictEqual(readFileString5, `contents of ${bDep}`);
             // The bystander never matched, so the archive must not resurrect it.
-            assert.isFalse(yield* fs.exists(bystander));
+            const exists6 = yield* fs.exists(bystander);
+            assert.isFalse(exists6);
           })
         );
       });
@@ -711,8 +720,12 @@ describe("ActionCache", () => {
             yield* Effect.flatMap(ActionCache, (cache) => cache.restore(literals, "k"));
             const create = O.getOrUndefined(A.findFirst(calls, (call) => call.method === "CreateCacheEntry"));
             const lookup = O.getOrUndefined(A.findFirst(calls, (call) => call.method === "GetCacheEntryDownloadURL"));
-            assert.strictEqual(create?.body.version, yield* versionOf(literals));
-            assert.strictEqual(lookup?.body.version, yield* versionOf(literals));
+            const argument1 = create?.body.version;
+            const versionOf2 = yield* versionOf(literals);
+            assert.strictEqual(argument1, versionOf2);
+            const argument2 = lookup?.body.version;
+            const versionOf4 = yield* versionOf(literals);
+            assert.strictEqual(argument2, versionOf4);
           })
         );
       });
@@ -819,7 +832,8 @@ describe("ActionCache", () => {
             yield* Effect.flatMap(ActionCache, (cache) => cache.save(["**/node_modules"], "k"));
             yield* fs.remove(join(root, "a"), { recursive: true });
             yield* Effect.flatMap(ActionCache, (cache) => cache.restore(["**/node_modules"], "k"));
-            assert.strictEqual(yield* fs.readFileString(aDep), `contents of ${aDep}`);
+            const readFileString7 = yield* fs.readFileString(aDep);
+            assert.strictEqual(readFileString7, `contents of ${aDep}`);
           })
         );
       });
@@ -884,8 +898,10 @@ describe("ActionCache", () => {
             yield* fs.remove(join(root, "a"), { recursive: true });
             yield* fs.remove(join(root, "b"), { recursive: true });
             yield* Effect.flatMap(ActionCache, (cache) => cache.restore(patterns, "k"));
-            assert.strictEqual(yield* fs.readFileString(aDep), `contents of ${aDep}`);
-            assert.isFalse(yield* fs.exists(bDep));
+            const readFileString8 = yield* fs.readFileString(aDep);
+            assert.strictEqual(readFileString8, `contents of ${aDep}`);
+            const exists9 = yield* fs.exists(bDep);
+            assert.isFalse(exists9);
           })
         );
       });
@@ -928,7 +944,9 @@ describe("ActionCache", () => {
         const { join } = yield* Path.Path;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "effected-cache-test-" });
         const files = [join(root, "payload\nnext.txt"), join(root, "payload\rnext.txt")];
-        for (const file of files) yield* fs.writeFileString(file, "unsafe manifest name");
+        for (const file of files) {
+          yield* fs.writeFileString(file, "unsafe manifest name");
+        }
         let uploads = 0;
         const transfer: FileBlobTransfer = {
           uploadFile: dual(2, (_url: string, _file: string) =>
@@ -988,7 +1006,9 @@ describe("ActionCache", () => {
         yield* fs.makeDirectory(nested, { recursive: true });
         const deep = join(nested, "deep.txt");
         const files = [join(directory, "top.txt"), deep];
-        for (const file of files) yield* fs.writeFileString(file, "stored once");
+        for (const file of files) {
+          yield* fs.writeFileString(file, "stored once");
+        }
         const broken = join(directory, "broken-link");
         yield* fs.symlink(join(root, "missing-target"), broken);
         const other = join(root, "tree-sibling.txt");
@@ -1033,10 +1053,8 @@ describe("ActionCache", () => {
           Effect.gen(function* () {
             const { directory, files, broken, other, alias, archived, patterns, calls, spying } = yield* Fixture26;
             yield* (yield* ActionCache).save(patterns, "recursive");
-            const listing = yield* spawnOnce(
-              yield* ChildProcessSpawner.ChildProcessSpawner,
-              ChildProcess.make("tar", ["tzPf", archived])
-            );
+            const ChildProcessSpawner10 = yield* ChildProcessSpawner.ChildProcessSpawner;
+            const listing = yield* spawnOnce(ChildProcessSpawner10, ChildProcess.make("tar", ["tzPf", archived]));
             assert.strictEqual(listing.code, 0);
             const members = Str.split(listing.output, "\n");
             for (const file of [...files, broken, other, alias, `${alias}/linked.txt`]) {
@@ -1051,7 +1069,9 @@ describe("ActionCache", () => {
               O.map(create, (spawn) => spawn.manifest),
               `${other}\n${directory}\n${alias}\n${alias}/linked.txt\n`
             );
-            assert.strictEqual(calls[0]?.body.version, yield* versionOf(patterns));
+            const argument3 = calls[0]?.body.version;
+            const versionOf5 = yield* versionOf(patterns);
+            assert.strictEqual(argument3, versionOf5);
           })
         );
       });
@@ -1137,8 +1157,10 @@ describe("ActionCache", () => {
               yield* fs.remove(deep, { recursive: true });
               yield* Effect.flatMap(ActionCache, (cache) => cache.restore([pattern], "k"));
               // The real-IO round trip held at manifest scale.
-              assert.strictEqual(yield* fs.readFileString(files[0] ?? ""), "payload 0");
-              assert.strictEqual(yield* fs.readFileString(files[2799] ?? ""), "payload 2799");
+              const readFileString11 = yield* fs.readFileString(files[0] ?? "");
+              assert.strictEqual(readFileString11, "payload 0");
+              const readFileString12 = yield* fs.readFileString(files[2799] ?? "");
+              assert.strictEqual(readFileString12, "payload 2799");
 
               // The create invocation carried `-T <manifest>` and not one
               // resolved path; the manifest listed every match.
@@ -1208,7 +1230,8 @@ describe("ActionCache", () => {
             // restore — a store-sized literal must not cost a full enumeration
             // that can admit nothing. tar's recursion still archived the
             // contents, which is what the round trip above proves.
-            assert.strictEqual(yield* fs.readFileString(join(store, "v3", "entry.txt")), "stored");
+            const readFileString13 = yield* fs.readFileString(join(store, "v3", "entry.txt"));
+            assert.strictEqual(readFileString13, "stored");
             assert.strictEqual(counting.reads(), 0, "a literal-only resolution must not enumerate the directory");
             // The control: a wildcard below the same root MUST enumerate —
             // proof the counter is live rather than the wrapper being blind.

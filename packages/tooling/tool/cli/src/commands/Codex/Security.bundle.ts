@@ -358,8 +358,10 @@ export const readSecurityBundle = Effect.fn("CodexSecurity.readBundle")(
     const totalBytes = yield* Ref.make(0);
     const { manifest, manifestBytes } = yield* decodeSealedManifest(root, totalBytes);
     const artifacts = yield* verifySealedArtifacts(root, manifest.scan.artifacts, totalBytes);
-    const findings = yield* decodeFindingsJson(yield* sealedArtifactBytes(artifacts, "findings.json"));
-    const coverage = yield* decodeCoverageJson(yield* sealedArtifactBytes(artifacts, "coverage.json"));
+    const sealedArtifactBytes1 = yield* sealedArtifactBytes(artifacts, "findings.json");
+    const findings = yield* decodeFindingsJson(sealedArtifactBytes1);
+    const sealedArtifactBytes2 = yield* sealedArtifactBytes(artifacts, "coverage.json");
+    const coverage = yield* decodeCoverageJson(sealedArtifactBytes2);
     yield* verifyScanConsistency(
       SecurityManifest.make(manifest),
       SecurityFindings.make(findings.value),

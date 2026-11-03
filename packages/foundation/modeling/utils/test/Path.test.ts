@@ -41,7 +41,8 @@ describe("Path helpers", () => {
       const absolute = Path.resolve("beep.txt");
       const url = yield* Path.toFileUrl(absolute);
       expect(url.protocol).toBe("file:");
-      expect(yield* Path.fromFileUrl(url)).toBe(absolute);
+      const fromFileUrl1 = yield* Path.fromFileUrl(url);
+      expect(fromFileUrl1).toBe(absolute);
     })
   );
 

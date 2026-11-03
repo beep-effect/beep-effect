@@ -80,6 +80,12 @@ import type { DockRenderer, DockviewAdapterApi } from "@beep/dock-react/DockReac
 import type { JSX, ReactNode } from "react";
 import type { DesktopDockGraph, DesktopPanelKey } from "./workspace/dock.atoms.ts";
 
+class AppOperationError extends S.TaggedError<AppOperationError, { readonly brand: unique symbol }>()(
+  "AppOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in App.tsx." }
+) {}
+
 const $I = $ProfessionalDesktopId.create("App");
 
 const OntologyMetricsRegion = lazy(() =>
@@ -136,7 +142,10 @@ const hasDesktopRpcAccess = (transport: SidecarTransport): boolean =>
 // and renders the unavailable state.
 const readSidecarTransport = Effect.suspend(() =>
   hasTauriRuntime()
-    ? Effect.tryPromise(() => invoke("sidecar_transport")).pipe(Effect.flatMap(SidecarTransport.decodeUnknownEffect))
+    ? Effect.tryPromise({
+        try: () => invoke("sidecar_transport"),
+        catch: (cause) => AppOperationError.make({ cause }),
+      }).pipe(Effect.flatMap(SidecarTransport.decodeUnknownEffect))
     : Effect.sync(browserSidecarTransport)
 );
 

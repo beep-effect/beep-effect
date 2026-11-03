@@ -78,7 +78,8 @@ describe("CliLog.layer plainLogger: false (diagnostics only)", () => {
           diagnosticsOnly({ envVar: ENV }),
           { [ENV]: value },
           Effect.gen(function* () {
-            assert.strictEqual(yield* CliLog.Level, "None");
+            const Level1 = yield* CliLog.Level;
+            assert.strictEqual(Level1, "None");
             yield* records;
           })
         );

@@ -129,11 +129,9 @@ const run = Effect.fn("run")(function* (
     via === "runWith"
       ? CliAudience.runWith(root, { version: "1.0.0" })(argv)
       : Command.runWith(CliAudience.provide(root), { version: "1.0.0" })(argv);
+  const FileSystem1 = yield* FileSystem.FileSystem;
   const exit = yield* CliRuntime.main(program, {
-    platform: Layer.mergeAll(
-      memoryPlatform(yield* FileSystem.FileSystem),
-      CliPrompt.gateTerminal.pipe(Layer.provide(terminal.layer))
-    ),
+    platform: Layer.mergeAll(memoryPlatform(FileSystem1), CliPrompt.gateTerminal.pipe(Layer.provide(terminal.layer))),
   }).pipe(
     Effect.exit,
     Effect.provideService(Console.Console, double),
@@ -321,9 +319,10 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, fixturesLayer), { timeout: "30 s
         innerBuiltIns === undefined
           ? program
           : Effect.provideService(program, CliConfig.CliConfig, CliConfig.make({ builtIns: innerBuiltIns }));
+      const FileSystem2 = yield* FileSystem.FileSystem;
       const exit = yield* CliRuntime.main(inner, {
         platform: Layer.mergeAll(
-          memoryPlatform(yield* FileSystem.FileSystem),
+          memoryPlatform(FileSystem2),
           CliPrompt.gateTerminal.pipe(Layer.provide(terminal.layer))
         ),
       }).pipe(

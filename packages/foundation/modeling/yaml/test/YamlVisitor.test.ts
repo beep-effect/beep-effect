@@ -172,7 +172,8 @@ describe("YamlVisitor", () => {
         );
         assert.deepStrictEqual([...keys], ["name", "age"]);
         // Sanity: parity with a full parse.
-        assert.deepStrictEqual(yield* Yaml.parse("name: x\nage: 1\n"), { name: "x", age: 1 });
+        const parsed = yield* Yaml.parse("name: x\nage: 1\n");
+        assert.deepStrictEqual(parsed, { name: "x", age: 1 });
       })
     );
   });

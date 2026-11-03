@@ -296,13 +296,19 @@ interface ConsoleMark {
 }
 
 const consoleMark = Effect.fn("baseConflictTest.consoleMark")(function* () {
-  return { errors: A.length(yield* TestConsole.errorLines), logs: A.length(yield* TestConsole.logLines) };
+  const errorLines1 = yield* TestConsole.errorLines;
+  const argument = A.length(errorLines1);
+  const logLines1 = yield* TestConsole.logLines;
+  return { errors: argument, logs: A.length(logLines1) };
 });
 
 const consoleSince = Effect.fn("baseConflictTest.consoleSince")(function* (mark: ConsoleMark) {
+  const errorLines2 = yield* TestConsole.errorLines;
+  const argument1 = A.map(A.drop(errorLines2, mark.errors), String);
+  const logLines2 = yield* TestConsole.logLines;
   return {
-    errors: A.map(A.drop(yield* TestConsole.errorLines, mark.errors), String),
-    logs: A.map(A.drop(yield* TestConsole.logLines, mark.logs), String),
+    errors: argument1,
+    logs: A.map(A.drop(logLines2, mark.logs), String),
   };
 });
 
@@ -314,17 +320,23 @@ it.layer(platform, { timeout: "30 seconds" })("base-conflict row", (it) => {
       // Generation 0 keeps the pre-generation digest of "7:<head>", so rows and
       // cleared receipts already on disk keep their ids.
       strictEqual(id, "base-conflict-d50fbcc322ba");
-      strictEqual(yield* generationId(0), id);
-      expect(yield* generationId(1)).not.toBe(id);
-      expect(yield* generationId(2)).not.toBe(yield* generationId(1));
+      const generationId3 = yield* generationId(0);
+      strictEqual(generationId3, id);
+      const generationId4 = yield* generationId(1);
+      expect(generationId4).not.toBe(id);
+      const generationId5 = yield* generationId(2);
+      const argument2 = expect(generationId5).not;
+      const generationId6 = yield* generationId(1);
+      argument2.toBe(generationId6);
       // Re-reading the same conflict derives the same id; the raw merge fields are evidence, not identity.
-      expect(
-        yield* yeetBaseConflictRowId(
-          YeetBaseConflictCapsule.make({ ...capsuleFor(head), mergeable: "UNKNOWN", mergeStateStatus: "DIRTY" })
-        )
-      ).toBe(id);
-      expect(yield* yeetBaseConflictRowId(capsuleFor(fixHead))).not.toBe(id);
-      expect(yield* yeetBaseConflictRowId({ generation: 0, headSha: head, prNumber: 8 })).not.toBe(id);
+      const yeetBaseConflictRowId6 = yield* yeetBaseConflictRowId(
+        YeetBaseConflictCapsule.make({ ...capsuleFor(head), mergeable: "UNKNOWN", mergeStateStatus: "DIRTY" })
+      );
+      expect(yeetBaseConflictRowId6).toBe(id);
+      const yeetBaseConflictRowId7 = yield* yeetBaseConflictRowId(capsuleFor(fixHead));
+      expect(yeetBaseConflictRowId7).not.toBe(id);
+      const yeetBaseConflictRowId8 = yield* yeetBaseConflictRowId({ generation: 0, headSha: head, prNumber: 8 });
+      expect(yeetBaseConflictRowId8).not.toBe(id);
 
       const row = YeetBaseConflictRow.make({
         capsule: capsuleFor(head),
@@ -333,7 +345,8 @@ it.layer(platform, { timeout: "30 seconds" })("base-conflict row", (it) => {
         severity: "P0",
         ts: at,
       });
-      expect(yield* yeetInboxExpectedRowId(row)).toBe(id);
+      const yeetInboxExpectedRowId9 = yield* yeetInboxExpectedRowId(row);
+      expect(yeetInboxExpectedRowId9).toBe(id);
       assertSome(yeetInboxRowPrNumber(row), 7);
       expect(describeYeetInboxRow(row)).toBe("base conflict with origin/main (pr #7 @ aaaaaaa)");
       const line = yield* YeetInboxRowJson.encode(row);
@@ -371,20 +384,21 @@ it.layer(platform, { timeout: "30 seconds" })("base-conflict row", (it) => {
       const id = yield* yeetBaseConflictRowId(capsule);
       expect(id).toMatch(/^base-conflict-[0-9a-f]{12}$/);
       // Base, link, and the raw merge fields are evidence, not identity.
-      expect(
-        yield* yeetBaseConflictRowId(
-          YeetBaseConflictCapsule.make({
-            ...evidence,
-            generation: capsule.generation,
-            headSha: capsule.headSha,
-            prNumber: capsule.prNumber,
-          })
-        )
-      ).toBe(id);
+      const yeetBaseConflictRowId10 = yield* yeetBaseConflictRowId(
+        YeetBaseConflictCapsule.make({
+          ...evidence,
+          generation: capsule.generation,
+          headSha: capsule.headSha,
+          prNumber: capsule.prNumber,
+        })
+      );
+      expect(yeetBaseConflictRowId10).toBe(id);
       // The next generation on the same head is a different row.
-      expect(yield* yeetBaseConflictRowId({ ...capsule, generation: capsule.generation + 1 })).not.toBe(id);
+      const yeetBaseConflictRowId11 = yield* yeetBaseConflictRowId({ ...capsule, generation: capsule.generation + 1 });
+      expect(yeetBaseConflictRowId11).not.toBe(id);
       const row = YeetBaseConflictRow.make({ capsule, checkout: "/repo", id, severity: "P0", ts: at });
-      expect(yield* yeetInboxExpectedRowId(row)).toBe(id);
+      const yeetInboxExpectedRowId12 = yield* yeetInboxExpectedRowId(row);
+      expect(yeetInboxExpectedRowId12).toBe(id);
     }),
     { arbitrary: fcRuns(20) }
   );
@@ -396,7 +410,8 @@ it.layer(platform, { timeout: "30 seconds" })("base-conflict row", (it) => {
       const line = yield* YeetInboxRowJson.encode(row);
       const decoded = yield* YeetInboxRowJson.decode(line);
       assertTrue(S.toEquivalence(YeetInboxRow)(decoded, row));
-      expect(yield* YeetInboxRowJson.encode(decoded)).toBe(line);
+      const encoded13 = yield* YeetInboxRowJson.encode(decoded);
+      expect(encoded13).toBe(line);
     }),
     { arbitrary: fcRuns(20) }
   );
@@ -406,7 +421,9 @@ it.layer(platform, { timeout: "30 seconds" })("base-conflict row", (it) => {
     [Arbitrary.schema(YeetRemediationWave)],
     Effect.fnUntraced(function* ([wave]) {
       const json = yield* YeetRemediationWaveJson.encode(wave);
-      assertTrue(S.toEquivalence(YeetRemediationWave)(yield* YeetRemediationWaveJson.decode(json), wave));
+      const argument3 = S.toEquivalence(YeetRemediationWave);
+      const decoded7 = yield* YeetRemediationWaveJson.decode(json);
+      assertTrue(argument3(decoded7, wave));
     }),
     { arbitrary: fcRuns(20) }
   );
@@ -427,17 +444,24 @@ it.layer(platform, { timeout: "30 seconds" })("base-conflict row", (it) => {
     Effect.gen(function* () {
       const root = yield* tempRoot();
       const first = yield* dispatchYeetBaseConflict(root, capsuleFor(head), at);
-      assertSome(
-        O.map(first, (row) => row.id),
-        yield* generationId(0)
-      );
+      const argument4 = O.map(first, (row) => row.id);
+      const generationId8 = yield* generationId(0);
+      assertSome(argument4, generationId8);
       // The same generation again appends nothing, so it reports no live row written.
-      assertNone(yield* dispatchYeetBaseConflict(root, capsuleFor(head), "2026-09-25T00:00:30.000Z"));
-      expect(yield* conflictRows(root)).toHaveLength(1);
-      const wave = O.getOrThrow(yield* loadYeetRemediationWave(root));
+      const dispatchYeetBaseConflict14 = yield* dispatchYeetBaseConflict(
+        root,
+        capsuleFor(head),
+        "2026-09-25T00:00:30.000Z"
+      );
+      assertNone(dispatchYeetBaseConflict14);
+      const conflictRows15 = yield* conflictRows(root);
+      expect(conflictRows15).toHaveLength(1);
+      const loadedYeetRemediationWave = yield* loadYeetRemediationWave(root);
+      const wave = O.getOrThrow(loadedYeetRemediationWave);
       expect(wave).toMatchObject({ headSha: head, prNumber: 7, sessionStartedAt: at });
       expect(wave.capsuleIds).toStrictEqual(A.map(O.toArray(first), (row) => row.id));
-      const errors = A.map(yield* TestConsole.errorLines, String);
+      const errorLines16 = yield* TestConsole.errorLines;
+      const errors = A.map(errorLines16, String);
       expect(A.filter(errors, Str.includes("opened the repair session"))).toHaveLength(1);
       expect(A.filter(errors, Str.includes("already queued for head aaaaaaa"))).toHaveLength(0);
     })
@@ -447,31 +471,44 @@ it.layer(platform, { timeout: "30 seconds" })("base-conflict row", (it) => {
     Effect.gen(function* () {
       const root = yield* tempRoot();
       const coordinates = { headSha: head, prNumber: 7 };
-      strictEqual(yield* yeetBaseConflictGeneration(root, coordinates), 0);
-      const first = O.getOrThrow(yield* dispatchYeetBaseConflict(root, capsuleFor(head), at));
+      const yeetBaseConflictGeneration17 = yield* yeetBaseConflictGeneration(root, coordinates);
+      strictEqual(yeetBaseConflictGeneration17, 0);
+      const dispatchYeetBaseConflict18 = yield* dispatchYeetBaseConflict(root, capsuleFor(head), at);
+      const first = O.getOrThrow(dispatchYeetBaseConflict18);
       // An open row is still the current generation: every poll derives its id.
-      strictEqual(yield* yeetBaseConflictGeneration(root, coordinates), 0);
+      const yeetBaseConflictGeneration19 = yield* yeetBaseConflictGeneration(root, coordinates);
+      strictEqual(yeetBaseConflictGeneration19, 0);
 
       yield* writeEarlierClear(root, first.id);
-      strictEqual(yield* yeetBaseConflictGeneration(root, coordinates), 1);
+      const yeetBaseConflictGeneration20 = yield* yeetBaseConflictGeneration(root, coordinates);
+      strictEqual(yeetBaseConflictGeneration20, 1);
       // Any later append rebuilds the active index without the acked row; the
       // receipt still counts it, and the acked id is held by its receipt.
       const red = yield* appendRed(root);
-      assertFalse(yield* yeetInboxHoldsRow(root, first.id));
-      strictEqual(yield* yeetBaseConflictGeneration(root, coordinates), 1);
-      assertNone(yield* dispatchYeetBaseConflict(root, capsuleFor(head), at));
+      const yeetInboxHoldsRow21 = yield* yeetInboxHoldsRow(root, first.id);
+      assertFalse(yeetInboxHoldsRow21);
+      const yeetBaseConflictGeneration22 = yield* yeetBaseConflictGeneration(root, coordinates);
+      strictEqual(yeetBaseConflictGeneration22, 1);
+      const dispatchYeetBaseConflict23 = yield* dispatchYeetBaseConflict(root, capsuleFor(head), at);
+      assertNone(dispatchYeetBaseConflict23);
 
-      const second = O.getOrThrow(yield* dispatchYeetBaseConflict(root, capsuleFor(head, 1), at));
-      strictEqual(second.id, yield* generationId(1));
+      const dispatchYeetBaseConflict24 = yield* dispatchYeetBaseConflict(root, capsuleFor(head, 1), at);
+      const second = O.getOrThrow(dispatchYeetBaseConflict24);
+      const generationId25 = yield* generationId(1);
+      strictEqual(second.id, generationId25);
       strictEqual(second.capsule.generation, 1);
       expect(second.id).not.toBe(first.id);
-      assertNone(yield* dispatchYeetBaseConflict(root, capsuleFor(head, 1), at));
-      strictEqual(yield* yeetBaseConflictGeneration(root, coordinates), 1);
-      expect(A.map(yield* conflictRows(root), (row) => row.capsule.generation)).toStrictEqual([0, 1]);
+      const dispatchYeetBaseConflict26 = yield* dispatchYeetBaseConflict(root, capsuleFor(head, 1), at);
+      assertNone(dispatchYeetBaseConflict26);
+      const yeetBaseConflictGeneration27 = yield* yeetBaseConflictGeneration(root, coordinates);
+      strictEqual(yeetBaseConflictGeneration27, 1);
+      const conflictRows28 = yield* conflictRows(root);
+      expect(A.map(conflictRows28, (row) => row.capsule.generation)).toStrictEqual([0, 1]);
 
       // The new generation is live and unacknowledged, so it is part of the pull request's wave.
+      const loadedYeetPrWave = yield* loadYeetPrWave(root, 7, HashSet.empty());
       assertSome(
-        O.map(yield* loadYeetPrWave(root, 7, HashSet.empty()), (wave) =>
+        O.map(loadedYeetPrWave, (wave) =>
           A.map(wave.entries, (entry) => [entry.row.id, entry.ack.acked, entry.liveness])
         ),
         [
@@ -479,12 +516,14 @@ it.layer(platform, { timeout: "30 seconds" })("base-conflict row", (it) => {
           [second.id, false, "live"],
         ]
       );
-      const wave = O.getOrThrow(yield* loadYeetRemediationWave(root));
+      const loadedYeetRemediationWave29 = yield* loadYeetRemediationWave(root);
+      const wave = O.getOrThrow(loadedYeetRemediationWave29);
       expect(wave.capsuleIds).toStrictEqual([first.id, second.id]);
 
       // An operator ack of another kind closes the row but is not a clear.
       yield* ackYeetInboxRow(root, second.id, YeetAckWontfixResolution.make({ reason: "base revert pending" }), at);
-      strictEqual(yield* yeetBaseConflictGeneration(root, coordinates), 1);
+      const yeetBaseConflictGeneration30 = yield* yeetBaseConflictGeneration(root, coordinates);
+      strictEqual(yeetBaseConflictGeneration30, 1);
     })
   );
 });
@@ -521,7 +560,8 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the bas
         closeout: () => Effect.succeed(report(head)),
       }).pipe(Effect.provideService(ConfigProvider.ConfigProvider, jobEnvironment));
       expect(terminal).toBe("ready");
-      expect(yield* Ref.get(polls)).toBe(6);
+      const got = yield* Ref.get(polls);
+      expect(got).toBe(6);
 
       const written = yield* conflictRows(root);
       expect(written).toHaveLength(1);
@@ -537,11 +577,13 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the bas
           prNumber: 7,
         },
       });
-      const wave = O.getOrThrow(yield* loadYeetRemediationWave(root));
+      const loadedYeetRemediationWave31 = yield* loadYeetRemediationWave(root);
+      const wave = O.getOrThrow(loadedYeetRemediationWave31);
       expect(wave.capsuleIds).toContain(row.id);
 
       // No receipt through the conflicted and UNKNOWN polls; a cleared one after.
-      expect(yield* Ref.get(receiptBeforeMergeable)).toBe(false);
+      const got32 = yield* Ref.get(receiptBeforeMergeable);
+      expect(got32).toBe(false);
       const ack = yield* readYeetAckState(root, row.id);
       expect(ack.acked).toBe(true);
       const receipt = O.getOrThrow(O.fromNullOr(ack.receipt));
@@ -550,16 +592,19 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the bas
       );
       const fs = yield* FileSystem.FileSystem;
       const raw = yield* fs.readFileString(`${root}/.beep/inbox/acks/${row.id}`);
-      expect(yield* decodeJsonObject(raw)).toMatchObject({
+      const decodedJsonObject = yield* decodeJsonObject(raw);
+      expect(decodedJsonObject).toMatchObject({
         id: row.id,
         resolution: { kind: "cleared", headSha: head, jobId, unit: jobUnit },
       });
 
-      const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+      const logLines33 = yield* TestConsole.logLines;
+      const printed = A.join(A.map(logLines33, String), "\n");
       expect(printed).toContain(
         `[yeet] base conflict cleared on head aaaaaaa without a push; row ${row.id} acked cleared`
       );
-      const errors = A.map(yield* TestConsole.errorLines, String);
+      const errorLines34 = yield* TestConsole.errorLines;
+      const errors = A.map(errorLines34, String);
       expect(A.filter(errors, Str.includes("[yeet] base conflict with origin/main on head aaaaaaa"))).toHaveLength(1);
     })
   );
@@ -590,11 +635,13 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the bas
         O.map(entry, (value) => value.liveness),
         "superseded"
       );
+      const loadedYeetRemediationWave35 = yield* loadYeetRemediationWave(root);
       assertSome(
-        O.map(yield* loadYeetRemediationWave(root), (wave) => wave.headSha),
+        O.map(loadedYeetRemediationWave35, (wave) => wave.headSha),
         fixHead
       );
-      const errors = A.join(A.map(yield* TestConsole.errorLines, String), "\n");
+      const errorLines36 = yield* TestConsole.errorLines;
+      const errors = A.join(A.map(errorLines36, String), "\n");
       expect(errors).toContain("head moved to bbbbbbb; the 1-capsule wave for aaaaaaa is superseded.");
     })
   );
@@ -602,7 +649,8 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the bas
   it.effect("a restarted loop recalls the head's unacked conflict row and clears it", () =>
     Effect.gen(function* () {
       const root = yield* tempRoot();
-      const earlier = O.getOrThrow(yield* dispatchYeetBaseConflict(root, capsuleFor(head), at));
+      const dispatchYeetBaseConflict37 = yield* dispatchYeetBaseConflict(root, capsuleFor(head), at);
+      const earlier = O.getOrThrow(dispatchYeetBaseConflict37);
       const polls = yield* Ref.make(0);
       const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
         ...loopOptions,
@@ -612,7 +660,8 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the bas
         closeout: () => Effect.succeed(report(head)),
       });
       expect(terminal).toBe("ready");
-      expect(yield* conflictRows(root)).toHaveLength(1);
+      const conflictRows38 = yield* conflictRows(root);
+      expect(conflictRows38).toHaveLength(1);
       const receipt = (yield* readYeetAckState(root, earlier.id)).receipt;
       assertSome(
         O.map(O.fromNullOr(receipt), (value) => renderYeetAckResolution(value.resolution)),
@@ -624,7 +673,8 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the bas
   it.effect("a restarted loop whose first read is UNKNOWN still recalls and clears the row", () =>
     Effect.gen(function* () {
       const root = yield* tempRoot();
-      const earlier = O.getOrThrow(yield* dispatchYeetBaseConflict(root, capsuleFor(head), at));
+      const dispatchYeetBaseConflict39 = yield* dispatchYeetBaseConflict(root, capsuleFor(head), at);
+      const earlier = O.getOrThrow(dispatchYeetBaseConflict39);
       const polls = yield* Ref.make(0);
       // Poll 0: GitHub is still recomputing mergeability (UNKNOWN), which neither
       // writes nor clears. Poll 1: the same head reads MERGEABLE, closeout pending;
@@ -648,7 +698,8 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the bas
         closeout: () => Effect.succeed(report(head)),
       });
       expect(terminal).toBe("ready");
-      expect(yield* conflictRows(root)).toHaveLength(1);
+      const conflictRows40 = yield* conflictRows(root);
+      expect(conflictRows40).toHaveLength(1);
       const receipt = (yield* readYeetAckState(root, earlier.id)).receipt;
       assertSome(
         O.map(O.fromNullOr(receipt), (value) => value.resolution.kind),
@@ -683,7 +734,9 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the bas
               O.map(wave, (value) => A.map(value.entries, (entry) => entry.row.id))
             );
           }
-          if (n === 5) yield* Ref.set(secondAckedBeforeClear, (yield* readYeetAckState(root, second)).acked);
+          if (n === 5) {
+            yield* Ref.set(secondAckedBeforeClear, (yield* readYeetAckState(root, second)).acked);
+          }
           if (n === 2 || n === 5) return mergeablePending(root);
           if (n >= 6) return mergeable(root, head, n >= 7);
           return conflicted(root);
@@ -691,16 +744,20 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the bas
         closeout: () => Effect.succeed(report(head)),
       });
       strictEqual(terminal, "ready");
-      strictEqual(yield* Ref.get(polls), 8);
+      const got41 = yield* Ref.get(polls);
+      strictEqual(got41, 8);
 
-      expect(A.map(yield* conflictRows(root), (row) => [row.id, row.capsule.generation])).toStrictEqual([
+      const conflictRows42 = yield* conflictRows(root);
+      expect(A.map(conflictRows42, (row) => [row.id, row.capsule.generation])).toStrictEqual([
         [first, 0],
         [second, 1],
       ]);
       // Between its write and its clear, generation 1 was the pull request's
       // live, unacked wave row; the acked generation 0 was not part of it.
-      assertSome(yield* Ref.get(waveBeforeSecondClear), [second]);
-      assertFalse(yield* Ref.get(secondAckedBeforeClear));
+      const got43 = yield* Ref.get(waveBeforeSecondClear);
+      assertSome(got43, [second]);
+      const got44 = yield* Ref.get(secondAckedBeforeClear);
+      assertFalse(got44);
       assertSome(
         O.map(O.fromNullOr((yield* readYeetAckState(root, first)).receipt), (receipt) => receipt.resolution.kind),
         "cleared"
@@ -720,8 +777,10 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the bas
           Str.includes(`P0 capsule ${second} queued to the head aaaaaaa repair session (2 capsules)`)
         )
       ).toHaveLength(1);
-      expect(O.getOrThrow(yield* loadYeetRemediationWave(root)).capsuleIds).toStrictEqual([first, second]);
-      strictEqual(yield* yeetBaseConflictGeneration(root, { headSha: head, prNumber: 7 }), 2);
+      const loadedYeetRemediationWave45 = yield* loadYeetRemediationWave(root);
+      expect(O.getOrThrow(loadedYeetRemediationWave45).capsuleIds).toStrictEqual([first, second]);
+      const yeetBaseConflictGeneration46 = yield* yeetBaseConflictGeneration(root, { headSha: head, prNumber: 7 });
+      strictEqual(yeetBaseConflictGeneration46, 2);
     })
   );
 
@@ -730,7 +789,8 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the bas
       const root = yield* tempRoot();
       const mark = yield* consoleMark();
       // An earlier monitor wrote generation 0 and acked it cleared.
-      const earlier = O.getOrThrow(yield* dispatchYeetBaseConflict(root, capsuleFor(head), at));
+      const dispatchYeetBaseConflict47 = yield* dispatchYeetBaseConflict(root, capsuleFor(head), at);
+      const earlier = O.getOrThrow(dispatchYeetBaseConflict47);
       yield* writeEarlierClear(root, earlier.id);
       const second = yield* generationId(1);
       const polls = yield* Ref.make(0);
@@ -750,8 +810,10 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the bas
         closeout: () => Effect.die("unexpected closeout"),
       });
       strictEqual(terminal, "wave");
-      strictEqual(yield* Ref.get(polls), 1);
-      expect(A.map(yield* conflictRows(root), (row) => row.id)).toStrictEqual([earlier.id, second]);
+      const got48 = yield* Ref.get(polls);
+      strictEqual(got48, 1);
+      const conflictRows49 = yield* conflictRows(root);
+      expect(A.map(conflictRows49, (row) => row.id)).toStrictEqual([earlier.id, second]);
       const printed = A.join((yield* consoleSince(mark)).logs, "\n");
       expect(printed).toContain(`[${second}]`);
       expect(printed).not.toContain(`[${earlier.id}]`);
@@ -765,10 +827,13 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the bas
       // A truncated write: the receipt file exists, so it acks the row, but it no longer decodes.
       const corruptReceipt = Effect.fnUntraced(function* (id: string) {
         const path = yield* writeEarlierClear(root, id);
-        yield* fs.writeFileString(path, Str.slice(0, 24)(yield* fs.readFileString(path)));
+        const argument5 = Str.slice(0, 24);
+        const readFileString9 = yield* fs.readFileString(path);
+        yield* fs.writeFileString(path, argument5(readFileString9));
         return path;
       });
-      const earlier = O.getOrThrow(yield* dispatchYeetBaseConflict(root, capsuleFor(head), at));
+      const dispatchYeetBaseConflict50 = yield* dispatchYeetBaseConflict(root, capsuleFor(head), at);
+      const earlier = O.getOrThrow(dispatchYeetBaseConflict50);
       const receiptPath = yield* corruptReceipt(earlier.id);
       const ack = yield* readYeetAckState(root, earlier.id);
       assertTrue(ack.acked);
@@ -792,8 +857,10 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the bas
         closeout: () => Effect.die("unexpected closeout"),
       });
       strictEqual(terminal, "wave");
-      strictEqual(yield* Ref.get(polls), 1);
-      expect(A.map(yield* conflictRows(root), (row) => [row.id, row.capsule.generation])).toStrictEqual([
+      const got51 = yield* Ref.get(polls);
+      strictEqual(got51, 1);
+      const conflictRows52 = yield* conflictRows(root);
+      expect(A.map(conflictRows52, (row) => [row.id, row.capsule.generation])).toStrictEqual([
         [earlier.id, 0],
         [second, 1],
       ]);
@@ -803,7 +870,8 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the bas
       ).toHaveLength(1);
       expect(A.filter(printed.errors, Str.includes(`P0 capsule ${second} opened the repair session`))).toHaveLength(0);
       expect(A.filter(printed.errors, Str.includes(`P0 capsule ${second} queued to the head aaaaaaa`))).toHaveLength(1);
-      strictEqual(yield* yeetBaseConflictGeneration(root, { headSha: head, prNumber: 7 }), 1);
+      const yeetBaseConflictGeneration53 = yield* yeetBaseConflictGeneration(root, { headSha: head, prNumber: 7 });
+      strictEqual(yeetBaseConflictGeneration53, 1);
       const walk = yield* yeetBaseConflictWalk(root, { headSha: head, prNumber: 7 });
       expect(A.map(walk.corruptReceipts, (receipt) => [receipt.generation, receipt.path])).toStrictEqual([
         [0, receiptPath],
@@ -815,9 +883,8 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the bas
       // Polls 3-5: the fix push, conflicted too, whose own generation 0 receipt
       // is corrupt. Poll 6 reads the pull request closed.
       yield* ackYeetInboxRow(root, second, YeetAckWontfixResolution.make({ reason: "base revert pending" }), at);
-      const fixReceiptPath = yield* corruptReceipt(
-        yield* yeetBaseConflictRowId({ generation: 0, headSha: fixHead, prNumber: 7 })
-      );
+      const yeetBaseConflictRowId54 = yield* yeetBaseConflictRowId({ generation: 0, headSha: fixHead, prNumber: 7 });
+      const fixReceiptPath = yield* corruptReceipt(yeetBaseConflictRowId54);
       const fixSecond = yield* yeetBaseConflictRowId({ generation: 1, headSha: fixHead, prNumber: 7 });
       const repeatMark = yield* consoleMark();
       const repeatPolls = yield* Ref.make(0);
@@ -835,8 +902,10 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the bas
         closeout: () => Effect.die("unexpected closeout"),
       });
       strictEqual(repeated, "closed");
-      strictEqual(yield* Ref.get(repeatPolls), 7);
-      expect(A.map(yield* conflictRows(root), (row) => row.id)).toStrictEqual([earlier.id, second, fixSecond]);
+      const got55 = yield* Ref.get(repeatPolls);
+      strictEqual(got55, 7);
+      const conflictRows56 = yield* conflictRows(root);
+      expect(A.map(conflictRows56, (row) => row.id)).toStrictEqual([earlier.id, second, fixSecond]);
       const repeatedErrors = (yield* consoleSince(repeatMark)).errors;
       // Once per head and generation: three polls on head A name its corrupt
       // receipt once, and the new head names its own once.
@@ -858,7 +927,8 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the bas
   it.effect("a same-head conflict on a generation acked wontfix writes no row and says why once per head", () =>
     Effect.gen(function* () {
       const root = yield* tempRoot();
-      const earlier = O.getOrThrow(yield* dispatchYeetBaseConflict(root, capsuleFor(head), at));
+      const dispatchYeetBaseConflict57 = yield* dispatchYeetBaseConflict(root, capsuleFor(head), at);
+      const earlier = O.getOrThrow(dispatchYeetBaseConflict57);
       yield* ackYeetInboxRow(root, earlier.id, YeetAckWontfixResolution.make({ reason: "base revert pending" }), at);
       const mark = yield* consoleMark();
       const polls = yield* Ref.make(0);
@@ -879,9 +949,12 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the bas
         closeout: () => Effect.die("unexpected closeout"),
       });
       strictEqual(terminal, "closed");
-      strictEqual(yield* Ref.get(polls), 3);
-      expect(A.map(yield* conflictRows(root), (row) => row.id)).toStrictEqual([earlier.id]);
-      strictEqual(yield* yeetBaseConflictGeneration(root, { headSha: head, prNumber: 7 }), 0);
+      const got58 = yield* Ref.get(polls);
+      strictEqual(got58, 3);
+      const conflictRows59 = yield* conflictRows(root);
+      expect(A.map(conflictRows59, (row) => row.id)).toStrictEqual([earlier.id]);
+      const yeetBaseConflictGeneration60 = yield* yeetBaseConflictGeneration(root, { headSha: head, prNumber: 7 });
+      strictEqual(yeetBaseConflictGeneration60, 0);
       const printed = yield* consoleSince(mark);
       expect(
         A.filter(
@@ -904,11 +977,14 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the bas
         Effect.gen(function* () {
           const root = yield* tempRoot();
           const mark = yield* consoleMark();
-          const first = O.getOrThrow(yield* dispatchYeetBaseConflict(root, capsuleFor(head), at));
+          const dispatchYeetBaseConflict61 = yield* dispatchYeetBaseConflict(root, capsuleFor(head), at);
+          const first = O.getOrThrow(dispatchYeetBaseConflict61);
           yield* writeEarlierClear(root, first.id);
-          const second = O.getOrThrow(yield* dispatchYeetBaseConflict(root, capsuleFor(head, 1), at));
+          const dispatchYeetBaseConflict62 = yield* dispatchYeetBaseConflict(root, capsuleFor(head, 1), at);
+          const second = O.getOrThrow(dispatchYeetBaseConflict62);
           // The generation 1 append rebuilt the active index without the acked generation 0.
-          assertFalse(yield* yeetInboxHoldsRow(root, first.id));
+          const yeetInboxHoldsRow63 = yield* yeetInboxHoldsRow(root, first.id);
+          assertFalse(yeetInboxHoldsRow63);
           const polls = yield* Ref.make(0);
           // conflicting: polls 0-1 still read the conflict (the row is already
           // written), poll 2 reads it mergeable. mergeable: poll 0 reads it
@@ -929,7 +1005,8 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the bas
             closeout: () => Effect.succeed(report(head)),
           });
           strictEqual(terminal, "ready");
-          expect(A.map(yield* conflictRows(root), (row) => row.id)).toStrictEqual([first.id, second.id]);
+          const conflictRows64 = yield* conflictRows(root);
+          expect(A.map(conflictRows64, (row) => row.id)).toStrictEqual([first.id, second.id]);
           assertSome(
             O.map(
               O.fromNullOr((yield* readYeetAckState(root, second.id)).receipt),
@@ -968,7 +1045,8 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the bas
         closeout: () => Effect.die("unexpected closeout"),
       });
       expect(terminal).toBe("merged");
-      expect(yield* rows(root)).toStrictEqual([]);
+      const rows65 = yield* rows(root);
+      expect(rows65).toStrictEqual([]);
     })
   );
 });
@@ -1014,7 +1092,8 @@ it.layer(platform, { timeout: "30 seconds" })("cleared ack kind", (it) => {
         expect(resolution.kind).toBe(kind);
         const receipt = YeetAckReceipt.make({ ackedAt: at, id: "row-abc", resolution });
         const line = yield* YeetAckReceiptJson.encode(receipt);
-        expect(yield* YeetAckReceiptJson.decode(line)).toStrictEqual(receipt);
+        const decoded66 = yield* YeetAckReceiptJson.decode(line);
+        expect(decoded66).toStrictEqual(receipt);
         expect(renderYeetAckResolution(resolution)).not.toBe("");
       }
       expect(renderYeetAckResolution(sampleResolution("cleared"))).toBe(
@@ -1028,7 +1107,9 @@ it.layer(platform, { timeout: "30 seconds" })("cleared ack kind", (it) => {
     [Arbitrary.schema(YeetAckReceipt)],
     Effect.fnUntraced(function* ([receipt]) {
       const line = yield* YeetAckReceiptJson.encode(receipt);
-      assertTrue(S.toEquivalence(YeetAckReceipt)(yield* YeetAckReceiptJson.decode(line), receipt));
+      const argument6 = S.toEquivalence(YeetAckReceipt);
+      const decoded10 = yield* YeetAckReceiptJson.decode(line);
+      assertTrue(argument6(decoded10, receipt));
       expect(renderYeetAckResolution(receipt.resolution)).not.toBe("");
     }),
     { arbitrary: fcRuns(20) }
@@ -1052,7 +1133,8 @@ it.layer(platform, { timeout: "30 seconds" })("cleared ack kind", (it) => {
         root,
         YeetCheckFailedRow.make({ capsule: failed, checkout: root, id: failedId, severity: "P0", ts: at })
       );
-      const conflict = O.getOrThrow(yield* dispatchYeetBaseConflict(root, capsuleFor(head), at));
+      const dispatchYeetBaseConflict67 = yield* dispatchYeetBaseConflict(root, capsuleFor(head), at);
+      const conflict = O.getOrThrow(dispatchYeetBaseConflict67);
       const cleared = sampleResolution("cleared");
       const refused = yield* ackYeetInboxRow(root, failedId, cleared, at).pipe(Effect.flip);
       expect(refused.message).toBe("A cleared receipt applies only to base-conflict rows; the merge loop writes it.");

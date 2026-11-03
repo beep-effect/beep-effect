@@ -155,10 +155,12 @@ const GraphTestHttpLayer = Layer.effect(
           method: request.method,
           url: requestUrl(request),
         };
-        const index = A.length(yield* calls);
+        const calls1 = yield* calls;
+        const index = A.length(calls1);
         yield* Ref.update(capturesRef, A.append(capture));
         if (isSetup(capture)) {
-          return respondToSetup(capture, yield* Ref.get(foldersDownRef));
+          const got = yield* Ref.get(foldersDownRef);
+          return respondToSetup(capture, got);
         }
         const respond = yield* Ref.get(respondRef);
         return yield* respond(capture, index);
@@ -574,7 +576,8 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
 
         yield* mailbox.markEntered(message("m1"));
 
-        expect(A.map(yield* testHttp.calls, (capture) => capture.method)).toStrictEqual(["GET"]);
+        const calls2 = yield* testHttp.calls;
+        expect(A.map(calls2, (capture) => capture.method)).toStrictEqual(["GET"]);
       })
     );
   });
@@ -623,7 +626,8 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
 
         const failure = yield* failureOf(mailbox.markEntered(message("m1")));
 
-        expect(yield* testHttp.calls).toHaveLength(4);
+        const calls3 = yield* testHttp.calls;
+        expect(calls3).toHaveLength(4);
         assertSome(
           O.map(failure, (error) => [error.stage, error.cause, error.ambiguousWrite]),
           ["mailbox", "response status", false]
@@ -678,7 +682,8 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
           O.map(failure, (error) => [error.stage, error.cause]),
           ["calendar", "all-day-date-out-of-range"]
         );
-        expect(yield* testHttp.calls).toStrictEqual([]);
+        const calls4 = yield* testHttp.calls;
+        expect(calls4).toStrictEqual([]);
       })
     );
 
@@ -750,7 +755,8 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
           ["calendar", "ambiguous write", true]
         );
         assertNone(found);
-        expect(A.filter(yield* testHttp.calls, (capture) => capture.method === "POST")).toHaveLength(1);
+        const calls5 = yield* testHttp.calls;
+        expect(A.filter(calls5, (capture) => capture.method === "POST")).toHaveLength(1);
       })
     );
   });
@@ -793,7 +799,8 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
         const listed = yield* mailbox.receivedSince(O.none());
         const found = yield* calendar.findByKey(KEY);
 
-        expect(A.filter(yield* testHttp.setup, isCategorySetup)).toStrictEqual([]);
+        const setup6 = yield* testHttp.setup;
+        expect(A.filter(setup6, isCategorySetup)).toStrictEqual([]);
         assertSome(
           O.map(marked, (error) => [error.stage, error.cause]),
           ["mailbox", "read-only"]
@@ -804,7 +811,8 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
         );
         expect(listed).toStrictEqual([]);
         assertNone(found);
-        expect(A.map(yield* testHttp.calls, (capture) => capture.method)).toStrictEqual(["GET", "GET"]);
+        const calls7 = yield* testHttp.calls;
+        expect(A.map(calls7, (capture) => capture.method)).toStrictEqual(["GET", "GET"]);
       })
     );
   });

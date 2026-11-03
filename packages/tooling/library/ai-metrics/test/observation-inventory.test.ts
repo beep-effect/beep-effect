@@ -231,7 +231,8 @@ describe("declared observability inventory", () => {
   it.effect("rejects unexpected content without exposing it in boundary errors", () =>
     Effect.gen(function* () {
       const encoded = yield* encodeObservationInventoryJson(inventory([route()]));
-      expect(summarizeObservationInventory(yield* decodeObservationInventory(encoded)).declaredRoutes).toBe(1);
+      const decodedObservationInventory = yield* decodeObservationInventory(encoded);
+      expect(summarizeObservationInventory(decodedObservationInventory).declaredRoutes).toBe(1);
       const valid = yield* S.encodeEffect(ObservationInventory)(inventory([route()]));
       const bad = yield* encodeRaw({ ...valid, secret: "synthetic-content-must-not-leak" });
       const failure = yield* decodeObservationInventory(bad).pipe(Effect.flip);

@@ -27,11 +27,13 @@ for (const field of ["x-ratelimit-remaining", "x-ratelimit-limit", "x-ratelimit-
           const transport = yield* makeTransport({ retry: RetryPolicy.none, fetch: script.fetch });
           if (retained) {
             yield* transport.request("seed", "/seed", {});
-            assertSome(yield* transport.rateLimit, prior);
+            const rateLimit1 = yield* transport.rateLimit;
+            assertSome(rateLimit1, prior);
           }
           const response = yield* transport.request("answer", "/answer", {});
           assert.deepStrictEqual(response.data, { answer: 42 });
-          assert.deepStrictEqual(yield* transport.rateLimit, retained ? O.some(prior) : O.none());
+          const rateLimit2 = yield* transport.rateLimit;
+          assert.deepStrictEqual(rateLimit2, retained ? O.some(prior) : O.none());
           const error = yield* transport
             .graphql("viewer", "query { viewer { login } }", {})
             .pipe(Effect.flip, Effect.orDie);
@@ -40,9 +42,11 @@ for (const field of ["x-ratelimit-remaining", "x-ratelimit-limit", "x-ratelimit-
           assert.strictEqual(error.reason, "missing");
           assert.strictEqual(error.errors[0]?.message, "missing");
           assert.isDefined(error.cause);
-          assert.deepStrictEqual(yield* transport.rateLimit, retained ? O.some(prior) : O.none());
+          const rateLimit3 = yield* transport.rateLimit;
+          assert.deepStrictEqual(rateLimit3, retained ? O.some(prior) : O.none());
           yield* transport.request("refresh", "/refresh", {});
-          assertSome(yield* transport.rateLimit, refreshed);
+          const rateLimit4 = yield* transport.rateLimit;
+          assertSome(rateLimit4, refreshed);
           assert.strictEqual(script.count(), retained ? 4 : 3);
         })
       );
@@ -60,7 +64,8 @@ for (const thrown of [null, "offline", { status: 404, message: "missing" }, { re
         .pipe(Effect.flip);
       assert.strictEqual(error.operation, "probe");
       assert.strictEqual(error.cause, thrown);
-      assertNone(yield* transport.rateLimit);
+      const rateLimit5 = yield* transport.rateLimit;
+      assertNone(rateLimit5);
       assert.strictEqual(script.count(), 0);
     })
   );
@@ -87,10 +92,8 @@ for (const response of [
         .pipe(Effect.flip);
       assert.strictEqual(error.cause, thrown);
       assert.strictEqual(error.kind, "notFound");
-      assertSome(
-        yield* transport.rateLimit,
-        RateLimitSnapshot.make({ remaining: 12, limit: 5000, resetEpochSeconds: 1_700_000_000 })
-      );
+      const rateLimit6 = yield* transport.rateLimit;
+      assertSome(rateLimit6, RateLimitSnapshot.make({ remaining: 12, limit: 5000, resetEpochSeconds: 1_700_000_000 }));
     })
   );
 }
@@ -105,10 +108,8 @@ it.effect("keeps usable nested headers ahead of top-level headers", () =>
     };
     const transport = yield* makeTransport({ retry: RetryPolicy.none, fetch: script.fetch });
     yield* transport.request("probe", "/probe", { request: { hook: () => Promise.reject(thrown) } }).pipe(Effect.flip);
-    assertSome(
-      yield* transport.rateLimit,
-      RateLimitSnapshot.make({ remaining: 8, limit: 5000, resetEpochSeconds: 1_700_000_000 })
-    );
+    const rateLimit7 = yield* transport.rateLimit;
+    assertSome(rateLimit7, RateLimitSnapshot.make({ remaining: 8, limit: 5000, resetEpochSeconds: 1_700_000_000 }));
   })
 );
 
@@ -122,7 +123,8 @@ for (const headers of [[], Object.assign([], rateLimitHeaders({ remaining: 8 }))
         .request("probe", "/probe", { request: { hook: () => Promise.reject(thrown) } })
         .pipe(Effect.flip);
       assert.strictEqual(error.cause, thrown);
-      assertNone(yield* transport.rateLimit);
+      const rateLimit8 = yield* transport.rateLimit;
+      assertNone(rateLimit8);
     })
   );
 }
@@ -136,7 +138,8 @@ for (const headers of [null, 42, [], Object.assign([], rateLimitHeaders({ remain
       yield* transport
         .request("probe", "/probe", { request: { hook: () => Promise.reject(thrown) } })
         .pipe(Effect.flip);
-      assertNone(yield* transport.rateLimit);
+      const rateLimit9 = yield* transport.rateLimit;
+      assertNone(rateLimit9);
     })
   );
 }

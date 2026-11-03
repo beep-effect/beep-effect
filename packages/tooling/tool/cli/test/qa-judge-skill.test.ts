@@ -28,7 +28,8 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("commands/Qa judge-skill", (i
 
         yield* runQaJudgeSkill(QaJudgeSkillOptions.make({ write: O.some(target) }));
 
-        expect(yield* fs.readFileString(target)).toBe(expectedMarkdown);
+        const readFileString1 = yield* fs.readFileString(target);
+        expect(readFileString1).toBe(expectedMarkdown);
       }),
       (dir) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(dir, { recursive: true }).pipe(Effect.orDie))
     )

@@ -94,7 +94,8 @@ const Fixture = Layer.effectDiscard(
     const path = yield* Path.Path;
     const temp = (prefix: string) => fs.makeTempDirectoryScoped({ prefix });
     root = yield* temp("effected-ladder-root-");
-    store = path.join(yield* temp("effected-ladder-store-"), "v11");
+    const temp1 = yield* temp("effected-ladder-store-");
+    store = path.join(temp1, "v11");
     yield* fs.makeDirectory(store, { recursive: true });
     storeReal = yield* fs.realPath(store);
     linkedRoot = yield* temp("effected-ladder-linked-");
@@ -103,7 +104,8 @@ const Fixture = Layer.effectDiscard(
     yield* writeModulesYaml(root, store);
     yield* installConfigDependency(root, NAME, "1.0.0", ["pnpmfile.mjs", pnpmfileInjecting("^1.0.0")]);
     yield* installConfigDependency(root, NO_HOOK, "2.0.0");
-    yield* fs.makeDirectory(yield* installedDir(root, NO_MANIFEST), { recursive: true });
+    const installedDir2 = yield* installedDir(root, NO_MANIFEST);
+    yield* fs.makeDirectory(installedDir2, { recursive: true });
     yield* installConfigDependency(root, UNVERSIONED, undefined, ["pnpmfile.mjs", pnpmfileInjecting("^6.0.0")]);
     yield* installConfigDependency(root, EMPTY_VERSION, "");
 

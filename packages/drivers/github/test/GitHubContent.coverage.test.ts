@@ -94,8 +94,10 @@ describe("GitHubContent coverage", () => {
     it.effect("test layer preserves both overrides", () =>
       Effect.gen(function* () {
         const content = yield* GitHubContent;
-        assert.strictEqual(yield* content.getFile("a"), "text");
-        assertSome(yield* content.getFileOption("a"), "text");
+        const gotFile = yield* content.getFile("a");
+        assert.strictEqual(gotFile, "text");
+        const gotFileOption = yield* content.getFileOption("a");
+        assertSome(gotFileOption, "text");
       })
     );
   });
@@ -127,9 +129,11 @@ describe("GitHubContent coverage", () => {
           assert.strictEqual(error.kind, "rejected");
           assert.include(error.reason, `is a ${type}, not a file`);
         }
-        assertSome(yield* content.getFileOption("a", { ref: "topic" }), "hello");
+        const gotFileOption1 = yield* content.getFileOption("a", { ref: "topic" });
+        assertSome(gotFileOption1, "hello");
         assert.strictEqual(script.queryOf(2).get("ref"), "topic");
-        assertNone(yield* content.getFileOption("missing"));
+        const gotFileOption2 = yield* content.getFileOption("missing");
+        assertNone(gotFileOption2);
         const error = yield* Effect.flip(content.getFileOption("large"));
         assert.strictEqual(error.kind, "rejected");
         assert.include(error.reason, 'encoding "none"');

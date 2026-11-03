@@ -734,7 +734,9 @@ const makeEngine: {
     const sampleFile = Effect.scoped(
       Effect.gen(function* () {
         const sample = yield* fs.open(config.path, { flag: "r" });
-        return Tuple.make(yield* handleBomBytes(sample), yield* sample.stat);
+        const handleBomBytes1 = yield* handleBomBytes(sample);
+        const stat2 = yield* sample.stat;
+        return Tuple.make(handleBomBytes1, stat2);
       })
     );
 

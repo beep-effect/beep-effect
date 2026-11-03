@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // Conformance against the CycloneDX 1.6 specification itself.
 //
 // This package declines the CycloneDX library (6.6 MB, seven optional peers)
@@ -21,8 +22,11 @@ import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import VENDORED_SCHEMA from "./fixtures/bom-1.6.SNAPSHOT.schema.json" with { type: "json" };
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const RequiredProperties = S.Struct({ required: S.String.pipe(S.Array, S.optionalKey) });
 const RequiredPropertyItems = S.Array(RequiredProperties);
@@ -96,7 +100,7 @@ const ConformanceDocument = S.Struct({
 });
 
 const emitted = (): typeof ConformanceDocument.Type => {
-  const document: unknown = JSON.parse(Sbom.toJson(fullDocument()));
+  const document: unknown = Result.getOrThrowWith(S.decodeResult(UnknownJson)(Sbom.toJson(fullDocument())), identity);
   assertTrue(S.is(ConformanceDocument)(document));
   return document;
 };
@@ -200,7 +204,7 @@ const licensesOf = (...licenses: ReadonlyArray<string>): ReadonlyArray<Record<st
     root: Component.make({ type: "library", name: "x", licenses }),
     components: [],
   });
-  const emitted: unknown = JSON.parse(Sbom.toJson(document));
+  const emitted: unknown = Result.getOrThrowWith(S.decodeResult(UnknownJson)(Sbom.toJson(document)), identity);
   assertTrue(S.is(LicenseDocument)(emitted));
   return emitted.metadata.component.licenses ?? [];
 };

@@ -2108,7 +2108,8 @@ const resolvePartitionedLaneRequest = Effect.fn("CiLane.resolvePartitionedLaneRe
   options: CiLaneRunOptions
 ): Effect.fn.Return<O.Option<PartitionedLaneRequest>, CiLanePartitionError> {
   if (options.partition !== undefined) {
-    return O.some(yield* validatePartitionedLaneRequest(laneId, options.partition, options));
+    const validatePartitionedLaneRequest1 = yield* validatePartitionedLaneRequest(laneId, options.partition, options);
+    return O.some(validatePartitionedLaneRequest1);
   }
 
   const proofOnlyFlags = proofOnlyPartitionFlags(options);

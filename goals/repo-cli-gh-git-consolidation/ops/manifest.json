@@ -41,7 +41,8 @@
     "research/yeet-remainder-differential-w2b.json",
     "research/reviewer-ci-github-differential-w3.json",
     "research/review-thread-differential-w4.json",
-    "research/yeet-gh-seams-differential-w6.json"
+    "research/yeet-gh-seams-differential-w6.json",
+    "research/w7-site-census-2026-11-03.md"
   ],
   "agentLaunchers": [
     {

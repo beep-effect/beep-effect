@@ -35,7 +35,8 @@ it.effect.prop(
       const expected = new TextDecoder().decode(new TextEncoder().encode(text));
       assert.strictEqual(handle.volume.text("/text"), expected);
       assert.strictEqual(handle.sync.readFile("/text"), expected);
-      assert.strictEqual(yield* handle.fileSystem.readFileString("/text"), expected);
+      const readFileString1 = yield* handle.fileSystem.readFileString("/text");
+      assert.strictEqual(readFileString1, expected);
     }),
   runs
 );

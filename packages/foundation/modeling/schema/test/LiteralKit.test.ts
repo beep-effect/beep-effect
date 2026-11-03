@@ -44,7 +44,9 @@ describe("LiteralKit", () => {
       [arbitrary],
       Effect.fnUntraced(function* ([literal]) {
         expect(Status.literals).toContain(literal);
-        expect(yield* decodeUnknownStatusEffect(yield* encodeStatusEffect(literal))).toBe(literal);
+        const encodedStatusEffect = yield* encodeStatusEffect(literal);
+        const decodedUnknownStatusEffect = yield* decodeUnknownStatusEffect(encodedStatusEffect);
+        expect(decodedUnknownStatusEffect).toBe(literal);
 
         return true;
       }),
@@ -189,12 +191,11 @@ describe("LiteralKit (string-only)", () => {
   it.effect(
     "builds tagged unions from literal members",
     Effect.fnUntraced(function* () {
-      expect(
-        yield* decodeEventEffect({
-          kind: "created",
-          value: 1,
-        })
-      ).toEqual({
+      const decodedEventEffect = yield* decodeEventEffect({
+        kind: "created",
+        value: 1,
+      });
+      expect(decodedEventEffect).toEqual({
         kind: "created",
         value: 1,
       });

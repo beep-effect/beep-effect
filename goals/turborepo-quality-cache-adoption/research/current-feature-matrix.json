@@ -1516,6 +1516,21 @@
         "stableVersion": "2.11.10",
         "canaryVersion": "2.11.11-canary.1",
         "scope": "Stable rejects both boolean settings; canary accepts both in dry runs. No task body or hash-mode semantics executed."
+      },
+      "linuxModeHashObservation": {
+        "checkpoint": "permission-mode-hash-checkpoint-2026-11-03.json",
+        "report": "source-capture-permission-mode-2026-11-03.json",
+        "cases": 132,
+        "taskBodiesExecuted": 0,
+        "authority": "Synthetic Linux regular-file hash invariants only; aliases are observations. No Windows, output restoration, real computation qualification, activation or performance proof.",
+        "remaining": [
+          "Windows and supported-platform semantics",
+          "Symlink-own-mode and real-profile alias behavior",
+          "Cross-worktree portability and output restoration",
+          "Real computation and hash/epoch qualification"
+        ],
+        "historicalReport": "native-permission-mode-controls-2026-11-03.json",
+        "sourceCaptureRepair": "Six controlled changes refuse before native client selection; observation binds the repaired source bytes."
       }
     }
   ],

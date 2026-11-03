@@ -345,9 +345,11 @@ describe("LocalDate", () => {
 
     it.live("returns real current date with live effect", () =>
       Effect.gen(function* () {
-        const before = DateTime.toDateUtc(yield* DateTime.now);
+        const now1 = yield* DateTime.now;
+        const before = DateTime.toDateUtc(now1);
         const date = yield* todayEffect;
-        const after = DateTime.toDateUtc(yield* DateTime.now);
+        const now2 = yield* DateTime.now;
+        const after = DateTime.toDateUtc(now2);
         // Preserve the live-clock contract even when UTC midnight intervenes.
         expect([
           [before.getUTCFullYear(), before.getUTCMonth() + 1, before.getUTCDate()],

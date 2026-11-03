@@ -17,7 +17,8 @@ describe("internal/osc8/env schema property floor", () => {
         const encoded = yield* S.encodeEffect(TruthySpec)(value);
         const decoded = yield* S.decodeEffect(TruthySpec)(encoded);
         assert.isTrue(S.toEquivalence(TruthySpec)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(TruthySpec)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(TruthySpec)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );

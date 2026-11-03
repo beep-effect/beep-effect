@@ -199,11 +199,8 @@ describe("@beep/pdf-tools live tools", () => {
         const out = path.join(dir, "sheets.pdf");
         const result = yield* tools.svgToPdf(SvgToPdfRequest.make({ svgPaths, outputPath: out }));
         expect(result.pageCount).toBe(2);
-        expect(
-          Buffer.from(yield* fs.readFile(out))
-            .subarray(0, 8)
-            .toString("latin1")
-        ).toBe("%PDF-1.6");
+        const readFile1 = yield* fs.readFile(out);
+        expect(Buffer.from(readFile1).subarray(0, 8).toString("latin1")).toBe("%PDF-1.6");
 
         const structure = yield* tools.inspect(out);
         expect(structure.headerVersion).toBe("1.6");
@@ -239,11 +236,8 @@ describe("@beep/pdf-tools live tools", () => {
         });
         // pdf-lib cuts a stream whose /Length is indirect at the EOL before `endstream`, so only a stream whose
         // data ends in 0x0D comes out short; whether cairo writes one depends on its build and the host's fonts.
-        const shortened = A.reduce(
-          yield* Effect.forEach(pages, shortenedFlateStreams),
-          0,
-          (total, count) => total + count
-        );
+        const forEach2 = yield* Effect.forEach(pages, shortenedFlateStreams);
+        const shortened = A.reduce(forEach2, 0, (total, count) => total + count);
         if (shortened === 0) {
           context.skip(
             "This rsvg-convert/cairo build ends no per-page FlateDecode stream under an indirect /Length in 0x0D, so the merge truncates nothing here; the unit test of an indirect /Length covers the read"
@@ -287,7 +281,8 @@ describe("@beep/pdf-tools live tools", () => {
         yield* fs.writeFile(sheet, sheetBytes);
         yield* fs.writeFile(reviewed, reviewedBytes);
 
-        expect(yield* tools.pageWords(PageTextRequest.make({ pdfPath: sheet, page: 1 }))).toEqual([]);
+        const pageWords3 = yield* tools.pageWords(PageTextRequest.make({ pdfPath: sheet, page: 1 }));
+        expect(pageWords3).toEqual([]);
         const blocks = yield* tools.pageWords(PageTextRequest.make({ pdfPath: reviewed, page: 1 }));
         expect(A.map(blocks, (b) => b.text)).toEqual(["Make the box taller"]);
         // top-left frame: the baseline sits 92 pt below the top edge
@@ -315,7 +310,8 @@ describe("@beep/pdf-tools live tools", () => {
           })
         );
         expect(reverse.coverage).toBeLessThan(1);
-        expect(yield* tools.annotations(reviewed)).toEqual([]);
+        const annotations4 = yield* tools.annotations(reviewed);
+        expect(annotations4).toEqual([]);
       })
     );
   });

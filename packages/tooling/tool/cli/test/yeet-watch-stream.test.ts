@@ -347,7 +347,8 @@ describe("renderYeetWatchEventLine", () => {
   it.effect("round-trips the event end reason", () =>
     Effect.gen(function* () {
       const ended = YeetWatchEnded.make({ at: AT, failing: 0, headSha: "aaa111", reason: "event" });
-      const decoded = yield* decodeUnknownYeetWatchEventJson(yield* renderYeetWatchEventLine(ended));
+      const renderYeetWatchEventLine1 = yield* renderYeetWatchEventLine(ended);
+      const decoded = yield* decodeUnknownYeetWatchEventJson(renderYeetWatchEventLine1);
 
       expect(decoded.kind === "watch-ended" ? decoded.reason : null).toBe("event");
     })
@@ -413,9 +414,10 @@ describe("yeetWatchCommentEvent", () => {
 
   it.effect("renders a comment row that round-trips through the stream schema", () =>
     Effect.gen(function* () {
-      const decoded = yield* decodeUnknownYeetWatchEventJson(
-        yield* renderYeetWatchEventLine(yeetWatchCommentEvent(reviewComment, AT, "aaa111"))
+      const renderYeetWatchEventLine2 = yield* renderYeetWatchEventLine(
+        yeetWatchCommentEvent(reviewComment, AT, "aaa111")
       );
+      const decoded = yield* decodeUnknownYeetWatchEventJson(renderYeetWatchEventLine2);
 
       expect(decoded.kind).toBe("comment-posted");
       expect(decoded.kind === "comment-posted" ? decoded.commentId : null).toBe(43);

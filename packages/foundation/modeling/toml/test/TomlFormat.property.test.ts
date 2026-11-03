@@ -56,7 +56,9 @@ describe("TomlFormat property floor", () => {
         assert.deepStrictEqual(TomlFormat.format(formatted, undefined, options), []);
         const after = yield* Toml.parse(formatted);
         assert.deepStrictEqual(after, before);
-        assert.deepStrictEqual(yield* Toml.parse(yield* Toml.stringify(after)), before);
+        const stringify5 = yield* Toml.stringify(after);
+        const parsed1 = yield* Toml.parse(stringify5);
+        assert.deepStrictEqual(parsed1, before);
         assert.strictEqual((yield* TomlDocument.parse(source)).stringify(), source);
         assert.include(formatted, "'''\nuntouched  \nbytes\n'''");
         assert.include(formatted, "# keep");
@@ -75,14 +77,15 @@ describe("TomlFormat property floor", () => {
         const modified = yield* TomlFormat.modifyToString(source, ["value"], sample.next);
         assertTrue(Str.startsWith(prefix)(modified));
         assertTrue(Str.endsWith(suffix)(modified));
-        assert.strictEqual(yield* TomlFormat.modifyToString(modified, ["value"], sample.next), modified);
-        assert.strictEqual(
-          TomlEdit.applyAll(source, yield* TomlFormat.modify(source, ["value"], sample.next)),
-          modified
-        );
+        const modifyToString2 = yield* TomlFormat.modifyToString(modified, ["value"], sample.next);
+        assert.strictEqual(modifyToString2, modified);
+        const modify3 = yield* TomlFormat.modify(source, ["value"], sample.next);
+        assert.strictEqual(TomlEdit.applyAll(source, modify3), modified);
         const parsed = yield* Toml.parse(modified);
         assert.deepStrictEqual(parsed, { value: sample.next, section: { flag: true } });
-        assert.deepStrictEqual(yield* Toml.parse(yield* Toml.stringify(parsed)), parsed);
+        const stringify6 = yield* Toml.stringify(parsed);
+        const parsed4 = yield* Toml.parse(stringify6);
+        assert.deepStrictEqual(parsed4, parsed);
       }),
     runs
   );

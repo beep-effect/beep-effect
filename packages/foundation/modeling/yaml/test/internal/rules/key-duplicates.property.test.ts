@@ -16,7 +16,8 @@ describe("key-duplicates schema properties", () => {
         const encoded = yield* S.encodeEffect(keyDuplicatesOptions)(value);
         const decoded = yield* S.decodeEffect(keyDuplicatesOptions)(encoded);
         assert.isTrue(S.toEquivalence(keyDuplicatesOptions)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(keyDuplicatesOptions)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(keyDuplicatesOptions)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );

@@ -144,8 +144,10 @@ const assertCleanFailure = Effect.fnUntraced(function* (
     Effect.flip
   );
   expect(error.message).toContain(expectedMessage);
-  expect(yield* fs.exists(targetPath)).toBe(false);
-  expect(yield* fs.readDirectory(modelRoot)).toEqual([]);
+  const exists1 = yield* fs.exists(targetPath);
+  expect(exists1).toBe(false);
+  const readDirectory2 = yield* fs.readDirectory(modelRoot);
+  expect(readDirectory2).toEqual([]);
 });
 
 describe("person-match ranged model acquisition", { concurrent: false }, () => {
@@ -168,9 +170,12 @@ describe("person-match ranged model acquisition", { concurrent: false }, () => {
           PosInt.make(3)
         );
 
-        expect(A.fromIterable(yield* fs.readFile(targetPath))).toEqual(A.fromIterable(payload));
-        expect(yield* fs.readDirectory(modelRoot)).toEqual(["model.safetensors"]);
-        expect(yield* recordedRequests).toEqual([
+        const readFile3 = yield* fs.readFile(targetPath);
+        expect(A.fromIterable(readFile3)).toEqual(A.fromIterable(payload));
+        const readDirectory4 = yield* fs.readDirectory(modelRoot);
+        expect(readDirectory4).toEqual(["model.safetensors"]);
+        const recordedRequests5 = yield* recordedRequests;
+        expect(recordedRequests5).toEqual([
           ["bytes=0-2", "identity"],
           ["bytes=3-5", "identity"],
         ]);
@@ -207,8 +212,10 @@ describe("person-match ranged model acquisition", { concurrent: false }, () => {
           PosInt.make(3)
         );
 
-        expect(A.fromIterable(yield* fs.readFile(targetPath))).toEqual(A.fromIterable(payload));
-        expect(yield* recordedRequests).toEqual([
+        const readFile6 = yield* fs.readFile(targetPath);
+        expect(A.fromIterable(readFile6)).toEqual(A.fromIterable(payload));
+        const recordedRequests7 = yield* recordedRequests;
+        expect(recordedRequests7).toEqual([
           ["bytes=0-2", "identity"],
           ["bytes=0-2", "identity"],
           ["bytes=3-5", "identity"],
@@ -239,8 +246,10 @@ describe("person-match ranged model acquisition", { concurrent: false }, () => {
           PosInt.make(3)
         );
 
-        expect(A.fromIterable(yield* fs.readFile(targetPath))).toEqual(A.fromIterable(payload));
-        expect(yield* recordedRequests).toEqual([
+        const readFile8 = yield* fs.readFile(targetPath);
+        expect(A.fromIterable(readFile8)).toEqual(A.fromIterable(payload));
+        const recordedRequests9 = yield* recordedRequests;
+        expect(recordedRequests9).toEqual([
           ["bytes=0-2", "identity"],
           ["bytes=0-2", "identity"],
           ["bytes=3-5", "identity"],
@@ -271,7 +280,8 @@ describe("person-match ranged model acquisition", { concurrent: false }, () => {
             PosInt.make(3),
             message
           );
-          expect(A.length(yield* recordedRequests)).toBe(1);
+          const recordedRequests10 = yield* recordedRequests;
+          expect(A.length(recordedRequests10)).toBe(1);
         })
     );
 
@@ -292,7 +302,8 @@ describe("person-match ranged model acquisition", { concurrent: false }, () => {
           PosInt.make(3),
           "exceeded its 3-byte ceiling"
         );
-        expect(A.length(yield* recordedRequests)).toBe(1);
+        const recordedRequests11 = yield* recordedRequests;
+        expect(A.length(recordedRequests11)).toBe(1);
       })
     );
 
@@ -313,7 +324,8 @@ describe("person-match ranged model acquisition", { concurrent: false }, () => {
           PosInt.make(3),
           "ended after 2 bytes; expected 3"
         );
-        expect(A.length(yield* recordedRequests)).toBe(1);
+        const recordedRequests12 = yield* recordedRequests;
+        expect(A.length(recordedRequests12)).toBe(1);
       })
     );
 
@@ -334,7 +346,8 @@ describe("person-match ranged model acquisition", { concurrent: false }, () => {
           PosInt.make(3),
           "failed integrity validation"
         );
-        expect(A.length(yield* recordedRequests)).toBe(2);
+        const recordedRequests13 = yield* recordedRequests;
+        expect(A.length(recordedRequests13)).toBe(2);
       })
     );
   });

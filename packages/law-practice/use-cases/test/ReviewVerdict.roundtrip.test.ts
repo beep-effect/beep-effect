@@ -95,15 +95,18 @@ describe("@beep/law-practice-use-cases review verdict round trip", () => {
         const queue = yield* ReviewQueue;
         const projector = yield* VerdictProjector;
         const item = yield* claimFinding;
-        expect(yield* decodeItem(encodedItem("claim-finding", FINDING_ID))).toStrictEqual(item);
+        const decodedItem = yield* decodeItem(encodedItem("claim-finding", FINDING_ID));
+        expect(decodedItem).toStrictEqual(item);
         const other = yield* decodeItem(encodedItem("kg-answer", "kg-answer:1"));
         const resolvedBy = yield* attorney;
 
-        expect(yield* queue.openItems([item, other])).toStrictEqual([item, other]);
+        const openItems1 = yield* queue.openItems([item, other]);
+        expect(openItems1).toStrictEqual([item, other]);
 
         const wrong = yield* verdictAt(T_WRONG, finding(BATCH_A, "wrong", O.some(NOTE)));
         expect(wrong.revision).toBe(1);
-        expect(yield* queue.openItems([item])).toStrictEqual([]);
+        const openItems2 = yield* queue.openItems([item]);
+        expect(openItems2).toStrictEqual([]);
 
         const right = yield* verdictAt(T_RIGHT, finding(BATCH_A, "right"));
         expect(right.revision).toBe(2);
@@ -220,14 +223,16 @@ describe("@beep/law-practice-use-cases review verdict round trip", () => {
         const resolvedBy = yield* attorney;
 
         yield* verdictAt(T_WRONG, finding(BATCH_A, "right"));
-        expect(yield* queue.openItems([item])).toStrictEqual([]);
+        const openItems3 = yield* queue.openItems([item]);
+        expect(openItems3).toStrictEqual([]);
 
         yield* verdictAt(T_RIGHT, finding(BATCH_B, "partly"));
         const rows = yield* queue.readLog;
 
         expect(projector.project({ items: [item], resolvedBy, rows })).toStrictEqual([]);
         assertNone(projector.projectItem({ item, resolvedBy, rows }));
-        expect(yield* queue.openItems([item])).toStrictEqual([item]);
+        const openItems4 = yield* queue.openItems([item]);
+        expect(openItems4).toStrictEqual([item]);
         assertTrue(
           sameProjections(
             projector.project({ items: [item], resolvedBy, rows }),
@@ -256,7 +261,8 @@ describe("@beep/law-practice-use-cases review verdict round trip", () => {
           ],
         });
 
-        expect(yield* queue.openItems([question, item])).toStrictEqual([item]);
+        const openItems5 = yield* queue.openItems([question, item]);
+        expect(openItems5).toStrictEqual([item]);
       })
     );
   });
@@ -271,7 +277,8 @@ describe("@beep/law-practice-use-cases review verdict round trip", () => {
         const resolvedBy = yield* attorney;
 
         yield* verdictAt(T_WRONG, finding(BATCH_A, "wrong"));
-        expect(yield* queue.openItems([item])).toStrictEqual([]);
+        const openItems6 = yield* queue.openItems([item]);
+        expect(openItems6).toStrictEqual([]);
 
         yield* verdictAt(T_RIGHT, finding(BATCH_A, "withdrawn"));
         const rows = yield* queue.readLog;
@@ -282,7 +289,8 @@ describe("@beep/law-practice-use-cases review verdict round trip", () => {
         ]);
         expect(projector.project({ items: [item], resolvedBy, rows })).toStrictEqual([]);
         assertNone(projector.projectItem({ item, resolvedBy, rows }));
-        expect(yield* queue.openItems([item])).toStrictEqual([item]);
+        const openItems7 = yield* queue.openItems([item]);
+        expect(openItems7).toStrictEqual([item]);
       })
     );
   });
@@ -305,7 +313,8 @@ describe("@beep/law-practice-use-cases review verdict round trip", () => {
         expect(A.map(projector.project({ items: [item], resolvedBy, rows }), (p) => p.status)).toStrictEqual([
           "rejected",
         ]);
-        expect(yield* queue.openItems([item])).toStrictEqual([]);
+        const openItems8 = yield* queue.openItems([item]);
+        expect(openItems8).toStrictEqual([]);
       })
     );
   });
@@ -325,7 +334,8 @@ describe("@beep/law-practice-use-cases review verdict round trip", () => {
         assertTrue(DateTime.Equivalence(first.recordedAt, second.recordedAt));
 
         const rows = yield* queue.readLog;
-        expect(yield* queue.openItems([item])).toStrictEqual([item]);
+        const openItems9 = yield* queue.openItems([item]);
+        expect(openItems9).toStrictEqual([item]);
         expect(projector.project({ items: [item], resolvedBy, rows })).toStrictEqual([]);
       })
     );

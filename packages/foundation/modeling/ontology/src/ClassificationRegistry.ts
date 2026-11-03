@@ -213,24 +213,22 @@ const narrower = Effect.fn("ClassificationRegistry.narrower")(function* (
 
 const decodeAssets = Effect.fnUntraced(function* (manifestPath: string, content: string) {
   const lines = A.filter(A.map(Str.split(content, "\n"), Str.trim), Str.isNonEmpty);
-  return A.getSomes(
-    yield* Effect.forEach(
-      lines,
-      Effect.fnUntraced(function* (line, index) {
-        // The shared decoder validates every discriminator, including unknown kinds.
-        const route = yield* decodeVendorManifestRow(manifestPath, line, index).pipe(
-          Effect.mapError(() => failure("manifest-invalid", `Manifest row ${index + 1}`))
-        );
-        if (!O.contains(route.loadKind, "classification-scheme")) return O.none<ClassificationAsset>();
-        return O.some(
-          yield* S.decodeEffect(ClassificationAssetJson)(line).pipe(
-            Effect.mapError(() => failure("manifest-invalid", `Classification row ${index + 1}`))
-          )
-        );
-      }),
-      { concurrency: 1 }
-    )
+  const forEach1 = yield* Effect.forEach(
+    lines,
+    Effect.fnUntraced(function* (line, index) {
+      // The shared decoder validates every discriminator, including unknown kinds.
+      const route = yield* decodeVendorManifestRow(manifestPath, line, index).pipe(
+        Effect.mapError(() => failure("manifest-invalid", `Manifest row ${index + 1}`))
+      );
+      if (!O.contains(route.loadKind, "classification-scheme")) return O.none<ClassificationAsset>();
+      const pipe6 = yield* S.decodeEffect(ClassificationAssetJson)(line).pipe(
+        Effect.mapError(() => failure("manifest-invalid", `Classification row ${index + 1}`))
+      );
+      return O.some(pipe6);
+    }),
+    { concurrency: 1 }
   );
+  return A.getSomes(forEach1);
 });
 
 const readAsset = Effect.fnUntraced(function* (asset: ClassificationAsset, vendorRoot: string) {
@@ -255,13 +253,9 @@ const load = Effect.fn("ClassificationRegistry.load")(function* (
   const content = yield* fs
     .readFileString(manifestPath)
     .pipe(Effect.mapError(() => failure("manifest-invalid", manifestPath)));
+  const decodedAssets = yield* decodeAssets(manifestPath, content);
   const assets = yield* Effect.filterOrFail(
-    Effect.succeed(
-      A.filter(
-        yield* decodeAssets(manifestPath, content),
-        (asset) => asset.schemeKind === pin.kind && asset.edition === pin.edition
-      )
-    ),
+    Effect.succeed(A.filter(decodedAssets, (asset) => asset.schemeKind === pin.kind && asset.edition === pin.edition)),
     A.isArrayNonEmpty<ClassificationAsset>,
     () => failure("edition-unpinned", `${pin.kind} ${pin.edition}`)
   );
@@ -275,7 +269,8 @@ const load = Effect.fn("ClassificationRegistry.load")(function* (
   const concepts = yield* ClassificationSchemeKind.match(pin.kind, {
     ipc: Effect.fnUntraced(function* () {
       const asset = A.headNonEmpty(assets);
-      return yield* parseIpc(yield* readAsset(asset, vendorRoot), pin);
+      const readAsset2 = yield* readAsset(asset, vendorRoot);
+      return yield* parseIpc(readAsset2, pin);
     }),
     cpc: Effect.fnUntraced(function* () {
       const asset = A.headNonEmpty(assets);
@@ -284,30 +279,27 @@ const load = Effect.fn("ClassificationRegistry.load")(function* (
           failure(error._tag === "VendorSlicePathEscape" ? "path-escape" : "source-parse", asset.id)
         )
       );
-      const files = A.filter(
-        yield* fs.readDirectory(directory).pipe(Effect.mapError(() => failure("source-parse", asset.id))),
-        (file) => Str.startsWith("cpc-scheme-")(file) && Str.endsWith(".xml")(file)
-      );
+      const pipe3 = yield* fs.readDirectory(directory).pipe(Effect.mapError(() => failure("source-parse", asset.id)));
+      const files = A.filter(pipe3, (file) => Str.startsWith("cpc-scheme-")(file) && Str.endsWith(".xml")(file));
       yield* Effect.filterOrFail(Effect.succeed(files), A.isReadonlyArrayNonEmpty, () =>
         failure("source-parse", "CPC scheme files missing")
       );
-      return A.flatten(
-        yield* Effect.forEach(
-          files,
-          Effect.fnUntraced(function* (file) {
-            const path = yield* S.decodeEffect(VendorSlicePath)(A.join([asset.path, file], "/")).pipe(
-              Effect.mapError(() => failure("path-escape", file))
-            );
-            const text = yield* readVendorContent(asset.id, path, vendorRoot).pipe(
-              Effect.mapError((error) =>
-                failure(error._tag === "VendorSlicePathEscape" ? "path-escape" : "source-parse", file)
-              )
-            );
-            return yield* parseCpc(text, pin);
-          }),
-          { concurrency: 1 }
-        )
+      const forEach4 = yield* Effect.forEach(
+        files,
+        Effect.fnUntraced(function* (file) {
+          const path = yield* S.decodeEffect(VendorSlicePath)(A.join([asset.path, file], "/")).pipe(
+            Effect.mapError(() => failure("path-escape", file))
+          );
+          const text = yield* readVendorContent(asset.id, path, vendorRoot).pipe(
+            Effect.mapError((error) =>
+              failure(error._tag === "VendorSlicePathEscape" ? "path-escape" : "source-parse", file)
+            )
+          );
+          return yield* parseCpc(text, pin);
+        }),
+        { concurrency: 1 }
       );
+      return A.flatten(forEach4);
     }),
     nice: Effect.fnUntraced(function* () {
       const structure = yield* Effect.fromOption(
@@ -318,7 +310,9 @@ const load = Effect.fn("ClassificationRegistry.load")(function* (
         A.findFirst(assets, (asset) => Str.includes("texts")(asset.id)),
         () => failure("manifest-invalid", "Nice texts archive missing")
       );
-      return yield* parseNice(yield* readAsset(structure, vendorRoot), yield* readAsset(texts, vendorRoot), pin);
+      const readAsset5 = yield* readAsset(structure, vendorRoot);
+      const readAsset7 = yield* readAsset(texts, vendorRoot);
+      return yield* parseNice(readAsset5, readAsset7, pin);
     }),
   });
   const broaderEquivalence = S.toEquivalence(S.Array(IRIReference));

@@ -52,12 +52,17 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       const receipt = yield* journal.acceptPage(page, O.none());
       expect(receipt.sequence).toBe(1);
       expect(receipt.frames).toBe(1);
-      assertSome(yield* journal.readCursor(page.cursor.source, page.cursor.pathHash), page.cursor);
-      expect(yield* journal.acceptPage(page, O.none())).toEqual(receipt);
-      expect(yield* journal.stats).toMatchObject({ pages: 1, frames: 1 });
+      const readCursor1 = yield* journal.readCursor(page.cursor.source, page.cursor.pathHash);
+      assertSome(readCursor1, page.cursor);
+      const acceptPage2 = yield* journal.acceptPage(page, O.none());
+      expect(acceptPage2).toEqual(receipt);
+      const stats3 = yield* journal.stats;
+      expect(stats3).toMatchObject({ pages: 1, frames: 1 });
       const reinitialized = yield* makeTranscriptIntakeJournal(config);
-      assertSome(yield* reinitialized.readCursor(page.cursor.source, page.cursor.pathHash), page.cursor);
-      expect(yield* reinitialized.acceptPage(page, O.none())).toEqual(receipt);
+      const readCursor4 = yield* reinitialized.readCursor(page.cursor.source, page.cursor.pathHash);
+      assertSome(readCursor4, page.cursor);
+      const acceptPage5 = yield* reinitialized.acceptPage(page, O.none());
+      expect(acceptPage5).toEqual(receipt);
       const sql = yield* SqlClient.SqlClient;
       const rows = yield* sql`SELECT payload FROM observation_intake_pages`;
       const text = yield* encodeJsonValue(rows);
@@ -75,8 +80,10 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       const sql = yield* SqlClient.SqlClient;
       yield* sql`CREATE TRIGGER synthetic_cursor_failure BEFORE INSERT ON observation_source_cursors BEGIN SELECT RAISE(ABORT,'synthetic failure'); END`;
       expect((yield* journal.acceptPage(page, O.none()).pipe(Effect.flip)).reason).toBe("storage");
-      expect(yield* journal.stats).toEqual({ pages: 0, payloadBytes: 0, frames: 0 });
-      assertNone(yield* journal.readCursor(page.cursor.source, page.cursor.pathHash));
+      const stats6 = yield* journal.stats;
+      expect(stats6).toEqual({ pages: 0, payloadBytes: 0, frames: 0 });
+      const readCursor7 = yield* journal.readCursor(page.cursor.source, page.cursor.pathHash);
+      assertNone(readCursor7);
       yield* sql`DROP TRIGGER synthetic_cursor_failure`;
       expect((yield* journal.acceptPage(page, O.none())).sequence).toBe(1);
     })
@@ -91,8 +98,10 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       yield* fs.writeFileString(path, line, { flag: "a" });
       const next = yield* readTranscriptPage(TranscriptPageInput.make({ ...input, cursor: O.some(page.cursor) }));
       expect((yield* journal.acceptPage(next, O.some(page.cursor)).pipe(Effect.flip)).reason).toBe("capacity");
-      assertSome(yield* journal.readCursor(page.cursor.source, page.cursor.pathHash), page.cursor);
-      expect(yield* journal.acceptPage(page, O.none())).toEqual(first);
+      const readCursor8 = yield* journal.readCursor(page.cursor.source, page.cursor.pathHash);
+      assertSome(readCursor8, page.cursor);
+      const acceptPage9 = yield* journal.acceptPage(page, O.none());
+      expect(acceptPage9).toEqual(first);
       expect((yield* journal.stats).pages).toBe(1);
     })
   )
@@ -117,14 +126,18 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
     Effect.gen(function* () {
       const { config } = yield* fixture();
       const sql = yield* SqlClient.SqlClient;
-      expect(yield* sql`PRAGMA synchronous`).toEqual([{ synchronous: 3 }]);
-      expect(yield* sql`PRAGMA journal_mode`).toEqual([{ journal_mode: "delete" }]);
-      expect(yield* sql`PRAGMA max_page_count`).toEqual([{ max_page_count: 256 }]);
+      const value = yield* sql`PRAGMA synchronous`;
+      expect(value).toEqual([{ synchronous: 3 }]);
+      const value10 = yield* sql`PRAGMA journal_mode`;
+      expect(value10).toEqual([{ journal_mode: "delete" }]);
+      const value11 = yield* sql`PRAGMA max_page_count`;
+      expect(value11).toEqual([{ max_page_count: 256 }]);
       const changed = TranscriptIntakeConfig.make({ ...config, hostId: Sha256Hex.make(Str.repeat(64)("b")) });
       expect((yield* makeTranscriptIntakeJournal(changed).pipe(Effect.flip)).reason).toBe("configuration");
       yield* sql`CREATE TABLE unrelated_work (id INTEGER)`;
       expect((yield* makeTranscriptIntakeJournal(config).pipe(Effect.flip)).reason).toBe("not-owned");
-      expect(yield* sql`SELECT COUNT(*) AS count FROM unrelated_work`).toEqual([{ count: 0 }]);
+      const value12 = yield* sql`SELECT COUNT(*) AS count FROM unrelated_work`;
+      expect(value12).toEqual([{ count: 0 }]);
     })
   )
 );
@@ -140,8 +153,10 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       );
       expect(page.frames).toHaveLength(4096);
       expect((yield* journal.acceptPage(page, O.none()).pipe(Effect.flip)).reason).toBe("storage");
-      expect(yield* journal.stats).toEqual({ pages: 0, payloadBytes: 0, frames: 0 });
-      assertNone(yield* journal.readCursor(page.cursor.source, page.cursor.pathHash));
+      const stats13 = yield* journal.stats;
+      expect(stats13).toEqual({ pages: 0, payloadBytes: 0, frames: 0 });
+      const readCursor14 = yield* journal.readCursor(page.cursor.source, page.cursor.pathHash);
+      assertNone(readCursor14);
     })
   )
 );

@@ -96,8 +96,10 @@ describe("Run against real processes", () => {
 
   it.effect("succeeds answers false for an absent executable and true for a real one", () =>
     Effect.gen(function* () {
-      assert.isFalse(yield* live(Run.succeeds(ChildProcess.make("effected-no-such-binary-xyz", []))));
-      assert.isTrue(yield* live(Run.succeeds(node("process.exit(0)"))));
+      const live1 = yield* live(Run.succeeds(ChildProcess.make("effected-no-such-binary-xyz", [])));
+      assert.isFalse(live1);
+      const live2 = yield* live(Run.succeeds(node("process.exit(0)")));
+      assert.isTrue(live2);
     })
   );
 

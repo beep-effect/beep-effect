@@ -2,6 +2,7 @@ import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as S from "effect/Schema";
 
 const runs = { arbitrary: fcRuns(100) };
@@ -11,10 +12,13 @@ import { stringifyTree } from "@beep/markdown/internal/stringify";
 import { Paragraph, Root, Text } from "@beep/markdown/MarkdownNode";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import { renderHtml } from "../support/htmlWriter.ts";
 import { normalizeHtml } from "../support/normalizeHtml.ts";
 import { renderOracleHtml } from "../support/oracle.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const prose = Arbitrary.schema(S.String).pipe(
   Arbitrary.map(
@@ -112,8 +116,16 @@ describe("text escaping against the reference implementation", () => {
       const value = `x${raw}x`;
       const tree = paragraphOf(value);
       const emitted = stringifyTree(tree);
-      assert.strictEqual(oracle(emitted), normalizeHtml(renderHtml(tree)), `emitted: ${JSON.stringify(emitted)}`);
-      assert.strictEqual(ours(emitted), oracle(emitted), `emitted: ${JSON.stringify(emitted)}`);
+      assert.strictEqual(
+        oracle(emitted),
+        normalizeHtml(renderHtml(tree)),
+        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
+      );
+      assert.strictEqual(
+        ours(emitted),
+        oracle(emitted),
+        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
+      );
       return true;
     },
     { arbitrary: { ...fcRuns(2000), seed: 0x657363, size: 24 } }
@@ -128,9 +140,13 @@ describe("text escaping against the reference implementation", () => {
       assert.deepStrictEqual(
         A.map(reparsed.children, (child) => child.type),
         ["paragraph"],
-        `emitted: ${JSON.stringify(emitted)}`
+        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
       );
-      assert.strictEqual(ours(emitted), oracle(emitted), `emitted: ${JSON.stringify(emitted)}`);
+      assert.strictEqual(
+        ours(emitted),
+        oracle(emitted),
+        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
+      );
       return true;
     },
     { arbitrary: { ...fcRuns(2000), seed: 0x6c6974, size: 24 } }

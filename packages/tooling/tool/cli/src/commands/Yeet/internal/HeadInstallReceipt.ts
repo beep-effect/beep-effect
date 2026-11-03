@@ -200,11 +200,12 @@ export const collectHeadInstallInputs = Effect.fn("Yeet.collectHeadInstallInputs
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Digest.Digest
 > {
   const treeSha = yield* runGitOutput(repoRoot, ["rev-parse", `${commitSha}^{tree}`]);
-  const entries = pipe(
-    yield* runGitFoldedStdout(repoRoot, ["ls-tree", "-r", "--full-tree", commitSha], foldInstallInputs),
-    Str.split("\n"),
-    A.filter(Str.isNonEmpty)
+  const resultGitFoldedStdout = yield* runGitFoldedStdout(
+    repoRoot,
+    ["ls-tree", "-r", "--full-tree", commitSha],
+    foldInstallInputs
   );
+  const entries = pipe(resultGitFoldedStdout, Str.split("\n"), A.filter(Str.isNonEmpty));
   const lockfileDigest = pipe(
     A.findFirst(entries, Str.startsWith(`${LOCKFILE_PATH}\0`)),
     O.map(Str.slice(LOCKFILE_PATH.length + 1)),
@@ -380,7 +381,8 @@ export const recordHeadInstallReceipt = Effect.fn("Yeet.recordHeadInstallReceipt
  */
 export const clearHeadInstallReceipt = Effect.fn("Yeet.clearHeadInstallReceipt")(function* (context: RepoRunContext) {
   const fs = yield* FileSystem.FileSystem;
-  yield* fs.remove(yield* receiptPathForContext(context), { force: true }).pipe(Effect.ignore);
+  const receiptPathForContext1 = yield* receiptPathForContext(context);
+  yield* fs.remove(receiptPathForContext1, { force: true }).pipe(Effect.ignore);
 });
 
 /**
@@ -397,7 +399,8 @@ export const loadHeadInstallReceipt = Effect.fn("Yeet.loadHeadInstallReceipt")(f
   commitSha: string
 ): Effect.fn.Return<O.Option<HeadInstallReceipt>, YeetCommandError, FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const fs = yield* FileSystem.FileSystem;
-  const text = yield* fs.readFileString(yield* receiptPathForContext(context)).pipe(Effect.option);
+  const receiptPathForContext2 = yield* receiptPathForContext(context);
+  const text = yield* fs.readFileString(receiptPathForContext2).pipe(Effect.option);
   return pipe(
     text,
     O.flatMap(HeadInstallReceiptJson.decodeOption),

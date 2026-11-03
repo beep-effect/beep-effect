@@ -79,7 +79,8 @@ describe("MemoryFileSystem.layerWith — Volume", () => {
 
         // Seeded files answer through both views.
         assert.strictEqual(volume.text("/repo/package.json"), `{ "name": "fixture" }`);
-        assert.strictEqual(yield* fs.readFileString("/repo/package.json"), `{ "name": "fixture" }`);
+        const readFileString1 = yield* fs.readFileString("/repo/package.json");
+        assert.strictEqual(readFileString1, `{ "name": "fixture" }`);
         assert.strictEqual((yield* fs.stat("/repo/bin/run.sh")).mode & 0o777, 0o755);
 
         // has(): files, directories and symlinks all count as present —
@@ -94,7 +95,8 @@ describe("MemoryFileSystem.layerWith — Volume", () => {
         // THROUGH it is the FileSystem API's job), a directory neither.
         assert.isUndefined(volume.text("/repo/latest"));
         assert.isUndefined(volume.bytes("/repo/empty"));
-        assert.strictEqual(yield* fs.readFileString("/repo/latest"), `{ "name": "fixture" }`);
+        const readFileString2 = yield* fs.readFileString("/repo/latest");
+        assert.strictEqual(readFileString2, `{ "name": "fixture" }`);
       })
     );
   });
@@ -175,7 +177,8 @@ describe("MemoryFileSystem.layerWith — Volume", () => {
         assert.isDefined(stolen);
         stolen?.fill(0);
         assert.strictEqual(volume.text("/data.bin"), "abc");
-        assert.strictEqual(yield* fs.readFileString("/data.bin"), "abc");
+        const readFileString3 = yield* fs.readFileString("/data.bin");
+        assert.strictEqual(readFileString3, "abc");
       })
     );
   });
@@ -350,8 +353,10 @@ describe("engine name ordering", () => {
         "/mixed/a": "lower",
         "/mixed/Z": "upper",
       });
-      assert.deepStrictEqual(yield* handle.fileSystem.readDirectory("/mixed"), ["Z", "a", "ä"]);
-      assert.deepStrictEqual(yield* handle.fileSystem.glob("*", { root: "/mixed" }), ["Z", "a", "ä"]);
+      const readDirectory4 = yield* handle.fileSystem.readDirectory("/mixed");
+      assert.deepStrictEqual(readDirectory4, ["Z", "a", "ä"]);
+      const glob5 = yield* handle.fileSystem.glob("*", { root: "/mixed" });
+      assert.deepStrictEqual(glob5, ["Z", "a", "ä"]);
       assert.deepStrictEqual(handle.volume.readDirectory("/mixed"), ["Z", "a", "ä"]);
     })
   );

@@ -56,7 +56,8 @@ const run = Effect.fn("run")(function* (argv: ReadonlyArray<string>, options?: {
   const seen: AudienceShape[] = [];
   const verify = Command.make("verify", { target: Argument.String("target") }, () =>
     Effect.gen(function* () {
-      seen.push(yield* Audience);
+      const Audience1 = yield* Audience;
+      seen.push(Audience1);
     })
   );
   const other = Command.make("other", {}, () => Effect.void);
@@ -65,8 +66,10 @@ const run = Effect.fn("run")(function* (argv: ReadonlyArray<string>, options?: {
     Command.withSubcommands([verify, other]),
     CliAudience.provide
   );
-  const exit = yield* CliRuntime.main(Command.runWith(root, { version: "1.0.0" })(argv), {
-    platform: memoryPlatform(yield* FileSystem.FileSystem),
+  const argument = Command.runWith(root, { version: "1.0.0" })(argv);
+  const FileSystem1 = yield* FileSystem.FileSystem;
+  const exit = yield* CliRuntime.main(argument, {
+    platform: memoryPlatform(FileSystem1),
   }).pipe(
     Effect.exit,
     Effect.provideService(Console.Console, double),
@@ -221,7 +224,8 @@ it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })((it) => {
       const seen: boolean[] = [];
       const verify = Command.make("verify", { target: Argument.String("target") }, () =>
         Effect.gen(function* () {
-          seen.push(yield* CliInteractive);
+          const CliInteractive2 = yield* CliInteractive;
+          seen.push(CliInteractive2);
         })
       );
       const root = Command.make("tool").pipe(
@@ -229,8 +233,10 @@ it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })((it) => {
         Command.withSubcommands([verify]),
         CliAudience.provide
       );
-      yield* CliRuntime.main(Command.runWith(root, { version: "1.0.0" })(argv), {
-        platform: memoryPlatform(yield* FileSystem.FileSystem),
+      const argument1 = Command.runWith(root, { version: "1.0.0" })(argv);
+      const FileSystem2 = yield* FileSystem.FileSystem;
+      yield* CliRuntime.main(argument1, {
+        platform: memoryPlatform(FileSystem2),
       }).pipe(
         Effect.exit,
         Effect.provideService(Console.Console, double),
@@ -242,18 +248,25 @@ it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })((it) => {
 
     it.effect("a non-human audience flag turns interactivity off for the handler", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* observe(["--agent", "verify", "x"], true), [false]);
-        assert.deepStrictEqual(yield* observe(["--ci", "verify", "x"], true), [false]);
-        assert.deepStrictEqual(yield* observe(["--audience", "agent", "verify", "x"], true), [false]);
+        const observe3 = yield* observe(["--agent", "verify", "x"], true);
+        assert.deepStrictEqual(observe3, [false]);
+        const observe4 = yield* observe(["--ci", "verify", "x"], true);
+        assert.deepStrictEqual(observe4, [false]);
+        const observe5 = yield* observe(["--audience", "agent", "verify", "x"], true);
+        assert.deepStrictEqual(observe5, [false]);
       })
     );
 
     it.effect("no flag leaves it as decided, and --human never turns it on", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* observe(["verify", "x"], true), [true]);
-        assert.deepStrictEqual(yield* observe(["verify", "x"], false), [false]);
-        assert.deepStrictEqual(yield* observe(["--human", "verify", "x"], true), [true]);
-        assert.deepStrictEqual(yield* observe(["--human", "verify", "x"], false), [false]);
+        const observe6 = yield* observe(["verify", "x"], true);
+        assert.deepStrictEqual(observe6, [true]);
+        const observe7 = yield* observe(["verify", "x"], false);
+        assert.deepStrictEqual(observe7, [false]);
+        const observe8 = yield* observe(["--human", "verify", "x"], true);
+        assert.deepStrictEqual(observe8, [true]);
+        const observe9 = yield* observe(["--human", "verify", "x"], false);
+        assert.deepStrictEqual(observe9, [false]);
       })
     );
   });

@@ -912,7 +912,8 @@ const sendThroughOtlpProtoExporter = Effect.fnUntraced(function* (
   }
 
   const resource = resourceFor(input);
-  const timestamp = hrTimeFrom(yield* Clock.currentTimeMillis);
+  const currentTimeMillis1 = yield* Clock.currentTimeMillis;
+  const timestamp = hrTimeFrom(currentTimeMillis1);
   const toReadableSpan = readableSpanFor(resource, timestamp);
 
   yield* Effect.acquireUseRelease(

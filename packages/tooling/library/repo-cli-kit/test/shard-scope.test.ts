@@ -13,20 +13,26 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 
-const json = (value: unknown): string => `${JSON.stringify(value)}\n`;
+const encodeJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
+
+const json = (value: unknown): string => `${Result.getOrThrowWith(encodeJson(value), identity)}\n`;
 
 // A scratch repository with two workspace members; `files` maps repo-relative paths to contents.
 const repository = Effect.fnUntraced(function* (files: Readonly<Record<string, string>>) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-shard-scope-" }));
+  const resolved1 = yield* fs.makeTempDirectoryScoped({ prefix: "beep-shard-scope-" });
+  const root = yield* fs.realPath(resolved1);
   for (const [relative, content] of R.toEntries(files)) {
     const file = path.join(root, relative);
     yield* fs.makeDirectory(path.dirname(file), { recursive: true });
@@ -103,7 +109,8 @@ describe("stageGeneratedFiles", () => {
     Effect.fn("CatalogShardScopeTest.stageEmpty")(function* () {
       const { calls, service } = yield* scriptedAdd([]);
       yield* stageGeneratedFiles("/repo", []).pipe(Effect.provideService(Git, service));
-      expect(yield* Ref.get(calls)).toBe(0);
+      const resolved2 = yield* Ref.get(calls);
+      expect(resolved2).toBe(0);
     })
   );
 
@@ -117,7 +124,8 @@ describe("stageGeneratedFiles", () => {
       );
       yield* TestClock.adjust(Duration.seconds(1));
       yield* Fiber.join(fiber);
-      expect(yield* Ref.get(calls)).toBe(3);
+      const resolved3 = yield* Ref.get(calls);
+      expect(resolved3).toBe(3);
     })
   );
 
@@ -135,7 +143,8 @@ describe("stageGeneratedFiles", () => {
           Effect.flip
         );
         expect(error).toBe(failure);
-        expect(yield* Ref.get(calls)).toBe(1);
+        const resolved4 = yield* Ref.get(calls);
+        expect(resolved4).toBe(1);
       }
     })
   );

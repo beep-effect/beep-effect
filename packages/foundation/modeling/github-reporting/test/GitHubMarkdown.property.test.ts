@@ -28,11 +28,12 @@ const fidelity = Effect.fnUntraced(function* (text: string) {
   const parsed = yield* Markdown.parse(text);
   const formatted = yield* Markdown.stringify(parsed);
   const reparsed = yield* Markdown.parse(formatted);
-  assert.deepStrictEqual(
-    semantics(yield* S.encodeEffect(Root)(reparsed)),
-    semantics(yield* S.encodeEffect(Root)(parsed))
-  );
-  assert.strictEqual(yield* Markdown.stringify(reparsed), formatted);
+  const value1 = yield* S.encodeEffect(Root)(reparsed);
+  const argument = semantics(value1);
+  const value2 = yield* S.encodeEffect(Root)(parsed);
+  assert.deepStrictEqual(argument, semantics(value2));
+  const stringify2 = yield* Markdown.stringify(reparsed);
+  assert.strictEqual(stringify2, formatted);
 });
 
 describe("GitHubMarkdown formatter properties", () => {

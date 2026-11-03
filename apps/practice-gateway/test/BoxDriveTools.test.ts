@@ -57,7 +57,9 @@ const userFolder = Effect.gen(function* () {
   yield* fs.writeFileString(path.join(box, "Clients", "Smith", "notes.md"), "# Smith\nFiling due Friday.");
   yield* fs.writeFileString(path.join(box, "readme.txt"), "Box root file");
   yield* fs.writeFileString(path.join(box, "long.txt"), Str.repeat(BOX_READ_MAX_CHARACTERS + 10)("x"));
-  yield* fs.writeFile(path.join(box, "Clients", "Smith", "letter.pdf"), yield* makePdf("Dear Ms Smith"));
+  const argument = path.join(box, "Clients", "Smith", "letter.pdf");
+  const madePdf = yield* makePdf("Dear Ms Smith");
+  yield* fs.writeFile(argument, madePdf);
   yield* fs.writeFile(path.join(box, "photo.png"), new Uint8Array([137, 80, 78, 71]));
   yield* fs.symlink(path.join(home, "Private"), path.join(box, "escape"));
   return home;
@@ -184,14 +186,17 @@ const mountedFor = Effect.fn("mountedFor")(function* (profile: O.Option<Practice
 describe("Box Drive provider", () => {
   it.effect("mounts the tools only when the profile selects Box Drive", () =>
     Effect.gen(function* () {
-      expect(yield* mountedFor(O.some(gapProfile))).toEqual(["box_list", "box_read"]);
-      expect(yield* mountedFor(O.none())).toEqual([]);
+      const mountedFor1 = yield* mountedFor(O.some(gapProfile));
+      expect(mountedFor1).toEqual(["box_list", "box_read"]);
+      const mountedFor2 = yield* mountedFor(O.none());
+      expect(mountedFor2).toEqual([]);
       const kgOnly = PracticeProfile.make({
         choices: [CapabilitySupported.make({ capability: "knowledge-graph", provider: "practice-kg" })],
         itLimits,
         recordedAt: DateTime.makeUnsafe(0),
       });
-      expect(yield* mountedFor(O.some(kgOnly))).toEqual([]);
+      const mountedFor3 = yield* mountedFor(O.some(kgOnly));
+      expect(mountedFor3).toEqual([]);
     })
   );
 });
@@ -206,18 +211,16 @@ describe("Box tool results", () => {
         const DocumentJson = S.fromJsonString(BoxDocument);
         // Schema equivalence, not deepStrictEqual: Opaque struct arbitraries build
         // null-prototype objects while decoding builds plain ones.
-        assertTrue(
-          S.toEquivalence(BoxListing)(
-            yield* S.decodeEffect(ListingJson)(yield* S.encodeEffect(ListingJson)(listing)),
-            listing
-          )
-        );
-        assertTrue(
-          S.toEquivalence(BoxDocument)(
-            yield* S.decodeEffect(DocumentJson)(yield* S.encodeEffect(DocumentJson)(document)),
-            document
-          )
-        );
+        const argument1 = S.toEquivalence(BoxListing);
+        const argument2 = S.decodeEffect(ListingJson);
+        const value = yield* S.encodeEffect(ListingJson)(listing);
+        const argument21 = yield* argument2(value);
+        assertTrue(argument1(argument21, listing));
+        const argument3 = S.toEquivalence(BoxDocument);
+        const argument4 = S.decodeEffect(DocumentJson);
+        const value3 = yield* S.encodeEffect(DocumentJson)(document);
+        const argument42 = yield* argument4(value3);
+        assertTrue(argument3(argument42, document));
       }),
     { arbitrary: fcRuns(50) }
   );

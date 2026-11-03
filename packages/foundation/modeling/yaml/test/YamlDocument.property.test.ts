@@ -16,7 +16,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -46,15 +47,18 @@ describe("document properties", () => {
         assert.strictEqual(decoded.comment, doc.comment);
         assert.strictEqual(decoded.hasDocumentStart, true);
         assert.strictEqual(decoded.hasDocumentEnd, true);
-        assert.strictEqual(yield* decoded.stringify(), text);
+        const stringify2 = yield* decoded.stringify();
+        assert.strictEqual(stringify2, text);
         const stream = yield* YamlDocument.parseAll(`${text}---\n${yield* Yaml.stringify(value)}`);
         assert.deepStrictEqual(
           A.map(stream, (entry) => entry.toValue()),
           [value, value]
         );
-        const rendered = A.join(yield* Effect.forEach(stream, (entry) => entry.stringify()), "");
+        const forEach3 = yield* Effect.forEach(stream, (entry) => entry.stringify());
+        const rendered = A.join(forEach3, "");
+        const parsedAll = yield* YamlDocument.parseAll(rendered);
         assert.deepStrictEqual(
-          A.map(yield* YamlDocument.parseAll(rendered), (entry) => entry.toValue()),
+          A.map(parsedAll, (entry) => entry.toValue()),
           [value, value]
         );
       }),
@@ -81,10 +85,13 @@ describe("document properties", () => {
         const doc = yield* YamlDocument.parse(input);
         const text = yield* doc.stringify();
         assert.deepStrictEqual(parse(text), parse(input));
-        assert.deepStrictEqual(yield* Yaml.parse(text), yield* Yaml.parse(input));
+        const parsed = yield* Yaml.parse(text);
+        const parsed5 = yield* Yaml.parse(input);
+        assert.deepStrictEqual(parsed, parsed5);
         const decoded = yield* YamlDocument.parse(text);
         assert.deepStrictEqual(decoded.toValue(), doc.toValue());
-        assert.strictEqual(yield* decoded.stringify(), text);
+        const stringify4 = yield* decoded.stringify();
+        assert.strictEqual(stringify4, text);
         assert.strictEqual(Str.split(text, "# inner").length, 2);
         if (parentComment) {
           assert.strictEqual(Str.split(text, "# parent").length, 2);

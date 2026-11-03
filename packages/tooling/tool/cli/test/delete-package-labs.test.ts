@@ -181,8 +181,10 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           const path = yield* Path.Path;
           yield* seedChangesets(repoRoot);
           yield* rewritePendingChangesets(repoRoot, "@beep/probe", "labs-exempt");
-          expect(yield* fs.exists(path.join(repoRoot, ".changeset", "delete-probe.md"))).toBe(false);
-          expect(yield* fs.exists(path.join(repoRoot, ".changeset", "orphan-probe.md"))).toBe(false);
+          const exists1 = yield* fs.exists(path.join(repoRoot, ".changeset", "delete-probe.md"));
+          expect(exists1).toBe(false);
+          const exists2 = yield* fs.exists(path.join(repoRoot, ".changeset", "orphan-probe.md"));
+          expect(exists2).toBe(false);
           const multi = yield* fs.readFileString(path.join(repoRoot, ".changeset", "multi.md"));
           expect(multi).not.toContain("@beep/probe");
           expect(multi).toContain("@beep/other");
@@ -197,8 +199,10 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         const repoRoot = yield* fs.makeTempDirectoryScoped();
         yield* seedChangesets(repoRoot);
         yield* rewritePendingChangesets(repoRoot, "@beep/probe", "private-exempt");
-        expect(yield* fs.exists(path.join(repoRoot, ".changeset", "orphan-probe.md"))).toBe(false);
-        expect(yield* fs.exists(path.join(repoRoot, ".changeset", "delete-probe.md"))).toBe(false);
+        const exists3 = yield* fs.exists(path.join(repoRoot, ".changeset", "orphan-probe.md"));
+        expect(exists3).toBe(false);
+        const exists4 = yield* fs.exists(path.join(repoRoot, ".changeset", "delete-probe.md"));
+        expect(exists4).toBe(false);
         const remaining = yield* fs.readFileString(path.join(repoRoot, ".changeset", "multi.md"));
         expect(remaining).not.toContain('"@beep/probe"');
       })
@@ -213,7 +217,8 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           yield* rewritePendingChangesets(repoRoot, "@beep/probe", "emit-empty-note");
           const note = yield* fs.readFileString(path.join(repoRoot, ".changeset", "delete-probe.md"));
           expect(note).toBe("---\n{}\n---\n\nNo release: remove `@beep/probe` from the workspace.\n");
-          expect(yield* fs.exists(path.join(repoRoot, ".changeset", "orphan-probe.md"))).toBe(false);
+          const exists5 = yield* fs.exists(path.join(repoRoot, ".changeset", "orphan-probe.md"));
+          expect(exists5).toBe(false);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -416,7 +421,8 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         Effect.gen(function* () {
           yield* seedLabWorkspace();
           yield* runDeletePackage(["probe", "--dry-run"]);
-          expect(yield* warnedAboutManifest).toBe(true);
+          const warnedAboutManifest6 = yield* warnedAboutManifest;
+          expect(warnedAboutManifest6).toBe(true);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -430,7 +436,8 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           yield* seedLabWorkspace();
           yield* fs.writeFileString(path.join("apps", "labs", "probe", "lab.manifest.json"), "not json\n");
           yield* runDeletePackage(["probe", "--dry-run"]);
-          expect(yield* warnedAboutManifest).toBe(true);
+          const warnedAboutManifest7 = yield* warnedAboutManifest;
+          expect(warnedAboutManifest7).toBe(true);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -463,7 +470,8 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           expect(
             A.some(lines, (line) => P.isString(line) && Str.includes("[require-consent] lab-postgres-schema")(line))
           ).toBe(true);
-          expect(yield* warnedAboutManifest).toBe(false);
+          const warnedAboutManifest8 = yield* warnedAboutManifest;
+          expect(warnedAboutManifest8).toBe(false);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -494,7 +502,9 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
           const exit = yield* Effect.exit(runDeletePackage(["probe", "--dry-run"]));
           expectReportedExit(exit);
-          const output = A.appendAll(yield* TestConsole.logLines, yield* TestConsole.errorLines);
+          const logLines9 = yield* TestConsole.logLines;
+          const errorLines10 = yield* TestConsole.errorLines;
+          const output = A.appendAll(logLines9, errorLines10);
           expect(A.some(output, (line) => P.isString(line) && Str.includes("data-ownership")(line))).toBe(true);
           expect(A.some(output, (line) => P.isString(line) && Str.includes("DROP SCHEMA")(line))).toBe(false);
         })

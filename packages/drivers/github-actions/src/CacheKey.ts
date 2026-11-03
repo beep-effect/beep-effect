@@ -774,10 +774,9 @@ export class CacheKey extends S.Class<CacheKey, { readonly brand: unique symbol 
     // traversal-chain cycle guard, so files reachable only through a
     // symlinked directory contribute to the key — matching the runner's
     // `hashFiles()` default of `followSymbolicLinks: true`.
-    const candidates = A.appendAll(
-      yield* literalMatches(fs, path, workspace, set.literals),
-      yield* wildcardMatches(path, workspace, set.wildcards)
-    );
+    const literalMatches1 = yield* literalMatches(fs, path, workspace, set.literals);
+    const wildcardMatches3 = yield* wildcardMatches(path, workspace, set.wildcards);
+    const candidates = A.appendAll(literalMatches1, wildcardMatches3);
     return A.map(
       A.sort(
         A.filter(MutableHashSet.fromIterable(candidates), (candidate) => set.matches(candidate)),
@@ -824,6 +823,7 @@ export class CacheKey extends S.Class<CacheKey, { readonly brand: unique symbol 
     readonly workspace: string;
     readonly patterns: ReadonlyArray<string>;
   }) {
-    return yield* CacheKey.hashFiles(yield* CacheKey.matchingFiles(options));
+    const matchingFiles2 = yield* CacheKey.matchingFiles(options);
+    return yield* CacheKey.hashFiles(matchingFiles2);
   });
 }

@@ -17,7 +17,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assertTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -73,7 +74,8 @@ describe("person property floor", () => {
     ([wire]) =>
       Effect.gen(function* () {
         const person = yield* S.decodeEffect(Person.FromValue)(wire);
-        assert.deepStrictEqual(yield* S.encodeEffect(Person.FromValue)(person), wire);
+        const value2 = yield* S.encodeEffect(Person.FromValue)(person);
+        assert.deepStrictEqual(value2, wire);
       }),
     runs
   );
@@ -84,9 +86,12 @@ describe("person property floor", () => {
       Effect.gen(function* () {
         const text = yield* S.encodeEffect(Person.FromString)(person);
         const parsed = yield* S.decodeEffect(Person.FromString)(text);
-        const twice = yield* S.decodeEffect(Person.FromString)(yield* S.encodeEffect(Person.FromString)(parsed));
+        const argument = S.decodeEffect(Person.FromString);
+        const value4 = yield* S.encodeEffect(Person.FromString)(parsed);
+        const twice = yield* argument(value4);
         assert.deepStrictEqual(twice, parsed);
-        assert.strictEqual(yield* S.encodeEffect(Person.FromString)(twice), text);
+        const value3 = yield* S.encodeEffect(Person.FromString)(twice);
+        assert.strictEqual(value3, text);
       }),
     runs
   );

@@ -150,11 +150,10 @@ export const makeInventoryProbeProgram = Effect.fn("AIMetrics.makeInventoryProbe
   );
   const result = yield* probeObservationRoots(declaration, salt).pipe(Effect.mapError((cause) => error(cause.message)));
   if (options.json) {
-    return yield* Console.log(
-      yield* encodeObservationRootProbeResultJson(result).pipe(
-        Effect.mapError(() => error("Unable to encode root probe result."))
-      )
+    const pipe1 = yield* encodeObservationRootProbeResultJson(result).pipe(
+      Effect.mapError(() => error("Unable to encode root probe result."))
     );
+    return yield* Console.log(pipe1);
   }
   yield* Console.log(
     `Declared root probe: 1 host, ${result.inventory.roots.length} roots, 7 unqualified harness routes`
@@ -203,16 +202,15 @@ export const makeInventoryCoverageProgram = Effect.fn("AIMetrics.makeInventoryCo
   );
   const report = reconcileObservationCoverage(input);
   if (options.json) {
-    return yield* Console.log(
-      yield* encodeObservationCoverageReportJson(report).pipe(
-        Effect.mapError(() =>
-          AiMetricsCommandError.make({
-            message: "Unable to encode coverage report.",
-            cause: "Coverage report encoding failed.",
-          })
-        )
+    const pipe2 = yield* encodeObservationCoverageReportJson(report).pipe(
+      Effect.mapError(() =>
+        AiMetricsCommandError.make({
+          message: "Unable to encode coverage report.",
+          cause: "Coverage report encoding failed.",
+        })
       )
     );
+    return yield* Console.log(pipe2);
   }
   yield* Console.log(`Observation snapshot: ${DateTime.formatIso(input.observedAt)}`);
   yield* Console.log(

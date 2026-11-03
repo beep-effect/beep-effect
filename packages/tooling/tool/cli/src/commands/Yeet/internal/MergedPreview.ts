@@ -49,13 +49,14 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
   adaptGitKitError,
+  patientGit,
   RepoRunContext,
   removeGitWorktree,
   runRepoCommandCapture,
 } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { artifactDirForContext } from "./ArtifactPaths.ts";
-import { patientGit, runGitOutput } from "./GitExec.ts";
+import { runGitOutput } from "./GitExec.ts";
 import type { Git } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";

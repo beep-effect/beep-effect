@@ -35,8 +35,11 @@ const roundTrips = <A extends object, I>(name: string, schema: S.Codec<A, I>): v
       Effect.gen(function* () {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
-        assert.deepStrictEqual(yield* structural(decoded), yield* structural(value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const structural1 = yield* structural(decoded);
+        const structural6 = yield* structural(value);
+        assert.deepStrictEqual(structural1, structural6);
+        const value2 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value2, encoded);
       }),
     runs
   );
@@ -69,16 +72,19 @@ it.layer(
         const fs = yield* FileSystem.FileSystem;
         yield* fs.writeFileString("/output", "");
         yield* outputs.setJson("payload", value, OutputPayload);
-        const text = Str.split(yield* fs.readFileString("/output"), "\n")[1];
+        const readFileString3 = yield* fs.readFileString("/output");
+        const text = Str.split(readFileString3, "\n")[1];
         assertDefined(text);
         const parsed = yield* S.decodeEffect(OutputJson)(text);
         assert.isTrue(S.toEquivalence(OutputPayload)(parsed, value));
         yield* fs.writeFileString("/output", "");
         yield* outputs.setJson("payload", parsed, OutputPayload);
-        const reformatted = Str.split(yield* fs.readFileString("/output"), "\n")[1];
+        const readFileString4 = yield* fs.readFileString("/output");
+        const reformatted = Str.split(readFileString4, "\n")[1];
         assertDefined(reformatted);
         assert.strictEqual(reformatted, text);
-        assert.deepStrictEqual(yield* S.decodeEffect(OutputJson)(reformatted), parsed);
+        const value5 = yield* S.decodeEffect(OutputJson)(reformatted);
+        assert.deepStrictEqual(value5, parsed);
       }),
     runs
   );

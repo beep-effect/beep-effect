@@ -366,9 +366,8 @@ describe("@beep/infra OpenClaw", () => {
           S.decodeEffect(OpenClawPulumiConfigValues)({ localProviderBaseUrl: "https://remote.example.test/v1" })
         ))._tag
       ).toBe("SchemaError");
-      expect(yield* S.decodeUnknownEffect(OpenClawPulumiConfigValues)({ configWrites: true })).not.toHaveProperty(
-        "configWrites"
-      );
+      const value1 = yield* S.decodeUnknownEffect(OpenClawPulumiConfigValues)({ configWrites: true });
+      expect(value1).not.toHaveProperty("configWrites");
     })
   );
 
@@ -493,7 +492,9 @@ describe("@beep/infra OpenClaw", () => {
         "matches the platform SHA-256 digest",
         Effect.fnUntraced(function* () {
           const defaultGeneration = yield* defaultGenerationEffect;
-          expect(defaultGeneration.configHash).toBe(yield* sha256Hex(defaultGeneration.canonicalJson));
+          const expectation = expect(defaultGeneration.configHash);
+          const sha256Hex1 = yield* sha256Hex(defaultGeneration.canonicalJson);
+          expectation.toBe(sha256Hex1);
           expect(defaultGeneration.generationId).not.toBe(defaultGeneration.configHash);
           expect(defaultGeneration.generationId).toMatch(/^[0-9a-f]{64}$/u);
           expect((yield* makeOpenClawGeneration(defaultArgs)).generationId).toBe(defaultGeneration.generationId);
@@ -520,17 +521,17 @@ describe("@beep/infra OpenClaw", () => {
       "hashes the changed SOUL through the platform crypto service",
       Effect.fnUntraced(function* () {
         const defaultGeneration = yield* defaultGenerationEffect;
-        const changedSoulHash = OpenclawSha256Hex.make(yield* sha256Hex(`${openClawLegalSoulMarkdown}\n`));
+        const sha256Hex2 = yield* sha256Hex(`${openClawLegalSoulMarkdown}\n`);
+        const changedSoulHash = OpenclawSha256Hex.make(sha256Hex2);
 
-        expect(
-          yield* makeOpenClawBundleHash(
-            OpenClawBundleHashInput.make({
-              configHash: defaultGeneration.configHash,
-              proofSkillHash: defaultGeneration.proofSkillHash,
-              soulHash: changedSoulHash,
-            })
-          )
-        ).not.toBe(defaultGeneration.generationId);
+        const madeOpenClawBundleHash = yield* makeOpenClawBundleHash(
+          OpenClawBundleHashInput.make({
+            configHash: defaultGeneration.configHash,
+            proofSkillHash: defaultGeneration.proofSkillHash,
+            soulHash: changedSoulHash,
+          })
+        );
+        expect(madeOpenClawBundleHash).not.toBe(defaultGeneration.generationId);
       })
     )
   );

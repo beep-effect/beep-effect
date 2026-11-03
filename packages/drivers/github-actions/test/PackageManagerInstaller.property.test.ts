@@ -18,7 +18,8 @@ const roundTrip =
       const encoded = yield* S.encodeEffect(schema)(value);
       const decoded = yield* S.decodeEffect(schema)(encoded);
       assert.strictEqual(S.toEquivalence(schema)(decoded, value), true);
-      assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(schema)(decoded);
+      assert.deepStrictEqual(value1, encoded);
     });
 it.effect.prop(
   "ambient manager survives its codec",

@@ -207,24 +207,27 @@ const fixture = Effect.fn("RootTasksFixture.make")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const repo = yield* findRepoRoot();
-  const configuration = yield* decodeConfiguration(yield* fs.readFileString(path.join(repo, "turbo.json")));
+  const readFileString1 = yield* fs.readFileString(path.join(repo, "turbo.json"));
+  const configuration = yield* decodeConfiguration(readFileString1);
   expect(configuration.agentGuidance).toBe(false);
-  const manifest = yield* decodeManifest(yield* fs.readFileString(path.join(repo, "package.json")));
+  const readFileString2 = yield* fs.readFileString(path.join(repo, "package.json"));
+  const manifest = yield* decodeManifest(readFileString2);
   const rootEntries = yield* Effect.forEach(
     A.filter(R.toEntries(configuration.tasks), ([id]) => Str.startsWith("//#")(id) && !isSealId(id)),
     Effect.fnUntraced(function* ([id, raw]) {
-      return Tuple.make(id, yield* decodeTask(raw));
+      const decodedTask3 = yield* decodeTask(raw);
+      return Tuple.make(id, decodedTask3);
     })
   );
   const seals = R.fromEntries(A.filter(R.toEntries(configuration.tasks), ([id]) => isSealId(id)));
-  const decodedSeals = R.fromEntries(
-    yield* Effect.forEach(
-      R.toEntries(seals),
-      Effect.fnUntraced(function* ([id, raw]) {
-        return Tuple.make(id, yield* decodeSeal(raw));
-      })
-    )
+  const forEach4 = yield* Effect.forEach(
+    R.toEntries(seals),
+    Effect.fnUntraced(function* ([id, raw]) {
+      const decodedSeal = yield* decodeSeal(raw);
+      return Tuple.make(id, decodedSeal);
+    })
   );
+  const decodedSeals = R.fromEntries(forEach4);
   const tasks = R.fromEntries(rootEntries);
   expect(A.length(rootEntries)).toBe(A.length(R.keys(directInputs)));
   for (const [id, task] of rootEntries) {
@@ -365,11 +368,13 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
       const encodedSummary = yield* encodeTaskSummary(summary);
       const decodedSummary = yield* decodeTaskSummary(encodedSummary);
       expect(taskSummaryEquivalent(decodedSummary, summary)).toBe(true);
-      expect(yield* encodeTaskSummary(decodedSummary)).toBe(encodedSummary);
+      const encodedTaskSummary = yield* encodeTaskSummary(decodedSummary);
+      expect(encodedTaskSummary).toBe(encodedSummary);
       const encodedTask = yield* encodeRootTask(task);
       const decodedTask = yield* decodeRootTask(encodedTask);
       expect(rootTaskEquivalent(decodedTask, task)).toBe(true);
-      expect(yield* encodeRootTask(decodedTask)).toBe(encodedTask);
+      const encodedRootTask = yield* encodeRootTask(decodedTask);
+      expect(encodedRootTask).toBe(encodedTask);
     }),
     { arbitrary: fcRuns(25) }
   );
@@ -405,7 +410,8 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
             }
           })
         );
-        expect(yield* dryRun(root, binary, ids, false)).toEqual(baseline);
+        const dryRun5 = yield* dryRun(root, binary, ids, false);
+        expect(dryRun5).toEqual(baseline);
       }),
       { timeout: 180_000 }
     );
@@ -600,9 +606,8 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           (row) => row.taskId
         );
         expect(readmeIds).toEqual(expect.arrayContaining(["//#lint:typos"]));
-        expect(selectedIds(yield* dryRun(root, binary, A.map(ids, Str.slice(3)), true))).toEqual(
-          withDependencies(readmeIds, baseline)
-        );
+        const dryRun6 = yield* dryRun(root, binary, A.map(ids, Str.slice(3)), true);
+        expect(selectedIds(dryRun6)).toEqual(withDependencies(readmeIds, baseline));
         // Scope each independent row probe to that row and the whole-tree walkers.
         // Other production rows intentionally share source/config globs.
         const wholeTreeIds = A.map(
@@ -630,11 +635,11 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           root,
           nonInput,
           Effect.gen(function* () {
-            expect(selectedIds(yield* dryRun(root, binary, A.map(ids, Str.slice(3)), true))).toEqual(
-              withDependencies(readmeIds, baseline)
-            );
+            const dryRun7 = yield* dryRun(root, binary, A.map(ids, Str.slice(3)), true);
+            expect(selectedIds(dryRun7)).toEqual(withDependencies(readmeIds, baseline));
             const narrow = A.filter(ids, (id) => !A.contains(readmeIds, id));
-            expect(yield* dryRun(root, binary, A.map(narrow, Str.slice(3)), true)).toEqual([]);
+            const dryRun8 = yield* dryRun(root, binary, A.map(narrow, Str.slice(3)), true);
+            expect(dryRun8).toEqual([]);
           })
         );
       }),
@@ -651,7 +656,8 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           root,
           nonInput,
           Effect.gen(function* () {
-            expect(selectedIds(yield* dryRun(root, binary, ids, true))).toEqual(A.sort(ids, Str.Order));
+            const dryRun9 = yield* dryRun(root, binary, ids, true);
+            expect(selectedIds(dryRun9)).toEqual(A.sort(ids, Str.Order));
             const bare = yield* dryRun(root, binary, A.map(ids, Str.slice(3)), true);
             expect(selectedIds(bare)).not.toEqual(A.sort(ids, Str.Order));
           })
@@ -672,13 +678,15 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
         const candidate = yield* git(root, ["hash-object", "--", nonInput]);
         const fs = yield* FileSystem.FileSystem;
         const candidateHash = Str.trim(candidate.output);
-        expect(
-          yield* fs.exists(`${root}/.git/objects/${Str.slice(0, 2)(candidateHash)}/${Str.slice(2)(candidateHash)}`)
-        ).toBe(false);
+        const exists10 = yield* fs.exists(
+          `${root}/.git/objects/${Str.slice(0, 2)(candidateHash)}/${Str.slice(2)(candidateHash)}`
+        );
+        expect(exists10).toBe(false);
         // Hash a new blob without adding any working-tree input or updating refs.
         const object = yield* git(root, ["hash-object", "-w", "--", nonInput]);
         const hash = Str.trim(object.output);
-        expect(yield* fs.exists(`${root}/.git/objects/${Str.slice(0, 2)(hash)}/${Str.slice(2)(hash)}`)).toBe(true);
+        const exists11 = yield* fs.exists(`${root}/.git/objects/${Str.slice(0, 2)(hash)}/${Str.slice(2)(hash)}`);
+        expect(exists11).toBe(true);
         yield* writeFile(root, "nested/.git/objects/ab/c3-probe", "nested git metadata");
         const changed = yield* dryRun(root, binary, ids, false);
         for (const id of ids) {
@@ -744,7 +752,8 @@ describe("Root-reaching task inputs", () => {
         const offenders = yield* Effect.forEach(
           files,
           Effect.fnUntraced(function* (file) {
-            const { tasks } = yield* decodeTurboInputsFile(yield* fs.readFileString(path.join(repo, file)));
+            const readFileString12 = yield* fs.readFileString(path.join(repo, file));
+            const { tasks } = yield* decodeTurboInputsFile(readFileString12);
             return A.flatMap(R.toEntries(tasks), ([id, { inputs }]) =>
               A.some(inputs, reachesNestedLanes(id)) && !A.some(inputs, excludesNestedLanes(id))
                 ? [`${file} ${id}`]

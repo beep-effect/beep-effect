@@ -64,7 +64,8 @@ describe("hidden groups and maximize", () => {
       "hides without losing the ratio, supports all-hidden geometry, and unhides exactly",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const hidden = yield* requireChanged(yield* engine.transition(workspace, updateVisibility(groupOne, false)));
+        const transition1 = yield* engine.transition(workspace, updateVisibility(groupOne, false));
+        const hidden = yield* requireChanged(transition1);
         const oneHidden = projectWorkspace(hidden.state, {
           container: box,
           options: GeometryOptions.make({ gap: 4 }),
@@ -72,13 +73,11 @@ describe("hidden groups and maximize", () => {
         expect(oneHidden.groups).toEqual([{ groupId: groupTwo, box }]);
         expect(oneHidden.sashes).toEqual([]);
         assertNone(DockGeometry.forGroup(oneHidden, groupOne));
-        const allHidden = yield* requireChanged(
-          yield* engine.transition(hidden.state, updateVisibility(groupTwo, false))
-        );
+        const transition2 = yield* engine.transition(hidden.state, updateVisibility(groupTwo, false));
+        const allHidden = yield* requireChanged(transition2);
         expect(projectWorkspace(allHidden.state, { container: box })).toEqual(DockGeometry.empty);
-        const shown = yield* requireChanged(
-          yield* engine.transition(allHidden.state, updateVisibility(groupOne, true))
-        );
+        const transition3 = yield* engine.transition(allHidden.state, updateVisibility(groupOne, true));
+        const shown = yield* requireChanged(transition3);
         const shownRoot = (yield* requirePopulated(shown.state)).root;
         const ratio = SplitNode.is(shownRoot) ? SplitLayout.ratio(shownRoot.layout) : SplitRatio.make(5_000);
         expect(ratio).toBe(4_000);
@@ -89,14 +88,17 @@ describe("hidden groups and maximize", () => {
       "maximizes, restores, and reports idempotent reasons",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const maximized = yield* requireChanged(yield* engine.transition(workspace, maximize()));
+        const transition4 = yield* engine.transition(workspace, maximize());
+        const maximized = yield* requireChanged(transition4);
         expect(projectWorkspace(maximized.state, { container: box }).groups).toEqual([{ groupId: groupOne, box }]);
         expect(projectWorkspace(maximized.state, { container: box }).sashes).toEqual([]);
         const again = yield* engine.transition(maximized.state, maximize());
         expect(again.result).toMatchObject({ _tag: "Unchanged", reason: "group-already-maximized" });
-        const restored = yield* requireChanged(
-          yield* engine.transition(maximized.state, envelope("restore", RestoreMaximizedCommand.make({})))
+        const transition5 = yield* engine.transition(
+          maximized.state,
+          envelope("restore", RestoreMaximizedCommand.make({}))
         );
+        const restored = yield* requireChanged(transition5);
         expect(restored.events).toContainEqual(expect.objectContaining({ kind: "groupRestored", groupId: groupOne }));
         const none = yield* engine.transition(
           restored.state,
@@ -110,8 +112,10 @@ describe("hidden groups and maximize", () => {
       "reveals a hidden group while maximizing it",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const hidden = yield* requireChanged(yield* engine.transition(workspace, updateVisibility(groupOne, false)));
-        const result = yield* requireChanged(yield* engine.transition(hidden.state, maximize()));
+        const transition6 = yield* engine.transition(workspace, updateVisibility(groupOne, false));
+        const hidden = yield* requireChanged(transition6);
+        const transition7 = yield* engine.transition(hidden.state, maximize());
+        const result = yield* requireChanged(transition7);
         expect(A.map(result.events, (event) => event.kind)).toEqual(["groupUpdated", "groupMaximized"]);
         expect(O.getOrThrow(DockWorkspace.findTabs(result.state, groupOne)).metadata.visible).toBe(true);
       })
@@ -127,10 +131,10 @@ describe("hidden groups and maximize", () => {
           MovePanelCommand.make({ panelId: panelOne.id, target: TabPlacement.make({ groupId: groupTwo }) }),
         ];
         for (const [index, command] of A.map(commands, (command, index) => [index, command] as const)) {
-          const maximized = yield* requireChanged(yield* engine.transition(workspace, maximize()));
-          const result = yield* requireChanged(
-            yield* engine.transition(maximized.state, envelope(`structural-${index}`, command))
-          );
+          const transition8 = yield* engine.transition(workspace, maximize());
+          const maximized = yield* requireChanged(transition8);
+          const transition9 = yield* engine.transition(maximized.state, envelope(`structural-${index}`, command));
+          const result = yield* requireChanged(transition9);
           expect(result.events.at(-1)).toMatchObject({ kind: "groupRestored", groupId: groupOne });
           assertNone((yield* requirePopulated(result.state)).maximized);
         }
@@ -141,26 +145,26 @@ describe("hidden groups and maximize", () => {
       "applies activation reveal and maximize exit rules",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const maximized = yield* requireChanged(yield* engine.transition(workspace, maximize()));
+        const transition10 = yield* engine.transition(workspace, maximize());
+        const maximized = yield* requireChanged(transition10);
         const inside = yield* engine.transition(
           maximized.state,
           envelope("activate-inside", ActivatePanelCommand.make({ panelId: panelOne.id }))
         );
         expect(inside.result).toMatchObject({ _tag: "Unchanged", reason: "panel-already-active" });
-        const outside = yield* requireChanged(
-          yield* engine.transition(
-            maximized.state,
-            envelope("activate-outside", ActivatePanelCommand.make({ panelId: panelTwo.id }))
-          )
+        const transition11 = yield* engine.transition(
+          maximized.state,
+          envelope("activate-outside", ActivatePanelCommand.make({ panelId: panelTwo.id }))
         );
+        const outside = yield* requireChanged(transition11);
         expect(outside.events).toContainEqual(expect.objectContaining({ kind: "groupRestored" }));
-        const hidden = yield* requireChanged(yield* engine.transition(workspace, updateVisibility(groupTwo, false)));
-        const revealed = yield* requireChanged(
-          yield* engine.transition(
-            hidden.state,
-            envelope("activate-hidden", ActivatePanelCommand.make({ panelId: panelTwo.id }))
-          )
+        const transition12 = yield* engine.transition(workspace, updateVisibility(groupTwo, false));
+        const hidden = yield* requireChanged(transition12);
+        const transition13 = yield* engine.transition(
+          hidden.state,
+          envelope("activate-hidden", ActivatePanelCommand.make({ panelId: panelTwo.id }))
         );
+        const revealed = yield* requireChanged(transition13);
         expect(O.getOrThrow(DockWorkspace.findTabs(revealed.state, groupTwo)).metadata.visible).toBe(true);
         expect(revealed.events).toContainEqual(expect.objectContaining({ kind: "groupUpdated" }));
       })
@@ -170,18 +174,17 @@ describe("hidden groups and maximize", () => {
       "clears maximize when hidden or when its last panel closes and round-trips snapshots",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const maximized = yield* requireChanged(yield* engine.transition(workspace, maximize()));
-        const hidden = yield* requireChanged(
-          yield* engine.transition(maximized.state, updateVisibility(groupOne, false))
-        );
+        const transition14 = yield* engine.transition(workspace, maximize());
+        const maximized = yield* requireChanged(transition14);
+        const transition15 = yield* engine.transition(maximized.state, updateVisibility(groupOne, false));
+        const hidden = yield* requireChanged(transition15);
         assertNone((yield* requirePopulated(hidden.state)).maximized);
         expect(A.map(hidden.events, (event) => event.kind)).toEqual(["groupUpdated", "groupRestored"]);
-        const closed = yield* requireChanged(
-          yield* engine.transition(
-            maximized.state,
-            envelope("close-maximized", ClosePanelCommand.make({ panelId: panelOne.id }))
-          )
+        const transition16 = yield* engine.transition(
+          maximized.state,
+          envelope("close-maximized", ClosePanelCommand.make({ panelId: panelOne.id }))
         );
+        const closed = yield* requireChanged(transition16);
         expect(closed.events.at(-1)).toMatchObject({ kind: "groupRestored", groupId: groupOne });
         const snapshotState = PopulatedWorkspace.make({
           root: SplitNode.make({
@@ -197,7 +200,8 @@ describe("hidden groups and maximize", () => {
           }),
           maximized: O.some(groupOne),
         });
-        const decoded = yield* engine.decodeSnapshot(yield* engine.encodeSnapshot(snapshotState));
+        const encodedSnapshot = yield* engine.encodeSnapshot(snapshotState);
+        const decoded = yield* engine.decodeSnapshot(encodedSnapshot);
         assertSome((yield* requirePopulated(decoded)).maximized, groupOne);
         expect(O.getOrThrow(DockWorkspace.findTabs(decoded, groupTwo)).metadata.visible).toBe(false);
       })
@@ -207,13 +211,13 @@ describe("hidden groups and maximize", () => {
       "emits exactly one restore event when activating an already-active panel outside the maximized group",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const maximized = yield* requireChanged(yield* engine.transition(workspace, maximize()));
-        const result = yield* requireChanged(
-          yield* engine.transition(
-            maximized.state,
-            envelope("activate-restore-only", ActivatePanelCommand.make({ panelId: panelTwo.id }))
-          )
+        const transition17 = yield* engine.transition(workspace, maximize());
+        const maximized = yield* requireChanged(transition17);
+        const transition18 = yield* engine.transition(
+          maximized.state,
+          envelope("activate-restore-only", ActivatePanelCommand.make({ panelId: panelTwo.id }))
         );
+        const result = yield* requireChanged(transition18);
         const restoreEvents = A.filter(result.events, (event) => event.kind === "groupRestored");
         expect(restoreEvents).toEqual([expect.objectContaining({ kind: "groupRestored", groupId: groupOne })]);
         assertNone((yield* requirePopulated(result.state)).maximized);

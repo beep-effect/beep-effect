@@ -300,10 +300,8 @@ describe("MarkdownToc", () => {
 
     it.effect("render is the Effect form of renderResult", () =>
       Effect.gen(function* () {
-        assert.strictEqual(
-          yield* MarkdownToc.render("# One\n\n## Two\n", { bullet: "*" }),
-          lines("* [One](#one)", "  * [Two](#two)")
-        );
+        const render1 = yield* MarkdownToc.render("# One\n\n## Two\n", { bullet: "*" });
+        assert.strictEqual(render1, lines("* [One](#one)", "  * [Two](#two)"));
         const failure = yield* Effect.flip(MarkdownToc.render(`${Str.repeat(300)(">")} foo\n`));
         assert.strictEqual(failure._tag, "MarkdownParseError");
       })

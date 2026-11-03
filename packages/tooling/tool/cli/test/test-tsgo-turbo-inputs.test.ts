@@ -128,12 +128,12 @@ const testTsgoHashFromSummary = Effect.fn("TestTsgoTurboInputsTest.testTsgoHashF
   );
   expect(run.exitCode, `${run.stdout.toString()}\n${run.stderr.toString()}`).toBe(0);
 
-  const summaryFiles = pipe(yield* fs.readDirectory(runsDirectory), A.filter(Str.endsWith(".json")));
+  const readDirectory1 = yield* fs.readDirectory(runsDirectory);
+  const summaryFiles = pipe(readDirectory1, A.filter(Str.endsWith(".json")));
   expect(summaryFiles).toHaveLength(1);
 
-  const summary = yield* decodeTurboRunSummary(
-    yield* fs.readFileString(path.join(runsDirectory, summaryFiles[0] ?? "missing-summary.json"))
-  );
+  const readFileString2 = yield* fs.readFileString(path.join(runsDirectory, summaryFiles[0] ?? "missing-summary.json"));
+  const summary = yield* decodeTurboRunSummary(readFileString2);
   const packageTask = A.findFirst(summary.tasks, (task) => task.taskId === "@fixture/test-tsgo#package-test-typecheck");
 
   expect(O.isSome(packageTask)).toBe(true);
@@ -153,9 +153,8 @@ it.layer(NodeServices.layer)("tsgo tests Turbo inputs", (it) => {
       const repoRoot = yield* findRepoRoot();
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "test-tsgo-turbo-inputs-" });
       const turboBinary = path.join(repoRoot, "node_modules", ".bin", "turbo");
-      const turboConfiguration = yield* decodeTurboConfiguration(
-        yield* fs.readFileString(path.join(repoRoot, "turbo.json"))
-      );
+      const readFileString3 = yield* fs.readFileString(path.join(repoRoot, "turbo.json"));
+      const turboConfiguration = yield* decodeTurboConfiguration(readFileString3);
       const packageTask = turboConfiguration.tasks["package-test-typecheck"];
 
       expect(packageTask.cache).toBe(false);
@@ -211,30 +210,37 @@ it.layer(NodeServices.layer)("tsgo tests Turbo inputs", (it) => {
       const baselineHash = yield* testTsgoHashFromSummary(root, turboBinary);
 
       yield* writeFixtureFile(root, "packages/test-tsgo/README.md", "# Docs-only edit\n");
-      expect(yield* testTsgoHashFromSummary(root, turboBinary)).toBe(baselineHash);
+      const testTsgoHashFromSummary4 = yield* testTsgoHashFromSummary(root, turboBinary);
+      expect(testTsgoHashFromSummary4).toBe(baselineHash);
 
       // Cargo build artifacts never reach the tests (quality audit M8).
       yield* writeFixtureFile(root, "packages/test-tsgo/src-tauri/target/debug/build.rs", "fn main() {}\n");
-      expect(yield* testTsgoHashFromSummary(root, turboBinary)).toBe(baselineHash);
+      const testTsgoHashFromSummary5 = yield* testTsgoHashFromSummary(root, turboBinary);
+      expect(testTsgoHashFromSummary5).toBe(baselineHash);
 
       yield* writeFixtureFile(root, "packages/test-tsgo/test/index.test.ts", "export const expected = 2;\n");
-      expect(yield* testTsgoHashFromSummary(root, turboBinary)).not.toBe(baselineHash);
+      const testTsgoHashFromSummary6 = yield* testTsgoHashFromSummary(root, turboBinary);
+      expect(testTsgoHashFromSummary6).not.toBe(baselineHash);
       yield* writeFixtureFile(root, "packages/test-tsgo/test/index.test.ts", "export const expected = 1;\n");
 
       yield* writeFixtureFile(root, "packages/test-tsgo/src/index.ts", "export const value = 2;\n");
-      expect(yield* testTsgoHashFromSummary(root, turboBinary)).not.toBe(baselineHash);
+      const testTsgoHashFromSummary7 = yield* testTsgoHashFromSummary(root, turboBinary);
+      expect(testTsgoHashFromSummary7).not.toBe(baselineHash);
       yield* writeFixtureFile(root, "packages/test-tsgo/src/index.ts", "export const value = 1;\n");
 
       yield* writeFixtureFile(root, "packages/config/src/index.ts", "export const config = 2;\n");
-      expect(yield* testTsgoHashFromSummary(root, turboBinary)).not.toBe(baselineHash);
+      const testTsgoHashFromSummary8 = yield* testTsgoHashFromSummary(root, turboBinary);
+      expect(testTsgoHashFromSummary8).not.toBe(baselineHash);
       yield* writeFixtureFile(root, "packages/config/src/index.ts", "export const config = 1;\n");
 
       yield* writeFixtureFile(root, "packages/test-tsgo/tsconfig.json", '{"compilerOptions":{}}\n');
-      expect(yield* testTsgoHashFromSummary(root, turboBinary)).not.toBe(baselineHash);
+      const testTsgoHashFromSummary9 = yield* testTsgoHashFromSummary(root, turboBinary);
+      expect(testTsgoHashFromSummary9).not.toBe(baselineHash);
       yield* writeFixtureFile(root, "packages/test-tsgo/tsconfig.json", "{}\n");
 
       yield* writeFixtureFile(root, "tsconfig.base.json", '{"compilerOptions":{}}\n');
-      expect(yield* testTsgoHashFromSummary(root, turboBinary)).not.toBe(baselineHash);
+      const testTsgoHashFromSummary10 = yield* testTsgoHashFromSummary(root, turboBinary);
+      expect(testTsgoHashFromSummary10).not.toBe(baselineHash);
       yield* writeFixtureFile(root, "tsconfig.base.json", "{}\n");
 
       yield* writeFixtureFile(
@@ -242,7 +248,8 @@ it.layer(NodeServices.layer)("tsgo tests Turbo inputs", (it) => {
         "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
         "export const worker = false;\n"
       );
-      expect(yield* testTsgoHashFromSummary(root, turboBinary)).not.toBe(baselineHash);
+      const testTsgoHashFromSummary11 = yield* testTsgoHashFromSummary(root, turboBinary);
+      expect(testTsgoHashFromSummary11).not.toBe(baselineHash);
       yield* writeFixtureFile(
         root,
         "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
@@ -254,7 +261,8 @@ it.layer(NodeServices.layer)("tsgo tests Turbo inputs", (it) => {
         "packages/tooling/tool/cli/src/commands/Quality/internal/TestTsgoSyntheticConfig.ts",
         "export const template = false;\n"
       );
-      expect(yield* testTsgoHashFromSummary(root, turboBinary)).not.toBe(baselineHash);
+      const testTsgoHashFromSummary12 = yield* testTsgoHashFromSummary(root, turboBinary);
+      expect(testTsgoHashFromSummary12).not.toBe(baselineHash);
     })
   );
 });
@@ -379,7 +387,10 @@ it.layer(FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)), { timeout: "6
             );
             const candidates = O.getOrElse(HashMap.get(actual, name), () => A.empty<string>());
             expect(candidates, name).toEqual(A.sort(A.fromIterable(expected), Order.String));
-            for (const project of candidates) expect(yield* fs.exists(project), project).toBe(true);
+            for (const project of candidates) {
+              const exists1 = yield* fs.exists(project);
+              expect(exists1, project).toBe(true);
+            }
           }
           expect(A.some(A.flatten(A.fromIterable(HashMap.values(actual))), Str.endsWith("tsconfig.configs.json"))).toBe(
             true
@@ -430,8 +441,12 @@ it.effect.prop(
   [Arbitrary.schema(TurboConfiguration), Arbitrary.schema(TurboRunSummary)],
   ([configuration, summary]) =>
     Effect.gen(function* () {
-      expect(yield* decodeTurboConfiguration(yield* encodeTurboConfiguration(configuration))).toEqual(configuration);
-      expect(yield* decodeTurboRunSummary(yield* encodeTurboRunSummary(summary))).toEqual(summary);
+      const encodedTurboConfiguration = yield* encodeTurboConfiguration(configuration);
+      const decodedTurboConfiguration = yield* decodeTurboConfiguration(encodedTurboConfiguration);
+      expect(decodedTurboConfiguration).toEqual(configuration);
+      const encodedTurboRunSummary = yield* encodeTurboRunSummary(summary);
+      const decodedTurboRunSummary = yield* decodeTurboRunSummary(encodedTurboRunSummary);
+      expect(decodedTurboRunSummary).toEqual(summary);
     }),
   { arbitrary: fcRuns(30) }
 );

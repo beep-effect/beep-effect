@@ -22,12 +22,17 @@ describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
   it.effect("preserves regional NaN and positive zero while negative zero takes the full rewrite", () =>
     Effect.gen(function* () {
       const text = "a: 1 # value\r\nb: 2\r\n";
-      assert.strictEqual(yield* modifyToString(text, ["a"], 0), "a: 0 # value\r\nb: 2\r\n");
-      assert.strictEqual(yield* modifyToString(text, ["a"], Number.NaN), "a: .nan # value\r\nb: 2\r\n");
-      assert.strictEqual(yield* modifyToString(text, ["a"], -0), "a: 0\nb: 2\n");
+      const modifyToString1 = yield* modifyToString(text, ["a"], 0);
+      assert.strictEqual(modifyToString1, "a: 0 # value\r\nb: 2\r\n");
+      const modifyToString2 = yield* modifyToString(text, ["a"], Number.NaN);
+      assert.strictEqual(modifyToString2, "a: .nan # value\r\nb: 2\r\n");
+      const modifyToString3 = yield* modifyToString(text, ["a"], -0);
+      assert.strictEqual(modifyToString3, "a: 0\nb: 2\n");
       const flow = "a: [1, 2] # value\r\n";
-      assert.strictEqual(yield* modifyToString(flow, ["a", 0], 0), "a: [0, 2] # value\r\n");
-      assert.strictEqual(yield* modifyToString(flow, ["a", 0], -0), "a: [0, 2] # value\n");
+      const modifyToString4 = yield* modifyToString(flow, ["a", 0], 0);
+      assert.strictEqual(modifyToString4, "a: [0, 2] # value\r\n");
+      const modifyToString5 = yield* modifyToString(flow, ["a", 0], -0);
+      assert.strictEqual(modifyToString5, "a: [0, 2] # value\n");
     })
   );
 
@@ -64,7 +69,8 @@ describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
       const text = "a: hello\nb: 2\n";
       const edits = yield* modify(text, ["a"], "world");
       assert.strictEqual(edits.length, 1);
-      assert.strictEqual(yield* modifyToString(text, ["a"], "world"), "a: world\nb: 2\n");
+      const modifyToString6 = yield* modifyToString(text, ["a"], "world");
+      assert.strictEqual(modifyToString6, "a: world\nb: 2\n");
     })
   );
 
@@ -93,10 +99,12 @@ describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
 
   it.effect("handles booleans into quoted targets without quoting them; null keeps the pipeline", () =>
     Effect.gen(function* () {
-      assert.strictEqual(yield* modifyToString('a: "x"\n', ["a"], true), "a: true\n");
+      const modifyToString7 = yield* modifyToString('a: "x"\n', ["a"], true);
+      assert.strictEqual(modifyToString7, "a: true\n");
       // null renders as an empty scalar in the whole-document pipeline
       // (`a:`), and the fast path deliberately defers to that convention.
-      assert.strictEqual(yield* modifyToString("a: 'x'\n", ["a"], null), "a:\n");
+      const modifyToString8 = yield* modifyToString("a: 'x'\n", ["a"], null);
+      assert.strictEqual(modifyToString8, "a:\n");
     })
   );
 
@@ -120,21 +128,24 @@ describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
     Effect.gen(function* () {
       const text = "a: 'same'\r\n";
       assert.strictEqual((yield* modify(text, ["a"], "same")).length, 0);
-      assert.strictEqual(yield* modifyToString(text, ["a"], "same"), text);
+      const modifyToString9 = yield* modifyToString(text, ["a"], "same");
+      assert.strictEqual(modifyToString9, text);
     })
   );
 
   it.effect("escapes an embedded single quote in single-quoted style", () =>
     Effect.gen(function* () {
       const text = "a: 'plain'\n";
-      assert.strictEqual(yield* modifyToString(text, ["a"], "it's"), "a: 'it''s'\n");
+      const modifyToString10 = yield* modifyToString(text, ["a"], "it's");
+      assert.strictEqual(modifyToString10, "a: 'it''s'\n");
     })
   );
 
   it.effect("escapes newlines in double-quoted style without touching the rest", () =>
     Effect.gen(function* () {
       const text = 'a: "x"\r\nb: 1\r\n';
-      assert.strictEqual(yield* modifyToString(text, ["a"], "line1\nline2"), 'a: "line1\\nline2"\r\nb: 1\r\n');
+      const modifyToString11 = yield* modifyToString(text, ["a"], "line1\nline2");
+      assert.strictEqual(modifyToString11, 'a: "line1\\nline2"\r\nb: 1\r\n');
     })
   );
 
@@ -161,8 +172,10 @@ describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
   it.effect("falls back for removals and insertions (existing behavior)", () =>
     Effect.gen(function* () {
       const text = "a: 'x'\nb: 1\n";
-      assert.strictEqual(yield* modifyToString(text, ["a"], undefined), "b: 1\n");
-      assert.strictEqual(yield* modifyToString(text, ["c"], "new"), "a: 'x'\nb: 1\nc: new\n");
+      const modifyToString12 = yield* modifyToString(text, ["a"], undefined);
+      assert.strictEqual(modifyToString12, "b: 1\n");
+      const modifyToString13 = yield* modifyToString(text, ["c"], "new");
+      assert.strictEqual(modifyToString13, "a: 'x'\nb: 1\nc: new\n");
     })
   );
 
@@ -172,7 +185,8 @@ describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
       // Exact whole-document pipeline output: the block scalar is replaced by
       // the stringifier's plain-scalar rendering. A weaker includes() check
       // would also pass if the fast path wrongly spliced the block header.
-      assert.strictEqual(yield* modifyToString(text, ["a"], "replaced"), "a: replaced\nb: 1\n");
+      const modifyToString14 = yield* modifyToString(text, ["a"], "replaced");
+      assert.strictEqual(modifyToString14, "a: replaced\nb: 1\n");
     })
   );
 
@@ -184,8 +198,10 @@ describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
       // so an anchored target splices and keeps its anchor and quote. Exact
       // outputs pin the tag bail precondition — includes() would pass under
       // either path.
-      assert.strictEqual(yield* modifyToString("a: !str 'x'\nb: 1\n", ["a"], "y"), "a: y\nb: 1\n");
-      assert.strictEqual(yield* modifyToString("a: &an 'x' # c\nb: 1\n", ["a"], "y"), "a: &an 'y' # c\nb: 1\n");
+      const modifyToString15 = yield* modifyToString("a: !str 'x'\nb: 1\n", ["a"], "y");
+      assert.strictEqual(modifyToString15, "a: y\nb: 1\n");
+      const modifyToString16 = yield* modifyToString("a: &an 'x' # c\nb: 1\n", ["a"], "y");
+      assert.strictEqual(modifyToString16, "a: &an 'y' # c\nb: 1\n");
     })
   );
 
@@ -193,22 +209,27 @@ describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
     Effect.gen(function* () {
       const mapping = yield* modifyToString("a: &an x # c\nb: *an\n", ["a"], "y");
       assert.strictEqual(mapping, "a: &an y # c\nb: *an\n");
-      assert.deepStrictEqual(yield* Yaml.parse(mapping), { a: "y", b: "y" });
+      const parsed = yield* Yaml.parse(mapping);
+      assert.deepStrictEqual(parsed, { a: "y", b: "y" });
 
       const sequence = yield* modifyToString("- &an x\n- *an\n", [0], "y");
       assert.strictEqual(sequence, "- &an y\n- *an\n");
-      assert.deepStrictEqual(yield* Yaml.parse(sequence), ["y", "y"]);
+      const parsed17 = yield* Yaml.parse(sequence);
+      assert.deepStrictEqual(parsed17, ["y", "y"]);
 
       // A block scalar takes the whole-document pipeline, which carries the
       // anchor onto the fresh replacement node.
       const block = yield* modifyToString("a: &an |\n  x\nb: *an\n", ["a"], "y");
       assert.strictEqual(block, "a: &an y\nb: *an\n");
-      assert.deepStrictEqual(yield* Yaml.parse(block), { a: "y", b: "y" });
+      const parsed18 = yield* Yaml.parse(block);
+      assert.deepStrictEqual(parsed18, { a: "y", b: "y" });
 
       const collection = yield* modifyToString("a: &an\n  k: 1\nb: *an\n", ["a"], { k: 2 });
-      assert.deepStrictEqual(yield* Yaml.parse(collection), { a: { k: 2 }, b: { k: 2 } });
+      const parsed19 = yield* Yaml.parse(collection);
+      assert.deepStrictEqual(parsed19, { a: { k: 2 }, b: { k: 2 } });
       const listed = yield* modifyToString("- &an x\n- *an\n", [0], ["y"]);
-      assert.deepStrictEqual(yield* Yaml.parse(listed), [["y"], ["y"]]);
+      const parsed20 = yield* Yaml.parse(listed);
+      assert.deepStrictEqual(parsed20, [["y"], ["y"]]);
     })
   );
 
@@ -219,11 +240,13 @@ describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
       // (null) renders as.
       const spliced = yield* modifyToString("a: &an x\nb: *an\n", ["a"], "");
       assert.strictEqual(spliced, "a: &an ''\nb: *an\n");
-      assert.deepStrictEqual(yield* Yaml.parse(spliced), { a: "", b: "" });
+      const parsed21 = yield* Yaml.parse(spliced);
+      assert.deepStrictEqual(parsed21, { a: "", b: "" });
 
       const block = yield* modifyToString("a: &an |\n  x\nb: *an\n", ["a"], "");
       assert.strictEqual(block, "a: &an ''\nb: *an\n");
-      assert.deepStrictEqual(yield* Yaml.parse(block), { a: "", b: "" });
+      const parsed22 = yield* Yaml.parse(block);
+      assert.deepStrictEqual(parsed22, { a: "", b: "" });
 
       // A document-shaping option forces the whole-document pipeline on a
       // spliceable target too.
@@ -234,15 +257,20 @@ describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
         YamlStringifyOptions.make({ indentSequences: true, quoteStyle: "auto" })
       );
       assert.strictEqual(rewritten, 'a: &an ""\nb: *an\n');
-      assert.deepStrictEqual(yield* Yaml.parse(rewritten), { a: "", b: "" });
+      const parsed23 = yield* Yaml.parse(rewritten);
+      assert.deepStrictEqual(parsed23, { a: "", b: "" });
 
       // An anchor over an empty source node still reads null, and a tag still fixes its value.
-      assert.deepStrictEqual(yield* Yaml.parse(yield* modifyToString("a: &an\nb: *an\n", ["c"], 1)), {
+      const modifyToString41 = yield* modifyToString("a: &an\nb: *an\n", ["c"], 1);
+      const parsed24 = yield* Yaml.parse(modifyToString41);
+      assert.deepStrictEqual(parsed24, {
         a: null,
         b: null,
         c: 1,
       });
-      assert.deepStrictEqual(yield* Yaml.parse(yield* modifyToString("a: &an !!str\nb: *an\n", ["c"], 1)), {
+      const modifyToString42 = yield* modifyToString("a: &an !!str\nb: *an\n", ["c"], 1);
+      const parsed25 = yield* Yaml.parse(modifyToString42);
+      assert.deepStrictEqual(parsed25, {
         a: "",
         b: "",
         c: 1,
@@ -253,7 +281,8 @@ describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
   it.effect("falls back for a multi-line quoted span", () =>
     Effect.gen(function* () {
       const text = "a: 'one\n  two'\nb: 1\n";
-      assert.strictEqual(yield* modifyToString(text, ["a"], "joined"), "a: joined\nb: 1\n");
+      const modifyToString26 = yield* modifyToString(text, ["a"], "joined");
+      assert.strictEqual(modifyToString26, "a: joined\nb: 1\n");
     })
   );
 
@@ -276,15 +305,13 @@ describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
     Effect.gen(function* () {
       // Canonical mode drops quotes, comments and CRLFs; the fast path would
       // preserve all three. Pins the `forceDefaultStyles` bail clause.
-      assert.strictEqual(
-        yield* modifyToString(
-          "a: 'x' # note\r\nb: 1\r\n",
-          ["a"],
-          "y",
-          YamlStringifyOptions.make({ forceDefaultStyles: true })
-        ),
-        "a: y\nb: 1\n"
+      const modifyToString27 = yield* modifyToString(
+        "a: 'x' # note\r\nb: 1\r\n",
+        ["a"],
+        "y",
+        YamlStringifyOptions.make({ forceDefaultStyles: true })
       );
+      assert.strictEqual(modifyToString27, "a: y\nb: 1\n");
     })
   );
 
@@ -293,10 +320,13 @@ describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
       // The fast path would splice in place and return the UNSORTED
       // "b: 'y'\na: 1\n"; the pipeline sorts keys and drops the quotes.
       // Deleting the `sortKeys === true` bail clause must fail this test.
-      assert.strictEqual(
-        yield* modifyToString("b: 'x'\na: 1\n", ["b"], "y", YamlStringifyOptions.make({ sortKeys: true })),
-        "a: 1\nb: y\n"
+      const modifyToString28 = yield* modifyToString(
+        "b: 'x'\na: 1\n",
+        ["b"],
+        "y",
+        YamlStringifyOptions.make({ sortKeys: true })
       );
+      assert.strictEqual(modifyToString28, "a: 1\nb: y\n");
     })
   );
 
@@ -304,10 +334,13 @@ describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
     Effect.gen(function* () {
       // The fast path would keep the original 4-space indentation; the
       // pipeline re-indents to 2. Pins the `indent !== undefined` clause.
-      assert.strictEqual(
-        yield* modifyToString("a:\n    k: 'x'\n", ["a", "k"], "y", YamlStringifyOptions.make({ indent: 2 })),
-        "a:\n  k: y\n"
+      const modifyToString29 = yield* modifyToString(
+        "a:\n    k: 'x'\n",
+        ["a", "k"],
+        "y",
+        YamlStringifyOptions.make({ indent: 2 })
       );
+      assert.strictEqual(modifyToString29, "a:\n  k: y\n");
     })
   );
 
@@ -315,10 +348,13 @@ describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
     Effect.gen(function* () {
       // The EOF newline sits outside the scalar span, so the fast path would
       // keep it; the pipeline honours finalNewline:false. Pins the clause.
-      assert.strictEqual(
-        yield* modifyToString("a: 'x'\n", ["a"], "y", YamlStringifyOptions.make({ finalNewline: false })),
-        "a: y"
+      const modifyToString30 = yield* modifyToString(
+        "a: 'x'\n",
+        ["a"],
+        "y",
+        YamlStringifyOptions.make({ finalNewline: false })
       );
+      assert.strictEqual(modifyToString30, "a: y");
     })
   );
 
@@ -326,10 +362,13 @@ describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
     Effect.gen(function* () {
       // The fast path would keep the indented sequence item; the pipeline
       // dedents it. Pins the `indentSequences !== undefined` clause.
-      assert.strictEqual(
-        yield* modifyToString("a:\n  - 'x'\n", ["a", 0], "y", YamlStringifyOptions.make({ indentSequences: false })),
-        "a:\n- y\n"
+      const modifyToString31 = yield* modifyToString(
+        "a:\n  - 'x'\n",
+        ["a", 0],
+        "y",
+        YamlStringifyOptions.make({ indentSequences: false })
       );
+      assert.strictEqual(modifyToString31, "a:\n- y\n");
     })
   );
 
@@ -348,16 +387,20 @@ describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
       const streamResult = yield* Effect.exit(YamlFormat.modify(stream, ["a"], "x"));
       assertExitFailure(streamResult, streamResult.pipe(Exit.getCause, O.getOrThrow));
       // The splice touches only the target span, so the directive prologue keeps its bytes.
-      assert.strictEqual(yield* modifyToString("%YAML 1.2\n---\na: '1'\n", ["a"], "x"), "%YAML 1.2\n---\na: 'x'\n");
+      const modifyToString32 = yield* modifyToString("%YAML 1.2\n---\na: '1'\n", ["a"], "x");
+      assert.strictEqual(modifyToString32, "%YAML 1.2\n---\na: 'x'\n");
     })
   );
 
   it.effect("splices sequence elements regionally", () =>
     Effect.gen(function* () {
       const text = "list:\r\n  - 'a'\r\n  - \"b\"\r\n  - c\r\n";
-      assert.strictEqual(yield* modifyToString(text, ["list", 0], "A"), "list:\r\n  - 'A'\r\n  - \"b\"\r\n  - c\r\n");
-      assert.strictEqual(yield* modifyToString(text, ["list", 1], "B"), "list:\r\n  - 'a'\r\n  - \"B\"\r\n  - c\r\n");
-      assert.strictEqual(yield* modifyToString(text, ["list", 2], "C"), "list:\r\n  - 'a'\r\n  - \"b\"\r\n  - C\r\n");
+      const modifyToString33 = yield* modifyToString(text, ["list", 0], "A");
+      assert.strictEqual(modifyToString33, "list:\r\n  - 'A'\r\n  - \"b\"\r\n  - c\r\n");
+      const modifyToString34 = yield* modifyToString(text, ["list", 1], "B");
+      assert.strictEqual(modifyToString34, "list:\r\n  - 'a'\r\n  - \"B\"\r\n  - c\r\n");
+      const modifyToString35 = yield* modifyToString(text, ["list", 2], "C");
+      assert.strictEqual(modifyToString35, "list:\r\n  - 'a'\r\n  - \"b\"\r\n  - C\r\n");
     })
   );
 
@@ -365,9 +408,12 @@ describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
     "quotes a plain replacement carrying a flow indicator when the target sits in a flow collection (#695)",
     () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* modifyToString("a: [x, y]\n", ["a", 0], "p, q"), "a: ['p, q', y]\n");
-        assert.strictEqual(yield* modifyToString("a: {b: x, c: y}\n", ["a", "b"], "p,q"), "a: {b: 'p,q', c: y}\n");
-        assert.strictEqual(yield* modifyToString("a: {b: x, c: y}\n", ["a", "b"], "p}"), "a: {b: 'p}', c: y}\n");
+        const modifyToString36 = yield* modifyToString("a: [x, y]\n", ["a", 0], "p, q");
+        assert.strictEqual(modifyToString36, "a: ['p, q', y]\n");
+        const modifyToString37 = yield* modifyToString("a: {b: x, c: y}\n", ["a", "b"], "p,q");
+        assert.strictEqual(modifyToString37, "a: {b: 'p,q', c: y}\n");
+        const modifyToString38 = yield* modifyToString("a: {b: x, c: y}\n", ["a", "b"], "p}");
+        assert.strictEqual(modifyToString38, "a: {b: 'p}', c: y}\n");
         // Still regional: one edit, confined to the target span.
         const edits = yield* modify("a: [x, y]\n", ["a", 0], "p, q");
         assert.strictEqual(edits.length, 1);
@@ -381,13 +427,15 @@ describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
 
   it.effect("a replacement without a flow indicator stays plain inside a flow collection", () =>
     Effect.gen(function* () {
-      assert.strictEqual(yield* modifyToString("a: [x, y]\n", ["a", 0], "p q"), "a: [p q, y]\n");
+      const modifyToString39 = yield* modifyToString("a: [x, y]\n", ["a", 0], "p q");
+      assert.strictEqual(modifyToString39, "a: [p q, y]\n");
     })
   );
 
   it.effect("finds the first key behind a leading BOM and keeps the BOM (#694)", () =>
     Effect.gen(function* () {
-      assert.strictEqual(yield* modifyToString("\uFEFFa: 'x'\nb: 1\n", ["a"], "y"), "\uFEFFa: 'y'\nb: 1\n");
+      const modifyToString40 = yield* modifyToString("\uFEFFa: 'x'\nb: 1\n", ["a"], "y");
+      assert.strictEqual(modifyToString40, "\uFEFFa: 'y'\nb: 1\n");
     })
   );
 });

@@ -65,7 +65,8 @@ describe("WorkItem use-cases", () => {
 
       expect(created.id).toBe(workItemId);
       expect(listed).toHaveLength(1);
-      assertSome(yield* Ref.get(createdInput), created);
+      const got = yield* Ref.get(createdInput);
+      assertSome(got, created);
       expect(listed[0]?.id).toBe(workItemId);
       expect(listed[0]?.title).toBe("Document topology");
     })

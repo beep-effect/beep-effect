@@ -37,7 +37,8 @@ const item = (itemId: string, text: string) => ReviewItem.cases["kg-answer"].mak
 // The three stores over a data directory inside a fresh temporary directory.
 const storesIn = Effect.fnUntraced(function* (subdirectory: string) {
   const path = yield* Path.Path;
-  const dataDirectory = path.join(yield* temporaryDirectory, subdirectory);
+  const temporaryDirectory1 = yield* temporaryDirectory;
+  const dataDirectory = path.join(temporaryDirectory1, subdirectory);
   const stores = yield* Layer.build(makeReviewFilesLayer(ReviewFilesConfig.make({ dataDirectory })));
   return { dataDirectory, stores };
 });
@@ -56,15 +57,19 @@ describe("@beep/law-practice-server ReviewFiles", () => {
           const verdicts = Context.get(stores, VerdictLog);
           const answers = Context.get(stores, AnswerLog);
 
-          expect(yield* verdicts.rows).toStrictEqual([]);
+          const rows2 = yield* verdicts.rows;
+          expect(rows2).toStrictEqual([]);
           yield* verdicts.append(verdict);
           yield* verdicts.append(verdict);
           yield* answers.append(answer);
 
-          expect(yield* verdicts.rows).toStrictEqual([verdict, verdict]);
-          expect(yield* answers.rows).toStrictEqual([answer]);
+          const rows3 = yield* verdicts.rows;
+          expect(rows3).toStrictEqual([verdict, verdict]);
+          const rows4 = yield* answers.rows;
+          expect(rows4).toStrictEqual([answer]);
           const path = yield* Path.Path;
-          expect(yield* lineCount(path.join(dataDirectory, "verdicts.jsonl"))).toBe(2);
+          const lineCount5 = yield* lineCount(path.join(dataDirectory, "verdicts.jsonl"));
+          expect(lineCount5).toBe(2);
           const mode = (yield* (yield* FileSystem.FileSystem).stat(path.join(dataDirectory, "answers.jsonl"))).mode;
           expect(mode & 0o077).toBe(0);
         })
@@ -82,10 +87,13 @@ describe("@beep/law-practice-server ReviewFiles", () => {
           yield* verdicts.append(verdict);
           yield* verdicts.append(verdict);
           // Half of a third row, with no line break yet: another process is still appending it.
-          const halfRow = Str.slice(0, 30)(yield* fs.readFileString(file));
+          const argument = Str.slice(0, 30);
+          const readFileString1 = yield* fs.readFileString(file);
+          const halfRow = argument(readFileString1);
           yield* fs.writeFileString(file, halfRow, { flag: "a" });
 
-          expect(yield* verdicts.rows).toStrictEqual([verdict, verdict]);
+          const rows6 = yield* verdicts.rows;
+          expect(rows6).toStrictEqual([verdict, verdict]);
         })
       )
     );
@@ -133,8 +141,10 @@ describe("@beep/law-practice-server ReviewFiles", () => {
           yield* store.upsert([item("kg-answer:1", "First answer, revised.")]);
 
           expect(once).toBe(2);
-          expect(yield* lineCount(file)).toBe(3);
-          expect(A.map(yield* store.list, ({ itemId, text }) => `${itemId} ${text}`)).toStrictEqual([
+          const lineCount7 = yield* lineCount(file);
+          expect(lineCount7).toBe(3);
+          const list8 = yield* store.list;
+          expect(A.map(list8, ({ itemId, text }) => `${itemId} ${text}`)).toStrictEqual([
             "kg-answer:1 First answer, revised.",
             "kg-answer:2 Second answer.",
           ]);

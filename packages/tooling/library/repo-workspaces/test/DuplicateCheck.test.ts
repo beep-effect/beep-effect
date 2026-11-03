@@ -238,7 +238,8 @@ describe("DuplicateCheck.run", () => {
 
   it.effect("reproduces issue #298: two copies of @effected/commands, each naming the package that pulls it", () =>
     Effect.gen(function* () {
-      const report = DuplicateCheck.run(yield* parse("kit-skew"));
+      const parsed1 = yield* parse("kit-skew");
+      const report = DuplicateCheck.run(parsed1);
 
       assert.isFalse(report.isClean);
       assert.deepStrictEqual(report.unresolvedImporters, []);
@@ -264,7 +265,8 @@ describe("DuplicateCheck.run", () => {
     Effect.gen(function* () {
       // `kit-skew` after `pnpm update @effected/npm`: the ONE edit the issue's
       // fix needed. The other copy is simply gone, and so is the finding.
-      const report = DuplicateCheck.run(yield* parse("kit-deduped"));
+      const parsed2 = yield* parse("kit-deduped");
+      const report = DuplicateCheck.run(parsed2);
 
       assert.deepStrictEqual(report.duplicates, []);
       assert.isTrue(report.isClean);
@@ -278,7 +280,8 @@ describe("DuplicateCheck.run", () => {
       // Two instances, one version: the code that loads is identical, so
       // nothing here can produce the type-identity skew the check exists to
       // catch. Counting instances instead of versions would report this.
-      const report = DuplicateCheck.run(yield* parse("peer-variants"));
+      const parsed3 = yield* parse("peer-variants");
+      const report = DuplicateCheck.run(parsed3);
 
       assert.deepStrictEqual(report.duplicates, []);
       assert.isTrue(report.isClean);
@@ -291,7 +294,8 @@ describe("DuplicateCheck.run", () => {
       // version list has two entries, and the 1.0.0 entry carries BOTH
       // instances — with the peer variant attributed to the importer that
       // took it, not merged into the other.
-      const report = DuplicateCheck.run(yield* parse("peer-variants-skew"));
+      const parsed4 = yield* parse("peer-variants-skew");
+      const report = DuplicateCheck.run(parsed4);
 
       assert.isFalse(report.isClean);
       assert.deepStrictEqual(
@@ -319,13 +323,15 @@ describe("DuplicateCheck.run", () => {
       // copy — the second incident in issue #603. Filtering it out of the
       // report must leave it standing as a dependent, or the report names
       // the skew without naming the culprit.
-      const unfiltered = DuplicateCheck.run(yield* parse("filtered"));
+      const parsed5 = yield* parse("filtered");
+      const unfiltered = DuplicateCheck.run(parsed5);
       assert.deepStrictEqual(
         A.map(unfiltered.duplicates, (row) => row.name),
         ["@effected/commands", "semver"]
       );
 
-      const kit = DuplicateCheck.run(yield* parse("filtered"), { names: DuplicateCheck.kit });
+      const parsed6 = yield* parse("filtered");
+      const kit = DuplicateCheck.run(parsed6, { names: DuplicateCheck.kit });
       assert.deepStrictEqual(
         A.map(kit.duplicates, (row) => row.name),
         ["@effected/commands"]
@@ -340,7 +346,8 @@ describe("DuplicateCheck.run", () => {
 
       // A filter matching nothing duplicated is a clean report — `isClean`
       // answers for the names asked about, not for the whole graph.
-      const nothing = DuplicateCheck.run(yield* parse("filtered"), { names: (name) => name === "left-pad" });
+      const parsed7 = yield* parse("filtered");
+      const nothing = DuplicateCheck.run(parsed7, { names: (name) => name === "left-pad" });
       assert.deepStrictEqual(nothing.duplicates, []);
       assert.isTrue(nothing.isClean);
     })
@@ -366,7 +373,8 @@ describe("DuplicateCheck.run", () => {
       // has its own workspace row, and the row's edges are the importer's own
       // dependencies — so the dependent is the importer, by path, never a
       // `package` row named after a directory with a "0.0.0" placeholder.
-      const report = DuplicateCheck.run(yield* parse("other-importer"));
+      const parsed8 = yield* parse("other-importer");
+      const report = DuplicateCheck.run(parsed8);
 
       assert.isFalse(report.isClean);
       const commands = byName(report, "@effected/commands");
@@ -384,18 +392,17 @@ describe("DuplicateCheck.run", () => {
       // version per root-importer dependency and no root package row, so the
       // root cannot be joined to instances and is reported rather than passed
       // silently. pnpm records the version and is unaffected.
-      const npm = DuplicateCheck.run(
-        yield* Lockfile.parse(fixture("peers/npm-root/package-lock.json"), { format: "npm" })
-      );
+      const parsed9 = yield* Lockfile.parse(fixture("peers/npm-root/package-lock.json"), { format: "npm" });
+      const npm = DuplicateCheck.run(parsed9);
       assert.include(npm.unresolvedImporters, ".");
 
-      const pnpm = DuplicateCheck.run(yield* Lockfile.parse(fixture("peers/mixed/pnpm-lock.yaml"), { format: "pnpm" }));
+      const parsed10 = yield* Lockfile.parse(fixture("peers/mixed/pnpm-lock.yaml"), { format: "pnpm" });
+      const pnpm = DuplicateCheck.run(parsed10);
       assert.deepStrictEqual(pnpm.unresolvedImporters, []);
 
       // A root with NO dependencies has nothing to fail to resolve.
-      const rootless = DuplicateCheck.run(
-        yield* Lockfile.parse(fixture("peers/npm/package-lock.json"), { format: "npm" })
-      );
+      const parsed11 = yield* Lockfile.parse(fixture("peers/npm/package-lock.json"), { format: "npm" });
+      const rootless = DuplicateCheck.run(parsed11);
       assert.deepStrictEqual(rootless.unresolvedImporters, []);
     })
   );
@@ -405,9 +412,8 @@ describe("DuplicateCheck.run", () => {
       // `peers/rootimporter` is real pnpm output: react at 17.0.2 (root) and
       // 18.3.1 (packages/other), with react-dom@18.3.1 present twice by peer
       // suffix. react is a duplicate; react-dom is not.
-      const report = DuplicateCheck.run(
-        yield* Lockfile.parse(fixture("peers/rootimporter/pnpm-lock.yaml"), { format: "pnpm" })
-      );
+      const parsed12 = yield* Lockfile.parse(fixture("peers/rootimporter/pnpm-lock.yaml"), { format: "pnpm" });
+      const report = DuplicateCheck.run(parsed12);
 
       assert.deepStrictEqual(
         A.map(report.duplicates, (row) => row.name),
@@ -428,7 +434,9 @@ it.effect.prop(
   [Arbitrary.schema(DuplicatedPackage)],
   ([value]) =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeEffect(DuplicatedPackage)(yield* S.encodeEffect(DuplicatedPackage)(value));
+      const argument = S.decodeEffect(DuplicatedPackage);
+      const value1 = yield* S.encodeEffect(DuplicatedPackage)(value);
+      const decoded = yield* argument(value1);
       assert.isTrue(S.toEquivalence(DuplicatedPackage)(decoded, value));
     }),
   { arbitrary: fcRuns(50) }

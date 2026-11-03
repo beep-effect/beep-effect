@@ -258,7 +258,9 @@ const writeVerdict = Effect.fn("EconomicsTest.writeVerdict")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const directory = yield* runDirectory(checkoutRoot, runId);
-  yield* fs.writeFileString(path.join(directory, "verdict.json"), yield* YeetVerdictJson.encode(entry));
+  const argument = path.join(directory, "verdict.json");
+  const encoded1 = yield* YeetVerdictJson.encode(entry);
+  yield* fs.writeFileString(argument, encoded1);
 });
 
 const readScope = Effect.fn("EconomicsTest.readScope")(function* (
@@ -396,7 +398,8 @@ it.layer(LiveSource, { timeout: "30 seconds" })("yeet economics loader", (layerI
       expect(failure).toBeInstanceOf(YeetEconomicsError);
       expect(failure.reason).toBe("no-runs-directory");
       yield* runDirectory(root, "run-empty");
-      expect(yield* readScope(root)).toEqual([]);
+      const readScope1 = yield* readScope(root);
+      expect(readScope1).toEqual([]);
     })
   );
 
@@ -477,7 +480,8 @@ it.layer(LiveSource, { timeout: "30 seconds" })("yeet economics loader", (layerI
         finished(id("84"), verdict(O.some(id("84")), { outcome: "success" })),
       ]);
       yield* writeVerdict(root, "run-v", verdict(O.some(id("84")), { outcome: "failure" }));
-      const economics = report(yield* readScope(root));
+      const readScope2 = yield* readScope(root);
+      const economics = report(readScope2);
       expect(economics.dataQuality.diagnostics.orphanVerdictFilesAdded).toBe(0);
       expect(economics.attempts.all.outcomeMix).toEqual([{ key: "success", count: 1 }]);
     })
@@ -661,7 +665,8 @@ it.layer(LiveSource, { timeout: "30 seconds" })("yeet economics lane populations
         finished(id("12"), wrapperOnly),
       ]);
 
-      const economics = report(yield* readScope(root));
+      const readScope3 = yield* readScope(root);
+      const economics = report(readScope3);
       expect(A.map(economics.wrapperLanes.rows, (row) => [row.id, row.totalDurationMs])).toEqual([
         ["full:01-pre-push", 6_000],
         ["full:00-cheap-gates", 4_000],
@@ -944,7 +949,8 @@ it.layer(LiveSource, { timeout: "30 seconds" })("yeet economics terminations", (
         terminated(id("25"), "oom-killed"),
       ]);
       yield* writeJournal(root, "run-u", [started(id("31")), terminated(id("31"), "legacy-unowned-start")]);
-      const economics = report(yield* readScope(root));
+      const readScope4 = yield* readScope(root);
+      const economics = report(readScope4);
       expect(economics.terminations).toMatchObject({ starts: 7, startsWithoutFinish: 1 });
       expect(economics.terminations.reasonMix).toEqual([
         { key: "interrupted", count: 2 },
@@ -972,7 +978,8 @@ describe("yeet economics document", () => {
       const text = yield* YeetEconomicsReportJson.encode(empty);
       expect(Str.includes('"p50Ms":null')(text)).toBe(true);
       expect(Str.includes('"accountedPct":null')(text)).toBe(true);
-      expect(yield* YeetEconomicsReportJson.decode(text)).toEqual(empty);
+      const decoded = yield* YeetEconomicsReportJson.decode(text);
+      expect(decoded).toEqual(empty);
       // Lane rows, first-failure offsets and the M4 mixes all cross the codec.
       const populated = report([
         journal("run-1", [
@@ -993,9 +1000,9 @@ describe("yeet economics document", () => {
       expect(A.length(populated.innerLanes.rows)).toBe(1);
       assertSome(populated.firstFailure.completionOffsetP50Ms, 1_500);
       expect(populated.unchangedFingerprint.byActionableLane).toEqual([{ key: "quality:coverage", count: 1 }]);
-      expect(yield* YeetEconomicsReportJson.decode(yield* YeetEconomicsReportJson.encode(populated))).toEqual(
-        populated
-      );
+      const encoded = yield* YeetEconomicsReportJson.encode(populated);
+      const decoded5 = yield* YeetEconomicsReportJson.decode(encoded);
+      expect(decoded5).toEqual(populated);
       const invalid = yield* Effect.flip(
         YeetEconomicsReportJson.decode(Str.replace('"yeet-economics/v2"', '"yeet-economics/v1"')(text))
       );
@@ -1014,7 +1021,8 @@ it.layer(LiveSource, { timeout: "30 seconds" })("yeet economics scope", (layerIt
       yield* writeJournal(root, "other-run", [started(id("42")), finished(id("42"), verdict(O.some(id("42"))))]);
       const narrowed = yield* readScope(root, { branch: "feat/economics" });
       expect(A.map(narrowed, (entry) => entry.runId)).toEqual([runId]);
-      expect(A.length(yield* readScope(root))).toBe(2);
+      const readScope6 = yield* readScope(root);
+      expect(A.length(readScope6)).toBe(2);
     })
   );
 
@@ -1072,8 +1080,10 @@ it.layer(LiveSource, { timeout: "30 seconds" })("yeet economics scope", (layerIt
         "beep-effect7-worktrees/lane-b",
         "beep-effect7/.claude/worktrees/x",
       ];
-      expect(A.map(yield* readScope(nestedLane, { fleet: true }), (entry) => entry.checkout)).toEqual(expected);
-      expect(A.map(yield* readScope(clone, { fleet: true }), (entry) => entry.checkout)).toEqual(expected);
+      const readScope7 = yield* readScope(nestedLane, { fleet: true });
+      expect(A.map(readScope7, (entry) => entry.checkout)).toEqual(expected);
+      const readScope8 = yield* readScope(clone, { fleet: true });
+      expect(A.map(readScope8, (entry) => entry.checkout)).toEqual(expected);
     })
   );
 
@@ -1154,7 +1164,8 @@ it.layer(sourceFailingWith("run-id"), { timeout: "30 seconds" })("yeet economics
         )
       );
       expect(repoRoot.reason).toBe("repo-root");
-      expect(yield* TestConsole.logLines).toEqual([]);
+      const logLines9 = yield* TestConsole.logLines;
+      expect(logLines9).toEqual([]);
     })
   );
 });
@@ -1272,7 +1283,8 @@ it.layer(LiveSourceWithConsole, { timeout: "30 seconds" })("yeet economics close
       yield* printYeetEconomicsCloseoutSummary(root, "feat/economics", ".beep/yeet-alt", O.some(id("73")));
       yield* printYeetEconomicsCloseoutSummary(root, "feat/economics", ".beep/yeet-alt", O.none());
       // The layer's console is shared with the test above; these are the last two summaries.
-      const lines = A.takeRight(yield* TestConsole.logLines, 10);
+      const logLines10 = yield* TestConsole.logLines;
+      const lines = A.takeRight(logLines10, 10);
       expect(lines[4]).toBe(
         "[yeet] economics: terminations 1 start(s), 0 without a terminal row; reasons none (1 in flight)"
       );
@@ -1290,7 +1302,8 @@ it.layer(
   layerIt.effect("reduces a failing source to one log line", () =>
     Effect.gen(function* () {
       yield* printYeetEconomicsCloseoutSummary("/repo", "main", PACKET_DIR, O.none());
-      expect(yield* TestConsole.logLines).toEqual(["[yeet] economics: no .beep/yeet/runs under /repo"]);
+      const logLines11 = yield* TestConsole.logLines;
+      expect(logLines11).toEqual(["[yeet] economics: no .beep/yeet/runs under /repo"]);
     })
   );
 });

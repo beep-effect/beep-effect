@@ -415,7 +415,8 @@ const renderTube = Effect.fnUntraced(function* (azimuth: number) {
   const before = A.map(projected?.visible ?? [], ([x1, y1, x2, y2]) =>
     Segment2.make([x1 * mm, -y1 * mm, x2 * mm, -y2 * mm])
   );
-  const after = figureSegmentsMm(yield* fs.readFileString(path.join(outputDir, "fig-1.svg")));
+  const readFileString1 = yield* fs.readFileString(path.join(outputDir, "fig-1.svg"));
+  const after = figureSegmentsMm(readFileString1);
   return { manifest, figure, before, after };
 });
 
@@ -877,7 +878,8 @@ describe("@beep/occt service", () => {
         const json = yield* encodeLegacyViews(
           A.map(views, (view) => ({ visible: view.visible, hidden: view.hidden, shading: view.shading }))
         );
-        expect(yield* sha256Hex(json)).toBe(LEGACY_SHA256);
+        const sha256Hex2 = yield* sha256Hex(json);
+        expect(sha256Hex2).toBe(LEGACY_SHA256);
       })
     );
 

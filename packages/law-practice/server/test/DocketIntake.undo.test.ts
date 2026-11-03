@@ -190,7 +190,8 @@ const seed = Effect.gen(function* () {
 
 const categoriesOf = Effect.fnUntraced(function* (messageId: string) {
   const fake = yield* FakeGraph;
-  return O.flatMap(HashMap.get(yield* Ref.get(fake.messages), messageId), (value) => value.categories);
+  const got1 = yield* Ref.get(fake.messages);
+  return O.flatMap(HashMap.get(got1, messageId), (value) => value.categories);
 });
 
 const plan = Effect.gen(function* () {
@@ -226,8 +227,10 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
         });
         expect(reusedPlan.events).toStrictEqual([]);
         yield* applyDocketUndo({ mailbox: MAILBOX, plan: reusedPlan });
-        expect(HashMap.has(yield* Ref.get(fake.events), "e-shared")).toBe(true);
-        expect(yield* Ref.get(fake.calls)).toStrictEqual([]);
+        const got2 = yield* Ref.get(fake.events);
+        expect(HashMap.has(got2, "e-shared")).toBe(true);
+        const got3 = yield* Ref.get(fake.calls);
+        expect(got3).toStrictEqual([]);
         const originalPlan = yield* planDocketUndo({
           entries: yield* readDocketJournal(DIRECTORY),
           mailbox: MAILBOX,
@@ -236,7 +239,8 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
         });
         expect(A.map(originalPlan.events, (target) => target.action)).toStrictEqual(["delete"]);
         yield* applyDocketUndo({ mailbox: MAILBOX, plan: originalPlan });
-        expect(HashMap.has(yield* Ref.get(fake.events), "e-shared")).toBe(false);
+        const got4 = yield* Ref.get(fake.events);
+        expect(HashMap.has(got4, "e-shared")).toBe(false);
       })
     );
   });
@@ -250,8 +254,10 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
         yield* seed;
 
         const planned = yield* plan;
-        const report = dryRunDocketUndo(planned, yield* store.load);
-        const verbs = A.map(yield* Ref.get(fake.calls), (call) => A.headNonEmpty(Str.split(" ")(call)));
+        const loaded = yield* store.load;
+        const report = dryRunDocketUndo(planned, loaded);
+        const got5 = yield* Ref.get(fake.calls);
+        const verbs = A.map(got5, (call) => A.headNonEmpty(Str.split(" ")(call)));
 
         expect(A.map(planned.events, (target) => [target.eventId, target.action])).toStrictEqual([
           ["e-provisional", "delete"],
@@ -301,7 +307,8 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
 
         const report = yield* applyDocketUndo({ mailbox: MAILBOX, plan: planned });
         const state = yield* store.load;
-        const undoLines = A.filter(yield* readDocketJournal(DIRECTORY), (line) => Str.startsWith("undo-")(line.kind));
+        const readDocketJournal6 = yield* readDocketJournal(DIRECTORY);
+        const undoLines = A.filter(readDocketJournal6, (line) => Str.startsWith("undo-")(line.kind));
 
         expect(report).toMatchObject({
           deleted: 1,
@@ -317,10 +324,14 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
           "e-recategorised",
           "e-verified",
         ]);
-        assertSome(yield* categoriesOf("m1"), ["M: FIX-0001"]);
-        assertSome(yield* categoriesOf("m2"), ["Follow up"]);
-        assertSome(yield* categoriesOf("m4"), ["M: FIX-0002"]);
-        assertSome(yield* categoriesOf("m-other"), ["Docket - entered"]);
+        const categoriesOf7 = yield* categoriesOf("m1");
+        assertSome(categoriesOf7, ["M: FIX-0001"]);
+        const categoriesOf8 = yield* categoriesOf("m2");
+        assertSome(categoriesOf8, ["Follow up"]);
+        const categoriesOf9 = yield* categoriesOf("m4");
+        assertSome(categoriesOf9, ["M: FIX-0002"]);
+        const categoriesOf10 = yield* categoriesOf("m-other");
+        assertSome(categoriesOf10, ["Docket - entered"]);
         expect(A.sort(R.keys(state.ledger), Str.Order)).toStrictEqual(["m-failing", "m-other", "m-quiet"]);
         // The cursor moves back to the earliest message the run touched, so it is listed again.
         assertSome(state.cursor, "2030-01-09T09:20:00.000Z");
@@ -340,7 +351,8 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
           ["undo-message-unmarked", RUN],
           ["undo-message-gone", RUN],
         ]);
-        expect(A.length(A.filter(yield* Ref.get(fake.calls), Str.startsWith("updateMessageCategories")))).toBe(3);
+        const got11 = yield* Ref.get(fake.calls);
+        expect(A.length(A.filter(got11, Str.startsWith("updateMessageCategories")))).toBe(3);
       })
     );
   });
@@ -433,8 +445,10 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
         );
         const report = yield* applyDocketUndo({ mailbox: MAILBOX, plan: planned });
         expect(report.deleted).toBe(0);
-        expect(HashMap.has(yield* Ref.get(fake.events), "e-race")).toBe(true);
-        expect(A.some(yield* Ref.get(fake.calls), Str.startsWith("deleteEvent e-race"))).toBe(false);
+        const got12 = yield* Ref.get(fake.events);
+        expect(HashMap.has(got12, "e-race")).toBe(true);
+        const got13 = yield* Ref.get(fake.calls);
+        expect(A.some(got13, Str.startsWith("deleteEvent e-race"))).toBe(false);
       })
     );
   });
@@ -479,7 +493,8 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
         const planned = yield* plan;
         const report = yield* applyDocketUndo({ mailbox: MAILBOX, plan: planned });
         const calls = yield* Ref.get(fake.calls);
-        const undoLines = A.filter(yield* readDocketJournal(DIRECTORY), (line) => Str.startsWith("undo-")(line.kind));
+        const readDocketJournal14 = yield* readDocketJournal(DIRECTORY);
+        const undoLines = A.filter(readDocketJournal14, (line) => Str.startsWith("undo-")(line.kind));
 
         expect(A.map(planned.events, (target) => [target.eventId, target.action])).toStrictEqual([
           ["e-provisional", "undone"],
@@ -497,7 +512,8 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
           "undo-event-deleted",
           "undo-message-unmarked",
         ]);
-        assertSome(yield* categoriesOf("m2"), []);
+        const categoriesOf15 = yield* categoriesOf("m2");
+        assertSome(categoriesOf15, []);
         expect(R.keys((yield* store.load).ledger)).toStrictEqual([]);
       })
     );
@@ -538,7 +554,8 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
           DocketIntakeState.make({ cursor: O.some("2030-01-09T12:00:00.000Z"), ledger: { m1: laterRecord } })
         );
         yield* journalService.append([created(OTHER_RUN, "e-later"), marked(OTHER_RUN, "m1", 30)]);
-        const linesBefore = A.length(yield* readDocketJournal(DIRECTORY));
+        const readDocketJournal16 = yield* readDocketJournal(DIRECTORY);
+        const linesBefore = A.length(readDocketJournal16);
         yield* Ref.set(fake.calls, []);
 
         const replanned = yield* plan;
@@ -554,12 +571,16 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
           OTHER_RUN
         );
         expect(again).toMatchObject({ alreadyUndone: 1, deleted: 0, ledgerCleared: 0, messagesKept: 1, unmarked: 0 });
-        assertSome(yield* categoriesOf("m1"), ["Docket - entered"]);
-        expect(HashMap.has(yield* Ref.get(fake.events), "e-later")).toBe(true);
+        const categoriesOf17 = yield* categoriesOf("m1");
+        assertSome(categoriesOf17, ["Docket - entered"]);
+        const got18 = yield* Ref.get(fake.events);
+        expect(HashMap.has(got18, "e-later")).toBe(true);
         expect(R.keys(state.ledger)).toStrictEqual(["m1"]);
         expect(O.getOrUndefined(R.get(state.ledger, "m1"))?.outcome).toMatchObject({ entry: { eventId: "e-later" } });
-        expect(A.length(yield* readDocketJournal(DIRECTORY))).toBe(linesBefore);
-        expect(yield* Ref.get(fake.calls)).toStrictEqual([]);
+        const readDocketJournal19 = yield* readDocketJournal(DIRECTORY);
+        expect(A.length(readDocketJournal19)).toBe(linesBefore);
+        const got20 = yield* Ref.get(fake.calls);
+        expect(got20).toStrictEqual([]);
       })
     );
   });
@@ -602,8 +623,10 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
           ["e-found-later", "keep"],
         ]);
         expect(report).toMatchObject({ deleted: 0, kept: 1, ledgerCleared: 0, messagesKept: 1 });
-        expect(HashMap.has(yield* Ref.get(fake.events), "e-found-later")).toBe(true);
-        assertSome(yield* categoriesOf("m-found-later"), ["Docket - entered"]);
+        const got21 = yield* Ref.get(fake.events);
+        expect(HashMap.has(got21, "e-found-later")).toBe(true);
+        const categoriesOf22 = yield* categoriesOf("m-found-later");
+        assertSome(categoriesOf22, ["Docket - entered"]);
         expect(R.keys((yield* store.load).ledger)).toStrictEqual(["m-found-later"]);
       })
     );

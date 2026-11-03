@@ -107,13 +107,20 @@ describe("DockEngine", () => {
         const engine = yield* DockEngine;
         let state: DockWorkspace = DockWorkspace.empty;
 
-        state = (yield* requireChanged(yield* engine.transition(state, openPanelOne))).state;
-        state = (yield* requireChanged(yield* engine.transition(state, openPanelTwo))).state;
-        state = (yield* requireChanged(yield* engine.transition(state, openPanelThreeSplitRight))).state;
-        state = (yield* requireChanged(yield* engine.transition(state, resizeSplit))).state;
-        state = (yield* requireChanged(yield* engine.transition(state, activatePanelOne))).state;
-        state = (yield* requireChanged(yield* engine.transition(state, movePanelOne))).state;
-        const closed = yield* requireChanged(yield* engine.transition(state, closePanelTwo));
+        const transition1 = yield* engine.transition(state, openPanelOne);
+        state = (yield* requireChanged(transition1)).state;
+        const transition2 = yield* engine.transition(state, openPanelTwo);
+        state = (yield* requireChanged(transition2)).state;
+        const transition3 = yield* engine.transition(state, openPanelThreeSplitRight);
+        state = (yield* requireChanged(transition3)).state;
+        const transition4 = yield* engine.transition(state, resizeSplit);
+        state = (yield* requireChanged(transition4)).state;
+        const transition5 = yield* engine.transition(state, activatePanelOne);
+        state = (yield* requireChanged(transition5)).state;
+        const transition6 = yield* engine.transition(state, movePanelOne);
+        state = (yield* requireChanged(transition6)).state;
+        const transition7 = yield* engine.transition(state, closePanelTwo);
+        const closed = yield* requireChanged(transition7);
         state = closed.state;
 
         expect(closed.events[0].kind).toBe("panelClosed");
@@ -169,9 +176,11 @@ describe("DockEngine", () => {
       "models valid idempotent commands as explicit unchanged outcomes",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const onePanel = (yield* requireChanged(yield* engine.transition(DockWorkspace.empty, openPanelOne))).state;
+        const transition8 = yield* engine.transition(DockWorkspace.empty, openPanelOne);
+        const onePanel = (yield* requireChanged(transition8)).state;
         const activeAgain = yield* engine.transition(onePanel, activatePanelOne);
-        const split = (yield* requireChanged(yield* engine.transition(onePanel, openPanelThreeSplitRight))).state;
+        const transition9 = yield* engine.transition(onePanel, openPanelThreeSplitRight);
+        const split = (yield* requireChanged(transition9)).state;
         const sameRatio = yield* engine.transition(
           split,
           envelope(
@@ -196,10 +205,13 @@ describe("DockEngine", () => {
       "keeps restore revision monotonic and preserves snapshot provenance",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const saved = (yield* requireChanged(yield* engine.transition(DockWorkspace.empty, openPanelOne))).state;
+        const transition10 = yield* engine.transition(DockWorkspace.empty, openPanelOne);
+        const saved = (yield* requireChanged(transition10)).state;
         const snapshot = yield* engine.encodeSnapshot(saved);
-        const cleared = (yield* requireChanged(yield* engine.transition(saved, clearWorkspace))).state;
-        const restored = yield* requireChanged(yield* engine.restore(cleared, snapshot, restoreRequest));
+        const transition11 = yield* engine.transition(saved, clearWorkspace);
+        const cleared = (yield* requireChanged(transition11)).state;
+        const restore12 = yield* engine.restore(cleared, snapshot, restoreRequest);
+        const restored = yield* requireChanged(restore12);
         const event = restored.events[0];
 
         expect(restored.previousRevision).toBe(2);
@@ -244,7 +256,8 @@ describe("DockEngine", () => {
           allowedRenderers: O.some([RendererKey.make("allowed")]),
         });
         const snapshot = yield* engine.encodeSnapshot(restored);
-        const outcome = yield* requireChanged(yield* engine.restore(DockWorkspace.empty, snapshot, request));
+        const restore13 = yield* engine.restore(DockWorkspace.empty, snapshot, request);
+        const outcome = yield* requireChanged(restore13);
 
         assertNone(DockWorkspace.findTabs(outcome.state, groupOne));
         expect(A.map(DockWorkspace.panels(outcome.state), (panel) => panel.id)).toEqual([allowed.id, panelOne.id]);
@@ -323,7 +336,8 @@ describe("DockEngine", () => {
           allowedRenderers: O.some([allowedRenderer]),
         });
         const snapshot = yield* engine.encodeSnapshot(restored);
-        const outcome = yield* requireChanged(yield* engine.restore(current, snapshot, request));
+        const restore14 = yield* engine.restore(current, snapshot, request);
+        const outcome = yield* requireChanged(restore14);
         const installed = yield* DockWorkspace.match(outcome.state, {
           empty: () => Effect.die("expected populated restored workspace"),
           populated: (workspace) => Effect.succeed(workspace),
@@ -351,7 +365,8 @@ describe("DockEngine", () => {
             }),
           })
         );
-        const emptied = yield* requireChanged(yield* engine.restore(current, deniedOnly, request));
+        const restore15 = yield* engine.restore(current, deniedOnly, request);
+        const emptied = yield* requireChanged(restore15);
         expect(emptied.state).toMatchObject({ kind: "empty" });
       })
     );
@@ -360,7 +375,8 @@ describe("DockEngine", () => {
       "rejects root-split moves that remove the final docked panel",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const onePanel = (yield* requireChanged(yield* engine.transition(DockWorkspace.empty, openPanelOne))).state;
+        const transition16 = yield* engine.transition(DockWorkspace.empty, openPanelOne);
+        const onePanel = (yield* requireChanged(transition16)).state;
         const rootSplit = envelope(
           "command-move-final-root-split",
           MovePanelCommand.make({
@@ -375,8 +391,10 @@ describe("DockEngine", () => {
         const failure = yield* Effect.flip(engine.transition(onePanel, rootSplit));
         expect(failure).toMatchObject({ reason: "workspace-empty" });
 
-        const twoPanels = (yield* requireChanged(yield* engine.transition(onePanel, openPanelTwo))).state;
-        const moved = yield* requireChanged(yield* engine.transition(twoPanels, rootSplit));
+        const transition17 = yield* engine.transition(onePanel, openPanelTwo);
+        const twoPanels = (yield* requireChanged(transition17)).state;
+        const transition18 = yield* engine.transition(twoPanels, rootSplit);
+        const moved = yield* requireChanged(transition18);
         expect(DockWorkspace.groupCount(moved.state)).toBe(2);
         expect((yield* requireRootSplit(moved.state)).splitId).toBe(splitOne);
       })
@@ -387,9 +405,12 @@ describe("DockEngine", () => {
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
         let state: DockWorkspace = DockWorkspace.empty;
-        state = (yield* requireChanged(yield* engine.transition(state, openPanelOne))).state;
-        state = (yield* requireChanged(yield* engine.transition(state, openPanelTwo))).state;
-        state = (yield* requireChanged(yield* engine.transition(state, openPanelThreeSplitRight))).state;
+        const transition19 = yield* engine.transition(state, openPanelOne);
+        state = (yield* requireChanged(transition19)).state;
+        const transition20 = yield* engine.transition(state, openPanelTwo);
+        state = (yield* requireChanged(transition20)).state;
+        const transition21 = yield* engine.transition(state, openPanelThreeSplitRight);
+        state = (yield* requireChanged(transition21)).state;
 
         const moveBeside = envelope(
           "command-move-beside",
@@ -404,7 +425,8 @@ describe("DockEngine", () => {
             }),
           })
         );
-        const moved = yield* requireChanged(yield* engine.transition(state, moveBeside));
+        const transition22 = yield* engine.transition(state, moveBeside);
+        const moved = yield* requireChanged(transition22);
 
         expect(DockWorkspace.groupCount(moved.state)).toBe(3);
         assertSome(
@@ -419,28 +441,28 @@ describe("DockEngine", () => {
       "interprets split sizing as the new group's share on every semantic side",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const root = (yield* requireChanged(yield* engine.transition(DockWorkspace.empty, openPanelOne))).state;
+        const transition23 = yield* engine.transition(DockWorkspace.empty, openPanelOne);
+        const root = (yield* requireChanged(transition23)).state;
 
         yield* Effect.forEach(DockSide.literals, (side) =>
           Effect.gen(function* () {
-            const opened = yield* requireChanged(
-              yield* engine.transition(
-                root,
-                envelope(
-                  `command-side-${side}`,
-                  OpenPanelCommand.make({
-                    panel: panelTwo,
-                    placement: SplitPlacement.make({
-                      referenceGroupId: groupOne,
-                      newGroupId: groupTwo,
-                      splitId: splitOne,
-                      side,
-                      newGroupRatio: SplitRatio.make(2_500),
-                    }),
-                  })
-                )
+            const transition24 = yield* engine.transition(
+              root,
+              envelope(
+                `command-side-${side}`,
+                OpenPanelCommand.make({
+                  panel: panelTwo,
+                  placement: SplitPlacement.make({
+                    referenceGroupId: groupOne,
+                    newGroupId: groupTwo,
+                    splitId: splitOne,
+                    side,
+                    newGroupRatio: SplitRatio.make(2_500),
+                  }),
+                })
               )
             );
+            const opened = yield* requireChanged(transition24);
             const split = yield* requireRootSplit(opened.state);
             const expected = DockSide.match({
               left: () => ({ axis: "horizontal", groupId: groupTwo, ratio: 2_500 }),
@@ -471,7 +493,8 @@ describe("DockEngine", () => {
       "uses exact basis-point complements at and below the upper bound",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const root = (yield* requireChanged(yield* engine.transition(DockWorkspace.empty, openPanelOne))).state;
+        const transition25 = yield* engine.transition(DockWorkspace.empty, openPanelOne);
+        const root = (yield* requireChanged(transition25)).state;
 
         yield* Effect.forEach(
           [
@@ -480,24 +503,23 @@ describe("DockEngine", () => {
           ],
           ({ requested, expected }) =>
             Effect.gen(function* () {
-              const opened = yield* requireChanged(
-                yield* engine.transition(
-                  root,
-                  envelope(
-                    `command-complement-${requested}`,
-                    OpenPanelCommand.make({
-                      panel: panelTwo,
-                      placement: SplitPlacement.make({
-                        referenceGroupId: groupOne,
-                        newGroupId: groupTwo,
-                        splitId: splitOne,
-                        side: "right",
-                        newGroupRatio: requested,
-                      }),
-                    })
-                  )
+              const transition26 = yield* engine.transition(
+                root,
+                envelope(
+                  `command-complement-${requested}`,
+                  OpenPanelCommand.make({
+                    panel: panelTwo,
+                    placement: SplitPlacement.make({
+                      referenceGroupId: groupOne,
+                      newGroupId: groupTwo,
+                      splitId: splitOne,
+                      side: "right",
+                      newGroupRatio: requested,
+                    }),
+                  })
                 )
               );
+              const opened = yield* requireChanged(transition26);
 
               expect(SplitLayout.ratio((yield* requireRootSplit(opened.state)).layout)).toBe(expected);
             })
@@ -548,7 +570,8 @@ describe("DockEngine", () => {
       "preserves idempotent and rejected semantics at the maximum revision",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const opened = (yield* requireChanged(yield* engine.transition(DockWorkspace.empty, openPanelOne))).state;
+        const transition27 = yield* engine.transition(DockWorkspace.empty, openPanelOne);
+        const opened = (yield* requireChanged(transition27)).state;
         const exhausted = yield* DockWorkspace.match(opened, {
           empty: () => Effect.die("expected populated state"),
           populated: (workspace) =>
@@ -578,7 +601,8 @@ describe("DockEngine", () => {
       "rejects a duplicate panel without mutating the caller's state",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const opened = yield* requireChanged(yield* engine.transition(DockWorkspace.empty, openPanelOne));
+        const transition28 = yield* engine.transition(DockWorkspace.empty, openPanelOne);
+        const opened = yield* requireChanged(transition28);
         const before = opened.state;
         const beforeEncoded = yield* encodeDockWorkspaceJson(before);
         const duplicate = envelope(
@@ -597,7 +621,8 @@ describe("DockEngine", () => {
         const failure = yield* Effect.flip(engine.transition(before, duplicate));
         expect(failure._tag).toBe("DockCommandRejected");
         expect(workspaceEquals(before, opened.state)).toBe(true);
-        expect(yield* encodeDockWorkspaceJson(before)).toBe(beforeEncoded);
+        const encodedDockWorkspaceJson = yield* encodeDockWorkspaceJson(before);
+        expect(encodedDockWorkspaceJson).toBe(beforeEncoded);
       })
     );
 

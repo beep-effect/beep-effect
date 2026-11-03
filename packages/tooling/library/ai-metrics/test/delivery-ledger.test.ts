@@ -76,7 +76,9 @@ const fixture = Effect.fn("DeliveryLedgerTest.fixture")(function* (
     ledger.prepareAttempt(DeliveryAttempt.make({ attemptId: id(char), eventIds: selected, payloadDigest: id("d") }));
   const first = eventIds[0];
   const second = eventIds[1];
-  if (first === undefined || second === undefined) return yield* Effect.die("Invalid synthetic fixture");
+  if (first === undefined || second === undefined) {
+    return yield* Effect.die("Invalid synthetic fixture");
+  }
   return { ledger, intakeConfig, config, accepted, first, second, prepare, salt, eventIds };
 });
 const accepted = DeliveryOutcome.cases.Accepted.make({});
@@ -88,12 +90,18 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("registers verified canonical native and transcript events while excluding malformed frames", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
-      assertNone(yield* f.ledger.state(f.first));
-      expect(yield* f.ledger.unregisteredPages).toEqual([f.accepted.page.receiptId]);
-      expect(yield* f.ledger.registerPage(f.accepted.page.receiptId)).toBe(2);
-      expect(yield* f.ledger.registerPage(f.accepted.page.receiptId)).toBe(2);
-      expect(yield* f.ledger.unregisteredPages).toEqual([]);
-      expect(yield* f.ledger.state(f.first)).toMatchObject({ _tag: "Some", value: { state: "pending", attempts: 0 } });
+      const state1 = yield* f.ledger.state(f.first);
+      assertNone(state1);
+      const unregisteredPages2 = yield* f.ledger.unregisteredPages;
+      expect(unregisteredPages2).toEqual([f.accepted.page.receiptId]);
+      const registerPage3 = yield* f.ledger.registerPage(f.accepted.page.receiptId);
+      expect(registerPage3).toBe(2);
+      const registerPage4 = yield* f.ledger.registerPage(f.accepted.page.receiptId);
+      expect(registerPage4).toBe(2);
+      const unregisteredPages5 = yield* f.ledger.unregisteredPages;
+      expect(unregisteredPages5).toEqual([]);
+      const state6 = yield* f.ledger.state(f.first);
+      expect(state6).toMatchObject({ _tag: "Some", value: { state: "pending", attempts: 0 } });
       const fs = yield* FileSystem.FileSystem;
       const path = `${yield* fs.makeTempDirectoryScoped()}/synthetic.jsonl`;
       yield* fs.writeFileString(
@@ -113,7 +121,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       );
       const journal = yield* makeTranscriptIntakeJournal(f.intakeConfig);
       const receipt = yield* journal.acceptPage(page, O.none());
-      expect(yield* f.ledger.registerPage(receipt.receiptId)).toBe(1);
+      const registerPage7 = yield* f.ledger.registerPage(receipt.receiptId);
+      expect(registerPage7).toBe(1);
       const sql = yield* SqlClient.SqlClient;
       const events = yield* sql`SELECT event_id,receipt_id,payload_hash FROM observation_delivery_events`;
       expect(events).toHaveLength(3);
@@ -132,28 +141,38 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       yield* f.ledger.registerPage(f.accepted.page.receiptId);
       yield* f.prepare("1");
       yield* f.ledger.recordOutcome(id("1"), DeliveryOutcome.cases.Partial.make({ rejectedCount: 1 }));
-      for (const event of f.eventIds)
-        expect(yield* f.ledger.state(event)).toMatchObject({
+      for (const event of f.eventIds) {
+        const state2 = yield* f.ledger.state(event);
+        expect(state2).toMatchObject({
           value: { state: "unresolved", ambiguousAttempts: 1, acknowledgedAttempts: 0 },
         });
+      }
       yield* f.prepare("2", [f.first]);
       yield* f.ledger.recordOutcome(id("2"), accepted);
-      expect(yield* f.ledger.state(f.first)).toMatchObject({
+      const state8 = yield* f.ledger.state(f.first);
+      expect(state8).toMatchObject({
         value: { state: "accepted-unverified", ambiguousAttempts: 1, acknowledgedAttempts: 1 },
       });
-      expect(yield* f.ledger.state(f.second)).toMatchObject({ value: { state: "unresolved" } });
+      const state9 = yield* f.ledger.state(f.second);
+      expect(state9).toMatchObject({ value: { state: "unresolved" } });
       const proof = DeliveryVisibility.make({
         eventId: f.second,
         attemptId: id("1"),
         payloadDigest: id("d"),
         observedAt: 100,
       });
-      expect(yield* f.ledger.recordVisibility(proof)).toEqual(proof);
-      expect(yield* f.ledger.recordVisibility(DeliveryVisibility.make({ ...proof, observedAt: 101 }))).toEqual(proof);
-      expect(yield* f.ledger.state(f.second)).toMatchObject({ value: { state: "visible", attempts: 1 } });
+      const recordVisibility10 = yield* f.ledger.recordVisibility(proof);
+      expect(recordVisibility10).toEqual(proof);
+      const recordVisibility11 = yield* f.ledger.recordVisibility(
+        DeliveryVisibility.make({ ...proof, observedAt: 101 })
+      );
+      expect(recordVisibility11).toEqual(proof);
+      const state12 = yield* f.ledger.state(f.second);
+      expect(state12).toMatchObject({ value: { state: "visible", attempts: 1 } });
       yield* f.prepare("3", [f.first]);
       yield* f.ledger.recordOutcome(id("3"), rejected);
-      expect(yield* f.ledger.state(f.first)).toMatchObject({ value: { state: "accepted-unverified" } });
+      const state13 = yield* f.ledger.state(f.first);
+      expect(state13).toMatchObject({ value: { state: "accepted-unverified" } });
     })
   )
 );
@@ -165,18 +184,22 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       yield* f.ledger.registerPage(f.accepted.page.receiptId);
       yield* f.prepare("1");
       yield* f.ledger.recordOutcome(id("1"), retryable);
-      expect(yield* f.ledger.state(f.first)).toMatchObject({ value: { state: "pending" } });
+      const state14 = yield* f.ledger.state(f.first);
+      expect(state14).toMatchObject({ value: { state: "pending" } });
       yield* f.prepare("2");
       yield* f.ledger.recordOutcome(id("2"), rejected);
-      expect(yield* f.ledger.state(f.first)).toMatchObject({ value: { state: "rejected" } });
+      const state15 = yield* f.ledger.state(f.first);
+      expect(state15).toMatchObject({ value: { state: "rejected" } });
       yield* f.prepare("3");
       yield* f.ledger.recordOutcome(id("3"), unknown);
       yield* f.prepare("4");
       yield* f.ledger.recordOutcome(id("4"), rejected);
-      expect(yield* f.ledger.state(f.first)).toMatchObject({ value: { state: "unresolved", ambiguousAttempts: 1 } });
+      const state16 = yield* f.ledger.state(f.first);
+      expect(state16).toMatchObject({ value: { state: "unresolved", ambiguousAttempts: 1 } });
       yield* f.prepare("5");
       const reopened = yield* makeDeliveryLedger(f.intakeConfig, f.config);
-      expect(yield* reopened.state(f.first)).toMatchObject({
+      const state17 = yield* reopened.state(f.first);
+      expect(state17).toMatchObject({
         value: { state: "unresolved", ambiguousAttempts: 2, attempts: 5 },
       });
     })
@@ -189,7 +212,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       const f = yield* fixture();
       yield* f.ledger.registerPage(f.accepted.page.receiptId);
       const attempt = yield* f.prepare("1");
-      expect(yield* f.prepare("1", A.reverse(f.eventIds))).toEqual(attempt);
+      const prepare18 = yield* f.prepare("1", A.reverse(f.eventIds));
+      expect(prepare18).toEqual(attempt);
       expect(
         (yield* f.ledger.prepareAttempt(DeliveryAttempt.make({ ...attempt, payloadDigest: id("e") })).pipe(Effect.flip))
           .reason
@@ -211,8 +235,10 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
           .pipe(Effect.flip)).reason
       ).toBe("conflict");
       const sql = yield* SqlClient.SqlClient;
-      expect(yield* sql`SELECT count(*) AS n FROM observation_delivery_attempts`).toEqual([{ n: 1 }]);
-      expect(yield* sql`SELECT count(*) AS n FROM observation_delivery_results`).toEqual([{ n: 1 }]);
+      const value19 = yield* sql`SELECT count(*) AS n FROM observation_delivery_attempts`;
+      expect(value19).toEqual([{ n: 1 }]);
+      const value20 = yield* sql`SELECT count(*) AS n FROM observation_delivery_results`;
+      expect(value20).toEqual([{ n: 1 }]);
     })
   )
 );
@@ -223,10 +249,14 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       const f = yield* fixture(1);
       expect((yield* f.ledger.registerPage(f.accepted.page.receiptId).pipe(Effect.flip)).reason).toBe("capacity");
       const sql = yield* SqlClient.SqlClient;
-      expect(yield* sql`SELECT count(*) AS n FROM observation_delivery_events`).toEqual([{ n: 0 }]);
-      expect(yield* sql`SELECT count(*) AS n FROM observation_delivery_pages`).toEqual([{ n: 0 }]);
-      expect(yield* sql`SELECT count(*) AS n FROM observation_intake_pages`).toEqual([{ n: 1 }]);
-      assertNone(yield* f.ledger.state(f.first));
+      const value21 = yield* sql`SELECT count(*) AS n FROM observation_delivery_events`;
+      expect(value21).toEqual([{ n: 0 }]);
+      const value22 = yield* sql`SELECT count(*) AS n FROM observation_delivery_pages`;
+      expect(value22).toEqual([{ n: 0 }]);
+      const value23 = yield* sql`SELECT count(*) AS n FROM observation_intake_pages`;
+      expect(value23).toEqual([{ n: 1 }]);
+      const state24 = yield* f.ledger.state(f.first);
+      assertNone(state24);
     })
   )
 );
@@ -240,11 +270,14 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       expect((yield* f.prepare("2", [f.first]).pipe(Effect.flip)).reason).toBe("capacity");
       expect((yield* f.prepare("3", [f.second, id("f")]).pipe(Effect.flip)).reason).toBe("unknown-event");
       yield* f.prepare("2", [f.second]);
-      expect(yield* f.prepare("1", [f.first])).toEqual(original);
+      const prepare25 = yield* f.prepare("1", [f.first]);
+      expect(prepare25).toEqual(original);
       expect((yield* f.prepare("3").pipe(Effect.flip)).reason).toBe("capacity");
       const sql = yield* SqlClient.SqlClient;
-      expect(yield* sql`SELECT count(*) AS n FROM observation_delivery_attempts`).toEqual([{ n: 2 }]);
-      expect(yield* sql`SELECT count(*) AS n FROM observation_delivery_attempt_events`).toEqual([{ n: 2 }]);
+      const value26 = yield* sql`SELECT count(*) AS n FROM observation_delivery_attempts`;
+      expect(value26).toEqual([{ n: 2 }]);
+      const value27 = yield* sql`SELECT count(*) AS n FROM observation_delivery_attempt_events`;
+      expect(value27).toEqual([{ n: 2 }]);
     })
   )
 );
@@ -256,20 +289,24 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       const sql = yield* SqlClient.SqlClient;
       yield* sql`CREATE TRIGGER synthetic_enrollment_failure BEFORE INSERT ON observation_delivery_pages BEGIN SELECT RAISE(ABORT,'private-fixture'); END`;
       expect((yield* f.ledger.registerPage(f.accepted.page.receiptId).pipe(Effect.flip)).reason).toBe("storage");
-      expect(yield* sql`SELECT count(*) AS n FROM observation_delivery_events`).toEqual([{ n: 0 }]);
+      const value28 = yield* sql`SELECT count(*) AS n FROM observation_delivery_events`;
+      expect(value28).toEqual([{ n: 0 }]);
       yield* sql`DROP TRIGGER synthetic_enrollment_failure`;
       yield* f.ledger.registerPage(f.accepted.page.receiptId);
       yield* sql`CREATE TRIGGER synthetic_attempt_failure BEFORE INSERT ON observation_delivery_attempt_events BEGIN SELECT RAISE(ABORT,'private-fixture'); END`;
       expect((yield* f.prepare("1").pipe(Effect.flip)).reason).toBe("storage");
-      expect(yield* sql`SELECT count(*) AS n FROM observation_delivery_attempts`).toEqual([{ n: 0 }]);
+      const value29 = yield* sql`SELECT count(*) AS n FROM observation_delivery_attempts`;
+      expect(value29).toEqual([{ n: 0 }]);
       yield* sql`DROP TRIGGER synthetic_attempt_failure`;
       yield* f.prepare("1");
       yield* sql`CREATE TRIGGER synthetic_outcome_failure BEFORE INSERT ON observation_delivery_results BEGIN SELECT RAISE(ABORT,'private-fixture'); END`;
       expect((yield* f.ledger.recordOutcome(id("1"), accepted).pipe(Effect.flip)).reason).toBe("storage");
-      expect(yield* f.ledger.state(f.first)).toMatchObject({ value: { state: "unresolved" } });
+      const state30 = yield* f.ledger.state(f.first);
+      expect(state30).toMatchObject({ value: { state: "unresolved" } });
       yield* sql`DROP TRIGGER synthetic_outcome_failure`;
       yield* f.ledger.recordOutcome(id("1"), accepted);
-      expect(yield* f.ledger.state(f.first)).toMatchObject({ value: { state: "accepted-unverified" } });
+      const state31 = yield* f.ledger.state(f.first);
+      expect(state31).toMatchObject({ value: { state: "accepted-unverified" } });
     })
   )
 );
@@ -311,7 +348,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
         (yield* f.ledger.reserveSend(DeliveryAttempt.make({ ...attempt, payloadDigest: id("f") })).pipe(Effect.flip))
           .reason
       ).toBe("conflict");
-      expect(yield* f.ledger.state(f.first)).toMatchObject({ value: { state: "unresolved", attempts: 1 } });
+      const state32 = yield* f.ledger.state(f.first);
+      expect(state32).toMatchObject({ value: { state: "unresolved", attempts: 1 } });
     })
   )
 );

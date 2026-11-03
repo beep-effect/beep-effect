@@ -74,7 +74,8 @@ describe("GuardExceeded schema and factory", () => {
         assert.isTrue(S.is(GuardExceeded)(error));
         assert.strictEqual(error.name, "Error");
         assert.strictEqual(error.message, fields.message);
-        assert.deepStrictEqual(yield* S.encodeEffect(GuardExceeded)(error), fields);
+        const value = yield* S.encodeEffect(GuardExceeded)(error);
+        assert.deepStrictEqual(value, fields);
         const decoded = yield* S.decodeUnknownEffect(GuardExceeded)(fields);
         assert.instanceOf(decoded, GuardExceeded);
         assert.isTrue(isGuardExceeded(decoded));
@@ -87,7 +88,8 @@ describe("GuardExceeded schema and factory", () => {
         const made = GuardExceeded.make({ reason, limit: 256, actual: 257, message: fields.message });
         assert.instanceOf(made, GuardExceeded);
         assert.strictEqual(made.name, "Error");
-        assert.deepStrictEqual(yield* S.encodeEffect(GuardExceeded)(made), fields);
+        const value1 = yield* S.encodeEffect(GuardExceeded)(made);
+        assert.deepStrictEqual(value1, fields);
       }
     })
   );
@@ -326,7 +328,9 @@ describe("GuardExceeded.fromReason over the schema domain", () => {
       Effect.gen(function* () {
         const error = GuardExceeded.fromReason(reason, limit, actual);
         assert.strictEqual(error.message, `${reason}: limit ${limit}, actual ${actual}`);
-        const decoded = yield* S.decodeEffect(GuardExceeded)(yield* S.encodeEffect(GuardExceeded)(error));
+        const argument = S.decodeEffect(GuardExceeded);
+        const value2 = yield* S.encodeEffect(GuardExceeded)(error);
+        const decoded = yield* argument(value2);
         assert.isTrue(isGuardExceeded(decoded));
         assert.strictEqual(decoded.reason, reason);
         assert.isTrue(S.toEquivalence(GuardMeasurement)(decoded.actual, actual));

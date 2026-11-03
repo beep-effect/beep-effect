@@ -2360,7 +2360,8 @@ const rulesetPopulationChange = (
 // population the census measures; each in-window snapshot is diffed against
 // the one before it so a mid-window change can be named, not just detected.
 const resolveWindowPopulation = Effect.fn("Ci.resolveWindowPopulation")(function* (options: CiLaneTimingWindowOptions) {
-  const history = A.sort(yield* collectCiRulesetHistory(), rulesetHistoryOrder);
+  const collectCiRulesetHistory1 = yield* collectCiRulesetHistory();
+  const history = A.sort(collectCiRulesetHistory1, rulesetHistoryOrder);
   const baseline = A.last(A.filter(history, isEffectiveAtOrBefore(options.since)));
   const inWindow = A.filter(
     history,

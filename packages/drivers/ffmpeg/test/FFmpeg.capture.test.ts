@@ -160,7 +160,8 @@ const makeCaptureSpawnerLayer = (
             const commandExitCode = failAfterFirstSuccess && encodeNumber === 1 ? 0 : exitCode;
             if (failAfterFirstSuccess && encodeNumber > 1) {
               const firstPath = yield* Deferred.await(firstSucceeded);
-              expect(yield* fs.readFileString(firstPath)).toBe("fake output");
+              const readFileString1 = yield* fs.readFileString(firstPath);
+              expect(readFileString1).toBe("fake output");
             }
             // The null muxer probe emits per-frame metadata on stdout and
             // writes no output file.
@@ -290,11 +291,16 @@ describe("@beep/ffmpeg capture", () => {
 
   it.effect("rejects unsafe metadata keys", () =>
     Effect.gen(function* () {
-      expect(yield* decodeUnknownSafeMetadataKey("BEEP_QA_SESSION_ID")).toBe("BEEP_QA_SESSION_ID");
-      pipe(yield* Effect.exit(decodeUnknownSafeMetadataKey("BEEP QA")), Exit.isFailure, assertTrue);
-      pipe(yield* Effect.exit(decodeUnknownSafeMetadataKey("BEEP=QA")), Exit.isFailure, assertTrue);
-      pipe(yield* Effect.exit(decodeUnknownSafeMetadataKey("1BEEP")), Exit.isFailure, assertTrue);
-      pipe(yield* Effect.exit(decodeUnknownSafeMetadataKey("")), Exit.isFailure, assertTrue);
+      const decodedUnknownSafeMetadataKey = yield* decodeUnknownSafeMetadataKey("BEEP_QA_SESSION_ID");
+      expect(decodedUnknownSafeMetadataKey).toBe("BEEP_QA_SESSION_ID");
+      const exit2 = yield* Effect.exit(decodeUnknownSafeMetadataKey("BEEP QA"));
+      pipe(exit2, Exit.isFailure, assertTrue);
+      const exit3 = yield* Effect.exit(decodeUnknownSafeMetadataKey("BEEP=QA"));
+      pipe(exit3, Exit.isFailure, assertTrue);
+      const exit4 = yield* Effect.exit(decodeUnknownSafeMetadataKey("1BEEP"));
+      pipe(exit4, Exit.isFailure, assertTrue);
+      const exit5 = yield* Effect.exit(decodeUnknownSafeMetadataKey(""));
+      pipe(exit5, Exit.isFailure, assertTrue);
     })
   );
 
@@ -607,15 +613,15 @@ describe("@beep/ffmpeg capture", () => {
               "sample_at_00001.png",
             ]);
             expect(A.map(result.frames, (frame) => frame.requestedTimestampSeconds)).toEqual([0.25, 1.5]);
-            expect(A.sort(yield* fs.readDirectory(outDir), Order.String)).toEqual([
+            const readDirectory6 = yield* fs.readDirectory(outDir);
+            expect(A.sort(readDirectory6, Order.String)).toEqual([
               "extract-frames-at-manifest.json",
               "sample_at_00000.png",
               "sample_at_00001.png",
             ]);
 
-            const manifest = yield* decodeFramesAtManifest(
-              yield* fs.readFileString(path.join(outDir, "extract-frames-at-manifest.json"))
-            );
+            const readFileString7 = yield* fs.readFileString(path.join(outDir, "extract-frames-at-manifest.json"));
+            const manifest = yield* decodeFramesAtManifest(readFileString7);
             expect(manifest.schemaVersion).toBe("beep.ffmpeg.extract-frames-at.v1");
             expect(manifest.summary.frameCount).toBe(2);
             expect(manifest.options.timestampsSeconds).toEqual([0.25, 1.5]);
@@ -674,7 +680,8 @@ describe("@beep/ffmpeg capture", () => {
             expect(error).toBeInstanceOf(FFmpegError);
             expect(error.operation).toBe("extractFramesAt");
             expect(error.message).toContain("could not extract a frame at");
-            expect(yield* fs.readDirectory(outDir)).toEqual([]);
+            const readDirectory8 = yield* fs.readDirectory(outDir);
+            expect(readDirectory8).toEqual([]);
           })
         );
       })
@@ -712,16 +719,24 @@ describe("@beep/ffmpeg capture", () => {
             expect(error).toBeInstanceOf(FFmpegError);
             expect(error.operation).toBe("extractFramesAt");
             expect(error.message).toContain("could not extract a frame at");
-            expect(yield* fs.readDirectory(outDir)).toEqual([]);
+            const readDirectory9 = yield* fs.readDirectory(outDir);
+            expect(readDirectory9).toEqual([]);
             const firstSucceeded = yield* FirstFrameSucceeded;
-            pipe(yield* Deferred.poll(firstSucceeded), O.isSome, assertTrue);
+            const poll10 = yield* Deferred.poll(firstSucceeded);
+            pipe(poll10, O.isSome, assertTrue);
             const firstStagedPath = yield* Deferred.await(firstSucceeded);
-            expect(yield* fs.exists(firstStagedPath)).toBe(false);
-            expect(yield* fs.exists(path.dirname(firstStagedPath))).toBe(false);
-            expect(yield* fs.exists(path.join(outDir, "sample_at_00000.png"))).toBe(false);
-            expect(yield* fs.exists(path.join(outDir, "sample_at_00001.png"))).toBe(false);
-            expect(yield* fs.exists(path.join(outDir, "extract-frames-at-manifest.json"))).toBe(false);
-            expect(A.sort(yield* fs.readDirectory(tmpDir), Order.String)).toEqual(["frames", "sample.webm"]);
+            const exists11 = yield* fs.exists(firstStagedPath);
+            expect(exists11).toBe(false);
+            const exists12 = yield* fs.exists(path.dirname(firstStagedPath));
+            expect(exists12).toBe(false);
+            const exists13 = yield* fs.exists(path.join(outDir, "sample_at_00000.png"));
+            expect(exists13).toBe(false);
+            const exists14 = yield* fs.exists(path.join(outDir, "sample_at_00001.png"));
+            expect(exists14).toBe(false);
+            const exists15 = yield* fs.exists(path.join(outDir, "extract-frames-at-manifest.json"));
+            expect(exists15).toBe(false);
+            const readDirectory16 = yield* fs.readDirectory(tmpDir);
+            expect(A.sort(readDirectory16, Order.String)).toEqual(["frames", "sample.webm"]);
             expect(A.map(commands, (command) => command.command)).toEqual(["ffprobe", "ffmpeg", "ffmpeg"]);
             assertSome(error.exitCode, ProcessExitCode.make(7));
           })
@@ -758,7 +773,8 @@ describe("@beep/ffmpeg capture", () => {
             expect(frame.fileName).toBe("pointer-down.png");
             expect(frame.index).toBe(0);
             expect(frame.requestedTimestampSeconds).toBe(1.25);
-            expect(yield* fs.readFileString(outPath)).toBe("fake output");
+            const readFileString17 = yield* fs.readFileString(outPath);
+            expect(readFileString17).toBe("fake output");
           })
         );
       })
@@ -793,7 +809,8 @@ describe("@beep/ffmpeg capture", () => {
             const result = yield* ffmpeg.renderGif(request);
 
             expect(result.fileSizeBytes).toBe("fake output".length);
-            expect(yield* fs.readFileString(outPath)).toBe("fake output");
+            const readFileString18 = yield* fs.readFileString(outPath);
+            expect(readFileString18).toBe("fake output");
 
             const error = yield* Effect.flip(ffmpeg.renderGif(request));
             expect(error).toBeInstanceOf(FFmpegError);
@@ -834,7 +851,8 @@ describe("@beep/ffmpeg capture", () => {
             assertSome(result.durationSeconds, 2);
             expect(result.startSeconds).toBe(1.5);
             expect(result.fileSizeBytes).toBe("fake output".length);
-            expect(yield* fs.readFileString(outPath)).toBe("fake output");
+            const readFileString19 = yield* fs.readFileString(outPath);
+            expect(readFileString19).toBe("fake output");
 
             // The clip is cut without a probe; only the encode command runs.
             expect(A.map(commands, (command) => command.command)).toEqual(["ffmpeg"]);

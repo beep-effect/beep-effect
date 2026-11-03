@@ -228,14 +228,17 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("reviewed cache activation
           ...f.activation,
           after: CacheEvidenceReference.make({ ...f.activation.after, sha256: changedDigest }),
         }),
-      ])
-        expect(
-          yield* projectCacheActivation(key, f.census, toolchain, activation, f.before, f.after).pipe(Effect.isFailure)
-        ).toBe(true);
+      ]) {
+        const pipe10 = yield* projectCacheActivation(key, f.census, toolchain, activation, f.before, f.after).pipe(
+          Effect.isFailure
+        );
+        expect(pipe10).toBe(true);
+      }
       const changed = CacheCensusReport.make({ ...f.census, globalConfiguration: { semantic: "changed" } });
-      expect(
-        yield* projectCacheActivation(key, changed, toolchain, f.activation, f.before, f.after).pipe(Effect.isFailure)
-      ).toBe(true);
+      const pipe1 = yield* projectCacheActivation(key, changed, toolchain, f.activation, f.before, f.after).pipe(
+        Effect.isFailure
+      );
+      expect(pipe1).toBe(true);
     })
   );
 });
@@ -276,12 +279,12 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("executable cache census",
         assertSome(optionUnderTest, expectedOptionValue);
       }
       expect(rows[1]?.dependencies).toEqual([rootTask.taskId]);
-      expect(yield* joinCacheCensusPlan([workspace], { tasks: [rootTask, lint] }).pipe(Effect.isFailure)).toBe(true);
-      expect(
-        yield* joinCacheCensusPlan([rootWorkspace], {
-          tasks: [{ ...rootTask, command: "unreviewed root script" }],
-        }).pipe(Effect.isFailure)
-      ).toBe(true);
+      const pipe2 = yield* joinCacheCensusPlan([workspace], { tasks: [rootTask, lint] }).pipe(Effect.isFailure);
+      expect(pipe2).toBe(true);
+      const pipe3 = yield* joinCacheCensusPlan([rootWorkspace], {
+        tasks: [{ ...rootTask, command: "unreviewed root script" }],
+      }).pipe(Effect.isFailure);
+      expect(pipe3).toBe(true);
     })
   );
 
@@ -296,7 +299,8 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("executable cache census",
         { tasks: [{ ...lint, command: "biome check . --write" }] },
       ];
       for (const plan of badCases) {
-        expect(yield* joinCacheCensusPlan([workspace], plan).pipe(Effect.isFailure)).toBe(true);
+        const pipe4 = yield* joinCacheCensusPlan([workspace], plan).pipe(Effect.isFailure);
+        expect(pipe4).toBe(true);
       }
     })
   );
@@ -489,14 +493,14 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("computation configuration
       const after = yield* fingerprintCacheComputation(updatedKey, census, updated);
       expect(after.configurationDigest).toBe(before.configurationDigest);
       expect(after.toolchainDigest).not.toBe(before.toolchainDigest);
-      expect(yield* fingerprintCacheComputation(key, census, updated).pipe(Effect.isFailure)).toBe(true);
-      expect(
-        yield* fingerprintCacheComputation(
-          updatedKey,
-          census,
-          CacheToolchainSnapshot.make({ ...updated, bun: toolchain.bun })
-        ).pipe(Effect.isFailure)
-      ).toBe(true);
+      const pipe5 = yield* fingerprintCacheComputation(key, census, updated).pipe(Effect.isFailure);
+      expect(pipe5).toBe(true);
+      const pipe6 = yield* fingerprintCacheComputation(
+        updatedKey,
+        census,
+        CacheToolchainSnapshot.make({ ...updated, bun: toolchain.bun })
+      ).pipe(Effect.isFailure);
+      expect(pipe6).toBe(true);
     })
   );
 
@@ -569,23 +573,22 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("computation configuration
         ...census,
         nodes: A.filter(census.nodes, (row) => row.id === key.computation),
       });
-      expect(yield* fingerprintCacheComputation(key, incomplete, toolchain).pipe(Effect.isFailure)).toBe(true);
+      const pipe7 = yield* fingerprintCacheComputation(key, incomplete, toolchain).pipe(Effect.isFailure);
+      expect(pipe7).toBe(true);
       for (const computation of ["@beep/fixture#transit", "@beep/absent#lint"]) {
-        expect(
-          yield* fingerprintCacheComputation(
-            CacheQualificationKey.make({ ...key, computation }),
-            census,
-            toolchain
-          ).pipe(Effect.isFailure)
-        ).toBe(true);
-      }
-      expect(
-        yield* fingerprintCacheComputation(
-          CacheQualificationKey.make({ ...key, profile: "another-profile" }),
+        const pipe8 = yield* fingerprintCacheComputation(
+          CacheQualificationKey.make({ ...key, computation }),
           census,
           toolchain
-        ).pipe(Effect.isFailure)
-      ).toBe(true);
+        ).pipe(Effect.isFailure);
+        expect(pipe8).toBe(true);
+      }
+      const pipe9 = yield* fingerprintCacheComputation(
+        CacheQualificationKey.make({ ...key, profile: "another-profile" }),
+        census,
+        toolchain
+      ).pipe(Effect.isFailure);
+      expect(pipe9).toBe(true);
     })
   );
 });
@@ -596,20 +599,24 @@ describe("signed root projection", () => {
       const source =
         '{"tasks":{"lint":{"cache":false}},"remoteCache":{"enabled":false,"signature":false,"timeout":42}}';
       const projected = yield* projectCacheSignedRoot(source);
-      expect(yield* S.decodeEffect(CensusJsonObject)(projected)).toEqual({
+      const value = yield* S.decodeEffect(CensusJsonObject)(projected);
+      expect(value).toEqual({
         tasks: { lint: { cache: false } },
         remoteCache: { enabled: true, signature: true, timeout: 42 },
       });
-      expect(yield* projectCacheSignedRoot(projected)).toBe(projected);
+      const projectCacheSignedRoot10 = yield* projectCacheSignedRoot(projected);
+      expect(projectCacheSignedRoot10).toBe(projected);
       const globalSource =
         '{/* reviewed */"futureFlags":{"globalConfiguration":true},"tasks":{"lint":{"cache":false}},"global":{"env":["KEEP"],"remoteCache":{"timeout":42}}}';
       const global = yield* projectCacheSignedRoot(globalSource);
-      expect(yield* S.decodeEffect(CensusJsonObject)(global)).toEqual({
+      const value11 = yield* S.decodeEffect(CensusJsonObject)(global);
+      expect(value11).toEqual({
         futureFlags: { globalConfiguration: true },
         tasks: { lint: { cache: false } },
         global: { env: ["KEEP"], remoteCache: { timeout: 42, enabled: true, signature: true } },
       });
-      expect(yield* projectCacheSignedRoot(global)).toBe(global);
+      const projectCacheSignedRoot12 = yield* projectCacheSignedRoot(global);
+      expect(projectCacheSignedRoot12).toBe(global);
     })
   );
   it.effect("rejects malformed containers before producing an overlay", () =>
@@ -686,23 +693,24 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) => {
             : node
         ),
       });
-      expect(yield* fingerprintCacheComputation(key, projectedCensus, toolchain)).toEqual(signed);
+      const fingerprintCacheComputation13 = yield* fingerprintCacheComputation(key, projectedCensus, toolchain);
+      expect(fingerprintCacheComputation13).toEqual(signed);
       for (const altered of [
         `${rootSigned}\n`,
         '{"remoteCache":{"enabled":true,"signature":true},"tasks":{"lint":{"outputs":["dist/**"]}}}',
-      ])
-        expect(
-          yield* projectCacheSignedActivation(
-            key,
-            census,
-            toolchain,
-            activation,
-            fixture.before,
-            fixture.after,
-            rootBefore,
-            altered
-          ).pipe(Effect.isFailure)
-        ).toBe(true);
+      ]) {
+        const pipe11 = yield* projectCacheSignedActivation(
+          key,
+          census,
+          toolchain,
+          activation,
+          fixture.before,
+          fixture.after,
+          rootBefore,
+          altered
+        ).pipe(Effect.isFailure);
+        expect(pipe11).toBe(true);
+      }
       for (const altered of [
         CacheCensusReport.make({ ...census, globalConfiguration: {} }),
         CacheCensusReport.make({ ...census, sources: A.filter(census.sources, (row) => row.path !== "turbo.json") }),
@@ -710,31 +718,30 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) => {
           ...census,
           sources: A.append(census.sources, CacheCensusSource.make({ path: "turbo.json", sha256: rootSha256 })),
         }),
-      ])
-        expect(
-          yield* projectCacheSignedActivation(
-            key,
-            altered,
-            toolchain,
-            activation,
-            fixture.before,
-            fixture.after,
-            rootBefore,
-            rootSigned
-          ).pipe(Effect.isFailure)
-        ).toBe(true);
-      expect(
-        yield* projectCacheSignedActivation(
+      ]) {
+        const pipe12 = yield* projectCacheSignedActivation(
           key,
-          census,
+          altered,
           toolchain,
           activation,
           fixture.before,
           fixture.after,
-          `${rootBefore} `,
+          rootBefore,
           rootSigned
-        ).pipe(Effect.isFailure)
-      ).toBe(true);
+        ).pipe(Effect.isFailure);
+        expect(pipe12).toBe(true);
+      }
+      const pipe14 = yield* projectCacheSignedActivation(
+        key,
+        census,
+        toolchain,
+        activation,
+        fixture.before,
+        fixture.after,
+        `${rootBefore} `,
+        rootSigned
+      ).pipe(Effect.isFailure);
+      expect(pipe14).toBe(true);
     })
   );
 });
@@ -745,11 +752,16 @@ describe("Turbo env forwarding", () => {
     Effect.fnUntraced(function* () {
       // The old compiler read the `!` as a literal character (matching no env name); the kit is told the
       // same through `nonegate`, and the exclusion is skipped before compiling, so neither spelling counts.
-      assertFalse(yield* forwardsBiomeConfigPath(["!BIOME_CONFIG_PATH"]));
-      assertFalse(yield* forwardsBiomeConfigPath(["!BIOME_*", "BEEP_*"]));
-      assertFalse(yield* forwardsBiomeConfigPath([]));
-      assertTrue(yield* forwardsBiomeConfigPath(["BIOME_*"]));
-      assertTrue(yield* forwardsBiomeConfigPath(["!BIOME_CONFIG_PATH", "BIOME_CONFIG_PATH"]));
+      const forwardsBiomeConfigPath15 = yield* forwardsBiomeConfigPath(["!BIOME_CONFIG_PATH"]);
+      assertFalse(forwardsBiomeConfigPath15);
+      const forwardsBiomeConfigPath16 = yield* forwardsBiomeConfigPath(["!BIOME_*", "BEEP_*"]);
+      assertFalse(forwardsBiomeConfigPath16);
+      const forwardsBiomeConfigPath17 = yield* forwardsBiomeConfigPath([]);
+      assertFalse(forwardsBiomeConfigPath17);
+      const forwardsBiomeConfigPath18 = yield* forwardsBiomeConfigPath(["BIOME_*"]);
+      assertTrue(forwardsBiomeConfigPath18);
+      const forwardsBiomeConfigPath19 = yield* forwardsBiomeConfigPath(["!BIOME_CONFIG_PATH", "BIOME_CONFIG_PATH"]);
+      assertTrue(forwardsBiomeConfigPath19);
     })
   );
 

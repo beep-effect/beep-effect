@@ -167,7 +167,8 @@ it.layer(FixtureLayer, { timeout: "30 seconds" })((it) => {
           assert.deepStrictEqual(result.releaseAge, {});
           // The marker proves the fixture executed — in the CHILD, which inherits
           // the environment.
-          assert.isTrue(yield* (yield* RealFileSystem).exists(markerPath));
+          const exists1 = yield* (yield* RealFileSystem).exists(markerPath);
+          assert.isTrue(exists1);
         }).pipe(
           Effect.ensuring(
             Effect.sync(() => {

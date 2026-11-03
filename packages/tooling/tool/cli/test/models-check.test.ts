@@ -65,7 +65,8 @@ const stageWorkspace = Effect.fnUntraced(function* (manifestFixture = "manifest.
   );
 
   const manifestPath = path.join(root, "models.yaml");
-  yield* fs.writeFileString(manifestPath, yield* readFixtureText(manifestFixture));
+  const readFixtureText1 = yield* readFixtureText(manifestFixture);
+  yield* fs.writeFileString(manifestPath, readFixtureText1);
 
   return { root, manifestPath };
 });
@@ -104,50 +105,41 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
     Effect.gen(function* () {
       const pin = (role: string, surface: string) =>
         A.findFirst(seedModelsManifest.bindings, (entry) => entry.role === role && entry.surface === surface);
-      assertSome(
-        O.map(pin("codex.heavy", "codex-cli"), (entry) => entry.modelId),
-        yield* decodeModelId("gpt-6.1-sol")
-      );
+      const argument = O.map(pin("codex.heavy", "codex-cli"), (entry) => entry.modelId);
+      const decodedModelId = yield* decodeModelId("gpt-6.1-sol");
+      assertSome(argument, decodedModelId);
       assertSome(
         O.flatMap(pin("codex.heavy", "codex-cli"), (entry) => entry.effort),
         "medium"
       );
-      assertSome(
-        O.map(pin("orchestrator", "claude-code"), (entry) => entry.modelId),
-        yield* decodeModelId("claude-fable-5-1")
-      );
-      assertSome(
-        O.map(pin("child.heavy", "claude-code"), (entry) => entry.modelId),
-        yield* decodeModelId("claude-opus-5-5")
-      );
-      assertSome(
-        O.map(pin("fallback.cursor", "cursor-seat"), (entry) => entry.modelId),
-        yield* decodeModelId("claude-opus-5-5-medium")
-      );
-      assertSome(
-        O.map(pin("child.lightweight", "proxy-workflow"), (entry) => entry.modelId),
-        yield* decodeModelId("gpt-6-luna")
-      );
-      assertSome(
-        O.map(pin("research.web", "proxy-workflow"), (entry) => entry.modelId),
-        yield* decodeModelId("grok-4.7")
-      );
-      assertSome(
-        O.map(pin("review.panel", "codex-cli"), (entry) => entry.modelId),
-        yield* decodeModelId("gpt-6-astra")
-      );
+      const argument1 = O.map(pin("orchestrator", "claude-code"), (entry) => entry.modelId);
+      const decodedModelId1 = yield* decodeModelId("claude-fable-5-1");
+      assertSome(argument1, decodedModelId1);
+      const argument2 = O.map(pin("child.heavy", "claude-code"), (entry) => entry.modelId);
+      const decodedModelId2 = yield* decodeModelId("claude-opus-5-5");
+      assertSome(argument2, decodedModelId2);
+      const argument3 = O.map(pin("fallback.cursor", "cursor-seat"), (entry) => entry.modelId);
+      const decodedModelId3 = yield* decodeModelId("claude-opus-5-5-medium");
+      assertSome(argument3, decodedModelId3);
+      const argument4 = O.map(pin("child.lightweight", "proxy-workflow"), (entry) => entry.modelId);
+      const decodedModelId4 = yield* decodeModelId("gpt-6-luna");
+      assertSome(argument4, decodedModelId4);
+      const argument5 = O.map(pin("research.web", "proxy-workflow"), (entry) => entry.modelId);
+      const decodedModelId5 = yield* decodeModelId("grok-4.7");
+      assertSome(argument5, decodedModelId5);
+      const argument6 = O.map(pin("review.panel", "codex-cli"), (entry) => entry.modelId);
+      const decodedModelId6 = yield* decodeModelId("gpt-6-astra");
+      assertSome(argument6, decodedModelId6);
       assertSome(
         O.flatMap(pin("review.panel", "codex-cli"), (entry) => entry.effort),
         "xhigh"
       );
-      assertSome(
-        O.map(pin("muse.opt-in", "proxy-workflow"), (entry) => entry.modelId),
-        yield* decodeModelId("muse-wonder-1.0")
-      );
-      assertSome(
-        O.map(pin("junie.default", "junie-cli"), (entry) => entry.modelId),
-        yield* decodeModelId("gemini-3-flash-preview")
-      );
+      const argument7 = O.map(pin("muse.opt-in", "proxy-workflow"), (entry) => entry.modelId);
+      const decodedModelId7 = yield* decodeModelId("muse-wonder-1.0");
+      assertSome(argument7, decodedModelId7);
+      const argument8 = O.map(pin("junie.default", "junie-cli"), (entry) => entry.modelId);
+      const decodedModelId8 = yield* decodeModelId("gemini-3-flash-preview");
+      assertSome(argument8, decodedModelId8);
       strictEqual(
         A.some(seedModelsManifest.superseded, (entry) => entry.id === "gpt-6-astra"),
         false
@@ -158,7 +150,9 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
     "round trips schema-derived check reports",
     [ModelsCheckReport],
     Effect.fnUntraced(function* ([report]) {
-      expect(yield* decodeReport(yield* encodeReport(report))).toEqual(report);
+      const encodedReport5 = yield* encodeReport(report);
+      const decodedReport = yield* decodeReport(encodedReport5);
+      expect(decodedReport).toEqual(report);
     }),
     { arbitrary: fcRuns(16) }
   );
@@ -195,7 +189,8 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
       );
       expect(persisted).toContain("gpt-6-astra");
       expect(persisted).not.toContain(rawOnly);
-      expect(yield* encodeReportJson(report)).not.toContain(rawOnly);
+      const encodedReportJson = yield* encodeReportJson(report);
+      expect(encodedReportJson).not.toContain(rawOnly);
     })
   );
 
@@ -259,7 +254,8 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
         )
       );
       const effortFindings = Effect.fnUntraced(function* (settings: unknown) {
-        yield* fs.writeFileString(settingsPath, yield* encodeJsonText(settings));
+        const encodedJsonText = yield* encodeJsonText(settings);
+        yield* fs.writeFileString(settingsPath, encodedJsonText);
         const report = yield* check.run(
           ModelsCheckOptions.make({ home: root, repo: root, manifestPath, offline: false })
         );
@@ -270,9 +266,11 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
       // high. Reading through the binding passes; a check that skipped the
       // binding would miss the literal `{model}` key, fall back to the
       // top-level `high`, and report drift.
-      expect(
-        yield* effortFindings({ effortLevel: "high", modelSettings: { "claude-opus-5": { effortLevel: "medium" } } })
-      ).toHaveLength(0);
+      const effortFindings2 = yield* effortFindings({
+        effortLevel: "high",
+        modelSettings: { "claude-opus-5": { effortLevel: "medium" } },
+      });
+      expect(effortFindings2).toHaveLength(0);
 
       // The reverse: the bound model's entry is low while the top-level effort
       // is medium. Only a check that reads the bound entry reports the drift.
@@ -325,7 +323,8 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
       // An offline snapshot has no upstream layer; recording it would turn the
       // next online run into a wall of phantom `added` models.
       const offline = yield* runCheckIn("manifest.yaml", true);
-      assertNone(yield* ledger.latest(offline.workspace.root));
+      const latest3 = yield* ledger.latest(offline.workspace.root);
+      assertNone(latest3);
 
       const online = yield* runCheckIn("manifest.yaml", false);
       const recorded = yield* ledger.latest(online.workspace.root);
@@ -425,7 +424,8 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
     Effect.gen(function* () {
       const report = yield* runCheck("manifest.yaml");
 
-      const restored = yield* decodeReport(yield* encodeReport(report));
+      const encodedReport = yield* encodeReport(report);
+      const restored = yield* decodeReport(encodedReport);
       strictEqual(restored.hasDrift, report.hasDrift);
       strictEqual(A.length(restored.findings), A.length(report.findings));
       strictEqual(restored.catalog.contentSha256, report.catalog.contentSha256);
@@ -463,7 +463,8 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
       const store = yield* ModelsManifestStore;
       const target = path.join(root, "nested", "models.yaml");
 
-      strictEqual(yield* store.init(target, seedModelsManifest), target);
+      const init4 = yield* store.init(target, seedModelsManifest);
+      strictEqual(init4, target);
 
       const loaded = yield* store.load(target);
       strictEqual(loaded.version, "beep-models/v1");

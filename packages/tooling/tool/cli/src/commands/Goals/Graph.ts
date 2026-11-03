@@ -230,9 +230,10 @@ export const goalsExplainCommand = Command.make(
       // proposal and whether this clone's receipt verified it. A report exists only
       // for a slug the manifests carry, so the manifest is always found here.
       const manifest = A.findFirst(manifests, (candidate) => candidate.initiative.id === slug);
-      const closeout = O.flatten(
-        yield* Effect.transposeOption(O.map(manifest, (found) => readGoalCloseoutView(".", slug, found)))
+      const transposeOption1 = yield* Effect.transposeOption(
+        O.map(manifest, (found) => readGoalCloseoutView(".", slug, found))
       );
+      const closeout = O.flatten(transposeOption1);
       yield* printReport(
         GoalExplainReport,
         GoalExplainReport.make({ ...report, ...optionalProp("closeout", closeout) }),

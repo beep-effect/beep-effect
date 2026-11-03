@@ -7,10 +7,14 @@ import { assertDefined, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { normalizeHtml } from "./support/normalizeHtml.ts";
 import { renderOracleHtml } from "./support/oracle.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const runs = { arbitrary: fcRuns(100) };
 const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
@@ -22,7 +26,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assertTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -56,7 +61,8 @@ describe("MarkdownFormat surgical fidelity", () => {
         const output = MarkdownEdit.applyAll(source, edits);
         assert.strictEqual(Str.substring(0, prefix.length)(output), prefix);
         assert.strictEqual(Str.substring(output.length - suffix.length)(output), suffix);
-        assert.strictEqual(yield* Subject.MarkdownFormat.modifyToString(document, paragraph, replacement), output);
+        const modifyToString2 = yield* Subject.MarkdownFormat.modifyToString(document, paragraph, replacement);
+        assert.strictEqual(modifyToString2, output);
       }),
     runs
   );
@@ -119,7 +125,7 @@ describe("MarkdownFormat against the reference implementation", () => {
       assert.strictEqual(
         oracle(formatted),
         oracle(source),
-        `source: ${JSON.stringify(source)}\nformatted: ${JSON.stringify(formatted)}`
+        `source: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(source), identity)}\nformatted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(formatted), identity)}`
       );
       return true;
     },

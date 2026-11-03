@@ -77,9 +77,10 @@ describe("WorkItem UI view model", () => {
         assignee
       );
 
-      expect(
-        yield* encodeWorkItemSummaryViewModel(toWorkItemSummaryViewModel(workItem, defaultWorkItemPublicConfig))
-      ).toEqual({
+      const encodedWorkItemSummaryViewModel = yield* encodeWorkItemSummaryViewModel(
+        toWorkItemSummaryViewModel(workItem, defaultWorkItemPublicConfig)
+      );
+      expect(encodedWorkItemSummaryViewModel).toEqual({
         id: "work-item-1",
         title: "Document topology",
         status: "assigned",
@@ -103,7 +104,8 @@ describe("WorkItem UI view model", () => {
       });
 
       assertNone(summary.assigneeLabel);
-      expect(yield* encodeWorkItemSummaryViewModel(summary)).toEqual({
+      const encodedWorkItemSummaryViewModel1 = yield* encodeWorkItemSummaryViewModel(summary);
+      expect(encodedWorkItemSummaryViewModel1).toEqual({
         id: "work-item-1",
         title: "Document topology",
         status: "open",

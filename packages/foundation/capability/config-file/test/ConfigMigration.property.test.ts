@@ -21,7 +21,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -47,9 +48,13 @@ it.effect.prop(
   ([value]) =>
     Effect.gen(function* () {
       const encoded = yield* migrating.stringify(value);
-      const decoded = yield* S.decodeUnknownEffect(Latest)(yield* migrating.parse(encoded));
+      const argument = S.decodeUnknownEffect(Latest);
+      const parsed1 = yield* migrating.parse(encoded);
+      const decoded = yield* argument(parsed1);
       assert.isTrue(S.toEquivalence(Latest)(decoded, value));
-      assert.strictEqual(yield* migrating.stringify(yield* migrating.parse(encoded)), encoded);
+      const parsed7 = yield* migrating.parse(encoded);
+      const stringify2 = yield* migrating.stringify(parsed7);
+      assert.strictEqual(stringify2, encoded);
     }),
   runs
 );
@@ -61,12 +66,17 @@ it.effect.prop(
     Effect.gen(function* () {
       const old = yield* JsonCodec.stringify({ version: 1, payload });
       // Migration preserves the decoded document; JSON encoding normalizes -0 to 0.
-      const previous = yield* S.decodeUnknownEffect(Previous)(yield* JsonCodec.parse(old));
+      const argument1 = S.decodeUnknownEffect(Previous);
+      const parsed2 = yield* JsonCodec.parse(old);
+      const previous = yield* argument1(parsed2);
       const parsed = yield* migrating.parse(old);
       assert.deepStrictEqual(parsed, { version: 2, payload: previous.payload });
       const formatted = yield* migrating.stringify(parsed);
-      assert.deepStrictEqual(yield* migrating.parse(formatted), parsed);
-      assert.strictEqual(yield* migrating.stringify(yield* migrating.parse(formatted)), formatted);
+      const parsed3 = yield* migrating.parse(formatted);
+      assert.deepStrictEqual(parsed3, parsed);
+      const parsed8 = yield* migrating.parse(formatted);
+      const stringify4 = yield* migrating.stringify(parsed8);
+      assert.strictEqual(stringify4, formatted);
     }),
   runs
 );
@@ -77,8 +87,11 @@ it.effect("upgrading preserves JSON-normalized negative zero in nested payloads"
     const parsed = yield* migrating.parse(old);
     assert.deepStrictEqual(parsed, { version: 2, payload: { scalar: 0, values: [0] } });
     const formatted = yield* migrating.stringify(parsed);
-    assert.deepStrictEqual(yield* migrating.parse(formatted), parsed);
-    assert.strictEqual(yield* migrating.stringify(yield* migrating.parse(formatted)), formatted);
+    const parsed5 = yield* migrating.parse(formatted);
+    assert.deepStrictEqual(parsed5, parsed);
+    const parsed9 = yield* migrating.parse(formatted);
+    const stringify6 = yield* migrating.stringify(parsed9);
+    assert.strictEqual(stringify6, formatted);
   })
 );
 

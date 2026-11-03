@@ -90,19 +90,21 @@ describe("XdgBase", () => {
   describe("dir", () => {
     it.effect("reads the variable and HOME from the provider", () =>
       Effect.gen(function* () {
-        assertSome(yield* XdgBase.dir("data").parse(provider({ XDG_DATA_HOME: "/data" })), "/data");
-        assertSome(yield* XdgBase.dir("data").parse(provider({ HOME: "/home/ada" })), "/home/ada/.local/share");
-        assertSome(
-          yield* XdgBase.dir("data").parse(provider({ HOME: "/home/ada", XDG_DATA_HOME: "data" })),
-          "/home/ada/.local/share"
-        );
+        const parsed = yield* XdgBase.dir("data").parse(provider({ XDG_DATA_HOME: "/data" }));
+        assertSome(parsed, "/data");
+        const parsed1 = yield* XdgBase.dir("data").parse(provider({ HOME: "/home/ada" }));
+        assertSome(parsed1, "/home/ada/.local/share");
+        const parsed2 = yield* XdgBase.dir("data").parse(provider({ HOME: "/home/ada", XDG_DATA_HOME: "data" }));
+        assertSome(parsed2, "/home/ada/.local/share");
       })
     );
 
     it.effect("answers none instead of failing when nothing resolves", () =>
       Effect.gen(function* () {
-        assertNone(yield* XdgBase.dir("state").parse(provider({})));
-        assertNone(yield* XdgBase.dir("runtime").parse(provider({ HOME: "/home/ada" })));
+        const parsed3 = yield* XdgBase.dir("state").parse(provider({}));
+        assertNone(parsed3);
+        const parsed4 = yield* XdgBase.dir("runtime").parse(provider({ HOME: "/home/ada" }));
+        assertNone(parsed4);
       })
     );
   });
@@ -110,8 +112,10 @@ describe("XdgBase", () => {
   describe("require", () => {
     it.effect("succeeds with the same answer as dir", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* XdgBase.require("state").parse(provider({ HOME: "/h" })), "/h/.local/state");
-        assert.strictEqual(yield* XdgBase.require("runtime").parse(provider({ XDG_RUNTIME_DIR: "/run/x" })), "/run/x");
+        const parsed5 = yield* XdgBase.require("state").parse(provider({ HOME: "/h" }));
+        assert.strictEqual(parsed5, "/h/.local/state");
+        const parsed6 = yield* XdgBase.require("runtime").parse(provider({ XDG_RUNTIME_DIR: "/run/x" }));
+        assert.strictEqual(parsed6, "/run/x");
       })
     );
 

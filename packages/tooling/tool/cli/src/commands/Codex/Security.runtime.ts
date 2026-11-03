@@ -59,10 +59,10 @@ export const securityRuntime = Effect.gen(function* () {
       message: `Install the pinned runtime: npm install --prefix ${INSTALL_PREFIX} --ignore-scripts --no-audit --no-fund --save-exact @openai/codex-security@${SECURITY_PACKAGE_VERSION}`,
     });
   }
-  yield* decodePackageMetadata(yield* fs.readFileString(path.join(packageRoot, "package.json")));
-  yield* decodePluginMetadata(
-    yield* fs.readFileString(path.join(packageRoot, "_bundled_plugin/.codex-plugin/plugin.json"))
-  );
+  const readFileString1 = yield* fs.readFileString(path.join(packageRoot, "package.json"));
+  yield* decodePackageMetadata(readFileString1);
+  const readFileString2 = yield* fs.readFileString(path.join(packageRoot, "_bundled_plugin/.codex-plugin/plugin.json"));
+  yield* decodePluginMetadata(readFileString2);
   return {
     cli,
     env: {

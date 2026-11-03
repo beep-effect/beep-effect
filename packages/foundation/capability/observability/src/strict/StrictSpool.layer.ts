@@ -118,7 +118,8 @@ export const layerStrictSaltFromKey = (
   Layer.effect(
     StrictSalt,
     Effect.gen(function* () {
-      const salt = yield* deriveStrictSalt(yield* StrictSpoolKey);
+      const StrictSpoolKey1 = yield* StrictSpoolKey;
+      const salt = yield* deriveStrictSalt(StrictSpoolKey1);
       return StrictSalt.of({
         keyedHex: (nonce, value) => {
           const key = new Uint8Array(salt.length + nonce.length);

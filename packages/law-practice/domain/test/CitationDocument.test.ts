@@ -206,7 +206,8 @@ it.layer(TestCrypto)("citation document relationships", (it) => {
       const { document, receipt, first } = yield* fixture;
       const json = yield* S.encodeEffect(ReceiptJson)(receipt);
       const restored = yield* S.decodeEffect(ReceiptJson)(json);
-      expect(yield* S.encodeEffect(ReceiptJson)(restored)).toBe(json);
+      const citationResult2 = yield* S.encodeEffect(ReceiptJson)(restored);
+      expect(citationResult2).toBe(json);
       expect(isDocument(document)).toBe(true);
       expect(isDocument(receipt)).toBe(false);
       expect(citationAuthorityMentionIds(document, a)).toEqual([first.id]);
@@ -346,7 +347,8 @@ it.layer(TestCrypto)("citation document relationships", (it) => {
           resolutions,
           mentions: A.map(A.takeRight(receipt.mentions, 2), (mention) => ({ ...mention, citation })),
         });
-        const restored = yield* S.decodeEffect(ReceiptJson)(yield* S.encodeEffect(ReceiptJson)(structural));
+        const citationResult3 = yield* S.encodeEffect(ReceiptJson)(structural);
+        const restored = yield* S.decodeEffect(ReceiptJson)(citationResult3);
         expect(isDocument(graph)).toBe(true);
         expect(isReceipt(restored)).toBe(true);
         expect(citationAuthorityMentionIds(restored, a)).toEqual([third.id, fourth.id]);
@@ -425,9 +427,10 @@ it.layer(TestCrypto)("citation document relationships", (it) => {
         memberListId: listA,
       });
       const graph = CitationDocument.make({ ...document, ...shared });
-      const restored = yield* S.decodeEffect(ReceiptJson)(
-        yield* S.encodeEffect(ReceiptJson)(CitationDocumentReceipt.make({ ...receipt, ...shared }))
+      const citationResult6 = yield* S.encodeEffect(ReceiptJson)(
+        CitationDocumentReceipt.make({ ...receipt, ...shared })
       );
+      const restored = yield* S.decodeEffect(ReceiptJson)(citationResult6);
       expect(restored.memberLists).toEqual(graph.memberLists);
       expect(restored.groups).toEqual(graph.groups);
       expect(restored.detachedCitations).toEqual([detached]);
@@ -435,7 +438,8 @@ it.layer(TestCrypto)("citation document relationships", (it) => {
         ...restored,
         memberLists: A.map(restored.memberLists, (list) => CitationMemberList.make({ ...list, members })),
       });
-      const equalRestored = yield* S.decodeEffect(ReceiptJson)(yield* S.encodeEffect(ReceiptJson)(equalLists));
+      const citationResult4 = yield* S.encodeEffect(ReceiptJson)(equalLists);
+      const equalRestored = yield* S.decodeEffect(ReceiptJson)(citationResult4);
       expect(equalRestored.memberLists).toHaveLength(2);
       expect(A.getUnsafe(equalRestored.memberLists, 0).id).not.toBe(A.getUnsafe(equalRestored.memberLists, 1).id);
       expect(A.getUnsafe(equalRestored.memberLists, 0).members).toEqual(
@@ -502,7 +506,9 @@ it.layer(TestCrypto)("citation document relationships", (it) => {
           ),
         });
         const json = yield* S.encodeEffect(ReceiptJson)(changed);
-        expect(yield* S.encodeEffect(ReceiptJson)(yield* S.decodeEffect(ReceiptJson)(json))).toBe(json);
+        const citationResult1 = yield* S.decodeEffect(ReceiptJson)(json);
+        const citationResult5 = yield* S.encodeEffect(ReceiptJson)(citationResult1);
+        expect(citationResult5).toBe(json);
       }),
     { arbitrary: fcRuns(25) }
   );

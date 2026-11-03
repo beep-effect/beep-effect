@@ -77,7 +77,8 @@ const fixture = Effect.fn("SecurityDispatchTest.fixture")(function* (
   const repo = yield* fs.realPath(process.cwd());
   yield* fs.writeFileString(path.join(repo, "bun.lock"), "fixture");
   yield* fs.makeDirectory(path.join(repo, "src"), { recursive: true });
-  const home = yield* fs.realPath(yield* fs.makeTempDirectoryScoped());
+  const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped();
+  const home = yield* fs.realPath(madeTempDirectoryScoped);
   const output = path.join(home, "scan");
   const packageRoot = path.join(
     home,
@@ -87,19 +88,19 @@ const fixture = Effect.fn("SecurityDispatchTest.fixture")(function* (
   yield* fs.makeDirectory(path.join(packageRoot, "bin"), { recursive: true });
   yield* fs.makeDirectory(path.join(packageRoot, "_bundled_plugin/.codex-plugin"), { recursive: true });
   yield* fs.writeFileString(cli, "fixture only; never executed");
-  yield* fs.writeFileString(
-    path.join(packageRoot, "package.json"),
-    yield* encodeJson({ name: "@openai/codex-security", version: SECURITY_PACKAGE_VERSION })
-  );
-  yield* fs.writeFileString(
-    path.join(packageRoot, "_bundled_plugin/.codex-plugin/plugin.json"),
-    yield* encodeJson({ name: "codex-security", version: SECURITY_PLUGIN_VERSION })
-  );
+  const argument = path.join(packageRoot, "package.json");
+  const encodedJson = yield* encodeJson({ name: "@openai/codex-security", version: SECURITY_PACKAGE_VERSION });
+  yield* fs.writeFileString(argument, encodedJson);
+  const argument1 = path.join(packageRoot, "_bundled_plugin/.codex-plugin/plugin.json");
+  const encodedJson1 = yield* encodeJson({ name: "codex-security", version: SECURITY_PLUGIN_VERSION });
+  yield* fs.writeFileString(argument1, encodedJson1);
   const calls = yield* Ref.make<ReadonlyArray<ChildProcess.StandardCommand>>([]);
   // Own double: the scan spawn swaps the output directory on disk; ScriptedSpawner scripts are synchronous.
   const spawner = ChildProcessSpawner.make(
     Effect.fnUntraced(function* (command: ChildProcess.Command) {
-      if (!ChildProcess.isStandardCommand(command)) return yield* Effect.die("Unexpected pipeline");
+      if (!ChildProcess.isStandardCommand(command)) {
+        return yield* Effect.die("Unexpected pipeline");
+      }
       yield* Ref.update(calls, A.append(command));
       if (command.command === "git") {
         const key = A.join(commandArgs(command), " ");
@@ -160,9 +161,8 @@ it.layer(Layer.mergeAll(WorkingDirectory, TestConsole.layer), { timeout: "30 sec
       "renders the command index without runtime discovery",
       Effect.fnUntraced(function* () {
         yield* runCommand([]);
-        expect(A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n")).toContain(
-          "beep codex security scan --output-dir"
-        );
+        const logLines1 = yield* TestConsole.logLines;
+        expect(A.join(A.filter(logLines1, P.isString), "\n")).toContain("beep codex security scan --output-dir");
       })
     );
 
@@ -170,7 +170,8 @@ it.layer(Layer.mergeAll(WorkingDirectory, TestConsole.layer), { timeout: "30 sec
       Effect.gen(function* () {
         const f = yield* fixture({ dirty: true });
         yield* f.provide(runCommand(["preflight", "--output-dir", f.output, "--max-cost", "5", "--path", "src"]));
-        expect(yield* f.fs.exists(f.output)).toBe(false);
+        const exists2 = yield* f.fs.exists(f.output);
+        expect(exists2).toBe(false);
         const calls = yield* Ref.get(f.calls);
         expect(A.map(calls, (call) => call.command)).toEqual(["git", "git", "git", "node"]);
         assertSome(
@@ -201,7 +202,8 @@ it.layer(Layer.mergeAll(WorkingDirectory, TestConsole.layer), { timeout: "30 sec
             "--dry-run",
           ]
         );
-        expect(A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n")).toContain("uncommitted changes");
+        const logLines3 = yield* TestConsole.logLines;
+        expect(A.join(A.filter(logLines3, P.isString), "\n")).toContain("uncommitted changes");
       })
     );
 
@@ -222,7 +224,8 @@ it.layer(Layer.mergeAll(WorkingDirectory, TestConsole.layer), { timeout: "30 sec
                 exitCode: 7,
               })
             );
-          const receipt = yield* decodeReceipt(yield* f.fs.readFileString(f.path.join(f.output, "beep-source.json")));
+          const readFileString4 = yield* f.fs.readFileString(f.path.join(f.output, "beep-source.json"));
+          const receipt = yield* decodeReceipt(readFileString4);
           expect(receipt.repository).toBe("example/project");
           expect(receipt.revision).toBe(revision);
           expect((yield* f.fs.stat(f.output)).mode & 0o777).toBe(0o700);
@@ -298,7 +301,8 @@ it.layer(Layer.mergeAll(WorkingDirectory, TestConsole.layer), { timeout: "30 sec
           expect(error.message).toContain(messages[scenario]);
           const calls = yield* Ref.get(f.calls);
           expect(A.filter(calls, (call) => call.command === "node")).toHaveLength(scenario === "swapped" ? 1 : 0);
-          expect(yield* f.fs.exists(f.path.join(f.repo, "src/beep-source.json"))).toBe(false);
+          const exists5 = yield* f.fs.exists(f.path.join(f.repo, "src/beep-source.json"));
+          expect(exists5).toBe(false);
           if (scenario === "missing-runtime" || scenario === "bad-metadata") expect(calls).toHaveLength(0);
         })
       );
@@ -334,8 +338,10 @@ it.layer(Layer.mergeAll(WorkingDirectory, TestConsole.layer), { timeout: "30 sec
         const fiber = yield* execution.pipe(Effect.result, Effect.forkChild);
         yield* Deferred.await(started);
         yield* clock.adjust("1 second");
-        assertFailure(yield* Fiber.join(fiber), CodexSecurityError.make({ message: "Fixture deadline exceeded." }));
-        expect(yield* Ref.get(released)).toBe(true);
+        const join6 = yield* Fiber.join(fiber);
+        assertFailure(join6, CodexSecurityError.make({ message: "Fixture deadline exceeded." }));
+        const got = yield* Ref.get(released);
+        expect(got).toBe(true);
       })
     );
 
@@ -366,7 +372,8 @@ it.layer(Layer.mergeAll(WorkingDirectory, TestConsole.layer), { timeout: "30 sec
             O.map(A.head(calls), (call) => call.options.stderr),
             "inherit"
           );
-          expect(yield* f.fs.exists(f.output)).toBe(false);
+          const exists7 = yield* f.fs.exists(f.output);
+          expect(exists7).toBe(false);
         })
       );
     }
@@ -378,7 +385,8 @@ it.layer(Layer.mergeAll(WorkingDirectory, TestConsole.layer), { timeout: "30 sec
         expect((yield* f.provide(securityRuntime).pipe(Effect.flip)).message).toContain(
           `@openai/codex-security@${SECURITY_PACKAGE_VERSION}`
         );
-        expect(yield* Ref.get(f.calls)).toEqual([]);
+        const got8 = yield* Ref.get(f.calls);
+        expect(got8).toEqual([]);
       })
     );
   }

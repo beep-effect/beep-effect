@@ -274,46 +274,45 @@ export const recoverBoxAdoptions: {
           ? HashMap.set(attempts, entry.planDigest, entry.attemptId)
           : attempts
     );
-    const recovered = A.getSomes(
-      yield* Effect.forEach(
-        journalEntries,
-        Effect.fnUntraced(function* (entry) {
-          if (
-            entry.phase !== "Applied" ||
-            entry.resourceKind !== "folder" ||
-            !O.exists(HashMap.get(latestAttemptByPlan, entry.planDigest), (attemptId) =>
-              Equal.equals(attemptId, entry.attemptId)
-            )
-          ) {
-            return O.none<BoxAdoption>();
-          }
-          const identity = O.all({
-            expectedParentProviderId: entry.parentProviderId,
-            expectedProviderId: entry.providerId,
-          });
-          if (O.isNone(identity)) {
-            return O.none<BoxAdoption>();
-          }
-          const matches = yield* Effect.forEach(
-            desired.folders,
-            Effect.fnUntraced(function* (folder) {
-              const digest = yield* digestText(folder.logicalKey);
-              return Equal.equals(digest, entry.logicalKeyDigest) ? O.some(folder) : O.none();
-            }),
-            { concurrency: 1 }
-          );
-          return O.map(A.head(A.getSomes(matches)), (folder) =>
-            BoxAdoption.make({
-              expectedParentProviderId: identity.value.expectedParentProviderId,
-              expectedProviderId: identity.value.expectedProviderId,
-              logicalKey: folder.logicalKey,
-              resourceKind: "folder",
-            })
-          );
-        }),
-        { concurrency: 1 }
-      )
+    const forEach1 = yield* Effect.forEach(
+      journalEntries,
+      Effect.fnUntraced(function* (entry) {
+        if (
+          entry.phase !== "Applied" ||
+          entry.resourceKind !== "folder" ||
+          !O.exists(HashMap.get(latestAttemptByPlan, entry.planDigest), (attemptId) =>
+            Equal.equals(attemptId, entry.attemptId)
+          )
+        ) {
+          return O.none<BoxAdoption>();
+        }
+        const identity = O.all({
+          expectedParentProviderId: entry.parentProviderId,
+          expectedProviderId: entry.providerId,
+        });
+        if (O.isNone(identity)) {
+          return O.none<BoxAdoption>();
+        }
+        const matches = yield* Effect.forEach(
+          desired.folders,
+          Effect.fnUntraced(function* (folder) {
+            const digest = yield* digestText(folder.logicalKey);
+            return Equal.equals(digest, entry.logicalKeyDigest) ? O.some(folder) : O.none();
+          }),
+          { concurrency: 1 }
+        );
+        return O.map(A.head(A.getSomes(matches)), (folder) =>
+          BoxAdoption.make({
+            expectedParentProviderId: identity.value.expectedParentProviderId,
+            expectedProviderId: identity.value.expectedProviderId,
+            logicalKey: folder.logicalKey,
+            resourceKind: "folder",
+          })
+        );
+      }),
+      { concurrency: 1 }
     );
+    const recovered = A.getSomes(forEach1);
     return mergeBoxAdoptions(desired.adoptions, recovered);
   })
 );

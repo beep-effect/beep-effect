@@ -88,8 +88,10 @@ const readSteps = Effect.fnUntraced(function* (m365: M365Shape, config: DocketIn
 const writeSteps = Effect.fnUntraced(function* (m365: M365Shape, config: DocketIntakeAppConfig) {
   const crypto = yield* SecureRandom.SecureRandom;
   const userId = O.some(config.mailbox);
-  const key = `smoke:${Hex.encode(yield* crypto.randomBytes(SMOKE_KEY_BYTES))}`;
-  const tomorrow = addDays(docketDayInZone(yield* DateTime.now, config.timeZone), 1);
+  const randomBytes1 = yield* crypto.randomBytes(SMOKE_KEY_BYTES);
+  const key = `smoke:${Hex.encode(randomBytes1)}`;
+  const now2 = yield* DateTime.now;
+  const tomorrow = addDays(docketDayInZone(now2, config.timeZone), 1);
 
   const created = yield* step(
     "create event",
