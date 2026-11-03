@@ -696,3 +696,25 @@ modules declare the option, but no native watch behavior is claimed.
 Eleven of 35 feature decisions now have scoped final reviews; 24 remain
 pending. The computation census, broader persistence/watch review, qualification,
 measured value, real observation windows and all whole-goal criteria remain open.
+
+
+### Published current-pair inventory correction, 2026-11-03
+
+The aggregate pin manifest still named canary 2.11.9-canary.1 while later
+feature-local observations used 2.11.11-canary.1. Fresh npm metadata confirms
+stable 2.11.10/current canary 2.11.11-canary.1. Verify canary package/native
+archive integrity, cached executable identity and both reported versions.
+Keep the former aggregate pin bytes and older availability report unchanged.
+
+The published canary schema contains 15 future flags, versus 14 on stable:
+`hashFilePermissions` is new to this matrix. The unchanged bounded availability
+collector passed 60 current-pair dry runs; a small collector reusing its bounded
+process capture passed four flag-specific cases. Stable rejected both boolean
+settings; canary accepted both. All sentinel/task bodies stayed unexecuted.
+Three driver refusal controls preserved pins and the passing report.
+
+The matrix now contains 36 entries and 25 pending decisions. Existing 11 scoped
+applicability reviews remain at their recorded scope; no semantic qualification,
+permission-hash behavior, repository upgrade or rollout is inferred. Actual
+permission-sensitive invalidation/portability and every whole-goal criterion
+remain open. Hosted CI is authoritative; no local verify/publish/package suite.

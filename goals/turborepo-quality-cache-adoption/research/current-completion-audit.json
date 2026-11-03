@@ -3,14 +3,14 @@
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "365bd154b05b4d425cecaf6ce5cb966cf00b9cb3",
-  "specSha256": "0342ed1f66fd798aee2d94e9dada8e1a96d1561184707b7806bc0f87cf24e1a5",
+  "specSha256": "a4edb5001ad5071179bca3dd66f7881cf6ccc8976c665c09c5ae1472b3137f69",
   "acceptance": [
     {
       "id": "AC-01",
       "source": "SPEC.md:165",
       "requirement": "Current executable/lane population and applicable stable/canary feature matrix are complete, source-backed and assigned to owners.",
       "status": "unproven",
-      "nextProof": "Reconcile the source-bound 2,434-computation census (2,236 remaining reviews) to current source, finish every in-scope computation review and the 24 pending feature decisions, and consume the economics owner baseline. Completed feature reviews do not qualify actual computations."
+      "nextProof": "Reconcile the source-bound 2,434-computation census (2,236 remaining reviews) to current source, finish every in-scope computation review and the 25 pending feature decisions, and consume the economics owner baseline. Completed feature reviews do not qualify actual computations."
     },
     {
       "id": "AC-02",
@@ -376,5 +376,11 @@
     "path": "research/watch-feature-review.json",
     "sha256": "d587ce4bf6fd40206e5b11a31e48032094eff26a24764eb6a41f4c96f8896bf0",
     "authority": "Scoped applicability decision for current tracked repository commands. No native watch semantics, timing, runtime adoption, task qualification or whole-goal acceptance."
+  },
+  "priorSpecSha256AtCurrentClientRefresh": "0342ed1f66fd798aee2d94e9dada8e1a96d1561184707b7806bc0f87cf24e1a5",
+  "currentFeatureClientRefresh": {
+    "path": "research/current-feature-client-refresh-2026-11-03.json",
+    "sha256": "35620c69fce97204477088a643515e83754f479f2f6a6f5017b69412e1d236d4",
+    "authority": "Fresh native identities, documentation/schema inventory and configuration parsing only. No semantic feature or computation qualification, dependency upgrade or rollout."
   }
 }
