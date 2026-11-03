@@ -114,3 +114,23 @@ requirements require explicit scope, not reuse of the former script-only claim.
 Historical root/stage applicability does not establish current exact-root admission.
 The final PR still requires its own terminal readiness, archived positive verdict,
 qualified merge and VERIFIED canonical receipt before completion is projected.
+
+### Shared unblocker landing order
+
+Coordinate the landing order for a shared CI repair before merging overlapping
+packet or baseline changes. The first repaired head passed all code checks, but
+two subsequent base conflicts created new heads and restarted hosted verification.
+A source-bound review can establish that bounded blobs remain identical, or that
+a stronger accepted floor is preserved; it cannot turn an old head's green run
+into current-head readiness.
+
+Keep one writer on each branch and reuse its authoritative observer while it is
+live. Preserve a terminated observer's actual job result and evidence before
+replacing it. A unit reset that later reports success does not override the
+job's recorded timeout. Publish reviewable work with explicit local proof limits
+instead of competing for workstation memory.
+
+Treat unrelated historical debt as a separate source-qualified repair unless a
+concrete dependency or the final head's actual checks make it a completion gate.
+This narrows avoidable waiting without accepting an actual failing check,
+weakening a floor, skipping the review window or releasing the recovery hold.

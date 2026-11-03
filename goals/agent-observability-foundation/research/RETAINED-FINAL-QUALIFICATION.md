@@ -141,6 +141,44 @@ path argument; no fresh backend run or full transitive runtime closure is claime
 All 25 retained Dankserver source hashes still match. No held unit or production
 collector configuration was changed.
 
+## Subsequent shared-repair integration
+
+The [latest comparison](../ops/history/shared-repair-source-applicability-20261102.json)
+records integration `869338c406e5e94b938b327dd682f07e19579708` of accepted main
+`c96edf8c10326942d292d78635296ce31b5b07cf`, including accepted PR2624, PR2632 and
+PR2639. Selected membership and the **234/249**, **82/84**, **86/90**, **85/89**
+match counts are unchanged. The only new selected-input delta since comparison811
+is removal of 36 root policy-fingerprint aliases whose command was `true`.
+Recorded Node/root/stage commands do not invoke them; all other root JSON and
+the lockfile remain exact at that comparison. This is scoped command
+applicability, not a new execution or complete dependency proof.
+
+The original baseline SHA `9593273c…` above is historical at its recorded support
+head. Current baseline SHA is
+`41ad354b336a68a882a9535a64dad9016c954596e0eeb58ed61cb105dbfeb8f2`.
+Every original value remains exact. Only the measured storage-file identity and
+Party-domain package identity were added; no original floor, package total,
+minimum, epsilon, exemption or metadata value changed. The accepted storage
+floor is 98.05/94.82/93.47/88.46 for lines/statements/branches/functions; the older
+96.11/86.20/80.43/73.07 proposal is superseded historical evidence.
+
+Accepted repair head `dac32fe4c0fa545a9fb3c44a87115de747412549` passed its actual
+[coverage comparison](https://github.com/beep-effect/beep-effect/actions/runs/41557361557/job/125668678051):
+one selected package, zero lowered floors. This is not a fresh whole-baseline
+measurement or this final PR's readiness. The runtime storage module and preview
+regression stayed byte-identical across four repair heads; producer-test and
+baseline changes preserve the accepted controls and stronger identities.
+Repeated packet conflicts therefore required new head-specific verification
+without constituting repeated collector-runtime changes.
+
+The 13 checked domain criteria record qualified retained support at these stated
+scopes. Final delivery remains conditional on this PR's actual terminal ready,
+pre-merge positive verdict, strict merge and VERIFIED canonical completion.
+Current exact-source root admission remains unestablished; original source maps,
+receipts, historical unknown results and all seven real-harness Unknown states
+are preserved. No new backend send, production configuration change or recovery
+hold release occurred in this integration.
+
 ## Delivery boundary
 
 The operator reserved the next final merge for this chat and directed other
