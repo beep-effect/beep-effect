@@ -1,4 +1,9 @@
-import { ClaimInputCollection, ClaimInputRecord } from "@beep/law-practice-domain/values/ClaimElement";
+import {
+  ClaimInputCollection,
+  ClaimInputRecord,
+  decomposeClaim,
+  decomposeClaimInput,
+} from "@beep/law-practice-domain/values/ClaimElement";
 import {
   normalizeClaimInput,
   normalizePatentClaims,
@@ -260,6 +265,90 @@ describe("source dependency qualification", () => {
       const last = O.getOrThrow(A.last(result));
       if (last.status === "context-unavailable")
         assert.deepStrictEqual(last.issues, [{ kind: "missing-parent", parentClaimNumber: 1 }]);
+    })
+  );
+});
+
+describe("partial source structural decomposition", () => {
+  it.effect("preserves a typed decomposition failure without rejecting a usable sibling", () =>
+    Effect.gen(function* () {
+      const input = numberedInput([
+        ["1", ", comprising a sensor."],
+        ["2", "A fixture comprising a panel."],
+      ]);
+      const outcomes = yield* decomposeClaimInput(input);
+      assert.deepStrictEqual(
+        A.map(outcomes, ({ status }) => status),
+        ["decomposition-failed", "decomposed"]
+      );
+      assert.deepStrictEqual(
+        A.map(outcomes, ({ qualification }) => qualification.record),
+        A.fromIterable(input.records)
+      );
+      const failed = O.getOrThrow(A.head(outcomes));
+      if (failed.status === "decomposition-failed") assert.strictEqual(failed.cause.reason, "incoherent-tree");
+    })
+  );
+
+  it.effect("actually decomposes independent siblings while preserving failed and affected records", () =>
+    Effect.gen(function* () {
+      const input = numberedInput([
+        ["1", "A fixture comprising a panel."],
+        ["2", "A fragment without a transition."],
+        ["3", "A fixture comprising a sensor."],
+        ["4", "The fixture of claim 2 wherein the panel is metallic."],
+      ]);
+      const outcomes = yield* decomposeClaimInput(input);
+      assert.deepStrictEqual(
+        A.map(outcomes, ({ status }) => status),
+        ["decomposed", "unchecked", "decomposed", "unchecked"]
+      );
+      assert.deepStrictEqual(
+        A.map(outcomes, ({ qualification }) => qualification.record),
+        A.fromIterable(input.records)
+      );
+      const trees = A.getSomes(
+        A.map(outcomes, (outcome) => (outcome.status === "decomposed" ? O.some(outcome.tree) : O.none()))
+      );
+      assert.deepStrictEqual(
+        A.map(trees, ({ claimNumber }) => claimNumber),
+        [1, 3]
+      );
+      assert.isTrue(A.every(trees, ({ elements }) => A.isReadonlyArrayNonEmpty(elements)));
+    })
+  );
+
+  it.effect("retains an all-unchecked source rather than returning an empty successful report", () =>
+    Effect.gen(function* () {
+      const input = numberedInput([
+        ["1", "A fragment without a transition."],
+        ["2", "The fixture of claim 1 wherein the panel is metallic."],
+      ]);
+      const outcomes = yield* decomposeClaimInput(input);
+      assert.deepStrictEqual(
+        A.map(outcomes, ({ status }) => status),
+        ["unchecked", "unchecked"]
+      );
+      assert.deepStrictEqual(
+        A.map(outcomes, ({ qualification }) => qualification.record),
+        A.fromIterable(input.records)
+      );
+    })
+  );
+
+  it.effect("produces byte-equivalent tree values through strict and input paths on wholly valid input", () =>
+    Effect.gen(function* () {
+      const texts = [
+        ["1", "A fixture comprising a panel."],
+        ["2", "The fixture of claim 1 wherein the panel is metallic."],
+      ] as const;
+      const claims = yield* normalizePatentClaims(texts);
+      const strict = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims));
+      const outcomes = yield* decomposeClaimInput(numberedInput(texts));
+      const actual = A.getSomes(
+        A.map(outcomes, (outcome) => (outcome.status === "decomposed" ? O.some(outcome.tree) : O.none()))
+      );
+      assert.deepStrictEqual(actual, strict);
     })
   );
 });
