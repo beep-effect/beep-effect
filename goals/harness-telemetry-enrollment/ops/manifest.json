@@ -21,7 +21,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Complete only after all declared route acceptance is demonstrated at its actual scope, a designated final delivery retains positive exact-head pre-merge readiness and successful terminal observer finalization, strict owner merge and genuinely verified canonical completion. Supporting PR2663 proves current-source admission and bounded tooling only; it does not complete real enrollment.",
+    "statement": "Complete only after all declared route acceptance is demonstrated at its actual scope, a designated final delivery retains positive exact-head pre-merge readiness and successful terminal observer finalization, strict owner merge and genuinely verified canonical completion. Supporting PR2663 is a source-bound admission checkpoint; its pre-cutover470d609 receipts remain historical while current81-input qualification is refreshed. It does not complete real enrollment.",
     "grandfathered": false,
     "pullRequests": [
       {
@@ -39,9 +39,7 @@
     "goals/harness-telemetry-enrollment/GOAL.md",
     "goals/harness-telemetry-enrollment/research/SOURCES.md",
     "explorations/agent-observability-rebuild/BRIEF.md",
-    "explorations/agent-observability-rebuild/DECISIONS.md",
-    "goals/harness-telemetry-enrollment/ops/cli-enrollment-canary.ts",
-    "goals/harness-telemetry-enrollment/ops/test-cli-enrollment-canary.ts"
+    "explorations/agent-observability-rebuild/DECISIONS.md"
   ],
   "researchReports": [
     "research/SOURCES.md",
@@ -62,7 +60,7 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "complete"
+      "status": "in-progress"
     },
     {
       "id": "P1",
@@ -90,15 +88,14 @@
     "jq . goals/harness-telemetry-enrollment/ops/manifest.json",
     "rg -n \"harness-telemetry-enrollment|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/harness-telemetry-enrollment",
     "git diff --check -- goals/harness-telemetry-enrollment",
-    "bun run beep lint reflection-artifacts",
-    "bun --no-env-file goals/harness-telemetry-enrollment/ops/test-cli-enrollment-canary.ts"
+    "bun run beep lint reflection-artifacts"
   ],
   "stopConditions": [
     "Only stop dependent work for an actual unresolved access/authentication/privacy/integrity/resource boundary; continue independent proof and handle routine fixes autonomously.",
     "New spend, plan changes or purchases require the operator.",
     "Never release the historical forwarder recovery hold as part of this packet."
   ],
-  "statusNote": "Explicit operator launch2026-11-03 after foundation PR2655 canonical verified/completed-retained. Start with fresh current-source root admission, then actual per-route collection for all seven requested harness families with desktop subroutes separate. Metadata plus curated examples only. Recovery forwarder service and timer remain masked/inactive. No coverage claim until actual runtime and backend receipts verify.",
+  "statusNote": "Enrollment remains active. Supporting PR2663 retains successful root/backend proof at470d609. Incoming accepted T3-only orchestration retirement2594 intentionally removes its prototype managed-session dependencies; prototype and originals are preserved, not restored. Source compatibility is being repaired and fresh admission must cover the current81-input root selector before actual collection. A standalone fixed native CLI observation path must obey the new doctrine. All real harness populations remain Unknown; recovery forwarder service/timer remain masked/inactive.",
   "resumeConditions": [],
   "dependencies": ["goals/agent-observability-foundation"]
 }

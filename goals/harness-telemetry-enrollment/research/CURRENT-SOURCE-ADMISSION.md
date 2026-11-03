@@ -1,4 +1,4 @@
-# Current-source admission — launch verification
+# Source-bound admission — launch verification
 
 The enrollment packet was explicitly launched on 2026-11-03 after foundation PR2655 obtained canonical verified completion. The held forwarder service and timer remain masked/inactive.
 
@@ -11,3 +11,7 @@ A separate read-only probe observed the actual enrollment worktree and owning Be
 All seven real-harness populations remain Unknown until their actual runtime and backend receipt evidence passes. No source comparison or fixture desktop label supplies desktop coverage.
 
 The [sanitized admission receipt](../ops/history/current-source-admission-20261103.json) records original private review digests and exact scope. Historical receipts were not rewritten. Per-route real launch, configuration, native telemetry, backend receipt and population gates remain separate.
+
+## Incoming main changes require a new admission
+
+Accepted main PR2594 removes three selected telemetry files. Current canonical root membership is81 rather than84, so the retained470d609 pair is historical and must not be reused as current admission. Its original hashes, stage results and reviews remain unchanged. A new qualification and backend pair will be executed against the refreshed source before any dependent real collection.
