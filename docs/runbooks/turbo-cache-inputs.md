@@ -193,7 +193,8 @@ maintained representation of the scanner's workspace discovery.
 | `lint:package-test-typecheck` | Workspace manifests, `tsconfig*.json`, test sources under `test/` and the committed blind-spot baseline. |
 | `lint:schema-catalog` | The schema-first source globs (`SchemaFirstIncludedGlobs`, `docs` trees excluded), every workspace manifest the owner resolver reads, the root `tsconfig.json`, and the committed per-package shards under `standards/schema-catalog/` plus the retired single-file catalog path. Added 2026-11-02 so the cheap-gates lane restores from cache instead of re-walking the tree (~25 s). The hosted Repo Sanity lane still calls the CLI directly. |
 | `lint:effect-vitest` | Exactly the scanner's D9 globs (`EffectVitestSourceFileGlobs`: `*.test`/`*.spec` files and `test/**/*.ts` under `apps`, `packages`, `infra`, fixtures included, `node_modules` excluded) plus the committed inventory and primitives graph the pin checks read; a tripwire pins the inputs to those constants. Check mode writes nothing. |
-| `fallow:audit:check`, `fallow:health:check`, `fallow:health:advisory`, `fallow:boundaries:advisory`, `fallow:flags:advisory`, `fallow:security:advisory`, `fallow:fix-preview:advisory`, `fallow:dead-code:check`, `fallow:boundaries:config-check` | Remain uncached with their baseline/environment/report contracts. |
+| `fallow:health:check`, `fallow:health:advisory`, `fallow:boundaries:advisory`, `fallow:flags:advisory`, `fallow:security:advisory`, `fallow:fix-preview:advisory`, `fallow:dead-code:check`, `fallow:boundaries:config-check` | Cached since 2026-11-02 (quality audit K2). The nine Fallow rows share one input set: every code file Fallow can discover (`**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,html,css}`), manifests, tsconfigs, `.gitignore` files, the root tool configuration its plugins read (`*.{json,jsonc,yml,yaml,toml}`, `.*.{json,jsonc,toml}`, `.changeset/config.json`), `standards/fallow.*.jsonc` (both regression baselines and the generated boundaries config), `bun.lock`, and the source trees, minus Git-ignored build output. The outputs restore the envelope and the raw report it cites, `BEEP_PROOF_BASE` stays in the key, and a tool failure exits non-zero even in advisory mode, so Turbo never caches one. `packages/tooling/tool/cli/test/fallow-turbo-cache.test.ts` replays two runs against a fixture built from these rows and checks the live repository: every file `fallow list --files` reports must be a hashed input. |
+| `fallow:audit:check` | Remains uncached: it diffs against the commit behind `BEEP_PROOF_BASE`, a ref name such as `origin/main` that can move while the key stays the same. |
 | `repo-sanity:bun-audit` | Remains uncached because vulnerability data can change independently of source. |
 
 Root tasks also hash root workspace dependencies through Turbo's internal
@@ -225,6 +226,59 @@ zero seconds. Three decisions follow:
   `tsdoc.json` and `@beep/lint-rules` source. The documentation input digest includes the
   dependency lock and plugin manifest. Deprecated-API shards use the dedicated oxlint
   configuration; no ESLint profile environment or result cache remains.
+
+## Changed-scope Lint Policy (2026-11-02)
+
+Pull requests run `Heavy / Lint Policy` changed-scope (quality audit K1):
+`heavy.yml` passes `--affected --base origin/<base>` to `ci lane lint-policy`,
+which runs `beep lint policy --affected`. Pushes to `main` and scheduled runs get
+no affected shape and run `--full`. Yeet's pre-push `quality:lint-policy` lane
+replays the pull-request shape. `beep lint policy` with no flags is the same
+changed scope against `origin/main`.
+
+A changed-scope run first decides whether to widen to the full sweep
+(`commands/Quality/internal/LintPolicyScope.ts`). It widens when the change set
+touches any of these:
+
+- a deleted or renamed path;
+- a changed source file whose head content carries `@deprecated` (only an added
+  tag can create findings in unchanged callers, so the head side is enough);
+- a `tsconfig*.json`/`jsconfig*.json`, `bun.lock`, any `package.json`,
+  `.bun-version`, `.nvmrc`, `bunfig.toml` or `patches/`;
+- a `turbo.json`;
+- a root `.oxlintrc*` or Biome profile, `_typos.toml`, `tsdoc.json`,
+  `standards/lint-policy.sweeps.jsonc` or the policy fingerprint;
+- a file in the policy fingerprint seals, `packages/tooling/policy-pack/`, or
+  the repo-cli `commands/Lint/` tree.
+
+The log line names every escalation:
+`lint:policy: scope=full (escalated: <class> <path>; …)`.
+
+Otherwise Turbo's `affectedUsingTaskInputs` selection decides which tasks run.
+That selection is only as sound as the task's declared inputs, the same claim a
+cache hit makes. So only `cache: true` tasks run changed-scope: the cheap and
+medium graphs, plus the cached state tasks (`lint:jsdoc-module-tags`,
+`jsdoc:inventory:check`, `jsdoc:ratchet:check`). The D2 git-delta and clock
+checks and the uncertified binary walkers (`knowledge:semantic-delta`,
+`knowledge:refs-check`, `goals:doctor`, `lint:oxlint`, `lint:shadcn`,
+`lint:typos`) stay unfiltered. They run in a second Turbo graph alongside the
+medium one, with one slot of the policy width (the medium graph keeps the rest),
+so the inventory and semantic-delta long poles overlap as they do in the single
+full-scope graph. `lint-policy-scope.test.ts` fails if a task's `cache` flag and
+its graph disagree.
+
+`lint:jsdoc` and `lint:deprecated-apis` are package tasks. Changed scope does not
+run them per package (one repo-cli boot plus one plugin load each, audit M16).
+Instead it runs one root oxlint per task over the package directories that a
+`turbo run lint:jsdoc lint:deprecated-apis --affected --dry=json` probe selects:
+the same per-package input sets, read from Turbo. If the probe fails, the plan
+keeps the per-package Turbo tasks.
+
+The documentation plugin is bundled to plain JS on every run
+(`commands/Quality/internal/DocsOxlintPlugin.ts`, about 0.03 s). It is loaded
+through a gitignored derived config written beside the source config
+(`PREBUILT_DOCS_OXLINT_CONFIG` in that module). `.oxlintrc.docs.json` stays authoritative for lefthook,
+editors and direct runs, and a failed build falls back to it.
 
 ## Workspace overrides
 

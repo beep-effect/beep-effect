@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import {
   detectGithubJobShapeClass,
   GithubJobRecord,
@@ -32,13 +33,10 @@ import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { commandArgs } from "./support/commandArgs.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
+import type { ScriptResult } from "@beep/commands/ScriptedSpawner";
 
 // `gh run view --job <id> --log-failed` emits `<job>\t<step>\t<timestamp> <line>`
 // and sometimes an `##[error]` workflow-command marker. These fixtures keep that
@@ -463,62 +461,46 @@ const monitorContext = RepoRunContext.make({
   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] },
 });
 
-const encoder = new TextEncoder();
+// A scripted gh answer as the spawner serves it: the output on stdout, under its exit code.
+const served = (exitCode: number, output: string) => ({ stdout: output, exit: exitCode });
 
-const stubHandle = (exitCode: number, output: string) =>
-  ChildProcessSpawner.makeHandle({
-    all: Stream.make(encoder.encode(output)),
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    stdout: Stream.make(encoder.encode(output)),
-    unref: Effect.succeed(Effect.void),
-  });
+const spawnLines = (spawner: ScriptedSpawner) =>
+  A.map(spawner.spawns, (spawn) => A.join([spawn.command, ...spawn.args], " "));
 
 interface MonitorGhScript {
   readonly jobLog: { readonly exitCode: number; readonly output: string };
   readonly rerun?: { readonly exitCode: number; readonly output: string };
   readonly runJobs: string;
   readonly runList: string;
-  readonly spawned?: Array<string>;
 }
 
 // Routes the merge loop's gh reads: `run list` for the branch, `run view 7
 // --json jobs` for the one candidate run, `--log-failed` for a red job's log
 // (the per-job endpoint fallback never has one), and `run rerun` for an
 // executed rerun. Anything else — notably a job fetch
-// for a run the selection should have excluded — dies the test.
+// for a run the selection should have excluded — exits 1 as an unexpected invocation.
 const monitorSpawner = (script: MonitorGhScript) =>
-  ChildProcessSpawner.make((command) => {
-    if (!ChildProcess.isStandardCommand(command)) {
-      return Effect.die("the merge loop never spawns a piped command");
-    }
-    const line = A.join([command.command, ...commandArgs(command)], " ");
-    script.spawned?.push(line);
+  ScriptedSpawner.make((command, args) => {
+    const line = A.join([command, ...args], " ");
     if (Str.includes("run list")(line)) {
-      return Effect.succeed(stubHandle(0, script.runList));
+      return served(0, script.runList);
     }
     if (Str.includes("--log-failed")(line)) {
-      return Effect.succeed(stubHandle(script.jobLog.exitCode, script.jobLog.output));
+      return served(script.jobLog.exitCode, script.jobLog.output);
     }
     if (Str.includes("actions/jobs/991/logs")(line)) {
       // The per-job endpoint answers like a log that has not materialized,
       // so a refused primary read keeps its pending/conservative reading.
-      return Effect.succeed(stubHandle(1, "gh: Not Found (HTTP 404)"));
+      return served(1, "gh: Not Found (HTTP 404)");
     }
     if (Str.includes("run rerun")(line)) {
       const rerun = script.rerun ?? { exitCode: 0, output: "" };
-      return Effect.succeed(stubHandle(rerun.exitCode, rerun.output));
+      return served(rerun.exitCode, rerun.output);
     }
     if (Str.includes("run view 7")(line)) {
-      return Effect.succeed(stubHandle(0, script.runJobs));
+      return served(0, script.runJobs);
     }
-    return Effect.die(`unexpected gh invocation: ${line}`);
+    return { exit: 1, stderr: `unexpected gh invocation: ${line}` };
   });
 
 const runListJson = (
@@ -654,8 +636,7 @@ it.layer(BunCrypto.layer)("collectYeetMonitorFailedJobs", (it) => {
       const plan = planYeetMonitorReruns(emptyYeetMonitorRerunBudget, "abc123", jobs);
       expect(plan.decisions[0]?.status).toBe("awaiting-log");
     }).pipe(
-      Effect.provideService(
-        ChildProcessSpawner.ChildProcessSpawner,
+      provideSpawner(
         monitorSpawner({
           jobLog: { exitCode: 1, output: "job 991 log not found" },
           runJobs: midRunJobs,
@@ -675,8 +656,7 @@ it.layer(BunCrypto.layer)("collectYeetMonitorFailedJobs", (it) => {
       const plan = planYeetMonitorReruns(emptyYeetMonitorRerunBudget, "abc123", jobs);
       expect(plan.decisions[0]?.status).toBe("needs-code-fix");
     }).pipe(
-      Effect.provideService(
-        ChildProcessSpawner.ChildProcessSpawner,
+      provideSpawner(
         monitorSpawner({
           jobLog: { exitCode: 0, output: genuineTypeErrorLog },
           runJobs: midRunJobs,
@@ -697,8 +677,7 @@ it.layer(BunCrypto.layer)("collectYeetMonitorFailedJobs", (it) => {
       expect(plan.decisions[0]?.status).toBe("awaiting-run");
       expect(plan.budget).toStrictEqual(emptyYeetMonitorRerunBudget);
     }).pipe(
-      Effect.provideService(
-        ChildProcessSpawner.ChildProcessSpawner,
+      provideSpawner(
         monitorSpawner({
           jobLog: { exitCode: 0, output: ts2589FlakeLog },
           runJobs: midRunJobs,
@@ -716,8 +695,7 @@ it.layer(BunCrypto.layer)("collectYeetMonitorFailedJobs", (it) => {
       const plan = planYeetMonitorReruns(emptyYeetMonitorRerunBudget, "abc123", jobs);
       expect(plan.decisions[0]?.status).toBe("needs-code-fix");
     }).pipe(
-      Effect.provideService(
-        ChildProcessSpawner.ChildProcessSpawner,
+      provideSpawner(
         monitorSpawner({
           jobLog: { exitCode: 1, output: "gh: log expired" },
           runJobs: runJobsJson([{ conclusion: "failure", databaseId: 991, name: "Check", status: "completed" }]),
@@ -738,7 +716,8 @@ interface JobLogFallbackScenario {
 
 // One red job per fallback scenario inside one in-progress run, keyed by job
 // id, so the whole primary-then-endpoint matrix shares a single spawner layer.
-// "unreachable" dies the test if the endpoint is asked after a primary success.
+// "unreachable" exits 1 if the endpoint is asked after a primary success, and
+// the test asserts no such read was spawned.
 // Listed in id order, which is the order the run reports its jobs in.
 const jobLogFallbackScenarioList: ReadonlyArray<readonly [number, JobLogFallbackScenario]> = [
   [981, { name: "Mid-run TS2589", primary: ghRunInProgress, endpoint: { exitCode: 0, output: ts2589EndpointLog } }],
@@ -805,65 +784,59 @@ const jobLogFallbackScenarioList: ReadonlyArray<readonly [number, JobLogFallback
 
 const jobLogFallbackScenarios = HashMap.fromIterable(jobLogFallbackScenarioList);
 
-const scriptedGhAnswer = (answer: ScriptedGhAnswer) =>
+const scriptedGhAnswer = (answer: ScriptedGhAnswer): ScriptResult.Encoded =>
   answer === "spawn-fails"
-    ? Effect.fail(
-        PlatformError.systemError({
-          _tag: "NotFound",
-          module: "ChildProcess",
-          method: "spawn",
-          description: "gh is not installed",
-        })
-      )
-    : Effect.succeed(stubHandle(answer.exitCode, answer.output));
+    ? PlatformError.systemError({
+        _tag: "NotFound",
+        module: "ChildProcess",
+        method: "spawn",
+        description: "gh is not installed",
+      })
+    : served(answer.exitCode, answer.output);
 
 const JOB_LOG_REQUEST_PATTERN = /(?:--job |actions\/jobs\/)(\d+)/u;
 
-const jobLogFallbackSpawnerLayer = Layer.mergeAll(
-  BunCrypto.layer,
-  Layer.succeed(
-    ChildProcessSpawner.ChildProcessSpawner,
-    ChildProcessSpawner.make((command) => {
-      if (!ChildProcess.isStandardCommand(command)) {
-        return Effect.die("the merge loop never spawns a piped command");
-      }
-      const line = A.join([command.command, ...commandArgs(command)], " ");
-      if (Str.includes("run list")(line)) {
-        return Effect.succeed(
-          stubHandle(0, runListJson([{ conclusion: null, databaseId: 7, headSha: "abc123", status: "in_progress" }]))
-        );
-      }
-      if (Str.includes("run view 7")(line)) {
-        return Effect.succeed(
-          stubHandle(
-            0,
-            runJobsJson(
-              A.map(jobLogFallbackScenarioList, ([databaseId, scenario]) => ({
-                conclusion: "failure",
-                databaseId,
-                name: scenario.name,
-                status: "completed",
-              }))
-            )
-          )
-        );
-      }
-      const scenario = pipe(
-        O.fromNullishOr(JOB_LOG_REQUEST_PATTERN.exec(line)?.[1]),
-        O.flatMap((id) => HashMap.get(jobLogFallbackScenarios, Number(id)))
-      );
-      if (O.isNone(scenario)) {
-        return Effect.die(`unexpected gh invocation: ${line}`);
-      }
-      if (Str.includes("--log-failed")(line)) {
-        return scriptedGhAnswer(scenario.value.primary);
-      }
-      return scenario.value.endpoint === "unreachable"
-        ? Effect.die(`the primary log read should have sufficed: ${line}`)
-        : scriptedGhAnswer(scenario.value.endpoint);
-    })
-  )
-);
+const scenarioOf = (line: string) =>
+  pipe(
+    O.fromNullishOr(JOB_LOG_REQUEST_PATTERN.exec(line)?.[1]),
+    O.flatMap((id) => HashMap.get(jobLogFallbackScenarios, Number(id)))
+  );
+
+// An endpoint read for a job whose primary read sufficed.
+const readsUnreachableEndpoint = (line: string) =>
+  !Str.includes("--log-failed")(line) && O.exists(scenarioOf(line), (scenario) => scenario.endpoint === "unreachable");
+
+const jobLogFallbackSpawner = ScriptedSpawner.make((command, args) => {
+  const line = A.join([command, ...args], " ");
+  if (Str.includes("run list")(line)) {
+    return served(0, runListJson([{ conclusion: null, databaseId: 7, headSha: "abc123", status: "in_progress" }]));
+  }
+  if (Str.includes("run view 7")(line)) {
+    return served(
+      0,
+      runJobsJson(
+        A.map(jobLogFallbackScenarioList, ([databaseId, scenario]) => ({
+          conclusion: "failure",
+          databaseId,
+          name: scenario.name,
+          status: "completed",
+        }))
+      )
+    );
+  }
+  const scenario = scenarioOf(line);
+  if (O.isNone(scenario)) {
+    return { exit: 1, stderr: `unexpected gh invocation: ${line}` };
+  }
+  if (Str.includes("--log-failed")(line)) {
+    return scriptedGhAnswer(scenario.value.primary);
+  }
+  return scenario.value.endpoint === "unreachable"
+    ? { exit: 1, stderr: `the primary log read should have sufficed: ${line}` }
+    : scriptedGhAnswer(scenario.value.endpoint);
+});
+
+const jobLogFallbackSpawnerLayer = Layer.mergeAll(BunCrypto.layer, jobLogFallbackSpawner.layer);
 
 // `gh run view --log-failed` refuses while the parent run is in progress, so
 // each red job's classification must come from the per-job endpoint instead.
@@ -905,6 +878,7 @@ it.layer(jobLogFallbackSpawnerLayer, { timeout: "30 seconds" })("per-job log end
           "awaiting-log",
         ]
       );
+      expect(A.filter(spawnLines(jobLogFallbackSpawner), readsUnreachableEndpoint)).toStrictEqual([]);
     })
   );
 });
@@ -933,7 +907,7 @@ describe("applyYeetMonitorJobDecision", () => {
         const lines = A.map(yield* TestConsole.logLines, String);
         expect(A.some(lines, (line) => Str.includes("allowance spent")(line))).toBe(true);
         expect(A.some(lines, (line) => Str.includes("unbounded retry loop")(line))).toBe(true);
-      }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner(1)))
+      }).pipe(provideSpawner(spawner(1)))
     );
   });
 
@@ -943,13 +917,18 @@ describe("applyYeetMonitorJobDecision", () => {
         const result = yield* applyYeetMonitorJobDecision(monitorContext, rerunDecision());
 
         expect(result).toBeUndefined();
-      }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner(0)))
+      }).pipe(provideSpawner(spawner(0)))
     );
   });
 
   it.layer(BunCrypto.layer)((it) => {
     it.effect("prints an awaiting-log decision without executing anything", () => {
-      const spawned: Array<string> = [];
+      const spawner = monitorSpawner({
+        jobLog: { exitCode: 1, output: "" },
+        rerun: { exitCode: 1, output: "run 7 cannot be rerun" },
+        runJobs: runJobsJson([]),
+        runList: runListJson([]),
+      });
       return Effect.gen(function* () {
         const plan = planYeetMonitorReruns(emptyYeetMonitorRerunBudget, "abc123", [
           YeetMonitorFailedJob.make({ databaseId: 991, logPending: true, name: "Check" }),
@@ -959,19 +938,8 @@ describe("applyYeetMonitorJobDecision", () => {
         expect(result).toBeUndefined();
         const lines = A.map(yield* TestConsole.logLines, String);
         expect(A.some(lines, (line) => Str.includes("reclassifying next poll")(line))).toBe(true);
-        expect(spawned).toEqual([]);
-      }).pipe(
-        Effect.provideService(
-          ChildProcessSpawner.ChildProcessSpawner,
-          monitorSpawner({
-            spawned,
-            jobLog: { exitCode: 1, output: "" },
-            rerun: { exitCode: 1, output: "run 7 cannot be rerun" },
-            runJobs: runJobsJson([]),
-            runList: runListJson([]),
-          })
-        )
-      );
+        expect(spawner.spawns).toEqual([]);
+      }).pipe(provideSpawner(spawner));
     });
   });
 });

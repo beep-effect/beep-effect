@@ -26,6 +26,7 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
@@ -65,11 +66,13 @@ import { runCacheSignedPilotExperiment } from "./Cache.pilot.runner.ts";
 import { CachePilotReceipt, CachePilotRequest } from "./Cache.pilot.schemas.ts";
 import { CacheSignedPilotReceipt, CacheSignedPilotRequest } from "./Cache.pilot.signed.schemas.ts";
 import { runCachePilotExperiment } from "./Cache.pilot.ts";
+import { CacheProducerApproval } from "./Cache.producer.schemas.ts";
 import {
   assertCacheProducerPrivateLocation,
   inspectCacheProducerDirectory,
   readCacheProducerExecutionProfile,
   readCacheProducerProvisioning,
+  validateCacheProducerApproval,
 } from "./Cache.producer.ts";
 import { verifyCacheIdentityLintProfile, writeCacheIdentityLintProfile } from "./Cache.profile.ts";
 import { CacheProtocolExecution, CacheProtocolRequest } from "./Cache.protocol.runner.schemas.ts";
@@ -105,7 +108,11 @@ import {
   CacheHostedProducerVerifierLive,
   layerCacheHostedProducerMetadata,
 } from "./Cache.workflow.github.ts";
-import { CacheProducerObservation, CacheProducerWorkflow } from "./Cache.workflow.schemas.ts";
+import {
+  CacheProducerExecutionProfile,
+  CacheProducerObservation,
+  CacheProducerWorkflow,
+} from "./Cache.workflow.schemas.ts";
 import {
   downloadCacheProducerPrivateObservation,
   readCacheProducerPrivateObservation,
@@ -1097,28 +1104,83 @@ const cacheProducerCleanupCommand = Command.make(
   )
 );
 
-const provisionCacheProducer = Effect.fn("Cache.provisionProducer")(function* (requireMaterial: typeof S.Boolean.Type) {
-  const configured = yield* Config.all({
-    inputs: Config.String("BEEP_CACHE_PRODUCER_PROVISIONING"),
-    directory: Config.String("BEEP_CACHE_PRODUCER_STORE"),
+const ProducerApprovalJson = JsonStringCodec(CacheProducerApproval);
+const ProducerExecutionProfileJson = JsonStringCodec(CacheProducerExecutionProfile);
+const decodeProducerMaterial = S.decodeEffect(S.Uint8ArrayFromBase64.check(S.isBetweenLength(96, 96)));
+const readProducerEnvironment = Effect.fn("Cache.readProducerEnvironment")(function* () {
+  const records = yield* Config.all({
+    approval: Config.Redacted("BEEP_CACHE_PRODUCER_APPROVAL_JSON"),
+    runtime: Config.Redacted("BEEP_CACHE_PRODUCER_RUNTIME_JSON"),
   }).pipe(
-    Effect.mapError(() =>
-      CacheCommandError.new("Independently selected provisioning inputs and producer store are required.")
-    )
+    Effect.mapError(() => CacheCommandError.new("Independent producer approval and runtime records are required."))
   );
-  const [approval, profile, material] = yield* readCacheProducerProvisioning(configured.inputs, process.cwd());
+  if (
+    A.some(
+      [records.approval, records.runtime],
+      (record) => new TextEncoder().encode(Redacted.value(record)).byteLength > 16384
+    )
+  )
+    return yield* CacheCommandError.new("Producer environment records exceed their sixteen KiB bound.");
+  const approval = yield* ProducerApprovalJson.decode(Redacted.value(records.approval)).pipe(
+    Effect.mapError(() => CacheCommandError.new("Producer environment approval is invalid."))
+  );
+  yield* validateCacheProducerApproval(approval).pipe(
+    Effect.catchTag("SchemaError", () => CacheCommandError.new("Producer environment approval is invalid."))
+  );
+  const profile = yield* ProducerExecutionProfileJson.decode(Redacted.value(records.runtime)).pipe(
+    Effect.mapError(() => CacheCommandError.new("Producer environment runtime profile is invalid."))
+  );
+  const encoded = yield* Config.Redacted("BEEP_CACHE_PRODUCER_ISSUER_MATERIAL_BASE64").pipe(
+    Effect.mapError(() => CacheCommandError.new("Independently transferred producer issuer material is required."))
+  );
+  if (Str.length(Redacted.value(encoded)) > 128)
+    return yield* CacheCommandError.new("Producer issuer transport exceeds its fixed encoded bound.");
+  const material = yield* encoded.pipe(
+    Redacted.value,
+    decodeProducerMaterial,
+    Effect.mapError(() => CacheCommandError.new("Producer issuer transport must encode exactly ninety-six bytes."))
+  );
+  return Tuple.make(approval, profile, O.some(Redacted.make(material)));
+});
+
+const provisionCacheProducer = Effect.fn("Cache.provisionProducer")(function* (
+  requireMaterial: typeof S.Boolean.Type,
+  fromEnvironment: typeof S.Boolean.Type
+) {
+  const missingLocation = () =>
+    CacheCommandError.new("Independently selected provisioning inputs and producer store are required.");
+  const directory = yield* Config.String("BEEP_CACHE_PRODUCER_STORE").pipe(Effect.mapError(missingLocation));
+  const [approval, profile, material] = yield* fromEnvironment
+    ? readProducerEnvironment()
+    : Config.String("BEEP_CACHE_PRODUCER_PROVISIONING").pipe(
+        Effect.mapError(missingLocation),
+        Effect.flatMap((inputs) => readCacheProducerProvisioning(inputs, process.cwd()))
+      );
   if (requireMaterial && O.isNone(material))
     return yield* CacheCommandError.new("Producer installation requires independently transferred issuer material.");
-  yield* initializeCacheProducerExecution(process.cwd(), configured.directory, approval, profile, material);
+  yield* initializeCacheProducerExecution(process.cwd(), directory, approval, profile, material);
   yield* Console.log(
     "Producer execution store provisioned from independent approval; runtime capabilities were not loaded."
   );
 }, renderCacheFailure);
 
-const cacheProducerProvisionCommand = Command.make("producer-provision", {}, () => provisionCacheProducer(false)).pipe(
+const cacheProducerProvisionCommand = Command.make("producer-provision", {}, () =>
+  provisionCacheProducer(false, false)
+).pipe(
   Command.withDescription("Exclusively provision a private producer store from independently selected approval files")
 );
-const cacheProducerInstallCommand = Command.make("producer-install", {}, () => provisionCacheProducer(true)).pipe(
+const cacheProducerInstallCommand = Command.make(
+  "producer-install",
+  {
+    fromEnvironment: Flag.Boolean("from-environment").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription(
+        "Read approved records and transferred issuer material from fixed protected environment variables"
+      )
+    ),
+  },
+  ({ fromEnvironment }) => provisionCacheProducer(true, fromEnvironment)
+).pipe(
   Command.withDescription("Install the exact independently approved private issuer without generating a replacement")
 );
 

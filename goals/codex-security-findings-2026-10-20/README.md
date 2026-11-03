@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -89,15 +89,17 @@ the October 28 catalog; their fixes merged in #2389 and closure remains pending.
 
 The October 21 reflection remains an interim historical record. The October 31
 reflection and accepted closeout report retain implementation and tooling proof.
-The manifest proposes closeout through #2488 while declared lifecycle remains
-active. Obtain and preserve its genuine final-head readiness verdict before
-merge; after merge and exact external closure, run:
+The manifest proposed closeout through #2488 while declared lifecycle remained
+active; that proposal is now the committed `closeout` record (see below). The
+completion route it followed: obtain and preserve the genuine final-head
+readiness verdict before merge; after merge and exact external closure, run:
 
 ```sh
 bun run beep goals completion refresh --slug codex-security-findings-2026-10-20
 ```
 
-The clone-scoped verified receipt derives `completed-retained`. See
+The verified receipt (now in the shared workstation store) derived
+`completed-retained`. See
 `goals/README.md` for the completion contract.
 
 ## October 28 supplemental batch
@@ -133,9 +135,11 @@ Final closeout PR [#2488](https://github.com/beep-effect/beep-effect/pull/2488)
 retains the merged implementation and must obtain genuine final-head canonical
 `merge-ready: yes` while it is still open. Preserve that evidence before merge.
 After #2488 merges and all exact external statuses are verified, run
-`goals completion refresh` for both packets. Their declared lifecycle remains
-`active` with prospective `completed-retained` until verified receipts derive
-completion. No gate is weakened and no readiness receipt is fabricated.
+`goals completion refresh` for both packets. Both receipts for #2488 now
+verify (`goals doctor`: `completed-retained (verified via #2488)`), and the
+committed `closeout` record in `ops/manifest.json` carries that status: `goals
+set-status` adopted the verified proposal on 2026-11-02 (#2629). No gate is
+weakened and no readiness receipt is fabricated.
 
 Dependency IDs #450–#469 are Fixed (GitHub REST, observed 2026-11-01) and the
 Dependabot, code-scanning and secret-scanning open inventories are zero. See the

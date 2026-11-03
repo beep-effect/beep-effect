@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import {
   acknowledgeYeetMonitorComments,
   collectNewYeetMonitorComments,
@@ -30,17 +31,16 @@ import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { commandArgs } from "./support/commandArgs.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { YeetPrCommentRow } from "@beep/repo-cli/test/Yeet";
 
 // pr-event-awareness W4 (D13/D21/D32/D33): the `--until-ready` merge loop turns
@@ -59,7 +59,6 @@ const SUBMITTED_AT = "2026-09-25T00:00:00.000Z";
 const AFTER_SUBMIT = "2026-09-25T00:05:00Z";
 const LATER = "2026-09-25T00:09:00Z";
 const POLLED_AT = "2026-09-25T00:10:00.000Z";
-const encoder = new TextEncoder();
 
 type Endpoint = "issues" | "reviews" | "review-comments";
 type Payloads = Readonly<Record<Endpoint, ReadonlyArray<unknown>>>;
@@ -73,32 +72,14 @@ const endpointOf = (commandLine: string): Endpoint =>
       ? "reviews"
       : "review-comments";
 
-const stubHandle = (output: string) =>
-  ChildProcessSpawner.makeHandle({
-    all: Stream.make(encoder.encode(output)),
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    stdout: Stream.make(encoder.encode(output)),
-    unref: Effect.succeed(Effect.void),
-  });
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 // `gh api --paginate --slurp` answers with one array of pages; the stub serves
 // whatever the test last put in `payloads` for the endpoint and records the call.
-const ghSpawner = (payloads: Ref.Ref<Payloads>, commands: Ref.Ref<ReadonlyArray<string>>) =>
-  ChildProcessSpawner.make((command) => {
-    if (!ChildProcess.isStandardCommand(command)) return Effect.die("the comment poll never pipes a command");
-    const line = A.join([command.command, ...commandArgs(command)], " ");
-    return Ref.update(commands, A.append(line)).pipe(
-      Effect.andThen(Ref.get(payloads)),
-      Effect.map((current) => stubHandle(JSON.stringify([current[endpointOf(line)]])))
-    );
-  });
+const ghSpawner = (payloads: Ref.Ref<Payloads>) =>
+  ScriptedSpawner.make((command, args) => ({
+    stdout: encodeJson([Ref.getUnsafe(payloads)[endpointOf(A.join([command, ...args], " "))]]),
+  }));
 
 const issue = (id: number, login: string | null, createdAt: string, body = "Please rebase onto main.") => ({
   body,
@@ -199,16 +180,14 @@ const withCheckout = Effect.fnUntraced(function* <Value, Failure, Requirements>(
   use: (
     root: string,
     payloads: Ref.Ref<Payloads>,
-    commands: Ref.Ref<ReadonlyArray<string>>
+    spawner: ScriptedSpawner
   ) => Effect.Effect<Value, Failure, Requirements>
 ) {
   const payloads = yield* Ref.make(noPayloads);
-  const commands = yield* Ref.make<ReadonlyArray<string>>(A.empty());
+  const spawner = ghSpawner(payloads);
   const fs = yield* FileSystem.FileSystem;
   const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-pr-comment-rows-" });
-  return yield* use(root, payloads, commands).pipe(
-    Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, ghSpawner(payloads, commands))
-  );
+  return yield* use(root, payloads, spawner).pipe(provideSpawner(spawner));
 });
 
 describe("pr-comment capsule", () => {
@@ -338,7 +317,7 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("per-consumer comment waterma
   );
 
   it.effect("replays no history as rows on the first namespaced run, and none as lines either", () =>
-    withCheckout((root, payloads, commands) =>
+    withCheckout((root, payloads, spawner) =>
       Effect.gen(function* () {
         const context = contextFor(root);
         // An unnamespaced position from before the split, and a person's comment
@@ -353,10 +332,10 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("per-consumer comment waterma
         // The until-merged replay's first namespaced run prints only its start
         // line and makes no GitHub read. The block shares one TestConsole, so
         // read only the lines the replay printed.
-        const before = A.length(yield* Ref.get(commands));
+        const before = A.length(spawner.spawns);
         const logged = A.length(yield* TestConsole.logLines);
         yield* replayYeetMonitorComments(context, PR, "until-merged");
-        expect(A.length(yield* Ref.get(commands))).toBe(before);
+        expect(A.length(spawner.spawns)).toBe(before);
         const printed = A.join(A.map(A.drop(yield* TestConsole.logLines, logged), String), "\n");
         expect(printed).toContain(`[yeet] comment replay: no watermark for #${PR}`);
         expect(printed).not.toContain("Please rebase onto main.");

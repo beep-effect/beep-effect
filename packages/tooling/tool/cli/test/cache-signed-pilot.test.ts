@@ -346,6 +346,32 @@ describe("signed real-pilot receipt relationships", () => {
         (yield* validate({ ...input, nonExecutions })).pipe(Result.isFailure, assertTrue);
     })
   );
+  it.effect("keeps root syntax refusal and package dependency-source verdicts distinct", () =>
+    Effect.gen(function* () {
+      (yield* validate(input)).pipe(Result.isSuccess, assertTrue);
+      for (const selectedCase of ["root-lint-config", "dependency-source"]) {
+        const mutations = A.map(input.mutations, (mutation) =>
+          mutation.case === selectedCase
+            ? {
+                ...mutation,
+                seed: {
+                  ...mutation.seed,
+                  graphExitCode: selectedCase === "root-lint-config" ? 0 : 1,
+                  outcome: {
+                    ...mutation.seed.outcome,
+                    selected: {
+                      ...mutation.seed.outcome.selected,
+                      exitCode: selectedCase === "root-lint-config" ? 0 : 1,
+                    },
+                  },
+                },
+              }
+            : mutation
+        );
+        (yield* validate({ ...input, mutations })).pipe(Result.isFailure, assertTrue);
+      }
+    })
+  );
   it.effect("requires all seven seeded cases with distinct changed files and fresh case-derived verdicts", () =>
     Effect.gen(function* () {
       for (const mutations of [

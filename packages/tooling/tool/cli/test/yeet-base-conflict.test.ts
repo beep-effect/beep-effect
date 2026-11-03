@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import {
   ackYeetInboxRow,
@@ -70,12 +71,8 @@ import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 
@@ -184,21 +181,6 @@ const report = (sha: string) => ({
   }),
 });
 
-const handle = (output: string) =>
-  ChildProcessSpawner.makeHandle({
-    all: Stream.make(new TextEncoder().encode(output)),
-    stdout: Stream.make(new TextEncoder().encode(output)),
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    unref: Effect.succeed(Effect.void),
-  });
-
 // The loop's once-per-head merge-base diff runs through `Git.changedFiles` (W2b); a code-bearing
 // answer keeps the heavy-admission verdict these fixtures were written against.
 const mergeBaseDiffGit = Git.layerTest({ changedFiles: () => Effect.succeed(["packages/a/src/index.ts"]) });
@@ -207,14 +189,9 @@ const platform = Layer.mergeAll(
   NodeFileSystem.layer,
   NodePath.layer,
   NodeCrypto.layer,
-  Layer.succeed(
-    ChildProcessSpawner.ChildProcessSpawner,
-    ChildProcessSpawner.make((command) =>
-      ChildProcess.isStandardCommand(command) && command.args[0] === "run" && command.args[1] === "list"
-        ? Effect.succeed(handle("[]"))
-        : Effect.die("unexpected process")
-    )
-  )
+  ScriptedSpawner.make((_command, args) =>
+    args[0] === "run" && args[1] === "list" ? { stdout: "[]" } : { exit: 1, stderr: "unexpected process" }
+  ).layer
 );
 
 const loopOptions = {

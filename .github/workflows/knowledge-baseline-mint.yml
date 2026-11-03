@@ -52,8 +52,6 @@ jobs:
       - name: Setup monorepo CI
         uses: ./.github/actions/setup-monorepo-ci
         with:
-          cache-turbo: "false"
-          cache-write: "false"
           free-disk: "false"
 
       - name: Mint the sealed baseline

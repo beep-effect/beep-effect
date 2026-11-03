@@ -1,4 +1,5 @@
 import {
+  GoalManifest,
   goalsCommand,
   PacketCoreLive,
   PacketEvent,
@@ -34,6 +35,7 @@ const decodePacketTransitionRequest = S.decodeEffect(PacketTransitionRequest);
 
 const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const decodeManifestJson = S.decodeUnknownEffect(S.fromJsonString(GoalManifest));
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
@@ -113,6 +115,40 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             expect(yield* fs.readFileString(manifestPath)).toBe(manifest);
             expect(yield* listEventFiles("proposal")).toEqual([]);
           }
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("reopens a committed closeout as its proposal and refuses a status that contradicts the record", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const manifestPath = "goals/closed/ops/manifest.json";
+          const readmePath = "goals/closed/README.md";
+          const manifest = yield* encodeJson({
+            initiative: { id: "closed", status: "completed-retained" },
+            lifecycle: "completed-retained",
+            completionGate: {
+              ...COMPLETION_GATE,
+              acceptanceEvidence: [{ kind: "yeet-verdict", ref: ".beep/yeet/verdict.json", gating: true }],
+            },
+            closeout: { status: "completed-retained", finalPullRequest: 1429 },
+          });
+          yield* writeProjectFile(manifestPath, manifest);
+          yield* writeProjectFile(readmePath, "# closed\n\n## Status\n\nLifecycle: `completed-retained`\n");
+
+          expectReportedFailure(yield* Effect.exit(runGoalsCommand(["set-status", "closed", "superseded"])));
+          expect(yield* fs.readFileString(manifestPath)).toBe(manifest);
+
+          const reopened = yield* Effect.exit(runGoalsCommand(["set-status", "closed", "active"]));
+          reopened.pipe(Exit.isSuccess, assertTrue);
+          const after = yield* decodeManifestJson(yield* fs.readFileString(manifestPath));
+          expect(after.initiative.status).toBe("active");
+          expect(after.lifecycle).toBe("active");
+          expect(after.closeout).toBeUndefined();
+          expect(after.proposedCloseout).toEqual({ status: "completed-retained", finalPullRequest: 1429 });
+          expect(yield* fs.readFileString(readmePath)).toContain("Lifecycle: `active`");
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );

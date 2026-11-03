@@ -1,7 +1,9 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   compileCapabilityProjection,
   GoalAcceptanceEvidenceRef,
+  GoalCloseoutRecord,
   GoalCompletionGate,
   GoalCompletionObservation,
   GoalCompletionReceipt,
@@ -23,6 +25,8 @@ import {
   goalPullRequestRefs,
   projectGoalLifecycle,
   readGoalCloseoutViews,
+  renderGoalCloseoutRecord,
+  renderGoalCloseoutRecordView,
   renderGoalCloseoutView,
 } from "@beep/repo-cli/test/Goals";
 import { it } from "@beep/test-runner";
@@ -38,7 +42,6 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -467,20 +470,15 @@ it.layer(
     MemoryFileSystem.layer,
     Path.layer,
     NodeCrypto.layer,
-    Layer.succeed(
-      ChildProcessSpawner.ChildProcessSpawner,
-      ChildProcessSpawner.make(() =>
-        Effect.fail(
-          PlatformError.systemError({
-            _tag: "NotFound",
-            module: "ChildProcess",
-            method: "spawn",
-            pathOrDescriptor: "git",
-            description: "The fixture has no Git remote.",
-          })
-        )
-      )
-    )
+    ScriptedSpawner.make(() =>
+      PlatformError.systemError({
+        _tag: "NotFound",
+        module: "ChildProcess",
+        method: "spawn",
+        pathOrDescriptor: "git",
+        description: "The fixture has no Git remote.",
+      })
+    ).layer
   ),
   { timeout: "10 seconds" }
 )("prospective goal closeout", (it) => {
@@ -671,6 +669,42 @@ it.layer(
       ).toBe("Failure");
       const paused = GoalManifest.make({ ...manifest(), initiative: { id: "unmentioned-packet", status: "paused" } });
       expect(yield* projectGoalLifecycle(paused, O.none())).toBe("paused");
+    })
+  );
+  const adopted = () => {
+    const { proposedCloseout: _proposal, ...rest } = manifest();
+    return {
+      ...rest,
+      initiative: { id: "unmentioned-packet", status: "completed-retained" as const },
+      closeout: GoalCloseoutRecord.make({ status: "completed-retained", finalPullRequest: 1429 }),
+    };
+  };
+  it.effect("keeps the declaration digest and final PR when a verified proposal becomes a committed record", () =>
+    Effect.gen(function* () {
+      const record = yield* S.decodeEffect(GoalManifest)(adopted());
+      expect(yield* goalCompletionDeclarationDigest(record)).toBe(yield* goalCompletionDeclarationDigest(manifest()));
+      expect(goalPullRequestRefs(record)).toEqual(goalPullRequestRefs(manifest()));
+      expect(yield* projectGoalLifecycle(record, O.some(yield* receipt()))).toBe("completed-retained");
+      assertNone(yield* goalCloseoutView("unmentioned-packet", record, O.some(yield* receipt())));
+      expect(
+        renderGoalCloseoutRecord(GoalCloseoutRecord.make({ status: "completed-retained", finalPullRequest: 7 }))
+      ).toBe("completed-retained via #7");
+      const committed = GoalCloseoutRecord.make({ status: "completed-retained", finalPullRequest: 1429 });
+      expect(renderGoalCloseoutRecordView(committed, "verified")).toBe("completed-retained (verified via #1429)");
+      expect(renderGoalCloseoutRecordView(committed, "unverified")).toBe(
+        "completed-retained (committed via #1429, unverified)"
+      );
+    })
+  );
+  it.effect("rejects a committed closeout record without its status, beside a proposal or on another final PR", () =>
+    Effect.gen(function* () {
+      for (const candidate of [
+        { ...adopted(), initiative: { id: "unmentioned-packet", status: "active" } },
+        { ...adopted(), proposedCloseout: proposal },
+        { ...adopted(), completionGate: { ...proposalGate, pullRequests: [{ number: 99, role: "final" }] } },
+        { ...adopted(), completionGate: gate },
+      ])
+        expect((yield* S.decodeUnknownEffect(GoalManifest)(candidate).pipe(Effect.exit))._tag).toBe("Failure");
     })
   );
 });

@@ -1337,3 +1337,115 @@ and a fleet read would spend the GraphQL budget); inferring dispositions from re
 …" is prose, not a declaration; `unknown` is the honest value and the operator sees how many); keeping
 body-less reviews out because the comment stream drops them (an approval with nothing to say is still
 a review of that head); a closed reviewer set without `bot` (Copilot and GitHub Actions review too).
+
+## 2026-11-02 — Ruling 69's root-input lock (ruling 82, proposed by the resume lane; the merge of its PR is the lock)
+
+Context: ruling 80 resumes the packet only once the ruling-69 root-input gap is closed with its own
+must-fail fixture (`research/c5-must-fail-fixtures-grill.md`, "Open question for ruling 69"). The
+resume lane re-measured the sample first. `proof-report --since 2026-09-28T15:09:39Z` (the #1321
+merge instant) read 87/200 attempts, 40/10 branches, 0 disagreements and 0 malformed rows in the
+owning clone on 2026-11-02, so the gap is the one item an agent can close while the sample keeps
+growing. Closing it now also means the remaining attempts measure the guard that enforcement ships
+with, which is ruling 69's own reason for its scope.
+
+Two facts measured before the lock decide against both of the grill's candidates:
+
+- Of the last 300 first-parent commits on `main`, 282 touch a path that is in no workspace, is not
+  one of the six epoch inputs, and is not documentation. `standards/` alone accounts for 234 of
+  them. Candidate 1 (widen the epoch) would invalidate every fact in every lane on nearly every
+  merge. Candidate 2 (any such path trips every scoped lane) would refuse reuse on most branches,
+  and it still misses the lanes that matter. The lanes that read root baselines undeclared are
+  root-task lanes with an empty package scope (`//#fallow:dead-code:check`, `//#fallow:audit:check`,
+  `//#goals:doctor`), and the tripwire decides those by digest alone under ruling 70.
+- Turbo's run summary carries each task's resolved definition. Twenty-eight tasks in `turbo.json`
+  are `cache: false`, and every one of the uncacheable lanes above is among them. Of the 205
+  would-reuse hits since the cutoff, 28 (3.9 of 35.2 min) are on uncacheable lanes.
+
+**Ruling 82 (C5-4) — a lane is decided by its digest only when Turbo caches every task the digest
+folds; any other lane trips on any changed path.** The lane run gains `inputsCacheable`, true when
+the lane's Turbo digest folds at least one task and every folded task's
+`resolvedTaskDefinition.cache` is true. It is read from the same run summary or wrapper lane ledger
+as the digest, and it is observation data that never enters the reuse key. A declared digest, an
+undeclared lane, a summary row without a definition and a report written before the field existed
+all read as not cacheable. The changed-package tripwire keeps ruling 70 for a cacheable lane. For
+one that is not cacheable, it fires whenever the attempt's changed set names any path at all
+(mapped or not, documentation included) and whenever the set is `unavailable`. The reason a
+cacheable lane needs nothing more: a root file that one of its tasks declares moves the digest, and
+a root file none of them declares is one Turbo would equally ignore when it replays a cached result
+on the same hash. A reused proof then claims no more than the cache hit the lane already accepts,
+and an incomplete `inputs` list is a task-definition defect for the cache-policy gate, not a ledger
+one. An uncacheable task makes no such promise, so nothing shows its lane did not read the changed
+file. The miss keeps the `changed-package-tripwire` reason, so the report's vocabulary and the
+ledger schema are unchanged.
+
+Must-fail fixture, locked with this ruling (`test/proof-shadow.test.ts`): an uncacheable root-task
+lane and a cacheable one record passed facts. A second attempt with the same digests and one
+unmapped changed path (a `standards/` baseline) must record `changed-package-tripwire` for the
+uncacheable lane and a hit for the cacheable control. A clean third attempt serves both, and an
+`unavailable` changed set refuses the uncacheable lane again. Companion fixtures pin the flag's
+derivation from a run summary (one `cache: false` task, or a row with no definition, makes the lane
+uncacheable), its survival through the wrapper lane ledger, and the uncacheable default for an older
+lane report.
+
+Rejected: widening the epoch (measured above: a fact invalidation on nearly every merge, for lanes
+whose digest already moves when they declare the file); tripping every scoped lane on an unmapped
+path (coarse on most branches and blind to the empty-scope lanes that actually read the baselines);
+a per-lane table of root files (ruling 70 rejected a second table to keep honest against the lane
+specs); reading each task's hashed `inputs` list to decide coverage per path (correct for cacheable
+tasks, but then the digest already decides, and for uncacheable tasks it is exactly the incomplete
+list the gap is about); a new miss reason (a ledger and report schema change for a cause the
+existing reason already names: the change trips the lane).
+## 2026-11-03 — The first disagreement and the sample restart (ruling 83, proposed by the resume lane; the merge of its PR is the lock)
+
+Context: on 2026-11-03 `proof-report --since 2026-09-28T15:09:39Z` in the owning clone read 100/200
+attempts, 49/10 branches and **1 disagreement**. The rows involved all carry one key on lane
+`repo-sanity:tsconfig-sync` (`//#config-sync:check`, a cacheable root task) on branch `@slop/11-2-26`
+in the primary clone:
+
+- attempt `d3810a91` (2026-11-02T23:50Z) passed and recorded the fact;
+- attempt `a01337f8` (2026-11-03T00:39Z) failed in 3.8 s on head `62c3f652`, diff fingerprint
+  `96a296d2`, the same key: the hit-versus-failed row ruling 72 makes observable;
+- attempt `0cdd2519` (00:46Z) passed on the same head, the same diff fingerprint and the same key.
+
+Attribution (the orchestrator's, checked against the run journals): at about 23:51Z
+`/beep-biome-json-*/` was added to the primary clone's shared `.git/info/exclude`, alongside the
+`@slop` snapshot excludes, to hide a leftover `beep-biome-json-*` directory from a killed
+tsconfig-sync run. `renderBiomeJson` stages every rendered file in a `beep-biome-json-*` directory
+under the repository root and hands the path to Biome, which honours VCS ignore files. The staged
+`docgen.json` became "provided but ignored", the render failed, and `repo-sanity:tsconfig-sync`
+failed in every lane of that clone. Linked worktrees share the clone's `info/exclude`, which is why
+an unrelated lane's local coverage run on the same evening failed 32 tests with the same Biome
+message. The line was removed at about 00:4xZ, and the 00:46Z attempt passed. The deciding input,
+`.git/info/exclude`, is outside Turbo's hash, so the key could not move. Ruling 7 counted it
+exactly as designed: reuse would have served a pass on inputs that were failing.
+
+**Ruling 83 (C4-8) — a tool given a path the repository owns must not read ambient VCS ignore
+state, and the enforcement sample restarts at this ruling's merge instant.**
+
+- *The fix.* `renderBiomeJson` and the codegen-kit formatter run Biome with
+  `--vcs-use-ignore-file=false`; the configuration's own `files` rules still apply.
+  `renderBiomeJsonAt(repoRoot, …)` carries the root explicitly, so the case is testable.
+- *Must-fail fixture* (`packages/tooling/library/repo-utils/test/schemas/BiomeJson.test.ts`): a
+  root whose `.git/info/exclude` holds `/beep-biome-json-*/` must still render. A control run of
+  Biome without the flag on a staged file under the same exclude must exit non-zero, so the fixture
+  fails when the flag is dropped (checked by removing it).
+- *The audit.* The other ambient-ignore readers in cacheable lanes are the `git ls-files --cached
+  --others --exclude-standard` scanners (JSDoc ratchet and inventory, Fallow, Doctest). They are
+  aligned with Turbo's own untracked-file view by the repository's scanner law, so an exclude rule
+  moves their input set and the hash together; `Cache.fingerprint` already folds `info/exclude`
+  into its census. The defect class is narrower: a tool handed an explicit path that Turbo does not
+  track (a staging file, a generated output), where an ignore rule turns success into failure.
+  Both such call sites are fixed here.
+- *The sample.* Rows recorded before this merge sampled a world where a clone-local file could
+  decide the lane. Ruling 80's resume condition now reads `proof-report --since <ruling 83's
+  merge instant>`, with the bar unchanged (200 attempts, 10 branches, 0 disagreements, 0 malformed
+  rows, every C5 fixture green). The 2026-09-28 window keeps its one disagreement on the record;
+  it is closed, not erased.
+
+Rejected: folding `.git/info/exclude` into the proof epoch (it is per clone and edited by hand, so
+every hand edit would invalidate every fact, and the tool would still fail on the staged file);
+staging outside the repository root with an explicit config path (Biome then resolves the file
+against no project root and applies the configuration's `files` rules to a foreign path, a second
+behaviour to keep honest); dismissing the row as environmental and keeping the window (the bar's
+"zero" is the evidence; a disagreement explained away is a criterion that cannot fail, which
+ruling 72 rejected); a calendar restart (ruling 7 counts events).

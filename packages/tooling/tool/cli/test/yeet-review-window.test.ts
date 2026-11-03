@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
@@ -36,14 +37,11 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
-import { commandArgs } from "./support/commandArgs.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import { provideLegacyGh } from "./support/YeetGithub.ts";
 import type { YeetReviewWindow } from "@beep/repo-cli/test/Yeet";
 
@@ -401,21 +399,6 @@ describe("merge readiness with the review window", () => {
   });
 });
 
-const fakeHandle = (output: string, exitCode = 0) =>
-  ChildProcessSpawner.makeHandle({
-    all: Stream.make(new TextEncoder().encode(output)),
-    stdout: Stream.make(new TextEncoder().encode(output)),
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    unref: Effect.succeed(Effect.void),
-  });
-
 const pullRequestJson =
   '{"headRefOid":"abc1234def","id":"PR_window","isDraft":false,"labels":[],"mergeable":"MERGEABLE","mergeStateStatus":"CLEAN","number":42,"reviewDecision":null,"state":"OPEN","url":"https://github.com/beep/beep/pull/42"}';
 const checksJson = (bucket: "pass" | "pending") =>
@@ -425,29 +408,36 @@ const threadsJson =
 
 // The whole `gh` surface `collectYeetStatus` reads, with the REST review-window
 // reads scripted separately from the GraphQL thread read.
-const ghRunner = (answers: Answers, bucket: "pass" | "pending", restCalls: Ref.Ref<ReadonlyArray<string>>) =>
-  ChildProcessSpawner.make((command) => {
-    if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-    if (command.command !== "gh") return Effect.succeed(fakeHandle(""));
-    const route = A.join(A.take(commandArgs(command), 2), " ");
-    if (route === "pr view") return Effect.succeed(fakeHandle(pullRequestJson));
-    if (route === "pr checks") return Effect.succeed(fakeHandle(checksJson(bucket)));
-    if (route === "api graphql") return Effect.succeed(fakeHandle(threadsJson));
-    if (route === "run list") return Effect.succeed(fakeHandle("[]"));
-    const answer = answerFor(answers, commandArgs(command));
-    return Ref.update(restCalls, A.append(A.join(commandArgs(command), " "))).pipe(
-      Effect.as(answer === "fail" ? fakeHandle("gh: API rate limit exceeded", 1) : fakeHandle(answer))
-    );
-  });
+const statusAnswers = (bucket: "pass" | "pending"): Record<string, string> => ({
+  "pr view": pullRequestJson,
+  "pr checks": checksJson(bucket),
+  "api graphql": threadsJson,
+  "run list": "[]",
+});
+const ghRoute = (args: ReadonlyArray<string>) => A.join(A.take(args, 2), " ");
+const restAnswer = (answer: Answer) =>
+  answer === "fail" ? { stdout: "gh: API rate limit exceeded", exit: 1 } : { stdout: answer };
+const ghRunner = (answers: Answers, bucket: "pass" | "pending") =>
+  ScriptedSpawner.make((command, args) =>
+    command === "gh"
+      ? O.match(R.get(statusAnswers(bucket), ghRoute(args)), {
+          onNone: () => restAnswer(answerFor(answers, args)),
+          onSome: (stdout) => ({ stdout }),
+        })
+      : {}
+  );
+// The REST review-window reads: every `gh` call outside the status surface.
+const restCallsOf = (spawner: ScriptedSpawner, bucket: "pass" | "pending") =>
+  A.map(
+    A.filter(spawner.spawns, (spawn) => spawn.command === "gh" && !R.has(statusAnswers(bucket), ghRoute(spawn.args))),
+    (spawn) => A.join(spawn.args, " ")
+  );
 
 const statusPlatform = Layer.mergeAll(
   MemoryFileSystem.layer,
   Path.layer,
   BunCrypto.layer,
-  Layer.succeed(
-    ChildProcessSpawner.ChildProcessSpawner,
-    ChildProcessSpawner.make(() => Effect.succeed(fakeHandle("")))
-  )
+  ScriptedSpawner.make(() => ({})).layer
 );
 
 const writeBoundCloseout = Effect.gen(function* () {
@@ -473,13 +463,13 @@ const writeBoundCloseout = Effect.gen(function* () {
 });
 
 const statusWith = Effect.fn("statusWith")(function* (answers: Answers, bucket: "pass" | "pending" = "pass") {
-  const restCalls = yield* Ref.make<ReadonlyArray<string>>([]);
+  const spawner = ghRunner(answers, bucket);
   const snapshot = yield* collectYeetStatus(context, true).pipe(
     provideLegacyGh,
     Effect.provideServiceEffect(Git, Git.make),
-    Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, ghRunner(answers, bucket, restCalls))
+    provideSpawner(spawner)
   );
-  return { snapshot, restCalls: yield* Ref.get(restCalls) };
+  return { snapshot, restCalls: restCallsOf(spawner, bucket) };
 });
 
 it.layer(statusPlatform, { timeout: "30 seconds" })("status read with the review window", (it) => {

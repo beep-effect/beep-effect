@@ -21,7 +21,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "statement": "Achieved only after final PR2612 is merged with final-head hosted checks and review/window requirements satisfied, a positive exact-head readiness verdict preserved before merge, and a canonical completion receipt actually verified for the accepted head.",
     "grandfathered": false,
     "pullRequests": [
       {
@@ -42,13 +42,41 @@
       },
       {
         "number": 2578,
+        "role": "supporting"
+      },
+      {
+        "number": 2595,
+        "role": "supporting"
+      },
+      {
+        "number": 2620,
+        "role": "supporting"
+      },
+      {
+        "number": 2621,
+        "role": "supporting"
+      },
+      {
+        "number": 2632,
+        "role": "supporting"
+      },
+      {
+        "number": 2639,
+        "role": "supporting"
+      },
+      {
+        "number": 2624,
+        "role": "supporting"
+      },
+      {
+        "number": 2612,
         "role": "final"
       }
     ],
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/fix_agent-observability-qualified-final-b110fe798213/verdict.json",
+        "ref": ".beep/yeet/runs/fix_agent-observability-retained-final-6992b5095ab2/verdict.json",
         "gating": true
       },
       {
@@ -114,17 +142,17 @@
     "bun run beep lint reflection-artifacts"
   ],
   "stopConditions": [
-    "Required source files are missing or materially contradictory.",
+    "Hold dependent mutation when source identity, integrity, privacy or resource bounds are unproven; continue safe independent work.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
-    "The same blocker repeats after reasonable investigation."
+    "Routine CI queues, failing checks, local admission refusals and publish/verify sequencing are autonomous repair or routing work. Keep the authoritative observer; do not pause merely because a blocker repeats. Escalate concrete missing authority or required operator input after authorized paths are exhausted."
   ],
-  "statusNote": "Lifecycle active. Historical PR2364 and PR2508 completion results remain unsatisfied;2519/2534 are supporting source delivery. FinalPR2578 is the owner-held follow-up on main including coverage repair2568. Original870/40/73/44 executions remain historical; hosted51-test HarnessLedger proof covers appended cases at4afad5c6. Selected package comparison is244exact plus four script-only manifests and that test file. Root84/84 and stage88/90,87/89 applicability retain the reviewed two-helper explicit-pin bridge. New final-head hosted/review/readiness/merge and canonical completion pending; recovery hold intact.",
+  "statusNote": "Final PR2612 remains reserved exclusively to this chat. Completion is unverified until its exact-head hosted checks, review, normal window, pre-merge readiness verdict, qualified merge and canonical receipt are observed. Accepted supporting repairs correct fixture timing and cleanup, coverage processor identity, merge-preview assertions and missing code-coverage identities. All original baseline values remain exact. Retained synthetic executions keep their original inputs and reviewed source deltas; current exact-source root admission is not established. Historical2364/2508/2578 results are unchanged. The recovery service and timer remain masked and inactive. All seven real-harness populations remain Unknown.",
   "resumeConditions": [
     "Explicit launch of this packet after dependency proof; refresh live state before changes."
   ],
   "dependencies": [],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2578
+    "finalPullRequest": 2612
   }
 }

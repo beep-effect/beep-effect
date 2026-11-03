@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
@@ -24,13 +25,10 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { YeetExecutedStep } from "@beep/repo-cli/test/Yeet";
 
 const context = RepoRunContext.make({
@@ -55,33 +53,14 @@ const labelStep = RepoPlanStep.make({
   resume: "never",
 });
 const created = YeetEnsuredPullRequest.make({ number: 42, created: true });
-const handle = (output: string, exitCode = 0) => {
-  const stdout = Stream.make(new TextEncoder().encode(output));
-  return ChildProcessSpawner.makeHandle({
-    all: stdout,
-    stdout,
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    unref: Effect.succeed(Effect.void),
-  });
-};
 // `Git` is rebuilt over each substituted spawner: the pull request's remote and diff reads run
 // through the kit (W2b).
-const provideSpawner =
-  (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"]) =>
+const provideGitOver =
+  (spawner: ScriptedSpawner) =>
   <A, E, R>(self: Effect.Effect<A, E, R>) =>
-    self.pipe(
-      Effect.provideServiceEffect(Git, Git.make),
-      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
-    );
+    self.pipe(Effect.provideServiceEffect(Git, Git.make), provideSpawner(spawner));
 const withGh = (output: string, exitCode = 0) =>
-  provideSpawner(ChildProcessSpawner.make(() => Effect.succeed(handle(output, exitCode))));
+  provideGitOver(ScriptedSpawner.make(() => ({ stdout: output, exit: exitCode })));
 const encodeView = S.encodeEffect(
   S.fromJsonString(
     S.Struct({
@@ -101,23 +80,19 @@ describe("Yeet pull request lifecycle boundaries", () => {
         const view = { number: 42, state: "OPEN", headRefName: context.branch };
         for (const views of [[view], [{ ...view, state: "CLOSED" }, { ...view, headRefName: "other" }, view], []]) {
           const output = yield* encodeList(views);
-          const calls = yield* Ref.make<ReadonlyArray<string>>([]);
-          const runner = ChildProcessSpawner.make((command) => {
-            if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-            return Ref.update(calls, A.append(command.command)).pipe(
-              Effect.as(handle(command.command === "git" ? "git@github.com:beep-effect/beep-effect.git" : output))
-            );
-          });
-          const found = yield* findOpenPullRequest(context).pipe(provideSpawner(runner));
+          const runner = ScriptedSpawner.make((command) => ({
+            stdout: command === "git" ? "git@github.com:beep-effect/beep-effect.git" : output,
+          }));
+          const found = yield* findOpenPullRequest(context).pipe(provideGitOver(runner));
           if (A.isReadonlyArrayEmpty(views)) assertNone(found);
           else
             assertSome(
               O.map(found, (pr) => pr.number),
               42
             );
-          expect(yield* Ref.get(calls)).toEqual(["git", "gh"]);
+          expect(A.map(runner.spawns, (spawn) => spawn.command)).toEqual(["git", "gh"]);
           if (A.isReadonlyArrayNonEmpty(views)) {
-            const required = yield* runGhPullRequestView(context).pipe(provideSpawner(runner));
+            const required = yield* runGhPullRequestView(context).pipe(provideGitOver(runner));
             expect(required.number).toBe(42);
           }
         }
@@ -131,17 +106,14 @@ describe("Yeet pull request lifecycle boundaries", () => {
           ["invalid JSON", 0, "Failed to decode GitHub REST pull request JSON"],
           [Str.repeat(512 * 1024 + 1)("x"), 0, "capture limit"],
         ] as const) {
-          const runner = ChildProcessSpawner.make((command) => {
-            if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-            return Effect.succeed(
-              command.command === "git"
-                ? handle("https://github.com/beep-effect/beep-effect.git")
-                : command.args[0] === "api"
-                  ? handle(output, exitCode)
-                  : handle("GraphQL: API rate limit already exceeded", 1)
-            );
-          });
-          const provide = provideSpawner(runner);
+          const runner = ScriptedSpawner.make((command, args) =>
+            command === "git"
+              ? { stdout: "https://github.com/beep-effect/beep-effect.git" }
+              : args[0] === "api"
+                ? { stdout: output, exit: exitCode }
+                : { stdout: "GraphQL: API rate limit already exceeded", exit: 1 }
+          );
+          const provide = provideGitOver(runner);
           const failure = yield* findOpenPullRequest(context).pipe(Effect.flip, provide);
           expect(failure.message).toContain(message);
           const direct = yield* findOpenPullRequestViaRest(context).pipe(Effect.flip, provide);
@@ -210,10 +182,8 @@ describe("Yeet pull request lifecycle boundaries", () => {
           withGh(Str.repeat(512 * 1024 + 1)("x"))
         );
         expect(truncated.message).toContain("capture limit");
-        const withSpawnFailure = provideSpawner(
-          ChildProcessSpawner.make(() =>
-            Effect.fail(PlatformError.badArgument({ module: "ChildProcess", method: "spawn" }))
-          )
+        const withSpawnFailure = provideGitOver(
+          ScriptedSpawner.make(() => PlatformError.badArgument({ module: "ChildProcess", method: "spawn" }))
         );
         const spawnFailure = yield* runGhPullRequestView(context).pipe(Effect.flip, withSpawnFailure);
         expect(spawnFailure.message).toBe("Failed to inspect current branch pull request.");

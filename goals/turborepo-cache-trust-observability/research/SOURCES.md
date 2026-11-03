@@ -611,6 +611,30 @@ streams and causes remain private, and a hint is not a trusted classification.
 The ordinary 967-second failure remains unclassified; the separately instrumented
 success is not reused as ordinary qualification. All full-goal gates remain.
 
+### Bounded live phase feedback, 2026-11-02
+
+The [phase-feedback checkpoint](supervisor-phase-checkpoint-2026-11-02.json)
+binds the ordinary twenty-minute timeout separately from current source controls.
+The worker emits eleven fixed schema-owned markers. The parent uses the existing
+folded stdout runner and bounded accumulator, retaining only a complete exact
+marker for timeout feedback. Sixty focused controls include split chunks,
+non-monotonic observations, partial/decorated/unknown lines, overflow, private
+output, real child exits and unchanged deadlines. These are diagnostic controls,
+not an ordinary signed qualification, protected publication or production rollout.
+
+
+### Ordinary frozen-source native matrices, 2026-11-02
+
+The [matrix checkpoint](ordinary-native-matrix-checkpoint-2026-11-02.json) binds the
+inspectable [stable view](ordinary-stable-signed-observation-2026-11-02.json) and
+[current-canary view](ordinary-canary-signed-observation-2026-11-02.json). The
+ordinary supervisor accepted both complete matrices under the unchanged limits
+and actual-overlap guard. The public views reconstruct the
+exact complete decoded private reports through an explicit runtime-toolchain
+fingerprint field mapping; raw-artifact and public-view byte hashes are separate. These
+observations have explicit supervisor/task-source identities and grant no
+protected producer provenance, current-main qualification or production rollout.
+
 
 ### 2026-11-02 — actual inspection and contained directory-alias repair
 
@@ -624,3 +648,22 @@ success is not reused as ordinary qualification. All full-goal gates remain.
   controls, real-tree replay and remaining protected approval.
 - Effect `FileSystem.lstat` was verified in the installed 4.1.1 public source and
   canonical Effect reference. It inspects child type without following aliases.
+
+
+### 2026-11-02 — private producer environment transport
+
+- Existing `Cache.producer.ts` provisioning reader and `Cache.workflow.ts` exclusive initializer supply the authority, record bounds, source/target/executable checks and rollback.
+- Installed Effect 4.1.1 and the canonical Effect reference expose `Config.Redacted`, `Schema.Uint8ArrayFromBase64` and length checks; the transport uses those APIs and the existing JSON codecs.
+- The [preparation record](producer-environment-install-preparation-2026-11-02.json) binds implementation and authored controls. It records no executed test, deployment or qualification claim.
+
+- [Protected source inspection](protected-source-inspection-2026-11-02.json): authenticated successful main run `41561109340`, exact caller/callee source `c96edf8c`, immutable archive digest, canonical workflow digest and actual tool pins. Source/tool evidence only; actual runner readiness and protected signed execution remain unproven.
+
+### 2026-11-02 — candidate adapter build preparation
+
+- Existing `infra/r2-cache/policy.sh`, its reviewed upstream patch and `policy-build-requirements.txt` remain the build authority. The former private portable artifacts remain historical, separately bound evidence.
+- The already-used immutable [Rust setup action](https://github.com/actions-rust-lang/setup-rust-toolchain/blob/ecabd13d1c56bd1345c230e542e9144811ad706f/action.yml) exposes explicit toolchain/target selection and disabling cache restoration and directory overrides. The new leaf selects those options and an isolated Rustup/Cargo home.
+- The existing pinned ziglang 0.14.1 installation has no console entry point. Its explicit `bin/zig` link points to the installed module binary; candidate preparation repeats that setup and checks the requested versions.
+- The installed Turbo 2.11.10 CI documentation and the existing main-only inspection caller informed the separate operational mode. Preparation leaves ordinary required matrix contexts and cache posture unchanged; it does not emit quality or producer verdicts.
+
+- [cargo-zigbuild 0.20.1 metadata](https://pypi.org/pypi/cargo-zigbuild/0.20.1/json) publishes the Linux x86_64 wheel SHA-256 `cb9508149ee63d60e5110ff24b527ab25ed418a6329252aa4f86868197c55bf6` and its sole package dependency, ziglang.
+- [ziglang 0.14.1 metadata](https://pypi.org/pypi/ziglang/0.14.1/json) publishes the matching Linux x86_64 wheel SHA-256 `6eb9d4d759b292c83810dbee2e9e8e3fbfbf01d864e6e9811bae711fd74e1c2f` and no package dependencies. These content pins address [the review finding](https://github.com/beep-effect/beep-effect/pull/2643#discussion_r4450530140); real CI installation remains unexecuted.

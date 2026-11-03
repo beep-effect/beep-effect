@@ -82,6 +82,8 @@ New split modules, all carved as library content:
 | `Yeet/internal/GitErrorAdapter.ts` | `GitExec.ts` | Yeet's git error wording, so library files call the run-layer `runGitOutput` (verifier item 5) |
 | `Cache/Cache.runtime.step.ts`, `Cache/Cache.errors.ts` | `Cache.runtime.ts`, `Cache.census.ts`, `Cache.schemas.ts` | The step router the task runner and CI lanes call |
 
+Main gained three lint-policy modules while W1b was in review (`Quality/internal/DocsOxlintPlugin.ts`, `Quality/internal/LintPolicyScope.ts` and `Lint/PolicyFingerprint.schemas.ts`, which `Tasks.ts` reads). All three are library-clean, so they are carved as `lib:repo-gates` in place.
+
 `writeTextFile` moves into `ArtifactPaths.ts`, and `shellQuote` moves out of
 `@beep/repo-ai-metrics` into `@beep/repo-utils/Shell` (verifier item 8).
 

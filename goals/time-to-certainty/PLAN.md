@@ -180,9 +180,16 @@ orchestrator owns schemas, contracts, and judgment.
         sibling lanes share one sample and a retired lane no longer takes it with it; ruling 72
         records a red run's digest as an observation, so a disagreement is observable and ruling
         7's bar can fail. Now waits only on the sample (ruling 80):
-        `bun run beep yeet proof-report --since <round-25 merge instant>` ready in the owning
+        `bun run beep yeet proof-report --since <ruling-83 merge instant>` ready in the owning
         clone, zero malformed rows, every C5 fixture green, and the ruling-69 root-input gap
         closed with its own must-fail fixture. The flip PR is the packet's final PR.
+        Root-input gap closed 2026-11-02 (ruling 82): a lane is decided by its digest only when
+        Turbo caches every task it folds; any other lane trips on any changed path. Sample on
+        2026-11-02: 87/200 attempts, 40/10 branches, 0 disagreements, 0 malformed rows.
+        Sample restarted 2026-11-03 (ruling 83): the 2026-09-28 window reached 100/200 with one
+        disagreement on `repo-sanity:tsconfig-sync`, a clone's `.git/info/exclude` hiding Biome's
+        staging file outside Turbo's hash; renders now ignore VCS ignore files and the bar counts
+        only rows recorded after ruling 83's merge.
 - [x] C5 must-fail fixtures: changed package, epoch change, cross-profile reuse — done 2026-09-24
       (epoch and cross-profile fixtures in #1214; the changed-package tripwire, its package-scope
       plumbing and its fixtures in this PR under rulings 68–70).

@@ -361,6 +361,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
   const profileMutations: Array<boolean> = [];
   const calls: Array<string> = [];
   const counts = MutableHashMap.empty<string, number>();
+  // Own double: each spawn reads and writes the sandbox fixture on disk; ScriptedSpawner scripts are synchronous.
   const spawner = ChildProcessSpawner.make(
     Effect.fnUntraced(
       function* (command) {
@@ -527,10 +528,9 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                       Match.when("failed-source", () => 1),
                       Match.orElse(() =>
                         (Str.startsWith("signed-")(label) &&
-                          ((Str.includes("export const =")(sourceText) &&
-                            !Str.includes("!**/src/index.ts")(rootConfigBytes)) ||
-                            Str.includes("@deprecated qualification dependency control")(dependencySource))) ||
-                        (number === 0 && A.contains(["mutation-root-lint-config", "mutation-dependency-source"], label))
+                          Str.includes("export const =")(sourceText) &&
+                          !Str.includes("!**/src/index.ts")(rootConfigBytes)) ||
+                        (number === 0 && label === "mutation-root-lint-config")
                           ? 1
                           : 0
                       )
@@ -880,6 +880,14 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
       expect(receipt.pairs).toHaveLength(3);
       expect(receipt.shadows).toHaveLength(10);
       expect(receipt.mutations).toHaveLength(7);
+      const dependencyMutation = O.getOrThrow(
+        A.findFirst(receipt.mutations, (mutation) => mutation.case === "dependency-source")
+      );
+      expect(dependencyMutation.seed.graphExitCode).toBe(0);
+      expect(dependencyMutation.seed.outcome.selected.exitCode).toBe(0);
+      expect(dependencyMutation.seed.outcome.selected.taskHash).not.toBe(
+        dependencyMutation.comparison.producer.outcome.selected.taskHash
+      );
       for (const pair of receipt.pairs) {
         const summary = O.getOrThrow(pair.producer.nativeSummary);
         expect(summary.turboVersion).toBe(pin.version);
@@ -1031,6 +1039,12 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
       expect(A.filter(receipt.checks, (check) => !check.passed)).toEqual([]);
       expect(receipt.shadowDecisions).toHaveLength(10);
       expect(receipt.mutations).toHaveLength(8);
+      const dependencyMutation = O.getOrThrow(
+        A.findFirst(receipt.mutations, (mutation) => mutation.id === "dependency-source")
+      );
+      expect(dependencyMutation.expectedBaselineExit).toBe(0);
+      expect(dependencyMutation.expectedChangedExit).toBe(0);
+      expect(dependencyMutation.beforeSha256).not.toBe(O.getOrThrow(dependencyMutation.afterSha256));
       expect(receipt.nonExecutions).toHaveLength(4);
       expect(receipt.runs.length).toBeGreaterThan(60);
       expect(receipt.authority).toBe("local-observation-only");
