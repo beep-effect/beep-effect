@@ -15,6 +15,10 @@ jobs:
     name: Build candidate producer adapter
     if: github.ref == 'refs/heads/main'
     # The runner group admits the reusable Heavy leaf, not this caller.
+    permissions:
+      contents: read
+      # GitHub validates every nested job, including the gated producer.
+      actions: read
     uses: beep-effect/beep-effect/.github/workflows/heavy.yml@main
     with:
       admitted: false
