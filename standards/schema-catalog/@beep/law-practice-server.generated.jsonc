@@ -250,6 +250,7 @@
     {"file":"packages/law-practice/server/src/internal/Citation/RuntimeDictionary.ts","symbol":"CitationRuntimeDictionaryKey","kind":"struct-const","owner":"@beep/law-practice-server","identity":"CitationRuntimeDictionaryKey","description":"Current resource identity/hash snapshot; never a persisted authority or source proof."},
     {"file":"packages/law-practice/server/src/internal/Citation/RuntimeDictionary.ts","symbol":"CitationRuntimeDictionaryLimits","kind":"struct-const","owner":"@beep/law-practice-server","identity":"CitationRuntimeDictionaryLimits","description":"Private ceiling projection for active entries and bounded probe/rebuild work."},
     {"file":"packages/law-practice/server/src/internal/Citation/RuntimeHashEncoding.ts","symbol":"CitationRuntimeHashEncodingFailure","kind":"tagged-error","owner":"@beep/law-practice-server","identity":"CitationRuntimeHashEncodingFailure"},
+    {"file":"packages/law-practice/server/src/internal/Citation/TokenText.ts","symbol":"CitationTokenTextPlan","kind":"struct-const","owner":"@beep/law-practice-server","identity":"CitationTokenTextPlan","description":"Owned native source snapshot and literal-space token spans; no verified citation evidence."},
     {"file":"packages/law-practice/server/src/internal/JsonlLog.ts","symbol":"makeJsonlLog","kind":"codec","owner":"@beep/law-practice-server"}
   ]
 }

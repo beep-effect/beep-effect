@@ -266,6 +266,14 @@ vectors. Full canonical replay is pending. Dynamic host mutation, full repr
 construction, token construction/merge, family/scaling and public integration
 remain open. See [ordering evidence](history/evidence/2026-11-03-extractor-ordering.md).
 
+Latest plain-text tokenizer checkpoint (2026-11-03): a private bounded planner
+preserves literal-space append_text boundaries over owned native source words.
+All 1,561 independent observations and token/source ceiling, ownership and
+captured-clock controls pass. The producer repeats byte-identically. Aggregate
+operation reservations and mixed citation/plain-text assembly remain open;
+this does not claim a complete tokenizer. See
+[plain-text evidence](history/evidence/2026-11-03-token-text.md).
+
 Latest worker evidence (2026-10-31): private process ownership now covers bounded
 schema frames, captured Clock timers, queue/active limits, forced stop,
 acknowledged cleanup and quarantine without permit reuse. Real-process tests
