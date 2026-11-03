@@ -1754,6 +1754,7 @@
         "packages/foundation/modeling/yaml/src/internal/rules/util.ts",
         "packages/foundation/modeling/yaml/src/internal/stringifier.ts",
         "packages/foundation/modeling/yaml/src/internal/token.ts",
+        "packages/tooling/library/repo-utils/src/JSDoc/JSDocSections.ts",
         "packages/tooling/library/repo-workspaces/package.json",
         "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
         "packages/tooling/library/repo-workspaces/src/WorkspacePackage.ts",
@@ -1811,7 +1812,6 @@
         "packages/tooling/tool/cli/src/internal/cli/Labs/RetiredPackages.ts",
         "packages/tooling/tool/cli/src/internal/cli/Labs/index.ts",
         "packages/tooling/tool/cli/src/internal/cli/OptionRecord.ts",
-        "packages/tooling/tool/cli/src/internal/jsdoc/JSDocSections.ts",
         "packages/tooling/tool/cli/src/internal/process/index.ts",
         "packages/tooling/tool/cli/src/internal/ratchet/RatchetDiff.ts",
         "packages/tooling/tool/cli/src/internal/ratchet/RatchetLifecycle.ts",
@@ -2046,6 +2046,7 @@
         "packages/foundation/modeling/yaml/src/internal/rules/util.ts",
         "packages/foundation/modeling/yaml/src/internal/stringifier.ts",
         "packages/foundation/modeling/yaml/src/internal/token.ts",
+        "packages/tooling/library/repo-utils/src/JSDoc/DoctestSource.ts",
         "packages/tooling/library/repo-workspaces/package.json",
         "packages/tooling/library/repo-workspaces/src/DependencyGraph.ts",
         "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
@@ -2068,8 +2069,7 @@
         "packages/tooling/tool/cli/src/internal/cli/Labs/LabManifest.ts",
         "packages/tooling/tool/cli/src/internal/cli/Labs/LabsWorkspace.ts",
         "packages/tooling/tool/cli/src/internal/cli/Labs/RetiredPackages.ts",
-        "packages/tooling/tool/cli/src/internal/cli/Labs/index.ts",
-        "packages/tooling/tool/cli/src/internal/jsdoc/DoctestSource.ts"
+        "packages/tooling/tool/cli/src/internal/cli/Labs/index.ts"
       ]
     },
     {
@@ -2447,6 +2447,7 @@
         "packages/foundation/modeling/yaml/src/internal/rules/util.ts",
         "packages/foundation/modeling/yaml/src/internal/stringifier.ts",
         "packages/foundation/modeling/yaml/src/internal/token.ts",
+        "packages/tooling/library/repo-utils/src/JSDoc/DoctestSource.ts",
         "packages/tooling/library/repo-workspaces/package.json",
         "packages/tooling/library/repo-workspaces/src/DependencyGraph.ts",
         "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
@@ -2461,7 +2462,6 @@
         "packages/tooling/tool/cli/src/commands/Lint/PackageScripts.command.ts",
         "packages/tooling/tool/cli/src/internal/RepoWorkspaces.ts",
         "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts",
-        "packages/tooling/tool/cli/src/internal/jsdoc/DoctestSource.ts",
         "packages/tooling/tool/cli/src/internal/package-scripts/PackageScripts.schemas.ts",
         "packages/tooling/tool/cli/src/internal/package-scripts/PackageScriptsPolicy.ts",
         "turbo.json"
@@ -3156,6 +3156,7 @@
         "packages/tooling/library/repo-tsconfig/src/TsconfigLoader.ts",
         "packages/tooling/library/repo-tsconfig/src/TsconfigValidator.ts",
         "packages/tooling/library/repo-tsconfig/src/internal/extendsTarget.ts",
+        "packages/tooling/library/repo-utils/src/JSDoc/JSDocSections.ts",
         "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
         "packages/tooling/library/repo-utils/src/schemas/JSDocCategories.ts",
         "packages/tooling/library/repo-utils/src/schemas/TypeScriptSourceExclusions.ts",
@@ -3261,7 +3262,6 @@
         "packages/tooling/tool/cli/src/internal/cli/OptionRecord.ts",
         "packages/tooling/tool/cli/src/internal/cli/Printer.ts",
         "packages/tooling/tool/cli/src/internal/cli/UnknownProbe.ts",
-        "packages/tooling/tool/cli/src/internal/jsdoc/JSDocSections.ts",
         "packages/tooling/tool/cli/src/internal/process/index.ts",
         "packages/tooling/tool/cli/src/internal/quality/SchemaFirstPolicyFinding.ts",
         "packages/tooling/tool/cli/src/internal/quality/TestTypecheckCoverage.ts",

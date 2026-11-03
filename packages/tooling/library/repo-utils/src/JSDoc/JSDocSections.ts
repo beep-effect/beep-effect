@@ -1,4 +1,11 @@
-import { $RepoCliId } from "@beep/identity/packages";
+/**
+ * Canonical JSDoc block extraction and body-section parsing for the documentation law.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+import { $RepoUtilsId } from "@beep/identity/packages";
 import { MarkdownDocument } from "@beep/markdown/MarkdownDocument";
 import { MarkdownFence } from "@beep/markdown/MarkdownFence";
 import { LiteralKit } from "@beep/schema";
@@ -13,7 +20,7 @@ import * as S from "effect/Schema";
 import { Node } from "ts-morph";
 import type { SourceFile } from "ts-morph";
 
-const $I = $RepoCliId.create("internal/jsdoc/JSDocSections");
+const $I = $RepoUtilsId.create("JSDoc/JSDocSections");
 
 /**
  * Models one raw JSDoc block and its exact source offsets.
@@ -21,7 +28,7 @@ const $I = $RepoCliId.create("internal/jsdoc/JSDocSections");
  * **Example** (Create a raw span)
  *
  * ```ts
- * import { RawJSDocSpan } from "@beep/repo-cli/test/Docgen"
+ * import { RawJSDocSpan } from "@beep/repo-utils/JSDoc/JSDocSections"
  *
  * const span = RawJSDocSpan.make({ start: 0, end: 11, text: "/** Doc. *" + "/" })
  * console.log(span.start) // 0
@@ -63,7 +70,7 @@ const fenceState = (line: string, openFence: string | undefined): readonly [stri
  * **Example** (Track an opening and closing fence)
  *
  * ```ts
- * import { fencedLineState } from "@beep/repo-cli/test/Docgen"
+ * import { fencedLineState } from "@beep/repo-utils/JSDoc/JSDocSections"
  *
  * const [open] = fencedLineState("```ts", undefined)
  * console.log(fencedLineState("```", open)[0]) // undefined
@@ -116,11 +123,13 @@ const lineStartBefore = (sourceText: string, index: number): number => {
  * **Example** (Extract one comment)
  *
  * ```ts
- * import { jsdocCommentsFromSource } from "@beep/repo-cli/test/Docgen"
+ * import { jsdocCommentsFromSource } from "@beep/repo-utils/JSDoc/JSDocSections"
  *
  * console.log(jsdocCommentsFromSource("/** Documentation. *" + "/\nexport const value = 1").length) // 1
  * ```
  *
+ * @param sourceText - Full TypeScript source text to scan.
+ * @returns Each line-leading comment from its opening delimiter through its closing delimiter, in source order; an unterminated block runs to the end of the text.
  * @category parsing
  * @since 0.0.0
  */
@@ -163,11 +172,13 @@ export const jsdocCommentsFromSource = (sourceText: string): ReadonlyArray<strin
  * **Example** (Locate a comment span)
  *
  * ```ts
- * import { rawJSDocSpans } from "@beep/repo-cli/test/Docgen"
+ * import { rawJSDocSpans } from "@beep/repo-utils/JSDoc/JSDocSections"
  *
  * console.log(rawJSDocSpans("/** Documentation. *" + "/")[0]?.start) // 0
  * ```
  *
+ * @param sourceText - Full TypeScript source text to scan.
+ * @returns Spans in source order whose `start` and `end` offsets slice `sourceText` back to each block's text.
  * @category parsing
  * @since 0.0.0
  */
@@ -249,7 +260,7 @@ const nodeNameReaders: ReadonlyArray<NodeNameReader> = [
  * **Example** (Resolve a variable statement name)
  *
  * ```ts
- * import { ownJSDocNodeName } from "@beep/repo-cli/test/Docgen"
+ * import { ownJSDocNodeName } from "@beep/repo-utils/JSDoc/JSDocSections"
  * import * as O from "effect/Option"
  * import { Project } from "ts-morph"
  *
@@ -258,6 +269,8 @@ const nodeNameReaders: ReadonlyArray<NodeNameReader> = [
  * // "value"
  * ```
  *
+ * @param node - Declaration, member, or statement node that can carry a JSDoc block.
+ * @returns The declared name, `"constructor"` for constructors, `"<default>"` for default and anonymous exports, or `None` for node kinds that do not own documentation.
  * @category getters
  * @since 0.0.0
  */
@@ -288,7 +301,7 @@ const recordBindingElementOwner = (node: Node, owners: MutableHashMap.MutableHas
  * **Example** (Index a documented declaration)
  *
  * ```ts
- * import { jsdocOwnersByStart } from "@beep/repo-cli/test/Docgen"
+ * import { jsdocOwnersByStart } from "@beep/repo-utils/JSDoc/JSDocSections"
  * import * as MutableHashMap from "effect/MutableHashMap";
  * import { Project } from "ts-morph"
  *
@@ -300,6 +313,8 @@ const recordBindingElementOwner = (node: Node, owners: MutableHashMap.MutableHas
  * console.log(MutableHashMap.size(jsdocOwnersByStart(source)) > 0) // true
  * ```
  *
+ * @param sourceFile - ts-morph source file whose descendants are walked.
+ * @returns A fresh map from each JSDoc block's start offset to the outermost node that owns it; destructured binding elements are included.
  * @category parsing
  * @since 0.0.0
  */
@@ -312,15 +327,62 @@ export const jsdocOwnersByStart = (sourceFile: SourceFile): MutableHashMap.Mutab
   return owners;
 };
 
+/**
+ * Schema for the four body-section headings the JSDoc documentation law recognizes.
+ *
+ * **Details**
+ *
+ * The parser only reads a bolded heading line as a section when its text is one of these names.
+ *
+ * **Example** (Accept only canonical section names)
+ *
+ * ```ts
+ * import { JSDocSectionName } from "@beep/repo-utils/JSDoc/JSDocSections"
+ * import * as S from "effect/Schema"
+ *
+ * const isSectionName = S.is(JSDocSectionName)
+ * console.log(isSectionName("Gotchas")) // true
+ * console.log(isSectionName("Remarks")) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export const JSDocSectionName = LiteralKit(["When to use", "Details", "Gotchas", "Example"]).pipe(
   $I.annoteSchema("JSDocSectionName", {
     description: "Canonical body-section names accepted by the JSDoc documentation law.",
   })
 );
 
+/**
+ * Union of the canonical body-section headings: `"When to use"`, `"Details"`, `"Gotchas"`, and `"Example"`.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type JSDocSectionName = typeof JSDocSectionName.Type;
 const isJSDocSectionName = S.is(JSDocSectionName);
 
+/**
+ * One canonical body section parsed from a JSDoc block, with its optional Example title and raw body lines.
+ *
+ * **Details**
+ *
+ * `lineOffset` is the index of the first body line inside the comment body after its framing is stripped,
+ * and `body` keeps fenced code lines verbatim.
+ *
+ * **Example** (Create a Gotchas section)
+ *
+ * ```ts
+ * import { JSDocSection } from "@beep/repo-utils/JSDoc/JSDocSections"
+ *
+ * const section = JSDocSection.make({ name: "Gotchas", lineOffset: 3, body: ["", "Runs twice on retry."] })
+ * console.log(section.name) // "Gotchas"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class JSDocSection extends S.Opaque<JSDocSection, { readonly brand: unique symbol }>()(
   S.Struct({
     name: JSDocSectionName,
@@ -334,6 +396,24 @@ export class JSDocSection extends S.Opaque<JSDocSection, { readonly brand: uniqu
   )
 ) {}
 
+/**
+ * Required relative order of the prose sections, used to flag a section that appears out of order.
+ *
+ * **Details**
+ *
+ * Example sections are left out because they repeat and always come after the prose sections.
+ *
+ * **Example** (Compare two section positions)
+ *
+ * ```ts
+ * import { jsDocSectionOrder } from "@beep/repo-utils/JSDoc/JSDocSections"
+ *
+ * console.log(jsDocSectionOrder.Gotchas < jsDocSectionOrder.Details) // false
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const jsDocSectionOrder: Record<Exclude<JSDocSectionName, "Example">, number> = {
   "When to use": 0,
   Details: 1,
@@ -397,7 +477,7 @@ const sectionHeadingPattern = /^\s*\*\*(When to use|Details|Gotchas|Example)\*\*
  * **Example** (Create parser options)
  *
  * ```ts
- * import { ParseJSDocSectionsOptions } from "@beep/repo-cli/test/Docgen"
+ * import { ParseJSDocSectionsOptions } from "@beep/repo-utils/JSDoc/JSDocSections"
  *
  * const options = ParseJSDocSectionsOptions.make({ commentText: "/** Documentation. *" + "/" })
  * console.log(options.commentText.startsWith("/**")) // true
@@ -420,7 +500,7 @@ export class ParseJSDocSectionsOptions extends S.Opaque<ParseJSDocSectionsOption
  * **Example** (Create an empty parse result)
  *
  * ```ts
- * import { ParseJSDocSectionsResult } from "@beep/repo-cli/test/Docgen"
+ * import { ParseJSDocSectionsResult } from "@beep/repo-utils/JSDoc/JSDocSections"
  *
  * const result = ParseJSDocSectionsResult.make({ bodyLines: [], sections: [] })
  * console.log(result.sections.length) // 0
@@ -446,7 +526,7 @@ export class ParseJSDocSectionsResult extends S.Opaque<ParseJSDocSectionsResult,
  * **Example** (Parse an Example section)
  *
  * ```ts
- * import { ParseJSDocSectionsOptions, parseJSDocSections } from "@beep/repo-cli/test/Docgen"
+ * import { ParseJSDocSectionsOptions, parseJSDocSections } from "@beep/repo-utils/JSDoc/JSDocSections"
  *
  * const parsed = parseJSDocSections(ParseJSDocSectionsOptions.make({
  *   commentText: "/** Lead.\n *\n * **Details**\n *\n * More context.\n *" + "/"
@@ -454,6 +534,7 @@ export class ParseJSDocSectionsResult extends S.Opaque<ParseJSDocSectionsResult,
  * console.log(parsed.sections[0]?.name) // "Details"
  * ```
  *
+ * @returns Body lines up to the first block tag, plus every canonical section found in them; headings quoted inside fenced code are ignored.
  * @category parsing
  * @since 0.0.0
  */
@@ -487,4 +568,21 @@ export const parseJSDocSections = ({ commentText }: ParseJSDocSectionsOptions): 
   return ParseJSDocSectionsResult.make({ bodyLines: A.take(bodyLines, tagIndex), sections });
 };
 
+/**
+ * Joins a parsed section's body lines into one newline-separated string for content checks.
+ *
+ * **Example** (Read a section body as text)
+ *
+ * ```ts
+ * import { JSDocSection, jsDocSectionBodyText } from "@beep/repo-utils/JSDoc/JSDocSections"
+ *
+ * const section = JSDocSection.make({ name: "Details", lineOffset: 1, body: ["First line.", "Second line."] })
+ * console.log(jsDocSectionBodyText(section)) // "First line.\nSecond line."
+ * ```
+ *
+ * @param section - Parsed section whose body lines are joined.
+ * @returns The body lines joined with `\n`, without trimming or fence removal.
+ * @category getters
+ * @since 0.0.0
+ */
 export const jsDocSectionBodyText = (section: JSDocSection): string => A.join(section.body, "\n");

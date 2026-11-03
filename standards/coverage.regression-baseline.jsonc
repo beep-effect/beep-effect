@@ -40868,30 +40868,6 @@
             "functions": 0
           }
         },
-        "packages/tooling/tool/cli/src/internal/jsdoc/DoctestSource.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/jsdoc/JSDocSections.ts": {
-          "lines": 95.8,
-          "statements": 96.12,
-          "branches": 69.52,
-          "functions": 97.61,
-          "uncovered": {
-            "lines": 6,
-            "statements": 6,
-            "branches": 32,
-            "functions": 1
-          }
-        },
         "packages/tooling/tool/cli/src/internal/package-scripts/PackageScripts.schemas.ts": {
           "lines": 100,
           "statements": 100,
@@ -42488,6 +42464,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/library/repo-utils/src/JSDoc/DoctestSource.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/library/repo-utils/src/JSDoc/JSDoc.ts": {
           "lines": 93.75,
           "statements": 93.75,
@@ -42498,6 +42486,18 @@
             "statements": 1,
             "branches": 0,
             "functions": 16
+          }
+        },
+        "packages/tooling/library/repo-utils/src/JSDoc/JSDocSections.ts": {
+          "lines": 95.8,
+          "statements": 96.12,
+          "branches": 69.52,
+          "functions": 97.61,
+          "uncovered": {
+            "lines": 6,
+            "statements": 6,
+            "branches": 32,
+            "functions": 1
           }
         },
         "packages/tooling/library/repo-utils/src/JSDoc/index.ts": {
