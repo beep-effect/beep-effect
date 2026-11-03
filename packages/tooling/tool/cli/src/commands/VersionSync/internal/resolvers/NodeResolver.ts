@@ -182,14 +182,15 @@ export const resolveNodeVersions: (
   return NodeVersionState.make({ nvmrc, workflowLocations: locations });
 });
 
-// These canonical coverage jobs preserve the legacy Node22/V8 measurement
-// engine. Heavy's matrix pin and Labs' conditional pin remain covered by the
-// templated-value rule below; ordinary jobs still follow .nvmrc. Keep this
-// exception tied to the actual workflow, job IDs, and reviewed runtime pin.
+// These canonical coverage jobs (the unit and Labs producers and their
+// comparison) preserve the legacy Node22/V8 measurement engine. Heavy's matrix
+// pin remains covered by the templated-value rule below; ordinary jobs still
+// follow .nvmrc. Keep this exception tied to the actual workflow, job IDs, and
+// reviewed runtime pin.
 const isCanonicalCoverageRuntimePin = S.is(
   S.Struct({
     file: S.tag(".github/workflows/check.yml"),
-    jobName: S.Literals(["test-unit-shard", "coverage-regression"]),
+    jobName: S.Literals(["test-unit-shard", "labs", "coverage-regression"]),
     currentValue: S.tag("22.23.4"),
   })
 );

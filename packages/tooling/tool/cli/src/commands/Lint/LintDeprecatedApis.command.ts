@@ -10,6 +10,7 @@ import { normalizePath } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -88,7 +89,9 @@ const runDeprecatedApiLint = Effect.fn("Lint.deprecatedApiWorker")(function* (
     path.join(root, OXLINT_DEPRECATED_APIS_CONFIG),
     "--disable-nested-config",
     `--threads=${plan.oxlintThreads}`,
-    ...(A.every(targets, isLabsWorkspaceDir) ? ["--no-error-on-unmatched-pattern"] : []),
+    // A labs package may match nothing, as its own per-package run always allowed; a changed-scope
+    // union keeps that allowance when it names one.
+    ...(A.some(targets, isLabsWorkspaceDir) ? ["--no-error-on-unmatched-pattern"] : []),
     ...targets,
   ];
   yield* Console.log(`[lint:deprecated-apis] oxlint ${A.join(args, " ")}`);
@@ -112,12 +115,29 @@ const runDeprecatedApiLint = Effect.fn("Lint.deprecatedApiWorker")(function* (
   yield* Console.log("[lint:deprecated-apis] OK: no deprecated vendor API usage found.");
 });
 
+// The changed-scope policy plan's union: every Turbo-selected package directory in one process.
+const runDeprecatedApiLintTargets = Effect.fn("Lint.deprecatedApiTargets")(function* (
+  targets: A.NonEmptyReadonlyArray<string>,
+  scoped: boolean
+) {
+  if (scoped) {
+    return yield* failWithReportedExit("lint deprecated-apis: --target cannot be combined with --package or --full.");
+  }
+  const root = yield* findRepoRoot();
+  const resolved = yield* Effect.forEach(targets, (entry) => resolveLintPackage(root, entry));
+  return yield* runDeprecatedApiLint(root, A.dedupe(resolved));
+});
+
 const runLintDeprecatedApis = Effect.fn("Lint.deprecatedApis")(function* (options: {
   readonly package: O.Option<string>;
   readonly full: boolean;
   readonly base: string;
+  readonly target: ReadonlyArray<string>;
 }) {
-  const { package: directory, full, base } = options;
+  const { package: directory, full, base, target } = options;
+  if (A.isReadonlyArrayNonEmpty(target)) {
+    return yield* runDeprecatedApiLintTargets(target, O.isSome(directory) || full);
+  }
   if (O.isNone(directory)) {
     const ci = yield* isCi;
     const sweeps = yield* readLintPolicySweeps(yield* findRepoRoot());
@@ -144,6 +164,16 @@ const runLintDeprecatedApis = Effect.fn("Lint.deprecatedApis")(function* (option
  */
 export const lintDeprecatedApisCommand = Command.make(
   "deprecated-apis",
-  { package: lintPackageFlag, full: lintFullFlag, base: lintBaseFlag },
+  {
+    package: lintPackageFlag,
+    full: lintFullFlag,
+    base: lintBaseFlag,
+    // The changed-scope policy plan passes every package directory Turbo selected, so one
+    // type-aware oxlint process checks them instead of one repo-cli boot per package.
+    target: Flag.String("target").pipe(
+      Flag.atLeast(0),
+      Flag.withDescription("Lint these package directories in one oxlint process; repeat for each directory")
+    ),
+  },
   (options) => provideQualityConcurrency(runLintDeprecatedApis(options))
 ).pipe(Command.withDescription("Check TypeScript sources for deprecated third-party API usage"));
