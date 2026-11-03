@@ -3468,10 +3468,11 @@ const rootRepoLintPolicySteps = (
 ): ReadonlyArray<QualityTaskStep> =>
   A.flatten(rootRepoLintPolicyStages(repoRoot, base, sweeps, hosted, docsCacheKey, plan, options));
 
-// Run each stage in order, its steps abreast. Hosted runs collect every failure;
-// local runs stop after a red cheap phase.
-const stopsAfterCheapRed = (step: QualityTaskStep, full: boolean, result: QualityTaskStepOutput): boolean =>
-  !full && step.label === "lint:policy:cheap" && result.exitCode !== 0;
+// Run each stage in order, its steps abreast. Full-scope and hosted runs collect every failure
+// (a hosted pull request runs changed-scope and must still report every phase); only a local
+// changed-scope run stops after a red cheap phase.
+const stopsAfterCheapRed = (step: QualityTaskStep, collectAll: boolean, result: QualityTaskStepOutput): boolean =>
+  !collectAll && step.label === "lint:policy:cheap" && result.exitCode !== 0;
 
 // Every command line is announced before the stage starts; outputs render in plan order once the
 // whole stage finishes, so abreast steps never interleave their blocks.
@@ -3489,22 +3490,22 @@ const runPolicyStage = Effect.fn("QualityTasks.runPolicyStage")(function* (stage
 
 const runPolicyStages = Effect.fn("QualityTasks.runPolicyStages")(function* (
   stages: ReadonlyArray<LintPolicyStage>,
-  full: boolean
+  collectAll: boolean
 ) {
   const results = A.empty<QualityTaskStepOutput>();
   yield* Console.log(`[beep-cli] lint:policy: running ${A.length(A.flatten(stages))} ordered step(s)`);
   for (const stage of stages) {
     const stageResults = yield* runPolicyStage(stage);
     A.appendAllInPlace(results, stageResults);
-    if (A.some(A.zip(stage, stageResults), ([step, result]) => stopsAfterCheapRed(step, full, result))) {
+    if (A.some(A.zip(stage, stageResults), ([step, result]) => stopsAfterCheapRed(step, collectAll, result))) {
       yield* failQualityTaskGroup("lint:policy", failedStepOutputs(results));
     }
   }
   yield* failQualityTaskGroup("lint:policy", failedStepOutputs(results));
 });
 
-const runPolicySteps = (steps: ReadonlyArray<QualityTaskStep>, full: boolean) =>
-  runPolicyStages(A.map(steps, A.of), full);
+const runPolicySteps = (steps: ReadonlyArray<QualityTaskStep>, collectAll: boolean) =>
+  runPolicyStages(A.map(steps, A.of), collectAll);
 
 /**
  * Build the repo-wide root lint policy subprocess steps.
@@ -3721,7 +3722,7 @@ const runRootLintPolicyTaskInternal = Effect.fn("QualityTasks.runRootLintPolicyT
       docsConfig,
       targets: O.getOrUndefined(targets),
     }),
-    runFull
+    runFull || isCiSync()
   );
 });
 

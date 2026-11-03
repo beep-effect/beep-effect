@@ -5069,6 +5069,53 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       )
     );
 
+    // A hosted pull request runs changed-scope; it must still report every phase, not stop after cheap.
+    it.effect("collects every phase of a hosted changed-scope run after a red cheap phase", () =>
+      Effect.andThen(
+        temporaryRepository,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const root = process.cwd();
+          yield* fs.makeDirectory(`${root}/standards`, { recursive: true });
+          yield* fs.writeFileString(
+            `${root}/standards/lint-policy.sweeps.jsonc`,
+            '{"schemaVersion":"lint-policy-sweeps/v1","deprecatedApis":"oxlint"}'
+          );
+          yield* fs.writeFileString(
+            `${root}/standards/policy-tools.fingerprint.json`,
+            '{"schemaVersion":"policy-tools-fingerprint/v2","shared":[],"sharedTasks":[],"check":[],"entries":[]}'
+          );
+          yield* withEnvVarEffect(
+            "CI",
+            "true",
+            withEnvVarEffect(
+              "TURBO_CACHE",
+              "local:rw",
+              Effect.gen(function* () {
+                const plan = rootLintPolicyStepsForTesting(root, undefined, "review-base", undefined, true);
+                const cheap = O.getOrThrow(A.findFirst(plan, (step) => step.label === "lint:policy:cheap"));
+                const spawned = A.empty<string>();
+                const exit = yield* runRootLintPolicyTask(false, "review-base").pipe(
+                  Effect.provideServiceEffect(Git, Git.make),
+                  Effect.provideService(
+                    ChildProcessSpawner.ChildProcessSpawner,
+                    cheapGatesSpawner(spawned, [policyStepCommand(cheap)], policyCommandKey)
+                  ),
+                  Effect.exit
+                );
+                expectPolicyGroupFailure(exit, "lint:policy:cheap");
+                expectPolicySpawns(spawned, plan, false);
+              })
+            )
+          );
+        })
+      ).pipe(
+        Effect.provideServiceEffect(Console.Console, TestConsole.make),
+        Effect.provideServiceEffect(Console.Console, TestConsole.make),
+        TestClock.withLive
+      )
+    );
+
     it("applies Biome lint fixes in the changed-file lint fix fast path", () => {
       const step = lintFixChangedStepForTesting("/repo", ["packages/example/src/index.ts"]);
 
