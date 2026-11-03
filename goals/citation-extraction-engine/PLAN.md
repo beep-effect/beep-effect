@@ -125,11 +125,16 @@ Latest upstream-reuse checkpoint (2026-11-03): native admission now commits
 closed/quarantine state, both capacity counters and exact lease flags through
 installed Effect 4.1.1 transactions. Transactional retry replaces the lock and
 generation-notification loop while retaining one queue deadline and retirement
-authority after owner closure. Seventeen admission tests and an injected-owner
+authority after owner closure. Twenty admission tests and an injected-owner
 real HTML smoke pass; Fallow remains at zero introduced findings. See
 [transactional native admission](history/evidence/2026-11-03-transactional-native-admission.md).
-Shared Worker/RPC transport, native regex execution and exhaustive parity remain
-required work.
+The actual HTML parent/child now use a shared typed Clean RPC with Effect's
+already-decoded channel constructors, preserving the strict bounded wire codec.
+Seventeen worker/protocol/RPC controls and the real HTML smoke pass, including
+an early-reply/stalled-write negative control. See
+[HTML RPC integration](history/evidence/2026-11-03-html-rpc-integration.md).
+A reusable shared regex/HTML backend, native regex execution and exhaustive
+parity remain required work.
 
 Latest worker evidence (2026-10-31): private process ownership now covers bounded
 schema frames, captured Clock timers, queue/active limits, forced stop,

@@ -1603,7 +1603,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 77,
+      "line": 79,
       "owner": "@beep/law-practice-server",
       "reason": "Checks all eight source list/pair identity traces and final grouping state. Random fixture generation cannot establish the recorded alias/identity relationships independently of the implementation. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
     },

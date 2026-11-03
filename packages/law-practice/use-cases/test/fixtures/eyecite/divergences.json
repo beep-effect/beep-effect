@@ -501,7 +501,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlWorkerProgram.ts",
-          "sha256": "dab8506acdac32edcceb08f12366f12f32516b987d03d2d59a9dff9983e6cb68"
+          "sha256": "e5b00ccaf144f05efe145f3e12f51205246b66235ce27fc1fac5dfb1a2fb34ff"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlWorker.entry.ts",
@@ -509,7 +509,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlWorker.ts",
-          "sha256": "4f86df1b9db27bb0a208da9e0cd77e845beed64e5ae70be1639335ddc9435ead"
+          "sha256": "f924ce584f527bbf0c85185539cea2ac3b0e3e95ca88636c94b0476a5dae7b57"
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlWorkerProtocol.test.ts",

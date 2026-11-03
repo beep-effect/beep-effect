@@ -27,7 +27,6 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Semaphore from "effect/Semaphore";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { CitationCleanerProduced } from "./CleanerPipeline.ts";
 import { CitationCleanerTextAllocation, citationCleanerHtmlTextOutput } from "./CleanerTextIdentity.ts";
@@ -35,13 +34,10 @@ import { CitationHtmlInputFailure, makeCitationHtmlInput } from "./HtmlInput.ts"
 import {
   CitationHtmlWorkerFailure,
   CitationHtmlWorkerJob,
-  CitationHtmlWorkerReply,
-  decodeCitationHtmlReply,
-  encodeCitationHtmlJob,
   preflightCitationHtmlControlFrames,
   preflightCitationHtmlJob,
-  readCitationHtmlFrames,
 } from "./HtmlWorkerProtocol.ts";
+import { prepareCitationHtmlRpc } from "./HtmlWorkerRpc.ts";
 import { CitationNativeProcessAdmission, makeCitationNativeProcessAdmission } from "./NativeAdmission.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import type { ChildProcessHandle } from "effect/process/ChildProcessSpawner";
@@ -293,7 +289,7 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
             const prepared = yield* prepare(input, (layout) =>
               preflightCitationHtmlJob(layout, outputUtf16, limits.processMessageBytes).pipe(Effect.asVoid)
             );
-            const frame = yield* encodeCitationHtmlJob(
+            const call = yield* prepareCitationHtmlRpc(
               CitationHtmlWorkerJob.make({
                 encoding: prepared.encoding,
                 bytes: prepared.bytes,
@@ -387,32 +383,7 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
                 })
               )
               .pipe(Effect.uninterruptible);
-            let step = 0;
-            let reply = O.none<CitationHtmlWorkerReply>();
-            const receive = readCitationHtmlFrames(
-              resource.stdout,
-              limits.processMessageBytes,
-              3,
-              Effect.fnUntraced(function* (bytes) {
-                const message = yield* decodeCitationHtmlReply(bytes);
-                if (
-                  (step === 0 && !CitationHtmlWorkerReply.guards.Ready(message)) ||
-                  (step === 1 && !CitationHtmlWorkerReply.guards.Started(message)) ||
-                  (step === 2 && !CitationHtmlWorkerReply.isAnyOf(["Success", "Failure"])(message))
-                )
-                  return yield* failure("invalid-frame");
-                if (step === 2) reply = O.some(message);
-                step++;
-              })
-            );
-            const send = Stream.run(Stream.make(frame), resource.stdin).pipe(
-              Effect.mapError(() => failure("channel-failed"))
-            );
-            yield* Effect.all([receive, send], { concurrency: 2, discard: true });
-            const message = yield* Effect.fromOption(reply).pipe(Effect.mapError(() => failure("invalid-frame")));
-            if (CitationHtmlWorkerReply.guards.Success(message)) return message.text;
-            if (CitationHtmlWorkerReply.guards.Failure(message)) return yield* message.failure;
-            return yield* failure("invalid-frame");
+            return yield* call(resource);
           });
           const outcome = yield* Effect.exit(
             restore(
