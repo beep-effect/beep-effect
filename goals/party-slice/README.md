@@ -31,13 +31,14 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3 Yeet: PR to mergeable — in progress (2026-11-03). The package implementation, law-practice
-adapter and rename, migrated scripts and scratch mirror removal are complete.
-Package verification, synthetic workflow checks and boundary scans passed before
-the first publish attempt. Yeet held that attempt on Fallow, schema-first and
-Effect Vitest findings; remediation and its verification are in progress.
-Repository-wide documentation verification passed. Publication, exact-head hosted
-readiness, merge and closeout remain to be completed. The initiative stays active.
+P3 Yeet: PR to mergeable — in progress (2026-11-03).
+[Draft PR #2658](https://github.com/beep-effect/beep-effect/pull/2658) contains the
+implementation and verified publish-gate remediation. All local publish gates
+and the clean-install preflight passed at `a7174da5f5`. The automatic detached
+monitor could not start in this session, so readiness is being followed through
+an attached workflow. The proposed closeout and reflection are included while
+initiative status remains active. Exact-head final verification, hosted readiness,
+review closeout, merge and completion refresh remain required.
 
 ## Latest Evidence
 

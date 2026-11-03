@@ -116,3 +116,19 @@ Root oxlint passes. Schema catalog regeneration updates the party-domain shard
 for IdentityView; no unrelated shard changed. All remaining gate proof is
 provided by the second publish's committed-head cheap-gates run, not inferred
 from these scoped checks.
+
+### Published draft #2658
+
+Commit `a7174da5f5` passed every cheap gate, including regenerated and committed
+JSDoc ratchets, schema catalog, Fallow health/audit/dead-code, schema-first,
+Effect Vitest, cache policy, root oxlint, repository registration and goal checks.
+The clean-head frozen install passed and the branch was pushed. Yeet created
+[PR #2658](https://github.com/beep-effect/beep-effect/pull/2658) as a draft with
+`ready-for-heavy`.
+
+The publish command exited 1 only after push/PR creation because detached
+monitor submission requires an active systemd user manager, which this session
+lacks. This is a monitor-launch failure, not a gate or push failure. The workflow
+continues attached; no authentication/service restart or duplicate publish is
+needed for that failure. The PR-specific proposedCloseout is now prepared with
+initiative status active. Hosted/final-head readiness and merge are not yet proven.
