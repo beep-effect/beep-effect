@@ -1,7 +1,7 @@
 # Retained final qualification
 
-[PR2612](https://github.com/beep-effect/beep-effect/pull/2612) proposes a new
-completed-retained delivery checkpoint. The base lifecycle remains active until
+[PR2612](https://github.com/beep-effect/beep-effect/pull/2612) was merged without
+establishing the proposed completed-retained delivery checkpoint. The base lifecycle remains active until
 the canonical accepted-head receipt verifies the declared completion evidence.
 Review readiness alone does not establish completion or real-harness enrollment.
 The final delivery role is selected by the [manifest](../ops/manifest.json).
@@ -197,3 +197,27 @@ The historical forwarder service and timer remain masked and inactive. Their
 recovery hold, historical data and the original dirty exploration are preserved.
 All seven real-harness populations remain Unknown. No production enrollment,
 archive reingestion, project deletion or hold release is implied.
+
+## PR2612: preserve the unsatisfied completion result
+
+The [canonical observation](../ops/history/pr2612-completion-unsatisfied-20261103.json)
+records **unsatisfied** at accepted head
+`e7ff08f2dcb68045b2219dd0318de5ac25cb307f`, merged at
+2026-11-03T02:55:46Z as `c40d02d10834ed2d9bd5cab107deff8c10670fbb`.
+GitHub records `kriegcloud` for the ready transition and merge; the initiating
+person or chat is unknown. The existing owner reservation was not a mechanical
+barrier to another caller using that account.
+
+All fifteen merge-time required contexts passed and the inventory is complete.
+Optional Coverage Regression failed; the canonical review-window sub-claim is
+unsatisfied. The retained canonical verdict names an older head and has no
+positive readiness field. The observer finalized successfully after merge,
+which proves observation of the merged state and supplies no pre-merge proof.
+The operative lifecycle remains active and closeout remains unverified.
+
+A successor declaration must retain this result, name one actual final PR and
+its own canonical verdict, and satisfy the original strict acceptance gates.
+Later checks cannot repair the missing historical readiness for PR2612. Draft
+state and a body reservation are coordination controls; shared unrestricted
+GitHub credentials can bypass them. Do not claim exclusive technical ownership
+without an enforced credential or server-side release boundary.
