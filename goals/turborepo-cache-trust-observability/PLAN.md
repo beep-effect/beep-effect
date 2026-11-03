@@ -1424,3 +1424,19 @@ operator's no-local-verify/publish instruction. After acceptance, refresh source
 control bindings and dispatch one new bounded preparation; never reuse or
 relabel the failed intent. Independent artifact inspection, protected execution,
 signed trials and all nine whole-goal criteria remain open.
+
+
+### Pilot directory and root mutation guard, 2026-11-03
+
+Source inspection found that the read-only snapshot omitted directories and its
+package root. A mode-only directory change or an added empty directory could
+therefore leave the comparison unchanged. The internal snapshot now includes
+those entries and complete regular-file modes, and enforces its entry limit
+for every visited child. Nine new orchestration fault cases exercise mode-only
+changes, empty directories, the bound, refusal without a receipt and cleanup.
+
+The isolated implementation is prepared for hosted CI; no local quality suite
+or pilot execution is used as proof. Current source-bound native permission
+counterexamples motivate the review but do not prove this supervisory change.
+Fresh hosted test/check/review results remain required. All whole-goal criteria
+and signed production, epoch, role and representative-window work remain open.
