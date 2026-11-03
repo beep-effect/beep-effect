@@ -131,6 +131,12 @@ def main():
         "artifactDescriptorIndices": {artifact: sorted(binding_indices[key] for key in keys)
                                       for artifact, keys in sorted(artifact_bindings.items())},
         "instanceBindingVectorSha256": sha(json.dumps(binding_vector, sort_keys=True, separators=(",", ":")).encode()),
+        "qualificationShards": [
+            {"index": index, "start": index * len(entries) // 16, "end": (index + 1) * len(entries) // 16,
+             "descriptorVectorSha256": sha(json.dumps(descriptor_vector[index * len(entries) // 16:(index + 1) * len(entries) // 16], sort_keys=True, separators=(",", ":")).encode()),
+             "bindingVectorSha256": sha(json.dumps(binding_vector[index * len(entries) // 16:(index + 1) * len(entries) // 16], sort_keys=True, separators=(",", ":")).encode())}
+            for index in range(16)
+        ],
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     # Keep each generated binding on one reviewable line rather than expanding

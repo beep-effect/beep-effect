@@ -161,6 +161,14 @@ hosted proof. See [source descriptors](history/evidence/2026-11-03-regex-source-
 Operator direction requires Effect-provided implementations wherever suitable;
 PR #2637 owns the 4.1.2 upgrade. Source binding does not approve family execution.
 
+Latest hosted repair (2026-11-03): Integration on `21465d67b9` reached the regex
+subject's 90-second watchdog. Partition the expanded compiler survey into sixteen
+source-hash-bound ranges plus its baseline, retaining every aggregate assertion,
+the per-child watchdog and independent exit checks. Effect.forEach bounds hosted
+qualification concurrency at two. See
+[qualification partition](history/evidence/2026-11-03-regex-hosted-qualification-partition.md).
+The new full native run remains pending; no engine safety limit changed.
+
 Latest worker evidence (2026-10-31): private process ownership now covers bounded
 schema frames, captured Clock timers, queue/active limits, forced stop,
 acknowledged cleanup and quarantine without permit reuse. Real-process tests

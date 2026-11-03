@@ -13350,8 +13350,122 @@
   },
   "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
   "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
-  "producerSha256": "689a008decaf43461a4f210d2d0bd5170b0ae3b8b4c5e4d367de9de1ec24eef8",
+  "producerSha256": "98f3750cdfa4e6fbf5b55c46fd93e19b248dfe55c3bd4b06079fca742bb21d50",
   "pythonVersion": "3.11.15",
+  "qualificationShards": [
+    {
+      "bindingVectorSha256": "0cab4e3cccf9df6e9e5b964aa731a76031019e6e37f729c7f5cce5a8778f97b5",
+      "descriptorVectorSha256": "66c603bf17c8c0ead48c3369df90b9f58bb8d36ac41f81b140c53dbf663e189e",
+      "end": 850,
+      "index": 0,
+      "start": 0
+    },
+    {
+      "bindingVectorSha256": "724ee4b3b299dc924c7f3fc28db74c5480efe29ee987f07d6fbc1fa83f7aab4a",
+      "descriptorVectorSha256": "d7ae132f5e896130fd4bbe86bd3dd26fdb614460f4bb9d05d532b30bc21c050a",
+      "end": 1701,
+      "index": 1,
+      "start": 850
+    },
+    {
+      "bindingVectorSha256": "f42022363ba14b89275ddaed8318021bbaf493b2622ab16b92b05a5ae416e713",
+      "descriptorVectorSha256": "010c2d4a0e31de01452acd2c4e9e7b5752f9fb241062f34fed1eeb0690ca2b10",
+      "end": 2551,
+      "index": 2,
+      "start": 1701
+    },
+    {
+      "bindingVectorSha256": "a69e6c686c564d8a220d93c9f8d269e7485be645aaa483623012edf84dbf56b8",
+      "descriptorVectorSha256": "353df4f73ab86e79de7658501c68b56dfedfcc3c616da39df8424d8c28da4fd5",
+      "end": 3402,
+      "index": 3,
+      "start": 2551
+    },
+    {
+      "bindingVectorSha256": "d5dbb79a112a7d965e2b8529977788d162115ffcb320853c4262693838e09e28",
+      "descriptorVectorSha256": "2e25b2df8366de2209c0309bf0c024c6a4b558cdd2390d2c4c59cede0be163bd",
+      "end": 4253,
+      "index": 4,
+      "start": 3402
+    },
+    {
+      "bindingVectorSha256": "ddda043722130dde262c64ea678b3d7da12f04c89a9641fba8c92f887d07b00d",
+      "descriptorVectorSha256": "db09c243d9c60413fe921f20c4ca441b1164a4c63567d208df84536bfebdb571",
+      "end": 5103,
+      "index": 5,
+      "start": 4253
+    },
+    {
+      "bindingVectorSha256": "89ca1c2b30862c79eb1194aa375beaeda382ab8ab10f376a77d248bd398db241",
+      "descriptorVectorSha256": "1b9af1025654bfae896e18a16214edd7eccfb3c25bd839f68afb1b6ae213f647",
+      "end": 5954,
+      "index": 6,
+      "start": 5103
+    },
+    {
+      "bindingVectorSha256": "be86be386a16646c138f6238a8c129e42e02d82d4904a602177408bc12262caa",
+      "descriptorVectorSha256": "93f5ec93ade63906b0e73907acecef48cde3e2916795da3863ab6b47aeeafe2d",
+      "end": 6805,
+      "index": 7,
+      "start": 5954
+    },
+    {
+      "bindingVectorSha256": "c9dc4405ef246946ca539ba26a0def9fb36b3bcabb51232d2a606dd4aedd0417",
+      "descriptorVectorSha256": "2416a354316a925ab6095c9e20e09eadbd8f6a74009b74b8d6231f177229d63f",
+      "end": 7655,
+      "index": 8,
+      "start": 6805
+    },
+    {
+      "bindingVectorSha256": "f370a61b3918532f88600d4abd9d4e030e057e915b3db45ec5ef8cb8153bd2e2",
+      "descriptorVectorSha256": "3cdc26a819d3d0e1163ff19dbb997dbd2bae8ce4e3dc8570219cef323efd60da",
+      "end": 8506,
+      "index": 9,
+      "start": 7655
+    },
+    {
+      "bindingVectorSha256": "82aa3c3b3b7e79acc869c33a85a8e385aa5bd288387b269e5ac6d66aa39f9368",
+      "descriptorVectorSha256": "1db0cb680d72fc875c0ac6caf1713114398fd4cbc009244b5b53d767751c8e88",
+      "end": 9356,
+      "index": 10,
+      "start": 8506
+    },
+    {
+      "bindingVectorSha256": "bd5852cebfb8793a75df415b848da5421bd109d9794fd274d437964d085ea1c0",
+      "descriptorVectorSha256": "6e3040101fb062cc7fac4342df082647162fe61e3dccb55ecec42a6e6a507753",
+      "end": 10207,
+      "index": 11,
+      "start": 9356
+    },
+    {
+      "bindingVectorSha256": "9a65d48200006f126695d7c94888af87ec81f211dfac133b1c31771d7fff7544",
+      "descriptorVectorSha256": "e1ab52e56eef67152666b34678f3d53466b0679a49425027671497009e8b4e02",
+      "end": 11058,
+      "index": 12,
+      "start": 10207
+    },
+    {
+      "bindingVectorSha256": "b67842b2abf33680cc12a8a5311522ba710ccd24a9b4cb2dc597727cf5c79487",
+      "descriptorVectorSha256": "7b8c1762e547fb2a9ee1e609748221e391ea530bb9311973b3992c63132a6a92",
+      "end": 11908,
+      "index": 13,
+      "start": 11058
+    },
+    {
+      "bindingVectorSha256": "204333153efb85b69fb4612ce0372cbdf99866092c4b3aa96375fe64c3efd812",
+      "descriptorVectorSha256": "6832d475bb99423143bc4291df9cb13fa3085ee81a581d2d667ee7b1f9e8a9d6",
+      "end": 12759,
+      "index": 14,
+      "start": 11908
+    },
+    {
+      "bindingVectorSha256": "02902e6ee5a5aeb83e2ca212a47ec4438b63c9efcb13a4cd1714fa40b4655200",
+      "descriptorVectorSha256": "ed6abe33f640719b5988ad7852df3b562cef3ffa5a96cadd8cd8009d1edef02d",
+      "end": 13610,
+      "index": 15,
+      "start": 12759
+    }
+  ],
   "schemaVersion": "citation-regex-program-facts/v1",
   "scope": "Complete parsed feature inventory; not target matching or family safety proof.",
   "sourceReaderSha256": "041e6c6e9eadb005da195f3982b9a6e2e87853108e03ca75e5c80bf51e706ddf",

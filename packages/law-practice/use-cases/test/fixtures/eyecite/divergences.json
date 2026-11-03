@@ -80,11 +80,11 @@
         },
         {
           "path": "goals/citation-extraction-engine/ops/probe-regex-program.py",
-          "sha256": "689a008decaf43461a4f210d2d0bd5170b0ae3b8b4c5e4d367de9de1ec24eef8"
+          "sha256": "98f3750cdfa4e6fbf5b55c46fd93e19b248dfe55c3bd4b06079fca742bb21d50"
         },
         {
           "path": "packages/law-practice/use-cases/test/fixtures/eyecite/regex-program-facts.json",
-          "sha256": "e97ff71682bd3e377978ad23ec1b6e21936ca5534a75e38a9c1891f9c736590a"
+          "sha256": "5b93d0172fc9a24f364a89d2ccaab193506b68c10458f962857badb630d32d52"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-02-regex-alphabet.md",

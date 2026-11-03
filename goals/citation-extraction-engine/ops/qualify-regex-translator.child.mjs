@@ -14,8 +14,17 @@ import { makeCitationRegexProgram } from "../../../packages/law-practice/server/
 import { makeCitationRegexResult } from "../../../packages/law-practice/server/src/internal/Citation/RegexResult.ts";
 import { makeCitationRegexTranslator } from "../../../packages/law-practice/server/src/internal/Citation/RegexTranslator.ts";
 
-const translateOnly = process.argv.length === 3 && process.argv[2] === "--translate-only";
-assert.ok(process.argv.length === 2 || translateOnly);
+const option = process.argv[2];
+const translateOnly = option === "--translate-only";
+const baselineOnly = option === "--baseline";
+const programShard = option?.startsWith("--program-shard=")
+  ? Number(option.slice("--program-shard=".length))
+  : undefined;
+assert.ok(
+  process.argv.length === 2 ||
+    (process.argv.length === 3 &&
+      (translateOnly || baselineOnly || (Number.isInteger(programShard) && programShard >= 0 && programShard < 16)))
+);
 
 const fixture = (name, digest) => {
   const raw = readFileSync(
@@ -31,7 +40,7 @@ assert.equal(facts.oracleCommit, operations.commit);
 const inventory = fixture("regex-inventory.json", "b0e75c4cd10ee153aeafe4f1b40750415c7f32ca0fabaaadc740b9f69f35fa83");
 const programFacts = fixture(
   "regex-program-facts.json",
-  "e97ff71682bd3e377978ad23ec1b6e21936ca5534a75e38a9c1891f9c736590a"
+  "5b93d0172fc9a24f364a89d2ccaab193506b68c10458f962857badb630d32d52"
 );
 let phase = "setup";
 let instance = 0;
@@ -43,18 +52,20 @@ await Effect.runPromise(
     let codePointChecks = 0;
     let captureMatches = 0;
     phase = "compile";
-    for (const [identity, artifact] of Object.entries(operations.artifacts)) {
-      if (artifact.kind !== "tokenizer-extractors") continue;
-      assert.equal(createHash("sha256").update(artifact.payload).digest("hex"), identity);
-      for (const entry of JSON.parse(artifact.payload)) {
-        const translated = yield* translator.translate({ pattern: entry.fields.regex, flags: entry.fields.flags });
-        // Compile only. Family-specific matching/timing qualification is separate.
-        if (!translateOnly) new RegExp(translated.pattern, translated.flags);
-        instances++;
-        maxUtf16 = Math.max(maxUtf16, translated.pattern.length);
+    if (programShard === undefined) {
+      for (const [identity, artifact] of Object.entries(operations.artifacts)) {
+        if (artifact.kind !== "tokenizer-extractors") continue;
+        assert.equal(createHash("sha256").update(artifact.payload).digest("hex"), identity);
+        for (const entry of JSON.parse(artifact.payload)) {
+          const translated = yield* translator.translate({ pattern: entry.fields.regex, flags: entry.fields.flags });
+          // Compile only. Family-specific matching/timing qualification is separate.
+          if (!translateOnly) new RegExp(translated.pattern, translated.flags);
+          instances++;
+          maxUtf16 = Math.max(maxUtf16, translated.pattern.length);
+        }
       }
+      assert.equal(instances, 13610);
     }
-    assert.equal(instances, 13610);
     if (translateOnly) {
       process.stdout.write(`${JSON.stringify({ instances, maxUtf16, translateOnly })}\n`);
       return;
@@ -68,57 +79,75 @@ await Effect.runPromise(
     const descriptorVector = [];
     let programInstances = 0;
     let programMaxUtf16 = 0;
-    const fieldsById = new Map();
-    const registries = new Map();
-    for (const [artifact, indices] of Object.entries(programFacts.artifactDescriptorIndices)) {
-      assert.equal(indices.length, 6805);
-      registries.set(
-        artifact,
-        yield* makeCitationRegexDescriptorRegistry(
-          limits,
-          indices.map((index) => programFacts.descriptors[index])
-        )
+    if (!baselineOnly) {
+      const shard = programShard === undefined ? undefined : programFacts.qualificationShards[programShard];
+      if (programShard !== undefined) {
+        assert.ok(shard);
+        assert.equal(programFacts.qualificationShards.length, 16);
+        assert.equal(shard.index, programShard);
+        assert.equal(shard.start, Math.floor((programShard * 13610) / 16));
+        assert.equal(shard.end, Math.floor(((programShard + 1) * 13610) / 16));
+      }
+      const rows = shard ? inventory.extractorInstances.slice(shard.start, shard.end) : inventory.extractorInstances;
+      const fieldsById = new Map();
+      const registries = new Map();
+      for (const [artifact, indices] of Object.entries(programFacts.artifactDescriptorIndices)) {
+        if (!rows.some((row) => row.artifactSha256 === artifact)) continue;
+        assert.equal(indices.length, 6805);
+        registries.set(
+          artifact,
+          yield* makeCitationRegexDescriptorRegistry(
+            limits,
+            indices.map((index) => programFacts.descriptors[index])
+          )
+        );
+      }
+      const bindingVector = [];
+      for (const [identity, artifact] of Object.entries(operations.artifacts)) {
+        if (artifact.kind !== "tokenizer-extractors") continue;
+        JSON.parse(artifact.payload).forEach((entry, index) => fieldsById.set(`${identity}::${index}`, entry.fields));
+      }
+      for (const row of rows) {
+        instance = programInstances;
+        const fields = fieldsById.get(row.id);
+        assert.ok(fields);
+        const native = (yield* patternInput.prepareText(fields.regex, () => Effect.void)).value.storage;
+        const registry = registries.get(row.artifactSha256);
+        assert.ok(registry);
+        const bound = yield* registry.bind(native, fields.flags);
+        const program = bound.program;
+        bindingVector.push([row.id, bound.descriptor.patternSha256, fields.flags]);
+        assert.ok(program.minimumWidthFloor > 0);
+        assert.equal(program.repeatedCaptures, false);
+        assert.equal(program.nullableMultiRepeat, false);
+        descriptorVector.push([
+          row.id,
+          program.groups,
+          Object.entries(program.names).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
+          program.minimumWidthFloor,
+        ]);
+        const encoded = yield* programAlphabet.prepare(program.sets, { width: 1, bytes: new Uint8Array(0) });
+        const pattern = yield* compiler.render(program, encoded);
+        new RegExp(pattern, encoded.flags);
+        programInstances++;
+        programMaxUtf16 = Math.max(programMaxUtf16, pattern.length);
+      }
+      assert.equal(programInstances, shard ? shard.end - shard.start : 13610);
+      assert.equal(
+        createHash("sha256").update(JSON.stringify(bindingVector)).digest("hex"),
+        shard ? shard.bindingVectorSha256 : programFacts.instanceBindingVectorSha256
+      );
+      assert.equal(
+        createHash("sha256").update(JSON.stringify(descriptorVector)).digest("hex"),
+        shard ? shard.descriptorVectorSha256 : programFacts.instanceDescriptorVectorSha256
       );
     }
-    const bindingVector = [];
-    for (const [identity, artifact] of Object.entries(operations.artifacts)) {
-      if (artifact.kind !== "tokenizer-extractors") continue;
-      JSON.parse(artifact.payload).forEach((entry, index) => fieldsById.set(`${identity}::${index}`, entry.fields));
+    if (programShard !== undefined) {
+      process.stdout.write(
+        `${JSON.stringify({ instances: 0, maxUtf16: 0, codePointChecks: 0, alphabetPointChecks: 0, alphabetCaptureMatches: 0, programInstances, programMaxUtf16, programCaptureMatches: 0, cases: 0, captureMatches: 0 })}\n`
+      );
+      return;
     }
-    for (const row of inventory.extractorInstances) {
-      instance = programInstances;
-      const fields = fieldsById.get(row.id);
-      assert.ok(fields);
-      const native = (yield* patternInput.prepareText(fields.regex, () => Effect.void)).value.storage;
-      const registry = registries.get(row.artifactSha256);
-      assert.ok(registry);
-      const bound = yield* registry.bind(native, fields.flags);
-      const program = bound.program;
-      bindingVector.push([row.id, bound.descriptor.patternSha256, fields.flags]);
-      assert.ok(program.minimumWidthFloor > 0);
-      assert.equal(program.repeatedCaptures, false);
-      assert.equal(program.nullableMultiRepeat, false);
-      descriptorVector.push([
-        row.id,
-        program.groups,
-        Object.entries(program.names).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
-        program.minimumWidthFloor,
-      ]);
-      const encoded = yield* programAlphabet.prepare(program.sets, { width: 1, bytes: new Uint8Array(0) });
-      const pattern = yield* compiler.render(program, encoded);
-      new RegExp(pattern, encoded.flags);
-      programInstances++;
-      programMaxUtf16 = Math.max(programMaxUtf16, pattern.length);
-    }
-    assert.equal(programInstances, 13610);
-    assert.equal(
-      createHash("sha256").update(JSON.stringify(bindingVector)).digest("hex"),
-      programFacts.instanceBindingVectorSha256
-    );
-    assert.equal(
-      createHash("sha256").update(JSON.stringify(descriptorVector)).digest("hex"),
-      programFacts.instanceDescriptorVectorSha256
-    );
     let programCaptureMatches = 0;
     const collectNative = Effect.fn("Qualification.collectNative")(function* (program, encoded, pattern) {
       const iterator = encoded.source.matchAll(new RegExp(pattern, encoded.flags));
