@@ -962,9 +962,10 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         unshallow = false,
       } = options;
       const target = O.fromUndefinedOr(ref);
+      const refLabel = O.getOrElse(target, () => "(configured refspecs)");
       yield* Effect.annotateCurrentSpan({
         cwd,
-        ref: O.getOrElse(target, () => "(configured refspecs)"),
+        ref: refLabel,
         tag,
         unshallow,
         prune,
@@ -989,12 +990,10 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         cwd,
         "generic"
       );
+      // Without a ref the label stays generic: `remote` may be a URL carrying credentials.
       return yield* Match.valueTags(classified, {
         success: () => Effect.void,
-        ...refFailureArms(
-          cwd,
-          O.getOrElse(target, () => remote)
-        ),
+        ...refFailureArms(cwd, refLabel),
       });
     })
   );
