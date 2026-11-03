@@ -236,6 +236,10 @@ them and record each in the Decision Log.
 
 ## Decision Log
 
+### 2026-11-03 — bind owner-controlled closeout to a fresh final head
+
+PR #2626 merged 97 seconds before final Policy success; the canonical verdict still referenced an older head, so completion refresh is unsatisfied despite successful terminal CI. Retain the new incident and every earlier receipt. Qualify a fresh final branch with its own evidence path; explicitly bind native closeout after the final push and any review repair. The goal-chat owner archives positive exact-head readiness before strict merge, then verifies the actual canonical receipt. Other chats and generic mergers leave this merge to the owner. Keep raw lifecycle active until verified projection. Preserve every label, previous result, v27 freeze, all 37 passes, PatentClaim and scope exclusions. No authority, performance target or verifier is changed. Reversal: retain the incident and supersede the prospective final declaration through a separately qualified publication.
+
 ### 2026-11-02 — retain user-confirmed manual merge and qualify the follow-up
 
 The user confirmed manually merging #2609 and then explicitly requested additional work in a follow-up PR. Record the accepted head, post-merge Policy success and unknown completion without attributing another process. Correct current-status prose and bind final follow-up #2626 to its own branch evidence. Preserve the original recovery report, all labels/results, v27 freeze and all 37 passing claims. Require this follow-up's own hosted verification and archived positive pre-merge monitor verdict before strict merge; refresh canonical completion afterward. Keep raw lifecycle active pending verification. No algorithm, numeric acceptance target, attorney authority or verifier change is introduced. Reversal: supersede the prospective declaration in a later qualified PR while retaining both incident reports and all historical receipts.
