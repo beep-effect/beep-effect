@@ -839,6 +839,23 @@ export const ensureProvenanceFooter = Effect.fn("ProvenanceFooter.ensure")(funct
   );
 });
 
+// The monitored session is recorded first, locally (the origin URL and the registry); `stamp`
+// then runs on the recorded repository, so a stamp that cannot reach GitHub never loses the record.
+const recordMonitoredSessionThen = Effect.fnUntraced(function* <E, R>(
+  context: RepoRunContext,
+  prNumber: PrNumber,
+  registryOverride: PrSessionRegistryShape | undefined,
+  stamp: (repository: PrRepository) => Effect.Effect<ProvenanceStampOutcome, E, R>
+) {
+  const recording = yield* recordCurrentPrSession(context, prNumber, O.none(), "monitored", registryOverride);
+  if (O.isNone(recording)) {
+    return skippedStamp(
+      `[yeet] provenance footer stamp skipped for PR #${prNumber}: session recording was unavailable`
+    );
+  }
+  return yield* stamp(recording.value.repository);
+});
+
 /**
  * Record the current monitor session and re-assert its public provenance footer once.
  *
@@ -867,13 +884,9 @@ export const recordMonitoredPrSession = Effect.fn("ProvenanceFooter.recordMonito
   prNumber: PrNumber,
   registryOverride?: PrSessionRegistryShape
 ) {
-  const recording = yield* recordCurrentPrSession(context, prNumber, O.none(), "monitored", registryOverride);
-  if (O.isNone(recording)) {
-    return skippedStamp(
-      `[yeet] provenance footer stamp skipped for PR #${prNumber}: session recording was unavailable`
-    );
-  }
-  return yield* ensureProvenanceFooter(context, recording.value.repository, prNumber, registryOverride);
+  return yield* recordMonitoredSessionThen(context, prNumber, registryOverride, (repository) =>
+    ensureProvenanceFooter(context, repository, prNumber, registryOverride)
+  );
 });
 
 /**
@@ -882,9 +895,9 @@ export const recordMonitoredPrSession = Effect.fn("ProvenanceFooter.recordMonito
  *
  * **Details**
  *
- * A login that does not resolve is a skipped stamp, logged the way any other
- * failure inside the stamp is, so the monitor still never fails over its
- * provenance footer.
+ * The session is recorded first, without GitHub. A login that does not resolve
+ * then skips only the footer stamp, logged the way any other failure inside the
+ * stamp is, so the monitor still never fails over its provenance footer.
  *
  * **Example** (Build the monitor provenance prelude)
  *
@@ -902,18 +915,22 @@ export const recordMonitoredPrSession = Effect.fn("ProvenanceFooter.recordMonito
  *
  * @param context - Hydrated Yeet context for the monitor invocation.
  * @param prNumber - Pull-request number observed once before polling begins.
+ * @param registryOverride - Optional in-memory registry used by fixture-safe tests.
  * @returns The typed stamp outcome, `skipped` when the session or the login was unavailable.
  * @category workflows
  * @since 0.0.0
  */
 export const recordMonitoredPrSessionAsGhLogin = Effect.fn("ProvenanceFooter.recordMonitoredSessionAsGhLogin")(
-  function* (context: RepoRunContext, prNumber: PrNumber) {
-    return yield* recordMonitoredPrSession(context, prNumber).pipe(
-      provideYeetGhLogin(context.repoRoot),
-      Effect.catchTag("YeetCommandError", (error) => {
-        const warning = `[yeet] provenance footer stamp skipped: ${error.message}`;
-        return Console.warn(warning).pipe(Effect.as(skippedStamp(warning)));
-      })
+  function* (context: RepoRunContext, prNumber: PrNumber, registryOverride?: PrSessionRegistryShape) {
+    // Only the stamp needs GitHub, so only the stamp builds the login.
+    return yield* recordMonitoredSessionThen(context, prNumber, registryOverride, (repository) =>
+      ensureProvenanceFooter(context, repository, prNumber, registryOverride).pipe(
+        provideYeetGhLogin(context.repoRoot),
+        Effect.catchTag("YeetCommandError", (error) => {
+          const warning = `[yeet] provenance footer stamp skipped: ${error.message}`;
+          return Console.warn(warning).pipe(Effect.as(skippedStamp(warning)));
+        })
+      )
     );
   }
 );

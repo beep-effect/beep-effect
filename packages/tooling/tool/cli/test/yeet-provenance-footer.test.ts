@@ -19,6 +19,7 @@ import {
   RepoStepRunResult,
   recordCurrentPrSession,
   recordMonitoredPrSession,
+  recordMonitoredPrSessionAsGhLogin,
   recordPrCreateLane,
   recordPrProvenanceStampLane,
   renderPrProvenance,
@@ -47,6 +48,7 @@ import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
@@ -942,6 +944,31 @@ describe("Yeet provenance footer splice", () => {
         );
         expect(yield* registry.lookup(repository, 42)).toHaveLength(1);
         expect(yield* Ref.get(runner.writes)).toBe(1);
+      })
+    );
+  });
+
+  it.layer(Layer.mergeAll(PlatformLayer, layerPrSessionRegistryMemory), { timeout: "10 seconds" })((it) => {
+    it.effect("records the monitored session even when the gh login cannot be built", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped();
+        yield* configureRepo(root);
+        const registry = yield* PrSessionRegistry;
+        const real = yield* ChildProcessSpawner.ChildProcessSpawner;
+        // Own double: git reaches the real repository; every credential source (gh, op, ssh) exits 1.
+        const noLogin = ChildProcessSpawner.make((command) =>
+          ChildProcess.isStandardCommand(command) && command.command !== "git"
+            ? real.spawn(ChildProcess.make("false", [], command.options))
+            : real.spawn(command)
+        );
+        const provider = ConfigProvider.fromEnv({ env: { HOME: root, PWD: root } });
+        const outcome = yield* recordMonitoredPrSessionAsGhLogin(context(root), 42, registry).pipe(
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, noLogin),
+          Effect.provideService(ConfigProvider.ConfigProvider, provider)
+        );
+        expect(yield* registry.lookup(repository, 42)).toHaveLength(1);
+        expect(outcome.status).toBe("skipped");
       })
     );
   });
