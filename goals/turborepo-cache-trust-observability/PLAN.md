@@ -1424,3 +1424,16 @@ operator's no-local-verify/publish instruction. After acceptance, refresh source
 control bindings and dispatch one new bounded preparation; never reuse or
 relabel the failed intent. Independent artifact inspection, protected execution,
 signed trials and all nine whole-goal criteria remain open.
+
+
+### Hold readiness after a failed check capture, 2026-11-03
+
+[The regression receipt](research/readiness-unread-check-regression-2026-11-03.json)
+records a live closeout that printed ready while an independent exact-head read
+still showed two CI failures. The collector retained a typed read failure, but
+the shared status/completion readiness policy ignored it. Require a complete
+read before the checks criterion can pass. Authored partition, zero-count and
+recovery regressions await hosted CI; no local test or quality suite ran.
+
+Keep the observed PR held, the inherited main repair separate, and every trust
+acceptance criterion open. This repair changes no cache or producer authority.

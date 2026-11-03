@@ -1269,3 +1269,14 @@ independent artifact inspection before approval; no unchanged retry or authority
 is granted by this repair. Reverse by disabling preparation and reverting this
 prerequisite delta, retaining the failure receipt. Existing consumers, secrets,
 producer activation, qualification and whole-goal acceptance remain unchanged.
+
+
+### Preserve unknown hosted checks in readiness, 2026-11-03
+
+The shared status/completion readiness policy consumes the existing typed remote
+read failure. A passing required-only view cannot establish a complete check
+census; unknown optional checks keep the checks criterion held. Preserve the
+current attribution, required-context, thread, exact-head and review-window
+checks. A complete later read can recover without a persistent failure latch.
+Reverse the isolated policy and regression-test change through Git. No stored
+proof is relabeled, baseline relaxed or runtime cache policy changed.

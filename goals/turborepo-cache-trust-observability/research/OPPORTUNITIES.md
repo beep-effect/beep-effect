@@ -2253,3 +2253,17 @@ toolchain is already present. Follow upstream package guidance (`perl-core` on
 RPM systems, `perl` on Debian), keep the existing bounds and retain an actual
 accepted-source build as the gate. Do not convert a source regression check into
 compiled-artifact proof.
+
+
+### 2026-11-03 — hold readiness after an unread check census
+
+- Read-first closeout for #2680 printed `merge-ready: yes` after a transient
+  GitHub API failure. A direct exact-head read still showed Lint Policy and
+  Coverage Regression failures. The successful required-only capture could
+  conceal the unread complete check list because absent counts defaulted to zero.
+- Reuse the remote summary's existing typed `readFailure` in the shared readiness
+  policy. An unread capture holds the checks criterion; a later complete read
+  can recover. Author regressions for the real partition shape and zero-count
+  masking without running local verification or repository tests.
+- The live snapshot stays held. Retain the failed read and contradictory output;
+  no cache result, old report or zero exit proves current hosted readiness.
