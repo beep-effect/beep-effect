@@ -3,6 +3,9 @@
   "extends": "./tsconfig.json",
   "references": [
     {
+      "path": "../../../drivers/commands/tsconfig.json"
+    },
+    {
       "path": "../../../drivers/duckdb/tsconfig.json"
     },
     {

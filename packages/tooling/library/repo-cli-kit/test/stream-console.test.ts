@@ -1,17 +1,17 @@
 import * as NodeURL from "node:url";
 import { CliRuntime } from "@beep/cli-kit/CliRuntime";
+import { CliReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { renderCliFailure } from "@beep/repo-cli-kit/cli/FailureRendering";
 import {
-  CliReportedExit,
   drainProcessStreams,
   noteProcessStreamWriteFailure,
   ProcessStreamName,
-  renderCliFailure,
   resetProcessStreamStateForTesting,
   StreamWriteFailure,
   streamConsole,
   writeBestEffortLine,
-} from "@beep/repo-cli/test/Cli";
-import { StepExec } from "@beep/repo-cli/test/PackageScripts";
+} from "@beep/repo-cli-kit/cli/Stdout";
+import * as StepExec from "@beep/repo-cli-kit/process/StepExec";
 import { P } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
@@ -839,7 +839,7 @@ describe("stream console", () => {
     it.effect(
       "delivers a large block through a pipe before a forced exit under Bun",
       Effect.fnUntraced(function* () {
-        const modulePath = NodeURL.fileURLToPath(new URL("../src/internal/cli/Stdout.ts", import.meta.url));
+        const modulePath = NodeURL.fileURLToPath(new URL("../src/cli/Stdout.ts", import.meta.url));
         const script = A.join(
           [
             "const { streamConsole, drainProcessStreams } = await import(process.argv[1]);",

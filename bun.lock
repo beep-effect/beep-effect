@@ -3854,6 +3854,7 @@
         "ts-morph": "catalog:",
       },
       "devDependencies": {
+        "@beep/commands": "workspace:^",
         "@beep/memfs": "workspace:^",
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",

@@ -1,5 +1,4 @@
 import { Git } from "@beep/git/Git";
-import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   BoundedOutput,
   CaptureCommandTimedOutError,
@@ -9,8 +8,7 @@ import {
   runCaptured,
   settleCapturedStepForTesting,
   withAdmissionWorkloadBinding,
-} from "@beep/repo-cli/test/Process";
-import { collectStepOutput, QualityTaskStep } from "@beep/repo-cli/test/Quality";
+} from "@beep/repo-cli-kit/process/StepExec";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
@@ -509,7 +507,7 @@ describe("StepExec capture pipe lifecycle", () => {
                 const workloadPath = `${root}/outer.workload`;
                 const readyPath = `${root}/nested-ready`;
                 const nestedSource = `
-import { runCaptured } from "@beep/repo-cli/test/Process";
+import { runCaptured } from "@beep/repo-cli-kit/process/StepExec";
 import { BunRuntime, BunServices } from "@effect/platform-bun";
 import * as Effect from "effect/Effect";
 
@@ -555,35 +553,6 @@ BunRuntime.runMain(
           );
         }),
       15_000
-    );
-  });
-
-  it.layer(Layer.mergeAll(BunCrypto.layer, MemoryFileSystem.layer, NodePath.layer), { timeout: "30 seconds" })((it) => {
-    it.effect(
-      "maps a bounded quality-step timeout to exit code 124",
-      Effect.fnUntraced(function* () {
-        const { spawner } = yield* makeNeverExitSpawner();
-        const fiber = yield* Effect.forkChild(
-          collectStepOutput(
-            QualityTaskStep.make({
-              label: "fake-step",
-              command: "fake-step",
-              args: ["--flag"],
-              cwd: process.cwd(),
-              captureTimeoutMillis: PosInt.make(60_000),
-            })
-          ).pipe(
-            Effect.provideServiceEffect(Git, Git.make),
-            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
-          )
-        );
-
-        yield* TestClock.adjust("1 minute");
-
-        const result = yield* Fiber.join(fiber);
-        expect(result.exitCode).toBe(124);
-        expect(result.output).toContain("fake-step --flag");
-      })
     );
   });
 

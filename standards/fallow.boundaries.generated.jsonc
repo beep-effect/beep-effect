@@ -4573,6 +4573,7 @@
         "from": "@beep/repo-cli-kit",
         "allow": [
           "@beep/cli-kit",
+          "@beep/commands",
           "@beep/duckdb",
           "@beep/file-processing",
           "@beep/git",
@@ -4591,6 +4592,7 @@
         ],
         "allowTypeOnly": [
           "@beep/cli-kit",
+          "@beep/commands",
           "@beep/duckdb",
           "@beep/file-processing",
           "@beep/git",
