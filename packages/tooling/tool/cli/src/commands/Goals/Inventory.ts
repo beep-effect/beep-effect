@@ -14,6 +14,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc, JsoncParseOptions } from "@beep/jsonc/Jsonc";
 import { MarkdownDocument } from "@beep/markdown/MarkdownDocument";
 import { MarkdownNodeKind } from "@beep/markdown/MarkdownNode";
+import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
 import { A, O, pipe, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -24,7 +25,6 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import type { GoalManifest, GoalPhase } from "./Goals.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Goals/Inventory");

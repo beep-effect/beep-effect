@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { errorMessage, timestampIso } from "@beep/repo-cli-kit/cli/Timing";
 import { shellQuote } from "@beep/repo-utils/Shell";
 import { A } from "@beep/utils";
 import * as Duration from "effect/Duration";
@@ -15,7 +16,6 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { errorMessage, timestampIso } from "../../../../internal/cli/Timing.ts";
 import { scoreSubject } from "./Quality.rubric.ts";
 import {
   bySubjectIdentityAscending,

@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { RunMode, RunModeMatch } from "@beep/repo-cli-kit/cli/RunMode";
 import { LiteralKit } from "@beep/schema";
 import { ArrayKeyDefaultEmpty } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import { A } from "@beep/utils";
@@ -14,8 +15,7 @@ import * as F from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
-import { RunMode, RunModeMatch } from "../../internal/cli/RunMode.ts";
-import type { RunMode as RunModeValue } from "../../internal/cli/RunMode.ts";
+import type { RunMode as RunModeValue } from "@beep/repo-cli-kit/cli/RunMode";
 
 /**
  * Public version-sync error exports.

@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { normalizePath } from "@beep/schema";
 import { A, Str, Text, thunkFalse } from "@beep/utils";
 import * as Console from "effect/Console";
@@ -19,7 +20,6 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import type { SourceFile } from "ts-morph";
 
 const $I = $RepoCliId.create("commands/Lint/PackageTestImports");

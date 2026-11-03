@@ -15,11 +15,11 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { OpaqueDefect } from "@beep/repo-cli-kit/schema/OpaqueDefect";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 import { CiLaneId } from "./CiLane.ts";
 
 const $I = $RepoCliId.create("commands/Ci/Route");

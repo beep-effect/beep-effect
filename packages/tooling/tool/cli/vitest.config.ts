@@ -95,7 +95,6 @@ const isolatedSuites = [
   "test/sync-data-to-ts.test.ts",
   "test/terse-effect.test.ts",
   "test/tsconfig-sync.test.ts",
-  "test/turbo-cache.test.ts",
   "test/worktree-command.test.ts",
   "test/worktree-remove-fence.test.ts",
   "test/xdg-adoption.test.ts",

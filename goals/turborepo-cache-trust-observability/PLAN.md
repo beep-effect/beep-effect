@@ -1406,3 +1406,21 @@ adding actual-leaf and narrower-default assertions. This component now carries
 regression strengthening and the operational failure record. Prior 715-head
 unit/policy/187-package coverage successes remain bound to 715; obtain fresh
 hosted proof after integration.
+
+
+### Candidate OpenSSL prerequisite repair, 2026-11-03
+
+Accepted-source preparation run 41610315729 passed workflow startup and native
+host compiler setup, then failed during vendored OpenSSL Configure because
+`FindBin.pm` was absent. Its build job lasted 74 seconds; upload was skipped and
+owned scratch cleanup succeeded. Preserve the exact job-log digest and source
+in `research/candidate-openssl-prerequisite-failure-2026-11-03.json`.
+
+Extend the existing native prerequisite step to check Make and Perl core modules
+even if GCC/linker/readelf already exist, following OpenSSL's distro guidance.
+The existing security regression pins both package-manager branches and the
+new probes. This source repair is sent straight to hosted CI under the
+operator's no-local-verify/publish instruction. After acceptance, refresh source
+control bindings and dispatch one new bounded preparation; never reuse or
+relabel the failed intent. Independent artifact inspection, protected execution,
+signed trials and all nine whole-goal criteria remain open.

@@ -5,12 +5,12 @@
  * @since 0.0.0
  */
 
+import { createInMemoryTsMorphProject } from "@beep/repo-cli-kit/tsmorph/index";
 import { A, Str } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import { Node, SyntaxKind, VariableDeclarationKind } from "ts-morph";
-import { createInMemoryTsMorphProject } from "../../../internal/tsmorph/index.ts";
 import { SchemaFirstInventoryEntry } from "../Lint.schemas.ts";
 
 const SCHEMA_CODEC_HELPERS = [

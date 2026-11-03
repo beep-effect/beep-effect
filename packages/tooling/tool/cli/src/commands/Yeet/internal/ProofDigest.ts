@@ -12,6 +12,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { concatBytes } from "@beep/repo-cli-kit/cli/Bytes";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
@@ -20,7 +21,6 @@ import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { concatBytes } from "../../../internal/cli/Bytes.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { ProofEpoch } from "./ProofFact.ts";
 import type { ProofInputDigest } from "./ProofFact.ts";

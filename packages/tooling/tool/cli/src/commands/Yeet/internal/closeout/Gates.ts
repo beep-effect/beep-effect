@@ -6,13 +6,13 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { normalizedTokens } from "@beep/repo-cli-kit/cli/Flags";
 import { O } from "@beep/utils";
 import * as A from "effect/Array";
 import { dual, pipe } from "effect/Function";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { normalizedTokens } from "../../../../internal/cli/Flags.ts";
 import { GhActor, GhComment } from "../../../../internal/github/index.ts";
 import { QualityIssue, QualityIssueCategory, QualityIssueRouting } from "../../Yeet.schemas.ts";
 import {

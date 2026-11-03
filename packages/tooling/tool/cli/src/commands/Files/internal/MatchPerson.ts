@@ -6,6 +6,12 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import {
+  CommandJsonOutput,
+  DEFAULT_JSON_PRETTY_MAX_LENGTH,
+  encodeCommandJson,
+  renderPrettyCommandJson,
+} from "@beep/repo-cli-kit/cli/Json";
 import { LiteralKit } from "@beep/schema";
 import { A, HostProcessArchitecture, HostProcessPlatform, Str } from "@beep/utils";
 import { isAbsoluteWin32 } from "@beep/xdg/Absolute";
@@ -23,12 +29,6 @@ import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import {
-  CommandJsonOutput,
-  DEFAULT_JSON_PRETTY_MAX_LENGTH,
-  encodeCommandJson,
-  renderPrettyCommandJson,
-} from "../../../internal/cli/Json.ts";
 import { FilesCommandError, formatPlatformError, mapPlatformError, PlatformErrorOptions } from "../Files.errors.ts";
 import {
   backupStagedFileTarget,

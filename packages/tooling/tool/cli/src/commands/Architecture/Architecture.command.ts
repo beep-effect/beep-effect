@@ -6,6 +6,7 @@
  * @since 0.0.0
  */
 
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import { DomainError, findRepoRoot } from "@beep/repo-utils";
 import { A, Text } from "@beep/utils";
 import * as Console from "effect/Console";
@@ -16,7 +17,6 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { printLines } from "../../internal/cli/Printer.ts";
 import { registerMissingWorkspaceIdentityPackages } from "../CreatePackage/internal/IdentityBulkRegistration.ts";
 import { makeArchitectureOperationPlan, makeArchitecturePackageOperationPlan } from "./Architecture.plan.ts";
 import {

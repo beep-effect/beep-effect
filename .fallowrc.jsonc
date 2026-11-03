@@ -46,7 +46,7 @@
     // Lab apps live one level deeper (apps/labs/<name>); mirror the framework
     // entry globs at labs depth. Labs are full law citizens: they must NEVER
     // be added to ignorePatterns (lab-apps-lifecycle D2, ratified row 13).
-    // Canonical labs path module: packages/tooling/tool/cli/src/internal/cli/Labs.
+    // Canonical labs path module: packages/tooling/library/repo-cli-kit/src/cli/Labs.
     "apps/labs/*/src/main.tsx",
     // `service` labs emit src/main.ts, not main.tsx (ratified row 13).
     "apps/labs/*/src/main.ts",
@@ -480,7 +480,7 @@
       },
       {
         "files": [
-          "packages/tooling/tool/cli/src/internal/cli/MixedOutputJson.ts"
+          "packages/tooling/library/repo-cli-kit/src/cli/MixedOutputJson.ts"
         ],
         "functions": [
           "jsonObjectTextFromMixedOutput",

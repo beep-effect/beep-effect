@@ -24,6 +24,13 @@
  */
 import * as NodeURL from "node:url";
 import { Git } from "@beep/git/Git";
+import {
+  formatCommandLine,
+  OutputBound,
+  repoRunOutputBound,
+  runCaptured,
+  runCapturedStreams,
+} from "@beep/repo-cli-kit/process/StepExec";
 import { NodeCrypto, NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -36,13 +43,6 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import {
-  formatCommandLine,
-  OutputBound,
-  repoRunOutputBound,
-  runCaptured,
-  runCapturedStreams,
-} from "../../../packages/tooling/tool/cli/src/internal/process/StepExec.ts";
 import {
   collectStagedPaths,
   collectUnstagedPaths,
@@ -57,12 +57,9 @@ import {
   resolveGitMergeBase,
 } from "../../../packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts";
 import { runRepoCommandCapture } from "../../../packages/tooling/tool/cli/src/internal/repo-run/RepoRun.executor.ts";
+import type { RunCapturedOptions, RunCapturedStreamsOptions } from "@beep/repo-cli-kit/process/StepExec";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type {
-  RunCapturedOptions,
-  RunCapturedStreamsOptions,
-} from "../../../packages/tooling/tool/cli/src/internal/process/StepExec.ts";
 import type {
   CurrentBranchRef,
   GitCommandErrorAdapter,

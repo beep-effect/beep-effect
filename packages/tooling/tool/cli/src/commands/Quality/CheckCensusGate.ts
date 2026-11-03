@@ -9,6 +9,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { formatJsonc, readArtifact, writeArtifact } from "@beep/repo-cli-kit/artifacts/index";
+import { runCaptured } from "@beep/repo-cli-kit/process/index";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { A, Str } from "@beep/utils";
 import * as Context from "effect/Context";
@@ -21,8 +23,6 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { formatJsonc, readArtifact, writeArtifact } from "../../internal/artifacts/index.ts";
-import { runCaptured } from "../../internal/process/index.ts";
 import { compilerOutputLines, isCompilerDiagnosticLine, nameFilterPredicate } from "./internal/CheckCensusOutput.ts";
 import { QualityScriptCommandError } from "./Quality.errors.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";

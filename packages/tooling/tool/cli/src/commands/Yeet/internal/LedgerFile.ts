@@ -16,11 +16,11 @@
  * @since 0.0.0
  */
 
+import { appendContainedFileString, readContainedFileStringNoFollow } from "@beep/repo-cli-kit/cli/FsGuards";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
-import { appendContainedFileString, readContainedFileStringNoFollow } from "../../../internal/cli/FsGuards.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";

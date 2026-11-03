@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { isExcludedTypeScriptSourcePath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
 import * as Console from "effect/Console";
@@ -18,7 +19,6 @@ import * as MutableHashSet from "effect/MutableHashSet";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { isContainedLintPath } from "./internal/LintPackage.ts";
 import { SchemaFirstSchemaClass } from "./internal/SchemaFirstSchemaClass.ts";
 import { LintFileDiscoveryError } from "./Lint.errors.ts";

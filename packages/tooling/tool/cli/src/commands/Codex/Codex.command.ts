@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import * as Command from "effect/cli/Command";
-import { printLines } from "../../internal/cli/Printer.ts";
 import { findingsCommand } from "./Findings.command.ts";
 import { securityCommand } from "./Security.command.ts";
 

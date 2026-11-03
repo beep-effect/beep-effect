@@ -6,13 +6,13 @@
  * @since 0.0.0
  */
 
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { normalizePath } from "@beep/schema";
 import { Str } from "@beep/utils";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as Path from "effect/Path";
-import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 
 /** Root config the deprecated-apis oxlint profile reads. @internal @category configuration @since 0.0.0 */
 export const OXLINT_DEPRECATED_APIS_CONFIG = ".oxlintrc.deprecated-apis.jsonc";

@@ -17,6 +17,8 @@
  * @since 0.0.0
  */
 
+import { runCaptured } from "@beep/repo-cli-kit/process/StepExec";
+import { readInstalledSystemdUnit, systemdUnitDirective, systemdUserUnitDir } from "@beep/repo-cli-kit/systemd/index";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
@@ -24,8 +26,6 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import { runCaptured } from "../../../internal/process/StepExec.ts";
-import { readInstalledSystemdUnit, systemdUnitDirective, systemdUserUnitDir } from "../../../internal/systemd/index.ts";
 import { ResearchCommandError } from "../Research.errors.ts";
 import { ResearchRecordedTimer } from "../Research.schemas.ts";
 import { RESEARCH_ENV_FILE_RELATIVE } from "./ResearchEnv.ts";

@@ -1,0 +1,129 @@
+{
+  "schemaVersion": "cache-current-feature-client-refresh/v1",
+  "recordedAt": "2026-11-03T09:57:37.904240+00:00",
+  "sourceBaseRevision": "61e2a1402a1d181b14c831bb60cf86c640f81e8c",
+  "sourceState": "working-tree-bound",
+  "authority": "Fresh native identities, documentation/schema inventory and configuration parsing only. No semantic feature or computation qualification, dependency upgrade or rollout.",
+  "sourceBindings": [
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/current-client-pins.json",
+      "sha256": "b3d507054f6e67ae8de5b235f05ae6786aed2f3f4361da20ec49a50d67cacecd"
+    },
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/current-feature-matrix.json",
+      "sha256": "5692d1bdfb9f1db75625bb316a3aea7b13bfed26776937611a266f229e3c67bc"
+    },
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/client-pins-before-current-pair-refresh-2026-11-03.json",
+      "sha256": "daf3cd0b53edf45e209a7be2f8eea93981a56d133d95ed81b7f929ed82683ae3"
+    },
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/native-future-flag-availability.py",
+      "sha256": "e2e51ecc6b3a3ca2e0553a13a061ebfc9b39d6239c8d935bbdbd411296c54736"
+    },
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/native-permission-flag-availability.py",
+      "sha256": "fc7a600a67534fcd3b93d4016a80a0a0987b10a06641adef3dc0c98901ca10b8"
+    },
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/native-future-flag-current-pair-availability-2026-11-03.json",
+      "sha256": "b303d0e360b5017e7c259ad88fec997f24be769b68c58bbf00d6a470aa165867"
+    },
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/native-permission-flag-availability-2026-11-03.json",
+      "sha256": "a48ab73d9f18e3e65d559229860f213787b23cbd9b930ae36916f4e1defc11a9"
+    },
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/permission-availability-driver-controls-2026-11-03.json",
+      "sha256": "4b6a9b6292af53fdc7ad7973a5f1852f0f80ceb65cbb7f8a7f0923048f752081"
+    }
+  ],
+  "registryTags": {
+    "observedAt": "2026-11-03T09:49:33.079871+00:00",
+    "source": "https://registry.npmjs.org/-/package/turbo/dist-tags",
+    "tags": {
+      "next": "0.9.0-next.22",
+      "turbo-2.3": "2.3.7",
+      "canary": "2.11.11-canary.1",
+      "latest": "2.11.10"
+    }
+  },
+  "nativeArchiveIntegrity": {
+    "metadataUrl": "https://registry.npmjs.org/@turbo%2flinux-64/2.11.11-canary.1",
+    "archiveBytes": 19665216,
+    "integrity": "sha512-roWVD6C1Q90g3XPkhc/WpUCw1BtSQoZcBxAwwqJz7tH/me4b/zhomlkV+o/I0Mn4CSiNN34jnq3FGXmggQjykw==",
+    "integrityVerified": true,
+    "cachedBinaryMatchesPublishedMember": true,
+    "binarySha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2",
+    "reportedVersion": "2.11.11-canary.1"
+  },
+  "canaryDocumentation": {
+    "version": "2.11.11-canary.1",
+    "integrityVerified": true,
+    "schemaFlags": 15,
+    "stableSchemaFlags": 14,
+    "canaryOnlyFlags": ["hashFilePermissions"]
+  },
+  "nativeAvailability": {
+    "sharedCases": 60,
+    "canaryOnlyCases": 4,
+    "totalCases": 64,
+    "tasksExecuted": 0,
+    "sharedCollectorUnchanged": true,
+    "runtimeSemanticsProven": false
+  },
+  "driverRefusals": {
+    "recordedAt": "2026-11-03T09:57:37.901012+00:00",
+    "authority": "Driver refusal controls only; no task execution or qualification.",
+    "sourceBindings": [
+      {
+        "path": "goals/turborepo-quality-cache-adoption/research/native-permission-flag-availability.py",
+        "sha256": "fc7a600a67534fcd3b93d4016a80a0a0987b10a06641adef3dc0c98901ca10b8"
+      }
+    ],
+    "rows": [
+      {
+        "case": "optimized-python",
+        "exit": 1,
+        "expectedReasonObserved": true,
+        "outputAbsent": true,
+        "diagnosticSha256": "29751f8ab2021fa2ee1b7f38f08bbe9678927721e9c62ab58ad19cc405963a2c"
+      },
+      {
+        "case": "existing-report",
+        "exit": 1,
+        "expectedReasonObserved": true,
+        "outputAbsent": true,
+        "diagnosticSha256": "8ff32b9f31e5ceaefe9e850c3d51b7ca540e72b0eaed39a637e5f744076d7db7"
+      },
+      {
+        "case": "wrong-native-pin",
+        "exit": 1,
+        "expectedReasonObserved": true,
+        "outputAbsent": true,
+        "diagnosticSha256": "75029ea2e82c2143290034e750f484735a100e25cdbd41932740bf1f5764d09d"
+      }
+    ],
+    "passingReportSha256": "a48ab73d9f18e3e65d559229860f213787b23cbd9b930ae36916f4e1defc11a9",
+    "passingReportUnchanged": true,
+    "pinsRestoredExactly": true,
+    "tasksExecuted": 0
+  },
+  "historicalAvailabilityPreserved": {
+    "path": "research/native-future-flag-availability.json",
+    "sha256": "752c513a3ca8112ade0c1d6adfe6bfcc13dbb073ebb221ef428fe01da1145e9e"
+  },
+  "matrix": {
+    "entries": 36,
+    "priorScopedReviewsRetained": 11,
+    "pendingDecisions": 25
+  },
+  "reproduction": [
+    "python3 goals/turborepo-quality-cache-adoption/research/native-future-flag-availability.py; retain .beep/native-future-flag-availability/report.json as a distinct observation, leaving the historical public report unchanged.",
+    "python3 goals/turborepo-quality-cache-adoption/research/native-permission-flag-availability.py --output <new-private-report>"
+  ],
+  "productionChanged": false,
+  "taskQualificationGranted": false,
+  "localQualitySuitesRun": false,
+  "publicationEncoding": "JSON formatting only; both published observations decode exactly to their retained native reports. Source bindings identify the published bytes."
+}

@@ -11,6 +11,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { asRecord } from "@beep/repo-cli-kit/cli/UnknownProbe";
 import { O as OptionUtils } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
@@ -25,7 +26,6 @@ import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { asRecord } from "../../../internal/cli/UnknownProbe.ts";
 import { ResearchCommandError } from "../Research.errors.ts";
 import { sha256HexOf } from "./Vault.ts";
 import type * as Digest from "effect/crypto/Digest";

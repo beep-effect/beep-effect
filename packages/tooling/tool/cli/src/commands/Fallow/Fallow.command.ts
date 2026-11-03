@@ -6,6 +6,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { runCaptured } from "@beep/repo-cli-kit/process/StepExec";
+import { workspaceDependencyGraph, workspaceDirectories } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
 import * as Console from "effect/Console";
@@ -19,9 +22,6 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { runCaptured } from "../../internal/process/StepExec.ts";
-import { workspaceDependencyGraph, workspaceDirectories } from "../../internal/RepoWorkspaces.ts";
 import type * as HashSet from "effect/HashSet";
 
 const $I = $RepoCliId.create("commands/Fallow/Fallow.command");

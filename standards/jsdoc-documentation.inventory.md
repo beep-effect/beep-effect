@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-03T09:55:04.927Z
+Generated: 2026-11-03T09:55:52.994Z
 
 ## Scope
 
@@ -10,12 +10,12 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 
 | Metric | Count |
 |---|---:|
-| packages | 186 |
-| cleanPackages | 169 |
+| packages | 187 |
+| cleanPackages | 170 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 15 |
-| publicModules | 3662 |
-| publicExports | 25923 |
+| publicModules | 3716 |
+| publicExports | 26269 |
 | openModules | 114 |
 | openExports | 88 |
 | missingExportExamples | 0 |
@@ -60,7 +60,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 2 | `@beep/tsgo-shim` | `tools/tsgo-shim` | no-public-src-surface | 0 | 0 | 0 | 0 |
 | 3 | `@beep/types` | `packages/foundation/primitive/types` | needs-remediation | 5 | 12 | 1 | 12 |
 | 4 | `@beep/test-runner` | `packages/tooling/test-kit/test-runner` | clean | 4 | 6 | 0 | 0 |
-| 5 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 8 | 283 | 0 | 0 |
+| 5 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 8 | 284 | 0 | 0 |
 | 6 | `@beep/github-commands` | `packages/foundation/modeling/github-commands` | clean | 3 | 6 | 0 | 0 |
 | 7 | `@beep/ontology-config` | `packages/ontology/config` | clean | 7 | 18 | 0 | 0 |
 | 8 | `@beep/spdx` | `packages/foundation/modeling/spdx` | clean | 4 | 16 | 0 | 0 |
@@ -71,7 +71,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 13 | `@beep/commands` | `packages/drivers/commands` | clean | 8 | 58 | 0 | 0 |
 | 14 | `@beep/cosmos` | `packages/drivers/cosmos` | clean | 6 | 22 | 0 | 0 |
 | 15 | `@beep/freshbooks` | `packages/drivers/freshbooks` | clean | 6 | 49 | 0 | 0 |
-| 16 | `@beep/git` | `packages/drivers/git` | clean | 7 | 55 | 0 | 0 |
+| 16 | `@beep/git` | `packages/drivers/git` | clean | 7 | 53 | 0 | 0 |
 | 17 | `@beep/github-references` | `packages/foundation/modeling/github-references` | clean | 4 | 28 | 0 | 0 |
 | 18 | `@beep/glob` | `packages/foundation/modeling/glob` | clean | 4 | 9 | 0 | 0 |
 | 19 | `@beep/graph-3d` | `packages/drivers/graph-3d` | clean | 7 | 17 | 0 | 0 |
@@ -179,69 +179,70 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 121 | `@beep/ontology-domain` | `packages/ontology/domain` | clean | 6 | 40 | 0 | 0 |
 | 122 | `@beep/qa-capture` | `packages/tooling/library/qa-capture` | needs-remediation | 12 | 174 | 10 | 0 |
 | 123 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | clean | 63 | 804 | 0 | 0 |
-| 124 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 10 | 98 | 0 | 3 |
-| 125 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | clean | 8 | 56 | 0 | 0 |
-| 126 | `@beep/infra` | `infra` | needs-remediation | 11 | 109 | 3 | 19 |
-| 127 | `@beep/oxigraph` | `packages/drivers/oxigraph` | clean | 3 | 6 | 0 | 0 |
-| 128 | `@beep/palantiri` | `packages/tooling/library/palantiri` | clean | 20 | 156 | 0 | 0 |
-| 129 | `@beep/rdf-canonize` | `packages/drivers/rdf-canonize` | clean | 2 | 2 | 0 | 0 |
-| 130 | `@beep/shacl` | `packages/drivers/shacl` | clean | 3 | 6 | 0 | 0 |
-| 131 | `@beep/shared-domain` | `packages/shared/domain` | clean | 106 | 374 | 0 | 0 |
-| 132 | `@beep/wink` | `packages/drivers/wink` | clean | 14 | 72 | 0 | 0 |
-| 133 | `@beep/agents-domain` | `packages/agents/domain` | clean | 16 | 75 | 0 | 0 |
-| 134 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 47 | 0 | 0 |
-| 135 | `@beep/documents-domain` | `packages/documents/domain` | clean | 26 | 81 | 0 | 0 |
-| 136 | `@beep/epistemic-domain` | `packages/epistemic/domain` | clean | 54 | 262 | 0 | 0 |
-| 137 | `@beep/law-practice-domain` | `packages/law-practice/domain` | clean | 253 | 954 | 0 | 0 |
-| 138 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | clean | 9 | 123 | 0 | 0 |
-| 139 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | clean | 4 | 16 | 0 | 0 |
-| 140 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | clean | 23 | 217 | 0 | 0 |
-| 141 | `@beep/party-domain` | `packages/party/domain` | clean | 64 | 422 | 0 | 0 |
-| 142 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 485 | 4486 | 45 | 29 |
-| 143 | `@beep/shared-tables` | `packages/shared/tables` | clean | 9 | 12 | 0 | 0 |
-| 144 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 30 | 58 | 0 | 0 |
-| 145 | `@beep/agents-tables` | `packages/agents/tables` | clean | 7 | 15 | 0 | 0 |
-| 146 | `@beep/architecture-lab-tables` | `packages/architecture-lab/tables` | clean | 7 | 20 | 0 | 0 |
-| 147 | `@beep/architecture-lab-ui` | `packages/architecture-lab/ui` | clean | 3 | 6 | 0 | 0 |
-| 148 | `@beep/architecture-lab-use-cases` | `packages/architecture-lab/use-cases` | clean | 18 | 63 | 0 | 0 |
-| 149 | `@beep/documents-tables` | `packages/documents/tables` | clean | 19 | 48 | 0 | 0 |
-| 150 | `@beep/documents-use-cases` | `packages/documents/use-cases` | clean | 23 | 124 | 0 | 0 |
-| 151 | `@beep/epistemic-config` | `packages/epistemic/config` | clean | 7 | 20 | 0 | 0 |
-| 152 | `@beep/epistemic-tables` | `packages/epistemic/tables` | clean | 34 | 99 | 0 | 0 |
-| 153 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | clean | 41 | 158 | 0 | 0 |
-| 154 | `@beep/law-practice-tables` | `packages/law-practice/tables` | clean | 34 | 88 | 0 | 0 |
-| 155 | `@beep/ontology-server` | `packages/ontology/server` | clean | 8 | 23 | 0 | 0 |
-| 156 | `@beep/party-use-cases` | `packages/party/use-cases` | clean | 6 | 17 | 0 | 0 |
-| 157 | `@beep/practice-claude-mod` | `apps/practice-claude-mod` | clean | 8 | 30 | 0 | 0 |
-| 158 | `@beep/workspace-tables` | `packages/workspace/tables` | clean | 23 | 56 | 0 | 0 |
-| 159 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | clean | 12 | 45 | 0 | 0 |
-| 160 | `@beep/agents-use-cases` | `packages/agents/use-cases` | clean | 31 | 129 | 0 | 0 |
-| 161 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 6 | 0 | 0 |
-| 162 | `@beep/architecture-lab-server` | `packages/architecture-lab/server` | clean | 13 | 33 | 0 | 0 |
-| 163 | `@beep/db-admin` | `packages/_internal/db-admin` | needs-remediation | 13 | 46 | 2 | 0 |
-| 164 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 35 | 123 | 2 | 0 |
-| 165 | `@beep/epistemic-client` | `packages/epistemic/client` | clean | 4 | 24 | 0 | 0 |
-| 166 | `@beep/epistemic-server` | `packages/epistemic/server` | clean | 28 | 62 | 0 | 0 |
-| 167 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | clean | 104 | 657 | 0 | 0 |
-| 168 | `@beep/party-server` | `packages/party/server` | clean | 26 | 116 | 0 | 0 |
-| 169 | `@beep/workspace-server` | `packages/workspace/server` | clean | 12 | 31 | 0 | 0 |
-| 170 | `@beep/agents-client` | `packages/agents/client` | clean | 6 | 39 | 0 | 0 |
-| 171 | `@beep/agents-server` | `packages/agents/server` | clean | 11 | 42 | 0 | 0 |
-| 172 | `@beep/architecture-lab-proof` | `apps/architecture-lab-proof` | clean | 1 | 2 | 0 | 0 |
-| 173 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 6 | 14 | 0 | 0 |
-| 174 | `@beep/law-practice-server` | `packages/law-practice/server` | clean | 75 | 356 | 0 | 0 |
-| 175 | `@beep/scratchpad` | `scratchpad` | clean | 1 | 5 | 0 | 0 |
-| 176 | `@beep/docket-intake` | `apps/docket-intake` | clean | 12 | 34 | 0 | 0 |
-| 177 | `@beep/ontology-client` | `packages/ontology/client` | clean | 3 | 92 | 0 | 0 |
-| 178 | `@beep/practice-gateway` | `apps/practice-gateway` | clean | 20 | 143 | 0 | 0 |
-| 179 | `@beep/practice-identify` | `apps/practice-identify` | clean | 3 | 10 | 0 | 0 |
-| 180 | `@beep/practice-kg-mcp` | `apps/practice-kg-mcp` | clean | 16 | 75 | 0 | 0 |
-| 181 | `@beep/practice-m365-contacts` | `apps/practice-m365-contacts` | clean | 8 | 28 | 0 | 0 |
-| 182 | `@beep/practice-mail-tagging` | `apps/practice-mail-tagging` | clean | 8 | 44 | 0 | 0 |
-| 183 | `@beep/practice-review-hub` | `apps/practice-review-hub` | clean | 3 | 12 | 0 | 0 |
-| 184 | `@beep/storybook` | `apps/storybook` | no-public-src-surface | 0 | 0 | 0 | 0 |
-| 185 | `@beep/ontology-ui` | `packages/ontology/ui` | clean | 15 | 27 | 0 | 0 |
-| 186 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 65 | 241 | 25 | 0 |
+| 124 | `@beep/repo-cli-kit` | `packages/tooling/library/repo-cli-kit` | clean | 54 | 347 | 0 | 0 |
+| 125 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 10 | 98 | 0 | 3 |
+| 126 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | clean | 8 | 56 | 0 | 0 |
+| 127 | `@beep/infra` | `infra` | needs-remediation | 11 | 109 | 3 | 19 |
+| 128 | `@beep/oxigraph` | `packages/drivers/oxigraph` | clean | 3 | 6 | 0 | 0 |
+| 129 | `@beep/palantiri` | `packages/tooling/library/palantiri` | clean | 20 | 156 | 0 | 0 |
+| 130 | `@beep/rdf-canonize` | `packages/drivers/rdf-canonize` | clean | 2 | 2 | 0 | 0 |
+| 131 | `@beep/shacl` | `packages/drivers/shacl` | clean | 3 | 6 | 0 | 0 |
+| 132 | `@beep/shared-domain` | `packages/shared/domain` | clean | 106 | 374 | 0 | 0 |
+| 133 | `@beep/wink` | `packages/drivers/wink` | clean | 14 | 72 | 0 | 0 |
+| 134 | `@beep/agents-domain` | `packages/agents/domain` | clean | 16 | 75 | 0 | 0 |
+| 135 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 47 | 0 | 0 |
+| 136 | `@beep/documents-domain` | `packages/documents/domain` | clean | 26 | 81 | 0 | 0 |
+| 137 | `@beep/epistemic-domain` | `packages/epistemic/domain` | clean | 54 | 262 | 0 | 0 |
+| 138 | `@beep/law-practice-domain` | `packages/law-practice/domain` | clean | 253 | 954 | 0 | 0 |
+| 139 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | clean | 9 | 123 | 0 | 0 |
+| 140 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | clean | 4 | 16 | 0 | 0 |
+| 141 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | clean | 23 | 217 | 0 | 0 |
+| 142 | `@beep/party-domain` | `packages/party/domain` | clean | 64 | 422 | 0 | 0 |
+| 143 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 485 | 4486 | 45 | 29 |
+| 144 | `@beep/shared-tables` | `packages/shared/tables` | clean | 9 | 12 | 0 | 0 |
+| 145 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 30 | 58 | 0 | 0 |
+| 146 | `@beep/agents-tables` | `packages/agents/tables` | clean | 7 | 15 | 0 | 0 |
+| 147 | `@beep/architecture-lab-tables` | `packages/architecture-lab/tables` | clean | 7 | 20 | 0 | 0 |
+| 148 | `@beep/architecture-lab-ui` | `packages/architecture-lab/ui` | clean | 3 | 6 | 0 | 0 |
+| 149 | `@beep/architecture-lab-use-cases` | `packages/architecture-lab/use-cases` | clean | 18 | 63 | 0 | 0 |
+| 150 | `@beep/documents-tables` | `packages/documents/tables` | clean | 19 | 48 | 0 | 0 |
+| 151 | `@beep/documents-use-cases` | `packages/documents/use-cases` | clean | 23 | 124 | 0 | 0 |
+| 152 | `@beep/epistemic-config` | `packages/epistemic/config` | clean | 7 | 20 | 0 | 0 |
+| 153 | `@beep/epistemic-tables` | `packages/epistemic/tables` | clean | 34 | 99 | 0 | 0 |
+| 154 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | clean | 41 | 158 | 0 | 0 |
+| 155 | `@beep/law-practice-tables` | `packages/law-practice/tables` | clean | 34 | 88 | 0 | 0 |
+| 156 | `@beep/ontology-server` | `packages/ontology/server` | clean | 8 | 23 | 0 | 0 |
+| 157 | `@beep/party-use-cases` | `packages/party/use-cases` | clean | 6 | 17 | 0 | 0 |
+| 158 | `@beep/practice-claude-mod` | `apps/practice-claude-mod` | clean | 8 | 30 | 0 | 0 |
+| 159 | `@beep/workspace-tables` | `packages/workspace/tables` | clean | 23 | 56 | 0 | 0 |
+| 160 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | clean | 12 | 45 | 0 | 0 |
+| 161 | `@beep/agents-use-cases` | `packages/agents/use-cases` | clean | 31 | 129 | 0 | 0 |
+| 162 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 6 | 0 | 0 |
+| 163 | `@beep/architecture-lab-server` | `packages/architecture-lab/server` | clean | 13 | 33 | 0 | 0 |
+| 164 | `@beep/db-admin` | `packages/_internal/db-admin` | needs-remediation | 13 | 46 | 2 | 0 |
+| 165 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 35 | 123 | 2 | 0 |
+| 166 | `@beep/epistemic-client` | `packages/epistemic/client` | clean | 4 | 24 | 0 | 0 |
+| 167 | `@beep/epistemic-server` | `packages/epistemic/server` | clean | 28 | 62 | 0 | 0 |
+| 168 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | clean | 104 | 657 | 0 | 0 |
+| 169 | `@beep/party-server` | `packages/party/server` | clean | 26 | 116 | 0 | 0 |
+| 170 | `@beep/workspace-server` | `packages/workspace/server` | clean | 12 | 31 | 0 | 0 |
+| 171 | `@beep/agents-client` | `packages/agents/client` | clean | 6 | 39 | 0 | 0 |
+| 172 | `@beep/agents-server` | `packages/agents/server` | clean | 11 | 42 | 0 | 0 |
+| 173 | `@beep/architecture-lab-proof` | `apps/architecture-lab-proof` | clean | 1 | 2 | 0 | 0 |
+| 174 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 6 | 14 | 0 | 0 |
+| 175 | `@beep/law-practice-server` | `packages/law-practice/server` | clean | 75 | 356 | 0 | 0 |
+| 176 | `@beep/scratchpad` | `scratchpad` | clean | 1 | 5 | 0 | 0 |
+| 177 | `@beep/docket-intake` | `apps/docket-intake` | clean | 12 | 34 | 0 | 0 |
+| 178 | `@beep/ontology-client` | `packages/ontology/client` | clean | 3 | 92 | 0 | 0 |
+| 179 | `@beep/practice-gateway` | `apps/practice-gateway` | clean | 20 | 143 | 0 | 0 |
+| 180 | `@beep/practice-identify` | `apps/practice-identify` | clean | 3 | 10 | 0 | 0 |
+| 181 | `@beep/practice-kg-mcp` | `apps/practice-kg-mcp` | clean | 16 | 75 | 0 | 0 |
+| 182 | `@beep/practice-m365-contacts` | `apps/practice-m365-contacts` | clean | 8 | 28 | 0 | 0 |
+| 183 | `@beep/practice-mail-tagging` | `apps/practice-mail-tagging` | clean | 8 | 44 | 0 | 0 |
+| 184 | `@beep/practice-review-hub` | `apps/practice-review-hub` | clean | 3 | 12 | 0 | 0 |
+| 185 | `@beep/storybook` | `apps/storybook` | no-public-src-surface | 0 | 0 | 0 | 0 |
+| 186 | `@beep/ontology-ui` | `packages/ontology/ui` | clean | 15 | 27 | 0 | 0 |
+| 187 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 65 | 241 | 25 | 0 |
 
 ## Open Findings
 

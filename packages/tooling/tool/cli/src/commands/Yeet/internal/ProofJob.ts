@@ -10,6 +10,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { UUID } from "@beep/repo-cli-kit/schema/Uuid";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
@@ -21,7 +22,6 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { UUID } from "../../../internal/schema/Uuid.ts";
 import { YeetRunMode } from "./Planner.schemas.ts";
 import { YeetOutcome } from "./Verdict.ts";
 

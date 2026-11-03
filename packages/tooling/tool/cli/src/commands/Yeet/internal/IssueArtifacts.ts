@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { encodeCommandJson } from "@beep/repo-cli-kit/cli/Json";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -12,7 +13,6 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
-import { encodeCommandJson } from "../../../internal/cli/Json.ts";
 import { executeRepoPlanStepStreaming } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { renderPackageQualityPacketMarkdown } from "../Yeet.render.ts";
