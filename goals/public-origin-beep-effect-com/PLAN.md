@@ -2,8 +2,8 @@
 
 ## Status
 
-Status: `active`. Implementation shipped in #1946. The 2026-10-28 audit found its completion
-gate unsatisfied; a fresh closeout PR must prove readiness and merge evidence.
+Status: `completed-retained` (verified via #2319), carried by the committed `closeout` record since 2026-11-02 (#2629). Implementation shipped in #1946. The 2026-10-28 audit found its completion
+gate unsatisfied; closeout PR #2319 then proved readiness and merge evidence.
 
 ## Phases
 
@@ -13,7 +13,7 @@ gate unsatisfied; a fresh closeout PR must prove readiness and merge evidence.
 | P1 `@beep/public-site` | complete | Ship `PublicOrigin`, `SiteRoute`, `hostedUrl` and `labRoute` (D4, I10). | Drift test proves `hostedUrl("ns") + "/"` equals the identity authority; `package-verify` green. |
 | P2 Authority move and residue | complete | Move the authority (I1), fold the drift authorities (D5, I2, I3, I11), rewrite seeds and every remaining retired-host literal (D6, I15, I16). | Retired hosts appear only under `**/history/**` and the root `research/` tree; `package-verify` green for every affected package. |
 | P3 Law and lane | complete | Add `bun run beep laws retired-iri-authorities` and its `lint:retired-iri-authorities` lane (I5, I6, I13). | `--check` green on the tree; a seeded scratch violation turns it red; lane registration tests green. |
-| P4 Closeout | in-progress | Publish through Yeet, declare the closeout, write the reflection (I17). | `proposedCloseout` and gating `yeet-verdict` evidence in the manifest; reflection lint green; PR mergeable at the gate. |
+| P4 Closeout | complete | Publish through Yeet, declare the closeout, write the reflection (I17). | `proposedCloseout` and gating `yeet-verdict` evidence in the manifest; reflection lint green; PR mergeable at the gate. |
 
 ## Closeout Checklist
 

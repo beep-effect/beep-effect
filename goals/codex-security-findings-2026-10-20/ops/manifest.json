@@ -3,13 +3,13 @@
   "initiative": {
     "id": "codex-security-findings-2026-10-20",
     "title": "Codex Security Findings (2026-10-20)",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-10-20",
-    "updated": "2026-10-31",
+    "updated": "2026-11-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/codex-security-findings-2026-10-20",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Retain merged proof and verified closure for the eight original Cloud and 123 Dependabot IDs, with final reconciliation in PR #2488, retaining merged implementation PR #2389.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -174,7 +174,7 @@
     {
       "id": "P5",
       "name": "Repo proof",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P6",
@@ -184,17 +184,17 @@
     {
       "id": "P7",
       "name": "Monitor",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P8",
       "name": "Merge and close findings",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P9",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -213,7 +213,7 @@
     "The same blocker repeats after reasonable investigation."
   ],
   "statusNote": "Implementation PR #2389 and reconciliation PR #2416 are merged; #2416's retained verdict is closeout-mode and bound to a pre-merge head, so it cannot qualify completion. Final closeout PR #2488 carries a publish verdict at its exact final head. External dependency, code-scanning and secret-scanning inventories were zero-open on 2026-11-01.",
-  "proposedCloseout": {
+  "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2488
   }

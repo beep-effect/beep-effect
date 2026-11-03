@@ -296,6 +296,12 @@ const equivalentReceipt = S.toEquivalence(GoalCompletionReceipt);
 /**
  * Digests the decoded completion declaration, initiative identity and packet identity canonically.
  *
+ * **Details**
+ *
+ * A committed `closeout` record digests in the proposal's slot, so adopting a
+ * verified proposal through `goals set-status` keeps the digest, and with it the
+ * receipt that verified the closeout, unchanged.
+ *
  * **Example** (Inspect the digest operation)
  *
  * ```ts
@@ -315,7 +321,7 @@ export const goalCompletionDeclarationDigest = Effect.fn("Goals.Completion.decla
       initiative: { id: manifest.initiative.id },
       packetId: manifest.initiative.packetId,
       completionGate: gate.completionGate,
-      proposedCloseout: gate.proposedCloseout,
+      proposedCloseout: gate.proposedCloseout ?? gate.closeout,
       pullRequests: goalPullRequestRefs(manifest),
     })
   );

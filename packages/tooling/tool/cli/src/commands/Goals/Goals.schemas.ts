@@ -1278,7 +1278,9 @@ const GoalManifestCapabilitySelfCycleCheck = S.makeFilter(
  * **Details**
  *
  * Keep initiative.status and lifecycle operative while this proposal and its
- * reflection ship in the final PR. A proposal is never completion evidence.
+ * reflection ship in the final PR. A proposal is never completion evidence;
+ * once its completion receipt verifies, `goals set-status` adopts it as a
+ * {@link GoalCloseoutRecord}.
  *
  * **Example** (Propose closeout in the final PR)
  *
@@ -1298,6 +1300,39 @@ export class GoalProposedCloseout extends S.Opaque<GoalProposedCloseout, { reado
   }).pipe(
     $I.annoteSchema("GoalProposedCloseout", {
       description: "Prospective final-PR closeout, separate from operative lifecycle and completion evidence.",
+    })
+  )
+) {}
+
+/**
+ * Commits a verified closeout once `goals set-status` adopts its proposal.
+ *
+ * **Details**
+ *
+ * `goals set-status <slug> completed-retained` replaces a proposal with this
+ * record only when the shared completion receipt for the proposed final PR
+ * verifies. It keeps the final PR in the committed manifest, and the
+ * completion declaration digest reads it exactly as it read the proposal, so
+ * the receipt that verified the closeout still matches afterwards.
+ *
+ * **Example** (Record an adopted closeout)
+ *
+ * ```ts
+ * import { GoalCloseoutRecord } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ * const record = GoalCloseoutRecord.make({ status: "completed-retained", finalPullRequest: 1582 })
+ * console.log(record.finalPullRequest) // 1582
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GoalCloseoutRecord extends S.Opaque<GoalCloseoutRecord, { readonly brand: unique symbol }>()(
+  S.Struct({
+    status: S.tag("completed-retained"),
+    finalPullRequest: S.Int.check(S.isGreaterThan(0)),
+  }).pipe(
+    $I.annoteSchema("GoalCloseoutRecord", {
+      description: "Committed closeout adopted from a proposal whose completion receipt verified.",
     })
   )
 ) {}
@@ -1435,6 +1470,39 @@ export const renderGoalCloseoutView = (view: GoalCloseoutView): string =>
     : `${view.proposedCloseout.status} (proposed via #${view.proposedCloseout.finalPullRequest}, unverified)`;
 
 /**
+ * Renders a committed closeout record against its completion receipt for operator surfaces.
+ *
+ * **Details**
+ *
+ * A verified record prints the same `completed-retained (verified via #N)` line
+ * a verified proposal prints, so adopting the proposal changes no operator line.
+ *
+ * **Example** (Render both verification states)
+ *
+ * ```ts
+ * import { GoalCloseoutRecord, renderGoalCloseoutRecordView } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ *
+ * const record = GoalCloseoutRecord.make({ status: "completed-retained", finalPullRequest: 7 })
+ * console.log(renderGoalCloseoutRecordView(record, "verified")) // "completed-retained (verified via #7)"
+ * console.log(renderGoalCloseoutRecordView(record, "unverified")) // "completed-retained (committed via #7, unverified)"
+ * ```
+ *
+ * @param record - The manifest's committed closeout.
+ * @param verification - Whether the matching completion receipt verifies.
+ * @returns One line naming the committed status, its final PR and its verification.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderGoalCloseoutRecordView: {
+  (verification: GoalCloseoutVerification): (record: GoalCloseoutRecord) => string;
+  (record: GoalCloseoutRecord, verification: GoalCloseoutVerification): string;
+} = dual(2, (record: GoalCloseoutRecord, verification: GoalCloseoutVerification): string =>
+  GoalCloseoutVerification.is.verified(verification)
+    ? `${record.status} (verified via #${record.finalPullRequest})`
+    : `${record.status} (committed via #${record.finalPullRequest}, unverified)`
+);
+
+/**
  * Renders a proposed closeout from the committed manifest alone.
  *
  * **Details**
@@ -1460,6 +1528,16 @@ export const renderGoalCloseoutView = (view: GoalCloseoutView): string =>
 export const renderGoalProposedCloseout = (proposal: GoalProposedCloseout): string =>
   `proposed ${proposal.status} via #${proposal.finalPullRequest}`;
 
+// Proposed and committed closeouts both need a non-grandfathered gate with
+// gating Yeet readiness evidence and no other declared final PR.
+const closeoutGateAdmits = (gate: GoalCompletionGate, finalPullRequest: number): boolean =>
+  !gate.grandfathered &&
+  A.some(gate.acceptanceEvidence ?? [], (ref) => ref.kind === "yeet-verdict" && ref.gating) &&
+  !O.exists(
+    A.findFirst(gate.pullRequests ?? [], (ref) => ref.role === "final"),
+    (ref) => ref.number !== finalPullRequest
+  );
+
 const GoalProposedCloseoutCheck = S.makeFilter(
   (manifest: {
     readonly initiative: GoalInitiative;
@@ -1468,12 +1546,9 @@ const GoalProposedCloseoutCheck = S.makeFilter(
   }) => {
     const proposal = manifest.proposedCloseout;
     if (proposal === undefined) return true;
-    const final = A.findFirst(manifest.completionGate.pullRequests ?? [], (ref) => ref.role === "final");
     return (
       (manifest.initiative.status === "active" || manifest.initiative.status === "paused") &&
-      !manifest.completionGate.grandfathered &&
-      A.some(manifest.completionGate.acceptanceEvidence ?? [], (ref) => ref.kind === "yeet-verdict" && ref.gating) &&
-      !O.exists(final, (ref) => ref.number !== proposal.finalPullRequest)
+      closeoutGateAdmits(manifest.completionGate, proposal.finalPullRequest)
     );
   },
   $I.annote("GoalProposedCloseoutCheck", {
@@ -1483,6 +1558,50 @@ const GoalProposedCloseoutCheck = S.makeFilter(
       "Proposed closeout requires active/paused status, a non-grandfathered gate and a matching final PR and gating Yeet readiness evidence",
   })
 );
+
+const GoalCloseoutRecordCheck = S.makeFilter(
+  (manifest: {
+    readonly initiative: GoalInitiative;
+    readonly completionGate: GoalCompletionGate;
+    readonly proposedCloseout?: GoalProposedCloseout;
+    readonly closeout?: GoalCloseoutRecord;
+  }) => {
+    const record = manifest.closeout;
+    if (record === undefined) return true;
+    return (
+      manifest.initiative.status === record.status &&
+      manifest.proposedCloseout === undefined &&
+      closeoutGateAdmits(manifest.completionGate, record.finalPullRequest)
+    );
+  },
+  $I.annote("GoalCloseoutRecordCheck", {
+    title: "Committed Closeout Identity",
+    description:
+      "A committed closeout matches the declared status, replaces its proposal and matches any declared final PR.",
+    message:
+      "Committed closeout requires completed-retained status, no proposal, a non-grandfathered gate, gating Yeet readiness evidence and a matching final PR",
+  })
+);
+
+/**
+ * Renders a committed closeout record for the generated portfolio index.
+ *
+ * **Example** (Render the committed record)
+ *
+ * ```ts
+ * import { GoalCloseoutRecord, renderGoalCloseoutRecord } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ *
+ * const record = GoalCloseoutRecord.make({ status: "completed-retained", finalPullRequest: 7 })
+ * console.log(renderGoalCloseoutRecord(record)) // "completed-retained via #7"
+ * ```
+ *
+ * @param record - The manifest's committed closeout.
+ * @returns The committed status and its final PR.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderGoalCloseoutRecord = (record: GoalCloseoutRecord): string =>
+  `${record.status} via #${record.finalPullRequest}`;
 
 /**
  * Packet-relative path of one registered goal ops script.
@@ -1599,6 +1718,7 @@ export class GoalManifest extends S.Opaque<GoalManifest, { readonly brand: uniqu
     schemaVersion: S.optionalKey(GoalManifestSchemaVersion),
     lifecycle: S.optionalKey(GoalStatus),
     proposedCloseout: S.optionalKey(GoalProposedCloseout),
+    closeout: S.optionalKey(GoalCloseoutRecord),
     mergedPullRequest: S.optionalKey(S.Int.check(S.isGreaterThan(0))),
     mergedPullRequests: S.Int.check(S.isGreaterThan(0)).pipe(S.Array, S.optionalKey),
     packetPath: S.optionalKey(S.String),
@@ -1617,7 +1737,7 @@ export class GoalManifest extends S.Opaque<GoalManifest, { readonly brand: uniqu
     provides: CapabilitySlugList,
     requires: CapabilitySlugList,
   })
-    .check(GoalManifestCapabilitySelfCycleCheck, GoalProposedCloseoutCheck)
+    .check(GoalManifestCapabilitySelfCycleCheck, GoalProposedCloseoutCheck, GoalCloseoutRecordCheck)
     .pipe(
       $I.annoteSchema("GoalManifest", {
         description: "Canonical goal-packet manifest with defaulted capability edges and legacy wire compatibility.",
@@ -1660,16 +1780,13 @@ export const decodeGoalManifest: {
  * @since 0.0.0
  */
 export const goalPullRequestRefs = (manifest: GoalManifest): ReadonlyArray<GoalPullRequestRef> => {
+  const closing = manifest.proposedCloseout ?? manifest.closeout;
   if (manifest.completionGate.pullRequests !== undefined) {
     const refs = manifest.completionGate.pullRequests;
-    if (manifest.proposedCloseout === undefined || A.some(refs, (ref) => ref.role === "final")) return refs;
-    return A.prepend(
-      refs,
-      GoalPullRequestRef.make({ number: manifest.proposedCloseout.finalPullRequest, role: "final" })
-    );
+    if (closing === undefined || A.some(refs, (ref) => ref.role === "final")) return refs;
+    return A.prepend(refs, GoalPullRequestRef.make({ number: closing.finalPullRequest, role: "final" }));
   }
-  if (manifest.proposedCloseout !== undefined)
-    return [GoalPullRequestRef.make({ number: manifest.proposedCloseout.finalPullRequest, role: "final" })];
+  if (closing !== undefined) return [GoalPullRequestRef.make({ number: closing.finalPullRequest, role: "final" })];
   const numbers = manifest.mergedPullRequests ?? [];
   const final = O.orElse(O.fromUndefinedOr(manifest.mergedPullRequest), () => A.last(numbers));
   return O.match(final, {

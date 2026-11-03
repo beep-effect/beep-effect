@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active`
+Status: `completed-retained`; the committed `closeout` record in `ops/manifest.json` carries it (`goals set-status` adopted the verified proposal on 2026-11-02, #2629).
 
 ## Phases
 
