@@ -1,0 +1,581 @@
+{
+  "tool": "goals/repo-cli-gh-git-consolidation/ops/yeet-differential-w7.ts",
+  "commit": "8602b24203414765675e1bd85e3401dc9fe68444",
+  "git": "git version 2.56.0",
+  "scenarios": 81,
+  "same": 72,
+  "classified": 9,
+  "unclassified": 0,
+  "gates": {
+    "unclassified": true
+  },
+  "rows": [
+    {
+      "site": "publishScope.stash",
+      "scenario": "unstaged and untracked residue beside a staged path",
+      "verdict": "same",
+      "old": "{\"ok\":{\"parked\":true,\"stashShaIsTop\":true,\"status\":\"A  staged.txt\"}}",
+      "new": "{\"ok\":{\"parked\":true,\"stashShaIsTop\":true,\"status\":\"A  staged.txt\"}}"
+    },
+    {
+      "site": "publishScope.stash",
+      "scenario": "clean worktree",
+      "verdict": "same",
+      "old": "{\"ok\":{\"parked\":false,\"stashShaIsTop\":false,\"status\":\"\"}}",
+      "new": "{\"ok\":{\"parked\":false,\"stashShaIsTop\":false,\"status\":\"\"}}"
+    },
+    {
+      "site": "publishScope.restore",
+      "scenario": "recorded stash",
+      "verdict": "same",
+      "old": "{\"warnings\":[],\"status\":\"M README.md\\nA  staged.txt\\n?? untracked.txt\",\"stashes\":1}",
+      "new": "{\"warnings\":[],\"status\":\"M README.md\\nA  staged.txt\\n?? untracked.txt\",\"stashes\":1}"
+    },
+    {
+      "site": "publishScope.restore",
+      "scenario": "stash dropped before the restore",
+      "verdict": "same",
+      "old": "{\"warnings\":[\"[yeet] warning: staged-only residue was NOT restored: stash not found by sha or marker; inspect \\\"git stash list\\\" for \\\"<marker>\\\"\"],\"status\":\"A  staged.txt\",\"stashes\":1}",
+      "new": "{\"warnings\":[\"[yeet] warning: staged-only residue was NOT restored: stash not found by sha or marker; inspect \\\"git stash list\\\" for \\\"<marker>\\\"\"],\"status\":\"A  staged.txt\",\"stashes\":1}"
+    },
+    {
+      "site": "publishScope.restore",
+      "scenario": "re-dirtied path conflicts with the stash",
+      "verdict": "D-18 (b): the warning names the kit's stash failure where it named the `git stash pop stash@{0}` capture; the residue stays parked under the marker on both sides",
+      "old": "{\"warnings\":[\"[yeet] warning: staged-only residue was NOT restored: stash pop failed (git stash pop stash@{0} failed with exit code 128.); residue is preserved under marker \\\"<marker>\\\"\"],\"status\":\"M README.md\\nA  staged.txt\\n?? untracked.txt\",\"stashes\":1}",
+      "new": "{\"warnings\":[\"[yeet] warning: staged-only residue was NOT restored: stash pop failed (local changes would be overwritten in <tmp>/world-10/work: commit or stash them first); residue is preserved under marker \\\"<marker>\\\"\"],\"status\":\"M README.md\\nA  staged.txt\\n?? untracked.txt\",\"stashes\":1}"
+    },
+    {
+      "site": "publishScope.baseFreshness",
+      "scenario": "behind with an overlapping path",
+      "verdict": "same",
+      "old": "{\"ok\":{\"behindCount\":1,\"mergeBase\":\"c12302405273ce28ecbc06133264e0c60f84ea3d\",\"overlappingPaths\":[\"src/a.ts\"]}}",
+      "new": "{\"ok\":{\"behindCount\":1,\"mergeBase\":\"c12302405273ce28ecbc06133264e0c60f84ea3d\",\"overlappingPaths\":[\"src/a.ts\"]}}"
+    },
+    {
+      "site": "publishScope.baseFreshness",
+      "scenario": "up to date",
+      "verdict": "same",
+      "old": "{\"ok\":{\"behindCount\":0,\"mergeBase\":\"c12302405273ce28ecbc06133264e0c60f84ea3d\",\"overlappingPaths\":[]}}",
+      "new": "{\"ok\":{\"behindCount\":0,\"mergeBase\":\"c12302405273ce28ecbc06133264e0c60f84ea3d\",\"overlappingPaths\":[]}}"
+    },
+    {
+      "site": "publishScope.baseFreshness",
+      "scenario": "no merge base with an unknown base",
+      "verdict": "same",
+      "old": "{\"failed\":{\"message\":\"yeet publish could not compute a merge-base between nope and HEAD. Rebase onto the base ref before publishing.\"}}",
+      "new": "{\"failed\":{\"message\":\"yeet publish could not compute a merge-base between nope and HEAD. Rebase onto the base ref before publishing.\"}}"
+    },
+    {
+      "site": "publishScope.upstream",
+      "scenario": "tracks origin/main",
+      "verdict": "same",
+      "old": "[\"[yeet] warning: branch \\\"feature\\\" tracks \\\"origin/main\\\"; publish will push HEAD to origin/feature.\"]",
+      "new": "[\"[yeet] warning: branch \\\"feature\\\" tracks \\\"origin/main\\\"; publish will push HEAD to origin/feature.\"]"
+    },
+    {
+      "site": "publishScope.upstream",
+      "scenario": "tracks origin/feature",
+      "verdict": "same",
+      "old": "[]",
+      "new": "[]"
+    },
+    {
+      "site": "publishScope.upstream",
+      "scenario": "no upstream",
+      "verdict": "same",
+      "old": "[]",
+      "new": "[]"
+    },
+    {
+      "site": "publishScope.upstream",
+      "scenario": "detached HEAD",
+      "verdict": "same",
+      "old": "[]",
+      "new": "[]"
+    },
+    {
+      "site": "publishScope.upstream",
+      "scenario": "tracks a configured but gone origin/other",
+      "verdict": "D-18 (c): `for-each-ref %(upstream)` reads the configured upstream where `rev-parse @{u}` failed on a gone one, so the mismatch warning now names it",
+      "old": "[]",
+      "new": "[\"[yeet] warning: branch \\\"feature\\\" tracks \\\"origin/other\\\"; publish will push HEAD to origin/feature.\"]"
+    },
+    {
+      "site": "publishScope.existingCommit",
+      "scenario": "pushed branch one commit ahead of origin/feature",
+      "verdict": "same",
+      "old": "{\"ok\":{\"sha\":\"a05afb300a8908efec590f61b78c3dab24fc7a32\",\"paths\":[\"src/b.ts\"]}}",
+      "new": "{\"ok\":{\"sha\":\"a05afb300a8908efec590f61b78c3dab24fc7a32\",\"paths\":[\"src/b.ts\"]}}"
+    },
+    {
+      "site": "publishScope.existingCommit",
+      "scenario": "unpushed branch ahead of the base",
+      "verdict": "same",
+      "old": "{\"ok\":{\"sha\":\"a05afb300a8908efec590f61b78c3dab24fc7a32\",\"paths\":[\"src/b.ts\"]}}",
+      "new": "{\"ok\":{\"sha\":\"a05afb300a8908efec590f61b78c3dab24fc7a32\",\"paths\":[\"src/b.ts\"]}}"
+    },
+    {
+      "site": "publishScope.existingCommit",
+      "scenario": "nothing ahead of the base",
+      "verdict": "D-18 (g): the private existing-commit read answered none; the exported `collectPublishIntent` the differential reaches turns that none into its own refusal",
+      "old": "{\"ok\":\"none\"}",
+      "new": "{\"failed\":{\"message\":\"yeet publish requires reviewed staged changes or a clean local commit ahead of the publish remote/base.\"}}"
+    },
+    {
+      "site": "publishScope.restage",
+      "scenario": "a regular and an ignored tracked path",
+      "verdict": "same",
+      "old": "{\"ok\":\"M\\tregular.txt\\nM\\ttracked.txt\"}",
+      "new": "{\"ok\":\"M\\tregular.txt\\nM\\ttracked.txt\"}"
+    },
+    {
+      "site": "publishScope.restage",
+      "scenario": "a tracked path under an ignored directory",
+      "verdict": "same",
+      "old": "{\"ok\":\"M\\tregular.txt\\nM\\tvendor/lib.txt\"}",
+      "new": "{\"ok\":\"M\\tregular.txt\\nM\\tvendor/lib.txt\"}"
+    },
+    {
+      "site": "handler.proofBaseSha",
+      "scenario": "the base ref",
+      "verdict": "same",
+      "old": "{\"ok\":\"c12302405273ce28ecbc06133264e0c60f84ea3d\"}",
+      "new": "{\"ok\":\"c12302405273ce28ecbc06133264e0c60f84ea3d\"}"
+    },
+    {
+      "site": "handler.proofBaseSha",
+      "scenario": "an unknown base",
+      "verdict": "same",
+      "old": "{\"failed\":{\"exitCode\":128}}",
+      "new": "{\"failed\":{\"exitCode\":128}}"
+    },
+    {
+      "site": "handler.mergeOnly",
+      "scenario": "a clean base merge onto the published tip",
+      "verdict": "same",
+      "old": "\"allowed\"",
+      "new": "\"allowed\""
+    },
+    {
+      "site": "handler.mergeOnly",
+      "scenario": "a non-merge commit",
+      "verdict": "same",
+      "old": "\"refused\"",
+      "new": "\"refused\""
+    },
+    {
+      "site": "handler.mergeOnly",
+      "scenario": "a base merge carrying an extra edit",
+      "verdict": "same",
+      "old": "\"refused\"",
+      "new": "\"refused\""
+    },
+    {
+      "site": "handler.mergeOnly",
+      "scenario": "an octopus merge",
+      "verdict": "same",
+      "old": "\"refused\"",
+      "new": "\"refused\""
+    },
+    {
+      "site": "finalCheck.dirtyTree",
+      "scenario": "clean tree",
+      "verdict": "same",
+      "old": "{\"ok\":false}",
+      "new": "{\"ok\":false}"
+    },
+    {
+      "site": "finalCheck.dirtyTree",
+      "scenario": "an untracked file",
+      "verdict": "same",
+      "old": "{\"ok\":true}",
+      "new": "{\"ok\":true}"
+    },
+    {
+      "site": "finalCheck.dirtyTree",
+      "scenario": "only an ignored file",
+      "verdict": "same",
+      "old": "{\"ok\":false}",
+      "new": "{\"ok\":false}"
+    },
+    {
+      "site": "finalCheck.dirtyTree",
+      "scenario": "a modified tracked file",
+      "verdict": "same",
+      "old": "{\"ok\":true}",
+      "new": "{\"ok\":true}"
+    },
+    {
+      "site": "finalCheck.heads",
+      "scenario": "head and merge base",
+      "verdict": "same",
+      "old": "{\"mb\":\"c12302405273ce28ecbc06133264e0c60f84ea3d\",\"head\":\"d3393cf4918241f778303cefc716a819cb4d16b2\"}",
+      "new": "{\"mb\":\"c12302405273ce28ecbc06133264e0c60f84ea3d\",\"head\":\"d3393cf4918241f778303cefc716a819cb4d16b2\"}"
+    },
+    {
+      "site": "finalCheck.changedFiles",
+      "scenario": "an add, a rename and a deletion, deletions filtered",
+      "verdict": "same",
+      "old": "{\"ok\":[\"src/b.ts\",\"src/renamed.ts\"]}",
+      "new": "{\"ok\":[\"src/b.ts\",\"src/renamed.ts\"]}"
+    },
+    {
+      "site": "finalCheckRefresh.changedPaths",
+      "scenario": "a rename reads as two paths",
+      "verdict": "same",
+      "old": "{\"ok\":[\"README.md\",\"src/a.ts\",\"src/b.ts\",\"src/renamed.ts\"]}",
+      "new": "{\"ok\":[\"README.md\",\"src/a.ts\",\"src/b.ts\",\"src/renamed.ts\"]}"
+    },
+    {
+      "site": "finalCheckRefresh.mergeBase",
+      "scenario": "an unknown receipt head",
+      "verdict": "same",
+      "old": "{\"failed\":{\"exitCode\":128}}",
+      "new": "{\"failed\":{\"exitCode\":128}}"
+    },
+    {
+      "site": "finalCheckRefresh.revListCount",
+      "scenario": "the receipt distance",
+      "verdict": "same",
+      "old": "{\"ok\":1}",
+      "new": "{\"ok\":1}"
+    },
+    {
+      "site": "finalCheckRefresh.revListCount",
+      "scenario": "an unknown range",
+      "verdict": "same",
+      "old": "{\"failed\":{\"exitCode\":128}}",
+      "new": "{\"failed\":{\"exitCode\":128}}"
+    },
+    {
+      "site": "proofState.lockPath",
+      "scenario": "an origin URL",
+      "verdict": "same",
+      "old": "{\"ok\":\"/home/elpresidank/.beep/runtime/beep-yeet-proof-locks-2a2145724d1c-uid-1000/aa3cdfc31d63.lock\"}",
+      "new": "{\"ok\":\"/home/elpresidank/.beep/runtime/beep-yeet-proof-locks-2a2145724d1c-uid-1000/aa3cdfc31d63.lock\"}"
+    },
+    {
+      "site": "proofState.lockPath",
+      "scenario": "no origin remote",
+      "verdict": "same",
+      "old": "{\"failed\":{\"message\":\"git config --get remote.origin.url failed with exit code 1.\"}}",
+      "new": "{\"failed\":{\"message\":\"git config --get remote.origin.url failed with exit code 1.\"}}"
+    },
+    {
+      "site": "proofState.fingerprint",
+      "scenario": "clean tree",
+      "verdict": "same",
+      "old": "{\"ok\":\"96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7\"}",
+      "new": "{\"ok\":\"96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7\"}"
+    },
+    {
+      "site": "proofState.fingerprint",
+      "scenario": "staged and unstaged edits with a rename and an untracked file",
+      "verdict": "D-18 (d): the merged capture trimmed the first status line's leading space (` M README.md` read `M README.md`); the porcelain v1 lines keep it, so the fingerprint bytes change once",
+      "old": "{\"ok\":\"7c839891895b7b2eff8bcd8cae9fa49dd98443c2eda38eeaed4d285951ae2bb0\"}",
+      "new": "{\"ok\":\"181b604e5823964153a919be721360d2babd7e87476d96f3b84b425c3ffb71b8\"}"
+    },
+    {
+      "site": "proofState.fingerprint",
+      "scenario": "a non-ASCII and a spaced path",
+      "verdict": "D-18 (d): porcelain v1 lines carry raw paths where `status --short` quoted them, so the fingerprint bytes change once",
+      "old": "{\"ok\":\"f210fed308d71d04893a6dbceb3d96e81bffce9b4b31730245442dab29f91f16\"}",
+      "new": "{\"ok\":\"2d6c59db0162f085c751af3efc2602a96e76be962752f7b4faefbaa9c36d2198\"}"
+    },
+    {
+      "site": "proofState.fingerprint",
+      "scenario": "status.branch=true",
+      "verdict": "D-18 (d): `status --short` honoured `status.branch` and printed a `##` header; the kit's porcelain read has none",
+      "old": "{\"ok\":\"03f6e724193062664348a999398a37d588c2303fbddd2c55251b05b39e82279b\"}",
+      "new": "{\"ok\":\"a6d4b33154e045b56a09f4eee97cc782be7252cd74ce1bb2a5a3d17d40d46616\"}"
+    },
+    {
+      "site": "provenance.gitPaths",
+      "scenario": "the primary clone root",
+      "verdict": "same",
+      "old": "{\"ok\":{\"clone\":\"<tmp>/world-71/work\",\"checkout\":\"<tmp>/world-71/work\"}}",
+      "new": "{\"ok\":{\"clone\":\"<tmp>/world-71/work\",\"checkout\":\"<tmp>/world-71/work\"}}"
+    },
+    {
+      "site": "provenance.gitPaths",
+      "scenario": "a subdirectory of the primary clone",
+      "verdict": "D-18 (h): `commonDir` is absolute; the cwd-relative `--git-common-dir` answer was resolved against the checkout root, which named the wrong clone from a subdirectory",
+      "old": "{\"ok\":{\"clone\":\"<tmp>/world-71\",\"checkout\":\"<tmp>/world-71/work\"}}",
+      "new": "{\"ok\":{\"clone\":\"<tmp>/world-71/work\",\"checkout\":\"<tmp>/world-71/work\"}}"
+    },
+    {
+      "site": "provenance.gitPaths",
+      "scenario": "a linked worktree",
+      "verdict": "same",
+      "old": "{\"ok\":{\"clone\":\"<tmp>/world-71/work\",\"checkout\":\"<tmp>/world-71/linked\"}}",
+      "new": "{\"ok\":{\"clone\":\"<tmp>/world-71/work\",\"checkout\":\"<tmp>/world-71/linked\"}}"
+    },
+    {
+      "site": "provenance.gitPaths",
+      "scenario": "a subdirectory of a linked worktree",
+      "verdict": "same",
+      "old": "{\"ok\":{\"clone\":\"<tmp>/world-71/work\",\"checkout\":\"<tmp>/world-71/linked\"}}",
+      "new": "{\"ok\":{\"clone\":\"<tmp>/world-71/work\",\"checkout\":\"<tmp>/world-71/linked\"}}"
+    },
+    {
+      "site": "provenance.gitPaths",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"failed\":{\"exitCode\":128}}",
+      "new": "{\"failed\":{\"exitCode\":128}}"
+    },
+    {
+      "site": "provenance.workspaceLabel",
+      "scenario": "a workspace label",
+      "verdict": "same",
+      "old": "{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"lane-label\"}",
+      "new": "{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"lane-label\"}"
+    },
+    {
+      "site": "provenance.workspaceLabel",
+      "scenario": "no workspace label",
+      "verdict": "same",
+      "old": "{\"_id\":\"Option\",\"_tag\":\"None\"}",
+      "new": "{\"_id\":\"Option\",\"_tag\":\"None\"}"
+    },
+    {
+      "site": "expectationRewrite.collect",
+      "scenario": "a modified, a renamed and an overflowing test file",
+      "verdict": "same",
+      "old": "{\"ok\":[{\"testFile\":\"pkg/test/huge.test.ts\",\"line\":0,\"removed\":\"(diff exceeded the capture limit; the whole file is replayed on the merge base)\",\"added\":\"(diff exceeded the capture limit; the whole file is replayed on the merge base)\"},{\"testFile\":\"pkg/test/small.test.ts\",\"line\":3,\"removed\":\"expect(f()).toBe(\\\"a\\\");\",\"added\":\"expect(f()).toBe(\\\"b\\\");\"},{\"testFile\":\"pkg/other/moved.test.ts\",\"baseFile\":\"pkg/test/moved.test.ts\",\"line\":3,\"removed\":\"expect(f()).toBe(\\\"c\\\");\",\"added\":\"expect(f()).toBe(\\\"d\\\");\"}]}",
+      "new": "{\"ok\":[{\"testFile\":\"pkg/test/huge.test.ts\",\"line\":0,\"removed\":\"(diff exceeded the capture limit; the whole file is replayed on the merge base)\",\"added\":\"(diff exceeded the capture limit; the whole file is replayed on the merge base)\"},{\"testFile\":\"pkg/test/small.test.ts\",\"line\":3,\"removed\":\"expect(f()).toBe(\\\"a\\\");\",\"added\":\"expect(f()).toBe(\\\"b\\\");\"},{\"testFile\":\"pkg/other/moved.test.ts\",\"baseFile\":\"pkg/test/moved.test.ts\",\"line\":3,\"removed\":\"expect(f()).toBe(\\\"c\\\");\",\"added\":\"expect(f()).toBe(\\\"d\\\");\"}]}"
+    },
+    {
+      "site": "expectationRewrite.worktreeAdd",
+      "scenario": "the merge base",
+      "verdict": "same",
+      "old": "0",
+      "new": "0"
+    },
+    {
+      "site": "expectationRewrite.worktreeRemove",
+      "scenario": "the merge base",
+      "verdict": "same",
+      "old": "0",
+      "new": "0"
+    },
+    {
+      "site": "expectationRewrite.worktreeAdd",
+      "scenario": "an unknown commit",
+      "verdict": "same",
+      "old": "\"nonzero\"",
+      "new": "\"nonzero\""
+    },
+    {
+      "site": "expectationRewrite.worktreeRemove",
+      "scenario": "an unknown commit",
+      "verdict": "same",
+      "old": "\"nonzero\"",
+      "new": "\"nonzero\""
+    },
+    {
+      "site": "expectationRewrite.worktreeAdd",
+      "scenario": "a path that already exists",
+      "verdict": "same",
+      "old": "\"nonzero\"",
+      "new": "\"nonzero\""
+    },
+    {
+      "site": "expectationRewrite.worktreeRemove",
+      "scenario": "a path that already exists",
+      "verdict": "same",
+      "old": "\"nonzero\"",
+      "new": "\"nonzero\""
+    },
+    {
+      "site": "headInstall.inputs",
+      "scenario": "a workspace with manifests, a lockfile, patches and bunfig",
+      "verdict": "same",
+      "old": "{\"ok\":{\"tree\":\"3ccccbebad1647e039f5d39cb0b9f280d89e930e\",\"lock\":\"ea7f33b0dda79d377d0442f928af9c634b6f4a57\",\"manifests\":\"7d48568bd11284d33161d7bd722598c95d437eccaa9cc96fb77bfa30699a4997\"}}",
+      "new": "{\"ok\":{\"tree\":\"3ccccbebad1647e039f5d39cb0b9f280d89e930e\",\"lock\":\"ea7f33b0dda79d377d0442f928af9c634b6f4a57\",\"manifests\":\"7d48568bd11284d33161d7bd722598c95d437eccaa9cc96fb77bfa30699a4997\"}}"
+    },
+    {
+      "site": "headInstall.inputs",
+      "scenario": "a manifest under a non-ASCII directory",
+      "verdict": "D-18 (e): `ls-tree -z` gives the raw path where the unquoted listing quoted it, so the manifest is now an install input",
+      "old": "{\"ok\":{\"tree\":\"d68e020c56b8b9c9574e1d3bb46ee6e45cf1d83f\",\"lock\":\"ea7f33b0dda79d377d0442f928af9c634b6f4a57\",\"manifests\":\"7d48568bd11284d33161d7bd722598c95d437eccaa9cc96fb77bfa30699a4997\"}}",
+      "new": "{\"ok\":{\"tree\":\"d68e020c56b8b9c9574e1d3bb46ee6e45cf1d83f\",\"lock\":\"ea7f33b0dda79d377d0442f928af9c634b6f4a57\",\"manifests\":\"b2cfa4726d2b431bf9546b5f32cbc5c8e3543d1bf687877c4f8ff7b99c58dc67\"}}"
+    },
+    {
+      "site": "headInstall.inputs",
+      "scenario": "an unknown commit",
+      "verdict": "same",
+      "old": "{\"failed\":{\"exitCode\":128}}",
+      "new": "{\"failed\":{\"exitCode\":128}}"
+    },
+    {
+      "site": "mergedPreview.create",
+      "scenario": "a clean merge",
+      "verdict": "same",
+      "old": "{\"ok\":{\"tree\":\"21f4c1d3f2ab686804979c449a2f624748fc740e\",\"base\":\"8ed5c322d8c0f61c62b94a7e07c66dd7121d04e3\",\"head\":\"58e9d20d91d68fdb907822acfd7fe0a79b2f621d\",\"commit\":\"2b9bb7278a5ec7bb864d4adab4fbec9e27ee402f\"}}",
+      "new": "{\"ok\":{\"tree\":\"21f4c1d3f2ab686804979c449a2f624748fc740e\",\"base\":\"8ed5c322d8c0f61c62b94a7e07c66dd7121d04e3\",\"head\":\"58e9d20d91d68fdb907822acfd7fe0a79b2f621d\",\"commit\":\"2b9bb7278a5ec7bb864d4adab4fbec9e27ee402f\"}}"
+    },
+    {
+      "site": "mergedPreview.create",
+      "scenario": "a conflicting merge",
+      "verdict": "same",
+      "old": "{\"failed\":{\"message\":\"yeet verify --merged cannot build the merge preview: HEAD conflicts with origin/main.\\nHosted CI proves refs/pull/N/merge, so this conflict blocks hosted lanes too.\\n  conflicted: README.md\\n  CONFLICT (content): Merge conflict in README.md\\nResolve it locally with: git fetch origin && git merge origin/main, then re-run yeet verify --merged.\"}}",
+      "new": "{\"failed\":{\"message\":\"yeet verify --merged cannot build the merge preview: HEAD conflicts with origin/main.\\nHosted CI proves refs/pull/N/merge, so this conflict blocks hosted lanes too.\\n  conflicted: README.md\\n  CONFLICT (content): Merge conflict in README.md\\nResolve it locally with: git fetch origin && git merge origin/main, then re-run yeet verify --merged.\"}}"
+    },
+    {
+      "site": "mergedPreview.create",
+      "scenario": "an unknown base",
+      "verdict": "same",
+      "old": "{\"failed\":{\"message\":\"yeet verify --merged could not resolve nope. Run git fetch origin first so the base ref exists locally.\"}}",
+      "new": "{\"failed\":{\"message\":\"yeet verify --merged could not resolve nope. Run git fetch origin first so the base ref exists locally.\"}}"
+    },
+    {
+      "site": "gateStaleness.inputPaths",
+      "scenario": "committed and dirty paths",
+      "verdict": "same",
+      "old": "{\"ok\":[\"README.md\",\"staged.txt\",\"untracked.txt\"]}",
+      "new": "{\"ok\":[\"README.md\",\"staged.txt\",\"untracked.txt\"]}"
+    },
+    {
+      "site": "gateStaleness.inputPaths",
+      "scenario": "an unknown base",
+      "verdict": "same",
+      "old": "{\"ok\":[\"README.md\",\"staged.txt\",\"untracked.txt\"]}",
+      "new": "{\"ok\":[\"README.md\",\"staged.txt\",\"untracked.txt\"]}"
+    },
+    {
+      "site": "portfolioIndex.stagedDeletions",
+      "scenario": "a staged deletion of the index",
+      "verdict": "same",
+      "old": "{\"ok\":[\"goals/INDEX.md\"]}",
+      "new": "{\"ok\":[\"goals/INDEX.md\"]}"
+    },
+    {
+      "site": "portfolioIndex.stagedDeletions",
+      "scenario": "a staged edit of the index",
+      "verdict": "same",
+      "old": "{\"ok\":[]}",
+      "new": "{\"ok\":[]}"
+    },
+    {
+      "site": "provenanceFooter.head",
+      "scenario": "a repository",
+      "verdict": "same",
+      "old": "{\"ok\":\"c12302405273ce28ecbc06133264e0c60f84ea3d\"}",
+      "new": "{\"ok\":\"c12302405273ce28ecbc06133264e0c60f84ea3d\"}"
+    },
+    {
+      "site": "provenanceFooter.head",
+      "scenario": "an unborn repository",
+      "verdict": "same",
+      "old": "{\"failed\":{\"exitCode\":128}}",
+      "new": "{\"failed\":{\"exitCode\":128}}"
+    },
+    {
+      "site": "prTitle.resolve",
+      "scenario": "the first non-merge commit",
+      "verdict": "same",
+      "old": "{\"ok\":[\"fix: first\",\"first-non-merge-commit\"]}",
+      "new": "{\"ok\":[\"fix: first\",\"first-non-merge-commit\"]}"
+    },
+    {
+      "site": "prTitle.resolve",
+      "scenario": "merge commits only",
+      "verdict": "same",
+      "old": "{\"failed\":{\"message\":\"yeet publish found no non-merge commit in HEAD^2..HEAD to title the pull request; pass --message \\\"<conventional subject>\\\".\"}}",
+      "new": "{\"failed\":{\"message\":\"yeet publish found no non-merge commit in HEAD^2..HEAD to title the pull request; pass --message \\\"<conventional subject>\\\".\"}}"
+    },
+    {
+      "site": "prTitle.resolve",
+      "scenario": "a subject past 512 KiB",
+      "verdict": "D-18 (f): `Git.log` reads under the kit's 16 MiB bound where the merged 512 KiB capture failed",
+      "old": "{\"failed\":{\"message\":\"git log --no-merges --reverse --pretty=%s origin/main..HEAD output exceeded the repo-run capture limit.\"}}",
+      "new": "{\"ok\":[\"feat: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"first-non-merge-commit\"]}"
+    },
+    {
+      "site": "prTitle.resolve",
+      "scenario": "a --message",
+      "verdict": "same",
+      "old": "{\"ok\":[\"docs: from message\",\"message\"]}",
+      "new": "{\"ok\":[\"docs: from message\",\"message\"]}"
+    },
+    {
+      "site": "prBody.build",
+      "scenario": "commits with bodies",
+      "verdict": "same",
+      "old": "{\"ok\":\"## fix: first\\n\\nfirst body\\n\\nsecond paragraph\\n\\n## feat: second\\n\\nsecond body\\n\\n## Local proof\\n\\n- no local proof lane ran before the push; hosted CI is the authoritative proof\\n\\nVerdict: .beep/yeet/runs/feature-2ad562319767/verdict.json\\n\"}",
+      "new": "{\"ok\":\"## fix: first\\n\\nfirst body\\n\\nsecond paragraph\\n\\n## feat: second\\n\\nsecond body\\n\\n## Local proof\\n\\n- no local proof lane ran before the push; hosted CI is the authoritative proof\\n\\nVerdict: .beep/yeet/runs/feature-2ad562319767/verdict.json\\n\"}"
+    },
+    {
+      "site": "prBody.build",
+      "scenario": "commits without bodies",
+      "verdict": "same",
+      "old": "{\"ok\":\"## fix: first\\n\\n\\n## feat: second\\n\\n## Local proof\\n\\n- no local proof lane ran before the push; hosted CI is the authoritative proof\\n\\nVerdict: .beep/yeet/runs/feature-2ad562319767/verdict.json\\n\"}",
+      "new": "{\"ok\":\"## fix: first\\n\\n\\n## feat: second\\n\\n## Local proof\\n\\n- no local proof lane ran before the push; hosted CI is the authoritative proof\\n\\nVerdict: .beep/yeet/runs/feature-2ad562319767/verdict.json\\n\"}"
+    },
+    {
+      "site": "yeetCommand.branch",
+      "scenario": "a branch",
+      "verdict": "same",
+      "old": "{\"ok\":\"feature\"}",
+      "new": "{\"ok\":\"feature\"}"
+    },
+    {
+      "site": "yeetCommand.head",
+      "scenario": "the head",
+      "verdict": "same",
+      "old": "{\"ok\":\"c12302405273ce28ecbc06133264e0c60f84ea3d\"}",
+      "new": "{\"ok\":\"c12302405273ce28ecbc06133264e0c60f84ea3d\"}"
+    },
+    {
+      "site": "yeetCommand.head",
+      "scenario": "an unknown head",
+      "verdict": "same",
+      "old": "{\"failed\":true}",
+      "new": "{\"failed\":true}"
+    },
+    {
+      "site": "yeetCommand.branch",
+      "scenario": "a detached HEAD",
+      "verdict": "same",
+      "old": "{\"ok\":\"HEAD\"}",
+      "new": "{\"ok\":\"HEAD\"}"
+    },
+    {
+      "site": "sweep.lsRemote",
+      "scenario": "a branch origin still has",
+      "verdict": "same",
+      "old": "{\"tip\":\"c12302405273ce28ecbc06133264e0c60f84ea3d\"}",
+      "new": "{\"tip\":\"c12302405273ce28ecbc06133264e0c60f84ea3d\"}"
+    },
+    {
+      "site": "sweep.lsRemote",
+      "scenario": "a branch origin no longer has",
+      "verdict": "same",
+      "old": "{\"tip\":null}",
+      "new": "{\"tip\":null}"
+    },
+    {
+      "site": "sweep.fetchPrune",
+      "scenario": "origin dropped a tracked branch",
+      "verdict": "same",
+      "old": "{\"exit\":0,\"tracking\":1}",
+      "new": "{\"exit\":0,\"tracking\":1}"
+    },
+    {
+      "site": "sweep.lsRemote",
+      "scenario": "no origin remote",
+      "verdict": "same",
+      "old": "\"unreliable\"",
+      "new": "\"unreliable\""
+    },
+    {
+      "site": "sweep.fetchPrune",
+      "scenario": "no origin remote",
+      "verdict": "same",
+      "old": "{\"failed\":true}",
+      "new": "{\"failed\":true}"
+    }
+  ]
+}

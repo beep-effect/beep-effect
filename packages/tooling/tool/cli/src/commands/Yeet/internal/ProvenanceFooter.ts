@@ -10,6 +10,7 @@
  * @since 0.0.0
  */
 import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { GraphQLDocument } from "@beep/github/GraphQL";
 import { $RepoCliId } from "@beep/identity/packages";
@@ -31,7 +32,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { writeContainedFileString } from "../../../internal/cli/FsGuards.ts";
 import { GithubRest } from "../../../internal/github/index.ts";
-import { runGitOutput } from "../../../internal/repo-run/index.ts";
+import { adaptGitKitError } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext, runIdForContext, writeTextFile } from "./ArtifactPaths.ts";
 import { yeetGitOutputErrorAdapter } from "./GitErrorAdapter.ts";
@@ -661,7 +662,10 @@ export const makeCurrentPrSessionRecord = Effect.fn("ProvenanceFooter.makeRecord
 ) {
   const detector = yield* makePrProvenanceServiceLive();
   const provenance = yield* detector.detect(context.repoRoot, context.branch);
-  const headSha = Str.trim(yield* runGitOutput(context.repoRoot, ["rev-parse", "HEAD"], yeetGitOutputErrorAdapter));
+  const git = yield* Git;
+  const headSha = yield* git
+    .revParse(context.repoRoot, "HEAD")
+    .pipe(Effect.mapError(adaptGitKitError(GitCommand.revParse("HEAD"), yeetGitOutputErrorAdapter)));
   const recordedAt = yield* DateTime.now;
   return PrSessionRecord.make({
     ...provenance,

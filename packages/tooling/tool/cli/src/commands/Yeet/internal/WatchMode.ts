@@ -179,6 +179,7 @@ const checksRead = Effect.fn("Yeet.checksRead")(function* (
   YeetCommandError,
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
+  // KEEP (D-13): `gh pr checks` gives the checks rollup with `bucket`, which no kit member does.
   const result = yield* runRepoCommandCapture(
     "gh",
     ["pr", "checks", ...(required ? ["--required"] : []), "--json", "name,state,bucket,link,workflow,description"],
@@ -282,6 +283,7 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
   | Path.Path
   | Digest.Digest
 > {
+  // KEEP (D-13): `gh pr view` resolves the pull request from the checked-out branch.
   const viewResult = yield* runRepoCommandCapture(
     "gh",
     [

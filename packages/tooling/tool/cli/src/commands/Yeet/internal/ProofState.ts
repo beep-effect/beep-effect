@@ -6,6 +6,8 @@
  */
 
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
+import { Git, StatusEntry } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as OptionUtils from "@beep/utils/Option";
@@ -23,6 +25,7 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { concatBytes } from "../../../internal/cli/Bytes.ts";
+import { formatCommandLine } from "../../../internal/process/StepExec.ts";
 import {
   commandTextForStep,
   currentEffectiveUserIdOption,
@@ -30,6 +33,7 @@ import {
   ProcessIdentityStatus,
   processIdentityStatus,
   processStartIdentityForPid,
+  runRepoCommandCapture,
   validatePrivateCoordinationDirectory,
 } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
@@ -42,7 +46,8 @@ import {
   safeArtifactName,
   writeTextFile,
 } from "./ArtifactPaths.ts";
-import { currentCommitSha, runGitOutput } from "./GitExec.ts";
+import { yeetGitOutputErrorAdapter } from "./GitErrorAdapter.ts";
+import { currentCommitSha, yeetGitKitError } from "./GitExec.ts";
 import {
   collectHeadInstallInputs,
   HeadInstallReceipt,
@@ -51,7 +56,6 @@ import {
 } from "./HeadInstallReceipt.ts";
 import { renderJson } from "./IssueArtifacts.ts";
 import { YeetProofTier } from "./Planner.ts";
-import type { Git } from "@beep/git/Git";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoPlanStep, RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { HeadInstallReceiptRefusal } from "./HeadInstallReceipt.ts";
@@ -213,8 +217,21 @@ export const proofLockPathForContext = Effect.fn("Yeet.proofLockPathForContext")
   | ChildProcessSpawner.ChildProcessSpawner
   | SecureRandom.SecureRandom
   | Digest.Digest
+  | Git
 > {
-  const repositoryIdentity = yield* runGitOutput(context.repoRoot, ["config", "--get", "remote.origin.url"]);
+  const git = yield* Git;
+  const invocation = GitCommand.configGet("remote.origin.url");
+  const configured = yield* git
+    .configGet(context.repoRoot, "remote.origin.url")
+    .pipe(Effect.mapError(yeetGitKitError(invocation)));
+  // An unset key is git's silent exit 1, which the bounded capture reported as a failure.
+  const repositoryIdentity = yield* Effect.fromOption(configured, () =>
+    yeetGitOutputErrorAdapter.onNonZeroExit({
+      commandLine: formatCommandLine("git", invocation.redactedArgs),
+      exitCode: 1,
+      output: "",
+    })
+  );
   return yield* proofCoordinatorLockPath(repositoryIdentity);
 });
 
@@ -288,8 +305,20 @@ export const collectGitDiffBytes = Effect.fn("Yeet.collectGitDiffBytes")(functio
     Effect.mapError(YeetCommandError.new(`Refused unsafe Yeet fingerprint artifact path ${requestedPath}.`))
   );
 
+  const diffArgs = ["diff", "--binary", `--output=${diffPath}`, ...args];
+  const commandLine = formatCommandLine("git", diffArgs);
   return yield* Effect.gen(function* () {
-    yield* runGitOutput(context.repoRoot, ["diff", "--binary", `--output=${diffPath}`, ...args]);
+    // KEEP (D-18): git writes a byte-exact patch into a path fenced inside the artifact tree; the kit only returns decoded stdout.
+    const written = yield* runRepoCommandCapture("git", diffArgs, context.repoRoot).pipe(
+      Effect.mapError(yeetGitOutputErrorAdapter.onSpawnFailure(commandLine))
+    );
+    if (written.exitCode !== 0) {
+      return yield* yeetGitOutputErrorAdapter.onNonZeroExit({
+        commandLine,
+        exitCode: written.exitCode,
+        output: written.output,
+      });
+    }
     return yield* readFingerprintFileBytes(diffPath);
   }).pipe(Effect.ensuring(fs.remove(diffPath).pipe(Effect.ignore)));
 });
@@ -332,8 +361,17 @@ export const collectDiffFingerprint = Effect.fn("Yeet.collectDiffFingerprint")(f
   | ChildProcessSpawner.ChildProcessSpawner
   | SecureRandom.SecureRandom
   | Digest.Digest
+  | Git
 > {
-  const status = yield* runGitOutput(context.repoRoot, ["status", "--short"]);
+  const git = yield* Git;
+  // Porcelain v1 lines, renames as `old -> new`: the `status --short` text without its quoting or
+  // `status.branch` header, so pre-W7 proof-reuse fingerprints miss once (W7a Y37, SPEC D-18).
+  const status = yield* git.status(context.repoRoot).pipe(
+    Effect.mapBoth({
+      onFailure: yeetGitKitError(GitCommand.status()),
+      onSuccess: StatusEntry.format({ renames: "arrow" }),
+    })
+  );
   const unstagedDiff = yield* collectGitDiffBytes(context, ["HEAD"], "worktree");
   const stagedDiff = yield* collectGitDiffBytes(context, ["--cached"], "index");
   const crypto = yield* Digest.Digest;
@@ -1022,6 +1060,7 @@ const acquireFullProofLock = Effect.fn("Yeet.acquireFullProofLock")(function* (
   | ChildProcessSpawner.ChildProcessSpawner
   | SecureRandom.SecureRandom
   | Digest.Digest
+  | Git
 > {
   const prepared = yield* prepareFullProofLockLease(context, proofSteps);
   if (yield* tryClaimProofLockExclusive(prepared.lockPath, prepared.lockText)) {
@@ -1063,6 +1102,7 @@ const prepareFullProofLockLease = Effect.fn("Yeet.prepareFullProofLockLease")(fu
   | ChildProcessSpawner.ChildProcessSpawner
   | SecureRandom.SecureRandom
   | Digest.Digest
+  | Git
 > {
   const lockPath = yield* proofLockPathForContext(context);
   return yield* prepareFullProofLockLeaseAt(lockPath, context, proofSteps);
@@ -1207,6 +1247,7 @@ const acquireFullProofLockOrObserve = Effect.fn("Yeet.acquireFullProofLockOrObse
   | ChildProcessSpawner.ChildProcessSpawner
   | SecureRandom.SecureRandom
   | Digest.Digest
+  | Git
 > {
   const lockPath = yield* proofLockPathForContext(context);
   return yield* acquireFullProofLockOrObserveAtPath(lockPath, context, proofSteps);

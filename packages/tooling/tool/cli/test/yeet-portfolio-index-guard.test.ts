@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { buildPortfolioIndexContent, PORTFOLIO_INDEX_PATH } from "@beep/repo-cli/commands/Goals";
 import {
   enforcePortfolioIndexPublishIntent,
@@ -24,7 +25,8 @@ import * as Tuple from "effect/Tuple";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 
-const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
+const PlatformLayer = Git.layer.pipe(
+  Layer.provideMerge(NodeChildProcessSpawner.layer),
   Layer.provideMerge(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer))
 );
 

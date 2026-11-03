@@ -5,6 +5,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { Fn, LiteralKit } from "@beep/schema";
@@ -26,6 +28,7 @@ import * as Str from "effect/String";
 import { configStringOption } from "../../internal/cli/EnvConfig.ts";
 import { yeetStateRootEnvVar, yeetStateRootFlag } from "../../internal/cli/Flags.ts";
 import { readContainedFileStringNoFollow } from "../../internal/cli/FsGuards.ts";
+import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
 import { processStartIdentityForPid } from "../../internal/repo-run/ProcessIdentity.ts";
 import { runRepoCommandCapture } from "../../internal/repo-run/RepoRun.executor.ts";
 import { UUID } from "../../internal/schema/Uuid.ts";
@@ -77,6 +80,7 @@ import { PositiveInt, ResumeOptions } from "./internal/Resume.schemas.ts";
 import { parsePrRef, runYeetResume } from "./internal/Resume.ts";
 import { YeetCommandError } from "./Yeet.errors.ts";
 import { YeetReadyOptions, YeetRunOptions } from "./Yeet.schemas.ts";
+import type { GitCommandErrorAdapter } from "../../internal/repo-run/GitExec.ts";
 import type { YeetRunMode } from "./internal/Planner.schemas.ts";
 import type { ProofJobLauncherShape } from "./internal/ProofJobLauncher.ts";
 
@@ -758,22 +762,27 @@ const renderJob = Effect.fn("Yeet.renderJob")(function* (record: ProofJobRecord,
     `job ${record.jobId}: ${record.phase}\nunit: ${record.unit.unitName}\nlog: ${record.unit.logPath}\nbun run beep yeet job wait ${record.jobId}`
   );
 });
+const detachedJobGitAdapter: GitCommandErrorAdapter<YeetCommandError> = {
+  onSpawnFailure: () => YeetCommandError.new("Failed to read detached job git coordinates."),
+  onNonZeroExit: ({ output }) => YeetCommandError.make({ message: Str.trim(output) }),
+  onTruncated: O.none(),
+};
 const submitDetachedProofJob = Effect.fn("Yeet.submitDetached")(function* (mode: YeetRunMode, options: SharedOptions) {
   yield* validateProofJobDetach(options.plan);
   const root = yield* jobRoot();
   const path = yield* Path.Path;
-  const git = Effect.fnUntraced(function* (args: ReadonlyArray<string>) {
-    const result = yield* runRepoCommandCapture(
-      "git",
-      args,
-      root,
-      O.getSomesStruct({ PATH: yield* configStringOption("PATH") })
-    ).pipe(Effect.mapError(YeetCommandError.new("Failed to read detached job git coordinates.")));
-    if (result.exitCode !== 0) return yield* YeetCommandError.make({ message: result.output });
-    return Str.trim(result.output);
-  });
-  const branch = yield* git(["rev-parse", "--abbrev-ref", "HEAD"]);
-  const head = yield* git(["rev-parse", "--verify", options.head]);
+  // The kit passes the inherited `PATH` the capture injected (`extendEnv`), so both coordinates read
+  // as they did: a detached HEAD is the literal `HEAD`, a failure git reported is its stderr.
+  const git = yield* Git;
+  const branch = yield* git.currentBranch(root).pipe(
+    Effect.mapBoth({
+      onFailure: adaptGitKitError(GitCommand.currentBranch(), detachedJobGitAdapter),
+      onSuccess: O.getOrElse(() => "HEAD"),
+    })
+  );
+  const head = yield* git
+    .revParse(root, options.head)
+    .pipe(Effect.mapError(adaptGitKitError(GitCommand.revParse(options.head), detachedJobGitAdapter)));
   const entrypoint = O.fromUndefinedOr(process.argv[1]);
   if (O.isNone(entrypoint)) return yield* YeetCommandError.make({ message: "Cannot detach without a CLI entrypoint." });
   const words = A.dropWhile(A.drop(process.argv, 2), (word) => word === "--");

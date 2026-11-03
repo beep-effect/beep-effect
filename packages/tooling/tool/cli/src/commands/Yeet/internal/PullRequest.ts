@@ -13,7 +13,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
@@ -28,7 +28,7 @@ import {
   runArtifactPathForContext as runOutputPathForContext,
   writeTextFile,
 } from "./ArtifactPaths.ts";
-import { runGitOutput, yeetGitKitError } from "./GitExec.ts";
+import { yeetGitKitError } from "./GitExec.ts";
 import {
   ensureProvenanceFooter,
   isProvenanceStampFailure,
@@ -348,8 +348,19 @@ export const buildPrBody = Effect.fn("Yeet.buildPrBody")(function* (
   | Git
 > {
   const range = yield* branchCommitRange(context);
-  // KEEP (W2b): `Git.log` carries each commit's subject but not its body (`%b`).
-  const commitLog = yield* runGitOutput(context.repoRoot, ["log", "--reverse", "--pretty=format:## %s%n%n%b", range]);
+  // `Git.log` with `includeBody` carries `%b`, so the body renders back to the `## %s%n%n%b` text
+  // entries joined by a newline, as `--pretty=format:` separated them (W7a Y55, SPEC D-18).
+  const git = yield* Git;
+  const logOptions = { revisions: [range], reverse: true, omitPaths: true, includeBody: true };
+  const commitLog = yield* git.log(context.repoRoot, logOptions).pipe(
+    Effect.mapBoth({
+      onFailure: yeetGitKitError(GitCommand.log([], false, undefined, false, logOptions)),
+      onSuccess: flow(
+        A.map((commit) => `## ${commit.subject}\n\n${commit.body ?? ""}`),
+        A.join("\n")
+      ),
+    })
+  );
   const executed = yield* Ref.get(recorder);
   const laneSummary = pipe(
     executed,

@@ -860,6 +860,27 @@ const lsRemoteTip = (output: string): O.Option<string> =>
     O.flatMap((line) => pipe(Str.split(line, "\t"), A.head, O.flatMap(flow(Str.trim, optionFromNonEmpty))))
   );
 
+// `ls-remote origin refs/heads/<branch>` on the patient instance (a network read), rendered back to
+// git's `<sha>\t<ref>` lines so `lsRemoteTip` reads it as before; an empty listing is a clean miss,
+// which is absence (W7a Y61/Y62, SPEC D-18).
+const probeRemoteBranch = (
+  cwd: string,
+  branch: string
+): Effect.Effect<CommandProbe, never, ChildProcessSpawner.ChildProcessSpawner> => {
+  const patterns = [`refs/heads/${branch}`];
+  return patientGit.pipe(
+    Effect.flatMap((git) =>
+      git
+        .lsRemote(cwd, "origin", { patterns })
+        .pipe(
+          sweepProbeFromGit(GitCommand.lsRemote("origin", false, false, patterns), (entries) =>
+            renderLines(A.map(entries, (entry) => `${entry.sha}\t${entry.ref}`))
+          )
+        )
+    )
+  );
+};
+
 const observeSha = (cwd: string, ref: string): Effect.Effect<O.Option<string>, never, Git> =>
   Effect.flatMap(Git, (git) =>
     git.revParse(cwd, ref, { quiet: true }).pipe(
@@ -874,6 +895,7 @@ const observePullRequest = Effect.fn("Yeet.observeSweepPullRequest")(function* (
   context: RepoRunContext,
   branch: string
 ): Effect.fn.Return<O.Option<GhPrView>, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
+  // KEEP (D-13): `gh pr view <branch>` finds the branch's pull request in any state.
   const output = yield* ghOutput({
     args: ["pr", "view", branch, "--json", "number,headRefName,state,headRefOid"],
     cwd: context.repoRoot,
@@ -1015,7 +1037,7 @@ export const observeSweepGitState = Effect.fn("Yeet.observeSweepGitState")(funct
   // unreadable answer leaves both unknown, so the deletion stays blocked.
   const remote = O.isSome(trackedTip)
     ? { tip: trackedTip, absent: false }
-    : yield* captureCommand("git", ["ls-remote", "origin", `refs/heads/${branch}`], repoRoot).pipe(
+    : yield* probeRemoteBranch(repoRoot, branch).pipe(
         Effect.map((probe) => {
           const tip = probeUnreliable(probe) ? O.none<string>() : lsRemoteTip(probe.output);
           return { tip, absent: !probeUnreliable(probe) && O.isNone(tip) };
@@ -1270,7 +1292,7 @@ export const revalidateRemoteDeletion: {
     cwd: string,
     state: SweepGitState
   ): Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> =>
-    captureCommand("git", ["ls-remote", "origin", `refs/heads/${state.branch}`], cwd).pipe(
+    probeRemoteBranch(cwd, state.branch).pipe(
       Effect.map((probe) => {
         if (probeUnreliable(probe)) {
           return O.some(`could not re-verify origin/${state.branch} before deletion: ${probeFailureText(probe)}`);
@@ -1547,11 +1569,24 @@ const performSweepStep = (
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > =>
   SweepStepId.match(planStep.id, {
-    // KEEP (W2b): `Git.fetch` needs a ref, and the bare `fetch --prune origin` fetches the configured refspecs.
-    "fetch-prune": () => runCommandStep("git", ["fetch", "--prune", "origin"], context.repoRoot, planStep.action),
+    // `Git.fetch` without a ref fetches the configured refspecs, as the bare `fetch --prune origin` did.
+    "fetch-prune": () =>
+      runGitStep(
+        patientGit.pipe(
+          Effect.flatMap((git) =>
+            git
+              .fetch(context.repoRoot, { remote: "origin", prune: true })
+              .pipe(
+                sweepProbeFromGit(GitCommand.fetch("origin", undefined, undefined, false, false, true), renderNothing)
+              )
+          )
+        ),
+        planStep.action
+      ),
     "ff-main": () =>
       state.headBranch === state.mainBranch
-        ? runCommandStep(
+        ? // KEEP (D-03): no `merge` member, and the fast-forward has a single consumer.
+          runCommandStep(
             "git",
             ["merge", "--ff-only", `refs/remotes/origin/${state.mainBranch}`],
             context.repoRoot,

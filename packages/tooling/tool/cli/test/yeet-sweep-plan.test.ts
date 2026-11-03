@@ -875,6 +875,53 @@ describe("executeSweep", () => {
 
   it.layer(
     sweepTestLayer([
+      ["git rev-parse --verify --quiet --end-of-options refs/remotes/origin/feat/merge-loop", nonzero(1)],
+      ["git ls-remote origin refs/heads/feat/merge-loop", nonzero(128)],
+      ...mergedSweepStubs,
+    ]),
+    { timeout: "30 seconds" }
+  )((it) => {
+    it.effect("leaves the remote tip unknown, not absent, when ls-remote cannot be read", () =>
+      Effect.acquireUseRelease(
+        makeTempDirectory,
+        (root) =>
+          Effect.gen(function* () {
+            const state = yield* observeSweepGitState(sweepContext(root)).pipe(
+              Effect.provideServiceEffect(Git, Git.make)
+            );
+            assertNone(state.remoteTip);
+            expect(state.remoteBranchAbsent).toBe(false);
+          }),
+        removeTempDirectory
+      )
+    );
+  });
+
+  it.layer(
+    sweepTestLayer([
+      ["git fetch --prune origin", nonzero(1)],
+      ["git merge --ff-only refs/remotes/origin/main", nonzero(1)],
+      ...mergedSweepStubs,
+    ]),
+    { timeout: "30 seconds" }
+  )((it) => {
+    it.effect("skips a failed fetch --prune and a failed fast-forward with git's exit", () =>
+      Effect.acquireUseRelease(
+        makeTempDirectory,
+        (root) =>
+          Effect.gen(function* () {
+            const { report, spawned } = yield* recordedSweep(root);
+            expect(spawned).toContain("git fetch --prune origin");
+            expect(outcomeOf(report, "fetch-prune").status).toBe("skipped");
+            expect(outcomeOf(report, "ff-main").status).toBe("skipped");
+          }),
+        removeTempDirectory
+      )
+    );
+  });
+
+  it.layer(
+    sweepTestLayer([
       [
         "git push origin --force-with-lease",
         { exitCode: 1, output: " ! [remote rejected] refs/heads/feat/merge-loop (custom hook said no)" },

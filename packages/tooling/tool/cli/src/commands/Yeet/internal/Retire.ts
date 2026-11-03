@@ -501,6 +501,7 @@ const packetSlugFromPath = (relativePath: string): O.Option<string> => {
 // GitHub's own list of the pull request's files is independent of how the
 // merge landed; a failed or truncated read contributes nothing.
 const pullRequestPaths = Effect.fn("Yeet.pullRequestPaths")(function* (plan: YeetRetirePlan) {
+  // KEEP (D-13): `gh pr view <branch>` finds the branch's pull request in any state.
   const output = yield* ghOutput({
     args: ["pr", "view", plan.branch, "--json", "files"],
     cwd: plan.worktreePath,

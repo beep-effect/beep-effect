@@ -40,6 +40,11 @@ parallel, then the runner retirement, then closeout C.
 
 ## Latest Evidence
 
+- 2026-11-03 W7a: `research/yeet-differential-w7.json` (81 scenarios, 72 same, 9 classified, 0 unclassified);
+  repo-cli `check` and `docgen` clean, every `yeet-*`, `proof-job`, `session-ledger` and `ci-runner-security` suite
+  green on Node (1868 tests; `yeet-merge-gate` holds 3 reds only on a host with an active merge reservation)
+  and the 8 touched suites on Bun, `goals/tsconfig.ops.json` clean; `lint effect-vitest`, Fallow audit, health and
+  dead-code introduce 0.
 - 2026-11-02 W6: `research/yeet-gh-seams-differential-w6.json` (51 scenarios, 40 same, 11 classified, 0 unclassified);
   repo-cli `check` clean, every `yeet-*`, `proof-job` and `shared-internals` suite green on Node and Bun (65 files,
   1885 tests), `goals/tsconfig.ops.json` clean; `lint effect-vitest`, Fallow audit and Fallow health introduce 0.

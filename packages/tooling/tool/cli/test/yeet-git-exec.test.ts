@@ -6,27 +6,37 @@ import { runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
 import {
   assessBaseFreshnessForTesting,
   captureGitKitExit,
+  changedYeetPaths,
   collectYeetGateInputPaths,
+  countYeetRevisions,
   currentCommitSha,
   currentYeetBranch,
   lockfileChangedSinceBase,
   optionFromNonEmpty,
   patientGit,
+  proofLockPathForContext,
   RepoRunContext,
   refreshBaseRef,
   resolvePullRequestTitle,
+  resolveYeetMergeBase,
+  resolveYeetRev,
   runGitFoldedStdout,
   safeOriginBranchFromBaseForTesting,
+  warnOnMismatchedPublishUpstream,
+  YeetChangedPathsQuery,
 } from "@beep/repo-cli/test/Yeet";
 import { expect, it } from "@effect/vitest";
 import { assertInclude, assertNone, assertSome } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
+import * as P from "effect/Predicate";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import * as TestConsole from "effect/testing/TestConsole";
 import { NodeCommandTestLayer } from "./support/CommandTest.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 
@@ -254,16 +264,27 @@ it.layer(NodeCommandTestLayer, { timeout: "60 seconds" })("yeet git exec over a 
     })
   );
 
-  it.effect("runGitOutput fails when git prints past the capture limit", () =>
+  it.effect("resolvePullRequestTitle reads a subject past the old 512 KiB capture limit", () =>
     Effect.gen(function* () {
       const { root, work, context, git } = yield* fixture();
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const messageFile = path.join(root, "long-subject.txt");
-      yield* fs.writeFileString(messageFile, `feat: ${Str.repeat(600 * 1024)("x")}\n`);
+      const subject = `feat: ${Str.repeat(600 * 1024)("x")}`;
+      yield* fs.writeFileString(messageFile, `${subject}\n`);
       yield* git(work, "commit", "--quiet", "--no-verify", "--allow-empty", "-F", messageFile);
+      // `Git.log` reads under the kit's 16 MiB bound, so the subject the merged 512 KiB capture
+      // refused now titles the pull request (W7a Y54, SPEC D-18).
+      const resolution = yield* resolvePullRequestTitle(context, O.none(), "origin/main..HEAD");
+      expect(resolution.title).toBe(subject);
+    })
+  );
+
+  it.effect("resolvePullRequestTitle refuses a range without a non-merge commit", () =>
+    Effect.gen(function* () {
+      const { context } = yield* fixture();
       const error = yield* Effect.flip(resolvePullRequestTitle(context, O.none(), "origin/main..HEAD"));
-      assertInclude(error.message, "output exceeded the repo-run capture limit.");
+      assertInclude(error.message, "found no non-merge commit in origin/main..HEAD");
     })
   );
 
@@ -287,6 +308,97 @@ it.layer(NodeCommandTestLayer, { timeout: "60 seconds" })("yeet git exec over a 
     Effect.gen(function* () {
       const { context } = yield* fixture();
       expect(yield* lockfileChangedSinceBase(RepoRunContext.make({ ...context, base: "nope" }))).toBe(false);
+    })
+  );
+
+  it.effect("resolveYeetRev and countYeetRevisions read the branch and fail an unknown ref in Yeet's wording", () =>
+    Effect.gen(function* () {
+      const { origin, work, c0, commit } = yield* fixture();
+      const c1 = yield* commit(work, "one.txt");
+      yield* commit(origin, "base-only.txt");
+      expect(yield* resolveYeetRev(work, "HEAD")).toBe(c1);
+      expect(yield* resolveYeetMergeBase(work, "origin/main", "HEAD")).toBe(c0);
+      expect(yield* countYeetRevisions(work, "origin/main..HEAD")).toBe(1);
+      const unknown = yield* Effect.flip(resolveYeetRev(work, "nope"));
+      expect(unknown.message).toBe("git rev-parse --verify nope failed with exit code 128.");
+      const uncounted = yield* Effect.flip(countYeetRevisions(work, "nope..HEAD"));
+      assertInclude(uncounted.message, "git rev-list --count --end-of-options nope..HEAD -- failed with exit code");
+    })
+  );
+
+  it.effect("changedYeetPaths lists a sorted unique pair diff, a merge-base range, a filter and a pathspec", () =>
+    Effect.gen(function* () {
+      const { work, commit, git } = yield* fixture();
+      yield* commit(work, "b.txt");
+      yield* commit(work, "a.txt");
+      yield* git(work, "rm", "--quiet", "base.txt");
+      yield* git(work, "commit", "--quiet", "--no-verify", "-m", "drop base");
+      const pair = YeetChangedPathsQuery.make({ base: "origin/main", head: "HEAD" });
+      expect(yield* changedYeetPaths(work, pair)).toEqual(["a.txt", "b.txt", "base.txt"]);
+      expect(
+        yield* changedYeetPaths(work, YeetChangedPathsQuery.make({ ...pair, mergeBaseRange: true, diffFilter: "d" }))
+      ).toEqual(["a.txt", "b.txt"]);
+      expect(yield* changedYeetPaths(work, YeetChangedPathsQuery.make({ ...pair, pathspec: ["b.txt"] }))).toEqual([
+        "b.txt",
+      ]);
+      const error = yield* Effect.flip(changedYeetPaths(work, YeetChangedPathsQuery.make({ ...pair, base: "nope" })));
+      assertInclude(error.message, "git diff --name-only -z --no-relative nope HEAD failed with exit code 128.");
+    })
+  );
+
+  it.effect("warnOnMismatchedPublishUpstream warns when the branch tracks another upstream", () =>
+    Effect.gen(function* () {
+      const { work, context, git } = yield* fixture();
+      // `switch -c feature origin/main` tracks origin/main, not the origin/feature Yeet pushes.
+      yield* warnOnMismatchedPublishUpstream(context);
+      assertInclude(A.join(A.filter(yield* TestConsole.errorLines, P.isString), "\n"), "origin/main");
+      yield* git(work, "branch", "--quiet", "--unset-upstream");
+      yield* git(work, "switch", "--quiet", "--detach");
+      yield* warnOnMismatchedPublishUpstream(context);
+      expect(A.filter(yield* TestConsole.errorLines, P.isString)).toHaveLength(1);
+    })
+  );
+
+  it.effect(
+    "warnOnMismatchedPublishUpstream keeps the spawn-failure wording and reads other failures as no upstream",
+    () =>
+      Effect.gen(function* () {
+        const { context } = yield* fixture();
+        const unreachable = GitCommandError.make({ kind: "failed", args: ["rev-parse"], cwd: "/repo", stderr: "" });
+        const failed = yield* warnOnMismatchedPublishUpstream(context).pipe(
+          Effect.provideService(Git, Git.makeTest({ currentBranch: () => Effect.fail(unreachable) })),
+          Effect.flip
+        );
+        expect(failed.message).toBe("Failed to inspect current branch upstream.");
+        const refused = GitCommandError.make({ ...unreachable, exitCode: 128, stderr: "fatal: no upstream\n" });
+        yield* warnOnMismatchedPublishUpstream(context).pipe(
+          Effect.provideService(
+            Git,
+            Git.makeTest({
+              currentBranch: () => Effect.succeedSome("feature"),
+              upstream: () => Effect.fail(refused),
+            })
+          )
+        );
+        yield* warnOnMismatchedPublishUpstream(context).pipe(
+          Effect.provideService(
+            Git,
+            Git.makeTest({
+              currentBranch: () => Effect.succeedSome("feature"),
+              upstream: () => Effect.succeedSome("refs/heads/main"),
+            })
+          )
+        );
+        assertInclude(A.join(A.filter(yield* TestConsole.errorLines, P.isString), "\n"), "main");
+      })
+  );
+
+  it.effect("proofLockPathForContext fails an unset origin URL as git's exit 1", () =>
+    Effect.gen(function* () {
+      const { work, context, git } = yield* fixture();
+      yield* git(work, "remote", "remove", "origin");
+      const error = yield* Effect.flip(proofLockPathForContext(context));
+      expect(error.message).toBe("git config --get remote.origin.url failed with exit code 1.");
     })
   );
 
