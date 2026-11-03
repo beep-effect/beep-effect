@@ -2121,72 +2121,6 @@
       "reason": "Owner: @beep/law-practice-server. Executable offline evaluation main, registered as a Fallow entrypoint and invoked by the fixed replay protocol. Per-source scoped live adapter layers and exact on-disk hash checks are the subject; this is not an it test. Moving the command into it.layer would remove its CLI contract. Exit: retire when the detector excludes CLI evaluation entrypoints or the evaluator becomes a dedicated command package."
     },
     {
-      "id": "EV003:packages/tooling/tool/cli/test/AgentMessage.layer.test.ts:10:query@55#1",
-      "lens": "resource",
-      "ruleId": "EV003",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/AgentMessage.layer.test.ts",
-      "line": 10,
-      "endLine": 15,
-      "symbol": "query",
-      "occurrence": "v2:e3678e84b75c9ef5f5df52df58ab3fd4d81afbf37f73103a89b794a33f1a6176",
-      "class": "resource-wrapper",
-      "evidence": "function* (directory: string) { const context = yield* Layer.build(agentMessageStoreLayer(directory)); return yield* Effect.gen(function* () { return yield* (yield* AgentMessageStore).endpoints; }).pi",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The test supplies each real private, invalid or symlinked path to the production SQLite layer and races independent first-open calls. Dynamic Layer.build contexts are intentional; a shared static layer would change the ownership and creation-race subject. Outer it.layer supplies platform services and scope. Owner: @beep/repo-cli. Exit: EV003 recognizes per-call layer builds over a helper parameter, or the store exposes an open-by-path service. #1855 wave 5 register."
-    },
-    {
-      "id": "EV003:packages/tooling/tool/cli/test/AgentMessage.tools.test.ts:74:call@53#1",
-      "lens": "resource",
-      "ruleId": "EV003",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/AgentMessage.tools.test.ts",
-      "line": 74,
-      "endLine": 83,
-      "symbol": "call",
-      "occurrence": "v2:445f8e2380492c7735dc63230d1163ee0b2c529a6d6995978d9435566120a407",
-      "class": "resource-wrapper",
-      "evidence": "function* <Name extends keyof typeof AgentMessageToolkit.tools>( grantId: string, name: Name, input: Tool.ParametersEncoded<(typeof AgentMessageToolkit.tools)[Name]> ) { const context = yield* Layer.b",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Each fixture builds a fresh SQLite store, and each call builds the exact grant-bound MCP handler under test. Distinct, expired and replaced grants must stay distinct across calls; sharing one static handler would remove the authorization boundary being tested. Outer it.layer owns platform resources and scope. Owner: @beep/repo-cli. Exit: EV003 recognizes per-call layer builds over a helper parameter, or the toolkit exposes a grant-scoped handler service. #1855 wave 5 register."
-    },
-    {
-      "id": "EV003:packages/tooling/tool/cli/test/AgentMessage.tools.test.ts:85:fixture@59#1",
-      "lens": "resource",
-      "ruleId": "EV003",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/AgentMessage.tools.test.ts",
-      "line": 85,
-      "endLine": 104,
-      "symbol": "fixture",
-      "occurrence": "v2:75053c3e3326ae0de7e6bb8440dcd0bc78aa2d450a8f24f9850907fa8cbbf9af",
-      "class": "resource-wrapper",
-      "evidence": "function* <A, E>( test: Effect.Effect<A, E, AgentMessageStore | Scope.Scope> ) { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const directory = yield* fs.realPath(yield* fs.",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Each fixture builds a fresh SQLite store, and each call builds the exact grant-bound MCP handler under test. Distinct, expired and replaced grants must stay distinct across calls; sharing one static handler would remove the authorization boundary being tested. Outer it.layer owns platform resources and scope. Owner: @beep/repo-cli. Exit: EV003 recognizes per-call layer builds over a helper parameter, or the store exposes an open-by-path service. #1855 wave 5 register."
-    },
-    {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:207:withPrependedPath@26#1",
       "lens": "detector",
       "ruleId": "EV003",
@@ -3021,50 +2955,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The shorter scope closes a descriptor, temp root, native database, container or assertion helper before post-close assertions, or keeps native worker evidence until before fixture cleanup. Owner: @beep/test-utils. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts:672:scoped@33#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts",
-      "line": 672,
-      "endLine": 690,
-      "symbol": "scoped",
-      "occurrence": "v2:1088417ca3c3b6a12233e643ccacaef093098736676b8b1ba289455bb62db2f6",
-      "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const child = yield* ChildProcess.make(process.execPath, [\"-e\", \"setInterval(() => {}, 1000)\"], { stdout: \"ignore\", stderr: \"inherit\", }); yield* Deferred.succ",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The shorter scope is the runtime ownership subject: one case interrupts its child-owning loop scope and asserts the real child stopped, the other observes immediate finalization on a permanent storage or policy failure. Owner: @beep/repo-cli. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts:775:scoped@22#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts",
-      "line": 775,
-      "endLine": 775,
-      "symbol": "scoped",
-      "occurrence": "v2:a0afa5196773ae2655f93522b5da4b59586711f18c43b935ccb07a725b87a96c",
-      "class": "shared-helper-scope-lifetime-review",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The shorter scope is the runtime ownership subject: one case interrupts its child-owning loop scope and asserts the real child stopped, the other observes immediate finalization on a permanent storage or policy failure. Owner: @beep/repo-cli. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/agent-effectiveness-eval-scorer.test.ts:210:scoped@21#1",
@@ -5003,28 +4893,6 @@
       "reason": "Native Bun child spawning, piped stdio and real termination and exit codes are the subjects; NodeServices supplies the native process and path services. Owner: @beep/acp. Exit: retire when the protocol cases run against a scripted spawner."
     },
     {
-      "id": "EV010:packages/drivers/ai-provider-cli/test/AiProviderCliSession.test.ts:10:@effect/platform-node/NodeServices@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/ai-provider-cli",
-      "file": "packages/drivers/ai-provider-cli/test/AiProviderCliSession.test.ts",
-      "line": 10,
-      "endLine": 10,
-      "symbol": "@effect/platform-node/NodeServices",
-      "occurrence": "v2:fb7d6bba929488197f859519d08aea3efcf9ac097f647f2bbff02362d70850d7",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import * as NodeServices from \"@effect/platform-node/NodeServices\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Private path modes, symlink refusal, SQLite file persistence and owned native stdio lifecycles are the subjects, under one bounded outer it.layer. Owner: @beep/ai-provider-cli. Exit: retire when the session cases run over an injected store and a scripted spawner."
-    },
-    {
       "id": "EV010:packages/drivers/box-provisioning/test/BoxContentMigration.test.ts:12:@effect/platform-node-shared/NodeFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -6147,28 +6015,6 @@
       "reason": "Native atomic renames, lock contention and stale-lock behavior need real files, and two live-clock cases keep bounded retry deadlines. Owner: @beep/repo-ai-metrics. Exit: retire when MemoryFileSystem models rename races and lock contention and the registry cases move to it."
     },
     {
-      "id": "EV010:packages/tooling/library/ai-metrics/test/observation-launch-claims-crash.test.ts:4:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-ai-metrics",
-      "file": "packages/tooling/library/ai-metrics/test/observation-launch-claims-crash.test.ts",
-      "line": 4,
-      "endLine": 4,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Two independent producer processes race for one claimed attempt over real files, so OS process concurrency and the file-lock outcome are the subject; the crash cases SIGKILL their producer. Owner: @beep/repo-ai-metrics. Exit: retire when EV010 recognises concurrently spawned independent processes as a native subject, or the race runs behind a scripted two-process double."
-    },
-    {
       "id": "EV010:packages/tooling/library/ai-metrics/test/observation-root-probe.test.ts:10:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -6761,94 +6607,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "A spawned Vitest worker consumes actual files, and its output, abort and report evidence is read before scoped directory deletion. Owner: @beep/test-utils. Exit: retire when the runtime cases run against an in-process worker double."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/AgentMessage.attached.test.ts:28:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/AgentMessage.attached.test.ts",
-      "line": 28,
-      "endLine": 28,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Private file permissions, file-backed SQLite grants and dispatch, hashed correlation checkpoints, canonical workspace realPath checks and cleanup are the subjects in both Node and Bun runners. Owner: @beep/repo-cli. Exit: retire when the attached cases run over an in-memory SQLite store and a memory volume that models modes and realPath."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/AgentMessage.observation.test.ts:25:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/AgentMessage.observation.test.ts",
-      "line": 25,
-      "endLine": 25,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "A real child is spawned through the platform ChildProcessSpawner, held in a Deferred, recorded, closed and killed (SIGKILL), so the managed observation owner's real process lifecycle is the subject. Owner: @beep/repo-cli. Exit: retire when EV010 follows a spawner handle through a Deferred to its kill, or the lifecycle cases run behind a scripted spawner with the live child kept as an opt-in check."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts:20:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts",
-      "line": 20,
-      "endLine": 20,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The private SQLite fixture, an external writer process and owned process cleanup need the real filesystem, path and process-spawner services. Owner: @beep/repo-cli. Exit: retire when the runtime cases run over an in-memory store with the external writer behind a scripted spawner."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/AgentMessage.tools.test.ts:17:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/AgentMessage.tools.test.ts",
-      "line": 17,
-      "endLine": 17,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Fresh private SQLite mailboxes and grant-bound MCP authorization fixtures need the real filesystem and path services. Owner: @beep/repo-cli. Exit: retire when the tool cases run over an in-memory SQLite mailbox."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/accounts-usage.test.ts:67:@effect/platform-node@0#1",

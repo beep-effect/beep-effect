@@ -29,6 +29,7 @@ import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -3613,9 +3614,21 @@ const compareCoverage = (
     A.filter((actual) => !isNamedFollowUp(baseline, actual.packageName)),
     A.flatMap((actual) => belowMinimumMetrics(actual.packageName, actual.baseline, baseline.minimum, baseline.epsilon))
   );
+  // A package the branch deleted keeps its row in the base floors, emits no summary, and
+  // is absent from the branch's own document. Only a base-pinned run can see that, and only
+  // then is the missing summary a retirement rather than a lost package.
+  const retiredByProposal = (packageName: string): boolean =>
+    O.exists(baselines.proposed, (proposed) => !R.has(proposed.packages, packageName)) &&
+    !R.has(actualsByName, packageName);
   const missingActuals = missingCoverageSnapshotPackages(
     actuals,
-    scoped ? expectedPackageNames : A.map(baselineEntries, ([packageName]) => packageName)
+    scoped
+      ? expectedPackageNames
+      : pipe(
+          baselineEntries,
+          A.map(([packageName]) => packageName),
+          A.filter(P.not(retiredByProposal))
+        )
   );
   const newPackages = pipe(
     actuals,

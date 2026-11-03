@@ -259,7 +259,12 @@ needed only for the escalation list below.
   operator's answers. Sessions report blockers to it, not to the operator.
   The role is held, run and handed over by the `orchestrate` skill
   (register, `HANDOFF.md`, `yeet merge-gate`); `bun run beep session open`
-  names the holder.
+  names the holder. Cross-session and cross-provider messaging runs only
+  through T3 Code's MCP tools (`t3_thread_send`, `t3_thread_wait`,
+  `t3_thread_read`, `delegate_task`, `t3_thread_launch`, `schedule_task`;
+  `environmentId` for a linked host). The repo ships no mailbox, relay or
+  dispatcher of its own; a message never moves ownership, model pins or
+  Yeet authority.
 
 ## Discovery & Reuse
 
