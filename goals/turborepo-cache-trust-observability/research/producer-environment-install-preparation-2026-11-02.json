@@ -42,7 +42,7 @@
     "normalGitHooks": "passed on source commit 1c21ef7c80; hook organized imports; binding refreshed afterward",
     "packageVerify": "not run per operator push-only instruction",
     "localYeetVerifyPublishFinalCheck": "not run",
-    "hostedChecks": "not started; wait for consolidated prerequisite landing order"
+    "hostedChecks": "pending; fresh hosted checks required on the submitted PR head"
   },
   "activation": {
     "runtimeChanged": false,
@@ -64,5 +64,15 @@
       "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
       "sha256": "8215b9d6f278438aeb5118bc8169663ddb4c4907f2a721288cca96970f2499de"
     }
-  ]
+  ],
+  "acceptedMainIntegration": {
+    "revision": "874533e793196c38aae371606b1df01787b8e809",
+    "environmentSourceBindingsUnchanged": true,
+    "consumedAcceptedComponents": [
+      "resolved Heavy approval (#2603)",
+      "narrowed policy-seal, role and transit hashes (#2633)",
+      "optional exporter default review (#2636)"
+    ],
+    "acceptanceGranted": false
+  }
 }

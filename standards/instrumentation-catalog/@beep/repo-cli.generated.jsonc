@@ -535,6 +535,7 @@
     {"name":"CacheWorkflow.initializeExecution","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheWorkflow.inspect","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheWorkflow.inspectHostedMetadata","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"CacheWorkflow.inspectHostedWorkflows","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheWorkflow.joinProducerUpload","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheWorkflow.listSources","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheWorkflow.loadExecutionRuntime","owner":"@beep/repo-cli","family":"tooling","conforms":true},
