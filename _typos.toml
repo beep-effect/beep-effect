@@ -187,6 +187,7 @@ extend-exclude = [
   "packages/law-practice/use-cases/test/fixtures/eyecite/typescript-extensions.json",
   "packages/law-practice/use-cases/test/fixtures/eyecite/vocabulary-mapping.json",
   "packages/law-practice/use-cases/test/fixtures/eyecite/frozen-editions.json",
+  "packages/law-practice/use-cases/test/fixtures/eyecite/canonical-tokenizer.json",
   "packages/law-practice/use-cases/test/fixtures/eyecite/regex-adversarial-corpus.json",
   "**/src-tauri/gen/**",
   "**/src-tauri/target/**",

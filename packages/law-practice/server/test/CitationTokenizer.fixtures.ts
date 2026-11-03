@@ -51,6 +51,22 @@ const Item = S.Union([
 ]);
 const ItemType = S.toType(Item);
 const Overrides = S.Record(S.String, S.Unknown);
+/** Native source observations shared by controlled and canonical composition.
+ * @internal @category testing @since 0.0.0
+ */
+export const CitationTokenizerSourceCase = S.Struct({
+  id: S.Natural,
+  source: Native,
+  selected: S.Array(S.Natural),
+  candidates: S.Natural,
+  items: S.Array(Item),
+  citations: S.Array(S.Tuple([S.Natural, S.Natural])),
+  tokens: S.Array(S.Struct({ id: S.Natural, seed: CitationTokenSeedHex })),
+}).pipe(
+  $I.annoteSchema("CitationTokenizerSourceCase", {
+    description: "Independent native source, selected extractor ids and complete mixed tokenizer outcomes.",
+  })
+);
 const Corpus = S.fromJsonString(
   S.Struct({
     schemaVersion: S.tag("citation-tokenizer-composition/v1"),
@@ -63,17 +79,7 @@ const Corpus = S.fromJsonString(
       extractors: S.Array(Extractor).check(S.isBetweenLength(7, 7)),
       editions: S.Array(S.Never).check(S.isMaxLength(0)),
     }),
-    cases: S.Array(
-      S.Struct({
-        id: S.Natural,
-        source: Native,
-        selected: S.Array(S.Natural),
-        candidates: S.Natural,
-        items: S.Array(Item),
-        citations: S.Array(S.Tuple([S.Natural, S.Natural])),
-        tokens: S.Array(S.Struct({ id: S.Natural, seed: CitationTokenSeedHex })),
-      })
-    ).check(S.isBetweenLength(20, 20)),
+    cases: S.Array(CitationTokenizerSourceCase).check(S.isBetweenLength(20, 20)),
   })
 ).pipe(
   $I.annoteSchema("Corpus", {

@@ -47,6 +47,9 @@ frozen array/bool extras. `ExtractorRecipes.ts` preserves the actual bound built
 constructor class and ordered edition references of the canonical extractors.
 `Tokenizer.ts` composes these source stages with owned native matching, raw
 capture construction, mixed assembly and invocation-wide output accounting.
+`TokenizerCatalog.ts` authenticates the default extractor artifact and binds its
+native pattern fingerprints to the independently observed constructor, compiler,
+ordering and parameterized edition metadata.
 Fresh-process hash production, general custom protocols
 and complete public tokenizer integration remain open.
 

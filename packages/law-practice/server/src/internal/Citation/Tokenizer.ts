@@ -81,15 +81,23 @@ export class CitationTokenizerEdition extends S.Opaque<CitationTokenizerEdition,
     })
   )
 ) {}
-const Configuration = S.Struct({
-  extractors: S.Array(CitationTokenizerExtractor).check(S.isMaxLength(CitationEngineAbsoluteMaxima.patterns)),
-  editions: S.Array(CitationTokenizerEdition).check(S.isMaxLength(2533)),
-}).pipe(
-  S.toType,
-  $I.annoteSchema("Configuration", {
-    description: "Trusted bounded immutable tokenizer installation; no custom constructors in this profile.",
-  })
-);
+/** Decoded immutable native installation, independently owned by the tokenizer.
+ * @internal @category models @since 0.0.0
+ */
+export class CitationTokenizerConfiguration extends S.Opaque<
+  CitationTokenizerConfiguration,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    extractors: S.Array(CitationTokenizerExtractor).check(S.isMaxLength(CitationEngineAbsoluteMaxima.patterns)),
+    editions: S.Array(CitationTokenizerEdition).check(S.isMaxLength(2533)),
+  }).pipe(
+    $I.annoteSchema("CitationTokenizerConfiguration", {
+      description: "Trusted bounded native tokenizer installation; decoding does not grant execution authority.",
+    })
+  )
+) {}
+const Configuration = S.toType(CitationTokenizerConfiguration);
 const Reason = LiteralKit(["invalid-configuration", "invalid-source", "stage-failed"]).pipe(
   $I.annoteSchema("Reason", { description: "Closed private tokenizer composition failures." })
 );

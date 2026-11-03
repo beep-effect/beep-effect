@@ -209,3 +209,14 @@ reject valid owned native data. Source Aho filter construction also reads global
 EXTRACTORS, so controlled source setup must explicitly install and restore that
 global rather than assume the dataclass constructor argument controls filtering.
 See history/evidence/2026-11-03-native-tokenizer-composition.md.
+
+### Preserve runtime hash parameters during canonical composition proof
+
+The complete default catalog references 2,533 distinct editions. Date/None hashes
+are runtime facts even with a fixed string-hash seed, so exact intermediate set
+order must be tested with an explicit captured profile. The source replay verifies
+all other edition facts and supplies only those hash parameters to the actual
+source implementation. It does not normalize intermediate order or establish
+fresh-process production semantics. The installing server must authenticate the
+metadata separately from the canonical regex artifact. See
+history/evidence/2026-11-03-canonical-tokenizer-catalog.md.

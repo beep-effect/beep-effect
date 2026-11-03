@@ -356,6 +356,16 @@ extractors; full canonical citation/edition composition and complete engine work
 accounting remain open. See
 [composition evidence](history/evidence/2026-11-03-native-tokenizer-composition.md).
 
+Latest complete default catalog checkpoint (2026-11-03): the authenticated default
+artifact now prepares all 6,805 native patterns, bound classes, ordering facts and
+2,533 edition identities. A real 1 U.S. 1 citation passes the composed tokenizer
+with eleven independently confirmed Bun worker exits. The source corpus now
+captures seventeen full default-tokenizer inputs and 21 candidates under explicit
+edition hash parameters; frozen-profile replay is byte-identical. Seven focused
+tests pass. Hosted integration must compare all seventeen inputs and 192 worker
+exits per runtime; fresh-process hashes and full engine accounting stay open. See
+[canonical catalog evidence](history/evidence/2026-11-03-canonical-tokenizer-catalog.md).
+
 Latest worker evidence (2026-10-31): private process ownership now covers bounded
 schema frames, captured Clock timers, queue/active limits, forced stop,
 acknowledged cleanup and quarantine without permit reuse. Real-process tests
