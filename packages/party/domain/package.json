@@ -59,8 +59,11 @@
     }
   },
   "dependencies": {
+    "@beep/epistemics": "workspace:^",
     "@beep/identity": "workspace:^",
     "@beep/schema": "workspace:^",
+    "@beep/shared-domain": "workspace:^",
+    "@beep/utils": "workspace:^",
     "@noble/hashes": "catalog:",
     "effect": "catalog:",
     "libphonenumber-js": "catalog:",

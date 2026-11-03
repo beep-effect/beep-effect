@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "harness-enrollment-admission-evidence/v1",
+  "recordedAt": "2026-11-03T08:48:18.122115+00:00",
+  "freshSyntheticDeclaredRootAdmission": true,
+  "currentSelectedPreparationInputs": 81,
+  "disposableStageSourceBindings": 87,
+  "liveStageSourceBindings": 86,
+  "stageBindingDifference": "disposable_canary_support.py is conditionally selected only for disposable proof.",
+  "expectedEventsPerStage": 2,
+  "actualIntakeDeliveryVisibilitySetsExact": true,
+  "sameReviewedQualificationAndProbeBothStages": true,
+  "qualificationSha256": "83270ad42777efbf390811de35c51051fbcb4b33897dd013aaccf6c53bc7d7fc",
+  "probeSha256": "33871b7f32e14100d0c7d9f6d21ceba229221ffe25c2032e06363eade532eb47",
+  "actualRootIdentityObservation": {
+    "rootCount": 2,
+    "repositoryAndOwningCloneShared": true,
+    "worktreeIdentitiesDistinct": true,
+    "stableApprovedNamespace": true,
+    "runtimeLaunchPopulation": "Unknown"
+  },
+  "reviewReceiptHashes": {
+    "post-t3-root-review.json": "e1d0e49487234c310f95dfb89340213bede17733a50711b143800cc33d275416",
+    "disposable-post-t3-review.json": "ec21e39f2fb4e9a493e590ec4ad11de06d3a1aa572522911d23ddd976e868bb0",
+    "live-post-t3-review.json": "45a633c399827219442a206d384044a7adb41704b1134ccb028cae26a9bedbcc",
+    "real-roots-post-t3/review.json": "2c012324674139c5e8c93c468bd2aaae9917d1c9e8e772539d949fe78cb6533e"
+  },
+  "liveEndpointDnsAndTlsVerified": true,
+  "independentFreshBackendReadback": true,
+  "ownedCanaryRollbackVerified": true,
+  "heldServiceAndTimer": "masked/inactive",
+  "allSevenRealHarnessPopulations": "Unknown",
+  "retirementBoundary": "Accepted main PR2594 retired managed-session/message/claim APIs; original470d609 proof and prototype are preserved unchanged, active incompatible scripts removed. No restored messaging stack.",
+  "resourceBoundary": "First live guard refused initial headroom before spawning any workload, peak0, inner exitCode null, outer wrapper75. Refusal retained. Separate guarded retry passed without lowering limits or replaying ambiguous sends.",
+  "sourceClosureLimit": "Canonical selected inputs plus recorded runtime/source bindings; not complete transitive import closure.",
+  "qualificationScope": "Fresh post-retirement synthetic root and backend route proof, separate actual-root identity observation. No real harness inference/event collection or fleet enrollment established.",
+  "preparationSourceHead": "d6ad0d2893c93b3f35cd88c602a67de9b2a681ca",
+  "stageComparisonHead": "9d3ca8b589642e85c28f48920f508a9bf797b9f3",
+  "sourceRevisionScope": "Preparation and actual-root probe bind d6ad0d2. Stage review compares selected inputs against9d3ca8b5; intervening packet-only changes did not alter selected telemetry bytes. No whole-repository stage equivalence is claimed."
+}

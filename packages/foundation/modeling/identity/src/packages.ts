@@ -244,6 +244,8 @@ const generatedComposers = $I.compose(
   "github-actions",
   "beep-effect-web",
   "party-domain",
+  "party-use-cases",
+  "party-server",
   "repo-cli-kit"
 );
 
@@ -3568,6 +3570,40 @@ export const $BeepEffectWebId: Identity.IdentityComposer<"@beep/beep-effect-web"
  * @since 0.0.0
  */
 export const $PartyDomainId: Identity.IdentityComposer<"@beep/party-domain"> = composers.$PartyDomainId;
+
+/**
+ * Identity composer for `@beep/party-use-cases`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $PartyUseCasesId } from "@beep/identity/packages"
+ *
+ * const id = $PartyUseCasesId.make("PartyUseCases")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $PartyUseCasesId: Identity.IdentityComposer<"@beep/party-use-cases"> = composers.$PartyUseCasesId;
+
+/**
+ * Identity composer for `@beep/party-server`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $PartyServerId } from "@beep/identity/packages"
+ *
+ * const id = $PartyServerId.make("PartyServer")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $PartyServerId: Identity.IdentityComposer<"@beep/party-server"> = composers.$PartyServerId;
 
 /**
  * Identity composer for `@beep/repo-cli-kit`.

@@ -33,11 +33,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3 Yeet — final PR [#2594](https://github.com/beep-effect/beep-effect/pull/2594) (replaced #2574) passed `yeet final-check`; the proposed closeout `completed-retained` awaits exact-head hosted readiness and merge evidence.
+P4 Close — the implementation merged in [#2594](https://github.com/beep-effect/beep-effect/pull/2594) (`6fad8f6d0f`); closeout PR [#2664](https://github.com/beep-effect/beep-effect/pull/2664) rebinds the `completed-retained` proposal to its own readiness verdict and records the local-state cleanup.
 
 ## Latest Evidence
 
-2026-11-02: removal map re-verified against `6bb8584b6d` (every row still present); installed T3 tool listing captured in `history/2026-11-02-t3-tool-listing.md`; live round-trip receipt in `history/2026-11-02-t3-round-trip.md`; reflection `history/reflections/2026-11-02-claude.md`; final PR #2594 (#2574 was closed: a pushed over-long commit subject failed required Commitlint).
+2026-11-02: removal map re-verified against `6bb8584b6d` (every row still present); installed T3 tool listing captured in `history/2026-11-02-t3-tool-listing.md`; live round-trip receipt in `history/2026-11-02-t3-round-trip.md`; reflection `history/reflections/2026-11-02-claude.md`; implementation PR #2594 merged `6fad8f6d0f` (it replaced #2574); local-state cleanup in `history/2026-11-03-local-state-cleanup.md`.
 
 ## Notes
 

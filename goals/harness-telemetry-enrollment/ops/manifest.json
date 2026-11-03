@@ -3,13 +3,13 @@
   "initiative": {
     "id": "harness-telemetry-enrollment",
     "title": "Qualify every agent harness and surface",
-    "status": "paused",
+    "status": "active",
     "created": "2026-10-27",
-    "updated": "2026-10-27",
+    "updated": "2026-11-03",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/harness-telemetry-enrollment",
-  "lifecycle": "paused",
+  "lifecycle": "active",
   "mission": "Enroll declared CLI, desktop and proxy routes without overstating coverage, preserving identity across clones, worktrees and hosts.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -21,8 +21,14 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "statement": "Complete only after all declared route acceptance is demonstrated at its actual scope, a designated final delivery retains positive exact-head pre-merge readiness and successful terminal observer finalization, strict owner merge and genuinely verified canonical completion. Supporting PR2663 proves source-bound synthetic root/backend admission and separate actual-root identity only. It does not complete real harness enrollment.",
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 2663,
+        "role": "supporting"
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -35,7 +41,15 @@
     "explorations/agent-observability-rebuild/BRIEF.md",
     "explorations/agent-observability-rebuild/DECISIONS.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/CURRENT-SOURCE-ADMISSION.md",
+    "research/HARNESS-ROUTES.md",
+    "ops/history/current-source-admission-20261103.json",
+    "research/COVERAGE.md",
+    "research/OPPORTUNITIES.md",
+    "ops/history/post-t3-source-admission-20261103.json"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -49,12 +63,12 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",
@@ -80,13 +94,11 @@
     "bun run beep lint reflection-artifacts"
   ],
   "stopConditions": [
-    "Required source files are missing or materially contradictory.",
-    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
-    "The same blocker repeats after reasonable investigation."
+    "Only stop dependent work for an actual unresolved access/authentication/privacy/integrity/resource boundary; continue independent proof and handle routine fixes autonomously.",
+    "New spend, plan changes or purchases require the operator.",
+    "Never release the historical forwarder recovery hold as part of this packet."
   ],
-  "statusNote": "Authored but not started; operator requested implementation-packet preparation, not execution.",
-  "resumeConditions": [
-    "Explicit launch of this packet after dependency proof; refresh live state before changes."
-  ],
+  "statusNote": "Enrollment remains active. Supporting PR2663 refreshes source-bound admission after accepted T3-only retirement2594:81 preparation inputs,87 disposable and86 live selected bindings, exact2synthetic events per stage, fresh backend readback and independent reviews. Separate actual-root identity proof passes. Historical470d609 receipts and prototype remain preserved; incompatible active session scripts removed without restoring messaging. All seven real harness populations remain Unknown. Native one-shot producer work proceeds separately; recovery forwarder service/timer remain masked/inactive.",
+  "resumeConditions": [],
   "dependencies": ["goals/agent-observability-foundation"]
 }

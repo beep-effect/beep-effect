@@ -3408,6 +3408,7 @@
         "@beep/libpff": "workspace:^",
         "@beep/m365": "workspace:^",
         "@beep/mcp-kit": "workspace:^",
+        "@beep/party-use-cases": "workspace:^",
         "@beep/pglite": "workspace:^",
         "@beep/postgres": "workspace:^",
         "@beep/provenance": "workspace:^",
@@ -3423,6 +3424,7 @@
         "@beep/md": "workspace:^",
         "@beep/memfs": "workspace:^",
         "@beep/nlp": "workspace:^",
+        "@beep/repo-utils": "workspace:^",
         "@beep/shared-domain": "workspace:^",
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
@@ -3431,6 +3433,7 @@
         "@effect/vitest": "catalog:",
         "@electric-sql/pglite": "catalog:",
         "@types/node": "catalog:",
+        "@typescript/native": "catalog:",
         "bun-types": "catalog:",
       },
     },
@@ -3618,12 +3621,50 @@
       "name": "@beep/party-domain",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/epistemics": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
+        "@beep/shared-domain": "workspace:^",
+        "@beep/utils": "workspace:^",
         "@noble/hashes": "catalog:",
         "effect": "catalog:",
         "libphonenumber-js": "catalog:",
         "tr46": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
+    "packages/party/server": {
+      "name": "@beep/party-server",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/epistemics": "workspace:^",
+        "@beep/identity": "workspace:^",
+        "@beep/m365": "workspace:^",
+        "@beep/party-domain": "workspace:^",
+        "@beep/party-use-cases": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/shared-domain": "workspace:^",
+        "@noble/hashes": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
+    "packages/party/use-cases": {
+      "name": "@beep/party-use-cases",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/party-domain": "workspace:^",
+        "@beep/shared-domain": "workspace:^",
+        "effect": "catalog:",
       },
       "devDependencies": {
         "@effect/vitest": "catalog:",
@@ -4984,6 +5025,10 @@
     "@beep/pandoc-ast": ["@beep/pandoc-ast@workspace:packages/foundation/modeling/pandoc-ast"],
 
     "@beep/party-domain": ["@beep/party-domain@workspace:packages/party/domain"],
+
+    "@beep/party-server": ["@beep/party-server@workspace:packages/party/server"],
+
+    "@beep/party-use-cases": ["@beep/party-use-cases@workspace:packages/party/use-cases"],
 
     "@beep/pdf-tools": ["@beep/pdf-tools@workspace:packages/drivers/pdf-tools"],
 

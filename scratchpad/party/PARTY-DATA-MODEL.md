@@ -1,6 +1,6 @@
 # Party Data Model — evidence-gated parties, identities, and organization graphs
 
-Status: experiment (scratchpad), 2026-10-21. Module: `scratchpad/party/`. Tests: `test/*.test.ts` (49 competency, adapter, identity-, organization-evidence and review-loop tests, all passing). Real-corpus run: `bun scratchpad/party/scripts/mail-census.ts <out.json> <filter|-> <index.jsonl>...`. Typecheck: `node_modules/.bin/tsgo -p scratchpad/party/tsconfig.json --noEmit`. Run: `node_modules/.bin/vitest run --config scratchpad/party/vitest.config.ts`.
+Status: historical design, 2026-10-21. The implementation has graduated into `packages/party/{domain,use-cases,server}`. Names, types, timestamp rules and test counts below describe the original experiment, not the current contract. See [current workflows](README.md), the [normative slice specification](../../goals/party-slice/SPEC.md), and the [competency migration](../../goals/party-slice/history/2026-11-03-competency-migration.md).
 
 ## 1. The short answer
 
