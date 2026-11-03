@@ -1,6 +1,6 @@
 # Trustworthy agent observability foundation
 
-Current delivery: operator-reserved final [PR2612](https://github.com/beep-effect/beep-effect/pull/2612). Historical PR2364/2508 results remain unsatisfied; PR2578 is canonical **unknown** after external merge without positive readiness. The goal remains active and the recovery hold stays intact.
+Current delivery: operator-reserved corrective final [PR2644](https://github.com/beep-effect/beep-effect/pull/2644). PR2364/2508/2612 retain **unsatisfied** canonical results; PR2578 remains canonical **unknown**. PR2612 is supporting history, and the operator subsequently confirmed personally initiating its merge. The goal remains active until genuine final verification; the recovery hold stays intact.
 
 ## Status
 
@@ -30,16 +30,27 @@ Only on an explicit implementation launch, use:
 
 ## Current phase
 
-The namespace repair [PR2519](https://github.com/beep-effect/beep-effect/pull/2519)
-is merged and integrated. Fresh qualification passed 870 AI-metrics,40 Phoenix,
-73 managed-provider and all 44 reconciliation tests, with 249 selected inputs stable.
-Independent review accepted the 84-input root and same-root90/89-input disposable/live
-pair. All thirteen domain criteria retain support at their explicit scopes.
-See the [active qualification](./research/POST-MERGE-QUALIFICATION.md).
-Required final-head hosted/review/merge proof and canonical completion remain open.
-The narrowly scoped scanner correction is merged. The [retained qualification](./research/RETAINED-FINAL-QUALIFICATION.md)
-records PR2578's unknown result, current input applicability, 51 hosted reconciliation
-tests and the operator's exclusive reservation of the next final merge.
+The accepted implementation and scoped synthetic evidence are retained. Historical
+November2 executions passed 870 AI-metrics, 40 Phoenix, 73 managed-provider and
+44 reconciliation tests at their recorded source. Accepted support-head execution
+later passed 871 AI-metrics and 51 reconciliation tests. Those records do not
+become new executions at PR2644's head.
+
+The [latest source comparison](./ops/history/owner-closeout-source-applicability-20261103.json)
+retains 234/249 selected package matches, 82/84 preparation matches, and 86/90
+and 85/89 disposable/live matches, with explicit source-delta boundaries. All
+thirteen domain criteria retain support only at their qualified scopes. Current
+exact-source root admission remains false; all seven real-harness populations
+remain Unknown. Final-head hosted checks, resolved review, the normal window,
+pre-merge readiness evidence and actual verified completion remain required.
+
+Supporting [PR2635](https://github.com/beep-effect/beep-effect/pull/2635) and
+[PR2641](https://github.com/beep-effect/beep-effect/pull/2641) are accepted and
+integrated. All V3 coverage-baseline values remain exact, with one measured
+PolicyRootFiles identity added; original ProofShadow floors remain unchanged.
+PR2641's successful hosted coverage belongs to its own head. The
+[retained qualification](./research/RETAINED-FINAL-QUALIFICATION.md) preserves
+historical outcomes, source applicability and execution boundaries.
 
 Current declared-root proof commands require both `--declared-qualification-sha256`
 and `--declared-probe-sha256`; there is no implicit historical pair. The
@@ -54,7 +65,7 @@ that historical result as unsatisfied; a merge alone cannot complete this packet
 The [post-merge qualification](./research/POST-MERGE-QUALIFICATION.md) preserves
 that history and refreshes current source, package and synthetic-route evidence.
 
-[PR2508](https://github.com/beep-effect/beep-effect/pull/2508) was the previous final follow-up. Its canonical result remains unsatisfied because its declared readiness verdict was stale, despite fifteen green required contexts at merge. PR2364 and PR2508 are now supporting historical delivery. [PR2578](https://github.com/beep-effect/beep-effect/pull/2578) also merged before positive readiness was retained. Its [canonical observation](./ops/history/pr2578-completion-unknown-20261102.json) remains unknown despite fifteen verified required contexts. PR2612 is now the sole final, with a new verdict reference and unchanged completion policy. The operator reserved its ready/merge transition for this chat. Supporting [PR2595](https://github.com/beep-effect/beep-effect/pull/2595) passed all 37 hosted jobs with one skip after merge; its [source qualification](./ops/history/pr2595-postmerge-source-qualification-20261102.json) preserves that timing.
+[PR2508](https://github.com/beep-effect/beep-effect/pull/2508) was the previous final follow-up. Its canonical result remains unsatisfied because its declared readiness verdict was stale, despite fifteen green required contexts at merge. PR2364 and PR2508 are now supporting historical delivery. [PR2578](https://github.com/beep-effect/beep-effect/pull/2578) also merged before positive readiness was retained. Its [canonical observation](./ops/history/pr2578-completion-unknown-20261102.json) remains unknown despite fifteen verified required contexts. PR2612 also merged without its declared readiness; its [canonical observation](./ops/history/pr2612-completion-unsatisfied-20261103.json) remains unsatisfied. PR2644 is the sole corrective final, with its own verdict reference and unchanged completion policy. The operator reserved its final merge for this chat. Supporting [PR2595](https://github.com/beep-effect/beep-effect/pull/2595) passed all 37 hosted jobs with one skip after merge; its [source qualification](./ops/history/pr2595-postmerge-source-qualification-20261102.json) preserves that timing.
 The existing prospective declaration is not achievement. The canonical
 `beep goals completion refresh` writer remains the only completion derivation;
 local passes and synthetic proof do not replace it.
@@ -90,7 +101,7 @@ that later public derivatives retain the original bytes.
 
 ## Current verification
 
-- [Retained final qualification](./research/RETAINED-FINAL-QUALIFICATION.md): current main selected-input comparison, retained unknown completion, actual hosted 51-test reconciliation result and post-merge compatibility proof. These do not establish new final-head readiness. The [new reflection](./history/reflections/2026-11-02-codex-retained-final.md) preserves the earlier reflection unchanged.
+- [Retained final qualification](./research/RETAINED-FINAL-QUALIFICATION.md): latest selected-input comparison, historical unknown and unsatisfied completion results, actual supporting-head execution and accepted repairs. These do not establish PR2644 final-head readiness. The [new reflection](./history/reflections/2026-11-02-codex-retained-final.md) preserves the earlier reflection unchanged.
 
 - [November2 integrated qualification](./research/POST-MERGE-QUALIFICATION.md):
   fresh suites passed 870/40/73/44 tests with 249 selected inputs stable. Independent
