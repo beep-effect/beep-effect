@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { fcRuns } from "@beep/fc-runs";
 import { Git, GitCommandError } from "@beep/git/Git";
 import {
@@ -40,15 +41,11 @@ import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { commandArgs } from "./support/commandArgs.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 
 const decodeBakeConfig = S.decodeEffect(BakeConfig);
 
@@ -57,26 +54,9 @@ const bunArchiveDigest = Sha256Hex.make("951ee2aee855f08595aeec6225226a298d3fea8
 const PlatformLayer = Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer);
 
 // `Git` is built over the scripted spawner, so the kit's `HEAD` read reaches the stub's answer (W2).
-const withGit = <ROut, E, RIn>(
-  spawner: Layer.Layer<ChildProcessSpawner.ChildProcessSpawner>,
-  platform: Layer.Layer<ROut, E, RIn>
-) => Layer.provideMerge(Git.layer, Layer.merge(spawner, platform));
-const encoder = new TextEncoder();
-
-const stubHandle = (output: string, exitCode = 0) =>
-  ChildProcessSpawner.makeHandle({
-    all: Stream.make(encoder.encode(output)),
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    stdout: Stream.make(encoder.encode(output)),
-    unref: Effect.succeed(Effect.void),
-  });
+const withGit = <ROut, E, RIn>(spawner: ScriptedSpawner, platform: Layer.Layer<ROut, E, RIn>) =>
+  Layer.provideMerge(Git.layer, Layer.merge(spawner.layer, platform));
+const spawnArgv = (spawner: ScriptedSpawner) => A.map(spawner.spawns, (spawn) => [spawn.command, ...spawn.args]);
 
 const withTempDirectory = <Result, Error, Requirements>(
   use: (tmpDir: string) => Effect.Effect<Result, Error, Requirements>
@@ -159,51 +139,34 @@ const argumentAfter = (argv: ReadonlyArray<string>, flag: string): O.Option<stri
     A.head
   );
 
-const makeBakeSpawner = (
-  commands: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>,
-  consoleOutput: string,
-  git: { readonly remotes?: string; readonly contains?: string } = {}
-): ChildProcessSpawner.ChildProcessSpawner["Service"] =>
-  ChildProcessSpawner.make((command) => {
-    if (!ChildProcess.isStandardCommand(command)) {
-      return Effect.die("runner bake never spawns a piped command");
-    }
-    const args = commandArgs(command);
-    const argv = [command.command, ...args];
-    const output = Match.value(command.command).pipe(
-      Match.when("git", () =>
-        Effect.succeed(
-          A.contains(args, "status")
-            ? stubHandle("")
-            : A.contains(args, "remote")
-              ? stubHandle(git.remotes ?? "origin\thttps://github.com/beep-effect/beep-effect.git (fetch)")
-              : A.contains(args, "--contains")
-                ? stubHandle(git.contains ?? "  origin/main")
-                : stubHandle("0123456789abcdef0123456789abcdef01234567")
-        )
-      ),
+// Unexpected commands exit nonzero with the old guard's message instead of dying.
+const makeBakeSpawner = (consoleOutput: string, git: { readonly remotes?: string; readonly contains?: string } = {}) =>
+  ScriptedSpawner.make((command, args) =>
+    Match.value(command).pipe(
+      Match.when("git", () => ({
+        stdout: A.contains(args, "status")
+          ? ""
+          : A.contains(args, "remote")
+            ? (git.remotes ?? "origin\thttps://github.com/beep-effect/beep-effect.git (fetch)")
+            : A.contains(args, "--contains")
+              ? (git.contains ?? "  origin/main")
+              : "0123456789abcdef0123456789abcdef01234567",
+      })),
       Match.when("aws", () =>
         Match.value(args).pipe(
-          Match.when(A.contains("get-parameter"), () =>
-            Effect.succeed(stubHandle('{"Parameter":{"Value":"ami-base"}}'))
-          ),
-          Match.when(A.contains("run-instances"), () =>
-            Effect.succeed(stubHandle('{"Instances":[{"InstanceId":"i-bake"}]}'))
-          ),
-          Match.when(A.contains("describe-instances"), () => Effect.succeed(stubHandle('["stopped"]'))),
-          Match.when(A.contains("get-console-output"), () =>
-            Effect.succeed(stubHandle(`{"Output":"${consoleOutput}"}`))
-          ),
-          Match.when(A.contains("create-image"), () => Effect.succeed(stubHandle('{"ImageId":"ami-baked"}'))),
-          Match.when(A.contains("describe-images"), () => Effect.succeed(stubHandle('["available"]'))),
-          Match.when(A.contains("terminate-instances"), () => Effect.succeed(stubHandle("{}"))),
-          Match.orElse(() => Effect.die(`unexpected aws command: ${A.join(args, " ")}`))
+          Match.when(A.contains("get-parameter"), () => ({ stdout: '{"Parameter":{"Value":"ami-base"}}' })),
+          Match.when(A.contains("run-instances"), () => ({ stdout: '{"Instances":[{"InstanceId":"i-bake"}]}' })),
+          Match.when(A.contains("describe-instances"), () => ({ stdout: '["stopped"]' })),
+          Match.when(A.contains("get-console-output"), () => ({ stdout: `{"Output":"${consoleOutput}"}` })),
+          Match.when(A.contains("create-image"), () => ({ stdout: '{"ImageId":"ami-baked"}' })),
+          Match.when(A.contains("describe-images"), () => ({ stdout: '["available"]' })),
+          Match.when(A.contains("terminate-instances"), () => ({ stdout: "{}" })),
+          Match.orElse(() => ({ exit: 1, stderr: `unexpected aws command: ${A.join(args, " ")}` }))
         )
       ),
-      Match.orElse(() => Effect.die(`unexpected command: ${command.command}`))
-    );
-    return Ref.update(commands, A.append(argv)).pipe(Effect.andThen(output));
-  });
+      Match.orElse(() => ({ exit: 1, stderr: `unexpected command: ${command}` }))
+    )
+  );
 
 const stubService = (fresh: boolean) => ({
   plan: Effect.succeed(makePlan()),
@@ -270,21 +233,15 @@ describe("runner image manifest checks", () => {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
           const manifestPath = path.join(tmpDir, "runner-image.json");
-          const commands = yield* Ref.make<ReadonlyArray<string>>(A.empty());
-          const spawner = ChildProcessSpawner.make((command) => {
-            if (!ChildProcess.isStandardCommand(command) || command.command !== "git") {
-              return Effect.die("manifest checks must never invoke AWS");
-            }
-            return Ref.update(commands, A.append(command.command)).pipe(
-              Effect.as(
-                stubHandle(A.contains(commandArgs(command), "status") ? "" : "0123456789abcdef0123456789abcdef01234567")
-              )
-            );
-          });
+          const spawner = ScriptedSpawner.make((command, args) =>
+            command === "git"
+              ? { stdout: A.contains(args, "status") ? "" : "0123456789abcdef0123456789abcdef01234567" }
+              : { exit: 1, stderr: "manifest checks must never invoke AWS" }
+          );
           const testLayer = RunnersServiceLive.pipe(
             Layer.provide(
               withGit(
-                Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
+                spawner,
                 Layer.mergeAll(
                   Layer.succeed(FileSystem.FileSystem, {
                     ...fs,
@@ -335,7 +292,7 @@ describe("runner image manifest checks", () => {
               testLayer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RunnersService)))
             )
           );
-          expect(A.dedupe(yield* Ref.get(commands))).toEqual(["git"]);
+          expect(A.dedupe(A.map(spawner.spawns, (spawn) => spawn.command))).toEqual(["git"]);
         })
       )
     );
@@ -460,20 +417,12 @@ describe("runner bake planning and argv", () => {
   it.layer(NodeCrypto.layer, { timeout: "10 seconds" })((it) => {
     it.effect("passes AWS an explicit global-region argv without a shell", () =>
       Effect.gen(function* () {
-        const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
-        const spawner = ChildProcessSpawner.make((command) => {
-          if (!ChildProcess.isStandardCommand(command)) {
-            return Effect.die("runner bake never spawns a piped command");
-          }
-          return Ref.update(commands, A.append([command.command, ...commandArgs(command)])).pipe(
-            Effect.as(stubHandle('{"Images":[]}'))
-          );
-        });
+        const spawner = ScriptedSpawner.make(() => ({ stdout: '{"Images":[]}' }));
         const output = yield* runAwsForTesting("us-east-1", ["ec2", "describe-images", "--image-ids", "ami-123"]).pipe(
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+          provideSpawner(spawner)
         );
         expect(output).toBe('{"Images":[]}');
-        expect(yield* Ref.get(commands)).toStrictEqual([
+        expect(spawnArgv(spawner)).toStrictEqual([
           ["aws", "--no-cli-pager", "--region", "us-east-1", "ec2", "describe-images", "--image-ids", "ami-123"],
         ]);
       })
@@ -512,16 +461,14 @@ describe("runner bake planning and argv", () => {
   for (const { label, failure, message, exitCode } of revisionFailures) {
     it.effect(`folds ${label} into the runner revision wording`, () =>
       Effect.gen(function* () {
-        const spawner = ChildProcessSpawner.make((command) =>
-          ChildProcess.isStandardCommand(command) && command.command === "git"
-            ? Effect.succeed(stubHandle(""))
-            : Effect.die("the revision probe never reaches AWS")
+        const spawner = ScriptedSpawner.make((command) =>
+          command === "git" ? {} : { exit: 1, stderr: "the revision probe never reaches AWS" }
         );
         const testLayer = RunnersServiceLive.pipe(
           Layer.provide(
             Layer.provideMerge(
               Git.layerTest({ revParse: () => Effect.fail(failure) }),
-              Layer.merge(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), PlatformLayer)
+              Layer.merge(spawner.layer, PlatformLayer)
             )
           )
         );
@@ -541,50 +488,30 @@ describe("runner bake planning and argv", () => {
   it.effect("plans and checks freshness through the live service with a scripted spawner", () =>
     Effect.gen(function* () {
       const localPlan = yield* Ref.make(O.none<BakePlan>());
-      const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
-      const spawner = ChildProcessSpawner.make((command) => {
-        if (!ChildProcess.isStandardCommand(command)) {
-          return Effect.die("runner bake never spawns a piped command");
-        }
-        const argv = [command.command, ...commandArgs(command)];
-        return Ref.update(commands, A.append(argv)).pipe(
-          Effect.andThen(
-            Match.value(command.command).pipe(
-              Match.when("git", () =>
-                Effect.succeed(
-                  stubHandle(
-                    A.contains(commandArgs(command), "status") ? "" : "0123456789abcdef0123456789abcdef01234567"
-                  )
-                )
-              ),
-              Match.when("aws", () =>
-                pipe(
-                  A.contains(commandArgs(command), "get-parameter"),
-                  Match.value,
-                  Match.when(true, () => Effect.succeed(stubHandle('{"Parameter":{"Value":"ami-live"}}'))),
-                  Match.orElse(() =>
-                    Ref.get(localPlan).pipe(
-                      Effect.map(
-                        O.match({
-                          onNone: () => stubHandle('{"Images":[]}'),
-                          onSome: (currentPlan) =>
-                            stubHandle(
-                              `{"Images":[{"Tags":[{"Key":"beep-ci:lockfile-sha256","Value":"${currentPlan.lockfileSha256}"},{"Key":"beep-ci:bun-archive-sha256","Value":"${currentPlan.bunArchiveSha256}"},{"Key":"beep-ci:bun-version","Value":"${currentPlan.bunVersion}"}]}]}`
-                            ),
-                        })
-                      )
-                    )
-                  )
-                )
-              ),
-              Match.orElse(() => Effect.die(`unexpected command: ${command.command}`))
+      // The script is synchronous, so it reads the plan the test stores through `Ref.getUnsafe`.
+      const spawner = ScriptedSpawner.make((command, args) =>
+        Match.value(command).pipe(
+          Match.when("git", () => ({
+            stdout: A.contains(args, "status") ? "" : "0123456789abcdef0123456789abcdef01234567",
+          })),
+          Match.when("aws", () =>
+            pipe(
+              A.contains(args, "get-parameter"),
+              Match.value,
+              Match.when(true, () => ({ stdout: '{"Parameter":{"Value":"ami-live"}}' })),
+              Match.orElse(() => ({
+                stdout: O.match(Ref.getUnsafe(localPlan), {
+                  onNone: () => '{"Images":[]}',
+                  onSome: (currentPlan) =>
+                    `{"Images":[{"Tags":[{"Key":"beep-ci:lockfile-sha256","Value":"${currentPlan.lockfileSha256}"},{"Key":"beep-ci:bun-archive-sha256","Value":"${currentPlan.bunArchiveSha256}"},{"Key":"beep-ci:bun-version","Value":"${currentPlan.bunVersion}"}]}]}`,
+                }),
+              }))
             )
-          )
-        );
-      });
-      const testLayer = RunnersServiceLive.pipe(
-        Layer.provide(withGit(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), PlatformLayer))
+          ),
+          Match.orElse(() => ({ exit: 1, stderr: `unexpected command: ${command}` }))
+        )
       );
+      const testLayer = RunnersServiceLive.pipe(Layer.provide(withGit(spawner, PlatformLayer)));
       const { check, currentPlan } = yield* Effect.gen(function* () {
         const service = yield* RunnersService;
         const currentPlan = yield* service.plan;
@@ -611,7 +538,7 @@ describe("runner bake planning and argv", () => {
       expect(check.fresh).toBe(true);
       expect(check.amiId).toBe("ami-live");
       expect(
-        A.some(yield* Ref.get(commands), (argv) => A.contains(argv, "describe-images") && A.contains(argv, "us-west-2"))
+        A.some(spawnArgv(spawner), (argv) => A.contains(argv, "describe-images") && A.contains(argv, "us-west-2"))
       ).toBe(true);
     })
   );
@@ -621,13 +548,10 @@ describe("runner bake planning and argv", () => {
       withTempDirectory(
         Effect.fnUntraced(function* (tmpDir) {
           const path = yield* Path.Path;
-          const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
           // AWS CLI v2 hands back get-console-output's Output already decoded.
           const consoleOutput = "BEEP_RUNNERS_BAKE_COMPLETE";
-          const spawner = makeBakeSpawner(commands, consoleOutput);
-          const testLayer = RunnersServiceLive.pipe(
-            Layer.provide(withGit(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), PlatformLayer))
-          );
+          const spawner = makeBakeSpawner(consoleOutput);
+          const testLayer = RunnersServiceLive.pipe(Layer.provide(withGit(spawner, PlatformLayer)));
           const reportPath = path.join(tmpDir, "bake-report.json");
           const baked = yield* Effect.gen(function* () {
             const service = yield* RunnersService;
@@ -638,7 +562,7 @@ describe("runner bake planning and argv", () => {
               testLayer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RunnersService)))
             )
           );
-          const captured = yield* Ref.get(commands);
+          const captured = spawnArgv(spawner);
           const runInstances = yield* A.findFirst(captured, A.contains("run-instances")).pipe(
             O.match({ onNone: () => Effect.die("missing run-instances"), onSome: Effect.succeed })
           );
@@ -714,11 +638,8 @@ describe("runner bake planning and argv", () => {
       Effect.gen(function* () {
         // EC2 posts a stopped instance's console minutes after the stop; an
         // empty read is the propagation window, never a bake verdict.
-        const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
         const pending = yield* Effect.flip(
-          readPostedConsoleForTesting("us-east-1", "i-bake").pipe(
-            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, makeBakeSpawner(commands, ""))
-          )
+          readPostedConsoleForTesting("us-east-1", "i-bake").pipe(provideSpawner(makeBakeSpawner("")))
         );
         expect(pending._tag).toBe("AwsResourcePending");
 
@@ -727,10 +648,7 @@ describe("runner bake planning and argv", () => {
         // command, so nonempty is not terminal.
         const partial = yield* Effect.flip(
           readPostedConsoleForTesting("us-east-1", "i-bake").pipe(
-            Effect.provideService(
-              ChildProcessSpawner.ChildProcessSpawner,
-              makeBakeSpawner(commands, "cloud-init boot noise without any marker")
-            )
+            provideSpawner(makeBakeSpawner("cloud-init boot noise without any marker"))
           )
         );
         expect(partial._tag).toBe("AwsResourcePending");
@@ -743,13 +661,10 @@ describe("runner bake planning and argv", () => {
       withTempDirectory(
         Effect.fnUntraced(function* (tmpDir) {
           const path = yield* Path.Path;
-          const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
-          const spawner = makeBakeSpawner(commands, "BEEP_RUNNERS_BAKE_COMPLETE", {
+          const spawner = makeBakeSpawner("BEEP_RUNNERS_BAKE_COMPLETE", {
             remotes: "fork\thttps://github.com/someone/beep-effect-fork.git (fetch)",
           });
-          const testLayer = RunnersServiceLive.pipe(
-            Layer.provide(withGit(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), PlatformLayer))
-          );
+          const testLayer = RunnersServiceLive.pipe(Layer.provide(withGit(spawner, PlatformLayer)));
           const error = yield* Effect.gen(function* () {
             const service = yield* RunnersService;
             return yield* Effect.flip(service.bake(bakeConfig(), O.some(path.join(tmpDir, "bake-report.json"))));
@@ -761,7 +676,7 @@ describe("runner bake planning and argv", () => {
           );
           expect(error.message).toContain("No Git remote points at github.com/beep-effect/beep-effect");
           // The guard must refuse before any AWS call reaches the spawner.
-          expect(A.some(yield* Ref.get(commands), A.contains("aws"))).toBe(false);
+          expect(A.some(spawnArgv(spawner), A.contains("aws"))).toBe(false);
         })
       )
     );
@@ -772,11 +687,8 @@ describe("runner bake planning and argv", () => {
       withTempDirectory(
         Effect.fnUntraced(function* (tmpDir) {
           const path = yield* Path.Path;
-          const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
-          const spawner = makeBakeSpawner(commands, "BEEP_RUNNERS_BAKE_COMPLETE", { contains: "  fork/feature" });
-          const testLayer = RunnersServiceLive.pipe(
-            Layer.provide(withGit(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), PlatformLayer))
-          );
+          const spawner = makeBakeSpawner("BEEP_RUNNERS_BAKE_COMPLETE", { contains: "  fork/feature" });
+          const testLayer = RunnersServiceLive.pipe(Layer.provide(withGit(spawner, PlatformLayer)));
           const error = yield* Effect.gen(function* () {
             const service = yield* RunnersService;
             return yield* Effect.flip(service.bake(bakeConfig(), O.some(path.join(tmpDir, "bake-report.json"))));
@@ -787,7 +699,7 @@ describe("runner bake planning and argv", () => {
             )
           );
           expect(error.message).toContain("is not reachable from any github.com/beep-effect/beep-effect remote branch");
-          expect(A.some(yield* Ref.get(commands), A.contains("aws"))).toBe(false);
+          expect(A.some(spawnArgv(spawner), A.contains("aws"))).toBe(false);
         })
       )
     );
@@ -798,12 +710,9 @@ describe("runner bake planning and argv", () => {
       withTempDirectory(
         Effect.fnUntraced(function* (tmpDir) {
           const path = yield* Path.Path;
-          const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
           const consoleOutput = "BEEP_RUNNERS_BAKE_FAILED line 5: false";
-          const spawner = makeBakeSpawner(commands, consoleOutput);
-          const testLayer = RunnersServiceLive.pipe(
-            Layer.provide(withGit(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), PlatformLayer))
-          );
+          const spawner = makeBakeSpawner(consoleOutput);
+          const testLayer = RunnersServiceLive.pipe(Layer.provide(withGit(spawner, PlatformLayer)));
           const error = yield* Effect.gen(function* () {
             const service = yield* RunnersService;
             return yield* Effect.flip(
@@ -817,7 +726,7 @@ describe("runner bake planning and argv", () => {
           );
 
           expect(error.message).toContain("stopped without the BEEP_RUNNERS_BAKE_COMPLETE success marker");
-          expect(A.some(yield* Ref.get(commands), A.contains("terminate-instances"))).toBe(true);
+          expect(A.some(spawnArgv(spawner), A.contains("terminate-instances"))).toBe(true);
         })
       )
     );
@@ -825,17 +734,8 @@ describe("runner bake planning and argv", () => {
 
   it.effect("refuses dirty lockfile inputs before making an AWS call", () =>
     Effect.gen(function* () {
-      const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
-      const spawner = ChildProcessSpawner.make((command) => {
-        if (!ChildProcess.isStandardCommand(command)) {
-          return Effect.die("runner bake never spawns a piped command");
-        }
-        const argv = [command.command, ...commandArgs(command)];
-        return Ref.update(commands, A.append(argv)).pipe(Effect.as(stubHandle(" M bun.lock")));
-      });
-      const testLayer = RunnersServiceLive.pipe(
-        Layer.provide(withGit(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), PlatformLayer))
-      );
+      const spawner = ScriptedSpawner.make(() => ({ stdout: " M bun.lock" }));
+      const testLayer = RunnersServiceLive.pipe(Layer.provide(withGit(spawner, PlatformLayer)));
       const error = yield* Effect.gen(function* () {
         const service = yield* RunnersService;
         return yield* Effect.flip(service.plan);
@@ -849,7 +749,7 @@ describe("runner bake planning and argv", () => {
       expect(error.message).toBe(
         "Refusing to bake while bun.lock, .bun-version, or .bun-linux-x64.sha256 has uncommitted changes."
       );
-      expect(A.some(yield* Ref.get(commands), A.contains("aws"))).toBe(false);
+      expect(A.some(spawnArgv(spawner), A.contains("aws"))).toBe(false);
     })
   );
 

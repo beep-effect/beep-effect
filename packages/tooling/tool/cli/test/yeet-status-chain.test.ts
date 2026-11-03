@@ -232,6 +232,7 @@ const withFakeRunner = (
   flow(
     provideLegacyGh,
     Effect.provideServiceEffect(Git, Git.make),
+    // Own double: each gh spawn sleeps on the live clock and counts in-flight calls.
     Effect.provideService(
       ChildProcessSpawner.ChildProcessSpawner,
       ChildProcessSpawner.make((command) => {

@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import {
   BaselineOutputStamp,
   DeletePackageBaselineWriters,
@@ -33,12 +34,9 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as TestConsole from "effect/testing/TestConsole";
 import { expectReportedExit, temporaryWorkingDirectory } from "./support/CommandTest.ts";
-import { commandArgs } from "./support/commandArgs.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { DeletePackageRefusal } from "@beep/repo-cli/test/DeletePackage";
 
 const temporaryDirectory = Effect.gen(function* () {
@@ -745,27 +743,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
   });
 
   describe("delete-package baseline writer stage", () => {
-    const fakeSpawner = (exitCode: number, spawned: Array<string>) =>
-      ChildProcessSpawner.make((command) =>
-        Effect.sync(() => {
-          if (command._tag === "StandardCommand") {
-            spawned.push(A.join([command.command, ...commandArgs(command)], " "));
-          }
-          return ChildProcessSpawner.makeHandle({
-            pid: ChildProcessSpawner.ProcessId(1),
-            exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
-            isRunning: Effect.succeed(false),
-            kill: () => Effect.void,
-            stdin: Sink.drain,
-            stdout: Stream.empty,
-            stderr: Stream.empty,
-            all: Stream.empty,
-            getInputFd: () => Sink.drain,
-            getOutputFd: () => Stream.empty,
-            unref: Effect.succeed(Effect.void),
-          });
-        })
-      );
+    const fakeSpawner = (exit: number) => ScriptedSpawner.make(() => ({ exit }));
 
     const coverageBaselineFixture = `{
   "schema_version": 2,
@@ -793,7 +771,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 `;
 
     it.effect("subtracts the coverage baseline then runs every shell step in table order", () => {
-      const spawned: Array<string> = [];
+      const spawner = fakeSpawner(0);
       return Effect.flatMap(temporaryDirectory, (repoRoot) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
@@ -810,7 +788,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             path.join(repoRoot, "standards", "coverage.regression-baseline.jsonc")
           );
           expect(Str.includes("@beep/courtlistener")(baseline)).toBe(false);
-          expect(spawned).toStrictEqual([
+          expect(A.map(spawner.spawns, (spawn) => A.join([spawn.command, ...spawn.args], " "))).toStrictEqual([
             "bun run beep fallow boundaries --write",
             "bun run fallow:health:baseline:write",
             "bun run fallow:dead-code:baseline:write",
@@ -823,16 +801,13 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           ]);
         })
       ).pipe(
-        flow(
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, fakeSpawner(0, spawned)),
-          Effect.provideServiceEffect(Console.Console, TestConsole.make)
-        ),
+        flow(provideSpawner(spawner), Effect.provideServiceEffect(Console.Console, TestConsole.make)),
         Effect.provideServiceEffect(Console.Console, TestConsole.make)
       );
     });
 
     it.effect("fails the stage on the first zero-only step that exits nonzero", () => {
-      const spawned: Array<string> = [];
+      const spawner = fakeSpawner(1);
       return Effect.flatMap(temporaryDirectory, (repoRoot) =>
         Effect.gen(function* () {
           const exit = yield* Effect.exit(DeletePackageBaselineWriters.run(repoRoot, "@beep/courtlistener"));
@@ -840,13 +815,10 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           if (Exit.isFailure(exit)) {
             expect(Str.includes("fallow boundaries failed with exit code 1")(Cause.pretty(exit.cause))).toBe(true);
           }
-          expect(A.length(spawned)).toBe(1);
+          expect(A.length(spawner.spawns)).toBe(1);
         })
       ).pipe(
-        flow(
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, fakeSpawner(1, spawned)),
-          Effect.provideServiceEffect(Console.Console, TestConsole.make)
-        ),
+        flow(provideSpawner(spawner), Effect.provideServiceEffect(Console.Console, TestConsole.make)),
         Effect.provideServiceEffect(Console.Console, TestConsole.make)
       );
     });

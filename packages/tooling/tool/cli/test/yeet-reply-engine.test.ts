@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import {
   failedReplyOutcomes,
   failYeetReplyOnFailedOutcomes,
@@ -41,14 +42,10 @@ import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Result from "effect/Result";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { expectReportedExit } from "./support/CommandTest.ts";
-import { commandArgs } from "./support/commandArgs.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import { githubCallLine, isGraphql, recordedGithub } from "./support/YeetGithub.ts";
 import type { ReplyAction } from "@beep/repo-cli/test/Yeet";
 import type { GithubAnswer, GithubRoutes } from "./support/YeetGithub.ts";
@@ -459,8 +456,6 @@ describe("planReplyActions", () => {
   );
 });
 
-const encoder = new TextEncoder();
-
 type CommandStub = {
   readonly exitCode: number;
   readonly output: string;
@@ -468,38 +463,19 @@ type CommandStub = {
 
 const ok = (output: string): CommandStub => ({ exitCode: 0, output });
 
-const stubHandle = (stub: CommandStub) =>
-  ChildProcessSpawner.makeHandle({
-    all: Stream.make(encoder.encode(stub.output)),
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(stub.exitCode)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    stdout: Stream.make(encoder.encode(stub.output)),
-    unref: Effect.succeed(Effect.void),
-  });
-
 /**
- * A scripted spawner that rejects every unlisted command.
- * `spawned`, when given, records every command line so a test can assert what
- * was *not* run — which is the whole point of the follow-up routing.
+ * A scripted spawner that fails every unlisted command.
+ * Its `spawns` record every command line so a test can assert what was *not*
+ * run — which is the whole point of the follow-up routing.
  */
-const stubSpawner = (stubs: ReadonlyArray<readonly [string, CommandStub]>, spawned?: Array<ReadonlyArray<string>>) =>
-  ChildProcessSpawner.make((command) => {
-    if (!ChildProcess.isStandardCommand(command)) {
-      return Effect.die("the reply engine never spawns a piped command");
-    }
-    const line = A.join([command.command, ...commandArgs(command)], " ");
-    spawned?.push([command.command, ...commandArgs(command)]);
+const stubSpawner = (stubs: ReadonlyArray<readonly [string, CommandStub]>) =>
+  ScriptedSpawner.make((command, args) => {
+    const line = A.join([command, ...args], " ");
     return pipe(
       A.findFirst(stubs, ([marker]) => Str.includes(marker)(line)),
       O.match({
-        onNone: () => Effect.die(`Unscripted reply command: ${line}`),
-        onSome: ([, stub]) => Effect.succeed(stubHandle(stub)),
+        onNone: () => ({ exit: 1, stderr: `Unscripted reply command: ${line}` }),
+        onSome: ([, stub]) => ({ stdout: stub.output, exit: stub.exitCode }),
       })
     );
   });
@@ -620,12 +596,7 @@ const writeDrafts = Effect.fnUntraced(function* (context: RepoRunContext, drafts
 });
 
 const replyTestLayer = (stubs: ReadonlyArray<readonly [string, CommandStub]>) =>
-  Layer.mergeAll(
-    BunCrypto.layer,
-    NodeFileSystem.layer,
-    NodePath.layer,
-    Layer.succeed(ChildProcessSpawner.ChildProcessSpawner)(stubSpawner(stubs))
-  );
+  Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer, stubSpawner(stubs).layer);
 
 const deniedRepoViewStubs: ReadonlyArray<readonly [string, CommandStub]> = [
   ["gh repo view", { exitCode: 1, output: "gh: authentication required" }],
@@ -672,15 +643,12 @@ describe("runYeetReply", () => {
     it.effect("writes a reply-report.json that decodes back through ReplyReportJson", () =>
       Effect.gen(function* () {
         const root = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
-        const spawned: Array<ReadonlyArray<string>> = [];
+        const spawner = stubSpawner(repoViewStubs);
         const github = recordedGithub(replyRoutes(livePage));
         const context = replyContext(root);
         yield* writeDrafts(context, twoDrafts);
 
-        const report = yield* runYeetReply(context).pipe(
-          github.provide,
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, stubSpawner(repoViewStubs, spawned))
-        );
+        const report = yield* runYeetReply(context).pipe(github.provide, provideSpawner(spawner));
         expect(A.map(report.outcomes, (outcome) => outcome.status)).toEqual(["resolved", "stale"]);
 
         expect(A.map(github.calls, githubCallLine)).toEqual([
@@ -696,7 +664,7 @@ describe("runYeetReply", () => {
         expect(A.map(A.take(github.calls, 1), (call) => call.body)).toMatchObject([
           { variables: { owner: "YeeBois", name: "beep-effect", number: 558 } },
         ]);
-        expect(spawned).toHaveLength(1);
+        expect(spawner.spawns).toHaveLength(1);
         const fs = yield* FileSystem.FileSystem;
         const written = yield* fs.readFileString(yield* replyReportPathForContext(context));
         expect(written).not.toContain('"_id":"Option"');

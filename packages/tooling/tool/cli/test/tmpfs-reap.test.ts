@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { fcRuns } from "@beep/fc-runs";
 import { Git } from "@beep/git/Git";
 import {
@@ -22,11 +23,11 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 
 // `Git` rides beside the platform services: the worktree removals take it from the context (W1b).
 const platformLayer = Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer));
@@ -682,14 +683,12 @@ describe("tmpfs reap", () => {
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const fixture = yield* makeNewClassFixtures(root);
-          const failingSpawner = ChildProcessSpawner.make(() =>
-            Effect.fail(
-              PlatformError.badArgument({
-                description: "simulated rmdir spawn failure",
-                method: "spawn",
-                module: "ChildProcessSpawner",
-              })
-            )
+          const failingSpawner = ScriptedSpawner.make(() =>
+            PlatformError.badArgument({
+              description: "simulated rmdir spawn failure",
+              method: "spawn",
+              module: "ChildProcessSpawner",
+            })
           );
 
           const report = yield* runTmpfsReap({
@@ -699,7 +698,7 @@ describe("tmpfs reap", () => {
             listProcessCommandLines: noProcessCommandLines,
             nowMillis: FIXTURE_NOW_MILLIS,
             tmpRoot: fixture.tmpRoot,
-          }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, failingSpawner));
+          }).pipe(provideSpawner(failingSpawner));
 
           expect(yield* fs.exists(fixture.stubSoleEligible)).toBe(true);
           expect(report.warnings).toContain(

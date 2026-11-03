@@ -146,6 +146,7 @@ const readConfigArgument = (args: ReadonlyArray<string>): O.Option<string> =>
     )
   );
 
+// Own double: each spawn reads the scorer-generated config file it is pointed at, inside the spawn.
 /**
  * Spawner stand-in for the three law-lane tools: records each spawned command
  * name, snapshots the scorer-generated config a lane is pointed at, and answers

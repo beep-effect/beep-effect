@@ -1,4 +1,5 @@
 import * as NodeZlib from "node:zlib";
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { fcRuns } from "@beep/fc-runs";
 import {
   HostedJob,
@@ -34,16 +35,12 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
-import { commandArgs } from "./support/commandArgs.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { RouteGhRunner } from "@beep/repo-cli/commands/Ci/RouteCorpus";
 
 const FIXTURES = new URL("./fixtures/ci-route/corpus/", import.meta.url);
@@ -199,41 +196,11 @@ const repin = Effect.fn("RouteCorpusTest.repin")(function* (
   yield* fs.writeFileString(receiptPath, yield* encodeReceipt(repinned));
 });
 
-const handle = (exitCode: number, output: string) =>
-  ChildProcessSpawner.makeHandle({
-    all: Stream.make(new TextEncoder().encode(output)),
-    stdout: Stream.make(new TextEncoder().encode(output)),
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    unref: Effect.succeed(Effect.void),
-  });
-
-// A scripted `gh`: records every spawn as [cwd, command, ...args] and answers it.
-const scriptedSpawner = (
-  spawns: Calls,
-  answer: (
-    args: ReadonlyArray<string>
-  ) => Effect.Effect<ChildProcessSpawner.ChildProcessHandle, PlatformError.PlatformError>
-) =>
-  ChildProcessSpawner.make((command) => {
-    if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-    const args = commandArgs(command);
-    return Ref.update(spawns, A.append([command.options.cwd ?? "", command.command, ...args])).pipe(
-      Effect.andThen(answer(args))
-    );
-  });
-
-const captureLive = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], options: RouteCorpusCaptureOptions) =>
+const captureLive = (spawner: ScriptedSpawner, options: RouteCorpusCaptureOptions) =>
   Effect.gen(function* () {
     const corpus = yield* RouteCorpus;
     return yield* corpus.capture(options);
-  }).pipe(provideScopedLayer(RouteCorpusLive), Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
+  }).pipe(provideScopedLayer(RouteCorpusLive), provideSpawner(spawner));
 
 // Retries and rate-limit waits sleep on the test clock. The capture does real
 // I/O between its sleeps, so keep advancing the clock until it has finished.
@@ -243,7 +210,7 @@ const untilDone = Effect.fn("RouteCorpusTest.untilDone")(function* <A, E, R>(eff
   return yield* Fiber.join(fiber);
 });
 
-const failLive = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], options: RouteCorpusCaptureOptions) =>
+const failLive = (spawner: ScriptedSpawner, options: RouteCorpusCaptureOptions) =>
   captureLive(spawner, options).pipe(Effect.flip, untilDone);
 
 // The corpus stores one encoded HostedRun per line and the receipt as JSON, so
@@ -851,7 +818,6 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         const fs = yield* FileSystem.FileSystem;
         const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
         yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
-        const spawns = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const list = yield* fixtureText("list.Check.2026-10-28.json");
         const view = yield* fixtureText(`view.${RERUN}.json`);
         const options = RouteCorpusCaptureOptions.make({
@@ -862,13 +828,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           outDir: "corpus",
         });
 
-        const receipt = yield* captureLive(
-          scriptedSpawner(spawns, (args) => Effect.succeed(handle(0, args[1] === "list" ? list : view))),
-          options
-        );
+        // A scripted `gh`: answers the list and the view, and records every spawn with its cwd.
+        const spawner = ScriptedSpawner.make((_command, args) => ({ stdout: args[1] === "list" ? list : view }));
+        const receipt = yield* captureLive(spawner, options);
 
         expect([receipt.runs, receipt.heads]).toEqual([1, 1]);
-        expect(yield* Ref.get(spawns)).toEqual([
+        expect(A.map(spawner.spawns, (spawn) => [spawn.cwd, spawn.command, ...spawn.args])).toEqual([
           [
             root,
             "gh",
@@ -893,8 +858,6 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         const fs = yield* FileSystem.FileSystem;
         const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
         yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
-        const spawns = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
-        const views = yield* Ref.make(0);
         const list = yield* fixtureText("list.Check.2026-10-28.json");
         const view = yield* fixtureText(`view.${RERUN}.json`);
         yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-28T23:00:00Z").pipe(DateTime.toEpochMillis));
@@ -906,26 +869,21 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           outDir: "corpus",
         });
 
-        const receipt = yield* untilDone(
-          captureLive(
-            scriptedSpawner(spawns, (args) =>
-              args[0] === "api"
-                ? Effect.succeed(handle(0, rateLimitPayload("2026-10-28T23:00:30Z")))
-                : args[1] === "list"
-                  ? Effect.succeed(handle(0, list))
-                  : Ref.getAndUpdate(views, (count) => count + 1).pipe(
-                      Effect.map((count) =>
-                        count === 0 ? handle(1, "HTTP 403: API rate limit exceeded for user ID 1.") : handle(0, view)
-                      )
-                    )
-            ),
-            options
-          )
+        // The first view is refused; the spawn is recorded before the script answers, so it counts itself.
+        const spawner: ScriptedSpawner = ScriptedSpawner.make((_command, args) =>
+          args[0] === "api"
+            ? { stdout: rateLimitPayload("2026-10-28T23:00:30Z") }
+            : args[1] === "list"
+              ? { stdout: list }
+              : A.length(A.filter(spawner.spawns, (spawn) => spawn.args[1] === "view")) === 1
+                ? { exit: 1, stdout: "HTTP 403: API rate limit exceeded for user ID 1." }
+                : { stdout: view }
         );
+        const receipt = yield* untilDone(captureLive(spawner, options));
 
         expect([receipt.until, receipt.runs]).toEqual(["2026-10-27", 1]);
         // The refused view is not retried by the runner; the corpus waits, then retries it once.
-        expect(A.map(yield* Ref.get(spawns), (spawn) => A.join(A.take(A.drop(spawn, 1), 3), " "))).toEqual([
+        expect(A.map(spawner.spawns, (spawn) => A.join(A.take([spawn.command, ...spawn.args], 3), " "))).toEqual([
           "gh run list",
           "gh run view",
           "gh api rate_limit",
@@ -947,26 +905,21 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           outDir: "corpus",
         });
 
-        const exits = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
-        const exited = yield* failLive(
-          scriptedSpawner(exits, () => Effect.succeed(handle(1, "HTTP 502: Bad Gateway"))),
-          options
-        );
+        const exits = ScriptedSpawner.make(() => ({ exit: 1, stdout: "HTTP 502: Bad Gateway" }));
+        const exited = yield* failLive(exits, options);
         expect(exited.reason).toBe("corpus-fetch");
         assertInclude(exited.message, "exited 1: HTTP 502: Bad Gateway");
-        expect(A.length(yield* Ref.get(exits))).toBe(3);
+        expect(A.length(exits.spawns)).toBe(3);
 
         const truncated = yield* failLive(
-          scriptedSpawner(yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]), () =>
-            Effect.succeed(handle(0, Str.repeat(512 * 1024 + 1)("x")))
-          ),
+          ScriptedSpawner.make(() => ({ stdout: Str.repeat(512 * 1024 + 1)("x") })),
           options
         );
         assertInclude(truncated.message, "overflowed the capture bound");
 
         const missing = yield* failLive(
-          scriptedSpawner(yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]), () =>
-            Effect.fail(PlatformError.systemError({ _tag: "NotFound", module: "ChildProcess", method: "spawn" }))
+          ScriptedSpawner.make(() =>
+            PlatformError.systemError({ _tag: "NotFound", module: "ChildProcess", method: "spawn" })
           ),
           options
         );

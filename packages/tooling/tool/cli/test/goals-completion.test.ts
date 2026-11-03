@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   compileCapabilityProjection,
@@ -38,7 +39,6 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -467,20 +467,15 @@ it.layer(
     MemoryFileSystem.layer,
     Path.layer,
     NodeCrypto.layer,
-    Layer.succeed(
-      ChildProcessSpawner.ChildProcessSpawner,
-      ChildProcessSpawner.make(() =>
-        Effect.fail(
-          PlatformError.systemError({
-            _tag: "NotFound",
-            module: "ChildProcess",
-            method: "spawn",
-            pathOrDescriptor: "git",
-            description: "The fixture has no Git remote.",
-          })
-        )
-      )
-    )
+    ScriptedSpawner.make(() =>
+      PlatformError.systemError({
+        _tag: "NotFound",
+        module: "ChildProcess",
+        method: "spawn",
+        pathOrDescriptor: "git",
+        description: "The fixture has no Git remote.",
+      })
+    ).layer
   ),
   { timeout: "10 seconds" }
 )("prospective goal closeout", (it) => {

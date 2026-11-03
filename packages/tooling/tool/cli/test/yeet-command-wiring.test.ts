@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { YeetCommandError, yeetCommand, yeetMonitorCommandRoute } from "@beep/repo-cli/commands/Yeet";
 import { CommandJsonOutput, printCommandJson } from "@beep/repo-cli/test/Cli";
@@ -62,13 +63,11 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
-import { commandArgs } from "./support/commandArgs.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { YeetExecutedStep, YeetVerdictExtrasForTesting } from "@beep/repo-cli/test/Yeet";
 
 const runYeetCommand = Command.runWith(yeetCommand, { version: "0.0.0" });
@@ -259,29 +258,11 @@ describe("yeet merge-loop command wiring", () => {
           `${root}/package.json`,
           yield* S.encodeUnknownEffect(FixturePackageJson)({ name: "yeet-command-fixture", workspaces: [] })
         );
-        const encoder = new TextEncoder();
-        const handle = (output: string) =>
-          ChildProcessSpawner.makeHandle({
-            all: Stream.make(encoder.encode(output)),
-            exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
-            getInputFd: () => Sink.drain,
-            getOutputFd: () => Stream.empty,
-            isRunning: Effect.succeed(false),
-            kill: () => Effect.void,
-            pid: ChildProcessSpawner.ProcessId(1),
-            stderr: Stream.empty,
-            stdin: Sink.drain,
-            stdout: Stream.make(encoder.encode(output)),
-            unref: Effect.succeed(Effect.void),
-          });
-        const spawner = ChildProcessSpawner.make((command) => {
-          if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected planner pipe");
-          const line = A.join([command.command, ...commandArgs(command)], " ");
+        const spawner = ScriptedSpawner.make((command, args) => {
+          const line = A.join([command, ...args], " ");
           const responseFor = (responses: ReadonlyArray<readonly [string, string]>) =>
-            A.findFirst(responses, ([argument]) => A.contains(commandArgs(command), argument)).pipe(
-              O.map(([, output]) => output)
-            );
-          const response = Match.value(command.command).pipe(
+            A.findFirst(responses, ([argument]) => A.contains(args, argument)).pipe(O.map(([, output]) => output));
+          const response = Match.value(command).pipe(
             Match.when("git", () =>
               responseFor([
                 ["--abbrev-ref", "feat/yeet-command-wiring\n"],
@@ -313,8 +294,8 @@ describe("yeet merge-loop command wiring", () => {
           );
           return response.pipe(
             O.match({
-              onNone: () => Effect.die(`unexpected planner invocation: ${line}`),
-              onSome: (output) => Effect.succeed(handle(output)),
+              onNone: () => ({ exit: 1, stderr: `unexpected planner invocation: ${line}` }),
+              onSome: (output) => ({ stdout: output }),
             })
           );
         });
@@ -339,10 +320,7 @@ describe("yeet merge-loop command wiring", () => {
             ).toBe(true);
           }),
           { discard: true, concurrency: 1 }
-        ).pipe(
-          Effect.provideServiceEffect(Git, Git.make),
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
-        );
+        ).pipe(Effect.provideServiceEffect(Git, Git.make), provideSpawner(spawner));
       }).pipe(
         Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})),
         Effect.provideServiceEffect(Console.Console, TestConsole.make)
@@ -936,6 +914,7 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("attached monitor environm
     Effect.gen(function* () {
       const exit = yield* runYeetCommand(["monitor", "--until-ready"]).pipe(
         Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})),
+        // Own double: the test asserts this spawn defect; ScriptedSpawner scripts no defect outcome.
         Effect.provideService(
           ChildProcessSpawner.ChildProcessSpawner,
           ChildProcessSpawner.make(() => Effect.die("fixture-git-boundary"))

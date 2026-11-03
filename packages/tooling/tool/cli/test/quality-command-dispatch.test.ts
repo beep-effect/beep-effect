@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { qualityCommand } from "@beep/repo-cli/commands/Quality";
 import { runTsgoSmokeCheck } from "@beep/repo-cli/test/Quality";
@@ -16,12 +17,9 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as TestConsole from "effect/testing/TestConsole";
-import { commandArgs } from "./support/commandArgs.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
+import type { ScriptResult } from "@beep/commands/ScriptedSpawner";
 
 const FixedMemoryStatsLayer = Layer.succeed(
   MemoryStats,
@@ -35,30 +33,10 @@ const CommandTestLayer = Layer.mergeAll(
   FixedMemoryStatsLayer
 );
 const runQualityCommand = Command.runWith(qualityCommand, { version: "0.0.0" });
-const encoder = new TextEncoder();
 
-const successfulHandle = ChildProcessSpawner.makeHandle({
-  all: Stream.empty,
-  exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
-  getInputFd: () => Sink.drain,
-  getOutputFd: () => Stream.empty,
-  isRunning: Effect.succeed(false),
-  kill: () => Effect.void,
-  pid: ChildProcessSpawner.ProcessId(1),
-  stderr: Stream.empty,
-  stdin: Sink.drain,
-  stdout: Stream.make(encoder.encode("")),
-  unref: Effect.succeed(Effect.void),
-});
-
-const recordingSpawner = (spawned: Array<string>, handle = successfulHandle) =>
-  ChildProcessSpawner.make((command) => {
-    if (!ChildProcess.isStandardCommand(command)) {
-      return Effect.die("quality command dispatch does not spawn piped commands");
-    }
-    A.appendInPlace(spawned, A.join([command.command, ...commandArgs(command)], " "));
-    return Effect.succeed(handle);
-  });
+const recordingSpawner = (result: ScriptResult.Encoded = {}) => ScriptedSpawner.make(() => result);
+const spawnedLines = (spawner: ScriptedSpawner) =>
+  A.map(spawner.spawns, (spawn) => A.join([spawn.command, ...spawn.args], " "));
 
 const consoleText = Effect.fn("QualityCommandDispatchTest.consoleText")(function* () {
   const logs = A.filter(yield* TestConsole.logLines, P.isString);
@@ -80,19 +58,13 @@ it.layer(CommandTestLayer, { timeout: "10 seconds" })("quality command dispatch"
         Effect.sync(() => process.chdir(repoRoot)),
         () => Effect.sync(() => process.chdir(originalCwd))
       );
-      const spawned: Array<string> = [];
-      const diagnosticHandle = ChildProcessSpawner.makeHandle({
-        ...successfulHandle,
-        all: Stream.make(encoder.encode("effect(effectFnOpportunity)")),
-        exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(1)),
-        stdout: Stream.make(encoder.encode("effect(effectFnOpportunity)")),
-      });
+      const spawner = recordingSpawner({ stdout: "effect(effectFnOpportunity)", exit: 1 });
 
-      yield* runTsgoSmokeCheck().pipe(
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, recordingSpawner(spawned, diagnosticHandle))
-      );
+      yield* runTsgoSmokeCheck().pipe(provideSpawner(spawner));
 
-      expect(spawned).toEqual([expect.stringContaining(path.join(repoRoot, "node_modules", ".bin", "effect-tsgo"))]);
+      expect(spawnedLines(spawner)).toEqual([
+        expect.stringContaining(path.join(repoRoot, "node_modules", ".bin", "effect-tsgo")),
+      ]);
       expect(yield* fs.exists(tempRoot)).toBe(true);
       expect(yield* fs.readDirectory(tempRoot)).toEqual([]);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -141,35 +113,28 @@ it.layer(CommandTestLayer, { timeout: "10 seconds" })("quality command dispatch"
   );
 
   it.effect("maps the GitHub check collection flag before using a fake process layer", () => {
-    const spawned: Array<string> = [];
+    const spawner = recordingSpawner();
 
     return Effect.gen(function* () {
       yield* runQualityCommand(["github-checks", "security"]);
       yield* runQualityCommand(["github-checks", "security", "--collect-all"]);
 
-      expect(spawned).toEqual([expect.stringMatching(/^docker run --rm /), expect.stringMatching(/^docker run --rm /)]);
-    }).pipe(
-      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, recordingSpawner(spawned)),
-      Effect.provideServiceEffect(Console.Console, TestConsole.make)
-    );
+      expect(spawnedLines(spawner)).toEqual([
+        expect.stringMatching(/^docker run --rm /),
+        expect.stringMatching(/^docker run --rm /),
+      ]);
+    }).pipe(provideSpawner(spawner), Effect.provideServiceEffect(Console.Console, TestConsole.make));
   });
 
   it.effect("fails the security check when the OSV scan fails", () => {
-    const spawned: Array<string> = [];
-    const failedHandle = ChildProcessSpawner.makeHandle({
-      ...successfulHandle,
-      exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(1)),
-    });
+    const spawner = recordingSpawner({ exit: 1 });
 
     return Effect.gen(function* () {
       const exit = yield* Effect.exit(runQualityCommand(["github-checks", "security"]));
 
       exit.pipe(Exit.isFailure, assertTrue);
-      expect(spawned).toEqual([expect.stringMatching(/^docker run --rm /)]);
-    }).pipe(
-      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, recordingSpawner(spawned, failedHandle)),
-      Effect.provideServiceEffect(Console.Console, TestConsole.make)
-    );
+      expect(spawnedLines(spawner)).toEqual([expect.stringMatching(/^docker run --rm /)]);
+    }).pipe(provideSpawner(spawner), Effect.provideServiceEffect(Console.Console, TestConsole.make));
   });
 
   it.effect("dispatches scheduler status and dry-run/apply branches in an isolated runtime root", () =>

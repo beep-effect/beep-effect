@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import {
   appendYeetInboxRow,
@@ -49,18 +50,17 @@ import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { constant } from "effect/Function";
+import { constant, flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
+import type { ScriptResult } from "@beep/commands/ScriptedSpawner";
 import type { YeetPrCommentWindow, YeetReviewWindow } from "@beep/repo-cli/test/Yeet";
 
 const at = "2026-09-16T00:00:00.000Z";
@@ -187,14 +187,9 @@ const platform = Layer.mergeAll(
   NodeFileSystem.layer,
   NodePath.layer,
   NodeCrypto.layer,
-  Layer.succeed(
-    ChildProcessSpawner.ChildProcessSpawner,
-    ChildProcessSpawner.make((command) => {
-      if (ChildProcess.isStandardCommand(command) && command.args[0] === "run" && command.args[1] === "list")
-        return Effect.succeed(handle("[]"));
-      return Effect.die("unexpected process");
-    })
-  )
+  ScriptedSpawner.make((_command, args) =>
+    args[0] === "run" && args[1] === "list" ? { stdout: "[]" } : { exit: 1, stderr: "unexpected process" }
+  ).layer
 );
 const fixture = Effect.fn("readyTest.fixture")(function* <V, E, R>(use: (root: string) => Effect.Effect<V, E, R>) {
   const fs = yield* FileSystem.FileSystem;
@@ -280,7 +275,7 @@ it.layer(platform, { timeout: "30 seconds" })("push → row → ack timeline", (
         yield* fs.makeDirectory(`${root}/.beep/inbox/sessions`, { recursive: true });
         yield* fs.writeFileString(
           `${root}/.beep/inbox/sessions/claude-1.json`,
-          yield* encodeJson({
+          encodeJson({
             schemaVersion: "yeet-hook-session/v1",
             incidentId: null,
             seenIds: [optionalId, id],
@@ -360,7 +355,7 @@ it.layer(platform, { timeout: "30 seconds" })("push → row → ack timeline", (
         yield* fs.makeDirectory(`${root}/.beep/inbox/sessions`, { recursive: true });
         yield* fs.writeFileString(
           `${root}/.beep/inbox/sessions/claude-1.json`,
-          yield* encodeJson({
+          encodeJson({
             schemaVersion: "yeet-hook-session/v1",
             incidentId: null,
             seenIds: [buildId, checkId],
@@ -716,22 +711,39 @@ it.layer(platform, { timeout: "30 seconds" })("B7 readiness loop", (test) => {
   );
 });
 
-const encodeUnknownJsonString = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
-const encodeJson = (value: unknown) => encodeUnknownJsonString(value).pipe(Effect.orDie);
-const handle = (output: string, code = 0) =>
-  ChildProcessSpawner.makeHandle({
-    all: Stream.make(new TextEncoder().encode(output)),
-    stdout: Stream.make(new TextEncoder().encode(output)),
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(code)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    unref: Effect.succeed(Effect.void),
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
+
+interface TriageScript {
+  readonly job: string;
+  readonly log: ScriptResult.Encoded;
+  readonly run?: { readonly status: string; readonly conclusion: string };
+}
+
+// The red triage's gh reads: `run list` lists run 7 on the head, `--log-failed`
+// serves the job log and any other read the one failed job; a rerun succeeds
+// silently and is counted from `spawns`.
+const triageSpawner = ({ job, log, run = { status: "completed", conclusion: "failure" } }: TriageScript) =>
+  ScriptedSpawner.make((_command, args) => {
+    if (args[0] === "run" && args[1] === "list") {
+      return { stdout: encodeJson([{ databaseId: 7, headSha: head, ...run, name: "CI" }]) };
+    }
+    if (args[1] === "rerun") return {};
+    if (A.contains(args, "--log-failed")) return log;
+    return {
+      stdout: encodeJson({
+        jobs: [
+          {
+            databaseId: 991,
+            name: job,
+            status: "completed",
+            conclusion: "failure",
+            steps: [{ name: "Test", conclusion: "failure" }],
+          },
+        ],
+      }),
+    };
   });
+const rerunsOf = (spawner: ScriptedSpawner) => A.countBy(spawner.spawns, (spawn) => spawn.args[1] === "rerun");
 describe("required red decisions", () => {
   for (const name of ["Lint", "Test Unit (unit-a)", "Outside", "Vercel"]) {
     for (const flake of [false, true])
@@ -740,39 +752,10 @@ describe("required red decisions", () => {
           fixture((root) =>
             Effect.gen(function* () {
               const polls = yield* Ref.make(0);
-              const reruns = yield* Ref.make(0);
-              const runner = ChildProcessSpawner.make(
-                Effect.fnUntraced(function* (command) {
-                  if (!ChildProcess.isStandardCommand(command)) return yield* Effect.die("unexpected pipe");
-                  const [first, second] = command.args;
-                  if (first === "run" && second === "list")
-                    return yield* Effect.succeed(
-                      handle(
-                        yield* encodeJson([
-                          { databaseId: 7, headSha: head, status: "completed", conclusion: "failure", name: "CI" },
-                        ])
-                      )
-                    );
-                  if (second === "rerun") return yield* Ref.update(reruns, (n) => n + 1).pipe(Effect.as(handle("")));
-                  if (A.contains(command.args, "--log-failed"))
-                    return yield* Effect.succeed(handle(flake ? "Test timed out in 5000ms" : "Assertion failed"));
-                  return yield* Effect.succeed(
-                    handle(
-                      yield* encodeJson({
-                        jobs: [
-                          {
-                            databaseId: 991,
-                            name,
-                            status: "completed",
-                            conclusion: "failure",
-                            steps: [{ name: "Test", conclusion: "failure" }],
-                          },
-                        ],
-                      })
-                    )
-                  );
-                })
-              );
+              const runner = triageSpawner({
+                job: name,
+                log: { stdout: flake ? "Test timed out in 5000ms" : "Assertion failed" },
+              });
               const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
                 ...options,
                 rulesetRead: () => rules([name === "Test Unit (unit-a)" ? "Test Unit" : "Lint"]),
@@ -791,13 +774,13 @@ describe("required red decisions", () => {
                       )
                     )
                   ),
-              }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner));
+              }).pipe(provideSpawner(runner));
               // A required red no longer ends --until-ready (pr-event-awareness D16):
               // the loop keeps polling until the PR closes on poll 2, and the red
               // is a converged check-failed row instead of a terminal.
               expect(terminal).toBe("closed");
               expect(yield* Ref.get(polls)).toBe(3);
-              expect(yield* Ref.get(reruns)).toBe(flake ? 1 : 0);
+              expect(rerunsOf(runner)).toBe(flake ? 1 : 0);
               expect(yield* lines).not.toContain("merge-ready: yes");
               expect(A.map(yield* rows(root), (row) => [row.kind, row.capsule])).toMatchObject([
                 ["check-failed", { lane: name, headSha: head, prNumber: 7 }],
@@ -817,35 +800,7 @@ it.layer(platform, { timeout: "30 seconds" })((it) =>
     fixture((root) =>
       Effect.gen(function* () {
         const polls = yield* Ref.make(0);
-        const logReads = yield* Ref.make(0);
-        const runner = ChildProcessSpawner.make(
-          Effect.fnUntraced(function* (command) {
-            if (!ChildProcess.isStandardCommand(command)) return yield* Effect.die("unexpected pipe");
-            const [first, second] = command.args;
-            if (first === "run" && second === "list")
-              return handle(
-                yield* encodeJson([
-                  { databaseId: 7, headSha: head, status: "completed", conclusion: "failure", name: "CI" },
-                ])
-              );
-            if (second === "rerun") return yield* Effect.die("a needs-code-fix red is never rerun");
-            if (A.contains(command.args, "--log-failed"))
-              return yield* Ref.update(logReads, (n) => n + 1).pipe(Effect.as(handle("Assertion failed")));
-            return handle(
-              yield* encodeJson({
-                jobs: [
-                  {
-                    databaseId: 991,
-                    name: "Lint",
-                    status: "completed",
-                    conclusion: "failure",
-                    steps: [{ name: "Test", conclusion: "failure" }],
-                  },
-                ],
-              })
-            );
-          })
-        );
+        const runner = triageSpawner({ job: "Lint", log: { stdout: "Assertion failed" } });
         const red = (job: number) =>
           YeetWatchCheck.make({
             name: "Lint",
@@ -860,11 +815,13 @@ it.layer(platform, { timeout: "30 seconds" })((it) =>
             Ref.getAndUpdate(polls, (n) => n + 1).pipe(
               Effect.map((n) => snapshot(root, [red(n >= 3 ? 992 : 991)], true, head, n === 4 ? "CLOSED" : "OPEN"))
             ),
-        }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner));
+        }).pipe(provideSpawner(runner));
         expect(terminal).toBe("closed");
         expect(yield* Ref.get(polls)).toBe(5);
+        // A needs-code-fix red is never rerun.
+        expect(rerunsOf(runner)).toBe(0);
         // The unchanged red is classified on poll 0 only; the moved red on poll 3.
-        expect(yield* Ref.get(logReads)).toBe(2);
+        expect(A.countBy(runner.spawns, (spawn) => A.contains(spawn.args, "--log-failed"))).toBe(2);
         expect(A.length(Str.split(yield* lines, "required-red: Lint;")) - 1).toBe(2);
       })
     )
@@ -879,33 +836,7 @@ for (const attachment of YeetMonitorAttachment.literals)
       fixture((root) =>
         Effect.gen(function* () {
           const polls = yield* Ref.make(0);
-          const runner = ChildProcessSpawner.make(
-            Effect.fnUntraced(function* (command) {
-              if (!ChildProcess.isStandardCommand(command)) return yield* Effect.die("unexpected pipe");
-              const [first, second] = command.args;
-              if (first === "run" && second === "list")
-                return handle(
-                  yield* encodeJson([
-                    { databaseId: 7, headSha: head, status: "completed", conclusion: "failure", name: "CI" },
-                  ])
-                );
-              if (second === "rerun") return yield* Effect.die("a needs-code-fix red is never rerun");
-              if (A.contains(command.args, "--log-failed")) return handle("Assertion failed");
-              return handle(
-                yield* encodeJson({
-                  jobs: [
-                    {
-                      databaseId: 991,
-                      name: "Lint",
-                      status: "completed",
-                      conclusion: "failure",
-                      steps: [{ name: "Test", conclusion: "failure" }],
-                    },
-                  ],
-                })
-              );
-            })
-          );
+          const runner = triageSpawner({ job: "Lint", log: { stdout: "Assertion failed" } });
           // Poll 0: the required red. Poll 1: the pull request closes.
           const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
             ...options,
@@ -914,7 +845,9 @@ for (const attachment of YeetMonitorAttachment.literals)
               Ref.getAndUpdate(polls, (n) => n + 1).pipe(
                 Effect.map((n) => snapshot(root, [check("Lint", "fail")], true, head, n === 1 ? "CLOSED" : "OPEN"))
               ),
-          }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner));
+          }).pipe(provideSpawner(runner));
+          // A needs-code-fix red is never rerun.
+          expect(rerunsOf(runner)).toBe(0);
           const printed = yield* lines;
           expect(printed).toContain("required-red: Lint; not terminal under --until-ready: the wave is in the inbox");
           if (attachment === "attached") {
@@ -1201,7 +1134,7 @@ it.layer(platform, { timeout: "30 seconds" })("draft pull requests (push-first-p
   );
 });
 
-it.layer(platform)("B7 remaining boundaries", (test) => {
+it.layer(platform, { timeout: "30 seconds" })("B7 remaining boundaries", (test) => {
   test.effect("times out at exactly 1000ms and names both missing and pending required checks", () =>
     fixture((root) =>
       Effect.gen(function* () {
@@ -1226,7 +1159,7 @@ it.layer(platform)("B7 remaining boundaries", (test) => {
   );
 });
 
-it.layer(platform)("B7 remaining boundaries", (test) => {
+it.layer(platform, { timeout: "30 seconds" })("B7 remaining boundaries", (test) => {
   for (const embedded of [false, true])
     test.effect(`counts a post-closeout reread failure without repeating closeout, embedded=${embedded}`, () =>
       fixture((root) =>
@@ -1280,53 +1213,27 @@ it.layer(platform)("B7 remaining boundaries", (test) => {
 });
 
 for (const waiting of ["awaiting-log", "awaiting-run"])
-  it.layer(platform)((it) => {
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
     it.effect(`keeps polling required ${waiting} decisions`, () =>
       fixture((root) =>
         Effect.gen(function* () {
           const polls = yield* Ref.make(0);
-          const runner = ChildProcessSpawner.make(
-            Effect.fnUntraced(function* (command) {
-              if (!ChildProcess.isStandardCommand(command)) return yield* Effect.die("unexpected pipe");
-              if (command.args[1] === "list")
-                return yield* Effect.succeed(
-                  handle(
-                    yield* encodeJson([
-                      { databaseId: 7, headSha: head, status: "in_progress", conclusion: "", name: "CI" },
-                    ])
-                  )
-                );
-              if (command.args[1] === "rerun") return yield* Effect.die("must not rerun an active parent");
-              if (A.contains(command.args, "--log-failed"))
-                return yield* Effect.succeed(
-                  waiting === "awaiting-log" ? handle("", 1) : handle("Test timed out in 5000ms")
-                );
-              return yield* Effect.succeed(
-                handle(
-                  yield* encodeJson({
-                    jobs: [
-                      {
-                        databaseId: 991,
-                        name: "Lint",
-                        status: "completed",
-                        conclusion: "failure",
-                        steps: [{ name: "Test", conclusion: "failure" }],
-                      },
-                    ],
-                  })
-                )
-              );
-            })
-          );
+          const runner = triageSpawner({
+            job: "Lint",
+            log: waiting === "awaiting-log" ? { exit: 1 } : { stdout: "Test timed out in 5000ms" },
+            run: { status: "in_progress", conclusion: "" },
+          });
           const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
             ...options,
             collectStatus: () =>
               Ref.getAndUpdate(polls, (n) => n + 1).pipe(
                 Effect.map((n) => snapshot(root, [check("Lint", "fail")], true, head, n === 1 ? "CLOSED" : "OPEN"))
               ),
-          }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner));
+          }).pipe(provideSpawner(runner));
           expect(terminal).toBe("closed");
           expect(yield* Ref.get(polls)).toBe(2);
+          // An active parent run is never rerun.
+          expect(rerunsOf(runner)).toBe(0);
           expect(yield* lines).toContain(waiting === "awaiting-log" ? "reclassifying next poll" : "deferring rerun");
         })
       )
