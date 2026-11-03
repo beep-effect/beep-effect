@@ -2,15 +2,10 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import {
-  CitationEngineAbsoluteMaxima,
-  CitationEngineLimits,
-  CitationSafetyLimitExceeded,
-} from "@beep/law-practice-use-cases/server";
+import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
-import * as Clock from "effect/Clock";
-import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -18,12 +13,12 @@ import * as Str from "effect/String";
 import { readCitationByteFrames } from "./ByteFrames.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { CitationRegexInputLayout, makeCitationRegexInput } from "./RegexInput.ts";
+import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import type * as PlatformError from "effect/PlatformError";
 import type * as Stream from "effect/Stream";
 import type { CitationPreparedRegexInput } from "./RegexInput.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/RegexWorkerProtocol");
-const Limits = S.toType(CitationEngineLimits);
 const Reason = LiteralKit([
   "invalid-runtime",
   "invalid-frame",
@@ -176,29 +171,44 @@ export const preflightCitationRegexJson = Effect.fn("Citation.preflightRegexJson
   let escaped = false;
   let depth = 0;
   let properties = 0;
+  const quotedByte = (byte: number) => {
+    if (escaped) escaped = false;
+    else if (byte === 92) escaped = true;
+    else if (byte === 34) quoted = false;
+  };
+  const openObject = Effect.fnUntraced(function* () {
+    depth++;
+    if (depth > 1) return yield* invalid();
+  });
+  const closeObject = Effect.fnUntraced(function* () {
+    depth--;
+    if (depth < 0) return yield* invalid();
+  });
+  const property = Effect.fnUntraced(function* () {
+    properties++;
+    if (properties > propertyCeiling) return yield* invalid();
+  });
+  const structuralByte = (byte: number | undefined) =>
+    Match.value(byte).pipe(
+      Match.when(34, () =>
+        Effect.sync(() => {
+          quoted = true;
+        })
+      ),
+      Match.whenOr(91, 93, () => Effect.fail(invalid())),
+      Match.when(123, openObject),
+      Match.when(125, closeObject),
+      Match.when(58, property),
+      Match.orElse(() => Effect.void)
+    );
   for (let index = 0; index < bytes.byteLength; index++) {
     if (index % 4096 === 0) yield* Effect.yieldNow;
     const byte = bytes[index];
-    if (quoted) {
-      if (escaped) escaped = false;
-      else if (byte === 92) escaped = true;
-      else if (byte === 34) quoted = false;
-      continue;
-    }
-    if (byte === 34) quoted = true;
-    else if (byte === 91 || byte === 93) return yield* invalid();
-    else if (byte === 123) {
-      depth++;
-      if (depth > 1) return yield* invalid();
-    } else if (byte === 125) {
-      depth--;
-      if (depth < 0) return yield* invalid();
-    } else if (byte === 58) {
-      properties++;
-      if (properties > propertyCeiling) return yield* invalid();
-    }
+    if (quoted) quotedByte(byte ?? -1);
+    else yield* structuralByte(byte);
   }
-  if (quoted || escaped || depth !== 0) return yield* invalid();
+  const complete = () => !quoted && !escaped && depth === 0;
+  if (!complete()) return yield* invalid();
 });
 /** Decode a complete bounded frame body. Structural and encoded-byte ceilings
  * precede variable decoding allocations; unknown properties are rejected.
@@ -230,75 +240,54 @@ export const readCitationRegexFrames = Effect.fn("Citation.readRegexFrames")(fun
 export const makeCitationRegexJobPreparation = Effect.fn("Citation.makeRegexJobPreparation")(function* (
   policy: unknown
 ) {
-  const limits = yield* S.decodeUnknownEffect(Limits)(policy).pipe(
-    Effect.mapError(() => CitationRegexWorkerFailure.make({ reason: "invalid-runtime" }))
+  const limits = yield* decodeCitationRegexPolicy(policy, () =>
+    CitationRegexWorkerFailure.make({ reason: "invalid-runtime" })
   );
-  const clock = yield* Clock.Clock;
-  const deadline = Duration.min(limits.extractDeadline, limits.operationDeadline).pipe(
-    Duration.toMillis,
-    Duration.millis
-  );
-  const deadlineLimit = Duration.isLessThanOrEqualTo(limits.operationDeadline, limits.extractDeadline)
-    ? "operationDeadline"
-    : "extractDeadline";
+  const { timed } = yield* makeCitationRegexTiming(limits, true);
   const badRuntime = () => CitationRegexWorkerFailure.make({ reason: "invalid-runtime" });
   const patternInput = yield* makeCitationRegexInput(limits, "pattern").pipe(Effect.mapError(badRuntime));
   const sourceInput = yield* makeCitationRegexInput(limits).pipe(Effect.mapError(badRuntime));
-  const prepare = Effect.fn("Citation.prepareRegexJob")(
-    function* (
-      pattern: unknown,
-      source: unknown,
-      flagsInput: unknown,
-      maxMatchesInput: unknown,
-      beforeAllocate: (
-        completeBytes: number
-      ) => Effect.Effect<void, CitationRegexWorkerFailure | CitationSafetyLimitExceeded>
-    ) {
-      const flags = yield* S.decodeUnknownEffect(Flags)(flagsInput).pipe(Effect.mapError(invalid));
-      const maxMatches = yield* S.decodeUnknownEffect(Matches)(maxMatchesInput).pipe(Effect.mapError(invalid));
-      let preparedSource = O.none<CitationPreparedRegexInput>();
-      const preparedPattern = yield* patternInput
-        .prepareUnicode(pattern, (patternLayout) =>
-          sourceInput
-            .prepareUnicode(source, (sourceLayout) =>
-              preflightCitationRegexJob(
-                patternLayout,
-                sourceLayout,
-                flags,
-                maxMatches,
-                limits.processMessageBytes
-              ).pipe(Effect.flatMap(beforeAllocate))
+  const prepare = Effect.fn("Citation.prepareRegexJob")(function* (
+    pattern: unknown,
+    source: unknown,
+    flagsInput: unknown,
+    maxMatchesInput: unknown,
+    beforeAllocate: (
+      completeBytes: number
+    ) => Effect.Effect<void, CitationRegexWorkerFailure | CitationSafetyLimitExceeded>
+  ) {
+    const flags = yield* S.decodeUnknownEffect(Flags)(flagsInput).pipe(Effect.mapError(invalid));
+    const maxMatches = yield* S.decodeUnknownEffect(Matches)(maxMatchesInput).pipe(Effect.mapError(invalid));
+    let preparedSource = O.none<CitationPreparedRegexInput>();
+    const preparedPattern = yield* patternInput
+      .prepareUnicode(pattern, (patternLayout) =>
+        sourceInput
+          .prepareUnicode(source, (sourceLayout) =>
+            preflightCitationRegexJob(patternLayout, sourceLayout, flags, maxMatches, limits.processMessageBytes).pipe(
+              Effect.flatMap(beforeAllocate)
             )
-            .pipe(
-              Effect.tap((value) =>
-                Effect.sync(() => {
-                  preparedSource = O.some(value);
-                })
-              ),
-              Effect.asVoid
-            )
-        )
-        .pipe(Effect.catchTag("CitationRegexInputFailure", () => Effect.fail(invalid())));
-      const sourceValue = yield* Effect.fromOption(preparedSource).pipe(Effect.mapError(invalid));
-      const job = CitationRegexWorkerJob.make({
-        patternWidth: preparedPattern.value.storage.width,
-        patternBytes: preparedPattern.value.storage.bytes,
-        sourceWidth: sourceValue.value.storage.width,
-        sourceBytes: sourceValue.value.storage.bytes,
-        flags,
-        maxMatches,
-      });
-      const frame = yield* encodeCitationRegexJob(job, limits.processMessageBytes);
-      return { job, frame, pattern: preparedPattern, source: sourceValue };
-    },
-    (body) =>
-      body.pipe(
-        Effect.timeoutOrElse({
-          duration: deadline,
-          orElse: () => Effect.fail(CitationSafetyLimitExceeded.make({ operation: "extract", limit: deadlineLimit })),
-        })
-      ),
-    Effect.provideService(Clock.Clock, clock)
-  );
+          )
+          .pipe(
+            Effect.tap((value) =>
+              Effect.sync(() => {
+                preparedSource = O.some(value);
+              })
+            ),
+            Effect.asVoid
+          )
+      )
+      .pipe(Effect.catchTag("CitationRegexInputFailure", () => Effect.fail(invalid())));
+    const sourceValue = yield* Effect.fromOption(preparedSource).pipe(Effect.mapError(invalid));
+    const job = CitationRegexWorkerJob.make({
+      patternWidth: preparedPattern.value.storage.width,
+      patternBytes: preparedPattern.value.storage.bytes,
+      sourceWidth: sourceValue.value.storage.width,
+      sourceBytes: sourceValue.value.storage.bytes,
+      flags,
+      maxMatches,
+    });
+    const frame = yield* encodeCitationRegexJob(job, limits.processMessageBytes);
+    return { job, frame, pattern: preparedPattern, source: sourceValue };
+  }, timed);
   return { prepare };
 });

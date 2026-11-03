@@ -11,6 +11,7 @@ import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -81,6 +82,31 @@ export class CitationPythonHash extends Context.Service<
 const mask = BigInt("0xffffffffffffffff");
 const rotate = (value: bigint, bits: bigint) => ((value << bits) | (value >> (BigInt(64) - bits))) & mask;
 const readByte = (bytes: Uint8Array, index: number) => O.getOrElse(O.fromUndefinedOr(bytes[index]), () => 0);
+const widthOf = (largest: number) => (largest <= 255 ? 1 : largest <= 65535 ? 2 : 4);
+const pointUnits = (point: number) => (point > 65535 ? 2 : 1);
+const readNativePoint = (bytes: Uint8Array, index: number, width: number) => {
+  let point = 0;
+  for (let part = 0; part < width; part++) point += readByte(bytes, index + part) * 2 ** (8 * part);
+  return point;
+};
+const TextMeasure = S.Tuple([S.Natural, S.Natural]).pipe(
+  $I.annoteSchema("TextMeasure", { description: "Maximum original point and point count before native allocation." })
+);
+/** Measure owned text without allocating native storage; yield every 4096 points.
+ * @internal @category operations @since 0.0.0
+ */
+export const measureCitationPythonText = Effect.fn("Citation.measurePythonText")(function* (text: string) {
+  let largest = 0;
+  let points = 0;
+  for (let index = 0; index < Str.length(text); ) {
+    if (points % 4096 === 0) yield* Effect.yieldNow;
+    const point = O.getOrElse(Str.codePointAt(text, index), () => 0);
+    largest = Num.max(largest, point);
+    index += pointUnits(point);
+    points++;
+  }
+  return TextMeasure.make([largest, points]);
+});
 /**
  * Capture limits/Clock once. Unicode preparation scans code points without
  * coercion, and hashing streams native bytes without allocating an encoded
@@ -147,6 +173,19 @@ export const makeCitationPythonHash = Effect.fn("Citation.makePythonHash")(funct
     let index = 0;
     return yield* hash(bytes.length, () => readByte(bytes, index++));
   });
+  const validateNative = Effect.fnUntraced(function* (width: number, bytes: Uint8Array) {
+    let largest = 0;
+    let units = 0;
+    for (let index = 0; index < bytes.length; index += width) {
+      if (index % (width * 4096) === 0) yield* Effect.yieldNow;
+      const point = readNativePoint(bytes, index, width);
+      if (point > 0x10ffff) return yield* fail("invalid-input");
+      largest = Num.max(largest, point);
+      units += pointUnits(point);
+      if (units > maximum) return yield* fail("invalid-input");
+    }
+    if (width !== widthOf(largest)) return yield* fail("invalid-input");
+  });
   return CitationPythonHash.of({
     bytes: Effect.fn("Citation.hashOwnedBytes")((value) => bounded(byteHash(value))),
     unicode: Effect.fn("Citation.hashUnicodeStorage")((input) =>
@@ -156,19 +195,7 @@ export const makeCitationPythonHash = Effect.fn("Citation.makePythonHash")(funct
             Effect.mapError(() => fail("invalid-input"))
           );
           if (bytes.length % width !== 0) return yield* fail("invalid-input");
-          let largest = 0;
-          let units = 0;
-          for (let index = 0; index < bytes.length; index += width) {
-            if (index % (width * 4096) === 0) yield* Effect.yieldNow;
-            let point = 0;
-            for (let part = 0; part < width; part++) point += readByte(bytes, index + part) * 2 ** (8 * part);
-            if (point > 0x10ffff) return yield* fail("invalid-input");
-            if (point > largest) largest = point;
-            units += point > 0xffff ? 2 : 1;
-            if (units > maximum) return yield* fail("invalid-input");
-          }
-          const expected = largest <= 255 ? 1 : largest <= 65535 ? 2 : 4;
-          if (width !== expected) return yield* fail("invalid-input");
+          yield* validateNative(width, bytes);
           return yield* byteHash(bytes);
         })
       )
@@ -177,16 +204,8 @@ export const makeCitationPythonHash = Effect.fn("Citation.makePythonHash")(funct
       bounded(
         Effect.gen(function* () {
           const text = yield* S.decodeUnknownEffect(Text)(input).pipe(Effect.mapError(() => fail("invalid-input")));
-          let largest = 0;
-          let points = 0;
-          for (let index = 0; index < Str.length(text); ) {
-            if (points % 4096 === 0) yield* Effect.yieldNow;
-            const point = O.getOrElse(Str.codePointAt(text, index), () => 0);
-            if (point > largest) largest = point;
-            index += point > 65535 ? 2 : 1;
-            points++;
-          }
-          const width = largest <= 255 ? 1 : largest <= 65535 ? 2 : 4;
+          const [largest, points] = yield* measureCitationPythonText(text);
+          const width = widthOf(largest);
           let index = 0;
           let pending = 0;
           let left = 0;

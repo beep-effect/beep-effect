@@ -32,7 +32,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexInput.ts",
-          "sha256": "10d3b1fca77f4b0571201fd291109f3d2024a98bd8f547ce76c5a5490f1e0f93"
+          "sha256": "3ca845b36a6d0a56c180fcf819999764a1f8db8284d3c5cb15b08b24f93c0e0a"
         },
         {
           "path": "packages/law-practice/server/test/CitationRegexInput.test.ts",
@@ -48,7 +48,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexWorkerProtocol.ts",
-          "sha256": "9eb6d2f3d0ad651d9363d86c4f557c6ee829679a932896ae45f60a0de7a33b6f"
+          "sha256": "ceeabec2910ba9cb9a6b4591557d60bdd17212d8e97776dc8060586826a55b4d"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/ByteFrames.ts",
@@ -60,7 +60,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexResult.ts",
-          "sha256": "731c993d3f43800d7fd79add20402a910fdfa5142f80a0c70c6a93228cd61396"
+          "sha256": "f4098af0b07b5a26daeb018dc7d00697da8eb70f4bc09bf2e0250007218e3296"
         },
         {
           "path": "packages/law-practice/server/test/CitationRegexResult.test.ts",
@@ -72,7 +72,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexAlphabet.ts",
-          "sha256": "26dda68e03fde9cf9d2e6ff46eabfaf5b31619cab6eadd11bba828dc6d1141bf"
+          "sha256": "88e18e64de6030b89ecf4145e412b08907509a36187e4e53d4313ce4c921a612"
         },
         {
           "path": "packages/law-practice/server/test/CitationRegexAlphabet.test.ts",
@@ -92,7 +92,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexProgram.ts",
-          "sha256": "64aec818106a561c9f7baffc7c643032d923ab8d4f531062fb42f22825931409"
+          "sha256": "a7a117e886ee1ed40eb4bcab535cc5a442b89e91c46575c691f3d48704e6459c"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexPointSets.ts",
@@ -509,7 +509,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlWorker.ts",
-          "sha256": "cedb564da7caf404ed1d8cf3788a2b5944525be482f4853fa8836b98c227f056"
+          "sha256": "4f86df1b9db27bb0a208da9e0cd77e845beed64e5ae70be1639335ddc9435ead"
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlWorkerProtocol.test.ts",
@@ -633,7 +633,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/CleanerPipeline.ts",
-          "sha256": "c5ae8f77846a2305d753120dc20cda1046925aa239040fe940b65e4197874fa1"
+          "sha256": "ca68082b207fb640bed291f875a252bd28798bed73871241d6ab3799d5ce0abe"
         },
         {
           "path": "packages/law-practice/server/test/CitationCleanerPipeline.test.ts",
@@ -657,7 +657,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/BuiltinCleaners.ts",
-          "sha256": "e3a048141e64bb296119e40dfd7b155e51eb10d41b62afba23f50bb0379d596a"
+          "sha256": "eb158dcde86f5b90a4fb53d5c4bf806a8b217e5cd4e82eb35c792b35ae30ec7e"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/CleanerTextIdentity.ts",
@@ -713,7 +713,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/PythonHash.ts",
-          "sha256": "c6930c8a60dc0d74bdac6b80dd15d50f5dbf3ca6d8227a6d7b0bcf93b882d508"
+          "sha256": "d18f789aa53e7a69ac2da63cbf4a7adc6bcb1b45e434b6231764ef168781738e"
         },
         {
           "path": "packages/law-practice/server/test/CitationPythonHash.test.ts",
@@ -745,7 +745,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/PythonUnicode.ts",
-          "sha256": "71381b0a57aab6ac9fb21d112339eae6a3411fca1e972a79bea81ce947d1ed00"
+          "sha256": "c0fa6d0dc7d8343c907453f223b24eaee4c780b7ac31705e8de062dded91a169"
         },
         {
           "path": "packages/law-practice/server/test/CitationPythonUnicode.test.ts",
@@ -789,7 +789,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/CleanerRegistry.ts",
-          "sha256": "66ca486d9f8ab418822b9237460fa2ae5376fb1c2d83c53bcbf40db4d94d00b6"
+          "sha256": "3b6bf368b5428fed9778d47c44ad9a7b6e7d95a744466b9aaa825c44b232b6f8"
         },
         {
           "path": "packages/law-practice/server/test/CitationCleanerRegistry.test.ts",

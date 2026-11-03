@@ -28,6 +28,8 @@ import {
 } from "./RuntimeDictionary.ts";
 import type { CitationCleanerCursor, CitationCleanerProduced, CitationCleanerWork } from "./CleanerPipeline.ts";
 
+const crossPrimitiveKinds = (leftText: boolean, rightText: boolean, leftBytes: boolean, rightBytes: boolean) =>
+  (leftText && rightBytes) || (rightText && leftBytes);
 const $I = $LawPracticeServerId.create("internal/Citation/CleanerRegistry");
 const Limits = S.toType(CitationEngineLimits);
 const Hash = S.toType(CitationRuntimeDictionaryKey.fields.hash);
@@ -133,8 +135,8 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
     const b = yield* lookup(right);
     const aText = yield* values.getText(a);
     const bText = yield* values.getText(b);
-    const aPlain = O.isSome(aText) && aText.value.subtype === "plain";
-    const bPlain = O.isSome(bText) && bText.value.subtype === "plain";
+    const aPlain = O.exists(aText, (text) => text.subtype === "plain");
+    const bPlain = O.exists(bText, (text) => text.subtype === "plain");
     // General tables retain primitive equality after conversion. Subclasses
     // and other host values still use reflected adapter protocols.
     if (aPlain && bPlain) {
@@ -145,7 +147,7 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
     const aBytes = yield* values.getBytes(a);
     const bBytes = yield* values.getBytes(b);
     if (O.isSome(aBytes) && O.isSome(bBytes)) return yield* equalBytes(aBytes.value, bBytes.value);
-    if ((aPlain && O.isSome(bBytes)) || (bPlain && O.isSome(aBytes))) return false;
+    if (crossPrimitiveKinds(aPlain, bPlain, O.isSome(aBytes), O.isSome(bBytes))) return false;
     return yield* protocols.equal(a, b);
   });
   const table = yield* makeCitationRuntimeDictionary({ entries: limits.authorities, iterations: maximum }).pipe(
@@ -166,13 +168,14 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
     const entries = yield* table.read;
     let retained = HashMap.empty<number, CitationCleanerObject>();
     for (const ref of active) retained = HashMap.set(retained, ref.slot, ref);
+    const retain = (id: number) => {
+      const ref = HashMap.get(refs, id);
+      if (O.isSome(ref)) retained = HashMap.set(retained, id, ref.value);
+    };
     let index = 0;
     for (const entry of entries) {
       if (index++ % 4096 === 0) yield* Effect.yieldNow;
-      for (const id of [entry.objectId, entry.value]) {
-        const ref = HashMap.get(refs, id);
-        if (O.isSome(ref)) retained = HashMap.set(retained, id, ref.value);
-      }
+      for (const id of [entry.objectId, entry.value]) retain(id);
     }
     refs = retained;
   });

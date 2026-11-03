@@ -3,15 +3,9 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import {
-  CitationEngineAbsoluteMaxima,
-  CitationEngineLimits,
-  CitationSafetyLimitExceeded,
-} from "@beep/law-practice-use-cases/server";
+import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
-import * as Clock from "effect/Clock";
-import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
@@ -29,11 +23,11 @@ import {
   makeCitationRegexPointSets,
   normalizeCitationRegexRanges,
 } from "./RegexPointSets.ts";
+import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { CitationRegexTranslationFailure } from "./RegexTranslator.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/RegexProgram");
 const max = CitationEngineAbsoluteMaxima;
-const Limits = S.toType(CitationEngineLimits);
 const sameSets = S.toEquivalence(CitationRegexAtomSets);
 const Flags = LiteralKit([0, 2]).pipe(
   $I.annoteSchema("Flags", { description: "Captured source flag domain; Unicode is implicit." })
@@ -315,24 +309,13 @@ const renderToken = (alphabet: CitationRegexAlphabetText, token: CitationRegexPr
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(function* (policy: unknown) {
-  const limits = yield* S.decodeUnknownEffect(Limits)(policy).pipe(
-    Effect.mapError(() => CitationRegexTranslationFailure.make({ reason: "invalid-policy" }))
+  const limits = yield* decodeCitationRegexPolicy(policy, () =>
+    CitationRegexTranslationFailure.make({ reason: "invalid-policy" })
   );
   const patternInput = yield* makeCitationRegexInput(limits, "pattern");
   const categories = yield* makeCitationRegexPointSets();
-  const clock = yield* Clock.Clock;
-  const deadline = Duration.min(limits.extractDeadline, limits.operationDeadline);
-  const deadlineLimit = Duration.isLessThanOrEqualTo(limits.operationDeadline, limits.extractDeadline)
-    ? "operationDeadline"
-    : "extractDeadline";
-  const timed = <A, E>(body: Effect.Effect<A, E>) =>
-    body.pipe(
-      Effect.timeoutOrElse({
-        duration: deadline,
-        orElse: () => Effect.fail(CitationSafetyLimitExceeded.make({ operation: "extract", limit: deadlineLimit })),
-      }),
-      Effect.provideService(Clock.Clock, clock)
-    );
+  const { timed } = yield* makeCitationRegexTiming(limits, false);
+
   const compile = Effect.fn("Citation.compileRegexProgram")(function* (nativePattern: unknown, flagsInput: unknown) {
     const flags = yield* S.decodeUnknownEffect(Flags)(flagsInput).pipe(
       Effect.mapError(() => CitationRegexTranslationFailure.make({ reason: "invalid-input" }))

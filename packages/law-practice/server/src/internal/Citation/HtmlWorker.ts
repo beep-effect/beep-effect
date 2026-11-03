@@ -225,22 +225,25 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
       );
     })
   );
+  const validateSource = Effect.fnUntraced(function* (input: unknown, kind: "raw" | "text" | "bytes" | "unicode") {
+    if (kind === "bytes") {
+      yield* S.decodeUnknownEffect(S.Uint8Array)(input).pipe(
+        Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
+      );
+    } else if (kind === "unicode") {
+      yield* S.decodeUnknownEffect(NativeStorage)(input).pipe(
+        Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
+      );
+    } else {
+      const text = yield* S.decodeUnknownEffect(kind === "text" ? StageText : Text)(input).pipe(
+        Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
+      );
+      if (kind === "raw" && Str.length(text) > limits.sourceUtf16) return yield* safety("sourceUtf16");
+    }
+  });
   const clean = Effect.fn("Citation.cleanHtmlProcess")(
     function* (input: unknown, remaining: number, kind: "raw" | "text" | "bytes" | "unicode") {
-      if (kind === "bytes") {
-        yield* S.decodeUnknownEffect(S.Uint8Array)(input).pipe(
-          Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
-        );
-      } else if (kind === "unicode") {
-        yield* S.decodeUnknownEffect(NativeStorage)(input).pipe(
-          Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
-        );
-      } else {
-        const text = yield* S.decodeUnknownEffect(kind === "text" ? StageText : Text)(input).pipe(
-          Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
-        );
-        if (kind === "raw" && Str.length(text) > limits.sourceUtf16) return yield* safety("sourceUtf16");
-      }
+      yield* validateSource(input, kind);
       const outputUtf16 = yield* S.decodeEffect(Output)(remaining).pipe(
         Effect.mapError(() => failure("invalid-runtime"))
       );

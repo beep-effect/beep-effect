@@ -16,7 +16,7 @@ import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
+import { CitationPythonUnicodeStorage, measureCitationPythonText } from "./PythonHash.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/PythonUnicode");
 const Limits = S.toType(CitationEngineLimits);
@@ -80,23 +80,6 @@ const readPoint = (bytes: Uint8Array, index: number, width: number) => {
   return point;
 };
 const pointUnits = (point: number) => (point > 65535 ? 2 : 1);
-const TextMeasure = S.Tuple([S.Natural, S.Natural]).pipe(
-  $I.annoteSchema("TextMeasure", {
-    description: "Private maximum source point and source point count before native allocation.",
-  })
-);
-const measureText = Effect.fnUntraced(function* (text: string) {
-  let largest = 0;
-  let points = 0;
-  for (let index = 0; index < Str.length(text); ) {
-    if (points % 4096 === 0) yield* Effect.yieldNow;
-    const point = O.getOrElse(Str.codePointAt(text, index), () => 0);
-    largest = Num.max(largest, point);
-    index += pointUnits(point);
-    points++;
-  }
-  return TextMeasure.make([largest, points]);
-});
 const encodeText = Effect.fnUntraced(function* (text: string, width: 1 | 2 | 4, points: number) {
   const bytes = new Uint8Array(points * width);
   let cursor = 0;
@@ -178,7 +161,7 @@ export const makeCitationPythonUnicode = Effect.fn("Citation.makePythonUnicode")
     const text = yield* S.decodeUnknownEffect(Text)(input).pipe(Effect.mapError(() => fail("invalid-input")));
     const units = Str.length(text);
     if (units > maximum) return yield* fail("limit-exceeded");
-    const [largest, points] = yield* measureText(text);
+    const [largest, points] = yield* measureCitationPythonText(text);
     const width = widthOf(largest);
     const bytes = yield* encodeText(text, width, points);
     return CitationPythonUnicodeValue.make({

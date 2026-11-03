@@ -80,16 +80,15 @@ const coherent = (document: typeof RuntimeShape.Type | typeof ReceiptShape.Type)
       Mention: (value) => HashMap.has(byMention, value.mentionId),
       Detached: (value) => HashMap.has(byDetached, value.detachedId),
     });
-  if (
+  const hasDuplicateIds = () =>
     HashMap.size(byList) !== A.length(document.memberLists) ||
     HashMap.size(byDetached) !== A.length(document.detachedCitations) ||
     HashMap.size(byGroup) !== A.length(document.groups) ||
     HashMap.size(byMention) !== A.length(mentions) ||
     HashMap.size(byAuthority) !== A.length(document.authorities) ||
     HashMap.size(byResolution) !== A.length(document.resolutions) ||
-    HashMap.size(byResolution) !== HashMap.size(byMention)
-  )
-    return false;
+    HashMap.size(byResolution) !== HashMap.size(byMention);
+  if (hasDuplicateIds()) return false;
   return (
     A.every(
       mentions,

@@ -161,6 +161,25 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
           ? O.some(yield* identityFactory.value.build.pipe(Effect.mapError(bad)))
           : O.none();
         let identityHashes = HashMap.empty<string, bigint>();
+        const identityHash = Effect.fn("Citation.callbackMissingPageIdentity")(function* (
+          reference: CitationGroupMember
+        ) {
+          const key = referenceKey(reference);
+          let missingPageIdentityHash = HashMap.get(identityHashes, key);
+          if (O.isNone(missingPageIdentityHash) && O.isSome(identities)) {
+            const identityReference =
+              reference._tag === "Mention"
+                ? CitationGroupMember.cases.Mention.make({ mentionId: reference.mentionId })
+                : CitationGroupMember.cases.Detached.make({ detachedId: reference.detachedId });
+            const hash = yield* identities.value.read(identityReference).pipe(
+              Effect.flatMap(S.decodeEffect(S.BigInt)),
+              Effect.mapError(() => CitationResourceObjectFailure.make({ reason: "identity-unavailable" }))
+            );
+            identityHashes = HashMap.set(identityHashes, key, hash);
+            missingPageIdentityHash = O.some(hash);
+          }
+          return missingPageIdentityHash;
+        });
         const models = CitationResourceModels.of({
           read: Effect.fn("Citation.callbackRuntimeSemantic")(function* (reference: CitationGroupMember) {
             const citation = yield* owner
@@ -174,20 +193,7 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
                 Effect.mapError(() => CitationResourceObjectFailure.make({ reason: "model-failed" }))
               );
               if (O.exists(R.get(groups, "page"), (page) => page === null)) {
-                const key = referenceKey(reference);
-                missingPageIdentityHash = HashMap.get(identityHashes, key);
-                if (O.isNone(missingPageIdentityHash) && O.isSome(identities)) {
-                  const identityReference =
-                    reference._tag === "Mention"
-                      ? CitationGroupMember.cases.Mention.make({ mentionId: reference.mentionId })
-                      : CitationGroupMember.cases.Detached.make({ detachedId: reference.detachedId });
-                  const hash = yield* identities.value.read(identityReference).pipe(
-                    Effect.flatMap(S.decodeEffect(S.BigInt)),
-                    Effect.mapError(() => CitationResourceObjectFailure.make({ reason: "identity-unavailable" }))
-                  );
-                  identityHashes = HashMap.set(identityHashes, key, hash);
-                  missingPageIdentityHash = O.some(hash);
-                }
+                missingPageIdentityHash = yield* identityHash(reference);
               }
             }
             return CitationResourceModelInput.make({ citation, missingPageIdentityHash });

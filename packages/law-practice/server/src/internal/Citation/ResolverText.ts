@@ -108,6 +108,8 @@ const decimalInteger = Effect.fn("Citation.parseResolverDecimal")(function* (cha
   );
 });
 
+const missingCasePage = (citation: Citation, page: O.Option<string | null>) =>
+  citation.type === "case" && (O.isNone(page) || page.value === null);
 /**
  * Exact default Id. pin validation, with arbitrary-precision Unicode decimals.
  * The first grouped citation can be non-full when a custom callback introduced
@@ -129,7 +131,7 @@ export const hasInvalidCitationPinCite = Effect.fn("Citation.hasInvalidPinCite")
   );
   const pageEntry = R.get(components, "page");
   const page = O.getOrElse(pageEntry, () => "");
-  if (decoded.fullCitation.type === "case" && (O.isNone(pageEntry) || pageEntry.value === null)) return true;
+  if (missingCasePage(decoded.fullCitation, pageEntry)) return true;
   const pin = O.getOrElse(decoded.idCitation.metadata.pinCite, () => "");
   if (Str.isEmpty(pin)) return false;
   if (page === null) return yield* CitationResolverTextFailure.make({ reason: "canonical-page-type" });

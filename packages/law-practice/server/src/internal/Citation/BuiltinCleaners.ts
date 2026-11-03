@@ -7,6 +7,7 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CitationCleanerFailure, CitationCleanerProduced } from "./CleanerPipeline.ts";
@@ -48,16 +49,25 @@ type Failure =
   | CitationHtmlKernelFailure
   | CitationHtmlCompletionFailure
   | CitationHtmlWorkerFailure;
-const translate = (error: Failure): CitationCleanerFailure | CitationSafetyLimitExceeded => {
-  if (error._tag === "CitationCleanerFailure" || error._tag === "CitationSafetyLimitExceeded") return error;
-  if (error._tag === "CitationHtmlInputFailure" && error.reason === "unicode-encoding-declaration")
-    return fail("html-unicode-encoding-declaration");
-  if (error._tag === "CitationHtmlKernelFailure") {
-    if (error.reason === "parse-error") return fail("html-parse-error");
-    if (error.reason === "unicode-decode-error") return fail("html-unicode-decode-error");
-  }
-  return fail("runtime-failed");
-};
+const kernelFailure = (reason: CitationHtmlKernelFailure["reason"]) =>
+  Match.value(reason).pipe(
+    Match.when("parse-error", () => fail("html-parse-error")),
+    Match.when("unicode-decode-error", () => fail("html-unicode-decode-error")),
+    Match.orElse(() => fail("runtime-failed"))
+  );
+const translate = (error: Failure): CitationCleanerFailure | CitationSafetyLimitExceeded =>
+  Match.value(error).pipe(
+    Match.tags({
+      CitationCleanerFailure: (error) => error,
+      CitationSafetyLimitExceeded: (error) => error,
+      CitationHtmlKernelFailure: (error) => kernelFailure(error.reason),
+      CitationHtmlInputFailure: (error) =>
+        error.reason === "unicode-encoding-declaration"
+          ? fail("html-unicode-encoding-declaration")
+          : fail("runtime-failed"),
+    }),
+    Match.orElse(() => fail("runtime-failed"))
+  );
 /**
  * Capture the value service, limits/Clock and native worker owner once. Returned
  * invocation has R = never; enclosing clean_text keeps its shared work/timers.

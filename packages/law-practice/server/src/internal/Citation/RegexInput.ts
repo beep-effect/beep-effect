@@ -4,14 +4,8 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import {
-  CitationEngineAbsoluteMaxima,
-  CitationEngineLimits,
-  CitationSafetyLimitExceeded,
-} from "@beep/law-practice-use-cases/server";
+import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
-import * as Clock from "effect/Clock";
-import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
@@ -19,10 +13,10 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { makeCitationPythonUnicode } from "./PythonUnicode.ts";
+import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import type { CitationPythonUnicodeFailure, CitationPythonUnicodeValue } from "./PythonUnicode.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/RegexInput");
-const Limits = S.toType(CitationEngineLimits);
 const Role = LiteralKit(["source", "pattern"]).pipe(
   $I.annoteSchema("Role", {
     description: "Captured server preparation purpose selecting the schema-owned text budget.",
@@ -60,6 +54,11 @@ export class CitationRegexInputFailure extends S.TaggedError<
 const Size = S.Natural.check(S.isLessThanOrEqualTo(CitationEngineAbsoluteMaxima.producedTextUtf16)).pipe(
   $I.annoteSchema("Size", { description: "Position/count within the absolute intermediate UTF-16 ceiling." })
 );
+const coherentProjectionWidth = (width: number, points: number, units: number) =>
+  width === 4 ? units > points && units <= 2 * points : units === points;
+const possibleProjectionAmbiguity = (ambiguous: boolean, width: number, points: number, units: number) =>
+  !ambiguous || (width !== 1 && 2 * points - units >= 2);
+const surrogatePair = (previous: number, point: number) => high(previous) && low(point);
 /** @internal @category models @since 0.0.0 */
 export class CitationRegexInputLayout extends S.Opaque<CitationRegexInputLayout, { readonly brand: unique symbol }>()(
   S.Struct({
@@ -76,10 +75,8 @@ export class CitationRegexInputLayout extends S.Opaque<CitationRegexInputLayout,
           layout.byteLength === layout.pythonLength * layout.width &&
           layout.mapBytes === 4 * (layout.pythonLength + 1) &&
           (layout.pythonLength !== 0 || layout.width === 1) &&
-          (layout.width === 4
-            ? layout.utf16Units > layout.pythonLength && layout.utf16Units <= 2 * layout.pythonLength
-            : layout.utf16Units === layout.pythonLength) &&
-          (!layout.projectionAmbiguous || (layout.width !== 1 && 2 * layout.pythonLength - layout.utf16Units >= 2)),
+          coherentProjectionWidth(layout.width, layout.pythonLength, layout.utf16Units) &&
+          possibleProjectionAmbiguity(layout.projectionAmbiguous, layout.width, layout.pythonLength, layout.utf16Units),
         $I.annote("NativeLayoutCoherence", {
           description: "Require exact native/map sizes and a possible canonical point/projection layout.",
         })
@@ -192,20 +189,13 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
   policy: unknown,
   roleInput: unknown = "source"
 ) {
-  const limits = yield* S.decodeUnknownEffect(Limits)(policy).pipe(Effect.mapError(() => fail("invalid-policy")));
+  const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-policy"));
   const role = yield* S.decodeUnknownEffect(Role)(roleInput).pipe(Effect.mapError(() => fail("invalid-policy")));
   const sourceMaximum = role === "pattern" ? limits.patternUtf16 : limits.sourceUtf16;
   const producedMaximum = role === "pattern" ? limits.patternUtf16 : limits.producedTextUtf16;
   const sourceLimit = role === "pattern" ? "patternUtf16" : "sourceUtf16";
   const producedLimit = role === "pattern" ? "patternUtf16" : "producedTextUtf16";
-  const clock = yield* Clock.Clock;
-  const deadline = Duration.min(limits.extractDeadline, limits.operationDeadline).pipe(
-    Duration.toMillis,
-    Duration.millis
-  );
-  const deadlineLimit = Duration.isLessThanOrEqualTo(limits.operationDeadline, limits.extractDeadline)
-    ? "operationDeadline"
-    : "extractDeadline";
+  const { deadline, deadlineLimit, timed } = yield* makeCitationRegexTiming(limits, true);
   // The shared Unicode helper's timer is parameterized for this extract stage.
   const unicode = yield* makeCitationPythonUnicode({
     ...limits,
@@ -229,7 +219,7 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
     for (let index = 0; index < value.pythonLength; index++) {
       if (index % 4096 === 0) yield* Effect.yieldNow;
       const point = readPoint(value.storage, index);
-      if (high(previous) && low(point)) ambiguous = true;
+      ambiguous ||= surrogatePair(previous, point);
       offset += unitsOf(point);
       offsets[index + 1] = offset;
       previous = point;
@@ -288,6 +278,33 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
     yield* beforeAllocate(layout);
     return yield* finish(yield* capture(unicode.fromText(text)), layout);
   });
+  const measureNative = Effect.fn("Citation.measureRegexNativeInput")(function* (source: typeof NativeInput.Type) {
+    const byteLength = source.bytes.byteLength;
+    const length = byteLength / source.width;
+    let largest = 0;
+    let units = 0;
+    let previous = -1;
+    let ambiguous = false;
+    for (let index = 0; index < length; index++) {
+      if (index % 4096 === 0) yield* Effect.yieldNow;
+      const point = readPoint(source, index);
+      if (point > 0x10ffff) return yield* fail("invalid-input");
+      ambiguous ||= surrogatePair(previous, point);
+      largest = Num.max(largest, point);
+      units += unitsOf(point);
+      if (units > producedMaximum) return yield* safety(producedLimit);
+      previous = point;
+    }
+    if (source.width !== widthOf(largest)) return yield* fail("invalid-input");
+    return CitationRegexInputLayout.make({
+      width: source.width,
+      byteLength,
+      pythonLength: length,
+      utf16Units: units,
+      mapBytes: 4 * (length + 1),
+      projectionAmbiguous: ambiguous,
+    });
+  });
   const prepareUnicode = Effect.fn("Citation.prepareRegexUnicode")(function* <E>(
     input: unknown,
     beforeAllocate: (layout: CitationRegexInputLayout) => Effect.Effect<void, E>
@@ -298,29 +315,7 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
     if (byteLength > limits.processMessageBytes) return yield* safety("processMessageBytes");
     const length = byteLength / source.width;
     if (length > producedMaximum) return yield* safety(producedLimit);
-    let largest = 0;
-    let units = 0;
-    let previous = -1;
-    let ambiguous = false;
-    for (let index = 0; index < length; index++) {
-      if (index % 4096 === 0) yield* Effect.yieldNow;
-      const point = readPoint(source, index);
-      if (point > 0x10ffff) return yield* fail("invalid-input");
-      if (high(previous) && low(point)) ambiguous = true;
-      largest = Num.max(largest, point);
-      units += unitsOf(point);
-      if (units > producedMaximum) return yield* safety(producedLimit);
-      previous = point;
-    }
-    if (source.width !== widthOf(largest)) return yield* fail("invalid-input");
-    const layout = CitationRegexInputLayout.make({
-      width: source.width,
-      byteLength,
-      pythonLength: length,
-      utf16Units: units,
-      mapBytes: 4 * (length + 1),
-      projectionAmbiguous: ambiguous,
-    });
+    const layout = yield* measureNative(source);
     yield* beforeAllocate(layout);
     return yield* finish(yield* capture(unicode.fromStorage(source)), layout);
   });
@@ -329,19 +324,13 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
       input: unknown,
       beforeAllocate: (layout: CitationRegexInputLayout) => Effect.Effect<void, E>
     ) {
-      return yield* prepareText(input, beforeAllocate).pipe(
-        Effect.timeoutOrElse({ duration: deadline, orElse: () => Effect.fail(safety(deadlineLimit)) }),
-        Effect.provideService(Clock.Clock, clock)
-      );
-    }),
+      return yield* prepareText(input, beforeAllocate);
+    }, timed),
     prepareUnicode: Effect.fn("Citation.captureRegexUnicode")(function* <E>(
       input: unknown,
       beforeAllocate: (layout: CitationRegexInputLayout) => Effect.Effect<void, E>
     ) {
-      return yield* prepareUnicode(input, beforeAllocate).pipe(
-        Effect.timeoutOrElse({ duration: deadline, orElse: () => Effect.fail(safety(deadlineLimit)) }),
-        Effect.provideService(Clock.Clock, clock)
-      );
-    }),
+      return yield* prepareUnicode(input, beforeAllocate);
+    }, timed),
   };
 });

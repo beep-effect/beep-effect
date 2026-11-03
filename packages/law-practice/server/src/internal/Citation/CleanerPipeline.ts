@@ -314,6 +314,13 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
           )
         )
       );
+    const takeCharge = Effect.fnUntraced(function* (charge: CitationCleanerTextCharge | undefined) {
+      const reserved = charge === undefined ? undefined : issued.get(charge);
+      if (reserved === undefined || charge === undefined || charge.units !== reserved)
+        return yield* fail("invalid-reservation");
+      issued.delete(charge);
+      return reserved;
+    });
     const consume = Effect.fn("Citation.consumeCleanerText")(function* (
       charges: ReadonlyArray<CitationCleanerTextCharge>,
       units: number
@@ -325,16 +332,28 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
           yield* ensureOpen;
           yield* Effect.yieldNow;
         }
-        const charge = charges[index];
-        const reserved = charge === undefined ? undefined : issued.get(charge);
-        if (reserved === undefined || charge === undefined || charge.units !== reserved)
-          return yield* fail("invalid-reservation");
-        issued.delete(charge);
-        total += reserved;
+        total += yield* takeCharge(charges[index]);
         if (total > actual) return yield* fail("invalid-reservation");
       }
       yield* ensureOpen;
       if (total !== actual) return yield* fail("invalid-reservation");
+    });
+    const consumeUnchanged = Effect.fnUntraced(function* (value: CitationCleanerObject) {
+      const units = yield* runtime.textUnits(value);
+      if (O.isSome(units)) {
+        const amount = yield* S.decodeEffect(S.Natural)(units.value).pipe(
+          Effect.mapError(() => fail("invalid-reservation"))
+        );
+        if (amount > 0) {
+          const charge = yield* reserveText(amount);
+          yield* consume([charge], amount);
+        }
+      }
+    });
+    const lookupCallable = Effect.fnUntraced(function* (value: CitationCleanerObject) {
+      if (yield* runtime.contains(value, work)) return yield* runtime.get(value, work);
+      if (yield* runtime.callable(value, work)) return value;
+      return yield* fail("unknown-step");
     });
     const execute = Effect.fn("Citation.executeCleanerPlan")(function* (
       plan: string,
@@ -351,25 +370,11 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
         yield* Effect.yieldNow;
         const next = yield* cursor.next;
         if (O.isNone(next)) {
-          if (steps === 0) {
-            const units = yield* runtime.textUnits(value);
-            if (O.isSome(units)) {
-              const amount = yield* S.decodeEffect(S.Natural)(units.value).pipe(
-                Effect.mapError(() => fail("invalid-reservation"))
-              );
-              if (amount > 0) {
-                const charge = yield* reserveText(amount);
-                yield* consume([charge], amount);
-              }
-            }
-          }
+          if (steps === 0) yield* consumeUnchanged(value);
           return value;
         }
         yield* runtime.assertOwned(next.value);
-        let callable: CitationCleanerObject;
-        if (yield* runtime.contains(next.value, work)) callable = yield* runtime.get(next.value, work);
-        else if (yield* runtime.callable(next.value, work)) callable = next.value;
-        else return yield* fail("unknown-step");
+        const callable = yield* lookupCallable(next.value);
         yield* runtime.assertOwned(callable);
         const produced = yield* runtime.invoke(callable, value, work);
         yield* runtime.assertOwned(produced.value);

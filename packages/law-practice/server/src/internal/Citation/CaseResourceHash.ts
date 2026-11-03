@@ -12,7 +12,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { CitationAuthorityEdition } from "./AuthorityIdentity.ts";
+import { CitationAuthorityEdition, citationAuthorityEditionMatches } from "./AuthorityIdentity.ts";
 import { encodeCitationRuntimeString, hashCitationRuntimePreimage } from "./RuntimeHashEncoding.ts";
 import type * as Digest from "effect/crypto/Digest";
 
@@ -94,6 +94,32 @@ const jsonValue = (value: string | null) => (value === null ? Effect.succeed("nu
 const numericHash = Effect.fn("Citation.caseHashPreimage")((preimage: string) =>
   hashCitationRuntimePreimage(preimage).pipe(Effect.mapError((error) => failure(error.reason)))
 );
+const nonNullCaseHash = Effect.fn("Citation.hashNonNullCase")(function* (
+  decoded: typeof CitationCaseResourceHashInputType.Type,
+  groups: typeof CitationComponents.Encoded,
+  page: string
+) {
+  const selected = decoded.citation.publication.selectedEdition;
+  const edition = decoded.selectedEdition;
+  if (
+    !citationAuthorityEditionMatches(
+      selected,
+      O.map(edition, (value) => value.edition)
+    )
+  )
+    return yield* failure("missing-edition");
+  const rawReporter = R.get(groups, "reporter");
+  if (O.isNone(edition) && O.isNone(rawReporter)) return yield* failure("missing-reporter");
+  const reporter = O.isSome(edition) ? edition.value.shortName : O.getOrElse(rawReporter, () => null);
+  const pageJson = yield* quote(page);
+  const reporterJson = yield* jsonValue(reporter);
+  const volume = R.get(groups, "volume");
+  const volumeJson = O.isSome(volume) ? `, "volume": ${yield* jsonValue(volume.value)}` : "";
+  // Snapshot the complete preimage before the first asynchronous digest.
+  return yield* numericHash(
+    `{"class": "FullCaseCitation", "page": ${pageJson}, "reporter": ${reporterJson}${volumeJson}}`
+  );
+});
 /**
  * Hash the current case fields with source JSON spacing, ASCII escaping and
  * CPython integer reduction. No mutable citation-bearing input is memoized.
@@ -119,24 +145,7 @@ export const makeCitationCaseResourceHash = Effect.fn("Citation.makeCaseResource
     if (O.isNone(decoded.missingPageIdentityHash)) return yield* failure("identity-unavailable");
     citationHash = decoded.missingPageIdentityHash.value;
   } else {
-    const selected = decoded.citation.publication.selectedEdition;
-    const edition = decoded.selectedEdition;
-    if (
-      O.isSome(selected) !== O.isSome(edition) ||
-      (O.isSome(selected) && O.isSome(edition) && selected.value !== edition.value.edition)
-    )
-      return yield* failure("missing-edition");
-    const rawReporter = R.get(groups, "reporter");
-    if (O.isNone(edition) && O.isNone(rawReporter)) return yield* failure("missing-reporter");
-    const reporter = O.isSome(edition) ? edition.value.shortName : O.getOrElse(rawReporter, () => null);
-    const pageJson = yield* quote(page.value);
-    const reporterJson = yield* jsonValue(reporter);
-    const volume = R.get(groups, "volume");
-    const volumeJson = O.isSome(volume) ? `, "volume": ${yield* jsonValue(volume.value)}` : "";
-    // Snapshot the complete preimage before the first asynchronous digest.
-    citationHash = yield* numericHash(
-      `{"class": "FullCaseCitation", "page": ${pageJson}, "reporter": ${reporterJson}${volumeJson}}`
-    );
+    citationHash = yield* nonNullCaseHash(decoded, groups, page.value);
   }
   const decimal = yield* S.encodeEffect(S.BigIntFromString)(citationHash).pipe(
     Effect.mapError(() => failure("invalid-input"))

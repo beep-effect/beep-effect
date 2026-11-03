@@ -126,6 +126,27 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
     }
     return found;
   });
+  const reporterMatches = Effect.fnUntraced(function* (
+    current: Effect.Success<ReturnType<typeof reporter>>,
+    previous: Effect.Success<ReturnType<typeof reporter>>
+  ) {
+    if (!current.defined || !previous.defined) return yield* invalid();
+    return current.value === previous.value && current.volume === previous.volume;
+  });
+  const byReporter = Effect.fn("Citation.defaultFilterReporter")(function* (
+    fulls: ReadonlyArray<CitationCallbackFull>,
+    current: Effect.Success<ReturnType<typeof reporter>>
+  ) {
+    let candidates = A.empty<CitationCallbackFull>();
+    for (const entry of fulls) {
+      yield* work.step;
+      const prior = yield* citationOf(entry.citation);
+      if (prior.type !== "case") continue;
+      const previous = yield* reporter(prior);
+      if (yield* reporterMatches(current, previous)) candidates = A.append(candidates, entry);
+    }
+    return candidates;
+  });
   return CitationResolutionCallbacks.of({
     full: Effect.fn("Citation.defaultFullCallback")((mention: CitationMention) =>
       dictionary.canonicalResource(CitationGroupMember.cases.Mention.make({ mentionId: mention.id }))
@@ -135,16 +156,7 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
         const citation = yield* currentCitation(input.mention);
         if (citation.type !== "shortFormCase") return yield* invalid();
         const current = yield* reporter(citation);
-        let candidates = A.empty<CitationCallbackFull>();
-        for (const entry of input.fulls) {
-          yield* work.step;
-          const prior = yield* citationOf(entry.citation);
-          if (prior.type !== "case") continue;
-          const previous = yield* reporter(prior);
-          if (!current.defined || !previous.defined) return yield* invalid();
-          if (current.value === previous.value && current.volume === previous.volume)
-            candidates = A.append(candidates, entry);
-        }
+        let candidates = yield* byReporter(input.fulls, current);
         const count = yield* unique(candidates);
         if (count === 1) return CitationCallbackResult.make({ resource: A.getUnsafe(candidates, 0).resource });
         if (O.exists(citation.metadata.antecedentGuess, Str.isNonEmpty)) {

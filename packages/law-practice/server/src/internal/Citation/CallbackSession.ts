@@ -660,23 +660,27 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
   const reserveEntrySlot = Effect.suspend(() =>
     nextEntrySlot >= limits.resolutionIterations ? Effect.fail(limit()) : Effect.succeed(nextEntrySlot++)
   );
-  const getLocated = Effect.fn("Citation.dictionaryGetLocated")(function* (input: CitationCallbackResource) {
-    if (O.isSome(runtime)) {
-      let selected = yield* runtime.value.get(input);
-      let handle: CitationCallbackList;
-      if (O.isSome(selected)) handle = yield* Effect.fromOption(HashMap.get(bySlot, selected.value.slot), invalid);
-      else {
-        if (A.length(entries) >= limits.authorities) return yield* limit();
-        handle = yield* allocate([]);
-        selected = O.some(yield* runtime.value.set(input, yield* slotOf(handle)));
-        yield* refreshRuntime;
-      }
-      const entry = yield* Effect.fromOption(selected, invalid);
-      return {
-        handle,
-        entry: { entrySlot: entry.entryId, key: `entry:${entry.entryId}`, resource: entry.resource, slot: entry.slot },
-      };
+  const getRuntimeLocated = Effect.fnUntraced(function* (
+    input: CitationCallbackResource,
+    selectedRuntime: CitationCallbackRuntimeIndex
+  ) {
+    let selected = yield* selectedRuntime.get(input);
+    let handle: CitationCallbackList;
+    if (O.isSome(selected)) handle = yield* Effect.fromOption(HashMap.get(bySlot, selected.value.slot), invalid);
+    else {
+      if (A.length(entries) >= limits.authorities) return yield* limit();
+      handle = yield* allocate([]);
+      selected = O.some(yield* selectedRuntime.set(input, yield* slotOf(handle)));
+      yield* refreshRuntime;
     }
+    const entry = yield* Effect.fromOption(selected, invalid);
+    return {
+      handle,
+      entry: { entrySlot: entry.entryId, key: `entry:${entry.entryId}`, resource: entry.resource, slot: entry.slot },
+    };
+  });
+  const getLocated = Effect.fn("Citation.dictionaryGetLocated")(function* (input: CitationCallbackResource) {
+    if (O.isSome(runtime)) return yield* getRuntimeLocated(input, runtime.value);
     const value = yield* fingerprint(input);
     const existing = yield* find(value.key);
     if (O.isSome(existing))
@@ -1209,6 +1213,68 @@ export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPrepare
     ? suppliedDictionary.value
     : yield* makeCitationCallbackDictionary(prepared).pipe(Effect.provideService(CitationResolutionWork, work));
   if (dictionary.owner !== prepared || dictionary.work !== work) return yield* invalid();
+  const acceptResult = Effect.fnUntraced(function* (mention: CitationMention, result: CitationCallbackResult) {
+    const observation = yield* readCitationDefaultObservation(result, mention.id);
+    const snapshot = yield* S.decodeEffect(CallbackResultJson)(
+      yield* S.encodeEffect(CallbackResultJson)(result).pipe(Effect.mapError(invalid))
+    ).pipe(Effect.mapError(invalid));
+    last = snapshot.resource;
+    return observation;
+  });
+  const dispatch = Effect.fn("Citation.dispatchResolutionCallback")(function* (mention: CitationMention) {
+    if (isFull(mention.citation)) {
+      const result = yield* callbacks.full(mention).pipe(Effect.mapError(callbackFailed));
+      last = yield* S.decodeEffect(ResourceJson)(
+        yield* S.encodeEffect(ResourceJson)(result).pipe(Effect.mapError(invalid))
+      ).pipe(Effect.mapError(invalid));
+      yield* dictionary.appendFullCurrent(CitationGroupMember.cases.Mention.make({ mentionId: mention.id }), last);
+      return O.none<CitationDefaultObservation>();
+    }
+    if (mention.citation.type === "id") {
+      const groups = yield* dictionary.read;
+      const result = yield* callbacks
+        .id(CitationIdCallbackInput.make({ mention, last: yield* dictionary.currentResource(last), groups }))
+        .pipe(Effect.mapError(callbackFailed));
+      return yield* acceptResult(mention, result);
+    }
+    if (mention.citation.type === "unknown") {
+      last = CitationCallbackResource.cases.None.make({});
+      return O.none<CitationDefaultObservation>();
+    }
+    const callback =
+      mention.citation.type === "shortFormCase"
+        ? callbacks.shortCase
+        : mention.citation.type === "supra"
+          ? callbacks.supra
+          : callbacks.reference;
+    const result = yield* callback(
+      CitationFullsCallbackInput.make({ mention, fulls: yield* dictionary.readFulls })
+    ).pipe(Effect.mapError(callbackFailed));
+    return yield* acceptResult(mention, result);
+  });
+  const callbackName = (citation: Citation) =>
+    isFull(citation) ? "full" : citation.type === "shortFormCase" ? "shortCase" : citation.type;
+  const recordDecision = Effect.fnUntraced(function* (
+    mention: CitationMention,
+    observation: O.Option<CitationDefaultObservation>
+  ) {
+    const assignment = (yield* dictionary.isTruthy(last))
+      ? O.some(yield* dictionary.appendCurrent(last, mention.id))
+      : O.none<CitationCallbackAssignment>();
+    decisions = A.append(
+      decisions,
+      CitationCallbackDecision.make({
+        mentionId: mention.id,
+        callback: callbackName(mention.citation),
+        resource: last,
+        assignment,
+        observation: last._tag === "None" ? observation : O.none(),
+      })
+    );
+    const finalGroups = yield* dictionary.read;
+    if (A.reduce(finalGroups, 0, (count, group) => count + A.length(group.members)) > prepared.limits.resolutionEdges)
+      return yield* limit();
+  });
   return yield* Effect.acquireUseRelease(
     dictionary.start,
     Effect.fnUntraced(function* () {
@@ -1218,67 +1284,13 @@ export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPrepare
           CitationGroupMember.cases.Mention.make({ mentionId: original.id })
         );
         const mention = CitationMention.make({ ...original, citation });
-        let observation = O.none<CitationDefaultObservation>();
-        if (isFull(mention.citation)) {
-          const result = yield* callbacks.full(mention).pipe(Effect.mapError(callbackFailed));
-          last = yield* S.decodeEffect(ResourceJson)(
-            yield* S.encodeEffect(ResourceJson)(result).pipe(Effect.mapError(invalid))
-          ).pipe(Effect.mapError(invalid));
-          yield* dictionary.appendFullCurrent(CitationGroupMember.cases.Mention.make({ mentionId: mention.id }), last);
-        } else if (mention.citation.type === "id") {
-          const groups = yield* dictionary.read;
-          const result = yield* callbacks
-            .id(CitationIdCallbackInput.make({ mention, last: yield* dictionary.currentResource(last), groups }))
-            .pipe(Effect.mapError(callbackFailed));
-          observation = yield* readCitationDefaultObservation(result, mention.id);
-          const snapshot = yield* S.decodeEffect(CallbackResultJson)(
-            yield* S.encodeEffect(CallbackResultJson)(result).pipe(Effect.mapError(invalid))
-          ).pipe(Effect.mapError(invalid));
-          last = snapshot.resource;
-        } else if (mention.citation.type === "unknown") last = CitationCallbackResource.cases.None.make({});
-        else {
-          const callback =
-            mention.citation.type === "shortFormCase"
-              ? callbacks.shortCase
-              : mention.citation.type === "supra"
-                ? callbacks.supra
-                : callbacks.reference;
-          const result = yield* callback(
-            CitationFullsCallbackInput.make({ mention, fulls: yield* dictionary.readFulls })
-          ).pipe(Effect.mapError(callbackFailed));
-          observation = yield* readCitationDefaultObservation(result, mention.id);
-          const snapshot = yield* S.decodeEffect(CallbackResultJson)(
-            yield* S.encodeEffect(CallbackResultJson)(result).pipe(Effect.mapError(invalid))
-          ).pipe(Effect.mapError(invalid));
-          last = snapshot.resource;
-        }
+        const observation = yield* dispatch(mention);
         const groups = yield* dictionary.read;
         if (mention.citation.type === "id") yield* Effect.forEach(groups, () => step, { discard: true });
 
         last = yield* dictionary.currentResource(last);
         yield* dictionary.validateResource(last);
-        const assignment = (yield* dictionary.isTruthy(last))
-          ? O.some(yield* dictionary.appendCurrent(last, mention.id))
-          : O.none<CitationCallbackAssignment>();
-        decisions = A.append(
-          decisions,
-          CitationCallbackDecision.make({
-            mentionId: mention.id,
-            callback: isFull(mention.citation)
-              ? "full"
-              : mention.citation.type === "shortFormCase"
-                ? "shortCase"
-                : mention.citation.type,
-            resource: last,
-            assignment,
-            observation: last._tag === "None" ? observation : O.none(),
-          })
-        );
-        const finalGroups = yield* dictionary.read;
-        if (
-          A.reduce(finalGroups, 0, (count, group) => count + A.length(group.members)) > prepared.limits.resolutionEdges
-        )
-          return yield* limit();
+        yield* recordDecision(mention, observation);
       }
       const groups = yield* dictionary.readEntries;
       decisions = yield* Effect.forEach(

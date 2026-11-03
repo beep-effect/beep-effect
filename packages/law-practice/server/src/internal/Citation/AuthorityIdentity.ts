@@ -16,6 +16,7 @@ import {
 import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
@@ -23,6 +24,13 @@ import * as S from "effect/Schema";
 import type * as Digest from "effect/crypto/Digest";
 
 const $I = $LawPracticeServerId.create("internal/Citation/AuthorityIdentity");
+/** Compare the optional selected reference with its trusted adapter result.
+ * @internal @category predicates @since 0.0.0
+ */
+export const citationAuthorityEditionMatches: {
+  (that: O.Option<CitationEditionRef>): (self: O.Option<CitationEditionRef>) => boolean;
+  (self: O.Option<CitationEditionRef>, that: O.Option<CitationEditionRef>): boolean;
+} = dual(2, O.makeEquivalence(S.toEquivalence(CitationEditionRef)));
 const encoder = new TextEncoder();
 /**
  * Selected frozen edition spelling supplied by the trusted artifact adapter.
@@ -97,6 +105,29 @@ export class CitationAuthorityIdentityFailure extends S.TaggedError<
 const invalid = () => CitationAuthorityIdentityFailure.make({ reason: "invalid-input" });
 const componentOrder = Order.mapInput(Order.String, (entry: typeof Component.Type) => entry[0]);
 
+const caseAuthorityPreimage = Effect.fn("Citation.caseAuthorityPreimage")(function* (
+  decoded: typeof CitationAuthorityIdentityInputType.Type,
+  components: typeof CitationComponents.Encoded,
+  pairs: ReadonlyArray<typeof Component.Type>
+) {
+  const edition = decoded.selectedEdition;
+  const page = R.get(components, "page");
+  const reporter = R.get(components, "reporter");
+  if (O.isNone(page)) return yield* invalid();
+  if (page.value === null) {
+    return yield* S.encodeEffect(Key)(["citation-authority/v1", "case-occurrence", decoded.mentionId]).pipe(
+      Effect.mapError(invalid)
+    );
+  }
+  const groups = A.filter(pairs, ([name]) => name === "volume" || name === "page");
+  if (O.isNone(edition) && O.isNone(reporter)) return yield* invalid();
+  const correctedReporter = O.isSome(edition) ? edition.value.shortName : O.getOrElse(reporter, () => null);
+  return yield* S.encodeEffect(Key)([
+    "citation-authority/v1",
+    "case",
+    A.sort(A.append(groups, ["reporter", correctedReporter]), componentOrder),
+  ]).pipe(Effect.mapError(invalid));
+});
 /**
  * Produce a deterministic document-local authority ID using canonical equality.
  *
@@ -121,8 +152,10 @@ export const makeCitationAuthorityId = Effect.fn("Citation.makeAuthorityId")(fun
   const selected = citation.publication.selectedEdition;
   const edition = decoded.selectedEdition;
   if (
-    O.isSome(selected) !== O.isSome(edition) ||
-    (O.isSome(selected) && O.isSome(edition) && selected.value !== edition.value.edition)
+    !citationAuthorityEditionMatches(
+      selected,
+      O.map(edition, (value) => value.edition)
+    )
   ) {
     return yield* CitationAuthorityIdentityFailure.make({ reason: "missing-edition" });
   }
@@ -130,23 +163,7 @@ export const makeCitationAuthorityId = Effect.fn("Citation.makeAuthorityId")(fun
   const pairs = A.map(R.toEntries(components), ([name, value]): typeof Component.Type => [name, value]);
   let preimage: string;
   if (citation.type === "case") {
-    const page = R.get(components, "page");
-    const reporter = R.get(components, "reporter");
-    if (O.isNone(page)) return yield* invalid();
-    if (page.value === null) {
-      preimage = yield* S.encodeEffect(Key)(["citation-authority/v1", "case-occurrence", decoded.mentionId]).pipe(
-        Effect.mapError(invalid)
-      );
-    } else {
-      const groups = A.filter(pairs, ([name]) => name === "volume" || name === "page");
-      if (O.isNone(edition) && O.isNone(reporter)) return yield* invalid();
-      const correctedReporter = O.isSome(edition) ? edition.value.shortName : O.getOrElse(reporter, () => null);
-      preimage = yield* S.encodeEffect(Key)([
-        "citation-authority/v1",
-        "case",
-        A.sort(A.append(groups, ["reporter", correctedReporter]), componentOrder),
-      ]).pipe(Effect.mapError(invalid));
-    }
+    preimage = yield* caseAuthorityPreimage(decoded, components, pairs);
   } else {
     preimage = yield* S.encodeEffect(Key)([
       "citation-authority/v1",

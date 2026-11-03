@@ -2,25 +2,19 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import {
-  CitationEngineAbsoluteMaxima,
-  CitationEngineLimits,
-  CitationSafetyLimitExceeded,
-} from "@beep/law-practice-use-cases/server";
+import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
-import * as Clock from "effect/Clock";
-import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { makeCitationRegexInput } from "./RegexInput.ts";
+import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { CitationRegexWorkerFailure } from "./RegexWorkerProtocol.ts";
 import type { CitationPythonUnicodeValue } from "./PythonUnicode.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/RegexAlphabet");
 const max = CitationEngineAbsoluteMaxima;
-const Limits = S.toType(CitationEngineLimits);
 const Point = S.Natural.check(S.isLessThanOrEqualTo(0x10ffff)).pipe(
   $I.annoteSchema("Point", {
     description: "A Python Unicode source point, including literal surrogate points.",
@@ -135,6 +129,17 @@ const makeBoundaries = Effect.fn("Citation.partitionRegexAtoms")(function* (sets
   }
   return A.dedupeAdjacent(A.sort(A.fromIterable(endpoints), Order.Number));
 });
+const encodeInterval = Effect.fnUntraced(function* (
+  row: CitationRegexAtomInterval,
+  boundaries: ReadonlyArray<number>,
+  available: number
+) {
+  const first = cellFor(boundaries, row.start);
+  const last = cellFor(boundaries, row.end);
+  const units = first === last ? 1 : 3;
+  if (units > available) return yield* safety("patternUtf16");
+  return first === last ? symbol(first) : `${symbol(first)}-${symbol(last)}`;
+});
 const encodeAtoms = Effect.fn("Citation.encodeRegexAtoms")(function* (
   sets: CitationRegexAtomSets,
   boundaries: ReadonlyArray<number>,
@@ -143,25 +148,30 @@ const encodeAtoms = Effect.fn("Citation.encodeRegexAtoms")(function* (
   const atoms = A.empty<string>();
   let rowIndex = 0;
   let patternUnits = 0;
-  for (let atom = 0; atom < sets.atoms; atom++) {
-    yield* Effect.yieldNow;
+  const encodeAtom = Effect.fnUntraced(function* (atom: number) {
     let body = "";
     while (rowIndex < A.length(sets.intervals) && A.getUnsafe(sets.intervals, rowIndex).atom === atom) {
       const row = A.getUnsafe(sets.intervals, rowIndex);
-      const first = cellFor(boundaries, row.start);
-      const last = cellFor(boundaries, row.end);
-      const units = first === last ? 1 : 3;
-      if (patternUnits + Str.length(body) + units + 2 > maximum) return yield* safety("patternUtf16");
-      body += first === last ? symbol(first) : `${symbol(first)}-${symbol(last)}`;
+      body += yield* encodeInterval(row, boundaries, maximum - patternUnits - Str.length(body) - 2);
       rowIndex++;
     }
     const text = Str.isEmpty(body) ? "(?!)" : `[${body}]`;
     if (patternUnits + Str.length(text) > maximum) return yield* safety("patternUtf16");
     patternUnits += Str.length(text);
-    atoms.push(text);
+    return text;
+  });
+  for (let atom = 0; atom < sets.atoms; atom++) {
+    yield* Effect.yieldNow;
+    atoms.push(yield* encodeAtom(atom));
   }
   return atoms;
 });
+const sourcePoint = (view: DataView, width: number, index: number) => {
+  const offset = index * width;
+  if (width === 1) return view.getUint8(offset);
+  if (width === 2) return view.getUint16(offset, true);
+  return view.getUint32(offset, true);
+};
 const encodeSource = Effect.fn("Citation.encodeRegexAlphabetSource")(function* (
   value: CitationPythonUnicodeValue,
   boundaries: ReadonlyArray<number>
@@ -172,13 +182,7 @@ const encodeSource = Effect.fn("Citation.encodeRegexAlphabetSource")(function* (
   let chunk = "";
   for (let index = 0; index < value.pythonLength; index++) {
     if (index % 4096 === 0) yield* Effect.yieldNow;
-    const offset = index * native.width;
-    const point =
-      native.width === 1
-        ? view.getUint8(offset)
-        : native.width === 2
-          ? view.getUint16(offset, true)
-          : view.getUint32(offset, true);
+    const point = sourcePoint(view, native.width, index);
     chunk += symbol(cellFor(boundaries, point));
     if (Str.length(chunk) === 4096) {
       chunks.push(chunk);
@@ -195,45 +199,34 @@ const encodeSource = Effect.fn("Citation.encodeRegexAlphabetSource")(function* (
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationRegexAlphabet = Effect.fn("Citation.makeRegexAlphabet")(function* (policy: unknown) {
-  const limits = yield* S.decodeUnknownEffect(Limits)(policy).pipe(
-    Effect.mapError(() => CitationRegexWorkerFailure.make({ reason: "invalid-runtime" }))
+  const limits = yield* decodeCitationRegexPolicy(policy, () =>
+    CitationRegexWorkerFailure.make({ reason: "invalid-runtime" })
   );
   const input = yield* makeCitationRegexInput(limits);
-  const clock = yield* Clock.Clock;
-  const deadline = Duration.min(limits.extractDeadline, limits.operationDeadline);
-  const deadlineLimit = Duration.isLessThanOrEqualTo(limits.operationDeadline, limits.extractDeadline)
-    ? "operationDeadline"
-    : "extractDeadline";
-  const prepare = Effect.fn("Citation.prepareRegexAlphabet")(
-    function* (setsInput: unknown, sourceInput: unknown) {
-      const borrowed = yield* S.decodeUnknownEffect(CitationRegexAtomSets, { onExcessProperty: "error" })(
-        setsInput
-      ).pipe(Effect.mapError(invalid));
-      const sets = CitationRegexAtomSets.make({
-        atoms: borrowed.atoms,
-        intervals: A.map(borrowed.intervals, (row) =>
-          CitationRegexAtomInterval.make({ atom: row.atom, start: row.start, end: row.end })
-        ),
-      });
-      if (sets.atoms > limits.patternUtf16 || A.length(sets.intervals) > limits.patternUtf16)
-        return yield* safety("patternUtf16");
-      const boundaries = yield* makeBoundaries(sets);
-      const atoms = yield* encodeAtoms(sets, boundaries, limits.patternUtf16);
-      const prepared = yield* input.prepareUnicode(sourceInput, () => Effect.void);
-      const source = yield* encodeSource(prepared.value, boundaries);
-      return CitationRegexAlphabetText.make({
-        source,
-        sourceSets: sets,
-        atoms,
-        pythonLength: prepared.value.pythonLength,
-        cells: A.length(boundaries) - 1,
-      });
-    },
-    (body) =>
-      body.pipe(
-        Effect.timeoutOrElse({ duration: deadline, orElse: () => Effect.fail(safety(deadlineLimit)) }),
-        Effect.provideService(Clock.Clock, clock)
-      )
-  );
+  const { timed } = yield* makeCitationRegexTiming(limits, false);
+  const prepare = Effect.fn("Citation.prepareRegexAlphabet")(function* (setsInput: unknown, sourceInput: unknown) {
+    const borrowed = yield* S.decodeUnknownEffect(CitationRegexAtomSets, { onExcessProperty: "error" })(setsInput).pipe(
+      Effect.mapError(invalid)
+    );
+    const sets = CitationRegexAtomSets.make({
+      atoms: borrowed.atoms,
+      intervals: A.map(borrowed.intervals, (row) =>
+        CitationRegexAtomInterval.make({ atom: row.atom, start: row.start, end: row.end })
+      ),
+    });
+    if (sets.atoms > limits.patternUtf16 || A.length(sets.intervals) > limits.patternUtf16)
+      return yield* safety("patternUtf16");
+    const boundaries = yield* makeBoundaries(sets);
+    const atoms = yield* encodeAtoms(sets, boundaries, limits.patternUtf16);
+    const prepared = yield* input.prepareUnicode(sourceInput, () => Effect.void);
+    const source = yield* encodeSource(prepared.value, boundaries);
+    return CitationRegexAlphabetText.make({
+      source,
+      sourceSets: sets,
+      atoms,
+      pythonLength: prepared.value.pythonLength,
+      cells: A.length(boundaries) - 1,
+    });
+  }, timed);
   return { prepare };
 });
