@@ -4,9 +4,11 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { makeCitationRegexAlphabet } from "../../../packages/law-practice/server/src/internal/Citation/RegexAlphabet.ts";
+import { makeCitationRegexDescriptorRegistry } from "../../../packages/law-practice/server/src/internal/Citation/RegexDescriptors.ts";
 import { makeCitationRegexInput } from "../../../packages/law-practice/server/src/internal/Citation/RegexInput.ts";
 import { makeCitationRegexProgram } from "../../../packages/law-practice/server/src/internal/Citation/RegexProgram.ts";
 import { makeCitationRegexResult } from "../../../packages/law-practice/server/src/internal/Citation/RegexResult.ts";
@@ -29,7 +31,7 @@ assert.equal(facts.oracleCommit, operations.commit);
 const inventory = fixture("regex-inventory.json", "b0e75c4cd10ee153aeafe4f1b40750415c7f32ca0fabaaadc740b9f69f35fa83");
 const programFacts = fixture(
   "regex-program-facts.json",
-  "58403e7805b85f7eb19892ea3fadbb165f4c367a28759ada557ae41d4cd3e0bf"
+  "e97ff71682bd3e377978ad23ec1b6e21936ca5534a75e38a9c1891f9c736590a"
 );
 let phase = "setup";
 let instance = 0;
@@ -67,6 +69,18 @@ await Effect.runPromise(
     let programInstances = 0;
     let programMaxUtf16 = 0;
     const fieldsById = new Map();
+    const registries = new Map();
+    for (const [artifact, indices] of Object.entries(programFacts.artifactDescriptorIndices)) {
+      assert.equal(indices.length, 6805);
+      registries.set(
+        artifact,
+        yield* makeCitationRegexDescriptorRegistry(
+          limits,
+          indices.map((index) => programFacts.descriptors[index])
+        )
+      );
+    }
+    const bindingVector = [];
     for (const [identity, artifact] of Object.entries(operations.artifacts)) {
       if (artifact.kind !== "tokenizer-extractors") continue;
       JSON.parse(artifact.payload).forEach((entry, index) => fieldsById.set(`${identity}::${index}`, entry.fields));
@@ -76,7 +90,11 @@ await Effect.runPromise(
       const fields = fieldsById.get(row.id);
       assert.ok(fields);
       const native = (yield* patternInput.prepareText(fields.regex, () => Effect.void)).value.storage;
-      const program = yield* compiler.compile(native, fields.flags);
+      const registry = registries.get(row.artifactSha256);
+      assert.ok(registry);
+      const bound = yield* registry.bind(native, fields.flags);
+      const program = bound.program;
+      bindingVector.push([row.id, bound.descriptor.patternSha256, fields.flags]);
       assert.ok(program.minimumWidthFloor > 0);
       assert.equal(program.repeatedCaptures, false);
       assert.equal(program.nullableMultiRepeat, false);
@@ -93,6 +111,10 @@ await Effect.runPromise(
       programMaxUtf16 = Math.max(programMaxUtf16, pattern.length);
     }
     assert.equal(programInstances, 13610);
+    assert.equal(
+      createHash("sha256").update(JSON.stringify(bindingVector)).digest("hex"),
+      programFacts.instanceBindingVectorSha256
+    );
     assert.equal(
       createHash("sha256").update(JSON.stringify(descriptorVector)).digest("hex"),
       programFacts.instanceDescriptorVectorSha256
@@ -261,7 +283,7 @@ await Effect.runPromise(
     process.stdout.write(
       `${JSON.stringify({ instances, maxUtf16, codePointChecks, alphabetPointChecks, alphabetCaptureMatches, programInstances, programMaxUtf16, programCaptureMatches, cases: facts.cases.length, captureMatches })}\n`
     );
-  })
+  }).pipe(Effect.provide(BunCrypto.layer))
 ).catch(() => {
   process.stdout.write(`${JSON.stringify({ outcome: "failure", phase, instance })}\n`);
   process.exitCode = 1;

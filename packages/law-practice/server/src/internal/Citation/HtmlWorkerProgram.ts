@@ -8,6 +8,7 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
+import * as Bytes from "effect/Bytes";
 import * as Cause from "effect/Cause";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -73,12 +74,7 @@ export const citationHtmlWorkerProgram = Effect.gen(function* () {
   );
   const length = A.reduce(chunks, 0, (size, bytes) => size + bytes.byteLength);
   if (length !== 1753104) return yield* badRuntime();
-  const asset = new Uint8Array(length);
-  let offset = 0;
-  for (const bytes of chunks) {
-    asset.set(bytes, offset);
-    offset += bytes.byteLength;
-  }
+  const asset = Bytes.concat(chunks);
   const kernel = yield* makeCitationHtmlKernel(asset);
   const send = Effect.fn("Citation.sendHtmlWorkerReply")((reply: CitationHtmlWorkerReply) =>
     encodeCitationHtmlReply(reply, maximum).pipe(

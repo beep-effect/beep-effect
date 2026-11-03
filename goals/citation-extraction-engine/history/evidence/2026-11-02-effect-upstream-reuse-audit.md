@@ -92,15 +92,33 @@ one-job adapter, retaining separate physical native lease ownership.
 
 ### Stock shutdown and stronger process primitives
 
-NodeWorker and BunWorker request graceful close, wait five seconds, then force
-termination. The Node child fallback kill does not itself provide the citation
-independent-exit acknowledgement and quarantine contract.
+The stock NodeWorker/BunWorker convenience layers request graceful close and
+contain a literal `Effect.timeout(5000)`; their exported `layer`/`layerPlatform`
+interfaces do not expose that timeout as an option. This is a limitation of
+those presets, not of Effect's supported shutdown capabilities.
+
+Effect provides the required termination controls in `ChildProcess.KillOptions`:
+`killSignal` and `forceKillAfter`, used both when constructing a command and
+calling its handle's `kill`. The Node-shared spawner waits for its exit signal.
+`Worker.makePlatform` also exposes setup/listen hooks, including the worker Scope,
+for a specialized backend. Do not invent an OS process manager or custom timer
+because a convenience preset has a fixed default. The citation path already
+uses `SIGKILL`, `Duration.zero` and captured Effect timeout combinators. Its
+remaining specialization is lease/quarantine/publication policy around those
+upstream primitives.
 
 ChildProcessSpawner remains a valuable upstream foundation. Bun's process
 spawner uses the Node-shared implementation; isRunning follows an exit Deferred
 and kill waits for that exit signal (`NodeChildProcessSpawner.ts`, canonical
 around lines 739 and 759). Keep this primitive under the worker backend rather
 than replacing it with raw process management.
+
+Operator follow-up (2026-11-03): PR #2637 upgrades Effect and companion packages
+to 4.1.2. This was verified in its package/lockfile diff at `91a7a38f0425`.
+Keep dependency publication in that PR and consume it through main. Configuration
+hooks above were rechecked in installed 4.1.1 and canonical 4.1.2 at
+`7a87ff9b88b1`; runtime qualification must be repeated against the actual upgraded
+dependency after it lands.
 
 ### NDJSON is bounded, but has different semantics
 

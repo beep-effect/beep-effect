@@ -38,6 +38,9 @@ def main():
     widths = collections.Counter()
     profile_vector = []
     descriptor_vector = []
+    bindings = {}
+    binding_vector = []
+    artifact_bindings = collections.defaultdict(set)
     repeated_capture_instances = 0
     nullable_repeat_instances = 0
 
@@ -80,11 +83,32 @@ def main():
         nullable_repeat_instances += profile["nullableMultiRepeatBodies"] > 0
         profile_vector.append([identity, width, dict(sorted(profile.items()))])
         descriptor_vector.append([identity, tree.state.groups - 1, sorted(tree.state.groupdict.items()), width])
+        largest = max(map(ord, fields["regex"]), default=0)
+        word_width = 1 if largest <= 0xff else 2 if largest <= 0xffff else 4
+        native = bytes([word_width]) + b"".join(ord(point).to_bytes(word_width, "little") for point in fields["regex"])
+        digest = hashlib.sha256(native).hexdigest()
+        descriptor = {
+            "patternSha256": digest, "flags": fields["flags"],
+            "profile": {
+                "groups": tree.state.groups - 1, "names": dict(sorted(tree.state.groupdict.items())),
+                "minimumWidthFloor": min(width, 1000001),
+                "repeatedCaptures": profile["capturesUnderMultiRepeat"] > 0,
+                "nullableMultiRepeat": profile["nullableMultiRepeatBodies"] > 0,
+            },
+        }
+        binding_key = (digest, fields["flags"])
+        if binding_key in bindings and bindings[binding_key] != descriptor:
+            raise RuntimeError("inconsistent source pattern descriptor")
+        bindings[binding_key] = descriptor
+        binding_vector.append([identity, digest, fields["flags"]])
+        artifact_bindings[identity.rsplit("::", 1)[0]].add(binding_key)
         flags[str(fields["flags"])] += 1
         groups = tree.state.groups - 1
         maximum_groups = max(maximum_groups, groups)
         vector.append([identity, groups, sorted(tree.state.groupdict.items()), dict(sorted(observed.items()))])
     sha = lambda raw: hashlib.sha256(raw).hexdigest()
+    binding_keys = sorted(bindings)
+    binding_indices = {key: index for index, key in enumerate(binding_keys)}
     report = {
         "schemaVersion": "citation-regex-program-facts/v1",
         "scope": "Complete parsed feature inventory; not target matching or family safety proof.",
@@ -103,9 +127,24 @@ def main():
         "instanceProfileVectorSha256": sha(json.dumps(profile_vector, sort_keys=True, separators=(",", ":")).encode()),
         "instanceDescriptorVectorSha256": sha(json.dumps(descriptor_vector, sort_keys=True, separators=(",", ":")).encode()),
         "instanceFeatureVectorSha256": sha(json.dumps(vector, sort_keys=True, separators=(",", ":")).encode()),
+        "descriptors": [bindings[key] for key in binding_keys],
+        "artifactDescriptorIndices": {artifact: sorted(binding_indices[key] for key in keys)
+                                      for artifact, keys in sorted(artifact_bindings.items())},
+        "instanceBindingVectorSha256": sha(json.dumps(binding_vector, sort_keys=True, separators=(",", ":")).encode()),
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(report, ensure_ascii=True, sort_keys=True, indent=2) + "\n")
+    # Keep each generated binding on one reviewable line rather than expanding
+    # thirteen thousand mechanical records into hundreds of thousands of lines.
+    sections = []
+    for name, value in sorted(report.items()):
+        if name == "descriptors":
+            body = "[\n" + ",\n".join("    " + json.dumps(row, sort_keys=True, separators=(",", ":")) for row in value) + "\n  ]"
+        elif name == "artifactDescriptorIndices":
+            body = json.dumps(value, sort_keys=True, separators=(",", ":"))
+        else:
+            body = json.dumps(value, ensure_ascii=True, sort_keys=True, indent=2).replace("\n", "\n  ")
+        sections.append("  " + json.dumps(name) + ": " + body)
+    args.output.write_text("{\n" + ",\n".join(sections) + "\n}\n")
     print(json.dumps({"instances": len(entries), "maximumCaptureGroups": maximum_groups, "features": report["features"]}, sort_keys=True))
 
 

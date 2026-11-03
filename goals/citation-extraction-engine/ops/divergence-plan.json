@@ -25,6 +25,8 @@
         "packages/law-practice/use-cases/test/fixtures/eyecite/regex-program-facts.json",
         "goals/citation-extraction-engine/history/evidence/2026-11-02-regex-alphabet.md",
         "packages/law-practice/server/src/internal/Citation/RegexProgram.ts",
+        "packages/law-practice/server/src/internal/Citation/RegexDescriptors.ts",
+        "packages/law-practice/server/test/CitationRegexDescriptors.test.ts",
         "packages/law-practice/server/src/internal/Citation/RegexPointSets.ts",
         "packages/law-practice/server/test/CitationRegexProgram.test.ts",
         "goals/citation-extraction-engine/history/evidence/2026-11-02-regex-program-compiler.md"
