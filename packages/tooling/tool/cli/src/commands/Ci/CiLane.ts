@@ -1643,9 +1643,9 @@ export const ciLaneStepsForTesting: {
           })
         ),
       // lab-apps-lifecycle P2 (ratified row 10): one bundled turbo invocation
-      // over the labs glob. Deliberately no --affected — turbo unions filter
-      // selectors, so --affected plus the positive labs filter would WIDEN the
-      // selection to affected-products plus labs; the workflow path gate scopes
+      // over the labs glob. Deliberately no --affected: this lane's contract
+      // runs the full labs set, even though the pinned clients intersect the
+      // affected set with positive filters. The workflow path gate scopes
       // PRs, while push and local replays want the full labs set.
       labs: () => [
         QualityTaskStep.make({
@@ -2688,8 +2688,8 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
     ecosystem: A.empty<string>,
     fallow: () => ["--base", plan.base, "--validate-envelopes"],
     "jsdoc-ratchet": A.empty<string>,
-    // check.yml runs `ci lane labs --summarize` with no affected shape (a
-    // positive filter plus --affected would widen the selection). The summary
+    // check.yml runs `ci lane labs --summarize` over the full labs set, so
+    // local replay deliberately omits the affected shape too. The summary
     // is what folds the lab check/lint/test task hashes into the lane digest
     // (TTC ruling 58), so the local replay passes it too.
     labs: () => ["--summarize"],

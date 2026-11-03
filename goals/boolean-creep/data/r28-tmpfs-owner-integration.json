@@ -24,8 +24,8 @@
     "data/provisional-r28-tmpfs-discovered-candidate-full-owner.md": "5d61ab7da52d0e462196bc9687e854be980ace2b508a8b9219092f4f0d4e00a2"
   },
   "boundSourceReferenceAndProofSha256": {
-    "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts": "2a0253141d3ebdadfbe6b8d715012b83cb75c36876ec50969e330e2f03a5da01",
-    "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.schemas.ts": "bad39e4279d1f1b9c0f6773a7645bd5b3fb31654209e312a4116066b7ea15b08",
+    "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts": "2a0253141d3ebdadfbe6b8d715012b83cb75c36876ec50969e330e2f03a5da01",
+    "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts": "bad39e4279d1f1b9c0f6773a7645bd5b3fb31654209e312a4116066b7ea15b08",
     "packages/tooling/tool/cli/src/internal/repo-run/index.ts": "8700650d67f60eeebdbc9830b1f47c415fcd80d26b2d51e0c6d0b4314079934a",
     "packages/tooling/tool/cli/src/test/RepoRun.test-kit.ts": "88affd301f15a26a60bc1aa7d9fc6bb6a43dab0fcfb35a437ab6d28a6e5f5f8f",
     "packages/tooling/tool/cli/test/tmpfs-reap.test.ts": "ab3db06585ab6baab7d17e42b3f5a705edb089d7a555111304eb17910ddbaece",

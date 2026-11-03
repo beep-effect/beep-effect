@@ -3,14 +3,14 @@
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "365bd154b05b4d425cecaf6ce5cb966cf00b9cb3",
-  "specSha256": "50bca5ce9ee8d0eb0a0c4b1bd3243f4c0f78cd849157dfd068a04ca8523d9894",
+  "specSha256": "b5b3484ad4bd54132dff3520f56837b1d79647c55446c18c8d63d5b9847b5c1c",
   "acceptance": [
     {
       "id": "AC-01",
       "source": "SPEC.md:165",
       "requirement": "Current executable/lane population and applicable stable/canary feature matrix are complete, source-backed and assigned to owners.",
       "status": "unproven",
-      "nextProof": "Close 2,236 current computation reviews out of the source-bound 2,434 executable population and the 27 pending feature decisions; consume the economics owner baseline. Completed feature reviews do not qualify actual computations."
+      "nextProof": "Reconcile the source-bound 2,434-computation census (2,236 remaining reviews) to current source, finish every in-scope computation review and the 26 pending feature decisions, and consume the economics owner baseline. Completed feature reviews do not qualify actual computations."
     },
     {
       "id": "AC-02",
@@ -353,5 +353,16 @@
   "currentCanarySelectionCheckpoint": "research/selection-current-canary-checkpoint.json",
   "priorSpecSha256AtSelectionSourceReview": "e06ef69dc660cda68e62178eca2d704eff703cf7f8b0327c30541b0948877495",
   "priorSpecSha256AtSelectionSiblingReview": "af4e7eb5dc8f2ed5010132d8733f705e83f3228b848bde27a582bea455b3caa7",
-  "selectionSiblingCompatibilityCheckpoint": "research/selection-sibling-driver-compatibility.json"
+  "selectionSiblingCompatibilityCheckpoint": "research/selection-sibling-driver-compatibility.json",
+  "priorSpecSha256AtObservabilityFeatureReview": "50bca5ce9ee8d0eb0a0c4b1bd3243f4c0f78cd849157dfd068a04ca8523d9894",
+  "observabilityFeatureReview": {
+    "path": "research/observability-feature-review.json",
+    "sha256": "b13adb1af9774cc9cc02528942b8f1407f495e600e2fc6831f2aa36e625de743",
+    "authority": "One no-change optional feature decision; no computation or whole-goal acceptance."
+  },
+  "priorSpecSha256AtFilterCompositionReview": "2792ea0002905d744a1d2037498a8e715e25e9cb96b514577d348d0b0862c3ff",
+  "filterCompositionSourceReview": "research/filter-composition-source-review.json",
+  "priorSpecSha256BeforeF7d2SelectionConflictResolution": "3da1a83e8dd41f336942429035e30fa2f68d30a9d5b5ccfbae19046a905233a8",
+  "priorSpecSha256Before1dd2ConflictResolution": "5763e795d653f81c2e14f9953afb3c8e3cf11c3cd40312167ee53c597e663af1",
+  "acceptedMainSpecSha256At1dd2Integration": "61414f7929dfa6ebb6484498bca7256d9533ffae97e76dc0031830a8ec9df2a8"
 }

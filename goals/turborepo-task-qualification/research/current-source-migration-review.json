@@ -27,7 +27,7 @@
       "packages/tooling/tool/cli/src/commands/Yeet/internal/Resume.ts",
       "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
       "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.executor.ts",
-      "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts",
+      "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts",
       "packages/tooling/tool/cli/test/cache-census.test.ts",
       "packages/tooling/tool/cli/test/cache-dependencies.test.ts",
       "packages/tooling/tool/cli/test/cache-runtime.test.ts",

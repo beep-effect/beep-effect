@@ -31,7 +31,7 @@ and P1 tests.
 ## File Inventory
 
 - `goals/lab-apps-lifecycle/history/p1-implementation-notes.md` (this handoff)
-- `packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/*`
+- `packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/*`
 - `packages/tooling/tool/cli/src/commands/DeletePackage/*`
 - `packages/tooling/tool/cli/src/test/DeletePackage.test-kit.ts`
 - `packages/tooling/tool/cli/test/delete-package.test.ts`

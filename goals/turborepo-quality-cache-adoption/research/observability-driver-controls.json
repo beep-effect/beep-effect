@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "cache-observability-driver-controls/v1",
+  "driverSha256": "69c955260c49cadce505f5759cf5be20cba24acda7e8911e27eba552fdf1e30e",
+  "controls": [
+    {
+      "case": "optimized-python",
+      "exit": 1,
+      "expectedReasonObserved": true,
+      "stderrSha256": "ae07ef0e93b87322854e3c3bfe0c8361ff0dc4cd7528fbe417daa907a57f16a5"
+    },
+    {
+      "case": "wrong-native-pin",
+      "exit": 1,
+      "expectedReasonObserved": true,
+      "stderrSha256": "d785c2cc7e4bd5aef3becc761713f72713a1191938a3fd0a704e8079805e197a"
+    },
+    {
+      "case": "existing-report",
+      "exit": 1,
+      "expectedReasonObserved": true,
+      "stderrSha256": "470d713409d11de8f6a3971aee1a906433e6e13165418e7fee486959572827c3"
+    }
+  ],
+  "passingReportUnchanged": true,
+  "passingReportSha256": "94bd262fb9b5bd5790bb4ce75213083eadf1aa360472e14a28c6c4944fd78cf0"
+}

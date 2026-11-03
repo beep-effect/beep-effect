@@ -210,7 +210,7 @@
       "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
       "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
       "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
-      "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueTerminalLaneLive.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/internal/ResidueTerminalLaneLive.ts",
       "packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts",
       "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
       "packages/tooling/tool/cli/src/commands/Yeet/internal/ExpectationRewrite.ts",

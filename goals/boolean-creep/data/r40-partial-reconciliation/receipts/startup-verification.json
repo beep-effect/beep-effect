@@ -12387,27 +12387,27 @@
       "passed": true
     },
     {
-      "check": "overlapping binding packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.errors.ts",
+      "check": "overlapping binding packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.errors.ts",
       "passed": true
     },
     {
-      "check": "overlapping binding packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.plan.ts",
+      "check": "overlapping binding packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.plan.ts",
       "passed": true
     },
     {
-      "check": "overlapping binding packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.probes.ts",
+      "check": "overlapping binding packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts",
       "passed": true
     },
     {
-      "check": "overlapping binding packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "check": "overlapping binding packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
       "passed": true
     },
     {
-      "check": "overlapping binding packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.service.ts",
+      "check": "overlapping binding packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.service.ts",
       "passed": true
     },
     {
-      "check": "overlapping binding packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/index.ts",
+      "check": "overlapping binding packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/index.ts",
       "passed": true
     },
     {
@@ -12563,11 +12563,11 @@
       "passed": true
     },
     {
-      "check": "overlapping binding packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.schemas.ts",
+      "check": "overlapping binding packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts",
       "passed": true
     },
     {
-      "check": "overlapping binding packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts",
+      "check": "overlapping binding packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts",
       "passed": true
     },
     {
@@ -12587,11 +12587,11 @@
       "passed": true
     },
     {
-      "check": "overlapping binding packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.schemas.ts",
+      "check": "overlapping binding packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts",
       "passed": true
     },
     {
-      "check": "overlapping binding packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
+      "check": "overlapping binding packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
       "passed": true
     },
     {

@@ -1,0 +1,250 @@
+{
+  "schemaVersion": "cache-filter-composition-source-review/v1",
+  "recordedAt": "2026-11-02T19:56:54.102968+00:00",
+  "acceptedBase": "930758e06bf4442d721d818fcba6a40301471784",
+  "scope": "Exact-client synthetic composition proof plus correction of two stale CI rationale comments. Partial discovery of central repository consumers; not a completed whole-repository or feature review.",
+  "features": [
+    "affected-selection",
+    "filter-selection",
+    "graph-and-transit",
+    "futureFlag:affectedUsingTaskInputs",
+    "futureFlag:filterUsingTasks"
+  ],
+  "nativeEvidence": {
+    "path": "research/native-filter-composition-controls.json",
+    "sha256": "4b06997b46d3ebe8ff79ed4c6547dd142b517e5527e9766ddeba8362906703f6",
+    "driver": "research/native-filter-composition-controls.py",
+    "driverSha256": "d96d2bbb423b9227e1f9be624d64af7004592b22bd85a0c5d16c464461bc8f5c",
+    "selectionCases": 56,
+    "actualVersionProbes": 2,
+    "stable": "2.11.10",
+    "canary": "2.11.11-canary.1",
+    "networkIsolated": true,
+    "repositoryNotMounted": true,
+    "noTasksExecuted": true
+  },
+  "driverControls": {
+    "path": "research/filter-composition-driver-controls.json",
+    "sha256": "664e0a7d74cdaf9665430b466c0f4e55df98ef751858a93f5e74c4f9a7386031",
+    "controls": 5,
+    "counterfactuals": ["stale-union-oracle", "omitted-task-prerequisite"],
+    "passingReportUnchanged": true
+  },
+  "sourceCorrection": {
+    "path": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+    "sha256": "63d279fca03a718c3d61b9236fbf47d985b439ba4d8156e474112609809f5f69",
+    "commentBlocks": 2,
+    "lineCountPreserved": true,
+    "restoringOnlyThoseCommentsReproducesAcceptedSourceBytes": true,
+    "executableLaneArgvUnchanged": true,
+    "labsFullSetContractPreserved": true
+  },
+  "discovery": {
+    "scope": [
+      "package.json",
+      "turbo.json",
+      "scripts",
+      ".github",
+      "packages/tooling/tool/cli/src"
+    ],
+    "textMatchCount": 134,
+    "candidateFileCount": 43,
+    "completeConsumerAudit": false,
+    "warning": "Text candidates include non-Turbo filters, examples and comments; they are not all classified runtime callers. Remaining workspace and consumer review is still required.",
+    "sourceCandidates": [
+      {
+        "path": ".github/workflows/check.yml",
+        "sha256": "f06b91c028049cbbd7ce8f19d7326abd9308d8b3cc1a2f9186d46ed0145a27fc"
+      },
+      {
+        "path": ".github/workflows/data-sync.yml",
+        "sha256": "d16a70f833e193f958c731af1f8827cea614b99264ca708cd70bbaf04b5d2814"
+      },
+      {
+        "path": ".github/workflows/heavy.yml",
+        "sha256": "1415910025129316e8c27c0e2bbe60022201e6d26ba8eba15f60dfd17a301b59"
+      },
+      {
+        "path": ".github/workflows/property-laws-nightly.yml",
+        "sha256": "0e2f07125a0b42edf2256e89023617d594eb9635ff0898da01be20f473b19a84"
+      },
+      {
+        "path": ".github/workflows/storybook.yml",
+        "sha256": "09db92401a638b7976d86bc890db130fb8d1ade61f18331ae53325c24abb88c0"
+      },
+      {
+        "path": "package.json",
+        "sha256": "dc1edc42c12c96838774996dfe20dea836896252407036e09a9b26fd366ae1eb"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
+        "sha256": "b7f99063870cb747b1c84aa03549fadae843594bec3328fd582a0c8c3501ad5f"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+        "sha256": "960b5febfd69bafedad9bb36b7a329de68a8a1ebbb344fded22a307fbfe453ea"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
+        "sha256": "2bbff980813f38d0ce6a6804af7a0e52ee0c1968d1925f9fb00eb0f0ed264f27"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.ts",
+        "sha256": "169305ddc0277f3b330d7a33987111bf8cb4426dd5976cd029aa91865356887b"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.service.ts",
+        "sha256": "45991ec6c8dc50ef113ccbdc822436e3f55f477f02c43e5b07a998f721967c79"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts",
+        "sha256": "facd24006bb3bc84673034a54c518bb6857d94a2b049f161550b2037f0019979"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Ci/CiCoverage.ts",
+        "sha256": "a9adcf2f2e1f3cbcf7e325b31e77a0adbb0a48fcbb3cf7124182bcf81d631bd1"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+        "sha256": "63d279fca03a718c3d61b9236fbf47d985b439ba4d8156e474112609809f5f69"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.command.ts",
+        "sha256": "d6765afece0cfe488189e308cc0d6c17ae9b7d016316bccab4ebe15d515abec1"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Docgen/Doctest.schemas.ts",
+        "sha256": "a68d1bd6b31e5b8e939725f9571b12580692b23672754fdf2ee630b8b22e996a"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts",
+        "sha256": "907befcc4e714c7447933ae1b95e426c7814b76e9e3a1c3611e54c1301b01d01"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Docgen/internal/Targets.ts",
+        "sha256": "d7c599baf5465f1b121dcf1cf5ed1cc1f51880424bdc78c115752bbb77f69274"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Lint/PackageTestTypecheck.ts",
+        "sha256": "c196df2384bf046f0a50f729bf6f29fb5af36256b8fd2a7ec77713671fd0393d"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
+        "sha256": "35ca2f17e395715d29c25d5b33add31e2ea29e5021a5f4cfb9b0cfd1458b3438"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
+        "sha256": "c9b82f2ce3db46ec1e981d06854e2d1c1f2d433015181f2daa81be84d53309eb"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+        "sha256": "d220ae245a4a80a3cb95cf1c69287a7d69bb34cfeb60a90b5759f61129f6e2aa"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+        "sha256": "d16f9afd42ade52a8ffe80bfc5dce072fb8ba00a37577e72a80ccafeb0cde1f1"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+        "sha256": "6e01e3b8da2a7839f95dae6c2f5cb15de536341daccf8fdcd64c54e111dc9b1d"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Quality/internal/CheckCensusOutput.ts",
+        "sha256": "7229fa3a917157aa40ec9b5c328aee1c93c457b182fc019f8c68e55c393d5777"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
+        "sha256": "fe4d02d2c313ba3d2012517123ce22e60c93258dad3010c8326b7957bc25d9f4"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Quality/internal/FlakeQuarantine.ts",
+        "sha256": "ffbdecf2c5797ee5f8b24acc120bc2401215a0ab138a975f5b631c1b1fd1776d"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts",
+        "sha256": "c39ba300181c7e0dc570240a952f1e89226109601ab288749d3bd4435f25ec6e"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts",
+        "sha256": "e6860c679cfbdb4c5818d3fdc8a27670baa09423e44b2397b4eff698b3962899"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts",
+        "sha256": "2712c6f867356c15bd51a9de36c26de80a5783ce0446c41825aad54c7c5f8d87"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
+        "sha256": "e3f3c9ce7888d51ef860f3df37df73f41927765deacf67bf08993defaaf12508"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.errors.ts",
+        "sha256": "da08d9e9fba5dd0d65abe21432ac80b2fa64d341dd7274a34d6ecdc688df9be5"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/FinalCheck.schemas.ts",
+        "sha256": "e08a001bef8f9659eb50cbc7abbc8f2b8250e7ce435abf4991a2bf9b1db66682"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/FinalCheck.ts",
+        "sha256": "e00d9aeeac8858e97c03bd462546825869ae1f5c0badf71b5f1410f366307ece"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/IssueParser.ts",
+        "sha256": "00f87e46f14ad284d6015ad998483b622122cbc650ed91933b22220cd9fdc00e"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts",
+        "sha256": "9a6e053feef2b8b9ca2c2a24d572fe8cf666bfd5d74d778113c8b4fb1e5dcc59"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/ReadyGate.ts",
+        "sha256": "2a3dc3a6230df93a3914564b27fa370568cd3d181d46fcdd0a804cf608b2e07d"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/internal/cli/Flags.ts",
+        "sha256": "f96bcaa6f9ede14d2e4b32eced9a9107bc8486d5c44c2995f87fe7e96cd3fc67"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/internal/cli/Labs/LabsWorkspace.ts",
+        "sha256": "9e1750e73ceaa96f08901206b4d225b67ee9b7e62fe5f284a8963221df9833f5"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts",
+        "sha256": "aa92ddde38c13cb296232176fc3244410d3f7dddd6a2025f5d6053b05165776e"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/internal/quality/TestTypecheckCoverage.ts",
+        "sha256": "0012d4ca93538731b31315677c2f4d72d1b07a94cd457fe7bd16dd2f53b11cac"
+      },
+      {
+        "path": "scripts/ci-change-profile.sh",
+        "sha256": "11ca4dc9e9f565ca63d32472d0362c91c3ec97fe5c612f037a70d5320c55557f"
+      },
+      {
+        "path": "turbo.json",
+        "sha256": "a56eee4c0101cbcfa52b23ea4a7403e9ef3e5d9155794ad55da80cae469f5bf4"
+      }
+    ]
+  },
+  "verification": {
+    "packageQuickExit": 0,
+    "packageQuickSourceScope": "Only the two comment blocks changed inside @beep/repo-cli; lint and type checks passed.",
+    "sourceBindingsMatch": true,
+    "noQualificationLedgerChange": true
+  },
+  "conclusions": [
+    "With the current enabled task-level flags, positive filter unions are intersected with the affected set; unrelated changes do not select labs.",
+    "A selected Storybook task retains its product prerequisite, while negative labs filtering and --only retain their separate tested semantics.",
+    "Full labs execution remains an explicit lane contract; this change fixes the incorrect rationale and proposes no new scope reduction."
+  ],
+  "remaining": [
+    "Complete actual current-root caller/selector and computation review.",
+    "Qualify applicable tuple-specific inputs, outputs, portability, concurrency and signed reuse.",
+    "Prove named hosted cohort execution and actual resolved reusable workflows.",
+    "Complete warming, economics, representative windows and final same-PR closeout."
+  ],
+  "featureAcceptanceChanged": false,
+  "runtimeConfigurationChanged": false,
+  "productionChanged": false,
+  "allWholeGoalAcceptanceUnproven": true
+}

@@ -14537,32 +14537,32 @@
       "bytes": 5002
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.errors.ts",
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.errors.ts",
       "sha256": "6cb6c683a51e7909a07044b8b276647c960406a3fc312694971ccecad6bb973e",
       "bytes": 905
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.plan.ts",
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.plan.ts",
       "sha256": "c447e44d6b45fae5c3d23fb37b47fd54ede22f86a6051788a7c750694bd38b06",
       "bytes": 12333
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.probes.ts",
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts",
       "sha256": "7d118605464a37620fe0fa59bc53f508b480a93566ce92720b17073845904ce5",
       "bytes": 26533
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
       "sha256": "e3a97b7c58764946fd0216a8f9de9ac50be0992f500006f9714097961bf354fe",
       "bytes": 10394
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.service.ts",
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.service.ts",
       "sha256": "797f64a420182c709608d922525f16d077c8bd811d75cf619ed681571192dfe0",
       "bytes": 4214
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/index.ts",
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/index.ts",
       "sha256": "97c46eef6988726f39542297aebcba10a0042d1bd25446cb5dd67b76c90ea191",
       "bytes": 250
     },
@@ -14747,12 +14747,12 @@
       "bytes": 1619
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts",
       "sha256": "004f78ba436de5d497b9bc5e6e6a1b13814f846e7fab2f775aee5f73c79c7e37",
       "bytes": 7088
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts",
       "sha256": "f444c15d5cc91b85535542ba133306b74d4b5601839e68ea305749372dc26de4",
       "bytes": 38432
     },
@@ -14777,12 +14777,12 @@
       "bytes": 6652
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts",
       "sha256": "bad39e4279d1f1b9c0f6773a7645bd5b3fb31654209e312a4116066b7ea15b08",
       "bytes": 5183
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
       "sha256": "2a0253141d3ebdadfbe6b8d715012b83cb75c36876ec50969e330e2f03a5da01",
       "bytes": 50090
     },

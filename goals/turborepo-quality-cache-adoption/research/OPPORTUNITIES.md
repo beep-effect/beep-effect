@@ -680,6 +680,14 @@ follow-up read confirmed cancellation, so no retry was needed. The requests
 were scoped to obsolete heads and no workflow was re-dispatched. This clears
 the stale predecessor without claiming the remaining runner queue has cleared.
 
+
+### Native selector composition versus CI rationale (2026-11-02)
+
+- Work: current selection-consumer review in `CiLane.ts`.
+- Friction: two full-labs comments claimed positive filters plus `--affected` widen scope, while the Storybook probe depends on intersection. The pinned enabled configuration proves intersection in 56 asserted native plans.
+- Correction: retain the full-labs execution contract and correct its rationale; publish the bounded native oracle and five intended refusals/counterfactuals. Do not infer a runtime speedup from the comment repair.
+- Calibration: the first fixture put `remoteCache` outside the enabled global namespace and was refused before selection. A report-variable shadowing error also prevented an initial report; neither was treated as passing evidence. Fixed source is bound to the successful fresh report.
+- Prevention: use the accepted global namespace, keep parsed arguments distinct from selector argv, and require exact-client behavioral evidence before deciding lane scope.
 ### 2026-11-02 — selection evidence must follow the current native pin
 
 The retained selection report covers canary `2.11.9-canary.1`; the current
@@ -735,3 +743,20 @@ projection. Review caught the omitted regeneration before current-head validatio
 `bun run beep cache profile --write` regenerates it; the freshness command then
 passes. Both configuration files remain a projection, without a cache qualification
 or runtime activation. Keep the generated profile in the same config-edit wave.
+
+
+### 2026-11-02 — exporter gate documentation and native behavior
+
+The first offline observability control expected a missing feature flag to
+reject configured export before task execution, as the pinned documentation
+states. Stable 2.11.10 instead returned success and executed the synthetic
+task with the global namespace shape. The failed expectation is retained.
+Resolve configuration placement and exact parser behavior before finalizing
+the control or feature decision. No repository exporter or runtime flag was
+changed; these fixtures have no host network or real credential.
+
+The exact-tag review resolved the mismatch: file settings are deliberately
+dropped before the run-builder guard; CLI/environment settings are guarded. The
+revised controls assert both paths on stable and current canary. Keep the initial
+failed receipt and source separately; generated schema omission is also not an
+availability test because this experimental block is intentionally hidden.

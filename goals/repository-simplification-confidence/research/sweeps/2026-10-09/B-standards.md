@@ -157,7 +157,7 @@ Not stale (verified): `effect/http` is a real 4.0.2 export (`package.json` expor
 2. `.patterns/error-handling.md` and `effect-library-development.md` restate `effect-laws-v1.md` law 7 and `effect-first-development.md`, and they contradict them on the error helper.
 3. `standards/schema-first-development-prompt.md` (727 lines) restates the schema-first skill (`.claude/skills/schema-first-development/` with 4 references) plus the effect laws, and drifts (§2a, §2b).
 4. `docs/runbooks/agent-pools.md:18–23` and the cursor-seat tables restate AGENTS.md "Volume pools". The `beep-models` blocks are check-only (`Models.render.ts:8`), so they are hand-maintained copies under a drift checker.
-5. `standards/generated-artifacts.policy.md:9–14` lists 3 generated artifacts. The code registry `commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.plan.ts:89–144` lists 9 generated surfaces under `standards/`, and 3 of its writer labels are wrong:
+5. `standards/generated-artifacts.policy.md:9–14` lists 3 generated artifacts. The code registry `internal/cli/RegistrationGeometry/RegistrationGeometry.plan.ts:89–144` lists 9 generated surfaces under `standards/`, and 3 of its writer labels are wrong:
    - `fallow-health-baseline` (l.112–114) names writer `fallow-boundaries`; the real writer is root `fallow:health:baseline:write`.
    - `fallow-dead-code-baseline` (l.118–120) also names `fallow-boundaries`.
    - the `fallow-boundaries` surface claims it outputs `fallow.boundaries.provenance.jsonc` (l.92), which nothing writes.

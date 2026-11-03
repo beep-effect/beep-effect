@@ -365,7 +365,7 @@
         "changedFiles": [
           "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts",
           "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.policy.ts",
-          "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.probes.ts",
+          "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts",
           "packages/tooling/tool/cli/test/delete-package-labs.test.ts",
           "packages/tooling/tool/cli/test/delete-package.test.ts"
         ],
@@ -513,7 +513,7 @@
         "changedFiles": [
           "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts",
           "packages/tooling/tool/cli/src/commands/DeletePackage/internal/DeletionChangeset.ts",
-          "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.probes.ts",
+          "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts",
           "packages/tooling/tool/cli/test/delete-package.test.ts"
         ],
         "verificationCommands": [
@@ -601,7 +601,7 @@
         "changedFiles": [
           "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts",
           "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.policy.ts",
-          "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.probes.ts",
+          "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts",
           "packages/tooling/tool/cli/test/delete-package.test.ts"
         ],
         "verificationCommands": [

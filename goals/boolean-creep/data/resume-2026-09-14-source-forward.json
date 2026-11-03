@@ -476,8 +476,8 @@
       "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
       "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts",
       "packages/tooling/tool/cli/src/internal/repo-run/ProcessAttachment.ts",
-      "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts",
-      "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
+      "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts",
+      "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
       "packages/tooling/tool/cli/src/internal/systemd/SystemdUnit.schemas.ts",
       "packages/tooling/tool/cli/src/internal/systemd/SystemdUnit.ts",
       "packages/tooling/tool/cli/src/internal/systemd/index.ts",
@@ -1640,28 +1640,28 @@
         "id": "r28-cli-internal-root-tmpfs-discovered-classified-skip",
         "status": "designed",
         "files": [
-          "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts"
+          "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts"
         ]
       },
       {
         "id": "r28-cli-internal-root-tmpfs-gitfile-remove-options",
         "status": "disqualified",
         "files": [
-          "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts"
+          "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts"
         ]
       },
       {
         "id": "r28-cli-internal-root-tmpfs-directory-remove-options",
         "status": "disqualified",
         "files": [
-          "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts"
+          "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts"
         ]
       },
       {
         "id": "r28-cli-internal-root-tmpfs-fallow-extras-remove-options",
         "status": "disqualified",
         "files": [
-          "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts"
+          "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts"
         ]
       },
       {
@@ -1718,7 +1718,7 @@
         "id": "r28-cli-internal-root-tmpfs-stub-observations",
         "status": "designed",
         "files": [
-          "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts"
+          "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts"
         ]
       },
       {

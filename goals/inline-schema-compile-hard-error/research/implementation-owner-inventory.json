@@ -765,7 +765,7 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/Resume.ts",
             "packages/tooling/tool/cli/src/internal/jsdoc/JSDocSections.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
-            "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts",
+            "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts",
             "packages/tooling/tool/cli/test/agent-effectiveness-eval-scorer.test.ts",
             "packages/tooling/tool/cli/test/allowlist-check.test.ts",
             "packages/tooling/tool/cli/test/architecture-operation-plan.test.ts",

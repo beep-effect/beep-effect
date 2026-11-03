@@ -530,3 +530,38 @@ preserve the original pair's semantic projection. The [checkpoint](selection-cur
 binds both report generations, immutable historical source and seven driver
 refusals. These are synthetic runtime observations, not repository-task or
 production qualification.
+
+
+### 2026-11-02 — native exporter defaults and configuration sources
+
+- Installed Turbo 2.11.10 configuration documentation describes the optional
+  exporter and its separate payload/cardinality/credential surface. Its claim
+  that every configuration source is rejected without the flag is broader than
+  the observed file-reader behavior.
+- Exact upstream stable `e521641a142a24abe4554a77fdd6551e47e96fb3` and canary
+  `a4ab545cd10a4db4e8e8c58cd2792d82c630a2f0` source: the config reader drops
+  file-based OTEL settings when the flag is absent/false; the run builder checks
+  environment and CLI settings after option merging. Immutable file URLs and
+  digests are in the [feature review](observability-feature-review.json). Upstream
+  tests were inspected, not executed.
+- [Native controls](native-observability-default-controls.json) cover both pinned
+  clients with actual synthetic tasks and pre-task refusals in isolated networks.
+  The existing streaming collector enforces process/time/output bounds. No real
+  repository task or enabled exporter payload was exercised.
+- The current source census distinguishes app/agent/adapter OTEL from a Turbo
+  consumer. A missing optional consumer supports retaining the default; it does
+  not complete deployed trust or telemetry safety acceptance.
+
+### 2026-11-02 affected/filter composition supplement
+
+- Installed Turbo 2.11.10 documentation: `reference/configuration.mdx` task-level
+  filter/affected sections and `reference/run.mdx`; source is the bundled vendor
+  documentation matching the pinned stable package.
+- `errors-only-client-pins.json` supplies immutable stable 2.11.10 and published
+  canary 2.11.11-canary.1 binary digests. The driver verifies their bytes and
+  actual version output before the bounded offline plans.
+- `native-filter-composition-controls.py` reuses the existing captured
+  `run_bounded` function; its versioned report binds the driver, helper, pins,
+  root configuration and reviewed CI caller source.
+- These are synthetic task-selection plans and comment-correction evidence,
+  not real Beep execution, performance, qualification or hosted acceptance.
