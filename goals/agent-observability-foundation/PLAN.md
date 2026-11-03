@@ -20,13 +20,13 @@ Execution: **active**, explicitly launched 2026-10-27. Preserve the recovery hol
 
 ## P4 closeout
 
-PR2364, PR2508 and PR2612 retain unsatisfied historical completion receipts. PR2578 and PR2644
+PR2364, PR2508 and PR2612 retain unsatisfied historical completion receipts. PR2578, PR2644 and PR2649
 retain canonical **unknown** after external merge without positive readiness.
 Preserve those results as supporting delivery. PR2595 has separate post-merge
 source qualification; its observer did not establish pre-merge readiness.
 
-The operator reserved final checkpoint PR2649 for this chat and directed other
-merge activity for it to stop. Supporting PR2635 and PR2641 are accepted and
+The operator reserved final checkpoint PR2655 for this chat after directing an
+executable coordination repair. PR2649 remains historical unknown. Supporting PR2635 and PR2641 are accepted and
 integrated; their source and execution scopes remain explicit. The operator
 subsequently confirmed personally merging PR2612; that unsatisfied result and
 PR2644's unknown result are preserved. The operator explicitly retained the
@@ -46,3 +46,5 @@ an actually verified accepted-head result and complete merge-time required-check
 inventory before completion. Later observations cannot establish missing
 historical readiness. Preserve historical originals, the recovery hold and
 unrelated work. Source delivery remains separate from production enrollment.
+
+The [coordination runbook](./research/MERGE-COORDINATION.md) requires a private exact-head reservation, successful terminal observer finalization and a positive canonical verdict before the owner merge. Use an explicit full `--head` for the new observer and classic monitor. The shared-wrapper capability is required for owner Ready there; native Ready remains outside the merge guard. No direct-website/server exclusion is claimed.

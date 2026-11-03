@@ -62,6 +62,7 @@ import {
   markPullRequestReadyDocument,
   selectGithubIdentity,
 } from "../../../internal/github/index.ts";
+import { enforceReviewerGate } from "../../Reviewer/ReviewerRuleset.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { parsePrProvenanceFooter } from "./Provenance.ts";
 import { ensureProvenanceFooter, ProvenanceStampOutcome, recordMonitoredPrSessionThen } from "./ProvenanceFooter.ts";
@@ -616,9 +617,13 @@ export const layerYeetGh = ({ tokenRef }: YeetGhCommonOptions) =>
  */
 export const withYeetGh =
   (tokenRef: O.Option<string>) =>
-  <A, E>(
-    program: Effect.Effect<A, E, YeetGithubServices>
-  ): Effect.Effect<A, E | GithubIdentityError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> =>
+  <A, E, R>(
+    program: Effect.Effect<A, E, YeetGithubServices | R>
+  ): Effect.Effect<
+    A,
+    E | GithubIdentityError,
+    SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Exclude<R, YeetGithubServices>
+  > =>
     Effect.flatMap(Layer.build(layerYeetGh(YeetGhCommonOptions.make({ tokenRef }))), (context) =>
       Effect.provideContext(program, context)
     ).pipe(Effect.scoped);
@@ -1211,10 +1216,14 @@ export const recordInheritedRedsInPullRequestBody = Effect.fn("YeetGh.recordInhe
 
 const report = (exitCode: number) => (message: string) => failWithReportedExit(message, exitCode);
 
-const runGh = <A>(
+const runGh = <A, R>(
   options: typeof YeetGhCommonOptions.Encoded,
-  program: Effect.Effect<A, GitHubError | GraphqlBudgetExhausted | CliReportedExit, YeetGithubServices>
-): Effect.Effect<A, CliReportedExit, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> =>
+  program: Effect.Effect<A, GitHubError | GraphqlBudgetExhausted | CliReportedExit, YeetGithubServices | R>
+): Effect.Effect<
+  A,
+  CliReportedExit,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Exclude<R, YeetGithubServices>
+> =>
   withYeetGh(options.tokenRef)(program).pipe(
     Effect.catchTags({
       GithubIdentityError: (error) => report(1)(`[gh] ${error.message}`),
@@ -1412,6 +1421,9 @@ export const runYeetGhMerge = (
         yield* Console.log(`[gh] dry run: #${options.number} would merge at ${facts.pullRequest.headSha}`);
         return;
       }
+      yield* enforceReviewerGate(options.number, facts.pullRequest.headSha).pipe(
+        Effect.catchTag("ReviewerError", (error) => report(1)(`[gh] ${error.message}`))
+      );
       const merged = yield* rest.mergePullRequest(options.number, {
         sha: facts.pullRequest.headSha,
         commitTitle: `${facts.pullRequest.title} (#${options.number})`,
