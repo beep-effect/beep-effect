@@ -548,6 +548,15 @@ instead of silently splitting delivery or weakening scope.
 
 ## Decision Log
 
+- **2026-11-03 nullable single matching:** extend the existing Effect RPC worker
+  for empty search/match results, preserving exact quotas, bounded frames and
+  acknowledged retirement. Keep nullable iterator advancement unqualified until
+  its Python empty/nonempty behavior is implemented. Both pinned engines execute
+  the retained synthetic controls; their Unicode character and folding profiles
+  remain distinct required work. Reverse with a normal revert of this private
+  worker profile and its tests; no public contract or semantic waiver changes.
+  See `history/evidence/2026-11-03-nullable-single-regex.md`.
+
 - **2026-11-03 native context preparation:** preserve source word scanning and
   post-append 300-Python-point truncation through Effect control flow and the
   existing native Unicode owner. Intercepting the source search proves context

@@ -28,6 +28,15 @@ text and assembly tests pass. Source capture intercepts final regex.search;
 matching, tokenizer composition, metadata and public extraction remain open.
 See [native context evidence](history/evidence/2026-11-03-native-token-context.md).
 
+Nullable matching checkpoint (2026-11-03): the existing isolated worker accepts
+empty results for single search/match operations. Eight patterns and 56 cases
+retain 336 independently executed observations under both pinned Python engines.
+Twenty-six focused tests pass; each actual Bun/Node nullable smoke confirms all
+fifteen independent child exits, zero-quota refusal and fresh-call recovery.
+Full hosted comparison requires 115 exits per runtime. Nullable finditer,
+third-party Unicode/folding, metadata integration and family safety remain open.
+See [nullable single-match evidence](history/evidence/2026-11-03-nullable-single-regex.md).
+
 ## Status
 
 Status: `in-progress`

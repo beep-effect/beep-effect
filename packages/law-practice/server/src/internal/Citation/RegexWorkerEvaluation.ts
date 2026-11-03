@@ -19,7 +19,8 @@ import type { CitationRegexWorkerStartup } from "./RegexWorkerRpc.ts";
 const nativeFailure = () => CitationRegexEvaluationFailure.make({ reason: "native-failed" });
 /** Rebind exact native words/profile and collect a complete bounded result.
  * Parent process ownership supplies the hard deadline for synchronous RegExp.
- * This canonical profile admits positive-width, non-repeated captures only;
+ * This profile admits non-repeated captures; nullable programs are restricted
+ * to single search/match operations until Python iterator advancement is qualified.
  * unsupported profiles fail explicitly and acquire no public family approval.
  * @internal @category operations @since 0.0.0
  */
@@ -39,7 +40,7 @@ export const makeCitationRegexEvaluation = Effect.fn("Citation.makeRegexEvaluati
       const program = bound.program;
       if (
         program.groups > 10 ||
-        program.minimumWidthFloor === 0 ||
+        (program.minimumWidthFloor === 0 && job.mode === "finditer") ||
         program.repeatedCaptures ||
         program.nullableMultiRepeat
       )
@@ -69,7 +70,7 @@ export const makeCitationRegexEvaluation = Effect.fn("Citation.makeRegexEvaluati
           Effect.mapError(nativeFailure)
         );
         const whole = yield* Effect.fromOption(O.fromUndefinedOr(indices[0])).pipe(Effect.mapError(nativeFailure));
-        if (whole[0] >= whole[1]) return yield* nativeFailure();
+        if (whole[0] > whole[1] || (whole[0] === whole[1] && job.mode === "finditer")) return yield* nativeFailure();
         return O.some(indices);
       });
       const frame = yield* result.collect(pull, job.maxMatches);

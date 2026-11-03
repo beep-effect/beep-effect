@@ -28,10 +28,10 @@ import {
   makeCitationNativeManualClock,
   makeCitationNativeSleepClock,
   makeCitationNativeWorkerFixture,
-  makeCitationNodeTestRuntime,
   makeCitationObservedSpawner,
   waitForCitationNativeTest,
 } from "./CitationNativeSpawner.fixtures.ts";
+import { setupCitationRegexWorker as setup } from "./CitationRegexWorker.fixtures.ts";
 
 const $I = $LawPracticeServerId.create("test/CitationRegexWorker");
 const ExpectedMatches = S.Array(S.Array(S.Tuple([S.Int, S.Int])).check(S.isMaxLength(3))).check(S.isMaxLength(2));
@@ -76,39 +76,6 @@ const descriptor = {
     nullableMultiRepeat: false,
   },
 };
-const setup = Effect.fn("RegexWorkerTest.setup")(function* (
-  bindings: unknown,
-  kind: CitationNativeRuntimeKind = "bun"
-) {
-  // Distinct from the default one-second cleanup timer: only native execution
-  // time is manually controlled in functional tests.
-  const limits = { ...(yield* defaultCitationEnginePolicy).limits, regexDeadline: Duration.millis(997) };
-  // These cases compare results, not real-time cold-start performance. The
-  // entered-child controls below exercise actual deadline firing separately.
-  const timer = yield* makeCitationNativeManualClock(limits.regexDeadline);
-  const admission = yield* makeCitationNativeProcessAdmission(limits);
-  const observed = yield* makeCitationObservedSpawner();
-  const citationResult1 = yield* FileSystem.FileSystem;
-  const cwd = yield* citationResult1.makeTempDirectoryScoped({ prefix: "citation-regex-worker-" });
-  const runtime =
-    kind === "node"
-      ? yield* makeCitationNodeTestRuntime(
-          NodeURL.fileURLToPath(new URL("../src/internal/Citation/RegexWorker.node.entry.ts", import.meta.url)),
-          cwd
-        )
-      : {
-          kind: "bun",
-          executable: process.execPath,
-          cwd,
-          workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/RegexWorker.entry.ts", import.meta.url)),
-        };
-  const worker = yield* makeCitationRegexWorker(limits, runtime, bindings).pipe(
-    Effect.provideService(Clock.Clock, timer.clock),
-    Effect.provideService(CitationNativeProcessAdmission, admission),
-    Effect.provideService(ChildProcessSpawner, observed.spawner)
-  );
-  return { worker, admission, observed };
-});
 
 const controlled = Effect.fn("RegexWorkerTest.controlled")(function* (
   afterKill: Effect.Effect<void> = Effect.void,

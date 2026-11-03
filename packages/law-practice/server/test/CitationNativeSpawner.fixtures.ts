@@ -87,6 +87,26 @@ export const makeCitationNodeTestRuntime = Effect.fn("NativeSourceTest.nodeRunti
   return CitationNativeProcessRuntime.make({ kind: "node", executable, cwd, workerFile: path.join(cwd, "worker.mjs") });
 });
 
+/** Share actual regex runtime selection across worker and tokenizer controls.
+ * @internal @category testing @since 0.0.0
+ */
+export const makeCitationRegexTestRuntime = Effect.fn("NativeSourceTest.regexRuntime")(function* (
+  kind: CitationNativeRuntimeKind,
+  cwd: string
+) {
+  if (kind === "node")
+    return yield* makeCitationNodeTestRuntime(
+      NodeURL.fileURLToPath(new URL("../src/internal/Citation/RegexWorker.node.entry.ts", import.meta.url)),
+      cwd
+    );
+  return CitationNativeProcessRuntime.make({
+    kind: "bun",
+    executable: process.execPath,
+    cwd,
+    workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/RegexWorker.entry.ts", import.meta.url)),
+  });
+});
+
 const $I = $LawPracticeServerId.create("test/CitationNativeSpawner");
 const MissingProcess = S.Struct({ code: S.tag("ESRCH") }).pipe(
   $I.annoteSchema("MissingProcess", {

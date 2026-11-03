@@ -29,8 +29,8 @@ import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import {
   makeCitationNativeManualClock,
-  makeCitationNodeTestRuntime,
   makeCitationObservedSpawner,
+  makeCitationRegexTestRuntime,
 } from "./CitationNativeSpawner.fixtures.ts";
 import { CitationTokenSeedHex } from "./CitationTokenSeed.fixtures.ts";
 
@@ -122,18 +122,8 @@ export const setupCitationTokenizer = Effect.fn("TokenizerTest.setup")(function*
   };
   const fs = yield* FileSystem.FileSystem;
   const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "citation-tokenizer-" });
-  const runtime =
-    kind === "node"
-      ? yield* makeCitationNodeTestRuntime(
-          NodeURL.fileURLToPath(new URL("../src/internal/Citation/RegexWorker.node.entry.ts", import.meta.url)),
-          cwd
-        )
-      : {
-          kind: "bun",
-          executable: process.execPath,
-          cwd,
-          workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/RegexWorker.entry.ts", import.meta.url)),
-        };
+  const runtime = yield* makeCitationRegexTestRuntime(kind, cwd);
+
   const admission = yield* makeCitationOperationAdmission(limits);
   const observed = yield* makeCitationObservedSpawner();
   const timer = yield* makeCitationNativeManualClock(limits.regexDeadline);
