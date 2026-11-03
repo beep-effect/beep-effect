@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git, GitCommandError } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { YeetCommandError } from "@beep/repo-cli/commands/Yeet/Yeet.errors";
@@ -24,10 +25,10 @@ import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { NodeCommandTestLayer } from "./support/CommandTest.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 
 const GIT_ENV = { GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: "/dev/null" };
 const GIT_IDENTITY = [
@@ -79,8 +80,8 @@ const fixture = Effect.fn("YeetGitExecTest.fixture")(function* () {
   return { root, origin, work, c0, context, git, commit };
 });
 
-const failingSpawner = ChildProcessSpawner.make(() =>
-  Effect.fail(PlatformError.badArgument({ description: "spawn disabled", method: "spawn", module: "ChildProcess" }))
+const failingSpawner = ScriptedSpawner.make(() =>
+  PlatformError.badArgument({ description: "spawn disabled", method: "spawn", module: "ChildProcess" })
 );
 
 const WORKTREE_FAILED = "Failed to run git worktree add.";
@@ -330,7 +331,7 @@ it.layer(NodeCommandTestLayer, { timeout: "60 seconds" })("yeet git exec over a 
         Git.use((git) => git.worktreeAdd("/repo", "/repo/preview", { ref: "HEAD", detach: true })).pipe(
           captureGitKitExit(GitCommand.worktreeAdd("/repo/preview", "HEAD", true), WORKTREE_FAILED),
           Effect.provideServiceEffect(Git, Git.make),
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, failingSpawner)
+          provideSpawner(failingSpawner)
         )
       );
       expect(error).toBeInstanceOf(YeetCommandError);

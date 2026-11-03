@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   HoldLedger,
@@ -28,12 +29,8 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
-import * as Sink from "effect/Sink";
 import * as Stdio from "effect/Stdio";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as Terminal from "effect/Terminal";
 import * as TestClock from "effect/testing/TestClock";
@@ -42,7 +39,6 @@ import * as TestClock from "effect/testing/TestClock";
 const root = process.cwd();
 const scratchRoot = "/scratch";
 const commitSha = "0123456789abcdef0123456789abcdef01234567";
-const encoder = new TextEncoder();
 
 const signals =
   '{"sourceTrust":{"_tag":"Absent","reason":"not-assessed"},"sourceAssertedConfidence":{"_tag":"Absent","reason":"not-assessed"},"extractorConfidence":{"_tag":"Absent","reason":"not-applicable"},"validator":{"_tag":"Absent","reason":"not-assessed"},"reviewer":{"_tag":"Absent","reason":"not-assessed"}}';
@@ -61,49 +57,29 @@ const runLine = (id: string, holdVersionId: string, candidateVersion = "0.19.0")
 const currentClaim = claimLine({ id: "statelyai-model-testing-404@2", expiredAt: "null", falsifier: scripted });
 const expiredClaim = claimLine({ id: "statelyai-model-testing-404@1", expiredAt: "500", falsifier: scripted });
 
-const handle = (output: string, exitCode: number) =>
-  ChildProcessSpawner.makeHandle({
-    all: Stream.make(encoder.encode(output)),
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    stdout: Stream.make(encoder.encode(output)),
-    unref: Effect.succeed(Effect.void),
-  });
-
-const outputFor = (command: ChildProcess.Command): string =>
-  !ChildProcess.isStandardCommand(command)
-    ? "80 packages installed\n"
-    : command.command === "git"
-      ? `${commitSha}\n`
-      : Str.endsWith("/control")(command.options.cwd ?? "")
-        ? "error: @statelyai/model-testing@0.2.0 failed to resolve\n"
-        : "80 packages installed\n";
+// The working directory of the spawn being scripted: its record is pushed before the script runs.
+const currentCwd = (spawner: ScriptedSpawner): string =>
+  O.getOrElse(
+    O.flatMapNullishOr(A.last(spawner.spawns), (spawn) => spawn.cwd),
+    () => ""
+  );
 
 // git answers HEAD; the control directory reproduces the 404; the candidate installs cleanly.
-const statelyaiSpawner = ChildProcessSpawner.make((command) => {
-  const output = outputFor(command);
-  return Effect.succeed(handle(output, Str.includes("failed to resolve")(output) ? 1 : 0));
-});
-
-// git exits 128 (not a repository); everything else would succeed.
-const gitFailingSpawner = ChildProcessSpawner.make((command) =>
-  Effect.succeed(
-    ChildProcess.isStandardCommand(command) && command.command === "git"
-      ? handle("fatal: not a git repository\n", 128)
-      : handle("80 packages installed\n", 0)
-  )
+const statelyaiSpawner: ScriptedSpawner = ScriptedSpawner.make((command) =>
+  command === "git"
+    ? { stdout: `${commitSha}\n` }
+    : Str.endsWith("/control")(currentCwd(statelyaiSpawner))
+      ? { stdout: "error: @statelyai/model-testing@0.2.0 failed to resolve\n", exit: 1 }
+      : { stdout: "80 packages installed\n" }
 );
 
-const failingSpawner = ChildProcessSpawner.make(() =>
-  Effect.fail(
-    PlatformError.systemError({ _tag: "NotFound", module: "ChildProcess", method: "spawn", description: "no bun" })
-  )
+// git exits 128 (not a repository); everything else would succeed.
+const gitFailingSpawner = ScriptedSpawner.make((command) =>
+  command === "git" ? { stdout: "fatal: not a git repository\n", exit: 128 } : { stdout: "80 packages installed\n" }
+);
+
+const failingSpawner = ScriptedSpawner.make(() =>
+  PlatformError.systemError({ _tag: "NotFound", module: "ChildProcess", method: "spawn", description: "no bun" })
 );
 
 const terminal = Terminal.make({
@@ -115,10 +91,7 @@ const terminal = Terminal.make({
   display: () => Effect.void,
 });
 
-const platformFor = (
-  files: Readonly<Record<string, string>>,
-  spawner: ChildProcessSpawner.ChildProcessSpawner["Service"]
-) =>
+const platformFor = (files: Readonly<Record<string, string>>, spawner: ScriptedSpawner) =>
   Layer.mergeAll(
     MemoryFileSystem.layer.pipe(
       Layer.tap((context) =>
@@ -144,13 +117,10 @@ const platformFor = (
     BunCrypto.layer,
     Stdio.layerTest({}),
     Layer.succeed(Terminal.Terminal, terminal),
-    Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner)
+    spawner.layer
   );
 
-const layerFor = (
-  files: Readonly<Record<string, string>>,
-  spawner: ChildProcessSpawner.ChildProcessSpawner["Service"] = statelyaiSpawner
-) =>
+const layerFor = (files: Readonly<Record<string, string>>, spawner: ScriptedSpawner = statelyaiSpawner) =>
   Layer.mergeAll(
     Layer.effect(HoldLedger, makeHoldLedger(root)),
     Layer.effect(HoldProbe, makeHoldProbe(scratchRoot))

@@ -20,13 +20,16 @@ Execution: **active**, explicitly launched 2026-10-27. Preserve the recovery hol
 
 ## P4 closeout
 
-PR2364 and PR2508 retain unsatisfied historical completion receipts. PR2578
+PR2364, PR2508 and PR2612 retain unsatisfied historical completion receipts. PR2578
 retains canonical **unknown** after external merge without positive readiness.
 Preserve those results as supporting delivery. PR2595 has separate post-merge
 source qualification; its observer did not establish pre-merge readiness.
 
-The operator reserved final PR2612 for this chat and directed other merge
-activity for it to stop. Ship current source applicability, the new reflection
+The operator reserved corrective final PR2644 for this chat and directed other
+merge activity for it to stop. Supporting PR2635 and PR2641 are accepted and
+integrated; their source and execution scopes remain explicit. The operator
+subsequently confirmed personally merging PR2612; the original unsatisfied
+completion result is preserved. Ship current source applicability, the new reflection
 and a coherent prospective declaration while lifecycle remains active. Publish
 a reviewable draft; only this owner may make it ready and merge it. A draft
 monitor's `ready-pending-flip` result does not replace final readiness.

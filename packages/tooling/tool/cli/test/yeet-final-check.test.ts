@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { LenientManifest } from "@beep/package-json/LenientManifest";
@@ -30,15 +31,11 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
-import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { commandArgs } from "./support/commandArgs.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
+import type { ScriptResult } from "@beep/commands/ScriptedSpawner";
 import type { FinalCheckVerdict } from "@beep/repo-cli/test/Yeet";
 
 const HEAD = Str.repeat(40)("a");
@@ -398,44 +395,21 @@ describe("finalCheckRefusal", () => {
   });
 });
 
-const handle = (exitCode: number, output = "") =>
-  ChildProcessSpawner.makeHandle({
-    all: Stream.make(new TextEncoder().encode(output)),
-    stdout: Stream.make(new TextEncoder().encode(output)),
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    unref: Effect.succeed(Effect.void),
-  });
-
 // git and bun install succeed unless their command names a failing step; the
 // merge-base vitest run fails for test files whose path says `masked`, and for
 // `bun-only` files (they call a Bun API) replayed without `--bun`.
 const scriptedSpawner = (failing: ReadonlyArray<string> = []) =>
-  ChildProcessSpawner.make((command) => {
-    if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-    const line = A.join([command.command, ...commandArgs(command)], " ");
-    if (A.some(failing, (fragment) => Str.includes(fragment)(line))) return Effect.succeed(handle(1));
-    const bunOnlyOnNode = Str.includes("bun-only")(line) && !A.contains(commandArgs(command), "--bun");
-    return Effect.succeed(
-      handle(command.command === "bunx" && (Str.includes("masked")(line) || bunOnlyOnNode) ? 1 : 0)
-    );
+  ScriptedSpawner.make((command, args) => {
+    const line = A.join([command, ...args], " ");
+    if (A.some(failing, (fragment) => Str.includes(fragment)(line))) return { exit: 1 };
+    const bunOnlyOnNode = Str.includes("bun-only")(line) && !A.contains(args, "--bun");
+    return { exit: command === "bunx" && (Str.includes("masked")(line) || bunOnlyOnNode) ? 1 : 0 };
   });
 
 const platformWith = (failing: ReadonlyArray<string> = []) =>
   Layer.provideMerge(
     Git.layer,
-    Layer.mergeAll(
-      MemoryFileSystem.layer,
-      Path.layer,
-      BunCrypto.layer,
-      Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, scriptedSpawner(failing))
-    )
+    Layer.mergeAll(MemoryFileSystem.layer, Path.layer, BunCrypto.layer, scriptedSpawner(failing).layer)
   );
 
 // A moved test tree as #2241 made it: one modified file whose diff is wider than
@@ -454,21 +428,20 @@ const smallDiff = (path: string, from: string, to: string) =>
     ],
     "\n"
   );
-const treeMoveGit = (commands: Ref.Ref<ReadonlyArray<string>>) =>
-  ChildProcessSpawner.make((command) => {
-    if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-    const line = A.join([command.command, ...commandArgs(command)], " ");
-    const reply = (output: string) => Ref.update(commands, A.append(line)).pipe(Effect.as(handle(0, output)));
-    if (Str.includes("--name-only")(line)) return reply("pkg/test/huge.test.ts\0pkg/test/small.test.ts\0");
+const treeMoveGit = () =>
+  ScriptedSpawner.make((command, args) => {
+    const line = A.join([command, ...args], " ");
+    if (Str.includes("--name-only")(line)) return { stdout: "pkg/test/huge.test.ts\0pkg/test/small.test.ts\0" };
     if (Str.includes("--name-status")(line)) {
-      return reply(
-        "R090\0old/test/moved.test.ts\0new/test/moved.test.ts\0A\0new/test/added.test.ts\0D\0old/test/gone.test.ts\0"
-      );
+      return {
+        stdout:
+          "R090\0old/test/moved.test.ts\0new/test/moved.test.ts\0A\0new/test/added.test.ts\0D\0old/test/gone.test.ts\0",
+      };
     }
-    if (Str.includes("huge.test.ts")(line)) return reply(WIDE_DIFF);
-    if (Str.includes("small.test.ts")(line)) return reply(smallDiff("pkg/test/small.test.ts", "a", "b"));
-    if (Str.includes("moved.test.ts")(line)) return reply(smallDiff("new/test/moved.test.ts", "c", "d"));
-    return reply("");
+    if (Str.includes("huge.test.ts")(line)) return { stdout: WIDE_DIFF };
+    if (Str.includes("small.test.ts")(line)) return { stdout: smallDiff("pkg/test/small.test.ts", "a", "b") };
+    if (Str.includes("moved.test.ts")(line)) return { stdout: smallDiff("new/test/moved.test.ts", "c", "d") };
+    return {};
   });
 
 it.layer(Layer.mergeAll(BunCrypto.layer, Path.layer), { timeout: "30 seconds" })(
@@ -476,10 +449,10 @@ it.layer(Layer.mergeAll(BunCrypto.layer, Path.layer), { timeout: "30 seconds" })
   (it) => {
     it.effect("diffs modified and renamed files one at a time and survives a file wider than the capture bound", () =>
       Effect.gen(function* () {
-        const commands = yield* Ref.make<ReadonlyArray<string>>([]);
+        const spawner = treeMoveGit();
         const rewrites = yield* collectExpectationRewrites("/repo", BASE).pipe(
           Effect.provideServiceEffect(Git, Git.make),
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, treeMoveGit(commands))
+          provideSpawner(spawner)
         );
         expect(rewrites).toEqual([
           ExpectationRewrite.make({
@@ -502,7 +475,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, Path.layer), { timeout: "30 seconds" })
             added: 'expect(out).toBe("d")',
           }),
         ]);
-        const ran = yield* Ref.get(commands);
+        const ran = A.map(spawner.spawns, (spawn) => A.join([spawn.command, ...spawn.args], " "));
         const diffs = A.filter(ran, Str.includes("--unified=0"));
         expect(diffs).toHaveLength(3);
         expect(A.some(diffs, Str.includes("*.test.ts"))).toBe(false);
@@ -518,17 +491,11 @@ it.layer(Layer.mergeAll(BunCrypto.layer, Path.layer), { timeout: "30 seconds" })
 );
 
 // Scripted git for the listing and per-file failure paths of the collector.
-type GitScript = (line: string) => Effect.Effect<ChildProcessSpawner.ChildProcessHandle, PlatformError.PlatformError>;
-const scriptedGit = (script: GitScript) =>
-  ChildProcessSpawner.make((command) =>
-    ChildProcess.isStandardCommand(command)
-      ? script(A.join([command.command, ...commandArgs(command)], " "))
-      : Effect.die("unexpected pipe")
-  );
+type GitScript = (line: string) => ScriptResult.Encoded;
 const collectWith = (script: GitScript) =>
   collectExpectationRewrites("/repo", BASE).pipe(
     Effect.provideServiceEffect(Git, Git.make),
-    Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, scriptedGit(script))
+    provideSpawner(ScriptedSpawner.make((command, args) => script(A.join([command, ...args], " "))))
   );
 const spawnFailure = PlatformError.systemError({
   _tag: "NotFound",
@@ -543,20 +510,18 @@ it.layer(Layer.mergeAll(BunCrypto.layer, Path.layer), { timeout: "30 seconds" })
   (it) => {
     it.effect("returns nothing when no test file was modified or renamed", () =>
       Effect.gen(function* () {
-        expect(yield* collectWith(() => Effect.succeed(handle(0)))).toEqual([]);
+        expect(yield* collectWith(() => ({}))).toEqual([]);
       })
     );
 
     it.effect("maps a snapshot overflow to its test file and drops a non-test .snap", () =>
       Effect.gen(function* () {
         const rewrites = yield* collectWith((line) =>
-          Effect.succeed(
-            Str.includes("--name-only")(line)
-              ? handle(0, "pkg/fixtures/data.snap\0pkg/test/__snapshots__/render.test.ts.snap\0")
-              : Str.includes("--unified=0")(line)
-                ? handle(0, WIDE_DIFF)
-                : handle(0)
-          )
+          Str.includes("--name-only")(line)
+            ? { stdout: "pkg/fixtures/data.snap\0pkg/test/__snapshots__/render.test.ts.snap\0" }
+            : Str.includes("--unified=0")(line)
+              ? { stdout: WIDE_DIFF }
+              : {}
         );
         // A `.snap` outside __snapshots__ names no test, so its overflow yields nothing.
         expect(A.map(rewrites, (rewrite) => rewrite.testFile)).toEqual(["pkg/test/render.test.ts"]);
@@ -567,11 +532,9 @@ it.layer(Layer.mergeAll(BunCrypto.layer, Path.layer), { timeout: "30 seconds" })
     it.effect("fails with the command when a per-file diff exits non-zero", () =>
       Effect.gen(function* () {
         const error = yield* collectWith((line) =>
-          Effect.succeed(
-            Str.includes("--name-only")(line)
-              ? handle(0, "pkg/test/a.test.ts\0")
-              : handle(Str.includes("--unified=0")(line) ? 128 : 0)
-          )
+          Str.includes("--name-only")(line)
+            ? { stdout: "pkg/test/a.test.ts\0" }
+            : { exit: Str.includes("--unified=0")(line) ? 128 : 0 }
         ).pipe(Effect.flip);
         expect(error).toMatchObject({ _tag: "YeetCommandError", exitCode: 128 });
         expect(error.message).toContain("pkg/test/a.test.ts failed with exit code 128");
@@ -580,19 +543,11 @@ it.layer(Layer.mergeAll(BunCrypto.layer, Path.layer), { timeout: "30 seconds" })
 
     it.effect("fails when the rename table cannot be read, is malformed, or exits non-zero", () =>
       Effect.gen(function* () {
-        const listingOnly = (
-          nameStatus: Effect.Effect<ChildProcessSpawner.ChildProcessHandle, PlatformError.PlatformError>
-        ) =>
-          collectWith((line) => (Str.includes("--name-status")(line) ? nameStatus : Effect.succeed(handle(0)))).pipe(
-            Effect.flip
-          );
-        expect((yield* listingOnly(spawnFailure.pipe(Effect.fail))).message).toContain(
-          "Failed to run git diff --name-status"
-        );
-        expect((yield* listingOnly(Effect.succeed(handle(0, "R090\0only-one-path\0")))).message).toContain(
-          "malformed rename table"
-        );
-        expect((yield* listingOnly(Effect.succeed(handle(1)))).message).toContain("failed with exit code 1");
+        const listingOnly = (nameStatus: ScriptResult.Encoded) =>
+          collectWith((line) => (Str.includes("--name-status")(line) ? nameStatus : {})).pipe(Effect.flip);
+        expect((yield* listingOnly(spawnFailure)).message).toContain("Failed to run git diff --name-status");
+        expect((yield* listingOnly({ stdout: "R090\0only-one-path\0" })).message).toContain("malformed rename table");
+        expect((yield* listingOnly({ exit: 1 })).message).toContain("failed with exit code 1");
       })
     );
   }

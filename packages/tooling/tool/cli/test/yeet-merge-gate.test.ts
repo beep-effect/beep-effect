@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { reviewerCheckExternalId } from "@beep/repo-cli/commands/Reviewer";
 import { GithubTransportFetch } from "@beep/repo-cli/test/SharedInternals";
@@ -43,13 +44,9 @@ import * as Layer from "effect/Layer";
 import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -60,8 +57,8 @@ import rulesFixture from "./fixtures/yeet-merge-gate/rules.json" with { type: "j
 import threadsFixture from "./fixtures/yeet-merge-gate/threads.json" with { type: "json" };
 import openThreadsFixture from "./fixtures/yeet-merge-gate/threads-open.json" with { type: "json" };
 import timelineFixture from "./fixtures/yeet-merge-gate/timeline.json" with { type: "json" };
-import { commandArgs } from "./support/commandArgs.ts";
 import { githubFetch, reply } from "./support/GithubFetch.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import { legacyGhAnswer, legacyGhArgs, recordedGithub } from "./support/YeetGithub.ts";
 import type { GithubAnswer, GithubCall } from "./support/YeetGithub.ts";
 
@@ -852,23 +849,6 @@ describe("yeet merge-gate --relaxed own versus inherited reds (S11, 2026-11-02)"
 
 // A scripted `gh` whose answers are the recorded fixtures, routed by argv; the
 // merge PUT is captured so the test proves what would have been sent.
-const encoder = new TextEncoder();
-
-const stubHandle = (exitCode: number, output: string) =>
-  ChildProcessSpawner.makeHandle({
-    all: Stream.make(encoder.encode(output)),
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    stdout: Stream.make(encoder.encode(output)),
-    unref: Effect.succeed(Effect.void),
-  });
-
 interface ScriptedAnswer {
   readonly exitCode: number;
   readonly output: string;
@@ -1076,21 +1056,20 @@ const answerFor = (script: GhScript, command: string, line: string): ScriptedAns
         );
 
 const scriptedGh = (script: GhScript, calls: Ref.Ref<ReadonlyArray<string>>) =>
-  ChildProcessSpawner.make((command) => {
-    if (!ChildProcess.isStandardCommand(command)) return Effect.die("the gate never spawns a piped command");
-    const line = A.join([command.command, ...commandArgs(command)], " ");
-    if (script.spawnFails === true && command.command === "gh") {
-      return Effect.fail(
-        PlatformError.systemError({
-          _tag: "NotFound",
-          module: "MergeGateTest",
-          method: "spawn",
-          pathOrDescriptor: "gh",
-        })
-      );
+  ScriptedSpawner.make((command, args) => {
+    const line = A.join([command, ...args], " ");
+    if (script.spawnFails === true && command === "gh") {
+      return PlatformError.systemError({
+        _tag: "NotFound",
+        module: "MergeGateTest",
+        method: "spawn",
+        pathOrDescriptor: "gh",
+      });
     }
-    const answer = answerFor(script, command.command, line);
-    return Ref.update(calls, A.append(line)).pipe(Effect.as(stubHandle(answer.exitCode, answer.output)));
+    const answer = answerFor(script, command, line);
+    // The script is synchronous; the shared Ref is updated in place, as `Ref.update` would.
+    MutableRef.update(calls.ref, A.append(line));
+    return { stdout: answer.output, exit: answer.exitCode };
   });
 
 // The REST fields GitHub always sends that the recorded #1459 pull omits.
@@ -1193,7 +1172,7 @@ const withScriptedGh = <A, E, R>(
         github.provide,
         Effect.provideService(GithubTransportFetch, O.some(scriptedGithub(script, calls).fetch)),
         Effect.provideServiceEffect(Git, Git.make),
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, scriptedGh(script, calls))
+        provideSpawner(scriptedGh(script, calls))
       );
     })
   );

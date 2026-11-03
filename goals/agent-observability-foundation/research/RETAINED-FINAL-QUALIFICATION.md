@@ -1,7 +1,7 @@
 # Retained final qualification
 
-[PR2612](https://github.com/beep-effect/beep-effect/pull/2612) proposes a new
-completed-retained delivery checkpoint. The base lifecycle remains active until
+[PR2612](https://github.com/beep-effect/beep-effect/pull/2612) was merged without
+establishing the proposed completed-retained delivery checkpoint. The base lifecycle remains active until
 the canonical accepted-head receipt verifies the declared completion evidence.
 Review readiness alone does not establish completion or real-harness enrollment.
 The final delivery role is selected by the [manifest](../ops/manifest.json).
@@ -197,3 +197,53 @@ The historical forwarder service and timer remain masked and inactive. Their
 recovery hold, historical data and the original dirty exploration are preserved.
 All seven real-harness populations remain Unknown. No production enrollment,
 archive reingestion, project deletion or hold release is implied.
+
+## PR2612: preserve the unsatisfied completion result
+
+The [canonical observation](../ops/history/pr2612-completion-unsatisfied-20261103.json)
+records **unsatisfied** at accepted head
+`e7ff08f2dcb68045b2219dd0318de5ac25cb307f`, merged at
+2026-11-03T02:55:46Z as `c40d02d10834ed2d9bd5cab107deff8c10670fbb`.
+GitHub records `kriegcloud` for the ready transition and merge; the initiating
+person or chat is unknown. The existing owner reservation was not a mechanical
+barrier to another caller using that account.
+
+All fifteen merge-time required contexts passed and the inventory is complete.
+Optional Coverage Regression failed; the canonical review-window sub-claim is
+unsatisfied. The retained canonical verdict names an older head and has no
+positive readiness field. The observer finalized successfully after merge,
+which proves observation of the merged state and supplies no pre-merge proof.
+The operative lifecycle remains active and closeout remains unverified.
+
+A successor declaration must retain this result, name one actual final PR and
+its own canonical verdict, and satisfy the original strict acceptance gates.
+Later checks cannot repair the missing historical readiness for PR2612. Draft
+state and a body reservation are coordination controls; shared unrestricted
+GitHub credentials can bypass them. Do not claim exclusive technical ownership
+without an enforced credential or server-side release boundary.
+
+## Corrective PR2644 source comparison
+
+[PR2644](https://github.com/beep-effect/beep-effect/pull/2644) is the held corrective
+final declaration. Its [comparison](../ops/history/owner-closeout-source-applicability-20261103.json)
+consumes accepted main `453364b0` through a normal merge. All selected bytes and
+membership match V3: 234/249, 82/84, 86/90 and 85/89. All V3 baseline values remain
+exact; PolicyRootFiles adds one identity at 95.23 branch coverage. The original
+ProofShadow 100 percent floors remain unchanged. This compares committed data;
+it does not remeasure the entire baseline.
+
+The accepted formatter, lint planning and Goals reader changes are outside
+that selected footprint. Their scope is explicit; final-head hosted checks
+remain necessary. Older component and backend executions retain their original
+heads. Current exact-root admission remains false, all seven real harnesses
+remain Unknown, and the recovery hold stays intact. The original PR2612 result
+is unsatisfied. PR2644 has no completion claim until actual acceptance occurs.
+
+## Later merge-attribution clarification (2026-11-02 local)
+
+The operator subsequently confirmed personally merging PR2612. The
+[clarification](../ops/history/pr2612-merge-attribution-clarified-20261102.json)
+supplements the earlier unknown-caller observation without rewriting it. Its
+canonical completion result remains unsatisfied. There is no outstanding need
+to identify a competing agent before PR2644 proceeds through normal verification.
+The existing reservation of PR2644's final merge to this chat remains in force.

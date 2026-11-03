@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { fcRuns } from "@beep/fc-runs";
 import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
@@ -30,14 +31,10 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as TestConsole from "effect/testing/TestConsole";
-import { commandArgs } from "./support/commandArgs.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import { makeRecord } from "./yeet-pr-fixtures.ts";
 
 const TestLayer = Layer.provideMerge(
@@ -85,21 +82,6 @@ const options = (overrides: Partial<ResumeOptions> = {}) =>
     json: false,
     agent: O.none(),
     ...overrides,
-  });
-
-const stubHandle = (exitCode: number) =>
-  ChildProcessSpawner.makeHandle({
-    all: Stream.empty,
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    stdout: Stream.empty,
-    unref: Effect.succeed(Effect.void),
   });
 
 describe("yeet resume", () => {
@@ -516,16 +498,7 @@ describe("yeet resume", () => {
           recordedAt: "2026-09-03T12:00:00Z",
         });
         yield* registry.append(PrSessionRecord.make({ ...codexRecord, sessionHome: O.none(), clonePath: root }));
-        const spawned = yield* Ref.make<ReadonlyArray<string>>(A.empty());
-        const spawnCwd = yield* Ref.make(O.none<string>());
-        const spawner = ChildProcessSpawner.make((command) => {
-          const argv =
-            command._tag === "StandardCommand" ? A.prepend(commandArgs(command), command.command) : A.empty<string>();
-          const cwd = command._tag === "StandardCommand" ? O.fromUndefinedOr(command.options.cwd) : O.none<string>();
-          return Effect.all([Ref.set(spawned, argv), Ref.set(spawnCwd, cwd)], { discard: true }).pipe(
-            Effect.as(stubHandle(0))
-          );
-        });
+        const spawner = ScriptedSpawner.make(() => ({}));
         yield* runYeetResume(
           options({
             ref: decodeRef("https://github.com/beep-effect/beep-effect/pull/42"),
@@ -536,10 +509,17 @@ describe("yeet resume", () => {
         ).pipe(
           Effect.provideService(ConfigProvider.ConfigProvider, provider),
           Effect.provideServiceEffect(Git, Git.make),
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+          provideSpawner(spawner)
         );
-        expect(yield* Ref.get(spawned)).toStrictEqual(["codex", "resume", "codex-thread"]);
-        assertSome(yield* Ref.get(spawnCwd), root);
+        const last = A.last(spawner.spawns);
+        assertSome(
+          O.map(last, (spawn) => A.prepend(spawn.args, spawn.command)),
+          ["codex", "resume", "codex-thread"]
+        );
+        assertSome(
+          O.flatMapNullishOr(last, (spawn) => spawn.cwd),
+          root
+        );
       })
     );
   });
@@ -555,7 +535,7 @@ describe("yeet resume", () => {
           Effect.provideService(ConfigProvider.ConfigProvider, provider)
         );
         yield* registry.append(makeRecord({ sessionHome: root }));
-        const spawner = ChildProcessSpawner.make(() => Effect.succeed(stubHandle(7)));
+        const spawner = ScriptedSpawner.make(() => ({ exit: 7 }));
         const error = yield* runYeetResume(
           options({
             ref: decodeRef("https://github.com/beep-effect/beep-effect/pull/42"),
@@ -565,7 +545,7 @@ describe("yeet resume", () => {
         ).pipe(
           Effect.provideService(ConfigProvider.ConfigProvider, provider),
           Effect.provideServiceEffect(Git, Git.make),
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+          provideSpawner(spawner),
           Effect.flip
         );
         assert.instanceOf(error, YeetCommandError);

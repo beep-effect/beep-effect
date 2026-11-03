@@ -361,6 +361,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
   const profileMutations: Array<boolean> = [];
   const calls: Array<string> = [];
   const counts = MutableHashMap.empty<string, number>();
+  // Own double: each spawn reads and writes the sandbox fixture on disk; ScriptedSpawner scripts are synchronous.
   const spawner = ChildProcessSpawner.make(
     Effect.fnUntraced(
       function* (command) {

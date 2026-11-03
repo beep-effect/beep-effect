@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git, GitCommandError, NotARepositoryError, UnknownRefError } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { KnowledgeCloneAttributesError, KnowledgeOperationalError } from "@beep/repo-cli/commands/Knowledge";
@@ -50,13 +51,10 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
-import { commandArgs, commandEnv } from "./support/commandArgs.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { GitCommandErrorAdapter } from "@beep/repo-cli/test/RepoRun";
 
 // `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
@@ -217,20 +215,6 @@ describe("GitExec archive byte canonicality", () => {
 });
 
 describe("GitExec archive spawn wiring", () => {
-  const emptyHandle = ChildProcessSpawner.makeHandle({
-    all: Stream.empty,
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    stdout: Stream.empty,
-    unref: Effect.succeed(Effect.void),
-  });
-
   const adapter = {
     onSpawnFailure: (commandLine: string) => (cause: unknown) => new Error(`${commandLine}: ${String(cause)}`),
     onNonZeroExit: (failure: { readonly commandLine: string; readonly exitCode: number; readonly output: string }) =>
@@ -238,17 +222,7 @@ describe("GitExec archive spawn wiring", () => {
     onTruncated: O.none(),
   };
 
-  const captureSpawner = (stdout: string, stderr = "") =>
-    ChildProcessSpawner.make(() =>
-      Effect.succeed(
-        ChildProcessSpawner.makeHandle({
-          ...emptyHandle,
-          stdout: Stream.make(encode(stdout)),
-          stderr: Stream.make(encode(stderr)),
-          all: Stream.make(encode(`${stdout}${stderr}`)),
-        })
-      )
-    );
+  const captureSpawner = (stdout: string, stderr = "") => ScriptedSpawner.make(() => ({ stdout, stderr }));
   const completeAdapter = {
     ...adapter,
     onTruncated: O.some((commandLine: string) => new Error(`${commandLine} truncated`)),
@@ -271,12 +245,7 @@ describe("GitExec archive spawn wiring", () => {
           "/repo",
           ["diff", "--name-only", "-z", "origin/topic..HEAD"],
           completeAdapter
-        ).pipe(
-          Effect.provideService(
-            ChildProcessSpawner.ChildProcessSpawner,
-            captureSpawner(stdout, "warning: advice stays out of filename records\n")
-          )
-        );
+        ).pipe(provideSpawner(captureSpawner(stdout, "warning: advice stays out of filename records\n")));
         expect(actual).toEqual(sortedUniquePaths(paths));
       })
     );
@@ -293,7 +262,7 @@ describe("GitExec archive spawn wiring", () => {
         )}\0`;
         expect(stdout.length).toBeGreaterThan(8 * 1024 * 1024);
         const failure = yield* runGitPathList("/repo", ["diff", "--name-only", "-z"], completeAdapter).pipe(
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, captureSpawner(stdout)),
+          provideSpawner(captureSpawner(stdout)),
           Effect.flip
         );
         expect(failure.message).toContain("truncated");
@@ -303,10 +272,7 @@ describe("GitExec archive spawn wiring", () => {
     it.effect("keeps the smaller stderr diagnostic bound for machine-read filename operations", () =>
       Effect.gen(function* () {
         const failure = yield* runGitPathList("/repo", ["ls-files", "-z"], completeAdapter).pipe(
-          Effect.provideService(
-            ChildProcessSpawner.ChildProcessSpawner,
-            captureSpawner("src/file.ts\0", Str.repeat(repoRunOutputBound.maxChars + 1)("x"))
-          ),
+          provideSpawner(captureSpawner("src/file.ts\0", Str.repeat(repoRunOutputBound.maxChars + 1)("x"))),
           Effect.flip
         );
         expect(failure.message).toContain("truncated");
@@ -316,10 +282,7 @@ describe("GitExec archive spawn wiring", () => {
     it.effect("keeps generic Git content captures at the existing smaller bound", () =>
       Effect.gen(function* () {
         const failure = yield* runGitOutput("/repo", ["show", "HEAD:content.txt"], completeAdapter).pipe(
-          Effect.provideService(
-            ChildProcessSpawner.ChildProcessSpawner,
-            captureSpawner(Str.repeat(repoRunOutputBound.maxChars + 1)("x"))
-          ),
+          provideSpawner(captureSpawner(Str.repeat(repoRunOutputBound.maxChars + 1)("x"))),
           Effect.flip
         );
         expect(failure.message).toContain("truncated");
@@ -331,27 +294,11 @@ describe("GitExec archive spawn wiring", () => {
     it.effect(
       "sends the canonical vector, the attribute-isolation env, and extendEnv on the archive spawn",
       Effect.fnUntraced(function* () {
-        type SpawnFacts = {
-          readonly args: ReadonlyArray<string>;
-          readonly env: Record<string, string | undefined> | undefined;
-          readonly extendEnv: boolean | undefined;
-        };
-        const captured = yield* Ref.make<ReadonlyArray<SpawnFacts>>([]);
-        const spawner = ChildProcessSpawner.make((command) => {
-          if (!ChildProcess.isStandardCommand(command)) {
-            return Effect.die("the archive writer never spawns a piped command");
-          }
-          return Ref.update(
-            captured,
-            A.append({ args: commandArgs(command), env: commandEnv(command), extendEnv: command.options.extendEnv })
-          ).pipe(Effect.as(emptyHandle));
-        });
+        const spawner = ScriptedSpawner.make(() => ({}));
 
-        yield* writeGitArchive("/repo", "deadbeef", "/tmp/out.tar", adapter).pipe(
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
-        );
+        yield* writeGitArchive("/repo", "deadbeef", "/tmp/out.tar", adapter).pipe(provideSpawner(spawner));
 
-        const calls = yield* Ref.get(captured);
+        const calls = spawner.spawns;
         expect(calls).toHaveLength(1);
         expect(calls[0]?.args).toEqual(gitArchiveArgs("/tmp/out.tar", "deadbeef"));
         expect(calls[0]?.env).toStrictEqual(gitArchiveEnv);

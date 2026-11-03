@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   checkBunRuntimeVersion,
@@ -18,10 +19,9 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as TestConsole from "effect/testing/TestConsole";
 import { expectReportedExit } from "./support/CommandTest.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -60,26 +60,7 @@ describe("Bun runtime version comparison", () => {
 const runtimeLayer = Layer.mergeAll(
   MemoryFileSystem.layer,
   Path.layer,
-  Layer.succeed(
-    ChildProcessSpawner.ChildProcessSpawner,
-    ChildProcessSpawner.make(() =>
-      Effect.succeed(
-        ChildProcessSpawner.makeHandle({
-          all: Stream.make(new TextEncoder().encode("1.4.3\n")),
-          stdout: Stream.make(new TextEncoder().encode("1.4.3\n")),
-          stderr: Stream.empty,
-          stdin: Sink.drain,
-          exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
-          getInputFd: () => Sink.drain,
-          getOutputFd: () => Stream.empty,
-          isRunning: Effect.succeed(false),
-          kill: () => Effect.void,
-          pid: ChildProcessSpawner.ProcessId(1),
-          unref: Effect.succeed(Effect.void),
-        })
-      )
-    )
-  )
+  ScriptedSpawner.make(() => ({ stdout: "1.4.3\n" })).layer
 );
 
 const runVersionSync = Command.runWith(versionSyncCommand, { version: "0.0.0" });
@@ -155,23 +136,10 @@ it.layer(runtimeLayer, { timeout: "30 seconds" })("Bun runtime preflight I/O", (
       vi.stubGlobal("process", { ...process, versions: { ...process.versions, bun: undefined } });
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
       const root = yield* fs.makeTempDirectoryScoped();
       yield* fs.writeFileString(path.join(root, ".bun-version"), "1.4.3\n");
       const error = yield* checkBunRuntimeVersion(root).pipe(
-        Effect.provideService(
-          ChildProcessSpawner.ChildProcessSpawner,
-          ChildProcessSpawner.make((command) =>
-            spawner.spawn(command).pipe(
-              Effect.map((handle) =>
-                ChildProcessSpawner.makeHandle({
-                  ...handle,
-                  exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(2)),
-                })
-              )
-            )
-          )
-        ),
+        provideSpawner(ScriptedSpawner.make(() => ({ stdout: "1.4.3\n", exit: 2 }))),
         Effect.flip
       );
       expect(error.message).toContain("bun --version exited 2");
@@ -208,6 +176,7 @@ it.layer(runtimeLayer, { timeout: "30 seconds" })("Bun runtime preflight I/O", (
       const root = yield* fs.makeTempDirectoryScoped();
       yield* fs.writeFileString(path.join(root, ".bun-version"), "1.4.3\n");
       const error = yield* checkBunRuntimeVersion(root).pipe(
+        // Own double: a never-spawn guard; ScriptedSpawner has no defect outcome.
         Effect.provideService(
           ChildProcessSpawner.ChildProcessSpawner,
           ChildProcessSpawner.make(() => Effect.die("must not spawn"))

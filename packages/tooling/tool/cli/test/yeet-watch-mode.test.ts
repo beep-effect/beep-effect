@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { HEAVY_ADMISSION_LABEL } from "@beep/repo-cli/commands/Ci";
@@ -40,16 +41,12 @@ import * as FileSystem from "effect/FileSystem";
 import { constant } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { commandArgs } from "./support/commandArgs.ts";
 import { legacyGhGithubLayer } from "./support/YeetGithub.ts";
+import type { SpawnRecord } from "@beep/commands/ScriptedSpawner";
 import type { YeetCheckFailedRow } from "@beep/repo-cli/test/Yeet";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -70,23 +67,6 @@ const contextFor = (repoRoot: string): RepoRunContext =>
   });
 
 const context = contextFor(".");
-
-const encoder = new TextEncoder();
-
-const stubHandle = (exitCode: number, output: string) =>
-  ChildProcessSpawner.makeHandle({
-    all: Stream.make(encoder.encode(output)),
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    stdout: Stream.make(encoder.encode(output)),
-    unref: Effect.succeed(Effect.void),
-  });
 
 interface ScriptedAnswer {
   readonly exitCode: number;
@@ -200,10 +180,58 @@ const threadsJson = (
 // collection is one empty page, not one empty array.
 const emptyCollection: ScriptedAnswer = { exitCode: 0, output: "[[]]" };
 
+const answerOf = (answer: ScriptedAnswer) => ({ stdout: answer.output, exit: answer.exitCode });
+const lineOf = (spawn: SpawnRecord) => A.join([spawn.command, ...spawn.args], " ");
+const isMergeBaseDiff = (command: string, args: ReadonlyArray<string>) =>
+  command === "git" && args[0] === "diff" && args[1] === "--name-only";
+// Every family the router answers before the GraphQL thread read, which takes the rest.
+const routedFamilies = [
+  "rules/branches/",
+  "pulls/751/reviews",
+  "pulls/751/comments",
+  "issues/751/comments",
+  "pr view",
+  "pr checks",
+];
+const isThreadRead = (spawn: SpawnRecord) =>
+  !isMergeBaseDiff(spawn.command, spawn.args) &&
+  !A.some(routedFamilies, (family) => Str.includes(family)(lineOf(spawn)));
+const lineIncludes = (needle: string) => (spawn: SpawnRecord) => Str.includes(needle)(lineOf(spawn));
+
 // One scripted answer set per poll. Each command family keeps its own served
 // count, because the comment polls run *after* the tick's GraphQL thread read:
 // a single shared cursor advanced by the thread read would hand the comment
-// polls the NEXT tick's script.
+// polls the NEXT tick's script. A family's count is its earlier spawns.
+const pollSpawner = (scripts: ReadonlyArray<PollScript>, diff: string) => {
+  const scriptAt = (index: number): PollScript => scripts[Math.min(index, A.length(scripts) - 1)] as PollScript;
+  // fallow-ignore-next-line complexity -- scripted command router keeps independent per-family poll cursors in one fixture. Owner: @beep/repo-cli. Exit: split per command family when the router gains another family.
+  const spawner: ScriptedSpawner = ScriptedSpawner.make((command, args) => {
+    const line = A.join([command, ...args], " ");
+    const served = (family: (spawn: SpawnRecord) => boolean) =>
+      scriptAt(A.length(A.filter(A.dropRight(spawner.spawns, 1), family)));
+    if (Str.includes("rules/branches/")(line)) return { stdout: "rules unavailable", exit: 1 };
+    // The once-per-head merge-base diff owns no poll index: it answers by argv prefix.
+    if (isMergeBaseDiff(command, args)) return { stdout: diff };
+    // The review-body collection rides the same poll; this watch has
+    // no use for it, so it answers with an empty page rather than
+    // falling through to the thread reader.
+    if (Str.includes("pulls/751/reviews")(line)) return { stdout: "[[]]" };
+    if (Str.includes("pulls/751/comments")(line)) {
+      return answerOf(served(lineIncludes("pulls/751/comments")).reviewComments ?? emptyCollection);
+    }
+    if (Str.includes("issues/751/comments")(line)) {
+      return answerOf(served(lineIncludes("issues/751/comments")).issueComments ?? emptyCollection);
+    }
+    const script = served(isThreadRead);
+    if (Str.includes("pr view")(line)) return answerOf(script.view);
+    if (Str.includes("pr checks")(line)) {
+      return answerOf(A.contains(args, "--required") ? (script.requiredChecks ?? script.checks) : script.checks);
+    }
+    return answerOf(script.threads);
+  });
+  return spawner;
+};
+
 const scriptedSpawnerLayer = (
   scripts: ReadonlyArray<PollScript>,
   diff: string = codeDiff,
@@ -211,58 +239,7 @@ const scriptedSpawnerLayer = (
 ) =>
   Layer.mergeAll(
     platform,
-    Layer.effect(
-      ChildProcessSpawner.ChildProcessSpawner,
-      Effect.gen(function* () {
-        const threadsServed = yield* Ref.make(0);
-        const reviewServed = yield* Ref.make(0);
-        const issueServed = yield* Ref.make(0);
-        const scriptAt = (index: number): PollScript => scripts[Math.min(index, A.length(scripts) - 1)] as PollScript;
-        return ChildProcessSpawner.make((command) => {
-          if (!ChildProcess.isStandardCommand(command)) {
-            return Effect.die("the watch never spawns a piped command");
-          }
-          const line = A.join([command.command, ...commandArgs(command)], " ");
-          // fallow-ignore-next-line complexity -- scripted command router keeps independent per-family poll cursors in one fixture. Owner: @beep/repo-cli. Exit: split per command family when the router gains another family.
-          return Effect.gen(function* () {
-            if (Str.includes("rules/branches/")(line)) return stubHandle(1, "rules unavailable");
-            // The once-per-head merge-base diff owns no poll index: it answers by argv prefix.
-            if (
-              command.command === "git" &&
-              commandArgs(command)[0] === "diff" &&
-              commandArgs(command)[1] === "--name-only"
-            )
-              return stubHandle(0, diff);
-            // The review-body collection rides the same poll; this watch has
-            // no use for it, so it answers with an empty page rather than
-            // falling through to the thread reader.
-            if (Str.includes("pulls/751/reviews")(line)) return stubHandle(0, "[[]]");
-            if (Str.includes("pulls/751/comments")(line)) {
-              const answer = scriptAt(yield* Ref.getAndUpdate(reviewServed, (value) => value + 1));
-              const review = answer.reviewComments ?? emptyCollection;
-              return stubHandle(review.exitCode, review.output);
-            }
-            if (Str.includes("issues/751/comments")(line)) {
-              const answer = scriptAt(yield* Ref.getAndUpdate(issueServed, (value) => value + 1));
-              const issue = answer.issueComments ?? emptyCollection;
-              return stubHandle(issue.exitCode, issue.output);
-            }
-            const script = scriptAt(yield* Ref.get(threadsServed));
-            if (Str.includes("pr view")(line)) {
-              return stubHandle(script.view.exitCode, script.view.output);
-            }
-            if (Str.includes("pr checks")(line)) {
-              const checks = A.contains(commandArgs(command), "--required")
-                ? (script.requiredChecks ?? script.checks)
-                : script.checks;
-              return stubHandle(checks.exitCode, checks.output);
-            }
-            yield* Ref.update(threadsServed, (value) => value + 1);
-            return stubHandle(script.threads.exitCode, script.threads.output);
-          });
-        });
-      })
-    )
+    pollSpawner(scripts, diff).layer
     // `Git` rides over the scripted spawner: the merge-base diff runs through the kit (W2b), whose
     // `diff --name-only` argv the router above answers by prefix.
   ).pipe((scripted) => Layer.provideMerge(legacyGhGithubLayer, Layer.provideMerge(Git.layer, scripted)));

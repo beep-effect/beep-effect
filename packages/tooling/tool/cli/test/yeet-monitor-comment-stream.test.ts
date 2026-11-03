@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
@@ -33,16 +34,11 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { commandArgs } from "./support/commandArgs.ts";
 import { legacyGhGithubLayer } from "./support/YeetGithub.ts";
 
 const isStoppedPollMessage = S.is(
@@ -60,51 +56,30 @@ const EARLIER_COMMENT_AT = "2026-08-16T12:00:00.000Z";
 // A session with no saved position starts its cursors at wall-clock now, so a
 // comment the stub means to be "new" has to be dated after the test runs.
 const LATER_COMMENT_AT = "2099-01-01T00:00:00.000Z";
-const encoder = new TextEncoder();
-
 type CommandStub = {
   readonly exitCode: number;
   readonly output: string;
 };
 
-const stubHandle = (stub: CommandStub) =>
-  ChildProcessSpawner.makeHandle({
-    all: Stream.make(encoder.encode(stub.output)),
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(stub.exitCode)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    stdout: Stream.make(encoder.encode(stub.output)),
-    unref: Effect.succeed(Effect.void),
-  });
-
 /** A spawner that records every command line and answers from one function. */
 const $I = $RepoCliId.create("test/yeet-monitor-comment-stream");
-class RecordedCommands extends Context.Service<RecordedCommands, Ref.Ref<ReadonlyArray<string>>>()(
+class RecordedCommands extends Context.Service<RecordedCommands, Effect.Effect<ReadonlyArray<string>>>()(
   $I`RecordedCommands`
 ) {}
-const RecordedCommandsLayer = Layer.effect(RecordedCommands, Ref.make<ReadonlyArray<string>>(A.empty()));
 
 const recordingSpawnerLayer = (respond: (commandLine: string) => CommandStub) =>
   Layer.provideMerge(
     Git.layer,
-    Layer.effect(
-      ChildProcessSpawner.ChildProcessSpawner,
-      Effect.map(RecordedCommands, (commandsRef) =>
-        ChildProcessSpawner.make((command) =>
-          ChildProcess.isStandardCommand(command)
-            ? Effect.map(
-                Ref.updateAndGet(commandsRef, A.append(A.join([command.command, ...commandArgs(command)], " "))),
-                (commands) => stubHandle(respond(O.getOrElse(A.last(commands), () => Str.empty)))
-              )
-            : Effect.die("the comment monitor never spawns a piped command")
-        )
-      )
-    ).pipe(Layer.provideMerge(RecordedCommandsLayer))
+    Layer.suspend(() => {
+      const spawner = ScriptedSpawner.make((command, args) => {
+        const stub = respond(A.join([command, ...args], " "));
+        return { stdout: stub.output, exit: stub.exitCode };
+      });
+      const commandLines = Effect.sync(() =>
+        A.map(spawner.spawns, (spawn) => A.join([spawn.command, ...spawn.args], " "))
+      );
+      return Layer.merge(spawner.layer, Layer.succeed(RecordedCommands, commandLines));
+    })
   );
 
 // `gh api --paginate --slurp` answers with one array OF PAGES, so every stub
@@ -384,7 +359,7 @@ describe("yeet monitor comment cursor persistence", () => {
         makeTempDirectory,
         (root) =>
           Effect.gen(function* () {
-            const commandsRef = yield* RecordedCommands;
+            const recordedCommands = yield* RecordedCommands;
             const context = monitorContext(root);
             // The session seeds its starting position immediately, so waiting for
             // the file to exist would race the comment; wait for the cursor to
@@ -408,15 +383,14 @@ describe("yeet monitor comment cursor persistence", () => {
             // The second run must ask GitHub for everything since the saved
             // position — not since its own start — or a comment posted between the
             // two runs is invisible to both.
-            const firstRunCommandCount = A.length(yield* Ref.get(commandsRef));
-            yield* commandsRef.pipe(
-              Ref.get,
+            const firstRunCommandCount = A.length(yield* recordedCommands);
+            yield* recordedCommands.pipe(
               Effect.map((commands) => A.length(commands) >= firstRunCommandCount + 2),
               until,
               Effect.raceFirst(runYeetPullRequestCommentMonitor(context, PR_NUMBER))
             );
 
-            const secondRunCommands = A.drop(yield* Ref.get(commandsRef), firstRunCommandCount);
+            const secondRunCommands = A.drop(yield* recordedCommands, firstRunCommandCount);
             const issuePoll = A.findFirst(secondRunCommands, Str.includes("/issues/"));
             assertSome(O.map(issuePoll, Str.includes(`since=${LATER_COMMENT_AT}`)), true);
           }),
@@ -443,7 +417,7 @@ describe("yeet monitor comment poll failures", () => {
         makeTempDirectory,
         (root) =>
           Effect.gen(function* () {
-            const commandsRef = yield* RecordedCommands;
+            const recordedCommands = yield* RecordedCommands;
             // Stands in for `gh pr checks --watch`: the effect the operator is
             // actually waiting on. Before this fix, the failing comment poll won
             // the race with an error and took this fiber down with it.
@@ -459,7 +433,7 @@ describe("yeet monitor comment poll failures", () => {
 
             expect(winner).toBe("checks finished");
             // It really did try, and really did fail: the race was survived, not skipped.
-            expect(A.length(yield* Ref.get(commandsRef))).toBeGreaterThan(0);
+            expect(A.length(yield* recordedCommands)).toBeGreaterThan(0);
           }),
         removeTempDirectory
       )
@@ -600,7 +574,7 @@ describe("yeet monitor comment replay", () => {
         makeTempDirectory,
         (root) =>
           Effect.gen(function* () {
-            const commandsRef = yield* RecordedCommands;
+            const recordedCommands = yield* RecordedCommands;
             const context = monitorContext(root);
 
             yield* replayYeetMonitorComments(context, PR_NUMBER);
@@ -609,7 +583,7 @@ describe("yeet monitor comment replay", () => {
             expect(printed).toContain(`comment replay: no watermark for #${PR_NUMBER}; starting at`);
             // Nothing was read, because there was no "since" to read from — the
             // point of the line is that the NEXT open is the one that resumes.
-            expect(A.length(yield* Ref.get(commandsRef))).toBe(0);
+            expect(A.length(yield* recordedCommands)).toBe(0);
             (yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER)).pipe(O.isSome, assertTrue);
           }),
         removeTempDirectory
@@ -771,7 +745,7 @@ describe("yeet status comment replay", () => {
         makeTempDirectory,
         (root) =>
           Effect.gen(function* () {
-            const commandsRef = yield* RecordedCommands;
+            const recordedCommands = yield* RecordedCommands;
             const context = monitorContext(root);
             yield* writeState(context, stateAt(PR_NUMBER, EARLIER_COMMENT_AT, 0));
 
@@ -780,7 +754,7 @@ describe("yeet status comment replay", () => {
               defaultYeetRunOptions({ base: context.base, json: true, mode: "status", packetDir: root, remote: true })
             );
 
-            const commands = yield* Ref.get(commandsRef);
+            const commands = yield* recordedCommands;
             // The pull request was read — so the replay had a number to work with —
             // and none of the three comment endpoints was touched anyway.
             expect(A.some(commands, Str.includes("pr view"))).toBe(true);

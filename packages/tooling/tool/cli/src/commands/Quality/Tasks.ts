@@ -105,7 +105,13 @@ import {
   MAX_QUARANTINED_TASKS_PER_LANE,
   standaloneQuarantineRerunStep,
 } from "./internal/FlakeQuarantine.ts";
-import { hasReusableLaneProof, persistLaneProofs, prepareLaneProofSession } from "./internal/LaneProofReuse.ts";
+import {
+  explainLaneProofRefusal,
+  hasReusableLaneProof,
+  persistLaneProofs,
+  prepareLaneProofSession,
+  renderLaneProofRefusal,
+} from "./internal/LaneProofReuse.ts";
 import {
   LINT_POLICY_TARGET_TASKS,
   LintPolicyFullScope,
@@ -2164,6 +2170,11 @@ const runGithubCheckLane = Effect.fn("QualityTasks.runGithubCheckLane")(function
   const activeReuse = reusable && O.exists(session, (prepared) => prepared.mode === "active");
   if (reusable) {
     yield* Console.log(`[lane-proof] ${activeReuse ? "reusing" : "shadow hit for"} exact lane proof: ${lane.id}`);
+  } else {
+    yield* O.match(O.flatMap(session, explainLaneProofRefusal(lane.id)), {
+      onNone: () => Effect.void,
+      onSome: flow(renderLaneProofRefusal, Console.log),
+    });
   }
   if (activeReuse) {
     return {

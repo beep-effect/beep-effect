@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { fcRuns } from "@beep/fc-runs";
 import { ActionEnvironment } from "@beep/github-actions/ActionEnvironment";
 import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
@@ -29,16 +30,12 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as TestConsole from "effect/testing/TestConsole";
-import { commandArgs } from "./support/commandArgs.ts";
 import { parseRunnerFile } from "./support/runnerFile.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 
 const code = ["packages/a/src/index.ts"];
 const docs = ["docs/runbooks/ci.md", "goals/x/PLAN.md"];
@@ -55,28 +52,9 @@ const payload = (labels: ReadonlyArray<string>, draft = false, base = "main") =>
       base: { ref: base, repo: { full_name: "beep-effect/beep-effect" } },
     },
   });
-const handle = (exitCode: number, output: string) =>
-  ChildProcessSpawner.makeHandle({
-    all: Stream.make(new TextEncoder().encode(output)),
-    stdout: Stream.make(new TextEncoder().encode(output)),
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    unref: Effect.succeed(Effect.void),
-  });
 // The scripted git: fetch succeeds silently, diff prints the scripted paths.
-const gitSpawner = (diff: string, commands: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>) =>
-  ChildProcessSpawner.make((command) => {
-    if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-    return Ref.update(commands, A.append([command.command, ...commandArgs(command)])).pipe(
-      Effect.as(handle(0, commandArgs(command)[0] === "diff" ? diff : ""))
-    );
-  });
+const gitSpawner = (diff: string) =>
+  ScriptedSpawner.make((_command, args) => ({ stdout: args[0] === "diff" ? diff : "" }));
 const platform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer);
 const lastLine = (lines: ReadonlyArray<string>): string => O.getOrElse(A.last(lines), () => "");
 const runAdmissionCommand = Command.runWith(ciAdmissionCommand, { version: "0.0.0" });
@@ -424,7 +402,7 @@ it.layer(platform, { timeout: "30 seconds" })("B8 ci admission command", (layerI
     temporary((root) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+        const spawner = gitSpawner("packages/a/src/index.ts\n");
         const path = yield* writeEvent(root, payload([HEAVY_ADMISSION_LABEL], false, "develop"));
         const output = `${root}/github-output.txt`;
         const env = ConfigProvider.fromUnknown({
@@ -440,13 +418,7 @@ it.layer(platform, { timeout: "30 seconds" })("B8 ci admission command", (layerI
           "--base",
           "main",
           "--github-output",
-        ]).pipe(
-          Effect.provideService(
-            ChildProcessSpawner.ChildProcessSpawner,
-            gitSpawner("packages/a/src/index.ts\n", commands)
-          ),
-          Effect.provideService(ConfigProvider.ConfigProvider, env)
-        );
+        ]).pipe(provideSpawner(spawner), Effect.provideService(ConfigProvider.ConfigProvider, env));
         const printed = yield* logs;
         const decoded = yield* HeavyAdmissionJson.decode(lastLine(printed));
         expect(decoded).toEqual(
@@ -461,14 +433,14 @@ it.layer(platform, { timeout: "30 seconds" })("B8 ci admission command", (layerI
         expect(parseRunnerFile(yield* fs.readFileString(output))).toEqual(
           parseRunnerFile("verdict=run\nadmitted=true\ndocs_only=false\nsources=label\n")
         );
-        expect(A.map(yield* Ref.get(commands), (command) => command[1])).toEqual(["fetch", "diff"]);
+        expect(A.map(spawner.spawns, (spawn) => spawn.args[0])).toEqual(["fetch", "diff"]);
         // The environment alone drives a push: no payload, no git, exit 0.
-        yield* Ref.set(commands, []);
+        const idle = gitSpawner("");
         yield* runAdmissionCommand([]).pipe(
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, gitSpawner("", commands)),
+          provideSpawner(idle),
           Effect.provideService(ConfigProvider.ConfigProvider, env)
         );
-        expect(yield* Ref.get(commands)).toEqual([]);
+        expect(idle.spawns).toEqual([]);
         expect(parseRunnerFile(yield* fs.readFileString(output))).toEqual(
           parseRunnerFile("verdict=run\nadmitted=true\ndocs_only=false\nsources=label\n")
         );
@@ -485,10 +457,9 @@ it.layer(platform, { timeout: "30 seconds" })("B8 ci admission command", (layerI
   layerIt.effect("reports unreadable inputs on stderr with a failing exit", () =>
     temporary((root) =>
       Effect.gen(function* () {
-        const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const env = ConfigProvider.fromUnknown({});
         const exit = yield* runAdmissionCommand(["--event-name", "pull_request", "--github-output"]).pipe(
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, gitSpawner("", commands)),
+          provideSpawner(gitSpawner("")),
           Effect.provideService(ConfigProvider.ConfigProvider, env),
           Effect.exit
         );
