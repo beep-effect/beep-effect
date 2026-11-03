@@ -16,6 +16,7 @@
  */
 import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
 import { $RepoCliId } from "@beep/identity/packages";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { findRepoRoot } from "@beep/repo-utils";
 import { BoolKeyDefaultFalse } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import * as Config from "effect/Config";
@@ -27,7 +28,6 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { runRepoCommandCapture } from "../../internal/repo-run/index.ts";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { CiCommandError, reportCiCommandError } from "./Ci.errors.ts";
 import { CiRunnerOutputsLive } from "./CiRunnerOutputs.ts";
 import {

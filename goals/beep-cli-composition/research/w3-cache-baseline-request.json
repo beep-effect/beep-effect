@@ -1,0 +1,20 @@
+{
+  "previous": "ef390b78722a13417e2a0566601c65d3d7c13c33534286814bbd1ab23d927435",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (W3 lane, refactor/beep-cli-w3-repo-cli-kit)",
+    "reason": "Record the new @beep/repo-cli-kit subject and re-record repo-cli and the root after W3 moves the CLI-kit substrate into the new library; standard tooling-library tasks, no qualification granted.",
+    "basis": {
+      "path": "goals/beep-cli-composition/research/w3-cache-baseline-review.md",
+      "sha256": "b9856e7a73dccceddbf3ad4384d4fd15e6fa1f0559166d892fbcd85f2b85994a"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//", "@beep/repo-cli", "@beep/repo-cli-kit"]
+}

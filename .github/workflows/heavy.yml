@@ -443,32 +443,38 @@ jobs:
           printf 'XDG_CACHE_HOME=%s/cache\n' "$build_root" >> "$GITHUB_ENV"
           printf 'CARGO_TARGET_DIR=%s/target\n' "$build_root" >> "$GITHUB_ENV"
 
-      - name: Ensure native host compiler and ELF inspection tools
+      - name: Ensure native build and ELF inspection prerequisites
         shell: bash
         run: |
           set -euo pipefail
-          if ! command -v cc >/dev/null || ! command -v ld >/dev/null || ! command -v readelf >/dev/null; then
+          # Vendored OpenSSL needs Make and Perl core modules even when GCC exists.
+          if ! command -v cc >/dev/null || ! command -v ld >/dev/null || ! command -v readelf >/dev/null ||
+             ! command -v make >/dev/null || ! perl -MFindBin -MIPC::Cmd -MFile::Compare -MFile::Copy -e 'use 5.010;' >/dev/null 2>&1; then
             privilege=()
             if [[ "$EUID" -ne 0 ]]; then
               privilege=(sudo -n)
             fi
             if command -v dnf >/dev/null 2>&1; then
-              "${privilege[@]}" dnf install -y gcc binutils
+              "${privilege[@]}" dnf install -y gcc binutils make perl-core
             elif command -v apt-get >/dev/null 2>&1; then
               bash scripts/ci-prune-apt-sources.sh
               "${privilege[@]}" apt-get update
-              "${privilege[@]}" apt-get install -y --no-install-recommends gcc binutils
+              "${privilege[@]}" apt-get install -y --no-install-recommends gcc binutils make perl
             else
-              echo "::error::No supported native host compiler installer."
+              echo "::error::No supported native build prerequisite installer."
               exit 1
             fi
           fi
           command -v cc
           command -v ld
           command -v readelf
+          command -v make
+          perl -MFindBin -MIPC::Cmd -MFile::Compare -MFile::Copy -e 'use 5.010;'
           cc --version
           ld --version
           readelf --version
+          make --version
+          perl --version
 
       - name: Setup pinned Rust without shared caches
         uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0

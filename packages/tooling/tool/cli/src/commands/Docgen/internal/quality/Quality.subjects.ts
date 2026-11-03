@@ -7,6 +7,7 @@
 
 import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { $RepoCliId } from "@beep/identity/packages";
+import { boundedText, firstLine } from "@beep/repo-cli-kit/cli/Timing";
 import { parseComment } from "@beep/repo-docgen/Parser";
 import { ContentHashFromSourceText, DomainError, findRepoRoot } from "@beep/repo-utils";
 import { normalizeJSDocCategory } from "@beep/repo-utils/schemas/JSDocCategories";
@@ -25,7 +26,6 @@ import * as Regex from "effect/RegExp";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Node, Project } from "ts-morph";
-import { boundedText, firstLine } from "../../../../internal/cli/Timing.ts";
 import { DocgenConfigDocument } from "../../Docgen.schemas.ts";
 import { getDeclaredJsDocs } from "../JsDocNodes.ts";
 import { loadDocgenConfigDocument } from "../Workspace.ts";

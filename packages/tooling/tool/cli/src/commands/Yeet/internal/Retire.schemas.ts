@@ -6,10 +6,10 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { GitObjectId } from "@beep/schema/Conformance";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { WorktreeRemovalReceipt } from "../../Worktree/Worktree.schemas.ts";
 import { ProofJobCancelOutcome } from "./ProofJob.ts";
 import { SweepPlan, SweepReport } from "./Sweep.schemas.ts";

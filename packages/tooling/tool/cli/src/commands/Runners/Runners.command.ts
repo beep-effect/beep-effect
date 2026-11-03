@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { A } from "@beep/utils";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
@@ -14,7 +15,6 @@ import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { RunnersCommandError } from "./Runners.errors.ts";
 import { BakeCheckReportJson, BakeConfig, BakePlanJson, BakeReportJson } from "./Runners.schemas.ts";
 import { RunnersService, RunnersServiceLive } from "./Runners.service.ts";

@@ -13,6 +13,21 @@
 import * as NodeURL from "node:url";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
+import { formatJsonValue } from "@beep/repo-cli-kit/cli/Json";
+import { applyJsoncModification, JsoncModification } from "@beep/repo-cli-kit/cli/Jsonc";
+import {
+  encodeLabManifestJson,
+  isLabsWorkspacePath,
+  LAB_MANIFEST_FILENAME,
+  LABS_WORKSPACE_GLOB,
+  LABS_WORKSPACE_ROOT,
+  LabManifest,
+  RETIRED_REGISTRY_PATH,
+  readRetiredPackageNames,
+} from "@beep/repo-cli-kit/cli/Labs/index";
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
+import { scaffoldPackageScripts } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas";
+import { runToExit } from "@beep/repo-cli-kit/process/StepExec";
 import {
   DomainError,
   encodePackageJsonCanonicalPrettyEffect,
@@ -38,21 +53,6 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { formatJsonValue } from "../../internal/cli/Json.ts";
-import { applyJsoncModification, JsoncModification } from "../../internal/cli/Jsonc.ts";
-import {
-  encodeLabManifestJson,
-  isLabsWorkspacePath,
-  LAB_MANIFEST_FILENAME,
-  LABS_WORKSPACE_GLOB,
-  LABS_WORKSPACE_ROOT,
-  LabManifest,
-  RETIRED_REGISTRY_PATH,
-  readRetiredPackageNames,
-} from "../../internal/cli/Labs/index.ts";
-import { printLines } from "../../internal/cli/Printer.ts";
-import { scaffoldPackageScripts } from "../../internal/package-scripts/PackageScripts.schemas.ts";
-import { runToExit } from "../../internal/process/StepExec.ts";
 import { syncTsconfigAtRoot } from "../TsconfigSync/index.ts";
 import { TsconfigSyncRunOptionsSync } from "../TsconfigSync/TsconfigSync.schemas.ts";
 import {
@@ -66,7 +66,7 @@ import { CreatePackageIdentityRegistration } from "./internal/IdentityRegistrati
 import { LabIdentitySegment } from "./internal/LabIdentitySegment.ts";
 import * as RetiredNameRegistry from "./internal/RetiredNameRegistry.ts";
 import { createTemplateService, StaticAssetSpec, TemplateRenderRequest, TemplateSpec } from "./TemplateService.ts";
-import type { PackageKind as ScriptsPackageKind } from "../../internal/package-scripts/PackageScripts.schemas.ts";
+import type { PackageKind as ScriptsPackageKind } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas";
 
 const $I = $RepoCliId.create("commands/CreatePackage/CreatePackage.command");
 const {

@@ -28,6 +28,7 @@
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
+import { PosInt } from "@beep/repo-cli-kit/schema/PosInt";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
@@ -75,7 +76,6 @@ import {
   scanProcessAttachments,
   sessionRootOf,
 } from "../../internal/repo-run/index.ts";
-import { PosInt } from "../../internal/schema/PosInt.ts";
 import { isRetainedCheckoutResidueName } from "./internal/ResidueReap.ts";
 import { CLAUDE_WORKTREES_RELATIVE_ROOT } from "./Worktree.constants.ts";
 import { WorktreeCommandError, WorktreeDirtyError, WorktreePreservationError } from "./Worktree.errors.ts";

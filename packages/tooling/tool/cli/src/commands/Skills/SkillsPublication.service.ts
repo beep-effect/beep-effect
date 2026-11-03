@@ -17,6 +17,7 @@
 
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
+import { asArrayBufferView, concatBytes } from "@beep/repo-cli-kit/cli/Bytes";
 import { A, O, Str } from "@beep/utils";
 import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
@@ -31,7 +32,6 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { asArrayBufferView, concatBytes } from "../../internal/cli/Bytes.ts";
 import {
   dropStalePublicationPartials,
   makePublicationLedger,

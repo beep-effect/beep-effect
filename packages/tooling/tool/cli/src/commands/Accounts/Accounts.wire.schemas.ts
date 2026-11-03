@@ -12,6 +12,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -24,7 +25,6 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { AccountLabel, CreditBalance, UsageWindow } from "./Accounts.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Accounts/Accounts.wire.schemas");

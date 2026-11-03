@@ -1,3 +1,6 @@
+import { isLabsWorkspacePath } from "@beep/repo-cli-kit/cli/Labs/index";
+import { workspaceDirectories, workspacePackages } from "@beep/repo-cli-kit/RepoWorkspaces";
+import { mentionsAnyToken, mentionsToken } from "@beep/repo-cli-kit/WholeToken";
 import { computeTransitiveClosure, decodePackageJsonEffect, toSortedRecord } from "@beep/repo-utils";
 import { ALL_DEPENDENCY_FIELDS } from "@beep/repo-workspaces/internal/dependencyFields";
 import { normalizePath } from "@beep/schema";
@@ -14,9 +17,6 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
-import { isLabsWorkspacePath } from "../../../../internal/cli/Labs/index.ts";
-import { workspaceDirectories, workspacePackages } from "../../../../internal/RepoWorkspaces.ts";
-import { mentionsAnyToken, mentionsToken } from "../../../../internal/WholeToken.ts";
 import { DeletePackageDataResource } from "../DataResource.ts";
 import { isCanonicalDeletionChangeset } from "../DeletionChangeset.ts";
 import { IDENTITY_SHAPE_TEST_PATH, shapeTestRowAccessor } from "../ShapeTestRow.ts";

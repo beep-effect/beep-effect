@@ -5,11 +5,11 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { messageWithCause } from "@beep/repo-cli-kit/cli/CommandErrorFields";
+import { OpaqueDefect } from "@beep/repo-cli-kit/schema/OpaqueDefect";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import { messageWithCause } from "../../internal/cli/CommandErrorFields.ts";
-import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 
 const $I = $RepoCliId.create("commands/VersionSync/VersionSync.errors");
 

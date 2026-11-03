@@ -1,0 +1,149 @@
+/**
+ * Shared schema fields and reporting helper for repo-cli command-suite errors.
+ *
+ * **Details**
+ *
+ * The `<Group>CommandError` classes in Worktree, Yeet, Quality, and
+ * their siblings all carry the same `message` + optional
+ * `command` / `exitCode` / `cause` shape and the same
+ * `Runtime.errorExitCode` default. {@link commandErrorFields} lets a group
+ * adopt that field set by spread without changing its tag or serialized shape,
+ * {@link resolveCommandExitCode} centralises the `exitCode ?? 1` default the
+ * override applies, and {@link reportCommandError} reproduces the
+ * `Console.error` + {@link failWithReportedExit} recovery each command runs
+ * inside `Effect.catchTags`.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
+import { OpaqueDefect } from "../schema/OpaqueDefect.ts";
+import { failWithReportedExit } from "./ExitCodeError.ts";
+
+const causeMessage = (cause: unknown): string => {
+  if (P.isError(cause)) {
+    return cause.message;
+  }
+  if (P.hasProperty(cause, "message") && P.isString(cause.message)) {
+    return cause.message;
+  }
+  return Inspectable.toStringUnknown(cause, 0);
+};
+
+/**
+ * Schema fields shared by repo-cli command-suite error classes.
+ *
+ * **Details**
+ *
+ * Spread into a `S.TaggedError` field definition to inherit the common
+ * `message` + optional `command` / `exitCode` / `cause` shape; add
+ * group-specific fields (for example `path` or `file`) alongside the spread.
+ *
+ * **Example** (Spread into S.TaggedError)
+ *
+ * ```ts
+ * import { $RepoCliId } from "@beep/identity/packages"
+ * import * as S from "effect/Schema"
+ * import { commandErrorFields } from "@beep/repo-cli-kit/cli/CommandErrorFields"
+ *
+ * const $I = $RepoCliId.create("commands/Example/Example.errors")
+ *
+ * class ExampleCommandError extends S.TaggedError<ExampleCommandError, { readonly brand: unique symbol }>($I`ExampleCommandError`)(
+ *   "ExampleCommandError",
+ *   { ...commandErrorFields, path: S.optionalKey(S.String) },
+ *   $I.annoteError<ExampleCommandError>("ExampleCommandError", { description: "Example failure." })
+ * ) {}
+ *
+ * console.log(ExampleCommandError.make({ message: "boom" }).message)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const commandErrorFields = {
+  message: S.String,
+  command: S.optionalKey(S.String),
+  exitCode: S.optionalKey(S.Finite),
+  cause: S.optionalKey(OpaqueDefect),
+} satisfies S.Struct.Fields;
+
+/**
+ * Append a readable unknown cause to a CLI error message.
+ *
+ * **Details**
+ *
+ * Error instances and objects with a string `message` use that message. Other
+ * values use Effect's compact unknown-value inspector.
+ *
+ * **Example** (Format a command failure)
+ *
+ * ```ts
+ * import { messageWithCause } from "@beep/repo-cli-kit/cli/CommandErrorFields"
+ *
+ * console.log(messageWithCause("Version sync failed", { message: "Network unavailable" }))
+ * // "Version sync failed: Network unavailable"
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
+export const messageWithCause: {
+  (cause: unknown): (message: string) => string;
+  (message: string, cause: unknown): string;
+} = dual(2, (message: string, cause: unknown): string => `${message}: ${causeMessage(cause)}`);
+
+/**
+ * Resolve the process exit code for a command error, defaulting to `1`.
+ *
+ * **Example** (Resolve provided and missing codes)
+ *
+ * ```ts
+ * import { resolveCommandExitCode } from "@beep/repo-cli-kit/cli/CommandErrorFields"
+ *
+ * console.log(resolveCommandExitCode(2))
+ * console.log(resolveCommandExitCode(undefined))
+ * ```
+ *
+ * @param exitCode - The error's optional `exitCode` field.
+ * @returns The provided exit code, or `1` when absent.
+ * @category error-handling
+ * @since 0.0.0
+ */
+export const resolveCommandExitCode = (exitCode: number | undefined): number => exitCode ?? 1;
+
+/**
+ * Build a catch handler that prints a prefixed error line and then fails with a
+ * silent reported exit.
+ *
+ * **Details**
+ *
+ * Reproduces the `Console.error` line `<prefix>: <message>` +
+ * {@link failWithReportedExit} pattern each command runs per tag inside
+ * `Effect.catchTags`.
+ *
+ * **Example** (Build prefixed catch handler)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect";
+ * import { reportCommandError } from "@beep/repo-cli-kit/cli/CommandErrorFields"
+ *
+ * const handler = reportCommandError("version-sync")
+ * console.log(Effect.isEffect(handler({ message: "drift detected" })))
+ * ```
+ *
+ * @param prefix - The command label prepended to the error message.
+ * @returns A handler consuming an error with a `message` field.
+ * @category error-handling
+ * @since 0.0.0
+ */
+export const reportCommandError = (prefix: string) =>
+  Effect.fnUntraced(function* (error: { readonly message: string }) {
+    const line = `${prefix}: ${error.message}`;
+    yield* Console.error(line);
+    return yield* failWithReportedExit(line);
+  });

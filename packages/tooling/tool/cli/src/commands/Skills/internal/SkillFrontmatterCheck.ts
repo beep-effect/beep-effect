@@ -10,6 +10,7 @@ import { decodeAgentSkillFrontmatterStrict } from "@beep/ai-sync";
 import { FrontmatterSource } from "@beep/markdown/FrontmatterSource";
 import { Frontmatter } from "@beep/markdown/MarkdownNode";
 import { YamlFrontmatter } from "@beep/markdown/YamlFrontmatter";
+import { errorMessage } from "@beep/repo-cli-kit/cli/Timing";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -17,7 +18,6 @@ import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Str from "effect/String";
-import { errorMessage } from "../../../internal/cli/Timing.ts";
 import {
   SKILL_BODY_LINE_LIMIT,
   SkillBodyAdvisory,

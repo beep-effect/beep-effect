@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { UUID } from "@beep/repo-cli-kit/schema/Uuid";
 import { SchemaUtils } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
@@ -16,7 +17,6 @@ import {
   YeetAttemptTerminationReason,
 } from "../../../internal/repo-run/AttemptTerminationJournal.ts";
 import { attemptInputFactFields } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
-import { UUID } from "../../../internal/schema/Uuid.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
 import { YeetVerdict } from "./Verdict.ts";

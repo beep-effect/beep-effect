@@ -14,6 +14,16 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import {
+  decodeLabManifestJson,
+  isLabsWorkspacePath,
+  LAB_MANIFEST_FILENAME,
+  LABS_WORKSPACE_ROOT,
+  LabManifest,
+} from "@beep/repo-cli-kit/cli/Labs/index";
+import { printJsonOrLines } from "@beep/repo-cli-kit/cli/Printer";
+import { workspaceDirectories } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -27,16 +37,6 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import {
-  decodeLabManifestJson,
-  isLabsWorkspacePath,
-  LAB_MANIFEST_FILENAME,
-  LABS_WORKSPACE_ROOT,
-  LabManifest,
-} from "../../internal/cli/Labs/index.ts";
-import { printJsonOrLines } from "../../internal/cli/Printer.ts";
-import { workspaceDirectories } from "../../internal/RepoWorkspaces.ts";
 
 const $I = $RepoCliId.create("commands/Labs/Labs.command");
 

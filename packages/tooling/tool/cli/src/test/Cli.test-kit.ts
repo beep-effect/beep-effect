@@ -5,19 +5,19 @@
  * @since 0.0.0
  */
 
-export * from "../internal/cli/Bytes.ts";
-export * from "../internal/cli/CommandErrorFields.ts";
-export * from "../internal/cli/EntryPath.ts";
-export * from "../internal/cli/ExitCodeError.ts";
-export * from "../internal/cli/FailureRendering.ts";
-export * from "../internal/cli/Flags.ts";
-export * from "../internal/cli/FsGuards.ts";
-export * from "../internal/cli/Json.ts";
-export * from "../internal/cli/Printer.ts";
-export * from "../internal/cli/Progress.ts";
-export * from "../internal/cli/RunMode.ts";
-export * from "../internal/cli/ShardScope.ts";
-export * from "../internal/cli/Stdin.ts";
-export * from "../internal/cli/Stdout.ts";
-export * from "../internal/cli/Timing.ts";
-export * from "../internal/cli/UnknownProbe.ts";
+export * from "@beep/repo-cli-kit/cli/Bytes";
+export * from "@beep/repo-cli-kit/cli/CommandErrorFields";
+export * from "@beep/repo-cli-kit/cli/EntryPath";
+export * from "@beep/repo-cli-kit/cli/ExitCodeError";
+export * from "@beep/repo-cli-kit/cli/FailureRendering";
+export * from "@beep/repo-cli-kit/cli/Flags";
+export * from "@beep/repo-cli-kit/cli/FsGuards";
+export * from "@beep/repo-cli-kit/cli/Json";
+export * from "@beep/repo-cli-kit/cli/Printer";
+export * from "@beep/repo-cli-kit/cli/Progress";
+export * from "@beep/repo-cli-kit/cli/RunMode";
+export * from "@beep/repo-cli-kit/cli/ShardScope";
+export * from "@beep/repo-cli-kit/cli/Stdin";
+export * from "@beep/repo-cli-kit/cli/Stdout";
+export * from "@beep/repo-cli-kit/cli/Timing";
+export * from "@beep/repo-cli-kit/cli/UnknownProbe";

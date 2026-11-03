@@ -11,10 +11,10 @@
  */
 
 import { SessionStore } from "@beep/qa-capture";
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
-import { printLines } from "../../internal/cli/Printer.ts";
 import { extractionPlanPath, readExtractionPlan, resolveRoundLayout } from "./Extract.ts";
 import { QaCommandError } from "./Qa.errors.ts";
 import { renderRoundReport } from "./Qa.render.ts";

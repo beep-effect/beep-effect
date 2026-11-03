@@ -43,7 +43,7 @@ Higher sources outrank lower sources when they conflict.
 
 ## Target surfaces
 
-- `packages/tooling/tool/cli/src/internal/process/StepExec.ts` for the split
+- `packages/tooling/library/repo-cli-kit/src/process/StepExec.ts` for the split
   process-exit and capture-EOF lifecycle.
 - `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts` for the captured
   step-group watchdog, expected-duration policy, retry, and the
@@ -52,7 +52,7 @@ Higher sources outrank lower sources when they conflict.
   `bunRunStep` helper — the spawn site of the middle
   `bun run beep lint policy --full` pair; both files must drop the wrapper
   to reach the promised six-to-four process reduction.
-- `packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts` and focused
+- `packages/tooling/library/repo-cli-kit/test/step-capture-lifecycle.test.ts` and focused
   Quality task tests, using the existing fake-spawner pattern.
 - One well-known watchdog-dump directory shared by the CLI and workflow.
 - `.github/workflows/check.yml` for an `always()` artifact upload only.
@@ -74,7 +74,7 @@ Higher sources outrank lower sources when they conflict.
 
 - The first vertical slice joins W1, W2, and W3 on the Lint Policy lane. A
   synthetic hang built from the fake spawner in
-  `packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts` must drive
+  `packages/tooling/library/repo-cli-kit/test/step-capture-lifecycle.test.ts` must drive
   watchdog fire, dump creation, process-group kill, one retry, and a green
   lane. The hosted artifact proof must be deterministically reachable: the
   dump directory always contains a per-run watchdog summary (so the
@@ -172,7 +172,7 @@ Higher sources outrank lower sources when they conflict.
 
 | Check | Command or evidence | Required result |
 | --- | --- | --- |
-| Lifecycle and watchdog tests | `bunx --bun vitest run packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts packages/tooling/tool/cli/test/quality-tasks.test.ts` | Synthetic hang covers dump, kill, retry-once, and failure paths |
+| Lifecycle and watchdog tests | `bunx --bun vitest run packages/tooling/library/repo-cli-kit/test/step-capture-lifecycle.test.ts packages/tooling/tool/cli/test/quality-tasks.test.ts` | Synthetic hang covers dump, kill, retry-once, and failure paths |
 | CLI typecheck | `bun run --cwd packages/tooling/tool/cli check` | Passes |
 | Lint Policy | `bun run beep lint policy --full` | Passes without a watchdog false positive |
 | Hosted first slice | Lint Policy Actions run plus uploaded watchdog artifact | Green run; the always-written per-run summary artifact is present, and one opt-in synthetic-hang run has produced a full incident dump |

@@ -10,6 +10,7 @@
  */
 
 import * as NodeOS from "node:os";
+import { configStringOption } from "@beep/repo-cli-kit/cli/EnvConfig";
 import { HostProcessPlatform } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as A from "effect/Array";
@@ -19,7 +20,6 @@ import * as Eq from "effect/Equal";
 import { constant, flow, pipe } from "effect/Function";
 import * as N from "effect/Number";
 import * as Str from "effect/String";
-import { configStringOption } from "../cli/EnvConfig.ts";
 import { runRepoCommandCapture } from "./RepoRun.executor.ts";
 import {
   isProofJobUnitName,

@@ -749,3 +749,7 @@ protected producer provenance, current-main qualification or production rollout.
   the four caller permission maps are consumed unchanged from `fae5b2098c`.
   The remaining regression compares against the actual requested leaf map and
   pins the narrower selected-leaf defaults.
+
+
+- [Preparation run 41610315729](https://github.com/beep-effect/beep-effect/actions/runs/41610315729): actual accepted-source build failed at OpenSSL Configure because `FindBin.pm` was missing; artifact upload skipped and isolated scratch cleanup passed. Source, job and exact log digest are retained in `candidate-openssl-prerequisite-failure-2026-11-03.json`.
+- [OpenSSL prerequisites](https://github.com/openssl/openssl/blob/openssl-3.5.4/INSTALL.md) require Make and Perl with core modules. [OpenSSL Perl notes](https://github.com/openssl/openssl/blob/openssl-3.5.4/NOTES-PERL.md) name `perl-core` for RPM-based distributions and `perl` for Debian-based distributions. This is prerequisite guidance, not proof that the Beep candidate has compiled.

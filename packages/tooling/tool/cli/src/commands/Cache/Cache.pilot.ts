@@ -8,6 +8,9 @@
 import { isResolvedPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
+import { readContainedFileBytesNoFollow, writeContainedFileString } from "@beep/repo-cli-kit/cli/FsGuards";
+import { OutputBound, runCapturedStreams } from "@beep/repo-cli-kit/process/index";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { CacheClientPin, CacheQualificationKey, CacheTaskConfiguration } from "@beep/repo-configs/cache";
 import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
@@ -30,11 +33,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { readContainedFileBytesNoFollow, writeContainedFileString } from "../../internal/cli/FsGuards.ts";
-import { OutputBound, runCapturedStreams } from "../../internal/process/index.ts";
 import { AdmissionRequest } from "../../internal/repo-run/QualityScheduler.schemas.ts";
 import { noAdmissionOriginGate, withQualityAdmission } from "../../internal/repo-run/QualityScheduler.ts";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { resolveWorktreeContext } from "../Worktree/index.ts";
 import { collectCacheCensus, collectCacheTaskSelection, joinCacheCensusPlan } from "./Cache.census.ts";
 import { CacheConformanceProxyOptions, makeCacheConformanceFaultProxy } from "./Cache.conformance.proxy.ts";
@@ -110,9 +110,9 @@ import {
   CacheToolchainSnapshot,
 } from "./Cache.schemas.ts";
 import { CacheQualificationService } from "./Cache.service.ts";
+import type { FsGuardError } from "@beep/repo-cli-kit/cli/FsGuards";
 import type * as Digest from "effect/crypto/Digest";
 import type * as PlatformError from "effect/PlatformError";
-import type { FsGuardError } from "../../internal/cli/FsGuards.ts";
 import type { CacheDependencyMaterialization } from "./Cache.dependencies.schemas.ts";
 import type { CachePilotRequest } from "./Cache.pilot.schemas.ts";
 

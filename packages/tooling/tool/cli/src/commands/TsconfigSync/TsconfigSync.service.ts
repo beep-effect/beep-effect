@@ -5,23 +5,23 @@
  * @since 0.0.0
  */
 
+import { workspaceDependencyGraph } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { detectCycles } from "@beep/repo-utils";
 import { A } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
-import { workspaceDependencyGraph } from "../../internal/RepoWorkspaces.ts";
 import { TsconfigSyncCycleError, TsconfigSyncDriftError } from "./TsconfigSync.errors.ts";
 import { TsconfigSyncPlan } from "./TsconfigSync.plan.ts";
 import { TsconfigSyncRender } from "./TsconfigSync.render.ts";
 import { TsconfigSyncModeMatch, TsconfigSyncResult, tsconfigSyncModeEquivalence } from "./TsconfigSync.schemas.ts";
+import type { RepoWorkspacesError } from "@beep/repo-cli-kit/RepoWorkspaces";
 import type { CyclicDependencyError, DomainError, FsUtils, NoSuchFileError } from "@beep/repo-utils";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as PlatformError from "effect/PlatformError";
 import type { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
-import type { RepoWorkspacesError } from "../../internal/RepoWorkspaces.ts";
 import type { TsconfigSyncFilterError } from "./TsconfigSync.errors.ts";
 import type { PlannedFileChange, TsconfigSyncRunOptions } from "./TsconfigSync.schemas.ts";
 

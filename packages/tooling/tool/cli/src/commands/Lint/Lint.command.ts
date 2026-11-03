@@ -5,9 +5,9 @@
  * @since 0.0.0
  */
 
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import { A } from "@beep/utils";
 import * as Command from "effect/cli/Command";
-import { printLines } from "../../internal/cli/Printer.ts";
 import { lintEcosystemPolarityCommand } from "./EcosystemPolarity.ts";
 import { lintEffectSchemaInventoryCommand } from "./EffectSchemaInventory.ts";
 import { lintEffectVitestCommand } from "./EffectVitest.ts";

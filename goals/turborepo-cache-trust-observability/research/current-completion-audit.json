@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "e1ec81133ca1a44b7ffad5c184e9c4b0a9f17cdb7529c8a03dcff483b8683418",
+  "specSha256": "60222d2f1c620e53a4e2ace2a354df51e77e86c92286dd85a0d4b882c019fed4",
   "acceptance": [
     {
       "id": "AC-01",
@@ -537,5 +537,11 @@
     "path": "research/caller-permission-startup-repair-2026-11-03.json",
     "sha256": "ca5ffd0d730802fb0e4eb7120a228b287a198e58cd0cd45825425e86c2ce0103",
     "authority": "Actual failed startup and source-level repair only; hosted regressions and a fresh accepted-source operational run remain required."
+  },
+  "priorSpecDigestBeforeOpenSslPrerequisiteRepair": "e1ec81133ca1a44b7ffad5c184e9c4b0a9f17cdb7529c8a03dcff483b8683418",
+  "candidateOpenSslPrerequisiteRepair": {
+    "path": "research/candidate-openssl-prerequisite-repair-2026-11-03.json",
+    "sha256": "7981c3390cff25148c39cab61d20c2ab89ca347916a0e81ab1d793263e09b6f8",
+    "authority": "Source-level prerequisite repair only. Hosted regression proof, accepted-source build and independent artifact inspection are still required."
   }
 }

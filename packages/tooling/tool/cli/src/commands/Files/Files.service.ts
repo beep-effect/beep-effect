@@ -8,6 +8,7 @@
 import { Exiftool } from "@beep/exiftool";
 import { $RepoCliId } from "@beep/identity/packages";
 import { profilePhase } from "@beep/observability";
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Console from "effect/Console";
@@ -22,7 +23,6 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
-import { printLines } from "../../internal/cli/Printer.ts";
 import {
   failOnExtensionlessFile,
   formatPlatformError,

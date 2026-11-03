@@ -3,6 +3,9 @@ import { resolvePathWithinCanonicalRoot, resolvePathWithinRoot } from "@beep/fil
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import { LenientManifest } from "@beep/package-json/LenientManifest";
+import { manifestDecoder, manifestParser } from "@beep/repo-cli-kit/ManifestRead";
+import { runCaptured } from "@beep/repo-cli-kit/process/index";
+import { OpaqueDefect } from "@beep/repo-cli-kit/schema/OpaqueDefect";
 import { fencedLineState } from "@beep/repo-utils/JSDoc/JSDocSections";
 import { WorkspaceDiscovery } from "@beep/repo-workspaces/WorkspaceDiscovery";
 import { WorkspaceRoot } from "@beep/repo-workspaces/WorkspaceRoot";
@@ -20,15 +23,12 @@ import * as P from "effect/Predicate";
 import * as Regex from "effect/RegExp";
 import * as S from "effect/Schema";
 import { Node } from "ts-morph";
-import { manifestDecoder, manifestParser } from "../../../internal/ManifestRead.ts";
-import { runCaptured } from "../../../internal/process/index.ts";
-import { OpaqueDefect } from "../../../internal/schema/OpaqueDefect.ts";
 import { QualityScriptCommandError } from "../Quality.errors.ts";
+import type { ManifestField } from "@beep/repo-cli-kit/ManifestRead";
 import type { WorkspaceDiscoveryError } from "@beep/repo-workspaces/WorkspaceDiscovery";
 import type { WorkspacePackage } from "@beep/repo-workspaces/WorkspacePackage";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { ManifestField } from "../../../internal/ManifestRead.ts";
 
 export { fencedLineState, jsdocCommentsFromSource } from "@beep/repo-utils/JSDoc/JSDocSections";
 
