@@ -1,0 +1,21 @@
+name: Cache Producer Preparation
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: cache-producer-preparation-main
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    name: Build candidate producer adapter
+    if: github.ref == 'refs/heads/main'
+    # The runner group admits the reusable Heavy leaf, not this caller.
+    uses: beep-effect/beep-effect/.github/workflows/heavy.yml@main
+    with:
+      admitted: false
+      producer_preparation: true

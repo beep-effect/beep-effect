@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { runTestTsgoChecksAt, testTsgoPlanningForTesting } from "@beep/repo-cli/test/Quality";
@@ -12,10 +13,10 @@ import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 
 const FileSystemLayer = Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer);
 const PlatformLayer = Layer.mergeAll(BunCrypto.layer, FileSystemLayer, TestConsole.layer);
@@ -210,17 +211,12 @@ describe("test-typecheck coverage", () => {
         yield* writeFixturePackage(root, "covered", coveredScripts, ["src", "test"]);
         yield* writeFixturePackage(root, "also-covered", coveredScripts, ["test", "src"]);
 
-        const spawned: Array<unknown> = [];
-        const spawner = ChildProcessSpawner.make((command) =>
-          Effect.sync(() => spawned.push(command)).pipe(
-            Effect.andThen(Effect.die("Unexpected test-tsgo child process"))
-          )
-        );
+        const spawner = ScriptedSpawner.make(() => ({ exit: 1, stderr: "Unexpected test-tsgo child process" }));
         yield* runTestTsgoChecksAt(root, undefined).pipe(
           Effect.provideServiceEffect(Git, Git.make),
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+          provideSpawner(spawner)
         );
-        expect(spawned).toEqual([]);
+        expect(spawner.spawns).toEqual([]);
 
         const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
         expect(logText).toContain("[quality:test-tsgo] skipped 2 package(s) already covered by their check script");

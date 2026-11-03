@@ -670,6 +670,7 @@ describe("criticRunLine", () => {
   );
 });
 
+// Own double: seats stream forever (Stream.never, isRunning true), emit asserted pieces and gate exitCode on a sleep.
 const textStream = (text: string) => (text === "" ? Stream.empty : Stream.make(new TextEncoder().encode(text)));
 
 type SeatOutput = { readonly stdout: string; readonly stderr: string; readonly exitCode: number };

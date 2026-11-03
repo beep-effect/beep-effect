@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { sessionCommand } from "@beep/repo-cli";
 import { GoalManifest } from "@beep/repo-cli/commands/Goals";
@@ -39,13 +40,10 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { commandArgs } from "./support/commandArgs.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 
 const encodeGoalManifestJson = S.encodeEffect(S.fromJsonString(GoalManifest));
 
@@ -712,39 +710,22 @@ describe("session ledger failures", () => {
     exists: () => denied("exists"),
     readFileString: () => denied("readFileString"),
   });
-  const handle = (exitCode: number, output: string) =>
-    ChildProcessSpawner.makeHandle({
-      all: Stream.make(new TextEncoder().encode(output)),
-      stdout: Stream.make(new TextEncoder().encode(output)),
-      stderr: Stream.empty,
-      stdin: Sink.drain,
-      exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
-      getInputFd: () => Sink.drain,
-      getOutputFd: () => Stream.empty,
-      isRunning: Effect.succeed(false),
-      kill: () => Effect.void,
-      pid: ChildProcessSpawner.ProcessId(1),
-      unref: Effect.succeed(Effect.void),
-    });
   // A git that knows its origin, then either exits nonzero or cannot be
   // spawned for every other question.
   const gitWithoutCheckout = (spawnable: boolean) =>
-    ChildProcessSpawner.make((command) => {
-      if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-      const line = A.join(commandArgs(command), " ");
+    ScriptedSpawner.make((_command, args) => {
+      const line = A.join(args, " ");
       if (pipe(line, Str.includes("remote.origin.url"))) {
-        return Effect.succeed(handle(0, "git@github.com:beep-effect/beep-effect.git\n"));
+        return { stdout: "git@github.com:beep-effect/beep-effect.git\n" };
       }
       return spawnable
-        ? Effect.succeed(handle(128, "fatal: not a git repository"))
-        : Effect.fail(
-            PlatformError.systemError({
-              _tag: "NotFound",
-              module: "SessionLedgerTest",
-              method: "spawn",
-              pathOrDescriptor: line,
-            })
-          );
+        ? { exit: 128, stdout: "fatal: not a git repository" }
+        : PlatformError.systemError({
+            _tag: "NotFound",
+            module: "SessionLedgerTest",
+            method: "spawn",
+            pathOrDescriptor: line,
+          });
     });
 
   it.layer(Layer.fresh(Layer.mergeAll(deniedFileSystem, Path.layer)), { timeout: "30 seconds" })((it) => {
@@ -788,7 +769,7 @@ describe("session ledger failures", () => {
             Effect.flip,
             // `Git` is built over the stub spawner, so the kit's reads reach the scripted answers (W2).
             Effect.provideServiceEffect(Git, Git.make),
-            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, gitWithoutCheckout(spawnable))
+            provideSpawner(gitWithoutCheckout(spawnable))
           );
         const exited = yield* facts(true);
         expect(exited).toMatchObject({ _tag: "SessionLedgerError", reason: "git" });

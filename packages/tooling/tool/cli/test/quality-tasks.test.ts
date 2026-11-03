@@ -1,5 +1,6 @@
 import * as NodeOS from "node:os";
 import * as NodeURL from "node:url";
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import {
@@ -204,15 +205,12 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
-import { commandArgs } from "./support/commandArgs.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { CiLaneId } from "@beep/repo-cli/commands/Ci";
 import type { PolicySweepProgram } from "@beep/repo-cli/commands/Quality";
 import type { GateOrderLaneClass, GithubCheckLaneWave, QualityTaskInvocation } from "@beep/repo-cli/test/Quality";
@@ -631,22 +629,8 @@ const laneProofTestLane = (
     }),
   });
 
-const commandOutputEncoder = new TextEncoder();
-
-const qualityCommandHandle = (output: string, exitCode: number) =>
-  ChildProcessSpawner.makeHandle({
-    all: Stream.make(commandOutputEncoder.encode(output)),
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    stdout: Stream.make(commandOutputEncoder.encode(output)),
-    unref: Effect.succeed(Effect.void),
-  });
+const spawnedLines = (spawner: ScriptedSpawner): ReadonlyArray<string> =>
+  A.map(spawner.spawns, (spawn) => A.join([spawn.command, ...spawn.args], " "));
 
 // The runtime may wrap a Turbo step in a secret session (`op run … --`) and rewrite its
 // `--cache=` posture (and, under CI, a leading `--force`) from the ambient environment; policy
@@ -701,12 +685,18 @@ const expectedPolicyRun = (
 
 // Session probes (`op …`) and git reads are spawned around the plan; only commands with a
 // step launcher token are plan steps.
-const spawnedPolicyCommands = (spawned: ReadonlyArray<string>): ReadonlyArray<string> =>
+const spawnedPolicyCommands = (spawner: ScriptedSpawner): ReadonlyArray<string> =>
   pipe(
-    spawned,
+    spawnedLines(spawner),
     A.map(policyCommandKey),
     A.filter((key) => key !== "" && !Str.startsWith("git ")(key))
   );
+
+// The git probes the runner makes around the plan, answered by their first matching argv flag.
+const cheapGatesGitReplies: ReadonlyArray<readonly [flag: string, stdout: string]> = [
+  ["--is-shallow-repository", "false"],
+  ["--show-current", "feature/cheap-gates"],
+];
 
 const isTargetProbe = Str.includes("--dry=json");
 
@@ -714,11 +704,11 @@ const isTargetProbe = Str.includes("--dry=json");
 // plan, so the per-package Turbo tasks stay. Steps inside a stage run abreast, so the spawned
 // plan commands are compared as a set.
 const expectPolicySpawns = (
-  spawned: ReadonlyArray<string>,
+  spawner: ScriptedSpawner,
   expected: ReadonlyArray<QualityTaskStep>,
   full: boolean
 ): void => {
-  const commands = spawnedPolicyCommands(spawned);
+  const commands = spawnedPolicyCommands(spawner);
   // A full-scope run never probes.
   expect(A.length(A.filter(commands, isTargetProbe))).toBe(full ? 0 : 1);
   expect(A.sort(A.filter(commands, P.not(isTargetProbe)), Order.String)).toEqual(
@@ -729,26 +719,21 @@ const expectPolicySpawns = (
   );
 };
 
-const cheapGatesSpawner = (
-  spawned: Array<string>,
-  failedCommands: ReadonlyArray<string>,
-  key: (text: string) => string = identity
-) =>
-  ChildProcessSpawner.make((command) => {
-    if (ChildProcess.isStandardCommand(command)) {
-      const commandText = A.join([command.command, ...commandArgs(command)], " ");
-      A.appendInPlace(spawned, commandText);
-      const output = A.contains(commandArgs(command), "--is-shallow-repository")
-        ? "false"
-        : A.contains(commandArgs(command), "--show-current")
-          ? "feature/cheap-gates"
-          : "";
-      const exitCode = A.contains(A.map(failedCommands, key), key(commandText)) ? 1 : 0;
-      return Effect.succeed(qualityCommandHandle(output, exitCode));
-    }
+const cheapGatesSpawner = (failedCommands: ReadonlyArray<string>, key: (text: string) => string = identity) =>
+  ScriptedSpawner.make((command, args) => ({
+    stdout: A.findFirst(cheapGatesGitReplies, ([flag]) => A.contains(args, flag)).pipe(
+      O.map(([, stdout]) => stdout),
+      O.getOrElse(() => "")
+    ),
+    exit: A.contains(A.map(failedCommands, key), key(A.join([command, ...args], " "))) ? 1 : 0,
+  }));
 
-    return Effect.die("the cheap-gates test never spawns a piped command");
-  });
+// The SAST lane's spawns: the changed-file listing answers with `changedOutput`, every other command prints nothing.
+const sastSpawner = (changedOutput: string) =>
+  ScriptedSpawner.make((_command, args) => ({ stdout: A.contains(args, "--name-only") ? changedOutput : "" }));
+
+const spawnedArgv = (spawner: ScriptedSpawner): ReadonlyArray<ReadonlyArray<string>> =>
+  A.map(spawner.spawns, (spawn) => [spawn.command, ...spawn.args]);
 
 type FallowFeatureMatrixRowTuple = readonly [
   featureFamily: GithubChecksFallowFeatureMatrix["features"][number]["featureFamily"],
@@ -939,13 +924,12 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             );
             yield* fs.writeFileString(path.join(repoRoot, "bun.lock"), '{"packages":{"braces":["braces@3.0.3"]}}');
 
-            const spawned: Array<string> = [];
-            yield* runBunAudit(repoRoot).pipe(
-              Effect.provideServiceEffect(Git, Git.make),
-              Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, cheapGatesSpawner(spawned, A.empty()))
-            );
+            const spawner = cheapGatesSpawner(A.empty());
+            yield* runBunAudit(repoRoot).pipe(Effect.provideServiceEffect(Git, Git.make), provideSpawner(spawner));
 
-            expect(spawned).toEqual(["bun audit --audit-level=high --ignore=GHSA-active --ignore=GHSA-vfj7-8cjw-p6xm"]);
+            expect(spawnedLines(spawner)).toEqual([
+              "bun audit --audit-level=high --ignore=GHSA-active --ignore=GHSA-vfj7-8cjw-p6xm",
+            ]);
             expect(A.join(A.filter(yield* TestConsole.logLines, isString), "\n")).toContain("GHSA-expired");
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
@@ -1007,22 +991,14 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       Effect.gen(function* () {
         const ignored = "goals/repository-simplification-confidence/history/outputs/semgrep/first-party.ts";
         const changed = "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts";
-        const commands: Array<ReadonlyArray<string>> = [];
-        const spawner = ChildProcessSpawner.make((command) => {
-          if (!ChildProcess.isStandardCommand(command)) {
-            return Effect.die("SAST test requires a standard command");
-          }
-          A.appendInPlace(commands, [command.command, ...commandArgs(command)]);
-          const output = A.contains(commandArgs(command), "--name-only") ? `${ignored}\0${changed}\0` : "";
-          return Effect.succeed(qualityCommandHandle(output, 0));
-        });
+        const spawner = sastSpawner(`${ignored}\0${changed}\0`);
         yield* runGithubChecks("sast").pipe(
           Effect.provideServiceEffect(Git, Git.make),
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+          provideSpawner(spawner),
           Effect.provideServiceEffect(Console.Console, TestConsole.make),
           TestClock.withLive
         );
-        const scan = A.findFirst(commands, (args) => A.contains(args, "scan"));
+        const scan = A.findFirst(spawnedArgv(spawner), (args) => A.contains(args, "scan"));
         scan.pipe(O.isSome, assertTrue);
         if (O.isSome(scan)) {
           expect(A.takeRight(scan.value, 5)).toEqual(["--include", `/${ignored}`, "--include", `/${changed}`, "."]);
@@ -1037,20 +1013,14 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("runs the first-party Semgrep rule tests before the changed-file filter", () =>
       Effect.gen(function* () {
-        const commands: Array<ReadonlyArray<string>> = [];
-        const spawner = ChildProcessSpawner.make((command) => {
-          if (!ChildProcess.isStandardCommand(command)) {
-            return Effect.die("SAST test requires a standard command");
-          }
-          A.appendInPlace(commands, [command.command, ...commandArgs(command)]);
-          return Effect.succeed(qualityCommandHandle("", 0));
-        });
+        const spawner = sastSpawner("");
         yield* runGithubChecks("sast").pipe(
           Effect.provideServiceEffect(Git, Git.make),
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+          provideSpawner(spawner),
           Effect.provideServiceEffect(Console.Console, TestConsole.make),
           TestClock.withLive
         );
+        const commands = spawnedArgv(spawner);
         const ruleTests = A.findFirst(commands, (args) => A.contains(args, "--test"));
         assertSome(O.map(ruleTests, A.takeRight(3)), [
           "--config",
@@ -1089,20 +1059,12 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
     it.effect("escapes and anchors literal changed paths in Semgrep include patterns", () =>
       Effect.gen(function* () {
         const changed = ["apps/todox/src/app/[id]/page.tsx", "!route.ts", "#route.ts", "src/a*b?c\\d.ts"];
-        const commands: Array<ReadonlyArray<string>> = [];
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const spawner = ChildProcessSpawner.make((command) => {
-          if (!ChildProcess.isStandardCommand(command)) {
-            return Effect.die("SAST test requires a standard command");
-          }
-          A.appendInPlace(commands, [command.command, ...commandArgs(command)]);
-          const output = A.contains(commandArgs(command), "--name-only") ? `${A.join(changed, "\0")}\0` : "";
-          return Effect.succeed(qualityCommandHandle(output, 0));
-        });
+        const spawner = sastSpawner(`${A.join(changed, "\0")}\0`);
         yield* runGithubChecks("sast").pipe(
           Effect.provideServiceEffect(Git, Git.make),
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+          provideSpawner(spawner),
           Effect.provideService(FileSystem.FileSystem, {
             ...fs,
             exists: () => Effect.succeed(true),
@@ -1111,7 +1073,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           Effect.provideServiceEffect(Console.Console, TestConsole.make),
           TestClock.withLive
         );
-        const scan = A.findFirst(commands, (args) => A.contains(args, "scan"));
+        const scan = A.findFirst(spawnedArgv(spawner), (args) => A.contains(args, "scan"));
         scan.pipe(O.isSome, assertTrue);
         if (O.isSome(scan)) {
           expect(A.takeRight(scan.value, 9)).toEqual([
@@ -1134,14 +1096,14 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       flow(
         Effect.fnUntraced(
           function* () {
-            const spawned: Array<string> = [];
+            const spawner = cheapGatesSpawner(A.empty());
             yield* runGithubChecks("review-fix").pipe(
               Effect.provideServiceEffect(Git, Git.make),
-              Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, cheapGatesSpawner(spawned, A.empty()))
+              provideSpawner(spawner)
             );
 
-            expect(spawned).toContain("bun run build -- --affected --summarize");
-            expect(spawned).toContain(
+            expect(spawnedLines(spawner)).toContain("bun run build -- --affected --summarize");
+            expect(spawnedLines(spawner)).toContain(
               A.join(["bun", "run", ...reviewFixDocgenLocalArgsForTesting("origin/main", "HEAD")], " ")
             );
           },
@@ -3870,7 +3832,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         flow(
           Effect.fnUntraced(function* () {
             const testConsole = yield* TestConsole.make;
-            const spawned: Array<string> = [];
+            const spawner = cheapGatesSpawner(A.empty(), policyCommandKey);
             const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
             const changesetStatusLane = githubCheckChangesetStatusLane(process.cwd());
             const changesetStatusCommand = A.join(
@@ -3889,22 +3851,19 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                     expect(logText).toContain(GITHUB_CHECK_RUN_REPORT_PREFIX);
                     expect(logText).toContain('"failurePolicy":"collect-all"');
                     expect(logText).toContain('"status":"passed"');
-                    expect(spawnedPolicyCommands(spawned)).toContain(policyCommandKey(changesetStatusCommand));
+                    expect(spawnedPolicyCommands(spawner)).toContain(policyCommandKey(changesetStatusCommand));
                     expect(
                       A.filter(
                         cheapGateLanes,
                         (lane) =>
-                          !A.contains(spawnedPolicyCommands(spawned), policyCommandKey(policyStepCommand(lane.step)))
+                          !A.contains(spawnedPolicyCommands(spawner), policyCommandKey(policyStepCommand(lane.step)))
                       )
                     ).toEqual([]);
                   })
                 ),
                 Effect.provideService(Console.Console, testConsole),
                 Effect.provideServiceEffect(Git, Git.make),
-                Effect.provideService(
-                  ChildProcessSpawner.ChildProcessSpawner,
-                  cheapGatesSpawner(spawned, A.empty(), policyCommandKey)
-                ),
+                provideSpawner(spawner),
                 Effect.provideService(
                   ConfigProvider.ConfigProvider,
                   ConfigProvider.fromUnknown({
@@ -3924,7 +3883,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         flow(
           Effect.fnUntraced(function* () {
             const testConsole = yield* TestConsole.make;
-            const spawned: Array<string> = [];
+            const spawner = cheapGatesSpawner(A.empty(), policyCommandKey);
             const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
             const changesetStatusLane = githubCheckChangesetStatusLane(process.cwd());
             const changesetStatusCommand = A.join(
@@ -3941,22 +3900,19 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                   Effect.fnUntraced(function* () {
                     const logText = A.join(A.filter(yield* testConsole.logLines, isString), "\n");
                     expect(logText).toContain("[github-checks] quality: skipped changeset status on main push");
-                    expect(spawnedPolicyCommands(spawned)).not.toContain(policyCommandKey(changesetStatusCommand));
+                    expect(spawnedPolicyCommands(spawner)).not.toContain(policyCommandKey(changesetStatusCommand));
                     expect(
                       A.filter(
                         cheapGateLanes,
                         (lane) =>
-                          !A.contains(spawnedPolicyCommands(spawned), policyCommandKey(policyStepCommand(lane.step)))
+                          !A.contains(spawnedPolicyCommands(spawner), policyCommandKey(policyStepCommand(lane.step)))
                       )
                     ).toEqual([]);
                   })
                 ),
                 Effect.provideService(Console.Console, testConsole),
                 Effect.provideServiceEffect(Git, Git.make),
-                Effect.provideService(
-                  ChildProcessSpawner.ChildProcessSpawner,
-                  cheapGatesSpawner(spawned, A.empty(), policyCommandKey)
-                ),
+                provideSpawner(spawner),
                 Effect.provideService(
                   ConfigProvider.ConfigProvider,
                   ConfigProvider.fromUnknown({ GITHUB_EVENT_NAME: "push", GITHUB_REF_NAME: "main" })
@@ -3973,7 +3929,6 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         flow(
           Effect.fnUntraced(function* () {
             const testConsole = yield* TestConsole.make;
-            const spawned: Array<string> = [];
             const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
             const failedCommands = A.map(
               A.filter(cheapGateLanes, (lane) =>
@@ -3983,6 +3938,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             );
             const lastLane = O.getOrThrow(A.last(cheapGateLanes));
             const lastCommand = policyStepCommand(lastLane.step);
+            const spawner = cheapGatesSpawner(failedCommands, policyCommandKey);
 
             yield* withEnvVarEffect(
               "BEEP_YEET_LANE_PROOF_MODE",
@@ -4002,7 +3958,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                   }
                 }
 
-                expect(spawnedPolicyCommands(spawned)).toContain(policyCommandKey(lastCommand));
+                expect(spawnedPolicyCommands(spawner)).toContain(policyCommandKey(lastCommand));
                 const logText = A.join(A.filter(yield* testConsole.logLines, isString), "\n");
                 expect(logText).toContain(GITHUB_CHECK_RUN_REPORT_PREFIX);
                 expect(logText).toContain('"failurePolicy":"collect-all"');
@@ -4013,10 +3969,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             ).pipe(
               Effect.provideService(Console.Console, testConsole),
               Effect.provideServiceEffect(Git, Git.make),
-              Effect.provideService(
-                ChildProcessSpawner.ChildProcessSpawner,
-                cheapGatesSpawner(spawned, failedCommands, policyCommandKey)
-              ),
+              provideSpawner(spawner),
               Effect.provideService(
                 ConfigProvider.ConfigProvider,
                 ConfigProvider.fromUnknown({
@@ -5045,17 +4998,14 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                       A.findFirst((step) => step.label === failedLabel),
                       O.getOrThrow
                     );
-                    const spawned = A.empty<string>();
+                    const spawner = cheapGatesSpawner([policyStepCommand(failed)], policyCommandKey);
                     const exit = yield* runRootLintPolicyTask(full, "review-base").pipe(
                       Effect.provideServiceEffect(Git, Git.make),
-                      Effect.provideService(
-                        ChildProcessSpawner.ChildProcessSpawner,
-                        cheapGatesSpawner(spawned, [policyStepCommand(failed)], policyCommandKey)
-                      ),
+                      provideSpawner(spawner),
                       Effect.exit
                     );
                     expectPolicyGroupFailure(exit, failedLabel);
-                    expectPolicySpawns(spawned, expectedPolicyRun(plan, full, failedLabel), full);
+                    expectPolicySpawns(spawner, expectedPolicyRun(plan, full, failedLabel), full);
                   }
                 }
               })
@@ -5094,17 +5044,14 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               Effect.gen(function* () {
                 const plan = rootLintPolicyStepsForTesting(root, undefined, "review-base", undefined, true);
                 const cheap = O.getOrThrow(A.findFirst(plan, (step) => step.label === "lint:policy:cheap"));
-                const spawned = A.empty<string>();
+                const spawner = cheapGatesSpawner([policyStepCommand(cheap)], policyCommandKey);
                 const exit = yield* runRootLintPolicyTask(false, "review-base").pipe(
                   Effect.provideServiceEffect(Git, Git.make),
-                  Effect.provideService(
-                    ChildProcessSpawner.ChildProcessSpawner,
-                    cheapGatesSpawner(spawned, [policyStepCommand(cheap)], policyCommandKey)
-                  ),
+                  provideSpawner(spawner),
                   Effect.exit
                 );
                 expectPolicyGroupFailure(exit, "lint:policy:cheap");
-                expectPolicySpawns(spawned, plan, false);
+                expectPolicySpawns(spawner, plan, false);
               })
             )
           );

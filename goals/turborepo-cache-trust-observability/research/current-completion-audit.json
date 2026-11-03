@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "8417ce9c74b2588578ed90de5d18e417a71721a8ab8d82b21cabcc440bed031c",
+  "specSha256": "e5157183e7007be1ceb7f4312b91d9d0a9a46c38cac501a5e7732b9a9556ac7e",
   "acceptance": [
     {
       "id": "AC-01",
@@ -43,7 +43,8 @@
       "nextProof": "Bind real protected workflow producer evidence and typed fault causes to the actual consumer; current producer/protocol unit tests alone are insufficient.",
       "partialEvidence": [
         "research/closed-producer-upload-checkpoint.json",
-        "research/private-producer-object-checkpoint-2026-11-02.json"
+        "research/private-producer-object-checkpoint-2026-11-02.json",
+        "research/protected-source-inspection-2026-11-02.json"
       ]
     },
     {
@@ -483,6 +484,12 @@
   "priorSpecSha256Before9adaConflictResolution": "2f1e6e90d99265abd4362a54524ec18d574f5d96cd5ba1bc889eb7084aceb3b1",
   "priorSpecSha256Before1dd2ConflictResolution": "1acf203b579426293dc829a222777b00112a2dff2f327aaec20e3f5f13031783",
   "acceptedMainSpecSha256At1dd2Integration": "2ce7cdef99c0e34d307601d6cd7286b70ef11daf85d770c72ae882d1669c3349",
+  "priorSpecSha256BeforeEnvironmentInstallPreparation": "2ce7cdef99c0e34d307601d6cd7286b70ef11daf85d770c72ae882d1669c3349",
+  "producerEnvironmentInstallPreparation": "research/producer-environment-install-preparation-2026-11-02.json",
+  "priorSpecSha256BeforeEnvironmentCurrentMainIntegration": "912fc5354600bb06dd237cb14a2f20f2f29e6294cdd8eda4a892ca241705b45a",
+  "acceptedMainSpecSha256AtEnvironmentIntegration": "2fe59728708a3026a9d1b4037f6970d173f7ec6401ae7d32f94d6896f2f84ede",
+  "priorSpecSha256BeforeCoverageIdentityReview": "2f1e6e90d99265abd4362a54524ec18d574f5d96cd5ba1bc889eb7084aceb3b1",
+  "priorSpecSha256Before71bcCoverageReconciliation": "6201731b74ad6586aae4cf46d2e3c792c9d73303a7b889fd89fb34fc2d33720c",
   "priorSpecSha256BeforeAfeaIntegration": "bfd2194a791198f281edc78bbd628b801513cf8004cc436200cfbf416fc9d842",
   "acceptedMainSpecSha256AtAfeaIntegration": "2fe59728708a3026a9d1b4037f6970d173f7ec6401ae7d32f94d6896f2f84ede",
   "priorSpecSha256MergeHistory": [
@@ -502,8 +509,12 @@
       "sha256": "69cf3a2c1e53c9a41b34ead7420db9ca1e281dbb23e63ce6cd6ebe3ec32e8040"
     }
   ],
-  "priorSpecSha256BeforeCoverageIdentityReview": "2f1e6e90d99265abd4362a54524ec18d574f5d96cd5ba1bc889eb7084aceb3b1",
-  "priorSpecSha256Before71bcCoverageReconciliation": "6201731b74ad6586aae4cf46d2e3c792c9d73303a7b889fd89fb34fc2d33720c",
+  "priorSpecSha256BeforeEnvironment0beIntegration": "53f29506a4bbc11db7c348c966fc05be578906f20dc53d18ca57d31f5815497f",
+  "acceptedMainSpecSha256AtEnvironment0beIntegration": "bb7a0efbaef84cbbe1ea4f1a3e48847b917a791ff2075237cf4c0a2fada42715",
   "priorSpecSha256Before0beIntegration": "7f974dfb420c11334379c39dbc8eb6c90e54e8d8ab575d64d9a2e4259202f367",
-  "acceptedMainSpecSha256At0beIntegration": "bb7a0efbaef84cbbe1ea4f1a3e48847b917a791ff2075237cf4c0a2fada42715"
+  "acceptedMainSpecSha256At0beIntegration": "bb7a0efbaef84cbbe1ea4f1a3e48847b917a791ff2075237cf4c0a2fada42715",
+  "priorSpecSha256BeforeEnvironment070Integration": "d6c392764524b66eea1031b2efec11aab9821aca12b5642dffe774773fe327a5",
+  "acceptedMainSpecSha256AtEnvironment070Integration": "8417ce9c74b2588578ed90de5d18e417a71721a8ab8d82b21cabcc440bed031c",
+  "priorSpecSha256BeforeCandidateBuildPreparation": "f6c677b00a4dda11e981247ad4d523f0ea7c064a16d33219dd7551ddf7920f8a",
+  "priorSpecSha256BeforeWheelHashReview": "ee6a9e498c4e60a026090d1852247113628e3f725134faf4a98390ead7b036f2"
 }

@@ -29,6 +29,7 @@ const TestLayer = MarkdownFenceTypechecker.layer.pipe(Layer.provideMerge(Platfor
 const runInProcess = Command.runWith(lawsCommand, { version: "0.0.0" });
 const withEmptyConfig = Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}));
 
+// Own double: decorates the real platform spawner, stubbing only the `tsrs` spawn.
 const encoder = new TextEncoder();
 
 /** A finished compiler process with fixed combined output and exit code. */

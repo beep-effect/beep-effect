@@ -648,3 +648,22 @@ protected producer provenance, current-main qualification or production rollout.
   controls, real-tree replay and remaining protected approval.
 - Effect `FileSystem.lstat` was verified in the installed 4.1.1 public source and
   canonical Effect reference. It inspects child type without following aliases.
+
+
+### 2026-11-02 — private producer environment transport
+
+- Existing `Cache.producer.ts` provisioning reader and `Cache.workflow.ts` exclusive initializer supply the authority, record bounds, source/target/executable checks and rollback.
+- Installed Effect 4.1.1 and the canonical Effect reference expose `Config.Redacted`, `Schema.Uint8ArrayFromBase64` and length checks; the transport uses those APIs and the existing JSON codecs.
+- The [preparation record](producer-environment-install-preparation-2026-11-02.json) binds implementation and authored controls. It records no executed test, deployment or qualification claim.
+
+- [Protected source inspection](protected-source-inspection-2026-11-02.json): authenticated successful main run `41561109340`, exact caller/callee source `c96edf8c`, immutable archive digest, canonical workflow digest and actual tool pins. Source/tool evidence only; actual runner readiness and protected signed execution remain unproven.
+
+### 2026-11-02 — candidate adapter build preparation
+
+- Existing `infra/r2-cache/policy.sh`, its reviewed upstream patch and `policy-build-requirements.txt` remain the build authority. The former private portable artifacts remain historical, separately bound evidence.
+- The already-used immutable [Rust setup action](https://github.com/actions-rust-lang/setup-rust-toolchain/blob/ecabd13d1c56bd1345c230e542e9144811ad706f/action.yml) exposes explicit toolchain/target selection and disabling cache restoration and directory overrides. The new leaf selects those options and an isolated Rustup/Cargo home.
+- The existing pinned ziglang 0.14.1 installation has no console entry point. Its explicit `bin/zig` link points to the installed module binary; candidate preparation repeats that setup and checks the requested versions.
+- The installed Turbo 2.11.10 CI documentation and the existing main-only inspection caller informed the separate operational mode. Preparation leaves ordinary required matrix contexts and cache posture unchanged; it does not emit quality or producer verdicts.
+
+- [cargo-zigbuild 0.20.1 metadata](https://pypi.org/pypi/cargo-zigbuild/0.20.1/json) publishes the Linux x86_64 wheel SHA-256 `cb9508149ee63d60e5110ff24b527ab25ed418a6329252aa4f86868197c55bf6` and its sole package dependency, ziglang.
+- [ziglang 0.14.1 metadata](https://pypi.org/pypi/ziglang/0.14.1/json) publishes the matching Linux x86_64 wheel SHA-256 `6eb9d4d759b292c83810dbee2e9e8e3fbfbf01d864e6e9811bae711fd74e1c2f` and no package dependencies. These content pins address [the review finding](https://github.com/beep-effect/beep-effect/pull/2643#discussion_r4450530140); real CI installation remains unexecuted.

@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import {
   diffJudgeRubricFamily,
   diffJudgeRubricLenses,
@@ -28,11 +29,11 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { expectReportedExit } from "./support/CommandTest.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 
 const decodeUnknownJudgeRubricDrift = S.decodeUnknownEffect(JudgeRubricDrift);
 
@@ -137,27 +138,19 @@ it.layer(PlatformLayer, { timeout: "5 seconds" })((it) => {
           readFileString: () => Effect.fail(fileSystemError),
         });
 
-        const spawned: Array<unknown> = [];
-        const spawner = ChildProcessSpawner.make((command) =>
-          Effect.sync(() => spawned.push(command)).pipe(
-            Effect.andThen(Effect.die("Unexpected judge-rubric child process"))
-          )
-        );
+        const spawner = ScriptedSpawner.make(() => ({ exit: 1, stderr: "Unexpected judge-rubric child process" }));
         return Effect.gen(function* () {
           const exit = yield* Effect.exit(runLintJudgeRubricCommand([]));
           const errorLines = yield* TestConsole.errorLines;
           const errorText = A.join(A.filter(errorLines, P.isString), "\n");
 
           expectReportedExit(exit, 2);
-          expect(spawned).toEqual([]);
+          expect(spawner.spawns).toEqual([]);
           expect(errorLines).toHaveLength(1);
           expect(errorText).toContain(`[lint:judge-rubric] failed to read`);
           expect(errorText).toContain("PermissionDenied: FileSystem.readFileString");
           expect(errorText).toContain("fixture denied");
-        }).pipe(
-          Effect.provideService(FileSystem.FileSystem, fileSystem),
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
-        );
+        }).pipe(Effect.provideService(FileSystem.FileSystem, fileSystem), provideSpawner(spawner));
       });
     });
 
