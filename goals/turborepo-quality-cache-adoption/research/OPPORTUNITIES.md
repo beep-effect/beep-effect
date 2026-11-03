@@ -1006,3 +1006,13 @@ disappear, permitting unsupported claims. Replace the startup guard with an
 unconditional check before any fixture/source/tool/report work. Preserve old
 reports; twelve actual early refusals and fresh source-bound native replays
 validate the repair. Keep the existing experiment limits and qualification holds.
+
+
+### 2026-11-03 — distinguish captured and published JSON byte digests
+
+Review found that the startup-refusal checkpoint used an ambiguous `sha256`
+field for captured bytes while the staged formatter reflowed the committed
+report. Parsed content matched, but the committed-byte digest did not. Keep
+separate captured and published digests/byte counts, plus decoded equality, and
+check the committed files after Git hooks. No executed driver bytes changed,
+so replaying native experiments would add no proof for this metadata correction.

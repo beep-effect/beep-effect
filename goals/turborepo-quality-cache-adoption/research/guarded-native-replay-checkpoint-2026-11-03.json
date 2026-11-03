@@ -7,11 +7,15 @@
   "sourceBindingExplanation": "The two uncommitted guard edits are bound by captured digests. Normal replay reports bind their exact executed sources; historical reports keep their original source envelopes.",
   "startupRefusals": {
     "report": "native-startup-refusals-2026-11-03.json",
-    "sha256": "15e389040bc9e658df91d3b8eb8c2de83592b11f4e6b1061b77fb8f55c2a0d03",
     "cases": 12,
     "nativeOrFixtureExecutions": 0,
     "outputParentsAbsent": true,
-    "simulatedPlatformBranchOnly": true
+    "simulatedPlatformBranchOnly": true,
+    "sourceReportSha256": "15e389040bc9e658df91d3b8eb8c2de83592b11f4e6b1061b77fb8f55c2a0d03",
+    "sourceReportBytes": 10581,
+    "publishedReportSha256": "0f33849906b1218f2b85918dd426e72937c1f4a461765c90c9783b58019ef1cf",
+    "publishedReportBytes": 10569,
+    "decodedPublicReportEqualsNative": true
   },
   "reports": [
     {
@@ -51,7 +55,9 @@
       ],
       "retainedRawFiles": 120,
       "allReferencedDigestsChecked": true,
-      "decodedPublicReportEqualsRaw": true
+      "decodedPublicReportEqualsRaw": true,
+      "publishedReportSha256": "25e65977ee002cd875b612343a3bae5be0c2a3b14e9f795fba1f392cd02934f1",
+      "publishedReportBytes": 30239
     },
     {
       "kind": "worktrees",
@@ -90,7 +96,9 @@
       ],
       "retainedRawFiles": 284,
       "allReferencedDigestsChecked": true,
-      "decodedPublicReportEqualsRaw": true
+      "decodedPublicReportEqualsRaw": true,
+      "publishedReportSha256": "1ce7c85127b8049a482be21a5bf98ba11d99b85b1f8cba313d851177170f764b",
+      "publishedReportBytes": 92727
     }
   ],
   "admission": {
@@ -113,5 +121,6 @@
     "Real computation/profile and feature acceptance",
     "Protected producer/trust/epoch and cohort observation work"
   ],
-  "historicalReportsUnchanged": true
+  "historicalReportsUnchanged": true,
+  "reportByteBindings": "sourceReportSha256 binds retained captured bytes; publishedReportSha256 binds the committed formatted report. Decoded public/native equality is checked separately."
 }
