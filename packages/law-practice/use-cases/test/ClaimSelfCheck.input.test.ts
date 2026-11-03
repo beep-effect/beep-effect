@@ -9,6 +9,9 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const claimInputSetType = S.toType(UsptoClaimInputSet);
+const claimInputSetJson = S.fromJsonString(UsptoClaimInputSet);
+
 const sourceDocumentDigest = ContentDigest.make(`sha256:${Str.repeat(64)("a")}`);
 const documentIdentifier = "fixture-document";
 const source = UsptoClaimSource.cases.application.make({
@@ -29,9 +32,8 @@ describe("public claim-input acquisition provenance", () => {
         records: [failedRecord],
       });
       const set = UsptoClaimInputSet.make({ input, documentIdentifier, sourceDocumentDigest, source });
-      const codec = S.fromJsonString(UsptoClaimInputSet);
-      const encoded = yield* S.encodeEffect(codec)(set);
-      const decoded = yield* S.decodeEffect(codec)(encoded);
+      const encoded = yield* S.encodeEffect(claimInputSetJson)(set);
+      const decoded = yield* S.decodeEffect(claimInputSetJson)(encoded);
       assert.deepStrictEqual(decoded, set);
       assert.strictEqual(decoded.input.records[0].sourceText, "<claim/>");
     })
@@ -45,7 +47,7 @@ describe("public claim-input acquisition provenance", () => {
       ]) {
         const input = ClaimInputCollection.make({ sourceKey, records: [failedRecord] });
         const failure = yield* Effect.flip(
-          S.decodeUnknownEffect(S.toType(UsptoClaimInputSet))({
+          S.decodeUnknownEffect(claimInputSetType)({
             input,
             documentIdentifier,
             sourceDocumentDigest,
