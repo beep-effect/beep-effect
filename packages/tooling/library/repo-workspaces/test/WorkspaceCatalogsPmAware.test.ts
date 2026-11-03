@@ -6,6 +6,7 @@ import { assertSome, assertSuccess } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -169,15 +170,18 @@ describe("CatalogSet.fromLockfile", () => {
 // ── Through the stack: a malformed package.json workspaces fails set() ────────
 
 const doubleDefaultTree: Tree = {
-  "/repo/package.json": JSON.stringify({
-    name: "root",
-    version: "0.0.0",
-    workspaces: {
-      packages: ["packages/*"],
-      catalog: { effect: "^4.0.0" },
-      catalogs: { default: { effect: "^3.0.0" } },
-    },
-  }),
+  "/repo/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+      name: "root",
+      version: "0.0.0",
+      workspaces: {
+        packages: ["packages/*"],
+        catalog: { effect: "^4.0.0" },
+        catalogs: { default: { effect: "^3.0.0" } },
+      },
+    }),
+    identity
+  ),
   "/repo/packages/a/package.json": manifest("@x/a"),
 };
 
@@ -197,11 +201,14 @@ describe("WorkspaceCatalogs.set — the double-default rejection through the sta
 });
 
 const malformedTree: Tree = {
-  "/repo/package.json": JSON.stringify({
-    name: "root",
-    version: "0.0.0",
-    workspaces: { packages: ["packages/*"], catalog: "not-an-object" },
-  }),
+  "/repo/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+      name: "root",
+      version: "0.0.0",
+      workspaces: { packages: ["packages/*"], catalog: "not-an-object" },
+    }),
+    identity
+  ),
   "/repo/packages/a/package.json": manifest("@x/a"),
 };
 
@@ -221,25 +228,31 @@ describe("WorkspaceCatalogs.set — a malformed workspaces shape through the sta
 // ── Through the stack: a bun workspace — PM-aware inline AND lockfile ─────────
 
 const bunWorkspace: Tree = {
-  "/repo/package.json": JSON.stringify({
-    name: "root",
-    version: "0.0.0",
-    private: true,
-    packageManager: "bun@1.2.0",
-    workspaces: {
-      packages: ["packages/*"],
-      catalog: { effect: "^4.0.0" },
-      catalogs: { build: { typescript: "^6.0.0" } },
-    },
-  }),
+  "/repo/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+      name: "root",
+      version: "0.0.0",
+      private: true,
+      packageManager: "bun@1.2.0",
+      workspaces: {
+        packages: ["packages/*"],
+        catalog: { effect: "^4.0.0" },
+        catalogs: { build: { typescript: "^6.0.0" } },
+      },
+    }),
+    identity
+  ),
   "/repo/packages/a/package.json": manifest("@x/a", { dependencies: { effect: "catalog:" } }),
   // The bun lockfile records react (default) and a STALE typescript in `build`.
   // Inline must win on typescript; react must survive from the lockfile.
-  "/repo/bun.lock": JSON.stringify({
-    lockfileVersion: 1,
-    catalog: { react: "^18.0.0" },
-    catalogs: { build: { typescript: "^5.0.0" } },
-  }),
+  "/repo/bun.lock": Result.getOrThrowWith(
+    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+      lockfileVersion: 1,
+      catalog: { react: "^18.0.0" },
+      catalogs: { build: { typescript: "^5.0.0" } },
+    }),
+    identity
+  ),
 };
 
 describe("WorkspaceCatalogs.set — a bun workspace with no pnpm-workspace.yaml", () => {

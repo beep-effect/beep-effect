@@ -70,7 +70,8 @@ it.layer(layers, { timeout: "30 seconds", excludeTestServices: true })("Independ
         const f = yield* fixture();
         const before = yield* f.fs.readFile(`${f.directory}/source.sqlite`);
         const receipt = yield* f.capture(`${f.directory}/backup`);
-        expect(yield* f.fs.readFile(`${f.directory}/source.sqlite`)).toEqual(before);
+        const readFile1 = yield* f.fs.readFile(`${f.directory}/source.sqlite`);
+        expect(readFile1).toEqual(before);
         expect(receipt.manifest.bytes).toBeLessThanOrEqual(policy.maxBytes);
         yield* f.fs.writeFileString(f.source, f.line, { flag: "a" });
         const second = yield* readTranscriptPage(
@@ -78,24 +79,30 @@ it.layer(layers, { timeout: "30 seconds", excludeTestServices: true })("Independ
         );
         yield* f.journal.acceptPage(second, O.some(f.page.cursor));
         const verifier = yield* SqliteClient.make({ filename: ":memory:" });
-        expect(
-          yield* restoreObservationBackup(policy, `${f.directory}/backup`, `${f.directory}/restored`, receipt).pipe(
-            Effect.provideService(SqlClient.SqlClient, verifier)
-          )
-        ).toEqual(receipt);
+        const pipe2 = yield* restoreObservationBackup(
+          policy,
+          `${f.directory}/backup`,
+          `${f.directory}/restored`,
+          receipt
+        ).pipe(Effect.provideService(SqlClient.SqlClient, verifier));
+        expect(pipe2).toEqual(receipt);
         expect((yield* f.journal.stats).pages).toBe(2);
         const reopened = yield* SqliteClient.make({ filename: `${f.directory}/restored/journal.sqlite` });
         const recovered = yield* makeTranscriptIntakeJournal(f.config).pipe(
           Effect.provideService(SqlClient.SqlClient, reopened)
         );
         expect((yield* recovered.stats).pages).toBe(1);
-        expect(yield* recovered.acceptPage(f.page, O.none())).toEqual(f.accepted);
-        assertSome(yield* recovered.readCursor(f.page.cursor.source, f.page.cursor.pathHash), f.page.cursor);
-        expect(new TextDecoder().decode(yield* f.fs.readFile(`${f.directory}/backup/journal.sqlite`))).not.toContain(
-          "synthetic-private-backup-prompt"
-        );
-        expect(yield* verifier`PRAGMA database_list`).toEqual([{ seq: 0, name: "main", file: "" }]);
-        expect(yield* f.fs.exists(`${f.directory}/restored/restore.json`)).toBe(true);
+        const acceptPage3 = yield* recovered.acceptPage(f.page, O.none());
+        expect(acceptPage3).toEqual(f.accepted);
+        const readCursor4 = yield* recovered.readCursor(f.page.cursor.source, f.page.cursor.pathHash);
+        assertSome(readCursor4, f.page.cursor);
+        const argument = new TextDecoder();
+        const readFile2 = yield* f.fs.readFile(`${f.directory}/backup/journal.sqlite`);
+        expect(argument.decode(readFile2)).not.toContain("synthetic-private-backup-prompt");
+        const value5 = yield* verifier`PRAGMA database_list`;
+        expect(value5).toEqual([{ seq: 0, name: "main", file: "" }]);
+        const exists6 = yield* f.fs.exists(`${f.directory}/restored/restore.json`);
+        expect(exists6).toBe(true);
       })
   );
   it.effect("refuses existing destinations, exposed parents and foreign journal tables without modifying them", () =>
@@ -104,14 +111,16 @@ it.layer(layers, { timeout: "30 seconds", excludeTestServices: true })("Independ
       yield* f.fs.makeDirectory(`${f.directory}/existing`);
       yield* f.fs.writeFileString(`${f.directory}/existing/keep`, "preserve");
       expect((yield* f.capture(`${f.directory}/existing`).pipe(Effect.flip)).reason).toBe("destination");
-      expect(yield* f.fs.readFileString(`${f.directory}/existing/keep`)).toBe("preserve");
+      const readFileString7 = yield* f.fs.readFileString(`${f.directory}/existing/keep`);
+      expect(readFileString7).toBe("preserve");
       yield* f.fs.makeDirectory(`${f.directory}/exposed`, { mode: 0o755 });
       // Make the hostile fixture explicit even under a private service umask.
       yield* f.fs.chmod(`${f.directory}/exposed`, 0o755);
       expect((yield* f.capture(`${f.directory}/exposed/backup`).pipe(Effect.flip)).reason).toBe("destination");
       yield* f.sql`CREATE TABLE foreign_data (payload TEXT)`;
       expect((yield* f.capture(`${f.directory}/foreign`).pipe(Effect.flip)).reason).toBe("configuration");
-      expect(yield* f.fs.exists(`${f.directory}/foreign`)).toBe(false);
+      const exists8 = yield* f.fs.exists(`${f.directory}/foreign`);
+      expect(exists8).toBe(false);
       expect((yield* f.journal.stats).pages).toBe(1);
     })
   );
@@ -135,7 +144,8 @@ it.layer(layers, { timeout: "30 seconds", excludeTestServices: true })("Independ
         bytes[100] = (bytes[100] ?? 0) ^ 1;
         yield* f.fs.writeFile(`${f.directory}/backup/journal.sqlite`, bytes);
         expect((yield* restore(receipt).pipe(Effect.flip)).reason).toBe("integrity");
-        expect(yield* f.fs.exists(`${f.directory}/restored`)).toBe(false);
+        const exists9 = yield* f.fs.exists(`${f.directory}/restored`);
+        expect(exists9).toBe(false);
         expect((yield* f.journal.stats).pages).toBe(1);
       })
   );
@@ -160,15 +170,19 @@ it.layer(layers, { timeout: "30 seconds", excludeTestServices: true })("Independ
       yield* f.fs.writeFileString(`${f.directory}/backup/manifest.json`, encoded);
       const receipt = ObservationBackupReceipt.make({ manifest, manifestDigest: yield* hashPublicTextSha256(encoded) });
       const verifier = yield* SqliteClient.make({ filename: ":memory:" });
-      expect(
-        yield* restoreObservationBackup(policy, `${f.directory}/backup`, `${f.directory}/refused`, receipt).pipe(
-          Effect.provideService(SqlClient.SqlClient, verifier),
-          Effect.isFailure
-        )
-      ).toBe(true);
-      expect(yield* f.fs.exists(`${f.directory}/refused/restore.json`)).toBe(false);
-      expect(yield* f.fs.readFile(`${f.directory}/source.sqlite`)).toEqual(originalSource);
-      expect(yield* f.fs.readFile(`${f.directory}/backup/journal.sqlite`)).toEqual(bytes);
+      const pipe10 = yield* restoreObservationBackup(
+        policy,
+        `${f.directory}/backup`,
+        `${f.directory}/refused`,
+        receipt
+      ).pipe(Effect.provideService(SqlClient.SqlClient, verifier), Effect.isFailure);
+      expect(pipe10).toBe(true);
+      const exists11 = yield* f.fs.exists(`${f.directory}/refused/restore.json`);
+      expect(exists11).toBe(false);
+      const readFile12 = yield* f.fs.readFile(`${f.directory}/source.sqlite`);
+      expect(readFile12).toEqual(originalSource);
+      const readFile13 = yield* f.fs.readFile(`${f.directory}/backup/journal.sqlite`);
+      expect(readFile13).toEqual(bytes);
     })
   );
   it.effect("refuses a source beyond the snapshot ceiling while preserving the preceding generation", () =>
@@ -178,8 +192,10 @@ it.layer(layers, { timeout: "30 seconds", excludeTestServices: true })("Independ
       const first = yield* f.fs.readFile(`${f.directory}/first/journal.sqlite`);
       yield* f.sql`INSERT INTO observation_page_dispositions(receipt_id,payload,digest) VALUES('synthetic-capacity',zeroblob(1200000),'synthetic')`;
       expect((yield* f.capture(`${f.directory}/too-large`).pipe(Effect.flip)).reason).toBe("capacity");
-      expect(yield* f.fs.exists(`${f.directory}/too-large`)).toBe(false);
-      expect(yield* f.fs.readFile(`${f.directory}/first/journal.sqlite`)).toEqual(first);
+      const exists14 = yield* f.fs.exists(`${f.directory}/too-large`);
+      expect(exists14).toBe(false);
+      const readFile15 = yield* f.fs.readFile(`${f.directory}/first/journal.sqlite`);
+      expect(readFile15).toEqual(first);
       expect((yield* f.journal.stats).pages).toBe(1);
     })
   );
@@ -210,9 +226,12 @@ it.layer(layers, { timeout: "30 seconds", excludeTestServices: true })("Independ
       const journal = yield* makeTranscriptIntakeJournal(f.config).pipe(
         Effect.provideService(SqlClient.SqlClient, client)
       );
-      expect(yield* journal.acceptPage(f.page, O.none())).toEqual(recovery.accepted);
-      assertSome(yield* journal.readCursor(f.page.cursor.source, f.page.cursor.pathHash), f.page.cursor);
-      expect(yield* f.fs.readFileString(original)).toBe("synthetic database corruption");
+      const acceptPage16 = yield* journal.acceptPage(f.page, O.none());
+      expect(acceptPage16).toEqual(recovery.accepted);
+      const readCursor17 = yield* journal.readCursor(f.page.cursor.source, f.page.cursor.pathHash);
+      assertSome(readCursor17, f.page.cursor);
+      const readFileString18 = yield* f.fs.readFileString(original);
+      expect(readFileString18).toBe("synthetic database corruption");
     })
   );
   it.effect(
@@ -233,9 +252,12 @@ it.layer(layers, { timeout: "30 seconds", excludeTestServices: true })("Independ
             .capture(`${f.directory}/failed`)
             .pipe(Effect.provideService(FileSystem.FileSystem, failing), Effect.flip)).reason
         ).toBe("storage");
-        expect(yield* f.fs.exists(`${f.directory}/failed/manifest.json`)).toBe(false);
-        expect(yield* f.fs.exists(`${f.directory}/failed/manifest.partial`)).toBe(true);
-        expect(yield* f.fs.readFile(`${f.directory}/first/journal.sqlite`)).toEqual(prior);
+        const exists19 = yield* f.fs.exists(`${f.directory}/failed/manifest.json`);
+        expect(exists19).toBe(false);
+        const exists20 = yield* f.fs.exists(`${f.directory}/failed/manifest.partial`);
+        expect(exists20).toBe(true);
+        const readFile21 = yield* f.fs.readFile(`${f.directory}/first/journal.sqlite`);
+        expect(readFile21).toEqual(prior);
         expect((yield* f.journal.stats).pages).toBe(1);
       })
   );

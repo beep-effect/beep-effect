@@ -284,7 +284,8 @@ export const XSSProtectionHeader = S.Union([XSSProtectionOption, S.Undefined]).p
     ) => Effect.Effect<O.Option<string>, SecureHeaderError> = Effect.fnUntraced(function* (
       option?: undefined | XSSProtectionOption
     ) {
-      return O.some(yield* formatXSSProtectionValue(option));
+      const formatXSSProtectionValue1 = yield* formatXSSProtectionValue(option);
+      return O.some(formatXSSProtectionValue1);
     });
 
     const create = Effect.fnUntraced(function* (

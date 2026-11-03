@@ -276,9 +276,8 @@ export const sessionCheckoutFacts = Effect.fn("SessionLedger.checkoutFacts")(fun
     Effect.mapError((error) => SessionLedgerError.make({ reason: "git", message: error.message, cause: error }))
   );
   const git = yield* Git;
-  const checkout = path.resolve(
-    yield* git.repoRoot(cwd).pipe(Effect.mapError(adaptGitKitError(GitCommand.repoRoot(), gitAdapter)))
-  );
+  const pipe1 = yield* git.repoRoot(cwd).pipe(Effect.mapError(adaptGitKitError(GitCommand.repoRoot(), gitAdapter)));
+  const checkout = path.resolve(pipe1);
   const common = yield* git.commonDir(cwd).pipe(Effect.mapError(adaptGitKitError(GitCommand.commonDir(), gitAdapter)));
   // `rev-parse --abbrev-ref HEAD` printed the literal `HEAD` when detached; the kit reads that as none.
   const branch = yield* git.currentBranch(cwd).pipe(
@@ -436,7 +435,7 @@ export const noteSession = Effect.fn("SessionLedger.note")(function* (input: Ses
       ? built
       : SessionLedgerRow.make({
           ...built,
-          role: inheritedRole(yield* ledger.list(built.repository), built.checkout),
+          role: yield* Effect.map(ledger.list(built.repository), (value) => inheritedRole(value, built.checkout)),
         });
   yield* ledger.append(row);
   return row;

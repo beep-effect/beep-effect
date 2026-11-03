@@ -50,8 +50,10 @@ describe("WorkspaceSnapshots explicit doubles and historical fallbacks", () => {
           assert.fail("unstubbed methods must fail");
         }
       };
-      check("at", yield* Effect.exit(double.at("HEAD")));
-      check("worktree", yield* Effect.exit(double.worktree));
+      const exit1 = yield* Effect.exit(double.at("HEAD"));
+      check("at", exit1);
+      const exit2 = yield* Effect.exit(double.worktree);
+      check("worktree", exit2);
     })
   );
   it.layer(WorkspaceSnapshots.layerTest({ at: () => Effect.succeed(snapshot), worktree: Effect.succeed(snapshot) }), {
@@ -60,8 +62,10 @@ describe("WorkspaceSnapshots explicit doubles and historical fallbacks", () => {
     it.effect("test layer carries both overrides", () =>
       Effect.gen(function* () {
         const service = yield* WorkspaceSnapshots;
-        assert.strictEqual(yield* service.at("HEAD"), snapshot);
-        assert.strictEqual(yield* service.worktree, snapshot);
+        const at3 = yield* service.at("HEAD");
+        assert.strictEqual(at3, snapshot);
+        const worktree4 = yield* service.worktree;
+        assert.strictEqual(worktree4, snapshot);
       })
     );
   });
@@ -86,7 +90,8 @@ describe("WorkspaceSnapshots explicit doubles and historical fallbacks", () => {
             Effect.provideService(Scheduler.Scheduler, scheduler)
           );
           assert.strictEqual(first, second);
-          assert.strictEqual(yield* service.at(ref), first);
+          const at5 = yield* service.at(ref);
+          assert.strictEqual(at5, first);
         }
       })
     );

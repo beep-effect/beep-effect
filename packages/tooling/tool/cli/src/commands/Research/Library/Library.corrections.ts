@@ -75,7 +75,8 @@ export const correctLibraryCaptures = Effect.fn("Library.correctCaptures")(funct
 ) {
   const captures: Array<LibraryCapture> = [];
   const recordCaptureCorrection = Effect.fn("Library.recordCaptureCorrection")(function* (capture: LibraryCapture) {
-    const recordedAt = DateTime.formatIso(yield* DateTime.now);
+    const now1 = yield* DateTime.now;
+    const recordedAt = DateTime.formatIso(now1);
     const reason =
       "Reading claim invalidated: original hashes, target identity, revision, or required source evidence failed current semantic validation; new source capture required.";
     const beforeText = yield* encodeLibraryJson(capture);
@@ -110,10 +111,12 @@ export const correctLibraryCaptures = Effect.fn("Library.correctCaptures")(funct
       after,
       afterSha256: yield* hashBytes(new TextEncoder().encode(afterText)),
     });
+    const argument = `${prefix}/correction.json`;
+    const encodedLibraryJson = yield* encodeLibraryJson(receipt);
     const evidence = yield* saveLibraryText(
       root,
-      `${prefix}/correction.json`,
-      yield* encodeLibraryJson(receipt),
+      argument,
+      encodedLibraryJson,
       "application/json",
       "capture-correction"
     );
@@ -137,6 +140,9 @@ export const correctLibraryCaptures = Effect.fn("Library.correctCaptures")(funct
     }
     return yield* recordCaptureCorrection(capture);
   });
-  for (const capture of catalog.captures) captures.push(yield* correctCapture(capture));
+  for (const capture of catalog.captures) {
+    const correctCapture1 = yield* correctCapture(capture);
+    captures.push(correctCapture1);
+  }
   return LibraryCatalog.make({ ...catalog, captures });
 });

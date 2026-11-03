@@ -579,15 +579,18 @@ describe("SourceBoundary round-2 scanner contracts", () => {
   it.effect("keeps option payloads plain, exact-optional and free of eager defaults", () =>
     Effect.gen(function* () {
       const options: ScanOptions.Encoded = { root: "/repo/src", rules: ["process"] };
-      assert.deepStrictEqual(yield* S.decodeEffect(ScanOptions)(options), ScanOptions.make(options));
-      assert.deepStrictEqual(yield* S.decodeEffect(ReferenceOptions)({}), ReferenceOptions.make({}));
+      const value1 = yield* S.decodeEffect(ScanOptions)(options);
+      assert.deepStrictEqual(value1, ScanOptions.make(options));
+      const value2 = yield* S.decodeEffect(ReferenceOptions)({});
+      assert.deepStrictEqual(value2, ReferenceOptions.make({}));
       const present: ScanOptions.Encoded = {
         ...options,
         allow: [],
         extensions: [".ts"],
         allowRules: { forbidImports: ["allowed.ts"] },
       };
-      assert.deepStrictEqual(yield* S.decodeEffect(ScanOptions)(present), ScanOptions.make(present));
+      const value3 = yield* S.decodeEffect(ScanOptions)(present);
+      assert.deepStrictEqual(value3, ScanOptions.make(present));
       for (const key of ["ignoreTokens", "allow", "extensions", "allowRules"] as const)
         assert.isFalse(S.is(ScanOptions)({ ...options, [key]: undefined }), key);
       assert.isFalse(S.is(ScanOptions)({ ...options, allowRules: { process: undefined } }));
@@ -652,7 +655,9 @@ it.effect.prop(
   [Arbitrary.schema(ScanOptions)],
   ([value]) =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeEffect(ScanOptions)(yield* S.encodeEffect(ScanOptions)(value));
+      const argument1 = S.decodeEffect(ScanOptions);
+      const value4 = yield* S.encodeEffect(ScanOptions)(value);
+      const decoded = yield* argument1(value4);
       assert.isTrue(S.toEquivalence(ScanOptions)(decoded, value));
     }),
   { arbitrary: fcRuns(50) }

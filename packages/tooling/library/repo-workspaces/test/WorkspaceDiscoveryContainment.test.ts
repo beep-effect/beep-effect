@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // `containWithinRoot`: discovery that stays inside the workspace root's real
 // path.
 //
@@ -18,13 +19,26 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import type { WorkspaceDiscoveryOptions } from "@beep/repo-workspaces";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 type Seed = Parameters<typeof MemoryFileSystem.layerWith>[0];
 
-const manifest = (name: string): string => JSON.stringify({ name, version: "1.0.0" });
+const manifest = (name: string): string =>
+  Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)({ name, version: "1.0.0" }), identity);
 const root = (patterns: ReadonlyArray<string>): string =>
-  JSON.stringify({ name: "root", version: "0.0.0", private: true, workspaces: patterns });
+  Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({
+      name: "root",
+      version: "0.0.0",
+      private: true,
+      workspaces: patterns,
+    }),
+    identity
+  );
 
 /** A tree with links that leave `/repo` and links that stay inside it. */
 const linked: Seed = {
@@ -107,7 +121,8 @@ describe("WorkspaceDiscovery containWithinRoot", () => {
   layer(discoveryOver(linked, { containWithinRoot: true }), { timeout: "30 seconds" })("true", (it) => {
     it.effect("skips every directory whose real path leaves the root, before reading or descending into it", () =>
       Effect.gen(function* () {
-        deepStrictEqual(yield* listed, ["root=.", "local=groups/local", "a=inner", "a=packages/a"]);
+        const listed1 = yield* listed;
+        deepStrictEqual(listed1, ["root=.", "local=groups/local", "a=inner", "a=packages/a"]);
       })
     );
   });
@@ -117,7 +132,8 @@ describe("WorkspaceDiscovery containWithinRoot", () => {
     (it) => {
       it.effect("compares against the root as given", () =>
         Effect.gen(function* () {
-          deepStrictEqual(yield* listed, ["root=.", "a=packages/a"]);
+          const listed2 = yield* listed;
+          deepStrictEqual(listed2, ["root=.", "a=packages/a"]);
         })
       );
     }

@@ -12,8 +12,10 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { changeEventLedgerSha256, changeEventTable } from "@/kpi/ChangeEvents";
@@ -55,6 +57,8 @@ import {
 import type { KpiReading, PercentileRow } from "@/kpi/Schemas";
 import type { AttemptJournalPin, FleetManifestFacts } from "@/kpi/Sources";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const repoRoot = "../../..";
 const PlatformLive = Layer.mergeAll(BunFileSystem.layer, BunCrypto.layer);
 const KpiLive = Layer.provideMerge(CiOpsKpiLive, PlatformLive);
@@ -66,7 +70,8 @@ const readText = (path: string) => Effect.flatMap(FileSystem.FileSystem, (fs) =>
 
 const sha256Of = Effect.fn("KpiTest.sha256Of")(function* (bytes: Uint8Array) {
   const crypto = yield* Digest.Digest;
-  return Sha256Hex.make(Hex.encode(yield* crypto.digest(Digest.sha256, bytes)));
+  const digest1 = yield* crypto.digest(Digest.sha256, bytes);
+  return Sha256Hex.make(Hex.encode(digest1));
 });
 
 // ---- synthetic fold fixtures (every instant inside W and W-b) ----
@@ -304,7 +309,8 @@ describe("@beep/ciops KPI reading", () => {
           outcome: "red",
         }),
       ]);
-      const row = rowOf(yield* fold([open]), "W", "local-full-proof");
+      const fold2 = yield* fold([open]);
+      const row = rowOf(fold2, "W", "local-full-proof");
       expect([row.cut.n, row.uncut.n, row.rightCensored]).toStrictEqual([0, 1, 1]);
       assertSome(row.uncut.p50Ms, 300_000);
     })
@@ -316,7 +322,8 @@ describe("@beep/ciops KPI reading", () => {
         ...closedEpisode("left", 10),
         compactionCutoff: O.some(at("2026-10-02T10:00:00.000Z")),
       });
-      const row = rowOf(yield* fold([compacted]), "W", "local-full-proof");
+      const fold3 = yield* fold([compacted]);
+      const row = rowOf(fold3, "W", "local-full-proof");
       expect([row.cut.n, row.uncut.n, row.leftCensored]).toStrictEqual([0, 1, 1]);
     })
   );
@@ -324,7 +331,8 @@ describe("@beep/ciops KPI reading", () => {
   it.effect("must-fail: a streak opening at an at-cap journal's first retained attempt is possibly truncated", () =>
     Effect.gen(function* () {
       const atCap = FleetJournal.make({ ...closedEpisode("cap", 10), atWriterCap: true });
-      const row = rowOf(yield* fold([atCap]), "W", "local-full-proof");
+      const fold4 = yield* fold([atCap]);
+      const row = rowOf(fold4, "W", "local-full-proof");
       expect([row.cut.n, row.uncut.n, row.possiblyTruncated]).toStrictEqual([0, 1, 1]);
     })
   );
@@ -395,13 +403,16 @@ describe("@beep/ciops KPI reading", () => {
   it.effect("the two admission sources disagreeing on a shared nonce and tag fail closed", () =>
     Effect.gen(function* () {
       const row = (enqueued: number) =>
-        JSON.stringify({
-          _tag: "admission-enqueued",
-          nonce: "n-1",
-          attemptId: "a-1",
-          enqueuedAtMillis: enqueued,
-          pid: enqueued,
-        });
+        Result.getOrThrowWith(
+          S.encodeUnknownResult(UnknownJson)({
+            _tag: "admission-enqueued",
+            nonce: "n-1",
+            attemptId: "a-1",
+            enqueuedAtMillis: enqueued,
+            pid: enqueued,
+          }),
+          identity
+        );
       const enqueued: AdmissionEventTag = AdmissionEventTag.Enum["admission-enqueued"];
       const agreed = yield* mergeAdmissionSources({ path: "a", text: row(1) }, { path: "b", text: `${row(1)}\n` });
       expect(A.map(agreed, (entry) => entry._tag)).toStrictEqual([enqueued]);
@@ -415,7 +426,8 @@ describe("@beep/ciops KPI reading", () => {
 
   it.effect("synthetic episodes need no adoption probe without a resolved head", () =>
     Effect.gen(function* () {
-      expect(yield* adoptionProbes([closedEpisode("p1", 10)], [], changeEventTable)).toStrictEqual([]);
+      const adoptionProbes5 = yield* adoptionProbes([closedEpisode("p1", 10)], [], changeEventTable);
+      expect(adoptionProbes5).toStrictEqual([]);
       const probe = AdoptionProbe.make({
         changeEventId: "iv-1427-push-first-publish",
         mergeCommit: "01d8c18f314661a7957ef6420b2180ffb29804d1",
@@ -430,7 +442,8 @@ describe("@beep/ciops KPI reading", () => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const bytes = yield* fs.readFile(`${repoRoot}/${ledgerPin.path}`);
-        expect(yield* sha256Of(bytes)).toBe(changeEventLedgerSha256);
+        const sha256Of6 = yield* sha256Of(bytes);
+        expect(sha256Of6).toBe(changeEventLedgerSha256);
         const blocks = A.drop(Str.split(new TextDecoder().decode(bytes), "\n- id: "), 1);
         expect(A.length(blocks)).toBe(44);
         expect(A.length(changeEventTable)).toBe(44);
@@ -454,7 +467,8 @@ describe("@beep/ciops KPI reading", () => {
         expect(stale.message).toContain(
           "reading.md differ from the recomputed bytes; run `bun run evidence:kpi:write`"
         );
-        expect(yield* readText(`${root}/reading.md`)).toBe("old\n");
+        const readText7 = yield* readText(`${root}/reading.md`);
+        expect(readText7).toBe("old\n");
         yield* syncKpiArtifacts("write", root, "evidence:kpi:write", [["reading.md", "new\n"]]);
         yield* syncKpiArtifacts("check", root, "evidence:kpi:write", [["reading.md", "new\n"]]);
         const missing = yield* Effect.flip(syncKpiArtifacts("check", root, "evidence:kpi:write", [["absent.md", ""]]));
@@ -482,10 +496,8 @@ describe("@beep/ciops KPI reading", () => {
 
     it.effect("every stage and proof-tier pair the pinned journals carry classifies by the ruled table", () =>
       Effect.gen(function* () {
-        const facts: FleetManifestFacts = yield* readFleetManifestFacts(
-          manifestPin.path,
-          yield* readText(`${repoRoot}/${manifestPin.path}`)
-        );
+        const readText8 = yield* readText(`${repoRoot}/${manifestPin.path}`);
+        const facts: FleetManifestFacts = yield* readFleetManifestFacts(manifestPin.path, readText8);
         const directory = Str.slice(0, Str.lastIndexOf("/")(manifestPin.path).pipe(O.getOrThrow))(manifestPin.path);
         const journals = yield* Effect.forEach(facts.journals, (pin: AttemptJournalPin) =>
           Effect.flatMap(readText(`${repoRoot}/${directory}/${pin.path}`), (text) => decodeAttemptJournal(pin, text))
@@ -513,10 +525,13 @@ describe("@beep/ciops KPI reading", () => {
         const first = yield* kpi.read(kpiReadingInput(repoRoot));
         const second = yield* kpi.read(kpiReadingInput(repoRoot));
         const json = yield* renderReadingJson(first);
-        expect(yield* renderReadingJson(second)).toBe(json);
+        const renderReadingJson9 = yield* renderReadingJson(second);
+        expect(renderReadingJson9).toBe(json);
         expect(renderReadingMarkdown(second)).toBe(renderReadingMarkdown(first));
-        expect(yield* readText(`${repoRoot}/${kpiOutputPaths.readingJson}`)).toBe(json);
-        expect(yield* readText(`${repoRoot}/${kpiOutputPaths.readingMarkdown}`)).toBe(renderReadingMarkdown(first));
+        const readText10 = yield* readText(`${repoRoot}/${kpiOutputPaths.readingJson}`);
+        expect(readText10).toBe(json);
+        const readText11 = yield* readText(`${repoRoot}/${kpiOutputPaths.readingMarkdown}`);
+        expect(readText11).toBe(renderReadingMarkdown(first));
         expect(first.starvationBoundMs).toBe(starvationBoundMs);
         expect(A.map(first.inputs, (input) => input.role)).toStrictEqual([
           "fleet-manifest",
@@ -532,9 +547,11 @@ describe("@beep/ciops KPI reading", () => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const bytes = yield* fs.readFile(`${repoRoot}/${kpiOutputPaths.adoptionTable}`);
-        expect(yield* sha256Of(bytes)).toBe(adoptionTableSha256);
+        const sha256Of12 = yield* sha256Of(bytes);
+        expect(sha256Of12).toBe(adoptionTableSha256);
         const table = yield* decodeAdoptionTable(new TextDecoder().decode(bytes));
-        expect(yield* renderAdoptionTable(table)).toBe(new TextDecoder().decode(bytes));
+        const renderAdoptionTable13 = yield* renderAdoptionTable(table);
+        expect(renderAdoptionTable13).toBe(new TextDecoder().decode(bytes));
         const probes = yield* (yield* CiOpsKpi).probes(kpiReadingInput(repoRoot));
         expect(
           A.map(table.rows, (row) => `${row.changeEventId} ${row.mergeCommit} ${row.resolvedHeadSha}`)

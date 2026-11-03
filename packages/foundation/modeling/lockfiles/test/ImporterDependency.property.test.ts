@@ -32,7 +32,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(ImporterDependency)(value);
       const decoded = yield* S.decodeEffect(ImporterDependency)(encoded);
       assertTrue(S.toEquivalence(ImporterDependency)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(ImporterDependency)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(ImporterDependency)(decoded);
+      assert.deepStrictEqual(value1, encoded);
     }),
   runs
 );
@@ -67,7 +68,8 @@ it.effect.prop(
       assert.deepStrictEqual(serialized, encoded);
       const decoded = yield* S.decodeEffect(ImporterDependency)(serialized);
       assertTrue(S.toEquivalence(ImporterDependency)(decoded, dependency));
-      assert.deepStrictEqual(yield* S.encodeEffect(ImporterDependency)(decoded), serialized);
+      const value2 = yield* S.encodeEffect(ImporterDependency)(decoded);
+      assert.deepStrictEqual(value2, serialized);
     }),
   runs
 );

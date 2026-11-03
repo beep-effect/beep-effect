@@ -56,8 +56,9 @@ describe("BlobStore gaps", () => {
           ["get", store.get("k", S.String)],
           ["put", store.put("k", { metadata: "m", body: new Uint8Array() }, S.String)],
         ] as const) {
+          const exit1 = yield* Effect.exit(call);
           assertExitFailure(
-            yield* Effect.exit(call),
+            exit1,
             Cause.die(
               UnstubbedMemberError.make({
                 message: `BlobStore.makeTest: ${name}() was called but not stubbed — pass a \`${name}\` override.`,
@@ -140,7 +141,8 @@ it.layer(
 )((it) => {
   it.effect("strips every trailing endpoint slash before building the object URL", () =>
     Effect.gen(function* () {
-      assert.isTrue(yield* (yield* BlobStore).has("key"));
+      const has2 = yield* (yield* BlobStore).has("key");
+      assert.isTrue(has2);
       assert.deepStrictEqual(seen, ["https://s3.example/bucket/key"]);
     })
   );

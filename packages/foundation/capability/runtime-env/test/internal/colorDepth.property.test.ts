@@ -15,7 +15,9 @@ describe("color depth detection fidelity", () => {
     [Arbitrary.schema(Input)],
     ([input]) =>
       Effect.gen(function* () {
-        const restored = yield* S.decodeEffect(json)(yield* S.encodeEffect(json)(input));
+        const argument = S.decodeEffect(json);
+        const value = yield* S.encodeEffect(json)(input);
+        const restored = yield* argument(value);
         assert.strictEqual(colorDepth(restored.env, restored.tty), colorDepth(input.env, input.tty));
         assert.strictEqual(colorDepth(input.env, input.tty), colorDepth(input.tty)(input.env));
         assert.strictEqual(colorDepth({ ...input.env, FORCE_COLOR: "3", NO_COLOR: "1" }, input.tty), "truecolor");

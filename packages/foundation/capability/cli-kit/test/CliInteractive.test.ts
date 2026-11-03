@@ -38,7 +38,8 @@ describe("CliInteractive.layer", () => {
         const expected = kind === "human" && stdin && stdout;
         it.effect(`${kind}, stdin TTY ${stdin}, stdout TTY ${stdout} => ${expected}`, () =>
           Effect.gen(function* () {
-            assert.strictEqual(yield* decide(kind, stdin, stdout), expected);
+            const decide1 = yield* decide(kind, stdin, stdout);
+            assert.strictEqual(decide1, expected);
           })
         );
       }
@@ -47,15 +48,19 @@ describe("CliInteractive.layer", () => {
 
   it.effect("a human on two terminals is not interactive when TERM is dumb: it cannot move the cursor", () =>
     Effect.gen(function* () {
-      assert.strictEqual(yield* decide("human", true, true, { TERM: "dumb" }), false);
-      assert.strictEqual(yield* decide("human", true, true, { TERM: "xterm-256color" }), true, "control: a real TERM");
-      assert.strictEqual(yield* decide("human", true, true, { TERM: "" }), true, "an empty TERM is unset");
+      const decide2 = yield* decide("human", true, true, { TERM: "dumb" });
+      assert.strictEqual(decide2, false);
+      const decide3 = yield* decide("human", true, true, { TERM: "xterm-256color" });
+      assert.strictEqual(decide3, true, "control: a real TERM");
+      const decide4 = yield* decide("human", true, true, { TERM: "" });
+      assert.strictEqual(decide4, true, "an empty TERM is unset");
     })
   );
 
   it.effect("defaults to non-interactive when no layer is provided", () =>
     Effect.gen(function* () {
-      assert.strictEqual(yield* CliInteractive, false);
+      const CliInteractive5 = yield* CliInteractive;
+      assert.strictEqual(CliInteractive5, false);
     })
   );
 });
@@ -65,13 +70,15 @@ it.layer(CliInteractive.layerTest(true), { timeout: "30 seconds" })("CliInteract
 
   it.effect("unless(true) turns an interactive scope off", () =>
     Effect.gen(function* () {
-      assert.strictEqual(yield* CliInteractive.unless(true)(read), false);
+      const value6 = yield* CliInteractive.unless(true)(read);
+      assert.strictEqual(value6, false);
     })
   );
 
   it.effect("unless(false) leaves an interactive scope interactive", () =>
     Effect.gen(function* () {
-      assert.strictEqual(yield* CliInteractive.unless(false)(read), true);
+      const value7 = yield* CliInteractive.unless(false)(read);
+      assert.strictEqual(value7, true);
     })
   );
 
@@ -86,14 +93,16 @@ it.layer(CliInteractive.layerTest(true), { timeout: "30 seconds" })("CliInteract
 
   it.effect("narrowing nests: an inner unless(false) cannot undo an outer unless(true)", () =>
     Effect.gen(function* () {
-      assert.strictEqual(yield* read.pipe(CliInteractive.unless(false), CliInteractive.unless(true)), false);
+      const pipe8 = yield* read.pipe(CliInteractive.unless(false), CliInteractive.unless(true));
+      assert.strictEqual(pipe8, false);
     })
   );
 
   it.effect("restores the outer value when the scoped effect fails", () =>
     Effect.gen(function* () {
       yield* Effect.fail("boom").pipe(CliInteractive.unless(true), Effect.ignore);
-      assert.strictEqual(yield* read, true);
+      const read9 = yield* read;
+      assert.strictEqual(read9, true);
     })
   );
 
@@ -102,7 +111,8 @@ it.layer(CliInteractive.layerTest(true), { timeout: "30 seconds" })("CliInteract
       const fiber = yield* Effect.never.pipe(CliInteractive.unless(true), Effect.forkChild);
       yield* Effect.yieldNow;
       yield* Fiber.interrupt(fiber);
-      assert.strictEqual(yield* read, true);
+      const read10 = yield* read;
+      assert.strictEqual(read10, true);
     })
   );
 });
@@ -114,8 +124,10 @@ it.layer(CliInteractive.layerTest(false), { timeout: "30 seconds" })(
 
     it.effect("unless(false) never turns a non-interactive scope on", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* CliInteractive.unless(false)(read), false);
-        assert.strictEqual(yield* CliInteractive.unless(true)(read), false);
+        const value11 = yield* CliInteractive.unless(false)(read);
+        assert.strictEqual(value11, false);
+        const value12 = yield* CliInteractive.unless(true)(read);
+        assert.strictEqual(value12, false);
       })
     );
   }

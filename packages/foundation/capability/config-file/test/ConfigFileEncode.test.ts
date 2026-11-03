@@ -215,11 +215,15 @@ describe("ConfigFile.encode", () => {
         const _encode: (value: Doc) => Effect.Effect<string, ConfigEncodeError> = cfg.encode;
         yield* _write(value, "/legacy/config.json");
         const fs = yield* FileSystem.FileSystem;
-        assertSuccess(S.decodeResult(JsonValue)(yield* fs.readFileString("/legacy/config.json")), {
+        const argument1 = S.decodeResult(JsonValue);
+        const readFileString1 = yield* fs.readFileString("/legacy/config.json");
+        assertSuccess(argument1(readFileString1), {
           name: "svc",
           port: 8080,
         });
-        assert.strictEqual(yield* _encode(value), yield* fs.readFileString("/legacy/config.json"));
+        const _encode1 = yield* _encode(value);
+        const readFileString2 = yield* fs.readFileString("/legacy/config.json");
+        assert.strictEqual(_encode1, readFileString2);
       })
     );
   });

@@ -31,29 +31,31 @@ describe("Package field schemas", () => {
         const input = { lodash: "^4.0.0", "@scope/pkg": "workspace:*" };
         const decoded = yield* S.decodeEffect(schema)(input);
         assert.isTrue(HashMap.isHashMap(decoded));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), input);
+        const value = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value, input);
         assert.strictEqual((yield* Effect.flip(S.decodeUnknownEffect(schema)({ lodash: 42 })))._tag, "SchemaError");
       }
       const fields = S.Struct({ dependencies: DependencyMapField, engines: S.optionalKey(StringMapField) });
       const decoded = yield* S.decodeEffect(fields)({});
       assert.isTrue(HashMap.isEmpty(decoded.dependencies));
       assert.isUndefined(decoded.engines);
-      assert.deepStrictEqual(yield* S.encodeEffect(fields)(decoded), { dependencies: {} });
+      const value1 = yield* S.encodeEffect(fields)(decoded);
+      assert.deepStrictEqual(value1, { dependencies: {} });
     })
   );
 
   it.effect("preserve open publish config and optional peer metadata", () =>
     Effect.gen(function* () {
       const config = { access: "public", targets: ["node"], custom: { enabled: true } };
-      assert.deepStrictEqual(
-        yield* S.encodeEffect(PublishConfigField)(yield* S.decodeEffect(PublishConfigField)(config)),
-        config
-      );
+      const argument = S.encodeEffect(PublishConfigField);
+      const value5 = yield* S.decodeEffect(PublishConfigField)(config);
+      const value2 = yield* argument(value5);
+      assert.deepStrictEqual(value2, config);
       const peers = { lodash: { optional: true }, react: {} };
-      assert.deepStrictEqual(
-        yield* S.encodeEffect(PeerDependenciesMetaField)(yield* S.decodeEffect(PeerDependenciesMetaField)(peers)),
-        peers
-      );
+      const argument1 = S.encodeEffect(PeerDependenciesMetaField);
+      const value6 = yield* S.decodeEffect(PeerDependenciesMetaField)(peers);
+      const value3 = yield* argument1(value6);
+      assert.deepStrictEqual(value3, peers);
       assert.strictEqual(
         (yield* Effect.flip(S.decodeUnknownEffect(PeerDependenciesMetaField)({ react: { optional: "yes" } })))._tag,
         "SchemaError"
@@ -70,7 +72,8 @@ describe("Package field schemas property", () => {
       Effect.gen(function* () {
         const decoded = yield* S.decodeEffect(StringMapField)(input);
         assert.strictEqual(HashMap.size(decoded), R.size(input));
-        assert.deepStrictEqual(yield* S.encodeEffect(StringMapField)(decoded), input);
+        const value4 = yield* S.encodeEffect(StringMapField)(decoded);
+        assert.deepStrictEqual(value4, input);
       }),
     { arbitrary: fcRuns(50) }
   );

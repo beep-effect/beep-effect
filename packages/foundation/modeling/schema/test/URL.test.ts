@@ -39,10 +39,10 @@ describe("URL", () => {
   it.effect(
     "accepts valid https URL strings",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownHttpsUrl("https://example.com/api/v1")).toBe("https://example.com/api/v1");
-      expect(yield* decodeUnknownHttpsUrl("https://localhost:8443/path?ready=true#status")).toBe(
-        "https://localhost:8443/path?ready=true#status"
-      );
+      const decodedUnknownHttpsUrl = yield* decodeUnknownHttpsUrl("https://example.com/api/v1");
+      expect(decodedUnknownHttpsUrl).toBe("https://example.com/api/v1");
+      const decodedUnknownHttpsUrl1 = yield* decodeUnknownHttpsUrl("https://localhost:8443/path?ready=true#status");
+      expect(decodedUnknownHttpsUrl1).toBe("https://localhost:8443/path?ready=true#status");
     })
   );
 
@@ -90,7 +90,8 @@ it.effect.prop(
   ([value]) =>
     Effect.gen(function* () {
       assertTrue(Str.startsWith("https://")(value), value);
-      const decoded = yield* decodeUnknownHttpsUrl(yield* S.encodeEffect(HttpsUrl)(value));
+      const value2 = yield* S.encodeEffect(HttpsUrl)(value);
+      const decoded = yield* decodeUnknownHttpsUrl(value2);
       expect(decoded).toBe(value);
     }),
   runs

@@ -87,7 +87,8 @@ const rewriteSegment = Effect.fnUntraced(function* (
 ) {
   const fs = yield* FileSystem.FileSystem;
   const segment = yield* fs.readFileString(file).pipe(Effect.flatMap(decodeSegment));
-  yield* fs.writeFileString(file, yield* encodeSegment(edit(segment)));
+  const encodedSegment = yield* encodeSegment(edit(segment));
+  yield* fs.writeFileString(file, encodedSegment);
 });
 
 // Records one body through the spool sink over `spool`.
@@ -170,7 +171,8 @@ describe("StrictSpool", () => {
           Effect.provideService(StrictSpoolKey, keyOf("1", 7))
         );
         expect((yield* survey).entries).toEqual([]);
-        expect(yield* fs.exists("/survey")).toBe(false);
+        const exists1 = yield* fs.exists("/survey");
+        expect(exists1).toBe(false);
 
         const spool = yield* spoolWith("/survey");
         yield* spool.append(tracesRecord);
@@ -182,9 +184,11 @@ describe("StrictSpool", () => {
         const before = yield* fs.readDirectory("/survey");
 
         const { entries } = yield* survey;
-        expect(yield* fs.readDirectory("/survey")).toEqual(before);
+        const readDirectory2 = yield* fs.readDirectory("/survey");
+        expect(readDirectory2).toEqual(before);
         expect(A.map(entries, (entry) => entry.sealedAtMillis)).toEqual([0, 1_700_000_000, 0]);
-        const sizes = yield* Effect.forEach(yield* segmentFiles("/survey"), (name) =>
+        const segmentFiles3 = yield* segmentFiles("/survey");
+        const sizes = yield* Effect.forEach(segmentFiles3, (name) =>
           fs.stat(`/survey/${name}`).pipe(Effect.map((info) => ByteSize.toNumberUnsafe(info.size)))
         );
         expect(A.map(entries, (entry) => entry.sizeBytes)).toEqual(sizes);
@@ -276,7 +280,8 @@ describe("StrictSpool", () => {
         const evicted = A.reduce(ledgers, 0, (total, ledger) => total + countOf(ledger, "spool-evicted"));
         expect(evicted).toBe(2);
         expect((yield* spool.replay).records).toEqual(A.drop(bodies, 2));
-        expect(A.length(yield* segmentFiles("/eviction/spool"))).toBe(2);
+        const segmentFiles4 = yield* segmentFiles("/eviction/spool");
+        expect(A.length(segmentFiles4)).toBe(2);
       })
     );
 
@@ -386,8 +391,10 @@ describe("layerStrictSaltFromKey", () => {
   it.effect("derives one salt per root key, and a different one for another key", () =>
     Effect.gen(function* () {
       const first = yield* keyedWith(keyLayer("1", 7));
-      expect(yield* keyedWith(keyLayer("1", 7))).toBe(first);
-      expect(yield* keyedWith(keyLayer("2", 9))).not.toBe(first);
+      const keyedWith5 = yield* keyedWith(keyLayer("1", 7));
+      expect(keyedWith5).toBe(first);
+      const keyedWith6 = yield* keyedWith(keyLayer("2", 9));
+      expect(keyedWith6).not.toBe(first);
       expect(first).toMatch(/^[0-9a-f]{64}$/);
     })
   );

@@ -24,7 +24,8 @@ it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })((it) => {
   it.effect("rejects unreadable claims and malformed scope entries precisely", () =>
     Effect.gen(function* () {
       for (const claims of [null, [], {}, { scp: 1 }]) {
-        const token = `e30.${Base64Url.encode(yield* S.encodeEffect(json)(claims))}.sig`;
+        const value1 = yield* S.encodeEffect(json)(claims);
+        const token = `e30.${Base64Url.encode(value1)}.sig`;
         assertFailure(backendIdsFrom(token), "the runtime token carries no `scp` claim");
       }
       for (const scope of [
@@ -34,12 +35,15 @@ it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })((it) => {
         "Actions.Results:run:",
         "Actions.Results:run:job:extra",
       ]) {
-        const token = `e30.${Base64Url.encode(yield* S.encodeEffect(json)({ scp: scope }))}.sig`;
+        const value2 = yield* S.encodeEffect(json)({ scp: scope });
+        const token = `e30.${Base64Url.encode(value2)}.sig`;
         assertFailure(backendIdsFrom(token), `the runtime token's Actions.Results scope is malformed: "${scope}"`);
       }
-      const absent = `e30.${Base64Url.encode(yield* S.encodeEffect(json)({ scp: "unrelated" }))}.sig`;
+      const value3 = yield* S.encodeEffect(json)({ scp: "unrelated" });
+      const absent = `e30.${Base64Url.encode(value3)}.sig`;
       assertFailure(backendIdsFrom(absent), "the runtime token carries no `Actions.Results` scope");
-      const token = `e30.${Base64Url.encode(yield* S.encodeEffect(json)({ scp: "unrelated Actions.Results:run:job trailing" }))}.sig`;
+      const value4 = yield* S.encodeEffect(json)({ scp: "unrelated Actions.Results:run:job trailing" });
+      const token = `e30.${Base64Url.encode(value4)}.sig`;
       assertSuccess(
         backendIdsFrom(token),
         BackendIds.make({ workflowRunBackendId: "run", workflowJobRunBackendId: "job" })
@@ -52,11 +56,15 @@ it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })((it) => {
         [{}, RESULTS_URL],
         [{ ACTIONS_RESULTS_URL: "https://example/" }, RUNTIME_TOKEN],
       ] as const) {
-        assertFailure(yield* Effect.result(resultsBackend(yield* ActionEnvironment.makeTest(values))), missing);
+        const madeTest9 = yield* ActionEnvironment.makeTest(values);
+        const result5 = yield* Effect.result(resultsBackend(madeTest9));
+        assertFailure(result5, missing);
       }
-      const value = yield* resultsBackend(
-        yield* ActionEnvironment.makeTest({ ACTIONS_RESULTS_URL: "https://example/", ACTIONS_RUNTIME_TOKEN: "bad" })
-      );
+      const madeTest = yield* ActionEnvironment.makeTest({
+        ACTIONS_RESULTS_URL: "https://example/",
+        ACTIONS_RUNTIME_TOKEN: "bad",
+      });
+      const value = yield* resultsBackend(madeTest);
       assert.strictEqual(value.baseUrl, "https://example/");
       assert.strictEqual(misconfiguredDetail("cache")(RESULTS_URL), misconfiguredDetail(RESULTS_URL, "cache"));
     })
@@ -66,8 +74,10 @@ it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })((it) => {
 it.effect("backend schemas preserve plain objects, redacted tokens, and both scope outcomes", () =>
   Effect.gen(function* () {
     const ids = BackendIds.make({ workflowRunBackendId: "", workflowJobRunBackendId: "job" });
-    assert.deepStrictEqual(yield* S.decodeEffect(BackendIds)(ids), ids);
-    assert.deepStrictEqual(yield* S.encodeEffect(BackendIds)(ids), ids);
+    const value6 = yield* S.decodeEffect(BackendIds)(ids);
+    assert.deepStrictEqual(value6, ids);
+    const value7 = yield* S.encodeEffect(BackendIds)(ids);
+    assert.deepStrictEqual(value7, ids);
     assert.isFalse(S.is(BackendIds)({ workflowRunBackendId: "run" }));
     assert.isFalse(S.is(BackendIds)({ workflowRunBackendId: 1, workflowJobRunBackendId: "job" }));
     for (const backendIds of [Result.succeed(ids), Result.fail("no scope")]) {
@@ -75,7 +85,9 @@ it.effect("backend schemas preserve plain objects, redacted tokens, and both sco
       const decoded = yield* S.decodeEffect(ResultsBackend)(backend);
       assert.deepStrictEqual(decoded, ResultsBackend.make(backend));
       assert.strictEqual(Redacted.value(decoded.token), "token");
-      assert.isTrue(S.is(ResultsBackend)(yield* S.encodeEffect(ResultsBackend)(ResultsBackend.make(decoded))));
+      const argument = S.is(ResultsBackend);
+      const value5 = yield* S.encodeEffect(ResultsBackend)(ResultsBackend.make(decoded));
+      assert.isTrue(argument(value5));
     }
     assert.isFalse(
       S.is(ResultsBackend)({ baseUrl: "https://example/", token: "token", backendIds: Result.succeed(ids) })
@@ -90,7 +102,10 @@ describe("BackendIds codec property", () => {
     [Arbitrary.schema(BackendIds)],
     ([value]) =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* S.decodeEffect(BackendIds)(yield* S.encodeEffect(BackendIds)(value)), value);
+        const argument1 = S.decodeEffect(BackendIds);
+        const value9 = yield* S.encodeEffect(BackendIds)(value);
+        const value8 = yield* argument1(value9);
+        assert.deepStrictEqual(value8, value);
       }),
     { arbitrary: fcRuns(100) }
   );

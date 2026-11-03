@@ -97,7 +97,8 @@ describe("resolveSinkAudience", () => {
     "takes the stricter audience for malformed loopback-like input %s",
     (destination) =>
       Effect.gen(function* () {
-        expect(resolveSinkAudience(yield* decodeSinkDestination(destination))).toBe("external-network");
+        const decodedSinkDestination = yield* decodeSinkDestination(destination);
+        expect(resolveSinkAudience(decodedSinkDestination)).toBe("external-network");
       })
   );
 
@@ -105,7 +106,8 @@ describe("resolveSinkAudience", () => {
     "preserves URL parser semantics for a valid local destination %s",
     (destination) =>
       Effect.gen(function* () {
-        expect(resolveSinkAudience(yield* decodeSinkDestination(destination))).toBe("local-workspace");
+        const decodedSinkDestination1 = yield* decodeSinkDestination(destination);
+        expect(resolveSinkAudience(decodedSinkDestination1)).toBe("local-workspace");
       })
   );
 
@@ -121,7 +123,8 @@ describe("resolveSinkAudience", () => {
       ];
 
       for (const destination of loopback) {
-        expect(resolveSinkAudience(yield* decodeSinkDestination(destination))).toBe("local-workspace");
+        const decodedSinkDestination2 = yield* decodeSinkDestination(destination);
+        expect(resolveSinkAudience(decodedSinkDestination2)).toBe("local-workspace");
       }
     })
   );
@@ -132,7 +135,8 @@ describe("resolveSinkAudience", () => {
       const external = ["https://registry.example", "http://192.168.1.10/api", "https://localhost.attacker.example"];
 
       for (const destination of external) {
-        expect(resolveSinkAudience(yield* decodeSinkDestination(destination))).toBe("external-network");
+        const decodedSinkDestination3 = yield* decodeSinkDestination(destination);
+        expect(resolveSinkAudience(decodedSinkDestination3)).toBe("external-network");
       }
     })
   );
@@ -140,7 +144,8 @@ describe("resolveSinkAudience", () => {
   it.effect(
     "takes the stricter branch for unparseable destinations",
     Effect.fnUntraced(function* () {
-      expect(resolveSinkAudience(yield* decodeSinkDestination("not a url"))).toBe("external-network");
+      const decodedSinkDestination4 = yield* decodeSinkDestination("not a url");
+      expect(resolveSinkAudience(decodedSinkDestination4)).toBe("external-network");
     })
   );
 });

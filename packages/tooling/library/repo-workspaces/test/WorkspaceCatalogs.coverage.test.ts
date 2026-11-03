@@ -98,7 +98,8 @@ describe("catalog validation edge cases", () => {
         );
         assertNone(exit.pipe(Exit.findErrorOption));
       }
-      assert.strictEqual(yield* double.refresh, undefined);
+      const refresh1 = yield* double.refresh;
+      assert.strictEqual(refresh1, undefined);
     })
   );
 });
@@ -116,7 +117,8 @@ for (const yaml of [
       Effect.gen(function* () {
         const catalogs = yield* WorkspaceCatalogs;
         assert.deepStrictEqual((yield* catalogs.set).entries, {});
-        assert.deepStrictEqual(yield* catalogs.hookReplays, {});
+        const hookReplays2 = yield* catalogs.hookReplays;
+        assert.deepStrictEqual(hookReplays2, {});
       })
     );
   });
@@ -148,8 +150,10 @@ for (const files of [
       Effect.gen(function* () {
         const catalogs = yield* WorkspaceCatalogs;
         assert.deepStrictEqual((yield* catalogs.set).entries, {});
-        assert.deepStrictEqual(yield* catalogs.importerVersions, {});
-        assert.deepStrictEqual(yield* catalogs.hookReplays, {});
+        const importerVersions3 = yield* catalogs.importerVersions;
+        assert.deepStrictEqual(importerVersions3, {});
+        const hookReplays4 = yield* catalogs.hookReplays;
+        assert.deepStrictEqual(hookReplays4, {});
       })
     );
   });
@@ -219,8 +223,10 @@ it.layer(
   it.effect("live hooks without config dependencies preserve inline ranges", () =>
     Effect.gen(function* () {
       const catalogs = yield* WorkspaceCatalogs;
-      assertSome(yield* catalogs.resolveSpecifier("effect", "catalog:"), "^4.0.0");
-      assertNone(yield* catalogs.resolveSpecifier("missing", "catalog:"));
+      const resolvedSpecifier = yield* catalogs.resolveSpecifier("effect", "catalog:");
+      assertSome(resolvedSpecifier, "^4.0.0");
+      const resolvedSpecifier5 = yield* catalogs.resolveSpecifier("missing", "catalog:");
+      assertNone(resolvedSpecifier5);
     })
   );
 });

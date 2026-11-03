@@ -57,7 +57,8 @@ describe("@beep/law-practice-domain ReviewItem", () => {
         expect(item.kind).toBe(kind);
         assertTrue(ReviewItem.guards[kind](item));
         assertNone(item.label);
-        expect(yield* encodeItem(item)).toStrictEqual(input);
+        const encodedItem1 = yield* encodeItem(item);
+        expect(encodedItem1).toStrictEqual(input);
       }
     })
   );
@@ -103,7 +104,8 @@ describe("@beep/law-practice-domain SourceRef", () => {
       assertNone(ref.quote.prefix);
       assertNone(ref.quote.suffix);
       assertNone(ref.crop);
-      expect(yield* encodeRef(ref)).toStrictEqual(minimalRef);
+      const encodedRef = yield* encodeRef(ref);
+      expect(encodedRef).toStrictEqual(minimalRef);
     })
   );
 
@@ -116,7 +118,8 @@ describe("@beep/law-practice-domain SourceRef", () => {
       assertSome(ref.quote.prefix, "comprising ");
       assertSome(ref.quote.suffix, " coupling the lid");
       expect(ref.crop._tag).toBe("Some");
-      expect(yield* encodeRef(ref)).toStrictEqual(fullRef);
+      const encodedRef2 = yield* encodeRef(ref);
+      expect(encodedRef2).toStrictEqual(fullRef);
     })
   );
 
@@ -191,14 +194,17 @@ describe("@beep/law-practice-domain VerdictRow", () => {
       expect(DateTime.toEpochMillis(row.recordedAt)).toBe(1_760_400_000_000);
       expect(A.map([row, locked, bare], (r) => r.verdict)).toStrictEqual(["wrong", "right", "wrong"]);
       assertNone(bare.note);
-      expect(yield* encodeRow(row)).toStrictEqual(encodedRow);
-      expect(yield* encodeRow(locked)).toStrictEqual({
+      const encodedRow3 = yield* encodeRow(row);
+      expect(encodedRow3).toStrictEqual(encodedRow);
+      const encodedRow4 = yield* encodeRow(locked);
+      expect(encodedRow4).toStrictEqual({
         ...encodedRow,
         verdict: "right",
         revision: 2,
         lockedAt: 1_760_400_060_000,
       });
-      expect(yield* encodeRow(bare)).toStrictEqual(withoutNote);
+      const encodedRow5 = yield* encodeRow(bare);
+      expect(encodedRow5).toStrictEqual(withoutNote);
     })
   );
 
@@ -243,7 +249,9 @@ describe("@beep/law-practice-domain review envelope properties", () => {
     { item: Arbitrary.schema(ReviewItem) },
     ({ item }) =>
       Effect.gen(function* () {
-        const decoded = yield* S.decodeEffect(ReviewItem)(yield* encodeItem(item));
+        const argument = S.decodeEffect(ReviewItem);
+        const encodedItem2 = yield* encodeItem(item);
+        const decoded = yield* argument(encodedItem2);
 
         expect(S.toEquivalence(ReviewItem)(decoded, item)).toBe(true);
       }),
@@ -255,7 +263,9 @@ describe("@beep/law-practice-domain review envelope properties", () => {
     { row: Arbitrary.schema(VerdictRow) },
     ({ row }) =>
       Effect.gen(function* () {
-        const decoded = yield* S.decodeEffect(VerdictRow)(yield* encodeRow(row));
+        const argument1 = S.decodeEffect(VerdictRow);
+        const encodedRow6 = yield* encodeRow(row);
+        const decoded = yield* argument1(encodedRow6);
 
         expect(S.toEquivalence(VerdictRow)(decoded, row)).toBe(true);
       }),

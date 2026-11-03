@@ -31,7 +31,8 @@ beforeAll(() =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const dir = yield* fs.realPath(yield* fixture.tempDirectory("run-bin-stdin-"));
+      const tempDirectory1 = yield* fixture.tempDirectory("run-bin-stdin-");
+      const dir = yield* fs.realPath(tempDirectory1);
       const carrier = path.join(dir, "node_modules", "carrier");
       const shim = path.join(dir, "node_modules", ".bin", "echo");
       yield* fs.makeDirectory(path.join(dir, "node_modules", ".bin"), { recursive: true });

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "claim-performance-ci-repair/v1",
+  "hostedFailureJob": 125912457646,
+  "repairs": [
+    "Use canonical assertNone for Option absence",
+    "Hoist decoded and JSON schemas to module scope",
+    "Exercise source-record JSON preservation across 100 deterministic schema-derived arbitrary cases"
+  ],
+  "focusedTests": 14,
+  "packageAudit": "passed",
+  "packageDocgen": "passed",
+  "scopedRootOxlint": "passed",
+  "runtimeSourceChanged": false,
+  "referencesChanged": false,
+  "previousResultsChanged": false,
+  "lintBaselineOrFloorChanged": false,
+  "currentHeadHostedProof": "required",
+  "goalComplete": false
+}

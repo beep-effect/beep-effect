@@ -43,6 +43,15 @@ import { ts } from "ts-morph";
 import { parse } from "vite";
 import { hostNodeExecutable } from "./helpers/native-node.ts";
 
+class CoverageArtifactsTestOperationError extends S.TaggedError<
+  CoverageArtifactsTestOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "CoverageArtifactsTestOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in coverage-artifacts.test.ts." }
+) {}
+
 // `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
 const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
 
@@ -114,12 +123,15 @@ const fixture = Effect.fnUntraced(function* () {
   });
   expect(commit.exitCode).toBe(0);
   const head = yield* StepExec.runCaptured({ command: "git", args: ["rev-parse", "HEAD"], cwd: root });
+  const argument = Str.trim(head.output);
+  const argument1 = Str.trim(head.output);
+  const encoded1 = yield* encode(["@beep/example"]);
   const identity = CoverageProducerIdentity.make({
-    executionSha: Str.trim(head.output),
-    baseSha: Str.trim(head.output),
+    executionSha: argument,
+    baseSha: argument1,
     runId: "123",
     runAttempt: 1,
-    scopeDigest: yield* sha256Hex(yield* encode(["@beep/example"])),
+    scopeDigest: yield* sha256Hex(encoded1),
   });
   const tests = [`${packagePath}/test/one.test.ts`, `${packagePath}/test/two.test.ts`];
   const instrumenter = createInstrumenter({ esModules: true });
@@ -128,7 +140,9 @@ const fixture = Effect.fnUntraced(function* () {
   });
   instrumenter.instrumentSync(outputText, path.join(packageRoot, "src/choose.ts"));
   const raw = instrumenter.lastFileCoverage();
-  if (raw === null || raw === undefined) return yield* Effect.die("Fixture instrumentation produced no coverage map");
+  if (raw === null || raw === undefined) {
+    return yield* Effect.die("Fixture instrumentation produced no coverage map");
+  }
   // Load the real Node/Bun Vitest provider before changing only the producer
   // metadata boundary, so Vite chooses its actual runtime implementation.
   yield* discoverCoverageArtifactSources(root, packagePath);
@@ -150,47 +164,44 @@ const fixture = Effect.fnUntraced(function* () {
       f: R.map(raw.f, () => 1),
       b: R.map(raw.b, (hits) => A.map(hits, (_, branch) => (branch === index - 1 ? 1 : 0))),
     };
-    yield* fs.writeFileString(
-      path.join(packageRoot, "coverage/coverage-final.json"),
-      yield* encode({
-        [raw.path]: coverage,
-        ...(includeBarrel === true
-          ? {
-              [path.join(packageRoot, "src/index.ts")]: {
-                path: path.join(packageRoot, "src/index.ts"),
-                statementMap: {},
-                fnMap: {},
-                branchMap: {},
-                s: {},
-                f: {},
-                b: {},
-              },
-            }
-          : {}),
-      })
-    );
-    yield* fs.writeFileString(
-      path.join(packageRoot, "coverage/unit-results.json"),
-      yield* encode({
+    const argument2 = path.join(packageRoot, "coverage/coverage-final.json");
+    const encoded4 = yield* encode({
+      [raw.path]: coverage,
+      ...(includeBarrel === true
+        ? {
+            [path.join(packageRoot, "src/index.ts")]: {
+              path: path.join(packageRoot, "src/index.ts"),
+              statementMap: {},
+              fnMap: {},
+              branchMap: {},
+              s: {},
+              f: {},
+              b: {},
+            },
+          }
+        : {}),
+    });
+    yield* fs.writeFileString(argument2, encoded4);
+    const argument3 = path.join(packageRoot, "coverage/unit-results.json");
+    const encoded6 = yield* encode({
+      success: true,
+      numFailedTests: 0,
+      numFailedTestSuites: 0,
+      testResults: [{ name: path.join(root, tests[index - 1] ?? ""), status: "passed" }],
+    });
+    yield* fs.writeFileString(argument3, encoded6);
+    const argument4 = path.join(packageRoot, "coverage/runtime.json");
+    const encoded7 = yield* encode(
+      CoverageRuntimeReceipt.make({
+        schemaVersion: "coverage-runtime/v1",
+        invocationId: "0",
+        testRuntime: nativeTestRuntime,
+        runtimeVersion: nativeTestVersion,
+        provider: "istanbul",
         success: true,
-        numFailedTests: 0,
-        numFailedTestSuites: 0,
-        testResults: [{ name: path.join(root, tests[index - 1] ?? ""), status: "passed" }],
       })
     );
-    yield* fs.writeFileString(
-      path.join(packageRoot, "coverage/runtime.json"),
-      yield* encode(
-        CoverageRuntimeReceipt.make({
-          schemaVersion: "coverage-runtime/v1",
-          invocationId: "0",
-          testRuntime: nativeTestRuntime,
-          runtimeVersion: nativeTestVersion,
-          provider: "istanbul",
-          success: true,
-        })
-      )
-    );
+    yield* fs.writeFileString(argument4, encoded7);
     yield* writeCoverageProducerArtifact(
       root,
       CoverageProducerWriteOptions.make({
@@ -226,29 +237,33 @@ const signedV8Fixture = Effect.fnUntraced(function* () {
   const consequent = pipe(code, Str.indexOf("{ return 1; }"), O.getOrElse(constant(-1)));
   const fileUrl = yield* f.path.toFileUrl(file);
   const converted = yield* Effect.forEach([3, 0], (count) =>
-    Effect.tryPromise(() =>
-      convertV8({
-        code,
-        ast: parse("choose.js", code).then((result) => result.program),
-        coverage: {
-          url: fileUrl.href,
-          functions: [
-            {
-              functionName: "choose",
-              isBlockCoverage: true,
-              ranges: [
-                { startOffset: 0, endOffset: code.length, count: 1 },
-                { startOffset: consequent + 1, endOffset: consequent + "{ return 1; }".length - 1, count },
-              ],
-            },
-          ],
-        },
-      })
-    ).pipe(Effect.flatMap(encode), Effect.flatMap(decodeRawFixture), Effect.map(R.values))
+    Effect.tryPromise({
+      try: () =>
+        convertV8({
+          code,
+          ast: parse("choose.js", code).then((result) => result.program),
+          coverage: {
+            url: fileUrl.href,
+            functions: [
+              {
+                functionName: "choose",
+                isBlockCoverage: true,
+                ranges: [
+                  { startOffset: 0, endOffset: code.length, count: 1 },
+                  { startOffset: consequent + 1, endOffset: consequent + "{ return 1; }".length - 1, count },
+                ],
+              },
+            ],
+          },
+        }),
+      catch: (cause) => CoverageArtifactsTestOperationError.make({ cause }),
+    }).pipe(Effect.flatMap(encode), Effect.flatMap(decodeRawFixture), Effect.map(R.values))
   );
   const first = converted[0]?.[0];
   const second = converted[1]?.[0];
-  if (first === undefined || second === undefined) return yield* Effect.die("Expected real converter maps");
+  if (first === undefined || second === undefined) {
+    return yield* Effect.die("Expected real converter maps");
+  }
   expect(first.b["0"]).toEqual([3, -2]);
   expect(second.b["0"]).toEqual([0, 1]);
   const node = yield* hostNodeExecutable;
@@ -270,32 +285,29 @@ const signedV8Fixture = Effect.fnUntraced(function* () {
     });
   const write = Effect.fnUntraced(function* (index: number, raw: unknown, provider: "v8" | "istanbul" = "v8") {
     const invocation = selection(index, provider);
-    yield* f.fs.writeFileString(
-      f.path.join(f.packageRoot, "coverage/coverage-final.json"),
-      yield* encode({ [file]: raw })
-    );
-    yield* f.fs.writeFileString(
-      f.path.join(f.packageRoot, "coverage/unit-results.json"),
-      yield* encode({
+    const argument5 = f.path.join(f.packageRoot, "coverage/coverage-final.json");
+    const encoded8 = yield* encode({ [file]: raw });
+    yield* f.fs.writeFileString(argument5, encoded8);
+    const argument6 = f.path.join(f.packageRoot, "coverage/unit-results.json");
+    const encoded12 = yield* encode({
+      success: true,
+      numFailedTests: 0,
+      numFailedTestSuites: 0,
+      testResults: [{ name: f.path.join(f.root, f.tests[index - 1] ?? ""), status: "passed" }],
+    });
+    yield* f.fs.writeFileString(argument6, encoded12);
+    const argument7 = f.path.join(f.packageRoot, "coverage/runtime.json");
+    const encoded13 = yield* encode(
+      CoverageRuntimeReceipt.make({
+        schemaVersion: "coverage-runtime/v1",
+        invocationId: invocation.invocationId,
+        testRuntime: "node",
+        runtimeVersion: invocation.testRuntimeVersion,
+        provider,
         success: true,
-        numFailedTests: 0,
-        numFailedTestSuites: 0,
-        testResults: [{ name: f.path.join(f.root, f.tests[index - 1] ?? ""), status: "passed" }],
       })
     );
-    yield* f.fs.writeFileString(
-      f.path.join(f.packageRoot, "coverage/runtime.json"),
-      yield* encode(
-        CoverageRuntimeReceipt.make({
-          schemaVersion: "coverage-runtime/v1",
-          invocationId: invocation.invocationId,
-          testRuntime: "node",
-          runtimeVersion: invocation.testRuntimeVersion,
-          provider,
-          success: true,
-        })
-      )
-    );
+    yield* f.fs.writeFileString(argument7, encoded13);
     yield* writeCoverageProducerArtifact(
       f.root,
       CoverageProducerWriteOptions.make({
@@ -328,14 +340,17 @@ const sealedFixture = Effect.fnUntraced(function* () {
   const manifestPath = f.path.join(f.root, ".beep/artifacts/shard-2/manifest.json");
   const manifest = yield* f.fs.readFileString(manifestPath).pipe(Effect.flatMap(decodeManifest));
   const entry = manifest.packages[0];
-  if (entry === undefined) return yield* Effect.die("Expected sealed package");
+  if (entry === undefined) {
+    return yield* Effect.die("Expected sealed package");
+  }
   return { ...f, manifest, manifestPath, entry };
 });
 const rejectChangedManifest = Effect.fnUntraced(function* (
   f: Effect.Success<ReturnType<typeof sealedFixture>>,
   manifest: CoverageProducerManifest
 ) {
-  yield* f.fs.writeFileString(f.manifestPath, yield* encode(manifest));
+  const encoded = yield* encode(manifest);
+  yield* f.fs.writeFileString(f.manifestPath, encoded);
   const failure = yield* collectCoverageProducerArtifacts(f.root, f.options).pipe(Effect.flip);
   expect(failure.message).toContain("Coverage artifact:");
 });
@@ -374,50 +389,47 @@ const compoundFixture = Effect.fnUntraced(function* (secondRuntime: "bun" | "nod
         f: R.map(f.raw.f, () => 1),
         b: R.map(f.raw.b, (hits) => A.map(hits, (_, branch) => (branch === index ? 1 : 0))),
       };
-      yield* f.fs.writeFileString(
-        f.path.join(f.packageRoot, directory, "coverage-final.json"),
-        yield* encode({
-          [f.raw.path]: raw,
-          ...(selection.provider === "v8"
-            ? {
-                [f.path.join(f.packageRoot, "src/index.ts")]: {
-                  path: f.path.join(f.packageRoot, "src/index.ts"),
-                  statementMap: {},
-                  fnMap: {},
-                  branchMap: {},
-                  s: {},
-                  f: {},
-                  b: {},
-                },
-              }
-            : {}),
-        })
-      );
-      yield* f.fs.writeFileString(
-        f.path.join(f.packageRoot, selection.testReportPath),
-        yield* encode({
+      const argument8 = f.path.join(f.packageRoot, directory, "coverage-final.json");
+      const encoded14 = yield* encode({
+        [f.raw.path]: raw,
+        ...(selection.provider === "v8"
+          ? {
+              [f.path.join(f.packageRoot, "src/index.ts")]: {
+                path: f.path.join(f.packageRoot, "src/index.ts"),
+                statementMap: {},
+                fnMap: {},
+                branchMap: {},
+                s: {},
+                f: {},
+                b: {},
+              },
+            }
+          : {}),
+      });
+      yield* f.fs.writeFileString(argument8, encoded14);
+      const argument9 = f.path.join(f.packageRoot, selection.testReportPath);
+      const encoded15 = yield* encode({
+        success: true,
+        numFailedTests: 0,
+        numFailedTestSuites: 0,
+        testResults: A.map(selection.expectedTestFiles, (file) => ({
+          name: f.path.join(f.root, file),
+          status: "passed",
+        })),
+      });
+      yield* f.fs.writeFileString(argument9, encoded15);
+      const argument10 = f.path.join(f.packageRoot, selection.runtimeReportPath);
+      const encoded16 = yield* encode(
+        CoverageRuntimeReceipt.make({
+          schemaVersion: "coverage-runtime/v1",
+          invocationId,
+          testRuntime: runtime,
+          runtimeVersion: selection.testRuntimeVersion,
+          provider: selection.provider,
           success: true,
-          numFailedTests: 0,
-          numFailedTestSuites: 0,
-          testResults: A.map(selection.expectedTestFiles, (file) => ({
-            name: f.path.join(f.root, file),
-            status: "passed",
-          })),
         })
       );
-      yield* f.fs.writeFileString(
-        f.path.join(f.packageRoot, selection.runtimeReportPath),
-        yield* encode(
-          CoverageRuntimeReceipt.make({
-            schemaVersion: "coverage-runtime/v1",
-            invocationId,
-            testRuntime: runtime,
-            runtimeVersion: selection.testRuntimeVersion,
-            provider: selection.provider,
-            success: true,
-          })
-        )
-      );
+      yield* f.fs.writeFileString(argument10, encoded16);
       return selection;
     }),
     { concurrency: 1 }
@@ -458,7 +470,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
             })
           ).pipe(Effect.flip);
           expect(failure.message).toContain("must run under Bun");
-          expect(yield* f.fs.exists(f.path.join(f.root, ".beep/rejected-node/manifest.json"))).toBe(false);
+          const exists1 = yield* f.fs.exists(f.path.join(f.root, ".beep/rejected-node/manifest.json"));
+          expect(exists1).toBe(false);
         })
       );
 
@@ -520,10 +533,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         Effect.gen(function* () {
           const f = yield* sealedFixture();
           // Tamper with serialized metadata rather than constructing a schema-valid manifest.
-          yield* f.fs.writeFileString(
-            f.manifestPath,
-            yield* encode({ ...f.manifest, coverageLibraryVersion: "1.0.2" })
-          );
+          const encoded2 = yield* encode({ ...f.manifest, coverageLibraryVersion: "1.0.2" });
+          yield* f.fs.writeFileString(f.manifestPath, encoded2);
           const failure = yield* collectCoverageProducerArtifacts(f.root, f.options).pipe(Effect.flip);
           expect(failure.message).toContain("invalid producer manifest");
         })
@@ -619,10 +630,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           yield* f.write;
           const manifestPath = f.path.join(f.root, ".beep/compound/one/manifest.json");
           const manifest = yield* f.fs.readFileString(manifestPath).pipe(Effect.flatMap(decodeManifest));
-          yield* f.fs.writeFileString(
-            manifestPath,
-            yield* encode(CoverageProducerManifest.make({ ...manifest, packages: A.take(manifest.packages, 1) }))
+          const encoded3 = yield* encode(
+            CoverageProducerManifest.make({ ...manifest, packages: A.take(manifest.packages, 1) })
           );
+          yield* f.fs.writeFileString(manifestPath, encoded3);
           const failure = yield* collectCoverageProducerArtifacts(f.root, f.options).pipe(Effect.flip);
           expect(failure.message).toContain("package assignment differs");
         })
@@ -673,7 +684,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
               success: true,
               ...patch,
             };
-            yield* f.fs.writeFileString(f.path.join(f.packageRoot, "coverage/runtime.json"), yield* encode(receipt));
+            const argument11 = f.path.join(f.packageRoot, "coverage/runtime.json");
+            const encoded17 = yield* encode(receipt);
+            yield* f.fs.writeFileString(argument11, encoded17);
             const failure = yield* writeCoverageProducerArtifact(
               f.root,
               CoverageProducerWriteOptions.make({
@@ -782,7 +795,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
             readFile: Effect.fnUntraced(function* (file: string) {
               if (file === barrel) {
                 reads += 1;
-                if (reads === 2) yield* f.fs.writeFileString(barrel, "export const changed = 1;\n");
+                if (reads === 2) {
+                  yield* f.fs.writeFileString(barrel, "export const changed = 1;\n");
+                }
               }
               return yield* f.fs.readFile(file);
             }),
@@ -793,7 +808,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           );
           expect(reads).toBe(2);
           expect(failure.message).toContain(`missing source ${f.packagePath}/src/index.ts`);
-          expect(yield* f.fs.readFileString(barrel)).toContain("export const changed = 1");
+          const readFileString4 = yield* f.fs.readFileString(barrel);
+          expect(readFileString4).toContain("export const changed = 1");
         })
       );
 
@@ -801,19 +817,18 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         Effect.gen(function* () {
           const f = yield* sealedFixture();
           const selection = CoverageProducerPackage.make({ ...f.entry.selection, provider: "v8" });
-          yield* f.fs.writeFileString(
-            f.path.join(f.packageRoot, "coverage/runtime.json"),
-            yield* encode(
-              CoverageRuntimeReceipt.make({
-                schemaVersion: "coverage-runtime/v1",
-                invocationId: selection.invocationId,
-                testRuntime: selection.testRuntime,
-                runtimeVersion: selection.testRuntimeVersion,
-                provider: "v8",
-                success: true,
-              })
-            )
+          const argument12 = f.path.join(f.packageRoot, "coverage/runtime.json");
+          const encoded18 = yield* encode(
+            CoverageRuntimeReceipt.make({
+              schemaVersion: "coverage-runtime/v1",
+              invocationId: selection.invocationId,
+              testRuntime: selection.testRuntime,
+              runtimeVersion: selection.testRuntimeVersion,
+              provider: "v8",
+              success: true,
+            })
           );
+          yield* f.fs.writeFileString(argument12, encoded18);
           const failure = yield* writeCoverageProducerArtifact(
             f.root,
             CoverageProducerWriteOptions.make({
@@ -846,7 +861,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
             .readFileString(f.path.join(f.root, ".beep/signed-artifacts/shard-1/manifest.json"))
             .pipe(Effect.flatMap(decodeManifest));
           const entry = manifest.packages[0];
-          if (entry === undefined) return yield* Effect.die("Expected signed report");
+          if (entry === undefined) {
+            return yield* Effect.die("Expected signed report");
+          }
           const raw = yield* f.fs
             .readFileString(f.path.join(f.root, ".beep/signed-artifacts/shard-1", entry.reportPath))
             .pipe(Effect.flatMap(decodeRawFixture));
@@ -907,7 +924,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
             ...f.manifest,
             packages: [CoveragePackageArtifact.make({ ...f.entry, selection })],
           });
-          yield* f.fs.writeFileString(f.manifestPath, yield* encode(manifest));
+          const encoded5 = yield* encode(manifest);
+          yield* f.fs.writeFileString(f.manifestPath, encoded5);
           const options = CoverageProducerCompareOptions.make({
             ...f.options,
             expectedPartitions: A.map(f.options.expectedPartitions, (partition) =>
@@ -933,7 +951,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
             `${f.packagePath}/src/choose.ts`,
             `${f.packagePath}/src/index.ts`,
           ]);
-          expect(yield* discoverCoverageArtifactSources(f.root, f.packagePath)).toEqual([
+          const discoverCoverageArtifactSources6 = yield* discoverCoverageArtifactSources(f.root, f.packagePath);
+          expect(discoverCoverageArtifactSources6).toEqual([
             `${f.packagePath}/src/choose.ts`,
             `${f.packagePath}/src/index.ts`,
           ]);
@@ -1051,7 +1070,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           yield* f.write(2);
           const snapshots = yield* collectCoverageProducerArtifacts(f.root, f.options);
           const first = snapshots[0];
-          if (first === undefined) return yield* Effect.die("Expected validated snapshot");
+          if (first === undefined) {
+            return yield* Effect.die("Expected validated snapshot");
+          }
           yield* f.fs.makeDirectory(f.path.join(f.root, "standards"));
           const baseline = CoverageRegressionBaseline.make({
             schema_version: 2,
@@ -1069,16 +1090,16 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
             follow_ups: {},
             packages: { "@beep/example": first.baseline },
           });
-          yield* f.fs.writeFileString(
-            f.path.join(f.root, "standards/coverage.regression-baseline.jsonc"),
-            yield* encode(baseline)
-          );
+          const argument13 = f.path.join(f.root, "standards/coverage.regression-baseline.jsonc");
+          const encoded19 = yield* encode(baseline);
+          yield* f.fs.writeFileString(argument13, encoded19);
           // Removing local reports proves the adapter consumes sealed artifacts only.
           yield* f.fs.remove(f.path.join(f.packageRoot, "coverage"), { recursive: true });
           yield* compareCoverageProducerArtifacts(f.root, f.options).pipe(
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}))
           );
-          expect(yield* f.fs.exists(f.path.join(f.packageRoot, "coverage"))).toBe(false);
+          const exists7 = yield* f.fs.exists(f.path.join(f.packageRoot, "coverage"));
+          expect(exists7).toBe(false);
         })
       );
 
@@ -1091,29 +1112,30 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           yield* f.write(2);
           const snapshots = yield* collectCoverageProducerArtifacts(f.root, f.options);
           const first = snapshots[0];
-          if (first === undefined) return yield* Effect.die("Expected validated snapshot");
+          if (first === undefined) {
+            return yield* Effect.die("Expected validated snapshot");
+          }
           yield* f.fs.makeDirectory(f.path.join(f.root, "standards"));
-          yield* f.fs.writeFileString(
-            f.path.join(f.root, "standards/coverage.regression-baseline.jsonc"),
-            yield* encode(
-              CoverageRegressionBaseline.make({
-                schema_version: 2,
-                generated_at: "fixture",
-                git_sha: f.identity.executionSha,
-                command: "fixture",
-                epsilon: 0.001,
-                minimum: {
-                  lines: first.baseline.lines,
-                  statements: first.baseline.statements,
-                  functions: first.baseline.functions,
-                  branches: first.baseline.branches,
-                },
-                exemptions: {},
-                follow_ups: {},
-                packages: { "@beep/example": first.baseline },
-              })
-            )
+          const argument14 = f.path.join(f.root, "standards/coverage.regression-baseline.jsonc");
+          const encoded20 = yield* encode(
+            CoverageRegressionBaseline.make({
+              schema_version: 2,
+              generated_at: "fixture",
+              git_sha: f.identity.executionSha,
+              command: "fixture",
+              epsilon: 0.001,
+              minimum: {
+                lines: first.baseline.lines,
+                statements: first.baseline.statements,
+                functions: first.baseline.functions,
+                branches: first.baseline.branches,
+              },
+              exemptions: {},
+              follow_ups: {},
+              packages: { "@beep/example": first.baseline },
+            })
           );
+          yield* f.fs.writeFileString(argument14, encoded20);
           const failure = yield* compareCoverageProducerArtifacts(f.root, {
             ...f.options,
             base: "refs/heads/missing-base",
@@ -1163,7 +1185,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
             cwd: f.root,
           });
           expect(Str.trim(moving.output)).not.toBe(before.baseSha);
-          expect(yield* resolve).toEqual(before);
+          const resolved8 = yield* resolve;
+          expect(resolved8).toEqual(before);
         })
       );
 
@@ -1267,10 +1290,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
             f: R.map(f.raw.f, () => 1),
             b: R.map(f.raw.b, (hits) => A.map(hits, () => 1)),
           };
-          yield* f.fs.writeFileString(
-            f.path.join(f.packageRoot, "coverage/coverage-final.json"),
-            yield* encode({ [f.raw.path]: remapped })
-          );
+          const argument15 = f.path.join(f.packageRoot, "coverage/coverage-final.json");
+          const encoded21 = yield* encode({ [f.raw.path]: remapped });
+          yield* f.fs.writeFileString(argument15, encoded21);
           const selection = CoverageProducerPackage.make({
             packageName: "@beep/example",
             packagePath: f.packagePath,
@@ -1306,14 +1328,11 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       it.effect("decodes an older sealed manifest as canonical coverage with no preparation commands", () =>
         Effect.gen(function* () {
           const f = yield* sealedFixture();
-          const manifest = yield* decodeManifest(
-            yield* encode({
-              ...f.manifest,
-              packages: [
-                { ...f.entry, selection: Struct.omit(f.entry.selection, ["preparationCommands", "testOnly"]) },
-              ],
-            })
-          );
+          const encoded9 = yield* encode({
+            ...f.manifest,
+            packages: [{ ...f.entry, selection: Struct.omit(f.entry.selection, ["preparationCommands", "testOnly"]) }],
+          });
+          const manifest = yield* decodeManifest(encoded9);
           expect(manifest.packages[0]?.selection.preparationCommands).toEqual([]);
           expect(manifest.packages[0]?.selection.testOnly).toBe(false);
         })
@@ -1399,10 +1418,14 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         Effect.gen(function* () {
           const f = yield* fixture();
           yield* f.write(1);
-          yield* f.fs.writeFileString(
-            f.path.join(f.packageRoot, "coverage/unit-results.json"),
-            yield* encode({ success: false, numFailedTests: 1, numFailedTestSuites: 1, testResults: [] })
-          );
+          const argument16 = f.path.join(f.packageRoot, "coverage/unit-results.json");
+          const encoded22 = yield* encode({
+            success: false,
+            numFailedTests: 1,
+            numFailedTestSuites: 1,
+            testResults: [],
+          });
+          yield* f.fs.writeFileString(argument16, encoded22);
           const failure = yield* writeCoverageProducerArtifact(
             f.root,
             CoverageProducerWriteOptions.make({
@@ -1538,10 +1561,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       it.effect("rejects a complete partition set containing an incomplete package shard set", () =>
         Effect.gen(function* () {
           const f = yield* sealedFixture();
-          yield* f.fs.writeFileString(
-            f.manifestPath,
-            yield* encode(CoverageProducerManifest.make({ ...f.manifest, packages: [] }))
-          );
+          const encoded10 = yield* encode(CoverageProducerManifest.make({ ...f.manifest, packages: [] }));
+          yield* f.fs.writeFileString(f.manifestPath, encoded10);
           const expectedPartitions = A.map(f.options.expectedPartitions, (partition) =>
             partition.partitionId === "unit-2"
               ? CoverageProducerPartition.make({ ...partition, packages: [] })
@@ -1558,15 +1579,13 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         Effect.gen(function* () {
           const f = yield* sealedFixture();
           const selection = CoverageProducerPackage.make({ ...f.entry.selection, shard: { index: 1, total: 2 } });
-          yield* f.fs.writeFileString(
-            f.manifestPath,
-            yield* encode(
-              CoverageProducerManifest.make({
-                ...f.manifest,
-                packages: [CoveragePackageArtifact.make({ ...f.entry, selection })],
-              })
-            )
+          const encoded11 = yield* encode(
+            CoverageProducerManifest.make({
+              ...f.manifest,
+              packages: [CoveragePackageArtifact.make({ ...f.entry, selection })],
+            })
           );
+          yield* f.fs.writeFileString(f.manifestPath, encoded11);
           const expectedPartitions = A.map(f.options.expectedPartitions, (partition) =>
             partition.partitionId === "unit-2"
               ? CoverageProducerPartition.make({ ...partition, packages: [selection] })
@@ -1586,21 +1605,19 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
             if (scenario === "missing-report") {
               yield* f.fs.remove(f.path.join(f.packageRoot, "coverage/unit-results.json"));
             } else if (scenario === "unexpected-test") {
-              yield* f.fs.writeFileString(
-                f.path.join(f.packageRoot, "coverage/unit-results.json"),
-                yield* encode({
-                  success: true,
-                  numFailedTests: 0,
-                  numFailedTestSuites: 0,
-                  testResults: [{ name: f.path.join(f.root, "test/unselected.test.ts"), status: "passed" }],
-                })
-              );
+              const argument17 = f.path.join(f.packageRoot, "coverage/unit-results.json");
+              const encoded23 = yield* encode({
+                success: true,
+                numFailedTests: 0,
+                numFailedTestSuites: 0,
+                testResults: [{ name: f.path.join(f.root, "test/unselected.test.ts"), status: "passed" }],
+              });
+              yield* f.fs.writeFileString(argument17, encoded23);
             } else {
               const extra = f.path.join(f.packageRoot, "src/excluded.ts");
-              yield* f.fs.writeFileString(
-                f.path.join(f.packageRoot, "coverage/coverage-final.json"),
-                yield* encode({ [f.raw.path]: f.raw, [extra]: { ...f.raw, path: extra } })
-              );
+              const argument18 = f.path.join(f.packageRoot, "coverage/coverage-final.json");
+              const encoded24 = yield* encode({ [f.raw.path]: f.raw, [extra]: { ...f.raw, path: extra } });
+              yield* f.fs.writeFileString(argument18, encoded24);
             }
             const failure = yield* writeCoverageProducerArtifact(
               f.root,
@@ -1634,7 +1651,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
             })
           ).pipe(Effect.flip);
           expect(failure.message).toContain("cannot seal runtime receipt");
-          expect(yield* fs.readDirectory(outside)).toEqual([]);
+          const readDirectory12 = yield* fs.readDirectory(outside);
+          expect(readDirectory12).toEqual([]);
         })
       );
 
@@ -1657,10 +1675,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         Effect.gen(function* () {
           const f = yield* sealedFixture();
           yield* f.fs.makeDirectory(f.path.join(f.root, ".beep/artifacts/duplicate"), { recursive: true });
-          yield* f.fs.writeFileString(
-            f.path.join(f.root, ".beep/artifacts/duplicate/manifest.json"),
-            yield* encode(f.manifest)
-          );
+          const argument19 = f.path.join(f.root, ".beep/artifacts/duplicate/manifest.json");
+          const encoded25 = yield* encode(f.manifest);
+          yield* f.fs.writeFileString(argument19, encoded25);
           yield* rejectChangedManifest(f, f.manifest);
         })
       );

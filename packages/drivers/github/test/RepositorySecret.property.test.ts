@@ -16,7 +16,8 @@ describe("RepositorySecret schema property floor", () => {
         const encoded = yield* S.encodeEffect(SecretInfo)(value);
         const decoded = yield* S.decodeEffect(SecretInfo)(encoded);
         assert.isTrue(S.toEquivalence(SecretInfo)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(SecretInfo)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(SecretInfo)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );

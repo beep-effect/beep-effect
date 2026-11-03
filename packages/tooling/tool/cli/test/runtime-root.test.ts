@@ -51,7 +51,8 @@ it.layer(Layer.mergeAll(NodePath.layer, BunCrypto.layer), { timeout: "5 seconds"
 
     it.effect("does not require a fallible filesystem probe", () =>
       Effect.gen(function* () {
-        expect(yield* perUserRuntimeRoot()).toStrictEqual(canonical);
+        const perUserRuntimeRoot1 = yield* perUserRuntimeRoot();
+        expect(perUserRuntimeRoot1).toStrictEqual(canonical);
       })
     );
 

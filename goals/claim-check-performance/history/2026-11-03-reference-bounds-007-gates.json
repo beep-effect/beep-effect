@@ -1,0 +1,141 @@
+{
+  "schemaVersion": "claim-performance-numerical-gates/v1",
+  "numericalGatesPassed": false,
+  "provenanceValidatedByThisTool": false,
+  "goalCompletionClaimed": false,
+  "checks": {
+    "legacy-strict": {
+      "passed": false,
+      "observed": {
+        "strict": 37,
+        "selected": 538
+      }
+    },
+    "all-37-retained": {
+      "passed": true,
+      "observed": {
+        "lost": [],
+        "protected": 37
+      }
+    },
+    "family-disjoint": {
+      "passed": false,
+      "observed": {
+        "overlap": [],
+        "families": 0
+      }
+    },
+    "heldout-strict": {
+      "passed": false,
+      "observed": {
+        "strict": 0,
+        "selected": 0,
+        "families": 0
+      }
+    },
+    "cpc-stratification": {
+      "passed": false,
+      "observed": {
+        "A": {
+          "claims": 0,
+          "families": 0
+        },
+        "B": {
+          "claims": 0,
+          "families": 0
+        },
+        "E": {
+          "claims": 0,
+          "families": 0
+        },
+        "F": {
+          "claims": 0,
+          "families": 0
+        },
+        "G": {
+          "claims": 0,
+          "families": 0
+        },
+        "H": {
+          "claims": 0,
+          "families": 0
+        }
+      }
+    },
+    "complex:nested": {
+      "passed": false,
+      "observed": {
+        "strict": 0,
+        "selected": 0
+      }
+    },
+    "complex:functional": {
+      "passed": false,
+      "observed": {
+        "strict": 0,
+        "selected": 0
+      }
+    },
+    "complex:dependent": {
+      "passed": false,
+      "observed": {
+        "strict": 0,
+        "selected": 0
+      }
+    },
+    "complex:multiple-dependent": {
+      "passed": false,
+      "observed": {
+        "strict": 0,
+        "selected": 0
+      }
+    },
+    "coverage:legacy": {
+      "passed": false,
+      "observed": {
+        "parsed": 495,
+        "abstainedOrUnknown": 456,
+        "selected": 538
+      }
+    },
+    "coverage:heldout": {
+      "passed": false,
+      "observed": {
+        "parsed": 0,
+        "abstainedOrUnknown": 0,
+        "selected": 0
+      }
+    },
+    "alert-precision": {
+      "passed": false,
+      "observed": {
+        "right": 0,
+        "emitted": 0,
+        "wilson95": [0.0, 1.0]
+      }
+    },
+    "defect-recall": {
+      "passed": false,
+      "observed": {
+        "detected": 0,
+        "supported": 0,
+        "unknownTruth": 0,
+        "selected": 0,
+        "wilson95": [0.0, 1.0]
+      }
+    },
+    "defect-kind-coverage": {
+      "passed": false,
+      "observed": {}
+    },
+    "erroneous-alert-claims": {
+      "passed": false,
+      "observed": {
+        "erroneousOrUnknown": 0,
+        "selected": 0,
+        "wilson95": [0.0, 1.0]
+      }
+    }
+  },
+  "implementationDigest": "084340a10b78c48afaa78c571ae8a6fd56950669da72ea5d05f07f13084e77e8"
+}

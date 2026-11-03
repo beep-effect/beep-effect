@@ -12,12 +12,13 @@ import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as PlatformError from "effect/PlatformError";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CiOpsProjection, CiOpsProjectionLive } from "@/projection/CiOpsProjection";
@@ -41,6 +42,8 @@ import {
 } from "@/projection/Schemas";
 import { emitLanePlan, emitScheduleAbox } from "@/projection/Turtle";
 import type { CiOpsProjectionShape } from "@/projection/CiOpsProjection";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 // P2 Ruling 2: the lab pins the live 33-lane handoff by digest; counts always come from the decoded bytes.
 const pinnedHandoffSha256 = "705f3e754a51c6750529ccec1021293c82fce0994709a18906b863609a0a2198";
@@ -67,16 +70,19 @@ const readHandoff = Effect.fn("LanePlanTest.readHandoff")(function* (path: strin
 });
 
 const handoffJson = (overrides: Readonly<Record<string, unknown>>): string =>
-  JSON.stringify({
-    schemaVersion: "gate-order-handoff/v1",
-    scope: "pre-push:non-main",
-    orderRule: "gate-order-lexicographic/v1",
-    lanes: [
-      { rank: 0, laneId: "quality:secrets", declarationIndex: 1 },
-      { rank: 1, laneId: "fallow:audit", declarationIndex: 0 },
-    ],
-    ...overrides,
-  });
+  Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({
+      schemaVersion: "gate-order-handoff/v1",
+      scope: "pre-push:non-main",
+      orderRule: "gate-order-lexicographic/v1",
+      lanes: [
+        { rank: 0, laneId: "quality:secrets", declarationIndex: 1 },
+        { rank: 1, laneId: "fallow:audit", declarationIndex: 0 },
+      ],
+      ...overrides,
+    }),
+    identity
+  );
 
 const expectFailure = Effect.fnUntraced(function* <A>(effect: Effect.Effect<A, S.SchemaError>, fragment: string) {
   const failure = yield* Effect.flip(effect);
@@ -336,7 +342,8 @@ it.layer(PlatformLive, { timeout: "10 seconds" })("@beep/ciops lane-plan seam", 
         repoRoot: "../../..",
         handoff: { path: pinnedHandoffPath, sha256: pinnedHandoffSha256 },
       });
-      expect(yield* S.decodeEffect(PlanEpisodeInput)(encoded)).toStrictEqual(input);
+      const value = yield* S.decodeEffect(PlanEpisodeInput)(encoded);
+      expect(value).toStrictEqual(input);
 
       yield* expectFailure(planInputWithPath("../time-to-certainty/research/gate-order-handoff.json"), pathFailure);
       yield* expectFailure(planInputWithPath(`/${pinnedHandoffPath}`), pathFailure);
@@ -352,7 +359,8 @@ it.layer(PlatformLive, { timeout: "10 seconds" })("@beep/ciops lane-plan seam", 
     Effect.gen(function* () {
       const plan = yield* decodePlan(encodedPlan);
       expect(plan.handoffPath).toBe(pinnedHandoffPath);
-      expect(yield* S.encodeEffect(LanePlanProposal)(plan)).toStrictEqual(encodedPlan);
+      const value1 = yield* S.encodeEffect(LanePlanProposal)(plan);
+      expect(value1).toStrictEqual(encodedPlan);
 
       const { handoffPath: _handoffPath, ...pathless } = encodedPlan;
       yield* expectFailure(decodePlan(pathless), 'at ["handoffPath"]');
@@ -379,9 +387,13 @@ it.layer(PlatformLive, { timeout: "10 seconds" })("@beep/ciops lane-plan seam", 
     ([lane, step]) =>
       Effect.gen(function* () {
         const laneEncoded = yield* S.encodeEffect(HandoffLane)(lane);
-        expect(S.toEquivalence(HandoffLane)(yield* S.decodeEffect(HandoffLane)(laneEncoded), lane)).toBe(true);
+        const argument = S.toEquivalence(HandoffLane);
+        const value2 = yield* S.decodeEffect(HandoffLane)(laneEncoded);
+        expect(argument(value2, lane)).toBe(true);
         const stepEncoded = yield* S.encodeEffect(LaneStep)(step);
-        expect(S.toEquivalence(LaneStep)(yield* S.decodeEffect(LaneStep)(stepEncoded), step)).toBe(true);
+        const argument1 = S.toEquivalence(LaneStep);
+        const value3 = yield* S.decodeEffect(LaneStep)(stepEncoded);
+        expect(argument1(value3, step)).toBe(true);
       }),
     { arbitrary: fcRuns(64) }
   );
@@ -496,7 +508,9 @@ it.layer(PlatformLive, { timeout: "10 seconds" })("@beep/ciops lane-plan seam", 
           laneSteps,
         });
         const document = yield* emitLanePlan(plan);
-        expect(document.content).toBe(yield* fs.readFileString(lanePlanGoldenPath));
+        const expectation = expect(document.content);
+        const readFileString4 = yield* fs.readFileString(lanePlanGoldenPath);
+        expectation.toBe(readFileString4);
       }),
     { arbitrary: fcRuns(32) }
   );
@@ -546,7 +560,9 @@ it.layer(PlatformLive, { timeout: "10 seconds" })("@beep/ciops lane-plan seam", 
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const admission = yield* emitScheduleAbox(admissionGoldenProposal);
-      expect(admission.content).toBe(yield* fs.readFileString(admissionGoldenPath));
+      const expectation1 = expect(admission.content);
+      const readFileString5 = yield* fs.readFileString(admissionGoldenPath);
+      expectation1.toBe(readFileString5);
 
       const lanePlan = yield* fs.readFileString(lanePlanGoldenPath);
       const admissionEpisodes = episodeNodes(admission.content);
@@ -589,7 +605,9 @@ it.layer(PlatformLive, { timeout: "10 seconds" })("@beep/ciops lane-plan seam", 
         expect(plan.handoffPath).toBe(fixtureHandoffPath);
         expect(A.map(plan.laneSteps, (step) => step.laneId)).toStrictEqual(rankedLaneIds(view.lanes));
         const document = yield* service.emitLanePlan(plan);
-        expect(document.content).toBe(yield* fs.readFileString(lanePlanGoldenPath));
+        const expectation2 = expect(document.content);
+        const readFileString6 = yield* fs.readFileString(lanePlanGoldenPath);
+        expectation2.toBe(readFileString6);
       })
     );
 

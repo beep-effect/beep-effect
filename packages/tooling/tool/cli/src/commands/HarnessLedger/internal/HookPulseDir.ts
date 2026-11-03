@@ -40,7 +40,8 @@ const optionalNonEmpty: (value: O.Option<string>) => O.Option<string> = flow(O.m
  * @since 0.0.0
  */
 export const resolveHookPulseDir = Effect.gen(function* () {
-  const configuredRoot = optionalNonEmpty(yield* Config.option(Config.String("BEEP_AGENT_EVIDENCE_ROOT")));
+  const option1 = yield* Config.option(Config.String("BEEP_AGENT_EVIDENCE_ROOT"));
+  const configuredRoot = optionalNonEmpty(option1);
   if (O.isSome(configuredRoot)) {
     return hookPulseLedgerDir(configuredRoot.value);
   }

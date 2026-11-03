@@ -113,9 +113,11 @@ describe("collectStderrTail", () => {
       const collector = yield* collectStderrTail(bytes(Str.repeat(ACP_STDERR_TAIL_MAX_CHARS + 1)("x")));
       yield* collector.drained;
       assert.isTrue((yield* collector.tail).truncated);
-      assertNone(yield* collector.excerpt);
+      const excerpt1 = yield* collector.excerpt;
+      assertNone(excerpt1);
       const exited = AcpError.AcpProcessExitedError.make({ code: O.some(1) });
-      assert.strictEqual(yield* withStderrExcerpt(collector)(exited), exited);
+      const value2 = yield* withStderrExcerpt(collector)(exited);
+      assert.strictEqual(value2, exited);
     })
   );
 
@@ -127,7 +129,8 @@ describe("collectStderrTail", () => {
       });
       yield* collector.drained;
 
-      assertSome(yield* collector.excerpt, "fatal: config ~/.agent missing");
+      const excerpt3 = yield* collector.excerpt;
+      assertSome(excerpt3, "fatal: config ~/.agent missing");
       assert.isFalse((yield* collector.tail).truncated);
     })
   );
@@ -144,7 +147,8 @@ describe("collectStderrTail", () => {
       const tail = yield* collector.tail;
       assert.isTrue(tail.truncated);
       assert.isTrue(Str.startsWith("VALUE123\n")(tail.text));
-      assertSome(yield* collector.excerpt, filler);
+      const excerpt4 = yield* collector.excerpt;
+      assertSome(excerpt4, filler);
     })
   );
 
@@ -153,7 +157,8 @@ describe("collectStderrTail", () => {
     Effect.fnUntraced(function* () {
       const collector = yield* collectStderrTail(Stream.concat(bytes("  \n"), Stream.fail("boom")));
 
-      assertNone(yield* collector.excerpt);
+      const excerpt5 = yield* collector.excerpt;
+      assertNone(excerpt5);
     })
   );
 });
@@ -173,10 +178,12 @@ describe("withStderrExcerpt", () => {
       assert.strictEqual(enriched.message, "ACP process exited with code 2\npanic: lost auth");
 
       const existing = AcpError.AcpProcessExitedError.make({ stderr: O.some("already captured") });
-      assert.strictEqual(yield* withStderrExcerpt(collector)(existing), existing);
+      const value6 = yield* withStderrExcerpt(collector)(existing);
+      assert.strictEqual(value6, existing);
 
       const transport = AcpError.AcpTransportError.make({});
-      assert.strictEqual(yield* withStderrExcerpt(collector)(transport), transport);
+      const value7 = yield* withStderrExcerpt(collector)(transport);
+      assert.strictEqual(value7, transport);
     })
   );
 });

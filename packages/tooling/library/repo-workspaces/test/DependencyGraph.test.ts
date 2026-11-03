@@ -42,9 +42,12 @@ describe("DependencyGraph", () => {
       assert.isTrue(HashMap.has(HashMap.set(adjacency, "extra", HashSet.empty<string>()), "extra"));
       assert.isFalse(HashMap.has(graph.adjacency, "extra"));
       assert.deepStrictEqual(graph.names, ["a", "b", "c", "d"]);
-      assert.deepStrictEqual(yield* graph.levels(), [["c", "d"], ["b"], ["a"]]);
-      assert.deepStrictEqual(yield* graph.sort(), ["c", "d", "b", "a"]);
-      assert.deepStrictEqual(yield* graph.sortSubset(["a", "d"]), ["c", "d", "b", "a"]);
+      const levels1 = yield* graph.levels();
+      assert.deepStrictEqual(levels1, [["c", "d"], ["b"], ["a"]]);
+      const sort2 = yield* graph.sort();
+      assert.deepStrictEqual(sort2, ["c", "d", "b", "a"]);
+      const sortSubset3 = yield* graph.sortSubset(["a", "d"]);
+      assert.deepStrictEqual(sortSubset3, ["c", "d", "b", "a"]);
       assert.strictEqual(graph.toMermaid(), chain.toMermaid());
     })
   );
@@ -128,7 +131,8 @@ describe("DependencyGraph", () => {
 
   it.effect("sort flattens the levels into one deterministic order", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* chain.sort(), ["c", "d", "b", "a"]);
+      const sort4 = yield* chain.sort();
+      assert.deepStrictEqual(sort4, ["c", "d", "b", "a"]);
     })
   );
 
@@ -175,15 +179,19 @@ describe("DependencyGraph", () => {
 
   it.effect("dependenciesOf returns the direct workspace dependencies", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* chain.dependenciesOf("a"), ["b"]);
-      assert.deepStrictEqual(yield* chain.dependenciesOf("c"), []);
+      const dependenciesOf5 = yield* chain.dependenciesOf("a");
+      assert.deepStrictEqual(dependenciesOf5, ["b"]);
+      const dependenciesOf6 = yield* chain.dependenciesOf("c");
+      assert.deepStrictEqual(dependenciesOf6, []);
     })
   );
 
   it.effect("dependentsOf returns the direct reverse edges", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* chain.dependentsOf("b"), ["a"]);
-      assert.deepStrictEqual(yield* chain.dependentsOf("a"), []);
+      const dependentsOf7 = yield* chain.dependentsOf("b");
+      assert.deepStrictEqual(dependentsOf7, ["a"]);
+      const dependentsOf8 = yield* chain.dependentsOf("a");
+      assert.deepStrictEqual(dependentsOf8, []);
     })
   );
 
@@ -199,26 +207,30 @@ describe("DependencyGraph", () => {
     Effect.gen(function* () {
       // `c` is at the far end of the chain: a→b→c. Changing it affects b AND a.
       // A one-hop implementation returns ["b", "c"] and passes a lazier test.
-      assert.deepStrictEqual(yield* chain.affectedBy(["c"]), ["a", "b", "c"]);
+      const affectedBy9 = yield* chain.affectedBy(["c"]);
+      assert.deepStrictEqual(affectedBy9, ["a", "b", "c"]);
     })
   );
 
   it.effect("affectedBy includes the seeds themselves and dedupes", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* chain.affectedBy(["b", "c"]), ["a", "b", "c"]);
+      const affectedBy10 = yield* chain.affectedBy(["b", "c"]);
+      assert.deepStrictEqual(affectedBy10, ["a", "b", "c"]);
     })
   );
 
   it.effect("affectedBy on an isolated package returns just it", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* chain.affectedBy(["d"]), ["d"]);
+      const affectedBy11 = yield* chain.affectedBy(["d"]);
+      assert.deepStrictEqual(affectedBy11, ["d"]);
     })
   );
 
   it.effect("sortSubset pulls in transitive dependencies, not just the named packages", () =>
     Effect.gen(function* () {
       // Asking for `a` alone must still build `c` then `b` first.
-      assert.deepStrictEqual(yield* chain.sortSubset(["a"]), ["c", "b", "a"]);
+      const sortSubset12 = yield* chain.sortSubset(["a"]);
+      assert.deepStrictEqual(sortSubset12, ["c", "b", "a"]);
     })
   );
 

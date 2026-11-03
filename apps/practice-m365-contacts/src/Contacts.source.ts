@@ -38,7 +38,8 @@ const failInput = () => ContactsError.make({ reason: "input" });
  * @since 0.0.0
  */
 export const checksum = Effect.fn("Contacts.checksum")(function* (bytes: Uint8Array) {
-  return Hex.encode(yield* (yield* Digest.Digest).digest(Digest.sha256, bytes));
+  const digest1 = yield* (yield* Digest.Digest).digest(Digest.sha256, bytes);
+  return Hex.encode(digest1);
 });
 const readSources = Effect.fn("Contacts.readSources")(function* (paths: ReadonlyArray<string>) {
   const fs = yield* FileSystem.FileSystem;
@@ -115,12 +116,12 @@ export const loadContacts = Effect.fn("Contacts.load")(function* (inputs: Contac
     }),
     { concurrency: 1 }
   );
-  const vcfFiles = A.dedupeWith(yield* readSources(inputs.vcf), (a, b) => a.hash === b.hash);
-  const vcfRaw = A.flatten(
-    yield* Effect.forEach(vcfFiles, (file) => parseVcards(file.text).pipe(Effect.mapError(failInput)), {
-      concurrency: 1,
-    })
-  );
+  const readSources2 = yield* readSources(inputs.vcf);
+  const vcfFiles = A.dedupeWith(readSources2, (a, b) => a.hash === b.hash);
+  const forEach3 = yield* Effect.forEach(vcfFiles, (file) => parseVcards(file.text).pipe(Effect.mapError(failInput)), {
+    concurrency: 1,
+  });
+  const vcfRaw = A.flatten(forEach3);
   const vcf = normaliseContacts(vcfRaw);
   const csvEmails = personalEmails(contacts);
   const overlaps = A.filter(vcf, (card) =>

@@ -137,7 +137,9 @@ const isWipoSt13OfficeCode = S.is(WipoSt13OfficeCode);
 const assertSchemaEncodedRoundTrip = Effect.fn("DomainTest.assertSchemaEncodedRoundTrip")(function* <
   Schema extends S.Codec<unknown>,
 >(schema: Schema, value: Schema["Type"], label: string) {
-  const decoded = yield* S.decodeUnknownEffect(schema)(yield* S.encodeEffect(schema)(value));
+  const argument = S.decodeUnknownEffect(schema);
+  const value1 = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* argument(value1);
   expect(S.toEquivalence(schema)(decoded, value), label).toBe(true);
 });
 const assertSchemaDecodesToSelf = Effect.fn("DomainTest.assertSchemaDecodesToSelf")(function* <
@@ -448,7 +450,8 @@ describe("@beep/law-practice-domain", () => {
       expect(constructed.entityType).toBe("LawPracticeMatter");
       expect(constructed.matterType).toBe("patent_application");
       expect(constructed.legalClientFixtureKey).toBe("legal-client.acme");
-      expect(yield* encodeMatter(decoded)).toStrictEqual(input);
+      const encodedMatter = yield* encodeMatter(decoded);
+      expect(encodedMatter).toStrictEqual(input);
     })
   );
 
@@ -469,7 +472,8 @@ describe("@beep/law-practice-domain", () => {
       expect(decoded).toBeInstanceOf(OfficeAction);
       expect(decoded.entityType).toBe("LawPracticeOfficeAction");
       expect(decoded.matterFixtureKey).toBe("matter.patent");
-      expect(yield* encodeOfficeAction(decoded)).toStrictEqual(input);
+      const encodedOfficeAction = yield* encodeOfficeAction(decoded);
+      expect(encodedOfficeAction).toStrictEqual(input);
     })
   );
 
@@ -491,7 +495,8 @@ describe("@beep/law-practice-domain", () => {
       expect(decoded).toBeInstanceOf(Claim);
       expect(decoded.claimNumber).toBe(1);
       expect(decoded.independent).toBe(true);
-      expect(yield* encodeClaim(decoded)).toStrictEqual(input);
+      const encodedClaim = yield* encodeClaim(decoded);
+      expect(encodedClaim).toStrictEqual(input);
     })
   );
 
@@ -511,7 +516,8 @@ describe("@beep/law-practice-domain", () => {
 
       expect(decoded).toBeInstanceOf(PriorArtReference);
       expect(decoded.documentNumber).toBe("US 9,999,999 B2");
-      expect(yield* encodePriorArtReference(decoded)).toStrictEqual(input);
+      const encodedPriorArtReference = yield* encodePriorArtReference(decoded);
+      expect(encodedPriorArtReference).toStrictEqual(input);
     })
   );
 
@@ -531,7 +537,8 @@ describe("@beep/law-practice-domain", () => {
 
       expect(decoded).toBeInstanceOf(Rejection);
       expect(decoded.ground.statute).toBe("102");
-      expect(yield* encodeRejection(decoded)).toStrictEqual(input);
+      const encodedRejection = yield* encodeRejection(decoded);
+      expect(encodedRejection).toStrictEqual(input);
     })
   );
 
@@ -554,7 +561,8 @@ describe("@beep/law-practice-domain", () => {
       expect(decoded).toBeInstanceOf(Distinction);
       expect(decoded.lifecycleState).toBe("candidate");
       expect(decoded.anchor.quote).toBe("a claimed fact");
-      expect(yield* encodeDistinction(decoded)).toStrictEqual(input);
+      const encodedDistinction = yield* encodeDistinction(decoded);
+      expect(encodedDistinction).toStrictEqual(input);
     })
   );
 
@@ -588,15 +596,15 @@ describe("@beep/law-practice-domain", () => {
         title: "Hinged lid assembly",
       };
 
-      expect(yield* encodeLegalClient(yield* decodeUnknownLegalClient(legalClientInput))).toStrictEqual(
-        legalClientInput
-      );
-      expect(yield* encodeLegalContact(yield* decodeUnknownLegalContact(legalContactInput))).toStrictEqual(
-        legalContactInput
-      );
-      expect(yield* encodePatentAsset(yield* decodeUnknownPatentAsset(patentAssetInput))).toStrictEqual(
-        patentAssetInput
-      );
+      const decodedUnknownLegalClient = yield* decodeUnknownLegalClient(legalClientInput);
+      const encodedLegalClient = yield* encodeLegalClient(decodedUnknownLegalClient);
+      expect(encodedLegalClient).toStrictEqual(legalClientInput);
+      const decodedUnknownLegalContact = yield* decodeUnknownLegalContact(legalContactInput);
+      const encodedLegalContact = yield* encodeLegalContact(decodedUnknownLegalContact);
+      expect(encodedLegalContact).toStrictEqual(legalContactInput);
+      const decodedUnknownPatentAsset = yield* decodeUnknownPatentAsset(patentAssetInput);
+      const encodedPatentAsset = yield* encodePatentAsset(decodedUnknownPatentAsset);
+      expect(encodedPatentAsset).toStrictEqual(patentAssetInput);
     })
   );
 
@@ -696,7 +704,8 @@ describe("@beep/law-practice-domain", () => {
       const locator = yield* decodeDurableLocatorOptions({});
 
       expect((yield* encodeCitationBase(base)).warnings).toStrictEqual([]);
-      expect(yield* encodeFullCaseCitation(fullCase)).toMatchObject({
+      const encodedFullCaseCitation = yield* encodeFullCaseCitation(fullCase);
+      expect(encodedFullCaseCitation).toMatchObject({
         unpublished: false,
         hasBlankPage: false,
         parentheticals: [],
@@ -711,13 +720,15 @@ describe("@beep/law-practice-domain", () => {
       expect((yield* encodeRegulationCitation(regulation)).hasEtSeq).toBe(false);
       expect((yield* encodeStatutesAtLargeCitation(statutesAtLarge)).pinciteIsRange).toBe(false);
       expect((yield* encodeParenthetical(parenthetical)).citations).toStrictEqual([]);
-      expect(yield* encodePinciteInfo(pincite)).toMatchObject({
+      const encodedPinciteInfo = yield* encodePinciteInfo(pincite);
+      expect(encodedPinciteInfo).toMatchObject({
         starPage: false,
         additionalPincites: [],
       });
       expect((yield* encodeResolutionResult(resolution)).warnings).toStrictEqual([]);
       expect((yield* encodeContextOptions(context)).type).toBe("sentence");
-      expect(yield* encodeDurableLocatorOptions(locator)).toMatchObject({
+      const encodedDurableLocatorOptions = yield* encodeDurableLocatorOptions(locator);
+      expect(encodedDurableLocatorOptions).toMatchObject({
         space: "original",
         fullSpan: false,
         contextLength: 32,
@@ -947,7 +958,9 @@ describe("@beep/law-practice-domain", () => {
 
       // encode -> decode is identity across the S.suspend recursion knot
       const equivalent = S.toEquivalence(Citation);
-      expect(equivalent(yield* decodeCitation(yield* encodeCitation(decoded)), decoded)).toBe(true);
+      const encodedCitation = yield* encodeCitation(decoded);
+      const decodedCitation = yield* decodeCitation(encodedCitation);
+      expect(equivalent(decodedCitation, decoded)).toBe(true);
     })
   );
 

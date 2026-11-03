@@ -89,27 +89,30 @@ const holds = (condition: boolean) => (condition ? Effect.void : Effect.fromOpti
 // The checkout's toplevel, git dir and common dir; only a registered linked worktree passes.
 const linkedLayout = Effect.fnUntraced(function* (checkout: string) {
   const fs = yield* FileSystem.FileSystem;
-  const lines = Str.split(
-    yield* gitOutput(checkout, [
-      "rev-parse",
-      "--path-format=absolute",
-      "--show-toplevel",
-      "--git-dir",
-      "--git-common-dir",
-    ]),
-    "\n"
-  );
-  const toplevel = yield* fs.realPath(yield* Effect.fromOption(A.get(lines, 0)));
-  const gitDir = yield* fs.realPath(yield* Effect.fromOption(A.get(lines, 1)));
-  const commonDir = yield* fs.realPath(yield* Effect.fromOption(A.get(lines, 2)));
+  const gitOutput1 = yield* gitOutput(checkout, [
+    "rev-parse",
+    "--path-format=absolute",
+    "--show-toplevel",
+    "--git-dir",
+    "--git-common-dir",
+  ]);
+  const lines = Str.split(gitOutput1, "\n");
+  const fromOption2 = yield* Effect.fromOption(A.get(lines, 0));
+  const toplevel = yield* fs.realPath(fromOption2);
+  const fromOption3 = yield* Effect.fromOption(A.get(lines, 1));
+  const gitDir = yield* fs.realPath(fromOption3);
+  const fromOption4 = yield* Effect.fromOption(A.get(lines, 2));
+  const commonDir = yield* fs.realPath(fromOption4);
   yield* holds(Str.Equivalence(toplevel, checkout) && !Str.Equivalence(gitDir, commonDir));
-  yield* holds(O.getOrElse(yield* isRegisteredWorktree(checkout, checkout), thunkFalse));
+  const isRegisteredWorktree5 = yield* isRegisteredWorktree(checkout, checkout);
+  yield* holds(O.getOrElse(isRegisteredWorktree5, thunkFalse));
   return commonDir;
 });
 
 // Processes whose cwd is inside the checkout, minus the invoking CLI and its ancestry.
 const liveProcessCount = Effect.fnUntraced(function* (checkout: string) {
-  const attachments = yield* Effect.fromOption(yield* scanProcessAttachments({ directory: checkout, kinds: ["cwd"] }));
+  const scanProcessAttachments6 = yield* scanProcessAttachments({ directory: checkout, kinds: ["cwd"] });
+  const attachments = yield* Effect.fromOption(scanProcessAttachments6);
   const ancestry = yield* invokerAncestryPids();
   return A.length(A.filter(attachments, (attachment) => !HashSet.has(ancestry, attachment.pid)));
 });
@@ -119,7 +122,9 @@ const liveSessionRowCount = Effect.fnUntraced(function* (checkout: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const ledger = yield* SessionLedger;
-  const rows = openSessionRows(yield* ledger.list(yield* detectPrRepository(checkout)));
+  const detectPrRepository13 = yield* detectPrRepository(checkout);
+  const list7 = yield* ledger.list(detectPrRepository13);
+  const rows = openSessionRows(list7);
   const named = yield* Effect.filter(rows, (row) =>
     fs.realPath(row.checkout).pipe(
       Effect.orElseSucceed(() => path.resolve(row.checkout)),
@@ -142,28 +147,31 @@ const proveTerminalLane = Effect.fnUntraced(function* (
   const checkout = yield* fs.realPath(checkoutRoot);
   const commonDir = yield* linkedLayout(checkout);
   const branch = yield* gitOutput(checkout, ["symbolic-ref", "--quiet", "--short", "HEAD"]);
-  const head = yield* decodeGitObjectId(yield* gitOutput(checkout, ["rev-parse", "--verify", "HEAD"]));
-  yield* holds(
-    Str.isEmpty(
-      yield* gitOutput(checkout, [
-        "--no-optional-locks",
-        "status",
-        "--porcelain",
-        "--untracked-files=all",
-        "--ignore-submodules=none",
-      ])
-    )
-  );
-  yield* holds(N.Equivalence(yield* liveProcessCount(checkout), 0));
-  yield* holds(N.Equivalence(yield* liveSessionRowCount(checkout), 0));
-  const merged = yield* Effect.fromOption(yield* pullRequests(checkout, branch));
+  const gitOutput8 = yield* gitOutput(checkout, ["rev-parse", "--verify", "HEAD"]);
+  const head = yield* decodeGitObjectId(gitOutput8);
+  const gitOutput9 = yield* gitOutput(checkout, [
+    "--no-optional-locks",
+    "status",
+    "--porcelain",
+    "--untracked-files=all",
+    "--ignore-submodules=none",
+  ]);
+  yield* holds(Str.isEmpty(gitOutput9));
+  const liveProcessCount10 = yield* liveProcessCount(checkout);
+  yield* holds(N.Equivalence(liveProcessCount10, 0));
+  const liveSessionRowCount11 = yield* liveSessionRowCount(checkout);
+  yield* holds(N.Equivalence(liveSessionRowCount11, 0));
+  const pullRequests12 = yield* pullRequests(checkout, branch);
+  const merged = yield* Effect.fromOption(pullRequests12);
   const equal = A.findFirst(merged, (pullRequest) => Str.Equivalence(pullRequest.headRefOid, head));
   const proof = O.isSome(equal)
     ? O.some({ pullRequest: equal.value, headRelation: "equal" as const })
-    : O.map(yield* Effect.findFirst(merged, ancestorOf(checkout, head)), (pullRequest) => ({
-        pullRequest,
-        headRelation: "ancestor" as const,
-      }));
+    : yield* Effect.map(Effect.findFirst(merged, ancestorOf(checkout, head)), (value) =>
+        O.map(value, (pullRequest) => ({
+          pullRequest,
+          headRelation: "ancestor" as const,
+        }))
+      );
   const { pullRequest, headRelation } = yield* Effect.fromOption(proof);
   return ResidueTerminalLaneAuthority.make({
     checkoutRoot,

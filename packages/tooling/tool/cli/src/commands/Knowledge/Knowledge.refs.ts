@@ -3192,7 +3192,8 @@ export const scanKnowledgeRefsTree = Effect.fn("Knowledge.scanRefsTree")(functio
   const slugs = pipe(A.getSomes(A.map(candidates, (candidate) => candidate.slug)), A.dedupe, A.sort(Order.String));
   let slugResolutions = HashMap.empty<string, KnowledgeRefResolution>();
   for (const slug of slugs) {
-    slugResolutions = HashMap.set(slugResolutions, slug, yield* resolveGoalSlug(oracle, pathIndex, slug));
+    const resolvedGoalSlug = yield* resolveGoalSlug(oracle, pathIndex, slug);
+    slugResolutions = HashMap.set(slugResolutions, slug, resolvedGoalSlug);
   }
 
   const occurrences = MutableHashMap.empty<string, number>();

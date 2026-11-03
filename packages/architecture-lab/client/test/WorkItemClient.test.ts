@@ -38,7 +38,8 @@ describe("WorkItem client", () => {
 
       const workItem = yield* client.get(WorkItemUseCases.GetWorkItemQuery.make({ id: created.id }));
       assertNone(workItem.assignee);
-      assertSome(yield* Ref.get(observedGet), WorkItemUseCases.GetWorkItemQuery.make({ id: created.id }));
+      const got = yield* Ref.get(observedGet);
+      assertSome(got, WorkItemUseCases.GetWorkItemQuery.make({ id: created.id }));
       expect(workItem).toEqual(created);
     })
   );

@@ -166,7 +166,8 @@ it.layer(BunCrypto.layer, { timeout: "10 seconds" })("@beep/box-provisioning orc
       const encodedDesired = yield* desiredInput;
       const dryRun = yield* runProvisioning(dependencies, (service) => service.reconcile(encodedDesired));
       expect(dryRun.planDigest).toBe(plan.planDigest);
-      expect(yield* Ref.get(applyCalls)).toBe(0);
+      const got = yield* Ref.get(applyCalls);
+      expect(got).toBe(0);
 
       const result = yield* runProvisioning(dependencies, (service) =>
         service.applyReviewedPlan(encodedDesired, planJson)
@@ -177,7 +178,8 @@ it.layer(BunCrypto.layer, { timeout: "10 seconds" })("@beep/box-provisioning orc
         entitlementBlockerCount: 2,
         entitlementBlockersPreserved: true,
       });
-      expect(yield* Ref.get(applyCalls)).toBe(1);
+      const got1 = yield* Ref.get(applyCalls);
+      expect(got1).toBe(1);
     })
   );
 
@@ -378,7 +380,8 @@ it.layer(BunCrypto.layer, { timeout: "10 seconds" })("@beep/box-provisioning orc
       if (error._tag === "BoxProvisioningInvariantError") {
         expect(error.code).toBe("invalid-plan-digest");
       }
-      expect(yield* Ref.get(applyCalls)).toBe(0);
+      const got2 = yield* Ref.get(applyCalls);
+      expect(got2).toBe(0);
     })
   );
 
@@ -400,7 +403,8 @@ it.layer(BunCrypto.layer, { timeout: "10 seconds" })("@beep/box-provisioning orc
       ).pipe(Effect.flip);
 
       expect(error._tag).toBe("BoxProvisioningDriftError");
-      expect(yield* Ref.get(applyCalls)).toBe(0);
+      const got3 = yield* Ref.get(applyCalls);
+      expect(got3).toBe(0);
     })
   );
 
@@ -419,7 +423,8 @@ it.layer(BunCrypto.layer, { timeout: "10 seconds" })("@beep/box-provisioning orc
       );
 
       expect(error._tag).toBe("BoxProvisioningBlockerContractError");
-      expect(yield* Ref.get(applyCalls)).toBe(0);
+      const got4 = yield* Ref.get(applyCalls);
+      expect(got4).toBe(0);
     })
   );
 
@@ -458,7 +463,8 @@ it.layer(BunCrypto.layer, { timeout: "10 seconds" })("@beep/box-provisioning orc
         assertTrue
       );
       expect(error._tag).toBe("BoxProvisioningBlockerContractError");
-      expect(yield* Ref.get(applyCalls)).toBe(0);
+      const got5 = yield* Ref.get(applyCalls);
+      expect(got5).toBe(0);
     })
   );
 

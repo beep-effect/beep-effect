@@ -48,7 +48,9 @@ const fixture = Effect.fn("CacheEntrypointsTest.fixture")(function* () {
         schemaVersion: format,
         ownerFields: { steps: [{ command: "touch", args: ["must-not-execute"], env: { EXAMPLE_SEED: "12345" } }] },
       };
-      const reference = yield* write(`artifact-${index}.json`, yield* encodeJsonObjectJson(document));
+      const argument = `artifact-${index}.json`;
+      const encodedJsonObjectJson1 = yield* encodeJsonObjectJson(document);
+      const reference = yield* write(argument, encodedJsonObjectJson1);
       return CacheEntrypointArtifactReference.make({ format, reference });
     })
   );
@@ -88,12 +90,14 @@ describe("source-bound census entrypoints", () => {
         const result = yield* attachCacheEntrypointReview(f.root, f.census, request);
         expect(O.getOrThrow(result.entrypointReview).sources).toContainEqual(source);
         yield* f.fs.writeFileString(f.path.join(f.root, source.path), '{"name":"changed"}');
-        expect(yield* attachCacheEntrypointReview(f.root, f.census, request).pipe(Effect.isFailure)).toBe(true);
+        const pipe1 = yield* attachCacheEntrypointReview(f.root, f.census, request).pipe(Effect.isFailure);
+        expect(pipe1).toBe(true);
         yield* f.write(source.path, '{"name":"@fixture/tool"}');
         const original = f.path.join(f.root, "original-scope");
         yield* f.fs.rename(scope, original);
         yield* f.fs.symlink(original, scope);
-        expect(yield* attachCacheEntrypointReview(f.root, f.census, request).pipe(Effect.isFailure)).toBe(true);
+        const pipe2 = yield* attachCacheEntrypointReview(f.root, f.census, request).pipe(Effect.isFailure);
+        expect(pipe2).toBe(true);
       })
     );
   });
@@ -107,7 +111,8 @@ describe("source-bound census entrypoints", () => {
           const f = yield* fixture();
           const first = f.request.artifacts[0];
           const document = { ...payload, schemaVersion: first.format };
-          const reference = yield* f.write(first.reference.path, yield* encodeJsonObjectJson(document));
+          const encodedJsonObjectJson = yield* encodeJsonObjectJson(document);
+          const reference = yield* f.write(first.reference.path, encodedJsonObjectJson);
           const request = CacheEntrypointReviewRequest.make({
             ...f.request,
             artifacts: [
@@ -135,7 +140,8 @@ describe("source-bound census entrypoints", () => {
           value: -0,
           ownerFields: { values: [-0, 0, 1, -1], label: "retained" },
         };
-        const reference = yield* f.write(first.reference.path, yield* encodeJsonObjectJson(document));
+        const encodedJsonObjectJson3 = yield* encodeJsonObjectJson(document);
+        const reference = yield* f.write(first.reference.path, encodedJsonObjectJson3);
         const request = CacheEntrypointReviewRequest.make({
           ...f.request,
           artifacts: [
@@ -170,7 +176,8 @@ describe("source-bound census entrypoints", () => {
         expect(result.unresolved).toContain("Candidate file reads remain unobserved.");
         expect(result.nodes).toEqual(f.census.nodes);
         f.census.entrypointReview.pipe(assertNone);
-        expect(yield* f.fs.exists(f.path.join(f.root, "must-not-execute"))).toBe(false);
+        const exists4 = yield* f.fs.exists(f.path.join(f.root, "must-not-execute"));
+        expect(exists4).toBe(false);
         const json = yield* encodeCacheCensusReportJson(result);
         const decoded = yield* decodeCacheCensusReportJson(json);
         expect(S.toEquivalence(CacheCensusReport)(result, decoded)).toBe(true);
@@ -188,8 +195,10 @@ describe("source-bound census entrypoints", () => {
           CacheEntrypointReviewRequest.make({ ...f.request, reviews: [source] }),
           CacheEntrypointReviewRequest.make({ ...f.request, artifacts: [f.request.artifacts[0]] }),
         ];
-        for (const request of cases)
-          expect(yield* attachCacheEntrypointReview(f.root, f.census, request).pipe(Effect.isFailure)).toBe(true);
+        for (const request of cases) {
+          const pipe3 = yield* attachCacheEntrypointReview(f.root, f.census, request).pipe(Effect.isFailure);
+          expect(pipe3).toBe(true);
+        }
       })
     );
 
@@ -204,7 +213,8 @@ describe("source-bound census entrypoints", () => {
             artifact: f.request.artifacts[0].reference,
           };
           yield* f.fs.writeFileString(f.path.join(f.root, references[kind].path), "Changed after review.\n");
-          expect(yield* attachCacheEntrypointReview(f.root, f.census, f.request).pipe(Effect.isFailure)).toBe(true);
+          const pipe5 = yield* attachCacheEntrypointReview(f.root, f.census, f.request).pipe(Effect.isFailure);
+          expect(pipe5).toBe(true);
         }
       })
     );
@@ -225,7 +235,8 @@ describe("source-bound census entrypoints", () => {
             ...A.drop(f.request.artifacts, 1),
           ],
         });
-        expect(yield* attachCacheEntrypointReview(f.root, f.census, request).pipe(Effect.isFailure)).toBe(true);
+        const pipe6 = yield* attachCacheEntrypointReview(f.root, f.census, request).pipe(Effect.isFailure);
+        expect(pipe6).toBe(true);
       })
     );
 
@@ -243,7 +254,8 @@ describe("source-bound census entrypoints", () => {
               ...A.drop(f.request.artifacts, 1),
             ],
           });
-          expect(yield* attachCacheEntrypointReview(f.root, f.census, request).pipe(Effect.isFailure)).toBe(true);
+          const pipe7 = yield* attachCacheEntrypointReview(f.root, f.census, request).pipe(Effect.isFailure);
+          expect(pipe7).toBe(true);
         }
       })
     );
@@ -266,7 +278,8 @@ describe("source-bound census entrypoints", () => {
             ...A.drop(f.request.artifacts, 1),
           ],
         });
-        expect(yield* attachCacheEntrypointReview(f.root, f.census, request).pipe(Effect.isFailure)).toBe(true);
+        const pipe8 = yield* attachCacheEntrypointReview(f.root, f.census, request).pipe(Effect.isFailure);
+        expect(pipe8).toBe(true);
       })
     );
   });

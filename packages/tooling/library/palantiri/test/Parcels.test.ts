@@ -113,10 +113,12 @@ describe("checkFreshness", () => {
       const asOf = NOON_TIME;
       yield* asOf.pipe(DateTime.toEpochMillis, TestClock.setTime);
       yield* TestClock.adjust(Duration.minutes(4));
-      const early = checkFreshness(yield* DateTime.now, Duration.minutes(5), [asOf]);
+      const now1 = yield* DateTime.now;
+      const early = checkFreshness(now1, Duration.minutes(5), [asOf]);
       expect(early._tag).toBe("Fresh");
       yield* TestClock.adjust(Duration.minutes(2));
-      const late = checkFreshness(yield* DateTime.now, Duration.minutes(5), [asOf]);
+      const now2 = yield* DateTime.now;
+      const late = checkFreshness(now2, Duration.minutes(5), [asOf]);
       expect(late._tag).toBe("Unknown");
       expect(late._tag === "Unknown" ? late.reason : "fresh").toBe("stale");
     })
@@ -131,7 +133,8 @@ describe("checkFreshness", () => {
 describe("reduceAccountHeadroom", () => {
   it.effect("numbers accounts per provider and never leaks a label", () =>
     Effect.gen(function* () {
-      const parcel = reduceAccountHeadroom(yield* sampleInput, NOON_TIME, 20);
+      const sampleInput3 = yield* sampleInput;
+      const parcel = reduceAccountHeadroom(sampleInput3, NOON_TIME, 20);
       const items = A.map(accountItems(parcel), (item) => [
         item.provider,
         item.account,
@@ -156,7 +159,8 @@ describe("reduceAccountHeadroom", () => {
 
   it.effect("is Fresh with one stale item, and the summary names the split", () =>
     Effect.gen(function* () {
-      const parcel = reduceAccountHeadroom(yield* sampleInput, NOON_TIME, 20);
+      const sampleInput4 = yield* sampleInput;
+      const parcel = reduceAccountHeadroom(sampleInput4, NOON_TIME, 20);
       expect(parcel.freshness._tag).toBe("Fresh");
       const stale = A.findFirst(accountItems(parcel), (item) => item.provider === "grok-bot");
       assertSome(
@@ -188,7 +192,9 @@ describe("reduceAccountHeadroom", () => {
 
   it.effect("is Unknown{attribution-incomplete} when an expected provider has no item", () =>
     Effect.gen(function* () {
-      const input = inputOf([...EXPECTED, "muse"])(yield* sampleReport);
+      const argument = inputOf([...EXPECTED, "muse"]);
+      const sampleReport1 = yield* sampleReport;
+      const input = argument(sampleReport1);
       const parcel = reduceAccountHeadroom(input, NOON_TIME, 20);
       expect(reasonOf(parcel.freshness)).toBe("attribution-incomplete");
       expect(parcel.summary).toContain("no reading from muse");
@@ -197,7 +203,8 @@ describe("reduceAccountHeadroom", () => {
 
   it.effect("caps items at the budget with an N-of-M receipt", () =>
     Effect.gen(function* () {
-      const parcel = reduceAccountHeadroom(yield* sampleInput, NOON_TIME, 3);
+      const sampleInput5 = yield* sampleInput;
+      const parcel = reduceAccountHeadroom(sampleInput5, NOON_TIME, 3);
       expect(parcel.items.length).toBe(3);
       expect(parcel.receipt).toEqual({ shown: 3, total: 5 });
     })
@@ -205,7 +212,8 @@ describe("reduceAccountHeadroom", () => {
 
   it.effect("is Unknown{stale} when the report it served is older than five minutes", () =>
     Effect.gen(function* () {
-      const parcel = reduceAccountHeadroom(yield* sampleInput, DateTime.add(NOON_TIME, { minutes: 6 }), 20);
+      const sampleInput6 = yield* sampleInput;
+      const parcel = reduceAccountHeadroom(sampleInput6, DateTime.add(NOON_TIME, { minutes: 6 }), 20);
       expect(reasonOf(parcel.freshness)).toBe("stale");
     })
   );
@@ -292,7 +300,8 @@ describe("Parcels.read", () => {
           O.map(read, (span) => span.attributes.get("beep.parcel_freshness")),
           "fresh"
         );
-        const gauges = A.filter(yield* Metric.snapshot, (metric) => metric.id === AccountsWindowRemaining.name);
+        const snapshot7 = yield* Metric.snapshot;
+        const gauges = A.filter(snapshot7, (metric) => metric.id === AccountsWindowRemaining.name);
         const readings = A.map(gauges, (metric) => [
           metric.attributes?.["beep.provider"],
           metric.attributes?.["beep.window"],
@@ -363,12 +372,14 @@ describe("stale gauge series in a long-lived host", () => {
       const parcels = yield* sampleInput.pipe(Effect.orDie, parcelsWith, Layer.build, Effect.map(Context.get(Parcels)));
       yield* NOON_TIME.pipe(DateTime.toEpochMillis, TestClock.setTime);
       yield* parcels.read("account-headroom");
-      expect(yield* providersOf).toEqual(["anthropic"]);
+      const providersOf8 = yield* providersOf;
+      expect(providersOf8).toEqual(["anthropic"]);
       // Same process, same registry: ten minutes on, every Claude reading is past its bound.
       yield* TestClock.adjust(Duration.minutes(10));
       const later = yield* parcels.read("account-headroom");
       expect(A.every(later.items, (item) => item.freshness._tag === "Unknown")).toBe(true);
-      expect(yield* providersOf).toEqual([]);
+      const providersOf9 = yield* providersOf;
+      expect(providersOf9).toEqual([]);
     }).pipe(Effect.provideService(Metric.MetricRegistry, new Map()))
   );
 
@@ -383,11 +394,13 @@ describe("stale gauge series in a long-lived host", () => {
       const parcels = yield* snapshot.pipe(parcelsWith, Layer.build, Effect.map(Context.get(Parcels)));
       yield* NOON_TIME.pipe(DateTime.toEpochMillis, TestClock.setTime);
       yield* parcels.read("account-headroom");
-      expect(yield* providersOf).toEqual(["anthropic"]);
+      const providersOf10 = yield* providersOf;
+      expect(providersOf10).toEqual(["anthropic"]);
       yield* Ref.set(failing, true);
       const later = yield* parcels.read("account-headroom");
       expect(reasonOf(later.freshness)).toBe("unreachable");
-      expect(yield* providersOf).toEqual([]);
+      const providersOf11 = yield* providersOf;
+      expect(providersOf11).toEqual([]);
     }).pipe(Effect.provideService(Metric.MetricRegistry, new Map()))
   );
 });

@@ -26,7 +26,10 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { PatentClaim } from "../PatentDocument/PatentDocument.model.ts";
+import { qualifyClaimInput } from "../PatentDocument/PatentDocument.normalizer.ts";
 import { ClaimDecompositionError } from "./ClaimElement.errors.ts";
+import { ClaimInputQualification } from "./ClaimElement.input.model.ts";
+import { ClaimInputDecomposition } from "./ClaimElement.inspection.model.ts";
 import { ClaimTermDeterminer } from "./ClaimElement.model.ts";
 import { ClaimElementTree } from "./ClaimElement.tree.model.ts";
 import {
@@ -37,6 +40,7 @@ import {
 } from "./ClaimTerm.compatibility.ts";
 import type { PatentClaims } from "../PatentDocument/PatentDocument.model.ts";
 import type { ClaimElementEdge, ClaimFunctionalPart } from "./ClaimElement.edge.model.ts";
+import type { ClaimInputCollection } from "./ClaimElement.input.model.ts";
 import type { ClaimElement, ClaimElementKind, ClaimTerm } from "./ClaimElement.model.ts";
 
 const $I = $LawPracticeDomainId.create("values/ClaimElement/ClaimElement.behavior");
@@ -854,6 +858,178 @@ const treeInput = (
 
 const decodeTree = S.decodeEffect(ClaimElementTree);
 
+const decomposeInContext = Effect.fn("ClaimElement.decomposeClaim")(function* (
+  claim: PatentClaim,
+  claims: ReadonlyArray<PatentClaim>
+): Effect.fn.Return<ClaimElementTree, ClaimDecompositionError> {
+  const claimNumber = claim.claimNumber;
+  const parts = yield* Effect.fromOption(locateParts(claim), () =>
+    ClaimDecompositionError.make({
+      claimNumber,
+      message: `Claim ${claimNumber} does not contain its preamble, transition and body in that order.`,
+      reason: "unsupported-claim-text",
+    })
+  );
+  const needed = A.prepend(referencesOf(claim), claimNumber);
+  const missing = A.filter(needed, (needs) => !A.some(claims, (known) => Num.Equivalence(known.claimNumber, needs)));
+  if (A.isReadonlyArrayNonEmpty(missing)) {
+    return yield* ClaimDecompositionError.make({
+      claimNumber,
+      message: `Claim ${claimNumber} needs claim ${A.join(
+        A.map(missing, (number) => `${number}`),
+        ", "
+      )}, which is not in the claim set.`,
+      reason: "claim-not-in-claims",
+    });
+  }
+  const input = treeInput(claim, parts);
+  // A term must resolve on every alternative dependency route. Intersect
+  // branch ancestry instead of treating the union as one fictitious chain.
+  let commonByClaim = HashMap.empty<number, HashSet.HashSet<number>>();
+  for (const earlier of A.sort(claims, (left: PatentClaim, right: PatentClaim) =>
+    Num.Order(left.claimNumber, right.claimNumber)
+  )) {
+    const branches = A.map(referencesOf(earlier), (parent) =>
+      HashSet.add(O.getOrElse(HashMap.get(commonByClaim, parent), HashSet.empty<number>), parent)
+    );
+    const common = O.match(A.head(branches), {
+      onNone: () => HashSet.empty<number>(),
+      onSome: (first) => A.reduce(A.drop(branches, 1), first, (shared, branch) => HashSet.intersection(shared, branch)),
+    });
+    commonByClaim = HashMap.set(commonByClaim, earlier.claimNumber, common);
+  }
+  const ancestorNumbers = O.getOrElse(HashMap.get(commonByClaim, claimNumber), HashSet.empty<number>);
+  const ancestors = A.flatMap(
+    A.filter(claims, (candidate: PatentClaim) => HashSet.has(ancestorNumbers, candidate.claimNumber)),
+    (candidate: PatentClaim) =>
+      O.match(locateParts(candidate), {
+        onNone: () => [],
+        onSome: (located) => treeInput(candidate, located).elements,
+      })
+  );
+  const antecedents = antecedentEdges(input.elements, ancestors);
+  const bodyDependencies = A.flatMap(antecedents, (edge): ReadonlyArray<EncodedEdge> => {
+    if (
+      edge.kind !== "antecedent" ||
+      edge.referring.path === `${claimNumber}` ||
+      !Str.includes(".")(edge.introducing.path)
+    )
+      return [];
+    const parent = A.some(referencesOf(claim), (number) => Str.startsWith(`${number}.`)(edge.introducing.path));
+    const subject = A.some(
+      input.elements,
+      (element) =>
+        element.path === edge.referring.path &&
+        O.exists(A.head(element.terms), (term) => {
+          if (term.anchor.startChar !== element.anchor.startChar) return false;
+          const partOwner =
+            isIntroducingDeterminer(term.determiner) &&
+            O.isSome(Str.match(/\b(?:portion|surface|edge|end|region|area|section|side)$/u)(term.head)) &&
+            Str.trim(Str.slice(term.anchor.endChar, edge.referring.anchor.startChar)(claim.claimText)) === "of";
+          if (term.anchor.startChar !== edge.referring.anchor.startChar && !partOwner) return false;
+          return A.some(
+            ancestors,
+            (ancestor) =>
+              ancestor.path === edge.introducing.path &&
+              A.some(
+                ancestor.terms,
+                (introduced) =>
+                  introduced.anchor.startChar === edge.introducing.anchor.startChar &&
+                  isIntroducingDeterminer(introduced.determiner) &&
+                  (partOwner || introduced.head === term.head)
+              )
+          );
+        })
+    );
+    return parent && subject
+      ? [{ kind: "depends-on-element", dependent: edge.referring.path, ancestor: edge.introducing.path }]
+      : [];
+  });
+  // A bare object explicitly defined by `to form` is a structural result,
+  // even though bare wording does not establish legal antecedent basis.
+  // Later limitations may refine that result through an immediate parent.
+  const resultDependencies = A.flatMap(
+    input.elements,
+    (element): ReadonlyArray<EncodedEdge> =>
+      O.match(
+        O.filter(
+          A.head(element.terms),
+          (term) =>
+            element.kind === "functional-relation" &&
+            term.anchor.startChar === element.anchor.startChar &&
+            isReferringDeterminer(term.determiner)
+        ),
+        {
+          onNone: () => [],
+          onSome: (subject) => {
+            const origins = A.flatMap(ancestors, (ancestor) =>
+              A.map(
+                A.filter(
+                  ancestor.terms,
+                  (term) =>
+                    term.determiner === "bare" &&
+                    term.head === subject.head &&
+                    O.isSome(
+                      Str.match(/\bto form\s*$/iu)(
+                        Str.slice(0, term.anchor.startChar - ancestor.anchor.startChar)(ancestor.anchor.quote)
+                      )
+                    ) &&
+                    A.some(
+                      antecedents,
+                      (edge) =>
+                        edge.kind === "antecedent" &&
+                        edge.referring.path === element.path &&
+                        edge.referring.anchor.startChar === subject.anchor.startChar &&
+                        edge.introducing.path === ancestor.path &&
+                        edge.introducing.anchor.startChar === term.anchor.startChar
+                    )
+                ),
+                () => ancestor
+              )
+            );
+            if (origins.length !== 1) return [];
+            const origin = O.getOrThrow(A.head(origins));
+            const parents = A.filter(
+              ancestors,
+              (ancestor) =>
+                A.some(referencesOf(claim), (number) => Str.startsWith(`${number}.`)(ancestor.path)) &&
+                (ancestor.path === origin.path ||
+                  (ancestor.kind === "functional-relation" &&
+                    O.exists(
+                      A.head(ancestor.terms),
+                      (term) => term.anchor.startChar === ancestor.anchor.startChar && term.head === subject.head
+                    )))
+            );
+            return O.match(parents.length === 1 ? A.head(parents) : O.none(), {
+              onNone: () => [],
+              onSome: (parent): ReadonlyArray<EncodedEdge> => [
+                { kind: "depends-on-element", dependent: element.path, ancestor: parent.path },
+              ],
+            });
+          },
+        }
+      )
+  );
+  const linked = {
+    ...input,
+    edges: [
+      ...A.filter(input.edges, (edge) => edge.kind !== "antecedent"),
+      ...antecedents,
+      ...bodyDependencies,
+      ...resultDependencies,
+    ],
+  };
+  return yield* decodeTree(linked).pipe(
+    Effect.mapError((error) =>
+      ClaimDecompositionError.make({
+        claimNumber,
+        message: `Claim ${claimNumber} decomposed into an incoherent tree: ${error.message}`,
+        reason: "incoherent-tree",
+      })
+    )
+  );
+});
+
 /**
  * Deterministic rule decomposer: splits a claim into span-anchored elements, terms and edges.
  *
@@ -911,178 +1087,41 @@ export const decomposeClaim: {
     claims: Parameters<ClaimElementDecomposer>[1]
   ): (claim: Parameters<ClaimElementDecomposer>[0]) => ReturnType<ClaimElementDecomposer>;
   (...args: Parameters<ClaimElementDecomposer>): ReturnType<ClaimElementDecomposer>;
-} = dual(
-  2,
-  Effect.fn("ClaimElement.decomposeClaim")(function* (
-    claim: PatentClaim,
-    claims: PatentClaims
-  ): Effect.fn.Return<ClaimElementTree, ClaimDecompositionError> {
-    const claimNumber = claim.claimNumber;
-    const parts = yield* Effect.fromOption(locateParts(claim), () =>
-      ClaimDecompositionError.make({
-        claimNumber,
-        message: `Claim ${claimNumber} does not contain its preamble, transition and body in that order.`,
-        reason: "unsupported-claim-text",
-      })
-    );
-    const needed = A.prepend(referencesOf(claim), claimNumber);
-    const missing = A.filter(needed, (needs) => !A.some(claims, (known) => Num.Equivalence(known.claimNumber, needs)));
-    if (A.isReadonlyArrayNonEmpty(missing)) {
-      return yield* ClaimDecompositionError.make({
-        claimNumber,
-        message: `Claim ${claimNumber} needs claim ${A.join(
-          A.map(missing, (number) => `${number}`),
-          ", "
-        )}, which is not in the claim set.`,
-        reason: "claim-not-in-claims",
-      });
+} = dual(2, decomposeInContext satisfies ClaimElementDecomposer);
+
+/**
+ * Decompose every eligible source record while retaining every unchecked record.
+ *
+ * **Details**
+ * The raw input is normalized and qualified here; callers cannot supply a
+ * sparse array disguised as PatentClaims. Every alternative ancestor must be
+ * available. This operation builds structures only; substantive findings and
+ * global source-index coverage belong to the subsequent inspection policy.
+ *
+ * **Example** (Inspect the structural input operation)
+ *
+ * ```ts
+ * import { decomposeClaimInput } from "@beep/law-practice-domain/values/ClaimElement"
+ * console.log(typeof decomposeClaimInput) // function
+ * ```
+ *
+ * @category domain-logic
+ * @since 0.0.0
+ */
+export const decomposeClaimInput = Effect.fn("ClaimElement.decomposeClaimInput")(function* (
+  input: ClaimInputCollection
+): Effect.fn.Return<ReadonlyArray<ClaimInputDecomposition>> {
+  const qualifications = yield* qualifyClaimInput(input);
+  const claims = A.map(A.filter(qualifications, ClaimInputQualification.guards["context-ready"]), ({ claim }) => claim);
+  return yield* Effect.forEach(qualifications, (qualification): Effect.Effect<ClaimInputDecomposition> => {
+    if (!ClaimInputQualification.guards["context-ready"](qualification)) {
+      return Effect.succeed(ClaimInputDecomposition.cases.unchecked.make({ qualification }));
     }
-    const input = treeInput(claim, parts);
-    // A term must resolve on every alternative dependency route. Intersect
-    // branch ancestry instead of treating the union as one fictitious chain.
-    let commonByClaim = HashMap.empty<number, HashSet.HashSet<number>>();
-    for (const earlier of A.sort(claims, (left: PatentClaim, right: PatentClaim) =>
-      Num.Order(left.claimNumber, right.claimNumber)
-    )) {
-      const branches = A.map(referencesOf(earlier), (parent) =>
-        HashSet.add(O.getOrElse(HashMap.get(commonByClaim, parent), HashSet.empty<number>), parent)
-      );
-      const common = O.match(A.head(branches), {
-        onNone: () => HashSet.empty<number>(),
-        onSome: (first) =>
-          A.reduce(A.drop(branches, 1), first, (shared, branch) => HashSet.intersection(shared, branch)),
-      });
-      commonByClaim = HashMap.set(commonByClaim, earlier.claimNumber, common);
-    }
-    const ancestorNumbers = O.getOrElse(HashMap.get(commonByClaim, claimNumber), HashSet.empty<number>);
-    const ancestors = A.flatMap(
-      A.filter(claims, (candidate: PatentClaim) => HashSet.has(ancestorNumbers, candidate.claimNumber)),
-      (candidate: PatentClaim) =>
-        O.match(locateParts(candidate), {
-          onNone: () => [],
-          onSome: (located) => treeInput(candidate, located).elements,
-        })
-    );
-    const antecedents = antecedentEdges(input.elements, ancestors);
-    const bodyDependencies = A.flatMap(antecedents, (edge): ReadonlyArray<EncodedEdge> => {
-      if (
-        edge.kind !== "antecedent" ||
-        edge.referring.path === `${claimNumber}` ||
-        !Str.includes(".")(edge.introducing.path)
-      )
-        return [];
-      const parent = A.some(referencesOf(claim), (number) => Str.startsWith(`${number}.`)(edge.introducing.path));
-      const subject = A.some(
-        input.elements,
-        (element) =>
-          element.path === edge.referring.path &&
-          O.exists(A.head(element.terms), (term) => {
-            if (term.anchor.startChar !== element.anchor.startChar) return false;
-            const partOwner =
-              isIntroducingDeterminer(term.determiner) &&
-              O.isSome(Str.match(/\b(?:portion|surface|edge|end|region|area|section|side)$/u)(term.head)) &&
-              Str.trim(Str.slice(term.anchor.endChar, edge.referring.anchor.startChar)(claim.claimText)) === "of";
-            if (term.anchor.startChar !== edge.referring.anchor.startChar && !partOwner) return false;
-            return A.some(
-              ancestors,
-              (ancestor) =>
-                ancestor.path === edge.introducing.path &&
-                A.some(
-                  ancestor.terms,
-                  (introduced) =>
-                    introduced.anchor.startChar === edge.introducing.anchor.startChar &&
-                    isIntroducingDeterminer(introduced.determiner) &&
-                    (partOwner || introduced.head === term.head)
-                )
-            );
-          })
-      );
-      return parent && subject
-        ? [{ kind: "depends-on-element", dependent: edge.referring.path, ancestor: edge.introducing.path }]
-        : [];
-    });
-    // A bare object explicitly defined by `to form` is a structural result,
-    // even though bare wording does not establish legal antecedent basis.
-    // Later limitations may refine that result through an immediate parent.
-    const resultDependencies = A.flatMap(
-      input.elements,
-      (element): ReadonlyArray<EncodedEdge> =>
-        O.match(
-          O.filter(
-            A.head(element.terms),
-            (term) =>
-              element.kind === "functional-relation" &&
-              term.anchor.startChar === element.anchor.startChar &&
-              isReferringDeterminer(term.determiner)
-          ),
-          {
-            onNone: () => [],
-            onSome: (subject) => {
-              const origins = A.flatMap(ancestors, (ancestor) =>
-                A.map(
-                  A.filter(
-                    ancestor.terms,
-                    (term) =>
-                      term.determiner === "bare" &&
-                      term.head === subject.head &&
-                      O.isSome(
-                        Str.match(/\bto form\s*$/iu)(
-                          Str.slice(0, term.anchor.startChar - ancestor.anchor.startChar)(ancestor.anchor.quote)
-                        )
-                      ) &&
-                      A.some(
-                        antecedents,
-                        (edge) =>
-                          edge.kind === "antecedent" &&
-                          edge.referring.path === element.path &&
-                          edge.referring.anchor.startChar === subject.anchor.startChar &&
-                          edge.introducing.path === ancestor.path &&
-                          edge.introducing.anchor.startChar === term.anchor.startChar
-                      )
-                  ),
-                  () => ancestor
-                )
-              );
-              if (origins.length !== 1) return [];
-              const origin = O.getOrThrow(A.head(origins));
-              const parents = A.filter(
-                ancestors,
-                (ancestor) =>
-                  A.some(referencesOf(claim), (number) => Str.startsWith(`${number}.`)(ancestor.path)) &&
-                  (ancestor.path === origin.path ||
-                    (ancestor.kind === "functional-relation" &&
-                      O.exists(
-                        A.head(ancestor.terms),
-                        (term) => term.anchor.startChar === ancestor.anchor.startChar && term.head === subject.head
-                      )))
-              );
-              return O.match(parents.length === 1 ? A.head(parents) : O.none(), {
-                onNone: () => [],
-                onSome: (parent): ReadonlyArray<EncodedEdge> => [
-                  { kind: "depends-on-element", dependent: element.path, ancestor: parent.path },
-                ],
-              });
-            },
-          }
-        )
-    );
-    const linked = {
-      ...input,
-      edges: [
-        ...A.filter(input.edges, (edge) => edge.kind !== "antecedent"),
-        ...antecedents,
-        ...bodyDependencies,
-        ...resultDependencies,
-      ],
-    };
-    return yield* decodeTree(linked).pipe(
-      Effect.mapError((error) =>
-        ClaimDecompositionError.make({
-          claimNumber,
-          message: `Claim ${claimNumber} decomposed into an incoherent tree: ${error.message}`,
-          reason: "incoherent-tree",
-        })
+    return decomposeInContext(qualification.claim, claims).pipe(
+      Effect.map((tree) => ClaimInputDecomposition.cases.decomposed.make({ qualification, tree })),
+      Effect.catchTag("ClaimDecompositionError", (cause) =>
+        Effect.succeed(ClaimInputDecomposition.cases["decomposition-failed"].make({ qualification, cause }))
       )
     );
-  }) satisfies ClaimElementDecomposer
-);
+  });
+});

@@ -110,7 +110,8 @@ const runFixtureGit = Effect.fn("YeetCommandWiringTest.runFixtureGit")(function*
     ["-c", "user.name=final-check", "-c", "user.email=final-check@example.test", "-c", "commit.gpgsign=false", ...args],
     { cwd: repoRoot, stdin: "ignore", stdout: "ignore", stderr: "ignore" }
   );
-  expect(yield* handle.exitCode).toBe(0);
+  const exitCode1 = yield* handle.exitCode;
+  expect(exitCode1).toBe(0);
 });
 
 describe("yeet final-check command", () => {
@@ -137,7 +138,8 @@ describe("yeet final-check command", () => {
         yield* commit(root, "README.md", "head\n", "head");
 
         yield* finalCheck(["--base", "HEAD~1", "--dry-run", "--skip", "coverage=hosted proves it"]);
-        const planned = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+        const logLines2 = yield* TestConsole.logLines;
+        const planned = A.join(A.map(logLines2, String), "\n");
         assertInclude(planned, "final-check plan for");
         assertInclude(planned, "skip coverage: hosted proves it");
         assertInclude(planned, "expectation-rewrite: scan the diff's test files");
@@ -179,7 +181,8 @@ describe("yeet final-check command", () => {
         yield* commit(root, "package.json", '{"scripts":{"beep":"echo drift >> README.md"}}\n', "drifting gate");
         const moved = yield* finalCheck(["--base", "HEAD~1", "--gates", "repo-sanity"]).pipe(Effect.flip);
         expect(moved.message).toContain("the checkout changed while the gates ran");
-        expect(yield* fs.readDirectory(`${root}/.beep/yeet/final-check`)).toHaveLength(1);
+        const readDirectory3 = yield* fs.readDirectory(`${root}/.beep/yeet/final-check`);
+        expect(readDirectory3).toHaveLength(1);
       })
     );
   });
@@ -228,11 +231,20 @@ describe("yeet merge-loop command wiring", () => {
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-fallow-feedback-command-" });
         const from = path.join(root, "fallow");
         const emit = path.join(root, "fallow-quality-issues.json");
-        expect(yield* commandFailure(["fallow-feedback", "--advisory", "--from", from, "--emit", emit])).toMatchObject({
+        const commandFailure4 = yield* commandFailure([
+          "fallow-feedback",
+          "--advisory",
+          "--from",
+          from,
+          "--emit",
+          emit,
+        ]);
+        expect(commandFailure4).toMatchObject({
           _tag: "YeetCommandError",
           message: `Path "${from}" is not contained within the allowed Fallow feedback root.`,
         });
-        expect(yield* fs.exists(emit)).toBe(false);
+        const exists5 = yield* fs.exists(emit);
+        expect(exists5).toBe(false);
       })
     );
 
@@ -244,7 +256,8 @@ describe("yeet merge-loop command wiring", () => {
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-status-command-" });
         yield* Effect.addFinalizer(() => Effect.sync(() => process.chdir(originalCwd)));
         yield* Effect.sync(() => process.chdir(root));
-        expect(yield* commandFailure(["status"])).toMatchObject({ _tag: "YeetCommandError" });
+        const commandFailure6 = yield* commandFailure(["status"]);
+        expect(commandFailure6).toMatchObject({ _tag: "YeetCommandError" });
       })
     );
   });
@@ -255,10 +268,12 @@ describe("yeet merge-loop command wiring", () => {
         const fs = yield* FileSystem.FileSystem;
         const root = yield* temporaryWorkingDirectory;
         yield* fs.writeFileString(`${root}/bun.lock`, "");
-        yield* fs.writeFileString(
-          `${root}/package.json`,
-          yield* S.encodeUnknownEffect(FixturePackageJson)({ name: "yeet-command-fixture", workspaces: [] })
-        );
+        const argument1 = `${root}/package.json`;
+        const value1 = yield* S.encodeUnknownEffect(FixturePackageJson)({
+          name: "yeet-command-fixture",
+          workspaces: [],
+        });
+        yield* fs.writeFileString(argument1, value1);
         const spawner = ScriptedSpawner.make((command, args) => {
           const line = A.join([command, ...args], " ");
           const responseFor = (responses: ReadonlyArray<readonly [string, string]>) =>
@@ -310,9 +325,11 @@ describe("yeet merge-loop command wiring", () => {
             ["sweep", "--plan"],
           ],
           Effect.fnUntraced(function* (args) {
-            const logged = A.length(yield* TestConsole.logLines);
+            const logLines7 = yield* TestConsole.logLines;
+            const logged = A.length(logLines7);
             yield* runYeetCommand(args);
-            const lines = A.drop(yield* TestConsole.logLines, logged);
+            const logLines8 = yield* TestConsole.logLines;
+            const lines = A.drop(logLines8, logged);
             expect(
               A.some(
                 lines,
@@ -468,7 +485,8 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("yeet push-first publish p
     "printed plans preserve schema-generated context and ordered command data",
     [Arbitrary.schema(RepoRunPlan)],
     Effect.fnUntraced(function* ([plan]) {
-      const decoded = yield* decodePlan(yield* printedPlan(plan));
+      const printedPlan9 = yield* printedPlan(plan);
+      const decoded = yield* decodePlan(printedPlan9);
       const stepsWithoutEnvironment = (value: RepoRunPlan) =>
         A.map(value.steps, ({ env: _env, ...step }) => RepoPlanStep.make(step));
       return (
@@ -529,7 +547,8 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("yeet push-first publish p
       const fixturePath = yield* path.fromFileUrl(
         new URL("./fixtures/yeet-publish-plan/prove-first-plans.json", import.meta.url)
       );
-      const fixtures = yield* decodeFixture(yield* fs.readFileString(fixturePath));
+      const readFileString10 = yield* fs.readFileString(fixturePath);
+      const fixtures = yield* decodeFixture(readFileString10);
       const verifyPlan = publishPlan({ mode: "verify", pr: false });
       // Only the PR-less plan is byte-identical: with a pull request every
       // publish path now shares the draft-label-monitor tail (D4, D7).
@@ -540,7 +559,10 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("yeet push-first publish p
         // from the pre-change default; lane waves are compared against the
         // current verify plan instead, so a lane added to the catalog later
         // moves both and does not stale this fixture.
-        expect(yield* printedPlan(withoutWaves(actual))).toBe(yield* printedPlan(withoutWaves(expected)));
+        const printedPlan11 = yield* printedPlan(withoutWaves(actual));
+        const expectation1 = expect(printedPlan11);
+        const printedPlan2 = yield* printedPlan(withoutWaves(expected));
+        expectation1.toBe(printedPlan2);
         for (const step of A.filter(actual.steps, (candidate) => candidate.waves !== undefined)) {
           const twin = A.findFirst(verifyPlan.steps, (candidate) => candidate.id === step.id);
           assertSome(
@@ -577,7 +599,8 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("yeet push-first publish p
       // `--detach --plan` is refused by the handler after parsing, so reaching
       // that refusal proves the flags before it parsed.
       for (const flag of ["--no-pr", "--prove-first"]) {
-        expect(yield* runYeetCommand(["publish", flag, "--detach", "--plan"]).pipe(Effect.flip)).toMatchObject({
+        const pipe12 = yield* runYeetCommand(["publish", flag, "--detach", "--plan"]).pipe(Effect.flip);
+        expect(pipe12).toMatchObject({
           _tag: "YeetCommandError",
           message: "--detach cannot be combined with --plan.",
         });
@@ -650,7 +673,8 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("cheap-gates admission", (
           ],
           ["-C", root, "remote", "add", "origin", "https://example.invalid/push-first.git"],
         ]) {
-          expect(yield* spawner.exitCode(ChildProcess.make("git", args))).toBe(0);
+          const exitCode13 = yield* spawner.exitCode(ChildProcess.make("git", args));
+          expect(exitCode13).toBe(0);
         }
         const gate = RepoPlanStep.make({
           ...step(
@@ -715,12 +739,15 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("cheap-gates admission", (
         expect(lease.priority).toBe(mode === "publish" ? "publish" : "verify");
         expect(lease.checkoutRoot).toBe(root);
         expect(lease.command).toContain("observed-lease.json");
-        expect(yield* fs.readDirectory(leases)).toEqual([]);
-        expect(yield* fs.readDirectory(path.join(runtimeDir, "beep", "admit", "queue"))).toEqual([]);
+        const readDirectory14 = yield* fs.readDirectory(leases);
+        expect(readDirectory14).toEqual([]);
+        const readDirectory15 = yield* fs.readDirectory(path.join(runtimeDir, "beep", "admit", "queue"));
+        expect(readDirectory15).toEqual([]);
         expect(error.message).toContain(expectedMessage);
         if (mode === "publish") {
           expect(error.message).toContain("nothing was pushed");
-          expect(A.map(yield* Ref.get(recorder), (entry) => entry.step.id)).toEqual([gate.id]);
+          const got = yield* Ref.get(recorder);
+          expect(A.map(got, (entry) => entry.step.id)).toEqual([gate.id]);
         }
       })
     );
@@ -833,7 +860,8 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("detached proof job comman
   it.effect(
     "rejects a runtime ceiling without detachment and malformed resume coordinates",
     Effect.fnUntraced(function* () {
-      expect(yield* runYeetCommand(["verify", "--job-max-runtime", "30 seconds"]).pipe(Effect.flip)).toMatchObject({
+      const pipe16 = yield* runYeetCommand(["verify", "--job-max-runtime", "30 seconds"]).pipe(Effect.flip);
+      expect(pipe16).toMatchObject({
         message: "--job-max-runtime requires --detach.",
       });
       expect((yield* runYeetCommand(["resume", "invalid"]).pipe(Effect.flip))._tag).toBe("YeetCommandError");
@@ -1099,8 +1127,10 @@ it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor
         }
       );
       expect(result.pushed).toBe(true);
-      expect(yield* Ref.get(listed)).toBe(1);
-      expect(yield* fs.exists(marker)).toBe(false);
+      const got17 = yield* Ref.get(listed);
+      expect(got17).toBe(1);
+      const exists18 = yield* fs.exists(marker);
+      expect(exists18).toBe(false);
       const entries = yield* Ref.get(fixture.recorder);
       expect(A.map(entries, (entry) => [entry.step.id, entry.status])).toEqual([
         [MONITOR_READY_SUBMIT_STEP_ID, "skipped"],
@@ -1134,9 +1164,11 @@ it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor
         }
       );
       expect(result.pushed).toBe(true);
-      expect(yield* Ref.get(probed)).toEqual([RUNNING_ID]);
+      const got19 = yield* Ref.get(probed);
+      expect(got19).toEqual([RUNNING_ID]);
       // The stale record is not handed back: the submit step really ran.
-      expect(yield* fs.exists(marker)).toBe(true);
+      const exists20 = yield* fs.exists(marker);
+      expect(exists20).toBe(true);
     })
   );
 
@@ -1205,7 +1237,8 @@ it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor
           { ensurePullRequest: fixture.ensurePullRequest, listJobs }
         );
       yield* Effect.all([publish(first), publish(second)], { concurrency: 2 }).pipe(TestClock.withLive);
-      expect(yield* fs.readFileString(submits)).toBe("submitted\n");
+      const readFileString21 = yield* fs.readFileString(submits);
+      expect(readFileString21).toBe("submitted\n");
       const statuses = A.map(
         [...(yield* Ref.get(first.recorder)), ...(yield* Ref.get(second.recorder))],
         (entry) => entry.status === "skipped"
@@ -1227,14 +1260,14 @@ it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor
       yield* Effect.repeat(fs.exists(lockPath), { until: (exists) => exists }).pipe(TestClock.withLive);
       const contender = yield* Effect.forkScoped(launcher.withReadyMonitorSubmitLock(Effect.void));
       yield* Effect.sleep("150 millis").pipe(TestClock.withLive);
-      expect(yield* TestConsole.errorLines).toContainEqual(
-        expect.stringContaining("waiting for the readiness-monitor submit lock")
-      );
+      const errorLines22 = yield* TestConsole.errorLines;
+      expect(errorLines22).toContainEqual(expect.stringContaining("waiting for the readiness-monitor submit lock"));
       // The old shape sat in an uninterruptible acquire for about a minute.
       const interrupted = yield* Effect.timeoutOption(Fiber.interrupt(contender), "2 seconds").pipe(TestClock.withLive);
       expect(interrupted._tag).toBe("Some");
       // The holder still owns the lock: the contender released nothing it did not take.
-      expect(yield* fs.exists(lockPath)).toBe(true);
+      const exists23 = yield* fs.exists(lockPath);
+      expect(exists23).toBe(true);
       yield* Fiber.interrupt(holder);
     })
   );
@@ -1258,7 +1291,8 @@ it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor
         }
       );
       expect(result.pushed).toBe(true);
-      expect(A.map(yield* Ref.get(fixture.recorder), (entry) => entry.step.id)).toEqual([MONITOR_READY_SUBMIT_STEP_ID]);
+      const got24 = yield* Ref.get(fixture.recorder);
+      expect(A.map(got24, (entry) => entry.step.id)).toEqual([MONITOR_READY_SUBMIT_STEP_ID]);
     })
   );
 });
@@ -1406,7 +1440,8 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("published commit identity
       const error = yield* current.execute([failed], []).pipe(Effect.flip);
       expect(error.message).toContain("publish phase failed");
       assertNone((yield* Ref.get(current.extras)).publishedHeadSha);
-      expect(yield* current.fs.exists(current.path.join(current.remote, "refs/heads/main"))).toBe(false);
+      const exists25 = yield* current.fs.exists(current.path.join(current.remote, "refs/heads/main"));
+      expect(exists25).toBe(false);
     })
   );
 
@@ -1425,7 +1460,9 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("published commit identity
       expect(error.message).toContain("head changed during publication");
       assertNone((yield* Ref.get(current.extras)).publishedHeadSha);
       const remoteHead = yield* current.fs.readFileString(current.path.join(current.remote, "refs/heads/main"));
-      expect(Str.trim(remoteHead)).toBe(yield* current.readHead);
+      const expectation2 = expect(Str.trim(remoteHead));
+      const readHead3 = yield* current.readHead;
+      expectation2.toBe(readHead3);
       expect(Str.trim(remoteHead)).not.toBe(current.committedHead);
     })
   );
@@ -1441,7 +1478,8 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("published commit identity
       const error = yield* current.execute([current.push], [gate]).pipe(Effect.flip);
       expect(error.message).toContain("head changed during publication");
       assertNone((yield* Ref.get(current.extras)).publishedHeadSha);
-      expect(yield* current.fs.exists(current.path.join(current.remote, "refs/heads/main"))).toBe(false);
+      const exists26 = yield* current.fs.exists(current.path.join(current.remote, "refs/heads/main"));
+      expect(exists26).toBe(false);
     })
   );
 
@@ -1450,7 +1488,8 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("published commit identity
       const current = yield* fixture();
       yield* current.execute([], []);
       assertNone((yield* Ref.get(current.extras)).publishedHeadSha);
-      expect(yield* current.fs.exists(current.path.join(current.remote, "refs/heads/main"))).toBe(false);
+      const exists27 = yield* current.fs.exists(current.path.join(current.remote, "refs/heads/main"));
+      expect(exists27).toBe(false);
     })
   );
 
@@ -1471,9 +1510,11 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("published commit identity
       const current = yield* fixture();
       const error = yield* current.execute([current.push], [current.proofDrift], true).pipe(Effect.flip);
       expect(error.message).toContain("head changed during publication");
-      expect(yield* current.readHead).not.toBe(current.committedHead);
+      const readHead28 = yield* current.readHead;
+      expect(readHead28).not.toBe(current.committedHead);
       assertNone((yield* Ref.get(current.extras)).publishedHeadSha);
-      expect(yield* current.fs.exists(current.path.join(current.remote, "refs/heads/main"))).toBe(false);
+      const exists29 = yield* current.fs.exists(current.path.join(current.remote, "refs/heads/main"));
+      expect(exists29).toBe(false);
     })
   );
 });
@@ -1630,14 +1671,17 @@ it.layer(commandTestLayer, { timeout: "60 seconds" })("committing publish verdic
       yield* Fiber.interrupt(run);
     }
     const exit = yield* Fiber.await(run);
+    const resultArtifactPathForContext = yield* runArtifactPathForContext(context, "verdict.json");
     const verdict = yield* fs
-      .readFileString(yield* runArtifactPathForContext(context, "verdict.json"))
+      .readFileString(resultArtifactPathForContext)
       .pipe(Effect.flatMap(YeetVerdictJson.decode), Effect.option);
-    const journal = yield* fs.readFileString(yield* attemptJournalPath(context));
+    const attemptJournalPath30 = yield* attemptJournalPath(context);
+    const journal = yield* fs.readFileString(attemptJournalPath30);
     const events = yield* Effect.forEach(pipe(journal, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
       decodeYeetAttemptJournalEvent(line)
     );
-    const ledgerHeads = yield* fs.readFileString(yield* proofLedgerPathForCheckout(root)).pipe(
+    const proofLedgerPathForCheckout31 = yield* proofLedgerPathForCheckout(root);
+    const ledgerHeads = yield* fs.readFileString(proofLedgerPathForCheckout31).pipe(
       Effect.map(
         flow(
           Str.split("\n"),

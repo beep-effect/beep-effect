@@ -406,34 +406,33 @@ const recoverReadiness = Effect.fn("Goals.Completion.recoverReadiness")(function
   const path = yield* Path.Path;
   const runId = yield* repoRunArtifactId(branch);
   const runRoot = path.join(root, ".beep", "yeet", "runs", runId);
-  if (path.resolve(root, ref.ref) !== path.join(runRoot, "verdict.json"))
+  if (path.resolve(root, ref.ref) !== path.join(runRoot, "verdict.json")) {
     return yield* YeetCommandError.make({ message: "Declared verdict path is not canonical for its branch." });
+  }
   const jobFile = path.join(root, ".beep", "yeet", "jobs", `${recovery.jobId}.json`);
   const jobRead = yield* readContainedFileStringNoFollow(root, jobFile);
   const statusFile = path.join(runRoot, "status.json");
   const statusRead = yield* readContainedFileStringNoFollow(root, statusFile);
-  const job = yield* decodeJob(
-    yield* Effect.fromOption(jobRead.contents).pipe(
-      Effect.mapError(() =>
-        YeetCommandError.make({
-          message: jobRead.exists
-            ? "canonical job artifact is unreadable or not a file"
-            : "canonical job artifact is absent",
-        })
-      )
+  const pipe1 = yield* Effect.fromOption(jobRead.contents).pipe(
+    Effect.mapError(() =>
+      YeetCommandError.make({
+        message: jobRead.exists
+          ? "canonical job artifact is unreadable or not a file"
+          : "canonical job artifact is absent",
+      })
     )
   );
-  const status = yield* decodeRecoveryStatus(
-    yield* Effect.fromOption(statusRead.contents).pipe(
-      Effect.mapError(() =>
-        YeetCommandError.make({
-          message: statusRead.exists
-            ? "canonical status artifact is unreadable or not a file"
-            : "canonical status artifact is absent",
-        })
-      )
+  const job = yield* decodeJob(pipe1);
+  const pipe2 = yield* Effect.fromOption(statusRead.contents).pipe(
+    Effect.mapError(() =>
+      YeetCommandError.make({
+        message: statusRead.exists
+          ? "canonical status artifact is unreadable or not a file"
+          : "canonical status artifact is absent",
+      })
     )
   );
+  const status = yield* decodeRecoveryStatus(pipe2);
   const runner = yield* Effect.fromOption(job.runner).pipe(
     Effect.mapError(() => YeetCommandError.make({ message: "job runner receipt is absent" }))
   );
@@ -489,7 +488,9 @@ const recoverReadiness = Effect.fn("Goals.Completion.recoverReadiness")(function
     ],
   ];
   const refusal = A.findFirst(checks, ([, holds]) => !holds);
-  if (O.isSome(refusal)) return yield* YeetCommandError.make({ message: refusal.value[0] });
+  if (O.isSome(refusal)) {
+    return yield* YeetCommandError.make({ message: refusal.value[0] });
+  }
   return true;
 });
 
@@ -528,7 +529,7 @@ const readLocalEvidence = Effect.fn("Goals.Completion.localEvidence")(function* 
   const observedHead = verdict.value.resolvedHeadSha;
   const ready = O.map(verdict.value.mergeReady, (value) => value.ready);
   const refusal = readinessRecoveryRefusal(verdict.value, head);
-  if (O.isSome(recovery) && O.isNone(refusal))
+  if (O.isSome(recovery) && O.isNone(refusal)) {
     return yield* recoverReadiness(root, ref, head, verdict.value.branch, recovery.value).pipe(
       Effect.map(() =>
         evidenceCheck(
@@ -542,6 +543,7 @@ const readLocalEvidence = Effect.fn("Goals.Completion.localEvidence")(function* 
         Effect.succeed(evidenceCheck(ref, "unknown", observedHead, `Readiness recovery refused: ${error.message}`))
       )
     );
+  }
   const outcome = Match.value({ observedHead, ready }).pipe(
     Match.when(
       ({ observedHead, ready }) => O.exists(observedHead, (value) => value !== head) || O.contains(false)(ready),
@@ -678,13 +680,17 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
     subClaims: [],
     verifiedAt,
   });
-  if (initial.grandfathered) return yield* resolve(initial);
+  if (initial.grandfathered) {
+    return yield* resolve(initial);
+  }
   const pullRead = yield* readGoalCompletionJson(
     root,
     ["api", `repos/{owner}/{repo}/pulls/${final.number}`],
     Pull
   ).pipe(Effect.option);
-  if (O.isNone(pullRead)) return yield* resolve(initial);
+  if (O.isNone(pullRead)) {
+    return yield* resolve(initial);
+  }
   const pull = pullRead.value;
   const head = pull.head.sha;
   const known = GoalCompletionObservation.make({
@@ -693,7 +699,9 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
     acceptedHead: O.some(head),
     merged: O.some(pull.merged),
   });
-  if (!pull.merged) return yield* resolve(known);
+  if (!pull.merged) {
+    return yield* resolve(known);
+  }
   const reads = yield* Effect.gen(function* () {
     const mergeSha = yield* Effect.fromOption(pull.merge_commit_sha).pipe(
       Effect.mapError(() => YeetCommandError.make({ message: "Merged PR has no merge result" }))
@@ -724,7 +732,7 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
     });
     const acceptedManifest = yield* readAcceptedManifest(root, head, slug);
     const acceptedDeclarationDigest = O.isSome(acceptedManifest)
-      ? O.some(yield* goalCompletionDeclarationDigest(acceptedManifest.value))
+      ? yield* Effect.asSome(goalCompletionDeclarationDigest(acceptedManifest.value))
       : O.none<string>();
     const pages = yield* readGoalCompletionJson(
       root,
@@ -1029,15 +1037,14 @@ export const storedGoalCompletion = Effect.fn("Goals.Completion.stored")(functio
       : picked;
   if (O.isNone(newest)) return newest;
   const receipt = newest.value;
-  return O.some(
-    yield* GoalCompletionVerifier.resolve(
-      GoalCompletionObservation.make({
-        ...receipt,
-        merged: O.isSome(receipt.merge) ? O.some(true) : O.none(),
-        grandfathered: manifest.completionGate.grandfathered,
-      })
-    )
+  const resolved3 = yield* GoalCompletionVerifier.resolve(
+    GoalCompletionObservation.make({
+      ...receipt,
+      merged: O.isSome(receipt.merge) ? O.some(true) : O.none(),
+      grandfathered: manifest.completionGate.grandfathered,
+    })
   );
+  return O.some(resolved3);
 });
 
 /**
@@ -1264,7 +1271,9 @@ const refreshRecord = Effect.fn("Goals.Completion.refreshRecord")(function* (
   const manifest = yield* explicit ? decoded.pipe(Effect.asSome) : decoded.pipe(Effect.option);
   if (O.isNone(manifest)) return;
   if (manifest.value.completionGate.grandfathered) {
-    if (explicit) yield* Console.log(`[goals:completion] ${record.slug}: grandfathered (no receipt needed)`);
+    if (explicit) {
+      yield* Console.log(`[goals:completion] ${record.slug}: grandfathered (no receipt needed)`);
+    }
     return;
   }
   const finalRead = Effect.fromOption(
@@ -1286,19 +1295,21 @@ const refresh = Effect.fn("Goals.Completion.refresh")(function* (
   slug: O.Option<string>,
   readinessJob: O.Option<string>
 ) {
-  if (O.isSome(readinessJob) && O.isNone(slug))
+  if (O.isSome(readinessJob) && O.isNone(slug)) {
     return yield* YeetCommandError.make({ message: "--readiness-job requires --slug" });
-  if (O.isSome(readinessJob))
+  }
+  if (O.isSome(readinessJob)) {
     yield* decodeRecoveryJobId(readinessJob.value).pipe(
       Effect.mapError(() => YeetCommandError.make({ message: "--readiness-job must be a job UUID" }))
     );
+  }
   const root = yield* findRepoRoot();
   const records = yield* listGoalPackets(root);
   const location = yield* receiptLocation(root);
   const repository = yield* readReceiptRepository(root);
   // The workstation store is shared by every clone of the repository; without
   // a resolvable github.com origin the owning clone's legacy file still records it.
-  const store = O.isSome(repository) ? O.some(yield* goalCompletionReceiptStore()) : O.none();
+  const store = O.isSome(repository) ? yield* Effect.asSome(goalCompletionReceiptStore()) : O.none();
   const write = (receipt: GoalCompletionReceipt) =>
     O.match(store, {
       onSome: (shared) => shared.append(receipt),
@@ -1308,8 +1319,9 @@ const refresh = Effect.fn("Goals.Completion.refresh")(function* (
           Effect.asVoid
         ),
     });
-  if (O.exists(slug, (value) => !A.some(records, (record) => record.slug === value)))
+  if (O.exists(slug, (value) => !A.some(records, (record) => record.slug === value))) {
     return yield* YeetCommandError.make({ message: "Requested goal packet does not exist" });
+  }
   const selected = O.match(slug, {
     onNone: () => records,
     onSome: (value) => A.filter(records, (record) => record.slug === value),

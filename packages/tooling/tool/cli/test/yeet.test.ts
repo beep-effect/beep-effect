@@ -198,7 +198,8 @@ const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const attemptUuid = S.decodeUnknownEffect(UUID);
 const DEAD_PID = 2_147_483_647;
 const liveAttemptOwner = Effect.fnUntraced(function* () {
-  const ownerProcStart = pipe(yield* processStartIdentityForPid(process.pid), O.getOrThrow);
+  const processStartIdentityForPid1 = yield* processStartIdentityForPid(process.pid);
+  const ownerProcStart = pipe(processStartIdentityForPid1, O.getOrThrow);
   return { ownerPid: O.some(process.pid), ownerProcStart: O.some(ownerProcStart) };
 });
 
@@ -209,35 +210,34 @@ const encodedAttemptPairs = Effect.fnUntraced(function* (family: string, count: 
       return yield* attemptUuid(`00000000-0000-4000-${family}-${Str.padStart(12, "0")(`${index + offset}`)}`);
     })
   );
-  const lines = A.flatten(
-    yield* Effect.forEach(attemptIds, (attemptId, index) => {
-      const ordinal = Str.padStart(3, "0")(`${index + offset}`);
-      return Effect.all([
-        encodeStarted(
-          YeetAttemptStarted.make({
-            schemaVersion: "yeet-attempt-journal/v1",
-            _tag: "attempt-started",
-            attemptId,
-            runId: `retained-${family}-${ordinal}`,
-            branch: "retention-fixture",
-            base: "origin/main",
-            head: "HEAD",
-            mode: "verify",
-            startedAt: `2026-09-03T00:00:00.${ordinal}Z`,
-          })
-        ),
-        encodeTerminated(
-          YeetAttemptTerminated.make({
-            schemaVersion: "yeet-attempt-journal/v1",
-            _tag: "attempt-terminated",
-            attemptId,
-            recordedAt: `2026-09-03T00:00:01.${ordinal}Z`,
-            reason: "interrupted",
-          })
-        ),
-      ]);
-    })
-  );
+  const forEach2 = yield* Effect.forEach(attemptIds, (attemptId, index) => {
+    const ordinal = Str.padStart(3, "0")(`${index + offset}`);
+    return Effect.all([
+      encodeStarted(
+        YeetAttemptStarted.make({
+          schemaVersion: "yeet-attempt-journal/v1",
+          _tag: "attempt-started",
+          attemptId,
+          runId: `retained-${family}-${ordinal}`,
+          branch: "retention-fixture",
+          base: "origin/main",
+          head: "HEAD",
+          mode: "verify",
+          startedAt: `2026-09-03T00:00:00.${ordinal}Z`,
+        })
+      ),
+      encodeTerminated(
+        YeetAttemptTerminated.make({
+          schemaVersion: "yeet-attempt-journal/v1",
+          _tag: "attempt-terminated",
+          attemptId,
+          recordedAt: `2026-09-03T00:00:01.${ordinal}Z`,
+          reason: "interrupted",
+        })
+      ),
+    ]);
+  });
+  const lines = A.flatten(forEach2);
   return { attemptIds, lines };
 });
 const proofLockReapClaimPath = Effect.fnUntraced(function* (lockPath: string, observedText: string) {
@@ -552,9 +552,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const directory = yield* temporaryDirectory;
-      assertTrue(yield* fs.exists(directory));
+      const exists3 = yield* fs.exists(directory);
+      assertTrue(exists3);
       yield* fs.remove(directory, { recursive: true });
-      assertFalse(yield* fs.exists(directory));
+      const exists4 = yield* fs.exists(directory);
+      assertFalse(exists4);
     })
   );
 
@@ -642,7 +644,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
             Effect.gen(function* () {
               const terminalWritten = yield* Ref.make(false);
               yield* ensureAttemptTerminatedForTesting(tempContext, started, terminalWritten, exit);
-              expect(yield* Ref.get(terminalWritten)).toBe(true);
+              const got = yield* Ref.get(terminalWritten);
+              expect(got).toBe(true);
               if (index === 0) {
                 yield* ensureAttemptTerminatedForTesting(tempContext, started, terminalWritten, exit);
               }
@@ -651,9 +654,9 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         );
 
         const journalPath = yield* attemptJournalPath(tempContext);
-        const events = yield* Effect.forEach(
-          pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
-          (line) => decodeYeetAttemptJournalEvent(line)
+        const readFileString5 = yield* fs.readFileString(journalPath);
+        const events = yield* Effect.forEach(pipe(readFileString5, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
+          decodeYeetAttemptJournalEvent(line)
         );
         const terminals = A.filter(events, YeetAttemptJournalEvent.guards["attempt-terminated"]);
         expect(A.map(terminals, (terminal) => terminal.reason)).toEqual(A.map(cases, ([, , reason]) => reason));
@@ -1274,7 +1277,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         yield* runGit(tmpDir, ["commit", "-m", "advance base"]);
         yield* runGit(tmpDir, ["switch", "feature"]);
         yield* runGit(tmpDir, ["merge", "main", "--no-edit"]);
-        expect(yield* fs.readFileString(filePath)).toBe("regenerated\n");
+        const readFileString6 = yield* fs.readFileString(filePath);
+        expect(readFileString6).toBe("regenerated\n");
         yield* assertMergeOnlyPublish(mergeContext);
         yield* fs.writeFileString(filePath, "unpublished payload\n");
         yield* runGit(tmpDir, ["add", "tracked.txt"]);
@@ -1308,11 +1312,21 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const { filePath, tempContext, tmpDir } = yield* trackedFileRepository;
         const fs = yield* FileSystem.FileSystem;
         const preservingAmend = defaultYeetRunOptions({ reuseVerified: true, amend: true, noEdit: true });
-        expect(yield* shouldSkipCommitForReusablePublishForTesting(tempContext, defaultYeetRunOptions())).toBe(false);
-        expect(yield* shouldSkipCommitForReusablePublishForTesting(tempContext, preservingAmend)).toBe(true);
-        expect(
-          yield* shouldSkipCommitForReusablePublishForTesting(tempContext, defaultYeetRunOptions({ pushOnly: true }))
-        ).toBe(true);
+        const shouldSkipCommitForReusablePublishForTesting7 = yield* shouldSkipCommitForReusablePublishForTesting(
+          tempContext,
+          defaultYeetRunOptions()
+        );
+        expect(shouldSkipCommitForReusablePublishForTesting7).toBe(false);
+        const shouldSkipCommitForReusablePublishForTesting8 = yield* shouldSkipCommitForReusablePublishForTesting(
+          tempContext,
+          preservingAmend
+        );
+        expect(shouldSkipCommitForReusablePublishForTesting8).toBe(true);
+        const shouldSkipCommitForReusablePublishForTesting9 = yield* shouldSkipCommitForReusablePublishForTesting(
+          tempContext,
+          defaultYeetRunOptions({ pushOnly: true })
+        );
+        expect(shouldSkipCommitForReusablePublishForTesting9).toBe(true);
 
         yield* fs.writeFileString(filePath, "pending tracked edit\n");
         for (const { options, expectedMessage } of [
@@ -1334,7 +1348,11 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           expect(error.message).toContain("tracked.txt");
         }
         yield* runGit(tmpDir, ["add", "tracked.txt"]);
-        expect(yield* shouldSkipCommitForReusablePublishForTesting(tempContext, preservingAmend)).toBe(false);
+        const shouldSkipCommitForReusablePublishForTesting10 = yield* shouldSkipCommitForReusablePublishForTesting(
+          tempContext,
+          preservingAmend
+        );
+        expect(shouldSkipCommitForReusablePublishForTesting10).toBe(false);
         const stagedPush = yield* shouldSkipCommitForReusablePublishForTesting(
           tempContext,
           defaultYeetRunOptions({ pushOnly: true })
@@ -1642,7 +1660,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           false
         );
 
-        expect(yield* runGitStatus(tmpDir)).toBe("M  regular.txt\nM  tracked.txt");
+        const resultGitStatus = yield* runGitStatus(tmpDir);
+        expect(resultGitStatus).toBe("M  regular.txt\nM  tracked.txt");
       })
     );
 
@@ -1666,11 +1685,10 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           true
         );
 
-        expect(yield* fs.exists(filePath)).toBe(true);
-        expect(yield* runGitOutputLines(tmpDir, ["diff", "--cached", "--name-status"])).toEqual([
-          "M\tregular.txt",
-          "D\ttracked.txt",
-        ]);
+        const exists11 = yield* fs.exists(filePath);
+        expect(exists11).toBe(true);
+        const resultGitOutputLines = yield* runGitOutputLines(tmpDir, ["diff", "--cached", "--name-status"]);
+        expect(resultGitOutputLines).toEqual(["M\tregular.txt", "D\ttracked.txt"]);
       })
     );
 
@@ -2225,7 +2243,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           runStartedAt: "2026-06-16T00:00:00.000Z",
         }).pipe(Effect.provideService(FallowFeedbackAllowedRoot, O.some(tmpDir)));
 
-        expect(yield* fs.exists(envelopePath)).toBe(false);
+        const exists12 = yield* fs.exists(envelopePath);
+        expect(exists12).toBe(false);
 
         const emittedText = yield* fs.readFileString(emitPath);
         const index = yield* decodeQualityIssueIndexJson(emittedText);
@@ -2892,7 +2911,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           { discard: true, concurrency: 1 }
         );
         const journalPath = yield* attemptJournalPath(tempContext);
-        const lines = pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty));
+        const readFileString13 = yield* fs.readFileString(journalPath);
+        const lines = pipe(readFileString13, Str.split("\n"), A.filter(Str.isNonEmpty));
         const events = yield* Effect.forEach(lines, (line) => decodeYeetAttemptJournalEvent(line));
 
         expect(events).toHaveLength(60);
@@ -2941,8 +2961,9 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           })
         );
 
+        const readFileString14 = yield* fs.readFileString(journalPath);
         const events = yield* Effect.forEach(
-          pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
+          pipe(readFileString14, Str.split("\n"), A.filter(Str.isNonEmpty)),
           (line) => decodeYeetAttemptJournalEvent(line)
         );
         const oldestAttemptRows = A.filter(
@@ -2968,14 +2989,14 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const journalPath = yield* attemptJournalPath(tempContext);
         const fixtureRoot = path.join(repoRoot, "packages/tooling/tool/cli/test/fixtures");
         const owner = yield* liveAttemptOwner();
-        const fixtureLines = pipe(
-          yield* Effect.forEach(["yeet-attempt-journal-legacy.ndjson", "yeet-attempt-journal-current.ndjson"], (name) =>
+        const forEach15 = yield* Effect.forEach(
+          ["yeet-attempt-journal-legacy.ndjson", "yeet-attempt-journal-current.ndjson"],
+          (name) =>
             fs
               .readFileString(path.join(fixtureRoot, name))
               .pipe(Effect.map((text) => pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty))))
-          ),
-          A.flatten
         );
+        const fixtureLines = pipe(forEach15, A.flatten);
         const seededLines = pipe(
           A.makeBy(30, () => fixtureLines),
           A.flatten
@@ -2999,8 +3020,9 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           })
         );
 
+        const readFileString16 = yield* fs.readFileString(journalPath);
         const events = yield* Effect.forEach(
-          pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
+          pipe(readFileString16, Str.split("\n"), A.filter(Str.isNonEmpty)),
           (line) => decodeYeetAttemptJournalEvent(line)
         );
         expect(events).toHaveLength(151);
@@ -3054,7 +3076,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         );
 
         const journalPath = yield* attemptJournalPath(tempContext);
-        expect(yield* reconcileAttemptJournal(journalPath)).toBe(0);
+        const reconcileAttemptJournal17 = yield* reconcileAttemptJournal(journalPath);
+        expect(reconcileAttemptJournal17).toBe(0);
         const text = yield* fs.readFileString(journalPath);
         const events = yield* Effect.forEach(pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
           decodeYeetAttemptJournalEvent(line)
@@ -3080,7 +3103,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const path = yield* Path.Path;
         const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
         const journalPath = yield* attemptJournalPath(tempContext);
-        const ownerProcStart = pipe(yield* processStartIdentityForPid(process.pid), O.getOrThrow);
+        const processStartIdentityForPid18 = yield* processStartIdentityForPid(process.pid);
+        const ownerProcStart = pipe(processStartIdentityForPid18, O.getOrThrow);
         const deadAttemptId = yield* attemptUuid("00000000-0000-4000-8002-000000000001");
         const liveAttemptId = yield* attemptUuid("00000000-0000-4000-8002-000000000002");
         const started = (attemptId: UUID, ownerPid: number, procStart: string) =>
@@ -3110,10 +3134,13 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         yield* fs.writeFileString(journalPath, `${A.join(lines, "\n")}\n`);
         yield* fs.writeFileString(path.join(tmpDir, ".beep", "yeet", "runs", "ignored.txt"), "ignored\n");
 
-        expect(yield* reconcileAttemptJournalsForCheckout(tmpDir)).toBe(1);
-        expect(yield* reconcileAttemptJournalsForCheckout(tmpDir)).toBe(0);
+        const reconcileAttemptJournalsForCheckout19 = yield* reconcileAttemptJournalsForCheckout(tmpDir);
+        expect(reconcileAttemptJournalsForCheckout19).toBe(1);
+        const reconcileAttemptJournalsForCheckout20 = yield* reconcileAttemptJournalsForCheckout(tmpDir);
+        expect(reconcileAttemptJournalsForCheckout20).toBe(0);
+        const readFileString21 = yield* fs.readFileString(journalPath);
         const events = yield* Effect.forEach(
-          pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
+          pipe(readFileString21, Str.split("\n"), A.filter(Str.isNonEmpty)),
           (line) => decodeYeetAttemptJournalEvent(line)
         );
         const terminals = A.filter(events, YeetAttemptJournalEvent.guards["attempt-terminated"]);
@@ -3153,13 +3180,16 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const journalPath = path.join(tmpDir, "attempts.ndjson");
-        expect(yield* reconcileAttemptJournalsForCheckout(tmpDir)).toBe(0);
-        expect(yield* reconcileAttemptJournal(journalPath)).toBe(0);
+        const reconcileAttemptJournalsForCheckout22 = yield* reconcileAttemptJournalsForCheckout(tmpDir);
+        expect(reconcileAttemptJournalsForCheckout22).toBe(0);
+        const reconcileAttemptJournal23 = yield* reconcileAttemptJournal(journalPath);
+        expect(reconcileAttemptJournal23).toBe(0);
 
         yield* fs.writeFileString(journalPath, "");
         const lockPath = `${journalPath}.lock`;
         const lockToken = `${process.pid}:00000000-0000-4000-8000-000000000123`;
-        expect(yield* acquireJournalFileLock(lockPath, lockToken, 1)).toBe(true);
+        const acquireJournalFileLock24 = yield* acquireJournalFileLock(lockPath, lockToken, 1);
+        expect(acquireJournalFileLock24).toBe(true);
         const error = yield* reconcileAttemptJournal(journalPath).pipe(
           Effect.flip,
           Effect.ensuring(releaseJournalFileLock(lockPath, lockToken))
@@ -3179,7 +3209,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
         const journalPath = yield* attemptJournalPath(tempContext);
         const deadAttemptId = yield* attemptUuid("00000000-0000-4000-8003-000000000000");
-        const ownerProcStart = pipe(yield* processStartIdentityForPid(process.pid), O.getOrThrow);
+        const processStartIdentityForPid25 = yield* processStartIdentityForPid(process.pid);
+        const ownerProcStart = pipe(processStartIdentityForPid25, O.getOrThrow);
         const starts = yield* Effect.forEach(
           A.makeBy(55, (index) => index),
           Effect.fnUntraced(function* (index) {
@@ -3209,8 +3240,9 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
         const writeOverLimitJournal = fs.writeFileString(journalPath, `${A.join(starts, "\n")}\n`);
         const readDeadPair = Effect.fnUntraced(function* (expectedStartCount: number) {
+          const readFileString26 = yield* fs.readFileString(journalPath);
           const events = yield* Effect.forEach(
-            pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
+            pipe(readFileString26, Str.split("\n"), A.filter(Str.isNonEmpty)),
             (line) => decodeYeetAttemptJournalEvent(line)
           );
           expect(A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"])).toHaveLength(expectedStartCount);
@@ -3244,7 +3276,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         });
 
         yield* writeOverLimitJournal;
-        expect(yield* reconcileAttemptJournal(journalPath)).toBe(1);
+        const reconcileAttemptJournal27 = yield* reconcileAttemptJournal(journalPath);
+        expect(reconcileAttemptJournal27).toBe(1);
         yield* readDeadPair(55);
 
         yield* writeOverLimitJournal;
@@ -3276,45 +3309,41 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const repoRoot = yield* findRepoRoot();
         const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
         const journalPath = yield* attemptJournalPath(tempContext);
-        const legacyLines = pipe(
-          yield* fs.readFileString(
-            path.join(repoRoot, "packages/tooling/tool/cli/test/fixtures/yeet-attempt-journal-legacy.ndjson")
-          ),
-          Str.split("\n"),
-          A.filter(Str.isNonEmpty)
+        const readFileString28 = yield* fs.readFileString(
+          path.join(repoRoot, "packages/tooling/tool/cli/test/fixtures/yeet-attempt-journal-legacy.ndjson")
         );
-        const priorPairs = A.flatten(
-          yield* Effect.forEach(
-            A.makeBy(59, (index) => index),
-            Effect.fnUntraced(function* (index) {
-              const attemptId = yield* attemptUuid(`00000000-0000-4000-8004-${Str.padStart(12, "0")(`${index}`)}`);
-              return yield* Effect.all([
-                encodeStarted(
-                  YeetAttemptStarted.make({
-                    schemaVersion: "yeet-attempt-journal/v1",
-                    _tag: "attempt-started",
-                    attemptId,
-                    runId: `prior-${index}`,
-                    branch: "dead-batch-reconciliation",
-                    base: "origin/main",
-                    head: "HEAD",
-                    mode: "repair",
-                    startedAt: `2026-09-02T00:00:${Str.padStart(2, "0")(`${index}`)}.000Z`,
-                  })
-                ),
-                encodeTerminated(
-                  YeetAttemptTerminated.make({
-                    schemaVersion: "yeet-attempt-journal/v1",
-                    _tag: "attempt-terminated",
-                    attemptId,
-                    recordedAt: `2026-09-02T00:01:${Str.padStart(2, "0")(`${index}`)}.000Z`,
-                    reason: "interrupted",
-                  })
-                ),
-              ]);
-            })
-          )
+        const legacyLines = pipe(readFileString28, Str.split("\n"), A.filter(Str.isNonEmpty));
+        const forEach29 = yield* Effect.forEach(
+          A.makeBy(59, (index) => index),
+          Effect.fnUntraced(function* (index) {
+            const attemptId = yield* attemptUuid(`00000000-0000-4000-8004-${Str.padStart(12, "0")(`${index}`)}`);
+            return yield* Effect.all([
+              encodeStarted(
+                YeetAttemptStarted.make({
+                  schemaVersion: "yeet-attempt-journal/v1",
+                  _tag: "attempt-started",
+                  attemptId,
+                  runId: `prior-${index}`,
+                  branch: "dead-batch-reconciliation",
+                  base: "origin/main",
+                  head: "HEAD",
+                  mode: "repair",
+                  startedAt: `2026-09-02T00:00:${Str.padStart(2, "0")(`${index}`)}.000Z`,
+                })
+              ),
+              encodeTerminated(
+                YeetAttemptTerminated.make({
+                  schemaVersion: "yeet-attempt-journal/v1",
+                  _tag: "attempt-terminated",
+                  attemptId,
+                  recordedAt: `2026-09-02T00:01:${Str.padStart(2, "0")(`${index}`)}.000Z`,
+                  reason: "interrupted",
+                })
+              ),
+            ]);
+          })
         );
+        const priorPairs = A.flatten(forEach29);
         const deadAttemptIds = yield* Effect.forEach(
           A.range(0, 30 - 1),
           Effect.fnUntraced(function* (index) {
@@ -3342,9 +3371,11 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
         yield* fs.writeFileString(journalPath, `${A.join(seededLines, "\n")}\n`);
 
-        expect(yield* reconcileAttemptJournal(journalPath)).toBe(30);
+        const reconcileAttemptJournal30 = yield* reconcileAttemptJournal(journalPath);
+        expect(reconcileAttemptJournal30).toBe(30);
+        const readFileString31 = yield* fs.readFileString(journalPath);
         const events = yield* Effect.forEach(
-          pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
+          pipe(readFileString31, Str.split("\n"), A.filter(Str.isNonEmpty)),
           (line) => decodeYeetAttemptJournalEvent(line)
         );
         const retainedStarts = A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"]);
@@ -3376,7 +3407,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const path = yield* Path.Path;
         const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
         const journalPath = yield* attemptJournalPath(tempContext);
-        const ownerProcStart = pipe(yield* processStartIdentityForPid(process.pid), O.getOrThrow);
+        const processStartIdentityForPid32 = yield* processStartIdentityForPid(process.pid);
+        const ownerProcStart = pipe(processStartIdentityForPid32, O.getOrThrow);
         const deadAttemptIds = yield* Effect.forEach(
           A.range(0, 50 - 1),
           Effect.fnUntraced(function* (index) {
@@ -3409,9 +3441,11 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
         yield* fs.writeFileString(journalPath, `${A.join(starts, "\n")}\n`);
 
-        expect(yield* reconcileAttemptJournal(journalPath)).toBe(50);
+        const reconcileAttemptJournal33 = yield* reconcileAttemptJournal(journalPath);
+        expect(reconcileAttemptJournal33).toBe(50);
+        const readFileString34 = yield* fs.readFileString(journalPath);
         const events = yield* Effect.forEach(
-          pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
+          pipe(readFileString34, Str.split("\n"), A.filter(Str.isNonEmpty)),
           (line) => decodeYeetAttemptJournalEvent(line)
         );
         const retainedStarts = A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"]);
@@ -3468,9 +3502,11 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
         yield* fs.writeFileString(journalPath, `${A.join(starts, "\n")}\n`);
 
-        expect(yield* reconcileAttemptJournal(journalPath)).toBe(0);
+        const reconcileAttemptJournal35 = yield* reconcileAttemptJournal(journalPath);
+        expect(reconcileAttemptJournal35).toBe(0);
+        const readFileString36 = yield* fs.readFileString(journalPath);
         const events = yield* Effect.forEach(
-          pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
+          pipe(readFileString36, Str.split("\n"), A.filter(Str.isNonEmpty)),
           (line) => decodeYeetAttemptJournalEvent(line)
         );
         const retainedStarts = A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"]);
@@ -3517,7 +3553,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         });
 
         const journalPath = yield* attemptJournalPath(tempContext);
-        const lines = pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty));
+        const readFileString37 = yield* fs.readFileString(journalPath);
+        const lines = pipe(readFileString37, Str.split("\n"), A.filter(Str.isNonEmpty));
         const events = yield* Effect.forEach(lines, (line) => decodeYeetAttemptJournalEvent(line));
         const starts = A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"]);
         const retainedIds = A.map(starts, (event) => event.attemptId);
@@ -3527,7 +3564,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         expect(A.length(A.dedupe(retainedIds))).toBe(60);
         expect(A.every(concurrent, (event) => A.contains(retainedIds, event.attemptId))).toBe(true);
         expect(A.filter(events, YeetAttemptJournalEvent.guards["journal-compacted"])).toHaveLength(0);
-        expect(yield* fs.exists(`${journalPath}.lock`)).toBe(false);
+        const exists38 = yield* fs.exists(`${journalPath}.lock`);
+        expect(exists38).toBe(false);
       }).pipe(
         // Native journal lock retries must advance while filesystem operations contend.
         TestClock.withLive
@@ -3556,13 +3594,16 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           });
         });
 
-        yield* appendYeetAttemptJournalEvent(tempContext, yield* attemptStarted(1));
+        const attemptStarted39 = yield* attemptStarted(1);
+        yield* appendYeetAttemptJournalEvent(tempContext, attemptStarted39);
         const intact = yield* fs.readFileString(journalPath);
         yield* fs.writeFileString(journalPath, `${intact}{"schemaVersion":"yeet-attempt-jour`);
 
-        yield* appendYeetAttemptJournalEvent(tempContext, yield* attemptStarted(2));
+        const attemptStarted40 = yield* attemptStarted(2);
+        yield* appendYeetAttemptJournalEvent(tempContext, attemptStarted40);
 
-        const lines = pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty));
+        const readFileString41 = yield* fs.readFileString(journalPath);
+        const lines = pipe(readFileString41, Str.split("\n"), A.filter(Str.isNonEmpty));
         const events = yield* Effect.forEach(lines, (line) => decodeYeetAttemptJournalEvent(line));
 
         expect(events).toHaveLength(2);
@@ -3605,7 +3646,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
         yield* fs.writeFileString(journalPath, `${A.join(starts, "\n")}\n`);
 
-        expect(yield* reconcileAttemptJournal(journalPath)).toBe(3);
+        const reconcileAttemptJournal42 = yield* reconcileAttemptJournal(journalPath);
+        expect(reconcileAttemptJournal42).toBe(3);
         const once = yield* fs.readFileString(journalPath);
         const events = yield* Effect.forEach(pipe(once, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
           decodeYeetAttemptJournalEvent(line)
@@ -3617,8 +3659,10 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         expect(
           A.every(A.drop(attemptIds, 3), (attemptId) => !A.some(terminals, (row) => row.attemptId === attemptId))
         ).toBe(true);
-        expect(yield* reconcileAttemptJournal(journalPath)).toBe(0);
-        expect(yield* fs.readFileString(journalPath)).toBe(once);
+        const reconcileAttemptJournal43 = yield* reconcileAttemptJournal(journalPath);
+        expect(reconcileAttemptJournal43).toBe(0);
+        const readFileString44 = yield* fs.readFileString(journalPath);
+        expect(readFileString44).toBe(once);
       })
     );
 
@@ -3655,7 +3699,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
         yield* fs.writeFileString(journalPath, `${A.join(lines, "\n")}\n`);
 
-        expect(yield* reconcileAttemptJournal(journalPath)).toBe(2);
+        const reconcileAttemptJournal45 = yield* reconcileAttemptJournal(journalPath);
+        expect(reconcileAttemptJournal45).toBe(2);
         const once = yield* fs.readFileString(journalPath);
         const events = yield* Effect.forEach(pipe(once, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
           decodeYeetAttemptJournalEvent(line)
@@ -3672,8 +3717,10 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           { attemptId: deadAttemptId, reason: "owner-dead", recordedAt: "2026-09-03T12:00:00.000Z" },
         ]);
         expect(A.some(terminals, (terminal) => terminal.attemptId === youngAttemptId)).toBe(false);
-        expect(yield* reconcileAttemptJournal(journalPath)).toBe(0);
-        expect(yield* fs.readFileString(journalPath)).toBe(once);
+        const reconcileAttemptJournal46 = yield* reconcileAttemptJournal(journalPath);
+        expect(reconcileAttemptJournal46).toBe(0);
+        const readFileString47 = yield* fs.readFileString(journalPath);
+        expect(readFileString47).toBe(once);
       })
     );
 
@@ -3712,9 +3759,12 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         yield* fs.writeFileString(journalPath, `${A.join(A.appendAll(unfinishedLines, completed.lines), "\n")}\n`);
         const before = yield* fs.readFileString(journalPath);
 
-        expect(yield* reconcileAttemptJournal(journalPath)).toBe(0);
-        expect(yield* fs.readFileString(journalPath)).toBe(before);
-        expect(yield* reconcileAttemptJournal(journalPath)).toBe(0);
+        const reconcileAttemptJournal48 = yield* reconcileAttemptJournal(journalPath);
+        expect(reconcileAttemptJournal48).toBe(0);
+        const readFileString49 = yield* fs.readFileString(journalPath);
+        expect(readFileString49).toBe(before);
+        const reconcileAttemptJournal50 = yield* reconcileAttemptJournal(journalPath);
+        expect(reconcileAttemptJournal50).toBe(0);
         const after = yield* fs.readFileString(journalPath);
         expect(after).toBe(before);
         const events = yield* Effect.forEach(pipe(after, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
@@ -3760,7 +3810,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
         yield* fs.writeFileString(journalPath, `${A.join(A.appendAll(unfinishedLines, completed.lines), "\n")}\n`);
 
-        expect(yield* reconcileAttemptJournal(journalPath)).toBe(0);
+        const reconcileAttemptJournal51 = yield* reconcileAttemptJournal(journalPath);
+        expect(reconcileAttemptJournal51).toBe(0);
         const once = yield* fs.readFileString(journalPath);
         const events = yield* Effect.forEach(pipe(once, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
           decodeYeetAttemptJournalEvent(line)
@@ -3776,8 +3827,10 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         expect(
           A.every(retainedCompletedIds, (attemptId) => A.some(starts, (start) => start.attemptId === attemptId))
         ).toBe(true);
-        expect(yield* reconcileAttemptJournal(journalPath)).toBe(0);
-        expect(yield* fs.readFileString(journalPath)).toBe(once);
+        const reconcileAttemptJournal52 = yield* reconcileAttemptJournal(journalPath);
+        expect(reconcileAttemptJournal52).toBe(0);
+        const readFileString53 = yield* fs.readFileString(journalPath);
+        expect(readFileString53).toBe(once);
       })
     );
 
@@ -3814,9 +3867,11 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
         yield* fs.writeFileString(journalPath, `${A.join(starts, "\n")}\n`);
 
-        expect(yield* reconcileAttemptJournal(journalPath)).toBe(60);
+        const reconcileAttemptJournal54 = yield* reconcileAttemptJournal(journalPath);
+        expect(reconcileAttemptJournal54).toBe(60);
+        const readFileString55 = yield* fs.readFileString(journalPath);
         const events = yield* Effect.forEach(
-          pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
+          pipe(readFileString55, Str.split("\n"), A.filter(Str.isNonEmpty)),
           (line) => decodeYeetAttemptJournalEvent(line)
         );
         expect(A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"])).toHaveLength(60);
@@ -3838,9 +3893,11 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
         yield* fs.writeFileString(journalPath, `${legacyReceipt}\n${A.join(firstBatch.lines, "\n")}\n`);
 
-        expect(yield* reconcileAttemptJournal(journalPath)).toBe(0);
+        const reconcileAttemptJournal56 = yield* reconcileAttemptJournal(journalPath);
+        expect(reconcileAttemptJournal56).toBe(0);
+        const readFileString57 = yield* fs.readFileString(journalPath);
         const firstEvents = yield* Effect.forEach(
-          pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
+          pipe(readFileString57, Str.split("\n"), A.filter(Str.isNonEmpty)),
           (line) => decodeYeetAttemptJournalEvent(line)
         );
         const firstReceipt = pipe(
@@ -3856,9 +3913,11 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           journalPath,
           `${yield* fs.readFileString(journalPath)}${A.join(secondBatch.lines, "\n")}\n`
         );
-        expect(yield* reconcileAttemptJournal(journalPath)).toBe(0);
+        const reconcileAttemptJournal58 = yield* reconcileAttemptJournal(journalPath);
+        expect(reconcileAttemptJournal58).toBe(0);
+        const readFileString59 = yield* fs.readFileString(journalPath);
         const secondEvents = yield* Effect.forEach(
-          pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
+          pipe(readFileString59, Str.split("\n"), A.filter(Str.isNonEmpty)),
           (line) => decodeYeetAttemptJournalEvent(line)
         );
         const receipts = A.filter(secondEvents, YeetAttemptJournalEvent.guards["journal-compacted"]);
@@ -3909,11 +3968,10 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const text = yield* fs.readFileString(journalPath);
         expect(Str.includes(`${corrupt}\n`)(text)).toBe(true);
         expect(Str.includes(`${future}\n`)(text)).toBe(true);
-        const known = A.getSomes(
-          yield* Effect.forEach(pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
-            decodeYeetAttemptJournalEvent(line).pipe(Effect.option)
-          )
+        const forEach60 = yield* Effect.forEach(pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
+          decodeYeetAttemptJournalEvent(line).pipe(Effect.option)
         );
+        const known = A.getSomes(forEach60);
         expect(A.filter(known, YeetAttemptJournalEvent.guards["attempt-terminated"])).toHaveLength(50);
         expect(A.filter(known, YeetAttemptJournalEvent.guards["journal-compacted"])).toHaveLength(1);
       })
@@ -3945,7 +4003,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         );
 
         expect(failure.message).toContain("Failed to publish Yeet attempt journal");
-        expect(yield* fs.readFileString(journalPath)).toBe(original);
+        const readFileString61 = yield* fs.readFileString(journalPath);
+        expect(readFileString61).toBe(original);
       })
     );
 
@@ -3956,13 +4015,10 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const path = yield* Path.Path;
         const repoRoot = yield* findRepoRoot();
         const finishedJournal = path.join(tmpDir, "finished", "attempts.ndjson");
-        const legacyLines = pipe(
-          yield* fs.readFileString(
-            path.join(repoRoot, "packages/tooling/tool/cli/test/fixtures/yeet-attempt-journal-legacy.ndjson")
-          ),
-          Str.split("\n"),
-          A.filter(Str.isNonEmpty)
+        const readFileString62 = yield* fs.readFileString(
+          path.join(repoRoot, "packages/tooling/tool/cli/test/fixtures/yeet-attempt-journal-legacy.ndjson")
         );
+        const legacyLines = pipe(readFileString62, Str.split("\n"), A.filter(Str.isNonEmpty));
         const startedLine = pipe(legacyLines, A.head, O.getOrThrow);
         const finishedLine = pipe(legacyLines, A.last, O.getOrThrow);
         const attemptId = yield* attemptUuid("550e8400-e29b-41d4-a716-446655440010");
@@ -3980,8 +4036,9 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
 
         yield* appendEncodedAttemptJournalEvent(finishedJournal, finishedLine, "attempt-finished");
         yield* appendEncodedAttemptJournalEvent(finishedJournal, terminatedLine, "attempt-terminated");
+        const readFileString63 = yield* fs.readFileString(finishedJournal);
         const finishedEvents = yield* Effect.forEach(
-          pipe(yield* fs.readFileString(finishedJournal), Str.split("\n"), A.filter(Str.isNonEmpty)),
+          pipe(readFileString63, Str.split("\n"), A.filter(Str.isNonEmpty)),
           (line) => decodeYeetAttemptJournalEvent(line)
         );
         const terminalEvents = A.filter(
@@ -3993,11 +4050,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const terminatedJournal = path.join(tmpDir, "terminated", "attempts.ndjson");
         yield* appendEncodedAttemptJournalEvent(terminatedJournal, terminatedLine, "attempt-terminated");
         yield* appendEncodedAttemptJournalEvent(terminatedJournal, terminatedLine, "attempt-terminated");
-        const terminatedLines = pipe(
-          yield* fs.readFileString(terminatedJournal),
-          Str.split("\n"),
-          A.filter(Str.isNonEmpty)
-        );
+        const readFileString64 = yield* fs.readFileString(terminatedJournal);
+        const terminatedLines = pipe(readFileString64, Str.split("\n"), A.filter(Str.isNonEmpty));
         expect(terminatedLines).toHaveLength(1);
       })
     );
@@ -4008,17 +4062,20 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const path = yield* Path.Path;
         const repoRoot = yield* findRepoRoot();
         const fixtureRoot = path.join(repoRoot, "packages/tooling/tool/cli/test/fixtures");
+        const readDirectory65 = yield* fs.readDirectory(fixtureRoot);
         const fixturePaths = pipe(
-          yield* fs.readDirectory(fixtureRoot),
+          readDirectory65,
           A.filter((name) => Str.startsWith("yeet-attempt-journal-")(name) && Str.endsWith(".ndjson")(name)),
           A.map((name) => path.join(fixtureRoot, name))
         );
         const liveRoot = path.join(repoRoot, ".beep/yeet/runs");
         const livePaths = (yield* fs.exists(liveRoot))
-          ? pipe(
-              yield* fs.readDirectory(liveRoot, { recursive: true }),
-              A.filter(Str.endsWith("attempts.ndjson")),
-              A.map((name) => path.join(liveRoot, name))
+          ? yield* Effect.map(fs.readDirectory(liveRoot, { recursive: true }), (value) =>
+              pipe(
+                value,
+                A.filter(Str.endsWith("attempts.ndjson")),
+                A.map((name) => path.join(liveRoot, name))
+              )
             )
           : A.empty<string>();
         const journalPaths = A.appendAll(fixturePaths, livePaths);
@@ -4026,7 +4083,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const decoded = yield* Effect.forEach(
           journalPaths,
           Effect.fnUntraced(function* (journalPath) {
-            const lines = pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty));
+            const readFileString66 = yield* fs.readFileString(journalPath);
+            const lines = pipe(readFileString66, Str.split("\n"), A.filter(Str.isNonEmpty));
             return yield* Effect.forEach(lines, (line) => decodeYeetAttemptJournalEvent(line));
           })
         );
@@ -4120,7 +4178,9 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         expect(S.is(YeetExistingCommitPublishIntent)(intent)).toBe(true);
         if (intent.kind === "existing-commit") {
           expect(intent.paths).toEqual(["tracked.txt"]);
-          expect(intent.commitSha).toBe(Str.trim(yield* runGitCapture(tmpDir, ["rev-parse", "HEAD"])));
+          const expectation = expect(intent.commitSha);
+          const resultGitCapture1 = yield* runGitCapture(tmpDir, ["rev-parse", "HEAD"]);
+          expectation.toBe(Str.trim(resultGitCapture1));
         }
       })
     );
@@ -4227,9 +4287,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           knownSubLaneRemediationFromOutput(result.output),
           "Commit or restage the required lockfile and manifest changes; if needed, run `bun install` and restage `bun.lock`."
         );
-        expect(yield* runGitCapture(tmpDir, ["worktree", "list", "--porcelain"])).not.toContain(
-          "beep-yeet-head-install-"
-        );
+        const resultGitCapture = yield* runGitCapture(tmpDir, ["worktree", "list", "--porcelain"]);
+        expect(resultGitCapture).not.toContain("beep-yeet-head-install-");
       })
     );
 
@@ -4257,9 +4316,10 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           mutability: "publish",
           resume: "never",
         });
+        const attemptUuid67 = yield* attemptUuid("550e8400-e29b-41d4-a716-446655440000");
         const verdict = buildYeetVerdictForTesting(
           BuildYeetVerdictInput.make({
-            attemptId: O.some(yield* attemptUuid("550e8400-e29b-41d4-a716-446655440000")),
+            attemptId: O.some(attemptUuid67),
             base: "origin/main",
             branch: "feature",
             createdAt: "2026-06-11T00:00:00.000Z",
@@ -4384,9 +4444,10 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           mutability: "publish",
           resume: "never",
         });
+        const attemptUuid68 = yield* attemptUuid("550e8400-e29b-41d4-a716-446655440001");
         const verdict = buildYeetVerdictForTesting(
           BuildYeetVerdictInput.make({
-            attemptId: O.some(yield* attemptUuid("550e8400-e29b-41d4-a716-446655440001")),
+            attemptId: O.some(attemptUuid68),
             base: "origin/main",
             branch: "feature",
             createdAt: "2026-06-11T00:00:00.000Z",
@@ -4821,17 +4882,22 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
 
-          expect(yield* fs.exists(lockPath)).toBe(false);
+          const exists69 = yield* fs.exists(lockPath);
+          expect(exists69).toBe(false);
           const lease = yield* acquireLegacyFullProofLockForTesting(tempContext, [prePushStep]);
           expect(lease.lockPath).toBe(lockPath);
-          expect(yield* fs.exists(lockPath)).toBe(true);
-          expect(yield* fs.readFileString(lockPath)).toContain('"schemaVersion":"yeet-proof-lock/v3"');
+          const exists70 = yield* fs.exists(lockPath);
+          expect(exists70).toBe(true);
+          const readFileString71 = yield* fs.readFileString(lockPath);
+          expect(readFileString71).toContain('"schemaVersion":"yeet-proof-lock/v3"');
           expect((yield* fs.stat(path.dirname(lockPath))).mode & 0o777).toBe(0o700);
 
           yield* releaseProofLock(lease);
-          expect(yield* fs.exists(lockPath)).toBe(false);
+          const exists72 = yield* fs.exists(lockPath);
+          expect(exists72).toBe(false);
           yield* releaseProofLock(lease);
-          expect(yield* fs.exists(lockPath)).toBe(false);
+          const exists73 = yield* fs.exists(lockPath);
+          expect(exists73).toBe(false);
         }).pipe(
           provideRuntimeRootForTesting(
             RuntimeRootChoice.make({ kind: "test-override", root: `${fixtureRepository.tmpDir}/runtime` })
@@ -4896,8 +4962,10 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
             )
           );
 
-          expect(yield* fs.readFileString(lockPath)).toBe(unreadableText);
-          expect(yield* fs.readFileString(fallbackPath)).toBe(unreadableText);
+          const readFileString74 = yield* fs.readFileString(lockPath);
+          expect(readFileString74).toBe(unreadableText);
+          const readFileString75 = yield* fs.readFileString(fallbackPath);
+          expect(readFileString75).toBe(unreadableText);
         }).pipe(
           provideRuntimeRootForTesting(
             RuntimeRootChoice.make({ kind: "test-override", root: `${fixtureRepository.tmpDir}/runtime` })
@@ -4920,13 +4988,15 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           expect(markerText).toContain('"coordination":"quality-scheduler/v1"');
 
           (yield* retireFullProofLockOrObserveAtPath(lockPath)).pipe(O.isSome, assertTrue);
-          expect(yield* fs.readFileString(lockPath)).toBe(markerText);
+          const readFileString76 = yield* fs.readFileString(lockPath);
+          expect(readFileString76).toBe(markerText);
 
           const legacyPathRefusal = yield* acquireLegacyFullProofLockForTesting(tempContext, [prePushStep]).pipe(
             Effect.flip
           );
           expect(legacyPathRefusal.message).toContain("Another Yeet full proof for this repository is active.");
-          expect(yield* fs.readFileString(lockPath)).toBe(markerText);
+          const readFileString77 = yield* fs.readFileString(lockPath);
+          expect(readFileString77).toBe(markerText);
         }).pipe(
           provideRuntimeRootForTesting(
             RuntimeRootChoice.make({ kind: "test-override", root: `${fixtureRepository.tmpDir}/runtime` })
@@ -4944,11 +5014,13 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           const lease = yield* acquireLegacyFullProofLockForTesting(tempContext, [prePushStep]);
 
           (yield* retireFullProofLockOrObserveAtPath(lockPath)).pipe(assertNone);
-          expect(yield* fs.readFileString(lockPath)).toContain('"schemaVersion":"yeet-proof-lock/v3"');
+          const readFileString78 = yield* fs.readFileString(lockPath);
+          expect(readFileString78).toContain('"schemaVersion":"yeet-proof-lock/v3"');
 
           yield* releaseProofLock(lease);
           (yield* retireFullProofLockOrObserveAtPath(lockPath)).pipe(O.isSome, assertTrue);
-          expect(yield* fs.readFileString(lockPath)).toContain('"schemaVersion":"yeet-proof-lock/v4"');
+          const readFileString79 = yield* fs.readFileString(lockPath);
+          expect(readFileString79).toContain('"schemaVersion":"yeet-proof-lock/v4"');
         }).pipe(
           provideRuntimeRootForTesting(
             RuntimeRootChoice.make({ kind: "test-override", root: `${fixtureRepository.tmpDir}/runtime` })
@@ -5036,7 +5108,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           );
 
           retired.pipe(O.isSome, assertTrue);
-          expect(yield* fs.readFileString(lockPath)).toBe(competingMarker);
+          const readFileString80 = yield* fs.readFileString(lockPath);
+          expect(readFileString80).toBe(competingMarker);
         }).pipe(
           provideRuntimeRootForTesting(
             RuntimeRootChoice.make({ kind: "test-override", root: `${fixtureRepository.tmpDir}/runtime` })
@@ -5119,7 +5192,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           );
 
           replacement.pipe(O.isSome, assertTrue);
-          expect(yield* fs.readFileString(fallbackPath)).not.toBe(recycledOwnerText);
+          const readFileString81 = yield* fs.readFileString(fallbackPath);
+          expect(readFileString81).not.toBe(recycledOwnerText);
           if (O.isSome(replacement)) {
             yield* releaseProofLock(replacement.value);
           }
@@ -5150,7 +5224,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           expect(refusal.message).toContain("current process start identity is unavailable");
           expect(refusal.message).toContain("PID reuse could strand the lock");
           expect(refusal.file).toBe(fallbackPath);
-          expect(yield* fs.exists(fallbackPath)).toBe(false);
+          const exists82 = yield* fs.exists(fallbackPath);
+          expect(exists82).toBe(false);
         }).pipe(
           provideRuntimeRootForTesting(
             RuntimeRootChoice.make({ kind: "test-override", root: `${fixtureRepository.tmpDir}/runtime` })
@@ -5176,7 +5251,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           );
 
           acquired.pipe(O.isSome, assertTrue);
-          expect(yield* fs.readFileString(fallbackPath)).toContain('"procStart":"ps:Sun Aug 31 00:00:00 2026"');
+          const readFileString83 = yield* fs.readFileString(fallbackPath);
+          expect(readFileString83).toContain('"procStart":"ps:Sun Aug 31 00:00:00 2026"');
           if (O.isSome(acquired)) {
             yield* releaseProofLock(acquired.value);
           }
@@ -5211,7 +5287,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
 
           expect(refusal.message).toContain("Another Yeet full proof for this repository is active.");
           expect(refusal.message).toContain("Owner checkout /repo/active-owner on feature/active-owner");
-          expect(yield* fs.readFileString(lockPath)).toBe(`${activeText}\n`);
+          const readFileString84 = yield* fs.readFileString(lockPath);
+          expect(readFileString84).toBe(`${activeText}\n`);
         }).pipe(
           provideRuntimeRootForTesting(
             RuntimeRootChoice.make({ kind: "test-override", root: `${fixtureRepository.tmpDir}/runtime` })
@@ -5277,9 +5354,16 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           yield* fs.writeFileString(lockPath, staleText);
           yield* fs.writeFileString(claimPath, deadClaimText);
 
-          expect(yield* tryReclaimStaleProofLockForTesting(lockPath, staleText, replacementText)).toBe(true);
-          expect(yield* fs.readFileString(lockPath)).toBe(replacementText);
-          expect(yield* fs.exists(claimPath)).toBe(false);
+          const tryReclaimStaleProofLockForTesting85 = yield* tryReclaimStaleProofLockForTesting(
+            lockPath,
+            staleText,
+            replacementText
+          );
+          expect(tryReclaimStaleProofLockForTesting85).toBe(true);
+          const readFileString86 = yield* fs.readFileString(lockPath);
+          expect(readFileString86).toBe(replacementText);
+          const exists87 = yield* fs.exists(claimPath);
+          expect(exists87).toBe(false);
         }).pipe(
           provideRuntimeRootForTesting(
             RuntimeRootChoice.make({ kind: "test-override", root: `${fixtureRepository.tmpDir}/runtime` })
@@ -5334,30 +5418,44 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           yield* Deferred.await(tombstoneCleaned);
           const freshClaimText = yield* fs.readFileString(claimPath);
           expect(freshClaimText).not.toBe(deadClaimText);
-          expect(yield* fs.exists(tombstonePath)).toBe(false);
+          const exists88 = yield* fs.exists(tombstonePath);
+          expect(exists88).toBe(false);
 
-          expect(
-            yield* tryRecoverObservedProofLockReapClaimForTesting(claimPath, delayedClaimText, deadClaimText).pipe(
-              Effect.provideService(FileSystem.FileSystem, racingFileSystem)
-            )
-          ).toBe(false);
-          expect(yield* fs.readFileString(claimPath)).toBe(freshClaimText);
-          expect(yield* fs.exists(tombstonePath)).toBe(false);
+          const pipe89 = yield* tryRecoverObservedProofLockReapClaimForTesting(
+            claimPath,
+            delayedClaimText,
+            deadClaimText
+          ).pipe(Effect.provideService(FileSystem.FileSystem, racingFileSystem));
+          expect(pipe89).toBe(false);
+          const readFileString90 = yield* fs.readFileString(claimPath);
+          expect(readFileString90).toBe(freshClaimText);
+          const exists91 = yield* fs.exists(tombstonePath);
+          expect(exists91).toBe(false);
 
-          expect(
-            yield* tryReclaimStaleProofLockForTesting(lockPath, staleText, "delayed-winner\n").pipe(
-              Effect.provideService(FileSystem.FileSystem, racingFileSystem)
-            )
-          ).toBe(false);
-          expect(yield* fs.readFileString(lockPath)).toBe(staleText);
-          expect(yield* fs.readFileString(claimPath)).toBe(freshClaimText);
+          const pipe92 = yield* tryReclaimStaleProofLockForTesting(lockPath, staleText, "delayed-winner\n").pipe(
+            Effect.provideService(FileSystem.FileSystem, racingFileSystem)
+          );
+          expect(pipe92).toBe(false);
+          const readFileString93 = yield* fs.readFileString(lockPath);
+          expect(readFileString93).toBe(staleText);
+          const readFileString94 = yield* fs.readFileString(claimPath);
+          expect(readFileString94).toBe(freshClaimText);
 
           yield* Deferred.succeed(releaseWinner, undefined);
-          expect(yield* Fiber.join(winner)).toBe(true);
-          expect(yield* fs.readFileString(lockPath)).toBe("winner-a\n");
-          expect(yield* fs.exists(claimPath)).toBe(false);
-          expect(yield* tryReclaimStaleProofLockForTesting(lockPath, staleText, "winner-b\n")).toBe(false);
-          expect(yield* fs.readFileString(lockPath)).toBe("winner-a\n");
+          const join95 = yield* Fiber.join(winner);
+          expect(join95).toBe(true);
+          const readFileString96 = yield* fs.readFileString(lockPath);
+          expect(readFileString96).toBe("winner-a\n");
+          const exists97 = yield* fs.exists(claimPath);
+          expect(exists97).toBe(false);
+          const tryReclaimStaleProofLockForTesting98 = yield* tryReclaimStaleProofLockForTesting(
+            lockPath,
+            staleText,
+            "winner-b\n"
+          );
+          expect(tryReclaimStaleProofLockForTesting98).toBe(false);
+          const readFileString99 = yield* fs.readFileString(lockPath);
+          expect(readFileString99).toBe("winner-a\n");
         }).pipe(
           provideRuntimeRootForTesting(
             RuntimeRootChoice.make({ kind: "test-override", root: `${fixtureRepository.tmpDir}/runtime` })
@@ -5379,15 +5477,17 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           yield* fs.writeFileString(claimPath, deadClaimText);
           yield* fs.writeFileString(tombstonePath, liveTombstoneText);
 
-          expect(
+          const tryRecoverObservedProofLockReapClaimForTesting100 =
             yield* tryRecoverObservedProofLockReapClaimForTesting(
               claimPath,
               `${yield* encodeProofLockReapClaim(process.pid)}\n`,
               deadClaimText
-            )
-          ).toBe(false);
-          expect(yield* fs.readFileString(claimPath)).toBe(deadClaimText);
-          expect(yield* fs.readFileString(tombstonePath)).toBe(liveTombstoneText);
+            );
+          expect(tryRecoverObservedProofLockReapClaimForTesting100).toBe(false);
+          const readFileString101 = yield* fs.readFileString(claimPath);
+          expect(readFileString101).toBe(deadClaimText);
+          const readFileString102 = yield* fs.readFileString(tombstonePath);
+          expect(readFileString102).toBe(liveTombstoneText);
         }).pipe(
           provideRuntimeRootForTesting(
             RuntimeRootChoice.make({ kind: "test-override", root: `${fixtureRepository.tmpDir}/runtime` })
@@ -5418,8 +5518,10 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           expect(refusal.message).toContain(tombstonePath);
           expect(refusal.message).toContain("depth-2 tombstones are never auto-reclaimed");
           expect(refusal.message).toContain("confirming every sibling checkout is idle");
-          expect(yield* fs.readFileString(claimPath)).toBe(deadClaimText);
-          expect(yield* fs.readFileString(tombstonePath)).toBe(deadTombstoneText);
+          const readFileString103 = yield* fs.readFileString(claimPath);
+          expect(readFileString103).toBe(deadClaimText);
+          const readFileString104 = yield* fs.readFileString(tombstonePath);
+          expect(readFileString104).toBe(deadTombstoneText);
         }).pipe(
           provideRuntimeRootForTesting(
             RuntimeRootChoice.make({ kind: "test-override", root: `${fixtureRepository.tmpDir}/runtime` })
@@ -5450,8 +5552,10 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           expect(refusal.message).toContain(tombstonePath);
           expect(refusal.message).toContain("depth-2 tombstones are never auto-reclaimed");
           expect(refusal.message).toContain("confirming every sibling checkout is idle");
-          expect(yield* fs.readFileString(claimPath)).toBe(deadClaimText);
-          expect(yield* fs.readFileString(tombstonePath)).toBe(unreadableTombstoneText);
+          const readFileString105 = yield* fs.readFileString(claimPath);
+          expect(readFileString105).toBe(deadClaimText);
+          const readFileString106 = yield* fs.readFileString(tombstonePath);
+          expect(readFileString106).toBe(unreadableTombstoneText);
         }).pipe(
           provideRuntimeRootForTesting(
             RuntimeRootChoice.make({ kind: "test-override", root: `${fixtureRepository.tmpDir}/runtime` })
@@ -5482,9 +5586,16 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           yield* fs.writeFileString(lockPath, staleText);
           yield* fs.writeFileString(claimPath, liveClaimText);
 
-          expect(yield* tryReclaimStaleProofLockForTesting(lockPath, staleText, "replacement\n")).toBe(false);
-          expect(yield* fs.readFileString(lockPath)).toBe(staleText);
-          expect(yield* fs.readFileString(claimPath)).toBe(liveClaimText);
+          const tryReclaimStaleProofLockForTesting107 = yield* tryReclaimStaleProofLockForTesting(
+            lockPath,
+            staleText,
+            "replacement\n"
+          );
+          expect(tryReclaimStaleProofLockForTesting107).toBe(false);
+          const readFileString108 = yield* fs.readFileString(lockPath);
+          expect(readFileString108).toBe(staleText);
+          const readFileString109 = yield* fs.readFileString(claimPath);
+          expect(readFileString109).toBe(liveClaimText);
         }).pipe(
           provideRuntimeRootForTesting(
             RuntimeRootChoice.make({ kind: "test-override", root: `${fixtureRepository.tmpDir}/runtime` })
@@ -5520,8 +5631,10 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           expect(refusal.message).toContain("unreadable proof-lock reclamation claim");
           expect(refusal.message).toContain(claimPath);
           expect(refusal.message).toContain("Remove");
-          expect(yield* fs.readFileString(lockPath)).toBe(staleText);
-          expect(yield* fs.readFileString(claimPath)).toBe("not-json\n");
+          const readFileString110 = yield* fs.readFileString(lockPath);
+          expect(readFileString110).toBe(staleText);
+          const readFileString111 = yield* fs.readFileString(claimPath);
+          expect(readFileString111).toBe("not-json\n");
         }).pipe(
           provideRuntimeRootForTesting(
             RuntimeRootChoice.make({ kind: "test-override", root: `${fixtureRepository.tmpDir}/runtime` })
@@ -5576,25 +5689,37 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           );
           yield* Deferred.await(tombstoneCreated);
           const tombstoneText = yield* fs.readFileString(tombstonePath);
-          expect(yield* fs.readFileString(claimPath)).toBe(deadClaimText);
+          const readFileString112 = yield* fs.readFileString(claimPath);
+          expect(readFileString112).toBe(deadClaimText);
 
-          expect(
-            yield* tryRecoverObservedProofLockReapClaimForTesting(
-              claimPath,
-              `${yield* encodeProofLockReapClaim(process.pid, "2026-08-26T00:00:00.003Z")}\n`,
-              deadClaimText
-            ).pipe(Effect.provideService(FileSystem.FileSystem, racingFileSystem))
-          ).toBe(false);
-          expect(yield* fs.readFileString(claimPath)).toBe(deadClaimText);
-          expect(yield* fs.readFileString(tombstonePath)).toBe(tombstoneText);
+          const pipe113 = yield* tryRecoverObservedProofLockReapClaimForTesting(
+            claimPath,
+            `${yield* encodeProofLockReapClaim(process.pid, "2026-08-26T00:00:00.003Z")}\n`,
+            deadClaimText
+          ).pipe(Effect.provideService(FileSystem.FileSystem, racingFileSystem));
+          expect(pipe113).toBe(false);
+          const readFileString114 = yield* fs.readFileString(claimPath);
+          expect(readFileString114).toBe(deadClaimText);
+          const readFileString115 = yield* fs.readFileString(tombstonePath);
+          expect(readFileString115).toBe(tombstoneText);
 
           yield* Deferred.succeed(releaseWinner, undefined);
-          expect(yield* Fiber.join(winner)).toBe(true);
-          expect(yield* fs.readFileString(lockPath)).toBe(winnerText);
-          expect(yield* fs.exists(claimPath)).toBe(false);
-          expect(yield* fs.exists(tombstonePath)).toBe(false);
-          expect(yield* tryReclaimStaleProofLockForTesting(lockPath, staleText, loserText)).toBe(false);
-          expect(yield* fs.readFileString(lockPath)).toBe(winnerText);
+          const join116 = yield* Fiber.join(winner);
+          expect(join116).toBe(true);
+          const readFileString117 = yield* fs.readFileString(lockPath);
+          expect(readFileString117).toBe(winnerText);
+          const exists118 = yield* fs.exists(claimPath);
+          expect(exists118).toBe(false);
+          const exists119 = yield* fs.exists(tombstonePath);
+          expect(exists119).toBe(false);
+          const tryReclaimStaleProofLockForTesting120 = yield* tryReclaimStaleProofLockForTesting(
+            lockPath,
+            staleText,
+            loserText
+          );
+          expect(tryReclaimStaleProofLockForTesting120).toBe(false);
+          const readFileString121 = yield* fs.readFileString(lockPath);
+          expect(readFileString121).toBe(winnerText);
         }).pipe(
           provideRuntimeRootForTesting(
             RuntimeRootChoice.make({ kind: "test-override", root: `${fixtureRepository.tmpDir}/runtime` })
@@ -5626,11 +5751,13 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           expect(refusal.message).toContain(lockPath);
           expect(refusal.message).toContain("will not reclaim it automatically");
           expect(refusal.message).toContain("confirming every sibling checkout is idle");
-          expect(yield* fs.readFileString(lockPath)).toBe(legacyText);
+          const readFileString122 = yield* fs.readFileString(lockPath);
+          expect(readFileString122).toBe(legacyText);
 
           const retirementRefusal = yield* retireFullProofLockOrObserveAtPath(lockPath).pipe(Effect.flip);
           expect(retirementRefusal.message).toContain("legacy v2 full-proof coordinator");
-          expect(yield* fs.readFileString(lockPath)).toBe(legacyText);
+          const readFileString123 = yield* fs.readFileString(lockPath);
+          expect(readFileString123).toBe(legacyText);
         }).pipe(
           provideRuntimeRootForTesting(
             RuntimeRootChoice.make({ kind: "test-override", root: `${fixtureRepository.tmpDir}/runtime` })
@@ -5681,9 +5808,20 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           )}\n`;
           yield* fs.writeFileString(lockPath, staleText);
 
-          expect(yield* tryReclaimStaleProofLockForTesting(lockPath, staleText, winnerText)).toBe(true);
-          expect(yield* tryReclaimStaleProofLockForTesting(lockPath, staleText, loserText)).toBe(false);
-          expect(yield* fs.readFileString(lockPath)).toBe(winnerText);
+          const tryReclaimStaleProofLockForTesting124 = yield* tryReclaimStaleProofLockForTesting(
+            lockPath,
+            staleText,
+            winnerText
+          );
+          expect(tryReclaimStaleProofLockForTesting124).toBe(true);
+          const tryReclaimStaleProofLockForTesting125 = yield* tryReclaimStaleProofLockForTesting(
+            lockPath,
+            staleText,
+            loserText
+          );
+          expect(tryReclaimStaleProofLockForTesting125).toBe(false);
+          const readFileString126 = yield* fs.readFileString(lockPath);
+          expect(readFileString126).toBe(winnerText);
 
           const refusal = yield* acquireLegacyFullProofLockForTesting(tempContext, [prePushStep]).pipe(Effect.flip);
           expect(refusal.message).toContain("Owner checkout /repo/winner on feature/winner");
@@ -5719,7 +5857,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
 
           yield* releaseProofLock(lease);
 
-          expect(yield* fs.readFileString(lockPath)).toBe(foreignText);
+          const readFileString127 = yield* fs.readFileString(lockPath);
+          expect(readFileString127).toBe(foreignText);
         }).pipe(
           provideRuntimeRootForTesting(
             RuntimeRootChoice.make({ kind: "test-override", root: `${fixtureRepository.tmpDir}/runtime` })
@@ -5740,7 +5879,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
 
           expect(refusal.message).toContain("Another Yeet full proof for this repository is active.");
           expect(refusal.message).not.toContain("Owner checkout");
-          expect(yield* fs.readFileString(lockPath)).toBe("not-json\n");
+          const readFileString128 = yield* fs.readFileString(lockPath);
+          expect(readFileString128).toBe("not-json\n");
         }).pipe(
           provideRuntimeRootForTesting(
             RuntimeRootChoice.make({ kind: "test-override", root: `${fixtureRepository.tmpDir}/runtime` })

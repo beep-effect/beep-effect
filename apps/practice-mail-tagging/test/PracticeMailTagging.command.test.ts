@@ -71,7 +71,8 @@ describe("practice-mail-tagging dry-run", () => {
         expect(Str.startsWith("tag-")(report.runId)).toBe(true);
         expect(outlook.categories).toEqual([foreignCategory]);
         expect(outlook.categoryWrites).toBe(0);
-        expect(yield* tagLedgerExists).toBe(false);
+        const tagLedgerExists1 = yield* tagLedgerExists;
+        expect(tagLedgerExists1).toBe(false);
         expect(lines).toContain("matched                                  1");
         expect(lines).toContain(`added ${matterCategory}                      1`);
       })
@@ -115,7 +116,8 @@ describe("practice-mail-tagging apply", () => {
         const categories = (yield* outlookNow).categories;
         assertSome(A.head(categories), foreignCategory);
         expect(categories).toContain(matterCategory);
-        expect(yield* tagLedgerExists).toBe(true);
+        const tagLedgerExists2 = yield* tagLedgerExists;
+        expect(tagLedgerExists2).toBe(true);
         expect(summary.tagged).toBe(1);
         expect(summary.undone).toBe(0);
         expect(summary.processed).toBe(1);
@@ -170,7 +172,8 @@ describe("practice-mail-tagging report", () => {
         expect(summary.pendingIntents).toBe(0);
         expect(summary.abandoned).toBe(0);
         assertNone(summary.lastCheckpointAt);
-        expect(yield* outputLines).toContain("last checkpoint  none");
+        const outputLines3 = yield* outputLines;
+        expect(outputLines3).toContain("last checkpoint  none");
         expect((yield* outlookNow).serviceBuilds).toBe(0);
       })
     );
@@ -252,8 +255,10 @@ describe("practice-mail-tagging watch", () => {
 describe("practice-mail-tagging run ids and schemas", () => {
   it.effect("derives a run id from the clock that the run id schema accepts", () =>
     Effect.gen(function* () {
-      expect(yield* makeRunId("tag")).toBe("tag-19700101T000000000Z");
-      expect(yield* makeRunId("undo")).toBe("undo-19700101T000000000Z");
+      const madeRunId = yield* makeRunId("tag");
+      expect(madeRunId).toBe("tag-19700101T000000000Z");
+      const madeRunId4 = yield* makeRunId("undo");
+      expect(madeRunId4).toBe("undo-19700101T000000000Z");
     })
   );
 

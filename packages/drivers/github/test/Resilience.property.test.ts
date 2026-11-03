@@ -16,7 +16,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -44,7 +45,8 @@ describe("Resilience schema property floor", () => {
         const encoded = yield* S.encodeEffect(RetryPolicy)(value);
         const decoded = yield* S.decodeEffect(RetryPolicy)(encoded);
         assert.deepStrictEqual(policyStructure(decoded), policyStructure(value));
-        assert.deepStrictEqual(yield* S.encodeEffect(RetryPolicy)(decoded), encoded);
+        const value2 = yield* S.encodeEffect(RetryPolicy)(decoded);
+        assert.deepStrictEqual(value2, encoded);
         assert.strictEqual(decoded.retries(failure), value.retries(failure));
         assert.strictEqual(
           Duration.toMillis(decoded.delayFor(failure, 2, 0.5)),

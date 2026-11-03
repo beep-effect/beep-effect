@@ -25,7 +25,8 @@ it.effect.prop(
       const reparsed = yield* Markdown.parse(serialized);
       const [again] = reparsed.children;
       assert.strictEqual(again?.type === "thematicBreak" ? again.markerChar : undefined, marker);
-      assert.strictEqual(yield* Markdown.stringify(reparsed), serialized);
+      const stringify1 = yield* Markdown.stringify(reparsed);
+      assert.strictEqual(stringify1, serialized);
       const surrounded = `<!-- untouched -->\n\n${source}\nparagraph  spacing\n`;
       const options = MarkdownFormattingOptions.make({ thematicBreakChar: "*" });
       const formatted = MarkdownFormat.formatToString(surrounded, undefined, options);

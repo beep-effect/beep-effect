@@ -84,7 +84,8 @@ const contextFor = Effect.fnUntraced(function* (
 });
 
 const plain = Effect.fnUntraced(function* (doc: Document, audience: AudienceKind = "agent") {
-  return Render.plain(doc, yield* contextFor(audience));
+  const contextFor1 = yield* contextFor(audience);
+  return Render.plain(doc, contextFor1);
 });
 
 class Boom extends S.TaggedError<Boom, { readonly brand: unique symbol }>()("Boom", { message: S.String }) {
@@ -123,7 +124,8 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
 
     it.effect("a non-error value is its string", () =>
       Effect.gen(function* () {
-        assert.include(yield* plain(CliFailure.toDoc(Cause.fail("plain text"))), "plain text");
+        const plain2 = yield* plain(CliFailure.toDoc(Cause.fail("plain text")));
+        assert.include(plain2, "plain text");
       })
     );
 
@@ -137,7 +139,8 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
 
     it.effect("a message with several lines is several lines, the status on the first", () =>
       Effect.gen(function* () {
-        const lines = Str.split(yield* plain(CliFailure.toDoc(Cause.fail(new Error("one\ntwo\nthree")))), "\n");
+        const plain3 = yield* plain(CliFailure.toDoc(Cause.fail(new Error("one\ntwo\nthree"))));
+        const lines = Str.split(plain3, "\n");
         assert.strictEqual(lines.length, 3);
         assert.include(lines[0] ?? "", "one");
         assert.include(lines[2] ?? "", "three");
@@ -158,7 +161,8 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
       Effect.gen(function* () {
         const doc = CliFailure.toDoc(Cause.fail(Mine.make({ message: "ignored message" })));
         assert.deepStrictEqual(kinds(doc), ["Heading", "Paragraph"]);
-        assert.notInclude(yield* plain(doc), "ignored message");
+        const plain4 = yield* plain(doc);
+        assert.notInclude(plain4, "ignored message");
       })
     );
 
@@ -171,7 +175,8 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
             throw new Error("nope");
           }
         }
-        assert.include(yield* plain(CliFailure.toDoc(Cause.fail(Bad.make({ message: "fallback me" })))), "fallback me");
+        const plain5 = yield* plain(CliFailure.toDoc(Cause.fail(Bad.make({ message: "fallback me" }))));
+        assert.include(plain5, "fallback me");
       })
     );
 
@@ -183,27 +188,23 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
             return [Doc.paragraph(`custom for ${error.message}`)];
           },
         };
-        assert.strictEqual(
-          yield* plain(CliFailure.toDoc(Cause.fail(Boom.make({ message: "x" })), { render })),
-          "custom for x"
+        const plain6 = yield* plain(CliFailure.toDoc(Cause.fail(Boom.make({ message: "x" })), { render }));
+        assert.strictEqual(plain6, "custom for x");
+        const plain7 = yield* plain(
+          CliFailure.toDoc(Cause.fail(Mine.make({ message: "m" })), {
+            render: { Mine: () => [Doc.paragraph("map")] },
+          })
         );
-        assert.notInclude(
-          yield* plain(
-            CliFailure.toDoc(Cause.fail(Mine.make({ message: "m" })), {
-              render: { Mine: () => [Doc.paragraph("map")] },
-            })
-          ),
-          "map"
-        );
+        assert.notInclude(plain7, "map");
         // A tag with no entry is the generic line, and an inherited name is not an entry.
-        assert.include(
-          yield* plain(CliFailure.toDoc(Cause.fail(Boom.make({ message: "y" })), { render: { Other: () => [] } })),
-          "y"
+        const plain8 = yield* plain(
+          CliFailure.toDoc(Cause.fail(Boom.make({ message: "y" })), { render: { Other: () => [] } })
         );
-        assert.include(
-          yield* plain(CliFailure.toDoc(Cause.fail({ _tag: "constructor", message: "z" }), { render: {} })),
-          "z"
+        assert.include(plain8, "y");
+        const plain9 = yield* plain(
+          CliFailure.toDoc(Cause.fail({ _tag: "constructor", message: "z" }), { render: {} })
         );
+        assert.include(plain9, "z");
       })
     );
   });
@@ -251,17 +252,17 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         const viaError = CliFailure.toDoc(Cause.fail(error));
         const viaIssue = CliFailure.toDoc(Cause.fail(error.issue));
         assert.deepStrictEqual(kinds(viaIssue), ["Tree"]);
-        assert.include(yield* plain(viaIssue), "ownr: unknown key");
-        assert.include(yield* plain(viaError), "ownr: unknown key");
+        const plain10 = yield* plain(viaIssue);
+        assert.include(plain10, "ownr: unknown key");
+        const plain11 = yield* plain(viaError);
+        assert.include(plain11, "ownr: unknown key");
       })
     );
 
     it.effect("a value with a malformed issue is the generic line, not a throw", () =>
       Effect.gen(function* () {
-        assert.include(
-          yield* plain(CliFailure.toDoc(Cause.fail({ issue: { not: "an issue" }, message: "weird" }))),
-          "weird"
-        );
+        const plain12 = yield* plain(CliFailure.toDoc(Cause.fail({ issue: { not: "an issue" }, message: "weird" })));
+        assert.include(plain12, "weird");
       })
     );
   });
@@ -307,7 +308,8 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
       Effect.gen(function* () {
         const error = new Error("bare");
         Object.defineProperty(error, "stack", { value: undefined });
-        assert.include(yield* plain(CliFailure.toDoc(Cause.die(error))), "no stack");
+        const plain13 = yield* plain(CliFailure.toDoc(Cause.die(error)));
+        assert.include(plain13, "no stack");
       })
     );
 
@@ -317,7 +319,8 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         const displayPath = (p: string) => Str.replace("/repo/", "")(p);
         const doc = CliFailure.toDoc(Cause.die(error), { displayPath });
         // The context applies the same function to the link's target, as the default report does.
-        const text = Render.plain(doc, yield* contextFor("agent", {}, { displayPath }));
+        const contextFor14 = yield* contextFor("agent", {}, { displayPath });
+        const text = Render.plain(doc, contextFor14);
         assert.include(text, "src/run.ts:3:4");
         assert.notInclude(text, "/repo/");
       })
@@ -326,11 +329,14 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
     it.effect("a frame is a file link: an editor hyperlink for a human on a linking terminal, never for an agent", () =>
       Effect.gen(function* () {
         const doc = CliFailure.toDoc(Cause.die(errorWithStack("boom", [`run (${USER}:3:4)`])));
-        const human = Render.ansi(doc, yield* contextFor("human", { hyperlinks: true, color: "basic" }));
+        const contextFor15 = yield* contextFor("human", { hyperlinks: true, color: "basic" });
+        const human = Render.ansi(doc, contextFor15);
         assert.include(human, `${ESC}]8;;vscode://file/repo/src/run.ts:3:4`);
-        const agent = Render.plain(doc, yield* contextFor("agent", { hyperlinks: true, color: "basic" }));
+        const contextFor16 = yield* contextFor("agent", { hyperlinks: true, color: "basic" });
+        const agent = Render.plain(doc, contextFor16);
         assert.notInclude(agent, ESC);
-        const agentAnsi = Render.ansi(doc, yield* contextFor("agent", { hyperlinks: true, color: "basic" }));
+        const contextFor17 = yield* contextFor("agent", { hyperlinks: true, color: "basic" });
+        const agentAnsi = Render.ansi(doc, contextFor17);
         assert.notInclude(agentAnsi, `${ESC}]8`);
       })
     );
@@ -367,7 +373,8 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         const a = new Error("a");
         const b = new Error("b", { cause: a });
         a.cause = b;
-        assert.include(yield* plain(CliFailure.toDoc(Cause.die(a))), "b");
+        const plain18 = yield* plain(CliFailure.toDoc(Cause.die(a)));
+        assert.include(plain18, "b");
       })
     );
 
@@ -426,7 +433,8 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
       Effect.gen(function* () {
         const doc = CliFailure.toDoc(Cause.die("just a string"));
         assert.deepStrictEqual(kinds(doc), ["Paragraph"]);
-        assert.include(yield* plain(doc), "just a string");
+        const plain19 = yield* plain(doc);
+        assert.include(plain19, "just a string");
       })
     );
   });
@@ -439,14 +447,17 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         const exit = yield* Effect.exit(spanned);
         if (!Exit.isFailure(exit)) throw new Error("expected a failure");
         const doc = CliFailure.toDoc(exit.cause);
-        assert.include(Render.plain(doc, yield* contextFor("agent")), "in: outer > inner");
-        assert.include(Render.ansi(doc, yield* contextFor("human")), "in: outer › inner");
+        const contextFor20 = yield* contextFor("agent");
+        assert.include(Render.plain(doc, contextFor20), "in: outer > inner");
+        const contextFor21 = yield* contextFor("human");
+        assert.include(Render.ansi(doc, contextFor21), "in: outer › inner");
       })
     );
 
     it.effect("a reason with no spans has no `in:` line", () =>
       Effect.gen(function* () {
-        assert.notInclude(yield* plain(CliFailure.toDoc(Cause.fail(Boom.make({ message: "x" })))), "in:");
+        const plain22 = yield* plain(CliFailure.toDoc(Cause.fail(Boom.make({ message: "x" }))));
+        assert.notInclude(plain22, "in:");
       })
     );
 
@@ -470,7 +481,8 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
       Effect.gen(function* () {
         const doc = CliFailure.toDoc(Cause.interrupt(3));
         assert.deepStrictEqual(kinds(doc), ["Paragraph"]);
-        assert.strictEqual(yield* plain(doc), "interrupted");
+        const plain23 = yield* plain(doc);
+        assert.strictEqual(plain23, "interrupted");
       })
     );
 
@@ -485,14 +497,10 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
 
     it.effect("Cancelled and NotInteractive keep their one fixed line, with no status glyph", () =>
       Effect.gen(function* () {
-        assert.strictEqual(
-          yield* plain(CliFailure.toDoc(Cause.fail(Cancelled.make({ reason: "escape" })))),
-          "cancelled; nothing written"
-        );
-        assert.strictEqual(
-          yield* plain(CliFailure.toDoc(Cause.fail(NotInteractive.make()))),
-          "not interactive: run in a terminal or pass the flag"
-        );
+        const plain24 = yield* plain(CliFailure.toDoc(Cause.fail(Cancelled.make({ reason: "escape" }))));
+        assert.strictEqual(plain24, "cancelled; nothing written");
+        const plain25 = yield* plain(CliFailure.toDoc(Cause.fail(NotInteractive.make())));
+        assert.strictEqual(plain25, "not interactive: run in a terminal or pass the flag");
       })
     );
 
@@ -527,8 +535,8 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         Effect.gen(function* () {
           for (const text of [
             yield* plain(doc),
-            Render.ansi(doc, yield* contextFor("human")),
-            Render.githubLog(doc, yield* contextFor("ci")),
+            yield* Effect.map(contextFor("human"), (value) => Render.ansi(doc, value)),
+            yield* Effect.map(contextFor("ci"), (value) => Render.githubLog(doc, value)),
           ]) {
             assert.notInclude(text, ESC);
             assert.notInclude(text, BEL);
@@ -539,7 +547,8 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
 
       it.effect(`${name}: with colour and links on, the only escapes are the kit's own balanced ones`, () =>
         Effect.gen(function* () {
-          const text = Render.ansi(doc, yield* contextFor("human", { hyperlinks: true, color: "truecolor" }));
+          const contextFor26 = yield* contextFor("human", { hyperlinks: true, color: "truecolor" });
+          const text = Render.ansi(doc, contextFor26);
           assert.notInclude(text, "evil");
           assert.notInclude(text, `${ESC}[31m red`);
         })
@@ -592,7 +601,7 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
 
     // Fresh errors per run: `reportFailures` marks the error it reports with its exit code, and a shared instance would
     // carry the first run's mark into the next.
-    const failing = Effect.suspend(() => Effect.fail(Boom.make({ message: "disk full" })));
+    const failing = Effect.failSync(() => Boom.make({ message: "disk full" }));
     const dying = Effect.suspend(() => Effect.die(errorWithStack("kaboom", [`run (${USER}:3:4)`, ...INTERNAL_FRAMES])));
 
     it.effect("an agent gets the plain rendering: a status line, no escape of any kind", () =>
@@ -786,7 +795,8 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         const all = yield* runTool("all");
         assert.notInclude(all, ESC, "control: the flag made it an agent's report");
         assert.include(all, "node_modules/vendor/x.js:7:8");
-        assert.notInclude(yield* runTool("app"), "node_modules/vendor", "control: app hides it");
+        const resultTool = yield* runTool("app");
+        assert.notInclude(resultTool, "node_modules/vendor", "control: app hides it");
       })
     );
   });
@@ -969,7 +979,8 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
     it.effect('stackFrames: "all" hides nothing and prints no note', () =>
       Effect.gen(function* () {
         const error = errorWithStack("boom", [`run (${USER}:3:4)`, ...INTERNAL_FRAMES]);
-        assert.notInclude(yield* plain(CliFailure.toDoc(Cause.die(error), { stackFrames: "all" })), "hidden");
+        const plain27 = yield* plain(CliFailure.toDoc(Cause.die(error), { stackFrames: "all" }));
+        assert.notInclude(plain27, "hidden");
       })
     );
   });

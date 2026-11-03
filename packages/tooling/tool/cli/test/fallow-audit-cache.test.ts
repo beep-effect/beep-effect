@@ -78,7 +78,8 @@ describe("fallow audit cache", () => {
         const root = path.join(parent, "beep", "fallow");
         const settings = yield* ensureFallowAuditCacheRoot(FallowAuditCacheSettings.make({ root, maxAgeDays: 0 }));
         expect(settings.root).toBe(root);
-        expect(yield* fs.exists(root)).toBe(true);
+        const exists1 = yield* fs.exists(root);
+        expect(exists1).toBe(true);
       })
     );
 

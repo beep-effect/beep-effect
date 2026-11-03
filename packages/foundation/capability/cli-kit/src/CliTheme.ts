@@ -444,7 +444,10 @@ export class CliTheme extends Context.Service<
         // TERM is read through Config (never process) only when it can matter, and handed to the pure selection.
         const term =
           choice === "auto"
-            ? O.getOrUndefined(yield* Config.option(Config.String("TERM")).pipe(Effect.orElseSucceed(O.none<string>)))
+            ? yield* Effect.map(
+                Config.option(Config.String("TERM")).pipe(Effect.orElseSucceed(O.none<string>)),
+                O.getOrUndefined
+              )
             : undefined;
         const glyphs = Glyphs.select({
           ascii: choice === "ascii" ? true : choice === "unicode" ? false : "auto",

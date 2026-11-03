@@ -19,6 +19,7 @@ import { identity } from "effect/Function";
 import { effect as effectLayer, merge, provideMerge, unwrap } from "effect/Layer";
 import { getOrThrow, getOrUndefined, none, some } from "effect/Option";
 import { hasProperty, isFunction } from "effect/Predicate";
+import * as S from "effect/Schema";
 import {
   Array as ArraySchema,
   decodeUnknownEffect,
@@ -42,6 +43,12 @@ import {
   userOptimisticRepository,
   userRepository,
 } from "../fixtures.ts";
+
+class LiveTestOperationError extends S.TaggedError<LiveTestOperationError, { readonly brand: unique symbol }>()(
+  "LiveTestOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in live.test.ts." }
+) {}
 
 const RelationId = StructSchema({ id: Finite }).annotate({
   identifier: "@beep/effect-drizzle/test/RelationId",
@@ -133,24 +140,28 @@ const queryRelationRows = fn("queryRelationRows")(function* () {
     client: client.pglite,
     relations: effectDrizzleSchema.relations,
   });
-  const usersUnknown = yield* tryPromise(() =>
-    invokeFindMany(db.query.user, {
-      with: {
-        org: true,
-        organizationsThroughMembership: true,
-      },
-    })
-  );
-  const organizationsUnknown = yield* tryPromise(() =>
-    invokeFindMany(db.query.organization, {
-      with: {
-        parentOrg: true,
-        childOrgs: true,
-        users: true,
-        usersThroughMembership: true,
-      },
-    })
-  );
+  const usersUnknown = yield* tryPromise({
+    try: () =>
+      invokeFindMany(db.query.user, {
+        with: {
+          org: true,
+          organizationsThroughMembership: true,
+        },
+      }),
+    catch: (cause) => LiveTestOperationError.make({ cause }),
+  });
+  const organizationsUnknown = yield* tryPromise({
+    try: () =>
+      invokeFindMany(db.query.organization, {
+        with: {
+          parentOrg: true,
+          childOrgs: true,
+          users: true,
+          usersThroughMembership: true,
+        },
+      }),
+    catch: (cause) => LiveTestOperationError.make({ cause }),
+  });
   const users = yield* decodeUnknownEffect(UserRelationRows)(usersUnknown);
   const organizations = yield* decodeUnknownEffect(OrganizationRelationRows)(organizationsUnknown);
   return { users, organizations };
@@ -254,45 +265,59 @@ it.layer(PgliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live PGl
     fnUntraced(function* () {
       const client = yield* PgliteClient;
       yield* flip(
-        tryPromise(() =>
-          client.pglite.query(`
+        tryPromise({
+          try: () =>
+            client.pglite.query(`
               create table wave_e_generated_volatile (
                 value double precision generated always as (random()) stored
               )
-            `)
-        )
+            `),
+          catch: (cause) => LiveTestOperationError.make({ cause }),
+        })
       );
       yield* flip(
-        tryPromise(() =>
-          client.pglite.query(`
+        tryPromise({
+          try: () =>
+            client.pglite.query(`
               create table wave_e_generated_chain (
                 source integer,
                 first_value integer generated always as (source + 1) stored,
                 second_value integer generated always as (first_value + 1) stored
               )
-            `)
-        )
+            `),
+          catch: (cause) => LiveTestOperationError.make({ cause }),
+        })
       );
       yield* flip(
-        tryPromise(() =>
-          client.pglite.query(`
+        tryPromise({
+          try: () =>
+            client.pglite.query(`
               create table wave_e_check_subquery (
                 value integer check (value > (select 0))
               )
-            `)
-        )
+            `),
+          catch: (cause) => LiveTestOperationError.make({ cause }),
+        })
       );
-      yield* tryPromise(() => client.pglite.query("create table wave_e_partial_index (value integer)"));
+      yield* tryPromise({
+        try: () => client.pglite.query("create table wave_e_partial_index (value integer)"),
+        catch: (cause) => LiveTestOperationError.make({ cause }),
+      });
       yield* flip(
-        tryPromise(() =>
-          client.pglite.query(`
+        tryPromise({
+          try: () =>
+            client.pglite.query(`
           create index wave_e_partial_index_volatile
           on wave_e_partial_index (value)
           where random() > 0.5
-            `)
-        )
+            `),
+          catch: (cause) => LiveTestOperationError.make({ cause }),
+        })
       );
-      yield* tryPromise(() => client.pglite.query("drop table wave_e_partial_index"));
+      yield* tryPromise({
+        try: () => client.pglite.query("drop table wave_e_partial_index"),
+        catch: (cause) => LiveTestOperationError.make({ cause }),
+      });
     })
   );
 
@@ -300,7 +325,13 @@ it.layer(PgliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live PGl
     "mirrors PostgreSQL value, default, action, and structural boundaries",
     fnUntraced(function* () {
       const client = yield* PgliteClient;
-      const rejected = (statement: string) => flip(tryPromise(() => client.pglite.query(statement)));
+      const rejected = (statement: string) =>
+        flip(
+          tryPromise({
+            try: () => client.pglite.query(statement),
+            catch: (cause) => LiveTestOperationError.make({ cause }),
+          })
+        );
 
       yield* rejected("create table wave_e_varchar_bound (value varchar(10485761))");
       yield* rejected("create table wave_e_numeric_bound (value numeric(1001))");
@@ -339,8 +370,9 @@ it.layer(PgliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live PGl
           )`
       );
 
-      yield* tryPromise(() =>
-        client.pglite.query(`
+      yield* tryPromise({
+        try: () =>
+          client.pglite.query(`
             create table wave_e_value_domains (
               small_value smallint,
               integer_value integer,
@@ -348,29 +380,46 @@ it.layer(PgliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live PGl
               numeric_value numeric,
               matrix text[][]
             )
-          `)
-      );
+          `),
+        catch: (cause) => LiveTestOperationError.make({ cause }),
+      });
       yield* rejected("insert into wave_e_value_domains (small_value) values (32768)");
       yield* rejected("insert into wave_e_value_domains (integer_value) values (2147483648)");
       yield* rejected("insert into wave_e_value_domains (uuid_value) values ('not-a-uuid')");
       yield* rejected("insert into wave_e_value_domains (numeric_value) values ('not-a-number')");
       yield* rejected("insert into wave_e_value_domains (matrix) values (array[array['a'], array['b', 'c']])");
 
-      yield* tryPromise(() => client.pglite.query("create table wave_e_action_parent (id integer primary key)"));
-      yield* tryPromise(() =>
-        client.pglite.query(`
+      yield* tryPromise({
+        try: () => client.pglite.query("create table wave_e_action_parent (id integer primary key)"),
+        catch: (cause) => LiveTestOperationError.make({ cause }),
+      });
+      yield* tryPromise({
+        try: () =>
+          client.pglite.query(`
             create table wave_e_action_child (
               id integer primary key,
               parent_id integer references wave_e_action_parent(id) on delete set null
             )
-          `)
-      );
-      yield* tryPromise(() => client.pglite.query("insert into wave_e_action_parent values (1)"));
-      yield* tryPromise(() => client.pglite.query("insert into wave_e_action_child values (1, 1)"));
-      yield* tryPromise(() => client.pglite.query("delete from wave_e_action_parent where id = 1"));
-      const actionRows = yield* tryPromise(() =>
-        client.pglite.query<{ readonly parent_id: number | null }>("select parent_id from wave_e_action_child")
-      );
+          `),
+        catch: (cause) => LiveTestOperationError.make({ cause }),
+      });
+      yield* tryPromise({
+        try: () => client.pglite.query("insert into wave_e_action_parent values (1)"),
+        catch: (cause) => LiveTestOperationError.make({ cause }),
+      });
+      yield* tryPromise({
+        try: () => client.pglite.query("insert into wave_e_action_child values (1, 1)"),
+        catch: (cause) => LiveTestOperationError.make({ cause }),
+      });
+      yield* tryPromise({
+        try: () => client.pglite.query("delete from wave_e_action_parent where id = 1"),
+        catch: (cause) => LiveTestOperationError.make({ cause }),
+      });
+      const actionRows = yield* tryPromise({
+        try: () =>
+          client.pglite.query<{ readonly parent_id: number | null }>("select parent_id from wave_e_action_child"),
+        catch: (cause) => LiveTestOperationError.make({ cause }),
+      });
       expect(actionRows.rows[0]?.parent_id).toBeNull();
     })
   );

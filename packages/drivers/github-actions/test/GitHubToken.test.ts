@@ -10,7 +10,7 @@ import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import { dual } from "effect/Function";
+import { dual, identity as identityFunction } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
@@ -109,10 +109,12 @@ const rig = (
       3,
       Effect.fn("save")(function* <A, I>(key: string, value: A, schema: S.Codec<A, I>) {
         events.push(`save:${key}`);
+        const argument = S.encodeResult(Json);
+        const value2 = yield* S.encodeUnknownEffect(schema)(value);
         MutableHashMap.set(
           saved,
           key,
-          Result.getOrThrowWith(S.encodeResult(Json)(yield* S.encodeUnknownEffect(schema)(value)), (error) => error)
+          Result.getOrThrowWith(argument(value2), (error) => error)
         );
       }, Effect.orDie)
     ),
@@ -376,7 +378,7 @@ describe("GitHubToken", () => {
         (_input: Parameters<typeof globalThis.fetch>[0], init: Parameters<typeof globalThis.fetch>[1]) => {
           seen.push(new Headers(init?.headers).get("authorization"));
           return Promise.resolve(
-            new Response(JSON.stringify({ login: "acme" }), {
+            new Response(Result.getOrThrowWith(S.encodeUnknownResult(Json)({ login: "acme" }), identityFunction), {
               status: 200,
               headers: { "content-type": "application/json" },
             })
@@ -518,7 +520,10 @@ describe("ReadOptions codec property", () => {
     [Arbitrary.schema(ReadOptions)],
     ([value]) =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* S.decodeEffect(ReadOptions)(yield* S.encodeEffect(ReadOptions)(value)), value);
+        const argument1 = S.decodeEffect(ReadOptions);
+        const value3 = yield* S.encodeEffect(ReadOptions)(value);
+        const value1 = yield* argument1(value3);
+        assert.deepStrictEqual(value1, value);
       }),
     { arbitrary: fcRuns(100) }
   );

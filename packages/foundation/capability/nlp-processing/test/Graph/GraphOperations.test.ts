@@ -157,8 +157,10 @@ describe("Operation constructors", () => {
     "filter keeps or drops based on the predicate",
     Effect.fnUntraced(function* () {
       const op = Operation.filter({ name: "nonEmpty", description: "", predicate: (s: string) => s.length > 0 });
-      const keep = yield* op.apply(yield* EG.makeNode("x"));
-      const drop = yield* op.apply(yield* EG.makeNode(""));
+      const madeNode = yield* EG.makeNode("x");
+      const keep = yield* op.apply(madeNode);
+      const madeNode1 = yield* EG.makeNode("");
+      const drop = yield* op.apply(madeNode1);
       expect(keep.length).toBe(1);
       expect(drop.length).toBe(0);
     })
@@ -180,7 +182,8 @@ describe("Operation constructors", () => {
 describe("ResultStore", () => {
   const mkResultFixture = Effect.gen(function* () {
     const node = yield* EG.makeNode<unknown>("payload");
-    const result = yield* Types.makeOperationResult(yield* Types.generateExecutionId, {
+    const generateExecutionId2 = yield* Types.generateExecutionId;
+    const result = yield* Types.makeOperationResult(generateExecutionId2, {
       originalGraph: O.none(),
       newNodes: [node],
       errors: [],
@@ -222,9 +225,11 @@ describe("ResultStore", () => {
         const nodeId = EG.NodeId.make("n1");
         const key = ResultStore.ResultKey.new("op", nodeId);
         const result = yield* mkResult;
-        expect(yield* store.has(key)).toBe(false);
+        const has3 = yield* store.has(key);
+        expect(has3).toBe(false);
         yield* store.store(key, result);
-        expect(yield* store.has(key)).toBe(true);
+        const has4 = yield* store.has(key);
+        expect(has4).toBe(true);
         const got = yield* store.get(key);
         pipe(got, O.isSome, assertTrue);
         const stats = yield* store.stats;
@@ -241,10 +246,14 @@ describe("ResultStore", () => {
         expect((yield* (yield* ResultStore.ResultStore).stats).size).toBe(0);
         const store = yield* ResultStore.ResultStore;
         const key = ResultStore.ResultKey.new("op", EG.NodeId.make("n2"));
-        yield* store.store(key, yield* mkResult);
+        const mkResult5 = yield* mkResult;
+        yield* store.store(key, mkResult5);
         yield* store.delete(key);
-        expect(yield* store.has(key)).toBe(false);
-        yield* store.store(ResultStore.ResultKey.new("op", EG.NodeId.make("n3")), yield* mkResult);
+        const has6 = yield* store.has(key);
+        expect(has6).toBe(false);
+        const argument = ResultStore.ResultKey.new("op", EG.NodeId.make("n3"));
+        const mkResult1 = yield* mkResult;
+        yield* store.store(argument, mkResult1);
         yield* store.clear;
         expect((yield* store.stats).size).toBe(0);
       })

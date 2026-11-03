@@ -260,7 +260,8 @@ export const ReferrerPolicyHeader = S.Union([ReferrerPolicyOption, S.Undefined])
         return O.none<string>();
       }
 
-      return O.some(yield* formatReferrerPolicyValue(option));
+      const formatReferrerPolicyValue1 = yield* formatReferrerPolicyValue(option);
+      return O.some(formatReferrerPolicyValue1);
     });
 
     const create: (

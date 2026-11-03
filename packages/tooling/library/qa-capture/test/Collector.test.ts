@@ -87,12 +87,14 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
               })
             );
             expect(running.port).toBeGreaterThan(0);
-            expect(yield* fs.exists(handlePath)).toBe(true);
+            const exists1 = yield* fs.exists(handlePath);
+            expect(exists1).toBe(true);
 
             const base = `http://127.0.0.1:${running.port}`;
 
             const witnessResponse = yield* HttpClient.get(`${base}/witness.js`);
-            expect(yield* witnessResponse.text).toBe(witnessStub);
+            const text2 = yield* witnessResponse.text;
+            expect(text2).toBe(witnessStub);
 
             const eventsResponse = yield* HttpClient.post(`${base}/events`, {
               body: HttpBody.text(batch, "text/plain;charset=UTF-8"),
@@ -127,13 +129,16 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
             yield* HttpClient.post(`${base}/stop`, { body: HttpBody.text("", "text/plain") });
             yield* Fiber.join(stopFiber);
 
-            expect(yield* running.eventsWritten).toBe(3);
-            expect(yield* running.rejectedCount).toBe(1);
+            const eventsWritten3 = yield* running.eventsWritten;
+            expect(eventsWritten3).toBe(3);
+            const rejectedCount4 = yield* running.rejectedCount;
+            expect(rejectedCount4).toBe(1);
           })
         );
 
         // Scope closed: the writer drained and the handle file is gone.
-        expect(yield* fs.exists(handlePath)).toBe(false);
+        const exists5 = yield* fs.exists(handlePath);
+        expect(exists5).toBe(false);
         const written = yield* fs.readFileString(eventsPath);
         const lines = pipe(written, Str.split("\n"), A.filter(Str.isNonEmpty));
         expect(A.length(lines)).toBe(3);
@@ -195,12 +200,14 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
               })
             );
             expect(running.port).toBeGreaterThan(0);
-            expect(yield* fs.exists(handlePath)).toBe(true);
+            const exists6 = yield* fs.exists(handlePath);
+            expect(exists6).toBe(true);
 
             const base = `http://127.0.0.1:${running.port}`;
 
             const witnessResponse = yield* HttpClient.get(`${base}/witness.js`);
-            expect(yield* witnessResponse.text).toBe(witnessStub);
+            const text7 = yield* witnessResponse.text;
+            expect(text7).toBe(witnessStub);
 
             const eventsResponse = yield* HttpClient.post(`${base}/events`, {
               body: HttpBody.text(batch, "text/plain;charset=UTF-8"),
@@ -241,13 +248,16 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
             yield* HttpClient.post(`${base}/stop`, { body: HttpBody.text("", "text/plain") });
             yield* Fiber.join(stopFiber);
 
-            expect(yield* running.eventsWritten).toBe(6);
-            expect(yield* running.rejectedCount).toBe(2);
+            const eventsWritten8 = yield* running.eventsWritten;
+            expect(eventsWritten8).toBe(6);
+            const rejectedCount9 = yield* running.rejectedCount;
+            expect(rejectedCount9).toBe(2);
           })
         );
 
         // Scope closed: the writer drained and the handle file is gone.
-        expect(yield* fs.exists(handlePath)).toBe(false);
+        const exists10 = yield* fs.exists(handlePath);
+        expect(exists10).toBe(false);
         const written = yield* fs.readFileString(eventsPath);
         const lines = pipe(written, Str.split("\n"), A.filter(Str.isNonEmpty));
         expect(A.length(lines)).toBe(6);

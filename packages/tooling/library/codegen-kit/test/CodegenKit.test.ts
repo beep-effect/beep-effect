@@ -640,7 +640,8 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit", (i
       });
       yield* Effect.logInfo("Codegen stage: generate");
       const output = yield* kit.generate(warningOpenApi, logConfig);
-      const warnings = pipe(yield* TestConsole.errorLines, A.filter(P.isString), A.join("\n"));
+      const errorLines1 = yield* TestConsole.errorLines;
+      const warnings = pipe(errorLines1, A.filter(P.isString), A.join("\n"));
 
       expect(output).toContain("export class WarningApi extends HttpApi.make");
       expect(warnings).toContain("WARNING [cookie-parameter-dropped]");
@@ -672,7 +673,8 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit", (i
 
       yield* Effect.logInfo("Codegen stage: format/write-or-drift-check");
       const failure = yield* kit.run(generateConfig, "check").pipe(Effect.flip);
-      const printed = pipe(yield* TestConsole.errorLines, A.filter(P.isString), A.join("\n"));
+      const errorLines2 = yield* TestConsole.errorLines;
+      const printed = pipe(errorLines2, A.filter(P.isString), A.join("\n"));
 
       expect(failure._tag).toBe("CodegenDriftError");
       expect(printed).toContain(`--- ${outputPath}`);
@@ -701,12 +703,14 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit", (i
         output: { path: outputPath },
       });
       const failure = yield* kit.run(generateConfig, "check").pipe(Effect.flip);
-      const printed = pipe(yield* TestConsole.errorLines, A.filter(P.isString), A.join("\n"));
+      const errorLines3 = yield* TestConsole.errorLines;
+      const printed = pipe(errorLines3, A.filter(P.isString), A.join("\n"));
       expect(failure._tag).toBe("CodegenDriftError");
       expect(printed).toContain(`--- ${outputPath}`);
       expect(printed).toContain("+++ generated");
       expect(printed).toContain("+/**");
-      expect(yield* fs.exists(outputPath)).toBe(false);
+      const exists4 = yield* fs.exists(outputPath);
+      expect(exists4).toBe(false);
     })
   );
 
@@ -1652,10 +1656,8 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit ACP 
       expect(raw).toContain("(?!(?:form|url)$)");
 
       const idleConfig = GenerateConfig.make({ ...config("idle.gen.ts"), transforms: acpTransforms });
-      const idle = yield* kit.postProcess(
-        yield* kit.generate({ $defs: { IdleStateUpdate: idleStateUpdate } }, idleConfig),
-        idleConfig
-      );
+      const generate5 = yield* kit.generate({ $defs: { IdleStateUpdate: idleStateUpdate } }, idleConfig);
+      const idle = yield* kit.postProcess(generate5, idleConfig);
       expect(idle).toContain('"stopReason": S.tag("end_turn")');
       expect(idle).toContain('"stopReason": S.optionalKey(S.Null)');
 
@@ -1775,12 +1777,14 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit ACP 
       yield* Effect.logInfo("Codegen stage: format/write-or-drift-check");
       const written = yield* kit.runAll([first, second], "write");
       expect(written).toEqual([]);
-      expect(yield* kit.runAll([first, second], "check")).toHaveLength(2);
+      const resultAll = yield* kit.runAll([first, second], "check");
+      expect(resultAll).toHaveLength(2);
 
       yield* fs.writeFileString(first.output.path, "export const stale = 1;\n");
       yield* fs.writeFileString(second.output.path, "export const stale = 2;\n");
       const failure = yield* kit.runAll([first, second], "check").pipe(Effect.flip);
-      const printed = pipe(yield* TestConsole.errorLines, A.filter(P.isString), A.join("\n"));
+      const errorLines6 = yield* TestConsole.errorLines;
+      const printed = pipe(errorLines6, A.filter(P.isString), A.join("\n"));
 
       expect(failure._tag).toBe("CodegenDriftError");
       const drifted = failure._tag === "CodegenDriftError" ? failure.reports : [];

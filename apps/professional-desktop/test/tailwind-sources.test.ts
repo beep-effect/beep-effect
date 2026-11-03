@@ -38,7 +38,8 @@ it.layer(BunFileSystem.layer, { timeout: filesystemLayerTimeout })("tailwind sou
     "declares an @source for every @beep UI package the app renders",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const manifest = yield* decodeManifest(yield* fs.readFileString("package.json"));
+      const readFileString1 = yield* fs.readFileString("package.json");
+      const manifest = yield* decodeManifest(readFileString1);
       const globals = yield* fs.readFileString("src/styles/globals.css");
 
       const rendered = A.filter(R.keys(uiPackageSources), (name) => manifest.dependencies?.[name] !== undefined);

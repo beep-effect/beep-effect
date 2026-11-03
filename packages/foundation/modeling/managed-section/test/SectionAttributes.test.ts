@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // Marker attributes: `name="value"` pairs on a BEGIN marker. Metadata, not
 // identity — they participate in equality (an attribute change is real drift)
 // but never in which block a marker names.
@@ -26,6 +27,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { begin, block, end, id, lines, memoryFs, parse, parseFailure, section } from "./fixtures.ts";
 import type { Section, SectionDocument, SectionRenderError } from "@beep/managed-section";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 /** A `#`-style BEGIN marker carrying a raw attribute run. */
 const beginWith = (key: string, run: string) => `# --- BEGIN ${key} MANAGED SECTION ${run} ---`;
@@ -433,16 +436,32 @@ describe("attribute constraint review regressions", () => {
       "é",
     ]) {
       const expected = ATTRIBUTE_NAME_PATTERN.test(name);
-      assert.strictEqual(S.is(AttributeName)(name), expected, JSON.stringify(name));
-      assert.strictEqual(isValidAttributeName(name), expected, JSON.stringify(name));
+      assert.strictEqual(
+        S.is(AttributeName)(name),
+        expected,
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(name), identity)
+      );
+      assert.strictEqual(
+        isValidAttributeName(name),
+        expected,
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(name), identity)
+      );
     }
   });
 
   it("matches the original value guard without accidentally admitting a trailing CR or LF", () => {
     for (const value of ["", "plain", "---", "\t", "\u2028", "\u2029", '"', 'a"b', "a\n", "a\r", "a\r\n", "\nstart"]) {
       const expected = !Str.includes('"')(value) && !Str.includes("\n")(value) && !Str.includes("\r")(value);
-      assert.strictEqual(S.is(AttributeValue)(value), expected, JSON.stringify(value));
-      assert.strictEqual(isValidAttributeValue(value), expected, JSON.stringify(value));
+      assert.strictEqual(
+        S.is(AttributeValue)(value),
+        expected,
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity)
+      );
+      assert.strictEqual(
+        isValidAttributeValue(value),
+        expected,
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity)
+      );
     }
   });
 

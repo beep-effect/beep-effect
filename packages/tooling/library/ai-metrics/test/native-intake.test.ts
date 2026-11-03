@@ -77,7 +77,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
         NativeTraceBatch.make({ ...first, spans: [metadata, metadata, conflict] })
       );
       expect(accepted).toMatchObject({ accepted: 2, rejected: 1, newEvents: 1, duplicates: 1, conflictIndices: [2] });
-      assertSome(yield* journal.readNewEvents(accepted.page.receiptId), [metadata]);
+      const readNewEvents1 = yield* journal.readNewEvents(accepted.page.receiptId);
+      assertSome(readNewEvents1, [metadata]);
     })
   )
 );
@@ -86,16 +87,20 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("refuses altered stored payloads before returning native export candidates", () =>
     Effect.gen(function* () {
       const { batch, journal } = yield* fixture();
-      const accepted = yield* journal.acceptBatch(yield* batch());
+      const batch2 = yield* batch();
+      const accepted = yield* journal.acceptBatch(batch2);
       const sql = yield* SqlClient.SqlClient;
       yield* sql`UPDATE observation_intake_pages SET payload = payload || ' ' WHERE receipt_id=${accepted.page.receiptId}`;
       expect((yield* journal.readBatch(accepted.page.receiptId).pipe(Effect.flip)).reason).toBe("storage");
       expect((yield* journal.readNewEvents(accepted.page.receiptId).pipe(Effect.flip)).reason).toBe("storage");
-      assertSome(yield* journal.receipt(accepted.page.receiptId), accepted);
-      expect((yield* journal.acceptBatch(yield* batch()).pipe(Effect.flip)).reason).toBe("storage");
+      const receipt3 = yield* journal.receipt(accepted.page.receiptId);
+      assertSome(receipt3, accepted);
+      const batch4 = yield* batch();
+      expect((yield* journal.acceptBatch(batch4).pipe(Effect.flip)).reason).toBe("storage");
       yield* sql`UPDATE observation_native_receipts SET payload = payload || ' ' WHERE receipt_id=${accepted.page.receiptId}`;
       expect((yield* journal.receipt(accepted.page.receiptId).pipe(Effect.flip)).reason).toBe("storage");
-      expect((yield* journal.acceptBatch(yield* batch()).pipe(Effect.flip)).reason).toBe("storage");
+      const batch5 = yield* batch();
+      expect((yield* journal.acceptBatch(batch5).pipe(Effect.flip)).reason).toBe("storage");
     })
   )
 );
@@ -113,11 +118,15 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
         duplicates: 0,
         page: { sequence: 1, frames: 1 },
       });
-      expect(yield* journal.acceptBatch(projected)).toEqual(receipt);
-      assertSome(yield* journal.readBatch(receipt.page.receiptId), projected);
-      assertSome(yield* journal.readNewEvents(receipt.page.receiptId), projected.spans);
+      const acceptBatch6 = yield* journal.acceptBatch(projected);
+      expect(acceptBatch6).toEqual(receipt);
+      const readBatch7 = yield* journal.readBatch(receipt.page.receiptId);
+      assertSome(readBatch7, projected);
+      const readNewEvents8 = yield* journal.readNewEvents(receipt.page.receiptId);
+      assertSome(readNewEvents8, projected.spans);
       const reopened = yield* makeNativeIntakeJournal(config);
-      assertSome(yield* reopened.receipt(receipt.page.receiptId), receipt);
+      const receipt9 = yield* reopened.receipt(receipt.page.receiptId);
+      assertSome(receipt9, receipt);
       const sql = yield* SqlClient.SqlClient;
       const stored =
         yield* sql`SELECT payload FROM observation_intake_pages UNION ALL SELECT payload FROM observation_native_receipts`;
@@ -135,16 +144,23 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       const { batch, journal } = yield* fixture();
       const firstBatch = yield* batch();
       const first = yield* journal.acceptBatch(firstBatch);
-      const duplicate = yield* journal.acceptBatch(yield* batch(2, "changed-uncollected-content"));
+      const batch10 = yield* batch(2, "changed-uncollected-content");
+      const duplicate = yield* journal.acceptBatch(batch10);
       expect(duplicate).toMatchObject({ accepted: 1, newEvents: 0, duplicates: 1, rejected: 0 });
-      const conflict = yield* journal.acceptBatch(yield* batch(3));
+      const batch11 = yield* batch(3);
+      const conflict = yield* journal.acceptBatch(batch11);
       expect(conflict).toMatchObject({ accepted: 0, rejected: 1, newEvents: 0, duplicates: 0, conflictIndices: [0] });
-      assertSome(yield* journal.readBatch(first.page.receiptId), firstBatch);
-      assertSome(yield* journal.readNewEvents(first.page.receiptId), firstBatch.spans);
-      assertSome(yield* journal.readNewEvents(duplicate.page.receiptId), []);
-      assertSome(yield* journal.readNewEvents(conflict.page.receiptId), []);
+      const readBatch12 = yield* journal.readBatch(first.page.receiptId);
+      assertSome(readBatch12, firstBatch);
+      const readNewEvents13 = yield* journal.readNewEvents(first.page.receiptId);
+      assertSome(readNewEvents13, firstBatch.spans);
+      const readNewEvents14 = yield* journal.readNewEvents(duplicate.page.receiptId);
+      assertSome(readNewEvents14, []);
+      const readNewEvents15 = yield* journal.readNewEvents(conflict.page.receiptId);
+      assertSome(readNewEvents15, []);
       const sql = yield* SqlClient.SqlClient;
-      expect(yield* sql`SELECT COUNT(*) AS count FROM observation_native_events`).toEqual([{ count: 1 }]);
+      const value16 = yield* sql`SELECT COUNT(*) AS count FROM observation_native_events`;
+      expect(value16).toEqual([{ count: 1 }]);
     })
   )
 );
@@ -156,7 +172,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       const projected = yield* batch(2, "", true);
       const accepted = yield* journal.acceptBatch(projected);
       expect(accepted).toMatchObject({ accepted: 1, rejected: 1, newEvents: 1 });
-      assertSome(yield* journal.readBatch(accepted.page.receiptId), projected);
+      const readBatch17 = yield* journal.readBatch(accepted.page.receiptId);
+      assertSome(readBatch17, projected);
     })
   )
 );
@@ -170,9 +187,11 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       const projected = yield* batch();
       expect((yield* journal.acceptBatch(projected).pipe(Effect.flip)).reason).toBe("storage");
       expect((yield* journal.stats).pages).toBe(0);
-      expect(yield* sql`SELECT COUNT(*) AS count FROM observation_native_events`).toEqual([{ count: 0 }]);
+      const value18 = yield* sql`SELECT COUNT(*) AS count FROM observation_native_events`;
+      expect(value18).toEqual([{ count: 0 }]);
       yield* sql`DROP TRIGGER native_receipt_failure`;
-      expect(yield* journal.acceptBatch(projected)).toMatchObject({ newEvents: 1, page: { sequence: 1 } });
+      const acceptBatch19 = yield* journal.acceptBatch(projected);
+      expect(acceptBatch19).toMatchObject({ newEvents: 1, page: { sequence: 1 } });
     })
   )
 );
@@ -183,8 +202,10 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       const { config, batch, journal } = yield* fixture(1);
       const projected = yield* batch();
       const accepted = yield* journal.acceptBatch(projected);
-      expect((yield* journal.acceptBatch(yield* batch(3)).pipe(Effect.flip)).reason).toBe("capacity");
-      expect(yield* journal.acceptBatch(projected)).toEqual(accepted);
+      const batch20 = yield* batch(3);
+      expect((yield* journal.acceptBatch(batch20).pipe(Effect.flip)).reason).toBe("capacity");
+      const acceptBatch21 = yield* journal.acceptBatch(projected);
+      expect(acceptBatch21).toEqual(accepted);
       const fs = yield* FileSystem.FileSystem;
       const dir = yield* fs.makeTempDirectoryScoped();
       const path = `${dir}/events`;
@@ -202,7 +223,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       );
       const transcripts = yield* makeTranscriptIntakeJournal(config);
       expect((yield* transcripts.acceptPage(page, O.none()).pipe(Effect.flip)).reason).toBe("capacity");
-      assertNone(yield* transcripts.readCursor("codex", page.cursor.pathHash));
+      const readCursor22 = yield* transcripts.readCursor("codex", page.cursor.pathHash);
+      assertNone(readCursor22);
     })
   )
 );
@@ -231,8 +253,10 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       const digest = yield* hashPublicTextSha256(payload);
       const sql = yield* SqlClient.SqlClient;
       yield* sql`UPDATE observation_native_receipts SET payload=${payload},payload_hash=${digest} WHERE receipt_id=${accepted.page.receiptId}`;
-      assertSome(yield* journal.receipt(accepted.page.receiptId), accepted);
-      expect(yield* journal.acceptBatch(projected)).toEqual(accepted);
+      const receipt23 = yield* journal.receipt(accepted.page.receiptId);
+      assertSome(receipt23, accepted);
+      const acceptBatch24 = yield* journal.acceptBatch(projected);
+      expect(acceptBatch24).toEqual(accepted);
     })
   )
 );
@@ -256,12 +280,14 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       );
       yield* Effect.gen(function* () {
         const reopened = yield* makeNativeIntakeJournal(config);
-        expect(yield* reopened.acceptBatch(projected)).toEqual(original);
-        assertSome(yield* reopened.readBatch(original.page.receiptId), projected);
-        expect(yield* reopenedSql`SELECT evidence_epoch FROM observation_intake_pages`).toEqual([
-          { evidence_epoch: 0 },
-        ]);
-        expect(yield* reopenedSql`PRAGMA integrity_check`).toEqual([{ integrity_check: "ok" }]);
+        const acceptBatch25 = yield* reopened.acceptBatch(projected);
+        expect(acceptBatch25).toEqual(original);
+        const readBatch26 = yield* reopened.readBatch(original.page.receiptId);
+        assertSome(readBatch26, projected);
+        const value27 = yield* reopenedSql`SELECT evidence_epoch FROM observation_intake_pages`;
+        expect(value27).toEqual([{ evidence_epoch: 0 }]);
+        const value28 = yield* reopenedSql`PRAGMA integrity_check`;
+        expect(value28).toEqual([{ integrity_check: "ok" }]);
       }).pipe(Effect.provideService(SqlClient.SqlClient, reopenedSql));
     })
   )

@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // The property floors the inline construct suites share. Two shapes:
 //
 // - `describePropertyFloor`: for each source template, with `{w}` replaced by
@@ -23,6 +24,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { MarkdownParseError } from "@beep/markdown/Markdown";
@@ -141,8 +143,11 @@ export const describePropertyFloor = ({
       ([word, dialect]) =>
         Effect.gen(function* () {
           for (const source of sources(word)) {
-            const formatted = yield* Markdown.stringify(yield* parse(source, dialect));
-            assert.strictEqual(yield* Markdown.stringify(yield* parse(formatted, dialect)), formatted);
+            const parsed1 = yield* parse(source, dialect);
+            const formatted = yield* Markdown.stringify(parsed1);
+            const parsed6 = yield* parse(formatted, dialect);
+            const stringify2 = yield* Markdown.stringify(parsed6);
+            assert.strictEqual(stringify2, formatted);
           }
         }),
       floorRuns
@@ -186,7 +191,14 @@ const RESPELLED_FIELDS: ReadonlyArray<string> = [
  * @since 0.0.0
  */
 const inlineMeaning = (root: unknown): string =>
-  JSON.stringify(root, (key, value: unknown) => (A.contains(RESPELLED_FIELDS, key) ? undefined : value));
+  Result.getOrThrowWith(
+    S.encodeUnknownResult(
+      S.fromJsonString(S.Unknown, {
+        replacer: (key, value: unknown) => (A.contains(RESPELLED_FIELDS, key) ? undefined : value),
+      })
+    )(root),
+    identity
+  );
 
 /**
  * Declare the meaning-preservation floor for one construct over `sources`.
@@ -220,8 +232,10 @@ export const describeConstructFloor = ({
       [sources],
       ([source]) =>
         Effect.gen(function* () {
-          const once = yield* Markdown.stringify(yield* Markdown.parse(source));
-          const twice = yield* Markdown.stringify(yield* Markdown.parse(once));
+          const parsed3 = yield* Markdown.parse(source);
+          const once = yield* Markdown.stringify(parsed3);
+          const parsed4 = yield* Markdown.parse(once);
+          const twice = yield* Markdown.stringify(parsed4);
           assert.strictEqual(twice, once);
         }),
       floorRuns
@@ -235,10 +249,10 @@ export const describeConstructFloor = ({
           const options = MarkdownFormattingOptions.make({ emphasisChar: "_" });
           const once = MarkdownFormat.formatToString(source, undefined, options);
           assert.strictEqual(MarkdownFormat.formatToString(once, undefined, options), once);
-          assert.deepStrictEqual(
-            inlineMeaning(yield* Markdown.parse(once)),
-            inlineMeaning(yield* Markdown.parse(source))
-          );
+          const parsed5 = yield* Markdown.parse(once);
+          const argument = inlineMeaning(parsed5);
+          const parsed2 = yield* Markdown.parse(source);
+          assert.deepStrictEqual(argument, inlineMeaning(parsed2));
         }),
       floorRuns
     );

@@ -219,9 +219,12 @@ const migrateAndRecord = Effect.fnUntraced(function* () {
   yield* db.insert(LawPracticeDbSchema.candorDisposition).values(dispositionInsert);
   yield* db.insert(LawPracticeDbSchema.idsSubmissionFact).values(submissionFactInsert);
 
-  expect(yield* db.select().from(LawPracticeDbSchema.patentCitationEvent)).toHaveLength(1);
-  expect(yield* db.select().from(LawPracticeDbSchema.candorDisposition)).toHaveLength(1);
-  expect(yield* db.select().from(LawPracticeDbSchema.idsSubmissionFact)).toHaveLength(1);
+  const from1 = yield* db.select().from(LawPracticeDbSchema.patentCitationEvent);
+  expect(from1).toHaveLength(1);
+  const from2 = yield* db.select().from(LawPracticeDbSchema.candorDisposition);
+  expect(from2).toHaveLength(1);
+  const from3 = yield* db.select().from(LawPracticeDbSchema.idsSubmissionFact);
+  expect(from3).toHaveLength(1);
 
   return sql;
 });

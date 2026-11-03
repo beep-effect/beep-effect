@@ -51,7 +51,8 @@ describe("IdentityToken.layerStatic", () => {
         // given. A `Redacted.value` round trip through a string would compare
         // equal and would be a declassification this package promises not to do.
         const identity = yield* IdentityToken;
-        assert.strictEqual(yield* identity.token("sigstore"), HELD);
+        const token1 = yield* identity.token("sigstore");
+        assert.strictEqual(token1, HELD);
       })
     );
   });
@@ -65,7 +66,8 @@ describe("IdentityToken doubles", () => {
         // fabricated OIDC token is a legitimate test answer, a fabricated
         // signature is a lie.
         const identity = yield* IdentityToken;
-        assert.strictEqual(Redacted.value(yield* identity.token("sigstore")), "test-identity-token");
+        const token2 = yield* identity.token("sigstore");
+        assert.strictEqual(Redacted.value(token2), "test-identity-token");
       })
     );
   });

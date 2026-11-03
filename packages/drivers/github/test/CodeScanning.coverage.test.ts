@@ -37,8 +37,10 @@ describe("CodeScanning test doubles", () => {
       it.effect("layer preserves all supplied overrides", () =>
         Effect.gen(function* () {
           const service = yield* CodeScanning;
-          assert.strictEqual(yield* service.configure({}), undefined);
-          assert.deepStrictEqual(yield* service.languages, ["Go"]);
+          const configure1 = yield* service.configure({});
+          assert.strictEqual(configure1, undefined);
+          const languages2 = yield* service.languages;
+          assert.deepStrictEqual(languages2, ["Go"]);
         })
       );
     });

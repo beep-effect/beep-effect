@@ -1,0 +1,111 @@
+{
+  "schemaVersion": "claim-performance-attempt-ledger/v1",
+  "originalLabelsChanged": false,
+  "previousResultsChanged": false,
+  "attempts": [
+    {
+      "attempt": "baseline-001",
+      "implementationDigest": "9a811e64f4fb47b1003a0607b3d4bd5da1cc56ed6b305162754041a319f7971c",
+      "resultSha256": "5c71a72cbeee94212b9fd284df745f3706a95bd4efe65ba46ffb5f30b8cddf4b",
+      "stages": {
+        "structural-mismatch": 443,
+        "strict-match": 37,
+        "input-failed": 58
+      },
+      "retained37": true,
+      "acceptedForPublication": false,
+      "reason": "Unmodified baseline"
+    },
+    {
+      "attempt": "reference-bounds-001",
+      "implementationDigest": "89b1118b8d0dac497cf0e7e2279abc04131af028656c8047558ca32ea8adacc0",
+      "resultSha256": "10fccc9837cf216c9b35c92b30904189a49947e2d95b1d6890a8b77de552ca78",
+      "stages": {
+        "structural-mismatch": 458,
+        "strict-match": 37,
+        "input-failed": 43
+      },
+      "retained37": true,
+      "acceptedForPublication": false,
+      "reason": "Rejected after review: unsupported dependency continuation could be truncated"
+    },
+    {
+      "attempt": "reference-bounds-002",
+      "implementationDigest": "cf68b13641c9586164d5a3456d96a183ed27eb50ac48e786b2b401441f3f5b22",
+      "resultSha256": "e20c2dc62c19cbd1594a41084934d097a29be5d4d773b31643c7ca45385fc61b",
+      "stages": {
+        "structural-mismatch": 435,
+        "strict-match": 37,
+        "input-failed": 66
+      },
+      "retained37": true,
+      "acceptedForPublication": false,
+      "reason": "Rejected: coverage regression and as-well-as continuation bypass"
+    },
+    {
+      "attempt": "reference-bounds-003",
+      "implementationDigest": "5fb3f54c8a9e49f483d3d97aaf38abf97c4e0cc230165cfb159d522613b9d0ad",
+      "resultSha256": "f8f22d654d56581bdfced72aa67d9095546b329b1dc0a7dc2f5d76ce03ce5f08",
+      "stages": {
+        "structural-mismatch": 406,
+        "strict-match": 37,
+        "input-failed": 95
+      },
+      "retained37": true,
+      "acceptedForPublication": false,
+      "reason": "Rejected: coverage regression from overly strict descriptive boundaries"
+    },
+    {
+      "attempt": "reference-bounds-004",
+      "implementationDigest": "db98485d9dacc86e43e4cbf97a96591b4011511eef959916805b869b6bf69f4c",
+      "resultSha256": "83fec14af7abc99888ba0e5aa6b5aebd93e5acdfdd6d575ebc07a9faffbc6352",
+      "stages": {
+        "structural-mismatch": 435,
+        "strict-match": 37,
+        "input-failed": 66
+      },
+      "retained37": true,
+      "acceptedForPublication": false,
+      "reason": "Rejected: coverage regression in above/and clauses"
+    },
+    {
+      "attempt": "reference-bounds-005",
+      "implementationDigest": "cffb54acc039528adaaa148aedbbfbe7dd81cddb5a3a2f256c7ca98f79d7b71f",
+      "resultSha256": "4460ca0ca53e4becb085e094dbed3fb2b677e6859045a1380442a939bcf2f829",
+      "stages": {
+        "structural-mismatch": 443,
+        "strict-match": 37,
+        "input-failed": 58
+      },
+      "retained37": true,
+      "acceptedForPublication": false,
+      "reason": "Rejected: coordinated purpose clause still input-failed"
+    },
+    {
+      "attempt": "reference-bounds-006",
+      "implementationDigest": "fb685f82e91997be13e780d6d870900d2c2be273368bdf353b0d9104a750df94",
+      "resultSha256": "5824e8eb14a9c78e6d04142d54c8629029bbab63a7d61891565876a49f9e1093",
+      "stages": {
+        "structural-mismatch": 458,
+        "strict-match": 37,
+        "input-failed": 43
+      },
+      "retained37": true,
+      "acceptedForPublication": false,
+      "reason": "Rejected after review: generic descriptive boundary could hide an explicit claim marker before its clause"
+    },
+    {
+      "attempt": "reference-bounds-007",
+      "implementationDigest": "084340a10b78c48afaa78c571ae8a6fd56950669da72ea5d05f07f13084e77e8",
+      "resultSha256": "f4ca89f12fd3591981461610a20f2fd2f8ef4b65a101fe349ab7883fa0108b2e",
+      "stages": {
+        "structural-mismatch": 458,
+        "strict-match": 37,
+        "input-failed": 43
+      },
+      "retained37": true,
+      "acceptedForPublication": true,
+      "reason": "Both independent review findings closed; descriptive context retained and additional pre-clause claim references rejected"
+    }
+  ]
+}

@@ -331,7 +331,9 @@ describe("JsonLdDocument — the decode direction is unimplemented, and the asym
     [Arbitrary.schema(JsonLdDocument)],
     ([graph]) =>
       Effect.gen(function* () {
-        const decoded = yield* S.decodeEffect(JsonLdDocument)(yield* S.encodeEffect(JsonLdDocument)(graph));
+        const argument = S.decodeEffect(JsonLdDocument);
+        const value1 = yield* S.encodeEffect(JsonLdDocument)(graph);
+        const decoded = yield* argument(value1);
         assert.deepStrictEqual(
           A.map(decoded["@graph"], (node) => node.additional),
           A.map(graph["@graph"], (node) => node.additional)

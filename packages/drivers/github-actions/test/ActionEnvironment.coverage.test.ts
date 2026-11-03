@@ -11,8 +11,10 @@ it.layer(ActionEnvironment.layerFrom({ X: "", RUNNER_DEBUG: "0" }).pipe(Layer.pr
   it.effect("empty values and a present non-debug flag remain absent and disabled", () =>
     Effect.gen(function* () {
       const env = yield* ActionEnvironment;
-      assertNone(yield* env.getOptional("X"));
-      assert.isFalse(yield* env.isDebug);
+      const gotOptional = yield* env.getOptional("X");
+      assertNone(gotOptional);
+      const isDebug1 = yield* env.isDebug;
+      assert.isFalse(isDebug1);
       assert.strictEqual((yield* Effect.flip(env.get("X"))).reason, "missing");
     })
   );

@@ -95,13 +95,16 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("installed cache 
         });
         const file = f.path.join(f.root, reference.path);
         yield* f.fs.writeFileString(file, text);
-        expect(yield* readCacheDependencyMaterialization(f.root, reference)).toEqual(materialization);
+        const readCacheDependencyMaterialization1 = yield* readCacheDependencyMaterialization(f.root, reference);
+        expect(readCacheDependencyMaterialization1).toEqual(materialization);
         const changed = CacheDependencyMaterialization.make({
           ...materialization,
           directory: `${materialization.directory}-changed`,
         });
-        yield* f.fs.writeFileString(file, yield* encodeMaterialization(changed));
-        assertTrue(yield* readCacheDependencyMaterialization(f.root, reference).pipe(Effect.isFailure));
+        const encodedMaterialization = yield* encodeMaterialization(changed);
+        yield* f.fs.writeFileString(file, encodedMaterialization);
+        const pipe2 = yield* readCacheDependencyMaterialization(f.root, reference).pipe(Effect.isFailure);
+        assertTrue(pipe2);
       }),
     { arbitrary: fcRuns(20) }
   );

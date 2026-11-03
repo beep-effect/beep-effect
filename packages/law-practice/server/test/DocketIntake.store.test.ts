@@ -132,12 +132,14 @@ const leaveLock = Effect.fnUntraced(function* (holder: Holder) {
   const fs = yield* FileSystem.FileSystem;
   yield* fs.makeDirectory(DIRECTORY, { recursive: true });
   yield* fs.remove(LOCK_PATH, { force: true });
-  yield* fs.writeFileString(LOCK_PATH, yield* lockText(holder));
+  const lockText1 = yield* lockText(holder);
+  yield* fs.writeFileString(LOCK_PATH, lockText1);
 });
 
 const lockHolder = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
-  return O.map(decodeLockFile(yield* fs.readFileString(LOCK_PATH)), (lock) => [lock.pid, lock.bootId, lock.startTime]);
+  const readFileString2 = yield* fs.readFileString(LOCK_PATH);
+  return O.map(decodeLockFile(readFileString2), (lock) => [lock.pid, lock.bootId, lock.startTime]);
 });
 
 const OWN_HOLDER = [OWN_PID, BOOT_ID, OWN_START];
@@ -147,10 +149,8 @@ const OTHER_HOLDER = [OTHER.pid, OTHER.bootId, OTHER.startTime];
 // Files a lock attempt may leave beside the lock if it does not clean up.
 const leftovers = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
-  return A.filter(
-    yield* fs.readDirectory(DIRECTORY),
-    (name) => Str.endsWith(".tmp")(name) || Str.endsWith(".stale")(name)
-  );
+  const readDirectory3 = yield* fs.readDirectory(DIRECTORY);
+  return A.filter(readDirectory3, (name) => Str.endsWith(".tmp")(name) || Str.endsWith(".stale")(name));
 });
 
 // Open the store in a scope of its own, hand back who holds the lock while it is open, and close
@@ -232,7 +232,8 @@ const refusingLinks = Effect.fnUntraced(function* (from: number) {
 const otherTakesLock = (fs: FileSystem.FileSystem): Effect.Effect<void> =>
   Effect.gen(function* () {
     yield* fs.remove(LOCK_PATH, { force: true });
-    yield* fs.writeFileString(LOCK_PATH, yield* lockText(OTHER));
+    const lockText4 = yield* lockText(OTHER);
+    yield* fs.writeFileString(LOCK_PATH, lockText4);
   }).pipe(Effect.orDie);
 
 const failureOf = <A, R>(
@@ -297,10 +298,14 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
         expect((yield* fs.stat(DIRECTORY)).mode & 0o077).toBe(0);
         expect((yield* fs.stat(STATE_PATH)).mode & 0o077).toBe(0);
         // The lock is complete from the moment it exists: it is linked into place, never written there.
-        assertSome(yield* lockHolder, OWN_HOLDER);
-        expect(A.filter(yield* Ref.get(record.written), (path) => path === LOCK_PATH)).toStrictEqual([]);
-        expect(yield* leftovers).toStrictEqual([]);
-        expect(yield* Ref.get(record.opened)).toHaveLength(1);
+        const lockHolder5 = yield* lockHolder;
+        assertSome(lockHolder5, OWN_HOLDER);
+        const got = yield* Ref.get(record.written);
+        expect(A.filter(got, (path) => path === LOCK_PATH)).toStrictEqual([]);
+        const leftovers6 = yield* leftovers;
+        expect(leftovers6).toStrictEqual([]);
+        const got7 = yield* Ref.get(record.opened);
+        expect(got7).toHaveLength(1);
       })
     );
   });
@@ -344,7 +349,8 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
 
         yield* store.save(expected);
 
-        assertTrue(sameState(yield* store.load, expected));
+        const loaded8 = yield* store.load;
+        assertTrue(sameState(loaded8, expected));
       }),
       { arbitrary: fcRuns(25) }
     );
@@ -362,8 +368,10 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
         yield* writeDigestFile({ day, directory, text: "Docket intake digest for 2030-01-09, rewritten." });
 
         expect(file).toBe(path.join(directory, "digests", "2030-01-09.md"));
-        expect(yield* fs.readFileString(file)).toBe("Docket intake digest for 2030-01-09, rewritten.");
-        expect(yield* fs.readDirectory(path.join(directory, "digests"))).toStrictEqual(["2030-01-09.md"]);
+        const readFileString9 = yield* fs.readFileString(file);
+        expect(readFileString9).toBe("Docket intake digest for 2030-01-09, rewritten.");
+        const readDirectory10 = yield* fs.readDirectory(path.join(directory, "digests"));
+        expect(readDirectory10).toStrictEqual(["2030-01-09.md"]);
       })
     );
   });
@@ -384,7 +392,8 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
           O.map(failure, (error) => [error.stage, error.cause]),
           ["store", "decode"]
         );
-        expect(yield* fs.readFileString(statePath)).toBe('{"ledger":{"m1":{"attempts":"many"}}');
+        const readFileString11 = yield* fs.readFileString(statePath);
+        expect(readFileString11).toBe('{"ledger":{"m1":{"attempts":"many"}}');
       })
     );
   });
@@ -406,7 +415,8 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
         assertTrue(
           A.every(opened, (name) => Str.startsWith(`${STATE_PATH}.${OWN_PID}.`)(name) && Str.endsWith(".tmp")(name))
         );
-        expect(A.filter(yield* fs.readDirectory(DIRECTORY), Str.endsWith(".tmp"))).toStrictEqual([]);
+        const readDirectory12 = yield* fs.readDirectory(DIRECTORY);
+        expect(A.filter(readDirectory12, Str.endsWith(".tmp"))).toStrictEqual([]);
         assertNone((yield* store.load).cursor);
       })
     );
@@ -426,8 +436,10 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
           O.map(failure, (error) => [error.stage, error.cause]),
           ["store", "state-locked"]
         );
-        assertSome(yield* lockHolder, OTHER_HOLDER);
-        expect(yield* leftovers).toStrictEqual([]);
+        const lockHolder13 = yield* lockHolder;
+        assertSome(lockHolder13, OTHER_HOLDER);
+        const leftovers14 = yield* leftovers;
+        expect(leftovers14).toStrictEqual([]);
       })
     );
   });
@@ -465,7 +477,8 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
           assertNone(opened.empty.cursor);
           expect(opened.lockedAfterClose).toBe(false);
         }
-        expect(yield* leftovers).toStrictEqual([]);
+        const leftovers15 = yield* leftovers;
+        expect(leftovers15).toStrictEqual([]);
       })
     );
   });
@@ -509,7 +522,8 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
           O.map(holder, (held) => held[0]),
           O.isSome(firstFailure) ? "5151" : OWN_PID
         );
-        expect(yield* leftovers).toStrictEqual([]);
+        const leftovers16 = yield* leftovers;
+        expect(leftovers16).toStrictEqual([]);
       })
     );
   });
@@ -525,15 +539,18 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
 
         // Another starter already moved the stale lock away.
         yield* leaveLock(stale);
-        const moved = yield* openAs(scope, yield* processView(OWN_PID, { fail: true }));
+        const processView17 = yield* processView(OWN_PID, { fail: true });
+        const moved = yield* openAs(scope, processView17);
         // Another starter replaced the stale lock with its own just before this one moved it:
         // what was moved is not what was judged, so the other lock is put back.
         yield* leaveLock(stale);
-        const replaced = yield* openAs(scope, yield* processView(OWN_PID, { before: otherTakesLock(fs) }));
+        const processView18 = yield* processView(OWN_PID, { before: otherTakesLock(fs) });
+        const replaced = yield* openAs(scope, processView18);
         const afterReplaced = yield* lockHolder;
         // Another starter took the lock right after this one moved the stale lock away.
         yield* leaveLock(stale);
-        const retaken = yield* openAs(scope, yield* processView(OWN_PID, { after: otherTakesLock(fs) }));
+        const processView19 = yield* processView(OWN_PID, { after: otherTakesLock(fs) });
+        const retaken = yield* openAs(scope, processView19);
         const afterRetaken = yield* lockHolder;
         yield* Scope.close(scope, Exit.void);
 
@@ -545,7 +562,8 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
         }
         assertSome(afterReplaced, OTHER_HOLDER);
         assertSome(afterRetaken, OTHER_HOLDER);
-        expect(yield* leftovers).toStrictEqual([]);
+        const leftovers20 = yield* leftovers;
+        expect(leftovers20).toStrictEqual([]);
       })
     );
   });
@@ -558,14 +576,17 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
         const scope = yield* Scope.make();
 
         // No lock exists: the link fails for another reason.
-        const failure = yield* openAs(scope, yield* refusingLinks(1));
+        const refusingLinks21 = yield* refusingLinks(1);
+        const failure = yield* openAs(scope, refusingLinks21);
 
         assertSome(
           O.map(failure, (error) => [error.stage, error.cause]),
           ["store", "lock"]
         );
-        expect(yield* fs.exists(LOCK_PATH)).toBe(false);
-        expect(yield* leftovers).toStrictEqual([]);
+        const exists22 = yield* fs.exists(LOCK_PATH);
+        expect(exists22).toBe(false);
+        const leftovers23 = yield* leftovers;
+        expect(leftovers23).toStrictEqual([]);
         yield* Scope.close(scope, Exit.void);
       })
     );
@@ -579,13 +600,15 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
         yield* leaveLock(OTHER);
 
         // The first link fails because the stale lock exists; the second, in the takeover, cannot be written.
-        const failure = yield* openAs(scope, yield* refusingLinks(2));
+        const refusingLinks24 = yield* refusingLinks(2);
+        const failure = yield* openAs(scope, refusingLinks24);
 
         assertSome(
           O.map(failure, (error) => [error.stage, error.cause]),
           ["store", "lock"]
         );
-        expect(yield* leftovers).toStrictEqual([]);
+        const leftovers25 = yield* leftovers;
+        expect(leftovers25).toStrictEqual([]);
         yield* Scope.close(scope, Exit.void);
       })
     );

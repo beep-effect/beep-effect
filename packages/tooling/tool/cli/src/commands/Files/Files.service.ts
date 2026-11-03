@@ -1585,7 +1585,8 @@ const creationDateToken = Effect.fn("Files.creationDateToken")(function* (
   ) {
     return `b${formatUtcDate(DateTime.fromDateUnsafe(file.birthtime.value))}`;
   }
-  return `n${formatUtcDate(yield* DateTime.now)}`;
+  const now1 = yield* DateTime.now;
+  return `n${formatUtcDate(now1)}`;
 });
 
 const sortUsesMediaOnly = (options: SortAndRenameOptions): boolean =>
@@ -1626,10 +1627,9 @@ const buildRenamePlan = Effect.fn("Files.buildRenamePlan")(function* (
 
   for (const [file, dimensions] of A.zip(collection.files, dimensionsByFile)) {
     const dateCreated = options.withDateCreated
-      ? O.some(
-          yield* creationDateToken(
-            file,
-            yield* probeMediaCreationDate(file).pipe(
+      ? yield* yield* Effect.map(
+          Effect.map(
+            probeMediaCreationDate(file).pipe(
               Effect.tapError(() => {
                 if (warnedMetadataRead) return Effect.void;
                 warnedMetadataRead = true;
@@ -1638,11 +1638,13 @@ const buildRenamePlan = Effect.fn("Files.buildRenamePlan")(function* (
                 );
               }),
               Effect.orElseSucceed(O.none<DateTime.Utc>)
-            )
-          )
+            ),
+            (value) => creationDateToken(file, value)
+          ),
+          Effect.asSome
         )
       : O.none<string>();
-    const hash = options.withHash ? O.some(yield* hashMediaFile(file)) : O.none<string>();
+    const hash = options.withHash ? yield* Effect.asSome(hashMediaFile(file)) : O.none<string>();
     const targetName = targetNameForEntry(
       prefix,
       TargetNameForEntryOptions.make({

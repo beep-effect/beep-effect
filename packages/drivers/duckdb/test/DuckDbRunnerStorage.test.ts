@@ -28,7 +28,8 @@ it.layer(
   it.effect("refreshes no shards as a heartbeat", () =>
     Effect.gen(function* () {
       const storage = yield* RunnerStorage.RunnerStorage;
-      assert.deepStrictEqual(yield* storage.refresh(RunnerAddress.make("localhost", 1234), []), []);
+      const refresh1 = yield* storage.refresh(RunnerAddress.make("localhost", 1234), []);
+      assert.deepStrictEqual(refresh1, []);
     })
   );
 });
@@ -54,7 +55,8 @@ it.layer(
         const exit = yield* Effect.exit(storage.refresh(RunnerAddress.make("localhost", 4321), []));
         assertTrue(exit.pipe(Exit.isFailure));
         yield* Fiber.join(holder);
-        assert.deepStrictEqual(yield* storage.refresh(RunnerAddress.make("localhost", 4321), []), []);
+        const refresh2 = yield* storage.refresh(RunnerAddress.make("localhost", 4321), []);
+        assert.deepStrictEqual(refresh2, []);
       })
     )
   );
@@ -79,10 +81,13 @@ it.layer(
       const rival = RunnerAddress.make("localhost", 5002);
       const shard = ShardId.make("default", 1);
       yield* sql`SET TimeZone = 'UTC'`;
-      assert.deepStrictEqual(yield* storage.acquire(owner, [shard]), [shard]);
+      const acquire3 = yield* storage.acquire(owner, [shard]);
+      assert.deepStrictEqual(acquire3, [shard]);
       yield* sql`SET TimeZone = 'Pacific/Kiritimati'`;
-      assert.deepStrictEqual(yield* storage.acquire(rival, [shard]), []);
-      assert.deepStrictEqual(yield* storage.refresh(owner, [shard]), [shard]);
+      const acquire4 = yield* storage.acquire(rival, [shard]);
+      assert.deepStrictEqual(acquire4, []);
+      const refresh5 = yield* storage.refresh(owner, [shard]);
+      assert.deepStrictEqual(refresh5, [shard]);
       yield* sql`SET TimeZone = 'UTC'`;
     })
   );

@@ -43,8 +43,12 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
     "preserves schema-derived upstream and Codex payloads through round trips",
     [UpstreamCatalog, CodexModelsCache],
     Effect.fnUntraced(function* ([upstream, codex]) {
-      expect(yield* decodeUpstream(yield* encodeUpstream(upstream))).toEqual(upstream);
-      expect(yield* decodeCodex(yield* encodeCodex(codex))).toEqual(codex);
+      const encodedUpstream6 = yield* encodeUpstream(upstream);
+      const decodedUpstream = yield* decodeUpstream(encodedUpstream6);
+      expect(decodedUpstream).toEqual(upstream);
+      const encodedCodex7 = yield* encodeCodex(codex);
+      const decodedCodex = yield* decodeCodex(encodedCodex7);
+      expect(decodedCodex).toEqual(codex);
     }),
     { arbitrary: fcRuns(16) }
   );
@@ -71,8 +75,12 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
           },
         ],
       };
-      expect(yield* encodeUpstream(yield* decodeUpstream(upstream))).toEqual(upstream);
-      expect(yield* encodeCodex(yield* decodeCodex(cache))).toEqual(cache);
+      const decodedUpstream8 = yield* decodeUpstream(upstream);
+      const encodedUpstream = yield* encodeUpstream(decodedUpstream8);
+      expect(encodedUpstream).toEqual(upstream);
+      const decodedCodex9 = yield* decodeCodex(cache);
+      const encodedCodex = yield* encodeCodex(decodedCodex9);
+      expect(encodedCodex).toEqual(cache);
     })
   );
 
@@ -220,7 +228,8 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
       const ledger = yield* ModelsLedger;
       const snapshot = yield* catalog.snapshot(ModelsCatalogOptions.make({ home, offline: false }));
 
-      assertNone(yield* ledger.latest(home));
+      const latest1 = yield* ledger.latest(home);
+      assertNone(latest1);
 
       const written = yield* ledger.record(home, snapshot);
       expect(written).toContain(path.join(home, ".local", "state", "beep", "models"));
@@ -239,10 +248,8 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
       );
 
       // A second record of the same digest is a no-op that returns latest.json.
-      strictEqual(
-        yield* ledger.record(home, snapshot),
-        path.join(home, ".local", "state", "beep", "models", "latest.json")
-      );
+      const record2 = yield* ledger.record(home, snapshot);
+      strictEqual(record2, path.join(home, ".local", "state", "beep", "models", "latest.json"));
     })
   );
 });
@@ -259,9 +266,12 @@ layer(Layer.mergeAll(platform, liveSources), { timeout: "30 seconds" })((it) => 
       const sources = yield* ModelsCatalogSources;
       const home = yield* fs.makeTempDirectoryScoped({ prefix: "models-live-sources-" });
 
-      assertNone(yield* sources.readCodexCache(home));
-      assertNone(yield* sources.readGrokCache(home));
-      assertNone(yield* sources.listProxyModels("http://127.0.0.1:1", path.join(home, "client-token")));
+      const readCodexCache3 = yield* sources.readCodexCache(home);
+      assertNone(readCodexCache3);
+      const readGrokCache4 = yield* sources.readGrokCache(home);
+      assertNone(readGrokCache4);
+      const listProxyModels5 = yield* sources.listProxyModels("http://127.0.0.1:1", path.join(home, "client-token"));
+      assertNone(listProxyModels5);
     })
   );
 });

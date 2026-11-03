@@ -95,7 +95,8 @@ const prepare = Effect.fn("test.prepare")(function* () {
 });
 const writePayload = Effect.fn("test.writePayload")(function* (resultPath: string, payload: LibraryImportPayload) {
   const fs = yield* FileSystem.FileSystem;
-  yield* fs.writeFileString(resultPath, yield* S.encodeEffect(LibraryImportPayloadJson)(payload));
+  const value1 = yield* S.encodeEffect(LibraryImportPayloadJson)(payload);
+  yield* fs.writeFileString(resultPath, value1);
 });
 
 const headerlessPdf = (body: string) => {
@@ -142,12 +143,13 @@ it.layer(
         const rawHtml = "<article>The retained full article.</article>";
         // Retained shape of an admitted redirected web capture: the provider response, both
         // full-text renditions, and the HTTP proof linking the requested URL to the resolved one.
+        const value2 = yield* S.encodeEffect(UnknownJson)({
+          data: { markdown, rawHtml, metadata: { sourceURL: resolved, statusCode: 200 } },
+        });
         const response = yield* saveLibraryText(
           f.root,
           "redirect/response.json",
-          yield* S.encodeEffect(UnknownJson)({
-            data: { markdown, rawHtml, metadata: { sourceURL: resolved, statusCode: 200 } },
-          }),
+          value2,
           "application/json",
           "raw-response"
         );
@@ -159,16 +161,17 @@ it.layer(
           "text/markdown",
           "extracted-full-text"
         );
+        const value3 = yield* S.encodeEffect(UnknownJson)({
+          requestedUrl: source.canonicalUrl,
+          resolvedUrl: resolved,
+          status: 200,
+          providerSourceUrl: resolved,
+          identityMerged: false,
+        });
         const redirect = yield* saveLibraryText(
           f.root,
           "redirect/redirect.json",
-          yield* S.encodeEffect(UnknownJson)({
-            requestedUrl: source.canonicalUrl,
-            resolvedUrl: resolved,
-            status: 200,
-            providerSourceUrl: resolved,
-            identityMerged: false,
-          }),
+          value3,
           "application/json",
           "target-metadata"
         );
@@ -176,16 +179,17 @@ it.layer(
         if (scenario !== "unchanged") {
           artifacts = A.filter(artifacts, (artifact) => artifact.role !== "target-metadata");
           if (scenario !== "missing") {
+            const value4 = yield* S.encodeEffect(UnknownJson)({
+              requestedUrl: scenario === "requested" ? "https://example.com/other" : source.canonicalUrl,
+              resolvedUrl: scenario === "resolved" ? "https://example.com/other" : resolved,
+              providerSourceUrl: scenario === "provider" ? "https://example.com/other" : resolved,
+              status: scenario === "status" ? 403 : 200,
+              identityMerged: scenario === "merged",
+            });
             const proof = yield* saveLibraryText(
               f.root,
               "replacement/redirect.json",
-              yield* S.encodeEffect(UnknownJson)({
-                requestedUrl: scenario === "requested" ? "https://example.com/other" : source.canonicalUrl,
-                resolvedUrl: scenario === "resolved" ? "https://example.com/other" : resolved,
-                providerSourceUrl: scenario === "provider" ? "https://example.com/other" : resolved,
-                status: scenario === "status" ? 403 : 200,
-                identityMerged: scenario === "merged",
-              }),
+              value4,
               "application/json",
               "target-metadata"
             );
@@ -207,7 +211,8 @@ it.layer(
           artifacts,
           reason: "Target metadata validated; raw HTML and extracted full text preserved.",
         });
-        expect(yield* librarySourceEvidenceValid(f.root, source, capture)).toBe(scenario === "unchanged");
+        const librarySourceEvidenceValid5 = yield* librarySourceEvidenceValid(f.root, source, capture);
+        expect(librarySourceEvidenceValid5).toBe(scenario === "unchanged");
       })
   );
   it.effect("decodes authentic plain alphaXiv envelopes before class-based qualification", () =>
@@ -218,7 +223,8 @@ it.layer(
         arguments: { url: "https://arxiv.org/abs/2608.23992v3", fullText: true },
         result: { content: [{ type: "text", text: Str.repeat(50)("Actual retained source body. ") }] },
       };
-      expect(yield* validateProviderQualification("alphaxiv", [receipt])).toBe(true);
+      const validateProviderQualification6 = yield* validateProviderQualification("alphaxiv", [receipt]);
+      expect(validateProviderQualification6).toBe(true);
       const error = yield* validateProviderQualification("alphaxiv", [
         { ...receipt, arguments: { ...receipt.arguments, fullText: false } },
       ]).pipe(Effect.flip);
@@ -371,7 +377,8 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
         "-m",
         "fixture",
       ]);
-      const revision = Str.trim(yield* runLibraryCommand(fixture.root, "git", ["-C", clone, "rev-parse", "HEAD"]));
+      const resultLibraryCommand = yield* runLibraryCommand(fixture.root, "git", ["-C", clone, "rev-parse", "HEAD"]);
+      const revision = Str.trim(resultLibraryCommand);
       const code = LibrarySource.make({
         ...source,
         kind: "github-code",
@@ -385,9 +392,8 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
       expect(capture.complete, capture.reason).toBe(true);
       const patch = O.getOrThrow(A.findFirst(capture.artifacts, (artifact) => artifact.role === "raw-diff"));
       expect(patch.bytes).toBeGreaterThan(8_000_000);
-      expect(yield* fixture.fs.readFileString(fixture.path.join(fixture.root, patch.path))).toContain(
-        "actual cited patch content"
-      );
+      const readFileString7 = yield* fixture.fs.readFileString(fixture.path.join(fixture.root, patch.path));
+      expect(readFileString7).toContain("actual cited patch content");
     })
   );
 
@@ -592,14 +598,16 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
       expect(capture?.complete).toBe(false);
       const artifact = O.getOrThrow(A.findFirst(capture.artifacts, (entry) => entry.role === "capture-correction"));
       expect(artifact).toBeDefined();
-      const receipt = yield* S.decodeEffect(LibraryCaptureCorrectionJson)(
-        yield* fixture.fs.readFileString(fixture.path.join(fixture.root, artifact.path))
-      );
+      const argument = S.decodeEffect(LibraryCaptureCorrectionJson);
+      const readFileString1 = yield* fixture.fs.readFileString(fixture.path.join(fixture.root, artifact.path));
+      const receipt = yield* argument(readFileString1);
       const before = yield* fixture.fs.readFile(fixture.path.join(fixture.root, receipt.before.path));
-      expect(yield* hashBytes(before)).toBe(receipt.before.sha256);
+      const hashBytes8 = yield* hashBytes(before);
+      expect(hashBytes8).toBe(receipt.before.sha256);
       expect(receipt.after.status).toBe("blocked");
       const afterText = yield* S.encodeEffect(UnknownJson)(receipt.after);
-      expect(yield* hashBytes(new TextEncoder().encode(afterText))).toBe(receipt.afterSha256);
+      const hashBytes9 = yield* hashBytes(new TextEncoder().encode(afterText));
+      expect(hashBytes9).toBe(receipt.afterSha256);
       const repeated = yield* withCatalog(fixture.root, (catalog) => correctLibraryCaptures(fixture.root, catalog));
       expect(A.getUnsafe(repeated.captures, 0)?.artifacts.length).toBe(capture?.artifacts.length);
       expect(A.getUnsafe(original.captures, 0)?.status).toBe("readable");
@@ -629,7 +637,11 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
           },
         },
       };
-      expect(yield* validateProviderQualification("grok-deep-research", [launch, complete])).toBe(true);
+      const validateProviderQualification10 = yield* validateProviderQualification("grok-deep-research", [
+        launch,
+        complete,
+      ]);
+      expect(validateProviderQualification10).toBe(true);
       const missingLaunch = yield* validateProviderQualification("grok-deep-research", [complete]).pipe(Effect.flip);
       expect(missingLaunch.message).toContain("does not prove");
       const otherSession = {
@@ -669,7 +681,8 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
           },
         },
       };
-      expect(yield* validateProviderQualification("grok-x-import", [call, completed])).toBe(true);
+      const validateProviderQualification11 = yield* validateProviderQualification("grok-x-import", [call, completed]);
+      expect(validateProviderQualification11).toBe(true);
       yield* validateProviderQualification("grok-x-import", [call]).pipe(Effect.flip);
     })
   );
@@ -693,9 +706,11 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
         evidence: [LibraryArtifact.make({ ...saved, role: "raw-provider-events", mediaType: "application/json" })],
       });
       const catalog = yield* loadCatalog(fixture.root);
-      expect(yield* libraryQualificationValid(fixture.root, catalog, qualification)).toBe(true);
+      const libraryQualificationValid12 = yield* libraryQualificationValid(fixture.root, catalog, qualification);
+      expect(libraryQualificationValid12).toBe(true);
       yield* fixture.fs.writeFileString(fixture.path.join(fixture.root, saved.path), "corrupted evidence");
-      expect(yield* libraryQualificationValid(fixture.root, catalog, qualification)).toBe(false);
+      const libraryQualificationValid13 = yield* libraryQualificationValid(fixture.root, catalog, qualification);
+      expect(libraryQualificationValid13).toBe(false);
     })
   );
   it.effect("rejects a successful provider envelope containing a failed or wrong target", () =>
@@ -727,10 +742,10 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
       expect(A.getUnsafe(first.captures, 0)?.status).toBe("readable");
       const snapshot = A.getUnsafe(A.getUnsafe(first.captures, 0).artifacts, 0);
       expect(snapshot).toBeDefined();
-      if (snapshot !== undefined)
-        expect(yield* fixture.fs.readFileString(fixture.path.join(fixture.root, snapshot.path))).toBe(
-          "Original source content."
-        );
+      if (snapshot !== undefined) {
+        const readFileString2 = yield* fixture.fs.readFileString(fixture.path.join(fixture.root, snapshot.path));
+        expect(readFileString2).toBe("Original source content.");
+      }
       yield* fixture.fs.writeFileString(fixture.original, "Modified original.");
       const error = yield* importLibraryResult(fixture.root, fixture.resultPath).pipe(Effect.flip);
       expect(error.message).toContain("hash or size mismatch");
@@ -780,10 +795,8 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
           LibraryArtifact.make({ ...artifact, role: "ai-interpretation" })
         ),
       });
-      yield* fixture.fs.writeFileString(
-        fixture.resultPath,
-        yield* S.encodeEffect(LibraryDispositionImportPayloadJson)(disposition)
-      );
+      const value14 = yield* S.encodeEffect(LibraryDispositionImportPayloadJson)(disposition);
+      yield* fixture.fs.writeFileString(fixture.resultPath, value14);
       const catalog = yield* importLibraryResult(fixture.root, fixture.resultPath);
       expect(A.getUnsafe(catalog.captures, 0)?.requestedRevision).toBe("v2");
       expect(A.getUnsafe(catalog.captures, 0)?.complete).toBe(false);
@@ -853,9 +866,9 @@ it.effect.prop(
   { value: Arbitrary.schema(LibraryCaptureCorrection) },
   ({ value }) =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeEffect(LibraryCaptureCorrectionJson)(
-        yield* S.encodeEffect(LibraryCaptureCorrectionJson)(value)
-      );
+      const argument1 = S.decodeEffect(LibraryCaptureCorrectionJson);
+      const value5 = yield* S.encodeEffect(LibraryCaptureCorrectionJson)(value);
+      const decoded = yield* argument1(value5);
       expect(decoded).toEqual(value);
     }),
   { arbitrary: fcRuns(32) }

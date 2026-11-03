@@ -20,9 +20,12 @@ describe("npm entrypoint default layer properties", () => {
         Effect.gen(function* () {
           const catalog = yield* CatalogResolver;
           const workspace = yield* WorkspaceResolver;
-          assertNone(yield* catalog.rangeOf(packageName, O.none()));
-          assertNone(yield* catalog.rangeOf(packageName, O.some(catalogName)));
-          assertNone(yield* workspace.versionOf(packageName));
+          const rangeOf1 = yield* catalog.rangeOf(packageName, O.none());
+          assertNone(rangeOf1);
+          const rangeOf2 = yield* catalog.rangeOf(packageName, O.some(catalogName));
+          assertNone(rangeOf2);
+          const versionOf3 = yield* workspace.versionOf(packageName);
+          assertNone(versionOf3);
         }),
       runs
     );

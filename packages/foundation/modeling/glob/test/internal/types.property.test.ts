@@ -15,7 +15,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(Platform)(value);
       const decoded = yield* S.decodeEffect(Platform)(encoded);
       assert.strictEqual(decoded, value);
-      assert.strictEqual(yield* S.encodeEffect(Platform)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(Platform)(decoded);
+      assert.strictEqual(value1, encoded);
     }),
   runs
 );

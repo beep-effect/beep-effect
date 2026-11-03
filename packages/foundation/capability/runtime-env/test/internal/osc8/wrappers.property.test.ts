@@ -21,7 +21,8 @@ describe("wrapper property floor", () => {
         const encoded = yield* S.encodeEffect(WrapperInfo)(value);
         const decoded = yield* S.decodeEffect(WrapperInfo)(encoded);
         assert.strictEqual(S.toEquivalence(WrapperInfo)(decoded, value), true);
-        assert.deepStrictEqual(yield* S.encodeEffect(WrapperInfo)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(WrapperInfo)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );

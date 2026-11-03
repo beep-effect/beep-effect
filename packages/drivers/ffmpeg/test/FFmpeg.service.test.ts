@@ -201,25 +201,25 @@ describe("@beep/ffmpeg", () => {
         yield* assertRoundTrip(ExtractFramesManifest, values.ExtractFramesManifest);
         yield* assertRoundTrip(FFmpegErrorContext, values.FFmpegErrorContext);
         const encoded = yield* encodeFFmpegErrorFromUnknownOptions(values.errorOptions);
-        expect(Equal.equals(yield* decodeFFmpegErrorFromUnknownOptions(encoded), values.errorOptions)).toBe(true);
+        const decodedFFmpegErrorFromUnknownOptions = yield* decodeFFmpegErrorFromUnknownOptions(encoded);
+        expect(Equal.equals(decodedFFmpegErrorFromUnknownOptions, values.errorOptions)).toBe(true);
       }),
     { arbitrary: fcRuns(25) }
   );
 
   it.effect("keeps Option-modeled optional metadata encoded as omitted keys", () =>
     Effect.gen(function* () {
-      expect(
-        yield* encodeVideoProbe(
-          VideoProbe.make({
-            videoPath: "./clip.mp4",
-            durationSeconds: O.some(2),
-            fps: O.some(30),
-            frameCount: O.some(60),
-            height: O.some(1080),
-            width: O.some(1920),
-          })
-        )
-      ).toEqual({
+      const encodedVideoProbe = yield* encodeVideoProbe(
+        VideoProbe.make({
+          videoPath: "./clip.mp4",
+          durationSeconds: O.some(2),
+          fps: O.some(30),
+          frameCount: O.some(60),
+          height: O.some(1080),
+          width: O.some(1920),
+        })
+      );
+      expect(encodedVideoProbe).toEqual({
         videoPath: "./clip.mp4",
         durationSeconds: 2,
         fps: 30,
@@ -228,22 +228,22 @@ describe("@beep/ffmpeg", () => {
         width: 1920,
       });
 
-      expect(yield* encodeVideoProbe(VideoProbe.make({ videoPath: "./clip.mp4" }))).toEqual({
+      const encodedVideoProbe1 = yield* encodeVideoProbe(VideoProbe.make({ videoPath: "./clip.mp4" }));
+      expect(encodedVideoProbe1).toEqual({
         videoPath: "./clip.mp4",
       });
 
-      expect(
-        yield* encodeFFmpegProgressEvent(
-          FFmpegProgressEvent.make({
-            frameCount: 1,
-            kind: "progress",
-            outTimeSeconds: O.some(0.5),
-            percent: 50,
-            progress: "continue",
-            speed: O.some("1x"),
-          })
-        )
-      ).toEqual({
+      const encodedFFmpegProgressEvent = yield* encodeFFmpegProgressEvent(
+        FFmpegProgressEvent.make({
+          frameCount: 1,
+          kind: "progress",
+          outTimeSeconds: O.some(0.5),
+          percent: 50,
+          progress: "continue",
+          speed: O.some("1x"),
+        })
+      );
+      expect(encodedFFmpegProgressEvent).toEqual({
         frameCount: 1,
         kind: "progress",
         outTimeSeconds: 0.5,
@@ -252,16 +252,15 @@ describe("@beep/ffmpeg", () => {
         speed: "1x",
       });
 
-      expect(
-        yield* encodeFFmpegProgressEvent(
-          FFmpegProgressEvent.make({
-            frameCount: 1,
-            kind: "progress",
-            percent: 50,
-            progress: "continue",
-          })
-        )
-      ).toEqual({
+      const encodedFFmpegProgressEvent2 = yield* encodeFFmpegProgressEvent(
+        FFmpegProgressEvent.make({
+          frameCount: 1,
+          kind: "progress",
+          percent: 50,
+          progress: "continue",
+        })
+      );
+      expect(encodedFFmpegProgressEvent2).toEqual({
         frameCount: 1,
         kind: "progress",
         percent: 50,
@@ -394,15 +393,15 @@ describe("@beep/ffmpeg", () => {
             );
 
             expect(result.frameCount).toBe(2);
-            expect(A.sort(yield* fs.readDirectory(outDir), Order.String)).toEqual([
+            const readDirectory3 = yield* fs.readDirectory(outDir);
+            expect(A.sort(readDirectory3, Order.String)).toEqual([
               "extract-frames-manifest.json",
               "sample_frame_00000.png",
               "sample_frame_00001.png",
             ]);
 
-            const manifest = yield* decodeManifest(
-              yield* fs.readFileString(path.join(outDir, "extract-frames-manifest.json"))
-            );
+            const readFileString4 = yield* fs.readFileString(path.join(outDir, "extract-frames-manifest.json"));
+            const manifest = yield* decodeManifest(readFileString4);
             expect(manifest.summary.frameCount).toBe(2);
             expect(manifest.options.prefix).toBe("sample_frame");
             expect(A.map(events, (event) => event.kind)).toEqual(["started", "progress", "progress", "completed"]);
@@ -446,7 +445,8 @@ describe("@beep/ffmpeg", () => {
 
             expect(error).toBeInstanceOf(FFmpegError);
             expect(error.message).toContain("Refusing to overwrite existing frame output");
-            expect(yield* fs.readFileString(path.join(outDir, "sample_frame_00000.png"))).toBe("existing");
+            const readFileString5 = yield* fs.readFileString(path.join(outDir, "sample_frame_00000.png"));
+            expect(readFileString5).toBe("existing");
           })
         );
       })

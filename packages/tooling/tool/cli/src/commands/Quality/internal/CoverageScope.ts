@@ -1411,10 +1411,7 @@ export const planWorkspaceCoverageAffectedScope = Effect.fn("CoverageScope.planW
     changedFiles: ReadonlyArray<string>,
     baselineRowPackages: O.Option<CoverageBaselineRowDelta> = O.none()
   ): Effect.fn.Return<CoverageAffectedScope, QualityTaskConfigurationError, FileSystem.FileSystem | Path.Path> {
-    return planCoverageAffectedScopeWithBaseline(
-      yield* workspaceCoverageScopeOwners(repoRoot),
-      changedFiles,
-      baselineRowPackages
-    );
+    const workspaceCoverageScopeOwners1 = yield* workspaceCoverageScopeOwners(repoRoot);
+    return planCoverageAffectedScopeWithBaseline(workspaceCoverageScopeOwners1, changedFiles, baselineRowPackages);
   }
 );

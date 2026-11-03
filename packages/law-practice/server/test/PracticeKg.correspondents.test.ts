@@ -236,21 +236,30 @@ describe("practice KG correspondents", () => {
   it.effect(
     "reads one address from a bare address or one header entry, and refuses none or several",
     Effect.fnUntraced(function* () {
-      expect(yield* parsePracticeKgCorrespondentAddress(" Pat@Example.com ")).toBe("pat@example.com");
+      const parsedPracticeKgCorrespondentAddress = yield* parsePracticeKgCorrespondentAddress(" Pat@Example.com ");
+      expect(parsedPracticeKgCorrespondentAddress).toBe("pat@example.com");
       // An apostrophe is legal in a local part; it must not cut the address short.
-      expect(yield* parsePracticeKgCorrespondentAddress("O'Brien@Example.com")).toBe("o'brien@example.com");
-      expect(yield* parsePracticeKgCorrespondentAddress("Pat O'Brien <o'brien@example.com>")).toBe(
-        "o'brien@example.com"
+      const parsedPracticeKgCorrespondentAddress1 = yield* parsePracticeKgCorrespondentAddress("O'Brien@Example.com");
+      expect(parsedPracticeKgCorrespondentAddress1).toBe("o'brien@example.com");
+      const parsedPracticeKgCorrespondentAddress2 = yield* parsePracticeKgCorrespondentAddress(
+        "Pat O'Brien <o'brien@example.com>"
       );
-      expect(yield* parsePracticeKgCorrespondentAddress('"Example, Pat" <Pat@Example.com>')).toBe("pat@example.com");
+      expect(parsedPracticeKgCorrespondentAddress2).toBe("o'brien@example.com");
+      const parsedPracticeKgCorrespondentAddress3 = yield* parsePracticeKgCorrespondentAddress(
+        '"Example, Pat" <Pat@Example.com>'
+      );
+      expect(parsedPracticeKgCorrespondentAddress3).toBe("pat@example.com");
       // A bare address wrapped in single quotes loses the quotes, in a lookup input and inside a header.
-      expect(yield* parsePracticeKgCorrespondentAddress("'pat@example.com'")).toBe("pat@example.com");
-      expect(yield* parsePracticeKgCorrespondentAddress("'pat@example.com', Pat <PAT@example.com>")).toBe(
-        "pat@example.com"
+      const parsedPracticeKgCorrespondentAddress4 = yield* parsePracticeKgCorrespondentAddress("'pat@example.com'");
+      expect(parsedPracticeKgCorrespondentAddress4).toBe("pat@example.com");
+      const parsedPracticeKgCorrespondentAddress5 = yield* parsePracticeKgCorrespondentAddress(
+        "'pat@example.com', Pat <PAT@example.com>"
       );
-      expect(yield* parsePracticeKgCorrespondentAddress("pat@example.com, Pat <PAT@example.com>")).toBe(
-        "pat@example.com"
+      expect(parsedPracticeKgCorrespondentAddress5).toBe("pat@example.com");
+      const parsedPracticeKgCorrespondentAddress6 = yield* parsePracticeKgCorrespondentAddress(
+        "pat@example.com, Pat <PAT@example.com>"
       );
+      expect(parsedPracticeKgCorrespondentAddress6).toBe("pat@example.com");
       const several = yield* Effect.flip(parsePracticeKgCorrespondentAddress("pat@example.com, sam@other.test"));
       const none = yield* Effect.flip(parsePracticeKgCorrespondentAddress("Pat Example"));
       const longMalformed = yield* Effect.flip(parsePracticeKgCorrespondentAddress(`X${Str.repeat(4_096)(" ")}X`));

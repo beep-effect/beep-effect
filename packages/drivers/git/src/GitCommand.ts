@@ -327,23 +327,37 @@ const checkout: {
   (ref: string, detach?: boolean): GitInvocation => git(["checkout", ...(detach === true ? ["--detach"] : []), ref])
 );
 
+/**
+ * The ref-update flags {@link GitCommand.fetch} accepts after its positional
+ * shape: `noTags` adds `--no-tags` (no tag auto-follow), `noWriteFetchHead`
+ * adds `--no-write-fetch-head` (leave `FETCH_HEAD` untouched for concurrent
+ * readers).
+ */
+type FetchFlags = {
+  readonly noTags?: boolean;
+  readonly noWriteFetchHead?: boolean;
+};
+
 // Implementation of GitCommand.fetch; the public contract lives on the static.
 const fetch = (
   remote: string,
-  ref: string,
+  ref?: string,
   depth?: number,
   tag = false,
   unshallow = false,
-  prune = false
+  prune = false,
+  flags: FetchFlags = {}
 ): GitInvocation =>
   git([
     "fetch",
     ...(depth !== undefined ? ["--depth", String(depth)] : []),
     ...(unshallow ? ["--unshallow"] : []),
     ...(prune ? ["--prune"] : []),
+    ...(flags.noTags === true ? ["--no-tags"] : []),
+    ...(flags.noWriteFetchHead === true ? ["--no-write-fetch-head"] : []),
     secretUrl(remote),
     ...(tag ? ["tag"] : []),
-    ref,
+    ...(ref !== undefined ? [ref] : []),
   ]);
 
 // Implementation of GitCommand.submoduleUpdate; the public contract lives on the static.
@@ -391,7 +405,8 @@ const configSet = (key: string, value: string, file?: string): GitInvocation =>
   git(["config", ...(file !== undefined ? ["-f", file] : []), key, secretValue(value)]);
 
 // Implementation of GitCommand.add; the public contract lives on the static.
-const add = (paths: ReadonlyArray<string>): GitInvocation => git(["add", "--", ...paths]);
+const add = (paths: ReadonlyArray<string>, force = false): GitInvocation =>
+  git(["add", ...(force ? ["--force"] : []), "--", ...paths]);
 
 // Implementation of GitCommand.reset; the public contract lives on the static.
 const reset = (mode: "soft" | "mixed" | "hard" = "mixed", ref?: string): GitInvocation =>
@@ -454,6 +469,7 @@ const fetchUnshallow = (remote = "origin"): GitInvocation => git(["fetch", "--un
  */
 type NameStatusOptions = {
   readonly findRenames?: number;
+  readonly noRenames?: boolean;
   readonly diffFilter?: string;
   readonly pathspec?: ReadonlyArray<string>;
   readonly twoDot?: boolean;
@@ -471,6 +487,7 @@ const nameStatus = (
     "--name-status",
     "-z",
     relative ? "--relative" : "--no-relative",
+    ...(options.noRenames === true ? ["--no-renames"] : []),
     ...(options.findRenames !== undefined ? [`--find-renames=${options.findRenames}%`] : []),
     ...(options.diffFilter !== undefined ? [`--diff-filter=${options.diffFilter}`] : []),
     ...(head === undefined ? [base] : rangeArgs(base, head, options.twoDot)),
@@ -528,6 +545,10 @@ const repoRoot = (): GitInvocation => git(["rev-parse", "--show-toplevel"]);
 // Implementation of GitCommand.commonDir; the public contract lives on the static.
 const commonDir = (): GitInvocation => git(["rev-parse", "--path-format=absolute", "--git-common-dir"]);
 
+// Implementation of GitCommand.gitDir; the public contract lives on the static.
+const gitDir = (path?: string): GitInvocation =>
+  git(["rev-parse", "--path-format=absolute", ...(path === undefined ? ["--git-dir"] : ["--git-path", path])]);
+
 // Implementation of GitCommand.commitInfo; the public contract lives on the static.
 const commitInfo = (ref = "HEAD"): GitInvocation =>
   git(["log", "--no-show-signature", "-1", "--format=%H%x00%G?%x00%B", ref]);
@@ -549,6 +570,13 @@ const commitInfo = (ref = "HEAD"): GitInvocation =>
 const LOG_FORMAT = "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s";
 
 /**
+ * {@link LOG_FORMAT} plus a seventh NUL-joined header field, the raw message
+ * body `%b`. A body may carry newlines but, like every commit-message byte,
+ * no NUL, so the field stays unambiguous.
+ */
+const LOG_BODY_FORMAT = `${LOG_FORMAT}%x00%b`;
+
+/**
  * The body-shape options {@link GitCommand.log} accepts beyond the walk
  * itself. `nameStatus` swaps `--name-only` for `--name-status`; `diffFilter`
  * and `findRenames` select and detect changes in either body mode (the
@@ -560,7 +588,33 @@ type LogOptions = {
   readonly diffFilter?: string;
   readonly findRenames?: number;
   readonly quotePath?: false;
+  readonly revisions?: ReadonlyArray<string>;
+  readonly noMerges?: boolean;
+  readonly reverse?: boolean;
+  readonly since?: string;
+  readonly omitPaths?: boolean;
+  readonly includeBody?: boolean;
 };
+
+/** The body-listing flag: `--name-only`, `--name-status`, or nothing under `omitPaths`. */
+const logBodyMode = (options: LogOptions): ReadonlyArray<string> =>
+  options.omitPaths === true ? [] : [options.nameStatus === true ? "--name-status" : "--name-only"];
+
+/** `[--no-merges] [--reverse] [--since=<when>]`: the commit filters and order {@link LogOptions} renders after the limit. */
+const logWalkFilters = (options: LogOptions): ReadonlyArray<string> => [
+  ...(options.noMerges === true ? ["--no-merges"] : []),
+  ...(options.reverse === true ? ["--reverse"] : []),
+  ...(options.since !== undefined ? [`--since=${options.since}`] : []),
+];
+
+/**
+ * The walk's starting revisions and pathspec. With revisions, `--end-of-options`
+ * keeps each one a revision and `--` always closes them, so a revision can
+ * never be read as a path; without revisions the pathspec renders exactly as
+ * before.
+ */
+const logWalkArgs = (revisions: ReadonlyArray<string>, paths: ReadonlyArray<string>): ReadonlyArray<string> =>
+  revisions.length > 0 ? ["--end-of-options", ...revisions, "--", ...paths] : pathspecArgs(paths);
 
 // Implementation of GitCommand.log; the public contract lives on the static.
 const log = (
@@ -575,14 +629,15 @@ const log = (
     "log",
     "--no-show-signature",
     "-z",
-    LOG_FORMAT,
-    options.nameStatus === true ? "--name-status" : "--name-only",
+    options.includeBody === true ? LOG_BODY_FORMAT : LOG_FORMAT,
+    ...logBodyMode(options),
     ...(options.diffFilter !== undefined ? [`--diff-filter=${options.diffFilter}`] : []),
     ...(options.findRenames !== undefined ? [`--find-renames=${options.findRenames}%`] : []),
     ...(follow ? ["--follow"] : []),
     ...(firstParentDiffMerges ? ["--diff-merges=first-parent"] : []),
     ...(limit !== undefined ? [`--max-count=${limit}`] : []),
-    ...pathspecArgs(paths),
+    ...logWalkFilters(options),
+    ...logWalkArgs(options.revisions ?? [], paths),
   ]);
 
 /**
@@ -770,12 +825,18 @@ const submoduleAbsorbgitdirs = (paths: ReadonlyArray<string> = []): GitInvocatio
 
 // Implementation of GitCommand.submoduleForeach; the public contract lives on the static.
 const submoduleForeach: {
-  (command: string, recursive?: boolean): GitInvocation;
-  (recursive?: boolean): (command: string) => GitInvocation;
+  (command: string, recursive?: boolean, quiet?: boolean): GitInvocation;
+  (recursive?: boolean, quiet?: boolean): (command: string) => GitInvocation;
 } = dual(
   (args) => P.isString(args[0]),
-  (command: string, recursive?: boolean): GitInvocation =>
-    git(["submodule", "foreach", ...(recursive === true ? ["--recursive"] : []), command])
+  (command: string, recursive?: boolean, quiet?: boolean): GitInvocation =>
+    git([
+      "submodule",
+      "foreach",
+      ...(quiet === true ? ["--quiet"] : []),
+      ...(recursive === true ? ["--recursive"] : []),
+      command,
+    ])
 );
 
 // Implementation of GitCommand.lsRemote; the public contract lives on the static.
@@ -816,11 +877,17 @@ const remoteSetUrl: {
 const stashRef = (index: number): string => `stash@{${index}}`;
 
 // Implementation of GitCommand.stashPush; the public contract lives on the static.
-const stashPush = (message?: string, includeUntracked = false, paths: ReadonlyArray<string> = []): GitInvocation =>
+const stashPush = (
+  message?: string,
+  includeUntracked = false,
+  paths: ReadonlyArray<string> = [],
+  keepIndex = false
+): GitInvocation =>
   git([
     "stash",
     "push",
     ...(includeUntracked ? ["--include-untracked"] : []),
+    ...(keepIndex ? ["--keep-index"] : []),
     ...(message !== undefined ? ["-m", message] : []),
     ...(paths.length > 0 ? ["--", ...paths] : []),
   ]);
@@ -841,11 +908,14 @@ const stashDrop = (index?: number): GitInvocation =>
 const stashList = (): GitInvocation => git(["stash", "list", "-z", "--format=%gd%x1f%H%x1f%gs"]);
 
 // Implementation of GitCommand.branchList; the public contract lives on the static.
-const branchList = (remotes = false, all = false): GitInvocation =>
+const branchList = (remotes = false, all = false, contains?: string): GitInvocation =>
   git([
     "branch",
     "--list",
     ...(all ? ["--all"] : remotes ? ["--remotes"] : []),
+    // `--contains` takes an optional value; `--format` always follows, so the
+    // revision is never the last argument git could read as absent.
+    ...(contains !== undefined ? ["--contains", contains] : []),
     "--format=%(HEAD)%00%(refname:short)%00%(objectname)",
   ]);
 
@@ -885,6 +955,55 @@ const revList: {
     ])
 );
 
+/**
+ * The one compare-and-swap change {@link GitCommand.updateRef} makes:
+ * `{ create: <new> }` points a NEW ref at `<new>` and fails when the ref
+ * already exists; `{ delete: <expected> }` removes the ref only while it still
+ * points at `<expected>`. Both values may be anything git resolves to an object.
+ */
+type UpdateRefChange = { readonly create: string } | { readonly delete: string };
+
+// Implementation of GitCommand.revListCount; the public contract lives on the static.
+const revListCount: {
+  (range: string, firstParent?: boolean): GitInvocation;
+  (firstParent?: boolean): (range: string) => GitInvocation;
+} = dual(
+  (args) => P.isString(args[0]),
+  (range: string, firstParent?: boolean): GitInvocation =>
+    git(["rev-list", "--count", ...(firstParent === true ? ["--first-parent"] : []), "--end-of-options", range, "--"])
+);
+
+// Implementation of GitCommand.mergeTree; the public contract lives on the static.
+const mergeTree: {
+  (base: string, head: string): GitInvocation;
+  (head: string): (base: string) => GitInvocation;
+} = dual(
+  2,
+  (base: string, head: string): GitInvocation =>
+    git(["merge-tree", "--write-tree", "-z", "--name-only", "--end-of-options", base, head])
+);
+
+// Implementation of GitCommand.upstream; the public contract lives on the static.
+const upstream = (branch: string): GitInvocation =>
+  git(["for-each-ref", "--format=%(refname)%00%(upstream)", "--end-of-options", `refs/heads/${branch}`]);
+
+// Implementation of GitCommand.checkRefFormat; the public contract lives on the static.
+const checkRefFormat = (ref: string): GitInvocation => git(["check-ref-format", ref]);
+
+// Implementation of GitCommand.updateRef; the public contract lives on the static.
+// An empty old value asks git to verify that the ref does not exist yet,
+// whatever the repository's object format, so no zero oid has to be sized.
+const updateRef: {
+  (ref: string, change: UpdateRefChange): GitInvocation;
+  (change: UpdateRefChange): (ref: string) => GitInvocation;
+} = dual(
+  2,
+  (ref: string, change: UpdateRefChange): GitInvocation =>
+    "create" in change
+      ? git(["update-ref", "--end-of-options", ref, change.create, ""])
+      : git(["update-ref", "-d", "--end-of-options", ref, change.delete])
+);
+
 // Implementation of GitCommand.commit; the public contract lives on the static.
 const commit: {
   (
@@ -894,7 +1013,8 @@ const commit: {
     amend?: boolean,
     author?: string,
     only?: boolean,
-    noVerify?: boolean
+    noVerify?: boolean,
+    noGpgSign?: boolean
   ): GitInvocation;
   (
     all?: boolean,
@@ -902,7 +1022,8 @@ const commit: {
     amend?: boolean,
     author?: string,
     only?: boolean,
-    noVerify?: boolean
+    noVerify?: boolean,
+    noGpgSign?: boolean
   ): (message: string) => GitInvocation;
 } = dual(
   (args) => P.isString(args[0]),
@@ -913,7 +1034,8 @@ const commit: {
     amend?: boolean,
     author?: string,
     only?: boolean,
-    noVerify?: boolean
+    noVerify?: boolean,
+    noGpgSign?: boolean
   ): GitInvocation =>
     git([
       "commit",
@@ -922,6 +1044,7 @@ const commit: {
       ...(amend === true ? ["--amend"] : []),
       ...(only === true ? ["--only"] : []),
       ...(noVerify === true ? ["--no-verify"] : []),
+      ...(noGpgSign === true ? ["--no-gpg-sign"] : []),
       ...(author !== undefined ? [`--author=${author}`] : []),
       "-m",
       message,
@@ -999,9 +1122,9 @@ const mv = (source: string, destination: string, force = false): GitInvocation =
   git(["mv", ...(force ? ["--force"] : []), "--", source, destination]);
 
 // Implementation of GitCommand.checkIgnore; the public contract lives on the static.
-const checkIgnore = (paths: ReadonlyArray<string>): GitInvocation =>
+const checkIgnore = (paths: ReadonlyArray<string>, noIndex = false): GitInvocation =>
   git(
-    ["check-ignore", "-z", "--stdin"],
+    ["check-ignore", ...(noIndex ? ["--no-index"] : []), "-z", "--stdin"],
     pipe(
       paths,
       A.map((path) => `${path}\0`),
@@ -1010,12 +1133,13 @@ const checkIgnore = (paths: ReadonlyArray<string>): GitInvocation =>
   );
 
 // Implementation of GitCommand.worktreeAdd; the public contract lives on the static.
-const worktreeAdd = (path: string, ref?: string, detach = false, force = false): GitInvocation =>
+const worktreeAdd = (path: string, ref?: string, detach = false, force = false, newBranch?: string): GitInvocation =>
   git([
     "worktree",
     "add",
     ...(force ? ["--force"] : []),
     ...(detach ? ["--detach"] : []),
+    ...(newBranch !== undefined ? ["-b", newBranch] : []),
     path,
     ...(ref !== undefined ? [ref] : []),
   ]);
@@ -1039,6 +1163,47 @@ const worktreeRemove: {
 // Implementation of GitCommand.lsFiles; the public contract lives on the static.
 const lsFiles = (pathspec: ReadonlyArray<string> = []): GitInvocation =>
   git(["ls-files", "--stage", "-z", ...(pathspec.length > 0 ? ["--", ...pathspec] : [])]);
+
+/**
+ * The comparison and rendering options {@link GitCommand.diffPatch} accepts.
+ * The service validates every combination (a `head` needs a `base`, `noIndex`
+ * excludes the revision and index forms, `noRenames` excludes `findRenames`)
+ * and both numbers before any spawn; the constructor renders them verbatim.
+ */
+type DiffPatchOptions = {
+  readonly base?: string;
+  readonly head?: string;
+  readonly cached?: boolean;
+  readonly noIndex?: readonly [string, string];
+  readonly binary?: boolean;
+  readonly unified?: number;
+  readonly noRenames?: boolean;
+  readonly findRenames?: number;
+  readonly pathspec?: ReadonlyArray<string>;
+};
+
+/** `[--cached] [--end-of-options <base> [<head>]] -- [<pathspec>...]`: the revision and index form of a patch. */
+const diffPatchTarget = (options: DiffPatchOptions): ReadonlyArray<string> => [
+  ...(options.cached === true ? ["--cached"] : []),
+  ...(options.base !== undefined
+    ? ["--end-of-options", options.base, ...(options.head !== undefined ? [options.head] : [])]
+    : []),
+  "--",
+  ...(options.pathspec ?? []),
+];
+
+// Implementation of GitCommand.diffPatch; the public contract lives on the static.
+const diffPatch = (options: DiffPatchOptions = {}): GitInvocation =>
+  git([
+    "diff",
+    "--no-color",
+    "--no-ext-diff",
+    ...(options.binary === true ? ["--binary"] : []),
+    ...(options.unified !== undefined ? [`--unified=${options.unified}`] : []),
+    ...(options.noRenames === true ? ["--no-renames"] : []),
+    ...(options.findRenames !== undefined ? [`--find-renames=${options.findRenames}%`] : []),
+    ...(options.noIndex !== undefined ? ["--no-index", "--", ...options.noIndex] : diffPatchTarget(options)),
+  ]);
 
 /**
  * Pure constructors for the `git` {@link GitInvocation} values this package
@@ -1484,10 +1649,13 @@ export class GitCommand {
    *
    * **Details**
    *
-   * Mutating: `git fetch [--depth <n>] [--unshallow] [--prune] <remote> [tag] <ref>`
+   * Mutating: `git fetch [--depth <n>] [--unshallow] [--prune] [--no-tags] [--no-write-fetch-head] <remote> [tag] [<ref>]`
    * — fetches the given ref from a remote, optionally with a depth limit, the
    * `--unshallow` mode, `--prune` (drop remote-tracking refs the remote no
-   * longer has), and the `tag` keyword.
+   * longer has), and the `tag` keyword. With `ref` omitted git fetches the
+   * remote's configured refspecs. `flags.noTags` turns off tag auto-follow and
+   * `flags.noWriteFetchHead` leaves `FETCH_HEAD` untouched, so a concurrent
+   * reader of it sees no change.
    *
    * **Gotchas**
    *
@@ -1511,6 +1679,18 @@ export class GitCommand {
    * const invocation = GitCommand.fetch("https://user:token@example.com/repo.git", "main", 1);
    *
    * console.log(invocation.redactedArgs.join(" ")) // fetch --depth 1 https://<redacted>@example.com/repo.git main
+   * ```
+   *
+   * **Example** (Fetch one commit without touching FETCH_HEAD)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const pinned = GitCommand.fetch("origin", "0123abc", undefined, false, false, false, { noWriteFetchHead: true });
+   * const refreshAll = GitCommand.fetch("origin", undefined, undefined, false, false, true);
+   *
+   * console.log(pinned.redactedArgs.join(" ")) // fetch --no-write-fetch-head origin 0123abc
+   * console.log(refreshAll.redactedArgs.join(" ")) // fetch --prune origin
    * ```
    *
    * @category constructors
@@ -1859,8 +2039,9 @@ export class GitCommand {
    *
    * **Details**
    *
-   * Mutating: `git add -- <paths...>` — stages the given paths for commit. The literal
-   * `--` separator makes the pathspec injection-safe by construction.
+   * Mutating: `git add [--force] -- <paths...>` — stages the given paths for commit. The literal
+   * `--` separator makes the pathspec injection-safe by construction; `force` stages a path an
+   * ignore rule matches, which git otherwise refuses.
    *
    * **Example** (Inspect add argv)
    *
@@ -1870,6 +2051,16 @@ export class GitCommand {
    * const invocation = GitCommand.add(["src/main.ts"]);
    *
    * console.log(invocation.redactedArgs.join(" ")) // add -- src/main.ts
+   * ```
+   *
+   * **Example** (Stage an ignored path)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.add(["dist/keep.js"], true);
+   *
+   * console.log(invocation.redactedArgs.join(" ")) // add --force -- dist/keep.js
    * ```
    *
    * @category constructors
@@ -1882,7 +2073,7 @@ export class GitCommand {
    *
    * **Details**
    *
-   * `git diff --name-status -z (--relative | --no-relative) [--find-renames=<n>%] [--diff-filter=<letters>] [<base> | <base>...<head> | <base> <head>] [-- <pathspec>...]`
+   * `git diff --name-status -z (--relative | --no-relative) [--no-renames] [--find-renames=<n>%] [--diff-filter=<letters>] [<base> | <base>...<head> | <base> <head>] [-- <pathspec>...]`
    * — the changed paths WITH their one-letter status codes, NUL-terminated.
    *
    * With `head` omitted this is the single-argument diff form: the working tree
@@ -1893,7 +2084,8 @@ export class GitCommand {
    * follow the same rules as {@link GitCommand.changedFiles}. In `-z` mode a
    * rename or copy entry is THREE NUL tokens: `R<score>`, the old path, the
    * new path. `options.findRenames` sets the similarity threshold rename
-   * detection uses, `options.diffFilter` keeps only the named status letters
+   * detection uses, `options.noRenames` turns rename detection off so a move
+   * lists as a deletion plus an addition, `options.diffFilter` keeps only the named status letters
    * (lower case excludes them), and `options.pathspec` scopes the diff after
    * `--`.
    *
@@ -1920,6 +2112,16 @@ export class GitCommand {
    *
    * console.log(invocation.redactedArgs.join(" "));
    * // diff --name-status -z --no-relative --find-renames=50% --diff-filter=ACMR main...HEAD -- src
+   * ```
+   *
+   * **Example** (Compare two trees with rename detection off)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.nameStatus("main", "HEAD", false, { noRenames: true, twoDot: true });
+   *
+   * console.log(invocation.redactedArgs.join(" ")) // diff --name-status -z --no-relative --no-renames main HEAD
    * ```
    *
    * @category constructors
@@ -2052,6 +2254,40 @@ export class GitCommand {
   static readonly commonDir = commonDir;
 
   /**
+   * Builds an invocation to locate this checkout's own Git directory, or a path inside it.
+   *
+   * **Details**
+   *
+   * `git rev-parse --path-format=absolute (--git-dir | --git-path <path>)` —
+   * the absolute path of the Git directory that belongs to this checkout (a
+   * linked worktree's own `.git/worktrees/<name>`, not the shared common
+   * directory), or with `path` the absolute location git would use for
+   * `$GIT_DIR/<path>`. `--git-path` honours git's own relocation rules
+   * (`info/attributes`, `hooks` and `objects` resolve into the common
+   * directory from a linked worktree), which joining `path` onto `--git-dir`
+   * by hand would get wrong.
+   *
+   * **Gotchas**
+   *
+   * Like {@link GitCommand.commonDir}, `--path-format=absolute` needs git
+   * 2.31 or later; an older git echoes the flag back and exits 0.
+   *
+   * **Example** (Inspect git dir argv)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * console.log(GitCommand.gitDir().redactedArgs.join(" ")) // rev-parse --path-format=absolute --git-dir
+   * console.log(GitCommand.gitDir("info/attributes").redactedArgs.join(" "));
+   * // rev-parse --path-format=absolute --git-path info/attributes
+   * ```
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly gitDir = gitDir;
+
+  /**
    * Builds an invocation to read a commit’s hash, signature status, and full message.
    *
    * **Details**
@@ -2088,11 +2324,20 @@ export class GitCommand {
    *
    * **Details**
    *
-   * `git [-c core.quotePath=false] log --no-show-signature -z --format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s (--name-only | --name-status) [--diff-filter=<letters>] [--find-renames=<n>%]`
+   * `git [-c core.quotePath=false] log --no-show-signature -z --format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s[%x00%b] [--name-only | --name-status] [--diff-filter=<letters>] [--find-renames=<n>%]`
    * — a commit listing carrying each commit's sha, both ISO dates, its author
-   * identity, its subject and the paths it touched. Three optional flags
+   * identity, its subject and the paths it touched. Six optional flags
    * follow, in this order: `--follow`, `--diff-merges=first-parent`,
-   * `--max-count=N`, then the `--` separator and the pathspec.
+   * `--max-count=N`, `--no-merges`, `--reverse`, `--since=<when>`, then the
+   * walk: with `options.revisions`, `--end-of-options <revisions...> --`
+   * followed by the pathspec, so each revision stays a revision; without them
+   * the `--` separator and the pathspec alone, walking from `HEAD`.
+   *
+   * `options.omitPaths` drops the body flag, so each record carries its header
+   * only (the subject listing at a fraction of the bytes). `options.includeBody`
+   * appends `%x00%b`, a seventh header field holding the raw message body.
+   * `--reverse` applies after `--max-count`: git takes the newest N commits,
+   * then prints them oldest first.
    *
    * `-z` is unconditional and does two things at once: it terminates the
    * `--format` output with a NUL instead of a newline, and it makes
@@ -2141,6 +2386,23 @@ export class GitCommand {
    *
    * console.log(invocation.redactedArgs.join(" "));
    * // -c core.quotePath=false log --no-show-signature -z --format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s --name-status --diff-filter=DR --find-renames=50%
+   * ```
+   *
+   * **Example** (Subjects and bodies of a range, oldest first)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.log([], false, undefined, false, {
+   *   revisions: ["origin/main..HEAD"],
+   *   noMerges: true,
+   *   reverse: true,
+   *   omitPaths: true,
+   *   includeBody: true,
+   * });
+   *
+   * console.log(invocation.redactedArgs.join(" "));
+   * // log --no-show-signature -z --format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s%x00%b --no-merges --reverse --end-of-options origin/main..HEAD --
    * ```
    *
    * @category constructors
@@ -2454,8 +2716,10 @@ export class GitCommand {
    *
    * **Details**
    *
-   * Mutating: `git submodule foreach [--recursive] <command>` — runs a shell
-   * command in every checked-out submodule. `command` is a single shell
+   * Mutating: `git submodule foreach [--quiet] [--recursive] <command>` — runs a shell
+   * command in every checked-out submodule. `quiet` drops git's own
+   * `Entering '<path>'` line, which otherwise precedes each submodule's output
+   * on stdout. `command` is a single shell
    * string, evaluated by git in each submodule's directory; it can mutate
    * anything, which is why the constructor is marked mutating regardless of
    * what the command does.
@@ -2476,6 +2740,16 @@ export class GitCommand {
    * const invocation = GitCommand.submoduleForeach("git status --short", true);
    *
    * console.log(invocation.redactedArgs.join(" ")) // submodule foreach --recursive git status --short
+   * ```
+   *
+   * **Example** (Read only the command's own output)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.submoduleForeach("git rev-parse HEAD", true, true);
+   *
+   * console.log(invocation.redactedArgs.join(" ")) // submodule foreach --quiet --recursive git rev-parse HEAD
    * ```
    *
    * @category constructors
@@ -2593,8 +2867,9 @@ export class GitCommand {
    *
    * **Details**
    *
-   * Mutating: `git stash push [--include-untracked] [-m <message>] [-- <paths>...]`
-   * — saves the working tree (and index) state onto the stash stack. The
+   * Mutating: `git stash push [--include-untracked] [--keep-index] [-m <message>] [-- <paths>...]`
+   * — saves the working tree (and index) state onto the stash stack;
+   * `keepIndex` leaves the staged changes in place after stashing. The
    * literal `--` separator makes the optional pathspec injection-safe by
    * construction; the message rides behind `-m`, which git consumes as a
    * value even when it begins with `-`.
@@ -2607,6 +2882,16 @@ export class GitCommand {
    * const invocation = GitCommand.stashPush("Work in progress", true, ["src/main.ts"]);
    *
    * console.log(invocation.redactedArgs.join(" ")) // stash push --include-untracked -m Work in progress -- src/main.ts
+   * ```
+   *
+   * **Example** (Stash everything but the index)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.stashPush("publish-scope", true, [], true);
+   *
+   * console.log(invocation.redactedArgs.join(" ")) // stash push --include-untracked --keep-index -m publish-scope
    * ```
    *
    * @category constructors
@@ -2719,9 +3004,10 @@ export class GitCommand {
    *
    * **Details**
    *
-   * `git branch --list [--remotes | --all] --format=%(HEAD)%00%(refname:short)%00%(objectname)`
+   * `git branch --list [--remotes | --all] [--contains <rev>] --format=%(HEAD)%00%(refname:short)%00%(objectname)`
    * — every branch as a NUL-separated triple: the current-branch marker, the
-   * short name, and the tip sha.
+   * short name, and the tip sha. `contains` keeps only the branches whose
+   * history includes `<rev>`.
    *
    * Records are newline-separated, which is split-safe here: git refnames
    * cannot contain a newline (or a space), so the only NUL bytes are the
@@ -2736,6 +3022,17 @@ export class GitCommand {
    * const invocation = GitCommand.branchList(false, true);
    *
    * console.log(invocation.redactedArgs.join(" ")) // branch --list --all --format=%(HEAD)%00%(refname:short)%00%(objectname)
+   * ```
+   *
+   * **Example** (Remote branches that contain a commit)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.branchList(true, false, "0123abc");
+   *
+   * console.log(invocation.redactedArgs.join(" "));
+   * // branch --list --remotes --contains 0123abc --format=%(HEAD)%00%(refname:short)%00%(objectname)
    * ```
    *
    * @category constructors
@@ -2865,18 +3162,164 @@ export class GitCommand {
   static readonly revList = revList;
 
   /**
+   * Builds an invocation to count the commits a range selects.
+   *
+   * **Details**
+   *
+   * `git rev-list --count [--first-parent] --end-of-options <range> --` — the
+   * number of commits `range` selects (`main..feature`, a single ref, `^a b`),
+   * printed as one decimal line. `--end-of-options` keeps the range a
+   * revision and the closing `--` keeps git from reading it as a path.
+   *
+   * **Example** (Count the commits ahead of a base)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.revListCount("origin/main..HEAD", true);
+   *
+   * console.log(invocation.redactedArgs.join(" ")) // rev-list --count --first-parent --end-of-options origin/main..HEAD --
+   * ```
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly revListCount = revListCount;
+
+  /**
+   * Builds an invocation to merge two commits in the object store only.
+   *
+   * **Details**
+   *
+   * `git merge-tree --write-tree -z --name-only --end-of-options <base> <head>`
+   * — computes the merge of `base` and `head` without touching the index, the
+   * working tree or any ref, and writes the merged tree into the object store.
+   * stdout is NUL-terminated: the tree oid; on a conflict, then each
+   * conflicted path, an empty token, and git's informational messages as
+   * `<count>\0<paths>...\0<type>\0<message>\0` groups. Exit 0 is a clean
+   * merge, exit 1 with silent stderr is a conflict, and exit 1 naming a
+   * revision `not something we can merge` is an unresolved revision.
+   *
+   * **Gotchas**
+   *
+   * `--write-tree` needs git 2.38 or later. Unrelated histories exit 128
+   * (`refusing to merge unrelated histories`).
+   *
+   * **Example** (Inspect merge tree argv)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.mergeTree("origin/main", "HEAD");
+   *
+   * console.log(invocation.redactedArgs.join(" ")) // merge-tree --write-tree -z --name-only --end-of-options origin/main HEAD
+   * ```
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly mergeTree = mergeTree;
+
+  /**
+   * Builds an invocation to read a local branch's configured upstream.
+   *
+   * **Details**
+   *
+   * `git for-each-ref --format=%(refname)%00%(upstream) --end-of-options refs/heads/<branch>`
+   * — one `<refname>\0<upstream>` line per matching ref; the upstream is
+   * the full remote-tracking refname (`refs/remotes/origin/main`), or empty
+   * when the branch has none.
+   *
+   * **Gotchas**
+   *
+   * A for-each-ref pattern also matches as a path prefix, so
+   * `refs/heads/feat` lists `refs/heads/feat/x` when `feat` itself does not
+   * exist. The refname column is in the format so the reader can keep only
+   * the exact branch; an upstream-only format cannot tell the two apart.
+   *
+   * **Example** (Inspect upstream argv)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.upstream("main");
+   *
+   * console.log(invocation.redactedArgs.join(" ")) // for-each-ref --format=%(refname)%00%(upstream) --end-of-options refs/heads/main
+   * ```
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly upstream = upstream;
+
+  /**
+   * Builds an invocation to check that a full refname is well formed.
+   *
+   * **Details**
+   *
+   * `git check-ref-format <ref>` — exits 0 for a valid full refname and 1,
+   * silently, for an invalid one (a space, `..`, a trailing `.lock`, a
+   * one-level name). It reads no repository, so it answers before any ref is
+   * touched; `Git.updateRef` runs it as its guard.
+   *
+   * **Example** (Inspect check ref format argv)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.checkRefFormat("refs/archive/lane");
+   *
+   * console.log(invocation.redactedArgs.join(" ")) // check-ref-format refs/archive/lane
+   * ```
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly checkRefFormat = checkRefFormat;
+
+  /**
+   * Builds an invocation to create or delete one ref as a compare-and-swap.
+   *
+   * **Details**
+   *
+   * Mutating: `git update-ref --end-of-options <ref> <new> ""` for
+   * `{ create: <new> }`, which fails when `ref` already exists (the empty old
+   * value is git's "must not exist" spelling, for either object format), or
+   * `git update-ref -d --end-of-options <ref> <expected>` for
+   * `{ delete: <expected> }`, which fails unless `ref` still points at
+   * `<expected>`.
+   *
+   * **Example** (Archive a branch tip, then drop the archive)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const create = GitCommand.updateRef("refs/archive/lane", { create: "0123abc" });
+   * const remove = GitCommand.updateRef("refs/archive/lane", { delete: "0123abc" });
+   *
+   * console.log(create.command.args.length) // 5
+   * console.log(remove.redactedArgs.join(" ")) // update-ref -d --end-of-options refs/archive/lane 0123abc
+   * ```
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly updateRef = updateRef;
+
+  /**
    * Builds an invocation to record a commit with an explicit message.
    *
    * **Details**
    *
-   * Mutating: `git commit [--all] [--allow-empty] [--amend] [--only] [--no-verify] [--author=<author>] -m <message>`
+   * Mutating: `git commit [--all] [--allow-empty] [--amend] [--only] [--no-verify] [--no-gpg-sign] [--author=<author>] -m <message>`
    * — records a commit. The message always rides argv behind `-m` (git
    * consumes it as a value even when it begins with `-`); committer identity
    * comes from the caller's environment — this constructor sets no
    * `GIT_AUTHOR_*`/`GIT_COMMITTER_*` variables, and the optional `author`
    * override is the fused `--author=` form. `only` commits exactly what is
    * staged even when `-a` would otherwise be implied; `noVerify` skips the
-   * pre-commit and commit-msg hooks.
+   * pre-commit and commit-msg hooks; `noGpgSign` overrides a configured
+   * `commit.gpgSign` for this one commit.
    *
    * **Example** (Inspect commit argv)
    *
@@ -2886,6 +3329,16 @@ export class GitCommand {
    * const invocation = GitCommand.commit("Update documentation", false, true);
    *
    * console.log(invocation.redactedArgs.join(" ")) // commit --allow-empty -m Update documentation
+   * ```
+   *
+   * **Example** (Commit without signing)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.commit("vault: daily", false, false, false, undefined, false, false, true);
+   *
+   * console.log(invocation.redactedArgs.join(" ")) // commit --no-gpg-sign -m vault: daily
    * ```
    *
    * @category constructors
@@ -3141,9 +3594,10 @@ export class GitCommand {
    *
    * **Details**
    *
-   * `git check-ignore -z --stdin` — which of the given paths git would
+   * `git check-ignore [--no-index] -z --stdin` — which of the given paths git would
    * ignore, paths fed NUL-separated via stdin and answers returned
-   * NUL-separated.
+   * NUL-separated. `noIndex` also reports a TRACKED path that an ignore rule
+   * matches; without it git never reports an indexed path.
    *
    * **Gotchas**
    *
@@ -3163,6 +3617,16 @@ export class GitCommand {
    * console.log(invocation.redactedArgs.join(" ")) // check-ignore -z --stdin
    * ```
    *
+   * **Example** (Ask about tracked paths too)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.checkIgnore(["dist/index.js"], true);
+   *
+   * console.log(invocation.redactedArgs.join(" ")) // check-ignore --no-index -z --stdin
+   * ```
+   *
    * @category constructors
    * @since 0.0.0
    */
@@ -3173,9 +3637,10 @@ export class GitCommand {
    *
    * **Details**
    *
-   * Mutating: `git worktree add [--force] [--detach] <path> [<ref>]` —
+   * Mutating: `git worktree add [--force] [--detach] [-b <name>] <path> [<ref>]` —
    * creates a linked working tree at `path`, checked out at `ref` (or the
-   * branch named after `path`'s basename).
+   * branch named after `path`'s basename). `newBranch` creates branch
+   * `<name>` at `ref` and checks it out there.
    *
    * **Example** (Inspect worktree add argv)
    *
@@ -3185,6 +3650,16 @@ export class GitCommand {
    * const invocation = GitCommand.worktreeAdd("../review", "main", true);
    *
    * console.log(invocation.redactedArgs.join(" ")) // worktree add --detach ../review main
+   * ```
+   *
+   * **Example** (Start a new branch in a new worktree)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.worktreeAdd("../lane", "0123abc", false, false, "feat/lane");
+   *
+   * console.log(invocation.redactedArgs.join(" ")) // worktree add -b feat/lane ../lane 0123abc
    * ```
    *
    * @category constructors
@@ -3292,4 +3767,51 @@ export class GitCommand {
    * @since 0.0.0
    */
   static readonly lsFiles = lsFiles;
+
+  /**
+   * Builds an invocation to render a patch between revisions, the index, the working tree or two files.
+   *
+   * **Details**
+   *
+   * `git diff --no-color --no-ext-diff [--binary] [--unified=<n>] [--no-renames | --find-renames=<n>%] [--cached] [--end-of-options <base> [<head>]] -- [<pathspec>...]`,
+   * or with `noIndex` `git diff --no-color --no-ext-diff [...] --no-index -- <a> <b>`
+   * — the patch text. `--no-color` and `--no-ext-diff` are unconditional, so a
+   * configured color or external diff driver can never replace the patch.
+   * Without `base` the patch is the working tree against the index (or with
+   * `cached` the index against `HEAD`); with `base` alone it is the working
+   * tree (or index) against `base`; with both it is `base` against `head`.
+   * The closing `--` always follows the revisions, so a revision is never
+   * read as a path.
+   *
+   * **Gotchas**
+   *
+   * Under `--no-index` git exits 1 when the two files differ, which is the
+   * answer rather than a failure; a missing file also exits 1, but names
+   * itself on stderr. `head` without `base` is not rendered: the `Git`
+   * service refuses that combination before any spawn.
+   *
+   * **Example** (A whole-tree binary patch against a base)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.diffPatch({ base: "origin/main", binary: true, unified: 0, pathspec: ["."] });
+   *
+   * console.log(invocation.redactedArgs.join(" ")) // diff --no-color --no-ext-diff --binary --unified=0 --end-of-options origin/main -- .
+   * ```
+   *
+   * **Example** (A new-file patch outside the index)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.diffPatch({ noIndex: ["/dev/null", "notes.md"], binary: true });
+   *
+   * console.log(invocation.redactedArgs.join(" ")) // diff --no-color --no-ext-diff --binary --no-index -- /dev/null notes.md
+   * ```
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly diffPatch = diffPatch;
 }

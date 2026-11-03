@@ -228,8 +228,9 @@ const validateFixture = Effect.fn("ConformanceLedgerTest.validateFixture")(funct
     fileSystem.makeDirectory(`${root}/data/conformance`, { recursive: true }),
     fileSystem.makeDirectory(`${root}/test`, { recursive: true }),
   ]);
+  const fixtureFiles1 = yield* fixtureFiles(options);
   yield* Effect.forEach(
-    yield* fixtureFiles(options),
+    fixtureFiles1,
     ([relativePath, contents]) => fileSystem.writeFileString(`${root}/${relativePath}`, contents),
     { concurrency: "unbounded" }
   );

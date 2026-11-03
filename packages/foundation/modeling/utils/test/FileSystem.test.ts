@@ -51,9 +51,12 @@ it.layer(NodePath.layer)("FileSystem watch wrapper", (it) =>
         Effect.provideService(PlatformFileSystem.FileSystem, fs)
       );
 
-      assertSome(yield* waitForFile(directory, "target.txt"), event);
-      assertSome(yield* pipe(directory, waitForFile("target.txt")), event);
-      assertNone(yield* waitForFile(directory, "missing.txt"));
+      const waitForFile1 = yield* waitForFile(directory, "target.txt");
+      assertSome(waitForFile1, event);
+      const pipe2 = yield* pipe(directory, waitForFile("target.txt"));
+      assertSome(pipe2, event);
+      const waitForFile3 = yield* waitForFile(directory, "missing.txt");
+      assertNone(waitForFile3);
     })
   )
 );
@@ -77,8 +80,10 @@ it.layer(NodeCrypto.layer, { timeout: "5 seconds" })("FileSystem sync wrappers",
       const dir = yield* makeTempDir();
       const file = Path.join(dir, "present.txt");
       yield* FileSystem.appendFileSync(file, "x");
-      expect(yield* FileSystem.existsSync(file)).toBe(true);
-      expect(yield* FileSystem.existsSync(Path.join(dir, "absent.txt"))).toBe(false);
+      const existsSync4 = yield* FileSystem.existsSync(file);
+      expect(existsSync4).toBe(true);
+      const existsSync5 = yield* FileSystem.existsSync(Path.join(dir, "absent.txt"));
+      expect(existsSync5).toBe(false);
     })
   );
 
@@ -130,13 +135,17 @@ it.layer(NodeCrypto.layer, { timeout: "5 seconds" })("FileSystem sync wrappers",
       const to = Path.join(dir, "new.txt");
       yield* FileSystem.appendFileSync(from, "x");
       yield* FileSystem.renameSync(from, to);
-      expect(yield* FileSystem.existsSync(from)).toBe(false);
-      expect(yield* FileSystem.existsSync(to)).toBe(true);
+      const existsSync6 = yield* FileSystem.existsSync(from);
+      expect(existsSync6).toBe(false);
+      const existsSync7 = yield* FileSystem.existsSync(to);
+      expect(existsSync7).toBe(true);
 
       const movedAgain = Path.join(dir, "again.txt");
       yield* pipe(to, FileSystem.renameSync(movedAgain));
-      expect(yield* FileSystem.existsSync(to)).toBe(false);
-      expect(yield* FileSystem.existsSync(movedAgain)).toBe(true);
+      const existsSync8 = yield* FileSystem.existsSync(to);
+      expect(existsSync8).toBe(false);
+      const existsSync9 = yield* FileSystem.existsSync(movedAgain);
+      expect(existsSync9).toBe(true);
     })
   );
 
@@ -148,7 +157,8 @@ it.layer(NodeCrypto.layer, { timeout: "5 seconds" })("FileSystem sync wrappers",
       NFS.mkdirSync(target);
       yield* FileSystem.appendFileSync(Path.join(target, "leaf.txt"), "x");
       yield* FileSystem.rmSync(target, RmSyncOptions.make({ recursive: true, force: true }));
-      expect(yield* FileSystem.existsSync(target)).toBe(false);
+      const existsSync10 = yield* FileSystem.existsSync(target);
+      expect(existsSync10).toBe(false);
     })
   );
 

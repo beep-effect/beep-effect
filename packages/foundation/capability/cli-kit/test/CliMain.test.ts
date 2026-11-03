@@ -288,8 +288,10 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
           }).pipe(Effect.exit, Effect.provideService(Console.Console, double));
           return err;
         });
-        assert.deepStrictEqual(yield* run("none"), []);
-        assert.deepStrictEqual(yield* run("error"), ["inside"]);
+        const result = yield* run("none");
+        assert.deepStrictEqual(result, []);
+        const result1 = yield* run("error");
+        assert.deepStrictEqual(result1, ["inside"]);
       })
     );
   });

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "claim-performance-coverage-repair/v1",
+  "hostedFailureJob": 125874903431,
+  "ownedRepair": "Use Effect String.search and remove impossible unmatched-expression fallback after a digit-prefixed expression was validated",
+  "coverageFloorsLowered": false,
+  "measuredNormalizerCoverage": {
+    "statements": 100,
+    "branches": 100,
+    "functions": 100,
+    "lines": 100
+  },
+  "packageTestsPassed": 266,
+  "coverageLogSha256": "b96487b171a8b6520d088a1f98cf1ace6c8cb6df65ada19b1e2993800ce9c225",
+  "acceptedMain": "4d266aa559",
+  "sharedRepairDependency": {
+    "pullRequest": 2676,
+    "state": "merged after this replay; next accepted-base replay required"
+  },
+  "implementationFreeze": "research/implementation-reference-bounds-009.json",
+  "strictMatches": 37,
+  "selectedClaims": 538,
+  "lost": [],
+  "inputFailed": 43,
+  "predictionReportsByteIdenticalTo008": 56,
+  "allOriginal1213FilesExact": true,
+  "goalComplete": false
+}

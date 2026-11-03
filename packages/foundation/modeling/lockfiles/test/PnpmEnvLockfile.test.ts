@@ -379,7 +379,8 @@ describe("PnpmEnvLockfile.configDependencies", () => {
             PLUGIN_0_11_1_SRI
           );
           // No devEngines, so the preamble records no package manager.
-          assertNone(yield* PnpmEnvLockfile.packageManager(content));
+          const packageManager1 = yield* PnpmEnvLockfile.packageManager(content);
+          assertNone(packageManager1);
         })
       );
     }

@@ -1,0 +1,147 @@
+{
+  "schemaVersion": "cache-source-capture-prefix-controls/v1",
+  "observedAt": "2026-11-03T11:23:19.046748+00:00",
+  "authority": "Six deterministic source-change prefix controls before any client selection. No native task/process or repository quality suite executed.",
+  "legacyHead": "a6b22fdb64fe9af2c1d86efcc2e1d1bfced6d3f7",
+  "sourceBindings": [
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/native-permission-mode-controls.py",
+      "sha256": "9c3caea2ec33bfc8afd89199f89e15da0e9f21db659ca516c83cf91d0bef264f"
+    },
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/native-permission-flag-availability.py",
+      "sha256": "d6b23f7a4a8c14ff58fb8033fb666af68ce2297974895d61d4978ba021fe3f11"
+    },
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/native-future-flag-availability.py",
+      "sha256": "49e4fd3edc49365f32dc2ce3cdec00e8b0d22034a54a9c1a37bbfd08f868baf0"
+    }
+  ],
+  "rows": [
+    {
+      "driver": "native-permission-mode-controls.py",
+      "changedAfterCapture": "pins",
+      "legacy": {
+        "sourceChangedBeforeNative": true,
+        "refusedBeforeClientSelection": false,
+        "parsedCaptureSha256": "b3d507054f6e67ae8de5b235f05ae6786aed2f3f4361da20ec49a50d67cacecd",
+        "changedFileSha256": "74bdef6955ceca708b64ad62fd1a0e106bd46697bb8dd95c8311aa3ba331a62c",
+        "taskBodiesExecuted": 0,
+        "nativeProcessesStarted": 0
+      },
+      "fixed": {
+        "sourceChangedBeforeNative": true,
+        "refusedBeforeClientSelection": true,
+        "parsedCaptureSha256": "b3d507054f6e67ae8de5b235f05ae6786aed2f3f4361da20ec49a50d67cacecd",
+        "changedFileSha256": "74bdef6955ceca708b64ad62fd1a0e106bd46697bb8dd95c8311aa3ba331a62c",
+        "taskBodiesExecuted": 0,
+        "nativeProcessesStarted": 0
+      }
+    },
+    {
+      "driver": "native-permission-mode-controls.py",
+      "changedAfterCapture": "harness",
+      "legacy": {
+        "sourceChangedBeforeNative": true,
+        "refusedBeforeClientSelection": false,
+        "parsedCaptureSha256": "49e4fd3edc49365f32dc2ce3cdec00e8b0d22034a54a9c1a37bbfd08f868baf0",
+        "changedFileSha256": "0683bc8abae3178e141553cc4424d09968320f493f6823ce9096aef3bab2a24b",
+        "taskBodiesExecuted": 0,
+        "nativeProcessesStarted": 0
+      },
+      "fixed": {
+        "sourceChangedBeforeNative": true,
+        "refusedBeforeClientSelection": true,
+        "parsedCaptureSha256": "49e4fd3edc49365f32dc2ce3cdec00e8b0d22034a54a9c1a37bbfd08f868baf0",
+        "changedFileSha256": "0683bc8abae3178e141553cc4424d09968320f493f6823ce9096aef3bab2a24b",
+        "taskBodiesExecuted": 0,
+        "nativeProcessesStarted": 0
+      }
+    },
+    {
+      "driver": "native-permission-flag-availability.py",
+      "changedAfterCapture": "pins",
+      "legacy": {
+        "sourceChangedBeforeNative": true,
+        "refusedBeforeClientSelection": false,
+        "parsedCaptureSha256": "b3d507054f6e67ae8de5b235f05ae6786aed2f3f4361da20ec49a50d67cacecd",
+        "changedFileSha256": "74bdef6955ceca708b64ad62fd1a0e106bd46697bb8dd95c8311aa3ba331a62c",
+        "taskBodiesExecuted": 0,
+        "nativeProcessesStarted": 0
+      },
+      "fixed": {
+        "sourceChangedBeforeNative": true,
+        "refusedBeforeClientSelection": true,
+        "parsedCaptureSha256": "b3d507054f6e67ae8de5b235f05ae6786aed2f3f4361da20ec49a50d67cacecd",
+        "changedFileSha256": "74bdef6955ceca708b64ad62fd1a0e106bd46697bb8dd95c8311aa3ba331a62c",
+        "taskBodiesExecuted": 0,
+        "nativeProcessesStarted": 0
+      }
+    },
+    {
+      "driver": "native-permission-flag-availability.py",
+      "changedAfterCapture": "harness",
+      "legacy": {
+        "sourceChangedBeforeNative": true,
+        "refusedBeforeClientSelection": false,
+        "parsedCaptureSha256": "49e4fd3edc49365f32dc2ce3cdec00e8b0d22034a54a9c1a37bbfd08f868baf0",
+        "changedFileSha256": "0683bc8abae3178e141553cc4424d09968320f493f6823ce9096aef3bab2a24b",
+        "taskBodiesExecuted": 0,
+        "nativeProcessesStarted": 0
+      },
+      "fixed": {
+        "sourceChangedBeforeNative": true,
+        "refusedBeforeClientSelection": true,
+        "parsedCaptureSha256": "49e4fd3edc49365f32dc2ce3cdec00e8b0d22034a54a9c1a37bbfd08f868baf0",
+        "changedFileSha256": "0683bc8abae3178e141553cc4424d09968320f493f6823ce9096aef3bab2a24b",
+        "taskBodiesExecuted": 0,
+        "nativeProcessesStarted": 0
+      }
+    },
+    {
+      "driver": "native-future-flag-availability.py",
+      "changedAfterCapture": "pins",
+      "legacy": {
+        "sourceChangedBeforeNative": true,
+        "refusedBeforeClientSelection": false,
+        "parsedCaptureSha256": "b3d507054f6e67ae8de5b235f05ae6786aed2f3f4361da20ec49a50d67cacecd",
+        "changedFileSha256": "74bdef6955ceca708b64ad62fd1a0e106bd46697bb8dd95c8311aa3ba331a62c",
+        "taskBodiesExecuted": 0,
+        "nativeProcessesStarted": 0
+      },
+      "fixed": {
+        "sourceChangedBeforeNative": true,
+        "refusedBeforeClientSelection": true,
+        "parsedCaptureSha256": "b3d507054f6e67ae8de5b235f05ae6786aed2f3f4361da20ec49a50d67cacecd",
+        "changedFileSha256": "74bdef6955ceca708b64ad62fd1a0e106bd46697bb8dd95c8311aa3ba331a62c",
+        "taskBodiesExecuted": 0,
+        "nativeProcessesStarted": 0
+      }
+    },
+    {
+      "driver": "native-future-flag-availability.py",
+      "changedAfterCapture": "schema",
+      "legacy": {
+        "sourceChangedBeforeNative": true,
+        "refusedBeforeClientSelection": false,
+        "parsedCaptureSha256": "e3042f9184a5e53260af50b724cbcbbb375f23d53bc1abdc6a3894216f10efaa",
+        "changedFileSha256": "403a20dee9842d1e4f69e570aa8793843436ef27194f93da7693db8398910274",
+        "taskBodiesExecuted": 0,
+        "nativeProcessesStarted": 0
+      },
+      "fixed": {
+        "sourceChangedBeforeNative": true,
+        "refusedBeforeClientSelection": true,
+        "parsedCaptureSha256": "e3042f9184a5e53260af50b724cbcbbb375f23d53bc1abdc6a3894216f10efaa",
+        "changedFileSha256": "403a20dee9842d1e4f69e570aa8793843436ef27194f93da7693db8398910274",
+        "taskBodiesExecuted": 0,
+        "nativeProcessesStarted": 0
+      }
+    }
+  ],
+  "cases": 6,
+  "nativeProcessesStarted": 0,
+  "tasksExecuted": 0,
+  "sourceCheckoutFilesMutated": false,
+  "ownedFixturesRemoved": true
+}

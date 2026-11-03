@@ -110,22 +110,24 @@ const workspaceRoot = (specifier: string): string => A.join(A.take(Str.split(spe
 describe("bundle reachability", () => {
   it.effect("GitHubMarkdown DOES reach @beep/markdown (the control: the walker can see the edge)", () =>
     Effect.gen(function* () {
-      assert.isTrue(A.some(yield* reachablePackages("GitHubMarkdown.ts"), isMarkdownEdge));
+      const reachablePackages1 = yield* reachablePackages("GitHubMarkdown.ts");
+      assert.isTrue(A.some(reachablePackages1, isMarkdownEdge));
     })
   );
 
   it.effect("the root entry point never reaches @beep/markdown", () =>
     Effect.gen(function* () {
-      assert.isFalse(A.some(yield* reachablePackages("index.ts"), isMarkdownEdge));
+      const reachablePackages2 = yield* reachablePackages("index.ts");
+      assert.isFalse(A.some(reachablePackages2, isMarkdownEdge));
     })
   );
 
   it.effect("GitHubMarkdown is the only module that reaches @beep/markdown", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(
-        yield* Effect.filter(sourceModules, (module) => Effect.map(reachablePackages(module), A.some(isMarkdownEdge))),
-        ["GitHubMarkdown.ts"]
+      const filter3 = yield* Effect.filter(sourceModules, (module) =>
+        Effect.map(reachablePackages(module), A.some(isMarkdownEdge))
       );
+      assert.deepStrictEqual(filter3, ["GitHubMarkdown.ts"]);
     })
   );
 
@@ -133,22 +135,26 @@ describe("bundle reachability", () => {
     Effect.gen(function* () {
       // Without this, a walker that never entered managed-section would pass
       // the FileSystem check below vacuously.
-      assert.include(yield* reachableClosure("@beep/managed-section/src/index.ts"), "effect/FileSystem");
+      const reachableClosure4 = yield* reachableClosure("@beep/managed-section/src/index.ts");
+      assert.include(reachableClosure4, "effect/FileSystem");
     })
   );
 
   it.effect("managed-section is reached through its pure leaves only, and effect/FileSystem never", () =>
     Effect.gen(function* () {
       for (const module of sourceModules) {
-        const managedSection = A.filter(yield* reachablePackages(module), Str.startsWith("@beep/managed-section"));
+        const reachablePackages5 = yield* reachablePackages(module);
+        const managedSection = A.filter(reachablePackages5, Str.startsWith("@beep/managed-section"));
         assert.isTrue(
           A.every(managedSection, (specifier) => A.contains(MANAGED_SECTION_LEAVES, specifier)),
           `${module} reaches ${A.join(managedSection, ", ")}`
         );
-        assert.notInclude(yield* reachableClosure(module), "effect/FileSystem", `${module} reaches effect/FileSystem`);
+        const reachableClosure6 = yield* reachableClosure(module);
+        assert.notInclude(reachableClosure6, "effect/FileSystem", `${module} reaches effect/FileSystem`);
       }
+      const reachablePackages7 = yield* reachablePackages("index.ts");
       assert.deepStrictEqual(
-        A.filter(yield* reachablePackages("index.ts"), Str.startsWith("@beep/managed-section")),
+        A.filter(reachablePackages7, Str.startsWith("@beep/managed-section")),
         MANAGED_SECTION_LEAVES
       );
     })
@@ -157,7 +163,8 @@ describe("bundle reachability", () => {
   it.effect("no src module reaches a driver or any workspace package outside its dependencies", () =>
     Effect.gen(function* () {
       for (const module of sourceModules) {
-        const workspace = A.filter(yield* reachableClosure(module), Str.startsWith("@beep/"));
+        const reachableClosure8 = yield* reachableClosure(module);
+        const workspace = A.filter(reachableClosure8, Str.startsWith("@beep/"));
         for (const specifier of workspace) {
           assert.include(ALLOWED_WORKSPACE_ROOTS, workspaceRoot(specifier), `${module} reaches ${specifier}`);
         }
@@ -173,13 +180,15 @@ describe("bundle reachability", () => {
       // blinded walker shows up as an empty set rather than as a pass. The
       // vocabulary reaches nothing but effect and the kit (in particular NOT
       // `@beep/github`, whose conclusion set it mirrors).
-      assert.deepStrictEqual(yield* reachablePackages("CheckState.ts"), [
+      const reachablePackages9 = yield* reachablePackages("CheckState.ts");
+      assert.deepStrictEqual(reachablePackages9, [
         "@beep/identity/packages",
         "@beep/schema/LiteralKit",
         "effect/Match",
         "effect/Schema",
       ]);
-      assert.deepStrictEqual(yield* reachablePackages("ManagedDocument.ts"), [
+      const reachablePackages10 = yield* reachablePackages("ManagedDocument.ts");
+      assert.deepStrictEqual(reachablePackages10, [
         "@beep/identity/packages",
         ...MANAGED_SECTION_LEAVES,
         "@beep/utils/Option",
@@ -190,7 +199,8 @@ describe("bundle reachability", () => {
         "effect/Schema",
         "effect/String",
       ]);
-      assert.deepStrictEqual(yield* reachablePackages("CheckDocument.ts"), [
+      const reachablePackages11 = yield* reachablePackages("CheckDocument.ts");
+      assert.deepStrictEqual(reachablePackages11, [
         "@beep/identity/packages",
         ...MANAGED_SECTION_LEAVES,
         "@beep/schema/LiteralKit",
@@ -218,7 +228,8 @@ describe("bundle reachability", () => {
         "effect/Semaphore",
         "effect/String",
       ]);
-      assert.deepStrictEqual(yield* reachablePackages("GitHubMarkdown.ts"), [
+      const reachablePackages12 = yield* reachablePackages("GitHubMarkdown.ts");
+      assert.deepStrictEqual(reachablePackages12, [
         "@beep/identity/packages",
         "@beep/markdown/Markdown",
         "@beep/markdown/MarkdownNode",

@@ -16,7 +16,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(LockfileIntegrity)(value);
       const decoded = yield* S.decodeEffect(LockfileIntegrity)(encoded);
       assertTrue(S.toEquivalence(LockfileIntegrity)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(LockfileIntegrity)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(LockfileIntegrity)(decoded);
+      assert.deepStrictEqual(value1, encoded);
     }),
   runs
 );
@@ -29,7 +30,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(WorkspaceManifest)(value);
       const decoded = yield* S.decodeEffect(WorkspaceManifest)(encoded);
       assertTrue(S.toEquivalence(WorkspaceManifest)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(WorkspaceManifest)(decoded), encoded);
+      const value2 = yield* S.encodeEffect(WorkspaceManifest)(decoded);
+      assert.deepStrictEqual(value2, encoded);
     }),
   runs
 );

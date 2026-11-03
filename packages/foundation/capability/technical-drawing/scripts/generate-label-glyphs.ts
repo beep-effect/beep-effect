@@ -21,9 +21,11 @@ import { A, R } from "@beep/utils";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { outlineFontFile } from "../src/internal/LabelOutline.ts";
 import type { LabelFace } from "../src/internal/LabelOutline.ts";
@@ -54,10 +56,12 @@ const serialize = (face: LabelFace): string => {
     A.map(([char, glyph]) => {
       const commands = pipe(
         glyph.commands,
-        A.map((command) => JSON.stringify(command)),
+        A.map((command) =>
+          Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(command), identity)
+        ),
         A.join(", ")
       );
-      return `    ${JSON.stringify(char)}: {\n      advance: ${glyph.advance},\n      ink: ${JSON.stringify(glyph.ink)},\n      commands: [${commands}],\n    },`;
+      return `    ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(char), identity)}: {\n      advance: ${glyph.advance},\n      ink: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(glyph.ink), identity)},\n      commands: [${commands}],\n    },`;
     }),
     A.join("\n")
   );

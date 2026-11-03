@@ -37,13 +37,16 @@ it.layer(SqlRunnerStorage.layer.pipe(Layer.provideMerge(DuckDbTestLayer), Layer.
         const machineId = yield* storage.register(runner, true);
         yield* storage.register(runner, true);
         expect(machineId).toEqual(1);
-        expect(yield* storage.getRunners).toEqual([[runner, true]]);
+        const gotRunners = yield* storage.getRunners;
+        expect(gotRunners).toEqual([[runner, true]]);
 
         yield* storage.setRunnerHealth(runnerAddress1, false);
-        expect(yield* storage.getRunners).toEqual([[runner, false]]);
+        const gotRunners1 = yield* storage.getRunners;
+        expect(gotRunners1).toEqual([[runner, false]]);
 
         yield* storage.unregister(runnerAddress1);
-        expect(yield* storage.getRunners).toEqual([]);
+        const gotRunners2 = yield* storage.getRunners;
+        expect(gotRunners2).toEqual([]);
       }),
     { timeout: 30_000 }
   );

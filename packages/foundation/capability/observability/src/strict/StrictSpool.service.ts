@@ -471,7 +471,8 @@ export const makeStrictSpool = Effect.fn("StrictSpool.make")(function* (options:
         ciphertextBase64: Base64.encode(new Uint8Array(ciphertext)),
       })
     ).pipe(Effect.mapError(spoolFailure("append", "A strict spool segment could not be encoded.")));
-    const name = segmentName(sealedAtMillis, yield* Ref.getAndUpdate(sequence, (next) => next + 1));
+    const gotAndUpdate = yield* Ref.getAndUpdate(sequence, (next) => next + 1);
+    const name = segmentName(sealedAtMillis, gotAndUpdate);
     const target = path.join(directory, name);
     yield* writeOwnerOnlyFile(target, text).pipe(
       Effect.provideService(FileSystem.FileSystem, fs),
@@ -479,7 +480,8 @@ export const makeStrictSpool = Effect.fn("StrictSpool.make")(function* (options:
     );
     // The body is already on disk, so eviction never fails the append: a
     // segment it could not remove is counted and the next append tries again.
-    return refusalLedgerOf(yield* evict());
+    const evict1 = yield* evict();
+    return refusalLedgerOf(evict1);
   });
 
   const replay = readSegments(

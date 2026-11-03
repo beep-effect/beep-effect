@@ -359,7 +359,8 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         assert.include(byDefault, "in: sync");
         assert.notInclude(byDefault, "(definition)");
         assert.notInclude(byDefault, "ConfigFile");
-        assert.include(yield* runTool("all"), "ConfigFile.loadFrom", "control: all keeps the kit's spans");
+        const resultTool = yield* runTool("all");
+        assert.include(resultTool, "ConfigFile.loadFrom", "control: all keeps the kit's spans");
         const off = yield* runTool("off");
         assert.include(off, "Config validation failed");
         assert.notInclude(off, "in: ");

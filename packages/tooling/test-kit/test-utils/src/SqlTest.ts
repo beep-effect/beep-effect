@@ -1252,7 +1252,9 @@ const buildPgExternalLayer: (
         );
         const sql = client.withoutTransforms();
         const schema =
-          config.isolation === "schema" ? O.some(yield* makePgExternalSchemaName(config.schemaPrefix)) : O.none();
+          config.isolation === "schema"
+            ? yield* Effect.asSome(makePgExternalSchemaName(config.schemaPrefix))
+            : O.none();
 
         yield* pipe(
           schema,

@@ -41,7 +41,8 @@ export const framedGet = (
       if (O.isNone(bytes)) {
         return O.none<StoredBlob<A>>();
       }
-      return O.some(yield* Effect.fromResult(BlobEnvelope.decodeResult(bytes.value, schema)));
+      const fromResult1 = yield* Effect.fromResult(BlobEnvelope.decodeResult(bytes.value, schema));
+      return O.some(fromResult1);
     })
   );
 
@@ -76,6 +77,7 @@ export const framedPut = (
       blob: StoredBlob<A>,
       schema: S.Codec<A, I>
     ): Effect.fn.Return<void, BlobStoreError | BlobEnvelopeError> {
-      yield* write(key, yield* Effect.fromResult(BlobEnvelope.encodeResult(blob.metadata, blob.body, schema)));
+      const fromResult2 = yield* Effect.fromResult(BlobEnvelope.encodeResult(blob.metadata, blob.body, schema));
+      yield* write(key, fromResult2);
     })
   );

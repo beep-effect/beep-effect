@@ -80,7 +80,9 @@ const mintText = Effect.fnUntraced(function* (
 // The committed form of a baseline minted earlier: same entries, an older mintedAt, exact text.
 const committedAt = Effect.fnUntraced(function* (baseline: KnowledgeDoctorBaseline, mintedAt: string) {
   const committed = KnowledgeDoctorBaseline.make({ ...baseline, mintedAt });
-  return seal({ baseline: O.some(committed), baselineText: O.some(yield* encodeKnowledgeBaselineText(committed)) });
+  const argument = O.some(committed);
+  const encodedKnowledgeBaselineText = yield* encodeKnowledgeBaselineText(committed);
+  return seal({ baseline: argument, baselineText: O.some(encodedKnowledgeBaselineText) });
 });
 
 const pullRequest = (overrides: Partial<KnowledgeMintPullRequest> = {}) =>
@@ -118,7 +120,9 @@ describe("knowledge doctor mint workflow", () => {
         yield* verifyKnowledgeBaselineText(first.text, second.baseline);
 
         // The committed baseline already holds these entries under an older mintedAt: nothing to write.
-        const same = yield* mintText(tree(SEALED_TREE), yield* committedAt(first.baseline, EARLIER));
+        const argument1 = tree(SEALED_TREE);
+        const committedAt1 = yield* committedAt(first.baseline, EARLIER);
+        const same = yield* mintText(argument1, committedAt1);
         assert.isFalse(same.changed);
         assert.strictEqual(same.text, first.text);
 
@@ -133,7 +137,9 @@ describe("knowledge doctor mint workflow", () => {
             })
           ),
         });
-        const dropped = yield* mintText(tree(SEALED_TREE), yield* committedAt(stale, EARLIER));
+        const argument2 = tree(SEALED_TREE);
+        const committedAt2 = yield* committedAt(stale, EARLIER);
+        const dropped = yield* mintText(argument2, committedAt2);
         assert.isTrue(dropped.changed);
         assert.strictEqual(A.length(dropped.baseline.entries), A.length(first.baseline.entries));
 

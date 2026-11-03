@@ -93,15 +93,19 @@ const makeHarness = Effect.fnUntraced(function* (options?: {
       yield* Ref.update(events, A.append("outcome"));
     }),
     readDecisions: Effect.fn("GovernedTierGateTest.readDecisions")(function* (runKey) {
-      return A.filter(yield* Ref.get(decisions), (record) => record.runKey === runKey);
+      const got = yield* Ref.get(decisions);
+      return A.filter(got, (record) => record.runKey === runKey);
     }),
     readOutcomes: Effect.fn("GovernedTierGateTest.readOutcomes")(function* (runKey) {
-      return A.filter(yield* Ref.get(outcomes), (record) => record.runKey === runKey);
+      const got1 = yield* Ref.get(outcomes);
+      return A.filter(got1, (record) => record.runKey === runKey);
     }),
     readUnsettledAllowed: Effect.fn("GovernedTierGateTest.readUnsettledAllowed")(function* (runKey) {
-      const settled = A.map(yield* Ref.get(outcomes), (record) => record.decisionHash);
+      const got2 = yield* Ref.get(outcomes);
+      const settled = A.map(got2, (record) => record.decisionHash);
+      const got3 = yield* Ref.get(decisions);
       return A.filter(
-        yield* Ref.get(decisions),
+        got3,
         (record) => record.runKey === runKey && record.verdict === "allowed" && !A.contains(settled, record.hash)
       );
     }),
@@ -144,7 +148,8 @@ describe("GovernedTierGate", () => {
         expect(result.audit.reason).toBe("Approved by a grant in the session's frozen grant set.");
       }
       // Write-ahead, then the wrapped effect, then the settlement — in order.
-      expect(yield* Ref.get(harness.events)).toEqual(["decision", "effect", "outcome"]);
+      const got4 = yield* Ref.get(harness.events);
+      expect(got4).toEqual(["decision", "effect", "outcome"]);
 
       const decisions = yield* Ref.get(harness.decisions);
       expect(decisions).toHaveLength(1);
@@ -202,7 +207,8 @@ describe("GovernedTierGate", () => {
       expect(result._tag).toBe("Refused");
       // Exactly one ledger event — the denied decision. The wrapped effect
       // never ran and no outcome is written or expected.
-      expect(yield* Ref.get(harness.events)).toEqual(["decision"]);
+      const got5 = yield* Ref.get(harness.events);
+      expect(got5).toEqual(["decision"]);
       const decisions = yield* Ref.get(harness.decisions);
       expect(decisions).toHaveLength(1);
       expect(decisions[0]!.verdict).toBe("denied");
@@ -218,8 +224,10 @@ describe("GovernedTierGate", () => {
 
       expect(result._tag).toBe("Refused");
       // No record, no action: the effect never ran and nothing was persisted.
-      expect(yield* Ref.get(harness.events)).toEqual([]);
-      expect(yield* Ref.get(harness.decisions)).toHaveLength(0);
+      const got6 = yield* Ref.get(harness.events);
+      expect(got6).toEqual([]);
+      const got7 = yield* Ref.get(harness.decisions);
+      expect(got7).toHaveLength(0);
     })
   );
 
@@ -235,7 +243,8 @@ describe("GovernedTierGate", () => {
       ).pipe(Effect.provideService(TierGate, harness.gate));
 
       expect(result._tag).toBe("Refused");
-      expect(yield* Ref.get(harness.events)).toEqual([]);
+      const got8 = yield* Ref.get(harness.events);
+      expect(got8).toEqual([]);
     })
   );
 
@@ -280,8 +289,10 @@ describe("GovernedTierGate", () => {
       expect(result._tag).toBe("Dispatched");
       // The decision persisted, the outcome write failed and was dropped —
       // the decision stays visibly unsettled in the derived-unknown view.
-      expect(yield* Ref.get(harness.decisions)).toHaveLength(1);
-      expect(yield* Ref.get(harness.outcomes)).toHaveLength(0);
+      const got9 = yield* Ref.get(harness.decisions);
+      expect(got9).toHaveLength(1);
+      const got10 = yield* Ref.get(harness.outcomes);
+      expect(got10).toHaveLength(0);
     })
   );
 

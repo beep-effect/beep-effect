@@ -30,18 +30,26 @@ assert sys.platform == "linux", (
 )
 os.umask(0o077)
 repo = Path(__file__).resolve().parents[3]
-relative_driver = Path(__file__).resolve().relative_to(repo).as_posix()
+driver = Path(__file__).resolve()
+driver_bytes = driver.read_bytes()
+relative_driver = driver.relative_to(repo).as_posix()
 base = repo / ".beep/native-future-flag-availability"
 cache = Path.home() / ".cache/beep/turbo-future-flag-availability"
 for directory in (base, cache):
     directory.mkdir(mode=0o700, parents=True, exist_ok=True)
-pins = json.loads((Path(__file__).parent / "current-client-pins.json").read_text())
+pins_path = Path(__file__).parent / "current-client-pins.json"
+pins_bytes = pins_path.read_bytes()
+pins = json.loads(pins_bytes)
 schema_path = repo / "node_modules/turbo/schema.json"
-schema = json.loads(schema_path.read_text())
+schema_bytes = schema_path.read_bytes()
+schema = json.loads(schema_bytes)
 flags = list(schema["definitions"]["FutureFlags"]["properties"])
 assert len(flags) == 14, (
     "Review the changed stable schema before changing this observation."
 )
+captured_sources = {driver: driver_bytes, pins_path: pins_bytes, schema_path: schema_bytes}
+for path, data in captured_sources.items():
+    assert path.read_bytes() == data, "Source changed before observation."
 clients = {
     "stable": repo / "node_modules/@turbo/linux-64/bin/turbo",
     "canary": Path.home()
@@ -188,6 +196,8 @@ for channel, binary in clients.items():
 
 assert time.monotonic() - start < 600
 assert len(rows) == 60
+for path, data in captured_sources.items():
+    assert path.read_bytes() == data, "Source changed during observation."
 raw = {
     "schemaVersion": "cache-future-flag-native-availability/v1",
     "recordedAt": datetime.datetime.now(datetime.UTC).isoformat(),
@@ -195,11 +205,17 @@ raw = {
     "sourceRevision": subprocess.check_output(
         ["git", "-C", str(repo), "rev-parse", "HEAD"], text=True, timeout=5
     ).strip(),
+    "sourceState": "working-tree-bound",
+    "sourceBindings": [
+        {"path": path.relative_to(repo).as_posix(), "sha256": hashlib.sha256(data).hexdigest()}
+        for path, data in captured_sources.items()
+    ],
     "clients": {
         channel: {key: pins[channel][key] for key in ("reportedVersion", "sha256")}
         for channel in clients
     },
-    "stableSchemaSha256": hashlib.sha256(schema_path.read_bytes()).hexdigest(),
+    "stableSchemaSha256": hashlib.sha256(schema_bytes).hexdigest(),
+    "pinManifestSha256": hashlib.sha256(pins_bytes).hexdigest(),
     "flags": flags,
     "rows": rows,
     "completed": True,
@@ -225,7 +241,7 @@ raw = {
 }
 raw_bytes = (json.dumps(raw, indent=2) + "\n").encode()
 (base / "raw-observation.json").write_bytes(raw_bytes)
-driver_sha = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+driver_sha = hashlib.sha256(driver_bytes).hexdigest()
 report = {
     **raw,
     "rawObservationSha256": hashlib.sha256(raw_bytes).hexdigest(),

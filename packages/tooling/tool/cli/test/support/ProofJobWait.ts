@@ -48,7 +48,8 @@ export const waitTimesOut = Effect.fnUntraced(function* (
   // A waiter that returns never sleeps, so its exit also ends the race.
   yield* Effect.raceFirst(Deferred.await(polled), Fiber.await(waiter));
   yield* testClock.adjust(Duration.millis(timeoutMs + 1));
-  yield* Result.match(yield* waiter.pipe(Fiber.join, Effect.result), {
+  const pipe1 = yield* waiter.pipe(Fiber.join, Effect.result);
+  yield* Result.match(pipe1, {
     onFailure: (error) => Effect.sync(() => assertInclude(error.message, "Timed out")),
     onSuccess: (returned) => Effect.die(`the wait returned ${returned.kind} where it had to time out`),
   });

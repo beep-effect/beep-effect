@@ -31,10 +31,12 @@ assert not args.output.exists() and not args.output.is_symlink(), "Existing repo
 repo = Path(__file__).resolve().parents[3]
 research = Path(__file__).resolve().parent
 pins_path = research / "current-client-pins.json"
-pins = json.loads(pins_path.read_text())
+pins_bytes = pins_path.read_bytes()
+pins = json.loads(pins_bytes)
 harness = research / "native-future-flag-availability.py"
+harness_bytes = harness.read_bytes()
 function = next(
-    node for node in ast.parse(harness.read_text()).body
+    node for node in ast.parse(harness_bytes).body
     if isinstance(node, ast.FunctionDef) and node.name == "run_bounded"
 )
 capture = {
@@ -44,11 +46,14 @@ capture = {
                 "--dry-run=json", "--cache=local:r", "--concurrency=1", "--env-mode=strict"],
 }
 exec(compile(ast.Module(body=[function], type_ignores=[]), str(harness), "exec"), capture)
-sources = [Path(__file__).resolve(), pins_path, harness]
+driver = Path(__file__).resolve()
+captured = {driver: driver.read_bytes(), pins_path: pins_bytes, harness: harness_bytes}
 bindings = [
-    {"path": path.relative_to(repo).as_posix(), "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
-    for path in sources
+    {"path": path.relative_to(repo).as_posix(), "sha256": hashlib.sha256(data).hexdigest()}
+    for path, data in captured.items()
 ]
+for binding in bindings:
+    assert hashlib.sha256((repo / binding["path"]).read_bytes()).hexdigest() == binding["sha256"], "Source changed before observation."
 clients = {
     "stable": repo / "node_modules/@turbo/linux-64/bin/turbo",
     "canary": Path.home() / ".cache/beep/turbo-goals-clients" / pins["canary"]["packageVersion"] / "turbo",

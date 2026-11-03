@@ -71,7 +71,8 @@ const takeOnce = Effect.fnUntraced(function* (
   queue: PersistedQueue.PersistedQueue<{ readonly n: bigint }>,
   expected: { readonly n: bigint }
 ) {
-  assert.deepStrictEqual(yield* queue.take(Effect.succeed), expected);
+  const take1 = yield* queue.take(Effect.succeed);
+  assert.deepStrictEqual(take1, expected);
   const fiber = yield* queue.take(Effect.succeed).pipe(Effect.forkScoped);
   yield* assertNotDelivered(fiber);
 });
@@ -148,7 +149,8 @@ const suiteWithImpl = <R, E>(
           yield* queue.offer({ n: 42n }, { id: Str.slice(0, 1)("😀") });
 
           const fiber = yield* queue.take(Effect.succeed).pipe(Effect.forkScoped);
-          assert.deepStrictEqual(yield* awaitDelivery(fiber), { n: 42n });
+          const awaitDelivery2 = yield* awaitDelivery(fiber);
+          assert.deepStrictEqual(awaitDelivery2, { n: 42n });
         }),
       testOptions
     );
@@ -166,7 +168,8 @@ const suiteWithImpl = <R, E>(
           const id = "lone-surrogate-failed-custom-id";
           yield* queue.offer({ s: Str.slice(0, 1)("😀") }, { id });
           const failed = yield* queue.take(() => Effect.fail("boom")).pipe(Effect.flip, Effect.forkScoped);
-          assert.strictEqual(yield* awaitDelivery(failed), "boom");
+          const awaitDelivery3 = yield* awaitDelivery(failed);
+          assert.strictEqual(awaitDelivery3, "boom");
 
           // An unexpired dead letter must keep its custom id deduplicated.
           yield* store.cleanup({ timeToLive: Duration.seconds(1), failedTimeToLive: Duration.days(30) });
@@ -178,7 +181,8 @@ const suiteWithImpl = <R, E>(
           yield* advancePastTtl;
           yield* store.cleanup({ timeToLive: Duration.days(30), failedTimeToLive: Duration.seconds(1) });
           yield* queue.offer({ s: "reoffered" }, { id });
-          assert.deepStrictEqual(yield* awaitDelivery(fiber), { s: "reoffered" });
+          const awaitDelivery4 = yield* awaitDelivery(fiber);
+          assert.deepStrictEqual(awaitDelivery4, { s: "reoffered" });
         }),
       testOptions
     );
@@ -264,7 +268,8 @@ const suiteWithImpl = <R, E>(
           yield* Effect.sleep(100).pipe(TestClock.withLive);
           assert.isUndefined(fiber.pollUnsafe());
 
-          assert.strictEqual(yield* awaitDelivery(fiber), 2);
+          const awaitDelivery5 = yield* awaitDelivery(fiber);
+          assert.strictEqual(awaitDelivery5, 2);
         }),
       testOptions
     );
@@ -289,7 +294,8 @@ const suiteWithImpl = <R, E>(
           yield* assertNotDelivered(fiber);
 
           // the delay does not consume an attempt
-          assert.deepStrictEqual(yield* awaitDelivery(fiber), { value: { n: 42n }, attempts: 1 });
+          const awaitDelivery6 = yield* awaitDelivery(fiber);
+          assert.deepStrictEqual(awaitDelivery6, { value: { n: 42n }, attempts: 1 });
         }),
       testOptions
     );
@@ -329,7 +335,8 @@ const suiteWithImpl = <R, E>(
 
           // no dedupe record was written, so the id can be offered again
           yield* queue.offer({ n: 3n }, { id: "infinite-delay-id" });
-          assert.deepStrictEqual(yield* queue.take(Effect.succeed), { n: 3n });
+          const take7 = yield* queue.take(Effect.succeed);
+          assert.deepStrictEqual(take7, { n: 3n });
 
           const fiber = yield* queue.take(Effect.succeed).pipe(Effect.forkScoped);
           yield* assertNotDelivered(fiber);
@@ -352,7 +359,8 @@ const suiteWithImpl = <R, E>(
           // the undelayed duplicate does not make the element available early
           const fiber = yield* queue.take(Effect.succeed).pipe(Effect.forkScoped);
           yield* assertNotDelivered(fiber);
-          assert.deepStrictEqual(yield* awaitDelivery(fiber), { n: 1n });
+          const awaitDelivery8 = yield* awaitDelivery(fiber);
+          assert.deepStrictEqual(awaitDelivery8, { n: 1n });
 
           const fiber2 = yield* queue.take(Effect.succeed).pipe(Effect.forkScoped);
           yield* assertNotDelivered(fiber2);
@@ -400,7 +408,8 @@ const suiteWithImpl = <R, E>(
           yield* second.offer({ n: 2n }, { id: "shared-custom-id" });
 
           const fiber = yield* second.take(Effect.succeed).pipe(Effect.forkScoped);
-          assert.deepStrictEqual(yield* awaitDelivery(fiber), { n: 2n });
+          const awaitDelivery9 = yield* awaitDelivery(fiber);
+          assert.deepStrictEqual(awaitDelivery9, { n: 2n });
         }),
       testOptions
     );
@@ -506,7 +515,8 @@ const suiteWithImpl = <R, E>(
           yield* advancePastTtl;
           yield* store.cleanup({ timeToLive: Duration.seconds(1), failedTimeToLive: undefined });
           yield* queue.offer({ n: 3n }, { id: "cleanup-id" });
-          assert.deepStrictEqual(yield* awaitDelivery(fiber), { n: 3n });
+          const awaitDelivery10 = yield* awaitDelivery(fiber);
+          assert.deepStrictEqual(awaitDelivery10, { n: 3n });
         }),
       testOptions
     );
@@ -538,7 +548,8 @@ const suiteWithImpl = <R, E>(
           // with failedTimeToLive the failed element and its dedupe entry go away
           yield* store.cleanup({ timeToLive: Duration.days(30), failedTimeToLive: Duration.seconds(1) });
           yield* queue.offer({ n: 3n }, { id: "failed-cleanup-id" });
-          assert.deepStrictEqual(yield* awaitDelivery(fiber), { n: 3n });
+          const awaitDelivery11 = yield* awaitDelivery(fiber);
+          assert.deepStrictEqual(awaitDelivery11, { n: 3n });
         }),
       testOptions
     );

@@ -26,6 +26,7 @@ export {
   LsRemoteEntry,
   LsTreeEntry,
   MergeConflictError,
+  MergeTreeResult,
   NameStatusEntry,
   NonFastForwardError,
   NotARepositoryError,

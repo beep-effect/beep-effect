@@ -141,7 +141,8 @@ export const makeMailTaggingUndo: Effect.Effect<MailTaggingUndoShape, never, Mai
         report: TaggingUndoReport,
         entry: TagLedgerEntry
       ): Effect.fn.Return<TaggingUndoReport, UndoError> {
-        const restoration = restorationOf(entry, yield* mailbox.getEnvelope(entry.messageId));
+        const gotEnvelope = yield* mailbox.getEnvelope(entry.messageId);
+        const restoration = restorationOf(entry, gotEnvelope);
         if (TaggingMode.is.apply(request.mode)) {
           yield* restore(request, restoration);
         }
@@ -150,7 +151,8 @@ export const makeMailTaggingUndo: Effect.Effect<MailTaggingUndoShape, never, Mai
 
     return MailTaggingUndoShape.make({
       run: Effect.fn("MailTaggingUndo.run")(function* (request: UndoMailTaggingRequest) {
-        const entries = activeTagEntriesOfRun(yield* tagLedger.records, request.originalRunId);
+        const records1 = yield* tagLedger.records;
+        const entries = activeTagEntriesOfRun(records1, request.originalRunId);
         return yield* Effect.reduce(entries, () => emptyUndoReport(request, entries.length), undoEntry(request));
       }),
     });

@@ -40,8 +40,10 @@ describe("ManagedSection", () => {
         it.effect("treats a missing file as a document with no sections", () =>
           Effect.gen(function* () {
             const service = yield* ManagedSection;
-            assertNone(yield* service.read(HOOK, id("example-tool")));
-            assert.isFalse(yield* service.isManaged(HOOK, id("example-tool")));
+            const read1 = yield* service.read(HOOK, id("example-tool"));
+            assertNone(read1);
+            const isManaged2 = yield* service.isManaged(HOOK, id("example-tool"));
+            assert.isFalse(isManaged2);
           })
         );
       });
@@ -223,7 +225,8 @@ describe("ManagedSection", () => {
         it.effect("removes a section and reports that it did", () =>
           Effect.gen(function* () {
             const service = yield* ManagedSection;
-            assert.isTrue(yield* service.remove(HOOK, id("example-tool")));
+            const remove3 = yield* service.remove(HOOK, id("example-tool"));
+            assert.isTrue(remove3);
             assert.strictEqual(fs.text(HOOK), lines("#!/bin/sh", "", "tail", ""));
           })
         );
@@ -236,7 +239,8 @@ describe("ManagedSection", () => {
         it.effect("reports false and writes nothing when the section is absent", () =>
           Effect.gen(function* () {
             const service = yield* ManagedSection;
-            assert.isFalse(yield* service.remove(HOOK, id("example-tool")));
+            const remove4 = yield* service.remove(HOOK, id("example-tool"));
+            assert.isFalse(remove4);
             assert.strictEqual(fs.writes(), 0);
           })
         );
@@ -249,7 +253,8 @@ describe("ManagedSection", () => {
         it.effect("reports false for a file that does not exist", () =>
           Effect.gen(function* () {
             const service = yield* ManagedSection;
-            assert.isFalse(yield* service.remove(HOOK, id("example-tool")));
+            const remove5 = yield* service.remove(HOOK, id("example-tool"));
+            assert.isFalse(remove5);
           })
         );
       });
@@ -365,7 +370,8 @@ describe("ManagedSection", () => {
       it.effect("layerTest serves the members a suite stubs", () =>
         Effect.gen(function* () {
           const service = yield* ManagedSection;
-          assert.isFalse(yield* service.isManaged("anywhere", id("example-tool")));
+          const isManaged6 = yield* service.isManaged("anywhere", id("example-tool"));
+          assert.isFalse(isManaged6);
         })
       );
     });

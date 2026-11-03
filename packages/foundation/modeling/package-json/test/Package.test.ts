@@ -199,7 +199,8 @@ describe("Package wire transform + rest", () => {
       assert.strictEqual(encoded.custom, "kept");
       assert.isFalse("rest" in encoded);
       // Byte-level: the serialized manifest still carries the key as data.
-      assert.include(yield* S.encodeEffect(Json)(encoded), '"__proto__":{"polluted":true}');
+      const value1 = yield* S.encodeEffect(Json)(encoded);
+      assert.include(value1, '"__proto__":{"polluted":true}');
       const rendered = yield* S.decodeEffect(Json)(decoded.toJsonString());
       assert.deepStrictEqual(Object.getOwnPropertyDescriptor(rendered, "__proto__")?.value, { polluted: true });
       assert.strictEqual(rendered.custom, "kept");

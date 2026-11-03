@@ -116,9 +116,9 @@ export class GatewaySettings extends Context.Service<GatewaySettings, GatewaySet
     GatewaySettings,
     Effect.gen(function* () {
       const path = yield* Path.Path;
-      const platform = yield* Config.String("PRACTICE_GATEWAY_PLATFORM").pipe(
-        Config.withDefault(yield* HostProcessPlatform)
-      );
+      const argument = Config.String("PRACTICE_GATEWAY_PLATFORM");
+      const HostProcessPlatform1 = yield* HostProcessPlatform;
+      const platform = yield* argument.pipe(Config.withDefault(HostProcessPlatform1));
       const isWindows = platform === "win32";
       const dataDir = yield* resolveDataDir(path, isWindows);
       const bundleDir = O.firstSomeOf([

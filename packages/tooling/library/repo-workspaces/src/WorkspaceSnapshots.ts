@@ -612,7 +612,8 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
       ref: string,
       rootManifest: Record<string, unknown>
     ) {
-      const recorded = yield* lockfileRecord(yield* lockfileText(root, ref, "bun"), "bun");
+      const lockfileText1 = yield* lockfileText(root, ref, "bun");
+      const recorded = yield* lockfileRecord(lockfileText1, "bun");
       return {
         patterns: WorkspacePatterns.fromManifest(rootManifest),
         inline: bunInlineCatalogs(rootManifest),
@@ -667,7 +668,8 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
         // Package directories come from the tree listing at the ref, matched
         // against the compiled glob set — no directory descent, because
         // `ls-tree -r` already enumerates every path (globstar included).
-        const { hasRootManifest, memberDirs } = memberDirsOf(yield* git.lsTree(root, ref), globs);
+        const lsTree2 = yield* git.lsTree(root, ref);
+        const { hasRootManifest, memberDirs } = memberDirsOf(lsTree2, globs);
 
         const members = yield* Effect.forEach(
           memberDirs,

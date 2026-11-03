@@ -24,7 +24,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -48,17 +49,14 @@ it.effect.prop(
     Effect.gen(function* () {
       const parsed = GitHubError.fromOctokit("operation", input, 0);
       const json = S.fromJsonString(ThrowableInput);
-      const reparsed = GitHubError.fromOctokit(
-        "operation",
-        yield* S.decodeEffect(json)(
-          yield* S.encodeEffect(json)({
-            ...input,
-            message: parsed.reason,
-            response: { data: { errors: parsed.validation ?? [] } },
-          })
-        ),
-        0
-      );
+      const argument = S.decodeEffect(json);
+      const value3 = yield* S.encodeEffect(json)({
+        ...input,
+        message: parsed.reason,
+        response: { data: { errors: parsed.validation ?? [] } },
+      });
+      const value2 = yield* argument(value3);
+      const reparsed = GitHubError.fromOctokit("operation", value2, 0);
       assert.strictEqual(reparsed.kind, parsed.kind);
       assert.strictEqual(reparsed.reason, parsed.reason);
       assert.deepStrictEqual(reparsed.validation, parsed.validation);
@@ -87,7 +85,9 @@ it.effect.prop(
         "x-ratelimit-reset": String(parsed.resetEpochSeconds),
       };
       const codec = S.fromJsonString(S.Record(S.String, S.String));
-      const decodedHeaders = yield* S.decodeEffect(codec)(yield* S.encodeEffect(codec)(canonical));
+      const argument1 = S.decodeEffect(codec);
+      const value4 = yield* S.encodeEffect(codec)(canonical);
+      const decodedHeaders = yield* argument1(value4);
       assertSome(readRateLimitHeaders(decodedHeaders), parsed);
       assert.isTrue(parsed.remaining === value.remaining);
       assert.isTrue(parsed.limit === value.limit);

@@ -107,8 +107,9 @@ export const deriveCacheProducerEvidence = Effect.fn("Producer.deriveEvidence")(
   if (
     !S.toEquivalence(CacheQualificationKey)(pilot.baseKey, execution.sourceKey) ||
     !S.toEquivalence(CacheEvidenceReference)(pilot.activation, execution.activationRequest)
-  )
+  ) {
     return yield* CacheCommandError.new("Signed evidence differs from its approved source or activation request.");
+  }
   const fragments = A.empty<CacheProducerEvidenceFragment>();
   const retain = Effect.fn("Producer.retainComparison")(function* (
     kind: typeof DerivedEvidenceKind.Type,
@@ -139,11 +140,13 @@ export const deriveCacheProducerEvidence = Effect.fn("Producer.deriveEvidence")(
     );
   });
   const baseline = A.getUnsafe(pilot.pairs, 0);
+
+  const encodedPilot = yield* encodePilot(pilot);
   yield* retain(
     "orchestration-invariance",
     "activation-projection",
     [baseline.authorityRoot, baseline.producerRoot],
-    yield* encodePilot(pilot),
+    encodedPilot,
     ["activation-projection"]
   );
   const retainFreshComparisons = Effect.fn("Producer.retainFreshComparisons")(function* () {
@@ -156,7 +159,9 @@ export const deriveCacheProducerEvidence = Effect.fn("Producer.deriveEvidence")(
         pair.right.selectedTaskInterval,
         (left, right) => Math.max(left.startTime, right.startTime) < Math.min(left.endTime, right.endTime)
       );
-      if (O.contains(true)(overlaps)) yield* retain("concurrency", `overlap-${pair.id}`, roots, contents);
+      if (O.contains(true)(overlaps)) {
+        yield* retain("concurrency", `overlap-${pair.id}`, roots, contents);
+      }
     }
   });
   yield* retainFreshComparisons();
@@ -178,7 +183,7 @@ export const deriveCacheProducerEvidence = Effect.fn("Producer.deriveEvidence")(
         shadow.comparison.replayRoot,
       ] satisfies CacheQualificationObservation["roots"];
       yield* retain("shadow", shadow.case, roots, contents);
-      if (shadow.case !== "baseline")
+      if (shadow.case !== "baseline") {
         yield* retain(
           changesSemanticHash(shadow.case) ? "semantic-invalidation" : "orchestration-invariance",
           `input-${shadow.case}`,
@@ -186,45 +191,46 @@ export const deriveCacheProducerEvidence = Effect.fn("Producer.deriveEvidence")(
           contents,
           [shadow.case]
         );
+      }
     }
   });
   yield* retainShadowComparisons();
-  for (const mutation of pilot.mutations)
+  for (const mutation of pilot.mutations) {
+    const argument1 = `mutation-${mutation.case}`;
+
+    const encodedMutation = yield* encodeMutation(mutation);
     yield* retain(
       "semantic-invalidation",
-      `mutation-${mutation.case}`,
+      argument1,
       [mutation.comparison.producerRoot, mutation.comparison.replayRoot],
-      yield* encodeMutation(mutation),
+      encodedMutation,
       [mutation.case]
     );
-  for (const control of pilot.captureControls)
-    yield* retain(
-      "capture-safety",
-      `capture-${control.case}`,
-      [control.isolationRoot],
-      yield* encodeCaptureControl(control)
-    );
-  for (const observation of pilot.nonExecutions)
-    yield* retain(
-      "negative-case",
-      `refusal-${observation.reason}`,
-      [observation.isolationRoot],
-      yield* encodeNonExecution(observation),
-      [observation.reason]
-    );
+  }
+  for (const control of pilot.captureControls) {
+    const argument3 = `capture-${control.case}`;
+
+    const encodedCaptureControl = yield* encodeCaptureControl(control);
+    yield* retain("capture-safety", argument3, [control.isolationRoot], encodedCaptureControl);
+  }
+  for (const observation of pilot.nonExecutions) {
+    const argument5 = `refusal-${observation.reason}`;
+
+    const encodedNonExecution = yield* encodeNonExecution(observation);
+    yield* retain("negative-case", argument5, [observation.isolationRoot], encodedNonExecution, [observation.reason]);
+  }
+
+  const encodedPolicyRefusal = yield* encodePolicyRefusal(pilot.policyRefusal);
   yield* retain(
     "negative-case",
     "refusal-missing-child-config",
     [pilot.policyRefusal.isolationRoot],
-    yield* encodePolicyRefusal(pilot.policyRefusal),
+    encodedPolicyRefusal,
     [pilot.policyRefusal.reason]
   );
-  yield* retain(
-    "conformance",
-    "complete-native-protocol",
-    A.map(bundle.protocol.roots, (root) => root.sha256),
-    yield* encodeProtocol(bundle.protocol)
-  );
+  const argument8 = A.map(bundle.protocol.roots, (root) => root.sha256);
+  const encodedProtocol = yield* encodeProtocol(bundle.protocol);
+  yield* retain("conformance", "complete-native-protocol", argument8, encodedProtocol);
   return fragments;
 });
 
@@ -251,10 +257,11 @@ const verifyImportPublications = Effect.fn("Producer.verifyImportPublications")(
         };
         for (const channel of CacheClientChannel.literals) {
           const approved = hostedApprovals[channel];
-          if (!sameProducerBinding(approved.binding, approvals[channel].binding))
+          if (!sameProducerBinding(approved.binding, approvals[channel].binding)) {
             return yield* CacheCommandError.new(
               "Hosted approval differs from the independently authenticated channel binding."
             );
+          }
           const publication = publications[channel];
           yield* verifier.verify(
             trust[channel],
@@ -266,8 +273,10 @@ const verifyImportPublications = Effect.fn("Producer.verifyImportPublications")(
         }
         for (const channel of CacheClientChannel.literals) {
           const approved = hostedApprovals[channel];
-          if (!sameHostedApproval(approved, yield* readCacheProducerHostedApproval(trust[channel])))
+          const readCacheProducerHostedApproval1 = yield* readCacheProducerHostedApproval(trust[channel]);
+          if (!sameHostedApproval(approved, readCacheProducerHostedApproval1)) {
             return yield* CacheCommandError.new("Hosted producer approval changed during acceptance verification.");
+          }
         }
         return A.empty<string>();
       }),
@@ -323,13 +332,15 @@ export const previewCacheProducerImport = Effect.fn("Producer.previewImport")(fu
     canary: canary.verify(request.observations.canary.envelope, request.observations.canary.observation),
   });
   const contract = approvals.stable.contract;
-  if (!S.toEquivalence(CacheTaskContract)(contract, approvals.canary.contract))
+  if (!S.toEquivalence(CacheTaskContract)(contract, approvals.canary.contract)) {
     return yield* CacheCommandError.new("Channel approvals do not describe the same reviewed task contract.");
+  }
   const fragments = A.empty<CacheProducerEvidenceFragment>();
   for (const channel of CacheClientChannel.literals) {
     const report = request.observations[channel];
-    if (report.observation.pilot.channel !== channel)
+    if (report.observation.pilot.channel !== channel) {
       return yield* CacheCommandError.new("Import channel does not match its authenticated report.");
+    }
     fragments.push(...(yield* deriveCacheProducerEvidence(report.observation, approvals[channel])));
   }
   const publicationFailures = yield* verifyImportPublications(request, trust, approvals);
@@ -373,9 +384,10 @@ export const validateCacheProducerImport = Effect.fn("Producer.validateImport")(
   trust: CacheProducerTrustLocations
 ) {
   const preview = yield* previewCacheProducerImport(submitted, trust);
-  if (A.isReadonlyArrayNonEmpty(preview.failures))
+  if (A.isReadonlyArrayNonEmpty(preview.failures)) {
     return yield* CacheCommandError.new(
       "Authenticated producer evidence does not satisfy the complete reviewed policy."
     );
+  }
   return preview;
 });

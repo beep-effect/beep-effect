@@ -493,14 +493,16 @@ const registry = (version: string) =>
 describe("ClaudeState probes", () => {
   it.effect("reads signed-out before Claude has written its config", () =>
     Effect.gen(function* () {
-      expect(yield* probe((claude) => claude.signIn)).toBe("signed-out");
+      const probe1 = yield* probe((claude) => claude.signIn);
+      expect(probe1).toBe("signed-out");
     })
   );
 
   it.effect("reads signed-in once config.json carries an account id, ignoring other fields", () =>
     Effect.gen(function* () {
       const files = [[`${APPDATA_CLAUDE}/config.json`, '{"locale":"en-US","lastKnownAccountUuid":"x"}']] as const;
-      expect(yield* probe((claude) => claude.signIn, { files })).toBe("signed-in");
+      const probe2 = yield* probe((claude) => claude.signIn, { files });
+      expect(probe2).toBe("signed-in");
     })
   );
 
@@ -508,8 +510,10 @@ describe("ClaudeState probes", () => {
     Effect.gen(function* () {
       const empty = [[`${APPDATA_CLAUDE}/config.json`, '{"lastKnownAccountUuid":""}']] as const;
       const absent = [[`${APPDATA_CLAUDE}/config.json`, '{"locale":"en-US"}']] as const;
-      expect(yield* probe((claude) => claude.signIn, { files: empty })).toBe("signed-out");
-      expect(yield* probe((claude) => claude.signIn, { files: absent })).toBe("signed-out");
+      const probe3 = yield* probe((claude) => claude.signIn, { files: empty });
+      expect(probe3).toBe("signed-out");
+      const probe4 = yield* probe((claude) => claude.signIn, { files: absent });
+      expect(probe4).toBe("signed-out");
     })
   );
 
@@ -517,15 +521,19 @@ describe("ClaudeState probes", () => {
     Effect.gen(function* () {
       const garbage = [[`${APPDATA_CLAUDE}/config.json`, "{not json"]] as const;
       const wrongType = [[`${APPDATA_CLAUDE}/config.json`, '{"lastKnownAccountUuid":42}']] as const;
-      expect(yield* probe((claude) => claude.signIn, { files: garbage })).toBe("unknown");
-      expect(yield* probe((claude) => claude.signIn, { files: wrongType })).toBe("unknown");
+      const probe5 = yield* probe((claude) => claude.signIn, { files: garbage });
+      expect(probe5).toBe("unknown");
+      const probe6 = yield* probe((claude) => claude.signIn, { files: wrongType });
+      expect(probe6).toBe("unknown");
     })
   );
 
   it.effect("cannot tell when the account has no APPDATA folder", () =>
     Effect.gen(function* () {
-      expect(yield* probe((claude) => claude.signIn, { env: {} })).toBe("unknown");
-      expect(yield* probe((claude) => claude.gateway(O.none()), { env: {} })).toBe("unknown");
+      const probe7 = yield* probe((claude) => claude.signIn, { env: {} });
+      expect(probe7).toBe("unknown");
+      const probe8 = yield* probe((claude) => claude.gateway(O.none()), { env: {} });
+      expect(probe8).toBe("unknown");
     })
   );
 
@@ -535,11 +543,12 @@ describe("ClaudeState probes", () => {
         [`${MSIX_CLAUDE}/config.json`, '{"lastKnownAccountUuid":"x"}'],
         [`${MSIX_CLAUDE}/extensions-installations.json`, registry(BUNDLE_VERSION)],
       ] as const;
-      expect(yield* probe((claude) => claude.signIn, { files, install: "msix" })).toBe("signed-in");
-      expect(yield* probe((claude) => claude.gateway(O.some(BUNDLE_VERSION)), { files, install: "msix" })).toBe(
-        "current"
-      );
-      expect(yield* probe((claude) => claude.signIn, { files })).toBe("signed-out");
+      const probe9 = yield* probe((claude) => claude.signIn, { files, install: "msix" });
+      expect(probe9).toBe("signed-in");
+      const probe10 = yield* probe((claude) => claude.gateway(O.some(BUNDLE_VERSION)), { files, install: "msix" });
+      expect(probe10).toBe("current");
+      const probe11 = yield* probe((claude) => claude.signIn, { files });
+      expect(probe11).toBe("signed-out");
     })
   );
 
@@ -548,11 +557,16 @@ describe("ClaudeState probes", () => {
       const file = `${APPDATA_CLAUDE}/extensions-installations.json`;
       const listed = [[file, registry(BUNDLE_VERSION)]] as const;
       const other = [[file, '{"extensions":{"other":{"version":"1"}}}']] as const;
-      expect(yield* probe((claude) => claude.gateway(O.some(BUNDLE_VERSION)))).toBe("missing");
-      expect(yield* probe((claude) => claude.gateway(O.some(BUNDLE_VERSION)), { files: other })).toBe("missing");
-      expect(yield* probe((claude) => claude.gateway(O.some(BUNDLE_VERSION)), { files: listed })).toBe("current");
-      expect(yield* probe((claude) => claude.gateway(O.some("0.2.0")), { files: listed })).toBe("outdated");
-      expect(yield* probe((claude) => claude.gateway(O.none()), { files: listed })).toBe("current");
+      const probe12 = yield* probe((claude) => claude.gateway(O.some(BUNDLE_VERSION)));
+      expect(probe12).toBe("missing");
+      const probe13 = yield* probe((claude) => claude.gateway(O.some(BUNDLE_VERSION)), { files: other });
+      expect(probe13).toBe("missing");
+      const probe14 = yield* probe((claude) => claude.gateway(O.some(BUNDLE_VERSION)), { files: listed });
+      expect(probe14).toBe("current");
+      const probe15 = yield* probe((claude) => claude.gateway(O.some("0.2.0")), { files: listed });
+      expect(probe15).toBe("outdated");
+      const probe16 = yield* probe((claude) => claude.gateway(O.none()), { files: listed });
+      expect(probe16).toBe("current");
     })
   );
 
@@ -561,8 +575,10 @@ describe("ClaudeState probes", () => {
       const file = `${APPDATA_CLAUDE}/extensions-installations.json`;
       const garbage = [[file, "[]"]] as const;
       const badEntry = [[file, `{"extensions":{"${GATEWAY_EXTENSION_ID}":{"version":1}}}`]] as const;
-      expect(yield* probe((claude) => claude.gateway(O.some(BUNDLE_VERSION)), { files: garbage })).toBe("unknown");
-      expect(yield* probe((claude) => claude.gateway(O.some(BUNDLE_VERSION)), { files: badEntry })).toBe("unknown");
+      const probe17 = yield* probe((claude) => claude.gateway(O.some(BUNDLE_VERSION)), { files: garbage });
+      expect(probe17).toBe("unknown");
+      const probe18 = yield* probe((claude) => claude.gateway(O.some(BUNDLE_VERSION)), { files: badEntry });
+      expect(probe18).toBe("unknown");
     })
   );
 });
@@ -588,7 +604,8 @@ it.layer(DownloadLayer, { timeout: "5 seconds" })("InstallerDownload", (it) => {
       const download = yield* InstallerDownload;
       const fs = yield* FileSystem.FileSystem;
       yield* download.fetch(pinned("abc"), "/match.exe");
-      expect(yield* fs.readFileString("/match.exe")).toBe("abc");
+      const readFileString19 = yield* fs.readFileString("/match.exe");
+      expect(readFileString19).toBe("abc");
     })
   );
 
@@ -600,7 +617,8 @@ it.layer(DownloadLayer, { timeout: "5 seconds" })("InstallerDownload", (it) => {
       expect(error.message).toBe(
         "The downloaded Claude installer did not match its expected fingerprint, so it was not run."
       );
-      expect(yield* fs.exists("/mismatch.exe")).toBe(false);
+      const exists20 = yield* fs.exists("/mismatch.exe");
+      expect(exists20).toBe(false);
     })
   );
 });

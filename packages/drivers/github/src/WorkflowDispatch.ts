@@ -498,12 +498,14 @@ const make = (client: GitHubClient["Service"]): WorkflowDispatchShape => {
           `workflow ${workflow} did not finish within ${Duration.format(timeout)}`
         );
         return yield* Effect.gen(function* () {
-          const dispatchedAt = DateTime.formatIso(yield* DateTime.now);
+          const now1 = yield* DateTime.now;
+          const dispatchedAt = DateTime.formatIso(now1);
           yield* dispatch(workflow, ref, options?.inputs);
           let selectedId = O.none<number>();
           const poll = Effect.fnUntraced(function* () {
             if (O.isSome(selectedId)) {
-              return O.some(yield* runStatus(selectedId.value));
+              const resultStatus = yield* runStatus(selectedId.value);
+              return O.some(resultStatus);
             }
             const runs = yield* client.paginate(
               "GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs",
@@ -520,7 +522,7 @@ const make = (client: GitHubClient["Service"]): WorkflowDispatchShape => {
             const first = A.head(runs);
             const found = O.isNone(first)
               ? O.none()
-              : O.some(yield* statusOf("WorkflowDispatch.dispatchAndWait", first.value));
+              : yield* Effect.asSome(statusOf("WorkflowDispatch.dispatchAndWait", first.value));
             selectedId = O.map(found, (run) => run.id);
             return found;
           });

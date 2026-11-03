@@ -4,12 +4,19 @@ import * as O from "@beep/utils/Option";
 import * as P from "@beep/utils/Predicate";
 import { invoke } from "@tauri-apps/api/core";
 import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App.tsx";
 import { ProfessionalAtomProvider } from "./runtime/ProfessionalAtomProvider.tsx";
 import { RendererObservabilityConfig } from "./runtime/RendererObservabilityConfig.ts";
 import { WorkbenchThemeProvider } from "./theme/WorkbenchThemeProvider.tsx";
+
+class MainOperationError extends S.TaggedError<MainOperationError, { readonly brand: unique symbol }>()(
+  "MainOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in main.tsx." }
+) {}
 
 // react-grab is a dev-only element picker; `VITE_REACT_GRAB=0` keeps its
 // pointer-capturing overlay out of recorded browser-QA runs.
@@ -32,7 +39,10 @@ const loadRendererObservabilityConfig = Effect.fn("professional_desktop.bootstra
   function* () {
     if (!("__TAURI_INTERNALS__" in globalThis)) return;
 
-    const wire = yield* Effect.tryPromise(() => invoke("renderer_observability_config"));
+    const wire = yield* Effect.tryPromise({
+      try: () => invoke("renderer_observability_config"),
+      catch: (cause) => MainOperationError.make({ cause }),
+    });
     const config = yield* RendererObservabilityConfig.decode(wire);
     setOptionalRuntimeString("__BEEP_BUILD_COMMIT__", config.buildCommit);
     setRuntimeString("__BEEP_DEPLOYMENT_ENVIRONMENT__", config.deploymentEnvironment);

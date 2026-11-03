@@ -19,7 +19,10 @@ import { escapeMarkdownText } from "@beep/md/Md.escape";
 import { A, O } from "@beep/utils";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { CodexFindingSeverity } from "./Findings.capture.schemas.ts";
 import { CodexFindingsIngestError } from "./Findings.errors.ts";
 import { CodexSeverityCounts } from "./Findings.schemas.ts";
@@ -33,10 +36,11 @@ import {
 } from "./Findings.triage.schemas.ts";
 import { PacketDocument } from "./Findings.write.ts";
 import { renderSecurityPacketGuidance } from "./Security.packet.ts";
-import type * as S from "effect/Schema";
 import type { CodexCaptureSource } from "./Findings.capture.schemas.ts";
 import type { CodexFindingRecord, CodexPacketPlan } from "./Findings.schemas.ts";
 import type { CodexCaptureMethod } from "./Findings.triage.schemas.ts";
+
+const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
 
 const $I = $RepoCliId.create("commands/Codex/Findings.packet");
 
@@ -83,7 +87,7 @@ const pendingIn = (phase: string): string => `_pending ${phase}_`;
 const VALIDATION_PHASE = "P2";
 const REMEDIATION_PHASE = "P4";
 
-const json = (value: unknown): string => `${JSON.stringify(value, null, 2)}\n`;
+const json = (value: unknown): string => `${Result.getOrThrowWith(encodePrettyJson(value), identity)}\n`;
 
 const lines = (value: ReadonlyArray<string>): string => `${A.join(value, "\n")}\n`;
 

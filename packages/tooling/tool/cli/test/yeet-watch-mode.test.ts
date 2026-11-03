@@ -38,10 +38,11 @@ import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { constant } from "effect/Function";
+import { constant, identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -51,6 +52,8 @@ import type { YeetCheckFailedRow } from "@beep/repo-cli/test/Yeet";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as Path from "effect/Path";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const decodeUnknownYeetWatchEventJson = S.decodeUnknownEffect(S.fromJsonString(YeetWatchEvent));
 
@@ -96,18 +99,21 @@ const viewJson = (
   labels: ReadonlyArray<string> = [],
   isCrossRepository = false
 ): string =>
-  JSON.stringify({
-    headRefOid: headSha,
-    id: "PR_watch",
-    isCrossRepository,
-    isDraft: false,
-    labels: A.map(labels, (name) => ({ name, color: "0e8a16" })),
-    mergeable: "MERGEABLE",
-    mergeStateStatus,
-    number: 751,
-    reviewDecision,
-    state,
-  });
+  Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({
+      headRefOid: headSha,
+      id: "PR_watch",
+      isCrossRepository,
+      isDraft: false,
+      labels: A.map(labels, (name) => ({ name, color: "0e8a16" })),
+      mergeable: "MERGEABLE",
+      mergeStateStatus,
+      number: 751,
+      reviewDecision,
+      state,
+    }),
+    identity
+  );
 // The merge-base diff the scripted git answers; code-bearing unless a test says
 // otherwise. The reader runs `git diff --name-only --no-renames -z`, so the
 // scripted answer is NUL-separated like the real one.
@@ -123,15 +129,18 @@ interface CheckRowFixture {
 }
 
 const checksJson = (rows: ReadonlyArray<CheckRowFixture>) =>
-  JSON.stringify(
-    A.map(rows, (row) => ({
-      bucket: row.bucket,
-      description: row.description,
-      link: row.link ?? "https://github.com/beep/beep/actions/runs/1/job/2",
-      name: row.name,
-      state: row.state,
-      workflow: row.workflow ?? "CI",
-    }))
+  Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)(
+      A.map(rows, (row) => ({
+        bucket: row.bucket,
+        description: row.description,
+        link: row.link ?? "https://github.com/beep/beep/actions/runs/1/job/2",
+        name: row.name,
+        state: row.state,
+        workflow: row.workflow ?? "CI",
+      }))
+    ),
+    identity
   );
 
 interface ThreadNodeFixture {
@@ -151,30 +160,33 @@ const threadsJson = (
   },
   author = "author"
 ) =>
-  JSON.stringify({
-    data: {
-      node: {
-        author: { login: author },
-        reviewThreads: {
-          nodes: A.map(nodes, (node) => ({
-            id: node.id,
-            isResolved: node.isResolved,
-            isOutdated: false,
-            path: null,
-            line: null,
-            resolvedBy: node.resolvedBy === undefined ? null : { login: node.resolvedBy },
-            latest: {
-              nodes:
-                node.latestAuthor === undefined
-                  ? []
-                  : [{ author: node.latestAuthor, createdAt: "2026-09-22T00:00:00.000Z" }],
-            },
-          })),
-          pageInfo,
+  Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({
+      data: {
+        node: {
+          author: { login: author },
+          reviewThreads: {
+            nodes: A.map(nodes, (node) => ({
+              id: node.id,
+              isResolved: node.isResolved,
+              isOutdated: false,
+              path: null,
+              line: null,
+              resolvedBy: node.resolvedBy === undefined ? null : { login: node.resolvedBy },
+              latest: {
+                nodes:
+                  node.latestAuthor === undefined
+                    ? []
+                    : [{ author: node.latestAuthor, createdAt: "2026-09-22T00:00:00.000Z" }],
+              },
+            })),
+            pageInfo,
+          },
         },
       },
-    },
-  });
+    }),
+    identity
+  );
 
 // `gh api --paginate --slurp` answers with an array OF PAGES, so an empty
 // collection is one empty page, not one empty array.
@@ -592,7 +604,8 @@ describe("collectYeetWatchSnapshot", () => {
             retriggeredGreptile: false,
             schemaVersion: "yeet-pr-closeout/v1",
           });
-          yield* fs.writeFileString(closeoutPath, yield* PrCloseoutReportJson.encode(report));
+          const encoded = yield* PrCloseoutReportJson.encode(report);
+          yield* fs.writeFileString(closeoutPath, encoded);
 
           const snapshot = yield* collectYeetWatchSnapshot(subjectContext);
 
@@ -655,7 +668,8 @@ describe("collectYeetWatchSnapshot", () => {
           retriggeredGreptile: false,
           schemaVersion: "yeet-pr-closeout/v1",
         });
-        yield* fs.writeFileString(closeoutPath, yield* PrCloseoutReportJson.encode(report));
+        const encoded1 = yield* PrCloseoutReportJson.encode(report);
+        yield* fs.writeFileString(closeoutPath, encoded1);
 
         const snapshot = yield* collectYeetWatchSnapshot(subjectContext);
 
@@ -799,19 +813,25 @@ describe("collectYeetWatchSnapshot", () => {
         {
           view: {
             exitCode: 0,
-            output: JSON.stringify({
-              headRefOid: "aaa111",
-              id: "PR_watch",
-              isDraft: false,
-              mergeable: null,
-              mergeStateStatus: null,
-              number: 751,
-              reviewDecision: null,
-              state: "OPEN",
-            }),
+            output: Result.getOrThrowWith(
+              S.encodeUnknownResult(UnknownJson)({
+                headRefOid: "aaa111",
+                id: "PR_watch",
+                isDraft: false,
+                mergeable: null,
+                mergeStateStatus: null,
+                number: 751,
+                reviewDecision: null,
+                state: "OPEN",
+              }),
+              identity
+            ),
           },
           checks: { exitCode: 0, output: checksJson([]) },
-          threads: { exitCode: 0, output: JSON.stringify({ data: { node: null } }) },
+          threads: {
+            exitCode: 0,
+            output: Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)({ data: { node: null } }), identity),
+          },
         },
       ],
       codeDiff,
@@ -860,7 +880,8 @@ describe("runYeetWatchStream", () => {
           expect(ended.reason).toBe("all-terminal");
           expect(ended.failing).toBe(1);
 
-          const lines = A.map(yield* TestConsole.logLines, String);
+          const logLines2 = yield* TestConsole.logLines;
+          const lines = A.map(logLines2, String);
           const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line));
           expect(A.map(events, (event) => event.kind)).toEqual([
             "watch-started",
@@ -906,10 +927,12 @@ describe("runYeetWatchStream", () => {
 
           expect(ended.reason).toBe("poll-error");
           expect(ended.failing).toBe(0);
-          const lines = A.map(yield* TestConsole.logLines, String);
+          const logLines3 = yield* TestConsole.logLines;
+          const lines = A.map(logLines3, String);
           const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line));
           expect(A.map(events, (event) => event.kind)).toEqual(["watch-started", "watch-ended"]);
-          const errors = A.map(yield* TestConsole.errorLines, String);
+          const errorLines4 = yield* TestConsole.errorLines;
+          const errors = A.map(errorLines4, String);
           expect(A.some(errors, (line) => Str.includes("watch poll failed")(line))).toBe(true);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -931,7 +954,8 @@ describe("runYeetWatchStream", () => {
 
           expect(ended.reason).toBe("all-terminal");
           expect(ended.failing).toBe(0);
-          const lines = A.map(yield* TestConsole.logLines, String);
+          const logLines5 = yield* TestConsole.logLines;
+          const lines = A.map(logLines5, String);
           expect(A.length(lines)).toBe(2);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -964,7 +988,8 @@ describe("runYeetWatchStream", () => {
           const ended = yield* runYeetWatchStream(contextFor(root), { intervalMillis: 0 });
 
           expect(ended.reason).toBe("all-terminal");
-          const errors = A.map(yield* TestConsole.errorLines, String);
+          const errorLines6 = yield* TestConsole.errorLines;
+          const errors = A.map(errorLines6, String);
           expect(A.some(errors, (line) => Str.includes("failed to append review-thread inbox row T1")(line))).toBe(
             true
           );
@@ -1043,7 +1068,8 @@ describe("remediation dispatch through the watch", () => {
             expect(wave.value.capsuleIds).toEqual([row.id]);
           }
 
-          const errors = A.map(yield* TestConsole.errorLines, String);
+          const errorLines7 = yield* TestConsole.errorLines;
+          const errors = A.map(errorLines7, String);
           expect(A.some(errors, (line) => Str.includes("repair session opened")(line))).toBe(true);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -1131,7 +1157,8 @@ describe("remediation dispatch through the watch", () => {
             expect(wave.value.capsuleIds).toEqual(A.map(rows, (row) => row.id));
           }
 
-          const errors = A.map(yield* TestConsole.errorLines, String);
+          const errorLines8 = yield* TestConsole.errorLines;
+          const errors = A.map(errorLines8, String);
           expect(A.length(A.filter(errors, (line) => Str.includes("repair session opened")(line)))).toBe(1);
           expect(A.length(A.filter(errors, (line) => Str.includes("queued to the head")(line)))).toBe(2);
         })
@@ -1184,7 +1211,8 @@ describe("remediation dispatch through the watch", () => {
           if (O.isSome(wave)) {
             expect(A.length(wave.value.capsuleIds)).toBe(1);
           }
-          const errors = A.map(yield* TestConsole.errorLines, String);
+          const errorLines9 = yield* TestConsole.errorLines;
+          const errors = A.map(errorLines9, String);
           expect(A.length(A.filter(errors, (line) => Str.includes("repair session opened")(line)))).toBe(1);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -1271,7 +1299,8 @@ describe("remediation dispatch through the watch", () => {
             expect(wave.value.headSha).toBe("bbb222");
             expect(A.length(wave.value.capsuleIds)).toBe(1);
           }
-          const errors = A.map(yield* TestConsole.errorLines, String);
+          const errorLines10 = yield* TestConsole.errorLines;
+          const errors = A.map(errorLines10, String);
           expect(A.some(errors, (line) => Str.includes("superseded")(line))).toBe(true);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -1307,7 +1336,8 @@ describe("remediation dispatch through the watch", () => {
 
           const rows = yield* readInboxRows(root);
           expect(A.length(rows)).toBe(1);
-          const errors = A.map(yield* TestConsole.errorLines, String);
+          const errorLines11 = yield* TestConsole.errorLines;
+          const errors = A.map(errorLines11, String);
           expect(A.length(A.filter(errors, (line) => Str.includes("repair session opened")(line)))).toBe(1);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -1352,8 +1382,10 @@ describe("registration patience", () => {
 
           expect(ended.reason).toBe("all-terminal");
           expect(ended.failing).toBe(1);
-          expect(A.length(yield* readInboxRows(root))).toBe(1);
-          const errors = A.map(yield* TestConsole.errorLines, String);
+          const readInboxRows12 = yield* readInboxRows(root);
+          expect(A.length(readInboxRows12)).toBe(1);
+          const errorLines13 = yield* TestConsole.errorLines;
+          const errors = A.map(errorLines13, String);
           expect(A.some(errors, (line) => Str.includes("no checks registered")(line))).toBe(true);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -1375,9 +1407,8 @@ describe("registration patience", () => {
 
           expect(ended.reason).toBe("settle-timeout");
           expect(ended.failing).toBe(0);
-          const errors = A.filter(A.map(yield* TestConsole.errorLines, String), (line) =>
-            Str.includes("no checks registered")(line)
-          );
+          const errorLines14 = yield* TestConsole.errorLines;
+          const errors = A.filter(A.map(errorLines14, String), (line) => Str.includes("no checks registered")(line));
           // An expired settle budget is a failure even when no check registered.
           expect(A.length(errors)).toBe(0);
         })
@@ -1411,9 +1442,8 @@ describe("registration patience", () => {
           const ended = yield* runYeetWatchStream(contextFor(root), { intervalMillis: 0 });
 
           expect(ended.failing).toBe(1);
-          const patience = A.filter(A.map(yield* TestConsole.errorLines, String), (line) =>
-            Str.includes("no checks registered")(line)
-          );
+          const errorLines15 = yield* TestConsole.errorLines;
+          const patience = A.filter(A.map(errorLines15, String), (line) => Str.includes("no checks registered")(line));
           expect(A.some(patience, (line) => Str.includes("head aaa111 yet (2/10)")(line))).toBe(true);
           expect(A.some(patience, (line) => Str.includes("head bbb222 yet (1/10)")(line))).toBe(true);
           expect(A.some(patience, (line) => Str.includes("(3/10)")(line))).toBe(false);
@@ -1487,7 +1517,8 @@ describe("registration patience", () => {
             ["Coverage", "aaa111"],
             ["Coverage", "bbb222"],
           ]);
-          const errors = A.map(yield* TestConsole.errorLines, String);
+          const errorLines16 = yield* TestConsole.errorLines;
+          const errors = A.map(errorLines16, String);
           expect(A.some(errors, (line) => Str.includes("superseded")(line))).toBe(true);
           expect(A.some(errors, (line) => Str.includes("no checks registered")(line))).toBe(true);
         })
@@ -1498,15 +1529,18 @@ describe("registration patience", () => {
 
 describe("comment rows and --until-event", () => {
   const issueCommentsJson = (comments: ReadonlyArray<{ readonly id: number; readonly createdAt: string }>) =>
-    JSON.stringify([
-      A.map(comments, (comment) => ({
-        body: `comment ${comment.id}`,
-        created_at: comment.createdAt,
-        html_url: `https://github.com/beep/beep/pull/751#issuecomment-${comment.id}`,
-        id: comment.id,
-        user: { login: "greptile-apps[bot]" },
-      })),
-    ]);
+    Result.getOrThrowWith(
+      S.encodeUnknownResult(UnknownJson)([
+        A.map(comments, (comment) => ({
+          body: `comment ${comment.id}`,
+          created_at: comment.createdAt,
+          html_url: `https://github.com/beep/beep/pull/751#issuecomment-${comment.id}`,
+          id: comment.id,
+          user: { login: "greptile-apps[bot]" },
+        })),
+      ]),
+      identity
+    );
 
   const pendingChecks = checksJson([{ bucket: "pending", name: "Coverage", state: "QUEUED" }]);
 
@@ -1535,7 +1569,8 @@ describe("comment rows and --until-event", () => {
 
           expect(ended.reason).toBe("pr-merged");
           expect(ended.failing).toBe(0);
-          const lines = A.map(yield* TestConsole.logLines, String);
+          const logLines17 = yield* TestConsole.logLines;
+          const lines = A.map(logLines17, String);
           const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line));
           expect(A.map(events, (event) => event.kind)).toEqual(["watch-started", "watch-ended"]);
         })
@@ -1634,11 +1669,13 @@ describe("comment rows and --until-event", () => {
           expect(ended.failing).toBe(1);
           expect(yeetWatchExitFailure(ended)).toBe(true);
 
-          const lines = A.map(yield* TestConsole.logLines, String);
+          const logLines18 = yield* TestConsole.logLines;
+          const lines = A.map(logLines18, String);
           const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line));
           expect(A.map(events, (event) => event.kind)).toEqual(["watch-started", "check-transition", "watch-ended"]);
           // The capsule is durable before the exit row is emitted.
-          expect(A.length(yield* readInboxRows(root))).toBe(1);
+          const readInboxRows19 = yield* readInboxRows(root);
+          expect(A.length(readInboxRows19)).toBe(1);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -1673,10 +1710,12 @@ describe("comment rows and --until-event", () => {
 
           expect(ended.reason).toBe("event");
           expect(ended.failing).toBe(1);
-          const lines = A.map(yield* TestConsole.logLines, String);
+          const logLines20 = yield* TestConsole.logLines;
+          const lines = A.map(logLines20, String);
           const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line));
           expect(A.map(events, (event) => event.kind)).toEqual(["watch-started", "watch-ended"]);
-          expect(A.length(yield* readInboxRows(root))).toBe(1);
+          const readInboxRows21 = yield* readInboxRows(root);
+          expect(A.length(readInboxRows21)).toBe(1);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -1761,7 +1800,8 @@ describe("comment rows and --until-event", () => {
           expect(ended.failing).toBe(0);
           expect(yeetWatchExitFailure(ended)).toBe(false);
 
-          const lines = A.map(yield* TestConsole.logLines, String);
+          const logLines22 = yield* TestConsole.logLines;
+          const lines = A.map(logLines22, String);
           const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line));
           expect(A.map(events, (event) => event.kind)).toEqual([
             "watch-started",
@@ -1778,7 +1818,8 @@ describe("comment rows and --until-event", () => {
           // session resumes past it instead of re-waking on the same comments.
           const statePath = yield* yeetMonitorCommentStatePath(contextFor(root));
           const fs = yield* FileSystem.FileSystem;
-          const state = yield* YeetMonitorCommentStateJson.decode(yield* fs.readFileString(statePath));
+          const readFileString23 = yield* fs.readFileString(statePath);
+          const state = yield* YeetMonitorCommentStateJson.decode(readFileString23);
           expect(state.prNumber).toBe(751);
           expect(state.watermark.issue.id).toBe(45);
         })
@@ -1823,7 +1864,8 @@ describe("comment rows and --until-event", () => {
 
           expect(ended.reason).toBe("all-terminal");
           expect(ended.failing).toBe(0);
-          const lines = A.map(yield* TestConsole.logLines, String);
+          const logLines24 = yield* TestConsole.logLines;
+          const lines = A.map(logLines24, String);
           const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line));
           expect(A.map(events, (event) => event.kind)).toEqual([
             "watch-started",
@@ -1872,7 +1914,8 @@ describe("comment rows and --until-event", () => {
 
           expect(ended.reason).toBe("all-terminal");
           expect(ended.failing).toBe(0);
-          const errors = A.map(yield* TestConsole.errorLines, String);
+          const errorLines25 = yield* TestConsole.errorLines;
+          const errors = A.map(errorLines25, String);
           expect(A.some(errors, (line) => Str.includes("watch comment poll failed")(line))).toBe(true);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -1915,7 +1958,8 @@ describe("comment rows and --until-event", () => {
             const ended = yield* runYeetWatchStream(contextFor(root), { intervalMillis: 0 });
 
             expect(ended.reason).toBe("all-terminal");
-            const errors = A.map(yield* TestConsole.errorLines, String);
+            const errorLines26 = yield* TestConsole.errorLines;
+            const errors = A.map(errorLines26, String);
             expect(A.some(errors, (line) => Str.includes("stopped after 5 consecutive failed polls")(line))).toBe(true);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -1981,9 +2025,12 @@ describe("B7 watch settle cache and timeout", () => {
           });
           expect(ended.reason).toBe("settle-timeout");
           expect(yeetWatchExitFailure(ended)).toBe(true);
-          expect(yield* Ref.get(reads)).toBe(2);
-          expect(yield* Ref.get(ticks)).toBe(4);
-          const events = yield* Effect.forEach(A.map(yield* TestConsole.logLines, String), (line) =>
+          const got = yield* Ref.get(reads);
+          expect(got).toBe(2);
+          const got27 = yield* Ref.get(ticks);
+          expect(got27).toBe(4);
+          const logLines28 = yield* TestConsole.logLines;
+          const events = yield* Effect.forEach(A.map(logLines28, String), (line) =>
             decodeUnknownYeetWatchEventJson(line)
           );
           expect(A.filter(events, (event) => event.kind === "head-changed")).toHaveLength(1);
@@ -2032,14 +2079,16 @@ describe("B8 watch base conflict", () => {
         Effect.gen(function* () {
           const ended = yield* runYeetWatchStream(contextFor(root), { intervalMillis: 0 });
           expect(ended.reason).toBe("pr-merged");
-          const events = yield* Effect.forEach(A.map(yield* TestConsole.logLines, String), (line) =>
+          const logLines29 = yield* TestConsole.logLines;
+          const events = yield* Effect.forEach(A.map(logLines29, String), (line) =>
             decodeUnknownYeetWatchEventJson(line)
           );
           expect(A.filter(events, (event) => event.kind === "settle-changed")).toMatchObject([
             { from: "required-pending", to: "base-conflict" },
             { from: "base-conflict", to: "required-pending", pending: ["Check"] },
           ]);
-          const stderr = A.join(A.map(yield* TestConsole.errorLines, String), "\n");
+          const errorLines30 = yield* TestConsole.errorLines;
+          const stderr = A.join(A.map(errorLines30, String), "\n");
           expect(stderr).toContain("settle: base-conflict; merge origin/main and push");
           expect(stderr).toContain("[yeet] rollup: 1 registered context(s) absent this poll, kept pending");
           expect(stderr).not.toContain("settle-timeout");
@@ -2096,14 +2145,16 @@ describe("B8 watch settle clock resumes with the budget", () => {
               ),
             });
             expect(ended.reason).toBe("pr-merged");
-            const events = yield* Effect.forEach(A.map(yield* TestConsole.logLines, String), (line) =>
+            const logLines31 = yield* TestConsole.logLines;
+            const events = yield* Effect.forEach(A.map(logLines31, String), (line) =>
               decodeUnknownYeetWatchEventJson(line)
             );
             expect(A.filter(events, (event) => event.kind === "settle-changed")).toMatchObject([
               { from: "base-conflict", to: "registration" },
               { from: "registration", to: "required-pending", pending: ["Check"] },
             ]);
-            const stderr = A.join(A.map(yield* TestConsole.errorLines, String), "\n");
+            const errorLines32 = yield* TestConsole.errorLines;
+            const stderr = A.join(A.map(errorLines32, String), "\n");
             expect(stderr).toContain("[yeet] settle budget resumed; clock reset");
             expect(stderr).toContain("settle: registration; no checks reported for this head yet; waited 0 of 1s");
             expect(stderr).not.toContain("settle-timeout");
@@ -2124,9 +2175,8 @@ describe("B8 watch heavy admission", () => {
       })
     );
   const settleRows = Effect.fn("watchAdmissionTest.settleRows")(function* () {
-    const events = yield* Effect.forEach(A.map(yield* TestConsole.logLines, String), (line) =>
-      decodeUnknownYeetWatchEventJson(line)
-    );
+    const logLines33 = yield* TestConsole.logLines;
+    const events = yield* Effect.forEach(A.map(logLines33, String), (line) => decodeUnknownYeetWatchEventJson(line));
     return A.filter(events, (event) => event.kind === "settle-changed");
   });
   const stderr = TestConsole.errorLines.pipe(Effect.map(A.map(String)), Effect.map(A.join("\n")));
@@ -2162,8 +2212,10 @@ describe("B8 watch heavy admission", () => {
           });
           // Four held ticks span 1.5s against a 1s budget; the merged view ends the stream.
           expect(ended.reason).toBe("pr-merged");
-          expect(yield* Ref.get(ticks)).toBe(5);
-          expect(yield* settleRows()).toEqual([]);
+          const got34 = yield* Ref.get(ticks);
+          expect(got34).toBe(5);
+          const settleRows35 = yield* settleRows();
+          expect(settleRows35).toEqual([]);
           const lines = yield* stderr;
           expect(lines).toContain(
             "settle: heavy-not-admitted; gated: Heavy / Check; admit: gh pr edit --add-label ready-for-heavy; waited 1s 500ms (not counted toward the 1s settle timeout)"
@@ -2216,8 +2268,10 @@ describe("B8 watch heavy admission", () => {
           });
           expect(ended.reason).toBe("all-terminal");
           expect(yeetWatchExitFailure(ended)).toBe(false);
-          expect(yield* Ref.get(diffs)).toBe(1);
-          expect(yield* settleRows()).toMatchObject([
+          const got36 = yield* Ref.get(diffs);
+          expect(got36).toBe(1);
+          const settleRows37 = yield* settleRows();
+          expect(settleRows37).toMatchObject([
             { from: "heavy-not-admitted", to: "closeout-pending", pending: [], missing: [], gated: [] },
           ]);
           const lines = yield* stderr;
@@ -2282,8 +2336,10 @@ describe("B8 watch heavy admission", () => {
           });
           expect(ended.reason).toBe("all-terminal");
           expect(yeetWatchExitFailure(ended)).toBe(false);
-          expect(yield* Ref.get(ticks)).toBe(3);
-          expect(yield* settleRows()).toMatchObject([
+          const got38 = yield* Ref.get(ticks);
+          expect(got38).toBe(3);
+          const settleRows39 = yield* settleRows();
+          expect(settleRows39).toMatchObject([
             { from: "heavy-not-admitted", to: "closeout-pending", pending: [], missing: [], gated: [] },
           ]);
           const lines = yield* stderr;
@@ -2326,7 +2382,8 @@ describe("B8 watch heavy admission", () => {
           });
           expect(ended.reason).toBe("all-terminal");
           expect(yeetWatchExitFailure(ended)).toBe(false);
-          expect(yield* stderr).toContain(
+          const stderr40 = yield* stderr;
+          expect(stderr40).toContain(
             "settle: closeout-pending; required census settled, running the read-first closeout; heavy: docs-only, lanes pass without work"
           );
         })
@@ -2370,7 +2427,8 @@ it.layer(
           rulesetRead: () => Effect.succeedNone,
         });
         expect(ended.reason).toBe("all-terminal");
-        expect(yield* Ref.get(ticks)).toBe(2);
+        const got41 = yield* Ref.get(ticks);
+        expect(got41).toBe(2);
       })
     ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
@@ -2420,7 +2478,8 @@ describe("required-only watch exits", () => {
             expect(ended.failing).toBe(0);
             expect(ended.optionalFailing).toBe(1);
             expect(yeetWatchExitFailure(ended)).toBe(false);
-            const lines = A.map(yield* TestConsole.logLines, String);
+            const logLines42 = yield* TestConsole.logLines;
+            const lines = A.map(logLines42, String);
             const rows = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line));
             expect(A.filter(rows, (row) => row.kind === "watch-ended")).toEqual([ended]);
             expect(A.some(rows, (row) => row.kind === "check-transition")).toBe(true);

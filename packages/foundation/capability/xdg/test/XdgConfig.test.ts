@@ -221,7 +221,8 @@ describe("XdgConfig.savePath", () => {
         const target = yield* config.save({ port: 8080 });
         // Same provide, same volume: the save really landed.
         const volume = yield* MemoryFileSystem.Volume;
-        assert.deepStrictEqual(yield* S.decodeEffect(JsonValue)(volume.text(target) ?? "null"), { port: 8080 });
+        const value = yield* S.decodeEffect(JsonValue)(volume.text(target) ?? "null");
+        assert.deepStrictEqual(value, { port: 8080 });
         return target;
       }).pipe(
         provideLayer(

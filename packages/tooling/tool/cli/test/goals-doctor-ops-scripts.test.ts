@@ -197,13 +197,12 @@ describe("goal ops script registration", () => {
         },
       });
       const reader = makeKnowledgeGoalPacketReader(tree);
-      assert.deepStrictEqual(yield* reader.opsFiles("goals/demo"), [
-        "ops/a.ts",
-        "ops/manifest.json",
-        "ops/nested/b.ts",
-      ]);
-      assert.deepStrictEqual(yield* reader.opsFiles("goals/demo-two"), ["ops/c.ts"]);
-      assert.deepStrictEqual(yield* reader.opsFiles("goals/absent"), []);
+      const opsFiles1 = yield* reader.opsFiles("goals/demo");
+      assert.deepStrictEqual(opsFiles1, ["ops/a.ts", "ops/manifest.json", "ops/nested/b.ts"]);
+      const opsFiles2 = yield* reader.opsFiles("goals/demo-two");
+      assert.deepStrictEqual(opsFiles2, ["ops/c.ts"]);
+      const opsFiles3 = yield* reader.opsFiles("goals/absent");
+      assert.deepStrictEqual(opsFiles3, []);
     })
   );
 
@@ -217,8 +216,10 @@ describe("goal ops script registration", () => {
         yield* fs.writeFileString(path.join(packet, "ops", "a.ts"), "");
         yield* fs.writeFileString(path.join(packet, "ops", "nested", "b.ts"), "");
         const reader = makeGoalPacketFilesystemReader();
-        assert.deepStrictEqual(yield* reader.opsFiles(packet), ["ops/a.ts", "ops/nested/b.ts"]);
-        assert.deepStrictEqual(yield* reader.opsFiles(path.join(packet, "absent")), []);
+        const opsFiles4 = yield* reader.opsFiles(packet);
+        assert.deepStrictEqual(opsFiles4, ["ops/a.ts", "ops/nested/b.ts"]);
+        const opsFiles5 = yield* reader.opsFiles(path.join(packet, "absent"));
+        assert.deepStrictEqual(opsFiles5, []);
       })
     );
   });

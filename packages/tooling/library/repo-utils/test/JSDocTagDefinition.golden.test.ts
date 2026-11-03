@@ -83,7 +83,8 @@ describe("JSDocTagDefinition.make golden compatibility", () => {
   it.effect(
     "matches every pre-migration JSDoc tag fingerprint",
     Effect.fnUntraced(function* () {
-      expect(yield* fingerprints(make, JSDocTag)).toEqual(golden);
+      const fingerprints1 = yield* fingerprints(make, JSDocTag);
+      expect(fingerprints1).toEqual(golden);
     })
   );
 });

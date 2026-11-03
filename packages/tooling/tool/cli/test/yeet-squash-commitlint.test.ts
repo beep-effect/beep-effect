@@ -349,7 +349,8 @@ it.layer(platform, { timeout: "60 seconds" })("squash commitlint against the rep
           expect(report.message.header).toBe(`${pullFacts.title} (#1913)`);
           expect(report.message.body).toContain("* docs(doctrine): admit Codex\n\nWhy.");
           expect(A.map(github, githubCallLine)).toEqual(["GET {repo}", "GET {repo}/pulls/1913/commits"]);
-          expect(A.some(yield* Ref.get(calls), Str.startsWith("bunx commitlint --verbose"))).toBe(true);
+          const got = yield* Ref.get(calls);
+          expect(A.some(got, Str.startsWith("bunx commitlint --verbose"))).toBe(true);
         })
     )
   );

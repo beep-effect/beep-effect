@@ -109,27 +109,26 @@ describe("@beep/epistemic-server bounded SHACL validator", () => {
       "validates bounded SHACL-inspired shapes and truncates when max results is reached",
       Effect.fnUntraced(function* () {
         const service = yield* ShaclValidationService;
-        const result = yield* service.validate(
-          yield* decodeShaclValidationRequest({
-            dataset: yield* encodeDataset(dataset),
-            maxResults: 1,
-            shapes: [
-              {
-                properties: [
-                  {
-                    minCount: 1,
-                    path: makeNamedNode("https://schema.org/knows"),
-                  },
-                  {
-                    datatype: makeNamedNode(XSD_STRING.value),
-                    path: makeNamedNode("https://schema.org/name"),
-                  },
-                ],
-                targetClass: makeNamedNode("https://schema.org/Person"),
-              },
-            ],
-          })
-        );
+        const decodedShaclValidationRequest = yield* decodeShaclValidationRequest({
+          dataset: yield* encodeDataset(dataset),
+          maxResults: 1,
+          shapes: [
+            {
+              properties: [
+                {
+                  minCount: 1,
+                  path: makeNamedNode("https://schema.org/knows"),
+                },
+                {
+                  datatype: makeNamedNode(XSD_STRING.value),
+                  path: makeNamedNode("https://schema.org/name"),
+                },
+              ],
+              targetClass: makeNamedNode("https://schema.org/Person"),
+            },
+          ],
+        });
+        const result = yield* service.validate(decodedShaclValidationRequest);
 
         pipe(result.conforms, assertFalse);
         pipe(result.truncated, assertTrue);
@@ -172,31 +171,29 @@ describe("@beep/epistemic-server bounded SHACL validator", () => {
       Effect.fnUntraced(function* () {
         const service = yield* ShaclValidationService;
         const encodedDataset = yield* encodeDataset(dataset);
-        const conforming = yield* service.validate(
-          yield* decodeShaclValidationRequest({
-            dataset: encodedDataset,
-            maxResults: 0,
-            shapes: [{ properties: [{ minCount: 1, path: makeNamedNode("https://schema.org/name") }] }],
-          })
-        );
+        const decodedShaclValidationRequest1 = yield* decodeShaclValidationRequest({
+          dataset: encodedDataset,
+          maxResults: 0,
+          shapes: [{ properties: [{ minCount: 1, path: makeNamedNode("https://schema.org/name") }] }],
+        });
+        const conforming = yield* service.validate(decodedShaclValidationRequest1);
         pipe(conforming.conforms, assertTrue);
         pipe(conforming.truncated, assertFalse);
         expect(conforming.violations).toEqual([]);
 
-        const nonconforming = yield* service.validate(
-          yield* decodeShaclValidationRequest({
-            dataset: encodedDataset,
-            maxResults: 0,
-            shapes: [
-              {
-                properties: [
-                  { minCount: 1, path: makeNamedNode("https://schema.org/name") },
-                  { minCount: 1, path: makeNamedNode("https://schema.org/knows") },
-                ],
-              },
-            ],
-          })
-        );
+        const decodedShaclValidationRequest2 = yield* decodeShaclValidationRequest({
+          dataset: encodedDataset,
+          maxResults: 0,
+          shapes: [
+            {
+              properties: [
+                { minCount: 1, path: makeNamedNode("https://schema.org/name") },
+                { minCount: 1, path: makeNamedNode("https://schema.org/knows") },
+              ],
+            },
+          ],
+        });
+        const nonconforming = yield* service.validate(decodedShaclValidationRequest2);
         pipe(nonconforming.conforms, assertFalse);
         pipe(nonconforming.truncated, assertTrue);
         expect(nonconforming.violations).toEqual([]);
@@ -208,38 +205,36 @@ describe("@beep/epistemic-server bounded SHACL validator", () => {
       Effect.fnUntraced(function* () {
         const service = yield* ShaclValidationService;
         const encodedDataset = yield* encodeDataset(dataset);
-        const nonTargetResult = yield* service.validate(
-          yield* decodeShaclValidationRequest({
-            dataset: encodedDataset,
-            shapes: [
-              {
-                properties: [{ minCount: 1, path: makeNamedNode("https://schema.org/knows") }],
-                targetClass: makeNamedNode("https://schema.org/Organization"),
-              },
-            ],
-          })
-        );
-        const requiredValueResult = yield* service.validate(
-          yield* decodeShaclValidationRequest({
-            dataset: encodedDataset,
-            shapes: [
-              {
-                properties: [
-                  {
-                    hasValue: {
-                      datatype: makeNamedNode(XSD_STRING.value),
-                      termType: "Literal",
-                      value: "Bob",
-                    },
-                    minCount: 1,
-                    path: makeNamedNode("https://schema.org/name"),
+        const decodedShaclValidationRequest3 = yield* decodeShaclValidationRequest({
+          dataset: encodedDataset,
+          shapes: [
+            {
+              properties: [{ minCount: 1, path: makeNamedNode("https://schema.org/knows") }],
+              targetClass: makeNamedNode("https://schema.org/Organization"),
+            },
+          ],
+        });
+        const nonTargetResult = yield* service.validate(decodedShaclValidationRequest3);
+        const decodedShaclValidationRequest4 = yield* decodeShaclValidationRequest({
+          dataset: encodedDataset,
+          shapes: [
+            {
+              properties: [
+                {
+                  hasValue: {
+                    datatype: makeNamedNode(XSD_STRING.value),
+                    termType: "Literal",
+                    value: "Bob",
                   },
-                ],
-                targetClass: makeNamedNode("https://schema.org/Person"),
-              },
-            ],
-          })
-        );
+                  minCount: 1,
+                  path: makeNamedNode("https://schema.org/name"),
+                },
+              ],
+              targetClass: makeNamedNode("https://schema.org/Person"),
+            },
+          ],
+        });
+        const requiredValueResult = yield* service.validate(decodedShaclValidationRequest4);
 
         pipe(nonTargetResult.conforms, assertTrue);
         expect(nonTargetResult.violations).toEqual([]);

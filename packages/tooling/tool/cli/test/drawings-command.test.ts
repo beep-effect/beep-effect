@@ -79,7 +79,8 @@ it.layer(PdfBackendToolsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices
       const doc = yield* Effect.promise(() => PDFDocument.create({ updateMetadata: false }));
       const font = yield* Effect.promise(() => doc.embedFont(StandardFonts.Helvetica));
       doc.addPage([612, 792]).drawText("adapter fixture", { font });
-      yield* fs.writeFile(pdfPath, yield* Effect.promise(() => doc.save({ useObjectStreams: false })));
+      const promise1 = yield* Effect.promise(() => doc.save({ useObjectStreams: false }));
+      yield* fs.writeFile(pdfPath, promise1);
       const backend = yield* PdfBackend;
       const facts = yield* backend.inspect(pdfPath);
       deepStrictEqual(
@@ -109,7 +110,8 @@ it.layer(PdfBackendToolsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices
       const stream = doc.context.register(
         doc.context.stream(new TextEncoder().encode("not zlib data"), { Filter: "FlateDecode" })
       );
-      yield* fs.writeFile(pdfPath, yield* Effect.promise(() => doc.save({ useObjectStreams: false })));
+      const promise2 = yield* Effect.promise(() => doc.save({ useObjectStreams: false }));
+      yield* fs.writeFile(pdfPath, promise2);
       const facts = yield* (yield* PdfBackend).inspect(pdfPath);
       deepStrictEqual(
         A.map(facts.undecodableStreams, (s) => [s.objectNumber, s.generation]),
@@ -173,7 +175,8 @@ it.layer(
       const doc = yield* Effect.promise(() => PDFDocument.create({ updateMetadata: false }));
       doc.addPage([612, 792]);
       doc.context.register(doc.context.stream(A.join(A.replicate("/ObjStm ", 129), "")));
-      yield* fs.writeFile(pdfPath, yield* Effect.promise(() => doc.save({ useObjectStreams: false })));
+      const promise3 = yield* Effect.promise(() => doc.save({ useObjectStreams: false }));
+      yield* fs.writeFile(pdfPath, promise3);
       const facts = yield* (yield* PdfBackend).inspect(pdfPath);
       expect(facts.containerDiscovery).toBe("limit-reached");
       expect(facts.streamCheck).toBe("complete");
@@ -195,7 +198,8 @@ it.layer(
       doc.addPage([612, 792]);
       // a valid FlateDecode stream that inflates past the one-byte limit
       doc.context.register(doc.context.flateStream("q 0 0 m 100 100 l S Q\n"));
-      yield* fs.writeFile(pdfPath, yield* Effect.promise(() => doc.save({ useObjectStreams: false })));
+      const promise4 = yield* Effect.promise(() => doc.save({ useObjectStreams: false }));
+      yield* fs.writeFile(pdfPath, promise4);
       const facts = yield* (yield* PdfBackend).inspect(pdfPath);
       deepStrictEqual(facts.undecodableStreams, []);
       expect(facts.streamCheck).toBe("limit-reached");
@@ -282,7 +286,8 @@ it.layer(pdfAdapterFixture, { timeout: "10 seconds" })((it) => {
       expect([measured.width, measured.height, measured.dpi, measured.antiAliased]).toEqual([100, 80, 144, false]);
       expect(O.getOrThrow(measured.inkBounds)).toEqual({ minX: 10, minY: 20, maxX: 40, maxY: 50 });
       expect([measured.inkPixels, measured.impurePixels, measured.largestBlackSquare]).toEqual([100, 2, 3]);
-      expect(yield* backend.pageText("fixture.pdf", 2)).toBe("adapter fixture");
+      const pageText5 = yield* backend.pageText("fixture.pdf", 2);
+      expect(pageText5).toBe("adapter fixture");
       yield* backend.svgToPdf(["sheet.svg"], "out.pdf", O.none());
       const requests = yield* Ref.get(calls);
       deepStrictEqual(requests, [
@@ -610,7 +615,8 @@ const writeSheetSet = Effect.fnUntraced(function* (options: { readonly figures: 
     figures: options.figures ? base.figures : [],
   });
   const manifestPath = path.join(dir, "manifest.json");
-  yield* fs.writeFileString(manifestPath, yield* encodeManifest(manifest));
+  const encodedManifest = yield* encodeManifest(manifest);
+  yield* fs.writeFileString(manifestPath, encodedManifest);
   return { dir, manifest: manifestPath, pdf: path.join(dir, "sheets.pdf") };
 });
 
@@ -654,9 +660,8 @@ describe("beep drawings command routes", () => {
 
         const notPdf = path.join(dir, "notes.pdf");
         yield* fs.writeFileString(notPdf, "not a pdf\n");
-        expect(yield* failureMessage(["validate", notPdf])).toContain(
-          "Validating the sheet set failed: The PDF backend failed. ("
-        );
+        const failureMessage6 = yield* failureMessage(["validate", notPdf]);
+        expect(failureMessage6).toContain("Validating the sheet set failed: The PDF backend failed. (");
 
         const empty = path.join(dir, "empty.pdf");
         const doc = yield* Effect.promise(() => PDFDocument.create({ updateMetadata: false }));
@@ -666,7 +671,8 @@ describe("beep drawings command routes", () => {
         const findings = yield* Effect.flip(runDrawings(["validate", empty]));
         assertInstanceOf(findings, DrawingsCommandError);
         expect(findings.message).toMatch(/^\d+ validator finding\(s\)\.$/u);
-        expect(yield* logged).toMatch(/validator: \d+ finding\(s\) on 0 page\(s\), sha256 [0-9a-f]{64}/u);
+        const logged7 = yield* logged;
+        expect(logged7).toMatch(/validator: \d+ finding\(s\) on 0 page\(s\), sha256 [0-9a-f]{64}/u);
       })
     );
 
@@ -677,7 +683,8 @@ describe("beep drawings command routes", () => {
         const error = yield* Effect.flip(runDrawings(["statement", "--manifest", set.manifest]));
         assertInstanceOf(error, DrawingsCommandError);
         expect(error.message).toContain(`"${set.pdf}" no longer matches its manifest`);
-        expect(yield* logged).toContain(`warning: no review/ directory in "${set.dir}" or any directory above it`);
+        const logged8 = yield* logged;
+        expect(logged8).toContain(`warning: no review/ directory in "${set.dir}" or any directory above it`);
       })
     );
 
@@ -725,20 +732,21 @@ describe("beep drawings command routes", () => {
         yield* runDrawings(["judge", "--manifest", set.manifest, "--photos", photos]);
         const packDir = path.join(set.dir, "judge", "round-1");
         const reply = path.join(set.dir, "reply.json");
-        yield* fs.writeFileString(reply, yield* encodeJson(judgeReply));
+        const encodedJson = yield* encodeJson(judgeReply);
+        yield* fs.writeFileString(reply, encodedJson);
         yield* runDrawings(["judge-ingest", "--pack", packDir, "--reply", reply]);
         const output = yield* logged;
         expect(output).toContain(`judge pack: ${packDir}\n  0 sheet(s), 1 reference photo(s)\n`);
         expect(output).toContain(
           "inventory: 1 finding(s), REQUIRED FINDINGS: 1\n  R1-01 P1 [orientation] The reference photo shows the tab folded down"
         );
-        expect(yield* fs.exists(path.join(packDir, "inventory.json"))).toBe(true);
+        const exists9 = yield* fs.exists(path.join(packDir, "inventory.json"));
+        expect(exists9).toBe(true);
 
         const unreadable = path.join(set.dir, "unreadable.json");
         yield* fs.writeFileString(unreadable, "{}");
-        expect(yield* failureMessage(["judge", "--manifest", unreadable])).toContain(
-          `Could not read the render manifest "${unreadable}".`
-        );
+        const failureMessage10 = yield* failureMessage(["judge", "--manifest", unreadable]);
+        expect(failureMessage10).toContain(`Could not read the render manifest "${unreadable}".`);
       })
     );
 
@@ -763,18 +771,17 @@ describe("beep drawings command routes", () => {
 
         const draft = path.join(set.dir, "draft.json");
         yield* fs.writeFileString(draft, "{}");
-        expect(
-          yield* failureMessage([
-            "deliver",
-            "record",
-            "--manifest",
-            set.manifest,
-            "--draft",
-            draft,
-            "--sent-message-id",
-            "",
-          ])
-        ).toBe("The delivery flags are not valid.");
+        const failureMessage11 = yield* failureMessage([
+          "deliver",
+          "record",
+          "--manifest",
+          set.manifest,
+          "--draft",
+          draft,
+          "--sent-message-id",
+          "",
+        ]);
+        expect(failureMessage11).toBe("The delivery flags are not valid.");
       })
     );
 
@@ -789,26 +796,28 @@ describe("beep drawings command routes", () => {
         yield* fs.writeFileString(manifest, "{}");
         yield* fs.writeFileString(brief, "# Brief\n");
         const pack = ["critics", "pack", "--manifest", manifest, "--out", path.join(dir, "pack"), "--brief", brief];
-        expect(yield* failureMessage([...pack, "--zoom", "fig-1"])).toBe('"fig-1" is not fig:x,y,width,height:label.');
-        expect(yield* failureMessage([...pack, "--zoom", "1:10,20,300,200:tab"])).toContain(
-          `Could not decode the render manifest "${manifest}".`
-        );
+        const failureMessage12 = yield* failureMessage([...pack, "--zoom", "fig-1"]);
+        expect(failureMessage12).toBe('"fig-1" is not fig:x,y,width,height:label.');
+        const failureMessage13 = yield* failureMessage([...pack, "--zoom", "1:10,20,300,200:tab"]);
+        expect(failureMessage13).toContain(`Could not decode the render manifest "${manifest}".`);
 
         const packDir = path.join(dir, "empty-pack");
         yield* fs.makeDirectory(packDir);
         const run = ["critics", "run", "--pack", packDir, "--loop-dir", path.join(dir, "loop-1")];
-        expect(yield* failureMessage([...run, "--reviewers", "nobody"])).toContain('"nobody" is not a known reviewer');
-        expect(yield* failureMessage([...run, "--reviewers", "grok-4.7", "--loop", "0"])).toBe(
+        const failureMessage14 = yield* failureMessage([...run, "--reviewers", "nobody"]);
+        expect(failureMessage14).toContain('"nobody" is not a known reviewer');
+        const failureMessage15 = yield* failureMessage([...run, "--reviewers", "grok-4.7", "--loop", "0"]);
+        expect(failureMessage15).toBe(
           "The critic run flags do not form a run request; --loop and --timeout-minutes must be at least 1."
         );
-        expect(yield* failureMessage([...run, "--reviewers", "grok-4.7"])).toContain(
-          `"${packDir}" holds no readable pack.json; build the pack first.`
-        );
+        const failureMessage16 = yield* failureMessage([...run, "--reviewers", "grok-4.7"]);
+        expect(failureMessage16).toContain(`"${packDir}" holds no readable pack.json; build the pack first.`);
 
         const loopDir = path.join(dir, "loop-0");
         yield* fs.makeDirectory(loopDir);
         yield* runDrawings(["critics", "summary", "--loop-dir", loopDir]);
-        expect(yield* logged).toContain("# Findings already reported in this loop");
+        const logged17 = yield* logged;
+        expect(logged17).toContain("# Findings already reported in this loop");
       })
     );
   });

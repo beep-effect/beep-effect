@@ -79,7 +79,8 @@ describe("practice hook host boundaries", { concurrent: false }, () => {
         "partly",
         "practice",
       ]);
-      expect(yield* Effect.promise(() => hooks.verdictCommand(engine)("wrong", ""))).toEqual({
+      const promise1 = yield* Effect.promise(() => hooks.verdictCommand(engine)("wrong", ""));
+      expect(promise1).toEqual({
         text: "There is no answer to mark yet.",
       });
       expect(hooks.verdictBand(engine)(abovePrompt)).toBeUndefined();
@@ -97,15 +98,17 @@ describe("practice hook host boundaries", { concurrent: false }, () => {
       yield* Effect.promise(() => hooks.rememberAnswer(engine)({ ...answer, agentId: "child" }));
       expect(engine.session.messages).not.toHaveBeenCalled();
       yield* Effect.promise(() => hooks.rememberAnswer(engine)(answer));
-      expect(yield* Effect.promise(() => hooks.verdictCommand(engine)("wrong", "  missed the continuation  "))).toEqual(
-        {
-          text: "Saved: Wrong",
-        }
+      const promise2 = yield* Effect.promise(() =>
+        hooks.verdictCommand(engine)("wrong", "  missed the continuation  ")
       );
+      expect(promise2).toEqual({
+        text: "Saved: Wrong",
+      });
       hooks.verdictBand(engine)(abovePrompt);
       expect(A.map(elements.Button.mock.calls, ([props]) => props.label)).toEqual(["Right", "Wrong", "Partly", "Undo"]);
       expect(elements.Text).toHaveBeenCalledWith({ dimColor: true, children: "Saved: Wrong" });
-      expect(yield* Effect.promise(() => hooks.practiceCommand(engine)("undo"))).toEqual({ text: "Undone" });
+      const promise3 = yield* Effect.promise(() => hooks.practiceCommand(engine)("undo"));
+      expect(promise3).toEqual({ text: "Undone" });
       const rows = yield* store.pipe(
         MutableHashMap.get("verdict-rows/v2"),
         O.getOrUndefined,
@@ -143,7 +146,8 @@ describe("practice hook host boundaries", { concurrent: false }, () => {
       );
 
       expect(engine.fs.write).not.toHaveBeenCalled();
-      expect(yield* Effect.promise(() => hooks.practiceCommand(engine)("unknown"))).toEqual({
+      const promise4 = yield* Effect.promise(() => hooks.practiceCommand(engine)("unknown"));
+      expect(promise4).toEqual({
         text: "Use /practice export, /practice undo, or /practice raw.",
       });
     })
@@ -188,12 +192,14 @@ describe("practice hook host boundaries", { concurrent: false }, () => {
       const { engine } = fixture();
       yield* Effect.promise(() => hooks.rememberAnswer(engine)({ answer: "answer", turnId: "t-1", isAborted: false }));
       engine.store.set.mockRejectedValue("disk full");
-      expect(yield* Effect.promise(() => hooks.verdictCommand(engine)("right", ""))).toEqual({
+      const promise5 = yield* Effect.promise(() => hooks.verdictCommand(engine)("right", ""));
+      expect(promise5).toEqual({
         text: "The verdict could not be saved. Try again.",
       });
       expect(engine.ui.toast).toHaveBeenCalledWith("The verdict could not be saved. Try again.");
       engine.store.get.mockRejectedValue("read denied");
-      expect(yield* Effect.promise(() => hooks.practiceCommand(engine)("export"))).toEqual({
+      const promise6 = yield* Effect.promise(() => hooks.practiceCommand(engine)("export"));
+      expect(promise6).toEqual({
         text: "The practice logs could not be exported. Try again.",
       });
       expect(engine.fs.write).not.toHaveBeenCalled();
@@ -234,12 +240,14 @@ describe("practice hook host boundaries", { concurrent: false }, () => {
       elements.Text.mockClear();
       hooks.toolRow(engine)({ ...row, props: { ...row.props, tool: "mcp__other__kg_find" } });
       expect(elements.Text).not.toHaveBeenCalled();
-      expect(yield* Effect.promise(() => hooks.practiceCommand(engine)("raw"))).toEqual({
+      const promise7 = yield* Effect.promise(() => hooks.practiceCommand(engine)("raw"));
+      expect(promise7).toEqual({
         text: "Showing the raw tool calls.",
       });
       hooks.toolRow(engine)(row);
       expect(elements.Text).not.toHaveBeenCalled();
-      expect(yield* Effect.promise(() => hooks.practiceCommand(engine)("raw"))).toEqual({
+      const promise8 = yield* Effect.promise(() => hooks.practiceCommand(engine)("raw"));
+      expect(promise8).toEqual({
         text: "Showing tool calls in plain language.",
       });
       hooks.configure({ servers: ["other"] });
@@ -275,7 +283,8 @@ describe("practice hook host boundaries", { concurrent: false }, () => {
     Effect.fnUntraced(function* () {
       const hooks = yield* Effect.promise(() => import("@/PracticeMod.hooks"));
       const { engine } = fixture();
-      expect(yield* Effect.promise(() => hooks.matterCommand(engine)(""))).toEqual({
+      const promise9 = yield* Effect.promise(() => hooks.matterCommand(engine)(""));
+      expect(promise9).toEqual({
         text: "No matter is selected.",
       });
       engine.mcp.call.mockResolvedValue({
@@ -283,7 +292,8 @@ describe("practice hook host boundaries", { concurrent: false }, () => {
         isError: false,
         structuredContent: { data: { columns: ["familyKey", "docketKey", "resolution", "client"], rows: [] } },
       });
-      expect(yield* Effect.promise(() => hooks.matterCommand(engine)("10008US01"))).toEqual({
+      const promise10 = yield* Effect.promise(() => hooks.matterCommand(engine)("10008US01"));
+      expect(promise10).toEqual({
         text: "No matter matches 10008US01.",
       });
       expect(engine.mcp.call).toHaveBeenCalledWith("practice-kg", "kg_matter_lookup", {
@@ -299,18 +309,22 @@ describe("practice hook host boundaries", { concurrent: false }, () => {
           },
         },
       });
-      expect(yield* Effect.promise(() => hooks.matterCommand(engine)("10008US01"))).toEqual({
+      const promise11 = yield* Effect.promise(() => hooks.matterCommand(engine)("10008US01"));
+      expect(promise11).toEqual({
         text: "Matter: 12345.10008US01",
       });
-      expect(yield* Effect.promise(() => hooks.matterCommand(engine)(""))).toEqual({
+      const promise12 = yield* Effect.promise(() => hooks.matterCommand(engine)(""));
+      expect(promise12).toEqual({
         text: "Matter: 12345.10008US01",
       });
       engine.mcp.call.mockRejectedValueOnce("unavailable");
-      expect(yield* Effect.promise(() => hooks.matterCommand(engine)("10008US01"))).toEqual({
+      const promise13 = yield* Effect.promise(() => hooks.matterCommand(engine)("10008US01"));
+      expect(promise13).toEqual({
         text: "The matter could not be looked up. Try again.",
       });
       expect(engine.ui.toast).toHaveBeenCalledWith("The matter could not be looked up. Try again.");
-      expect(yield* Effect.promise(() => hooks.matterCommand(engine)("clear"))).toEqual({ text: "Matter cleared." });
+      const promise14 = yield* Effect.promise(() => hooks.matterCommand(engine)("clear"));
+      expect(promise14).toEqual({ text: "Matter cleared." });
     })
   );
 
@@ -319,22 +333,31 @@ describe("practice hook host boundaries", { concurrent: false }, () => {
     Effect.fnUntraced(function* () {
       const hooks = yield* Effect.promise(() => import("@/PracticeMod.hooks"));
       const { engine } = fixture();
-      expect(yield* Effect.promise(() => hooks.timeCommand(engine)("stop"))).toEqual({ text: "Timer is stopped." });
-      expect(yield* Effect.promise(() => hooks.timeCommand(engine)("start"))).toEqual({ text: "Timer started." });
-      expect(yield* Effect.promise(() => hooks.timeCommand(engine)("start"))).toEqual({
+      const promise15 = yield* Effect.promise(() => hooks.timeCommand(engine)("stop"));
+      expect(promise15).toEqual({ text: "Timer is stopped." });
+      const promise16 = yield* Effect.promise(() => hooks.timeCommand(engine)("start"));
+      expect(promise16).toEqual({ text: "Timer started." });
+      const promise17 = yield* Effect.promise(() => hooks.timeCommand(engine)("start"));
+      expect(promise17).toEqual({
         text: "Timer is already running.",
       });
-      expect(yield* Effect.promise(() => hooks.timeCommand(engine)(""))).toEqual({ text: "Timer running: 0 minutes." });
+      const promise18 = yield* Effect.promise(() => hooks.timeCommand(engine)(""));
+      expect(promise18).toEqual({ text: "Timer running: 0 minutes." });
       engine.store.set.mockRejectedValueOnce("disk full");
-      expect(yield* Effect.promise(() => hooks.timeCommand(engine)("stop"))).toEqual({
+      const promise19 = yield* Effect.promise(() => hooks.timeCommand(engine)("stop"));
+      expect(promise19).toEqual({
         text: "The timer could not be saved or updated. Try again.",
       });
-      expect(yield* Effect.promise(() => hooks.timeCommand(engine)(""))).toEqual({ text: "Timer running: 0 minutes." });
-      expect(yield* Effect.promise(() => hooks.timeCommand(engine)("stop"))).toEqual({
+      const promise20 = yield* Effect.promise(() => hooks.timeCommand(engine)(""));
+      expect(promise20).toEqual({ text: "Timer running: 0 minutes." });
+      const promise21 = yield* Effect.promise(() => hooks.timeCommand(engine)("stop"));
+      expect(promise21).toEqual({
         text: "Timer stopped. Interval saved.",
       });
-      expect(yield* Effect.promise(() => hooks.timeCommand(engine)(""))).toEqual({ text: "Timer is stopped." });
-      expect(yield* Effect.promise(() => hooks.timeCommand(engine)("unknown"))).toEqual({
+      const promise22 = yield* Effect.promise(() => hooks.timeCommand(engine)(""));
+      expect(promise22).toEqual({ text: "Timer is stopped." });
+      const promise23 = yield* Effect.promise(() => hooks.timeCommand(engine)("unknown"));
+      expect(promise23).toEqual({
         text: "Use /time, /time start, or /time stop.",
       });
     })

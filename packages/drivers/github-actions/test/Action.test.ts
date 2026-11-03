@@ -432,8 +432,10 @@ describe("Action.main", () => {
         // The same provider `Action.run` installs, reached through the layer a
         // test composes directly — with the ambient environment injected as a
         // provider BENEATH the runtime, so nothing touches the process.
-        assert.strictEqual(yield* Config.String("dry-run").pipe(Config.withDefault("defaulted")), "x");
-        assert.strictEqual(yield* Config.String("PLAIN_VAR"), "y");
+        const pipe1 = yield* Config.String("dry-run").pipe(Config.withDefault("defaulted"));
+        assert.strictEqual(pipe1, "x");
+        const String2 = yield* Config.String("PLAIN_VAR");
+        assert.strictEqual(String2, "y");
       })
     );
   });
@@ -442,7 +444,8 @@ describe("Action.main", () => {
     it.effect("an interruption from inside the program still fails the step", () =>
       Effect.gen(function* () {
         const { lines } = yield* Captured;
-        assert.strictEqual(yield* verdict(Effect.interrupt), 1);
+        const verdict3 = yield* verdict(Effect.interrupt);
+        assert.strictEqual(verdict3, 1);
         assert.isTrue(A.some(lines, (line) => Str.startsWith("::error::Action failed:")(line)));
       })
     );
@@ -476,10 +479,10 @@ describe("Action.run", () => {
     it.effect("hands a successful program to runMain, whose teardown reads 0", () =>
       Effect.gen(function* () {
         const { lines } = yield* Captured;
-        assert.strictEqual(
-          yield* runVerdict((teardown) => Action.run(Effect.logWarning("ran under runMain"), { teardown })),
-          0
+        const resultVerdict = yield* runVerdict((teardown) =>
+          Action.run(Effect.logWarning("ran under runMain"), { teardown })
         );
+        assert.strictEqual(resultVerdict, 0);
         assert.include(lines, "::warning::ran under runMain");
       })
     );
@@ -489,12 +492,10 @@ describe("Action.run", () => {
     it.effect("leaves a failed program's exit code to runMain's teardown, with one ::error:: line", () =>
       Effect.gen(function* () {
         const { lines } = yield* Captured;
-        assert.strictEqual(
-          yield* runVerdict((teardown) =>
-            Action.run(Boom.make({ detail: "no token" }).pipe(Effect.fail), { teardown })
-          ),
-          1
+        const resultVerdict4 = yield* runVerdict((teardown) =>
+          Action.run(Boom.make({ detail: "no token" }).pipe(Effect.fail), { teardown })
         );
+        assert.strictEqual(resultVerdict4, 1);
         // disableErrorReporting: runMain adds no second rendering of the cause.
         assert.lengthOf(
           A.filter(lines, (line) => Str.startsWith("::error::")(line)),

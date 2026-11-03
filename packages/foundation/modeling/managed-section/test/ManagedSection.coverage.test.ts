@@ -41,8 +41,9 @@ describe("ManagedSection uncovered contracts", () => {
         ["remove", service.remove("file", id).pipe(Effect.asVoid)],
       ] as const;
       for (const [member, call] of calls) {
+        const exit1 = yield* Effect.exit(call);
         assertExitFailure(
-          yield* Effect.exit(call),
+          exit1,
           Cause.die(
             ManagedSectionTestError.make({
               message: `ManagedSection.makeTest: ${member}() was called but not stubbed — pass a \`${member}\` override.`,
@@ -66,9 +67,11 @@ describe("ManagedSection uncovered contracts", () => {
           fs.volume.text("file"),
           "user text\n\n# --- BEGIN tool OWNED ---\necho hi\n# --- END tool OWNED ---\n"
         );
-        assert.deepStrictEqual(yield* service.readAll("file"), [section]);
+        const readAll2 = yield* service.readAll("file");
+        assert.deepStrictEqual(readAll2, [section]);
+        const checkAll3 = yield* service.checkAll("file", [section]);
         assert.deepStrictEqual(
-          A.map(yield* service.checkAll("file", [section]), (outcome) => outcome._tag),
+          A.map(checkAll3, (outcome) => outcome._tag),
           ["UpToDate"]
         );
       })

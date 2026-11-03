@@ -47,7 +47,8 @@ describe("ConfigFile.testLayer", () => {
                 seededPath = sources[0]?.path ?? "";
                 assert.notStrictEqual(seededPath, "");
                 assert.strictEqual(path.basename(seededPath), ".apprc");
-                assert.strictEqual(yield* fs.exists(seededPath), true);
+                const exists1 = yield* fs.exists(seededPath);
+                assert.strictEqual(exists1, true);
                 const value = yield* cfg.load;
                 assert.strictEqual(value.port, 4242);
                 // The REAL decode ran, not a stub: a plain object would fail here.
@@ -57,8 +58,10 @@ describe("ConfigFile.testLayer", () => {
           (scope, exit) => Scope.close(scope, exit)
         );
         // The finalizer removed the whole temp directory, not just the file.
-        assert.strictEqual(yield* fs.exists(seededPath), false);
-        assert.strictEqual(yield* fs.exists(path.dirname(seededPath)), false);
+        const exists2 = yield* fs.exists(seededPath);
+        assert.strictEqual(exists2, false);
+        const exists3 = yield* fs.exists(path.dirname(seededPath));
+        assert.strictEqual(exists3, false);
       })
     );
   });

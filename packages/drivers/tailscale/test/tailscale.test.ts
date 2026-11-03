@@ -66,7 +66,8 @@ describe("tailscale", () => {
     Effect.fnUntraced(function* () {
       const dnsName = yield* parseTailscaleMagicDnsName(tailscaleStatusJson);
       assert.deepEqual(dnsName, O.some("desktop.tail.ts.net"));
-      assert.deepEqual(yield* parseTailscaleMagicDnsName("{}"), O.none());
+      const parsedTailscaleMagicDnsName = yield* parseTailscaleMagicDnsName("{}");
+      assert.deepEqual(parsedTailscaleMagicDnsName, O.none());
     })
   );
 

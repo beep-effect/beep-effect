@@ -42,7 +42,8 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("Yeet PR provenance v2", (it)
 
   it.effect("does not classify companion variables as Codex", () =>
     Effect.gen(function* () {
-      deepStrictEqual(yield* detectCodexEnvironment, [false, O.none()]);
+      const detectCodexEnvironment1 = yield* detectCodexEnvironment;
+      deepStrictEqual(detectCodexEnvironment1, [false, O.none()]);
     }).pipe(
       Effect.provideService(
         ConfigProvider.ConfigProvider,

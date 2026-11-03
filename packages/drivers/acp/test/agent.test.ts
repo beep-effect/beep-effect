@@ -111,11 +111,13 @@ it.effect.prop(
   Effect.fnUntraced(function* ([initializeResponse, cancelNotification]) {
     const encodedInitializeResponse = yield* encodeInitializeResponse(initializeResponse);
     const decodedInitializeResponse = yield* decodeInitializeResponse(encodedInitializeResponse);
-    assert.equal(yield* encodeInitializeResponse(decodedInitializeResponse), encodedInitializeResponse);
+    const encodedInitializeResponse1 = yield* encodeInitializeResponse(decodedInitializeResponse);
+    assert.equal(encodedInitializeResponse1, encodedInitializeResponse);
 
     const encodedCancelNotification = yield* encodeSessionCancelNotification(cancelNotification);
     const decodedCancelNotification = yield* decodeSessionCancelNotification(encodedCancelNotification);
-    assert.equal(yield* encodeSessionCancelNotification(decodedCancelNotification), encodedCancelNotification);
+    const encodedSessionCancelNotification = yield* encodeSessionCancelNotification(decodedCancelNotification);
+    assert.equal(encodedSessionCancelNotification, encodedCancelNotification);
   }),
   { arbitrary: fcRuns(25) }
 );
@@ -152,66 +154,71 @@ it.layer(Layer.fresh(agentFixtureLayer), { timeout: "10 seconds" })((it) => {
       );
 
       const permissionFiber = yield* agent.client.requestPermission(permissionRequest).pipe(Effect.forkScoped);
-      const outbound = yield* decodeRequestPermissionRequest(yield* Queue.take(output));
+      const take2 = yield* Queue.take(output);
+      const outbound = yield* decodeRequestPermissionRequest(take2);
       assert.equal(outbound.jsonrpc, "2.0");
       assert.equal(outbound.method, "session/request_permission");
       assert.deepStrictEqual(outbound.params, permissionRequest);
       assert.deepStrictEqual(outbound.headers, []);
 
-      yield* Queue.offer(
-        input,
-        yield* encodeJsonl(RequestPermissionResponse, {
-          jsonrpc: "2.0",
-          id: outbound.id,
-          result: { outcome: { outcome: "selected", optionId: "allow" } },
-        })
-      );
+      const encodedJsonl = yield* encodeJsonl(RequestPermissionResponse, {
+        jsonrpc: "2.0",
+        id: outbound.id,
+        result: { outcome: { outcome: "selected", optionId: "allow" } },
+      });
+      yield* Queue.offer(input, encodedJsonl);
       assert.equal((yield* Fiber.join(permissionFiber)).outcome.outcome, "selected");
 
-      yield* Queue.offer(input, yield* initializeRequest(2));
-      assert.deepStrictEqual(yield* decodeInitializeResponse(yield* Queue.take(output)), {
+      const initializeRequest3 = yield* initializeRequest(2);
+      yield* Queue.offer(input, initializeRequest3);
+      const take43 = yield* Queue.take(output);
+      const decodedInitializeResponse4 = yield* decodeInitializeResponse(take43);
+      assert.deepStrictEqual(decodedInitializeResponse4, {
         jsonrpc: "2.0",
         id: 2,
         result: mockAgentInitializeResponse,
       });
 
-      yield* Queue.offer(
-        input,
-        yield* encodeJsonl(ExtRequest, {
-          jsonrpc: "2.0",
-          id: "extension-3",
-          method: "x/test",
-          params: { hello: "world" },
-          headers: [],
-        })
-      );
-      assert.deepStrictEqual(yield* decodeExtResponse(yield* Queue.take(output)), {
+      const encodedJsonl5 = yield* encodeJsonl(ExtRequest, {
+        jsonrpc: "2.0",
+        id: "extension-3",
+        method: "x/test",
+        params: { hello: "world" },
+        headers: [],
+      });
+      yield* Queue.offer(input, encodedJsonl5);
+      const take44 = yield* Queue.take(output);
+      const decodedExtResponse = yield* decodeExtResponse(take44);
+      assert.deepStrictEqual(decodedExtResponse, {
         jsonrpc: "2.0",
         id: "extension-3",
         result: { ok: true },
       });
-      assert.deepStrictEqual(yield* Ref.get(requestContexts), [
+      const got = yield* Ref.get(requestContexts);
+      assert.deepStrictEqual(got, [
         AcpProtocol.AcpRequestContext.make({ method: "initialize", requestId: 2 }),
         AcpProtocol.AcpRequestContext.make({ method: "x/test", requestId: "extension-3" }),
       ]);
 
-      yield* Queue.offer(
-        input,
-        yield* encodeJsonl(SessionCancelNotification, {
-          jsonrpc: "2.0",
-          method: "session/cancel",
-          params: { sessionId: "session-1" },
-        })
-      );
-      yield* Queue.offer(
-        input,
-        yield* encodeJsonl(ExtPingNotification, { jsonrpc: "2.0", method: "x/ping", params: { count: 2 } })
-      );
+      const encodedJsonl6 = yield* encodeJsonl(SessionCancelNotification, {
+        jsonrpc: "2.0",
+        method: "session/cancel",
+        params: { sessionId: "session-1" },
+      });
+      yield* Queue.offer(input, encodedJsonl6);
+      const encodedJsonl7 = yield* encodeJsonl(ExtPingNotification, {
+        jsonrpc: "2.0",
+        method: "x/ping",
+        params: { count: 2 },
+      });
+      yield* Queue.offer(input, encodedJsonl7);
 
       yield* Deferred.await(cancelReceived);
       yield* Deferred.await(extReceived);
-      assert.deepStrictEqual(yield* Ref.get(cancelNotifications), ["session-1"]);
-      assert.deepStrictEqual(yield* Ref.get(extNotifications), [2]);
+      const got8 = yield* Ref.get(cancelNotifications);
+      assert.deepStrictEqual(got8, ["session-1"]);
+      const got9 = yield* Ref.get(extNotifications);
+      assert.deepStrictEqual(got9, [2]);
     })
   );
 });
@@ -228,9 +235,7 @@ it.layer(Layer.fresh(agentFixtureLayer), { timeout: "10 seconds" })((it) => {
 
       const firstOutbound = yield* Queue.take(output);
       const secondOutbound = yield* Queue.take(output);
-      const firstIsPermission = yield* decodeRequestPermissionRequest(firstOutbound).pipe(
-        Effect.match({ onFailure: () => false, onSuccess: () => true })
-      );
+      const firstIsPermission = yield* decodeRequestPermissionRequest(firstOutbound).pipe(Effect.isSuccess);
       const outboundPermission = yield* decodeRequestPermissionRequest(
         firstIsPermission ? firstOutbound : secondOutbound
       );
@@ -242,32 +247,32 @@ it.layer(Layer.fresh(agentFixtureLayer), { timeout: "10 seconds" })((it) => {
       assert.isAtMost(AcpProtocol.RPC_REQUEST_ID_START, 2 ** 31 - 1);
       assert.strictEqual(outboundExt.id, 1);
 
-      yield* Queue.offer(
-        input,
-        yield* encodeJsonl(RequestPermissionResponse, {
-          jsonrpc: "2.0",
-          id: outboundPermission.id,
-          result: { outcome: { outcome: "selected", optionId: "allow" } },
-        })
-      );
-      yield* Queue.offer(
-        input,
-        yield* encodeJsonl(ExtResponse, { jsonrpc: "2.0", id: outboundExt.id, result: { ok: true } })
-      );
+      const encodedJsonl10 = yield* encodeJsonl(RequestPermissionResponse, {
+        jsonrpc: "2.0",
+        id: outboundPermission.id,
+        result: { outcome: { outcome: "selected", optionId: "allow" } },
+      });
+      yield* Queue.offer(input, encodedJsonl10);
+      const encodedJsonl11 = yield* encodeJsonl(ExtResponse, {
+        jsonrpc: "2.0",
+        id: outboundExt.id,
+        result: { ok: true },
+      });
+      yield* Queue.offer(input, encodedJsonl11);
       assert.equal((yield* Fiber.join(permissionFiber)).outcome.outcome, "selected");
-      assert.deepStrictEqual(yield* Fiber.join(extFiber), { ok: true });
+      const join12 = yield* Fiber.join(extFiber);
+      assert.deepStrictEqual(join12, { ok: true });
 
       const nextPermissionFiber = yield* agent.client.requestPermission(permissionRequest).pipe(Effect.forkScoped);
-      const nextPermission = yield* decodeRequestPermissionRequest(yield* Queue.take(output));
+      const take13 = yield* Queue.take(output);
+      const nextPermission = yield* decodeRequestPermissionRequest(take13);
       assert.strictEqual(nextPermission.id, 2 ** 30 + 1);
-      yield* Queue.offer(
-        input,
-        yield* encodeJsonl(RequestPermissionResponse, {
-          jsonrpc: "2.0",
-          id: nextPermission.id,
-          result: { outcome: { outcome: "cancelled" } },
-        })
-      );
+      const encodedJsonl14 = yield* encodeJsonl(RequestPermissionResponse, {
+        jsonrpc: "2.0",
+        id: nextPermission.id,
+        result: { outcome: { outcome: "cancelled" } },
+      });
+      yield* Queue.offer(input, encodedJsonl14);
       assert.equal((yield* Fiber.join(nextPermissionFiber)).outcome.outcome, "cancelled");
     })
   );
@@ -285,26 +290,27 @@ it.effect.each([0, 2 ** 30, 2 ** 32])(
 
     // Opposite directions may reuse an id even while a request is pending.
     const outboundFiber = yield* agent.client.requestPermission(permissionRequest).pipe(Effect.forkScoped);
-    const outbound = yield* decodeRequestPermissionRequest(yield* Queue.take(output));
+    const take15 = yield* Queue.take(output);
+    const outbound = yield* decodeRequestPermissionRequest(take15);
 
-    yield* Queue.offer(input, yield* initializeRequest(requestId));
-    assert.deepStrictEqual(yield* decodeInitializeResponse(yield* Queue.take(output)), {
+    const initializeRequest16 = yield* initializeRequest(requestId);
+    yield* Queue.offer(input, initializeRequest16);
+    const take45 = yield* Queue.take(output);
+    const decodedInitializeResponse17 = yield* decodeInitializeResponse(take45);
+    assert.deepStrictEqual(decodedInitializeResponse17, {
       jsonrpc: "2.0",
       id: requestId,
       result: mockAgentInitializeResponse,
     });
-    assert.deepStrictEqual(yield* Ref.get(contexts), [
-      AcpProtocol.AcpRequestContext.make({ method: "initialize", requestId }),
-    ]);
+    const got18 = yield* Ref.get(contexts);
+    assert.deepStrictEqual(got18, [AcpProtocol.AcpRequestContext.make({ method: "initialize", requestId })]);
 
-    yield* Queue.offer(
-      input,
-      yield* encodeJsonl(RequestPermissionResponse, {
-        jsonrpc: "2.0",
-        id: outbound.id,
-        result: { outcome: { outcome: "cancelled" } },
-      })
-    );
+    const encodedJsonl19 = yield* encodeJsonl(RequestPermissionResponse, {
+      jsonrpc: "2.0",
+      id: outbound.id,
+      result: { outcome: { outcome: "cancelled" } },
+    });
+    yield* Queue.offer(input, encodedJsonl19);
     assert.equal((yield* Fiber.join(outboundFiber)).outcome.outcome, "cancelled");
   })
 );
@@ -318,16 +324,20 @@ it.layer(Layer.fresh(agentFixtureLayer), { timeout: "10 seconds" })((it) => {
       yield* agent.handleInitialize(() => Effect.die("handler bug"));
 
       // A defect answers a generic internal error that does not carry the defect text.
-      yield* Queue.offer(input, yield* initializeRequest(7));
-      const died = yield* decodeErrorResponse(yield* Queue.take(output));
+      const initializeRequest20 = yield* initializeRequest(7);
+      yield* Queue.offer(input, initializeRequest20);
+      const take21 = yield* Queue.take(output);
+      const died = yield* decodeErrorResponse(take21);
       assert.strictEqual(died.id, 7);
       assert.strictEqual(died.error.code, -32603);
       assert.notInclude(died.error.message, "handler bug");
 
       // The connection keeps serving after the defect.
       yield* agent.handleInitialize(() => Effect.succeed(mockAgentInitializeResponse));
-      yield* Queue.offer(input, yield* initializeRequest(8));
-      assert.strictEqual((yield* decodeInitializeResponse(yield* Queue.take(output))).id, 8);
+      const initializeRequest22 = yield* initializeRequest(8);
+      yield* Queue.offer(input, initializeRequest22);
+      const take23 = yield* Queue.take(output);
+      assert.strictEqual((yield* decodeInitializeResponse(take23)).id, 8);
     })
   );
 });
@@ -348,26 +358,34 @@ it.layer(Layer.fresh(agentFixtureLayer), { timeout: "10 seconds" })((it) => {
         });
 
       // Without handlers the agent answers method-not-found.
-      yield* Queue.offer(input, yield* resumeSession(10, undefined));
-      const missing = yield* decodeErrorResponse(yield* Queue.take(output));
+      const resumeSession24 = yield* resumeSession(10, undefined);
+      yield* Queue.offer(input, resumeSession24);
+      const take25 = yield* Queue.take(output);
+      const missing = yield* decodeErrorResponse(take25);
       assert.strictEqual(missing.id, 10);
       assert.strictEqual(missing.error.code, -32601);
 
       // Only a resume handler: it serves both replay forms.
       yield* agent.handleResumeSession(() => Effect.succeed({ _meta: { handler: "resume" } }));
-      yield* Queue.offer(input, yield* resumeSession(11, { type: "start" }));
-      assert.deepStrictEqual((yield* decodeResumeSessionResponse(yield* Queue.take(output))).result, {
+      const resumeSession26 = yield* resumeSession(11, { type: "start" });
+      yield* Queue.offer(input, resumeSession26);
+      const take27 = yield* Queue.take(output);
+      assert.deepStrictEqual((yield* decodeResumeSessionResponse(take27)).result, {
         _meta: { handler: "resume" },
       });
 
       // With a load handler too, a replay from the start prefers it; other cursors keep resume.
       yield* agent.handleLoadSession(() => Effect.succeed({ _meta: { handler: "load" } }));
-      yield* Queue.offer(input, yield* resumeSession(12, { type: "start" }));
-      assert.deepStrictEqual((yield* decodeResumeSessionResponse(yield* Queue.take(output))).result, {
+      const resumeSession28 = yield* resumeSession(12, { type: "start" });
+      yield* Queue.offer(input, resumeSession28);
+      const take29 = yield* Queue.take(output);
+      assert.deepStrictEqual((yield* decodeResumeSessionResponse(take29)).result, {
         _meta: { handler: "load" },
       });
-      yield* Queue.offer(input, yield* resumeSession(13, null));
-      assert.deepStrictEqual((yield* decodeResumeSessionResponse(yield* Queue.take(output))).result, {
+      const resumeSession30 = yield* resumeSession(13, null);
+      yield* Queue.offer(input, resumeSession30);
+      const take31 = yield* Queue.take(output);
+      assert.deepStrictEqual((yield* decodeResumeSessionResponse(take31)).result, {
         _meta: { handler: "resume" },
       });
     })
@@ -388,34 +406,34 @@ it.layer(Layer.fresh(agentFixtureLayer), { timeout: "10 seconds" })((it) => {
         })
       );
 
-      yield* Queue.offer(
-        input,
-        yield* encodeJsonl(DeleteSessionRequest, {
-          jsonrpc: "2.0",
-          id: 21,
-          method: "session/delete",
-          params: { sessionId: "session-9" },
-          headers: [],
-        })
-      );
-      assert.strictEqual(yield* Deferred.await(deleted), "session-9");
-      assert.deepStrictEqual(yield* decodeEmptyResponse(yield* Queue.take(output)), {
+      const encodedJsonl32 = yield* encodeJsonl(DeleteSessionRequest, {
+        jsonrpc: "2.0",
+        id: 21,
+        method: "session/delete",
+        params: { sessionId: "session-9" },
+        headers: [],
+      });
+      yield* Queue.offer(input, encodedJsonl32);
+      const await33 = yield* Deferred.await(deleted);
+      assert.strictEqual(await33, "session-9");
+      const take46 = yield* Queue.take(output);
+      const decodedEmptyResponse = yield* decodeEmptyResponse(take46);
+      assert.deepStrictEqual(decodedEmptyResponse, {
         jsonrpc: "2.0",
         id: 21,
         result: {},
       });
 
-      yield* Queue.offer(
-        input,
-        yield* encodeJsonl(ListProvidersRequest, {
-          jsonrpc: "2.0",
-          id: 22,
-          method: "providers/list",
-          params: {},
-          headers: [],
-        })
-      );
-      const providers = yield* decodeListProvidersResponse(yield* Queue.take(output));
+      const encodedJsonl34 = yield* encodeJsonl(ListProvidersRequest, {
+        jsonrpc: "2.0",
+        id: 22,
+        method: "providers/list",
+        params: {},
+        headers: [],
+      });
+      yield* Queue.offer(input, encodedJsonl34);
+      const take35 = yield* Queue.take(output);
+      const providers = yield* decodeListProvidersResponse(take35);
       assert.strictEqual(providers.id, 22);
       assert.deepStrictEqual(
         A.map(providers.result.providers, ({ providerId }) => providerId),
@@ -434,25 +452,32 @@ it.layer(Layer.fresh(agentFixtureLayer), { timeout: "10 seconds" })((it) => {
       const params = { serverId: "test-server", requestId: "mcp-1", method: "tools/list" };
 
       const messageFiber = yield* agent.client.messageMcp(params).pipe(Effect.forkScoped);
-      const message = yield* decodeMessageMcpRequest(yield* Queue.take(output));
+      const take36 = yield* Queue.take(output);
+      const message = yield* decodeMessageMcpRequest(take36);
       assert.strictEqual(message.id, AcpProtocol.RPC_REQUEST_ID_START);
       assert.deepStrictEqual(message.params, params);
-      yield* Queue.offer(
-        input,
-        yield* encodeJsonl(MessageMcpResponse, { jsonrpc: "2.0", id: message.id, result: { result: { tools: [] } } })
-      );
-      assert.deepStrictEqual(yield* Fiber.join(messageFiber), { result: { tools: [] } });
+      const encodedJsonl37 = yield* encodeJsonl(MessageMcpResponse, {
+        jsonrpc: "2.0",
+        id: message.id,
+        result: { result: { tools: [] } },
+      });
+      yield* Queue.offer(input, encodedJsonl37);
+      const join38 = yield* Fiber.join(messageFiber);
+      assert.deepStrictEqual(join38, { result: { tools: [] } });
 
       const notified = yield* Deferred.make<AcpSchema.MessageMcpNotification>();
       yield* agent.handleMcpNotification((notification) =>
         Deferred.succeed(notified, notification).pipe(Effect.asVoid)
       );
       const progress = { serverId: "test-server", requestId: "mcp-1", method: "notifications/progress" };
-      yield* Queue.offer(
-        input,
-        yield* encodeJsonl(MessageMcpNotification, { jsonrpc: "2.0", method: "mcp/message", params: progress })
-      );
-      assert.deepStrictEqual(yield* Deferred.await(notified), progress);
+      const encodedJsonl39 = yield* encodeJsonl(MessageMcpNotification, {
+        jsonrpc: "2.0",
+        method: "mcp/message",
+        params: progress,
+      });
+      yield* Queue.offer(input, encodedJsonl39);
+      const await40 = yield* Deferred.await(notified);
+      assert.deepStrictEqual(await40, progress);
     })
   );
 });
@@ -468,15 +493,14 @@ it.layer(Layer.fresh(agentFixtureLayer), { timeout: "10 seconds" })((it) => {
       yield* agent.handleCancel(() => Effect.die("cancel handler bug"));
       yield* agent.handleCancel((notification) => Deferred.succeed(reached, notification.sessionId));
 
-      yield* Queue.offer(
-        input,
-        yield* encodeJsonl(SessionCancelNotification, {
-          jsonrpc: "2.0",
-          method: "session/cancel",
-          params: { sessionId: "session-2" },
-        })
-      );
-      assert.strictEqual(yield* Deferred.await(reached), "session-2");
+      const encodedJsonl41 = yield* encodeJsonl(SessionCancelNotification, {
+        jsonrpc: "2.0",
+        method: "session/cancel",
+        params: { sessionId: "session-2" },
+      });
+      yield* Queue.offer(input, encodedJsonl41);
+      const await42 = yield* Deferred.await(reached);
+      assert.strictEqual(await42, "session-2");
     })
   );
 });

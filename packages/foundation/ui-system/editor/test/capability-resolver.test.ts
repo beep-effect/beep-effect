@@ -186,14 +186,12 @@ describe("capability resolver", () => {
       });
       const second = yield* Effect.fromResult(resolveEditorProfile(editorCapabilityCatalog, reordered));
       const third = yield* Effect.fromResult(resolveEditorProfile(editorCapabilityCatalog, referenceProfiles.minimal));
-      pipe(
-        Equal.equals(yield* encodeResolvedEditorProfile(original), yield* encodeResolvedEditorProfile(second)),
-        assertTrue
-      );
-      pipe(
-        Equal.equals(yield* encodeResolvedEditorProfile(original), yield* encodeResolvedEditorProfile(third)),
-        assertTrue
-      );
+      const encodedResolvedEditorProfile = yield* encodeResolvedEditorProfile(original);
+      const encodedResolvedEditorProfile2 = yield* encodeResolvedEditorProfile(second);
+      pipe(Equal.equals(encodedResolvedEditorProfile, encodedResolvedEditorProfile2), assertTrue);
+      const encodedResolvedEditorProfile1 = yield* encodeResolvedEditorProfile(original);
+      const encodedResolvedEditorProfile3 = yield* encodeResolvedEditorProfile(third);
+      pipe(Equal.equals(encodedResolvedEditorProfile1, encodedResolvedEditorProfile3), assertTrue);
     })
   );
 });

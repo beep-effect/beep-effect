@@ -212,7 +212,8 @@ describe("@beep/freshbooks read service", () => {
       Effect.fnUntraced(function* () {
         const freshbooks = yield* Freshbooks;
         const identity = yield* freshbooks.getIdentity;
-        const capture = findUrl(yield* capturesOf, "https://api.freshbooks.com/auth/api/v1/users/me");
+        const capturesOf1 = yield* capturesOf;
+        const capture = findUrl(capturesOf1, "https://api.freshbooks.com/auth/api/v1/users/me");
 
         expect(identity.business_memberships[0]?.business.account_id).toBe("TESTACCT");
         expect(identity.business_memberships[0]?.business.id).toBe(240340);
@@ -226,8 +227,9 @@ describe("@beep/freshbooks read service", () => {
       Effect.fnUntraced(function* () {
         const freshbooks = yield* Freshbooks;
         const page = yield* freshbooks.listClients(accountId);
+        const capturesOf2 = yield* capturesOf;
         const capture = findUrl(
-          yield* capturesOf,
+          capturesOf2,
           "https://api.freshbooks.com/accounting/account/TESTACCT/users/clients?page=1&per_page=100"
         );
 

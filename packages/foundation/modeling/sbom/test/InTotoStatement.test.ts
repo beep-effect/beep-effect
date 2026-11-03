@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // in-toto statements: the value a signer wraps and a verifier reads.
 //
 // Nothing here reaches `@sigstore/*` — building and inspecting a statement is
@@ -19,6 +20,8 @@ import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const HEX = "6a13657ec19f43b1d7b95c2f0a1c1e5b8d4f7a206a13657ec19f43b1d7b95c2f";
 
@@ -85,7 +88,8 @@ describe("Sha256Digest", () => {
 
   it.effect("the Effect form succeeds where the Result form does", () =>
     Effect.gen(function* () {
-      assert.strictEqual(yield* Sha256Digest.parse(`SHA256:${Str.toUpperCase(HEX)}`), HEX);
+      const parsed1 = yield* Sha256Digest.parse(`SHA256:${Str.toUpperCase(HEX)}`);
+      assert.strictEqual(parsed1, HEX);
     })
   );
 });
@@ -146,7 +150,7 @@ describe("InTotoStatement", () => {
     });
     const json = statement.toJson();
     assert.isFalse(Str.includes("\n")(json), "the DSSE payload is compact by default");
-    assert.deepStrictEqual<unknown>(JSON.parse(json), {
+    assert.deepStrictEqual<unknown>(Result.getOrThrowWith(S.decodeResult(UnknownJson)(json), identity), {
       _type: IN_TOTO_STATEMENT_V1,
       subject: [{ name: "pkg:npm/left-pad@1.0.0", digest: { sha256: HEX } }],
       predicateType: "https://example.test/predicate/v1",
@@ -186,7 +190,7 @@ describe("InTotoStatement", () => {
       predicateType: SlsaProvenance.predicateType,
       predicate: provenance,
     });
-    const parsed: unknown = JSON.parse(statement.toJson());
+    const parsed: unknown = Result.getOrThrowWith(S.decodeResult(UnknownJson)(statement.toJson()), identity);
     assertTrue(S.is(ProvenanceStatementJson)(parsed));
     assert.strictEqual(parsed.predicateType, "https://slsa.dev/provenance/v1");
     assert.strictEqual(parsed.predicate.buildDefinition.buildType, SlsaProvenance.buildType);

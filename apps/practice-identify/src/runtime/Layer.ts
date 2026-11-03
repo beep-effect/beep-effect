@@ -78,7 +78,8 @@ export const makeIdentificationStages = <E>(lookups: Layer.Layer<UsptoRecordLook
   const makeIdentificationStages = Effect.fn("DocumentIdentification.Layer.make")(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const platform = Layer.succeedContext(yield* Effect.context<FileSystem.FileSystem | Path.Path>());
+    const context1 = yield* Effect.context<FileSystem.FileSystem | Path.Path>();
+    const platform = Layer.succeedContext(context1);
     const sanitise = <T, E, R>(
       effect: Effect.Effect<T, E, R>,
       operation: string
@@ -211,7 +212,8 @@ export const makeIdentificationStages = <E>(lookups: Layer.Layer<UsptoRecordLook
         : ledgerTarget;
       if (ledgerReal === inputReal || ledgerReal === outputTarget)
         return yield* failure("ledger-path", "unsafe-output");
-      const queries = A.dedupeWith(yield* lines(input.input, UsptoQuery), S.toEquivalence(UsptoQuery));
+      const lines2 = yield* lines(input.input, UsptoQuery);
+      const queries = A.dedupeWith(lines2, S.toEquivalence(UsptoQuery));
       const results = yield* Effect.scoped(
         Effect.gen(function* () {
           const services = yield* Layer.build(lookups);

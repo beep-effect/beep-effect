@@ -24,10 +24,11 @@ import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { WaveOrder } from "../Yeet/internal/WaveOrder.ts";
@@ -56,6 +57,8 @@ import type * as FileSystem from "effect/FileSystem";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RouteCensus, RouteCorpusReceipt, RoutePlan, RouteReplay } from "./Route.schemas.ts";
 import type { RouteCensusShape, RouteCorpusLoaded } from "./Route.service.ts";
+
+const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
 
 /**
  * Default corpus directory, relative to the repository root.
@@ -131,7 +134,7 @@ const encodeJson = <Sch extends S.Top>(
   value: Sch["Type"]
 ): Effect.Effect<string, never, Sch["EncodingServices"]> =>
   S.encodeEffect(schema)(value).pipe(
-    Effect.map((encoded) => JSON.stringify(encoded, null, 2)),
+    Effect.map((encoded) => Result.getOrThrowWith(encodePrettyJson(encoded), identity)),
     Effect.orDie
   );
 

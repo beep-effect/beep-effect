@@ -15,8 +15,10 @@ describe("CurrencyCode", () => {
   it.effect(
     "decodes ISO 4217 literals from generated @beep/data values",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeCurrencyCodeEffect("USD")).toBe("USD");
-      expect(yield* decodeCurrencyCodeEffect("EUR")).toBe("EUR");
+      const decodedCurrencyCodeEffect = yield* decodeCurrencyCodeEffect("USD");
+      expect(decodedCurrencyCodeEffect).toBe("USD");
+      const decodedCurrencyCodeEffect1 = yield* decodeCurrencyCodeEffect("EUR");
+      expect(decodedCurrencyCodeEffect1).toBe("EUR");
       expect(CurrencyCode.literals).toContain("USD");
       expect(USD).toBe("USD");
     })
@@ -25,7 +27,8 @@ describe("CurrencyCode", () => {
   it.effect(
     "exports a generated currency-name literal schema",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeCurrencyNameEffect("US Dollar")).toBe("US Dollar");
+      const decodedCurrencyNameEffect = yield* decodeCurrencyNameEffect("US Dollar");
+      expect(decodedCurrencyNameEffect).toBe("US Dollar");
       expect(CurrencyName.literals).toContain("Euro");
     })
   );

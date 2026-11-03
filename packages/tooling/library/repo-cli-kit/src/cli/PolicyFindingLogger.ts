@@ -48,7 +48,8 @@ export const makePolicyFindingLogger = <Finding, EncodeError, EncodeRequirements
 
   const log = Effect.fn("PolicyFindingLogger.log")(function* (finding: Finding) {
     yield* Console.error(options.renderSummary(finding));
-    yield* Console.error(yield* render(finding));
+    const render1 = yield* render(finding);
+    yield* Console.error(render1);
   });
 
   return { log, render } as const;

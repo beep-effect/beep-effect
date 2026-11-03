@@ -89,27 +89,46 @@ export const decodeAdmissionPolicyParams = Effect.fn("AboxPolicy.decodeAdmission
     Effect.fromOption(() => schemaFailure("Policy A-Box did not match the ratified S6 document shape."))
   );
 
+  const captureAt1 = yield* captureAt(captures, 1, "capacityMaxTokens");
+  const argument = decodePositiveInteger(captureAt1, "capacityMaxTokens");
+  const captureAt2 = yield* captureAt(captures, 2, "slotSizeGib");
+  const argument1 = decodePositiveInteger(captureAt2, "slotSizeGib");
+  const captureAt3 = yield* captureAt(captures, 3, "reserveGib");
+  const argument2 = decodePositiveInteger(captureAt3, "reserveGib");
+  const captureAt4 = yield* captureAt(captures, 4, "hardFloorGib");
+  const argument3 = decodePositiveInteger(captureAt4, "hardFloorGib");
+  const captureAt5 = yield* captureAt(captures, 5, "heartbeatSeconds");
+  const argument4 = decodePositiveInteger(captureAt5, "heartbeatSeconds");
+  const captureAt6 = yield* captureAt(captures, 6, "publishAgingSeconds");
+  const argument5 = decodePositiveInteger(captureAt6, "publishAgingSeconds");
+  const captureAt7 = yield* captureAt(captures, 7, "reviewFixClassCap");
+  const argument6 = decodePositiveInteger(captureAt7, "reviewFixClassCap");
+  const captureAt8 = yield* captureAt(captures, 8, "full-proof weight");
+  const argument7 = decodePositiveInteger(captureAt8, "full-proof weight");
+  const captureAt9 = yield* captureAt(captures, 9, "merged-preview weight");
+  const argument8 = decodePositiveInteger(captureAt9, "merged-preview weight");
+  const captureAt10 = yield* captureAt(captures, 10, "review-fix weight");
+  const argument9 = decodePositiveInteger(captureAt10, "review-fix weight");
+  const captureAt11 = yield* captureAt(captures, 11, "publish weight");
+  const argument10 = decodePositiveInteger(captureAt11, "publish weight");
+  const captureAt12 = yield* captureAt(captures, 12, "first priority");
+  const argument11 = decodePriority(captureAt12);
+  const captureAt13 = yield* captureAt(captures, 13, "second priority");
   const values = yield* Effect.all(
     {
-      capacityMaxTokens: decodePositiveInteger(yield* captureAt(captures, 1, "capacityMaxTokens"), "capacityMaxTokens"),
-      slotSizeGib: decodePositiveInteger(yield* captureAt(captures, 2, "slotSizeGib"), "slotSizeGib"),
-      reserveGib: decodePositiveInteger(yield* captureAt(captures, 3, "reserveGib"), "reserveGib"),
-      hardFloorGib: decodePositiveInteger(yield* captureAt(captures, 4, "hardFloorGib"), "hardFloorGib"),
-      heartbeatSeconds: decodePositiveInteger(yield* captureAt(captures, 5, "heartbeatSeconds"), "heartbeatSeconds"),
-      publishAgingSeconds: decodePositiveInteger(
-        yield* captureAt(captures, 6, "publishAgingSeconds"),
-        "publishAgingSeconds"
-      ),
-      reviewFixClassCap: decodePositiveInteger(yield* captureAt(captures, 7, "reviewFixClassCap"), "reviewFixClassCap"),
-      fullProof: decodePositiveInteger(yield* captureAt(captures, 8, "full-proof weight"), "full-proof weight"),
-      mergedPreview: decodePositiveInteger(
-        yield* captureAt(captures, 9, "merged-preview weight"),
-        "merged-preview weight"
-      ),
-      reviewFix: decodePositiveInteger(yield* captureAt(captures, 10, "review-fix weight"), "review-fix weight"),
-      publish: decodePositiveInteger(yield* captureAt(captures, 11, "publish weight"), "publish weight"),
-      firstPriority: decodePriority(yield* captureAt(captures, 12, "first priority")),
-      secondPriority: decodePriority(yield* captureAt(captures, 13, "second priority")),
+      capacityMaxTokens: argument,
+      slotSizeGib: argument1,
+      reserveGib: argument2,
+      hardFloorGib: argument3,
+      heartbeatSeconds: argument4,
+      publishAgingSeconds: argument5,
+      reviewFixClassCap: argument6,
+      fullProof: argument7,
+      mergedPreview: argument8,
+      reviewFix: argument9,
+      publish: argument10,
+      firstPriority: argument11,
+      secondPriority: decodePriority(captureAt13),
     },
     { concurrency: "unbounded" }
   );

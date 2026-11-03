@@ -102,7 +102,7 @@ it.layer(layers("agent"), { timeout: "30 seconds" })((it) => {
           const { double, err } = capturing();
           const message = `bad${ESC}[31m red ${ESC}]8;;http://evil\u0007x\r::error::injected\n##[add-mask]y`;
           yield* CliRuntime.main(
-            Effect.suspend(() => Effect.fail(Broken.make({ message }))),
+            Effect.failSync(() => Broken.make({ message })),
             {
               platform,
               env: {},
@@ -149,7 +149,8 @@ it.layer(layers("agent"), { timeout: "30 seconds" })((it) => {
         const text = yield* print("agent", { displayPath: (p) => Str.replace("/repo/", "")(p) });
         assert.include(text, "src/run.ts:3:4");
         assert.notInclude(text, "/repo/");
-        assert.include(yield* print("agent", {}), "/repo/src/run.ts:3:4", "control: the identity without it");
+        const print1 = yield* print("agent", {});
+        assert.include(print1, "/repo/src/run.ts:3:4", "control: the identity without it");
       })
     );
 
@@ -232,7 +233,7 @@ describe("a consumer render's output is untrusted text", () => {
     options: { readonly env?: boolean } = {}
   ) {
     const { double, err } = capturing();
-    const program = Effect.suspend(() => Effect.fail(TestError.make({ message: "x" })));
+    const program = Effect.failSync(() => TestError.make({ message: "x" }));
     yield* (
       options.env === false
         ? CliRuntime.main(program, { platform: Layer.empty, render })
@@ -326,7 +327,7 @@ describe("a consumer render's output is untrusted text", () => {
     Effect.gen(function* () {
       const { double, err } = capturing();
       yield* CliRuntime.main(
-        Effect.suspend(() => Effect.fail(TestError.make({ message: "x" }))),
+        Effect.failSync(() => TestError.make({ message: "x" })),
         {
           platform,
           env: {},

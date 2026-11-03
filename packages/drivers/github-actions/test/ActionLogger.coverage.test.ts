@@ -33,7 +33,8 @@ it.layer(
           endColumn: null,
         })
       );
-      assert.deepStrictEqual(yield* TestConsole.logLines, [
+      const logLines1 = yield* TestConsole.logLines;
+      assert.deepStrictEqual(logLines1, [
         "::warning::bad annotations",
         "::error title=title,file=file.ts,line=12,col=3::valid annotations",
       ]);
@@ -42,25 +43,30 @@ it.layer(
   it.effect("an empty buffer flush prints no header or footer", () =>
     Effect.gen(function* () {
       const before = yield* TestConsole.logLines;
-      assert.strictEqual(yield* (yield* ActionLogger).withBuffer("empty", Effect.succeed(42)), 42);
-      assert.deepStrictEqual(yield* TestConsole.logLines, before);
+      const withBuffer2 = yield* (yield* ActionLogger).withBuffer("empty", Effect.succeed(42));
+      assert.strictEqual(withBuffer2, 42);
+      const logLines3 = yield* TestConsole.logLines;
+      assert.deepStrictEqual(logLines3, before);
     })
   );
   it.effect("the logger accepts a scalar message at its direct callback boundary", () =>
     Effect.gen(function* () {
       const before = yield* TestConsole.logLines;
-      const date = DateTime.toDateUtc(yield* DateTime.now);
+      const now4 = yield* DateTime.now;
+      const date = DateTime.toDateUtc(now4);
       yield* Effect.withFiber((fiber) =>
         Effect.sync(() =>
           ActionLogger.logger.log({ fiber, logLevel: "Info", message: "scalar", cause: Cause.empty, date: date })
         )
       );
-      assert.deepStrictEqual(yield* TestConsole.logLines, [...before, "scalar"]);
+      const logLines5 = yield* TestConsole.logLines;
+      assert.deepStrictEqual(logLines5, [...before, "scalar"]);
     })
   );
 });
 it.effect("the silent test double preserves annotated results", () =>
   Effect.gen(function* () {
-    assert.strictEqual(yield* ActionLogger.makeTest().annotated({ title: "test" }, Effect.succeed(42)), 42);
+    const annotated6 = yield* ActionLogger.makeTest().annotated({ title: "test" }, Effect.succeed(42));
+    assert.strictEqual(annotated6, 42);
   })
 );

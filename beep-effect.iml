@@ -280,6 +280,15 @@
       <excludeFolder url="file://$MODULE_DIR$/goals/lint-policy-oxlint-type-aware" />
       <excludeFolder url="file://$MODULE_DIR$/goals/literal-kit-subset-algebra" />
       <excludeFolder url="file://$MODULE_DIR$/goals/observability-kernel-catalog" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/beep-effect-web-alchemy" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/effect-string-migration" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/effect-vitest-canon" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/effected-promotion" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/exact-optional-keys" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/tsrs-gates" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/codex-security-findings-2026-10-20" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/codex-security-findings-2026-10-28" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/public-origin-beep-effect-com" />
       <excludePattern pattern=".beep" />
       <excludePattern pattern=".next" />
       <excludePattern pattern=".turbo" />

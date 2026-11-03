@@ -373,7 +373,8 @@ describe("@beep/rdf IRI schemas", () => {
         expect(decodeRelativeIriReference(value)).toBe(value);
       }
 
-      expect(yield* Arbitrary.sampleEffect(Arbitrary.schema(RelativeIRIReference), { count: 1 })).toHaveLength(1);
+      const sampleEffect1 = yield* Arbitrary.sampleEffect(Arbitrary.schema(RelativeIRIReference), { count: 1 });
+      expect(sampleEffect1).toHaveLength(1);
 
       expect(decodeIriReference("folder:child/leaf")).toBe("folder:child/leaf");
       expect(decodeRelativeIriReference("folder/child:leaf")).toBe("folder/child:leaf");
@@ -415,10 +416,8 @@ describe("@beep/rdf IRI schemas", () => {
 describe("@beep/rdf URI schemas and helpers", () => {
   it.effect("publishes a canonical arbitrary for URI values", () =>
     Effect.gen(function* () {
-      pipe(
-        A.every(yield* Arbitrary.sampleEffect(Arbitrary.schema(URI), { count: 20, seed: 0x5eed }), S.is(URI)),
-        assertTrue
-      );
+      const sampleEffect2 = yield* Arbitrary.sampleEffect(Arbitrary.schema(URI), { count: 20, seed: 0x5eed });
+      pipe(A.every(sampleEffect2, S.is(URI)), assertTrue);
     })
   );
 
@@ -583,11 +582,16 @@ describe("@beep/rdf RDF term and dataset models", () => {
         schema: "https://schema.org/",
       };
 
-      expect(yield* decodeNamespaceBinding({ prefix: "schema", namespace: "https://schema.org/" })).toEqual(
+      const decodedNamespaceBinding = yield* decodeNamespaceBinding({
+        prefix: "schema",
+        namespace: "https://schema.org/",
+      });
+      expect(decodedNamespaceBinding).toEqual(
         NamespaceBinding.make({ prefix: decodePrefixLabel("schema"), namespace: decodeIri("https://schema.org/") })
       );
       expect(decodePrefixMap(prefixMap)).toEqual(prefixMap);
-      expect(yield* encodePrefixMap(decodePrefixMap(prefixMap))).toEqual(prefixMap);
+      const encodedPrefixMap = yield* encodePrefixMap(decodePrefixMap(prefixMap));
+      expect(encodedPrefixMap).toEqual(prefixMap);
       expect(() => decodePrefixMap({ "bad prefix": "https://example.com/" })).toThrow(
         "Prefix labels must be empty for the default prefix or begin with an ASCII letter"
       );
@@ -632,12 +636,12 @@ describe("@beep/rdf JSON-LD models", () => {
         "https://example.com/alice"
       );
       pipe((yield* decodeJsonLdLiteralValue({ "@value": true }))["@value"], assertTrue);
-      expect(Result.getOrThrow(S.decodeResult(JsonLdPropertyValue)({ "@id": "_:bob" }))).toEqual(
-        yield* decodeJsonLdReferenceValue({ "@id": "_:bob" })
-      );
-      expect(Result.getOrThrow(S.decodeResult(JsonLdPropertyValue)({ "@value": 1 }))).toEqual(
-        yield* decodeJsonLdLiteralValue({ "@value": 1 })
-      );
+      const expectation = expect(Result.getOrThrow(S.decodeResult(JsonLdPropertyValue)({ "@id": "_:bob" })));
+      const decodedJsonLdReferenceValue = yield* decodeJsonLdReferenceValue({ "@id": "_:bob" });
+      expectation.toEqual(decodedJsonLdReferenceValue);
+      const expectation1 = expect(Result.getOrThrow(S.decodeResult(JsonLdPropertyValue)({ "@value": 1 })));
+      const decodedJsonLdLiteralValue = yield* decodeJsonLdLiteralValue({ "@value": 1 });
+      expectation1.toEqual(decodedJsonLdLiteralValue);
       expect(document["@graph"]).toEqual([node]);
       assertSome(frame.includeProperties, ["https://schema.org/name"]);
     })
@@ -719,7 +723,9 @@ describe("@beep/rdf semantic metadata", () => {
     [Arbitrary.schema(SemanticSchemaMetadata)],
     ([metadata]) =>
       Effect.gen(function* () {
-        expect(yield* decodeSemanticSchemaMetadata(yield* encodeSemanticSchemaMetadata(metadata))).toEqual(metadata);
+        const encodedSemanticSchemaMetadata = yield* encodeSemanticSchemaMetadata(metadata);
+        const decodedSemanticSchemaMetadata = yield* decodeSemanticSchemaMetadata(encodedSemanticSchemaMetadata);
+        expect(decodedSemanticSchemaMetadata).toEqual(metadata);
 
         return true;
       }),
@@ -756,29 +762,36 @@ describe("@beep/rdf crispening parity", () => {
       assertNone(fragmentSelector.conformsTo);
       assertNone(anchor.note);
 
-      expect(yield* encodeLiteral(literal)).toEqual({
+      const encodedLiteral = yield* encodeLiteral(literal);
+      expect(encodedLiteral).toEqual({
         termType: "Literal",
         value: "Alice",
         datatype: { termType: "NamedNode", value: XSD_STRING.value },
       });
-      expect(yield* encodeTextQuoteSelector(quoteSelector)).toEqual({
+      const encodedTextQuoteSelector = yield* encodeTextQuoteSelector(quoteSelector);
+      expect(encodedTextQuoteSelector).toEqual({
         kind: "text-quote",
         exact: "quoted text",
       });
-      expect(yield* encodeEvidenceAnchor(anchor)).toEqual({
+      const encodedEvidenceAnchor = yield* encodeEvidenceAnchor(anchor);
+      expect(encodedEvidenceAnchor).toEqual({
         id: "https://example.org/annotation/1",
         target: {
           source: "https://example.org/document",
           selector: { kind: "fragment", value: "section-1" },
         },
       });
-      expect(yield* encodeSemanticSchemaSpecification(specification)).toEqual({
+      const encodedSemanticSchemaSpecification = yield* encodeSemanticSchemaSpecification(specification);
+      expect(encodedSemanticSchemaSpecification).toEqual({
         name: "RDF 1.1 Concepts",
         disposition: "informative",
       });
-      expect(yield* encodeJsonLdDocument(document)).toEqual({ "@graph": [] });
-      expect(yield* encodeJsonLdFrame(frame)).toEqual({});
-      expect(yield* encodeProvBundle(bundle)).toEqual({ records: [] });
+      const encodedJsonLdDocument = yield* encodeJsonLdDocument(document);
+      expect(encodedJsonLdDocument).toEqual({ "@graph": [] });
+      const encodedJsonLdFrame = yield* encodeJsonLdFrame(frame);
+      expect(encodedJsonLdFrame).toEqual({});
+      const encodedProvBundle = yield* encodeProvBundle(bundle);
+      expect(encodedProvBundle).toEqual({ records: [] });
     })
   );
 
@@ -811,7 +824,8 @@ describe("@beep/rdf crispening parity", () => {
       ).toBe("TextPositionSelector");
       expect(evidenceAnchorToWebAnnotation(anchor)).toEqual(annotation);
       expect(webAnnotationToEvidenceAnchor(annotation)).toEqual(anchor);
-      expect(yield* encodeWebAnnotationFromEvidenceAnchor(annotation)).toEqual({
+      const encodedWebAnnotationFromEvidenceAnchor = yield* encodeWebAnnotationFromEvidenceAnchor(annotation);
+      expect(encodedWebAnnotationFromEvidenceAnchor).toEqual({
         id: "https://example.org/annotation/1",
         target: {
           source: "https://example.org/document",

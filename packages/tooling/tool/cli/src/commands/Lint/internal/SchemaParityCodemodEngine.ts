@@ -493,17 +493,16 @@ export const runSchemaParityCodemod = Effect.fn("SchemaParityCodemod.run")(funct
   const rules = yield* resolveRules(options.rules);
   const scanned = yield* discoverSources(repoRoot, options.paths);
   const isCandidate = matchesAnyRule(rules);
-  const candidates = A.getSomes(
-    yield* Effect.forEach(
-      scanned,
-      (filePath) =>
-        fs.readFileString(filePath).pipe(
-          SchemaParityCodemodError.mapError(`Failed to read ${filePath}.`),
-          Effect.map((text) => (isCandidate(text) ? O.some(filePath) : O.none()))
-        ),
-      { concurrency: 16 }
-    )
+  const forEach1 = yield* Effect.forEach(
+    scanned,
+    (filePath) =>
+      fs.readFileString(filePath).pipe(
+        SchemaParityCodemodError.mapError(`Failed to read ${filePath}.`),
+        Effect.map((text) => (isCandidate(text) ? O.some(filePath) : O.none()))
+      ),
+    { concurrency: 16 }
   );
+  const candidates = A.getSomes(forEach1);
 
   const project = createRepoTsMorphProject({
     tsConfigFilePath: path.resolve(repoRoot, options.tsconfig),

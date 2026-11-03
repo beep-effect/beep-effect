@@ -336,7 +336,8 @@ describe("@beep/repo-ai-metrics identity registry", () => {
             roots: current.roots,
             sourceInstances: current.sourceInstances,
           });
-          yield* writeText(registryPath, yield* identityRegistryToJson(legacy));
+          const identityRegistryToJson1 = yield* identityRegistryToJson(legacy);
+          yield* writeText(registryPath, identityRegistryToJson1);
 
           const migrated = yield* upsertRoot(dataRoot, clonePath, homeDir);
 
@@ -372,7 +373,8 @@ describe("@beep/repo-ai-metrics identity registry", () => {
             roots: current.roots,
             sourceInstances: current.sourceInstances,
           });
-          yield* writeText(registryPath, yield* identityRegistryToJson(legacy));
+          const identityRegistryToJson2 = yield* identityRegistryToJson(legacy);
+          yield* writeText(registryPath, identityRegistryToJson2);
 
           const failure = yield* upsertRoot(dataRoot, secondClonePath, pathApi.join(tmpDir, "second-home")).pipe(
             Effect.flip
@@ -410,7 +412,8 @@ describe("@beep/repo-ai-metrics identity registry", () => {
             roots: A.appendAll(current.roots, unrelated.roots),
             sourceInstances: A.appendAll(current.sourceInstances, unrelated.sourceInstances),
           });
-          yield* writeText(registryPath, yield* identityRegistryToJson(legacy));
+          const identityRegistryToJson3 = yield* identityRegistryToJson(legacy);
+          yield* writeText(registryPath, identityRegistryToJson3);
 
           const failure = yield* upsertRoot(dataRoot, clonePath, homeDir).pipe(Effect.flip);
 
@@ -451,7 +454,8 @@ describe("@beep/repo-ai-metrics identity registry", () => {
             roots: current.roots,
             sourceInstances: current.sourceInstances,
           });
-          yield* writeText(registryPath, yield* identityRegistryToJson(legacy));
+          const identityRegistryToJson4 = yield* identityRegistryToJson(legacy);
+          yield* writeText(registryPath, identityRegistryToJson4);
 
           const failure = yield* upsertWithSalt("provided-salt-b").pipe(Effect.flip);
 
@@ -600,8 +604,10 @@ describe("@beep/repo-ai-metrics identity registry", () => {
           );
 
           const registryPath = pathApi.join(dataRoot, "identity/registry.json");
-          pipe(yield* fs.exists(registryPath), assertTrue);
-          pipe(yield* fs.exists(`${registryPath}.tmp`), assertFalse);
+          const exists5 = yield* fs.exists(registryPath);
+          pipe(exists5, assertTrue);
+          const exists6 = yield* fs.exists(`${registryPath}.tmp`);
+          pipe(exists6, assertFalse);
 
           const json = yield* identityRegistryToJson(registry);
           const decoded = yield* AiMetricsIdentityRegistry.decodeJsonEffect(json);
@@ -664,9 +670,9 @@ describe("@beep/repo-ai-metrics identity registry", () => {
 
           expect(A.length(normalized.sourceInstances)).toBe(1);
           expect(A.length(trailingSlash.sourceInstances)).toBe(1);
-          expect(normalized.sourceInstances[0]?.homeDirHash).toBe(
-            yield* hashPrivateIdentifier(homeDir, O.some(hashSalt))
-          );
+          const expectation = expect(normalized.sourceInstances[0]?.homeDirHash);
+          const hashPrivateIdentifier1 = yield* hashPrivateIdentifier(homeDir, O.some(hashSalt));
+          expectation.toBe(hashPrivateIdentifier1);
           expect(trailingSlash.sourceInstances[0]?.homeDirHash).toBe(normalized.sourceInstances[0]?.homeDirHash);
           expect(trailingSlash.sourceInstances[0]?.instanceIdHash).toBe(normalized.sourceInstances[0]?.instanceIdHash);
         })
@@ -770,7 +776,8 @@ describe("@beep/repo-ai-metrics identity registry", () => {
             discard: true,
           }).pipe(provideScopedLayer(recordingFileSystem(writesRef)));
 
-          const tmpWrites = pipe(yield* Ref.get(writesRef), A.filter(Str.endsWith(".tmp")));
+          const got = yield* Ref.get(writesRef);
+          const tmpWrites = pipe(got, A.filter(Str.endsWith(".tmp")));
 
           expect(A.length(tmpWrites)).toBe(A.length(clonePaths));
           expect(A.length(A.dedupe(tmpWrites))).toBe(A.length(tmpWrites));
@@ -803,7 +810,8 @@ describe("@beep/repo-ai-metrics identity registry", () => {
         expect(failure).toBeInstanceOf(AiMetricsIdentityRegistryError);
         expect(failure.message).toContain("Timed out waiting");
         // The upsert failed instead of quietly doing nothing, and wrote no registry.
-        pipe(yield* fs.exists(pathApi.join(dataRoot, "identity/registry.json")), assertFalse);
+        const exists7 = yield* fs.exists(pathApi.join(dataRoot, "identity/registry.json"));
+        pipe(exists7, assertFalse);
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
@@ -841,22 +849,20 @@ describe("@beep/repo-ai-metrics identity registry", () => {
           yield* makeClone(vendorPath);
           yield* writeText(pathApi.join(plainPath, "AGENTS.md"), "guidance\n");
 
-          pipe(yield* isNestedGitRoot({ dirPath: clonePath, scanRoot: clonePath }), assertFalse);
-          pipe(
-            yield* isNestedGitRoot({
-              dirPath: worktreePath,
-              scanRoot: clonePath,
-            }),
-            assertTrue
-          );
-          pipe(
-            yield* isNestedGitRoot({
-              dirPath: vendorPath,
-              scanRoot: clonePath,
-            }),
-            assertTrue
-          );
-          pipe(yield* isNestedGitRoot({ dirPath: plainPath, scanRoot: clonePath }), assertFalse);
+          const isNestedGitRoot8 = yield* isNestedGitRoot({ dirPath: clonePath, scanRoot: clonePath });
+          pipe(isNestedGitRoot8, assertFalse);
+          const isNestedGitRoot9 = yield* isNestedGitRoot({
+            dirPath: worktreePath,
+            scanRoot: clonePath,
+          });
+          pipe(isNestedGitRoot9, assertTrue);
+          const isNestedGitRoot10 = yield* isNestedGitRoot({
+            dirPath: vendorPath,
+            scanRoot: clonePath,
+          });
+          pipe(isNestedGitRoot10, assertTrue);
+          const isNestedGitRoot11 = yield* isNestedGitRoot({ dirPath: plainPath, scanRoot: clonePath });
+          pipe(isNestedGitRoot11, assertFalse);
         })
       )
     );

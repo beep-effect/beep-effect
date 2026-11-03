@@ -26,7 +26,8 @@ describe("GitHubContent text fidelity", () => {
           replies[0] = { status: 200, body: { type: "file", encoding: "base64", content: ` \n${encoded}\t\r\n` } };
           const before = script.calls.length;
           const content = yield* GitHubContent;
-          assertSome(yield* content.getFileOption("text.txt"), text);
+          const gotFileOption = yield* content.getFileOption("text.txt");
+          assertSome(gotFileOption, text);
           assert.strictEqual(script.calls.length, before + 1);
         }),
       runs

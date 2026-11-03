@@ -16,7 +16,8 @@ describe("line-length schema properties", () => {
         const encoded = yield* S.encodeEffect(lineLengthOptions)(value);
         const decoded = yield* S.decodeEffect(lineLengthOptions)(encoded);
         assert.isTrue(S.toEquivalence(lineLengthOptions)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(lineLengthOptions)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(lineLengthOptions)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );

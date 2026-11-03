@@ -75,12 +75,14 @@ const deadOwner = ModelsPublicationOwner.make({ bootId: "retired-boot", pid: 1, 
 
 const sha256 = Effect.fnUntraced(function* (bytes: Uint8Array) {
   const crypto = yield* Digest.Digest;
-  return Hex.encode(yield* crypto.digest(Digest.sha256, bytes));
+  const digest1 = yield* crypto.digest(Digest.sha256, bytes);
+  return Hex.encode(digest1);
 });
 const textSha = (text: string) => sha256(new TextEncoder().encode(text));
 const fileSha = Effect.fnUntraced(function* (file: string) {
   const fs = yield* FileSystem.FileSystem;
-  return yield* sha256(yield* fs.readFile(file));
+  const readFile2 = yield* fs.readFile(file);
+  return yield* sha256(readFile2);
 });
 
 const fixture = Effect.fnUntraced(function* (prefix: string) {
@@ -95,13 +97,15 @@ const fixture = Effect.fnUntraced(function* (prefix: string) {
 
 const listing = Effect.fnUntraced(function* (directory: string) {
   const fs = yield* FileSystem.FileSystem;
-  return A.sort(yield* fs.readDirectory(directory), Order.String);
+  const readDirectory3 = yield* fs.readDirectory(directory);
+  return A.sort(readDirectory3, Order.String);
 });
 
 const onlyJournal = Effect.fnUntraced(function* (backups: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const entry = O.getOrThrow(A.findFirst(yield* fs.readDirectory(backups), Str.endsWith(".json")));
+  const readDirectory4 = yield* fs.readDirectory(backups);
+  const entry = O.getOrThrow(A.findFirst(readDirectory4, Str.endsWith(".json")));
   const file = path.join(backups, entry);
   return { file, journal: yield* fs.readFileString(file).pipe(Effect.flatMap(decodeJournal)) };
 });
@@ -151,7 +155,8 @@ const crash = Effect.fn("ModelsRecoveryTest.crash")(function* (
     stderr: "inherit",
     extendEnv: true,
   });
-  assertSome(yield* child.stdout.pipe(Stream.decodeText(), Stream.splitLines, Stream.runHead), `HALTED ${halt}`);
+  const pipe5 = yield* child.stdout.pipe(Stream.decodeText(), Stream.splitLines, Stream.runHead);
+  assertSome(pipe5, `HALTED ${halt}`);
   yield* child.kill({ killSignal: "SIGKILL" });
   yield* child.exitCode.pipe(Effect.result);
 });
@@ -164,15 +169,13 @@ const abandon = Effect.fnUntraced(function* (
   const fs = yield* FileSystem.FileSystem;
   const { file, journal } = yield* onlyJournal(backups);
   const publication = trackedOf(journal.publication);
-  yield* fs.writeFileString(
-    file,
-    yield* encodeJournal(
-      ModelsApplyJournal.make({
-        ...journal,
-        publication: edit(ModelsTrackedPublication.make({ ...publication, owner: O.some(deadOwner) })),
-      })
-    )
+  const encodedJournal = yield* encodeJournal(
+    ModelsApplyJournal.make({
+      ...journal,
+      publication: edit(ModelsTrackedPublication.make({ ...publication, owner: O.some(deadOwner) })),
+    })
   );
+  yield* fs.writeFileString(file, encodedJournal);
   return journal;
 });
 
@@ -193,15 +196,20 @@ const interfering = Effect.fnUntraced(function* (
   return ModelsAtomicExchange.of({
     qualify: base.qualify,
     exchange: Effect.fn("ModelsRecoveryTest.exchange")(function* (left, right) {
-      if (left !== file && right !== file) return yield* base.exchange(left, right);
-      if (behavior === "refuse") return yield* fail;
-      if (behavior === "displace-then-fail")
+      if (left !== file && right !== file) {
+        return yield* base.exchange(left, right);
+      }
+      if (behavior === "refuse") {
+        return yield* fail;
+      }
+      if (behavior === "displace-then-fail") {
         yield* fs
           .writeFileString(`${file}.competitor`, competitor)
           .pipe(
             Effect.andThen(fs.rename(`${file}.competitor`, file)),
             ModelsLocatorError.mapError("Test interference failed.")
           );
+      }
       yield* base.exchange(left, right);
       return yield* fail;
     }),
@@ -213,7 +221,8 @@ const interrupted = Effect.fnUntraced(function* (
   behavior: "refuse" | "exchange-then-fail" | "displace-then-fail"
 ) {
   const target = yield* fixture(prefix);
-  const writer = yield* writerWith(yield* interfering(target.file, behavior));
+  const interfering6 = yield* interfering(target.file, behavior);
+  const writer = yield* writerWith(interfering6);
   yield* Effect.flip(writer.apply(target.file, [request], "write", target.backups));
   return target;
 });
@@ -245,20 +254,33 @@ layer(
         const writer = yield* writerWith();
         const reports = yield* writer.recover(target.backups);
         expect(reports).toEqual(point === "completed" ? [] : [recovered(journal.id, outcome)]);
-        expect(yield* fileSha(target.file)).toBe(yield* textSha(outcome === "preimage" ? native : intended));
-        expect(yield* listing(target.root)).toEqual(["backups", "config.toml"]);
+        const fileSha7 = yield* fileSha(target.file);
+        const expectation = expect(fileSha7);
+        const textSha1 = yield* textSha(outcome === "preimage" ? native : intended);
+        expectation.toBe(textSha1);
+        const listing8 = yield* listing(target.root);
+        expect(listing8).toEqual(["backups", "config.toml"]);
         const backups = yield* listing(target.backups);
         expect(backups).toEqual(
           outcome === "preimage" ? [`${journal.id}.json`] : [`${journal.id}.backup`, `${journal.id}.json`]
         );
         const settled = trackedOf((yield* onlyJournal(target.backups)).journal.publication);
         expect(settled.state._tag).toBe(point === "completed" ? "completed" : "recovered");
-        if (outcome === "intended")
-          expect(yield* fileSha(path.join(target.backups, `${journal.id}.backup`))).toBe(yield* textSha(native));
+        if (outcome === "intended") {
+          const fileSha2 = yield* fileSha(path.join(target.backups, `${journal.id}.backup`));
+          const expectation1 = expect(fileSha2);
+          const textSha3 = yield* textSha(native);
+          expectation1.toBe(textSha3);
+        }
         // Idempotent: a second run is a no-op with identical bytes and artifacts.
-        expect(yield* writer.recover(target.backups)).toEqual([]);
-        expect(yield* fileSha(target.file)).toBe(yield* textSha(outcome === "preimage" ? native : intended));
-        expect(yield* listing(target.backups)).toEqual(backups);
+        const recover9 = yield* writer.recover(target.backups);
+        expect(recover9).toEqual([]);
+        const fileSha10 = yield* fileSha(target.file);
+        const expectation2 = expect(fileSha10);
+        const textSha4 = yield* textSha(outcome === "preimage" ? native : intended);
+        expectation2.toBe(textSha4);
+        const listing11 = yield* listing(target.backups);
+        expect(listing11).toEqual(backups);
       })
     );
 
@@ -270,12 +292,20 @@ layer(
         const { journal } = yield* onlyJournal(target.backups);
         const writer = yield* writerWith();
         yield* writer.restore(path.join(target.backups, `${journal.id}.json`), target.backups);
-        expect(yield* fileSha(target.file)).toBe(yield* textSha(native));
-        expect(yield* listing(target.root)).toEqual(["backups", "config.toml"]);
+        const fileSha12 = yield* fileSha(target.file);
+        const expectation3 = expect(fileSha12);
+        const textSha5 = yield* textSha(native);
+        expectation3.toBe(textSha5);
+        const listing13 = yield* listing(target.root);
+        expect(listing13).toEqual(["backups", "config.toml"]);
         // A second restore never changes the restored bytes.
         yield* writer.restore(path.join(target.backups, `${journal.id}.json`), target.backups).pipe(Effect.result);
-        expect(yield* fileSha(target.file)).toBe(yield* textSha(native));
-        expect(yield* listing(target.root)).toEqual(["backups", "config.toml"]);
+        const fileSha14 = yield* fileSha(target.file);
+        const expectation4 = expect(fileSha14);
+        const textSha6 = yield* textSha(native);
+        expectation4.toBe(textSha6);
+        const listing15 = yield* listing(target.root);
+        expect(listing15).toEqual(["backups", "config.toml"]);
       })
     );
 
@@ -288,8 +318,12 @@ layer(
         const next = yield* writer.apply(target.file, [request], "write", target.backups);
         if (outcome === "preimage") next.pipe(O.isSome, assertTrue);
         else assertNone(next);
-        expect(yield* fileSha(target.file)).toBe(yield* textSha(intended));
-        expect(yield* listing(target.root)).toEqual(["backups", "config.toml"]);
+        const fileSha16 = yield* fileSha(target.file);
+        const expectation5 = expect(fileSha16);
+        const textSha7 = yield* textSha(intended);
+        expectation5.toBe(textSha7);
+        const listing17 = yield* listing(target.root);
+        expect(listing17).toEqual(["backups", "config.toml"]);
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const first = trackedOf(
@@ -311,10 +345,16 @@ layer(
       const state = trackedOf(journal.publication).state;
       expect(state).toMatchObject({ _tag: "recovering", from: "staged" });
       const writer = yield* writerWith();
-      expect(yield* writer.recover(target.backups)).toEqual([recovered(journal.id, "intended")]);
-      expect(yield* fileSha(target.file)).toBe(yield* textSha(intended));
-      expect(yield* listing(target.root)).toEqual(["backups", "config.toml"]);
-      expect(yield* writer.recover(target.backups)).toEqual([]);
+      const recover18 = yield* writer.recover(target.backups);
+      expect(recover18).toEqual([recovered(journal.id, "intended")]);
+      const fileSha19 = yield* fileSha(target.file);
+      const expectation6 = expect(fileSha19);
+      const textSha8 = yield* textSha(intended);
+      expectation6.toBe(textSha8);
+      const listing20 = yield* listing(target.root);
+      expect(listing20).toEqual(["backups", "config.toml"]);
+      const recover21 = yield* writer.recover(target.backups);
+      expect(recover21).toEqual([]);
     })
   );
 
@@ -327,18 +367,32 @@ layer(
         const path = yield* Path.Path;
         const target = yield* fixture(`recovery-restore-${point}-`);
         const writer = yield* writerWith();
-        const journal = O.getOrThrow(yield* writer.apply(target.file, [request], "write", target.backups));
+        const apply22 = yield* writer.apply(target.file, [request], "write", target.backups);
+        const journal = O.getOrThrow(apply22);
         yield* crash("restore", target, point, journal.id);
-        expect(yield* writer.recover(target.backups)).toEqual([recovered(journal.id, outcome, "restoration")]);
-        expect(yield* fileSha(target.file)).toBe(yield* textSha(outcome === "intended" ? native : intended));
-        expect(yield* listing(target.root)).toEqual(["backups", "config.toml"]);
-        expect(yield* listing(target.backups)).toEqual([`${journal.id}.backup`, `${journal.id}.json`]);
+        const recover23 = yield* writer.recover(target.backups);
+        expect(recover23).toEqual([recovered(journal.id, outcome, "restoration")]);
+        const fileSha24 = yield* fileSha(target.file);
+        const expectation7 = expect(fileSha24);
+        const textSha9 = yield* textSha(outcome === "intended" ? native : intended);
+        expectation7.toBe(textSha9);
+        const listing25 = yield* listing(target.root);
+        expect(listing25).toEqual(["backups", "config.toml"]);
+        const listing26 = yield* listing(target.backups);
+        expect(listing26).toEqual([`${journal.id}.backup`, `${journal.id}.json`]);
         // A restoration that never landed is published afresh by the next restore.
         const restore = writer.restore(path.join(target.backups, `${journal.id}.json`), target.backups);
-        if (outcome === "preimage") yield* restore;
-        else yield* Effect.flip(restore);
-        expect(yield* fileSha(target.file)).toBe(yield* textSha(native));
-        expect(yield* writer.recover(target.backups)).toEqual([]);
+        if (outcome === "preimage") {
+          yield* restore;
+        } else {
+          yield* Effect.flip(restore);
+        }
+        const fileSha27 = yield* fileSha(target.file);
+        const expectation8 = expect(fileSha27);
+        const textSha10 = yield* textSha(native);
+        expectation8.toBe(textSha10);
+        const recover28 = yield* writer.recover(target.backups);
+        expect(recover28).toEqual([]);
       })
     );
   }
@@ -356,33 +410,47 @@ layer(
         if (interference === "replace") {
           yield* fs.writeFileString(path.join(target.root, "competitor"), competitor);
           yield* fs.rename(path.join(target.root, "competitor"), target.file);
-        } else yield* fs.writeFileString(target.file, competitor);
+        } else {
+          yield* fs.writeFileString(target.file, competitor);
+        }
         const { journal } = yield* onlyJournal(target.backups);
         const before = { root: yield* listing(target.root), backups: yield* listing(target.backups) };
         const publication = trackedOf(journal.publication);
         const writer = yield* writerWith();
         const [report] = yield* writer.recover(target.backups);
         expect(report?.result).toMatchObject({ _tag: "refused", reason: "competing-writer" });
-        expect(yield* fs.readFileString(target.file)).toBe(competitor);
-        expect(yield* listing(target.root)).toEqual(before.root);
+        const readFileString29 = yield* fs.readFileString(target.file);
+        expect(readFileString29).toBe(competitor);
+        const listing30 = yield* listing(target.root);
+        expect(listing30).toEqual(before.root);
         expect(A.length(before.root)).toBe(4);
-        expect(yield* fileSha(publication.staging)).toBe(yield* textSha(point === "staged" ? intended : native));
-        expect(yield* fileSha(path.join(target.backups, `${journal.id}.backup`))).toBe(yield* textSha(native));
+        const fileSha31 = yield* fileSha(publication.staging);
+        const expectation9 = expect(fileSha31);
+        const textSha11 = yield* textSha(point === "staged" ? intended : native);
+        expectation9.toBe(textSha11);
+        const fileSha32 = yield* fileSha(path.join(target.backups, `${journal.id}.backup`));
+        const expectation10 = expect(fileSha32);
+        const textSha12 = yield* textSha(native);
+        expectation10.toBe(textSha12);
         expect(trackedOf((yield* onlyJournal(target.backups)).journal.publication).state).toMatchObject({
           _tag: "refused",
           reason: "competing-writer",
         });
         // Refusal is durable: automatic recovery does not revisit it.
-        expect(yield* writer.recover(target.backups)).toEqual([]);
-        expect(yield* listing(target.backups)).toEqual(before.backups);
+        const recover33 = yield* writer.recover(target.backups);
+        expect(recover33).toEqual([]);
+        const listing34 = yield* listing(target.backups);
+        expect(listing34).toEqual(before.backups);
         // An explicit restore retries, and refuses again with the typed reason.
         const refusal = yield* Effect.flip(
           writer.restore(path.join(target.backups, `${journal.id}.json`), target.backups)
         );
         expect(refusal.reason).toBe("competing-writer");
         expect(refusal.message).toContain(`Journal: ${journal.id}`);
-        expect(yield* fs.readFileString(target.file)).toBe(competitor);
-        expect(yield* listing(target.root)).toEqual(before.root);
+        const readFileString35 = yield* fs.readFileString(target.file);
+        expect(readFileString35).toBe(competitor);
+        const listing36 = yield* listing(target.root);
+        expect(listing36).toEqual(before.root);
       })
     );
   }
@@ -409,10 +477,12 @@ layer(
         // Arbitrary values are null-prototype records, so compare the canonical
         // encoding rather than object identity of the decoded instances.
         const decoded = yield* decodeJournal(encoded);
-        expect(yield* encodeJournal(decoded)).toBe(encoded);
+        const encodedJournal37 = yield* encodeJournal(decoded);
+        expect(encodedJournal37).toBe(encoded);
         expect(decoded.publication._tag).toBe("tracked");
         const record = yield* decodeRecord(encoded);
-        const legacy = yield* decodeJournal(yield* encodeRecord(R.remove(record, "publication")));
+        const encodedRecord = yield* encodeRecord(R.remove(record, "publication"));
+        const legacy = yield* decodeJournal(encodedRecord);
         expect(legacy.publication._tag).toBe("legacy");
       }),
     { arbitrary: fcRuns(25) }
@@ -423,26 +493,37 @@ layer(
       const fs = yield* FileSystem.FileSystem;
       const target = yield* fixture("recovery-legacy-");
       const writer = yield* writerWith();
-      const applied = O.getOrThrow(yield* writer.apply(target.file, [request], "write", target.backups));
+      const apply38 = yield* writer.apply(target.file, [request], "write", target.backups);
+      const applied = O.getOrThrow(apply38);
       const { file } = yield* onlyJournal(target.backups);
       const record = yield* fs.readFileString(file).pipe(Effect.flatMap(decodeRecord));
-      yield* fs.writeFileString(file, yield* encodeRecord(R.remove(R.remove(record, "publication"), "restoration")));
+      const encodedRecord39 = yield* encodeRecord(R.remove(R.remove(record, "publication"), "restoration"));
+      yield* fs.writeFileString(file, encodedRecord39);
       const { journal } = yield* onlyJournal(target.backups);
       expect(journal.publication._tag).toBe("legacy");
       assertNone(journal.restoration);
       const before = yield* listing(target.backups);
-      expect(yield* writer.recover(target.backups)).toEqual([
+      const recover40 = yield* writer.recover(target.backups);
+      expect(recover40).toEqual([
         ModelsRecoveryReport.make({
           journal: applied.id,
           role: "publication",
           result: ModelsRecoveryResult.cases.skipped.make({ reason: "legacy" }),
         }),
       ]);
-      expect(yield* fileSha(target.file)).toBe(yield* textSha(intended));
-      expect(yield* listing(target.backups)).toEqual(before);
+      const fileSha41 = yield* fileSha(target.file);
+      const expectation11 = expect(fileSha41);
+      const textSha13 = yield* textSha(intended);
+      expectation11.toBe(textSha13);
+      const listing42 = yield* listing(target.backups);
+      expect(listing42).toEqual(before);
       yield* writer.restore(file, target.backups);
-      expect(yield* fileSha(target.file)).toBe(yield* textSha(native));
-      expect(yield* listing(target.root)).toEqual(["backups", "config.toml"]);
+      const fileSha43 = yield* fileSha(target.file);
+      const expectation12 = expect(fileSha43);
+      const textSha14 = yield* textSha(native);
+      expectation12.toBe(textSha14);
+      const listing44 = yield* listing(target.root);
+      expect(listing44).toEqual(["backups", "config.toml"]);
     })
   );
 
@@ -454,7 +535,8 @@ layer(
       expect(trackedOf(journal.publication).state._tag).toBe("staged");
       const writer = yield* writerWith();
       const before = yield* listing(target.root);
-      expect(yield* writer.recover(target.backups)).toEqual([
+      const recover45 = yield* writer.recover(target.backups);
+      expect(recover45).toEqual([
         ModelsRecoveryReport.make({
           journal: journal.id,
           role: "publication",
@@ -465,12 +547,19 @@ layer(
         writer.restore(path.join(target.backups, `${journal.id}.json`), target.backups)
       );
       expect(refusal.reason).toBe("owner-alive");
-      expect(yield* listing(target.root)).toEqual(before);
+      const listing46 = yield* listing(target.root);
+      expect(listing46).toEqual(before);
       yield* abandon(target.backups);
-      expect(yield* writer.recover(target.backups)).toEqual([recovered(journal.id, "preimage")]);
-      expect(yield* fileSha(target.file)).toBe(yield* textSha(native));
-      expect(yield* listing(target.root)).toEqual(["backups", "config.toml"]);
-      expect(yield* listing(target.backups)).toEqual([`${journal.id}.json`]);
+      const recover47 = yield* writer.recover(target.backups);
+      expect(recover47).toEqual([recovered(journal.id, "preimage")]);
+      const fileSha48 = yield* fileSha(target.file);
+      const expectation13 = expect(fileSha48);
+      const textSha15 = yield* textSha(native);
+      expectation13.toBe(textSha15);
+      const listing49 = yield* listing(target.root);
+      expect(listing49).toEqual(["backups", "config.toml"]);
+      const listing50 = yield* listing(target.backups);
+      expect(listing50).toEqual([`${journal.id}.json`]);
     })
   );
 
@@ -479,9 +568,14 @@ layer(
       const target = yield* interrupted("recovery-landed-", "exchange-then-fail");
       const journal = yield* abandon(target.backups);
       const writer = yield* writerWith();
-      expect(yield* writer.recover(target.backups)).toEqual([recovered(journal.id, "intended")]);
-      expect(yield* fileSha(target.file)).toBe(yield* textSha(intended));
-      expect(yield* listing(target.root)).toEqual(["backups", "config.toml"]);
+      const recover51 = yield* writer.recover(target.backups);
+      expect(recover51).toEqual([recovered(journal.id, "intended")]);
+      const fileSha52 = yield* fileSha(target.file);
+      const expectation14 = expect(fileSha52);
+      const textSha16 = yield* textSha(intended);
+      expectation14.toBe(textSha16);
+      const listing53 = yield* listing(target.root);
+      expect(listing53).toEqual(["backups", "config.toml"]);
     })
   );
 
@@ -491,16 +585,26 @@ layer(
       const target = yield* interrupted("recovery-displaced-", "displace-then-fail");
       const journal = yield* abandon(target.backups);
       const publication = trackedOf(journal.publication);
-      expect(yield* fileSha(target.file)).toBe(yield* textSha(intended));
-      expect(yield* fs.readFileString(publication.staging)).toBe(competitor);
+      const fileSha54 = yield* fileSha(target.file);
+      const expectation15 = expect(fileSha54);
+      const textSha17 = yield* textSha(intended);
+      expectation15.toBe(textSha17);
+      const readFileString55 = yield* fs.readFileString(publication.staging);
+      expect(readFileString55).toBe(competitor);
       const writer = yield* writerWith();
       const [report] = yield* writer.recover(target.backups);
       expect(report?.result).toMatchObject({ _tag: "refused", reason: "competing-writer" });
       expect(report?.result._tag === "refused" && report.result.detail).toContain("returned to the live path");
-      expect(yield* fs.readFileString(target.file)).toBe(competitor);
-      expect(yield* fileSha(publication.staging)).toBe(yield* textSha(intended));
-      expect(yield* writer.recover(target.backups)).toEqual([]);
-      expect(yield* fs.readFileString(target.file)).toBe(competitor);
+      const readFileString56 = yield* fs.readFileString(target.file);
+      expect(readFileString56).toBe(competitor);
+      const fileSha57 = yield* fileSha(publication.staging);
+      const expectation16 = expect(fileSha57);
+      const textSha18 = yield* textSha(intended);
+      expectation16.toBe(textSha18);
+      const recover58 = yield* writer.recover(target.backups);
+      expect(recover58).toEqual([]);
+      const readFileString59 = yield* fs.readFileString(target.file);
+      expect(readFileString59).toBe(competitor);
     })
   );
 
@@ -514,8 +618,12 @@ layer(
       const writer = yield* writerWith();
       const [report] = yield* writer.recover(target.backups);
       expect(report?.result).toMatchObject({ _tag: "refused", reason: "filesystem-changed" });
-      expect(yield* fileSha(target.file)).toBe(yield* textSha(intended));
-      expect(yield* fs.readFileString(trackedOf(journal.publication).staging)).toBe(competitor);
+      const fileSha60 = yield* fileSha(target.file);
+      const expectation17 = expect(fileSha60);
+      const textSha19 = yield* textSha(intended);
+      expectation17.toBe(textSha19);
+      const readFileString61 = yield* fs.readFileString(trackedOf(journal.publication).staging);
+      expect(readFileString61).toBe(competitor);
     })
   );
 
@@ -535,8 +643,12 @@ layer(
       const writer = yield* writerWith();
       const [report] = yield* writer.recover(target.backups);
       expect(report?.result).toMatchObject({ _tag: "refused", reason: "filesystem-changed" });
-      expect(yield* fileSha(target.file)).toBe(yield* textSha(intended));
-      expect(yield* fs.readFileString(trackedOf(journal.publication).staging)).toBe(competitor);
+      const fileSha62 = yield* fileSha(target.file);
+      const expectation18 = expect(fileSha62);
+      const textSha20 = yield* textSha(intended);
+      expectation18.toBe(textSha20);
+      const readFileString63 = yield* fs.readFileString(trackedOf(journal.publication).staging);
+      expect(readFileString63).toBe(competitor);
     })
   );
 
@@ -556,12 +668,16 @@ layer(
         const publication = trackedOf(journal.publication);
         const outside = path.join(target.root, "outside.tmp");
         yield* fs.writeFileString(outside, intended);
-        if (tamper === "foreign-stage") yield* fs.writeFileString(publication.staging, "foreign");
+        if (tamper === "foreign-stage") {
+          yield* fs.writeFileString(publication.staging, "foreign");
+        }
         if (tamper === "foreign-retained") {
           yield* fs.remove(publication.retained);
           yield* fs.writeFileString(publication.retained, "foreign");
         }
-        if (tamper === "missing-target") yield* fs.remove(target.file);
+        if (tamper === "missing-target") {
+          yield* fs.remove(target.file);
+        }
         if (tamper === "linked-target") {
           yield* fs.rename(target.file, path.join(target.root, "moved.toml"));
           yield* fs.symlink(path.join(target.root, "moved.toml"), target.file);
@@ -581,9 +697,12 @@ layer(
                 ? "competing-writer"
                 : "foreign-artifact",
         });
-        expect(yield* listing(target.root)).toEqual(before);
-        expect(yield* fs.readFileString(outside)).toBe(intended);
-        expect(yield* listing(target.backups)).toEqual([`${journal.id}.backup`, `${journal.id}.json`]);
+        const listing64 = yield* listing(target.root);
+        expect(listing64).toEqual(before);
+        const readFileString65 = yield* fs.readFileString(outside);
+        expect(readFileString65).toBe(intended);
+        const listing66 = yield* listing(target.backups);
+        expect(listing66).toEqual([`${journal.id}.backup`, `${journal.id}.json`]);
       })
     );
   }
@@ -596,14 +715,20 @@ layer(
       const real = path.join(target.root, "real-backups");
       yield* fs.makeDirectory(real);
       yield* fs.symlink(real, target.backups);
-      const writer = yield* writerWith(yield* interfering(target.file, "refuse"));
+      const interfering67 = yield* interfering(target.file, "refuse");
+      const writer = yield* writerWith(interfering67);
       yield* Effect.flip(writer.apply(target.file, [request], "write", target.backups));
       const journal = yield* abandon(target.backups);
       const restoring = yield* writerWith();
       yield* restoring.restore(path.join(real, `${journal.id}.json`), real);
-      expect(yield* fileSha(target.file)).toBe(yield* textSha(native));
-      expect(yield* listing(real)).toEqual([`${journal.id}.json`]);
-      expect(yield* listing(target.root)).toEqual(["backups", "config.toml", "real-backups"]);
+      const fileSha68 = yield* fileSha(target.file);
+      const expectation19 = expect(fileSha68);
+      const textSha21 = yield* textSha(native);
+      expectation19.toBe(textSha21);
+      const listing69 = yield* listing(real);
+      expect(listing69).toEqual([`${journal.id}.json`]);
+      const listing70 = yield* listing(target.root);
+      expect(listing70).toEqual(["backups", "config.toml", "real-backups"]);
     })
   );
 
@@ -617,8 +742,10 @@ layer(
       yield* fs.rename(file, path.join(target.backups, "renamed.json"));
       yield* fs.writeFileString(path.join(target.backups, "garbage.json"), "{");
       const writer = yield* writerWith();
-      expect(yield* writer.recover(target.backups)).toEqual([]);
-      expect(yield* writer.recover(path.join(target.root, "absent"))).toEqual([]);
+      const recover71 = yield* writer.recover(target.backups);
+      expect(recover71).toEqual([]);
+      const recover72 = yield* writer.recover(path.join(target.root, "absent"));
+      expect(recover72).toEqual([]);
       expect(trackedOf(journal.publication).state._tag).toBe("staged");
     })
   );
@@ -642,7 +769,8 @@ layer(
       expect(A.map(reports, (report) => report.result)).toEqual([
         expect.objectContaining({ _tag: "refused", reason: "foreign-artifact" }),
       ]);
-      expect(yield* fs.readFileString(victim)).toBe("unrelated recovery data");
+      const readFileString73 = yield* fs.readFileString(victim);
+      expect(readFileString73).toBe("unrelated recovery data");
     })
   );
 
@@ -667,16 +795,22 @@ layer(
       expect(refusal.message).toContain("Native file drifted after planning");
       const { journal } = yield* onlyJournal(target.backups);
       expect(trackedOf(journal.publication).state).toMatchObject({ _tag: "abandoned", from: "backed-up" });
-      expect(yield* listing(target.backups)).toEqual([`${journal.id}.json`]);
-      expect(yield* listing(target.root)).toEqual(["backups", "config.toml"]);
-      expect(yield* fs.readFileString(target.file)).toBe(competitor);
+      const listing74 = yield* listing(target.backups);
+      expect(listing74).toEqual([`${journal.id}.json`]);
+      const listing75 = yield* listing(target.root);
+      expect(listing75).toEqual(["backups", "config.toml"]);
+      const readFileString76 = yield* fs.readFileString(target.file);
+      expect(readFileString76).toBe(competitor);
       // The writer never touched the target, so nothing is refused afterwards.
       const plain = yield* writerWith();
-      expect(yield* plain.recover(target.backups)).toEqual([]);
+      const recover77 = yield* plain.recover(target.backups);
+      expect(recover77).toEqual([]);
       const next = yield* plain.apply(target.file, [request], "write", target.backups);
       next.pipe(O.isSome, assertTrue);
-      expect(yield* fs.readFileString(target.file)).toBe(Str.replace('"competitor"', '"gpt-6.1-sol"')(competitor));
-      expect(yield* listing(target.root)).toEqual(["backups", "config.toml"]);
+      const readFileString78 = yield* fs.readFileString(target.file);
+      expect(readFileString78).toBe(Str.replace('"competitor"', '"gpt-6.1-sol"')(competitor));
+      const listing79 = yield* listing(target.root);
+      expect(listing79).toEqual(["backups", "config.toml"]);
     })
   );
 
@@ -730,8 +864,12 @@ layer(
         { concurrency: "unbounded" }
       );
       expect(exchanges).toBe(1);
-      expect(yield* fs.readFileString(target.file)).toBe(competitor);
-      expect(yield* fileSha(trackedOf(journal.publication).staging)).toBe(yield* textSha(intended));
+      const readFileString80 = yield* fs.readFileString(target.file);
+      expect(readFileString80).toBe(competitor);
+      const fileSha81 = yield* fileSha(trackedOf(journal.publication).staging);
+      const expectation20 = expect(fileSha81);
+      const textSha22 = yield* textSha(intended);
+      expectation20.toBe(textSha22);
       expect(firstReports[0]?.result).toMatchObject({ _tag: "refused", reason: "competing-writer" });
       expect(secondReports).toEqual([
         ModelsRecoveryReport.make({
@@ -740,7 +878,8 @@ layer(
           result: ModelsRecoveryResult.cases.skipped.make({ reason: "lock-held" }),
         }),
       ]);
-      expect(A.filter(yield* listing(target.backups), Str.endsWith(".recovering"))).toEqual([]);
+      const listing82 = yield* listing(target.backups);
+      expect(A.filter(listing82, Str.endsWith(".recovering"))).toEqual([]);
     })
   );
 
@@ -754,7 +893,8 @@ layer(
       const writer = yield* writerWith();
       // A live owner (this process) holds the lock: recovery and restore stand back.
       const live = yield* fs.readFileString("/proc/self/stat");
-      const boot = Str.trim(yield* fs.readFileString("/proc/sys/kernel/random/boot_id"));
+      const readFileString83 = yield* fs.readFileString("/proc/sys/kernel/random/boot_id");
+      const boot = Str.trim(readFileString83);
       const fields = Str.split(
         Str.trim(Str.slice(O.getOrElse(Str.lastIndexOf(")")(live), constant(-1)) + 1)(live)),
         " "
@@ -764,8 +904,10 @@ layer(
         pid: Number.parseInt(live, 10),
         startTicks: fields[19] ?? "",
       });
-      yield* fs.writeFileString(lock, yield* encodeOwner(self));
-      expect(yield* writer.recover(target.backups)).toEqual([
+      const encodedOwner = yield* encodeOwner(self);
+      yield* fs.writeFileString(lock, encodedOwner);
+      const recover84 = yield* writer.recover(target.backups);
+      expect(recover84).toEqual([
         ModelsRecoveryReport.make({
           journal: journal.id,
           role: "publication",
@@ -776,12 +918,21 @@ layer(
         writer.restore(path.join(target.backups, `${journal.id}.json`), target.backups)
       );
       expect(refusal.reason).toBe("lock-held");
-      expect(yield* fs.readFileString(lock)).toBe(yield* encodeOwner(self));
+      const readFileString85 = yield* fs.readFileString(lock);
+      const expectation21 = expect(readFileString85);
+      const encodedOwner23 = yield* encodeOwner(self);
+      expectation21.toBe(encodedOwner23);
       // A dead owner's lock is stale and reclaimed.
-      yield* fs.writeFileString(lock, yield* encodeOwner(deadOwner));
-      expect(yield* writer.recover(target.backups)).toEqual([recovered(journal.id, "preimage")]);
-      expect(yield* listing(target.backups)).toEqual([`${journal.id}.json`]);
-      expect(yield* fileSha(target.file)).toBe(yield* textSha(native));
+      const encodedOwner86 = yield* encodeOwner(deadOwner);
+      yield* fs.writeFileString(lock, encodedOwner86);
+      const recover87 = yield* writer.recover(target.backups);
+      expect(recover87).toEqual([recovered(journal.id, "preimage")]);
+      const listing88 = yield* listing(target.backups);
+      expect(listing88).toEqual([`${journal.id}.json`]);
+      const fileSha89 = yield* fileSha(target.file);
+      const expectation22 = expect(fileSha89);
+      const textSha24 = yield* textSha(native);
+      expectation22.toBe(textSha24);
     })
   );
 
@@ -801,14 +952,19 @@ layer(
       // A live recoverer caught between creating its lock and stamping it.
       for (const stamp of ["", '{"bootId":"']) {
         yield* fs.writeFileString(lock, stamp);
-        expect(yield* writer.recover(target.backups)).toEqual([held]);
-        expect(yield* fs.readFileString(lock)).toBe(stamp);
-        expect(A.filter(yield* listing(target.backups), Str.includes(".recovering."))).toEqual([]);
+        const recover90 = yield* writer.recover(target.backups);
+        expect(recover90).toEqual([held]);
+        const readFileString91 = yield* fs.readFileString(lock);
+        expect(readFileString91).toBe(stamp);
+        const listing92 = yield* listing(target.backups);
+        expect(A.filter(listing92, Str.includes(".recovering."))).toEqual([]);
       }
       // Past the grace period an unreadable stamp is stale and reclaimed.
       yield* fs.utimes(lock, 0, 0);
-      expect(yield* writer.recover(target.backups)).toEqual([recovered(journal.id, "preimage")]);
-      expect(yield* listing(target.backups)).toEqual([`${journal.id}.json`]);
+      const recover93 = yield* writer.recover(target.backups);
+      expect(recover93).toEqual([recovered(journal.id, "preimage")]);
+      const listing94 = yield* listing(target.backups);
+      expect(listing94).toEqual([`${journal.id}.json`]);
     })
   );
 
@@ -820,7 +976,8 @@ layer(
       const backups = path.join(home, ".config-backups");
       const file = path.join(home, "config.toml");
       yield* fs.writeFileString(file, native);
-      const writer = yield* writerWith(yield* interfering(file, "refuse"));
+      const interfering95 = yield* interfering(file, "refuse");
+      const writer = yield* writerWith(interfering95);
       yield* Effect.flip(writer.apply(file, [request], "write", backups));
       const journal = yield* abandon(backups);
       const denied = (method: string, target: string) =>
@@ -829,25 +986,30 @@ layer(
       const denying = FileSystem.FileSystem.of({
         ...fs,
         open: Effect.fn("ModelsRecoveryTest.deniedOpen")(function* (target, options) {
-          if (Str.endsWith(".recovering")(target)) return yield* denied("open", target);
+          if (Str.endsWith(".recovering")(target)) {
+            return yield* denied("open", target);
+          }
           return yield* fs.open(target, options);
         }),
         link: Effect.fn("ModelsRecoveryTest.deniedLink")(function* (source, target) {
-          if (Str.endsWith(".recovering")(target)) return yield* denied("link", target);
+          if (Str.endsWith(".recovering")(target)) {
+            return yield* denied("link", target);
+          }
           yield* fs.link(source, target);
         }),
       });
       const refusal = yield* Effect.flip((yield* writerWithFs(denying)).recover(backups));
       expect(refusal._tag).toBe("ModelsLocatorError");
       expect(refusal.reason).toBe("lock-unavailable");
-      const before = A.length(yield* TestConsole.logLines);
+      const logLines96 = yield* TestConsole.logLines;
+      const before = A.length(logLines96);
       yield* Effect.flip(
         run(["recover", "--home", home, "--repo", home]).pipe(Effect.provideService(FileSystem.FileSystem, denying))
       );
-      expect(A.some(A.drop(yield* TestConsole.logLines, before), (line) => Str.includes("lock-held")(`${line}`))).toBe(
-        false
-      );
-      expect(yield* listing(backups)).toEqual([`${journal.id}.backup`, `${journal.id}.json`]);
+      const logLines97 = yield* TestConsole.logLines;
+      expect(A.some(A.drop(logLines97, before), (line) => Str.includes("lock-held")(`${line}`))).toBe(false);
+      const listing98 = yield* listing(backups);
+      expect(listing98).toEqual([`${journal.id}.backup`, `${journal.id}.json`]);
       expect(trackedOf((yield* onlyJournal(backups)).journal.publication).state._tag).toBe("staged");
     })
   );
@@ -860,25 +1022,33 @@ layer(
       const backups = path.join(home, ".config-backups");
       const flags = ["--home", home, "--repo", home];
       yield* run(["recover", ...flags]);
-      expect(yield* TestConsole.logLines).toContain(
+      const logLines99 = yield* TestConsole.logLines;
+      expect(logLines99).toContain(
         "models: recover reconciled 0 publication(s); 0 legacy journal(s) left for restore --journal"
       );
       const file = path.join(home, "config.toml");
       yield* fs.writeFileString(file, native);
-      const writer = yield* writerWith(yield* interfering(file, "refuse"));
+      const interfering100 = yield* interfering(file, "refuse");
+      const writer = yield* writerWith(interfering100);
       yield* Effect.flip(writer.apply(file, [request], "write", backups));
       const journal = yield* abandon(backups);
       yield* run(["recover", ...flags]);
-      expect(yield* TestConsole.logLines).toContain(`models: recovered ${journal.id} (publication) to preimage`);
-      expect(yield* fileSha(file)).toBe(yield* textSha(native));
-      const displacing = yield* writerWith(yield* interfering(file, "displace-then-fail"));
+      const logLines101 = yield* TestConsole.logLines;
+      expect(logLines101).toContain(`models: recovered ${journal.id} (publication) to preimage`);
+      const fileSha102 = yield* fileSha(file);
+      const expectation23 = expect(fileSha102);
+      const textSha25 = yield* textSha(native);
+      expectation23.toBe(textSha25);
+      const interfering103 = yield* interfering(file, "displace-then-fail");
+      const displacing = yield* writerWith(interfering103);
       yield* Effect.flip(displacing.apply(file, [request], "write", backups));
       yield* fs.makeDirectory(path.join(home, "settled"));
       yield* fs.rename(path.join(backups, `${journal.id}.json`), path.join(home, "settled", `${journal.id}.json`));
       const second = yield* abandon(backups);
       yield* Effect.flip(run(["recover", ...flags]));
+      const logLines104 = yield* TestConsole.logLines;
       expect(
-        A.some(yield* TestConsole.logLines, (line) =>
+        A.some(logLines104, (line) =>
           Str.startsWith(`models: refused recovery ${second.id} (publication): competing-writer:`)(`${line}`)
         )
       ).toBe(true);

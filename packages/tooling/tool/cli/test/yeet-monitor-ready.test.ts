@@ -233,8 +233,10 @@ it.layer(platform, { timeout: "30 seconds" })("B8 base conflict and registration
           closeout: () => Ref.update(closeouts, (n) => n + 1).pipe(Effect.as(report(nextHead))),
         });
         expect(terminal).toBe("ready");
-        expect(yield* Ref.get(calls)).toBe(4);
-        expect(yield* Ref.get(closeouts)).toBe(1);
+        const got = yield* Ref.get(calls);
+        expect(got).toBe(4);
+        const got1 = yield* Ref.get(closeouts);
+        expect(got1).toBe(1);
         const printed = yield* lines;
         expect(printed).toContain(
           "settle: base-conflict; merge origin/main and push; waited 5s (not counted toward the 1s settle timeout)"
@@ -408,12 +410,14 @@ it.layer(platform, { timeout: "30 seconds" })("push → row → ack timeline", (
           closeout: () => Effect.succeed(report(nextHead)),
         });
         expect(terminal).toBe("ready");
-        const reds = A.filter(yield* rows(root), (row) => row.kind === "check-failed");
+        const rows2 = yield* rows(root);
+        const reds = A.filter(rows2, (row) => row.kind === "check-failed");
         expect(A.map(reds, (row) => [row.id, row.ts])).toStrictEqual([
           [buildId, polledAt],
           [checkId, polledAt],
         ]);
-        expect(yield* lines).toContain(
+        const lines3 = yield* lines;
+        expect(lines3).toContain(
           "[yeet] push→row→ack aaaaaaa: pushed 2026-09-16T00:00:00.000Z, red 2026-09-16T00:03:00Z (+3m), " +
             "row 2026-09-16T00:04:00.000Z (+1m), injected 2026-09-16T00:04:40Z (+40s), " +
             "acked 2026-09-16T00:06:00.000Z (+1m 20s)"
@@ -448,8 +452,10 @@ it.layer(platform, { timeout: "30 seconds" })("B8 settle clock resumes with the 
           closeout: () => Ref.update(closeouts, (n) => n + 1).pipe(Effect.as(report())),
         });
         expect(terminal).toBe("ready");
-        expect(yield* Ref.get(calls)).toBe(5);
-        expect(yield* Ref.get(closeouts)).toBe(1);
+        const got4 = yield* Ref.get(calls);
+        expect(got4).toBe(5);
+        const got5 = yield* Ref.get(closeouts);
+        expect(got5).toBe(1);
         const printed = yield* lines;
         expect(printed).toContain("[yeet] settle: base-conflict → registration");
         expect(printed).toContain("[yeet] settle budget resumed; clock reset");
@@ -493,8 +499,10 @@ it.layer(platform, { timeout: "30 seconds" })("B7 readiness loop", (test) => {
           });
           expect(terminal).toBe("ready");
           expect(yeetMonitorExitFor(terminal).exitCode).toBe(0);
-          expect(yield* Ref.get(calls)).toBe(4);
-          expect(yield* Ref.get(closeouts)).toBe(1);
+          const got6 = yield* Ref.get(calls);
+          expect(got6).toBe(4);
+          const got7 = yield* Ref.get(closeouts);
+          expect(got7).toBe(1);
           const observed = yield* rows(root);
           const mergeReadyId = yield* yeetPrMergeReadyRowId({ prNumber: 7, headSha: head });
           // Under until-ready the optional red converges into a P1 check-failed
@@ -520,14 +528,18 @@ it.layer(platform, { timeout: "30 seconds" })("B7 readiness loop", (test) => {
               pushToReadyMs: 0,
             },
           });
-          expect(yield* lines).toMatch(/\[yeet\] settle: registration(?:\n|$)/);
-          expect(yield* lines).toContain("closeout: 0 issue(s) for head aaaaaaa");
-          expect(yield* lines).toContain("push→ready");
+          const lines8 = yield* lines;
+          expect(lines8).toMatch(/\[yeet\] settle: registration(?:\n|$)/);
+          const lines9 = yield* lines;
+          expect(lines9).toContain("closeout: 0 issue(s) for head aaaaaaa");
+          const lines10 = yield* lines;
+          expect(lines10).toContain("push→ready");
           yield* runYeetMonitorUntilMerged(contextFor(root), {
             ...options,
             collectStatus: () => Effect.succeed(snapshot(root, [check()])),
           });
-          expect(yield* rows(root)).toHaveLength(2);
+          const rows11 = yield* rows(root);
+          expect(rows11).toHaveLength(2);
         })
       )
   );
@@ -555,14 +567,20 @@ it.layer(platform, { timeout: "30 seconds" })("B7 readiness loop", (test) => {
             onMerged: () => Ref.update(sweeps, (n) => n + 1),
           });
           expect(terminal).toBe("merged");
-          expect(yield* Ref.get(reads)).toBe(2);
-          expect(yield* Ref.get(closes)).toBe(2);
-          expect(yield* Ref.get(sweeps)).toBe(1);
-          expect(yield* rows(root)).toHaveLength(2);
-          const ack = yield* readYeetAckState(root, yield* yeetPrMergeReadyRowId({ prNumber: 7, headSha: head }));
+          const got12 = yield* Ref.get(reads);
+          expect(got12).toBe(2);
+          const got13 = yield* Ref.get(closes);
+          expect(got13).toBe(2);
+          const got14 = yield* Ref.get(sweeps);
+          expect(got14).toBe(1);
+          const rows15 = yield* rows(root);
+          expect(rows15).toHaveLength(2);
+          const yeetPrMergeReadyRowId16 = yield* yeetPrMergeReadyRowId({ prNumber: 7, headSha: head });
+          const ack = yield* readYeetAckState(root, yeetPrMergeReadyRowId16);
           expect(ack.acked).toBe(true);
           expect(ack.receipt?.resolution).toMatchObject({ kind: "fix-sha", sha: nextHead });
-          expect(A.filter(Str.split(yield* lines, "\n"), Str.includes("merge-ready announced"))).toHaveLength(2);
+          const lines17 = yield* lines;
+          expect(A.filter(Str.split(lines17, "\n"), Str.includes("merge-ready announced"))).toHaveLength(2);
         })
       )
   );
@@ -581,10 +599,10 @@ it.layer(platform, { timeout: "30 seconds" })("B7 readiness loop", (test) => {
               ),
           });
           expect(terminal).toBe("poll-error-budget");
-          expect(yield* Ref.get(calls)).toBe(reset ? 9 : 5);
-          expect(A.join(A.map(yield* TestConsole.errorLines, String), "\n")).toContain(
-            "poll failed (5/5): read unavailable"
-          );
+          const got18 = yield* Ref.get(calls);
+          expect(got18).toBe(reset ? 9 : 5);
+          const errorLines19 = yield* TestConsole.errorLines;
+          expect(A.join(A.map(errorLines19, String), "\n")).toContain("poll failed (5/5): read unavailable");
         })
       )
     );
@@ -616,17 +634,18 @@ it.layer(platform, { timeout: "30 seconds" })("B7 readiness loop", (test) => {
               ),
           });
           expect(terminal).toBe("poll-error-budget");
-          expect(yield* Ref.get(calls)).toBe(limit);
-          expect(A.join(A.map(yield* TestConsole.errorLines, String), "\n")).toContain(
-            "poll failed (5/5): read unavailable"
-          );
+          const got20 = yield* Ref.get(calls);
+          expect(got20).toBe(limit);
+          const errorLines21 = yield* TestConsole.errorLines;
+          expect(A.join(A.map(errorLines21, String), "\n")).toContain("poll failed (5/5): read unavailable");
         })
       )
     );
   test.effect("keeps a confirmed absent pull request outside the read-failure budget", () =>
     fixture((root) =>
       Effect.gen(function* () {
-        const previousErrors = A.length(yield* TestConsole.errorLines);
+        const errorLines22 = yield* TestConsole.errorLines;
+        const previousErrors = A.length(errorLines22);
         const calls = yield* Ref.make(0);
         const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
           ...options,
@@ -649,8 +668,10 @@ it.layer(platform, { timeout: "30 seconds" })("B7 readiness loop", (test) => {
             ),
         });
         expect(terminal).toBe("merged");
-        expect(yield* Ref.get(calls)).toBe(7);
-        const errors = A.drop(yield* TestConsole.errorLines, previousErrors);
+        const got23 = yield* Ref.get(calls);
+        expect(got23).toBe(7);
+        const errorLines24 = yield* TestConsole.errorLines;
+        const errors = A.drop(errorLines24, previousErrors);
         expect(A.join(A.map(errors, String), "\n")).not.toContain("poll failed");
       })
     )
@@ -667,8 +688,10 @@ it.layer(platform, { timeout: "30 seconds" })("B7 readiness loop", (test) => {
           closeout: () => Ref.update(closes, (n) => n + 1).pipe(Effect.andThen(Effect.fail(failure))),
         });
         expect(terminal).toBe("poll-error-budget");
-        expect(yield* Ref.get(reads)).toBe(1);
-        expect(yield* Ref.get(closes)).toBe(5);
+        const got25 = yield* Ref.get(reads);
+        expect(got25).toBe(1);
+        const got26 = yield* Ref.get(closes);
+        expect(got26).toBe(5);
       })
     )
   );
@@ -686,8 +709,10 @@ it.layer(platform, { timeout: "30 seconds" })("B7 readiness loop", (test) => {
           closeout: () => Ref.update(closes, (n) => n + 1).pipe(Effect.as(report(head, 2))),
         });
         expect(terminal).toBe("closed");
-        expect(yield* Ref.get(closes)).toBe(1);
-        expect(yield* lines).toContain("closeout: 2 issue(s)");
+        const got27 = yield* Ref.get(closes);
+        expect(got27).toBe(1);
+        const lines28 = yield* lines;
+        expect(lines28).toContain("closeout: 2 issue(s)");
       })
     )
   );
@@ -708,9 +733,12 @@ it.layer(platform, { timeout: "30 seconds" })("B7 readiness loop", (test) => {
             Ref.getAndUpdate(closes, (n) => n + 1).pipe(Effect.map((n) => report(n === 0 ? head : nextHead))),
         });
         expect(terminal).toBe("ready");
-        expect(yield* Ref.get(reads)).toBe(2);
-        expect(yield* Ref.get(closes)).toBe(2);
-        expect(yield* rows(root)).toMatchObject([{ capsule: { headSha: nextHead } }]);
+        const got29 = yield* Ref.get(reads);
+        expect(got29).toBe(2);
+        const got30 = yield* Ref.get(closes);
+        expect(got30).toBe(2);
+        const rows31 = yield* rows(root);
+        expect(rows31).toMatchObject([{ capsule: { headSha: nextHead } }]);
       })
     )
   );
@@ -789,14 +817,18 @@ describe("required red decisions", () => {
               // the loop keeps polling until the PR closes on poll 2, and the red
               // is a converged check-failed row instead of a terminal.
               expect(terminal).toBe("closed");
-              expect(yield* Ref.get(polls)).toBe(3);
+              const got32 = yield* Ref.get(polls);
+              expect(got32).toBe(3);
               expect(rerunsOf(runner)).toBe(flake ? 1 : 0);
-              expect(yield* lines).not.toContain("merge-ready: yes");
-              expect(A.map(yield* rows(root), (row) => [row.kind, row.capsule])).toMatchObject([
+              const lines33 = yield* lines;
+              expect(lines33).not.toContain("merge-ready: yes");
+              const rows34 = yield* rows(root);
+              expect(A.map(rows34, (row) => [row.kind, row.capsule])).toMatchObject([
                 ["check-failed", { lane: name, headSha: head, prNumber: 7 }],
               ]);
               if (name !== "Vercel") {
-                expect(yield* lines).toContain(`required-red: ${name}; not terminal under --until-ready`);
+                const lines35 = yield* lines;
+                expect(lines35).toContain(`required-red: ${name}; not terminal under --until-ready`);
               }
             })
           )
@@ -827,12 +859,14 @@ it.layer(platform, { timeout: "30 seconds" })((it) =>
             ),
         }).pipe(atGithub, provideSpawner(runner));
         expect(terminal).toBe("closed");
-        expect(yield* Ref.get(polls)).toBe(5);
+        const got36 = yield* Ref.get(polls);
+        expect(got36).toBe(5);
         // A needs-code-fix red is never rerun.
         expect(rerunsOf(runner)).toBe(0);
         // The unchanged red is classified on poll 0 only; the moved red on poll 3.
         expect(A.countBy(runner.spawns, (spawn) => A.contains(spawn.args, "--log-failed"))).toBe(2);
-        expect(A.length(Str.split(yield* lines, "required-red: Lint;")) - 1).toBe(2);
+        const lines37 = yield* lines;
+        expect(A.length(Str.split(lines37, "required-red: Lint;")) - 1).toBe(2);
       })
     )
   )
@@ -862,7 +896,8 @@ for (const attachment of YeetMonitorAttachment.literals)
           expect(printed).toContain("required-red: Lint; not terminal under --until-ready: the wave is in the inbox");
           if (attachment === "attached") {
             expect(terminal).toBe("wave");
-            expect(yield* Ref.get(polls)).toBe(1);
+            const got38 = yield* Ref.get(polls);
+            expect(got38).toBe(1);
             expect(printed).not.toContain("keeps polling for the fix push");
             expect(printed).toContain("The attached monitor stopped");
           } else {
@@ -925,16 +960,17 @@ describe("attached wave return", () => {
               waveRerunCommand: "bun run beep yeet monitor --until-ready --settle-timeout 20m",
               collectStatus: () => Ref.getAndUpdate(polls, (n) => n + 1).pipe(Effect.map((n) => polled(root, n))),
             });
-            const red = A.findFirst(
-              yield* rows(root),
-              (row) => row.kind === "check-failed" && row.capsule.lane === "Lint"
-            ).pipe(O.map((row) => row.id));
+            const rows39 = yield* rows(root);
+            const red = A.findFirst(rows39, (row) => row.kind === "check-failed" && row.capsule.lane === "Lint").pipe(
+              O.map((row) => row.id)
+            );
             const redId = O.getOrThrow(red);
             const printed = yield* lines;
             if (attachment === "attached") {
               expect(terminal).toBe("wave");
               expect(yeetMonitorExitFor(terminal).exitCode).toBe(2);
-              expect(yield* Ref.get(polls)).toBe(2);
+              const got40 = yield* Ref.get(polls);
+              expect(got40).toBe(2);
               expect(printed).toContain("[yeet] wave on PR #7: 1 new P0/P1 inbox row(s): P0 Lint");
               expect(printed).toContain(`[${redId}]`);
               expect(printed).not.toContain(`[${earlier.id}]`);
@@ -943,7 +979,8 @@ describe("attached wave return", () => {
               );
             } else {
               expect(terminal).toBe("closed");
-              expect(yield* Ref.get(polls)).toBe(3);
+              const got41 = yield* Ref.get(polls);
+              expect(got41).toBe(3);
               expect(printed).not.toContain("[yeet] wave on PR");
             }
             // Handing the wave back never acknowledges it.
@@ -1042,7 +1079,8 @@ it.layer(platform, { timeout: "30 seconds" })("review window (push-first-publish
           closeout: () => Effect.succeed(report()),
         });
         expect(terminal).toBe("ready");
-        expect(yield* Ref.get(calls)).toBeGreaterThanOrEqual(3);
+        const got42 = yield* Ref.get(calls);
+        expect(got42).toBeGreaterThanOrEqual(3);
         const printed = yield* lines;
         expect(printed).toContain(
           "[yeet] not merge-ready: blocked on review-window-elapsed: review window open: 7 min left"
@@ -1071,7 +1109,8 @@ it.layer(platform, { timeout: "30 seconds" })("review window (push-first-publish
           onMerged: () => Effect.void,
         });
         expect(terminal).toBe("merged");
-        expect(yield* lines).toContain("review window unknown: the timeline of pull request #7 could not be read");
+        const lines43 = yield* lines;
+        expect(lines43).toContain("review window unknown: the timeline of pull request #7 could not be read");
       })
     )
   );
@@ -1093,7 +1132,8 @@ it.layer(platform, { timeout: "30 seconds" })("draft pull requests (push-first-p
             closeout: () => Effect.succeed(report()),
           });
           expect(terminal).toBe("ready-pending-flip");
-          expect(yield* Ref.get(calls)).toBe(2);
+          const got44 = yield* Ref.get(calls);
+          expect(got44).toBe(2);
           expect(yeetMonitorExitFor(terminal).exitCode).toBe(0);
         })
       )
@@ -1117,7 +1157,8 @@ it.layer(platform, { timeout: "30 seconds" })("draft pull requests (push-first-p
           onMerged: () => Effect.void,
         });
         expect(terminal).toBe("merged");
-        expect(yield* Ref.get(calls)).toBe(2);
+        const got45 = yield* Ref.get(calls);
+        expect(got45).toBe(2);
       })
     )
   );
@@ -1161,9 +1202,12 @@ it.layer(platform, { timeout: "30 seconds" })("B7 remaining boundaries", (test) 
           }),
         });
         expect(terminal).toBe("settle-timeout");
-        expect(yield* Ref.get(polls)).toBe(3);
-        expect(yield* lines).toContain("missing: Never registered");
-        expect(yield* lines).toContain("pending: Outside");
+        const got46 = yield* Ref.get(polls);
+        expect(got46).toBe(3);
+        const lines47 = yield* lines;
+        expect(lines47).toContain("missing: Never registered");
+        const lines48 = yield* lines;
+        expect(lines48).toContain("pending: Outside");
       })
     )
   );
@@ -1200,8 +1244,10 @@ it.layer(platform, { timeout: "30 seconds" })("B7 remaining boundaries", (test) 
             closeout: () => Ref.update(closes, (n) => n + 1).pipe(Effect.as(report())),
           });
           expect(terminal).toBe("ready");
-          expect(yield* Ref.get(closes)).toBe(1);
-          expect(A.join(A.map(yield* TestConsole.errorLines, String), "\n")).toContain("poll failed (1/5)");
+          const got49 = yield* Ref.get(closes);
+          expect(got49).toBe(1);
+          const errorLines50 = yield* TestConsole.errorLines;
+          expect(A.join(A.map(errorLines50, String), "\n")).toContain("poll failed (1/5)");
         })
       )
     );
@@ -1216,7 +1262,8 @@ it.layer(platform, { timeout: "30 seconds" })("B7 remaining boundaries", (test) 
           onMerged: () => Ref.update(sweeps, (n) => n + 1),
         });
         expect(terminal).toBe("merged");
-        expect(yield* Ref.get(sweeps)).toBe(1);
+        const got51 = yield* Ref.get(sweeps);
+        expect(got51).toBe(1);
       })
     )
   );
@@ -1241,10 +1288,12 @@ for (const waiting of ["awaiting-log", "awaiting-run"])
               ),
           }).pipe(atGithub, provideSpawner(runner));
           expect(terminal).toBe("closed");
-          expect(yield* Ref.get(polls)).toBe(2);
+          const got52 = yield* Ref.get(polls);
+          expect(got52).toBe(2);
           // An active parent run is never rerun.
           expect(rerunsOf(runner)).toBe(0);
-          expect(yield* lines).toContain(waiting === "awaiting-log" ? "reclassifying next poll" : "deferring rerun");
+          const lines53 = yield* lines;
+          expect(lines53).toContain(waiting === "awaiting-log" ? "reclassifying next poll" : "deferring rerun");
         })
       )
     );
@@ -1283,9 +1332,12 @@ it.layer(platform, { timeout: "30 seconds" })("R7 durable comment replay", (test
         });
 
         expect(terminal).toBe("merged");
-        expect(yield* Ref.get(replayed)).toStrictEqual([[7, "until-merged"]]);
-        expect(yield* Ref.get(polls)).toBeGreaterThan(1);
-        expect(yield* Ref.get(rowPolls)).toBe(0);
+        const got54 = yield* Ref.get(replayed);
+        expect(got54).toStrictEqual([[7, "until-merged"]]);
+        const got55 = yield* Ref.get(polls);
+        expect(got55).toBeGreaterThan(1);
+        const got56 = yield* Ref.get(rowPolls);
+        expect(got56).toBe(0);
       })
     )
   );
@@ -1314,8 +1366,10 @@ it.layer(platform, { timeout: "30 seconds" })("R7 durable comment replay", (test
         });
 
         expect(terminal).toBe("merged");
-        expect(yield* Ref.get(replayed)).toStrictEqual([7]);
-        expect(yield* Ref.get(polls)).toBeGreaterThan(2);
+        const got57 = yield* Ref.get(replayed);
+        expect(got57).toStrictEqual([7]);
+        const got58 = yield* Ref.get(polls);
+        expect(got58).toBeGreaterThan(2);
       })
     )
   );
@@ -1377,7 +1431,8 @@ it.layer(platform, { timeout: "30 seconds" })("W4 until-ready comment rows", (te
         }).pipe(provideMonitorGh(loginCapture(logins)));
 
         expect(terminal).toBe("ready");
-        expect(yield* Ref.get(replayed)).toBe(0);
+        const got59 = yield* Ref.get(replayed);
+        expect(got59).toBe(0);
         // Every poll converges comments, not only the first cycle (the closeout's
         // reread is inside a poll, so status reads outnumber polls).
         const seen = yield* Ref.get(windows);
@@ -1387,7 +1442,8 @@ it.layer(platform, { timeout: "30 seconds" })("W4 until-ready comment rows", (te
             A.map(seen, (window) => `${window.since} ${window.actingLogin} #${window.prNumber} ${window.headSha}`)
           )
         ).toStrictEqual([`${submittedAt} operator #7 ${head}`]);
-        expect(yield* lines).toContain(
+        const lines60 = yield* lines;
+        expect(lines60).toContain(
           `[yeet] P1 pr-comment row pr-comment-44: comment by @reviewer on PR #7 ${url}#issuecomment-44`
         );
       })
@@ -1424,8 +1480,10 @@ it.layer(platform, { timeout: "30 seconds" })("W4 until-ready comment rows", (te
         const seen = yield* Ref.get(windows);
         expect(A.length(seen)).toBeGreaterThan(0);
         expect(A.dedupe(A.map(seen, (window) => window.since))).toStrictEqual([at]);
-        expect(yield* Ref.get(captures)).toBe(2);
-        expect(A.join(A.map(yield* TestConsole.errorLines, String), "\n")).toContain(
+        const got61 = yield* Ref.get(captures);
+        expect(got61).toBe(2);
+        const errorLines62 = yield* TestConsole.errorLines;
+        expect(A.join(A.map(errorLines62, String), "\n")).toContain(
           "[yeet] comment rows wait: gh could not name the acting login"
         );
       })

@@ -61,7 +61,8 @@ describe("next recurring source-structure gaps", () => {
         [bareSubject, "a seal."],
       ];
       for (const [text, body] of subjectCases) {
-        const claim = O.getOrThrow(A.head(yield* normalizePatentClaims([["1", text]])));
+        const normalizePatentClaims1 = yield* normalizePatentClaims([["1", text]]);
+        const claim = O.getOrThrow(A.head(normalizePatentClaims1));
         assert.strictEqual(claim.claimText, text);
         assert.strictEqual(claim.transition, "wherein");
         assert.strictEqual(claim.body, body);
@@ -73,7 +74,8 @@ describe("next recurring source-structure gaps", () => {
       assert.strictEqual(O.getOrThrow(A.head(plain)).transition, "comprising");
       for (const transition of ["having", "including"]) {
         const text = `A device ${transition} a housing, the housing being characterized by a smooth surface.`;
-        const component = O.getOrThrow(A.head(yield* normalizePatentClaims([["1", text]])));
+        const normalizePatentClaims2 = yield* normalizePatentClaims([["1", text]]);
+        const component = O.getOrThrow(A.head(normalizePatentClaims2));
         assert.strictEqual(component.preamble, "A device");
         assert.strictEqual(component.transition, transition);
         assert.strictEqual(component.body, "a housing, the housing being characterized by a smooth surface.");

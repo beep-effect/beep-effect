@@ -46,7 +46,8 @@ describe("Yaml", () => {
 
     it.effect("returns null for empty input", () =>
       Effect.gen(function* () {
-        assert.isNull(yield* Yaml.parse(""));
+        const parsed1 = yield* Yaml.parse("");
+        assert.isNull(parsed1);
       })
     );
 
@@ -63,10 +64,11 @@ describe("Yaml", () => {
             assertFailure(Yaml.parseResult(source, YamlParseOptions.make({ strict: true })), error);
           }
           for (const modifiers of ["2+", "+2", "2-", "-2"]) {
-            assert.strictEqual(
-              yield* Yaml.parse(`${indicator}${modifiers}\n  a\n`, YamlParseOptions.make({ strict: true })),
-              Str.includes("-")(modifiers) ? "a" : "a\n"
+            const parsed2 = yield* Yaml.parse(
+              `${indicator}${modifiers}\n  a\n`,
+              YamlParseOptions.make({ strict: true })
             );
+            assert.strictEqual(parsed2, Str.includes("-")(modifiers) ? "a" : "a\n");
           }
         }
       })
@@ -316,15 +318,19 @@ describe("Yaml", () => {
   describe("leading byte-order mark (#694)", () => {
     it.effect("a BOM does not shift the first line's indentation — every node survives", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* Yaml.parse("\uFEFFa: 'x'\nb: 1\n"), { a: "x", b: 1 });
-        assert.deepStrictEqual(yield* Yaml.parse("\uFEFF- 1\n- 2\n"), [1, 2]);
-        assert.deepStrictEqual(yield* Yaml.parse("\uFEFFa: 1\n"), { a: 1 });
+        const parsed3 = yield* Yaml.parse("\uFEFFa: 'x'\nb: 1\n");
+        assert.deepStrictEqual(parsed3, { a: "x", b: 1 });
+        const parsed4 = yield* Yaml.parse("\uFEFF- 1\n- 2\n");
+        assert.deepStrictEqual(parsed4, [1, 2]);
+        const parsed5 = yield* Yaml.parse("\uFEFFa: 1\n");
+        assert.deepStrictEqual(parsed5, { a: 1 });
       })
     );
 
     it.effect("a comment directly after the BOM is a line-start comment, not trailing content", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* Yaml.parse("\uFEFF# c\na: 'x'\n"), { a: "x" });
+        const parsed6 = yield* Yaml.parse("\uFEFF# c\na: 'x'\n");
+        assert.deepStrictEqual(parsed6, { a: "x" });
       })
     );
 
@@ -350,7 +356,8 @@ describe("Yaml", () => {
         // document scope, where it is dropped.
         const doc = yield* YamlDocument.parse("\uFEFFa: 1\nb: 2\n# tail\n");
         assert.strictEqual(doc.comment, " tail");
-        assert.strictEqual(yield* doc.stringify(), "a: 1\nb: 2\n# tail\n");
+        const stringify7 = yield* doc.stringify();
+        assert.strictEqual(stringify7, "a: 1\nb: 2\n# tail\n");
       })
     );
 
@@ -358,18 +365,22 @@ describe("Yaml", () => {
       Effect.gen(function* () {
         // The BOM used to land in the body, so a following %YAML was a
         // misplaced directive and a following --- opened a second document.
-        assert.deepStrictEqual(yield* Yaml.parse("\uFEFF%YAML 1.2\n---\na: 1\n"), { a: 1 });
-        assert.deepStrictEqual(yield* Yaml.parse("\uFEFF%YAML 1.2\r\n--- # c\r\na: 1\r\n"), { a: 1 });
-        assert.deepStrictEqual(yield* Yaml.parse("\uFEFF\n%TAG !e! tag:example.com,2000:\n---\na: !e!x 1\n"), {
+        const parsed8 = yield* Yaml.parse("\uFEFF%YAML 1.2\n---\na: 1\n");
+        assert.deepStrictEqual(parsed8, { a: 1 });
+        const parsed9 = yield* Yaml.parse("\uFEFF%YAML 1.2\r\n--- # c\r\na: 1\r\n");
+        assert.deepStrictEqual(parsed9, { a: 1 });
+        const parsed10 = yield* Yaml.parse("\uFEFF\n%TAG !e! tag:example.com,2000:\n---\na: !e!x 1\n");
+        assert.deepStrictEqual(parsed10, {
           a: "1",
         });
-        assert.deepStrictEqual(yield* Yaml.parseAll("\uFEFF---\na: 1\n"), [{ a: 1 }]);
-        assert.deepStrictEqual(yield* Yaml.parseAll("\uFEFF# c\n--- [1, 2]\n"), [[1, 2]]);
-        assert.deepStrictEqual(yield* Yaml.parseAll("\uFEFF--- \n"), [null]);
-        assert.deepStrictEqual(yield* Yaml.parseAll("\uFEFF%YAML 1.2\n---\na: 1\n...\n%YAML 1.2\n---\nb: 2\n"), [
-          { a: 1 },
-          { b: 2 },
-        ]);
+        const parsedAll = yield* Yaml.parseAll("\uFEFF---\na: 1\n");
+        assert.deepStrictEqual(parsedAll, [{ a: 1 }]);
+        const parsedAll11 = yield* Yaml.parseAll("\uFEFF# c\n--- [1, 2]\n");
+        assert.deepStrictEqual(parsedAll11, [[1, 2]]);
+        const parsedAll12 = yield* Yaml.parseAll("\uFEFF--- \n");
+        assert.deepStrictEqual(parsedAll12, [null]);
+        const parsedAll13 = yield* Yaml.parseAll("\uFEFF%YAML 1.2\n---\na: 1\n...\n%YAML 1.2\n---\nb: 2\n");
+        assert.deepStrictEqual(parsedAll13, [{ a: 1 }, { b: 2 }]);
       })
     );
   });
@@ -438,7 +449,8 @@ describe("Yaml", () => {
         if (!Result.isSuccess(syncResult)) {
           assert.fail("parseAllResult must succeed on valid input");
         }
-        assert.deepStrictEqual(syncResult.success, yield* Yaml.parseAll(valid));
+        const parsedAll14 = yield* Yaml.parseAll(valid);
+        assert.deepStrictEqual(syncResult.success, parsedAll14);
 
         const invalid = "a: 1\n---\nb: *missing\n";
         const error = yield* Effect.flip(Yaml.parseAll(invalid));
@@ -491,7 +503,8 @@ describe("Yaml", () => {
       Effect.gen(function* () {
         const value = { name: "Alice", nested: { list: [1, 2, true, null] } };
         const text = yield* Yaml.stringify(value);
-        assert.deepStrictEqual(yield* Yaml.parse(text), value);
+        const parsed15 = yield* Yaml.parse(text);
+        assert.deepStrictEqual(parsed15, value);
       })
     );
 
@@ -565,7 +578,8 @@ describe("Yaml", () => {
             assert.strictEqual(text, fixture(name));
             // The spilled output must parse back through OUR parser to the
             // same value (PR #322 taught the parser these compact forms).
-            assert.deepStrictEqual(yield* Yaml.parse(text), value);
+            const parsed16 = yield* Yaml.parse(text);
+            assert.deepStrictEqual(parsed16, value);
           })
         );
       }
@@ -578,13 +592,15 @@ describe("Yaml", () => {
           const quoted1025 = ` ${Str.repeat(1022)("a")}`;
           const spilled = yield* Yaml.stringify({ [quoted1025]: 1 });
           assert.isTrue(Str.startsWith("? '")(spilled), "1025-char rendered key must spill");
-          assert.deepStrictEqual(yield* Yaml.parse(spilled), { [quoted1025]: 1 });
+          const parsed17 = yield* Yaml.parse(spilled);
+          assert.deepStrictEqual(parsed17, { [quoted1025]: 1 });
           // …while a 1022-char source key renders as exactly 1024 chars and
           // stays implicit.
           const quoted1024 = ` ${Str.repeat(1021)("a")}`;
           const implicit = yield* Yaml.stringify({ [quoted1024]: 1 });
           assert.isFalse(Str.startsWith("? ")(implicit), "1024-char rendered key stays implicit");
-          assert.deepStrictEqual(yield* Yaml.parse(implicit), { [quoted1024]: 1 });
+          const parsed18 = yield* Yaml.parse(implicit);
+          assert.deepStrictEqual(parsed18, { [quoted1024]: 1 });
         })
       );
 
@@ -597,7 +613,8 @@ describe("Yaml", () => {
           );
           assert.notInclude(text, "? ");
           assert.isTrue(Str.startsWith("{")(text));
-          assert.deepStrictEqual(yield* Yaml.parse(text), { [long]: 1 });
+          const parsed19 = yield* Yaml.parse(text);
+          assert.deepStrictEqual(parsed19, { [long]: 1 });
         })
       );
 
@@ -611,19 +628,22 @@ describe("Yaml", () => {
           const seqVal = { [k1]: ["first", "second"] };
           const seqText = yield* Yaml.stringify(seqVal, YamlStringifyOptions.make({ indent: 4 }));
           assert.include(seqText, ": - first\n  - second");
-          assert.deepStrictEqual(yield* Yaml.parse(seqText), seqVal);
+          const parsed20 = yield* Yaml.parse(seqText);
+          assert.deepStrictEqual(parsed20, seqVal);
 
           // Flat two-pair map: sibling pairs must align at column 2.
           const mapVal = { [k1]: { "dep-one": "1.2.3", "dep-two": "4.5.6" } };
           const mapText = yield* Yaml.stringify(mapVal, YamlStringifyOptions.make({ indent: 4 }));
           assert.include(mapText, ": dep-one: 1.2.3\n  dep-two: 4.5.6");
-          assert.deepStrictEqual(yield* Yaml.parse(mapText), mapVal);
+          const parsed21 = yield* Yaml.parse(mapText);
+          assert.deepStrictEqual(parsed21, mapVal);
 
           // Nested map: children indent relative to the compact column.
           const nestedVal = { [k1]: { dependencies: { x: 1 } } };
           const nestedText = yield* Yaml.stringify(nestedVal, YamlStringifyOptions.make({ indent: 4 }));
           assert.include(nestedText, ": dependencies:\n      x: 1");
-          assert.deepStrictEqual(yield* Yaml.parse(nestedText), nestedVal);
+          const parsed22 = yield* Yaml.parse(nestedText);
+          assert.deepStrictEqual(parsed22, nestedVal);
         })
       );
 
@@ -635,7 +655,8 @@ describe("Yaml", () => {
           const spilledDefault = yield* Yaml.stringify(value);
           const spilledIndented = yield* Yaml.stringify(value, YamlStringifyOptions.make({ indentSequences: true }));
           assert.strictEqual(spilledDefault, spilledIndented);
-          assert.deepStrictEqual(yield* Yaml.parse(spilledDefault), value);
+          const parsed23 = yield* Yaml.parse(spilledDefault);
+          assert.deepStrictEqual(parsed23, value);
         })
       );
     });
@@ -649,24 +670,25 @@ describe("Yaml", () => {
 
       it.effect("default leaves a block sequence under a mapping key unindented", () =>
         Effect.gen(function* () {
-          assert.strictEqual(yield* Yaml.stringify({ key: ["a", "b"] }), "key:\n- a\n- b\n");
+          const stringify24 = yield* Yaml.stringify({ key: ["a", "b"] });
+          assert.strictEqual(stringify24, "key:\n- a\n- b\n");
         })
       );
 
       it.effect("true indents a block sequence under a mapping key one level", () =>
         Effect.gen(function* () {
-          assert.strictEqual(yield* Yaml.stringify({ key: ["a", "b"] }, indented), "key:\n  - a\n  - b\n");
+          const stringify25 = yield* Yaml.stringify({ key: ["a", "b"] }, indented);
+          assert.strictEqual(stringify25, "key:\n  - a\n  - b\n");
         })
       );
 
       it.effect("nested sequence-of-maps renders exactly in both modes", () =>
         Effect.gen(function* () {
           const value = { items: [{ name: "a", value: 1 }, { name: "b" }] };
-          assert.strictEqual(
-            yield* Yaml.stringify(value, indented),
-            "items:\n  - name: a\n    value: 1\n  - name: b\n"
-          );
-          assert.strictEqual(yield* Yaml.stringify(value), "items:\n- name: a\n  value: 1\n- name: b\n");
+          const stringify26 = yield* Yaml.stringify(value, indented);
+          assert.strictEqual(stringify26, "items:\n  - name: a\n    value: 1\n  - name: b\n");
+          const stringify27 = yield* Yaml.stringify(value);
+          assert.strictEqual(stringify27, "items:\n- name: a\n  value: 1\n- name: b\n");
         })
       );
 
@@ -674,31 +696,38 @@ describe("Yaml", () => {
         Effect.gen(function* () {
           const value = ["a", "b", { k: 1 }];
           const expected = "- a\n- b\n- k: 1\n";
-          assert.strictEqual(yield* Yaml.stringify(value), expected);
-          assert.strictEqual(yield* Yaml.stringify(value, indented), expected);
+          const stringify28 = yield* Yaml.stringify(value);
+          assert.strictEqual(stringify28, expected);
+          const stringify29 = yield* Yaml.stringify(value, indented);
+          assert.strictEqual(stringify29, expected);
         })
       );
 
       it.effect("deeper nesting indents each sequence relative to its key", () =>
         Effect.gen(function* () {
           const value = { a: { b: ["x", { c: ["y"] }] } };
-          assert.strictEqual(yield* Yaml.stringify(value, indented), "a:\n  b:\n    - x\n    - c:\n        - y\n");
-          assert.strictEqual(yield* Yaml.stringify(value), "a:\n  b:\n  - x\n  - c:\n    - y\n");
+          const stringify30 = yield* Yaml.stringify(value, indented);
+          assert.strictEqual(stringify30, "a:\n  b:\n    - x\n    - c:\n        - y\n");
+          const stringify31 = yield* Yaml.stringify(value);
+          assert.strictEqual(stringify31, "a:\n  b:\n  - x\n  - c:\n    - y\n");
         })
       );
 
       it.effect("sequence-of-sequences under a key keeps compact nested dashes", () =>
         Effect.gen(function* () {
           const value = { k: [["a", "b"], ["c"]] };
-          assert.strictEqual(yield* Yaml.stringify(value, indented), "k:\n  - - a\n    - b\n  - - c\n");
+          const stringify32 = yield* Yaml.stringify(value, indented);
+          assert.strictEqual(stringify32, "k:\n  - - a\n    - b\n  - - c\n");
         })
       );
 
       it.effect("a map with a sequence value inside a sequence item indents relative to the key", () =>
         Effect.gen(function* () {
           const value = [{ key: ["a"] }];
-          assert.strictEqual(yield* Yaml.stringify(value, indented), "- key:\n    - a\n");
-          assert.strictEqual(yield* Yaml.stringify(value), "- key:\n  - a\n");
+          const stringify33 = yield* Yaml.stringify(value, indented);
+          assert.strictEqual(stringify33, "- key:\n    - a\n");
+          const stringify34 = yield* Yaml.stringify(value);
+          assert.strictEqual(stringify34, "- key:\n  - a\n");
         })
       );
     });
@@ -711,13 +740,15 @@ describe("Yaml", () => {
 
       it.effect("default falls back to single quotes for a scalar requiring quoting", () =>
         Effect.gen(function* () {
-          assert.strictEqual(yield* Yaml.stringify({ version: "*" }), "version: '*'\n");
+          const stringify35 = yield* Yaml.stringify({ version: "*" });
+          assert.strictEqual(stringify35, "version: '*'\n");
         })
       );
 
       it.effect('"double" falls back to double quotes for a scalar requiring quoting', () =>
         Effect.gen(function* () {
-          assert.strictEqual(yield* Yaml.stringify({ version: "*" }, double), 'version: "*"\n');
+          const stringify36 = yield* Yaml.stringify({ version: "*" }, double);
+          assert.strictEqual(stringify36, 'version: "*"\n');
         })
       );
 
@@ -725,8 +756,10 @@ describe("Yaml", () => {
         Effect.gen(function* () {
           const value = { name: "alice", count: 3, flag: true };
           const expected = "name: alice\ncount: 3\nflag: true\n";
-          assert.strictEqual(yield* Yaml.stringify(value), expected);
-          assert.strictEqual(yield* Yaml.stringify(value, double), expected);
+          const stringify37 = yield* Yaml.stringify(value);
+          assert.strictEqual(stringify37, expected);
+          const stringify38 = yield* Yaml.stringify(value, double);
+          assert.strictEqual(stringify38, expected);
         })
       );
 
@@ -738,12 +771,14 @@ describe("Yaml", () => {
             allowBuilds: { "@parcel/watcher": true },
             allowedDeprecatedVersions: { "@types/acorn": "*" },
           };
+          const stringify39 = yield* Yaml.stringify(value);
           assert.strictEqual(
-            yield* Yaml.stringify(value),
+            stringify39,
             "allowBuilds:\n  '@parcel/watcher': true\nallowedDeprecatedVersions:\n  '@types/acorn': '*'\n"
           );
+          const stringify40 = yield* Yaml.stringify(value, double);
           assert.strictEqual(
-            yield* Yaml.stringify(value, double),
+            stringify40,
             'allowBuilds:\n  "@parcel/watcher": true\nallowedDeprecatedVersions:\n  "@types/acorn": "*"\n'
           );
         })
@@ -753,23 +788,23 @@ describe("Yaml", () => {
         Effect.gen(function* () {
           const value = { "@types/acorn": "*" };
           const flow = { defaultCollectionStyle: "flow" as const };
-          assert.strictEqual(yield* Yaml.stringify(value, YamlStringifyOptions.make(flow)), "{'@types/acorn': '*'}\n");
-          assert.strictEqual(
-            yield* Yaml.stringify(value, YamlStringifyOptions.make({ ...flow, quoteStyle: "double" })),
-            '{"@types/acorn": "*"}\n'
+          const stringify41 = yield* Yaml.stringify(value, YamlStringifyOptions.make(flow));
+          assert.strictEqual(stringify41, "{'@types/acorn': '*'}\n");
+          const stringify42 = yield* Yaml.stringify(
+            value,
+            YamlStringifyOptions.make({ ...flow, quoteStyle: "double" })
           );
+          assert.strictEqual(stringify42, '{"@types/acorn": "*"}\n');
         })
       );
 
       it.effect('an explicit defaultScalarStyle of "single-quoted" still wins', () =>
         Effect.gen(function* () {
-          assert.strictEqual(
-            yield* Yaml.stringify(
-              { name: "alice" },
-              YamlStringifyOptions.make({ defaultScalarStyle: "single-quoted", quoteStyle: "double" })
-            ),
-            "name: 'alice'\n"
+          const stringify43 = yield* Yaml.stringify(
+            { name: "alice" },
+            YamlStringifyOptions.make({ defaultScalarStyle: "single-quoted", quoteStyle: "double" })
           );
+          assert.strictEqual(stringify43, "name: 'alice'\n");
         })
       );
 
@@ -780,7 +815,8 @@ describe("Yaml", () => {
           const value = { quoted: 'say "hi" now: ok', tabbed: "a\tb: c" };
           const emitted = yield* Yaml.stringify(value, double);
           assert.strictEqual(emitted, 'quoted: "say \\"hi\\" now: ok"\ntabbed: "a\\tb: c"\n');
-          assert.deepStrictEqual(yield* Yaml.parse(emitted), value);
+          const parsed44 = yield* Yaml.parse(emitted);
+          assert.deepStrictEqual(parsed44, value);
         })
       );
 
@@ -788,16 +824,22 @@ describe("Yaml", () => {
         Effect.gen(function* () {
           const value = { text: "line one\nline two" };
           const expected = "text: |-\n  line one\n  line two\n";
-          assert.strictEqual(yield* Yaml.stringify(value), expected);
-          assert.strictEqual(yield* Yaml.stringify(value, double), expected);
+          const stringify45 = yield* Yaml.stringify(value);
+          assert.strictEqual(stringify45, expected);
+          const stringify46 = yield* Yaml.stringify(value, double);
+          assert.strictEqual(stringify46, expected);
         })
       );
 
       it.effect("round-trips the quoted forms back to the same value", () =>
         Effect.gen(function* () {
           const value = { "@types/acorn": "*", "a: b": " lead", numeric: "123" };
-          assert.deepStrictEqual(yield* Yaml.parse(yield* Yaml.stringify(value, double)), value);
-          assert.deepStrictEqual(yield* Yaml.parse(yield* Yaml.stringify(value)), value);
+          const stringify83 = yield* Yaml.stringify(value, double);
+          const parsed47 = yield* Yaml.parse(stringify83);
+          assert.deepStrictEqual(parsed47, value);
+          const stringify84 = yield* Yaml.stringify(value);
+          const parsed48 = yield* Yaml.parse(stringify84);
+          assert.deepStrictEqual(parsed48, value);
         })
       );
 
@@ -808,10 +850,10 @@ describe("Yaml", () => {
           // single quotes. `quoteCompat` is only the trigger that forces a
           // parsed-plain scalar through the quoting fallback.
           const doc = yield* YamlDocument.parse("date: 2024-01-15\n");
-          assert.strictEqual(
-            yield* doc.stringify(YamlStringifyOptions.make({ quoteCompat: "yaml-1.1", quoteStyle: "double" })),
-            'date: "2024-01-15"\n'
+          const stringify49 = yield* doc.stringify(
+            YamlStringifyOptions.make({ quoteCompat: "yaml-1.1", quoteStyle: "double" })
           );
+          assert.strictEqual(stringify49, 'date: "2024-01-15"\n');
         })
       );
 
@@ -853,7 +895,8 @@ describe("Yaml", () => {
             Effect.fnUntraced(function* ([value, expected]) {
               const emitted = yield* Yaml.stringify({ k: value }, auto);
               assert.strictEqual(emitted, expected, Str.isEmpty(value) ? "<empty>" : value);
-              assert.deepStrictEqual(yield* Yaml.parse(emitted), { k: value });
+              const parsed50 = yield* Yaml.parse(emitted);
+              assert.deepStrictEqual(parsed50, { k: value });
             }),
             { discard: true }
           )
@@ -861,10 +904,8 @@ describe("Yaml", () => {
 
         it.effect("applies to mapping keys and sequence items too", () =>
           Effect.gen(function* () {
-            assert.strictEqual(
-              yield* Yaml.stringify({ '"quoted" key': ["it's: x", "plain"] }, auto),
-              '\'"quoted" key\':\n- "it\'s: x"\n- plain\n'
-            );
+            const stringify51 = yield* Yaml.stringify({ '"quoted" key': ["it's: x", "plain"] }, auto);
+            assert.strictEqual(stringify51, '\'"quoted" key\':\n- "it\'s: x"\n- plain\n');
           })
         );
 
@@ -873,14 +914,17 @@ describe("Yaml", () => {
             const value = { k: 'a"\rb', c: 'x"\u0001' };
             const emitted = yield* Yaml.stringify(value, auto);
             assert.strictEqual(emitted, 'k: "a\\"\\rb"\nc: "x\\"\\x01"\n');
-            assert.deepStrictEqual(yield* Yaml.parse(emitted), value);
+            const parsed52 = yield* Yaml.parse(emitted);
+            assert.deepStrictEqual(parsed52, value);
           })
         );
 
         it.effect("leaves single and double unchanged for an interior tab", () =>
           Effect.gen(function* () {
-            assert.strictEqual(yield* Yaml.stringify({ k: "tab\there" }), 'k: "tab\\there"\n');
-            assert.strictEqual(yield* Yaml.stringify({ k: "tab\there" }, double), 'k: "tab\\there"\n');
+            const stringify53 = yield* Yaml.stringify({ k: "tab\there" });
+            assert.strictEqual(stringify53, 'k: "tab\\there"\n');
+            const stringify54 = yield* Yaml.stringify({ k: "tab\there" }, double);
+            assert.strictEqual(stringify54, 'k: "tab\\there"\n');
           })
         );
       });
@@ -959,7 +1003,8 @@ describe("Yaml", () => {
       it.effect("quotes every 1.1-coercible plain scalar (single quotes by default)", () =>
         Effect.gen(function* () {
           for (const [family, value] of coercible) {
-            assert.strictEqual(yield* Yaml.stringify({ k: value }, compat), `k: '${value}'\n`, `${family}: ${value}`);
+            const stringify55 = yield* Yaml.stringify({ k: value }, compat);
+            assert.strictEqual(stringify55, `k: '${value}'\n`, `${family}: ${value}`);
           }
         })
       );
@@ -967,7 +1012,8 @@ describe("Yaml", () => {
       it.effect("leaves strings no 1.1 parser coerces plain — the clean-output half", () =>
         Effect.gen(function* () {
           for (const [family, value] of stillPlain) {
-            assert.strictEqual(yield* Yaml.stringify({ k: value }, compat), `k: ${value}\n`, `${family}: ${value}`);
+            const stringify56 = yield* Yaml.stringify({ k: value }, compat);
+            assert.strictEqual(stringify56, `k: ${value}\n`, `${family}: ${value}`);
           }
         })
       );
@@ -977,66 +1023,71 @@ describe("Yaml", () => {
           // Every value here is already quoted (or escaped) by the 1.2 Core
           // Schema gate; the compat mode must not move a byte of it.
           const value = { a: "true", b: "null", c: "0x1F", d: "123", e: "1.5", f: "", g: "*star" };
-          assert.strictEqual(yield* Yaml.stringify(value), yield* Yaml.stringify(value, compat));
+          const stringify57 = yield* Yaml.stringify(value);
+          const stringify85 = yield* Yaml.stringify(value, compat);
+          assert.strictEqual(stringify57, stringify85);
         })
       );
 
       it.effect("default (option absent) output is byte-identical to the released form", () =>
         Effect.gen(function* () {
-          assert.strictEqual(yield* Yaml.stringify({ yes: "2024-01-15" }), "yes: 2024-01-15\n");
+          const stringify58 = yield* Yaml.stringify({ yes: "2024-01-15" });
+          assert.strictEqual(stringify58, "yes: 2024-01-15\n");
         })
       );
 
       it.effect("composes with quoteStyle — the quote character stays its decision", () =>
         Effect.gen(function* () {
-          assert.strictEqual(
-            yield* Yaml.stringify(
-              { d: "2024-01-15" },
-              YamlStringifyOptions.make({ quoteCompat: "yaml-1.1", quoteStyle: "double" })
-            ),
-            'd: "2024-01-15"\n'
+          const stringify59 = yield* Yaml.stringify(
+            { d: "2024-01-15" },
+            YamlStringifyOptions.make({ quoteCompat: "yaml-1.1", quoteStyle: "double" })
           );
+          assert.strictEqual(stringify59, 'd: "2024-01-15"\n');
         })
       );
 
       it.effect("quotes 1.1-coercible mapping keys in block and flow styles", () =>
         Effect.gen(function* () {
           const value = { yes: 1, "1:30": "x" };
-          assert.strictEqual(yield* Yaml.stringify(value, compat), "'yes': 1\n'1:30': x\n");
-          assert.strictEqual(
-            yield* Yaml.stringify(
-              value,
-              YamlStringifyOptions.make({ defaultCollectionStyle: "flow", quoteCompat: "yaml-1.1" })
-            ),
-            "{'yes': 1, '1:30': x}\n"
+          const stringify60 = yield* Yaml.stringify(value, compat);
+          assert.strictEqual(stringify60, "'yes': 1\n'1:30': x\n");
+          const stringify61 = yield* Yaml.stringify(
+            value,
+            YamlStringifyOptions.make({ defaultCollectionStyle: "flow", quoteCompat: "yaml-1.1" })
           );
+          assert.strictEqual(stringify61, "{'yes': 1, '1:30': x}\n");
         })
       );
 
       it.effect("actual booleans and numbers stay unquoted — only strings are at stake", () =>
         Effect.gen(function* () {
-          assert.strictEqual(yield* Yaml.stringify({ a: true, b: 90, c: 1.5 }, compat), "a: true\nb: 90\nc: 1.5\n");
+          const stringify62 = yield* Yaml.stringify({ a: true, b: 90, c: 1.5 }, compat);
+          assert.strictEqual(stringify62, "a: true\nb: 90\nc: 1.5\n");
         })
       );
 
       it.effect("round-trips through the package's own parser unchanged", () =>
         Effect.gen(function* () {
           const value = R.fromEntries(A.map(coercible, ([, v], i) => [`k${i}`, v]));
-          assert.deepStrictEqual(yield* Yaml.parse(yield* Yaml.stringify(value, compat)), value);
+          const stringify86 = yield* Yaml.stringify(value, compat);
+          const parsed63 = yield* Yaml.parse(stringify86);
+          assert.deepStrictEqual(parsed63, value);
         })
       );
 
       it.effect("applies on the node path — YamlDocument#stringify quotes the 1.1 delta", () =>
         Effect.gen(function* () {
           const doc = yield* YamlDocument.parse("date: 2024-01-15\nname: alice\n");
-          assert.strictEqual(yield* doc.stringify(compat), "date: '2024-01-15'\nname: alice\n");
+          const stringify64 = yield* doc.stringify(compat);
+          assert.strictEqual(stringify64, "date: '2024-01-15'\nname: alice\n");
         })
       );
 
       it.effect("a tagged scalar is exempt, exactly like the 1.2 type-conflict check", () =>
         Effect.gen(function* () {
           const doc = yield* YamlDocument.parse("date: !!str 2024-01-15\n");
-          assert.strictEqual(yield* doc.stringify(compat), "date: !!str 2024-01-15\n");
+          const stringify65 = yield* doc.stringify(compat);
+          assert.strictEqual(stringify65, "date: !!str 2024-01-15\n");
         })
       );
 
@@ -1084,7 +1135,8 @@ describe("Yaml", () => {
               Str.startsWith('"')(scalar) || Str.startsWith("'")(scalar),
               `expected a quoted scalar for ${label}, got plain: ${yield* S.encodeEffect(JsonString)(scalar)}`
             );
-            assert.deepStrictEqual(yield* Yaml.parse(text), { key: value });
+            const parsed66 = yield* Yaml.parse(text);
+            assert.deepStrictEqual(parsed66, { key: value });
           })
         );
       }
@@ -1099,7 +1151,8 @@ describe("Yaml", () => {
             Str.includes("|")(text),
             `expected a block scalar, got: ${yield* S.encodeEffect(JsonString)(text)}`
           );
-          assert.deepStrictEqual(yield* Yaml.parse(text), value);
+          const parsed67 = yield* Yaml.parse(text);
+          assert.deepStrictEqual(parsed67, value);
         })
       );
     });
@@ -1108,22 +1161,27 @@ describe("Yaml", () => {
       it.effect("a scalar carrying a flow indicator is quoted inside a flow sequence", () =>
         Effect.gen(function* () {
           const flow = YamlStringifyOptions.make({ defaultCollectionStyle: "flow" });
-          assert.strictEqual(yield* Yaml.stringify({ a: ["p, q", "y"] }, flow), "{a: ['p, q', y]}\n");
-          assert.strictEqual(yield* Yaml.stringify({ a: ["p}", "y"] }, flow), "{a: ['p}', y]}\n");
-          assert.strictEqual(yield* Yaml.stringify({ a: ["x[0]"] }, flow), "{a: ['x[0]']}\n");
+          const stringify68 = yield* Yaml.stringify({ a: ["p, q", "y"] }, flow);
+          assert.strictEqual(stringify68, "{a: ['p, q', y]}\n");
+          const stringify69 = yield* Yaml.stringify({ a: ["p}", "y"] }, flow);
+          assert.strictEqual(stringify69, "{a: ['p}', y]}\n");
+          const stringify70 = yield* Yaml.stringify({ a: ["x[0]"] }, flow);
+          assert.strictEqual(stringify70, "{a: ['x[0]']}\n");
         })
       );
 
       it.effect("a flow mapping key or value carrying a flow indicator is quoted", () =>
         Effect.gen(function* () {
           const flow = YamlStringifyOptions.make({ defaultCollectionStyle: "flow" });
-          assert.strictEqual(yield* Yaml.stringify({ "k,1": "p,q" }, flow), "{'k,1': 'p,q'}\n");
+          const stringify71 = yield* Yaml.stringify({ "k,1": "p,q" }, flow);
+          assert.strictEqual(stringify71, "{'k,1': 'p,q'}\n");
         })
       );
 
       it.effect("the same scalars stay plain in block context", () =>
         Effect.gen(function* () {
-          assert.strictEqual(yield* Yaml.stringify({ a: ["p, q", "x[0]"] }), "a:\n- p, q\n- x[0]\n");
+          const stringify72 = yield* Yaml.stringify({ a: ["p, q", "x[0]"] });
+          assert.strictEqual(stringify72, "a:\n- p, q\n- x[0]\n");
         })
       );
 
@@ -1132,7 +1190,8 @@ describe("Yaml", () => {
           const flow = YamlStringifyOptions.make({ defaultCollectionStyle: "flow" });
           const value = { a: ["p, q", "p}", "[x", "{y", "k]"], "b,c": { "d}": "e{" } };
           const text = yield* Yaml.stringify(value, flow);
-          assert.deepStrictEqual(yield* Yaml.parse(text), value);
+          const parsed73 = yield* Yaml.parse(text);
+          assert.deepStrictEqual(parsed73, value);
         })
       );
     });
@@ -1151,7 +1210,8 @@ describe("Yaml", () => {
           // bounded — never wildly over the requested width).
           for (const line of lines) assert.isAtMost(line.length, 40);
           // A fold is a semantically transparent break: it re-parses identically.
-          assert.deepStrictEqual(yield* Yaml.parse(wrapped), value);
+          const parsed74 = yield* Yaml.parse(wrapped);
+          assert.deepStrictEqual(parsed74, value);
         })
       );
 
@@ -1164,7 +1224,8 @@ describe("Yaml", () => {
               YamlStringifyOptions.make({ lineWidth: 30, defaultScalarStyle })
             );
             assert.isAbove(Str.split("\n")(Str.trimEnd(wrapped)).length, 1);
-            assert.deepStrictEqual(yield* Yaml.parse(wrapped), value);
+            const parsed75 = yield* Yaml.parse(wrapped);
+            assert.deepStrictEqual(parsed75, value);
           }
         })
       );
@@ -1173,11 +1234,13 @@ describe("Yaml", () => {
         Effect.gen(function* () {
           const seq = yield* Yaml.stringify([long], YamlStringifyOptions.make({ lineWidth: 30 }));
           assert.isAbove(Str.split("\n")(Str.trimEnd(seq)).length, 1);
-          assert.deepStrictEqual(yield* Yaml.parse(seq), [long]);
+          const parsed76 = yield* Yaml.parse(seq);
+          assert.deepStrictEqual(parsed76, [long]);
 
           const root = yield* Yaml.stringify(long, YamlStringifyOptions.make({ lineWidth: 30 }));
           assert.isAbove(Str.split("\n")(Str.trimEnd(root)).length, 1);
-          assert.strictEqual(yield* Yaml.parse(root), long);
+          const parsed77 = yield* Yaml.parse(root);
+          assert.strictEqual(parsed77, long);
         })
       );
 
@@ -1188,7 +1251,8 @@ describe("Yaml", () => {
           const value = { text: `${long}\nsecond line` };
           const out = yield* Yaml.stringify(value, YamlStringifyOptions.make({ lineWidth: 20 }));
           assert.isTrue(A.some(Str.split("\n")(out), (l) => l.length > 40));
-          assert.deepStrictEqual(yield* Yaml.parse(out), value);
+          const parsed78 = yield* Yaml.parse(out);
+          assert.deepStrictEqual(parsed78, value);
         })
       );
 
@@ -1227,7 +1291,8 @@ describe("Yaml", () => {
         if (!Result.isSuccess(result)) {
           assert.fail("parseResult must succeed on valid input");
         }
-        assert.deepStrictEqual(result.success, yield* Yaml.parse(text));
+        const parsed79 = yield* Yaml.parse(text);
+        assert.deepStrictEqual(result.success, parsed79);
       })
     );
 
@@ -1249,7 +1314,8 @@ describe("Yaml", () => {
         if (!Result.isSuccess(result)) {
           assert.fail("stringifyResult must succeed on valid input");
         }
-        assert.strictEqual(result.success, yield* Yaml.stringify(value));
+        const stringify80 = yield* Yaml.stringify(value);
+        assert.strictEqual(result.success, stringify80);
       })
     );
 
@@ -1542,8 +1608,10 @@ describe("Yaml", () => {
         const codec = Yaml.allFromString();
         const parsed = yield* Yaml.parseAll("");
         assert.deepStrictEqual(parsed, [null]);
-        assert.deepStrictEqual(yield* S.decodeEffect(codec)(""), parsed);
-        assert.strictEqual(yield* S.encodeEffect(codec)([]), "");
+        const value81 = yield* S.decodeEffect(codec)("");
+        assert.deepStrictEqual(value81, parsed);
+        const value82 = yield* S.encodeEffect(codec)([]);
+        assert.strictEqual(value82, "");
       })
     );
 

@@ -35,7 +35,8 @@ describe("TsconfigLoaderSync parser properties", () => {
           path,
         });
         assert.isTrue(S.toEquivalence(TsconfigJson)(reparsed, parsed));
-        assert.strictEqual(yield* S.encodeEffect(TsconfigJsonFromString)(reparsed), formatted);
+        const value1 = yield* S.encodeEffect(TsconfigJsonFromString)(reparsed);
+        assert.strictEqual(value1, formatted);
       }),
     runs
   );
@@ -51,20 +52,18 @@ describe("TsconfigLoaderSync parser properties", () => {
           "/project/child.json": '{"extends":"./tsconfig.json","compilerOptions":{"noEmit":true}}',
         });
         const sync = { fileSystem: memory.sync, path };
-        assert.deepStrictEqual(
-          TsconfigLoaderSync.resolve("/project/child.json", sync),
-          yield* TsconfigLoader.resolve("/project/child.json").pipe(
-            Effect.provideService(FileSystem.FileSystem, memory.fileSystem),
-            Effect.provideService(Path.Path, path)
-          )
+        const argument = TsconfigLoaderSync.resolve("/project/child.json", sync);
+        const pipe1 = yield* TsconfigLoader.resolve("/project/child.json").pipe(
+          Effect.provideService(FileSystem.FileSystem, memory.fileSystem),
+          Effect.provideService(Path.Path, path)
         );
-        assert.deepStrictEqual(
-          TsconfigLoaderSync.compilerOptions("/project/child.json", sync),
-          yield* TsconfigLoader.compilerOptions("/project/child.json").pipe(
-            Effect.provideService(FileSystem.FileSystem, memory.fileSystem),
-            Effect.provideService(Path.Path, path)
-          )
+        assert.deepStrictEqual(argument, pipe1);
+        const argument1 = TsconfigLoaderSync.compilerOptions("/project/child.json", sync);
+        const pipe2 = yield* TsconfigLoader.compilerOptions("/project/child.json").pipe(
+          Effect.provideService(FileSystem.FileSystem, memory.fileSystem),
+          Effect.provideService(Path.Path, path)
         );
+        assert.deepStrictEqual(argument1, pipe2);
       }),
     runs
   );

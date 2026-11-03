@@ -191,9 +191,11 @@ describe("@beep/file-processing", () => {
         expect(decodedOperationId).toBe(operationId);
         expect(reencodedSource).toEqual(encodedSource);
         expect(decodedExtract.operationKind).toBe("extract");
-        expect(yield* encodeExtractFileOperation(decodedExtract)).toEqual(encodedExtract);
+        const encodedExtractFileOperation = yield* encodeExtractFileOperation(decodedExtract);
+        expect(encodedExtractFileOperation).toEqual(encodedExtract);
         expect(decodedProcess.operationKind).toBe("process");
-        expect(yield* encodeProcessFileOperation(decodedProcess)).toEqual(encodedProcess);
+        const encodedProcessFileOperation = yield* encodeProcessFileOperation(decodedProcess);
+        expect(encodedProcessFileOperation).toEqual(encodedProcess);
       }),
     { arbitrary: fcRuns(50) }
   );

@@ -530,14 +530,13 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal merge-time comp
       const lines = `${yield* encodeReceiptJson(red)}\n${yield* encodeReceiptJson(newer)}\n`;
       yield* writeProjectFile(".beep/goals/completion-receipts.ndjson", lines);
       const data = yield* recorded();
-      const io = recordedIo(data, yield* encodeGoalManifestJson(value));
+      const encodedGoalManifestJson = yield* encodeGoalManifestJson(value);
+      const io = recordedIo(data, encodedGoalManifestJson);
+      const pipe1 = yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
+        Effect.provideService(GoalCompletionIo, io)
+      );
       assertSome(
-        O.map(
-          yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
-            Effect.provideService(GoalCompletionIo, io)
-          ),
-          (row) => row.outcome
-        ),
+        O.map(pipe1, (row) => row.outcome),
         "verified"
       );
     })

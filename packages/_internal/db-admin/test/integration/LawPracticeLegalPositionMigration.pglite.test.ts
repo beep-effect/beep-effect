@@ -291,11 +291,16 @@ const migrateAndRecord = Effect.fnUntraced(function* () {
   yield* db.insert(LawPracticeDbSchema.correctionDelta).values(correctionInsert);
   yield* db.insert(LawPracticeDbSchema.legalOppositionCandidate).values(candidateInsert);
 
-  expect(yield* db.select().from(LawPracticeDbSchema.legalPositionRelator)).toHaveLength(2);
-  expect(yield* db.select().from(LawPracticeDbSchema.actFrame)).toHaveLength(1);
-  expect(yield* db.select().from(LawPracticeDbSchema.powerExercise)).toHaveLength(1);
-  expect(yield* db.select().from(LawPracticeDbSchema.correctionDelta)).toHaveLength(1);
-  expect(yield* db.select().from(LawPracticeDbSchema.legalOppositionCandidate)).toHaveLength(1);
+  const from1 = yield* db.select().from(LawPracticeDbSchema.legalPositionRelator);
+  expect(from1).toHaveLength(2);
+  const from2 = yield* db.select().from(LawPracticeDbSchema.actFrame);
+  expect(from2).toHaveLength(1);
+  const from3 = yield* db.select().from(LawPracticeDbSchema.powerExercise);
+  expect(from3).toHaveLength(1);
+  const from4 = yield* db.select().from(LawPracticeDbSchema.correctionDelta);
+  expect(from4).toHaveLength(1);
+  const from5 = yield* db.select().from(LawPracticeDbSchema.legalOppositionCandidate);
+  expect(from5).toHaveLength(1);
 
   return sql;
 });

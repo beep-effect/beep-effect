@@ -103,7 +103,8 @@ const listSourceFiles = Effect.fn("AgentEffectivenessEvalScorer.listSourceFiles"
         if (entry === "node_modules" || entry === "dist" || entry === "build" || entry === ".turbo") {
           continue;
         }
-        files = A.appendAll(files, yield* walk(absolutePath));
+        const walk1 = yield* walk(absolutePath);
+        files = A.appendAll(files, walk1);
         continue;
       }
 
@@ -115,7 +116,8 @@ const listSourceFiles = Effect.fn("AgentEffectivenessEvalScorer.listSourceFiles"
     return files;
   });
 
-  return A.sort(yield* walk(root), Order.String);
+  const walk2 = yield* walk(root);
+  return A.sort(walk2, Order.String);
 });
 
 /**

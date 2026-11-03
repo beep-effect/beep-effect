@@ -405,6 +405,7 @@ export class TerminalEnv extends Context.Service<TerminalEnv, TerminalEnvShape>(
     if (O.isSome(ambient)) return ambient.value.stdout.color;
     const stdio = yield* Stdio.Stdio;
     const isTTY = yield* stdio.stdoutIsTerminal;
-    return colorDepth(yield* readEnv(colorKeys), isTTY);
+    const readEnv1 = yield* readEnv(colorKeys);
+    return colorDepth(readEnv1, isTTY);
   });
 }

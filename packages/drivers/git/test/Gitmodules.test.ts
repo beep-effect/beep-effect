@@ -402,7 +402,8 @@ describe("Gitmodules round-1 codec regressions", () => {
         ],
       });
       const text = yield* S.encodeEffect(Gitmodules.FromString)(modules);
-      assert.deepStrictEqual(yield* S.decodeEffect(Gitmodules.FromString)(text), modules);
+      const value1 = yield* S.decodeEffect(Gitmodules.FromString)(text);
+      assert.deepStrictEqual(value1, modules);
     })
   );
 

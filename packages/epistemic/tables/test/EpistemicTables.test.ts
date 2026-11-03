@@ -728,22 +728,18 @@ describe("EpistemicTables", () => {
       const claim = yield* decodeUnknownCandidateClaimModel(candidateClaimInput(10));
       const insert = yield* Effect.fromResult(CandidateClaim.toCandidateClaimInsert(claim));
 
-      expectConverterFailure(
-        yield* converterFailure(CandidateClaim.toCandidateClaimInsert(withUnencodablePublicId(claim))),
-        "CandidateClaimConverterError",
-        "toInsert"
+      const converterFailure1 = yield* converterFailure(
+        CandidateClaim.toCandidateClaimInsert(withUnencodablePublicId(claim))
       );
-      expectConverterFailure(
-        yield* converterFailure(
-          CandidateClaim.fromCandidateClaimRow({
-            ...insert,
-            id: 10,
-            publicId: 42,
-          } as unknown as CandidateClaim.CandidateClaimRow)
-        ),
-        "CandidateClaimConverterError",
-        "fromRow"
+      expectConverterFailure(converterFailure1, "CandidateClaimConverterError", "toInsert");
+      const converterFailure2 = yield* converterFailure(
+        CandidateClaim.fromCandidateClaimRow({
+          ...insert,
+          id: 10,
+          publicId: 42,
+        } as unknown as CandidateClaim.CandidateClaimRow)
       );
+      expectConverterFailure(converterFailure2, "CandidateClaimConverterError", "fromRow");
     })
   );
 
@@ -753,22 +749,18 @@ describe("EpistemicTables", () => {
       const disposition = yield* decodeUnknownClaimDispositionModel(claimDispositionInput(10));
       const insert = yield* Effect.fromResult(ClaimDisposition.toClaimDispositionInsert(disposition));
 
-      expectConverterFailure(
-        yield* converterFailure(ClaimDisposition.toClaimDispositionInsert(withUnencodablePublicId(disposition))),
-        "ClaimDispositionConverterError",
-        "toInsert"
+      const converterFailure3 = yield* converterFailure(
+        ClaimDisposition.toClaimDispositionInsert(withUnencodablePublicId(disposition))
       );
-      expectConverterFailure(
-        yield* converterFailure(
-          ClaimDisposition.fromClaimDispositionRow({
-            ...insert,
-            id: 10,
-            publicId: 42,
-          } as unknown as ClaimDisposition.ClaimDispositionRow)
-        ),
-        "ClaimDispositionConverterError",
-        "fromRow"
+      expectConverterFailure(converterFailure3, "ClaimDispositionConverterError", "toInsert");
+      const converterFailure4 = yield* converterFailure(
+        ClaimDisposition.fromClaimDispositionRow({
+          ...insert,
+          id: 10,
+          publicId: 42,
+        } as unknown as ClaimDisposition.ClaimDispositionRow)
       );
+      expectConverterFailure(converterFailure4, "ClaimDispositionConverterError", "fromRow");
     })
   );
 
@@ -778,21 +770,17 @@ describe("EpistemicTables", () => {
       const version = yield* decodeUnknownEdgeVersionModel(edgeVersionInput(10));
       const insert = yield* Effect.fromResult(EdgeVersion.toEdgeVersionInsert(version));
 
-      expectConverterFailure(
-        yield* converterFailure(EdgeVersion.toEdgeVersionInsert(withUnencodablePublicId(version))),
-        "EdgeVersionConverterError",
-        "toInsert"
+      const converterFailure5 = yield* converterFailure(
+        EdgeVersion.toEdgeVersionInsert(withUnencodablePublicId(version))
       );
-      expectConverterFailure(
-        yield* converterFailure(
-          EdgeVersion.fromEdgeVersionRow({
-            ...edgeVersionRow(insert, 10),
-            publicId: 42,
-          } as unknown as EdgeVersion.EdgeVersionRow)
-        ),
-        "EdgeVersionConverterError",
-        "fromRow"
+      expectConverterFailure(converterFailure5, "EdgeVersionConverterError", "toInsert");
+      const converterFailure6 = yield* converterFailure(
+        EdgeVersion.fromEdgeVersionRow({
+          ...edgeVersionRow(insert, 10),
+          publicId: 42,
+        } as unknown as EdgeVersion.EdgeVersionRow)
       );
+      expectConverterFailure(converterFailure6, "EdgeVersionConverterError", "fromRow");
     })
   );
 
@@ -802,22 +790,18 @@ describe("EpistemicTables", () => {
       const record = yield* decodeUnknownUsageRecordModel(usageRecordInput(10));
       const insert = yield* Effect.fromResult(UsageRecord.toUsageRecordInsert(record));
 
-      expectConverterFailure(
-        yield* converterFailure(UsageRecord.toUsageRecordInsert(withUnencodablePublicId(record))),
-        "UsageRecordConverterError",
-        "toInsert"
+      const converterFailure7 = yield* converterFailure(
+        UsageRecord.toUsageRecordInsert(withUnencodablePublicId(record))
       );
-      expectConverterFailure(
-        yield* converterFailure(
-          UsageRecord.fromUsageRecordRow({
-            ...insert,
-            id: 10,
-            publicId: 42,
-          } as unknown as UsageRecord.UsageRecordRow)
-        ),
-        "UsageRecordConverterError",
-        "fromRow"
+      expectConverterFailure(converterFailure7, "UsageRecordConverterError", "toInsert");
+      const converterFailure8 = yield* converterFailure(
+        UsageRecord.fromUsageRecordRow({
+          ...insert,
+          id: 10,
+          publicId: 42,
+        } as unknown as UsageRecord.UsageRecordRow)
       );
+      expectConverterFailure(converterFailure8, "UsageRecordConverterError", "fromRow");
     })
   );
 

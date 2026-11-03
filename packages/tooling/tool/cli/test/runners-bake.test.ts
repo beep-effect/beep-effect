@@ -201,7 +201,8 @@ describe("runner bake schemas", () => {
         steps: [],
       });
       const encoded = yield* BakePlanJson.encode(plan);
-      expect(yield* BakePlanJson.decode(encoded)).toStrictEqual(plan);
+      const decoded1 = yield* BakePlanJson.decode(encoded);
+      expect(decoded1).toStrictEqual(plan);
     })
   );
 
@@ -209,7 +210,8 @@ describe("runner bake schemas", () => {
     Effect.gen(function* () {
       const original = report(O.some("ami-00112233445566778"));
       const encoded = yield* BakeReportJson.encode(original);
-      expect(yield* BakeReportJson.decode(encoded)).toStrictEqual(original);
+      const decoded2 = yield* BakeReportJson.decode(encoded);
+      expect(decoded2).toStrictEqual(original);
     })
   );
 
@@ -219,7 +221,8 @@ describe("runner bake schemas", () => {
     ([original]) =>
       Effect.gen(function* () {
         const encoded = yield* BakeReportJson.encode(BakeReport.make(original));
-        expect(yield* BakeReportJson.decode(encoded)).toStrictEqual(BakeReport.make(original));
+        const decoded3 = yield* BakeReportJson.decode(encoded);
+        expect(decoded3).toStrictEqual(BakeReport.make(original));
       }),
     { arbitrary: fcRuns(100) }
   );
@@ -323,9 +326,8 @@ describe("runner image manifest checks", () => {
         )
       );
       expect(error.message).toBe("runners bake --check: intended AMI manifest is stale.");
-      expect(yield* TestConsole.logLines).toStrictEqual([
-        "AMI: ami-0123456789abcdef0\nlockfile: stale\nbun version: stale\nfresh: no",
-      ]);
+      const logLines4 = yield* TestConsole.logLines;
+      expect(logLines4).toStrictEqual(["AMI: ami-0123456789abcdef0\nlockfile: stale\nbun version: stale\nfresh: no"]);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 });
@@ -368,9 +370,12 @@ describe("runner bake report writer", () => {
 describe("runner bake planning and argv", () => {
   it.effect("parses plan, check, and default bake modes", () =>
     Effect.gen(function* () {
-      expect(yield* resolveBakeMode(true, false)).toBe("plan");
-      expect(yield* resolveBakeMode(false, true)).toBe("check");
-      expect(yield* resolveBakeMode(false, false)).toBe("bake");
+      const resolvedBakeMode = yield* resolveBakeMode(true, false);
+      expect(resolvedBakeMode).toBe("plan");
+      const resolvedBakeMode5 = yield* resolveBakeMode(false, true);
+      expect(resolvedBakeMode5).toBe("check");
+      const resolvedBakeMode6 = yield* resolveBakeMode(false, false);
+      expect(resolvedBakeMode6).toBe("bake");
       const error = yield* Effect.flip(resolveBakeMode(true, true));
       expect(error.message).toBe("runners bake: --plan and --check are mutually exclusive.");
     })
@@ -381,7 +386,8 @@ describe("runner bake planning and argv", () => {
       yield* runWithStubService(true, { ...bakeOptions(), plan: true });
       yield* runWithStubService(true, { ...bakeOptions(), check: true });
       yield* runWithStubService(true, bakeOptions());
-      expect(yield* TestConsole.logLines).toStrictEqual([
+      const logLines7 = yield* TestConsole.logLines;
+      expect(logLines7).toStrictEqual([
         "lockfile sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nbun version: 1.3.14\ngit revision: 0123456789abcdef0123456789abcdef01234567\nrequired flags: --subnet, --security-group\nresolve-base-ami: aws ssm get-parameter",
         "AMI: ami-0123456789abcdef0\nlockfile: fresh\nbun version: fresh\nfresh: yes",
         "baked AMI: ami-0123456789abcdef0\nbase AMI: ami-0fedcba9876543210\nlockfile sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nbun version: 1.3.14\npin: cd infra/ci-runners && pulumi config set ciFleetController:amiId ami-0123456789abcdef0 --stack production",
@@ -393,9 +399,8 @@ describe("runner bake planning and argv", () => {
     Effect.gen(function* () {
       const error = yield* Effect.flip(runWithStubService(false, { ...bakeOptions(), check: true }));
       expect(error.message).toBe("runners bake --check: live AMI is stale.");
-      expect(yield* TestConsole.logLines).toStrictEqual([
-        "AMI: ami-0123456789abcdef0\nlockfile: stale\nbun version: stale\nfresh: no",
-      ]);
+      const logLines8 = yield* TestConsole.logLines;
+      expect(logLines8).toStrictEqual(["AMI: ami-0123456789abcdef0\nlockfile: stale\nbun version: stale\nfresh: no"]);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -860,7 +865,8 @@ describe("runner bake planning and argv", () => {
           yield* fs.writeFileString(filePath, source);
           yield* fs.chmod(filePath, 0o755);
         });
-        const bunVersion = Str.trim(yield* fs.readFileString(path.join(repoRoot, ".bun-version")));
+        const readFileString9 = yield* fs.readFileString(path.join(repoRoot, ".bun-version"));
+        const bunVersion = Str.trim(readFileString9);
         yield* writeExecutable(
           "bun",
           `#!/bin/sh\n[ "$1" = "--version" ] && { printf '%s\\n' '${bunVersion}'; exit 0; }\nexit 0\n`
@@ -884,7 +890,8 @@ describe("runner bake planning and argv", () => {
         });
 
         expect(result.exitCode).not.toBe(0);
-        expect(yield* fs.exists(curlCapture)).toBe(false);
+        const exists10 = yield* fs.exists(curlCapture);
+        expect(exists10).toBe(false);
       })
     );
   });

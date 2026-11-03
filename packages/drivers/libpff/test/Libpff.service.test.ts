@@ -96,11 +96,13 @@ describe("@beep/libpff", () => {
     Effect.fnUntraced(function* ([sourceArtifact, exportOperation]) {
       const encodedSourceArtifact = yield* encodeSourceArtifact(sourceArtifact);
       const decodedSourceArtifact = yield* decodeSourceArtifact(encodedSourceArtifact);
-      expect(yield* encodeSourceArtifact(decodedSourceArtifact)).toEqual(encodedSourceArtifact);
+      const encodedSourceArtifact1 = yield* encodeSourceArtifact(decodedSourceArtifact);
+      expect(encodedSourceArtifact1).toEqual(encodedSourceArtifact);
 
       const encodedExportOperation = yield* encodeExportArchiveOperation(exportOperation);
       const decodedExportOperation = yield* decodeExportArchiveOperation(encodedExportOperation);
-      expect(yield* encodeExportArchiveOperation(decodedExportOperation)).toEqual(encodedExportOperation);
+      const encodedExportArchiveOperation = yield* encodeExportArchiveOperation(decodedExportOperation);
+      expect(encodedExportArchiveOperation).toEqual(encodedExportOperation);
     }),
     { arbitrary: fcRuns(25) }
   );
@@ -116,19 +118,23 @@ describe("@beep/libpff", () => {
     Effect.fnUntraced(function* ([config, options, error, record]) {
       const encodedConfig = yield* encodePffexportEngineConfig(config);
       const decodedConfig = yield* decodePffexportEngineConfig(encodedConfig);
-      expect(yield* encodePffexportEngineConfig(decodedConfig)).toEqual(encodedConfig);
+      const encodedPffexportEngineConfig = yield* encodePffexportEngineConfig(decodedConfig);
+      expect(encodedPffexportEngineConfig).toEqual(encodedConfig);
 
       const encodedOptions = yield* encodeLibpffFileProcessingEngineOptions(options);
       const decodedOptions = yield* decodeLibpffFileProcessingEngineOptions(encodedOptions);
-      expect(yield* encodeLibpffFileProcessingEngineOptions(decodedOptions)).toEqual(encodedOptions);
+      const encodedLibpffFileProcessingEngineOptions = yield* encodeLibpffFileProcessingEngineOptions(decodedOptions);
+      expect(encodedLibpffFileProcessingEngineOptions).toEqual(encodedOptions);
 
       const encodedError = yield* encodeLibpffError(error);
       const decodedError = yield* decodeLibpffError(encodedError);
-      expect(yield* encodeLibpffError(decodedError)).toEqual(encodedError);
+      const encodedLibpffError = yield* encodeLibpffError(decodedError);
+      expect(encodedLibpffError).toEqual(encodedError);
 
       const encodedRecord = yield* encodePffexportMessageRecord(record);
       const decodedRecord = yield* decodePffexportMessageRecord(encodedRecord);
-      expect(yield* encodePffexportMessageRecord(decodedRecord)).toEqual(encodedRecord);
+      const encodedPffexportMessageRecord = yield* encodePffexportMessageRecord(decodedRecord);
+      expect(encodedPffexportMessageRecord).toEqual(encodedRecord);
     }),
     { arbitrary: fcRuns(25) }
   );
@@ -146,7 +152,8 @@ describe("@beep/libpff", () => {
         })
       );
 
-      expect(yield* encodePffexportEngineConfig(config)).toStrictEqual({
+      const encodedPffexportEngineConfig2 = yield* encodePffexportEngineConfig(config);
+      expect(encodedPffexportEngineConfig2).toStrictEqual({
         existingExportPolicy: "fail",
         exportFormat: "text",
         exportMode: "items",
@@ -154,11 +161,13 @@ describe("@beep/libpff", () => {
         pffexportPath: "pffexport",
         systemdRunPath: "systemd-run",
       });
-      expect(yield* encodeLibpffError(errorWithoutContext)).toStrictEqual({
+      const encodedLibpffError3 = yield* encodeLibpffError(errorWithoutContext);
+      expect(encodedLibpffError3).toStrictEqual({
         _tag: "LibpffError",
         reason: "timeout",
       });
-      expect(yield* encodeLibpffError(errorWithContext)).toStrictEqual({
+      const encodedLibpffError4 = yield* encodeLibpffError(errorWithContext);
+      expect(encodedLibpffError4).toStrictEqual({
         _tag: "LibpffError",
         cause: "pffexport failed",
         exitCode: 2,
@@ -172,7 +181,8 @@ describe("@beep/libpff", () => {
       "maps unavailable libpff runtime to an operation-level deferral",
       Effect.fnUntraced(function* () {
         const ids = yield* fixtureIds;
-        const error = yield* LibpffFileProcessingEngine.exportArchive(yield* operation(ids)).pipe(Effect.flip);
+        const operation5 = yield* operation(ids);
+        const error = yield* LibpffFileProcessingEngine.exportArchive(operation5).pipe(Effect.flip);
 
         return yield* Effect.sync(() => {
           expect(error._tag).toBe("FileProcessingOperationError");
@@ -187,9 +197,11 @@ describe("@beep/libpff", () => {
       "can emit synthetic child artifacts for proof fixtures",
       Effect.fnUntraced(function* () {
         const ids = yield* fixtureIds;
-        const result = yield* makeLibpffFileProcessingEngine(
+        const argument = makeLibpffFileProcessingEngine(
           LibpffFileProcessingEngineOptions.make({ syntheticExport: true })
-        ).exportArchive(yield* operation(ids));
+        );
+        const operation1 = yield* operation(ids);
+        const result = yield* argument.exportArchive(operation1);
 
         return yield* Effect.sync(() => {
           expect(result.children).toHaveLength(1);

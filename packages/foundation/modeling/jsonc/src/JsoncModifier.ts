@@ -695,7 +695,9 @@ export abstract class JsoncModifier {
                 // depth so a nested object lands at the same column as its siblings.
                 // The value keeps JSON.stringify's own "\n" line breaks (upstream);
                 // `eol` belongs to the wrapper around the entry only.
-                const serialized = Str.replaceAll("\n", `\n${indent}`)(yield* serialize());
+                const argument = Str.replaceAll("\n", `\n${indent}`);
+                const serialize1 = yield* serialize();
+                const serialized = argument(serialize1);
                 const entry = NavigateContainer.is.object(insert.container)
                   ? `${yield* Jsonc.stringify(String(A.lastNonEmpty(path)))}: ${serialized}`
                   : serialized;

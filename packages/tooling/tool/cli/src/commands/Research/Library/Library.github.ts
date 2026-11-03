@@ -77,12 +77,14 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
   prefix: string
 ) {
   const parts = repositoryParts(source.canonicalUrl);
-  if (O.isNone(parts))
+  if (O.isNone(parts)) {
     return yield* LibraryError.make({ message: "Unsupported GitHub repository identity.", cause: "identity" });
+  }
   const owner = Str.toLowerCase(parts.value[1] ?? "");
   const name = Str.toLowerCase(Str.replace(/\.git$/, "")(parts.value[2] ?? ""));
-  if (name === "." || name === ".." || Str.isEmpty(name))
+  if (name === "." || name === ".." || Str.isEmpty(name)) {
     return yield* LibraryError.make({ message: "Invalid repository path identity.", cause: "identity" });
+  }
   const slug = `${owner}/${name}`;
   const remote = `https://github.com/${slug}.git`;
   const path = yield* Path.Path;
@@ -95,14 +97,16 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
     if (!(yield* fs.exists(candidate))) return;
     const real = yield* fs.realPath(candidate);
     const relative = path.relative(realRoot, real);
-    if (path.isAbsolute(relative) || relative === ".." || Str.startsWith(`..${path.sep}`)(relative))
+    if (path.isAbsolute(relative) || relative === ".." || Str.startsWith(`..${path.sep}`)(relative)) {
       return yield* LibraryError.make({
         message: "Repository path escapes library through a symlink.",
         cause: "identity",
       });
+    }
   });
-  for (const ancestor of ["repos", "repos/github", `repos/github/${owner}`, cloneRelative])
+  for (const ancestor of ["repos", "repos/github", `repos/github/${owner}`, cloneRelative]) {
     yield* validateCloneAncestor(ancestor);
+  }
   if (!(yield* fs.exists(clone))) {
     yield* fs.makeDirectory(path.dirname(clone), { recursive: true });
     // --no-checkout prevents remote working-tree filters; no recursive submodule or LFS checkout.
@@ -113,14 +117,19 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
       20_000
     );
   }
-  const observedRemote = Str.trim(
-    yield* runLibraryCommand(root, "git", ["-C", clone, "remote", "get-url", "origin"], 10_000)
+  const resultLibraryCommand = yield* runLibraryCommand(
+    root,
+    "git",
+    ["-C", clone, "remote", "get-url", "origin"],
+    10_000
   );
-  if (observedRemote !== remote)
+  const observedRemote = Str.trim(resultLibraryCommand);
+  if (observedRemote !== remote) {
     return yield* LibraryError.make({
       message: "Existing repository remote differs from requested source.",
       cause: "identity",
     });
+  }
   const git = (args: ReadonlyArray<string>, cap = 8_000_000) =>
     runLibraryCommand(root, "git", ["-c", "core.hooksPath=/dev/null", "-C", clone, ...args], cap);
   const resolvePinnedRevision = Effect.fn("Library.github.resolvePinnedRevision")(function* () {
@@ -131,15 +140,19 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
           catch: () =>
             LibraryError.make({ message: "Repository revision contains invalid URL encoding.", cause: "identity" }),
         });
-    if (Str.startsWith("-")(requested))
+    if (Str.startsWith("-")(requested)) {
       return yield* LibraryError.make({ message: "Invalid repository revision.", cause: "identity" });
+    }
     const resolved = yield* git(["rev-parse", "--verify", `${requested}^{commit}`], 10_000).pipe(Effect.option);
-    if (O.isNone(resolved)) yield* git(["fetch", "--no-recurse-submodules", "origin", requested], 20_000);
+    if (O.isNone(resolved)) {
+      yield* git(["fetch", "--no-recurse-submodules", "origin", requested], 20_000);
+    }
     const revision = Str.trim(
       O.isSome(resolved) ? resolved.value : yield* git(["rev-parse", "--verify", "FETCH_HEAD^{commit}"], 10_000)
     );
-    if (!S.is(Commit)(revision))
+    if (!S.is(Commit)(revision)) {
       return yield* LibraryError.make({ message: "Repository did not resolve a pinned commit.", cause: "identity" });
+    }
     return revision;
   });
   const revision = yield* resolvePinnedRevision();
@@ -159,46 +172,34 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
     20_000
   );
   const files = yield* git(["ls-tree", "-r", "--name-only", revision]);
-  const pin = yield* saveLibraryText(
-    root,
-    `${prefix}/repository.json`,
-    yield* encodeLibraryJson({
-      remote,
-      revision,
-      requestedRevision: source.revision,
-      clone: cloneRelative,
-      materialization: "detached-checkout-and-git-object-database",
-      submodules: false,
-      lfs: false,
-    }),
-    "application/json",
-    "repository-pin"
-  );
+  const argument = `${prefix}/repository.json`;
+  const encodedLibraryJson = yield* encodeLibraryJson({
+    remote,
+    revision,
+    requestedRevision: source.revision,
+    clone: cloneRelative,
+    materialization: "detached-checkout-and-git-object-database",
+    submodules: false,
+    lfs: false,
+  });
+  const pin = yield* saveLibraryText(root, argument, encodedLibraryJson, "application/json", "repository-pin");
   const tree = yield* saveLibraryText(root, `${prefix}/tree.txt`, files, "text/plain", "repository-tree");
   const artifacts = [pin, tree];
   return yield* Effect.gen(function* () {
     const readme = A.findFirst(Str.split(files, "\n"), (file) => /^readme(?:\.[^/]+)?$/i.test(file));
-    if (O.isSome(readme))
-      artifacts.push(
-        yield* saveLibraryText(
-          root,
-          `${prefix}/README.txt`,
-          yield* git(["show", `${revision}:${readme.value}`]),
-          "text/plain",
-          "extracted-full-text"
-        )
-      );
+    if (O.isSome(readme)) {
+      const argument1 = `${prefix}/README.txt`;
+      const git23 = yield* git(["show", `${revision}:${readme.value}`]);
+      const saveLibraryText1 = yield* saveLibraryText(root, argument1, git23, "text/plain", "extracted-full-text");
+      artifacts.push(saveLibraryText1);
+    }
     const license = A.findFirst(Str.split(files, "\n"), (file) => /^(?:licen[cs]e|copying)(?:\.[^/]+)?$/i.test(file));
-    if (O.isSome(license))
-      artifacts.push(
-        yield* saveLibraryText(
-          root,
-          `${prefix}/LICENSE.txt`,
-          yield* git(["show", `${revision}:${license.value}`]),
-          "text/plain",
-          "repository-license"
-        )
-      );
+    if (O.isSome(license)) {
+      const argument2 = `${prefix}/LICENSE.txt`;
+      const git24 = yield* git(["show", `${revision}:${license.value}`]);
+      const saveLibraryText14 = yield* saveLibraryText(root, argument2, git24, "text/plain", "repository-license");
+      artifacts.push(saveLibraryText14);
+    }
     const captureGitPatch = Effect.fn("Library.github.captureGitPatch")(function* (
       label: string,
       args: ReadonlyArray<string>
@@ -211,11 +212,12 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
           const output = path.join(temporary, "patch.diff");
           yield* git([...args, `--output=${output}`], 20_000);
           const stat = yield* fs.stat(output);
-          if (stat.size > BigInt(100_000_000))
+          if (stat.size > BigInt(100_000_000)) {
             return yield* LibraryError.make({
               cause: "output-bound",
               message: "Git patch exceeded the explicit 100 MB retained-file limit.",
             });
+          }
           const bytes = yield* fs.readFile(output);
           const saved = yield* saveImmutable(root, `${prefix}/${label}`, bytes);
           const artifact = LibraryArtifact.make({ ...saved, mediaType: "text/x-diff", role: "raw-diff" });
@@ -263,24 +265,26 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
         );
         artifacts.push(artifact);
         const identity = yield* decodeLibraryJson(RepositoryIdentity)(raw);
+        const now1 = yield* DateTime.now;
         receipts.push({
           requestedEndpoint: endpoint,
-          observedAt: DateTime.formatIso(yield* DateTime.now),
+          observedAt: DateTime.formatIso(now1),
           exitCode: 0,
           ...identity,
           artifact: artifact.path,
           sha256: artifact.sha256,
           bytes: artifact.bytes,
         });
-        artifacts.push(
-          yield* saveLibraryText(
-            root,
-            `${prefix}/repository-identity-receipt-${index}.json`,
-            yield* encodeLibraryJson(receipts),
-            "application/json",
-            "repository-identity-provenance"
-          )
+        const argument3 = `${prefix}/repository-identity-receipt-${index}.json`;
+        const encodedLibraryJson15 = yield* encodeLibraryJson(receipts);
+        const saveLibraryText2 = yield* saveLibraryText(
+          root,
+          argument3,
+          encodedLibraryJson15,
+          "application/json",
+          "repository-identity-provenance"
         );
+        artifacts.push(saveLibraryText2);
         yield* validateRenameIdentity(identity, first, observedSlug);
         first = identity;
       }
@@ -292,7 +296,9 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
       const resources = S.is(ProviderItems)(decoded) ? decoded : [decoded];
       for (const resource of resources) {
         const identity = S.decodeUnknownOption(ResourceIdentity)(resource);
-        if (O.isSome(identity)) yield* captureRenameIdentity(identity.value.html_url);
+        if (O.isSome(identity)) {
+          yield* captureRenameIdentity(identity.value.html_url);
+        }
       }
     });
     const captureApi = Effect.fn("Library.github.captureApi")(function* (label: string, endpoint: string) {
@@ -302,15 +308,14 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
         const raw = yield* runLibraryCommand(root, "gh", ["api", paginated ? `${endpoint}&page=${page}` : endpoint]);
         const decoded = yield* decodeLibraryJson(S.Unknown)(raw);
         pages.push(decoded);
-        artifacts.push(
-          yield* saveLibraryText(
-            root,
-            `${prefix}/${label}-page-${page}.json`,
-            raw,
-            "application/json",
-            "raw-discussion"
-          )
+        const saveLibraryText3 = yield* saveLibraryText(
+          root,
+          `${prefix}/${label}-page-${page}.json`,
+          raw,
+          "application/json",
+          "raw-discussion"
         );
+        artifacts.push(saveLibraryText3);
         yield* observeResourceIdentities(decoded);
         const items = paginated
           ? yield* S.decodeUnknownEffect(ProviderItems)(decoded).pipe(
@@ -321,30 +326,48 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
           : [];
         if (!paginated || items.length < 100) {
           const aggregate = yield* encodeLibraryJson(pages);
-          artifacts.push(
-            yield* saveLibraryText(root, `${prefix}/${label}.json`, aggregate, "application/json", "raw-discussion")
+          const saveLibraryText4 = yield* saveLibraryText(
+            root,
+            `${prefix}/${label}.json`,
+            aggregate,
+            "application/json",
+            "raw-discussion"
           );
-          artifacts.push(
-            yield* saveLibraryText(
-              root,
-              `${prefix}/${label}-pagination.json`,
-              yield* encodeLibraryJson({ endpoint, pages: pages.length, exhausted: true, pageSize: 100 }),
-              "application/json",
-              "pagination-metadata"
-            )
+          artifacts.push(saveLibraryText4);
+          const argument4 = `${prefix}/${label}-pagination.json`;
+          const encodedLibraryJson16 = yield* encodeLibraryJson({
+            endpoint,
+            pages: pages.length,
+            exhausted: true,
+            pageSize: 100,
+          });
+          const saveLibraryText5 = yield* saveLibraryText(
+            root,
+            argument4,
+            encodedLibraryJson16,
+            "application/json",
+            "pagination-metadata"
           );
+          artifacts.push(saveLibraryText5);
           return aggregate;
         }
       }
-      artifacts.push(
-        yield* saveLibraryText(
-          root,
-          `${prefix}/${label}-pagination.json`,
-          yield* encodeLibraryJson({ endpoint, pages: pages.length, exhausted: false, pageSize: 100, limit: 100 }),
-          "application/json",
-          "pagination-metadata"
-        )
+      const argument5 = `${prefix}/${label}-pagination.json`;
+      const encodedLibraryJson17 = yield* encodeLibraryJson({
+        endpoint,
+        pages: pages.length,
+        exhausted: false,
+        pageSize: 100,
+        limit: 100,
+      });
+      const saveLibraryText6 = yield* saveLibraryText(
+        root,
+        argument5,
+        encodedLibraryJson17,
+        "application/json",
+        "pagination-metadata"
       );
+      artifacts.push(saveLibraryText6);
       return yield* LibraryError.make({
         cause: "pagination",
         message:
@@ -352,7 +375,9 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
       });
     });
     const capturePull = Effect.fn("Library.github.capturePull")(function* (n: string) {
-      const pull = yield* decodeLibraryJson(PullPins)(yield* captureApi("pull", `repos/${slug}/pulls/${n}`));
+      const argument6 = decodeLibraryJson(PullPins);
+      const captureApi18 = yield* captureApi("pull", `repos/${slug}/pulls/${n}`);
+      const pull = yield* argument6(captureApi18);
       yield* captureApi("reviews", `repos/${slug}/pulls/${n}/reviews?per_page=100`);
       yield* captureApi("review-comments", `repos/${slug}/pulls/${n}/comments?per_page=100`);
       yield* captureApi("files", `repos/${slug}/pulls/${n}/files?per_page=100`);
@@ -363,39 +388,45 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
         `repos/${slug}/pulls/${n}`,
       ]).pipe(Effect.option);
       const retainRemotePullDiff = Effect.fn("Library.github.retainRemotePullDiff")(function* (body: string) {
-        artifacts.push(yield* saveLibraryText(root, `${prefix}/pull.diff`, body, "text/x-diff", "raw-diff"));
+        const saveLibraryText7 = yield* saveLibraryText(root, `${prefix}/pull.diff`, body, "text/x-diff", "raw-diff");
+        artifacts.push(saveLibraryText7);
         const pins = A.head(pull);
-        if (O.isNone(pins))
+        if (O.isNone(pins)) {
           return yield* LibraryError.make({
             cause: "identity",
             message: "PR diff metadata omitted commit identities.",
           });
-        artifacts.push(
-          yield* saveLibraryText(
-            root,
-            `${prefix}/diff-provenance.json`,
-            yield* encodeLibraryJson({
-              method: "gh-api-diff",
-              endpoint: `repos/${slug}/pulls/${n}`,
-              accept: "application/vnd.github.diff",
-              base: pins.value.base.sha,
-              head: pins.value.head.sha,
-            }),
-            "application/json",
-            "diff-provenance"
-          )
+        }
+        const argument7 = `${prefix}/diff-provenance.json`;
+        const encodedLibraryJson19 = yield* encodeLibraryJson({
+          method: "gh-api-diff",
+          endpoint: `repos/${slug}/pulls/${n}`,
+          accept: "application/vnd.github.diff",
+          base: pins.value.base.sha,
+          head: pins.value.head.sha,
+        });
+        const saveLibraryText8 = yield* saveLibraryText(
+          root,
+          argument7,
+          encodedLibraryJson19,
+          "application/json",
+          "diff-provenance"
         );
+        artifacts.push(saveLibraryText8);
       });
       const retainLocalPullDiff = Effect.fn("Library.github.retainLocalPullDiff")(function* () {
         const pins = A.head(pull);
-        if (O.isNone(pins))
+        if (O.isNone(pins)) {
           return yield* LibraryError.make({
             message: "PR metadata omitted base/head commit identities for local diff fallback.",
             cause: "identity",
           });
+        }
         for (const sha of [pins.value.base.sha, pins.value.head.sha]) {
           const present = yield* git(["cat-file", "-e", `${sha}^{commit}`], 10_000).pipe(Effect.option);
-          if (O.isNone(present)) yield* git(["fetch", "--no-recurse-submodules", "origin", sha], 20_000);
+          if (O.isNone(present)) {
+            yield* git(["fetch", "--no-recurse-submodules", "origin", sha], 20_000);
+          }
         }
         yield* captureGitPatch("pull.diff", [
           "diff",
@@ -403,28 +434,33 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
           "--no-textconv",
           `${pins.value.base.sha}...${pins.value.head.sha}`,
         ]);
-        artifacts.push(
-          yield* saveLibraryText(
-            root,
-            `${prefix}/diff-provenance.json`,
-            yield* encodeLibraryJson({
-              method: "git-diff",
-              base: pins.value.base.sha,
-              head: pins.value.head.sha,
-              reason: "GitHub diff endpoint unavailable; exact API-reported commit objects fetched without execution.",
-            }),
-            "application/json",
-            "diff-provenance"
-          )
+        const argument8 = `${prefix}/diff-provenance.json`;
+        const encodedLibraryJson20 = yield* encodeLibraryJson({
+          method: "git-diff",
+          base: pins.value.base.sha,
+          head: pins.value.head.sha,
+          reason: "GitHub diff endpoint unavailable; exact API-reported commit objects fetched without execution.",
+        });
+        const saveLibraryText9 = yield* saveLibraryText(
+          root,
+          argument8,
+          encodedLibraryJson20,
+          "application/json",
+          "diff-provenance"
         );
+        artifacts.push(saveLibraryText9);
       });
-      if (O.isSome(remoteDiff)) yield* retainRemotePullDiff(remoteDiff.value);
-      else yield* retainLocalPullDiff();
+      if (O.isSome(remoteDiff)) {
+        yield* retainRemotePullDiff(remoteDiff.value);
+      } else {
+        yield* retainLocalPullDiff();
+      }
     });
     const captureDiscussion = Effect.fn("Library.github.captureDiscussion")(function* () {
       const discussionNumber = Str.match(/\/discussions\/(\d+)/)(source.canonicalUrl);
-      if (O.isNone(discussionNumber))
+      if (O.isNone(discussionNumber)) {
         return yield* LibraryError.make({ message: "Missing cited discussion number.", cause: "identity" });
+      }
       const query =
         "query($owner:String!,$name:String!,$number:Int!,$cursor:String){repository(owner:$owner,name:$name){discussion(number:$number){id title url body author{login} comments(first:100,after:$cursor){nodes{id body url author{login} replies(first:100){nodes{id body url author{login}} pageInfo{hasNextPage endCursor}}} pageInfo{hasNextPage endCursor}}}}}";
       const replyQuery =
@@ -448,23 +484,23 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
             `cursor=${replyCursor}`,
           ]);
           const reply = yield* decodeLibraryJson(ReplyPage)(replyRaw);
-          artifacts.push(
-            yield* saveLibraryText(
-              root,
-              `${prefix}/replies-${page}-${comment.id}-${replyPage}.json`,
-              replyRaw,
-              "application/json",
-              "raw-discussion"
-            )
+          const saveLibraryText10 = yield* saveLibraryText(
+            root,
+            `${prefix}/replies-${page}-${comment.id}-${replyPage}.json`,
+            replyRaw,
+            "application/json",
+            "raw-discussion"
           );
+          artifacts.push(saveLibraryText10);
           more = reply.data.node.replies.pageInfo.hasNextPage;
           replyCursor = O.getOrElse(O.fromNullishOr(reply.data.node.replies.pageInfo.endCursor), () => "");
         }
-        if (more)
+        if (more) {
           return yield* LibraryError.make({
             message: "GitHub Discussion replies exceeded bounded pagination.",
             cause: "pagination",
           });
+        }
       });
       let cursor = "";
       let exhausted = false;
@@ -482,14 +518,21 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
           `number=${discussionNumber.value[1]}`,
           ...(Str.isEmpty(cursor) ? [] : ["-f", `cursor=${cursor}`]),
         ]);
-        artifacts.push(
-          yield* saveLibraryText(root, `${prefix}/discussion-${page}.json`, raw, "application/json", "raw-discussion")
+        const saveLibraryText11 = yield* saveLibraryText(
+          root,
+          `${prefix}/discussion-${page}.json`,
+          raw,
+          "application/json",
+          "raw-discussion"
         );
+        artifacts.push(saveLibraryText11);
         const discussionIdentity = yield* decodeLibraryJson(DiscussionIdentity)(raw);
         yield* captureRenameIdentity(discussionIdentity.data.repository.discussion.url);
         const decoded = yield* decodeLibraryJson(DiscussionPage)(raw);
         const comments = decoded.data.repository.discussion.comments;
-        for (const comment of comments.nodes) yield* captureDiscussionReplies(page, comment);
+        for (const comment of comments.nodes) {
+          yield* captureDiscussionReplies(page, comment);
+        }
         return comments;
       });
       for (const page of A.range(0, 99)) {
@@ -499,17 +542,19 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
           break;
         }
         cursor = O.getOrElse(O.fromNullishOr(comments.pageInfo.endCursor), () => "");
-        if (Str.isEmpty(cursor))
+        if (Str.isEmpty(cursor)) {
           return yield* LibraryError.make({
             message: "GitHub pagination omitted its continuation cursor.",
             cause: "pagination",
           });
+        }
       }
-      if (!exhausted)
+      if (!exhausted) {
         return yield* LibraryError.make({
           message: "GitHub Discussion exceeded bounded pagination.",
           cause: "pagination",
         });
+      }
     });
     const captureCitedCode = Effect.fn("Library.github.captureCitedCode")(function* () {
       const commits = Str.match(/\/commits(?:\/([^?#]+))?(?:[?#]|$)/)(source.canonicalUrl);
@@ -543,15 +588,15 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
       const directory = Str.match(/\/tree\/[^/]+(?:\/(.+?))?(?:[?#]|$)/)(source.canonicalUrl);
       if (O.isSome(directory)) {
         const treePath = directory.value[1] ?? "";
-        artifacts.push(
-          yield* saveLibraryText(
-            root,
-            `${prefix}/cited-tree.txt`,
-            yield* git(["ls-tree", "-r", "--name-only", Str.isEmpty(treePath) ? revision : `${revision}:${treePath}`]),
-            "text/plain",
-            "cited-repository-tree"
-          )
-        );
+        const argument9 = `${prefix}/cited-tree.txt`;
+        const git21 = yield* git([
+          "ls-tree",
+          "-r",
+          "--name-only",
+          Str.isEmpty(treePath) ? revision : `${revision}:${treePath}`,
+        ]);
+        const saveLibraryText12 = yield* saveLibraryText(root, argument9, git21, "text/plain", "cited-repository-tree");
+        artifacts.push(saveLibraryText12);
         return LibraryAdapterResult.make({
           artifacts,
           revision,
@@ -569,25 +614,23 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
           complete: false,
           reason: "Repository pinned; cited code locator requires explicit file evidence.",
         });
-      artifacts.push(
-        yield* saveLibraryText(
-          root,
-          `${prefix}/cited-code.txt`,
-          yield* git(["show", `${revision}:${code.value[1]}`]),
-          "text/plain",
-          "raw-full-text"
-        )
-      );
+      const argument10 = `${prefix}/cited-code.txt`;
+      const git22 = yield* git(["show", `${revision}:${code.value[1]}`]);
+      const saveLibraryText13 = yield* saveLibraryText(root, argument10, git22, "text/plain", "raw-full-text");
+      artifacts.push(saveLibraryText13);
       return undefined;
     });
     const captureIssue = Effect.fn("Library.github.captureIssue")(function* () {
       const number = Str.match(/\/(?:issues|pull)\/(\d+)/)(source.canonicalUrl);
-      if (O.isNone(number))
+      if (O.isNone(number)) {
         return yield* LibraryError.make({ message: "Missing cited issue or PR number.", cause: "identity" });
+      }
       const n = number.value[1] ?? "";
       yield* captureApi("issue", `repos/${slug}/issues/${n}`);
       yield* captureApi("comments", `repos/${slug}/issues/${n}/comments?per_page=100`);
-      if (source.kind === "github-pr") yield* capturePull(n);
+      if (source.kind === "github-pr") {
+        yield* capturePull(n);
+      }
     });
     const captureRelease = Effect.fn("Library.github.captureRelease")(function* () {
       const tag = Str.match(/\/releases\/tag\/([^?#]+)/)(source.canonicalUrl);

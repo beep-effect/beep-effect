@@ -146,7 +146,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("Cache baseline per-subj
         ["ours.json", ours.baseline],
         ["theirs.json", theirs.baseline],
       ]);
-      expect(yield* gitMergeFile(root)).toBe(0);
+      const gitMergeFile1 = yield* gitMergeFile(root);
+      expect(gitMergeFile1).toBe(0);
       const merged = yield* fs.readFileString(path.join(root, "ours.json")).pipe(Effect.flatMap(decodeBaseline));
       expect(cachePolicyBaselineFailures(merged)).toStrictEqual([]);
       assertSome(Rec.get(merged.reviews, "@beep/alpha"), alphaReview);
@@ -177,7 +178,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("Cache baseline per-subj
         ["ours.json", ours.baseline],
         ["theirs.json", theirs.baseline],
       ]);
-      expect(yield* gitMergeFile(root)).toBe(0);
+      const gitMergeFile2 = yield* gitMergeFile(root);
+      expect(gitMergeFile2).toBe(0);
       const merged = yield* fs.readFileString(path.join(root, "ours.json")).pipe(Effect.flatMap(decodeBaseline));
       expect(cachePolicyBaselineFailures(merged)).toStrictEqual([]);
       expect(Rec.keys(merged.reviews)).toStrictEqual(["//", "@beep/alpha", "@beep/beta", "@beep/delta", "@beep/gamma"]);

@@ -178,8 +178,12 @@ describe("@beep/html safe policy", () => {
     [SafeUrlAttributeArbitrary, SafeImageUrlAttributeArbitrary],
     ([href, src]) =>
       Effect.gen(function* () {
-        expect(yield* decodeSafeUrlAttribute(yield* encodeSafeUrlAttribute(href))).toBe(href);
-        expect(yield* decodeSafeImageUrlAttribute(yield* encodeSafeImageUrlAttribute(src))).toBe(src);
+        const encodedSafeUrlAttribute = yield* encodeSafeUrlAttribute(href);
+        const decodedSafeUrlAttribute = yield* decodeSafeUrlAttribute(encodedSafeUrlAttribute);
+        expect(decodedSafeUrlAttribute).toBe(href);
+        const encodedSafeImageUrlAttribute = yield* encodeSafeImageUrlAttribute(src);
+        const decodedSafeImageUrlAttribute = yield* decodeSafeImageUrlAttribute(encodedSafeImageUrlAttribute);
+        expect(decodedSafeImageUrlAttribute).toBe(src);
 
         return true;
       }),
@@ -200,28 +204,26 @@ describe("@beep/html safe policy", () => {
       }
 
       for (const href of ["http://example.com", "javascript:alert(1)", "//example.com", String.raw`\evil`]) {
+        const pipe1 = yield* conform(
+          fragment(
+            Anchor.make({
+              href: O.some(href),
+              children: [text("link")],
+            })
+          )
+        ).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit);
         assertExitFailure(
-          Exit.match(
-            yield* conform(
-              fragment(
-                Anchor.make({
-                  href: O.some(href),
-                  children: [text("link")],
-                })
-              )
-            ).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit),
-            {
-              onSuccess: Exit.succeed,
-              onFailure: (cause) =>
-                Exit.failCause(
-                  Cause.fromReasons(
-                    A.map(cause.reasons, (reason) =>
-                      Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
-                    )
+          Exit.match(pipe1, {
+            onSuccess: Exit.succeed,
+            onFailure: (cause) =>
+              Exit.failCause(
+                Cause.fromReasons(
+                  A.map(cause.reasons, (reason) =>
+                    Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
                   )
-                ),
-            }
-          ),
+                )
+              ),
+          }),
           Cause.fail("HtmlPolicyError")
         );
       }
@@ -243,8 +245,9 @@ describe("@beep/html safe policy", () => {
             children: [text("link")],
           })
         );
+        const pipe2 = yield* conform(unsafe).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit);
         assertExitFailure(
-          Exit.match(yield* conform(unsafe).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit), {
+          Exit.match(pipe2, {
             onSuccess: Exit.succeed,
             onFailure: (cause) =>
               Exit.failCause(
@@ -267,8 +270,9 @@ describe("@beep/html safe policy", () => {
             children: [text("link")],
           })
         );
+        const pipe3 = yield* conform(unsafe).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit);
         assertExitFailure(
-          Exit.match(yield* conform(unsafe).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit), {
+          Exit.match(pipe3, {
             onSuccess: Exit.succeed,
             onFailure: (cause) =>
               Exit.failCause(
@@ -303,9 +307,10 @@ describe("@beep/html safe policy", () => {
         })
       );
       yield* conform(safe).pipe(Effect.flatMap(enforceSafeHtml));
-      expect(
-        safeHtmlValue(yield* conform(safe).pipe(Effect.flatMap(enforceSafeHtml), Effect.flatMap(serializeSafe)))
-      ).toBe('<a href="https://example.com" rel="noopener noreferrer" target="_BLANK">link</a>');
+      const pipe4 = yield* conform(safe).pipe(Effect.flatMap(enforceSafeHtml), Effect.flatMap(serializeSafe));
+      expect(safeHtmlValue(pipe4)).toBe(
+        '<a href="https://example.com" rel="noopener noreferrer" target="_BLANK">link</a>'
+      );
     })
   );
 
@@ -331,8 +336,9 @@ describe("@beep/html safe policy", () => {
           rel: `noopener${separator}noreferrer`,
           target: "_blank",
         });
+        const exit5 = yield* Effect.exit(applyPolicy(fragment(decoded)));
         assertExitFailure(
-          Exit.match(yield* Effect.exit(applyPolicy(fragment(decoded))), {
+          Exit.match(exit5, {
             onSuccess: Exit.succeed,
             onFailure: (cause) =>
               Exit.failCause(
@@ -386,8 +392,9 @@ describe("@beep/html safe policy", () => {
           children: [text("added")],
         })
       );
+      const pipe6 = yield* conform(unsafeCitation).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit);
       assertExitFailure(
-        Exit.match(yield* conform(unsafeCitation).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit), {
+        Exit.match(pipe6, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(
@@ -421,8 +428,9 @@ describe("@beep/html safe policy", () => {
       expect(inspectConformance(legacyImageName)).toContainEqual(
         expect.objectContaining({ rule: "obsoleteAttribute" })
       );
+      const exit7 = yield* Effect.exit(conform(legacyImageName));
       assertExitFailure(
-        Exit.match(yield* Effect.exit(conform(legacyImageName)), {
+        Exit.match(exit7, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(
@@ -450,23 +458,22 @@ describe("@beep/html canonical serialization", () => {
         target: O.some("_blank"),
         children: [text("<go>")],
       });
-      expect(yield* serialize(node).pipe(Effect.map(untrustedHtmlValue))).toBe(
+      const pipe8 = yield* serialize(node).pipe(Effect.map(untrustedHtmlValue));
+      expect(pipe8).toBe(
         '<a class="a&quot;b" href="/docs?a=1&amp;b=2" id="link" rel="noopener noreferrer" target="_blank">&lt;go&gt;</a>'
       );
-      expect(yield* serialize(Input.make({ disabled: O.some("") })).pipe(Effect.map(untrustedHtmlValue))).toBe(
-        "<input disabled>"
-      );
-      expect(
-        yield* serialize(
-          Div.make({
-            autofocus: O.some(""),
-            headingreset: O.some(""),
-            inert: O.some(""),
-            itemscope: O.some(""),
-            children: [],
-          })
-        ).pipe(Effect.map(untrustedHtmlValue))
-      ).toBe("<div autofocus headingreset inert itemscope></div>");
+      const pipe9 = yield* serialize(Input.make({ disabled: O.some("") })).pipe(Effect.map(untrustedHtmlValue));
+      expect(pipe9).toBe("<input disabled>");
+      const pipe10 = yield* serialize(
+        Div.make({
+          autofocus: O.some(""),
+          headingreset: O.some(""),
+          inert: O.some(""),
+          itemscope: O.some(""),
+          children: [],
+        })
+      ).pipe(Effect.map(untrustedHtmlValue));
+      expect(pipe10).toBe("<div autofocus headingreset inert itemscope></div>");
     })
   );
 
@@ -482,7 +489,8 @@ describe("@beep/html canonical serialization", () => {
         Button.make({ name: O.some("action"), value: O.some("save"), children: [text("Save")] })
       );
 
-      expect(yield* serialize(root).pipe(Effect.map(untrustedHtmlValue))).toBe(
+      const pipe11 = yield* serialize(root).pipe(Effect.map(untrustedHtmlValue));
+      expect(pipe11).toBe(
         '<data value="42">answer</data><ol><li value="-2">item</li></ol><meta content="text/html"><input name="query" value="beep"><button name="action" value="save">Save</button>'
       );
 
@@ -499,14 +507,13 @@ describe("@beep/html canonical serialization", () => {
 
   it.effect("sorts dataset and losslessly preserves escaped foreign attributes", () =>
     Effect.gen(function* () {
-      expect(
-        yield* serialize(
-          Div.make({
-            dataset: O.some({ zed: "2", alpha: "1" }),
-            children: [],
-          })
-        ).pipe(Effect.map(untrustedHtmlValue))
-      ).toBe('<div data-alpha="1" data-zed="2"></div>');
+      const pipe12 = yield* serialize(
+        Div.make({
+          dataset: O.some({ zed: "2", alpha: "1" }),
+          children: [],
+        })
+      ).pipe(Effect.map(untrustedHtmlValue));
+      expect(pipe12).toBe('<div data-alpha="1" data-zed="2"></div>');
 
       const foreign = ForeignElement.make({
         namespace: "svg",
@@ -514,9 +521,8 @@ describe("@beep/html canonical serialization", () => {
         attributes: O.some({ viewBox: "0 0 1 1", fill: "none" }),
         children: [text("<label>"), Comment.make({ value: "foreign note" })],
       });
-      expect(yield* serialize(foreign).pipe(Effect.map(untrustedHtmlValue))).toBe(
-        '<svg fill="none" viewBox="0 0 1 1">&lt;label&gt;<!--foreign note--></svg>'
-      );
+      const pipe13 = yield* serialize(foreign).pipe(Effect.map(untrustedHtmlValue));
+      expect(pipe13).toBe('<svg fill="none" viewBox="0 0 1 1">&lt;label&gt;<!--foreign note--></svg>');
 
       const active = ForeignElement.make({
         namespace: "svg",
@@ -529,7 +535,8 @@ describe("@beep/html canonical serialization", () => {
         }),
         children: [],
       });
-      expect(yield* serialize(active).pipe(Effect.map(untrustedHtmlValue))).toBe(
+      const pipe14 = yield* serialize(active).pipe(Effect.map(untrustedHtmlValue));
+      expect(pipe14).toBe(
         '<svg href="javascript:alert(1)" onload="alert(&quot;x&quot;)" style="fill:red" xlink:href="data:image/svg+xml?a=1&amp;b=2"></svg>'
       );
     })
@@ -564,8 +571,9 @@ describe("@beep/html canonical serialization", () => {
 
   it.effect("rejects scalar hazards, ambiguous comments, raw end tags, and plaintext", () =>
     Effect.gen(function* () {
+      const exit15 = yield* Effect.exit(serialize(text("\u0000")));
       assertExitFailure(
-        Exit.match(yield* Effect.exit(serialize(text("\u0000"))), {
+        Exit.match(exit15, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(
@@ -578,8 +586,9 @@ describe("@beep/html canonical serialization", () => {
         }),
         Cause.fail("HtmlSerializeError")
       );
+      const exit16 = yield* Effect.exit(serialize(text("\uD800")));
       assertExitFailure(
-        Exit.match(yield* Effect.exit(serialize(text("\uD800"))), {
+        Exit.match(exit16, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(
@@ -592,8 +601,9 @@ describe("@beep/html canonical serialization", () => {
         }),
         Cause.fail("HtmlSerializeError")
       );
+      const exit17 = yield* Effect.exit(serialize(Div.make({ id: O.some("\u0000"), children: [] })));
       assertExitFailure(
-        Exit.match(yield* Effect.exit(serialize(Div.make({ id: O.some("\u0000"), children: [] }))), {
+        Exit.match(exit17, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(
@@ -609,8 +619,9 @@ describe("@beep/html canonical serialization", () => {
       expect(isHtmlCommentData("safe note")).toBe(true);
       expect(isHtmlCommentData("-->")).toBe(false);
       expect(() => Comment.make({ value: "<!--" })).toThrow();
+      const exit18 = yield* Effect.exit(serialize(Script.make({ content: "</script><img src=x>" })));
       assertExitFailure(
-        Exit.match(yield* Effect.exit(serialize(Script.make({ content: "</script><img src=x>" }))), {
+        Exit.match(exit18, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(
@@ -694,7 +705,9 @@ describe("@beep/html proof provenance", () => {
         const serialized = yield* encodeJsonUnknown(value);
         expect(serialized).toBe("{}");
         expect(S.is(schema)({ ...value })).toBe(false);
-        expect(S.is(schema)(yield* decodeJsonUnknown(serialized))).toBe(false);
+        const argument = S.is(schema);
+        const decodedJsonUnknown = yield* decodeJsonUnknown(serialized);
+        expect(argument(decodedJsonUnknown)).toBe(false);
         expect(S.is(schema)(Object.create(Object.getPrototypeOf(value)))).toBe(false);
         expect(S.is(schema)({})).toBe(false);
       }

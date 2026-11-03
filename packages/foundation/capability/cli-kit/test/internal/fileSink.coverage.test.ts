@@ -66,7 +66,8 @@ for (const { name, defect } of unprintableDefects) {
           "diagnostics log file /logs/a.ndjson failed: unprintable filesystem error; further file logging disabled",
         ]);
         yield* Effect.logInfo("later").pipe(Effect.provideContext(logging), Effect.provideService(Level, "Info"));
-        assertExitSuccess(yield* Effect.exit(Scope.close(scope, Exit.void)), undefined);
+        const exit1 = yield* Effect.exit(Scope.close(scope, Exit.void));
+        assertExitSuccess(exit1, undefined);
       }).pipe(
         Effect.provideContext(context),
         Effect.provideService(Console.Console, capture),

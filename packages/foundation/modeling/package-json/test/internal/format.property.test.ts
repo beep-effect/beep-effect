@@ -52,7 +52,9 @@ describe("internal format property floor", () => {
         const text = renderJson(value, options);
         const json = S.fromJsonString(ObjectJson);
         const parsed = yield* S.decodeEffect(json)(text);
-        const originalParsed = yield* S.decodeEffect(json)(yield* S.encodeEffect(json)(value));
+        const argument = S.decodeEffect(json);
+        const value1 = yield* S.encodeEffect(json)(value);
+        const originalParsed = yield* argument(value1);
         assert.deepStrictEqual(parsed, originalParsed);
         assert.strictEqual(renderJson(parsed, options), text);
         assert.strictEqual(renderJson(options)(parsed), text);

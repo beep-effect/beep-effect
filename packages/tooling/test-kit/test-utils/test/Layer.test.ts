@@ -25,7 +25,8 @@ describe("layer test helpers", () => {
       }).pipe(provideScopedLayer(Layer.succeed(ExampleService, ExampleService.of({ value: "scoped" }))));
 
       expect(value).toBe("scoped");
-      expect(yield* Ref.get(released)).toBe(true);
+      const got = yield* Ref.get(released);
+      expect(got).toBe(true);
     })
   );
   it.effect("releases scoped assertion resources when the body fails", () =>
@@ -36,7 +37,8 @@ describe("layer test helpers", () => {
         return yield* Effect.fail("assertion body failure");
       }).pipe(provideScopedLayer(Layer.succeed(ExampleService, ExampleService.of({ value: "scoped" }))), Effect.exit);
       assertExitFailure(exit, Cause.fail("assertion body failure"));
-      expect(yield* Ref.get(released)).toBe(true);
+      const got1 = yield* Ref.get(released);
+      expect(got1).toBe(true);
     })
   );
 
@@ -54,7 +56,8 @@ describe("layer test helpers", () => {
       );
       yield* Deferred.await(acquired);
       yield* Fiber.interrupt(fiber);
-      expect(yield* Ref.get(released)).toBe(true);
+      const got2 = yield* Ref.get(released);
+      expect(got2).toBe(true);
     })
   );
 });

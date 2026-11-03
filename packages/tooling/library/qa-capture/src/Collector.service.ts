@@ -46,6 +46,15 @@ import type * as Cause from "effect/Cause";
 import type * as Scope from "effect/Scope";
 import type { ActionEvent } from "./ActionEvent.models.ts";
 
+class CollectorServiceOperationError extends S.TaggedError<
+  CollectorServiceOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "CollectorServiceOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in Collector.service.ts." }
+) {}
+
 const $I = $QaCaptureId.create("Collector.service");
 
 /**
@@ -271,9 +280,12 @@ const portOfServer = (server: HttpServer.HttpServer["Service"], fallback: number
 // `process.kill(pid, 0)` probes liveness without signalling; a throw means
 // the pid is gone and its handle file is reclaimable.
 const isPidAlive = (pid: number): Effect.Effect<boolean> =>
-  Effect.try(() => {
-    process.kill(pid, 0);
-    return true;
+  Effect.try({
+    try: () => {
+      process.kill(pid, 0);
+      return true;
+    },
+    catch: (cause) => CollectorServiceOperationError.make({ cause }),
   }).pipe(Effect.orElseSucceed(() => false));
 
 const makeService = Effect.fnUntraced(function* () {

@@ -35,7 +35,9 @@ describe("metrics canonical bank compatibility", () => {
         });
         expect(result.redaction.secretAssignmentCount).toBe(1);
         expect(result.redaction.safeForDerivedUi).toBe(false);
-        expect(Str.includes(canary())(yield* privacyCheckToJson(result))).toBe(false);
+        const argument = Str.includes(canary());
+        const privacyCheckToJson1 = yield* privacyCheckToJson(result);
+        expect(argument(privacyCheckToJson1)).toBe(false);
       }
       for (const header of ["Authorization", "Proxy-Authorization", "Cookie", "Set-Cookie"]) {
         const input = `${header}: ${canary()}`;
@@ -49,7 +51,9 @@ describe("metrics canonical bank compatibility", () => {
         });
         expect(result.redaction.authHeaderCount).toBe(1);
         expect(result.redaction.safeForDerivedUi).toBe(false);
-        expect(Str.includes(canary())(yield* privacyCheckToJson(result))).toBe(false);
+        const argument1 = Str.includes(canary());
+        const privacyCheckToJson2 = yield* privacyCheckToJson(result);
+        expect(argument1(privacyCheckToJson2)).toBe(false);
       }
       expect(redactAiMetricsSensitiveText(`Authorization: Bearer ${canary()}`) === "Authorization: [REDACTED]").toBe(
         true

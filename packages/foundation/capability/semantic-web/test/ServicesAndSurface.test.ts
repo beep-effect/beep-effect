@@ -77,13 +77,8 @@ const ServiceTestLayer = UnsupportedSparqlQueryServiceLive;
 describe("Services and Surface", () => {
   it.effect("publishes a canonical arbitrary for SHACL severity", () =>
     Effect.gen(function* () {
-      pipe(
-        A.every(
-          yield* Arbitrary.sampleEffect(Arbitrary.schema(ShaclSeverity), { count: 20, seed: 0x5eed }),
-          isShaclSeverity
-        ),
-        assertTrue
-      );
+      const sampleEffect1 = yield* Arbitrary.sampleEffect(Arbitrary.schema(ShaclSeverity), { count: 20, seed: 0x5eed });
+      pipe(A.every(sampleEffect1, isShaclSeverity), assertTrue);
     })
   );
 
@@ -250,15 +245,12 @@ describe("Services and Surface", () => {
       "exposes the unsupported SPARQL fallback and the web-annotation seam DTOs",
       Effect.fnUntraced(function* () {
         const service = yield* SparqlQueryService;
-        const error = yield* service
-          .execute(
-            yield* decodeSparqlQueryRequest({
-              dataset: yield* encodeDataset(dataset),
-              profile: "select",
-              query: "SELECT * WHERE { ?s ?p ?o }",
-            })
-          )
-          .pipe(Effect.flip);
+        const decodedSparqlQueryRequest = yield* decodeSparqlQueryRequest({
+          dataset: yield* encodeDataset(dataset),
+          profile: "select",
+          query: "SELECT * WHERE { ?s ?p ?o }",
+        });
+        const error = yield* service.execute(decodedSparqlQueryRequest).pipe(Effect.flip);
 
         expect(error.message).toBe("No SPARQL engine is wired into the v1 semantic-web package.");
 

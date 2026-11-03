@@ -33,6 +33,11 @@ const Classified = S.TaggedUnion({
   success: {
     output: S.String.pipe($I.annoteKey("Classified.success.output", { description: "The completed run's stdout." })),
   },
+  differs: {
+    output: S.String.pipe(
+      $I.annoteKey("Classified.differs.output", { description: "The stdout of a silent exit-1 data answer." })
+    ),
+  },
   absent: {},
   refMissing: {},
   notARepository: {},
@@ -57,7 +62,9 @@ type Classified = typeof Classified.Type;
  * dirty-worktree and merge-conflict rows, `"log"` enables the unborn-HEAD
  * degrade, `"revParse"` enables `rev-parse --verify`'s two unknown-ref
  * shapes (`Needed a single revision`, and `--quiet`'s silent exit 1),
- * `"generic"` enables none of them.
+ * `"differs"` enables the silent-exit-1-is-data row (`merge-tree --write-tree`
+ * conflicts, `diff --no-index` differences) plus merge-tree's unresolvable
+ * revision shape, `"generic"` enables none of them.
  */
 const ClassifyKind = LiteralKit([
   "show",
@@ -68,6 +75,7 @@ const ClassifyKind = LiteralKit([
   "merge",
   "log",
   "revParse",
+  "differs",
   "generic",
 ]).pipe($I.annoteSchema("ClassifyKind", { description: "The method-specific Git classification taxonomy." }));
 type ClassifyKind = typeof ClassifyKind.Type;
@@ -84,6 +92,7 @@ type ClassifiedFor<K extends ClassifyKind> = Extract<
       | "failure"
       | (K extends "show" | "quiet" | "noSuchRemote" | "log" ? "absent" : never)
       | (K extends "refExists" ? "refMissing" : never)
+      | (K extends "differs" ? "differs" : never)
       | (K extends "push" ? "nonFastForward" : never)
       | (K extends "merge" ? "mergeConflict" | "dirtyWorktree" : never);
   }
@@ -137,6 +146,10 @@ const UNBORN_HEAD_PATTERN = "does not have any commits yet";
 // (probed against git 2.54 under LC_ALL=C), not with any UNKNOWN_REF_PATTERNS
 // wording; `--quiet` suppresses even that and signals with a silent exit 1.
 const REV_PARSE_VERIFY_UNKNOWN_PATTERN = "Needed a single revision";
+// `merge-tree --write-tree` names a revision it cannot resolve with this
+// phrase and exit 1 — the same exit status as a conflict, told apart only by
+// the stderr text (probed against git 2.56 under LC_ALL=C).
+const MERGE_UNRESOLVED_PATTERN = "not something we can merge";
 
 const matchesAny: {
   (stderr: string, patterns: ReadonlyArray<string>): boolean;
@@ -204,6 +217,18 @@ const classifyMerge = ({ stderr, stdout }: Collected): Classified | undefined =>
     : undefined;
 };
 
+/**
+ * The `"differs"` row: a SILENT exit 1 is a data answer whose stdout is the
+ * payload (a merge-tree conflict, a `--no-index` difference). Any stderr text
+ * on exit 1 means a real failure instead, except merge-tree's unresolvable
+ * revision, which is the typed unknown-ref signal.
+ */
+const classifyDiffers = ({ exitCode, stderr, stdout }: Collected): Classified | undefined => {
+  if (exitCode !== 1) return undefined;
+  if (stderr === "") return { _tag: "differs", output: stdout };
+  return Str.includes(MERGE_UNRESOLVED_PATTERN)(stderr) ? { _tag: "unknownRef" } : undefined;
+};
+
 /** The method-specific classification rows; `undefined` falls through to the generic failure. */
 const KIND_ROWS: { readonly [K in ClassifyKind]: (outcome: Collected) => Classified | undefined } = {
   show: ({ stderr }) =>
@@ -231,6 +256,7 @@ const KIND_ROWS: { readonly [K in ClassifyKind]: (outcome: Collected) => Classif
     (exitCode === 1 && stderr === "") || Str.includes(REV_PARSE_VERIFY_UNKNOWN_PATTERN)(stderr)
       ? { _tag: "unknownRef" }
       : undefined,
+  differs: classifyDiffers,
   generic: () => undefined,
 };
 

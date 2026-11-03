@@ -21,18 +21,24 @@ describe("FileName", () => {
   it.effect(
     "accepts portable file names with known extensions",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownFileNameEffect("readme.txt")).toBe("readme.txt");
-      expect(yield* decodeUnknownFileNameEffect("archive.tar.gz")).toBe("archive.tar.gz");
-      expect(yield* decodeUnknownFileNameEffect("release.notes.v1.txt")).toBe("release.notes.v1.txt");
-      expect(yield* decodeUnknownFileNameEffect(".cache.png")).toBe(".cache.png");
+      const decodedUnknownFileNameEffect = yield* decodeUnknownFileNameEffect("readme.txt");
+      expect(decodedUnknownFileNameEffect).toBe("readme.txt");
+      const decodedUnknownFileNameEffect1 = yield* decodeUnknownFileNameEffect("archive.tar.gz");
+      expect(decodedUnknownFileNameEffect1).toBe("archive.tar.gz");
+      const decodedUnknownFileNameEffect2 = yield* decodeUnknownFileNameEffect("release.notes.v1.txt");
+      expect(decodedUnknownFileNameEffect2).toBe("release.notes.v1.txt");
+      const decodedUnknownFileNameEffect3 = yield* decodeUnknownFileNameEffect(".cache.png");
+      expect(decodedUnknownFileNameEffect3).toBe(".cache.png");
     })
   );
 
   it.effect(
     "keeps FilePath's any-major-os portability policy for accepted names",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownFileNameEffect("a<.txt")).toBe("a<.txt");
-      expect(yield* decodeUnknownFileNameEffect("CON.txt")).toBe("CON.txt");
+      const decodedUnknownFileNameEffect4 = yield* decodeUnknownFileNameEffect("a<.txt");
+      expect(decodedUnknownFileNameEffect4).toBe("a<.txt");
+      const decodedUnknownFileNameEffect5 = yield* decodeUnknownFileNameEffect("CON.txt");
+      expect(decodedUnknownFileNameEffect5).toBe("CON.txt");
     })
   );
 
@@ -111,7 +117,8 @@ describe("FileName", () => {
     Effect.fnUntraced(function* () {
       const input = { fileName: "archive.tar.gz" };
 
-      expect(yield* decodeUnknownFileNamePayloadEffect(input)).toEqual(input);
+      const decodedUnknownFileNamePayloadEffect = yield* decodeUnknownFileNamePayloadEffect(input);
+      expect(decodedUnknownFileNamePayloadEffect).toEqual(input);
     })
   );
 
@@ -122,7 +129,8 @@ describe("FileName", () => {
       [arbitrary],
       Effect.fnUntraced(function* ([name]) {
         expect(isFileName2(name)).toBe(true);
-        expect(yield* decodeUnknownFileNameEffect(name)).toBe(name);
+        const decodedUnknownFileNameEffect6 = yield* decodeUnknownFileNameEffect(name);
+        expect(decodedUnknownFileNameEffect6).toBe(name);
 
         return true;
       }),

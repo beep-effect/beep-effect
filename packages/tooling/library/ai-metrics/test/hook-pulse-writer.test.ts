@@ -234,13 +234,12 @@ const assertAdapterStamp = Effect.fnUntraced(function* (
 const readWriterLines = Effect.fnUntraced(function* (directory: string, files: ReadonlyArray<string>) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  return A.flatten(
-    yield* Effect.forEach(files, (entry) =>
-      fs
-        .readFileString(path.join(directory, entry))
-        .pipe(Effect.map((contents) => A.filter(Str.split("\n")(contents), (line) => line.length > 0)))
-    )
+  const forEach1 = yield* Effect.forEach(files, (entry) =>
+    fs
+      .readFileString(path.join(directory, entry))
+      .pipe(Effect.map((contents) => A.filter(Str.split("\n")(contents), (line) => line.length > 0)))
   );
+  return A.flatten(forEach1);
 });
 
 type WriterOptions = {
@@ -735,7 +734,8 @@ const makeHarnessFixtureRoot = Effect.fnUntraced(function* () {
     ["add", "--all"],
   ]) {
     const child = yield* ChildProcess.make("git", args, { cwd: root, stdout: "ignore", stderr: "ignore" });
-    expect(yield* child.exitCode).toBe(0);
+    const exitCode2 = yield* child.exitCode;
+    expect(exitCode2).toBe(0);
   }
   yield* write("packages/bar/.git", "gitdir: /elsewhere/bar\n");
   yield* write(".claude/worktrees/wt1/.git", "gitdir: /elsewhere/wt1\n");
@@ -746,9 +746,10 @@ const makeHarnessFixtureRoot = Effect.fnUntraced(function* () {
 // fingerprints, reduced to the harness hash.
 const typescriptHarnessHash = Effect.fnUntraced(function* (root: string) {
   const snapshot = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot: root }));
+  const madeHarnessFingerprint = yield* makeHarnessFingerprint(HarnessFingerprintInput.make({ snapshot }));
   return {
     snapshot,
-    harnessHash: yield* deriveHarnessHash(yield* makeHarnessFingerprint(HarnessFingerprintInput.make({ snapshot }))),
+    harnessHash: yield* deriveHarnessHash(madeHarnessFingerprint),
   };
 });
 
@@ -763,7 +764,8 @@ const sessionStartPayload = (cwd: string) => ({
 it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conformance", (it) => {
   it.effect("tags Codex hook rows as codex-cli", () =>
     Effect.gen(function* () {
-      const run = yield* runWriter(yield* encodeJson(preToolUsePayload), { writerPath: codexWriterPath });
+      const encodedJson = yield* encodeJson(preToolUsePayload);
+      const run = yield* runWriter(encodedJson, { writerPath: codexWriterPath });
       const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
       expect(decoded.agentKind).toBe(HookPulseAgentKind.Enum["codex-cli"]);
@@ -782,7 +784,8 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conforma
         model: "composer-2.5",
         workspace_roots: [baseFields.cwd],
       };
-      const run = yield* runWriter(yield* encodeJson(cursorPayload), { writerPath: cursorWriterPath });
+      const encodedJson3 = yield* encodeJson(cursorPayload);
+      const run = yield* runWriter(encodedJson3, { writerPath: cursorWriterPath });
 
       expect(run.exitCode).toBe(0);
       expect(run.stderr).toBe("");
@@ -799,7 +802,8 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conforma
 
   it.effect("writes nothing for an agent kind outside HookPulseAgentKind", () =>
     Effect.gen(function* () {
-      const run = yield* runWriter(yield* encodeJson(preToolUsePayload), { agentKind: "other" });
+      const encodedJson4 = yield* encodeJson(preToolUsePayload);
+      const run = yield* runWriter(encodedJson4, { agentKind: "other" });
       expectSilentRefusal(run);
       expect(run.refusals).toHaveLength(1);
       const refusal = yield* decodeHookPulseRefusalJson(pipe(A.head(run.refusals), O.getOrThrow));
@@ -864,7 +868,8 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conforma
   A.forEach(measuredPayloads, ({ label, payload, permissionMode, waitReason }) => {
     it.effect(`emits one HookPulseV1 row for ${label}`, () =>
       Effect.gen(function* () {
-        const run = yield* runWriter(yield* encodeJson(payload));
+        const encodedJson5 = yield* encodeJson(payload);
+        const run = yield* runWriter(encodedJson5);
         const row = expectSingleRow(run);
         const decoded = yield* decodeHookPulseRow(row);
 
@@ -874,15 +879,20 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conforma
         expect(decoded.instrumentClass).toBe(HookPulseInstrumentClass.Enum.production);
         // Pseudonymized, not raw: these three carry `Sha256Hex`, so the
         // expectation is the oracle digest rather than the identifier itself.
-        expect(decoded.sessionId).toBe(yield* privateDigest(session));
-        expect(decoded.cwd).toBe(yield* privateDigest(baseFields.cwd));
+        const expectation1 = expect(decoded.sessionId);
+        const privateDigest1 = yield* privateDigest(session);
+        expectation1.toBe(privateDigest1);
+        const expectation2 = expect(decoded.cwd);
+        const privateDigest2 = yield* privateDigest(baseFields.cwd);
+        expectation2.toBe(privateDigest2);
         expect(decoded.notifierRev).toBe("log-only-0");
         expect(decoded.waitReason).toBe(waitReason);
         // `transcriptPath` is the one forwarded field the codec cannot do
         // without: `HookPulseRawEvent.transcript_path` is required, so a row
         // missing it still decodes but can never be re-encoded — a replay
         // break that only surfaces in P4, long after the evidence is gone.
-        assertSome(decoded.transcriptPath, yield* privateDigest(baseFields.transcript_path));
+        const privateDigest6 = yield* privateDigest(baseFields.transcript_path);
+        assertSome(decoded.transcriptPath, privateDigest6);
         assertSome(decoded.promptId, baseFields.prompt_id);
         expect(decoded.permissionMode).toEqual(permissionMode);
         // Weakest-link: `waitReason` is derived, and the codec's
@@ -894,7 +904,8 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conforma
 
     it.effect(`writes no measured content for ${label}`, () =>
       Effect.gen(function* () {
-        const run = yield* runWriter(yield* encodeJson(payload));
+        const encodedJson7 = yield* encodeJson(payload);
+        const run = yield* runWriter(encodedJson7);
         const row = expectSingleRow(run);
 
         expect(row).not.toContain(CANARY);
@@ -902,8 +913,11 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conforma
         // drop, which makes "hash it instead" a newly plausible way to keep a
         // content field. A digest of the canary is still derived from content
         // and still belongs nowhere in the ledger.
-        expect(row).not.toContain(yield* privateDigest(CANARY));
-        expect(A.difference(R.keys(yield* decodeRowKeys(row)), canonicalRowKeys)).toEqual([]);
+        const argument = expect(row).not;
+        const privateDigest3 = yield* privateDigest(CANARY);
+        argument.toContain(privateDigest3);
+        const decodedRowKeys = yield* decodeRowKeys(row);
+        expect(A.difference(R.keys(decodedRowKeys), canonicalRowKeys)).toEqual([]);
       })
     );
   });
@@ -962,7 +976,8 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conforma
       // not the raw session id: a filename is as readable as a row, so a
       // ledger whose rows are pseudonymized while its directory listing spells
       // out every session UUID has pseudonymized nothing.
-      const run = yield* runWriter(yield* encodeJson(preToolUsePayload));
+      const encodedJson8 = yield* encodeJson(preToolUsePayload);
+      const run = yield* runWriter(encodedJson8);
       const row = expectSingleRow(run);
       const keys = yield* decodeRowKeys(row);
       const ts = yield* decodeRowString(keys.ts);
@@ -981,12 +996,18 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conforma
       // by any 64-hex string. This is the only one that fails when the shell
       // hashes the right value the wrong way — the NUL-through-a-variable trap
       // described above being the way it actually happens.
-      const run = yield* runWriter(yield* encodeJson(preToolUsePayload));
+      const encodedJson9 = yield* encodeJson(preToolUsePayload);
+      const run = yield* runWriter(encodedJson9);
       const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
-      expect(decoded.sessionId).toBe(yield* privateDigest(session));
-      expect(decoded.cwd).toBe(yield* privateDigest(baseFields.cwd));
-      assertSome(decoded.transcriptPath, yield* privateDigest(baseFields.transcript_path));
+      const expectation3 = expect(decoded.sessionId);
+      const privateDigest4 = yield* privateDigest(session);
+      expectation3.toBe(privateDigest4);
+      const expectation4 = expect(decoded.cwd);
+      const privateDigest5 = yield* privateDigest(baseFields.cwd);
+      expectation4.toBe(privateDigest5);
+      const privateDigest10 = yield* privateDigest(baseFields.transcript_path);
+      assertSome(decoded.transcriptPath, privateDigest10);
     })
   );
 
@@ -1042,7 +1063,8 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conforma
       yield* Effect.forEach(
         cases,
         Effect.fnUntraced(function* ({ payload, key }) {
-          const run = yield* runWriter(yield* encodeJson(payload));
+          const encodedJson11 = yield* encodeJson(payload);
+          const run = yield* runWriter(encodedJson11);
           const row = expectSingleRow(run);
           const writerRow = yield* decodeHookPulseRow(row);
           const codecRow = yield* withSaltEnv(
@@ -1092,13 +1114,11 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conforma
       Effect.gen(function* () {
         const root = yield* makeHarnessFixtureRoot();
         const oracle = yield* typescriptHarnessHash(root);
-        const run = yield* runWriter(
-          yield* encodeJson({ ...sessionStartPayload(root), hook_event_name: adapter.hookEvent }),
-          {
-            writerPath: adapter.writerPath,
-            ...(adapter.registeredEvent === undefined ? {} : { registeredEvent: adapter.registeredEvent }),
-          }
-        );
+        const encodedJson12 = yield* encodeJson({ ...sessionStartPayload(root), hook_event_name: adapter.hookEvent });
+        const run = yield* runWriter(encodedJson12, {
+          writerPath: adapter.writerPath,
+          ...(adapter.registeredEvent === undefined ? {} : { registeredEvent: adapter.registeredEvent }),
+        });
         yield* assertAdapterStamp(run, adapter.agentKind, adapter.stdout, oracle.harnessHash);
       })
     );
@@ -1132,15 +1152,13 @@ fi
         const executablePath = `${bin}:${yield* Config.String("PATH")}`;
         for (const stampCap of ["60s", ""]) {
           yield* fs.remove(`${date}.started`, { force: true });
-          const run = yield* runWriter(
-            yield* encodeJson({ ...sessionStartPayload(root), hook_event_name: adapter.hookEvent }),
-            {
-              writerPath: adapter.writerPath,
-              ...(adapter.registeredEvent === undefined ? {} : { registeredEvent: adapter.registeredEvent }),
-              executablePath,
-              stampCap,
-            }
-          );
+          const encodedJson13 = yield* encodeJson({ ...sessionStartPayload(root), hook_event_name: adapter.hookEvent });
+          const run = yield* runWriter(encodedJson13, {
+            writerPath: adapter.writerPath,
+            ...(adapter.registeredEvent === undefined ? {} : { registeredEvent: adapter.registeredEvent }),
+            executablePath,
+            stampCap,
+          });
           if (stampCap === "60s") {
             yield* assertAdapterStamp(run, adapter.agentKind, adapter.stdout, oracle.harnessHash);
             expect(run.refusals).toHaveLength(0);
@@ -1163,14 +1181,13 @@ fi
         // An indexed symlink loop deterministically refuses the stamp, even as root.
         yield* fs.symlink("loop.md", path.join(root, ".claude/loop.md"));
         const addLoop = yield* ChildProcess.make("git", ["add", ".claude/loop.md"], { cwd: root });
-        expect(yield* addLoop.exitCode).toBe(0);
-        const run = yield* runWriter(
-          yield* encodeJson({ ...sessionStartPayload(root), hook_event_name: adapter.hookEvent }),
-          {
-            writerPath: adapter.writerPath,
-            ...(adapter.registeredEvent === undefined ? {} : { registeredEvent: adapter.registeredEvent }),
-          }
-        );
+        const exitCode14 = yield* addLoop.exitCode;
+        expect(exitCode14).toBe(0);
+        const encodedJson15 = yield* encodeJson({ ...sessionStartPayload(root), hook_event_name: adapter.hookEvent });
+        const run = yield* runWriter(encodedJson15, {
+          writerPath: adapter.writerPath,
+          ...(adapter.registeredEvent === undefined ? {} : { registeredEvent: adapter.registeredEvent }),
+        });
         expect(run.rows).toHaveLength(1);
         assertNone((yield* decodeHookPulseRow(pipe(A.head(run.rows), O.getOrThrow))).harnessHash);
         for (const failedRun of [run, { ...run, rows: A.empty<string>() }]) {
@@ -1224,7 +1241,8 @@ fi
         ["add", "."],
       ]) {
         const command = yield* ChildProcess.make("git", args, { cwd: root, stdout: "ignore", stderr: "ignore" });
-        expect(yield* command.exitCode).toBe(0);
+        const exitCode16 = yield* command.exitCode;
+        expect(exitCode16).toBe(0);
       }
       yield* fs.writeFileString(path.join(root, "packages/nested/.git"), "gitdir: /fixture/missing\n");
       yield* fs.makeDirectory(path.join(root, ".claude/scratch"), { recursive: true });
@@ -1245,12 +1263,13 @@ fi
         ["add", "-f", ".claude/node_modules", ".claude/logs", ".codex/deleted.toml", ".claude/naïve.md"],
         { cwd: root }
       );
-      expect(yield* addExcluded.exitCode).toBe(0);
+      const exitCode17 = yield* addExcluded.exitCode;
+      expect(exitCode17).toBe(0);
       yield* fs.remove(path.join(root, ".codex/deleted.toml"));
       yield* fs.remove(path.join(root, ".claude/naïve.md"));
-      const decoded = yield* decodeHookPulseRow(
-        expectSingleRow(yield* runWriter(yield* encodeJson(sessionStartPayload(root))))
-      );
+      const encodedJson86 = yield* encodeJson(sessionStartPayload(root));
+      const resultWriter = yield* runWriter(encodedJson86);
+      const decoded = yield* decodeHookPulseRow(expectSingleRow(resultWriter));
       const oracle = yield* typescriptHarnessHash(root);
       assertSome(decoded.harnessHash, oracle.harnessHash);
       expect(oracle.snapshot.bounds.excludedNestedRootPaths).toContain("packages/nested");
@@ -1272,11 +1291,11 @@ fi
       yield* fs.makeDirectory(blocked);
       yield* fs.writeFileString(path.join(blocked, "config.json"), "{}\n");
       const add = yield* ChildProcess.make("git", ["add", ".claude/zz-blocked"], { cwd: root });
-      expect(yield* add.exitCode).toBe(0);
+      const exitCode18 = yield* add.exitCode;
+      expect(exitCode18).toBe(0);
       yield* fs.chmod(blocked, 0o000);
-      const run = yield* runWriter(yield* encodeJson(sessionStartPayload(root))).pipe(
-        Effect.ensuring(fs.chmod(blocked, 0o755).pipe(Effect.orDie))
-      );
+      const encodedJson19 = yield* encodeJson(sessionStartPayload(root));
+      const run = yield* runWriter(encodedJson19).pipe(Effect.ensuring(fs.chmod(blocked, 0o755).pipe(Effect.orDie)));
       assertNone((yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash);
       expect(
         Result.getOrThrow(HookPulseRefusal.decodeJsonResult(pipe(A.head(run.refusals), O.getOrThrow))).reason
@@ -1291,16 +1310,20 @@ fi
       const root = yield* makeHarnessFixtureRoot();
       yield* fs.symlink("missing.md", path.join(root, ".claude/dangling.md"));
       const addDangling = yield* ChildProcess.make("git", ["add", ".claude/dangling.md"], { cwd: root });
-      expect(yield* addDangling.exitCode).toBe(0);
-      const dangling = yield* runWriter(yield* encodeJson(sessionStartPayload(root)));
+      const exitCode20 = yield* addDangling.exitCode;
+      expect(exitCode20).toBe(0);
+      const encodedJson21 = yield* encodeJson(sessionStartPayload(root));
+      const dangling = yield* runWriter(encodedJson21);
       assertSome(
         (yield* decodeHookPulseRow(expectSingleRow(dangling))).harnessHash,
         (yield* typescriptHarnessHash(root)).harnessHash
       );
       yield* fs.symlink("loop.md", path.join(root, ".claude/loop.md"));
       const addLoop = yield* ChildProcess.make("git", ["add", ".claude/loop.md"], { cwd: root });
-      expect(yield* addLoop.exitCode).toBe(0);
-      const loop = yield* runWriter(yield* encodeJson(sessionStartPayload(root)));
+      const exitCode22 = yield* addLoop.exitCode;
+      expect(exitCode22).toBe(0);
+      const encodedJson23 = yield* encodeJson(sessionStartPayload(root));
+      const loop = yield* runWriter(encodedJson23);
       assertNone((yield* decodeHookPulseRow(expectSingleRow(loop))).harnessHash);
       expect(
         Result.getOrThrow(HookPulseRefusal.decodeJsonResult(pipe(A.head(loop.refusals), O.getOrThrow))).reason
@@ -1310,7 +1333,8 @@ fi
 
   it.effect("records a timeout refusal before the harness deadline", () =>
     Effect.gen(function* () {
-      const run = yield* runWriter(yield* encodeJson(preToolUsePayload), { writerCap: "0.001s" });
+      const encodedJson24 = yield* encodeJson(preToolUsePayload);
+      const run = yield* runWriter(encodedJson24, { writerCap: "0.001s" });
       expect(run.exitCode).toBe(0);
       expect(run.stdout).toBe("");
       expect(run.rows).toHaveLength(0);
@@ -1340,7 +1364,8 @@ fi
 
   it.effect("preserves an unstamped startup when its fingerprint deadline expires", () =>
     Effect.gen(function* () {
-      const run = yield* runWriter(yield* encodeJson(sessionStartPayload(repoRoot)), { stampCap: "0.001s" });
+      const encodedJson25 = yield* encodeJson(sessionStartPayload(repoRoot));
+      const run = yield* runWriter(encodedJson25, { stampCap: "0.001s" });
       const row = yield* decodeHookPulseRow(expectSingleRow(run));
       assertNone(row.harnessHash);
       expect(run.stdout).toBe("");
@@ -1356,7 +1381,9 @@ fi
       const payload = { ...preToolUsePayload, source: 42 };
       const raw = yield* HookPulseRawEvent.decodeEffect(payload);
       assertNone(raw.source);
-      const decoded = yield* decodeHookPulseRow(expectSingleRow(yield* runWriter(yield* encodeJson(payload))));
+      const encodedJson87 = yield* encodeJson(payload);
+      const resultWriter26 = yield* runWriter(encodedJson87);
+      const decoded = yield* decodeHookPulseRow(expectSingleRow(resultWriter26));
       expect(decoded.hookEvent).toBe("PreToolUse");
       assertNone(decoded.sessionStartSource);
     })
@@ -1367,7 +1394,8 @@ fi
       const root = yield* makeHarnessFixtureRoot();
       const path = yield* Path.Path;
       // A cwd below the root: the writer walks up to the nearest AGENTS.md + .git.
-      const run = yield* runWriter(yield* encodeJson(sessionStartPayload(path.join(root, "packages", "foo"))));
+      const encodedJson27 = yield* encodeJson(sessionStartPayload(path.join(root, "packages", "foo")));
+      const run = yield* runWriter(encodedJson27);
       const row = expectSingleRow(run);
       const decoded = yield* decodeHookPulseRow(row);
       const oracle = yield* typescriptHarnessHash(root);
@@ -1402,14 +1430,17 @@ fi
       const path = yield* Path.Path;
       const root = yield* makeHarnessFixtureRoot();
       const stampOf = Effect.fnUntraced(function* (payload: unknown) {
-        const run = yield* runWriter(yield* encodeJson(payload));
+        const encodedJson28 = yield* encodeJson(payload);
+        const run = yield* runWriter(encodedJson28);
         return (yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash;
       });
 
       // Owned by SessionStart: the same root on any other event carries no stamp.
-      assertNone(yield* stampOf({ ...preToolUsePayload, cwd: root }));
+      const stampOf29 = yield* stampOf({ ...preToolUsePayload, cwd: root });
+      assertNone(stampOf29);
       // No repo root above cwd: no fallback root, no stamp, but still a row.
-      assertNone(yield* stampOf(sessionStartPayload(baseFields.cwd)));
+      const stampOf30 = yield* stampOf(sessionStartPayload(baseFields.cwd));
+      assertNone(stampOf30);
 
       // A path outside printable ASCII: JS and C sort orders may disagree, so the
       // shell refuses even though TypeScript can hash it.
@@ -1420,9 +1451,11 @@ fi
         stdout: "ignore",
         stderr: "ignore",
       });
-      expect(yield* indexed1.exitCode).toBe(0);
+      const exitCode31 = yield* indexed1.exitCode;
+      expect(exitCode31).toBe(0);
       yield* typescriptHarnessHash(root);
-      assertNone(yield* stampOf(sessionStartPayload(root)));
+      const stampOf32 = yield* stampOf(sessionStartPayload(root));
+      assertNone(stampOf32);
       yield* fs.remove(path.join(root, ".claude", "skills", "caf\u00e9"), { recursive: true });
 
       // The file budget: TypeScript truncates at 1000 collected files, so the
@@ -1438,9 +1471,11 @@ fi
         stdout: "ignore",
         stderr: "ignore",
       });
-      expect(yield* indexed2.exitCode).toBe(0);
+      const exitCode33 = yield* indexed2.exitCode;
+      expect(exitCode33).toBe(0);
       pipe((yield* typescriptHarnessHash(root)).snapshot.bounds.truncationReason, O.isSome, assertTrue);
-      assertNone(yield* stampOf(sessionStartPayload(root)));
+      const stampOf34 = yield* stampOf(sessionStartPayload(root));
+      assertNone(stampOf34);
     })
   );
 
@@ -1458,7 +1493,8 @@ fi
       yield* fs.symlink(invalidRoot, alias);
       const failure = yield* typescriptHarnessHash(alias).pipe(Effect.flip);
       expect(failure.message).toContain("Git");
-      const run = yield* runWriter(yield* encodeJson(sessionStartPayload(alias)));
+      const encodedJson35 = yield* encodeJson(sessionStartPayload(alias));
+      const run = yield* runWriter(encodedJson35);
       assertNone((yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash);
     })
   );
@@ -1473,7 +1509,8 @@ fi
       yield* fs.rename(root, renamed);
       yield* Effect.gen(function* () {
         const oracle = yield* typescriptHarnessHash(renamed);
-        const run = yield* runWriter(yield* encodeJson(sessionStartPayload(renamed)));
+        const encodedJson36 = yield* encodeJson(sessionStartPayload(renamed));
+        const run = yield* runWriter(encodedJson36);
         assertSome((yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash, oracle.harnessHash);
       }).pipe(Effect.ensuring(fs.rename(renamed, root).pipe(Effect.orDie)));
     })
@@ -1491,7 +1528,8 @@ fi
       const alias = path.join(outer, "alias");
       yield* fs.symlink(subdirectory, alias);
       const oracle = yield* typescriptHarnessHash(inner);
-      const run = yield* runWriter(yield* encodeJson(sessionStartPayload(alias)));
+      const encodedJson37 = yield* encodeJson(sessionStartPayload(alias));
+      const run = yield* runWriter(encodedJson37);
       assertSome((yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash, oracle.harnessHash);
     })
   );
@@ -1503,7 +1541,8 @@ fi
       const outer = yield* makeHarnessFixtureRoot();
       const inner = path.join(outer, "nearer");
       yield* fs.makeDirectory(path.join(inner, ".git"), { recursive: true });
-      const run = yield* runWriter(yield* encodeJson(sessionStartPayload(inner)));
+      const encodedJson38 = yield* encodeJson(sessionStartPayload(inner));
+      const run = yield* runWriter(encodedJson38);
       assertNone((yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash);
     })
   );
@@ -1544,7 +1583,8 @@ fi
       );
       yield* fs.chmod(git, 0o755);
       const executablePath = `${bin}:${yield* Config.String("PATH")}`;
-      const run = yield* runWriter(yield* encodeJson(sessionStartPayload(root)), { executablePath });
+      const encodedJson39 = yield* encodeJson(sessionStartPayload(root));
+      const run = yield* runWriter(encodedJson39, { executablePath });
       assertNone((yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash);
     })
   );
@@ -1555,14 +1595,21 @@ fi
       // at all, because the insecure default is what such a writer would have
       // used anyway. Only a run under an operator salt separates "resolves the
       // salt" from "hardcodes the fallback".
-      const run = yield* runWriter(yield* encodeJson(preToolUsePayload), {
+      const encodedJson40 = yield* encodeJson(preToolUsePayload);
+      const run = yield* runWriter(encodedJson40, {
         hashSalt: OPERATOR_SALT,
       });
       const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
-      expect(decoded.sessionId).toBe(yield* hashPrivateIdentifier(session, O.some(OPERATOR_SALT)));
-      expect(decoded.cwd).toBe(yield* hashPrivateIdentifier(baseFields.cwd, O.some(OPERATOR_SALT)));
-      expect(decoded.sessionId).not.toBe(yield* privateDigest(session));
+      const expectation5 = expect(decoded.sessionId);
+      const hashPrivateIdentifier6 = yield* hashPrivateIdentifier(session, O.some(OPERATOR_SALT));
+      expectation5.toBe(hashPrivateIdentifier6);
+      const expectation6 = expect(decoded.cwd);
+      const hashPrivateIdentifier7 = yield* hashPrivateIdentifier(baseFields.cwd, O.some(OPERATOR_SALT));
+      expectation6.toBe(hashPrivateIdentifier7);
+      const argument1 = expect(decoded.sessionId).not;
+      const privateDigest8 = yield* privateDigest(session);
+      argument1.toBe(privateDigest8);
     })
   );
 
@@ -1572,18 +1619,22 @@ fi
       // `resolveAiMetricsHashSaltValue` trims first and falls back. That lone
       // input is where the two halves can disagree with both looking correct,
       // so the shell trims too and this pins it.
-      const run = yield* runWriter(yield* encodeJson(preToolUsePayload), {
+      const encodedJson41 = yield* encodeJson(preToolUsePayload);
+      const run = yield* runWriter(encodedJson41, {
         hashSalt: "   ",
       });
       const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
-      expect(decoded.sessionId).toBe(yield* privateDigest(session));
+      const expectation7 = expect(decoded.sessionId);
+      const privateDigest9 = yield* privateDigest(session);
+      expectation7.toBe(privateDigest9);
     })
   );
 
   it.effect("omits notificationType when the raw value is outside the enum", () =>
     Effect.gen(function* () {
-      const run = yield* runWriter(yield* encodeJson(futureNotificationPayload));
+      const encodedJson42 = yield* encodeJson(futureNotificationPayload);
+      const run = yield* runWriter(encodedJson42);
       const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
       // The spike's jq `capture()` defect dropped exactly this row while still
@@ -1597,7 +1648,8 @@ fi
 
   it.effect("keeps notificationType when the raw value is inside the enum", () =>
     Effect.gen(function* () {
-      const run = yield* runWriter(yield* encodeJson(permissionPromptNotificationPayload));
+      const encodedJson43 = yield* encodeJson(permissionPromptNotificationPayload);
+      const run = yield* runWriter(encodedJson43);
       const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
       assertSome(decoded.notificationType, HookPulseNotificationType.Enum.permission_prompt);
@@ -1606,9 +1658,12 @@ fi
 
   it.effect("carries sessionEndReason only on SessionEnd", () =>
     Effect.gen(function* () {
-      const ended = yield* runWriter(yield* encodeJson(sessionEndPayload));
-      const stopped = yield* runWriter(yield* encodeJson(stopPayload));
-      const denied = yield* runWriter(yield* encodeJson(permissionDeniedPayload));
+      const encodedJson44 = yield* encodeJson(sessionEndPayload);
+      const ended = yield* runWriter(encodedJson44);
+      const encodedJson45 = yield* encodeJson(stopPayload);
+      const stopped = yield* runWriter(encodedJson45);
+      const encodedJson46 = yield* encodeJson(permissionDeniedPayload);
+      const denied = yield* runWriter(encodedJson46);
       const decodedEnd = yield* decodeHookPulseRow(expectSingleRow(ended));
       const decodedStop = yield* decodeHookPulseRow(expectSingleRow(stopped));
       const decodedDenied = yield* decodeHookPulseRow(expectSingleRow(denied));
@@ -1622,7 +1677,8 @@ fi
 
   it.effect("carries durationMs from PostToolUse and pairs tool ids", () =>
     Effect.gen(function* () {
-      const run = yield* runWriter(yield* encodeJson(postToolUsePayload));
+      const encodedJson47 = yield* encodeJson(postToolUsePayload);
+      const run = yield* runWriter(encodedJson47);
       const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
       assertSome(decoded.durationMs, 477);
@@ -1636,7 +1692,8 @@ fi
       // `Infinity` and fails `NonNegNum`'s `S.Finite`. Keeping it would put an
       // undecodable line in a shard, which poisons replay for every row that
       // shard holds — strictly worse than dropping one optional field.
-      const run = yield* runWriter(yield* nonFiniteDurationStdin);
+      const nonFiniteDurationStdin48 = yield* nonFiniteDurationStdin;
+      const run = yield* runWriter(nonFiniteDurationStdin48);
       const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
       assertNone(decoded.durationMs);
@@ -1646,7 +1703,8 @@ fi
 
   it.effect("invents no toolUseId for PermissionRequest", () =>
     Effect.gen(function* () {
-      const run = yield* runWriter(yield* encodeJson(permissionRequestPlanPayload));
+      const encodedJson49 = yield* encodeJson(permissionRequestPlanPayload);
+      const run = yield* runWriter(encodedJson49);
       const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
       // The two-hop join in P4 depends on this absence being real.
@@ -1657,7 +1715,8 @@ fi
 
   it.effect("writes nothing and exits 0 when the kill-switch sentinel exists", () =>
     Effect.gen(function* () {
-      const run = yield* runWriter(yield* encodeJson(permissionRequestPlanPayload), {
+      const encodedJson50 = yield* encodeJson(permissionRequestPlanPayload);
+      const run = yield* runWriter(encodedJson50, {
         disarmSentinel: '{"disarmedAt":"2026-08-05T00:00:00Z","reason":"test","evidenceTier":"unknown"}',
       });
 
@@ -1686,7 +1745,8 @@ fi
       it.effect(`writes one row and ${notified ? "runs" : "skips"} the notifier for ${label}`, () =>
         Effect.gen(function* () {
           const stub = yield* makeNotifierStubWriter();
-          const run = yield* runWriter(yield* encodeJson(permissionRequestToolPayload), {
+          const encodedJson51 = yield* encodeJson(permissionRequestToolPayload);
+          const run = yield* runWriter(encodedJson51, {
             writerPath: stub.writerPath,
             extraEnv: notifierHostEnv(host, notifierRev),
           });
@@ -1695,7 +1755,8 @@ fi
           expect(decoded.hookEvent).toBe(HookPulseEvent.Enum.PermissionRequest);
           expect(decoded.waitReason).toBe(HookPulseWaitReason.Enum["tool-permission"]);
           expect(decoded.notifierRev).toBe(notifierRev);
-          expect(yield* stub.calls).toHaveLength(notified ? 1 : 0);
+          const calls52 = yield* stub.calls;
+          expect(calls52).toHaveLength(notified ? 1 : 0);
         })
       );
     }
@@ -1720,7 +1781,8 @@ fi
       it.effect(`writes no row and never notifies under the cloud host for ${label}`, () =>
         Effect.gen(function* () {
           const stub = yield* makeNotifierStubWriter();
-          const run = yield* runWriter(yield* stdin, {
+          const stdin53 = yield* stdin;
+          const run = yield* runWriter(stdin53, {
             writerPath: stub.writerPath,
             extraEnv: notifierHostEnv("cloud", "desktop-ntfy-1"),
             ...(disarmed
@@ -1733,7 +1795,8 @@ fi
           // The payload-free refusal row is the only trace either path leaves.
           const refusals = yield* Effect.forEach(run.refusals, (row) => decodeHookPulseRefusalJson(row));
           expect(A.map(refusals, (refusal) => refusal.reason)).toEqual([reason]);
-          expect(yield* stub.calls).toHaveLength(0);
+          const calls54 = yield* stub.calls;
+          expect(calls54).toHaveLength(0);
         })
       );
     }
@@ -1758,7 +1821,8 @@ fi
     ({ label, stdin }) => {
       it.effect(`writes no partial line for ${label}`, () =>
         Effect.gen(function* () {
-          const run = yield* runWriter(yield* stdin);
+          const stdin55 = yield* stdin;
+          const run = yield* runWriter(stdin55);
 
           expectSilentRefusal(run);
         })
@@ -1772,8 +1836,10 @@ fi
   // storms live. The closing evidence P4 needs is tool_use_id + durationMs.
   it.effect("carries bracket-closing evidence and isInterrupt on PostToolUseFailure", () =>
     Effect.gen(function* () {
-      const interrupted = yield* runWriter(yield* encodeJson(postToolUseFailurePayload(true)));
-      const errored = yield* runWriter(yield* encodeJson(postToolUseFailurePayload(false)));
+      const encodedJson56 = yield* encodeJson(postToolUseFailurePayload(true));
+      const interrupted = yield* runWriter(encodedJson56);
+      const encodedJson57 = yield* encodeJson(postToolUseFailurePayload(false));
+      const errored = yield* runWriter(encodedJson57);
       const decodedInterrupted = yield* decodeHookPulseRow(expectSingleRow(interrupted));
       const decodedErrored = yield* decodeHookPulseRow(expectSingleRow(errored));
 
@@ -1790,7 +1856,8 @@ fi
     Effect.gen(function* () {
       // `is_interrupt` on a foreign event is owned by PostToolUseFailure, so
       // emitting it would fail HookPulseEventOwnedFieldInvariant on decode.
-      const run = yield* runWriter(yield* encodeJson({ ...postToolUsePayload, is_interrupt: true }));
+      const encodedJson58 = yield* encodeJson({ ...postToolUsePayload, is_interrupt: true });
+      const run = yield* runWriter(encodedJson58);
       const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
       expect(decoded.hookEvent).toBe(HookPulseEvent.Enum.PostToolUse);
@@ -1803,7 +1870,8 @@ fi
       // With BEEP_AGENT_EVIDENCE_ROOT cleared, the writer must land in the
       // same directory `agentEvidenceRoot`/`hookPulseLedgerDir` compute — the
       // runner reads back from exactly that derived path.
-      const run = yield* runWriter(yield* encodeJson(permissionRequestPlanPayload), {
+      const encodedJson59 = yield* encodeJson(permissionRequestPlanPayload);
+      const run = yield* runWriter(encodedJson59, {
         viaXdgFallback: true,
       });
       const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
@@ -1850,7 +1918,8 @@ fi
   A.forEach(codecParityCases, ({ codecEnv, expectedSalt, label, writerOptions }) => {
     it.effect(`reproduces the writer's private digests through ${label}`, () =>
       Effect.gen(function* () {
-        const run = yield* runWriter(yield* encodeJson(preToolUsePayload), writerOptions);
+        const encodedJson60 = yield* encodeJson(preToolUsePayload);
+        const run = yield* runWriter(encodedJson60, writerOptions);
         const writerRow = yield* decodeHookPulseRow(expectSingleRow(run));
         // `ts`, `notifierRev`, `instrumentClass`, `agentKind`, and
         // `evidenceTier` enter no digest, so a literal `ts` here avoids
@@ -1875,8 +1944,12 @@ fi
         // what separates "reproduces the writer" from "both hardcode the
         // default", and it fails on the salted rows if either half stops
         // reading its variable.
-        expect(codecRow.sessionId).toBe(yield* hashPrivateIdentifier(session, O.fromUndefinedOr(expectedSalt)));
-        expect(codecRow.cwd).toBe(yield* hashPrivateIdentifier(baseFields.cwd, O.fromUndefinedOr(expectedSalt)));
+        const expectation8 = expect(codecRow.sessionId);
+        const hashPrivateIdentifier10 = yield* hashPrivateIdentifier(session, O.fromUndefinedOr(expectedSalt));
+        expectation8.toBe(hashPrivateIdentifier10);
+        const expectation9 = expect(codecRow.cwd);
+        const hashPrivateIdentifier11 = yield* hashPrivateIdentifier(baseFields.cwd, O.fromUndefinedOr(expectedSalt));
+        expectation9.toBe(hashPrivateIdentifier11);
       })
     );
   });
@@ -1903,27 +1976,37 @@ fi
 
   it.effect("reproduces the writer's private digests through the projection rung, above the ai-metrics rung", () =>
     Effect.gen(function* () {
-      const { file } = yield* writeProjection(yield* projectionDocument);
-      const run = yield* runWriter(yield* encodeJson(preToolUsePayload), {
+      const projectionDocument61 = yield* projectionDocument;
+      const { file } = yield* writeProjection(projectionDocument61);
+      const encodedJson62 = yield* encodeJson(preToolUsePayload);
+      const run = yield* runWriter(encodedJson62, {
         namespaceProjection: file,
         aiMetricsHashSalt: CODEC_PARITY_SALT,
       });
       const writerRow = yield* decodeHookPulseRow(expectSingleRow(run));
-      expect(writerRow.sessionId).toBe(yield* hashPrivateIdentifier(session, O.some(PROJECTION_SALT)));
-      expect(writerRow.cwd).toBe(yield* hashPrivateIdentifier(baseFields.cwd, O.some(PROJECTION_SALT)));
+      const expectation10 = expect(writerRow.sessionId);
+      const hashPrivateIdentifier12 = yield* hashPrivateIdentifier(session, O.some(PROJECTION_SALT));
+      expectation10.toBe(hashPrivateIdentifier12);
+      const expectation11 = expect(writerRow.cwd);
+      const hashPrivateIdentifier13 = yield* hashPrivateIdentifier(baseFields.cwd, O.some(PROJECTION_SALT));
+      expectation11.toBe(hashPrivateIdentifier13);
       const namespace = yield* withSaltEnv(
         { BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file, BEEP_AI_METRICS_HASH_SALT: CODEC_PARITY_SALT },
         hookPulseNamespace
       );
       expect(namespace.source).toBe("projection");
-      expect(yield* hashPrivateIdentifier(session, namespace.hashSalt)).toBe(writerRow.sessionId);
+      const hashPrivateIdentifier63 = yield* hashPrivateIdentifier(session, namespace.hashSalt);
+      expect(hashPrivateIdentifier63).toBe(writerRow.sessionId);
       // The instrument override still wins over the projection on both halves.
-      const overridden = yield* runWriter(yield* encodeJson(preToolUsePayload), {
+      const encodedJson64 = yield* encodeJson(preToolUsePayload);
+      const overridden = yield* runWriter(encodedJson64, {
         namespaceProjection: file,
         hashSalt: CODEC_PARITY_SALT,
       });
       const overriddenRow = yield* decodeHookPulseRow(expectSingleRow(overridden));
-      expect(overriddenRow.sessionId).toBe(yield* hashPrivateIdentifier(session, O.some(CODEC_PARITY_SALT)));
+      const expectation12 = expect(overriddenRow.sessionId);
+      const hashPrivateIdentifier14 = yield* hashPrivateIdentifier(session, O.some(CODEC_PARITY_SALT));
+      expectation12.toBe(hashPrivateIdentifier14);
       const overriddenNamespace = yield* withSaltEnv(
         { BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file, BEEP_HOOK_PULSE_HASH_SALT: CODEC_PARITY_SALT },
         hookPulseNamespace
@@ -1940,12 +2023,18 @@ fi
         { ...projectionFields, extra: "ignored forward-compatible metadata" },
         { ...projectionFields, hashSalt: AI_METRICS_LOCAL_INSECURE_HASH_SALT },
       ]) {
-        const { file } = yield* writeProjection(yield* encodeJson(fields));
-        const run = yield* runWriter(yield* encodeJson(preToolUsePayload), { namespaceProjection: file });
+        const encodedJson65 = yield* encodeJson(fields);
+        const { file } = yield* writeProjection(encodedJson65);
+        const encodedJson66 = yield* encodeJson(preToolUsePayload);
+        const run = yield* runWriter(encodedJson66, { namespaceProjection: file });
         const row = yield* decodeHookPulseRow(expectSingleRow(run));
         const namespace = yield* withSaltEnv({ BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file }, hookPulseNamespace);
-        expect(row.sessionId).toBe(yield* hashPrivateIdentifier(session, namespace.hashSalt));
-        expect(row.cwd).toBe(yield* hashPrivateIdentifier(baseFields.cwd, namespace.hashSalt));
+        const expectation13 = expect(row.sessionId);
+        const hashPrivateIdentifier15 = yield* hashPrivateIdentifier(session, namespace.hashSalt);
+        expectation13.toBe(hashPrivateIdentifier15);
+        const expectation14 = expect(row.cwd);
+        const hashPrivateIdentifier16 = yield* hashPrivateIdentifier(baseFields.cwd, namespace.hashSalt);
+        expectation14.toBe(hashPrivateIdentifier16);
         expect(run.refusals).toHaveLength(0);
       }
     })
@@ -1958,7 +2047,8 @@ fi
           { name: "BEEP_HOOK_PULSE_HASH_SALT", options: { hashSalt: salt } },
           { name: "BEEP_AI_METRICS_HASH_SALT", options: { aiMetricsHashSalt: salt } },
         ]) {
-          const run = yield* runWriter(yield* encodeJson(preToolUsePayload), rung.options);
+          const encodedJson67 = yield* encodeJson(preToolUsePayload);
+          const run = yield* runWriter(encodedJson67, rung.options);
           expect(run.rows).toHaveLength(0);
           expect(run.refusals).toHaveLength(1);
           const error = yield* withSaltEnv({ [rung.name]: salt }, hookPulseNamespace).pipe(Effect.flip);
@@ -1971,7 +2061,8 @@ fi
   it.effect("uses the same temporary XDG and HOME default projection paths", () =>
     Effect.gen(function* () {
       for (const cacheOverride of [undefined, ""]) {
-        const run = yield* runWriter(yield* encodeJson(preToolUsePayload), {
+        const encodedJson68 = yield* encodeJson(preToolUsePayload);
+        const run = yield* runWriter(encodedJson68, {
           defaultProjectionDocument: yield* projectionDocument,
           ...(cacheOverride === undefined ? {} : { extraEnv: { XDG_CACHE_HOME: cacheOverride } }),
         });
@@ -1985,7 +2076,9 @@ fi
           hookPulseNamespace
         );
         expect(namespace.source).toBe("projection");
-        expect(row.sessionId).toBe(yield* hashPrivateIdentifier(session, namespace.hashSalt));
+        const expectation15 = expect(row.sessionId);
+        const hashPrivateIdentifier17 = yield* hashPrivateIdentifier(session, namespace.hashSalt);
+        expectation15.toBe(hashPrivateIdentifier17);
       }
     })
   );
@@ -2014,7 +2107,8 @@ fi
       const validDocument = yield* projectionDocument;
       for (const text of [...invalidDocuments, `${validDocument}\n${validDocument}`, "null", "[]"]) {
         const { file } = yield* writeProjection(text);
-        const run = yield* runWriter(yield* encodeJson(preToolUsePayload), { namespaceProjection: file });
+        const encodedJson69 = yield* encodeJson(preToolUsePayload);
+        const run = yield* runWriter(encodedJson69, { namespaceProjection: file });
         expect(run.rows).toHaveLength(0);
         expect(run.refusals).toHaveLength(1);
         const refusal = yield* decodeHookPulseRefusalJson(A.getUnsafe(run.refusals, 0));
@@ -2038,7 +2132,8 @@ fi
           { namespaceProjection: `${dir}/absent.json` },
         ];
         for (const options of cases) {
-          const run = yield* runWriter(yield* encodeJson(preToolUsePayload), options);
+          const encodedJson70 = yield* encodeJson(preToolUsePayload);
+          const run = yield* runWriter(encodedJson70, options);
           const row = yield* decodeHookPulseRow(expectSingleRow(run));
           const namespace = yield* withSaltEnv(
             {
@@ -2048,7 +2143,9 @@ fi
             },
             hookPulseNamespace
           );
-          expect(row.sessionId).toBe(yield* hashPrivateIdentifier(session, namespace.hashSalt));
+          const expectation16 = expect(row.sessionId);
+          const hashPrivateIdentifier18 = yield* hashPrivateIdentifier(session, namespace.hashSalt);
+          expectation16.toBe(hashPrivateIdentifier18);
         }
       })
   );
@@ -2058,15 +2155,19 @@ fi
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const malformed = yield* writeProjection("{not json");
-      const blank = yield* writeProjection(yield* encodeJson({ version: 1, hashSalt: "   " }));
-      const wrongVersion = yield* writeProjection(yield* encodeJson({ version: 2, hashSalt: PROJECTION_SALT }));
-      const linked = yield* writeProjection(yield* projectionDocument);
+      const encodedJson71 = yield* encodeJson({ version: 1, hashSalt: "   " });
+      const blank = yield* writeProjection(encodedJson71);
+      const encodedJson72 = yield* encodeJson({ version: 2, hashSalt: PROJECTION_SALT });
+      const wrongVersion = yield* writeProjection(encodedJson72);
+      const projectionDocument73 = yield* projectionDocument;
+      const linked = yield* writeProjection(projectionDocument73);
       const link = path.join(linked.dir, "link.json");
       yield* fs.symlink(linked.file, link);
       const dangling = path.join(linked.dir, "dangling.json");
       yield* fs.symlink(path.join(linked.dir, "missing.json"), dangling);
       for (const projection of [malformed.file, blank.file, wrongVersion.file, link, dangling, linked.dir]) {
-        const run = yield* runWriter(yield* encodeJson(preToolUsePayload), {
+        const encodedJson74 = yield* encodeJson(preToolUsePayload);
+        const run = yield* runWriter(encodedJson74, {
           namespaceProjection: projection,
           aiMetricsHashSalt: CODEC_PARITY_SALT,
         });
@@ -2174,7 +2275,7 @@ const readSentinel = Effect.fnUntraced(function* (store: SwitchStore) {
   const fs = yield* FileSystem.FileSystem;
 
   return (yield* fs.exists(store.sentinelPath))
-    ? O.some(yield* fs.readFileString(store.sentinelPath))
+    ? yield* Effect.asSome(fs.readFileString(store.sentinelPath))
     : O.none<string>();
 });
 
@@ -2255,7 +2356,8 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse kill-switch con
   it.effect("never moves an existing window start forward, across any elapsed time", () =>
     Effect.gen(function* () {
       const store = yield* makeSwitchStore();
-      yield* seedSentinel(store, yield* seededSentinelJson);
+      const seededSentinelJson75 = yield* seededSentinelJson;
+      yield* seedSentinel(store, seededSentinelJson75);
 
       const run = yield* runSwitch(store, ["disarm", "a-much-later-reason"]);
 
@@ -2263,7 +2365,9 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse kill-switch con
       // Byte-identical to what was seeded: not the reason, not the timestamp,
       // not the trailing newline. The seeded start is far enough in the past
       // that an overwrite is unambiguous rather than clock-resolution noise.
-      assertSome(yield* readSentinel(store), yield* seededSentinelJson);
+      const readSentinel76 = yield* readSentinel(store);
+      const seededSentinelJson88 = yield* seededSentinelJson;
+      assertSome(readSentinel76, seededSentinelJson88);
       expect(run.stdout).toContain(SEEDED_DISARM.disarmedAt);
     })
   );
@@ -2293,11 +2397,13 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse kill-switch con
       // covered. Nothing downstream can detect that: the ledger still looks
       // complete, and the window it describes is simply wrong.
       const store = yield* makeSwitchStore();
-      yield* seedSentinel(store, yield* seededSentinelJson);
+      const seededSentinelJson77 = yield* seededSentinelJson;
+      yield* seedSentinel(store, seededSentinelJson77);
       yield* runSwitch(store, ["disarm", "a-much-later-reason"]);
 
       const armed = yield* runSwitch(store, ["arm"]);
-      const window = yield* decodeDisarmWindow(expectSingleWindow(yield* readWindowRows(store)));
+      const readWindowRows78 = yield* readWindowRows(store);
+      const window = yield* decodeDisarmWindow(expectSingleWindow(readWindowRows78));
 
       expectSwitchOk(armed);
       expect(window.schemaVersion).toBe(HookPulseDisarmWindowSchemaVersion.Enum["hook-pulse-disarm-window/v1"]);
@@ -2312,7 +2418,8 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse kill-switch con
       pipe(window.rearmedAt > SEEDED_DISARM.disarmedAt, assertTrue);
       // The switch is armed again only if the sentinel is actually gone — the
       // writer tests for its existence and nothing else.
-      assertNone(yield* readSentinel(store));
+      const readSentinel79 = yield* readSentinel(store);
+      assertNone(readSentinel79);
     })
   );
 
@@ -2338,10 +2445,12 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse kill-switch con
           // Idempotent here too: a sentinel it cannot parse is still a
           // sentinel, and stamping a fresh timestamp onto it would invent a
           // window start where the honest answer is that there isn't one.
-          assertSome(yield* readSentinel(store), contents);
+          const readSentinel80 = yield* readSentinel(store);
+          assertSome(readSentinel80, contents);
 
           const armed = yield* runSwitch(store, ["arm"]);
-          const window = yield* decodeDisarmWindow(expectSingleWindow(yield* readWindowRows(store)));
+          const readWindowRows81 = yield* readWindowRows(store);
+          const window = yield* decodeDisarmWindow(expectSingleWindow(readWindowRows81));
 
           expectSwitchOk(armed);
           // `null`, never the rearm instant: a window whose start defaulted to
@@ -2350,7 +2459,8 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse kill-switch con
           assertNone(window.disarmedAt);
           assertNone(window.reason);
           expect(window.rearmedAt).toMatch(isoSecond);
-          assertNone(yield* readSentinel(store));
+          const readSentinel82 = yield* readSentinel(store);
+          assertNone(readSentinel82);
         })
       );
     }
@@ -2369,8 +2479,10 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse kill-switch con
       // permanent: a phantom window nothing can retract. Not creating the file
       // at all also keeps "no windows yet" distinguishable from "a window whose
       // fields all came out empty".
-      expect(yield* readWindowRows(store)).toEqual([]);
-      pipe(yield* fs.exists(store.windowsPath), assertFalse);
+      const readWindowRows83 = yield* readWindowRows(store);
+      expect(readWindowRows83).toEqual([]);
+      const exists84 = yield* fs.exists(store.windowsPath);
+      pipe(exists84, assertFalse);
     })
   );
 
@@ -2380,7 +2492,8 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse kill-switch con
       // now", so it has to read the same sentinel the writer tests for rather
       // than a second opinion about it.
       const store = yield* makeSwitchStore();
-      yield* seedSentinel(store, yield* seededSentinelJson);
+      const seededSentinelJson85 = yield* seededSentinelJson;
+      yield* seedSentinel(store, seededSentinelJson85);
 
       const disarmed = yield* runSwitch(store, ["status"]);
       yield* runSwitch(store, ["arm"]);

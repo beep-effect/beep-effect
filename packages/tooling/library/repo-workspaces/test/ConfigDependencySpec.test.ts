@@ -118,7 +118,9 @@ describe("ConfigDependencySpec.FromString", () => {
   it.effect("round-trips encode(decode) byte-identically", () =>
     Effect.gen(function* () {
       for (const input of ["0.11.1", `0.11.1+${SRI}`, `0.44.0+${SRI_WITH_PLUS}`, "1.0.0-rc.1"]) {
-        assert.strictEqual(yield* encode(yield* decode(input)), input);
+        const decoded = yield* decode(input);
+        const encoded = yield* encode(decoded);
+        assert.strictEqual(encoded, input);
       }
     })
   );

@@ -48,8 +48,10 @@ it.layer(TestLayer, { timeout: "30 seconds" })((it) => {
       const pkg = yield* Package.decode({ name: "p", version: "1.0.0" });
       const writeError = yield* Effect.flip(service.write("/file/package.json", pkg));
       assert.strictEqual(writeError._tag, "PackageJsonWriteError");
-      assert.strictEqual(yield* service.modify("/p/package.json", []), '{"name":"p","version":"1.0.0"}');
-      assert.strictEqual(yield* fs.readFileString("/p/package.json"), '{"name":"p","version":"1.0.0"}');
+      const modify1 = yield* service.modify("/p/package.json", []);
+      assert.strictEqual(modify1, '{"name":"p","version":"1.0.0"}');
+      const readFileString2 = yield* fs.readFileString("/p/package.json");
+      assert.strictEqual(readFileString2, '{"name":"p","version":"1.0.0"}');
     })
   );
 });

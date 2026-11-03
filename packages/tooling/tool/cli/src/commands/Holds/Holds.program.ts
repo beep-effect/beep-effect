@@ -123,8 +123,9 @@ export const runHoldsProbe = Effect.fn("Holds.probeProgram")(function* (input: H
   );
   const ledger = yield* HoldLedger;
   const probe = yield* HoldProbe;
+  const currentVersions1 = yield* ledger.currentVersions;
   const version = yield* pipe(
-    yield* ledger.currentVersions,
+    currentVersions1,
     A.findFirst((candidate) => candidate.proposition.holdId === id),
     O.match({
       onNone: () => HoldsError.make({ reason: "not-found", message: `No current hold record named ${id}.` }),
@@ -144,7 +145,8 @@ export const runHoldsProbe = Effect.fn("Holds.probeProgram")(function* (input: H
     return A.append(report, "[holds] dry run: nothing recorded.");
   }
   yield* ledger.appendRun(run);
-  const confirmed = confirmHoldRuns(yield* ledger.runsFor(version));
+  const runsFor2 = yield* ledger.runsFor(version);
+  const confirmed = confirmHoldRuns(runsFor2);
   return A.append(report, `[holds] recorded ${run.id}; confirmed verdict: ${confirmed}`);
 });
 
@@ -199,7 +201,8 @@ const tombstonesFor = Effect.fn("Holds.tombstones")(function* (
   live: ReadonlyArray<HoldClaimVersion>,
   gone: HashMap.HashMap<string, ReadonlyArray<string>>
 ) {
-  const tombstone = retract(all, yield* DateTime.now);
+  const now3 = yield* DateTime.now;
+  const tombstone = retract(all, now3);
   return A.getSomes(
     A.map(live, (version) =>
       pipe(
@@ -217,9 +220,11 @@ const writeLintFixes = Effect.fn("Holds.writeLintFixes")(function* (
 ) {
   const ledger = yield* HoldLedger;
   const gone = goneAnchorsByHold(findings);
-  const tombstones = yield* tombstonesFor(yield* ledger.allVersions, live, gone);
+  const allVersions4 = yield* ledger.allVersions;
+  const tombstones = yield* tombstonesFor(allVersions4, live, gone);
   yield* ledger.appendVersions(tombstones);
-  yield* ledger.writeHeldList(heldListFor(yield* ledger.currentVersions));
+  const currentVersions5 = yield* ledger.currentVersions;
+  yield* ledger.writeHeldList(heldListFor(currentVersions5));
   // A hold that lost only some anchors may still apply, so it stays live and the lint keeps failing on it.
   const kept = A.filter(live, (version) =>
     O.exists(HashMap.get(gone, version.proposition.holdId), (keys) => !isFullyOrphaned(version, keys))
@@ -262,17 +267,15 @@ export const runHoldsLint = Effect.fn("Holds.lintProgram")(function* (write: boo
   const before = yield* ledger.currentVersions;
   const initial = yield* lintSnapshot(before);
   const written = write ? yield* writeLintFixes(before, initial) : [];
-  const findings = write ? yield* lintSnapshot(yield* ledger.currentVersions) : initial;
+  const findings = write ? yield* yield* Effect.map(ledger.currentVersions, lintSnapshot) : initial;
   if (A.isReadonlyArrayNonEmpty(findings)) {
     return yield* HoldsError.make({
       reason: "lint",
       message: A.join([...written, ...A.map(findings, holdLintFindingText)], "\n"),
     });
   }
-  return A.append(
-    written,
-    `[holds] lint ok: ${A.length(yield* ledger.currentVersions)} live hold(s) cover every site.`
-  );
+  const currentVersions6 = yield* ledger.currentVersions;
+  return A.append(written, `[holds] lint ok: ${A.length(currentVersions6)} live hold(s) cover every site.`);
 });
 
 /**
@@ -410,7 +413,8 @@ export const runHoldsUpdate = Effect.fn("Holds.updateProgram")(function* (input:
     return { version, freshRun, flipped: !failed && confirmHoldRuns([...O.toArray(freshRun), ...runs]) === "Flipped" };
   });
   // A hold past its lease or 180-day lifetime escalates whatever its probe says, so it is never auto-retired.
-  const escalate = escalationLine(yield* ledger.allVersions, now);
+  const allVersions7 = yield* ledger.allVersions;
+  const escalate = escalationLine(allVersions7, now);
   const flipped = A.filter(verdicts, (entry) => entry.flipped);
   const unpinned = A.filter(
     flipped,
@@ -418,13 +422,15 @@ export const runHoldsUpdate = Effect.fn("Holds.updateProgram")(function* (input:
   );
   if (!input.dryRun) {
     yield* Effect.forEach(A.getSomes(A.map(probed, (entry) => entry.run)), ledger.appendRun, { discard: true });
-    const tombstone = retract(yield* ledger.allVersions, now);
+    const allVersions8 = yield* ledger.allVersions;
+    const tombstone = retract(allVersions8, now);
     yield* ledger.appendVersions(
       A.map(unpinned, ({ version }) =>
         tombstone(version, "Flipped: the candidate passed twice, the newest run today; unpinned by deps:update.")
       )
     );
-    yield* ledger.writeHeldList(heldListFor(yield* ledger.currentVersions));
+    const currentVersions9 = yield* ledger.currentVersions;
+    yield* ledger.writeHeldList(heldListFor(currentVersions9));
   }
   return [
     ...A.map(probed, (entry) => entry.line),

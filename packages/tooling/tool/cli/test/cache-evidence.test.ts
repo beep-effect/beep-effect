@@ -103,7 +103,8 @@ it.layer(testLayer, { timeout: "5 seconds" })((it) => {
     it.effect("preserves valid UTF-8 and rejects malformed bytes", () =>
       Effect.gen(function* () {
         const text = "café λ\n";
-        expect(yield* decodeCacheExperimentText(new TextEncoder().encode(text))).toBe(text);
+        const decodedCacheExperimentText = yield* decodeCacheExperimentText(new TextEncoder().encode(text));
+        expect(decodedCacheExperimentText).toBe(text);
         (yield* decodeCacheExperimentText(new Uint8Array([0xc3, 0x28])).pipe(Effect.result)).pipe(
           Result.isFailure,
           assertTrue
@@ -117,9 +118,10 @@ it.layer(testLayer, { timeout: "5 seconds" })((it) => {
         const path = yield* Path.Path;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "cache-evidence-test-" });
         yield* fs.writeFileString(path.join(root, "artifact"), "four");
-        expect(
-          yield* readCacheExperimentBytes(root, "artifact", 4).pipe(Effect.flatMap(decodeCacheExperimentText))
-        ).toBe("four");
+        const pipe1 = yield* readCacheExperimentBytes(root, "artifact", 4).pipe(
+          Effect.flatMap(decodeCacheExperimentText)
+        );
+        expect(pipe1).toBe("four");
         (yield* readCacheExperimentBytes(root, "artifact", 3).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
         (yield* readCacheExperimentBytes(root, "absent", 4).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
         yield* fs.symlink(path.join(root, "artifact"), path.join(root, "link"));
@@ -135,7 +137,10 @@ it.layer(testLayer, { timeout: "5 seconds" })((it) => {
         const executable = path.join(root, "tool");
         const bytes = new TextEncoder().encode("fixture executable");
         yield* fs.writeFile(executable, bytes);
-        expect(yield* hashCacheExperimentExecutable(executable)).toBe(yield* hashBytes(bytes));
+        const hashCacheExperimentExecutable2 = yield* hashCacheExperimentExecutable(executable);
+        const expectation = expect(hashCacheExperimentExecutable2);
+        const hashBytes1 = yield* hashBytes(bytes);
+        expectation.toBe(hashBytes1);
         yield* fs.symlink(executable, path.join(root, "link"));
         (yield* hashCacheExperimentExecutable(path.join(root, "link")).pipe(Effect.result)).pipe(
           Result.isFailure,

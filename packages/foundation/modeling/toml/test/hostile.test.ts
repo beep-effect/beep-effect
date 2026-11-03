@@ -297,7 +297,8 @@ describe("hostile input", () => {
           const doc = `${A.join(lines, "\n")}\n`;
           assert.isAtLeast(doc.length, 2_000_000);
           const started = performance.now();
-          const value = checkedTable(yield* Toml.parse(doc));
+          const parsed1 = yield* Toml.parse(doc);
+          const value = checkedTable(parsed1);
           const elapsed = performance.now() - started;
           assert.strictEqual(R.size(value), 50_000);
           assert.strictEqual(value.k49999, Str.repeat(28)("x"));
@@ -312,7 +313,8 @@ describe("hostile input", () => {
         Effect.gen(function* () {
           const payload = Str.repeat(1_048_576)("x");
           const started = performance.now();
-          const value = checkedTable(yield* Toml.parse(`s = "${payload}"\n`));
+          const parsed2 = yield* Toml.parse(`s = "${payload}"\n`);
+          const value = checkedTable(parsed2);
           const elapsed = performance.now() - started;
           assert.strictEqual(value.s, payload);
           assert.isBelow(elapsed, ELAPSED_BOUND_MS);
@@ -337,7 +339,8 @@ describe("hostile input", () => {
   describe("prototype pollution", () => {
     it.effect('"__proto__ = 1" lands as an own data property', () =>
       Effect.gen(function* () {
-        const value = checkedTable(yield* Toml.parse("__proto__ = 1\n"));
+        const parsed3 = yield* Toml.parse("__proto__ = 1\n");
+        const value = checkedTable(parsed3);
         assert.isTrue(R.has(value, "__proto__"));
         assert.strictEqual(Object.getOwnPropertyDescriptor(value, "__proto__")?.value, 1);
         assert.strictEqual(Object.getPrototypeOf(value), Object.prototype);
@@ -347,7 +350,8 @@ describe("hostile input", () => {
 
     it.effect('"[__proto__]" defines an own table, not a prototype', () =>
       Effect.gen(function* () {
-        const value = checkedTable(yield* Toml.parse("[__proto__]\nx = 1\n"));
+        const parsed4 = yield* Toml.parse("[__proto__]\nx = 1\n");
+        const value = checkedTable(parsed4);
         assert.isTrue(R.has(value, "__proto__"));
         const table = checkedTable(Object.getOwnPropertyDescriptor(value, "__proto__")?.value);
         assert.isTrue(R.has(table, "x"));
@@ -359,7 +363,8 @@ describe("hostile input", () => {
 
     it.effect('"[[__proto__]]" defines an own array of tables', () =>
       Effect.gen(function* () {
-        const value = checkedTable(yield* Toml.parse("[[__proto__]]\nx = 1\n"));
+        const parsed5 = yield* Toml.parse("[[__proto__]]\nx = 1\n");
+        const value = checkedTable(parsed5);
         assert.isTrue(R.has(value, "__proto__"));
         const array: unknown = Object.getOwnPropertyDescriptor(value, "__proto__")?.value;
         if (!A.isArray(array)) {
@@ -383,7 +388,8 @@ describe("hostile input", () => {
         // The dotted path defines nested tables NAMED "constructor" and
         // "prototype" — they must be own plain-object properties, never a
         // walk up the real constructor/prototype chain.
-        const value = checkedTable(yield* Toml.parse("constructor.prototype.x = 1\n"));
+        const parsed6 = yield* Toml.parse("constructor.prototype.x = 1\n");
+        const value = checkedTable(parsed6);
         assert.isTrue(R.has(value, "constructor"));
         const constructorTable = checkedTable(value.constructor);
         assert.notStrictEqual<unknown>(constructorTable, Object);
@@ -474,7 +480,8 @@ describe("hostile input", () => {
 
     it.effect("1e400 saturates to Infinity — floats overflow legally per spec", () =>
       Effect.gen(function* () {
-        const value = checkedTable(yield* Toml.parse("a = 1e400\n"));
+        const parsed7 = yield* Toml.parse("a = 1e400\n");
+        const value = checkedTable(parsed7);
         assert.strictEqual(value.a, Number.POSITIVE_INFINITY);
       })
     );
@@ -514,7 +521,8 @@ describe("hostile input", () => {
           Array.from({ length: 10_000 }, (_, i) => `[t${i}]`),
           "\n"
         )}\n`;
-        const value = checkedTable(yield* Toml.parse(doc));
+        const parsed8 = yield* Toml.parse(doc);
+        const value = checkedTable(parsed8);
         assert.strictEqual(R.size(value), 10_000);
         assert.deepStrictEqual(value.t9999, {});
       })
@@ -530,7 +538,8 @@ describe("hostile input", () => {
           Array.from({ length: segments }, () => "a"),
           "."
         )}]\n`;
-        let current = checkedTable(yield* Toml.parse(doc));
+        const parsed9 = yield* Toml.parse(doc);
+        let current = checkedTable(parsed9);
         for (let i = 0; i < segments; i++) {
           assert.isTrue(R.has(current, "a"), `own property missing at depth ${i}`);
           current = checkedTable(current.a);
@@ -546,7 +555,8 @@ describe("hostile input", () => {
           Array.from({ length: segments }, () => "a"),
           "."
         )} = 1\n`;
-        let current = checkedTable(yield* Toml.parse(doc));
+        const parsed10 = yield* Toml.parse(doc);
+        let current = checkedTable(parsed10);
         for (let i = 0; i < segments - 1; i++) {
           assert.isTrue(R.has(current, "a"), `own property missing at depth ${i}`);
           current = checkedTable(current.a);

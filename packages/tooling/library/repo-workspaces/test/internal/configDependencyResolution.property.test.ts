@@ -18,10 +18,8 @@ it.effect.prop(
         ResolvedPnpmfile.make({ name: "config", version: parsed.version, source: "supplied", path }),
       ]);
       const canonical = parsed.integrity === undefined ? parsed.version : `${parsed.version}+${parsed.integrity}`;
-      assert.deepStrictEqual(
-        yield* lookupPnpmfiles({ [`config@${parsed.version}`]: path }, { config: canonical }),
-        result
-      );
+      const lookupPnpmfiles1 = yield* lookupPnpmfiles({ [`config@${parsed.version}`]: path }, { config: canonical });
+      assert.deepStrictEqual(lookupPnpmfiles1, result);
     }),
   runs
 );
@@ -34,7 +32,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(ResolvedPnpmfile)(resolved);
       const decoded = yield* S.decodeEffect(ResolvedPnpmfile)(encoded);
       assert.deepStrictEqual(decoded, resolved);
-      assert.deepStrictEqual(yield* S.encodeEffect(ResolvedPnpmfile)(decoded), encoded);
+      const value = yield* S.encodeEffect(ResolvedPnpmfile)(decoded);
+      assert.deepStrictEqual(value, encoded);
     }),
   runs
 );
