@@ -211,7 +211,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "cache-creation-mask-" });
-        const parentMask = process.umask();
+        const before = path.join(root, "before");
+        yield* fs.makeDirectory(before, { mode: 0o777 });
+        const parentPermissions = (yield* fs.stat(before)).mode & 0o777;
         for (const row of [
           { name: "shared", program: '#!/bin/sh\numask 022\nexec bun "$@"\n', expected: 0o022 },
           { name: "private", program: '#!/bin/sh\numask 077\nexec bun "$@"\n', expected: 0o077 },
@@ -222,7 +224,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           const observed = yield* Fingerprint.collectCacheFileCreationMask(root, executable);
           expect(observed).toBe(row.expected);
         }
-        expect(process.umask()).toBe(parentMask);
+        const after = path.join(root, "after");
+        yield* fs.makeDirectory(after, { mode: 0o777 });
+        expect((yield* fs.stat(after)).mode & 0o777).toBe(parentPermissions);
       })
     );
 

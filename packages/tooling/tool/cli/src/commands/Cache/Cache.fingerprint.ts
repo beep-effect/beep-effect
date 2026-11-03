@@ -159,7 +159,7 @@ const fingerprintExecutable = Effect.fn("CacheFingerprint.executable")(function*
  * Observe the inherited creation mask in a bounded child of the selected runtime.
  *
  * **Details**
- * The child reads its umask without changing it. Dotenv loading is disabled and
+ * The isolated child observes its inherited umask. Dotenv loading is disabled and
  * only the existing discovery environment is inherited. Invalid or failed
  * observations fail before an identity can be published.
  *

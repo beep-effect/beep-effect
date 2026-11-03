@@ -7,6 +7,26 @@ command/error/file evidence, impact, prevention and owner/disposition.
 Redact secrets, use portable paths, omit machine/session IDs and keep raw logs
 in bounded artifacts.
 
+## 2026-11-03: hosted policy must cover the new mask tests
+
+PR #2691's current hosted policy log found one introduced Effect Vitest
+outcome-assertion finding in `cache-census.test.ts` and two deprecated
+parent-process `process.umask()` reads in `cache-runtime.test.ts`. Build,
+Check and the four new runtime/identity regressions had passed; those results
+did not prove the separate policy gate. Preserve the Boolean rejection
+assertion with `Effect.isFailure`. Compare actual parent-created directory
+permissions before and after the child observations, avoiding the deprecated
+getter's process-wide write race. The isolated child remains the only native
+mask observer. Owner: this PR; current hosted policy must run again.
+
+The same log includes the inherited ClaimElement finding owned by #2682.
+The current coverage log has the existing 94-row shared episode: 92 metric
+rows match the earlier episode exactly, and the two fingerprint metrics
+improved while remaining below their base floors. All 46 other reported
+source objects match accepted main; #2682 already owns the fingerprint
+repair too. Retain these failures and consume that accepted repair once;
+neither lower a baseline nor copy another owner's unlanded changes.
+
 Historical leads remain in the [exploration ledger](../../../explorations/turborepo-quality-cache/research/OPPORTUNITIES.md)
 and [opportunity disposition](../../../explorations/turborepo-quality-cache/research/opportunity-disposition.md).
 Refresh historical claims before treating them as current.

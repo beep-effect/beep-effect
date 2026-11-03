@@ -367,11 +367,11 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("computation configuration
         assertSome(observed.fileCreationMask, mask);
       }
       for (const mask of [-1, 1.5, 0o1000, "077", null]) {
-        const result = yield* S.decodeUnknownEffect(CacheToolchainSnapshot)({
+        const failed = yield* S.decodeUnknownEffect(CacheToolchainSnapshot)({
           ...encoded,
           fileCreationMask: mask,
-        }).pipe(Effect.result);
-        expect(Result.isFailure(result)).toBe(true);
+        }).pipe(Effect.isFailure);
+        expect(failed).toBe(true);
       }
     })
   );
