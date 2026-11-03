@@ -532,6 +532,26 @@ refusals. These are synthetic runtime observations, not repository-task or
 production qualification.
 
 
+### 2026-11-02 — native exporter defaults and configuration sources
+
+- Installed Turbo 2.11.10 configuration documentation describes the optional
+  exporter and its separate payload/cardinality/credential surface. Its claim
+  that every configuration source is rejected without the flag is broader than
+  the observed file-reader behavior.
+- Exact upstream stable `e521641a142a24abe4554a77fdd6551e47e96fb3` and canary
+  `a4ab545cd10a4db4e8e8c58cd2792d82c630a2f0` source: the config reader drops
+  file-based OTEL settings when the flag is absent/false; the run builder checks
+  environment and CLI settings after option merging. Immutable file URLs and
+  digests are in the [feature review](observability-feature-review.json). Upstream
+  tests were inspected, not executed.
+- [Native controls](native-observability-default-controls.json) cover both pinned
+  clients with actual synthetic tasks and pre-task refusals in isolated networks.
+  The existing streaming collector enforces process/time/output bounds. No real
+  repository task or enabled exporter payload was exercised.
+- The current source census distinguishes app/agent/adapter OTEL from a Turbo
+  consumer. A missing optional consumer supports retaining the default; it does
+  not complete deployed trust or telemetry safety acceptance.
+
 ### 2026-11-02 affected/filter composition supplement
 
 - Installed Turbo 2.11.10 documentation: `reference/configuration.mdx` task-level
