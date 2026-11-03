@@ -105,6 +105,11 @@ describe("policy fingerprint import graph", () => {
     ]);
     expect(moduleRootFileReads("b.ts", 'const file = path.join(root, "turbo.json");')).toEqual(["turbo.json"]);
     expect(moduleRootFileReads("c.ts", 'const tool = "@biomejs/biome";')).toEqual(["biome.jsonc"]);
+    // TSX sources parse as TSX, and a quoted `"description"` key is help text like a bare one.
+    expect(moduleRootFileReads("d.tsx", 'export const View = () => <div title="turbo.json" />;')).toEqual([
+      "turbo.json",
+    ]);
+    expect(moduleRootFileReads("e.ts", 'export const route = { "description": "Reads turbo.json" };')).toEqual([]);
     // A file that routes nowhere is never a shared default: each family has a reader marker.
     for (const route of POLICY_ROOT_FILE_ROUTES) {
       expect(A.isReadonlyArrayNonEmpty([...route.names, ...route.tools]), A.join(route.files, ",")).toBe(true);

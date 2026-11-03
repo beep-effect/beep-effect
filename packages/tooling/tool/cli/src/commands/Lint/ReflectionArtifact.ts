@@ -36,7 +36,7 @@ import * as Str from "effect/String";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import { makePolicyFindingLogger } from "../../internal/cli/PolicyFindingLogger.ts";
-import { GoalProposedCloseout, GoalStatus } from "../Goals/Goals.schemas.ts";
+import { GoalCloseoutRecord, GoalProposedCloseout, GoalStatus } from "../Goals/Goals.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Lint/ReflectionArtifact");
 
@@ -219,6 +219,11 @@ export const reflectionFrontmatterIsValid = frontmatterIsValid;
  */
 export const reflectionFileNameIsArtifact = (file: string): boolean => REFLECTION_FILE_PATTERN.test(file);
 
+// A proposed or committed closeout keeps a packet inside the reflection gate.
+const declaresCloseout = (record: Readonly<Record<string, unknown>>): boolean =>
+  O.isSome(S.decodeUnknownOption(GoalProposedCloseout)(record.proposedCloseout)) ||
+  O.isSome(S.decodeUnknownOption(GoalCloseoutRecord)(record.closeout));
+
 const readManifestStatus = (manifest: unknown): { readonly status: string; readonly reflectionRequired: boolean } => {
   const record = (manifest ?? {}) as Record<string, unknown>;
   const initiative = (record.initiative ?? {}) as Record<string, unknown>;
@@ -230,7 +235,7 @@ const readManifestStatus = (manifest: unknown): { readonly status: string; reado
     O.getOrElse(thunkEmptyStr)
   );
   const reflectionRequired =
-    O.isSome(proposal) || record.reflectionRequired === true || initiative.reflectionRequired === true;
+    declaresCloseout(record) || record.reflectionRequired === true || initiative.reflectionRequired === true;
   return { status, reflectionRequired };
 };
 
@@ -316,12 +321,8 @@ const inspectCompletedReflection = Effect.fnUntraced(function* (
     return { advisories: [], blocking: [] };
   }
 
-  if (
-    ((manifestJson ?? {}) as Record<string, unknown>).reflectionRequired === false &&
-    O.isNone(
-      S.decodeUnknownOption(GoalProposedCloseout)(((manifestJson ?? {}) as Record<string, unknown>).proposedCloseout)
-    )
-  ) {
+  const manifestRecord = (manifestJson ?? {}) as Record<string, unknown>;
+  if (manifestRecord.reflectionRequired === false && !declaresCloseout(manifestRecord)) {
     return {
       blocking: [],
       advisories: [

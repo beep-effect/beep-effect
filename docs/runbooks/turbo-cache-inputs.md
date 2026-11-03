@@ -226,6 +226,59 @@ zero seconds. Three decisions follow:
   dependency lock and plugin manifest. Deprecated-API shards use the dedicated oxlint
   configuration; no ESLint profile environment or result cache remains.
 
+## Changed-scope Lint Policy (2026-11-02)
+
+Pull requests run `Heavy / Lint Policy` changed-scope (quality audit K1):
+`heavy.yml` passes `--affected --base origin/<base>` to `ci lane lint-policy`,
+which runs `beep lint policy --affected`. Pushes to `main` and scheduled runs get
+no affected shape and run `--full`. Yeet's pre-push `quality:lint-policy` lane
+replays the pull-request shape. `beep lint policy` with no flags is the same
+changed scope against `origin/main`.
+
+A changed-scope run first decides whether to widen to the full sweep
+(`commands/Quality/internal/LintPolicyScope.ts`). It widens when the change set
+touches any of these:
+
+- a deleted or renamed path;
+- a changed source file whose head content carries `@deprecated` (only an added
+  tag can create findings in unchanged callers, so the head side is enough);
+- a `tsconfig*.json`/`jsconfig*.json`, `bun.lock`, any `package.json`,
+  `.bun-version`, `.nvmrc`, `bunfig.toml` or `patches/`;
+- a `turbo.json`;
+- a root `.oxlintrc*` or Biome profile, `_typos.toml`, `tsdoc.json`,
+  `standards/lint-policy.sweeps.jsonc` or the policy fingerprint;
+- a file in the policy fingerprint seals, `packages/tooling/policy-pack/`, or
+  the repo-cli `commands/Lint/` tree.
+
+The log line names every escalation:
+`lint:policy: scope=full (escalated: <class> <path>; …)`.
+
+Otherwise Turbo's `affectedUsingTaskInputs` selection decides which tasks run.
+That selection is only as sound as the task's declared inputs, the same claim a
+cache hit makes. So only `cache: true` tasks run changed-scope: the cheap and
+medium graphs, plus the cached state tasks (`lint:jsdoc-module-tags`,
+`jsdoc:inventory:check`, `jsdoc:ratchet:check`). The D2 git-delta and clock
+checks and the uncertified binary walkers (`knowledge:semantic-delta`,
+`knowledge:refs-check`, `goals:doctor`, `lint:oxlint`, `lint:shadcn`,
+`lint:typos`) stay unfiltered. They run in a second Turbo graph alongside the
+medium one, with one slot of the policy width (the medium graph keeps the rest),
+so the inventory and semantic-delta long poles overlap as they do in the single
+full-scope graph. `lint-policy-scope.test.ts` fails if a task's `cache` flag and
+its graph disagree.
+
+`lint:jsdoc` and `lint:deprecated-apis` are package tasks. Changed scope does not
+run them per package (one repo-cli boot plus one plugin load each, audit M16).
+Instead it runs one root oxlint per task over the package directories that a
+`turbo run lint:jsdoc lint:deprecated-apis --affected --dry=json` probe selects:
+the same per-package input sets, read from Turbo. If the probe fails, the plan
+keeps the per-package Turbo tasks.
+
+The documentation plugin is bundled to plain JS on every run
+(`commands/Quality/internal/DocsOxlintPlugin.ts`, about 0.03 s). It is loaded
+through a gitignored derived config written beside the source config
+(`PREBUILT_DOCS_OXLINT_CONFIG` in that module). `.oxlintrc.docs.json` stays authoritative for lefthook,
+editors and direct runs, and a failed build falls back to it.
+
 ## Workspace overrides
 
 - `apps/oip-web`: build hashes its consumed `.env*` files and `ANALYZE`.

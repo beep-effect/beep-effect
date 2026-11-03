@@ -1254,6 +1254,45 @@ describe("ciLaneStepsForTesting", () => {
     expect([...step.args]).toEqual(["run", "beep", "lint", "policy", "--full"]);
   });
 
+  // Perf audit K1: the pull-request shape reaches `beep lint policy` as an explicit changed
+  // scope, which the policy command widens on escalating changes; it never inherits CI=true.
+  it("passes the pull-request affected shape through to the lint-policy changed scope", () => {
+    const step = firstOf(ciLaneStepsForTesting(REPO_ROOT, "lint-policy", prShapeOptions));
+    expect([...step.args]).toEqual(["run", "beep", "lint", "policy", "--affected", "--base", "origin/main"]);
+    assertSome(
+      pipe(
+        CI_LANE_DESCRIPTORS,
+        A.findFirst((descriptor) => descriptor.id === "lint-policy"),
+        O.map((descriptor) => [...descriptor.flags])
+      ),
+      ["--affected", "--base", "--summarize"]
+    );
+  });
+
+  it("replays the lint-policy lane locally with the hosted pull-request shape", () => {
+    const prPlan = CiLocalStepPlan.make({ affected: true, base: "origin/main", onMainBranch: false });
+    const fullPlan = CiLocalStepPlan.make({ ...prPlan, affected: false });
+    expect([...firstOf(ciLocalStepsForTesting(REPO_ROOT, ["lint-policy"], prPlan)).args]).toEqual([
+      "run",
+      "beep",
+      "ci",
+      "lane",
+      "lint-policy",
+      "--affected",
+      "--base",
+      "origin/main",
+      "--summarize",
+    ]);
+    expect([...firstOf(ciLocalStepsForTesting(REPO_ROOT, ["lint-policy"], fullPlan)).args]).toEqual([
+      "run",
+      "beep",
+      "ci",
+      "lane",
+      "lint-policy",
+      "--summarize",
+    ]);
+  });
+
   it("runs the first ecosystem member's type and bundle contracts explicitly", () => {
     const steps = ciLaneStepsForTesting(REPO_ROOT, "ecosystem", baseOptions);
     expect(A.map(steps, (step) => step.command)).toEqual(["bun", "bun"]);

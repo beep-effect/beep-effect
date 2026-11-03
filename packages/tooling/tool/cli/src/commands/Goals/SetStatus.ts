@@ -21,6 +21,7 @@
  * @since 0.0.0
  */
 
+import { findRepoRoot } from "@beep/repo-utils";
 import { A, O, pipe, Str } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Argument from "effect/cli/Argument";
@@ -34,13 +35,20 @@ import * as R from "effect/Record";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { applyJsoncModification, JsoncModification } from "../../internal/cli/Jsonc.ts";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";
+import { readGoalCloseoutView } from "./Completion.ts";
 import {
   GoalManifestInvalidError,
   GoalPacketNotFoundError,
   GoalReadmeStatusLineError,
   GoalStatusInputError,
 } from "./Goals.errors.ts";
-import { decodeGoalManifest, GoalPhaseStatus, GoalStatus, isGoalStatus } from "./Goals.schemas.ts";
+import {
+  decodeGoalManifest,
+  GoalCloseoutVerification,
+  GoalPhaseStatus,
+  GoalStatus,
+  isGoalStatus,
+} from "./Goals.schemas.ts";
 import {
   goalManifestPhases,
   isJsonRecord,
@@ -58,7 +66,7 @@ import {
   PacketTransitionWriter,
 } from "./PacketCore/PacketTransitionWriter.ts";
 import { PORTFOLIO_INDEX_PATH, writePortfolioIndex } from "./PortfolioIndex.ts";
-import type { GoalManifest, GoalPhase } from "./Goals.schemas.ts";
+import type { GoalCloseoutRecord, GoalManifest, GoalPhase, GoalProposedCloseout } from "./Goals.schemas.ts";
 import type { GoalPacketRecord } from "./Inventory.ts";
 import type { GoalPacketMigration } from "./Migration.ts";
 import type { PacketStage } from "./PacketCore/PacketCore.schemas.ts";
@@ -403,6 +411,107 @@ const planStreamTransition = Effect.fn("Goals.planStreamTransition")(function* (
   return O.some(yield* writer.plan(request));
 });
 
+type ManifestEdit = { readonly path: ReadonlyArray<string>; readonly value: unknown };
+
+type CloseoutTransition = { readonly edits: ReadonlyArray<ManifestEdit>; readonly note: string };
+
+// A proposal keeps its declared status active or paused until its completion
+// receipt verifies; `completed-retained` then adopts it as a committed closeout
+// record. The record digests in the proposal's slot, so that receipt still matches.
+const adoptVerifiedCloseout = Effect.fn("Goals.adoptVerifiedCloseout")(function* (
+  slug: string,
+  status: GoalStatus,
+  decoded: GoalManifest,
+  proposal: GoalProposedCloseout
+) {
+  if (status === "active" || status === "paused") return O.none<CloseoutTransition>();
+  if (status !== proposal.status) {
+    return yield* GoalStatusInputError.new(
+      `A proposed closeout retains active/paused declared status or adopts its proposed ${proposal.status}; ${status} is neither.`
+    );
+  }
+  const root = yield* findRepoRoot().pipe(Effect.orElseSucceed(process.cwd));
+  const view = yield* readGoalCloseoutView(root, slug, decoded);
+  if (!O.exists(view, (value) => GoalCloseoutVerification.is.verified(value.verification))) {
+    return yield* GoalStatusInputError.new(
+      `The proposed closeout via #${proposal.finalPullRequest} has no verified completion receipt; run \`bun run beep goals completion refresh --slug ${slug}\` once the final PR is merged and merge-ready.`
+    );
+  }
+  return O.some({
+    edits: [
+      { path: ["proposedCloseout"], value: undefined },
+      { path: ["closeout"], value: { status: proposal.status, finalPullRequest: proposal.finalPullRequest } },
+    ],
+    note: `verified via #${proposal.finalPullRequest}; a write replaces proposedCloseout with the committed closeout record.`,
+  });
+});
+
+// Reopening a committed closeout (active or paused) turns the record back into
+// its proposal; the digest is unchanged, so the receipt keeps verifying it.
+// Any other status would leave a record that contradicts the declared status.
+const reopenCommittedCloseout = Effect.fn("Goals.reopenCommittedCloseout")(function* (
+  status: GoalStatus,
+  record: GoalCloseoutRecord
+) {
+  if (status === record.status) return O.none<CloseoutTransition>();
+  if (status !== "active" && status !== "paused") {
+    return yield* GoalStatusInputError.new(
+      `A committed closeout via #${record.finalPullRequest} keeps ${record.status} or reopens as active/paused; ${status} is neither.`
+    );
+  }
+  return O.some({
+    edits: [
+      { path: ["closeout"], value: undefined },
+      {
+        path: ["proposedCloseout"],
+        value: { status: record.status, finalPullRequest: record.finalPullRequest },
+      },
+    ],
+    note: `reopened from #${record.finalPullRequest}; a write turns the committed closeout record back into proposedCloseout.`,
+  });
+});
+
+const closeoutTransition = (slug: string, status: GoalStatus, decoded: GoalManifest) =>
+  decoded.proposedCloseout !== undefined
+    ? adoptVerifiedCloseout(slug, status, decoded, decoded.proposedCloseout)
+    : decoded.closeout !== undefined
+      ? reopenCommittedCloseout(status, decoded.closeout)
+      : Effect.succeed(O.none<CloseoutTransition>());
+
+// One JSONC edit per field keeps comments and key order; a closeout transition
+// lands in the same write, and the result must still decode before anything is written.
+const rewriteManifestStatus = Effect.fn("Goals.rewriteManifestStatus")(function* (
+  slug: string,
+  surfaces: { readonly manifestText: string; readonly manifest: Readonly<Record<string, unknown>> },
+  status: GoalStatus,
+  today: string,
+  transition: O.Option<CloseoutTransition>
+) {
+  const edits: ReadonlyArray<ManifestEdit> = A.flatten<ReadonlyArray<ReadonlyArray<ManifestEdit>>>([
+    [{ path: ["initiative", "status"], value: status }],
+    R.has(surfaces.manifest, "lifecycle") ? [{ path: ["lifecycle"], value: status }] : A.empty<ManifestEdit>(),
+    [{ path: ["initiative", "updated"], value: today }],
+    O.match(transition, { onNone: A.empty<ManifestEdit>, onSome: (value) => value.edits }),
+  ]);
+  const text = A.reduce(edits, surfaces.manifestText, (content, edit) =>
+    applyJsoncModification(JsoncModification.make({ content, path: [...edit.path], value: edit.value }))
+  );
+  yield* pipe(
+    parseGoalManifestText(text),
+    Effect.fromOption(() => GoalManifestInvalidError.new(slug, "the rewritten manifest does not parse as JSON.")),
+    Effect.flatMap((value) => decodeGoalManifest(value)),
+    Effect.mapError((issue) =>
+      GoalManifestInvalidError.new(slug, `the rewritten manifest would not decode as GoalManifest: ${issue.message}`)
+    )
+  );
+  return text;
+});
+
+const reportSetStatusFailure = Effect.fn(function* (error: { readonly message: string }) {
+  yield* Console.error(`[goals:set-status] ${error.message}`);
+  return yield* failWithReportedExit(`goals set-status: ${error.message}`);
+});
+
 const setStatusForSlug = Effect.fn("Goals.setStatusForSlug")(function* (
   slug: string,
   status: GoalStatus,
@@ -411,16 +520,16 @@ const setStatusForSlug = Effect.fn("Goals.setStatusForSlug")(function* (
   const fs = yield* FileSystem.FileSystem;
   const writer = yield* PacketTransitionWriter;
   const { decoded, manifest, manifestText, record, rewrittenReadme } = yield* loadPacketSurfaces(slug, status);
-  if (decoded.proposedCloseout !== undefined && status !== "active" && status !== "paused") {
-    return yield* GoalStatusInputError.new(
-      "A proposed closeout retains active/paused declared status; completion is derived from exact-head readiness and merge proof."
-    );
-  }
+  const transition = yield* closeoutTransition(slug, status, decoded);
   const now = yield* DateTime.now;
   const today = pipe(DateTime.formatIso(now), Str.slice(0, 10));
+  const nextManifest = yield* rewriteManifestStatus(slug, { manifestText, manifest }, status, today, transition);
   const plan = yield* planStreamTransition(slug, status, decoded, record, DateTime.formatIso(now));
 
   if (preview) {
+    if (O.isSome(transition)) {
+      yield* Console.log(`[goals:set-status] closeout: ${transition.value.note}`);
+    }
     return yield* printTransitionPreview(slug, status, decoded.initiative.status, plan);
   }
 
@@ -434,18 +543,6 @@ const setStatusForSlug = Effect.fn("Goals.setStatusForSlug")(function* (
       );
     }
   }
-
-  let nextManifest = applyJsoncModification(
-    JsoncModification.make({ content: manifestText, path: ["initiative", "status"], value: status })
-  );
-  if (R.has(manifest, "lifecycle")) {
-    nextManifest = applyJsoncModification(
-      JsoncModification.make({ content: nextManifest, path: ["lifecycle"], value: status })
-    );
-  }
-  nextManifest = applyJsoncModification(
-    JsoncModification.make({ content: nextManifest, path: ["initiative", "updated"], value: today })
-  );
 
   yield* fs.writeFileString(record.manifestPath, nextManifest);
   yield* fs.writeFileString(record.readmePath, rewrittenReadme);
@@ -531,30 +628,12 @@ export const goalsSetStatusCommand = Command.make(
   Effect.fn(function* ({ migrate, preview, slug, status, write }) {
     return yield* runSetStatusProgram({ migrate, preview, slug, status, write }).pipe(
       Effect.catchTags({
-        GoalStatusInputError: Effect.fn(function* (error) {
-          yield* Console.error(`[goals:set-status] ${error.message}`);
-          return yield* failWithReportedExit(`goals set-status: ${error.message}`);
-        }),
-        GoalPacketNotFoundError: Effect.fn(function* (error) {
-          yield* Console.error(`[goals:set-status] ${error.message}`);
-          return yield* failWithReportedExit(`goals set-status: ${error.message}`);
-        }),
-        GoalManifestInvalidError: Effect.fn(function* (error) {
-          yield* Console.error(`[goals:set-status] ${error.message}`);
-          return yield* failWithReportedExit(`goals set-status: ${error.message}`);
-        }),
-        GoalReadmeStatusLineError: Effect.fn(function* (error) {
-          yield* Console.error(`[goals:set-status] ${error.message}`);
-          return yield* failWithReportedExit(`goals set-status: ${error.message}`);
-        }),
-        PacketStreamError: Effect.fn(function* (error) {
-          yield* Console.error(`[goals:set-status] ${error.message}`);
-          return yield* failWithReportedExit(`goals set-status: ${error.message}`);
-        }),
-        PacketCasConflictError: Effect.fn(function* (error) {
-          yield* Console.error(`[goals:set-status] ${error.message}`);
-          return yield* failWithReportedExit(`goals set-status: ${error.message}`);
-        }),
+        GoalStatusInputError: reportSetStatusFailure,
+        GoalPacketNotFoundError: reportSetStatusFailure,
+        GoalManifestInvalidError: reportSetStatusFailure,
+        GoalReadmeStatusLineError: reportSetStatusFailure,
+        PacketStreamError: reportSetStatusFailure,
+        PacketCasConflictError: reportSetStatusFailure,
       })
     );
   })

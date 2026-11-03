@@ -230,7 +230,12 @@ jobs:
               run_lane ci lane "${{ matrix.id }}" "${shape_args[@]}"
               ;;
             lint-policy)
-              run_lane ci lane "${{ matrix.id }}"
+              # Perf audit K1: pull requests run the changed scope, which
+              # `beep lint policy --affected` widens to the full sweep when the
+              # change set escalates it; pushes get no affected shape and run
+              # --full. A PR checkout whose CLI predates the affected lane
+              # body accepts these flags and still runs --full.
+              run_lane ci lane "${{ matrix.id }}" "${shape_args[@]}"
               ;;
             docgen)
               if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then

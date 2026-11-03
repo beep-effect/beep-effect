@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-03T01:53:41.452Z",
+  "generatedAt": "2026-11-03T01:26:34.394Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 15,
     "publicModules": 3600,
-    "publicExports": 25566,
+    "publicExports": 25567,
     "openModules": 115,
     "openExports": 94,
     "missingExportExamples": 0,
@@ -451537,7 +451537,7 @@
         "srcDir": "src",
         "sourceFileCount": 502,
         "publicModuleCount": 499,
-        "publicExportCount": 4707
+        "publicExportCount": 4708
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -453053,7 +453053,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 13,
+          "exportCount": 15,
           "remediationStatus": "resolved"
         },
         {
@@ -458225,7 +458225,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 10,
+          "exportCount": 9,
           "remediationStatus": "resolved"
         },
         {
@@ -473114,8 +473114,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.pilot.runner.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts",
-          "line": 352,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-runner-ts-352-runcachesignedpilotexperiment",
+          "line": 405,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-runner-ts-405-runcachesignedpilotexperiment",
           "currentTags": [
             "@category",
             "@since"
@@ -473136,8 +473136,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.pilot.runner.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts",
-          "line": 387,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-runner-ts-387-runcacheproduceruploadexperiment",
+          "line": 440,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-runner-ts-440-runcacheproduceruploadexperiment",
           "currentTags": [
             "@internal",
             "@category",
@@ -473419,12 +473419,56 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "CacheSignedPilotPhase",
+          "exportKind": "const",
+          "filePath": "src/commands/Cache/Cache.pilot.signed.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.signed.schemas.ts",
+          "line": 43,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-43-cachesignedpilotphase",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CacheSignedPilotPhase",
+          "exportKind": "type",
+          "filePath": "src/commands/Cache/Cache.pilot.signed.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.signed.schemas.ts",
+          "line": 67,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-67-cachesignedpilotphase",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "CacheSignedPilotTask",
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.pilot.signed.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.signed.schemas.ts",
-          "line": 39,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-39-cachesignedpilottask",
+          "line": 81,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-81-cachesignedpilottask",
           "currentTags": [
             "@category",
             "@since"
@@ -473445,8 +473489,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.pilot.signed.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.signed.schemas.ts",
-          "line": 71,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-71-cachesignedpilotrun",
+          "line": 113,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-113-cachesignedpilotrun",
           "currentTags": [
             "@category",
             "@since"
@@ -473467,8 +473511,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.pilot.signed.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.signed.schemas.ts",
-          "line": 105,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-105-cachesignedpilotprotection",
+          "line": 147,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-147-cachesignedpilotprotection",
           "currentTags": [
             "@category",
             "@since"
@@ -473489,8 +473533,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.pilot.signed.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.signed.schemas.ts",
-          "line": 137,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-137-cachesignedpilotarchive",
+          "line": 179,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-179-cachesignedpilotarchive",
           "currentTags": [
             "@category",
             "@since"
@@ -473511,8 +473555,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.pilot.signed.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.signed.schemas.ts",
-          "line": 164,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-164-cachesignedpilotpair",
+          "line": 206,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-206-cachesignedpilotpair",
           "currentTags": [
             "@category",
             "@since"
@@ -473533,8 +473577,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.pilot.signed.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.signed.schemas.ts",
-          "line": 201,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-201-cachesignedpilotfreshpair",
+          "line": 243,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-243-cachesignedpilotfreshpair",
           "currentTags": [
             "@category",
             "@since"
@@ -473555,8 +473599,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.pilot.signed.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.signed.schemas.ts",
-          "line": 232,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-232-cachesignedpilotshadow",
+          "line": 274,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-274-cachesignedpilotshadow",
           "currentTags": [
             "@category",
             "@since"
@@ -473577,8 +473621,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.pilot.signed.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.signed.schemas.ts",
-          "line": 272,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-272-cachesignedpilotmutation",
+          "line": 314,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-314-cachesignedpilotmutation",
           "currentTags": [
             "@category",
             "@since"
@@ -473599,8 +473643,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.pilot.signed.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.signed.schemas.ts",
-          "line": 311,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-311-cachesignedpilotnonexecution",
+          "line": 353,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-353-cachesignedpilotnonexecution",
           "currentTags": [
             "@category",
             "@since"
@@ -473621,8 +473665,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.pilot.signed.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.signed.schemas.ts",
-          "line": 377,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-377-cachesignedpilotpolicyrefusal",
+          "line": 419,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-419-cachesignedpilotpolicyrefusal",
           "currentTags": [
             "@category",
             "@since"
@@ -473643,8 +473687,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.pilot.signed.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.signed.schemas.ts",
-          "line": 416,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-416-cachesignedpilotcapturecontrol",
+          "line": 458,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-458-cachesignedpilotcapturecontrol",
           "currentTags": [
             "@category",
             "@since"
@@ -473665,8 +473709,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.pilot.signed.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.signed.schemas.ts",
-          "line": 449,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-449-cachesignedpilotreceipt",
+          "line": 491,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-491-cachesignedpilotreceipt",
           "currentTags": [
             "@category",
             "@since"
@@ -473687,8 +473731,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.pilot.signed.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.signed.schemas.ts",
-          "line": 523,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-523-cachesignedpilotrequest",
+          "line": 565,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-signed-schemas-ts-565-cachesignedpilotrequest",
           "currentTags": [
             "@category",
             "@since"
@@ -473841,8 +473885,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.pilot.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
-          "line": 2245,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-ts-2245-runcachepilotfortesting",
+          "line": 2251,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-ts-2251-runcachepilotfortesting",
           "currentTags": [
             "@internal",
             "@category",
@@ -473864,8 +473908,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.pilot.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
-          "line": 2273,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-ts-2273-runcachepilotexperiment",
+          "line": 2279,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-ts-2279-runcachepilotexperiment",
           "currentTags": [
             "@category",
             "@since"
@@ -473886,8 +473930,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.pilot.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
-          "line": 2311,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-ts-2311-runcachesignedpilotworker",
+          "line": 2317,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-ts-2317-runcachesignedpilotworker",
           "currentTags": [
             "@internal",
             "@category",
@@ -473909,8 +473953,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.pilot.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
-          "line": 2341,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-ts-2341-runcachesignedpilotuploadworker",
+          "line": 2348,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-ts-2348-runcachesignedpilotuploadworker",
           "currentTags": [
             "@internal",
             "@category",
@@ -477352,12 +477396,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export {\n  CacheSignedPilotArchive,\n  CacheSignedPilotCaptureControl,\n  CacheSignedPilotFreshPair,\n  CacheSignedPilotMutation,\n  CacheSignedPilotNonExecution,\n  CacheSignedPilotPair,\n  CacheSignedPilotPolicyRefusal,\n  CacheSignedPilotProtection,\n  CacheSignedPilotReceipt,\n  CacheSignedPilotRequest,\n  CacheSignedPilotRun,\n  CacheSignedPilotShadow,\n  CacheSignedPilotTask,\n} from \"./Cache.pilot.signed.schemas.ts\";",
+          "symbolName": "export {\n  CacheSignedPilotArchive,\n  CacheSignedPilotCaptureControl,\n  CacheSignedPilotFreshPair,\n  CacheSignedPilotMutation,\n  CacheSignedPilotNonExecution,\n  CacheSignedPilotPair,\n  CacheSignedPilotPhase,\n  CacheSignedPilotPolicyRefusal,\n  CacheSignedPilotProtection,\n  CacheSignedPilotReceipt,\n  CacheSignedPilotRequest,\n  CacheSignedPilotRun,\n  CacheSignedPilotShadow,\n  CacheSignedPilotTask,\n} from \"./Cache.pilot.signed.schemas.ts\";",
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
           "line": 248,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-248-export-cachesignedpilotarchive-cachesignedpilotcapturecontrol-cachesignedpilotfreshpair-cachesignedpilotmutation-cachesignedpilotnonexecution-cachesignedpilotpair-cachesignedpilotpolicyrefusal-cachesignedpilotprotection-cachesignedpilotreceipt-cachesignedpilotrequest-cachesignedpilotrun-cachesignedpilotshadow-cachesignedpilottask-from-cache-pilot-signed-schemas-ts",
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-248-export-cachesignedpilotarchive-cachesignedpilotcapturecontrol-cachesignedpilotfreshpair-cachesignedpilotmutation-cachesignedpilotnonexecution-cachesignedpilotpair-cachesignedpilotphase-cachesignedpilotpolicyrefusal-cachesignedpilotprotection-cachesignedpilotreceipt-cachesignedpilotrequest-cachesignedpilotrun-cachesignedpilotshadow-cachesignedpilottask-from-cache-pilot-signed-schemas-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -477375,8 +477419,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 269,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-269-export-validatecachesignedpilotconcurrency-validatecachesignedpilotfreshpair-validatecachesignedpilotmutation-validatecachesignedpilotpair-validatecachesignedpilotreceipt-validatecachesignedpilotshadow-from-cache-pilot-signed-ts",
+          "line": 270,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-270-export-validatecachesignedpilotconcurrency-validatecachesignedpilotfreshpair-validatecachesignedpilotmutation-validatecachesignedpilotpair-validatecachesignedpilotreceipt-validatecachesignedpilotshadow-from-cache-pilot-signed-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -477397,8 +477441,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 283,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-283-export-runcachepilotexperiment-runcachesignedpilotworker-from-cache-pilot-ts",
+          "line": 284,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-284-export-runcachepilotexperiment-runcachesignedpilotworker-from-cache-pilot-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -477419,8 +477463,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 290,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-290-export-cacheproducerapproval-cacheproducerbinding-cacheproducerbody-cacheproducerbundle-cacheproducerenvelope-cacheproducerevidencefragment-from-cache-producer-schemas-ts",
+          "line": 291,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-291-export-cacheproducerapproval-cacheproducerbinding-cacheproducerbody-cacheproducerbundle-cacheproducerenvelope-cacheproducerevidencefragment-from-cache-producer-schemas-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -477441,8 +477485,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 298,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-298-export-cachefixtureartifactkey-cachefixturecredentials-cachefixtureevent-cachefixturefault-cachefixturescenario-from-cache-protocol-fixture-schemas-ts",
+          "line": 299,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-299-export-cachefixtureartifactkey-cachefixturecredentials-cachefixtureevent-cachefixturefault-cachefixturescenario-from-cache-protocol-fixture-schemas-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -477460,8 +477504,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 305,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-305-export-corruptcacheartifactbody-makecacheprotocolfixture-servecacheloopback-tampercacheartifacttag-from-cache-protocol-fixture-ts",
+          "line": 306,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-306-export-corruptcacheartifactbody-makecacheprotocolfixture-servecacheloopback-tampercacheartifacttag-from-cache-protocol-fixture-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -477479,8 +477523,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 311,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-311-export-cacheprotocolexecution-cacheprotocolisolationroot-cacheprotocolreadfailure-cacheprotocolrequest-from-cache-protocol-runner-schemas-ts",
+          "line": 312,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-312-export-cacheprotocolexecution-cacheprotocolisolationroot-cacheprotocolreadfailure-cacheprotocolrequest-from-cache-protocol-runner-schemas-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -477498,8 +477542,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 317,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-317-export-assertcacheprivatenetwork-cacheprotocolnativesummary-cacheprotocolsandboxmounts-runcacheprotocolexperiment-runcacheprotocolworker-from-cache-protocol-runner-ts",
+          "line": 318,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-318-export-assertcacheprivatenetwork-cacheprotocolnativesummary-cacheprotocolsandboxmounts-runcacheprotocolexperiment-runcacheprotocolworker-from-cache-protocol-runner-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -477517,8 +477561,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 324,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-324-export-cacheprotocolobservation-from-cache-protocol-schemas-ts",
+          "line": 325,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-325-export-cacheprotocolobservation-from-cache-protocol-schemas-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -477536,8 +477580,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 325,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-325-export-validatecacheprotocolexecution-validatecacheprotocolobservation-from-cache-protocol-ts",
+          "line": 326,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-326-export-validatecacheprotocolexecution-validatecacheprotocolobservation-from-cache-protocol-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -477555,8 +477599,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 332,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-332-export-assertcacheruntimekeyunspecified-cacheruntimestep-resolvecachesigningposture-runcacheruntimetasks-from-cache-runtime-ts",
+          "line": 333,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-333-export-assertcacheruntimekeyunspecified-cacheruntimestep-resolvecachesigningposture-runcacheruntimetasks-from-cache-runtime-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -477577,8 +477621,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 344,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-344-export-cacheactivationpreview-cacheactivationrequest-cachebaselinerequest-cachecensusdefinition-cachecensusnode-cachecensusreport-cachecensussource-cachecensusworkspace-cachecommanderror-cachecomputationconfiguration-cachedashboardreport-cachedashboardreportjson-cacheexecutablepin-cachelambdasummary-cachelinkedfile-cachelinkerresolution-cacheliveidentity-cacheremotereadsrequest-cacherunmode-cacheruntimeexecutable-cacheruntimelinkersnapshot-cachesigningkeystate-cachesigningposture-cachesigningrequest-cachesigningrole-cachetoolchainsnapshot-cachetransitionrequest-cachewalltime-cachewarmlane-cachewarmreceipt-cachewarmreceiptjson-from-cache-schemas-ts",
+          "line": 345,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-345-export-cacheactivationpreview-cacheactivationrequest-cachebaselinerequest-cachecensusdefinition-cachecensusnode-cachecensusreport-cachecensussource-cachecensusworkspace-cachecommanderror-cachecomputationconfiguration-cachedashboardreport-cachedashboardreportjson-cacheexecutablepin-cachelambdasummary-cachelinkedfile-cachelinkerresolution-cacheliveidentity-cacheremotereadsrequest-cacherunmode-cacheruntimeexecutable-cacheruntimelinkersnapshot-cachesigningkeystate-cachesigningposture-cachesigningrequest-cachesigningrole-cachetoolchainsnapshot-cachetransitionrequest-cachewalltime-cachewarmlane-cachewarmreceipt-cachewarmreceiptjson-from-cache-schemas-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -477599,8 +477643,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 383,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-383-export-cachequalificationlive-cachequalificationservice-type-cachequalificationserviceshape-encodecachepolicybaselinetext-from-cache-service-ts",
+          "line": 384,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-384-export-cachequalificationlive-cachequalificationservice-type-cachequalificationserviceshape-encodecachepolicybaselinetext-from-cache-service-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -477621,8 +477665,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 389,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-389-export-cachehostedproducerverifier-cachehostedproducerverifierlive-from-cache-workflow-github-ts",
+          "line": 390,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-390-export-cachehostedproducerverifier-cachehostedproducerverifierlive-from-cache-workflow-github-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -526523,34 +526567,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "PolicyRootFileRoute",
-          "exportKind": "class",
-          "filePath": "src/commands/Lint/PolicyFingerprint.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
-          "line": 234,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-234-policyrootfileroute",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "PolicyCliLayout",
           "exportKind": "class",
           "filePath": "src/commands/Lint/PolicyFingerprint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
-          "line": 274,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-274-policyclilayout",
+          "line": 232,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-232-policyclilayout",
           "currentTags": [
             "@category",
             "@since"
@@ -526571,8 +526593,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/PolicyFingerprint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
-          "line": 308,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-308-policycommandnode",
+          "line": 266,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-266-policycommandnode",
           "currentTags": [
             "@category",
             "@since"
@@ -526593,8 +526615,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/PolicyFingerprint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
-          "line": 336,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-336-policyclosure",
+          "line": 294,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-294-policyclosure",
           "currentTags": [
             "@category",
             "@since"
@@ -526615,8 +526637,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 319,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-319-computepolicyfingerprint",
+          "line": 325,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-325-computepolicyfingerprint",
           "currentTags": [
             "@category",
             "@since"
@@ -526637,8 +526659,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 749,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-749-policytoolsfingerprintpolicy",
+          "line": 761,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-761-policytoolsfingerprintpolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -526659,8 +526681,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 824,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-824-lintpolicyfingerprintcommand",
+          "line": 836,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-836-lintpolicyfingerprintcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -546258,8 +546280,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 2167,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2167-qualitytasklanerun",
+          "line": 2155,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2155-qualitytasklanerun",
           "currentTags": [
             "@category",
             "@since"
@@ -546280,8 +546302,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 2206,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2206-qualitytasklanerunreport",
+          "line": 2193,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2193-qualitytasklanerunreport",
           "currentTags": [
             "@category",
             "@since"
@@ -546302,8 +546324,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 2238,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2238-githubchecklanerun",
+          "line": 2225,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2225-githubchecklanerun",
           "currentTags": [
             "@category",
             "@since"
@@ -546324,8 +546346,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 2270,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2270-githubcheckrunreport",
+          "line": 2257,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2257-githubcheckrunreport",
           "currentTags": [
             "@category",
             "@since"

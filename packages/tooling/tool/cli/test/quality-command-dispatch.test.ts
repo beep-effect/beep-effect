@@ -39,6 +39,17 @@ const recordingSpawner = (result: ScriptResult.Encoded = {}) => ScriptedSpawner.
 const spawnedLines = (spawner: ScriptedSpawner) =>
   A.map(spawner.spawns, (spawn) => A.join([spawn.command, ...spawn.args], " "));
 
+// `github-checks` scales its widths by the admission state under the runtime root. An
+// empty root keeps live leases from other sessions, and the systemd scope probes they
+// trigger, out of the recorded process list.
+const withEmptyAdmissionRoot = Effect.fn("QualityCommandDispatchTest.withEmptyAdmissionRoot")(function* <A, E, R>(
+  effect: Effect.Effect<A, E, R>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "quality-command-admission-" });
+  return yield* provideRuntimeRootForTesting(effect, RuntimeRootChoice.make({ kind: "test-override", root }));
+});
+
 // Admission adopts the run into a systemd user scope when the host has a user
 // manager, then reads the scope's telemetry through the spawner under test. A
 // recording spawner must not see that host-dependent probe, so the tests that
@@ -47,11 +58,6 @@ const RunScopesDisabled = ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" }).p
   ConfigProvider.orElse(ConfigProvider.fromEnv())
 );
 
-// Admission also samples every live lease under the host's shared runtime root (another
-// session's detached proof job, for one), so these tests coordinate under a private root.
-const isolatedRuntimeRoot = Effect.gen(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const root = yield* fs.makeTempDirectoryScoped({ prefix: "quality-command-dispatch-" });
   return RuntimeRootChoice.make({ kind: "test-override", root });
 });
 
@@ -133,9 +139,8 @@ it.layer(CommandTestLayer, { timeout: "10 seconds" })("quality command dispatch"
     const spawner = recordingSpawner();
 
     return Effect.gen(function* () {
-      const root = yield* isolatedRuntimeRoot;
-      yield* runQualityCommand(["github-checks", "security"]).pipe(provideRuntimeRootForTesting(root));
-      yield* runQualityCommand(["github-checks", "security", "--collect-all"]).pipe(provideRuntimeRootForTesting(root));
+      yield* runQualityCommand(["github-checks", "security"]).pipe(withEmptyAdmissionRoot);
+      yield* runQualityCommand(["github-checks", "security", "--collect-all"]).pipe(withEmptyAdmissionRoot);
 
       expect(spawnedLines(spawner)).toEqual([
         expect.stringMatching(/^docker run --rm /),
@@ -152,10 +157,7 @@ it.layer(CommandTestLayer, { timeout: "10 seconds" })("quality command dispatch"
     const spawner = recordingSpawner({ exit: 1 });
 
     return Effect.gen(function* () {
-      const root = yield* isolatedRuntimeRoot;
-      const exit = yield* Effect.exit(
-        runQualityCommand(["github-checks", "security"]).pipe(provideRuntimeRootForTesting(root))
-      );
+      const exit = yield* runQualityCommand(["github-checks", "security"]).pipe(withEmptyAdmissionRoot, Effect.exit);
 
       exit.pipe(Exit.isFailure, assertTrue);
       expect(spawnedLines(spawner)).toEqual([expect.stringMatching(/^docker run --rm /)]);
