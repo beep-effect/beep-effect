@@ -719,7 +719,6 @@ const expectPolicySpawns = (
   );
 };
 
-
 const cheapGatesSpawner = (failedCommands: ReadonlyArray<string>, key: (text: string) => string = identity) =>
   ScriptedSpawner.make((command, args) => ({
     stdout: A.findFirst(cheapGatesGitReplies, ([flag]) => A.contains(args, flag)).pipe(

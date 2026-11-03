@@ -58,9 +58,6 @@ const RunScopesDisabled = ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" }).p
   ConfigProvider.orElse(ConfigProvider.fromEnv())
 );
 
-  return RuntimeRootChoice.make({ kind: "test-override", root });
-});
-
 const consoleText = Effect.fn("QualityCommandDispatchTest.consoleText")(function* () {
   const logs = A.filter(yield* TestConsole.logLines, P.isString);
   const errors = A.filter(yield* TestConsole.errorLines, P.isString);
