@@ -870,6 +870,13 @@ that emits nonempty stdout and exits seven. Keep the expected format error,
 assert its exit status, and retain the original file. Do not alter the
 repository formatter policy or accept stdout from a failed formatter.
 
+The hosted HTML process test then exposed a fixture resolution mistake:
+linking only the package's `node_modules` loses workspace dependencies hoisted
+to the repository root when the copied fixture lives outside that repository.
+Link the existing root dependency tree instead. Keep the assertion for the
+specific drift error, edited target bytes and unchanged siblings so a module
+resolution failure cannot masquerade as the required nonwriting behavior.
+
 ### 2026-11-03 — Two generator checks rewrote source before comparing it
 
 The entrypoint census found `@beep/html#generate:check` and

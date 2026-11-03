@@ -15,13 +15,14 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })((it) => {
       const path = yield* Path.Path;
       const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
       const packageRoot = path.resolve(import.meta.dirname, "..");
+      const repositoryRoot = path.resolve(packageRoot, "../../../..");
       // This is a disposable package fixture outside the workspace census, not a Git checkout.
       const fixture = yield* fs.makeTempDirectoryScoped({ prefix: "html-generator-check-" });
       yield* fs.copy(path.join(packageRoot, "src"), path.join(fixture, "src"));
       yield* fs.copy(path.join(packageRoot, "data"), path.join(fixture, "data"));
       yield* fs.makeDirectory(path.join(fixture, "scripts"));
       yield* fs.copy(path.join(packageRoot, "scripts/generate.ts"), path.join(fixture, "scripts/generate.ts"));
-      yield* fs.symlink(path.join(packageRoot, "node_modules"), path.join(fixture, "node_modules"));
+      yield* fs.symlink(path.join(repositoryRoot, "node_modules"), path.join(fixture, "node_modules"));
       const target = path.join(fixture, "src/Html.model.ts");
       const edited = `${yield* fs.readFileString(target)}\n// Retain this uncommitted generator-check edit.\n`;
       yield* fs.writeFileString(target, edited);
