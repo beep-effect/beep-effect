@@ -8,7 +8,12 @@ import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeUseCasesId.create("ClaimSelfCheck/ClaimInspection.errors");
-const failureReason = LiteralKit(["public-source-unavailable", "response-too-large", "response-encoding-failed"]).pipe(
+const failureReason = LiteralKit([
+  "public-source-unavailable",
+  "response-too-large",
+  "response-encoding-failed",
+  "invalid-cursor",
+]).pipe(
   $I.annoteSchema("ClaimInspectionFailureReason", {
     description:
       "Source acquisition failed, or the complete response cannot be encoded or delivered within its size limit.",

@@ -7,10 +7,10 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { PracticeKgEpistemicStatus } from "@beep/law-practice-domain/values";
-import { ClaimInputCollection } from "@beep/law-practice-domain/values/ClaimElement";
 import {
   ClaimInspection,
   ClaimInspectionLive,
+  ClaimInspectionPageRequest,
   ClaimSelfCheck,
   ClaimSelfCheckLive,
   UsptoClaimInputs,
@@ -434,7 +434,9 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
         )
       ),
       claim_inspect_input: Effect.fn("PracticeKgTools.claim_inspect_input")((request) =>
-        claimInspectInput(ClaimInputCollection.make(request)).pipe(Effect.provideService(ClaimInspection, inspection))
+        claimInspectInput(ClaimInspectionPageRequest.make(request)).pipe(
+          Effect.provideService(ClaimInspection, inspection)
+        )
       ),
       kg_candidate_claims: Effect.fn("PracticeKgTools.kg_candidate_claims")(
         function* (request) {

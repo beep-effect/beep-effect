@@ -82,6 +82,27 @@ const treesOf = (value: PublishedClaimInspectionReport) =>
     decomposition.status === "decomposed" ? [decomposition.tree] : []
   );
 
+const verifyCanonicalRecord = Effect.fn("InspectionEvaluation.verifyCanonicalRecord")(function* (
+  records: PublishedClaimInspectionReport["source"]["input"]["records"],
+  expected: (typeof Canonical.Type)["claims"][number],
+  familyId: string
+) {
+  const matches = A.filter(records, (record) =>
+    O.exists(O.flatMap(record.numberText, decodeSourceNumber), (number) => number === expected.claimNumber)
+  );
+  if (matches.length !== 1) {
+    return yield* StructuralEvaluationError.make({
+      message: `Source identity mismatch: ${familyId}/${expected.claimNumber}`,
+    });
+  }
+  const actual = O.getOrThrow(A.head(matches));
+  if (actual.kind === "text" && Str.trim(Str.replace(/\s+/gu, " ")(actual.canonicalText)) !== expected.claimText) {
+    return yield* StructuralEvaluationError.make({
+      message: `Raw canonical text mismatch: ${familyId}/${expected.claimNumber}`,
+    });
+  }
+});
+
 const verifyCanonicalText = Effect.fn("InspectionEvaluation.verifyCanonicalText")(function* (
   report: PublishedClaimInspectionReport,
   canonical: typeof Canonical.Type,
@@ -96,20 +117,7 @@ const verifyCanonicalText = Effect.fn("InspectionEvaluation.verifyCanonicalText"
   // Check every raw source text, including records that failed normalization.
   // Whitespace canonicalization is exactly the original normalization protocol.
   for (const expected of canonical.claims) {
-    const matches = A.filter(records, (record) =>
-      O.exists(O.flatMap(record.numberText, decodeSourceNumber), (number) => number === expected.claimNumber)
-    );
-    if (matches.length !== 1) {
-      return yield* StructuralEvaluationError.make({
-        message: `Source identity mismatch: ${familyId}/${expected.claimNumber}`,
-      });
-    }
-    const actual = O.getOrThrow(A.head(matches));
-    if (actual.kind === "text" && Str.trim(Str.replace(/\s+/gu, " ")(actual.canonicalText)) !== expected.claimText) {
-      return yield* StructuralEvaluationError.make({
-        message: `Raw canonical text mismatch: ${familyId}/${expected.claimNumber}`,
-      });
-    }
+    yield* verifyCanonicalRecord(records, expected, familyId);
   }
 });
 
@@ -223,7 +231,7 @@ const program = Effect.gen(function* () {
                 publicationNumber: PatentNumber.make(Str.slice(2, 13)(source.publicationNumber)),
               })
             )
-          ).pipe(Effect.provide(context), Effect.result);
+          ).pipe(Effect.provideContext(context), Effect.result);
         }).pipe(Effect.scoped);
         const report = checked._tag === "Success" ? O.some(checked.success) : O.none();
         const predicted = O.match(report, { onNone: () => [], onSome: treesOf });

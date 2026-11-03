@@ -58,5 +58,52 @@ class CoverageTests(unittest.TestCase):
                          {"parsed": False, "abstained": True})
 
 
+class ToolDeliveryTests(unittest.TestCase):
+    def proof(self):
+        report = {"input": {"sourceKey": "version-1", "records": [{"sourceOrdinal": 1}]},
+                  "records": [{"status": "complete", "decomposition": {"qualification": {
+                      "status": "context-ready", "record": {"sourceOrdinal": 1}, "claim": {"claimNumber": 7}}},
+                               "findings": []}]}
+        delivery = {"complete": True, "sourceKey": "version-1", "totalRecords": 1,
+                    "deliveredRecords": 1, "pageCount": 1,
+                    "pages": [{"startSourceOrdinal": 1, "endSourceOrdinal": 1, "bytes": 321}]}
+        claim = {"claimNumber": 7, "sourceOrdinal": 1, "parsed": True,
+                 "abstained": False, "inspectionStatus": "complete"}
+        return report, delivery, claim
+
+    def test_complete_tool_proof_preserves_coverage(self):
+        report, delivery, claim = self.proof()
+        self.assertEqual(adapter.observed_coverage("claim-input-tool-evaluation/v1", claim, report, delivery),
+                         {"parsed": True, "abstained": False})
+
+    def test_missing_proof_refuses(self):
+        report, _, claim = self.proof()
+        with self.assertRaises(ValueError):
+            adapter.observed_coverage("claim-input-tool-evaluation/v1", claim, report)
+
+    def test_oversized_page_refuses(self):
+        report, delivery, _ = self.proof()
+        delivery["pages"][0]["bytes"] = 1024 * 1024 + 1
+        with self.assertRaises(ValueError):
+            adapter.validate_tool_delivery(report, delivery)
+
+    def test_range_gap_refuses(self):
+        report, delivery, _ = self.proof()
+        delivery["pages"][0]["startSourceOrdinal"] = 2
+        with self.assertRaises(ValueError):
+            adapter.validate_tool_delivery(report, delivery)
+
+    def test_foreign_source_refuses(self):
+        report, delivery, _ = self.proof()
+        delivery["sourceKey"] = "other-version"
+        with self.assertRaises(ValueError):
+            adapter.validate_tool_delivery(report, delivery)
+
+    def test_missing_product_stays_conservative(self):
+        claim = {"claimNumber": 7, "sourceOrdinal": None, "parsed": False, "abstained": True}
+        self.assertEqual(adapter.observed_coverage("claim-input-tool-evaluation/v1", claim, {}),
+                         {"parsed": False, "abstained": True})
+
+
 if __name__ == "__main__":
     unittest.main()

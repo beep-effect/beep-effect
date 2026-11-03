@@ -2,8 +2,8 @@ import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { ContentDigest, OperationId } from "@beep/file-processing/Artifact";
 import {
   ClaimInputCollection,
-  ClaimInputInspectionReport,
   ClaimInputRecord,
+  inspectClaimInput,
 } from "@beep/law-practice-domain/values/ClaimElement";
 import {
   normalizePatentApplicationDocument,
@@ -48,7 +48,11 @@ import {
 } from "@beep/law-practice-server";
 import { runPracticeKgSelfCheck } from "@beep/law-practice-server/PracticeKgHost";
 import { DbSchema } from "@beep/law-practice-tables";
-import { ClaimSelfCheckInput } from "@beep/law-practice-use-cases/ClaimSelfCheck";
+import {
+  ClaimInspectionPage,
+  ClaimInspectionPageRequest,
+  ClaimSelfCheckInput,
+} from "@beep/law-practice-use-cases/ClaimSelfCheck";
 import { OfficeActionReview } from "@beep/law-practice-use-cases/OfficeActionReview";
 import {
   ClaimSelfCheckReviewRequest,
@@ -881,8 +885,8 @@ const callToolText = Effect.fn("PracticeKgTest.callToolText")(function* (
 });
 
 const claimSelfCheckReviewResultJson = S.fromJsonString(ClaimSelfCheckReviewResult);
-const claimInputInspectionReportJson = S.fromJsonString(ClaimInputInspectionReport);
-const encodeClaimInspectionInput = S.encodeEffect(ClaimInputCollection);
+const claimInputInspectionReportJson = S.fromJsonString(ClaimInspectionPage);
+const encodeClaimInspectionInput = S.encodeEffect(ClaimInspectionPageRequest);
 const decodeClaimInspectionReport = S.decodeEffect(claimInputInspectionReportJson);
 
 describe("practice KG projections", () => {
@@ -1195,7 +1199,7 @@ describe("practice KG projections", () => {
             ),
           });
           const before = yield* callToolText("kg_candidate_claims", {});
-          const wire = yield* encodeClaimInspectionInput(input);
+          const wire = yield* encodeClaimInspectionInput(ClaimInspectionPageRequest.make({ input }));
           const encoded = yield* callToolText("claim_inspect_input", wire);
           const report = yield* decodeClaimInspectionReport(encoded);
           expect(report.input).toStrictEqual(input);
@@ -1217,11 +1221,40 @@ describe("practice KG projections", () => {
               }),
             ],
           });
-          const failedWire = yield* encodeClaimInspectionInput(unavailable);
+          const failedWire = yield* encodeClaimInspectionInput(ClaimInspectionPageRequest.make({ input: unavailable }));
           const failedEncoded = yield* callToolText("claim_inspect_input", failedWire);
           const failedReport = yield* decodeClaimInspectionReport(failedEncoded);
           expect(failedReport.input).toStrictEqual(unavailable);
           expect(A.map(failedReport.records, ({ status }) => status)).toStrictEqual(["unchecked"]);
+          const largeInput = ClaimInputCollection.make({
+            ...input,
+            sourceKey: "synthetic-large-MCP-source",
+            records: A.map(input.records, (record) =>
+              ClaimInputRecord.make({ ...record, sourceText: Str.repeat(50_000)("界") })
+            ),
+          });
+          const full = yield* inspectClaimInput(largeInput);
+          const largeWire = yield* encodeClaimInspectionInput(ClaimInspectionPageRequest.make({ input: largeInput }));
+          const largeEncoded = yield* callToolText("claim_inspect_input", largeWire);
+          expect(new TextEncoder().encode(largeEncoded).byteLength).toBeLessThanOrEqual(1024 * 1024);
+          let page = yield* decodeClaimInspectionReport(largeEncoded);
+          expect(page.deliveryStatus).toBe("incomplete");
+          let collected = page.records;
+          while (O.isSome(page.nextCursor)) {
+            const nextWire = yield* encodeClaimInspectionInput(
+              ClaimInspectionPageRequest.make({ input: largeInput, cursor: page.nextCursor.value })
+            );
+            const nextEncoded = yield* callToolText("claim_inspect_input", nextWire);
+            expect(new TextEncoder().encode(nextEncoded).byteLength).toBeLessThanOrEqual(1024 * 1024);
+            const next = yield* decodeClaimInspectionReport(nextEncoded);
+            expect(next.range.startSourceOrdinal).toBe(page.range.endSourceOrdinal + 1);
+            expect(next.input).toStrictEqual(largeInput);
+            expect(next.summary).toStrictEqual(page.summary);
+            collected = A.appendAll(collected, next.records);
+            page = next;
+          }
+          expect(page.deliveryStatus).toBe("complete");
+          expect(collected).toStrictEqual(full.records);
           const after = yield* callToolText("kg_candidate_claims", {});
           expect(after).toBe(before);
         })

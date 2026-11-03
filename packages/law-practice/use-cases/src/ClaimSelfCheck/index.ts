@@ -12,6 +12,12 @@
  */
 export * from "./ClaimInspection.errors.ts";
 /**
+ * Stateless inspection page contracts.
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./ClaimInspection.pages.ts";
+/**
  * Published inspection provenance models.
  * @category models
  * @since 0.0.0
