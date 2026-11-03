@@ -171,6 +171,9 @@ const workflow = CacheProducerWorkflow.make({
   ),
 });
 const decodeWorkflow = S.decodeUnknownEffect(S.fromJsonString(CacheProducerWorkflow));
+const encodeProducerApproval = S.encodeEffect(S.fromJsonString(CacheProducerApproval));
+const encodeProducerExecutionProfile = S.encodeEffect(S.fromJsonString(CacheProducerExecutionProfile));
+const encodeProducerMaterial = S.encodeEffect(S.Uint8ArrayFromBase64);
 const decodeProducerBinding = S.decodeUnknownEffect(CacheProducerBinding);
 const decodeProducerContract = S.decodeUnknownEffect(CacheTaskContract);
 const producerProvisioning = Effect.fn("CacheDispatchTest.producerProvisioning")(function* () {
@@ -864,13 +867,9 @@ describe("cache qualification command dispatch", () => {
             ConfigProvider.ConfigProvider,
             ConfigProvider.fromUnknown({
               BEEP_CACHE_PRODUCER_STORE: "/trusted/store",
-              BEEP_CACHE_PRODUCER_APPROVAL_JSON: yield* S.encodeEffect(S.fromJsonString(CacheProducerApproval))(
-                approval
-              ),
-              BEEP_CACHE_PRODUCER_RUNTIME_JSON: yield* S.encodeEffect(S.fromJsonString(CacheProducerExecutionProfile))(
-                profile
-              ),
-              BEEP_CACHE_PRODUCER_ISSUER_MATERIAL_BASE64: yield* S.encodeEffect(S.Uint8ArrayFromBase64)(bytes),
+              BEEP_CACHE_PRODUCER_APPROVAL_JSON: yield* encodeProducerApproval(approval),
+              BEEP_CACHE_PRODUCER_RUNTIME_JSON: yield* encodeProducerExecutionProfile(profile),
+              BEEP_CACHE_PRODUCER_ISSUER_MATERIAL_BASE64: yield* encodeProducerMaterial(bytes),
             })
           )
         );
@@ -900,19 +899,15 @@ describe("cache qualification command dispatch", () => {
           BEEP_CACHE_PRODUCER_RUNTIME_JSON: "private-unused-runtime",
           BEEP_CACHE_PRODUCER_ISSUER_MATERIAL_BASE64: "private-unused-material",
         });
-        expect(
-          yield* f
-            .run(["producer-install"])
-            .pipe(Effect.provideService(ConfigProvider.ConfigProvider, configuration), Effect.isFailure)
-        ).toBe(true);
+        yield* f
+          .run(["producer-install"])
+          .pipe(Effect.provideService(ConfigProvider.ConfigProvider, configuration), Effect.flip);
         expect(yield* errorText).toContain(
           "Independently selected provisioning inputs and producer store are required."
         );
-        expect(
-          yield* f
-            .run(["producer-provision", "--from-environment"])
-            .pipe(Effect.provideService(ConfigProvider.ConfigProvider, configuration), Effect.isFailure)
-        ).toBe(true);
+        yield* f
+          .run(["producer-provision", "--from-environment"])
+          .pipe(Effect.provideService(ConfigProvider.ConfigProvider, configuration), Effect.flip);
         expect(initialize).not.toHaveBeenCalled();
         expect(read).not.toHaveBeenCalled();
         expect(f.calls).toEqual([]);
@@ -938,15 +933,13 @@ describe("cache qualification command dispatch", () => {
         const marker = `private-input-sentinel-${testCase}`;
         const records = {
           BEEP_CACHE_PRODUCER_STORE: "/trusted/store",
-          BEEP_CACHE_PRODUCER_APPROVAL_JSON: yield* S.encodeEffect(S.fromJsonString(CacheProducerApproval))(approval),
-          BEEP_CACHE_PRODUCER_RUNTIME_JSON: yield* S.encodeEffect(S.fromJsonString(CacheProducerExecutionProfile))(
-            profile
-          ),
+          BEEP_CACHE_PRODUCER_APPROVAL_JSON: yield* encodeProducerApproval(approval),
+          BEEP_CACHE_PRODUCER_RUNTIME_JSON: yield* encodeProducerExecutionProfile(profile),
         };
-        const material = yield* S.encodeEffect(S.Uint8ArrayFromBase64)(new Uint8Array(96));
-        const short = yield* S.encodeEffect(S.Uint8ArrayFromBase64)(new Uint8Array(95));
-        const long = yield* S.encodeEffect(S.Uint8ArrayFromBase64)(new Uint8Array(97));
-        const mismatched = yield* S.encodeEffect(S.fromJsonString(CacheProducerApproval))(
+        const material = yield* encodeProducerMaterial(new Uint8Array(96));
+        const short = yield* encodeProducerMaterial(new Uint8Array(95));
+        const long = yield* encodeProducerMaterial(new Uint8Array(97));
+        const mismatched = yield* encodeProducerApproval(
           CacheProducerApproval.make({
             ...approval,
             binding: CacheProducerBinding.make({
@@ -1029,14 +1022,12 @@ describe("cache qualification command dispatch", () => {
         );
         const initialize = vi.spyOn(Workflow, "initializeCacheProducerExecution");
         const read = vi.spyOn(Producer, "readCacheProducerProvisioning");
-        expect(
-          yield* f
-            .run(["producer-install", "--from-environment"])
-            .pipe(
-              Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(configuration)),
-              Effect.isFailure
-            )
-        ).toBe(true);
+        yield* f
+          .run(["producer-install", "--from-environment"])
+          .pipe(
+            Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(configuration)),
+            Effect.flip
+          );
         expect(initialize).not.toHaveBeenCalled();
         expect(read).not.toHaveBeenCalled();
         expect(f.calls).toEqual([]);

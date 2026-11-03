@@ -1924,3 +1924,11 @@ ran on `c96edf8c` and passed. The earlier directory-alias failure is retained
 separately. Verify the main selection immediately before dispatch and bind both
 the caller and resolved Heavy leaf; later accepted commits require a fresh
 source approval rather than relabeling this observation as current.
+
+### 2026-11-02 — new dispatch controls before hosted replay
+
+Source review found inline schema encoders and boolean failure assertions in
+the newly authored environment-installation controls. Reuse module-level
+encoders and the existing Effect.flip failure pattern before submitting this
+wave. The thirteen controls retain their original scope and remain unrun; this
+source correction is not evidence that policy or behavioral gates have passed.

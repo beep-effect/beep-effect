@@ -10,7 +10,7 @@
     },
     {
       "path": "packages/tooling/tool/cli/test/cache-dispatch.test.ts",
-      "sha256": "d4c1e3342a4eaa5db87f3490e9beff4623801ee43cd648c7a76ee918aab03ef1"
+      "sha256": "244aaebc74eda859b8f63423eeb5133c3fca5b16c42ebb7487eaa1e247e4700e"
     }
   ],
   "environmentRecords": {
@@ -79,5 +79,16 @@
     ],
     "acceptanceGranted": false
   },
-  "protectedSourceInspection": "research/protected-source-inspection-2026-11-02.json"
+  "protectedSourceInspection": "research/protected-source-inspection-2026-11-02.json",
+  "priorSourceBindingsBeforeDispatchPolicyRepair": [
+    {
+      "path": "packages/tooling/tool/cli/test/cache-dispatch.test.ts",
+      "sha256": "d4c1e3342a4eaa5db87f3490e9beff4623801ee43cd648c7a76ee918aab03ef1"
+    }
+  ],
+  "dispatchPolicyRepair": {
+    "sourceReview": "Hoist the three encoders to module scope and use Effect.flip for newly authored failure controls. No new helper or assertion wrapper.",
+    "controlsChanged": false,
+    "controlsExecuted": false
+  }
 }
