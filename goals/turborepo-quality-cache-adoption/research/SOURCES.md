@@ -611,3 +611,7 @@ production qualification.
 - Installed Turbo 2.11.10 `docs/reference/run.mdx` documents `--dry=json` as
   planning without task execution. Cache's current collector uses strict
   environment mode and `--cache=local:` for that plan.
+
+
+- [Current npm dist-tags](https://registry.npmjs.org/-/package/turbo/dist-tags), observed 2026-11-03: stable 2.11.10 and canary 2.11.11-canary.1. `current-feature-client-refresh-2026-11-03.json` binds the current pins, SRI-verified canary package/native archive and availability observations; the previous aggregate pins remain byte-identical in `client-pins-before-current-pair-refresh-2026-11-03.json`.
+- [Published current canary package](https://registry.npmjs.org/turbo/2.11.11-canary.1): schema declares the canary-only `hashFilePermissions` flag. Sixty shared-flag and four canary-only-flag native dry runs executed no tasks. `native-permission-flag-availability.py` reuses the existing bounded collector; its three refusal controls are retained separately. No mode-hash semantics, task qualification or runtime activation is claimed.
