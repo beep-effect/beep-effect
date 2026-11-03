@@ -243,6 +243,46 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
       expect(output).toContain("[goals:doctor] note: proposal-cited: completed-retained (proposed via #7, unverified)");
     })
   );
+  it.effect("offline committed closeouts print their committed status line", () =>
+    Effect.gen(function* () {
+      yield* temporaryWorkingDirectory;
+      yield* runGit(["init", "-b", "main"]);
+      yield* runGit(["config", "user.name", "Fixture"]);
+      yield* runGit(["config", "user.email", "fixture@example.invalid"]);
+      yield* writeActivePacket("closed");
+      yield* writeProjectFile(
+        "goals/closed/ops/manifest.json",
+        `${encodeJson({
+          schemaVersion: "initiative-manifest/v2",
+          initiative: { id: "closed", status: "completed-retained" },
+          lifecycle: "completed-retained",
+          completionGate: {
+            ...COMPLETION_GATE,
+            acceptanceEvidence: [{ kind: "yeet-verdict", ref: ".beep/yeet/verdict.json", gating: true }],
+          },
+          closeout: { status: "completed-retained", finalPullRequest: 7 },
+        })}\n`
+      );
+      yield* writeProjectFile("goals/closed/README.md", "# closed\n\n## Status\n\nLifecycle: `completed-retained`\n");
+      yield* writeBaseline([]);
+      yield* runGit(["add", "."]);
+      yield* runGit(["commit", "-m", "chore: closed fixture"]);
+      const output = yield* captureOutput(
+        runGoalsCommand(["doctor"]).pipe(
+          Effect.provideService(
+            GoalCompletionIo,
+            GoalCompletionIo.of({
+              git: Effect.fn("GoalsDoctorTest.closeoutGit")(() => Effect.succeed("git@github.com:example/repo.git")),
+              github: Effect.fn("GoalsDoctorTest.closeoutGitHub")(() => Effect.die("offline closeout used GitHub")),
+            })
+          )
+        )
+      );
+      // Without a matching receipt the record still reads as committed, never as verified.
+      expect(output).toContain("[goals:doctor] note: closed: completed-retained (committed via #7, unverified)");
+      expect(output).toContain("closed [completion-gate-unknown]");
+    })
+  );
   it.effect("doctor prints the missing fact for unknown completion and nothing for verified", () =>
     Effect.forEach(
       [

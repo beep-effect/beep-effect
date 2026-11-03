@@ -1223,6 +1223,7 @@ const completionEvidenceAdvisory = Effect.fn("Goals.completionEvidenceAdvisory")
   if (
     O.isNone(receipt) &&
     manifest.proposedCloseout === undefined &&
+    manifest.closeout === undefined &&
     manifest.completionGate.pullRequests === undefined &&
     !online
   )
@@ -1234,7 +1235,7 @@ const completionEvidenceAdvisory = Effect.fn("Goals.completionEvidenceAdvisory")
   const committed = O.map(O.fromUndefinedOr(manifest.closeout), (record) =>
     renderGoalCloseoutRecordView(
       record,
-      O.exists(receipt, (row) => row.outcome === "verified") ? "verified" : "unverified"
+      O.isSome(receipt) && receipt.value.outcome === "verified" ? "verified" : "unverified"
     )
   );
   const notes = A.map(
