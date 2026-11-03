@@ -1,0 +1,253 @@
+{
+  "schemaVersion": "cache-prune-global-native-controls/v1",
+  "authority": "Synthetic offline prune and input-presence observations only; no computation qualification.",
+  "observedAt": "2026-11-03T03:38:43.225464+00:00",
+  "sourceState": "working-tree-bound",
+  "sourceBindings": [
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/native-prune-global-controls.py",
+      "sha256": "a61dc3bface802f0704e935050dc6aeb9689027f7ea8060390a3196323f95767"
+    },
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/errors-only-client-pins.json",
+      "sha256": "b98316567400a2323e0868b8558fb9250d7ceb5fd2e2af7354782e5bc8803c6d"
+    },
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/native-future-flag-availability.py",
+      "sha256": "e2e51ecc6b3a3ca2e0553a13a061ebfc9b39d6239c8d935bbdbd411296c54736"
+    },
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/native-selection-controls.py",
+      "sha256": "25a1b8766ba91883d761c5942b07fc4011b5ea6329c3d1eed83f758f97a98ce1"
+    },
+    {
+      "path": ".bun-version",
+      "sha256": "d03d8b268b4171328ac2458ce8ca82d69a1fde38469d4e4faae4f8fa8d8a5e35"
+    }
+  ],
+  "clients": {
+    "stable": {
+      "reportedVersion": "2.11.10",
+      "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+    },
+    "canary": {
+      "reportedVersion": "2.11.11-canary.1",
+      "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
+    }
+  },
+  "toolSha256": {
+    "bun": "10702245766b225e70bbf6235fd6b47214fd94b4760d00ffaed8ab0df57ac235",
+    "bwrap": "54e8408bd5b325c17926dd2c2420e6f28086286fd5bf99b397f9b681be3dada0",
+    "timeout": "3af64f366c2422870723a787b3912c0546927d16ed07ae2059431178e5ec503f"
+  },
+  "bunVersion": "1.4.4",
+  "networkIsolated": true,
+  "repositoryNotMounted": true,
+  "captureLimits": {
+    "wholeSeconds": 180,
+    "perProcessSeconds": 10,
+    "stdoutBytes": 1048576,
+    "stderrBytes": 65536
+  },
+  "cases": 16,
+  "subprocesses": 64,
+  "rows": [
+    {
+      "channel": "stable",
+      "layout": "legacy",
+      "flag": false,
+      "docker": false,
+      "dependencySourceRetained": true,
+      "unrelatedWorkspaceExcluded": true,
+      "globalFileCopied": false,
+      "frozenOfflineInstallPassed": true,
+      "missingGlobalConsumerRefused": true,
+      "lifecycleAndTaskExecution": false
+    },
+    {
+      "channel": "stable",
+      "layout": "legacy",
+      "flag": false,
+      "docker": true,
+      "dependencySourceRetained": true,
+      "unrelatedWorkspaceExcluded": true,
+      "globalFileCopied": false,
+      "frozenOfflineInstallPassed": true,
+      "missingGlobalConsumerRefused": true,
+      "lifecycleAndTaskExecution": false
+    },
+    {
+      "channel": "stable",
+      "layout": "legacy",
+      "flag": true,
+      "docker": false,
+      "dependencySourceRetained": true,
+      "unrelatedWorkspaceExcluded": true,
+      "globalFileCopied": true,
+      "frozenOfflineInstallPassed": true,
+      "missingGlobalConsumerRefused": true,
+      "lifecycleAndTaskExecution": false
+    },
+    {
+      "channel": "stable",
+      "layout": "legacy",
+      "flag": true,
+      "docker": true,
+      "dependencySourceRetained": true,
+      "unrelatedWorkspaceExcluded": true,
+      "globalFileCopied": true,
+      "frozenOfflineInstallPassed": true,
+      "missingGlobalConsumerRefused": true,
+      "lifecycleAndTaskExecution": false
+    },
+    {
+      "channel": "stable",
+      "layout": "global",
+      "flag": false,
+      "docker": false,
+      "dependencySourceRetained": true,
+      "unrelatedWorkspaceExcluded": true,
+      "globalFileCopied": false,
+      "frozenOfflineInstallPassed": true,
+      "missingGlobalConsumerRefused": true,
+      "lifecycleAndTaskExecution": false
+    },
+    {
+      "channel": "stable",
+      "layout": "global",
+      "flag": false,
+      "docker": true,
+      "dependencySourceRetained": true,
+      "unrelatedWorkspaceExcluded": true,
+      "globalFileCopied": false,
+      "frozenOfflineInstallPassed": true,
+      "missingGlobalConsumerRefused": true,
+      "lifecycleAndTaskExecution": false
+    },
+    {
+      "channel": "stable",
+      "layout": "global",
+      "flag": true,
+      "docker": false,
+      "dependencySourceRetained": true,
+      "unrelatedWorkspaceExcluded": true,
+      "globalFileCopied": true,
+      "frozenOfflineInstallPassed": true,
+      "missingGlobalConsumerRefused": true,
+      "lifecycleAndTaskExecution": false
+    },
+    {
+      "channel": "stable",
+      "layout": "global",
+      "flag": true,
+      "docker": true,
+      "dependencySourceRetained": true,
+      "unrelatedWorkspaceExcluded": true,
+      "globalFileCopied": true,
+      "frozenOfflineInstallPassed": true,
+      "missingGlobalConsumerRefused": true,
+      "lifecycleAndTaskExecution": false
+    },
+    {
+      "channel": "canary",
+      "layout": "legacy",
+      "flag": false,
+      "docker": false,
+      "dependencySourceRetained": true,
+      "unrelatedWorkspaceExcluded": true,
+      "globalFileCopied": false,
+      "frozenOfflineInstallPassed": true,
+      "missingGlobalConsumerRefused": true,
+      "lifecycleAndTaskExecution": false
+    },
+    {
+      "channel": "canary",
+      "layout": "legacy",
+      "flag": false,
+      "docker": true,
+      "dependencySourceRetained": true,
+      "unrelatedWorkspaceExcluded": true,
+      "globalFileCopied": false,
+      "frozenOfflineInstallPassed": true,
+      "missingGlobalConsumerRefused": true,
+      "lifecycleAndTaskExecution": false
+    },
+    {
+      "channel": "canary",
+      "layout": "legacy",
+      "flag": true,
+      "docker": false,
+      "dependencySourceRetained": true,
+      "unrelatedWorkspaceExcluded": true,
+      "globalFileCopied": true,
+      "frozenOfflineInstallPassed": true,
+      "missingGlobalConsumerRefused": true,
+      "lifecycleAndTaskExecution": false
+    },
+    {
+      "channel": "canary",
+      "layout": "legacy",
+      "flag": true,
+      "docker": true,
+      "dependencySourceRetained": true,
+      "unrelatedWorkspaceExcluded": true,
+      "globalFileCopied": true,
+      "frozenOfflineInstallPassed": true,
+      "missingGlobalConsumerRefused": true,
+      "lifecycleAndTaskExecution": false
+    },
+    {
+      "channel": "canary",
+      "layout": "global",
+      "flag": false,
+      "docker": false,
+      "dependencySourceRetained": true,
+      "unrelatedWorkspaceExcluded": true,
+      "globalFileCopied": false,
+      "frozenOfflineInstallPassed": true,
+      "missingGlobalConsumerRefused": true,
+      "lifecycleAndTaskExecution": false
+    },
+    {
+      "channel": "canary",
+      "layout": "global",
+      "flag": false,
+      "docker": true,
+      "dependencySourceRetained": true,
+      "unrelatedWorkspaceExcluded": true,
+      "globalFileCopied": false,
+      "frozenOfflineInstallPassed": true,
+      "missingGlobalConsumerRefused": true,
+      "lifecycleAndTaskExecution": false
+    },
+    {
+      "channel": "canary",
+      "layout": "global",
+      "flag": true,
+      "docker": false,
+      "dependencySourceRetained": true,
+      "unrelatedWorkspaceExcluded": true,
+      "globalFileCopied": true,
+      "frozenOfflineInstallPassed": true,
+      "missingGlobalConsumerRefused": true,
+      "lifecycleAndTaskExecution": false
+    },
+    {
+      "channel": "canary",
+      "layout": "global",
+      "flag": true,
+      "docker": true,
+      "dependencySourceRetained": true,
+      "unrelatedWorkspaceExcluded": true,
+      "globalFileCopied": true,
+      "frozenOfflineInstallPassed": true,
+      "missingGlobalConsumerRefused": true,
+      "lifecycleAndTaskExecution": false
+    }
+  ],
+  "limits": [
+    "Only synthetic Linux fixtures are exercised.",
+    "No production prune caller or build output is qualified.",
+    "Ignored/sensitive file policy, deployment portability and real task qualification remain separate gates."
+  ]
+}

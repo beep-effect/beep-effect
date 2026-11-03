@@ -123,7 +123,11 @@
     "research/native-filter-composition-controls.py",
     "research/native-filter-composition-controls.json",
     "research/filter-composition-driver-controls.json",
-    "research/filter-composition-source-review.json"
+    "research/filter-composition-source-review.json",
+    "research/native-prune-global-controls.py",
+    "research/native-prune-global-controls.json",
+    "research/prune-driver-controls.json",
+    "research/prune-global-feature-review.json"
   ],
   "agentLaunchers": [
     {
@@ -186,5 +190,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Active. The census at accepted source e274d3e619 contains 2,434 executable computations across 191 workspaces. All 199 prior source reviews are retained byte-identically; current literal-source review re-establishes 186 source-mutating fixers and 12 persistent services as whole-command keep-fresh. The current source leaves 2,236 computation reviews pending. 8 of 35 feature decisions have final scoped reviews on this branch; 27 remain pending. The global-configuration component still requires hosted acceptance. Qualification, supported adoption, actual observation windows and every whole-goal acceptance criterion remain incomplete."
+  "statusNote": "Active. The retained census has 2,434 executable computations and 2,236 remaining current-source reviews. Ten of 35 feature decisions have final scoped reviews; 25 remain pending. The optional prune global-file flag stays absent after tracked-source review and 16 synthetic native controls. Broad pruning/deployment and real pruned builds remain unproven. Qualification, supported adoption, measured value, actual observation windows and every whole-goal acceptance criterion remain incomplete."
 }

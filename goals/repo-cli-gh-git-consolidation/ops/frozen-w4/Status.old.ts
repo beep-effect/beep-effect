@@ -51,7 +51,7 @@ export { deriveYeetMergeReady } from "../../../../packages/tooling/tool/cli/src/
 
 import { provideYeetGhLogin } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/GhOps.ts";
 import { NO_CHECKS_REPORTED } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorChecks.ts";
-import { yeetCommentExcerpt } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorComments.ts";
+import { yeetCommentExcerpt } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorComments.schemas.ts";
 import { YeetHeadTimeline } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorPolicy.ts";
 import { YEET_STATUS_CHECK_FIELDS } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts";
 import { findOpenPullRequestViaRest } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/PullRequest.ts";

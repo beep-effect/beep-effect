@@ -76,6 +76,7 @@ import {
   yeetReviewThreadStateOutstanding,
 } from "./ReviewThreadState.ts";
 import { readYeetReviewWindowAsGhLogin, yeetReviewWindowDue, yeetReviewWindowElapsed } from "./ReviewWindow.ts";
+import { YeetSettleVerdict } from "./Settle.schemas.ts";
 import {
   deriveSettleVerdict,
   readYeetChangedPaths,
@@ -86,7 +87,6 @@ import {
   YeetRulesetRequiredContexts,
   YeetSettleCheck,
   YeetSettleInput,
-  YeetSettleVerdict,
   yeetBaseConflictFor,
   yeetGatedFamiliesFor,
   yeetSettleClockReset,

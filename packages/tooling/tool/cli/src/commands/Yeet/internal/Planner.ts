@@ -6,7 +6,6 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
@@ -34,6 +33,7 @@ import {
   githubCheckPrePushLanes,
 } from "../../Quality/internal/GithubChecks.ts";
 import { HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.ts";
+import { GIT_PUSH_STEP_ID, YeetRunMode } from "./Planner.schemas.ts";
 import { DEFAULT_GATE_ORDER_SEED, orderWaveLanes } from "./WaveOrder.ts";
 import type { RepoRunContext, TurboPlanTask } from "../../../internal/repo-run/RepoRun.models.ts";
 import type { GithubCheckLaneSpec } from "../../Quality/Quality.schemas.ts";
@@ -41,14 +41,6 @@ import type { GithubCheckLaneSpec } from "../../Quality/Quality.schemas.ts";
 export { YeetProofTier } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Planner");
-
-/**
- * Default ignored directory for yeet run artifacts.
- *
- * @category configuration
- * @since 0.0.0
- */
-export const DEFAULT_YEET_PACKET_DIR = ".beep/yeet" as const;
 
 /**
  * Stable step id for the merged-tree CI parity battery.
@@ -66,34 +58,6 @@ export const CI_PARITY_STEP_ID = "full:02-ci-parity" as const;
 export const YEET_FEEDBACK_TASKS = ["build", "check", "lint", "test"] as const;
 
 type YeetFeedbackTask = (typeof YEET_FEEDBACK_TASKS)[number];
-
-/**
- * Yeet execution modes.
- *
- * **Example** (Plan a Yeet run)
- *
- * ```ts
- * import { YeetRunMode } from "@beep/repo-cli/test/Yeet"
- *
- * console.log(YeetRunMode.is.verify("verify"))
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const YeetRunMode = LiteralKit(["repair", "verify", "publish", "monitor", "closeout", "status"]).pipe(
-  $I.annoteSchema("YeetRunMode", {
-    description: "Execution mode selected for a yeet repository run.",
-  })
-);
-
-/**
- * Yeet execution modes.
- *
- * @category models
- * @since 0.0.0
- */
-export type YeetRunMode = typeof YeetRunMode.Type;
 
 /**
  * Options for building a Yeet run plan in a specific mode.
@@ -533,27 +497,6 @@ const commitStep = (
         : ["commit", "--amend", "-m", O.getOrElse(message, () => "<required-conventional-commit-message>")]
       : ["commit", "-m", O.getOrElse(message, () => "<required-conventional-commit-message>")]
   );
-
-/**
- * Stable plan-step identifier for the branch push, shared by every publish path.
- *
- * **Details**
- *
- * The publish phase also carries the preflight and pull-request steps, so this
- * id — not the phase — is what proves the branch actually reached the remote.
- *
- * **Example** (Recognize the push step)
- *
- * ```ts
- * import { GIT_PUSH_STEP_ID } from "@beep/repo-cli/test/Yeet"
- *
- * console.log(GIT_PUSH_STEP_ID) // "publish:01-git-push"
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const GIT_PUSH_STEP_ID = "publish:01-git-push" as const;
 
 const publishPushRefspec = (): string => {
   // Machine-local dead-owner recovery uses this narrow override to update the

@@ -33,6 +33,7 @@ export * from "../commands/Yeet/internal/FinalCheckRefresh.schemas.ts";
 export * from "../commands/Yeet/internal/FinalCheckRefresh.ts";
 export * from "../commands/Yeet/internal/GateStaleness.ts";
 export * from "../commands/Yeet/internal/GhOps.ts";
+export * from "../commands/Yeet/internal/GitErrorAdapter.ts";
 export {
   captureGitKitExit,
   currentCommitSha,
@@ -64,10 +65,12 @@ export * from "../commands/Yeet/internal/Merge.ts";
 export * from "../commands/Yeet/internal/MergedPreview.ts";
 export * from "../commands/Yeet/internal/MergeGate.ts";
 export * from "../commands/Yeet/internal/MonitorChecks.ts";
+export * from "../commands/Yeet/internal/MonitorComments.schemas.ts";
 export * from "../commands/Yeet/internal/MonitorComments.ts";
 export * from "../commands/Yeet/internal/MonitorLoop.ts";
 export * from "../commands/Yeet/internal/MonitorPolicy.ts";
 export * from "../commands/Yeet/internal/ParityReuse.ts";
+export * from "../commands/Yeet/internal/Planner.schemas.ts";
 export * from "../commands/Yeet/internal/Planner.ts";
 export * from "../commands/Yeet/internal/Porcelain.ts";
 export * from "../commands/Yeet/internal/PortfolioIndexGuard.ts";
@@ -98,8 +101,10 @@ export * from "../commands/Yeet/internal/ReviewLane.schemas.ts";
 export * from "../commands/Yeet/internal/ReviewLane.ts";
 export * from "../commands/Yeet/internal/ReviewThreadState.ts";
 export * from "../commands/Yeet/internal/ReviewWindow.ts";
+export * from "../commands/Yeet/internal/Settle.schemas.ts";
 export * from "../commands/Yeet/internal/Settle.ts";
 export * from "../commands/Yeet/internal/SquashCommitlint.ts";
+export * from "../commands/Yeet/internal/Status.schemas.ts";
 export {
   collectRemoteChecks as collectRemoteChecksForTesting,
   GhStatusCheck,

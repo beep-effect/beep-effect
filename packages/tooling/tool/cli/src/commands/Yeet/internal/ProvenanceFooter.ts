@@ -31,11 +31,11 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { writeContainedFileString } from "../../../internal/cli/FsGuards.ts";
 import { GithubRest } from "../../../internal/github/index.ts";
+import { runGitOutput } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import { runArtifactPathForContext, runIdForContext } from "./ArtifactPaths.ts";
+import { runArtifactPathForContext, runIdForContext, writeTextFile } from "./ArtifactPaths.ts";
 import { provideYeetGhLogin } from "./GhOps.ts";
-import { runGitOutput } from "./GitExec.ts";
-import { writeTextFile } from "./IssueArtifacts.ts";
+import { yeetGitOutputErrorAdapter } from "./GitErrorAdapter.ts";
 import {
   makePrProvenanceServiceLive,
   PrRepository,
@@ -660,7 +660,7 @@ export const makeCurrentPrSessionRecord = Effect.fn("ProvenanceFooter.makeRecord
 ) {
   const detector = yield* makePrProvenanceServiceLive();
   const provenance = yield* detector.detect(context.repoRoot, context.branch);
-  const headSha = Str.trim(yield* runGitOutput(context.repoRoot, ["rev-parse", "HEAD"]));
+  const headSha = Str.trim(yield* runGitOutput(context.repoRoot, ["rev-parse", "HEAD"], yeetGitOutputErrorAdapter));
   const recordedAt = yield* DateTime.now;
   return PrSessionRecord.make({
     ...provenance,

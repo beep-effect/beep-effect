@@ -17,7 +17,7 @@ import {
   YeetMergeReadyCriterion,
 } from "./Verdict.ts";
 import { yeetCheckBlocksMerge } from "./WatchStream.ts";
-import type { YeetStatusArtifact, YeetStatusRemote } from "./Status.ts";
+import type { YeetStatusArtifact, YeetStatusRemote } from "./Status.schemas.ts";
 
 type ReadinessRemote = Pick<
   YeetStatusRemote,

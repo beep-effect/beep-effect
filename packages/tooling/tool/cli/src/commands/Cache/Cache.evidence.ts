@@ -18,7 +18,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
 import { ensureZeroExit } from "../../internal/process/index.ts";
-import { CacheCommandError } from "./Cache.schemas.ts";
+import { CacheCommandError } from "./Cache.errors.ts";
 import type { CacheEvidenceReference } from "@beep/repo-configs/cache";
 import type { CapturedStreams } from "../../internal/process/index.ts";
 

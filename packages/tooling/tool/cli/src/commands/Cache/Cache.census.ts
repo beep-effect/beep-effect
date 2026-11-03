@@ -29,13 +29,9 @@ import { hashFileSha256 } from "../../internal/cli/FsGuards.ts";
 import { isTurboCacheControlArg } from "../../internal/cli/TurboCache.ts";
 import { OutputBound, runCaptured } from "../../internal/process/index.ts";
 import { workspaceManifests } from "../../internal/RepoWorkspaces.ts";
-import {
-  CacheCensusNode,
-  CacheCensusReport,
-  CacheCensusSource,
-  CacheCensusWorkspace,
-  CacheCommandError,
-} from "./Cache.schemas.ts";
+import { CacheCommandError } from "./Cache.errors.ts";
+import { isCacheTaskInspectionArg } from "./Cache.runtime.step.ts";
+import { CacheCensusNode, CacheCensusReport, CacheCensusSource, CacheCensusWorkspace } from "./Cache.schemas.ts";
 
 // Turbo's wire objects are decoded before producing the public census model.
 const TurboWorkspaceList = S.Struct({
@@ -232,27 +228,6 @@ const decodeTurboWorkspaceListJson = S.decodeUnknownEffect(S.fromJsonString(Turb
 const decodeTurboConfiguration = S.decodeUnknownEffect(TurboConfiguration);
 
 const decodeTurboPlanJson = S.decodeUnknownEffect(S.fromJsonString(TurboPlan));
-
-/**
- * Identify explicit Turbo inspection modes before the task argument separator.
- *
- * **Example** (Recognize a dry plan option)
- *
- * ```ts
- * import { isCacheTaskInspectionArg } from "@beep/repo-cli/commands/Cache"
- * console.log(isCacheTaskInspectionArg("--dry=json")) // true
- * ```
- *
- * @param arg - A Turbo option before the task argument separator.
- * @returns Whether the option requests inspection instead of task execution.
- * @category predicates
- * @since 0.0.0
- */
-export const isCacheTaskInspectionArg = (arg: string): boolean =>
-  A.some(
-    ["--dry", "--dry-run", "--graph", "--help", "--version", "-h", "-V"],
-    (option) => arg === option || Str.startsWith(`${option}=`)(arg)
-  );
 
 /**
  * Prepare an execution invocation for bounded native task selection.

@@ -142,6 +142,7 @@ import {
 import { ReviewLaneHeadRow, ReviewLaneMergeReadyRow, YEET_REVIEW_LANE_SCHEMA_VERSION } from "./ReviewLane.schemas.ts";
 import { recordYeetReviewLaneRows } from "./ReviewLane.ts";
 import { renderYeetReviewWindowHold } from "./ReviewWindow.ts";
+import { YeetSettleVerdict, yeetSettleCensusRequires } from "./Settle.schemas.ts";
 import {
   deriveSettleVerdict,
   readYeetChangedPaths,
@@ -152,11 +153,9 @@ import {
   YeetRulesetRequiredContexts,
   YeetSettleCheck,
   YeetSettleInput,
-  YeetSettleVerdict,
   yeetBaseConflictFor,
   yeetBaseMergeableFor,
   yeetGatedFamiliesFor,
-  yeetSettleCensusRequires,
   yeetSettleClockReset,
 } from "./Settle.ts";
 import {
@@ -190,7 +189,7 @@ import type { YeetPrCommentRow } from "./Inbox.ts";
 import type { YeetMonitorLoopPolicy } from "./MonitorPolicy.ts";
 import type { YeetBaseConflictWalk } from "./Remediation.ts";
 import type { YeetReviewWindow } from "./ReviewWindow.ts";
-import type { YeetStatusReviewThread } from "./Status.ts";
+import type { YeetStatusReviewThread } from "./Status.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/MonitorLoop");
 

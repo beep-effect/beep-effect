@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "cache-saved-storage-grants-checkpoint/v1",
+  "recordedAt": "2026-11-03T04:03:24.597421+00:00",
+  "sourceBaseRevision": "e9cccd0b5bfc9a390eca249ff7e9f11ce604691d",
+  "authority": "Current small-object role capabilities only. No current management-policy inspection, deployed adapter trust, native signed restoration, protected producer, qualification or whole-goal acceptance.",
+  "reusedSource": {
+    "path": "infra/r2-cache/trial-grants.py",
+    "sha256": "71d91c11e6d9251c2a750c1d897a8e8a13ac4f3fbb9b13513bc91b166ee998c7",
+    "revision": "e9cccd0b5bfc9a390eca249ff7e9f11ce604691d",
+    "immutableUrl": "https://github.com/beep-effect/beep-effect/blob/e9cccd0b5bfc9a390eca249ff7e9f11ce604691d/infra/r2-cache/trial-grants.py",
+    "storageBlockLines": [166, 228],
+    "defaultManagementPolicyChecksChanged": false
+  },
+  "driver": {
+    "path": "research/saved-trial-storage-grants.py",
+    "sha256": "9895f3f8d99f49ea56caa12cfdc1ae04968da7933b62e63847eb742a95055f58",
+    "sourceHashAndShapeGuarded": true,
+    "storageCredentialsOnly": 4,
+    "privateExclusiveExternalOutputs": true,
+    "sdk": "boto3 1.43.121",
+    "sdkRetries": 0,
+    "connectTimeoutSeconds": 5,
+    "readTimeoutSeconds": 10,
+    "alarmSecondsBeforeCleanup": 90,
+    "cleanupUsesSameBoundedClients": true
+  },
+  "observation": {
+    "path": "research/saved-storage-grants-observation-2026-11-03.json",
+    "sha256": "0d0316dcf154b3e2fa3654e8b5c01b6ff1a0c34a29b343c77bd5d840b07c9233",
+    "writerPutStatus": 200,
+    "readerGetStatus": 200,
+    "readerExactBytes": true,
+    "readerPutStatus": 403,
+    "readerDeleteStatus": 403,
+    "ownedProbeObjectsCleaned": true,
+    "cleanupHeadsNotFound": 2,
+    "payloadBytes": 26,
+    "maximumPossibleStoredBytes": 52,
+    "storageRequests": 8
+  },
+  "driverControls": {
+    "path": "research/saved-storage-driver-controls-2026-11-03.json",
+    "sha256": "5702487e196a56f1e850276dcfadaa431f446229e10e3698514d807b141fd442",
+    "cases": 5,
+    "passingObservationUnchanged": true,
+    "storageIntentCreated": false
+  },
+  "initialPrivateProbeRetained": {
+    "reportSha256": "7c6074e4416a0cf4db369ead50267a84d22ccd2059b8ec153db1d785b21ef5fb",
+    "driverSha256": "4a62d2cdf06ff93fb7ddbf9b5d232bf6a5e8a04de787925e26f8a21d78aab964",
+    "result": "passed",
+    "authority": "Earlier private-source probe; not relabelled as retained-driver proof."
+  },
+  "trialAccountingThisTurn": {
+    "passedStorageProbes": 2,
+    "maximumStorageRequests": 16,
+    "maximumPossibleStoredPayloadBytesAcrossBothRuns": 104,
+    "ownedProbeKeysRemaining": 0,
+    "grantMutations": 0,
+    "artifactKeyOrBearerReferencesLoaded": 0,
+    "signedConsumersActivated": 0
+  },
+  "remaining": [
+    "Independently verify accepted candidate adapter artifact/source and freeze current producer tool/source/profile approval.",
+    "Implement and execute the closed protected-main producer workflow with step-scoped capabilities and off-runner verifier.",
+    "Prove deployed backend/client capability separation, tenant/selector/direct-invocation negatives, key epochs, warm processes, rollback and telemetry safety.",
+    "Complete real signed R2 publication/fetch/acceptance, computation qualification, measured rollout and actual representative windows.",
+    "All nine trust-goal acceptance criteria remain unproven."
+  ],
+  "reversal": "Revert only this optional research driver and evidence registration. Existing management checks, grants, credentials, bucket, cache services and issuer stores are unchanged."
+}

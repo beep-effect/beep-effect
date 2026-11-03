@@ -23,9 +23,12 @@ import { GhPrView, GithubRest, ghOutput } from "../../../internal/github/index.t
 import { RepoStepRunResult, sortedUniquePaths } from "../../../internal/repo-run/index.ts";
 import { HEAVY_ADMISSION_LABEL, isHeavyDocsOnlyPath } from "../../Ci/HeavyAdmission.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import { runIdForContext, runArtifactPathForContext as runOutputPathForContext } from "./ArtifactPaths.ts";
+import {
+  runIdForContext,
+  runArtifactPathForContext as runOutputPathForContext,
+  writeTextFile,
+} from "./ArtifactPaths.ts";
 import { runGitOutput, yeetGitKitError } from "./GitExec.ts";
-import { writeTextFile } from "./IssueArtifacts.ts";
 import {
   ensureProvenanceFooter,
   isProvenanceStampFailure,
