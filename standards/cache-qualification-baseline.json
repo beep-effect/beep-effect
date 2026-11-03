@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (W3 lane, refactor/beep-cli-w3-repo-cli-kit)",
-      "reason": "Re-record the root, repo-cli and new repo-cli-kit subjects after merging main (304565d49f); same W3 changes, no qualification granted.",
+      "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W7 kit, feat/gh-git-w7-kit)",
+      "reason": "Record the W7 kit seal drift: patientGit moved from the Yeet tool file GitExec.ts into the library file internal/repo-run/PatientGit.ts, re-exported from the repo-run barrel, so PatientGit.ts joins the goals-doctor, holds, knowledge and quality policy seals; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
       "basis": {
-        "path": "goals/beep-cli-composition/research/w3-cache-baseline-review.md",
-        "sha256": "b9856e7a73dccceddbf3ad4384d4fd15e6fa1f0559166d892fbcd85f2b85994a"
+        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w7-kit.md",
+        "sha256": "fd4321872fad85d0bb70837dc0157929f35d370583d2a843af8d733da24135bf"
       }
     },
     "@beep/acp": {
@@ -1162,11 +1162,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Claude Opus 5.5 (W3 lane, refactor/beep-cli-w3-repo-cli-kit)",
-      "reason": "Re-record the root, repo-cli and new repo-cli-kit subjects after merging main (304565d49f); same W3 changes, no qualification granted.",
+      "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W7 kit, feat/gh-git-w7-kit)",
+      "reason": "Record the W7 kit seal drift: patientGit moved from the Yeet tool file GitExec.ts into the library file internal/repo-run/PatientGit.ts, re-exported from the repo-run barrel, so PatientGit.ts joins the goals-doctor, holds, knowledge and quality policy seals; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
       "basis": {
-        "path": "goals/beep-cli-composition/research/w3-cache-baseline-review.md",
-        "sha256": "b9856e7a73dccceddbf3ad4384d4fd15e6fa1f0559166d892fbcd85f2b85994a"
+        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w7-kit.md",
+        "sha256": "fd4321872fad85d0bb70837dc0157929f35d370583d2a843af8d733da24135bf"
       }
     },
     "@beep/repo-cli-kit": {
@@ -121585,7 +121585,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "ac0f088e40655973a7bddf95e3573612f27b63f970b75afc695d15c8b3bb24cf"
+        "sha256": "0701e8a2c259880643cae15516f9838d7d7b4875911cf1c304aa2fc88ee592f3"
       }
     ]
   }
