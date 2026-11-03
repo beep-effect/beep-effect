@@ -23,13 +23,17 @@
     "pullRequests": [
       {
         "number": 2658,
+        "role": "supporting"
+      },
+      {
+        "number": 2676,
         "role": "final"
       }
     ],
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/feat_party-slice-completion-f1e3656e3e1b/verdict.json",
+        "ref": ".beep/yeet/runs/fix_party-slice-coverage-84efcdf329af/verdict.json",
         "gating": true
       }
     ]
@@ -96,6 +100,6 @@
   ],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2658
+    "finalPullRequest": 2676
   }
 }
