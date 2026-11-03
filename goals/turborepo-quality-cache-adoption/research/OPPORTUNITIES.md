@@ -838,3 +838,17 @@ observed schema difference changed the matrix and next qualification work.
 - Keep the unchanged bounded collector AST and immutable original evidence.
   Fresh observations record the repaired driver bytes rather than re-hashing
   an older observation onto them. A new source binding requires its own replay.
+
+
+### 2026-11-03 — Two generator checks rewrote source before comparing it
+
+The entrypoint census found `@beep/html#generate:check` and
+`@beep/technical-drawing#generate:check` calling their writing `generate`
+commands before `git diff`. A check could replace dirty generated source and
+silently create an untracked output. Their scripts now select an explicit check branch
+before any target write, reusing CodegenKit drift reports and stdin formatting
+with the repository's Biome configuration. The formatter also checks its child
+exit status before accepting output. Regression cases for current, dirty,
+missing and invalid generated content are authored for hosted CI; no local
+quality suite or generator execution is claimed. The writing commands and
+generated source bytes are unchanged. Qualification remains a separate gate.

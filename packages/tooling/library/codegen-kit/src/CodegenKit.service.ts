@@ -316,6 +316,7 @@ const makeService = Effect.fn("CodegenKit.make")(function* (extraRenderers: Extr
   const path = yield* Path.Path;
   const httpClient = yield* HttpClient.HttpClient;
   const formatter = yield* makeFormatter();
+  const projectFormatter = yield* makeFormatter(true);
   const openApiGenerator = yield* OpenApiGenerator.make;
 
   const readJson = Effect.fn("CodegenKit.readJson")(function* (filePath: string) {
@@ -449,6 +450,24 @@ const makeService = Effect.fn("CodegenKit.make")(function* (extraRenderers: Extr
     return DriftReport.make({ path: module.path, status: diffLines === 0 ? "clean" : "changed", diffLines });
   });
 
+  const checkModules = Effect.fn("CodegenKit.checkModules")(function* (modules: ReadonlyArray<GeneratedModule>) {
+    const reports = yield* Effect.forEach(
+      modules,
+      Effect.fn("CodegenKit.checkModule")(function* (module) {
+        const content = yield* projectFormatter.content(module.content, module.path);
+        return yield* drift(GeneratedModule.make({ path: module.path, content }));
+      }),
+      { concurrency: 1 }
+    );
+    if (A.some(reports, hasDrift)) {
+      return yield* CodegenDriftError.make({
+        message: "Generated output drift detected; run the writing generator.",
+        reports,
+      });
+    }
+    return reports;
+  });
+
   const renderExtras = Effect.fn("CodegenKit.renderExtras")(function* (config: GenerateConfig, refresh: boolean) {
     return yield* Effect.forEach(
       config.extraModules,
@@ -517,7 +536,7 @@ const makeService = Effect.fn("CodegenKit.make")(function* (extraRenderers: Extr
     return reports;
   });
 
-  return { fetch, patch, generate, postProcess, format, write, drift, run, runAll } as const;
+  return { fetch, patch, generate, postProcess, format, write, drift, checkModules, run, runAll } as const;
 });
 
 const packageLabel = (packageName: string): string =>
@@ -532,6 +551,13 @@ const packageLabel = (packageName: string): string =>
 /**
  * Shared code-generation service from pinned source through drift detection.
  *
+ * **Details**
+ *
+ * `checkModules` checks already-rendered TypeScript with the repository's Biome
+ * configuration. Formatting uses stdin and never rewrites a generated target;
+ * missing and stale modules are reported together. The OpenAPI pipeline keeps
+ * its existing formatting policy.
+ *
  * **Example** (Access the service)
  *
  * ```ts
@@ -542,6 +568,21 @@ const packageLabel = (packageName: string): string =>
  *   return kit
  * })
  * console.log(program)
+ * ```
+ *
+ * **Example** (Check a pre-rendered module without writing it)
+ *
+ * ```ts
+ * import { CodegenKit, GeneratedModule } from "@beep/codegen-kit"
+ * import * as Effect from "effect/Effect"
+ *
+ * const check = Effect.gen(function* () {
+ *   const kit = yield* CodegenKit
+ *   return yield* kit.checkModules([
+ *     GeneratedModule.make({ path: "src/Example.ts", content: "export const answer = 42;\n" })
+ *   ])
+ * })
+ * console.log(Effect.isEffect(check))
  * ```
  *
  * @category services

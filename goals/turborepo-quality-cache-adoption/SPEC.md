@@ -741,3 +741,17 @@ results. Six controlled source changes must refuse before client selection; the
 legacy prefixes lack that refusal. No task body executes, feature/tuple is
 qualified or runtime setting changes. Reverse the driver/registration wave
 through Git while retaining both source envelopes and their observations.
+
+
+### Preserve source during generator checks, 2026-11-03
+
+The HTML and label-glyph `generate:check` entrypoints must compare freshly
+rendered, project-formatted content without writing a target or creating its
+parent directory. Reuse CodegenKit drift reporting and add a project-format
+path while preserving the OpenAPI formatter's existing defaults. Treat a
+nonzero formatter exit as a typed failure. Keep ordinary generation unchanged.
+The isolated CI regressions preserve dirty bytes, reject missing outputs and
+formatter failure, and forbid writes through the check's filesystem service.
+No cache or qualification transition is included. If this repair must be
+withdrawn, suspend the affected checks until repaired rather than restoring
+the destructive generate-then-diff wrappers.
