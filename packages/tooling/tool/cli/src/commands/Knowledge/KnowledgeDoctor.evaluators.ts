@@ -7,6 +7,7 @@
  * @since 0.0.0
  */
 
+import { SkillGitRevision } from "@beep/ai-sync/Skills.schemas";
 import { Str } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -16,7 +17,6 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { isGoalStatus } from "../Goals/Goals.schemas.ts";
-import { SkillGitRevision } from "../Skills/Skills.schemas.ts";
 import { knowledgeInlineSpans, knowledgeLineMatches } from "./Knowledge.refs.ts";
 import { KnowledgeFindingCandidate, KnowledgeFindingLocation } from "./Knowledge.schemas.ts";
 import { KNOWLEDGE_SKILLS_DIR, KNOWLEDGE_SKILLS_LOCK_PATH, KNOWLEDGE_TSCONFIG_PATH } from "./KnowledgeDoctor.domain.ts";

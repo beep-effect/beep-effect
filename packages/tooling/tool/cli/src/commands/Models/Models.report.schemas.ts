@@ -13,12 +13,12 @@
  * @since 0.0.0
  */
 
+import { CatalogDiff, CatalogSnapshotSummary, ModelId } from "@beep/ai-sync/ModelCatalog.schemas";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { RunMode } from "../../internal/cli/RunMode.ts";
-import { CatalogDiff, CatalogSnapshotSummary, ModelId } from "./Models.catalog.schemas.ts";
 import { Locator, TargetId } from "./Models.manifest.schemas.ts";
 import type { RunMode as RunModeValue } from "../../internal/cli/RunMode.ts";
 
@@ -308,7 +308,7 @@ export class ManualVerification extends S.Opaque<ManualVerification, { readonly 
  * **Example** (Build a clean report)
  *
  * ```ts
- * import { CatalogDiff, CatalogSnapshotSummary } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { CatalogDiff, CatalogSnapshotSummary } from "@beep/ai-sync/ModelCatalog.schemas"
  * import { ModelsCheckReport } from "@beep/repo-cli/commands/Models/Models.report.schemas"
  * import * as DateTime from "effect/DateTime"
  *

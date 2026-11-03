@@ -14,19 +14,20 @@
  * {@link EffortLevel} domain happens once, when a {@link CatalogModel} is
  * built.
  *
- * The manifest half lives in `Models.manifest.schemas.ts`; the report half in
- * `Models.report.schemas.ts`.
+ * The manifest half lives in `@beep/repo-cli`'s
+ * `commands/Models/Models.manifest.schemas.ts`; the report half in
+ * `commands/Models/Models.report.schemas.ts`.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
-import { $RepoCliId } from "@beep/identity/packages";
+import { $AiSyncId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
-const $I = $RepoCliId.create("commands/Models/Models.catalog.schemas");
+const $I = $AiSyncId.create("ModelCatalog.schemas");
 
 // ── Identifiers and shared literal domains ──────────────────────────────────
 
@@ -43,7 +44,7 @@ const $I = $RepoCliId.create("commands/Models/Models.catalog.schemas");
  * **Example** (Guard an upstream id)
  *
  * ```ts
- * import { ModelId } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { ModelId } from "@beep/ai-sync/ModelCatalog.schemas"
  * import * as S from "effect/Schema"
  *
  * console.log(S.is(ModelId)("gpt-6-astra")) // true
@@ -86,7 +87,7 @@ const EffortLevelKit = LiteralKit(["minimal", "low", "medium", "high", "xhigh", 
  * **Example** (Check the effort domain)
  *
  * ```ts
- * import { EffortLevel, EffortLevelOptions } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { EffortLevel, EffortLevelOptions } from "@beep/ai-sync/ModelCatalog.schemas"
  * import * as S from "effect/Schema"
  *
  * console.log(S.is(EffortLevel)("xhigh")) // true
@@ -117,7 +118,7 @@ export type EffortLevel = typeof EffortLevel.Type;
  * **Example** (Ordered effort ladder)
  *
  * ```ts
- * import { EffortLevelOptions } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { EffortLevelOptions } from "@beep/ai-sync/ModelCatalog.schemas"
  *
  * console.log(EffortLevelOptions[0]) // "minimal"
  * ```
@@ -133,7 +134,7 @@ export const EffortLevelOptions = EffortLevelKit.literals;
  * **Example** (Test one effort guard)
  *
  * ```ts
- * import { EffortLevelIs } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { EffortLevelIs } from "@beep/ai-sync/ModelCatalog.schemas"
  *
  * console.log(EffortLevelIs.ultra("ultra")) // true
  * console.log(EffortLevelIs.ultra("max")) // false
@@ -175,7 +176,7 @@ const ProviderSectionKit = LiteralKit([
  * **Example** (Classify a provider section)
  *
  * ```ts
- * import { ProviderSection } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { ProviderSection } from "@beep/ai-sync/ModelCatalog.schemas"
  * import * as S from "effect/Schema"
  *
  * console.log(S.is(ProviderSection)("codex-pro")) // true
@@ -206,7 +207,7 @@ export type ProviderSection = typeof ProviderSection.Type;
  * **Example** (Count known sections)
  *
  * ```ts
- * import { ProviderSectionOptions } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { ProviderSectionOptions } from "@beep/ai-sync/ModelCatalog.schemas"
  *
  * console.log(ProviderSectionOptions.length) // 13
  * ```
@@ -237,7 +238,7 @@ const CatalogSourceKit = LiteralKit(["router-for-me", "codex-cache", "grok-cache
  * **Example** (Classify a catalog layer)
  *
  * ```ts
- * import { CatalogSource } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { CatalogSource } from "@beep/ai-sync/ModelCatalog.schemas"
  * import * as S from "effect/Schema"
  *
  * console.log(S.is(CatalogSource)("codex-cache")) // true
@@ -267,7 +268,7 @@ export type CatalogSource = typeof CatalogSource.Type;
  * **Example** (Enumerate catalog layers)
  *
  * ```ts
- * import { CatalogSourceOptions } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { CatalogSourceOptions } from "@beep/ai-sync/ModelCatalog.schemas"
  *
  * console.log(CatalogSourceOptions.includes("router-for-me")) // true
  * ```
@@ -309,7 +310,7 @@ const looseOptional = <Schema extends S.Top>(schema: Schema) => schema.pipe(S.Nu
  * **Example** (Read a discrete effort ladder)
  *
  * ```ts
- * import { UpstreamThinkingSupport } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { UpstreamThinkingSupport } from "@beep/ai-sync/ModelCatalog.schemas"
  *
  * const thinking = UpstreamThinkingSupport.make({ levels: ["low", "medium", "high", "xhigh", "max"] })
  * console.log(thinking.levels?.length) // 5
@@ -318,29 +319,22 @@ const looseOptional = <Schema extends S.Top>(schema: Schema) => schema.pipe(S.Nu
  * @category models
  * @since 0.0.0
  */
-export const UpstreamThinkingSupport = S.StructWithRest(
-  S.Struct({
-    min: looseOptional(S.Finite),
-    max: looseOptional(S.Finite),
-    zero_allowed: looseOptional(S.Boolean),
-    dynamic_allowed: looseOptional(S.Boolean),
-    levels: S.Array(S.String).pipe(looseOptional),
-  }),
-  [S.Record(S.String, S.Unknown)]
-).pipe(
-  $I.annoteSchema("UpstreamThinkingSupport", {
-    description: "Upstream reasoning-support block: token budget, dynamic flag, or discrete levels.",
-  })
-);
-
-/**
- * Decoded external UpstreamThinkingSupport payload, including unrecognized fields.
- *
- * @see {@link UpstreamThinkingSupport} for lossless boundary decoding.
- * @category type-level
- * @since 0.0.0
- */
-export type UpstreamThinkingSupport = typeof UpstreamThinkingSupport.Type;
+export class UpstreamThinkingSupport extends S.Opaque<UpstreamThinkingSupport, { readonly brand: unique symbol }>()(
+  S.StructWithRest(
+    S.Struct({
+      min: looseOptional(S.Finite),
+      max: looseOptional(S.Finite),
+      zero_allowed: looseOptional(S.Boolean),
+      dynamic_allowed: looseOptional(S.Boolean),
+      levels: S.Array(S.String).pipe(looseOptional),
+    }),
+    [S.Record(S.String, S.Unknown)]
+  ).pipe(
+    $I.annoteSchema("UpstreamThinkingSupport", {
+      description: "Upstream reasoning-support block: token budget, dynamic flag, or discrete levels.",
+    })
+  )
+) {}
 
 /**
  * One model entry inside an upstream provider section.
@@ -355,7 +349,7 @@ export type UpstreamThinkingSupport = typeof UpstreamThinkingSupport.Type;
  * **Example** (Read an upstream entry)
  *
  * ```ts
- * import { UpstreamModelEntry } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { UpstreamModelEntry } from "@beep/ai-sync/ModelCatalog.schemas"
  *
  * const entry = UpstreamModelEntry.make({ id: "gpt-6-astra", display_name: "GPT 6.0 Astra" })
  * console.log(entry.id) // "gpt-6-astra"
@@ -364,43 +358,36 @@ export type UpstreamThinkingSupport = typeof UpstreamThinkingSupport.Type;
  * @category models
  * @since 0.0.0
  */
-export const UpstreamModelEntry = S.StructWithRest(
-  S.Struct({
-    id: S.NonEmptyString,
-    object: looseOptional(S.String),
-    created: looseOptional(S.Finite),
-    owned_by: looseOptional(S.String),
-    type: looseOptional(S.String),
-    display_name: looseOptional(S.String),
-    name: looseOptional(S.String),
-    version: looseOptional(S.String),
-    description: looseOptional(S.String),
-    context_length: looseOptional(S.Finite),
-    max_completion_tokens: looseOptional(S.Finite),
-    inputTokenLimit: looseOptional(S.Finite),
-    outputTokenLimit: looseOptional(S.Finite),
-    supportedGenerationMethods: S.Array(S.String).pipe(looseOptional),
-    supportedInputModalities: S.Array(S.String).pipe(looseOptional),
-    supportedOutputModalities: S.Array(S.String).pipe(looseOptional),
-    supported_parameters: S.Array(S.String).pipe(looseOptional),
-    supports_web_search: looseOptional(S.Boolean),
-    thinking: looseOptional(UpstreamThinkingSupport),
-  }),
-  [S.Record(S.String, S.Unknown)]
-).pipe(
-  $I.annoteSchema("UpstreamModelEntry", {
-    description: "One model entry inside an upstream provider section; only the id is required.",
-  })
-);
-
-/**
- * Decoded external UpstreamModelEntry payload, including unrecognized fields.
- *
- * @see {@link UpstreamModelEntry} for lossless boundary decoding.
- * @category type-level
- * @since 0.0.0
- */
-export type UpstreamModelEntry = typeof UpstreamModelEntry.Type;
+export class UpstreamModelEntry extends S.Opaque<UpstreamModelEntry, { readonly brand: unique symbol }>()(
+  S.StructWithRest(
+    S.Struct({
+      id: S.NonEmptyString,
+      object: looseOptional(S.String),
+      created: looseOptional(S.Finite),
+      owned_by: looseOptional(S.String),
+      type: looseOptional(S.String),
+      display_name: looseOptional(S.String),
+      name: looseOptional(S.String),
+      version: looseOptional(S.String),
+      description: looseOptional(S.String),
+      context_length: looseOptional(S.Finite),
+      max_completion_tokens: looseOptional(S.Finite),
+      inputTokenLimit: looseOptional(S.Finite),
+      outputTokenLimit: looseOptional(S.Finite),
+      supportedGenerationMethods: S.Array(S.String).pipe(looseOptional),
+      supportedInputModalities: S.Array(S.String).pipe(looseOptional),
+      supportedOutputModalities: S.Array(S.String).pipe(looseOptional),
+      supported_parameters: S.Array(S.String).pipe(looseOptional),
+      supports_web_search: looseOptional(S.Boolean),
+      thinking: looseOptional(UpstreamThinkingSupport),
+    }),
+    [S.Record(S.String, S.Unknown)]
+  ).pipe(
+    $I.annoteSchema("UpstreamModelEntry", {
+      description: "One model entry inside an upstream provider section; only the id is required.",
+    })
+  )
+) {}
 
 /**
  * The whole upstream manifest: provider section to model entries.
@@ -414,7 +401,7 @@ export type UpstreamModelEntry = typeof UpstreamModelEntry.Type;
  * **Example** (Guard the manifest envelope)
  *
  * ```ts
- * import { UpstreamCatalog } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { UpstreamCatalog } from "@beep/ai-sync/ModelCatalog.schemas"
  * import * as S from "effect/Schema"
  *
  * console.log(S.is(UpstreamCatalog)({ xai: [] })) // true
@@ -454,7 +441,7 @@ const CodexVisibilityKit = LiteralKit(["list", "hide"]);
  * **Example** (Classify a cached slug)
  *
  * ```ts
- * import { CodexVisibility } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { CodexVisibility } from "@beep/ai-sync/ModelCatalog.schemas"
  * import * as S from "effect/Schema"
  *
  * console.log(S.is(CodexVisibility)("list")) // true
@@ -484,7 +471,7 @@ export type CodexVisibility = typeof CodexVisibility.Type;
  * **Example** (Keep only operator-selectable slugs)
  *
  * ```ts
- * import { CodexVisibilityIs } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { CodexVisibilityIs } from "@beep/ai-sync/ModelCatalog.schemas"
  *
  * console.log(CodexVisibilityIs.list("list")) // true
  * console.log(CodexVisibilityIs.list("hide")) // false
@@ -508,7 +495,7 @@ export const CodexVisibilityIs = CodexVisibilityKit.is;
  * **Example** (Read a ladder rung)
  *
  * ```ts
- * import { CodexReasoningLevel } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { CodexReasoningLevel } from "@beep/ai-sync/ModelCatalog.schemas"
  *
  * const rung = CodexReasoningLevel.make({ effort: "xhigh" })
  * console.log(rung.effort) // "xhigh"
@@ -517,26 +504,19 @@ export const CodexVisibilityIs = CodexVisibilityKit.is;
  * @category models
  * @since 0.0.0
  */
-export const CodexReasoningLevel = S.StructWithRest(
-  S.Struct({
-    effort: S.NonEmptyString,
-    description: looseOptional(S.String),
-  }),
-  [S.Record(S.String, S.Unknown)]
-).pipe(
-  $I.annoteSchema("CodexReasoningLevel", {
-    description: "One reasoning-effort rung offered for a cached Codex model slug.",
-  })
-);
-
-/**
- * Decoded external CodexReasoningLevel payload, including unrecognized fields.
- *
- * @see {@link CodexReasoningLevel} for lossless boundary decoding.
- * @category type-level
- * @since 0.0.0
- */
-export type CodexReasoningLevel = typeof CodexReasoningLevel.Type;
+export class CodexReasoningLevel extends S.Opaque<CodexReasoningLevel, { readonly brand: unique symbol }>()(
+  S.StructWithRest(
+    S.Struct({
+      effort: S.NonEmptyString,
+      description: looseOptional(S.String),
+    }),
+    [S.Record(S.String, S.Unknown)]
+  ).pipe(
+    $I.annoteSchema("CodexReasoningLevel", {
+      description: "One reasoning-effort rung offered for a cached Codex model slug.",
+    })
+  )
+) {}
 
 /**
  * One model slug in the Codex CLI's cached model list.
@@ -549,7 +529,7 @@ export type CodexReasoningLevel = typeof CodexReasoningLevel.Type;
  * **Example** (Read a cached slug)
  *
  * ```ts
- * import { CodexCacheEntry } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { CodexCacheEntry } from "@beep/ai-sync/ModelCatalog.schemas"
  *
  * const entry = CodexCacheEntry.make({ slug: "gpt-6-astra", default_reasoning_level: "medium" })
  * console.log(entry.slug) // "gpt-6-astra"
@@ -558,31 +538,24 @@ export type CodexReasoningLevel = typeof CodexReasoningLevel.Type;
  * @category models
  * @since 0.0.0
  */
-export const CodexCacheEntry = S.StructWithRest(
-  S.Struct({
-    slug: S.NonEmptyString,
-    display_name: looseOptional(S.String),
-    description: looseOptional(S.String),
-    default_reasoning_level: looseOptional(S.String),
-    supported_reasoning_levels: S.Array(CodexReasoningLevel).pipe(looseOptional),
-    visibility: looseOptional(S.String),
-    context_window: looseOptional(S.Finite),
-  }),
-  [S.Record(S.String, S.Unknown)]
-).pipe(
-  $I.annoteSchema("CodexCacheEntry", {
-    description: "One cached Codex CLI model slug with its reasoning ladder and picker visibility.",
-  })
-);
-
-/**
- * Decoded external CodexCacheEntry payload, including unrecognized fields.
- *
- * @see {@link CodexCacheEntry} for lossless boundary decoding.
- * @category type-level
- * @since 0.0.0
- */
-export type CodexCacheEntry = typeof CodexCacheEntry.Type;
+export class CodexCacheEntry extends S.Opaque<CodexCacheEntry, { readonly brand: unique symbol }>()(
+  S.StructWithRest(
+    S.Struct({
+      slug: S.NonEmptyString,
+      display_name: looseOptional(S.String),
+      description: looseOptional(S.String),
+      default_reasoning_level: looseOptional(S.String),
+      supported_reasoning_levels: S.Array(CodexReasoningLevel).pipe(looseOptional),
+      visibility: looseOptional(S.String),
+      context_window: looseOptional(S.Finite),
+    }),
+    [S.Record(S.String, S.Unknown)]
+  ).pipe(
+    $I.annoteSchema("CodexCacheEntry", {
+      description: "One cached Codex CLI model slug with its reasoning ladder and picker visibility.",
+    })
+  )
+) {}
 
 /**
  * The Codex CLI model cache at `$HOME/.codex/models_cache.json`.
@@ -596,7 +569,7 @@ export type CodexCacheEntry = typeof CodexCacheEntry.Type;
  * **Example** (Read a cache envelope)
  *
  * ```ts
- * import { CodexModelsCache } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { CodexModelsCache } from "@beep/ai-sync/ModelCatalog.schemas"
  *
  * const cache = CodexModelsCache.make({ models: [] })
  * console.log(cache.models.length) // 0
@@ -605,28 +578,21 @@ export type CodexCacheEntry = typeof CodexCacheEntry.Type;
  * @category models
  * @since 0.0.0
  */
-export const CodexModelsCache = S.StructWithRest(
-  S.Struct({
-    models: S.Array(CodexCacheEntry),
-    client_version: looseOptional(S.String),
-    etag: looseOptional(S.String),
-    fetched_at: looseOptional(S.String),
-  }),
-  [S.Record(S.String, S.Unknown)]
-).pipe(
-  $I.annoteSchema("CodexModelsCache", {
-    description: "Codex CLI model cache envelope read from $HOME/.codex/models_cache.json.",
-  })
-);
-
-/**
- * Decoded external CodexModelsCache payload, including unrecognized fields.
- *
- * @see {@link CodexModelsCache} for lossless boundary decoding.
- * @category type-level
- * @since 0.0.0
- */
-export type CodexModelsCache = typeof CodexModelsCache.Type;
+export class CodexModelsCache extends S.Opaque<CodexModelsCache, { readonly brand: unique symbol }>()(
+  S.StructWithRest(
+    S.Struct({
+      models: S.Array(CodexCacheEntry),
+      client_version: looseOptional(S.String),
+      etag: looseOptional(S.String),
+      fetched_at: looseOptional(S.String),
+    }),
+    [S.Record(S.String, S.Unknown)]
+  ).pipe(
+    $I.annoteSchema("CodexModelsCache", {
+      description: "Codex CLI model cache envelope read from $HOME/.codex/models_cache.json.",
+    })
+  )
+) {}
 
 // ── Cursor seat overlay ─────────────────────────────────────────────────────
 
@@ -643,7 +609,7 @@ export type CodexModelsCache = typeof CodexModelsCache.Type;
  * **Example** (Guard a seat id)
  *
  * ```ts
- * import { CursorModelId } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { CursorModelId } from "@beep/ai-sync/ModelCatalog.schemas"
  * import * as S from "effect/Schema"
  *
  * console.log(S.is(CursorModelId)("gpt-5.6-sol-xhigh")) // true
@@ -674,7 +640,7 @@ export type CursorModelId = typeof CursorModelId.Type;
  * **Example** (Guard a parsed seat list)
  *
  * ```ts
- * import { CursorModelList } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { CursorModelList } from "@beep/ai-sync/ModelCatalog.schemas"
  * import * as S from "effect/Schema"
  *
  * console.log(S.is(CursorModelList)(["composer-2.5", "claude-opus-5-thinking-high"])) // true
@@ -713,7 +679,7 @@ export type CursorModelList = typeof CursorModelList.Type;
  * **Example** (Read a Grok ladder rung)
  *
  * ```ts
- * import { GrokReasoningEffort } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { GrokReasoningEffort } from "@beep/ai-sync/ModelCatalog.schemas"
  *
  * const rung = GrokReasoningEffort.make({ value: "xhigh", label: "Extra High" })
  * console.log(rung.value) // "xhigh"
@@ -742,7 +708,7 @@ export class GrokReasoningEffort extends S.Opaque<GrokReasoningEffort, { readonl
  * **Example** (Read a cached Grok model)
  *
  * ```ts
- * import { GrokModelInfo } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { GrokModelInfo } from "@beep/ai-sync/ModelCatalog.schemas"
  *
  * const info = GrokModelInfo.make({ id: "grok-4.7", reasoning_effort: "high" })
  * console.log(info.id) // "grok-4.7"
@@ -783,7 +749,7 @@ export class GrokModelInfo extends S.Opaque<GrokModelInfo, { readonly brand: uni
  * **Example** (Read a cache entry)
  *
  * ```ts
- * import { GrokCacheEntry, GrokModelInfo } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { GrokCacheEntry, GrokModelInfo } from "@beep/ai-sync/ModelCatalog.schemas"
  *
  * const entry = GrokCacheEntry.make({ info: GrokModelInfo.make({ id: "grok-4.6" }) })
  * console.log(entry.info.id) // "grok-4.6"
@@ -816,7 +782,7 @@ export class GrokCacheEntry extends S.Opaque<GrokCacheEntry, { readonly brand: u
  * **Example** (Read a cache envelope)
  *
  * ```ts
- * import { GrokModelsCache } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { GrokModelsCache } from "@beep/ai-sync/ModelCatalog.schemas"
  *
  * const cache = GrokModelsCache.make({ models: {} })
  * console.log(Object.keys(cache.models).length) // 0
@@ -846,7 +812,7 @@ export class GrokModelsCache extends S.Opaque<GrokModelsCache, { readonly brand:
  * **Example** (Read a proxy entry)
  *
  * ```ts
- * import { ProxyModelEntry } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { ProxyModelEntry } from "@beep/ai-sync/ModelCatalog.schemas"
  *
  * const entry = ProxyModelEntry.make({ id: "grok-4.6" })
  * console.log(entry.id) // "grok-4.6"
@@ -882,7 +848,7 @@ export class ProxyModelEntry extends S.Opaque<ProxyModelEntry, { readonly brand:
  * **Example** (Read a proxy listing)
  *
  * ```ts
- * import { ProxyModelsResponse } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { ProxyModelsResponse } from "@beep/ai-sync/ModelCatalog.schemas"
  *
  * const listing = ProxyModelsResponse.make({ data: [] })
  * console.log(listing.data.length) // 0
@@ -910,7 +876,7 @@ export class ProxyModelsResponse extends S.Opaque<ProxyModelsResponse, { readonl
  * **Example** (Read an availability triple)
  *
  * ```ts
- * import { CatalogAvailability } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { CatalogAvailability } from "@beep/ai-sync/ModelCatalog.schemas"
  *
  * const availability = CatalogAvailability.make({
  *   proxy: true,
@@ -961,7 +927,7 @@ export class CatalogAvailability extends S.Opaque<CatalogAvailability, { readonl
  *   CatalogAvailability,
  *   CatalogModel,
  *   ModelId
- * } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * } from "@beep/ai-sync/ModelCatalog.schemas"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
@@ -1022,7 +988,7 @@ export class CatalogModel extends S.Opaque<CatalogModel, { readonly brand: uniqu
  * **Example** (Build a snapshot summary)
  *
  * ```ts
- * import { CatalogSnapshotSummary } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { CatalogSnapshotSummary } from "@beep/ai-sync/ModelCatalog.schemas"
  * import * as DateTime from "effect/DateTime"
  *
  * const summary = CatalogSnapshotSummary.make({
@@ -1062,7 +1028,7 @@ export class CatalogSnapshotSummary extends S.Opaque<CatalogSnapshotSummary, { r
  * **Example** (Build an empty snapshot)
  *
  * ```ts
- * import { CatalogSnapshot, CatalogSnapshotSummary } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { CatalogSnapshot, CatalogSnapshotSummary } from "@beep/ai-sync/ModelCatalog.schemas"
  * import * as DateTime from "effect/DateTime"
  *
  * const snapshot = CatalogSnapshot.make({
@@ -1097,7 +1063,7 @@ export class CatalogSnapshot extends S.Opaque<CatalogSnapshot, { readonly brand:
  * **Example** (Record a ladder change)
  *
  * ```ts
- * import { CatalogLevelsChange, ModelId } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { CatalogLevelsChange, ModelId } from "@beep/ai-sync/ModelCatalog.schemas"
  * import * as S from "effect/Schema"
  *
  * const change = CatalogLevelsChange.make({
@@ -1142,7 +1108,7 @@ export class CatalogLevelsChange extends S.Opaque<CatalogLevelsChange, { readonl
  * **Example** (Build an empty diff)
  *
  * ```ts
- * import { CatalogDiff } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import { CatalogDiff } from "@beep/ai-sync/ModelCatalog.schemas"
  *
  * const diff = CatalogDiff.make({ added: [], removed: [], levelsChanged: [] })
  * console.log(diff.added.length) // 0

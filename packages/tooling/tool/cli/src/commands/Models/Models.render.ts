@@ -22,7 +22,7 @@ import { dual, flow } from "effect/Function";
 import * as Match from "effect/Match";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import type { EffortLevel } from "./Models.catalog.schemas.ts";
+import type { EffortLevel } from "@beep/ai-sync/ModelCatalog.schemas";
 import type { LocatorField, LocatorRender, ModelBinding, SupersededModel } from "./Models.manifest.schemas.ts";
 
 const blockBeginText = (blockId: string): string => `beep-models:begin ${blockId}`;

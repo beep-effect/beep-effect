@@ -5,6 +5,36 @@
  * @since 0.0.0
  */
 
+import {
+  decodeSkillLockV2Entry,
+  SkillGitRevision,
+  SkillLicense,
+  SkillPatch,
+  SkillPathHistory,
+  SkillProvenanceReport,
+  SkillProvenanceResolution,
+  SkillTreeMode,
+  SkillUpstream,
+  SkillUpstreamContent,
+  SkillUpstreamContentFile,
+} from "@beep/ai-sync/Skills.schemas";
+import {
+  decodeSkillsLockDocumentJson,
+  KeepSeedPin,
+  LocalMigrationRow,
+  LocalSkillLockEntry,
+  MatchesNoExaminedRevisionDrift,
+  MatchesUpstreamRevisionDrift,
+  PristineAtRevisionPin,
+  SkillMigrationRow,
+  SkillPatchFile,
+  SkillPathHistoryWindow,
+  SkillsLockMigrationArtifacts,
+  SkillsLockMigrationPlan,
+  UnresolvedMigrationRow,
+  VendoredMigrationRow,
+  VendoredSkillLockEntry,
+} from "@beep/ai-sync/SkillsLock.schemas";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
@@ -48,42 +78,12 @@ import {
   SkillUpstreamContentErrorReason,
 } from "./Skills.errors.ts";
 import { renderUnifiedHunks, SkillPatchOwnerSource, SkillPatchOwnerSourceLive } from "./Skills.patches.ts";
-import {
-  decodeSkillLockV2Entry,
-  SkillGitRevision,
-  SkillLicense,
-  SkillPatch,
-  SkillPathHistory,
-  SkillProvenanceReport,
-  SkillProvenanceResolution,
-  SkillTreeMode,
-  SkillUpstream,
-  SkillUpstreamContent,
-  SkillUpstreamContentFile,
-} from "./Skills.schemas.ts";
 import { skillResolutionSeeds } from "./Skills.seeds.ts";
-import {
-  decodeSkillsLockDocumentJson,
-  KeepSeedPin,
-  LocalMigrationRow,
-  LocalSkillLockEntry,
-  MatchesNoExaminedRevisionDrift,
-  MatchesUpstreamRevisionDrift,
-  PristineAtRevisionPin,
-  SkillMigrationRow,
-  SkillPatchFile,
-  SkillPathHistoryWindow,
-  SkillsLockMigrationArtifacts,
-  SkillsLockMigrationPlan,
-  UnresolvedMigrationRow,
-  VendoredMigrationRow,
-  VendoredSkillLockEntry,
-} from "./SkillsLock.schemas.ts";
+import type { SkillPatchLabel } from "@beep/ai-sync/Skills.schemas";
+import type { SkillDriftRow, SkillPinProposal, SkillsLockDocument } from "@beep/ai-sync/SkillsLock.schemas";
 import type { Sha256Hex } from "@beep/schema";
 import type * as Digest from "effect/crypto/Digest";
 import type { ComputedSkillTree, HashedSkillFile } from "./internal/SkillTree.ts";
-import type { SkillPatchLabel } from "./Skills.schemas.ts";
-import type { SkillDriftRow, SkillPinProposal, SkillsLockDocument } from "./SkillsLock.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Skills/Skills.service");
 
@@ -272,7 +272,7 @@ const renderFilePatch = Effect.fn("SkillsProvenance.renderFilePatch")(function* 
  * **Example** (Diff a one-line change)
  *
  * ```ts
- * import { SkillUpstreamContentFile } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillUpstreamContentFile } from "@beep/ai-sync/Skills.schemas"
  * import { renderSkillTreeDiff } from "@beep/repo-cli/commands/Skills/Skills.service"
  * import { NodeCrypto } from "@effect/platform-node"
  * import * as Effect from "effect/Effect"
@@ -629,7 +629,7 @@ export interface SkillUpstreamContentSourceShape {
  * **Example** (Resolve against a stubbed offline source)
  *
  * ```ts
- * import { SkillPathHistory, SkillProvenanceResolution, SkillUpstreamContent } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillPathHistory, SkillProvenanceResolution, SkillUpstreamContent } from "@beep/ai-sync/Skills.schemas"
  * import { SkillUpstreamContentSource } from "@beep/repo-cli/commands/Skills/Skills.service"
  * import * as Effect from "effect/Effect";
  * import * as Layer from "effect/Layer";
@@ -780,7 +780,7 @@ type SkillsLockReading = {
  * **Example** (Inspect the pinned revision of a lock entry)
  *
  * ```ts
- * import { decodeSkillsLockDocumentJson } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { decodeSkillsLockDocumentJson } from "@beep/ai-sync/SkillsLock.schemas"
  * import { skillResolutionOfEntry } from "@beep/repo-cli/commands/Skills/Skills.service"
  * import * as Effect from "effect/Effect"
  * import * as R from "effect/Record"
@@ -1136,7 +1136,7 @@ const computeProvenance = Effect.fn("SkillsProvenance.computeProvenance")(functi
  * ```ts
  * import { SkillsCommandError, SkillUpstreamContentError } from "@beep/repo-cli/commands/Skills/Skills.errors"
  * import type { SkillPatchOwnerSource } from "@beep/repo-cli/commands/Skills/Skills.patches"
- * import type { SkillProvenanceReport } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import type { SkillProvenanceReport } from "@beep/ai-sync/Skills.schemas"
  * import { resolveSkillProvenance, SkillUpstreamContentSource } from "@beep/repo-cli/commands/Skills/Skills.service"
  * import type * as Digest from "effect/crypto/Digest";
  * import * as Effect from "effect/Effect";
@@ -1290,7 +1290,7 @@ const makeSkillProvenanceService = Effect.gen(function* () {
  *
  * ```ts
  * import { SkillPatchOwnerSource, skillPatchOwnerSourceFromCodeowners } from "@beep/repo-cli/commands/Skills/Skills.patches"
- * import { SkillPathHistory, SkillUpstreamContent } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillPathHistory, SkillUpstreamContent } from "@beep/ai-sync/Skills.schemas"
  * import { SkillProvenanceServiceLayer, SkillUpstreamContentSource } from "@beep/repo-cli/commands/Skills/Skills.service"
  * import * as Effect from "effect/Effect";
  * import * as Layer from "effect/Layer";
