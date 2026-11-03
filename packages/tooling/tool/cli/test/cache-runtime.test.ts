@@ -203,44 +203,47 @@ const runtimeSnapshot = CacheToolchainSnapshot.make({
   sources: [],
 });
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("file creation runtime identity", (it) => {
-  it.effect("reads inherited masks through real child runtimes without changing the parent", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const root = yield* fs.makeTempDirectoryScoped({ prefix: "cache-creation-mask-" });
-      const parentMask = process.umask();
-      for (const row of [
-        { name: "shared", program: '#!/bin/sh\numask 022\nexec bun "$@"\n', expected: 0o022 },
-        { name: "private", program: '#!/bin/sh\numask 077\nexec bun "$@"\n', expected: 0o077 },
-      ]) {
-        const executable = path.join(root, row.name);
-        yield* fs.writeFileString(executable, row.program);
-        yield* fs.chmod(executable, 0o700);
-        const observed = yield* Fingerprint.collectCacheFileCreationMask(root, executable);
-        expect(observed).toBe(row.expected);
-      }
-      expect(process.umask()).toBe(parentMask);
-    })
-  );
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+  "file creation runtime identity",
+  (it) => {
+    it.effect("reads inherited masks through real child runtimes without changing the parent", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "cache-creation-mask-" });
+        const parentMask = process.umask();
+        for (const row of [
+          { name: "shared", program: '#!/bin/sh\numask 022\nexec bun "$@"\n', expected: 0o022 },
+          { name: "private", program: '#!/bin/sh\numask 077\nexec bun "$@"\n', expected: 0o077 },
+        ]) {
+          const executable = path.join(root, row.name);
+          yield* fs.writeFileString(executable, row.program);
+          yield* fs.chmod(executable, 0o700);
+          const observed = yield* Fingerprint.collectCacheFileCreationMask(root, executable);
+          expect(observed).toBe(row.expected);
+        }
+        expect(process.umask()).toBe(parentMask);
+      })
+    );
 
-  it.effect("rejects empty, malformed and out-of-range child observations", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const root = yield* fs.makeTempDirectoryScoped({ prefix: "cache-invalid-mask-" });
-      const executable = path.join(root, "invalid");
-      for (const output of ["", "-1", "512", "1.5", "not-a-mask", "NaN", "Infinity", "-Infinity"]) {
-        yield* fs.writeFileString(executable, `#!/bin/sh\nprintf '%s\\n' '${output}'\n`);
-        yield* fs.chmod(executable, 0o700);
-        const result = yield* Fingerprint.collectCacheFileCreationMask(root, executable).pipe(Effect.result);
-        const failure = result.pipe(Result.getFailure, O.getOrThrow);
-        assertInstanceOf(failure, CacheCommandError);
-        expect(failure.message).toBe("Cannot observe the process file creation mask.");
-      }
-    })
-  );
-});
+    it.effect("rejects empty, malformed and out-of-range child observations", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "cache-invalid-mask-" });
+        const executable = path.join(root, "invalid");
+        for (const output of ["", "-1", "512", "1.5", "not-a-mask", "NaN", "Infinity", "-Infinity"]) {
+          yield* fs.writeFileString(executable, `#!/bin/sh\nprintf '%s\\n' '${output}'\n`);
+          yield* fs.chmod(executable, 0o700);
+          const result = yield* Fingerprint.collectCacheFileCreationMask(root, executable).pipe(Effect.result);
+          const failure = result.pipe(Result.getFailure, O.getOrThrow);
+          assertInstanceOf(failure, CacheCommandError);
+          expect(failure.message).toBe("Cannot observe the process file creation mask.");
+        }
+      })
+    );
+  }
+);
 
 it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
   "Git exclusion runtime identity",

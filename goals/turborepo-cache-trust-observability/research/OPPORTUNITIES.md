@@ -2280,3 +2280,10 @@ the bounded mask schema. Add NaN and both infinities to the native-output
 rejection controls. Do not disable diagnostics, relabel this as inherited, or
 treat the older static review as functional proof. Current hosted jobs
 126267896866 and 126267896900 retain the failures; fresh proof is required.
+
+The corrected production module built successfully at 4bc2f73f, but hosted Check
+126272654422 then reached two test-context errors: the new process-observation
+test group omitted SecureRandom. Merge the existing NodeCrypto layer with
+NodeServices, matching the neighboring real-command tests. This is introduced
+test wiring, not an inherited failure or a production signing dependency.
+Preserve its failed log and require fresh current-head hosted results.
