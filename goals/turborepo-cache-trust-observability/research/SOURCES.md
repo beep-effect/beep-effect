@@ -727,3 +727,29 @@ protected producer provenance, current-main qualification or production rollout.
   missing stable material cannot fall through to a canary value.
 - The source-bound preparation report records both review threads and the
   expanded unprivileged environment/input/script regression boundary.
+
+
+### Caller permission ceiling, 2026-11-03
+
+- [Actual preparation startup failure](https://github.com/beep-effect/beep-effect/actions/runs/41604614900):
+  authenticated metadata reports `startup_failure`, zero jobs and the exact
+  source/resolved Heavy revision. The public validation annotation identifies
+  the execution leaf's read permission exceeding the caller ceiling.
+- [GitHub reusable workflow permission propagation](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows#nesting-reusable-workflows):
+  nested workflows can maintain or reduce caller permissions, not elevate them.
+- [Source-bound repair checkpoint](caller-permission-startup-repair-2026-11-03.json):
+  preserve the failed run and distinguish authored regressions from hosted
+  execution and a later successful operational dispatch.
+
+- [Actual ordinary Check startup failure](https://github.com/beep-effect/beep-effect/actions/runs/41605514358):
+  the same validation annotation identifies the ordinary caller ceiling. The
+  workflow source inventory includes all five current Heavy callers.
+
+- [Accepted shared caller repair #2666](https://github.com/beep-effect/beep-effect/pull/2666):
+  the four caller permission maps are consumed unchanged from `fae5b2098c`.
+  The remaining regression compares against the actual requested leaf map and
+  pins the narrower selected-leaf defaults.
+
+
+- [Preparation run 41610315729](https://github.com/beep-effect/beep-effect/actions/runs/41610315729): actual accepted-source build failed at OpenSSL Configure because `FindBin.pm` was missing; artifact upload skipped and isolated scratch cleanup passed. Source, job and exact log digest are retained in `candidate-openssl-prerequisite-failure-2026-11-03.json`.
+- [OpenSSL prerequisites](https://github.com/openssl/openssl/blob/openssl-3.5.4/INSTALL.md) require Make and Perl with core modules. [OpenSSL Perl notes](https://github.com/openssl/openssl/blob/openssl-3.5.4/NOTES-PERL.md) name `perl-core` for RPM-based distributions and `perl` for Debian-based distributions. This is prerequisite guidance, not proof that the Beep candidate has compiled.

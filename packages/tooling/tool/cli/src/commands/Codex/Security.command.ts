@@ -6,6 +6,7 @@
  */
 import { isResolvedPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { Git } from "@beep/git/Git";
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import { findRepoRoot } from "@beep/repo-utils";
 import { O } from "@beep/utils";
 import * as A from "effect/Array";
@@ -17,7 +18,6 @@ import * as FileSystem from "effect/FileSystem";
 import * as F from "effect/Function";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { printLines } from "../../internal/cli/Printer.ts";
 import { securityRepositoryFromRemote } from "./Security.bundle.ts";
 import { CodexSecurityError, toCodexSecurityError } from "./Security.errors.ts";
 import { runSecurityCli, securityRuntime } from "./Security.runtime.ts";

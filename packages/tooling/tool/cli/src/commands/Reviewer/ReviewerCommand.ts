@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { GitHubApp } from "@beep/github/GitHubApp";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
@@ -16,7 +17,6 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { GitHubAppAuthLive, loadReviewerCredentials, mintReviewerToken } from "./GitHubAppAuth.ts";
 import { ReviewerError } from "./ReviewerErrors.ts";
 import { reviewerWire } from "./ReviewerModels.ts";

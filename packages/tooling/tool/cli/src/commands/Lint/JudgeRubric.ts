@@ -18,6 +18,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { BrowserQaLens, DrawingQaLens, QaLens } from "@beep/qa-capture/QaInventory.schemas";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { Fn } from "@beep/schema";
 import { A, O, Str, thunkEmptyStr } from "@beep/utils";
@@ -31,7 +32,6 @@ import * as Num from "effect/Number";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { DRAWING_JUDGE_PROMPT_TEMPLATE, JUDGE_PROMPT_TEMPLATE } from "../Qa/JudgePack.ts";
 
 const $I = $RepoCliId.create("commands/Lint/JudgeRubric");

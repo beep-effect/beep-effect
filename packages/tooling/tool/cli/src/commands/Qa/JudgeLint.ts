@@ -15,6 +15,8 @@
  */
 
 import { SessionStore } from "@beep/qa-capture";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import * as A from "@beep/utils/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -22,8 +24,6 @@ import * as Eq from "effect/Equal";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { printLines } from "../../internal/cli/Printer.ts";
 import {
   evidenceCrossCheckVerdictToCrossCheck,
   isCrossCheckClean,
@@ -47,8 +47,8 @@ import {
 } from "./JudgeIngest.ts";
 import { QaCommandError } from "./Qa.errors.ts";
 import { qaRootPath, readEventLog } from "./Qa.session.ts";
+import type { CliReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import type * as Digest from "effect/crypto/Digest";
-import type { CliReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import type { QaJudgeLintOptions } from "./Qa.schemas.ts";
 
 const utf8Decoder = new TextDecoder();

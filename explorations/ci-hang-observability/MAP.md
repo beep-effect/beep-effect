@@ -21,14 +21,14 @@ not a separate goal.
 
 | # | Workstream | What ships | Capability citation |
 | --- | --- | --- | --- |
-| W1 | Split-await lifecycle events | Structured single-line markers (spawned pid/pgid, exit-resolved, capture-EOF, deadline armed/fired) around the existing dual await | Existing seam: `runCaptured` / `capturePipeDeadline` (`packages/tooling/tool/cli/src/internal/process/StepExec.ts:604-635,506-522`); marker precedent: `[beep-cli] … done in` (`packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:1434-1443`). Event emission NET-NEW. |
+| W1 | Split-await lifecycle events | Structured single-line markers (spawned pid/pgid, exit-resolved, capture-EOF, deadline armed/fired) around the existing dual await | Existing seam: `runCaptured` / `capturePipeDeadline` (`packages/tooling/library/repo-cli-kit/src/process/StepExec.ts:604-635,506-522`); marker precedent: `[beep-cli] … done in` (`packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:1434-1443`). Event emission NET-NEW. |
 | W2 | Per-step watchdog + dump-kill-retry-once | Deadline = max(flat floor, multiplier × expected duration); on fire: forensic dump → group-kill (TERM→KILL) → single retry; lane fails only if retry fails | Seam: `runStepGroup`/`collectResolvedStepOutput` (`Tasks.ts:1371-1449`); kill mechanics exist: `handle.kill({ forceKillAfter })` + group-kill finalizers (`StepExec.ts:510-513`, spawner `.repos/effect/packages/platform/node-shared/src/NodeChildProcessSpawner.ts:362-384`); expected-duration data: LPT table (`Tasks.ts:1835-1883`) + `beep ci lane-timings` (`packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts`). Watchdog + retry policy NET-NEW. |
 | W3 | Forensic dump + artifact upload | Dump script (`ps --forest`, per-bun-pid `/proc` stat/status/wchan/syscall; best-effort `strace -c`/`gdb -batch`) to a well-known dir; `always()` upload step in `check.yml` | Dump recipe: researched + validated (`explorations/ci-hang-observability/research/lanes/external-bun-spin.md` §5); artifact-step precedent: fallow always-run envelopes in `check.yml`; host-probe precedent: `.github/workflows/fleet-lane-probe.yml`. Dump script + upload step NET-NEW. |
 | W4 | Trigger-surface reduction | (a) Bun 1.4.0 canary: temp standalone shadow workflow running the lint-policy lane on 1.4.0, ~1 week green → repo-wide pin-bump PR (`.bun-version`, `packageManager`, AMI `/etc/beep-ci/bun-version`); (b) wrapper drop: `repoCliStep` invokes `bun packages/tooling/tool/cli/src/bin.ts -- …` directly | Shadow-workflow precedent: ci-lane-shadow (lint-policy-single-digit campaign); pin-compare logic exists: `.github/actions/setup-monorepo-ci/action.yml` (baked-vs-checkout bun version); `repoCliStep` (`Tasks.ts:1512-1529`). Canary workflow NET-NEW; wrapper drop is a one-site edit. |
 
 **First vertical slice:** W1 + W2 + W3 scoped to proving end-to-end on the
 Lint Policy lane — a synthetic hang fixture (test double already exists:
-`packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts` fake-spawner
+`packages/tooling/library/repo-cli-kit/test/step-capture-lifecycle.test.ts` fake-spawner
 pattern) drives watchdog fire → dump written → group-kill → retry → lane
 green, with the dump artifact visible on a hosted run. Coverage widening to
 all captured step groups and W4 follow once the slice is proven.

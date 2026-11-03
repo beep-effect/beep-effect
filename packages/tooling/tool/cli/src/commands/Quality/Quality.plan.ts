@@ -7,6 +7,7 @@
 
 import * as NodeOS from "node:os";
 import { $RepoCliId } from "@beep/identity/packages";
+import { isCiSync } from "@beep/repo-cli-kit/cli/EnvConfig";
 import { A, Str } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Context from "effect/Context";
@@ -15,7 +16,6 @@ import { dual, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { isCiSync } from "../../internal/cli/EnvConfig.ts";
 import { invokerAncestryPids } from "../../internal/repo-run/ProcessAttachment.ts";
 import { admissionStatus, MemoryStats } from "../../internal/repo-run/QualityScheduler.ts";
 import {

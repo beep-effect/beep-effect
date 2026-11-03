@@ -8,11 +8,11 @@
 import { FileProcessingFailureRecord, SourceProcessingRecord } from "@beep/file-processing/Extraction";
 import { SelectedStrategy } from "@beep/file-processing/Strategy";
 import { $RepoCliId } from "@beep/identity/packages";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
+import { PosInt } from "@beep/repo-cli-kit/schema/PosInt";
 import { Sha256Hex } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
-import { PosInt } from "../../../internal/schema/PosInt.ts";
 import { CorpusExtractOcrCounts } from "./Ocr.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Corpus/internal/Extract.schemas");

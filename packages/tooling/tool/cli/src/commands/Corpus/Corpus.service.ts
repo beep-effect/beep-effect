@@ -6,10 +6,10 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import { printLines } from "../../internal/cli/Printer.ts";
 import { archiveMoveImpl } from "./internal/ArchiveMove.ts";
 import { catalogCorpusImpl } from "./internal/Catalog.ts";
 import { enrichCorpusImpl } from "./internal/Enrich.ts";

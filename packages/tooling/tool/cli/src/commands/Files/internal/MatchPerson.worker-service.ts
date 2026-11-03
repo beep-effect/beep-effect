@@ -7,6 +7,7 @@
 
 import * as NodeURL from "node:url";
 import { $RepoCliId } from "@beep/identity/packages";
+import { OutputBound, runCapturedStreams } from "@beep/repo-cli-kit/process/StepExec";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -22,7 +23,6 @@ import * as Num from "effect/Number";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { OutputBound, runCapturedStreams } from "../../../internal/process/StepExec.ts";
 import { MatchPersonError } from "./MatchPerson.errors.ts";
 import { prepareAdaFaceArtifacts, verifyPersonMatchModelArtifacts } from "./MatchPerson.model-store.ts";
 import { decodePersonMatchWorkerReportJson, PERSON_MATCH_MAX_REPORTED_FACES } from "./MatchPerson.schemas.ts";

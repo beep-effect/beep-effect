@@ -96,6 +96,15 @@ import {
   withAiMetricsDuckDb,
 } from "@beep/repo-ai-metrics";
 import { AiMetricsTranscriptTextSummaryInput } from "@beep/repo-ai-metrics/ingest";
+import { REPO_CLI_ENTRY_PATH } from "@beep/repo-cli-kit/cli/EntryPath";
+import { aiMetricsDataRootEnvVar } from "@beep/repo-cli-kit/cli/Flags";
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
+import {
+  resolveOperatorPath,
+  resolveSystemdBunPath,
+  SystemdUnitPath,
+  systemdUnitPathRule,
+} from "@beep/repo-cli-kit/systemd/index";
 import { shellQuote } from "@beep/repo-utils/Shell";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -115,15 +124,6 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
-import { REPO_CLI_ENTRY_PATH } from "../../../internal/cli/EntryPath.ts";
-import { aiMetricsDataRootEnvVar } from "../../../internal/cli/Flags.ts";
-import { printLines } from "../../../internal/cli/Printer.ts";
-import {
-  resolveOperatorPath,
-  resolveSystemdBunPath,
-  SystemdUnitPath,
-  systemdUnitPathRule,
-} from "../../../internal/systemd/index.ts";
 import { AiMetricsCommandError, AiMetricsStatusExit } from "../AIMetrics.errors.ts";
 import type {
   AiMetricsForwarderOtlpExport,

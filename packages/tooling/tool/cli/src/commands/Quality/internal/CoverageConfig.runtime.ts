@@ -5,6 +5,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { messageWithCause } from "@beep/repo-cli-kit/cli/CommandErrorFields";
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import { IstanbulCoverageProvider } from "@vitest/coverage-istanbul/dist/provider.js";
 import { V8CoverageProvider } from "@vitest/coverage-v8/dist/provider.js";
@@ -17,7 +19,6 @@ import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { createVitest, parseCLI } from "vitest/node";
-import { messageWithCause } from "../../../internal/cli/CommandErrorFields.ts";
 import { QualityTaskConfigurationError } from "../Quality.errors.ts";
 import type { Vitest } from "vitest/node";
 

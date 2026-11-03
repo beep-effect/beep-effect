@@ -1,0 +1,90 @@
+{
+  "schemaVersion": "cache-caller-permission-startup-repair/v1",
+  "recordedAt": "2026-11-03T08:41:11.201463+00:00",
+  "sourceBaseRevision": "7438cf69c6eff3ef23f99b3fef735b8c6d14e96b",
+  "authority": "Actual failed startup and source-level repair only; hosted regressions and a fresh accepted-source operational run remain required.",
+  "failedRun": {
+    "id": 41604614900,
+    "url": "https://github.com/beep-effect/beep-effect/actions/runs/41604614900",
+    "sourceRevision": "7438cf69c6eff3ef23f99b3fef735b8c6d14e96b",
+    "resolvedHeavyRevision": "7438cf69c6eff3ef23f99b3fef735b8c6d14e96b",
+    "conclusion": "startup_failure",
+    "jobs": 0,
+    "artifactProduced": false,
+    "diagnosis": "The gated execution leaf requests actions: read but the preparation caller ceiling allows actions: none."
+  },
+  "repair": {
+    "callingJobs": [
+      "check.yml#heavy",
+      "heavy-admit.yml#heavy",
+      "cache-producer-prepare.yml#prepare",
+      "cache-producer-inspect.yml#inspect"
+    ],
+    "callingJobCeiling": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "workflowDefault": {
+      "contents": "read"
+    },
+    "heavyDefault": {
+      "contents": "read"
+    },
+    "selectedLeavesOverrideDefaults": false,
+    "secretMappingsAdded": false,
+    "writePermissionAdded": false,
+    "modeGuardsChanged": false,
+    "boundsChanged": false
+  },
+  "inspectionCallerEvidence": "Same source permission defect; no new inspection run was dispatched.",
+  "regressions": "Strengthen the accepted single five-caller case against the actual execution-leaf permission map and narrower selected-leaf defaults; no duplicate fixture.",
+  "sourceBindings": [
+    {
+      "path": ".github/workflows/check.yml",
+      "sha256": "7cf8e17ac8cd828f2cedd59938619c35a68461c0701b786f11e8c15e9fbd2c24"
+    },
+    {
+      "path": ".github/workflows/heavy-admit.yml",
+      "sha256": "8ade886b1308b415b18170c8f0a35fa02b066e79bdd58c108c8546ef4d1e59d9"
+    },
+    {
+      "path": ".github/workflows/cache-producer-prepare.yml",
+      "sha256": "9d42a5faab20a0f5f4ac18a164e617c99f011c1b5086dd48fa03897dc5eb35fc"
+    },
+    {
+      "path": ".github/workflows/cache-producer-inspect.yml",
+      "sha256": "9b0fdc6777c67d070db99758b31002b0674437fbd0b5247ea6763535e783ca92"
+    },
+    {
+      "path": ".github/workflows/heavy.yml",
+      "sha256": "4909a7d77fb946af0734bb54650dae5ee193b203077ff9ffa523acd072d996ec"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/ci-runner-security.test.ts",
+      "sha256": "8332b832bc202b1a8acfce1b0c568eef957acef878483c973cb7776bc1c90670"
+    }
+  ],
+  "specSha256": "e1ec81133ca1a44b7ffad5c184e9c4b0a9f17cdb7529c8a03dcff483b8683418",
+  "localVerification": "No verify, publish, package verification or repository test suite; normal Git hooks and targeted formatting only.",
+  "hostedProofStatus": "pending new PR",
+  "freshOperationalStartup": "not yet run",
+  "wholeGoalAcceptanceChanged": false,
+  "rollback": "Disable optional callers and revert their job permission maps; retain defaults, failed run and earlier evidence.",
+  "ordinaryCheckStartupFailure": {
+    "id": 41605514358,
+    "url": "https://github.com/beep-effect/beep-effect/actions/runs/41605514358",
+    "head": "d657d857d149600fd6dfebd6562bcfc62ae0a5cb",
+    "conclusion": "startup_failure",
+    "jobs": 0,
+    "diagnosis": "Same read permission ceiling mismatch in the ordinary Heavy caller."
+  },
+  "alreadyCorrectCaller": "cache-producer.yml#produce",
+  "acceptedSharedRepair": {
+    "pr": 2666,
+    "mergeCommit": "fae5b2098c8a08b77df6f9e33e370e0e01f2ea68",
+    "fourWorkflowFilesRetainedExactly": true,
+    "duplicateCallerRegressionConsolidated": true,
+    "priorHostedProofHead": "715ccfda069ee119b53bcb3c6252f158b8c360df",
+    "newHeadHostedProof": "pending"
+  }
+}

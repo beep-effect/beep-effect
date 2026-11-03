@@ -12,6 +12,8 @@
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
+import { reportCommandError } from "@beep/repo-cli-kit/cli/CommandErrorFields";
+import { isWithinRoot } from "@beep/repo-cli-kit/PathContainment";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "@beep/utils/Array";
@@ -29,8 +31,6 @@ import { constFalse, dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { reportCommandError } from "../../internal/cli/CommandErrorFields.ts";
-import { isWithinRoot } from "../../internal/PathContainment.ts";
 import {
   adaptGitKitError,
   ProcessPid,

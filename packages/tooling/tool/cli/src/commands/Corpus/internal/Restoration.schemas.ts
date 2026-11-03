@@ -7,14 +7,14 @@
 
 import { FileProcessingOperationErrorReason } from "@beep/file-processing/Operation";
 import { $RepoCliId } from "@beep/identity/packages";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
+import { PosInt } from "@beep/repo-cli-kit/schema/PosInt";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
-import { PosInt } from "../../../internal/schema/PosInt.ts";
 
 const $I = $RepoCliId.create("commands/Corpus/internal/Restoration.schemas");
 

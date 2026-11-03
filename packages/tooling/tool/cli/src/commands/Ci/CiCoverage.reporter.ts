@@ -5,6 +5,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { createContainedFileString } from "@beep/repo-cli-kit/cli/FsGuards";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
@@ -14,7 +16,6 @@ import * as ManagedRuntime from "effect/ManagedRuntime";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { createContainedFileString } from "../../internal/cli/FsGuards.ts";
 import { CoverageRuntimeReceipt } from "../Quality/internal/CoverageArtifacts.schemas.ts";
 import { QualityTaskConfigurationError } from "../Quality/Quality.errors.ts";
 import type { Reporter, Vitest } from "vitest/node";

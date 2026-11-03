@@ -9,6 +9,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { decodeYamlTextWith } from "@beep/repo-cli-kit/schema/TextCodec";
 import { ArrayKeyDefaultEmpty } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as Effect from "effect/Effect";
@@ -20,7 +21,6 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
-import { decodeYamlTextWith } from "../../../../internal/schema/TextCodec.ts";
 import {
   VersionCategoryReport,
   VersionDriftItem,

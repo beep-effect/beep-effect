@@ -5,7 +5,7 @@
     "title": "Turborepo quality cache adoption",
     "status": "active",
     "created": "2026-09-08",
-    "updated": "2026-11-02",
+    "updated": "2026-11-03",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/turborepo-quality-cache-adoption",
@@ -127,7 +127,20 @@
     "research/native-prune-global-controls.py",
     "research/native-prune-global-controls.json",
     "research/prune-driver-controls.json",
-    "research/prune-global-feature-review.json"
+    "research/prune-global-feature-review.json",
+    "research/watch-source-review.py",
+    "research/watch-source-observation.json",
+    "research/watch-source-driver-controls.json",
+    "research/watch-feature-review.json",
+    "research/population-before-t3-refresh-2026-11-03.json",
+    "research/current-source-fresh-disposition-review-2026-11-03.json",
+    "research/population-current-source-checkpoint-2026-11-03.json",
+    "research/current-feature-client-refresh-2026-11-03.json",
+    "research/client-pins-before-current-pair-refresh-2026-11-03.json",
+    "research/native-future-flag-current-pair-availability-2026-11-03.json",
+    "research/native-permission-flag-availability-2026-11-03.json",
+    "research/permission-availability-driver-controls-2026-11-03.json",
+    "research/native-permission-flag-availability.py"
   ],
   "agentLaunchers": [
     {
@@ -190,5 +203,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Active. The retained census has 2,434 executable computations and 2,236 remaining current-source reviews. Ten of 35 feature decisions have final scoped reviews; 25 remain pending. The optional prune global-file flag stays absent after tracked-source review and 16 synthetic native controls. Broad pruning/deployment and real pruned builds remain unproven. Qualification, supported adoption, measured value, actual observation windows and every whole-goal acceptance criterion remain incomplete."
+  "statusNote": "Active. The source-bound native census at fae5b2098c has 191 workspaces, 4,459 graph nodes, 2,400 executable computations and 1,646 configured cache-enabled computations; those flags grant no qualification. Current literal-source reviews keep 198 whole-task boundaries fresh, with 2,202 native reviews pending and five original qualification exclusions unchanged. Retired entries remain in preserved history. Two entrypoint obligations and non-Turbo/nested coverage remain open. Eleven of 36 feature decisions have scoped reviews and 25 remain pending. Qualification, supported adoption, measured value, real observation windows and every whole-goal criterion remain incomplete. The published current canary adds the canary-only permission-hash flag; 64 configuration dry runs executed no task bodies."
 }

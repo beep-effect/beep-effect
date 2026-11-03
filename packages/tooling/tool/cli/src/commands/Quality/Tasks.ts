@@ -9,6 +9,30 @@ import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { GlobSet } from "@beep/glob/GlobSet";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
+import { REPO_CLI_ENTRY_PATH } from "@beep/repo-cli-kit/cli/EntryPath";
+import {
+  canUseTurboCacheSecretSession,
+  configStringEqualsSync,
+  configStringOption,
+  isCiSync,
+  isUnresolvedSecretReference,
+  readTurboCacheEnvironmentSync,
+  renderTurboEnvironmentHealthWarnings,
+  turboEnvExtendsAmbient,
+  turboEnvironmentHealthWarnings,
+  turboEnvOverrides,
+  turboSecretSessionStep,
+} from "@beep/repo-cli-kit/cli/EnvConfig";
+import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
+import {
+  hasRemoteTurboCacheArgs,
+  isTurboCacheControlArg,
+  localOnlyTurboCacheArgs,
+  resolveTurboCachePlan,
+  turboCacheEnvironmentNeedsSecretSession,
+  turboCachePlanArgs,
+  turboCachePlanNeedsSecretSession,
+} from "@beep/repo-cli-kit/cli/TurboCache";
 import { findRepoRoot, insertEndOfOptions } from "@beep/repo-utils";
 import { enumerate } from "@beep/repo-workspaces/internal/enumerate";
 import { WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
@@ -34,36 +58,12 @@ import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
-import { REPO_CLI_ENTRY_PATH } from "../../internal/cli/EntryPath.ts";
-import {
-  canUseTurboCacheSecretSession,
-  configStringEqualsSync,
-  configStringOption,
-  isCiSync,
-  isUnresolvedSecretReference,
-  readTurboCacheEnvironmentSync,
-  renderTurboEnvironmentHealthWarnings,
-  turboEnvExtendsAmbient,
-  turboEnvironmentHealthWarnings,
-  turboEnvOverrides,
-  turboSecretSessionStep,
-} from "../../internal/cli/EnvConfig.ts";
-import { optionalProp } from "../../internal/cli/OptionRecord.ts";
-import {
-  hasRemoteTurboCacheArgs,
-  isTurboCacheControlArg,
-  localOnlyTurboCacheArgs,
-  resolveTurboCachePlan,
-  turboCacheEnvironmentNeedsSecretSession,
-  turboCachePlanArgs,
-  turboCachePlanNeedsSecretSession,
-} from "../../internal/cli/TurboCache.ts";
 import { coverageEnvironment } from "./internal/CoverageEnvironment.ts";
 import type { Git } from "@beep/git/Git";
 
 export { coverageProducerEnvironment } from "./internal/CoverageEnvironment.ts";
 
-import { manifestParser } from "../../internal/ManifestRead.ts";
+import { manifestParser } from "@beep/repo-cli-kit/ManifestRead";
 import {
   CapturedStep,
   formatCommandLine,
@@ -73,10 +73,10 @@ import {
   repoRunOutputBound,
   runCaptured,
   runToExit,
-} from "../../internal/process/index.ts";
+} from "@beep/repo-cli-kit/process/index";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
+import { PosInt } from "@beep/repo-cli-kit/schema/PosInt";
 import { collectChangedFiles, collectDirtyWorktreeFiles } from "../../internal/repo-run/ChangedFiles.ts";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
-import { PosInt } from "../../internal/schema/PosInt.ts";
 import { assertCacheRuntimeKeyUnspecified, cacheRuntimeStep } from "../Cache/Cache.runtime.step.ts";
 import { CoverageProducerIdentity, resolveCoverageProducerIdentity } from "./internal/CoverageArtifacts.ts";
 import {
@@ -155,13 +155,13 @@ import {
 } from "./Quality.schemas.ts";
 import type { GlobPatternError } from "@beep/glob/GlobPattern";
 import type { LenientManifest } from "@beep/package-json/LenientManifest";
+import type { CaptureCommandTimedOutError } from "@beep/repo-cli-kit/process/index";
 import type { DomainError, NoSuchFileError } from "@beep/repo-utils";
 import type { EnumerationFailure } from "@beep/repo-workspaces/internal/enumerate";
 import type { PgliteTestcontainerResource } from "@beep/test-utils";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
-import type { CaptureCommandTimedOutError } from "../../internal/process/index.ts";
 import type { CoverageBaselineRowDelta } from "./internal/CoverageScope.ts";
 import type { FlakeQuarantineTask } from "./internal/FlakeQuarantine.ts";
 import type { LaneProofSession } from "./internal/LaneProofReuse.ts";
@@ -170,7 +170,7 @@ import type { TurboLaneDigest } from "./internal/TurboLaneDigest.ts";
 import type { UnexpectedQualityTaskFailure } from "./Quality.errors.ts";
 import type { GithubCheckLaneSpec, GithubCheckLaneWaveSpec, QualityConcurrencyPlan } from "./Quality.schemas.ts";
 
-export { QualityTaskStep } from "../../internal/process/index.ts";
+export { QualityTaskStep } from "@beep/repo-cli-kit/process/index";
 /**
  * Public quality task error exports.
  *
@@ -1142,7 +1142,7 @@ const shouldRunLintRepoWideSteps = (args: ReadonlyArray<string>): boolean =>
   !A.some(args, isExplicitTurboAffectedOrScopeArg);
 
 // A workstation configured for remote reads is honored; everything else falls
-// back to local-only. The decision itself lives in `internal/cli/TurboCache`
+// back to local-only. The decision itself lives in `@beep/repo-cli-kit/cli/TurboCache`
 // so the whole matrix stays unit-testable without mutating the environment.
 const turboCachePlan = (args: ReadonlyArray<string>) =>
   resolveTurboCachePlan(readTurboCacheEnvironmentSync(), { args, ci: isCiSync() });

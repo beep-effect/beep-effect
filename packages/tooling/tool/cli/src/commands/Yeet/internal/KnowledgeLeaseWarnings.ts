@@ -10,6 +10,7 @@
  * @since 0.0.0
  */
 
+import { runCapturedStreams } from "@beep/repo-cli-kit/process/StepExec";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -17,7 +18,6 @@ import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as Str from "effect/String";
-import { runCapturedStreams } from "../../../internal/process/StepExec.ts";
 import { decodeKnowledgeLeasesReportJson, knowledgeLeaseWarnings } from "../../Knowledge/KnowledgeDoctor.leases.ts";
 
 /**

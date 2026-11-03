@@ -6,11 +6,11 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { OpaqueDefect } from "@beep/repo-cli-kit/schema/OpaqueDefect";
 import { O } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
-import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 import { WorktreePreservationStep } from "./Worktree.schemas.ts";
 import type { WorktreePreservationStep as WorktreePreservationStepType } from "./Worktree.schemas.ts";
 

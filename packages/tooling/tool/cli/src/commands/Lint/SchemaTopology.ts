@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { normalizePath } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as Console from "effect/Console";
@@ -18,7 +19,6 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 
 const $I = $RepoCliId.create("commands/Lint/SchemaTopology");
 

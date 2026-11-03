@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { runToExit } from "@beep/repo-cli-kit/process/StepExec";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
@@ -14,7 +15,6 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { runToExit } from "../../../internal/process/StepExec.ts";
 import { ResearchCommandError } from "../Research.errors.ts";
 import {
   ResearchCognifyOptions,

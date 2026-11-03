@@ -1225,7 +1225,7 @@ currently `reviewed` while GATE 2 awaits ratification.
 Every confirmed entry was evidence-verified by the orchestrator (100%, not
 the 20% minimum). The exclusive-CLI-mode-flag family's collapse
 infrastructure already exists at
-`packages/tooling/tool/cli/src/internal/cli/RunMode.ts` — designs should
+`packages/tooling/library/repo-cli-kit/src/cli/RunMode.ts` — designs should
 reuse it.
 
 ## Sweep lane map (round 1)

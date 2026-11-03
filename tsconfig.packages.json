@@ -484,6 +484,12 @@
       "path": "packages/party/domain"
     },
     {
+      "path": "packages/party/server"
+    },
+    {
+      "path": "packages/party/use-cases"
+    },
+    {
       "path": "packages/shared/domain"
     },
     {
@@ -509,6 +515,9 @@
     },
     {
       "path": "packages/tooling/library/qa-capture"
+    },
+    {
+      "path": "packages/tooling/library/repo-cli-kit"
     },
     {
       "path": "packages/tooling/library/repo-tsconfig"

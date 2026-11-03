@@ -7,9 +7,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { QualityTaskStep } from "@beep/repo-cli-kit/process/index";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
-import { QualityTaskStep } from "../../../internal/process/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/FinalCheck.schemas");
 
