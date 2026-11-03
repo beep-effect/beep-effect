@@ -33,6 +33,42 @@ on:
         type: boolean
         default: false
 
+      producer_execution:
+        description: Run the closed independently approved signed trial for the exact main dispatcher.
+        required: false
+        type: boolean
+        default: false
+
+      producer_channel:
+        description: Exact native client channel for the protected signed trial.
+        required: false
+        type: string
+        default: stable
+
+    secrets:
+      BEEP_CACHE_PRODUCER_STABLE_APPROVAL_JSON:
+        required: false
+      BEEP_CACHE_PRODUCER_CANARY_APPROVAL_JSON:
+        required: false
+      BEEP_CACHE_PRODUCER_STABLE_RUNTIME_JSON:
+        required: false
+      BEEP_CACHE_PRODUCER_CANARY_RUNTIME_JSON:
+        required: false
+      BEEP_CACHE_PRODUCER_STABLE_ISSUER_MATERIAL_BASE64:
+        required: false
+      BEEP_CACHE_PRODUCER_CANARY_ISSUER_MATERIAL_BASE64:
+        required: false
+      BEEP_CACHE_TRIAL_R2_ACCESS_KEY_ID:
+        required: false
+      BEEP_CACHE_TRIAL_R2_SECRET_ACCESS_KEY:
+        required: false
+      BEEP_CACHE_TRIAL_ARTIFACT_KEY:
+        required: false
+      BEEP_CACHE_TRIAL_READER_BEARER:
+        required: false
+      BEEP_CACHE_TRIAL_WRITER_BEARER:
+        required: false
+
 permissions:
   contents: read
 
@@ -46,7 +82,7 @@ jobs:
     # matrix: skipping it leaves required contexts "Expected". Only the
     # dedicated manual inspection or preparation selects an operational job below;
     # it does not publish quality verdicts.
-    if: ${{ !inputs.producer_inspection && !inputs.producer_preparation }}
+    if: ${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.producer_execution }}
     runs-on: ${{ inputs.admitted && 'beep-ec2-heavy' || 'ubuntu-24.04' }}
     timeout-minutes: ${{ matrix.timeout_minutes }}
     environment: ${{ github.event_name == 'push' && inputs.admitted && matrix.uses_turbo == 'true' && 'turbo-cache-write' || null }}
@@ -201,7 +237,7 @@ jobs:
           #
           # Orphaned lane grandchildren (stuck bun wrappers, daemon sockets)
           # inherit this step's stdio pipes, and the runner does not end a
-          # step until those pipes close — so a lane can print success, exit,
+          # step until those pipes close, so a lane can print success, exit,
           # and still wedge the job for its full timeout (ship-velocity SPEC
           # A7; proven on Docgen run 31797064763). Run each lane in its own
           # session and reap the entire process group once the lane process
@@ -297,7 +333,7 @@ jobs:
   producer-inspect:
     name: Inspect producer sources and tools
     if: >-
-      inputs.producer_inspection && !inputs.producer_preparation &&
+      inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution &&
       github.repository == 'beep-effect/beep-effect' &&
       github.event_name == 'workflow_dispatch' &&
       github.ref == 'refs/heads/main' &&
@@ -369,7 +405,7 @@ jobs:
   producer-prepare:
     name: Build candidate producer adapter
     if: >-
-      inputs.producer_preparation && !inputs.producer_inspection &&
+      inputs.producer_preparation && !inputs.producer_inspection && !inputs.producer_execution &&
       github.repository == 'beep-effect/beep-effect' &&
       github.event_name == 'workflow_dispatch' &&
       github.ref == 'refs/heads/main' &&
@@ -524,3 +560,312 @@ jobs:
             */beep/cache-producer-build.??????) rm -rf -- "$build_root" ;;
             *) echo "::error::Refusing unexpected build scratch path."; exit 1 ;;
           esac
+
+
+  producer-execute:
+    name: Execute approved signed producer
+    if: >-
+      inputs.producer_execution && !inputs.producer_inspection && !inputs.producer_preparation &&
+      (inputs.producer_channel == 'stable' || inputs.producer_channel == 'canary') &&
+      github.repository == 'beep-effect/beep-effect' &&
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/main' &&
+      github.workflow_ref == 'beep-effect/beep-effect/.github/workflows/cache-producer.yml@refs/heads/main'
+    runs-on: beep-ec2-heavy
+    timeout-minutes: 60
+    environment: turbo-cache-write
+    permissions:
+      contents: read
+      actions: read
+    env:
+      BEEP_TURBO_HOST_CACHE_DISABLED: "true"
+      BEEP_CACHE_PRODUCER_CHANNEL: ${{ inputs.producer_channel }}
+    steps:
+      - name: Require independent frozen trial selection
+        id: selection
+        shell: bash
+        env:
+          TRIAL_ENABLED: ${{ vars.BEEP_CACHE_PRODUCER_ENABLED }}
+          EXPECTED_SOURCE: ${{ vars[inputs.producer_channel == 'stable' && 'BEEP_CACHE_PRODUCER_STABLE_SOURCE_SHA' || 'BEEP_CACHE_PRODUCER_CANARY_SOURCE_SHA'] }}
+          ADAPTER_RUN: ${{ vars.BEEP_CACHE_PRODUCER_ADAPTER_RUN_ID }}
+          ADAPTER_ARTIFACT: ${{ vars.BEEP_CACHE_PRODUCER_ADAPTER_ARTIFACT_ID }}
+          ADAPTER_SHA256: ${{ vars.BEEP_CACHE_PRODUCER_ADAPTER_SHA256 }}
+        run: |
+          set -euo pipefail
+          test "$TRIAL_ENABLED" = true
+          [[ "$EXPECTED_SOURCE" =~ ^[a-f0-9]{40}$ ]]
+          test "$EXPECTED_SOURCE" = "$GITHUB_SHA"
+          [[ "$ADAPTER_RUN" =~ ^[1-9][0-9]{0,14}$ ]]
+          [[ "$ADAPTER_ARTIFACT" =~ ^[1-9][0-9]{0,14}$ ]]
+          [[ "$ADAPTER_SHA256" =~ ^[a-f0-9]{64}$ ]]
+          printf 'run=%s\nartifact=%s\nsha256=%s\n' "$ADAPTER_RUN" "$ADAPTER_ARTIFACT" "$ADAPTER_SHA256" >> "$GITHUB_OUTPUT"
+
+      - name: Reserve exclusive private trial directory
+        id: private
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          trial_root=/var/tmp/beep-cache-producer-trial-v1
+          # An old or competing directory is a refusal, never an overwrite.
+          mkdir "$trial_root"
+          printf 'root=%s\n' "$trial_root" >> "$GITHUB_OUTPUT"
+          mkdir "$trial_root/adapter" "$trial_root/publication"
+          printf 'BEEP_CACHE_PRODUCER_PRIVATE_ROOT=%s\nBEEP_CACHE_PRODUCER_STORE=%s/issuer\n' "$trial_root" "$trial_root" >> "$GITHUB_ENV"
+
+      - name: Checkout exact approved main source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Setup pinned toolchain without trial capabilities
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          turbo-remote-cache: "false"
+          r2-enabled: "false"
+          app-secrets: "false"
+
+      - name: Ensure native sandbox trial dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -x /usr/bin/bwrap ]]; then
+            privilege=()
+            if [[ "$EUID" -ne 0 ]]; then
+              privilege=(sudo -n)
+            fi
+            if command -v dnf >/dev/null 2>&1; then
+              "${privilege[@]}" dnf install -y bubblewrap
+            elif command -v apt-get >/dev/null 2>&1; then
+              bash scripts/ci-prune-apt-sources.sh
+              "${privilege[@]}" apt-get update
+              "${privilege[@]}" apt-get install -y --no-install-recommends bubblewrap
+            else
+              echo "::error::Producer inspection requires /usr/bin/bwrap; no supported package manager."
+              exit 1
+            fi
+          fi
+          test -x /usr/bin/bwrap
+          /usr/bin/bwrap --version
+
+
+      - name: Download independently selected candidate
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          artifact-ids: ${{ steps.selection.outputs.artifact }}
+          run-id: ${{ steps.selection.outputs.run }}
+          repository: beep-effect/beep-effect
+          github-token: ${{ github.token }}
+          path: ${{ steps.private.outputs.root }}/adapter
+          merge-multiple: true
+          digest-mismatch: error
+
+      - name: Verify selected candidate before issuer delivery
+        shell: bash
+        env:
+          EXPECTED_ADAPTER_SHA256: ${{ steps.selection.outputs.sha256 }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,stat
+          root=pathlib.Path(os.environ['BEEP_CACHE_PRODUCER_PRIVATE_ROOT'])/'adapter'
+          files=list(root.iterdir())
+          if {p.name for p in files}!={'decay','build.json'} or len(files)!=2:
+              raise SystemExit('Candidate must contain exactly the approved executable and manifest.')
+          if any(not stat.S_ISREG(p.lstat().st_mode) for p in files):
+              raise SystemExit('Candidate members must be regular files.')
+          binary=root/'decay';manifest=root/'build.json'
+          if not 0<binary.stat().st_size<=16*1024*1024 or manifest.stat().st_size>64*1024 or sum(p.stat().st_size for p in files)>16*1024*1024:
+              raise SystemExit('Candidate exceeds its reviewed artifact bounds.')
+          digest=hashlib.sha256(binary.read_bytes()).hexdigest()
+          if digest!=os.environ['EXPECTED_ADAPTER_SHA256']:
+              raise SystemExit('Candidate differs from independent executable selection.')
+          report=json.loads(manifest.read_text())
+          if report['binary']!={'file':'decay','bytes':binary.stat().st_size,'sha256':digest}:
+              raise SystemExit('Candidate manifest does not describe the selected executable.')
+          inputs=['infra/r2-cache/policy.sh','infra/r2-cache/policy-build-requirements.txt',
+                  'infra/r2-cache/patches/4.0.20-signed-policy.patch','infra/r2-cache/patches/4.0.20-signed-policy.json']
+          if report['sourceInputs']!={p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in inputs}:
+              raise SystemExit('Candidate source inputs differ from the approved checkout.')
+          binary.chmod(0o500)
+          PY
+
+      - name: Prepare fixed full-pilot inputs without credentials
+        id: inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git diff --quiet HEAD
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,pathlib,re,shutil,tarfile,urllib.parse,urllib.request
+          root=pathlib.Path.cwd()
+          private=pathlib.Path(os.environ['BEEP_CACHE_PRODUCER_PRIVATE_ROOT'])
+          channel=os.environ['BEEP_CACHE_PRODUCER_CHANNEL']
+          if channel not in ['stable','canary']:
+              raise SystemExit('Only the two reviewed native channels are supported.')
+          pins=json.loads((root/'goals/turborepo-quality-cache-adoption/research/errors-only-client-pins.json').read_text())[channel]
+          executable=root/'node_modules/@turbo/linux-64/bin/turbo'
+          if channel=='canary':
+              url=urllib.parse.urlsplit(pins['tarball'])
+              if url.scheme!='https' or url.netloc!='registry.npmjs.org' or url.query or url.fragment:
+                  raise SystemExit('Native canary must use its reviewed public registry source.')
+              with urllib.request.urlopen(pins['tarball'],timeout=30) as response:
+                  archive=response.read(64*1024*1024+1)
+              if len(archive)>64*1024*1024 or 'sha512-'+base64.b64encode(hashlib.sha512(archive).digest()).decode()!=pins['integrity']:
+                  raise SystemExit('Native canary archive differs from its reviewed integrity.')
+              with tarfile.open(fileobj=io.BytesIO(archive),mode='r:gz') as package:
+                  members=package.getmembers()
+                  if len(members)>32 or sum(m.size for m in members)>128*1024*1024:
+                      raise SystemExit('Native canary archive exceeds its reviewed extraction bounds.')
+                  matches=[m for m in members if m.name==pins['archiveMember']]
+                  if len(matches)!=1 or not matches[0].isfile() or not 0<matches[0].size<=64*1024*1024:
+                      raise SystemExit('Native canary executable member is invalid.')
+                  with package.extractfile(matches[0]) as member:
+                      native=member.read(64*1024*1024+1)
+              executable=private/'turbo-canary'
+              with executable.open('xb') as output:
+                  output.write(native)
+              executable.chmod(0o500)
+          if hashlib.sha256(executable.read_bytes()).hexdigest()!=pins['sha256']:
+              raise SystemExit('Native client differs from its reviewed binary pin.')
+          folder=root/'.beep/cache/protected-producer-trial'
+          folder.parent.mkdir(mode=0o700,parents=True,exist_ok=True)
+          folder.mkdir(mode=0o700)
+          before=(root/'packages/foundation/modeling/identity/turbo.json').read_bytes()
+          after=json.loads(before)
+          if after['tasks']['lint'].get('cache') is not False:
+              raise SystemExit('The identity-lint pilot source profile changed; renew its review.')
+          after['tasks']['lint']['cache']=True
+          (folder/'before.json').write_bytes(before)
+          (folder/'after.json').write_text(json.dumps(after,indent=2)+'\n')
+          def reference(name):
+              file=folder/name
+              return {'path':file.relative_to(root).as_posix(),'sha256':hashlib.sha256(file.read_bytes()).hexdigest()}
+          (folder/'activation-request.json').write_text(json.dumps({'computation':'@beep/identity#lint',
+              'path':'packages/foundation/modeling/identity/turbo.json','before':reference('before.json'),'after':reference('after.json')})+'\n')
+          if not re.fullmatch('[1-9][0-9]*',os.environ['GITHUB_RUN_ID']) or not re.fullmatch('[1-9][0-9]*',os.environ['GITHUB_RUN_ATTEMPT']):
+              raise SystemExit('Hosted run identity is invalid.')
+          prefix='cache-producer-'+os.environ['GITHUB_RUN_ID']+'-'+os.environ['GITHUB_RUN_ATTEMPT']
+          trees=[str(root)+'-worktrees/'+prefix+'-'+suffix for suffix in ['a','b']]
+          (folder/'tools.json').write_text(json.dumps({'executable':str(executable.resolve()),'client':{
+              'version':pins['reportedVersion'],'sha256':pins['sha256'],'namespace':'team_beep_signed_canary_v1'},'worktrees':trees})+'\n')
+          with open(os.environ['GITHUB_OUTPUT'],'a') as output:
+              output.write('source_inputs='+str(folder)+'\nworktree_a='+trees[0]+'\nworktree_b='+trees[1]+'\n')
+          PY
+          bun --no-env-file run beep cache dependencies --output .beep/cache/protected-producer-trial/dependencies.json
+          bun --no-env-file run beep cache activation --request .beep/cache/protected-producer-trial/activation-request.json --output .beep/cache/protected-producer-trial/activation.json
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,shutil,subprocess
+          root=pathlib.Path.cwd();folder=root/'.beep/cache/protected-producer-trial'
+          tools=json.loads((folder/'tools.json').read_text())
+          pathlib.Path(tools['worktrees'][0]).parent.mkdir(mode=0o700,exist_ok=True)
+          for tree in tools['worktrees']:
+              subprocess.run(['git','worktree','add','--detach',tree,os.environ['GITHUB_SHA']],check=True)
+          def reference(name):
+              file=folder/name
+              return {'path':file.relative_to(root).as_posix(),'sha256':hashlib.sha256(file.read_bytes()).hexdigest()}
+          request={'sourceRoot':str(root),'pilot':{'channel':os.environ['BEEP_CACHE_PRODUCER_CHANNEL'],
+              'client':tools['client'],'executable':tools['executable'],
+              'biomeExecutable':str((root/'node_modules/@biomejs/cli-linux-x64/biome').resolve(strict=True)),
+              'nodeExecutable':str(pathlib.Path(shutil.which('node')).resolve(strict=True)),
+              'dependencies':reference('dependencies.json'),'worktrees':tools['worktrees'],
+              'activation':reference('activation.json'),'selection':'full'}}
+          (folder/'request.json').write_text(json.dumps(request)+'\n')
+          PY
+          git diff --quiet HEAD
+
+      - name: Install independently approved issuer only
+        shell: bash
+        env:
+          BEEP_CACHE_PRODUCER_APPROVAL_JSON: ${{ secrets[inputs.producer_channel == 'stable' && 'BEEP_CACHE_PRODUCER_STABLE_APPROVAL_JSON' || 'BEEP_CACHE_PRODUCER_CANARY_APPROVAL_JSON'] }}
+          BEEP_CACHE_PRODUCER_RUNTIME_JSON: ${{ secrets[inputs.producer_channel == 'stable' && 'BEEP_CACHE_PRODUCER_STABLE_RUNTIME_JSON' || 'BEEP_CACHE_PRODUCER_CANARY_RUNTIME_JSON'] }}
+          BEEP_CACHE_PRODUCER_ISSUER_MATERIAL_BASE64: ${{ secrets[inputs.producer_channel == 'stable' && 'BEEP_CACHE_PRODUCER_STABLE_ISSUER_MATERIAL_BASE64' || 'BEEP_CACHE_PRODUCER_CANARY_ISSUER_MATERIAL_BASE64'] }}
+        run: |
+          set -euo pipefail
+          bun --no-env-file run beep cache producer-install --from-environment
+
+      - name: Execute closed signed trial and retain private observation
+        shell: bash
+        env:
+          TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.BEEP_CACHE_TRIAL_ARTIFACT_KEY }}
+          R2_ACCESS_KEY_ID: ${{ secrets.BEEP_CACHE_TRIAL_R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.BEEP_CACHE_TRIAL_R2_SECRET_ACCESS_KEY }}
+          BEEP_CACHE_TRIAL_READER_BEARER: ${{ secrets.BEEP_CACHE_TRIAL_READER_BEARER }}
+          BEEP_CACHE_TRIAL_WRITER_BEARER: ${{ secrets.BEEP_CACHE_TRIAL_WRITER_BEARER }}
+          BEEP_CACHE_TRIAL_FOREIGN_BEARER: deliberately-unrecognized-foreign
+          BEEP_CACHE_TRIAL_UNKNOWN_BEARER: deliberately-unrecognized-unknown
+        run: |
+          set -euo pipefail
+          umask 077
+          timeout --signal=TERM --kill-after=30s 50m bun --no-env-file run beep cache producer-run             --request .beep/cache/protected-producer-trial/request.json             --output "$BEEP_CACHE_PRODUCER_PRIVATE_ROOT/observation.json"             --publication "$BEEP_CACHE_PRODUCER_PRIVATE_ROOT/publication/cache-producer.json"
+
+      - name: Publish issued observation using storage capabilities only
+        shell: bash
+        env:
+          R2_ACCESS_KEY_ID: ${{ secrets.BEEP_CACHE_TRIAL_R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.BEEP_CACHE_TRIAL_R2_SECRET_ACCESS_KEY }}
+        run: |
+          set -euo pipefail
+          bun --no-env-file run beep cache producer-publish --observation "$BEEP_CACHE_PRODUCER_PRIVATE_ROOT/observation.json"
+
+      - name: Check bounded public digest report
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os,pathlib,stat
+          folder=pathlib.Path(os.environ['BEEP_CACHE_PRODUCER_PRIVATE_ROOT'])/'publication'
+          files=list(folder.iterdir())
+          if len(files)!=1 or files[0].name!='cache-producer.json' or not stat.S_ISREG(files[0].lstat().st_mode) or not 0<files[0].stat().st_size<=64*1024:
+              raise SystemExit('Only the bounded producer digest report may be published.')
+          PY
+
+      - name: Retain only digest publication for one day
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cache-producer-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ steps.private.outputs.root }}/publication/cache-producer.json
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+
+      - name: Remove only this trial's private files and worktrees
+        if: always() && steps.private.outputs.root != ''
+        shell: bash
+        env:
+          TRIAL_ROOT: ${{ steps.private.outputs.root }}
+          TRIAL_INPUTS: ${{ steps.inputs.outputs.source_inputs }}
+          TRIAL_WORKTREE_A: ${{ steps.inputs.outputs.worktree_a }}
+          TRIAL_WORKTREE_B: ${{ steps.inputs.outputs.worktree_b }}
+        run: |
+          set -euo pipefail
+          cleanup_status=0
+          for tree in "$TRIAL_WORKTREE_A" "$TRIAL_WORKTREE_B"; do
+            if [[ -n "$tree" && -e "$tree" ]]; then
+              case "$tree" in
+                "$GITHUB_WORKSPACE"-worktrees/cache-producer-"$GITHUB_RUN_ID"-"$GITHUB_RUN_ATTEMPT"-[ab])
+                  git worktree remove -- "$tree" || cleanup_status=1 ;;
+                *) echo "::error::Refusing unexpected producer worktree."; cleanup_status=1 ;;
+              esac
+            fi
+          done
+          if [[ -n "$TRIAL_INPUTS" ]]; then
+            if [[ "$TRIAL_INPUTS" == "$GITHUB_WORKSPACE/.beep/cache/protected-producer-trial" ]]; then
+              rm -rf -- "$TRIAL_INPUTS"
+            else
+              echo "::error::Refusing unexpected producer input directory."
+              cleanup_status=1
+            fi
+          fi
+          if [[ "$TRIAL_ROOT" == /var/tmp/beep-cache-producer-trial-v1 ]]; then
+            rm -rf -- "$TRIAL_ROOT"
+          else
+            echo "::error::Refusing unexpected private producer directory."
+            cleanup_status=1
+          fi
+          exit "$cleanup_status"

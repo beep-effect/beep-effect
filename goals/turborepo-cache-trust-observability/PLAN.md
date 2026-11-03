@@ -1312,3 +1312,20 @@ failure at the approval boundary with a fixed diagnostic; preserve the policy
 refusal and validate before material lookup. A fourteenth authored control
 exercises a private-marker schema failure without issuer material or store IO.
 The controls remain unrun locally; the repair needs fresh hosted proof.
+
+
+### Closed protected producer wiring, 2026-11-03
+
+The [prepared workflow](research/protected-producer-workflow-preparation-2026-11-03.md)
+connects existing inspection/approval, installer, full signed pilot, private R2
+publisher and digest-artifact contracts. It adds no issuer service or new proof
+authority. All capability delivery is explicit and step-scoped; caller input is
+only the stable/canary enum. The existing protected environment and runner pool
+remain owned by their current authorities.
+
+YAML, ten shell blocks and four embedded Python blocks parse. Isolation controls
+and seven selection-shell cases are authored but not run locally. The next
+steps are hosted proof, reviewed candidate inspection, current independent
+approval, live protection/configuration checks and bounded real execution. The
+mode remains disabled and no secret, variable, cloud grant or cache service has
+changed. All nine trust-goal criteria remain unproven.

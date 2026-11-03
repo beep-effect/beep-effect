@@ -2066,3 +2066,29 @@ Record the published Linux x86_64 wheel hashes, enforce `--require-hashes`,
 and retain installed executable digests in the build manifest. Future pinned
 tool installs should review the complete dependency list and content hashes
 alongside their version checks before a protected runner consumes them.
+
+
+### Forward named environment secrets through reusable calls, 2026-11-03
+
+Current GitHub documentation says an environment secret resolves empty in the
+called workflow unless the caller also forwards it by name or inheritance. The
+new producer caller enumerates eleven fields and the Heavy leaf declares them
+optional so ordinary callers remain valid. The installation step still fails
+closed when the selected records are absent. Keep real protected delivery as a
+post-merge gate; parsing and source assertions do not prove a secret arrived.
+
+The protocol executor already has a fifteen-minute bound in addition to the
+comparison's twenty and upload's ten. A proposed thirty-five-minute outer limit
+would interrupt a legitimate full matrix. The prepared outer limit is fifty
+minutes inside a sixty-minute existing-runner job, with all inner limits intact.
+
+A value-level `stable && value || canary` expression can choose canary material
+when the stable value is empty. Select the nonempty field name first, then index
+the secret/variable context. Exact expression assertions preserve refusal for a
+missing selected channel instead of silently changing issuer or source selection.
+
+The combined-workflow ASCII preflight caught an existing em dash in a Heavy
+comment (`UnicodeEncodeError`). The first-cohort authenticated workflow reader
+requires ASCII before byte hashing. Normalize that comment and assert ASCII
+plus the original combined 64-KiB bound; do not widen the verifier or drop the
+resolved reusable workflow from approval. No executable lane behavior changed.

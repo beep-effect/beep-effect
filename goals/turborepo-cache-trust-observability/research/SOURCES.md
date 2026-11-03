@@ -667,3 +667,22 @@ protected producer provenance, current-main qualification or production rollout.
 
 - [cargo-zigbuild 0.20.1 metadata](https://pypi.org/pypi/cargo-zigbuild/0.20.1/json) publishes the Linux x86_64 wheel SHA-256 `cb9508149ee63d60e5110ff24b527ab25ed418a6329252aa4f86868197c55bf6` and its sole package dependency, ziglang.
 - [ziglang 0.14.1 metadata](https://pypi.org/pypi/ziglang/0.14.1/json) publishes the matching Linux x86_64 wheel SHA-256 `6eb9d4d759b292c83810dbee2e9e8e3fbfbf01d864e6e9811bae711fd74e1c2f` and no package dependencies. These content pins address [the review finding](https://github.com/beep-effect/beep-effect/pull/2643#discussion_r4450530140); real CI installation remains unexecuted.
+
+
+### Closed protected producer workflow, 2026-11-03
+
+- [Preparation record](protected-producer-workflow-preparation-2026-11-03.json)
+  binds the exact caller, Heavy leaf and authored CI policy controls. Existing
+  `producer-install`, `producer-run` and `producer-publish` implementations own
+  schema, source, mount, issuer and private-object checks. No observed report
+  approves its own source or credentials.
+- [GitHub reusable-workflow documentation](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows)
+  requires environment-secret forwarding through the call and an environment
+  on the called job. This caller enumerates named fields instead of inheriting
+  all secrets. Actual protected delivery remains unexecuted.
+- [Pinned download-artifact inputs](https://raw.githubusercontent.com/actions/download-artifact/9000827ccba6bdab643e8b6fd33ac0654aef8333/action.yml)
+  support exact artifact IDs, authenticated cross-run selection and a failing
+  digest mismatch. Independent executable/source approval remains separate.
+- Syntax-only inspection covers both YAML files, ten shell blocks and four
+  Python bodies. The authored source/secret/publication checks and seven real
+  Bash-selection cases still require exact-head hosted execution.

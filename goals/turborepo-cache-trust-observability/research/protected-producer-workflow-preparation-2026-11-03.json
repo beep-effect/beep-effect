@@ -1,0 +1,129 @@
+{
+  "schemaVersion": "cache-protected-producer-workflow-preparation/v1",
+  "recordedAt": "2026-11-03T04:30:36.984554+00:00",
+  "sourceBaseRevision": "e9cccd0b5bfc9a390eca249ff7e9f11ce604691d",
+  "status": "source-prepared-unexecuted",
+  "authority": "Closed workflow wiring only. No installed issuer, runtime credential delivery, protected execution, published observation, qualification or whole-goal acceptance.",
+  "sourceBindings": [
+    {
+      "path": ".github/workflows/cache-producer.yml",
+      "sha256": "b5398badce6643d3f0cc031e79c3ba1fedd0e81cd5416313a8a8ac7aa3f2a448"
+    },
+    {
+      "path": ".github/workflows/heavy.yml",
+      "sha256": "b33db3bc297ae524fe6339900e4eea24a719241b917562bd9610449eb9a0a06a"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/ci-runner-security.test.ts",
+      "sha256": "1a9a1959158f8ea935e82792b9e01a19903768881c6bf76dc53a593933dcd15d"
+    }
+  ],
+  "route": {
+    "caller": ".github/workflows/cache-producer.yml",
+    "callee": ".github/workflows/heavy.yml@main",
+    "mode": "producer_execution",
+    "default": false,
+    "channels": ["stable", "canary"],
+    "repository": "beep-effect/beep-effect",
+    "ref": "refs/heads/main",
+    "event": "workflow_dispatch",
+    "protectedEnvironment": "turbo-cache-write",
+    "callerInputs": ["channel enum only"],
+    "namedSecretsForwarded": 11,
+    "inheritAllSecrets": false,
+    "ordinaryQualityContextsPreserved": true,
+    "otherOperationalModesMutuallyExclusive": true
+  },
+  "execution": {
+    "independentSelection": "Explicit enable plus exact per-channel source SHA and independently selected candidate run/artifact/binary digest. Missing or malformed values refuse before private setup.",
+    "privateRoot": "/var/tmp/beep-cache-producer-trial-v1",
+    "privateRootExclusive": true,
+    "candidateDownload": "Immutable reviewed download-artifact action, exact artifact ID/run, digest mismatch is an error; binary hash and four current source-input hashes checked before issuer delivery.",
+    "request": "Fixed @beep/identity#lint activation preview, materialized dependencies, two same-source registered sibling worktrees and the complete selection; no arbitrary command or caller request file.",
+    "nativeClients": "Accepted stable/current-canary binary hashes; canary archive integrity and bounded single-member extraction precede any native execution.",
+    "installer": "Existing producer-install --from-environment with three step-only redacted records. No producer-provision or self-derived approval.",
+    "runtime": "Only the execution step receives trial storage/signing/reader/writer capabilities; native/backend mount and environment separation remain owned by the existing executor.",
+    "privatePublication": "Existing producer-publish receives only its two storage credentials and the saved issued observation. Publication cannot rerun matrices.",
+    "publicArtifact": "cache-producer-<run>-<attempt>, exactly one cache-producer.json, at most 64 KiB, one-day retention. Complete observation stays private in approved R2.",
+    "cleanup": "Frozen private output and exact sibling worktree/input paths; no forced worktree removal, no wildcard retirement of unrelated data.",
+    "channelSelection": "Select the nonempty secret/variable key first, then look up its value. Missing stable records cannot fall back to canary material."
+  },
+  "bounds": {
+    "concurrentJobs": 1,
+    "existingRunnerJobMinutes": 60,
+    "outerProducerMinutes": 50,
+    "comparisonMinutes": 20,
+    "protocolMinutes": 15,
+    "uploadMinutes": 10,
+    "candidateArtifactBytes": 16777216,
+    "candidateManifestBytes": 65536,
+    "publicReportBytes": 65536,
+    "artifactRetentionDays": 1,
+    "nativeArchiveBytes": 67108864,
+    "nativeExecutableBytes": 67108864,
+    "combinedHostedWorkflowTextBytes": 44738,
+    "hostedWorkflowTextLimitBytes": 65536,
+    "existingTrialStorageAndOperationLimitsExpanded": false,
+    "newRunnerCapacity": false
+  },
+  "verification": {
+    "syntax": {
+      "scope": "YAML, Bash and embedded Python syntax only. No workflow step, network transfer, credential load, tool installation or repository test executed.",
+      "shellCount": 10,
+      "pythonCount": 4,
+      "checked": [
+        "Require independent frozen trial selection",
+        "Reserve exclusive private trial directory",
+        "Ensure native sandbox trial dependency",
+        "Verify selected candidate before issuer delivery",
+        "Prepare fixed full-pilot inputs without credentials",
+        "Install independently approved issuer only",
+        "Execute closed signed trial and retain private observation",
+        "Publish issued observation using storage capabilities only",
+        "Check bounded public digest report",
+        "Remove only this trial's private files and worktrees"
+      ]
+    },
+    "authoredControls": [
+      "Main repository/ref/event/caller and channel guards",
+      "Named caller secret forwarding and optional declarations preserving ordinary callers",
+      "No trial capability on setup, download, preparation, validation or cleanup",
+      "Candidate checks before issuer installation; fixed complete selection",
+      "Storage-only private publication; digest-only bounded public artifact",
+      "Seven actual Bash selection cases authored for hosted CI: one accepted shape and six early refusals"
+    ],
+    "controlsExecutedLocally": false,
+    "localPackageVerify": "not run under the operator push-first/no competing local proof instruction",
+    "hostedProof": "pending on the submitted component head",
+    "asciiProfile": "Single inherited em dash comment normalized; ASCII and existing combined 64-KiB bound asserted without changing executable lanes or verifier."
+  },
+  "primaryReferences": [
+    {
+      "url": "https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows",
+      "observedAt": "2026-11-03",
+      "finding": "Environment secrets must be forwarded by name or inherited; the called job selects its environment. This component uses explicit names."
+    },
+    {
+      "url": "https://raw.githubusercontent.com/actions/download-artifact/9000827ccba6bdab643e8b6fd33ac0654aef8333/action.yml",
+      "finding": "Pinned action exposes exact artifact IDs, cross-run token/run selection and digest-mismatch error behavior."
+    }
+  ],
+  "activation": {
+    "enabledVariableChanged": false,
+    "approvalOrRuntimeRecordsInstalled": false,
+    "issuerMaterialCreatedOrTransferred": false,
+    "trialSecretsChanged": false,
+    "protectedWorkflowDispatched": false,
+    "cloudOrCacheServiceChanged": false
+  },
+  "remaining": [
+    "Fresh exact-head hosted package/workflow proof and all reviews.",
+    "Authenticated candidate artifact inspection and separately selected source/tool/profile/target/epoch approval.",
+    "Live existing environment branch-policy verification before named secret/variable installation.",
+    "Retain the off-runner verification store and independently selected approval; transfer only approved issuer material, without verifier-only API credentials.",
+    "Real protected stable/canary full matrices, R2 publication, independent fetch/acceptance and exact-object cleanup.",
+    "Every deployed trust/capability/epoch/warm-process/rollback/telemetry, computation qualification, measured rollout and actual representative-window gate.",
+    "All nine trust-goal acceptance criteria remain unproven."
+  ],
+  "reversal": "Keep the enable variable unset/false and remove this optional caller/mode. Preserve ordinary Heavy contexts, existing environment protections, bucket/grants/cache services, independent verifier and all historical receipts."
+}

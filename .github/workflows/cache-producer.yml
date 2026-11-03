@@ -1,0 +1,41 @@
+name: Cache Protected Producer
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Independently approved native client channel
+        required: true
+        type: choice
+        default: stable
+        options: [stable, canary]
+
+concurrency:
+  group: cache-protected-producer-main
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  produce:
+    name: Execute approved signed producer
+    if: github.ref == 'refs/heads/main'
+    uses: beep-effect/beep-effect/.github/workflows/heavy.yml@main
+    with:
+      admitted: false
+      producer_execution: true
+      producer_channel: ${{ inputs.channel }}
+    secrets:
+      BEEP_CACHE_PRODUCER_STABLE_APPROVAL_JSON: ${{ secrets.BEEP_CACHE_PRODUCER_STABLE_APPROVAL_JSON }}
+      BEEP_CACHE_PRODUCER_CANARY_APPROVAL_JSON: ${{ secrets.BEEP_CACHE_PRODUCER_CANARY_APPROVAL_JSON }}
+      BEEP_CACHE_PRODUCER_STABLE_RUNTIME_JSON: ${{ secrets.BEEP_CACHE_PRODUCER_STABLE_RUNTIME_JSON }}
+      BEEP_CACHE_PRODUCER_CANARY_RUNTIME_JSON: ${{ secrets.BEEP_CACHE_PRODUCER_CANARY_RUNTIME_JSON }}
+      BEEP_CACHE_PRODUCER_STABLE_ISSUER_MATERIAL_BASE64: ${{ secrets.BEEP_CACHE_PRODUCER_STABLE_ISSUER_MATERIAL_BASE64 }}
+      BEEP_CACHE_PRODUCER_CANARY_ISSUER_MATERIAL_BASE64: ${{ secrets.BEEP_CACHE_PRODUCER_CANARY_ISSUER_MATERIAL_BASE64 }}
+      BEEP_CACHE_TRIAL_R2_ACCESS_KEY_ID: ${{ secrets.BEEP_CACHE_TRIAL_R2_ACCESS_KEY_ID }}
+      BEEP_CACHE_TRIAL_R2_SECRET_ACCESS_KEY: ${{ secrets.BEEP_CACHE_TRIAL_R2_SECRET_ACCESS_KEY }}
+      BEEP_CACHE_TRIAL_ARTIFACT_KEY: ${{ secrets.BEEP_CACHE_TRIAL_ARTIFACT_KEY }}
+      BEEP_CACHE_TRIAL_READER_BEARER: ${{ secrets.BEEP_CACHE_TRIAL_READER_BEARER }}
+      BEEP_CACHE_TRIAL_WRITER_BEARER: ${{ secrets.BEEP_CACHE_TRIAL_WRITER_BEARER }}

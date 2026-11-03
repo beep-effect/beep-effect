@@ -1145,3 +1145,29 @@ wheels fail closed. Record actual Rust compiler, cargo-zigbuild and Zig
 executable digests and byte sizes alongside versions in the bounded build
 manifest; resolve the compiler through Rustup rather than hashing its launcher.
 This repairs preparation, not its unexecuted build or independent approval.
+
+
+### Closed protected-main producer workflow, 2026-11-03
+
+- Route the manual stable/canary choice through the existing admitted Heavy leaf,
+  an optional default-off execution mode and the existing protected writer
+  environment. Require the exact repository, main ref, event and caller. Keep
+  operational modes mutually exclusive and all ordinary quality contexts intact.
+- Forward only eleven named trial fields. Require explicit enable, independently
+  selected exact source and candidate identities before private setup. Verify the
+  candidate before delivering the three approval/runtime/issuer records only to
+  the existing installer. Keep verifier ownership off the runner.
+- Prepare only the fixed full identity-lint pilot using the canonical activation
+  and dependency commands, two same-source sibling worktrees and pinned native
+  clients. Never accept an arbitrary command, report, source override or signing
+  payload from the caller. Use the existing closed executor and private publisher.
+- Allow one existing runner for sixty minutes and a fifty-minute producer command,
+  preserving the existing twenty/fifteen/ten-minute comparison/protocol/upload
+  bounds. Preserve trial storage/operation limits in the concrete activation
+  preview. Publish only the bounded digest report for one day and clean only this
+  job's frozen private paths/worktrees. No capacity or cloud grant change.
+- Before activation, verify live environment protection, inspect the authenticated
+  candidate and independently freeze current source/tool/profile/target/epoch
+  approval. Actual secret delivery, protected execution, independent acceptance
+  and every whole-goal gate remain required. Reverse with the enable unset and
+  removal of this optional caller/mode, retaining ordinary CI and all evidence.
