@@ -14,3 +14,5 @@ Local evidence before the follow-up commit:
 - Law-practice domain: 262 tests; renamed files retain 100% entries and package comparison passed.
 
 Raw local receipts remain at `/home/elpresidank/.cache/party-coverage-ratchet2.log` and `/home/elpresidank/.cache/party-coverage-package-verify.log`. These are local evidence, not a substitute for the follow-up PR's hosted checks. The goal remains active pending that proof and completion refresh.
+
+The final delivery is now [PR #2676](https://github.com/beep-effect/beep-effect/pull/2676), retaining #2658 as supporting implementation history. The goal remains operative while the follow-up completes hosted verification and merge. Its gating verdict is `.beep/yeet/runs/fix_party-slice-coverage-84efcdf329af/verdict.json`.
