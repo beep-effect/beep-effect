@@ -15,7 +15,7 @@ import { CacheCensusSource, CacheLinkedFile, CacheToolchainSnapshot } from "./Ca
 
 const $I = $RepoCliId.create("commands/Cache/Cache.workflow.schemas");
 /**
- * Source bytes, permission bits and an optional source alias target.
+ * Source identity, complete filesystem mode and an optional relative alias target.
  *
  * **Example** (Inspect source bindings)
  * ```ts
@@ -33,7 +33,8 @@ export class CacheProducerWorkflowFile extends S.Opaque<CacheProducerWorkflowFil
     linkTarget: S.OptionFromOptionalKey(S.NonEmptyString),
   }).pipe(
     $I.annoteSchema("CacheProducerWorkflowFile", {
-      description: "Exact bytes and resolution of one declared supervisor source file.",
+      description:
+        "Exact file bytes or contained directory manifest, complete POSIX mode and relative alias resolution for one declared supervisor source entry.",
     })
   )
 ) {}
@@ -126,6 +127,40 @@ export class CacheProducerUploadRuntime extends S.Opaque<
   }).pipe(
     $I.annoteSchema("CacheProducerUploadRuntime", {
       description: "Unserialized parent-owned upload target, role bearers and native signing capability.",
+    })
+  )
+) {}
+
+/**
+ * Minimal private-object storage capability without artifact signing or adapter bearer access.
+ *
+ * **Details**
+ * Keep this runtime value in memory. The approved target descriptor determines
+ * the destination; neither credential is serialized into reports or approval.
+ *
+ * **Example** (Inspect the limited storage boundary)
+ * ```ts
+ * import { CacheProducerStorageRuntime } from "@beep/repo-cli/test/Cache"
+ * console.assert("accessKey" in CacheProducerStorageRuntime.fields)
+ * console.assert(!("signing" in CacheProducerStorageRuntime.fields))
+ * ```
+ *
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheProducerStorageRuntime extends S.Opaque<
+  CacheProducerStorageRuntime,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    target: CacheConformanceTarget,
+    accessKey: S.Redacted(S.NonEmptyString),
+    secretKey: S.Redacted(S.NonEmptyString),
+  }).pipe(
+    $I.annoteSchema("CacheProducerStorageRuntime", {
+      description:
+        "Unserialized approved R2 target and storage-only credential pair, without artifact-key or adapter bearer capabilities.",
     })
   )
 ) {}

@@ -4,6 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { isResolvedPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { CacheClientPin } from "@beep/repo-configs/cache";
 import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
@@ -13,6 +14,9 @@ import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
+import * as Match from "effect/Match";
+import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
@@ -46,11 +50,11 @@ import { CacheActivationPreview, CacheCommandError } from "./Cache.schemas.ts";
 import {
   CacheProducerExecutionProfile,
   CacheProducerObservation,
+  CacheProducerStorageRuntime,
   CacheProducerUploadRuntime,
   CacheProducerWorkflow,
   CacheProducerWorkflowFile,
 } from "./Cache.workflow.schemas.ts";
-import { CacheProducerUploadApproval } from "./Cache.workflow.upload.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.workflow");
 const R2StorageEndpoint = S.String.check(S.isPattern(/^https:\/\/[a-f0-9]{32}\.r2\.cloudflarestorage\.com\/$/)).pipe(
@@ -66,6 +70,62 @@ const encodeWorkflow = S.encodeEffect(S.fromJsonString(CacheProducerWorkflow));
 const approvalCodec = JsonStringCodec(CacheProducerApproval);
 const executionProfileCodec = JsonStringCodec(CacheProducerExecutionProfile);
 const pathsEquivalent = S.toEquivalence(S.Array(S.String));
+const directoryEntry = S.Tuple([S.String, S.Natural]).pipe(
+  $I.annoteSchema("WorkflowDirectoryEntry", {
+    description: "Canonical checkout-relative entry and complete POSIX mode, including its filesystem type.",
+  })
+);
+const encodeDirectoryManifest = S.encodeEffect(
+  S.fromJsonString(S.Tuple([S.String, S.Array(directoryEntry).check(S.isMaxLength(20000))]))
+);
+
+const hashDirectoryAlias = Effect.fn("CacheWorkflow.directoryAlias")(function* (
+  root: string,
+  target: string,
+  declared: HashSet.HashSet<string>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  let remaining: Array<string> = A.of(target);
+  let entries = A.empty<typeof directoryEntry.Type>();
+  while (A.isArrayNonEmpty(remaining)) {
+    const [directory, ...rest] = remaining;
+    remaining = rest;
+    yield* fs.realPath(directory).pipe(
+      Effect.filterOrFail(
+        (resolved) => resolved === directory && isResolvedPathWithinRoot(path, { root, candidate: resolved }),
+        () => CacheCommandError.new("Workflow directory alias escaped its canonical checkout location.")
+      )
+    );
+    for (const name of A.sort(yield* fs.readDirectory(directory), Order.String)) {
+      const child = path.join(directory, name);
+      const relative = path.relative(root, child);
+      const info = yield* fs.lstat(child);
+      yield* Match.value(info.type).pipe(
+        Match.when("Directory", () => {
+          if (!HashSet.some(declared, Str.startsWith(`${relative}/`)))
+            return CacheCommandError.new("Workflow directory alias contains an undeclared directory.");
+          remaining = A.append(remaining, child);
+          return Effect.void;
+        }),
+        Match.whenOr("File", "SymbolicLink", () =>
+          HashSet.has(declared, relative)
+            ? Effect.void
+            : CacheCommandError.new("Workflow directory alias contains an undeclared source entry.")
+        ),
+        Match.orElse(() => CacheCommandError.new("Workflow directory alias contains an unsupported filesystem entry."))
+      );
+      entries = A.append(entries, Tuple.make(relative, S.Natural.make(info.mode)));
+      if (entries.length > 20000)
+        return yield* CacheCommandError.new("Workflow directory alias exceeded its entry bound.");
+    }
+  }
+  const manifest = yield* encodeDirectoryManifest([
+    path.relative(root, target),
+    A.sort(entries, Tuple.makeOrder([Order.String, Order.Number])),
+  ]);
+  return yield* digest(new TextEncoder().encode(`beep/cache-producer-directory/v1\0${manifest}`));
+});
 const bound = OutputBound.make({ maxChars: 4 * 1024 * 1024, truncatedNotice: "workflow inventory exceeded bound" });
 const captureGit = Effect.fn("CacheWorkflow.git")(function* (root: string, args: ReadonlyArray<string>) {
   const captured = yield* runCapturedStreams({
@@ -184,7 +244,14 @@ export const assertCacheProducerWorkflowLocation = Effect.fn("CacheWorkflow.loca
 }, CacheCommandError.mapError("Cannot bind the loaded producer workflow."));
 
 /**
- * Inspect declared source bytes without following an alias outside the checkout.
+ * Inspect declared sources and contained directory aliases without leaving the checkout.
+ *
+ * **Details**
+ * Directory aliases bind their canonical target, complete entry modes and
+ * bounded tree structure. Every leaf must also occur in the declared source
+ * inventory, which independently binds its bytes or relative alias target.
+ * Child aliases are recorded without recursive traversal; their own inventory
+ * entries enforce containment. Complete modes distinguish files and directories.
  *
  * **Example** (Reference source inventory)
  * ```ts
@@ -199,21 +266,29 @@ export const assertCacheProducerWorkflowLocation = Effect.fn("CacheWorkflow.loca
 export const collectCacheProducerWorkflowFiles = Effect.fn("CacheWorkflow.files")(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const canonicalRoot = yield* fs.realPath(root);
   const paths = yield* listSources(root);
+  const declared = HashSet.fromIterable(paths);
   const files = yield* Effect.forEach(
     paths,
     Effect.fn("CacheWorkflow.file")(function* (relative) {
-      const file = path.resolve(root, relative);
+      const file = path.resolve(canonicalRoot, relative);
       const linkTarget = yield* fs.readLink(file).pipe(Effect.option);
       if (O.exists(linkTarget, path.isAbsolute))
         return yield* CacheCommandError.new("Workflow source alias must be relative.");
       const target = O.isSome(linkTarget) ? yield* fs.realPath(file) : file;
-      const bytes = yield* readCacheExperimentBytes(root, target, 8 * 1024 * 1024);
+      if (!isResolvedPathWithinRoot(path, { root: canonicalRoot, candidate: target }))
+        return yield* CacheCommandError.new("Workflow source alias must stay inside its canonical checkout.");
       const info = yield* fs.stat(target);
+      if (info.type === "Directory" && O.isNone(linkTarget))
+        return yield* CacheCommandError.new("Workflow source directory requires a declared relative alias.");
       return CacheProducerWorkflowFile.make({
         path: relative,
-        sha256: yield* digest(bytes),
-        mode: S.Natural.make(info.mode & 0o777),
+        sha256:
+          info.type === "Directory"
+            ? yield* hashDirectoryAlias(canonicalRoot, target, declared)
+            : yield* readCacheExperimentBytes(root, target, 8 * 1024 * 1024).pipe(Effect.flatMap(digest)),
+        mode: S.Natural.make(info.mode),
         linkTarget,
       });
     }),
@@ -335,6 +410,41 @@ export const hashCacheProducerUploadKey = Effect.fn("CacheWorkflow.hashUploadKey
   digest(new TextEncoder().encode(`beep/cache-producer-artifact-key/v1\0${Redacted.value(key)}`))
 );
 
+const assertCacheProducerStorageProfile = Effect.fn("CacheWorkflow.assertStorageProfile")(function* (
+  binding: CacheProducerBinding,
+  profile: CacheProducerExecutionProfile
+) {
+  const target = profile.target;
+  const approval = yield* binding.uploadApproval.pipe(
+    Effect.fromOption(() => CacheCommandError.new("The producer store has no independently approved upload."))
+  );
+  const storage = yield* target.storage.pipe(
+    Effect.fromOption(() =>
+      CacheCommandError.new("Producer upload requires approved storage and an owned adapter capability.")
+    )
+  );
+  if (
+    A.contains(
+      [
+        target.baseUrl.href === "http://127.0.0.1:19427/",
+        S.is(Sha256Hex)(target.backend.digest),
+        Str.startsWith("/")(profile.adapterExecutable),
+        isR2StorageEndpoint(storage.endpoint.href),
+        storage.bucket === "beep-turbo-r2-pilot",
+        target.namespace.teamId === "team_beep_signed_canary_v1",
+        target.namespace.teamId === binding.client.namespace,
+        target.namespace.teamId !== target.namespace.foreignTeamId,
+        target.policy.readerWriterSplit,
+        target.policy.tenantBinding,
+        (yield* hashCacheProducerUploadTarget(target)) === approval.targetSha256,
+      ],
+      false
+    )
+  )
+    return yield* CacheCommandError.new("Producer upload target differs from its approved bounded pilot profile.");
+  return approval;
+});
+
 const validateProvidedCacheProducerUploadRuntime = Effect.fn("CacheWorkflow.assertProvidedUploadRuntime")(function* (
   binding: CacheProducerBinding,
   runtime: CacheProducerUploadRuntime
@@ -375,32 +485,11 @@ const validateProvidedCacheProducerUploadRuntime = Effect.fn("CacheWorkflow.asse
     )
   )
     return yield* CacheCommandError.new("Producer artifact signing must be distinct from backend capabilities.");
-  const storage = target.storage.value;
-  const endpoint = storage.endpoint;
-  const url = target.baseUrl;
-  const targetDigest = yield* hashCacheProducerUploadTarget(target);
-  const keyDigest = yield* hashCacheProducerUploadKey(owned.signing);
-  if (
-    A.contains(
-      [
-        url.href === "http://127.0.0.1:19427/",
-        S.is(Sha256Hex)(target.backend.digest),
-        Str.startsWith("/")(owned.adapter.value.executable),
-        isR2StorageEndpoint(endpoint.href),
-        storage.bucket === "beep-turbo-r2-pilot",
-        target.namespace.teamId === "team_beep_signed_canary_v1",
-        target.namespace.teamId === binding.client.namespace,
-        target.namespace.teamId !== target.namespace.foreignTeamId,
-        target.policy.readerWriterSplit,
-        target.policy.tenantBinding,
-        O.containsWith(S.toEquivalence(CacheProducerUploadApproval))(
-          binding.uploadApproval,
-          CacheProducerUploadApproval.make({ targetSha256: targetDigest, artifactKeySha256: keyDigest })
-        ),
-      ],
-      false
-    )
-  )
+  const approval = yield* assertCacheProducerStorageProfile(
+    binding,
+    CacheProducerExecutionProfile.make({ target, adapterExecutable: owned.adapter.value.executable })
+  );
+  if ((yield* hashCacheProducerUploadKey(owned.signing)) !== approval.artifactKeySha256)
     return yield* CacheCommandError.new("Producer upload target differs from its approved bounded pilot profile.");
   return owned;
 });
@@ -498,6 +587,41 @@ export const loadCacheProducerExecutionRuntime = Effect.fn("CacheWorkflow.loadEx
   const owned = yield* validateProvidedCacheProducerUploadRuntime(binding, runtime);
   return Tuple.make(binding, owned);
 }, CacheCommandError.mapError("Cannot load independently approved producer execution capabilities."));
+
+/**
+ * Load only the independently approved private-object storage capabilities.
+ *
+ * **Details**
+ * Validate private issuer/profile state and the bounded target before reading
+ * credentials. Reject either storage credential if its identity equals the
+ * approved artifact signing key. No signing key or adapter bearer is loaded.
+ *
+ * **Example** (Plan limited private-object access)
+ * ```ts
+ * import { loadCacheProducerStorageRuntime } from "@beep/repo-cli/test/Cache"
+ * import * as Effect from "effect/Effect"
+ * console.assert(Effect.isEffect(loadCacheProducerStorageRuntime("/private/cache-producer")))
+ * ```
+ *
+ * @internal
+ * @category configuration
+ * @since 0.0.0
+ */
+export const loadCacheProducerStorageRuntime = Effect.fn("CacheWorkflow.loadStorageRuntime")(function* (
+  directory: string
+) {
+  const [binding, profile] = yield* readCacheProducerExecutionProfile(directory);
+  const approval = yield* assertCacheProducerStorageProfile(binding, profile);
+  const keys = yield* Config.all({
+    accessKey: Config.schema(CacheProducerStorageRuntime.fields.accessKey, "R2_ACCESS_KEY_ID"),
+    secretKey: Config.schema(CacheProducerStorageRuntime.fields.secretKey, "R2_SECRET_ACCESS_KEY"),
+  }).pipe(Effect.mapError(() => CacheCommandError.new("Approved producer storage capabilities are required.")));
+  for (const key of [keys.accessKey, keys.secretKey]) {
+    if ((yield* hashCacheProducerUploadKey(key)) === approval.artifactKeySha256)
+      return yield* CacheCommandError.new("Producer artifact signing must be distinct from backend capabilities.");
+  }
+  return Tuple.make(binding, CacheProducerStorageRuntime.make({ target: profile.target, ...keys }));
+}, CacheCommandError.mapError("Cannot load independently approved producer storage capabilities."));
 
 /**
  * Exclusively provision an execution store from separately approved source and target identities.

@@ -35,6 +35,7 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { commandArgs } from "./support/commandArgs.ts";
+import { provideLegacyGh } from "./support/YeetGithub.ts";
 
 const decodeGhStatusChecks = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhStatusCheck)));
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
@@ -128,6 +129,7 @@ const threadsJson = JSON.stringify({
 // Answers every read of both collectors; records each `gh pr checks` argv.
 const withGh = (checkArgs: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>) =>
   flow(
+    provideLegacyGh,
     Effect.provideServiceEffect(Git, Git.make),
     Effect.provideService(
       ChildProcessSpawner.ChildProcessSpawner,

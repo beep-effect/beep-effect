@@ -7,6 +7,8 @@
 import { RepoRef } from "@beep/github/Repo";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Sha256Hex } from "@beep/schema";
+import { GitObjectId } from "@beep/schema/Conformance";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { CacheProducerBinding } from "./Cache.producer.schemas.ts";
 import { CacheHostedProducerUpload } from "./Cache.workflow.upload.schemas.ts";
@@ -17,6 +19,41 @@ const $I = $RepoCliId.create("commands/Cache/Cache.workflow.github.schemas");
 const Identifier = S.Int.check(S.isBetween({ minimum: 1, maximum: Number.MAX_SAFE_INTEGER })).pipe(
   $I.annoteSchema("Identifier", { description: "A positive exact GitHub database identifier or run attempt." })
 );
+
+/**
+ * Independent approval of the protected main Heavy workflow's resolved source.
+ *
+ * **Details**
+ * The enclosing approval selects the repository. Only its main Heavy leaf is
+ * supported; another repository, ref or nested reusable workflow is refused.
+ * The resolved revision may differ from the caller's revision and must have
+ * its own reviewed ASCII file digest.
+ *
+ * **Example** (Inspect the independent source binding)
+ * ```ts
+ * import { CacheHostedProducerReusableWorkflowApproval } from "@beep/repo-cli/test/Cache"
+ * console.assert("revision" in CacheHostedProducerReusableWorkflowApproval.fields)
+ * ```
+ *
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheHostedProducerReusableWorkflowApproval extends S.Opaque<
+  CacheHostedProducerReusableWorkflowApproval,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    workflowPath: S.tag(".github/workflows/heavy.yml"),
+    revision: GitObjectId,
+    workflowSha256: Sha256Hex,
+  }).pipe(
+    $I.annoteSchema("CacheHostedProducerReusableWorkflowApproval", {
+      description:
+        "Explicit same-repository main Heavy leaf approval bound to a resolved commit and exact file digest.",
+    })
+  )
+) {}
 
 /**
  * Repository and exact reviewed workflow identity supplied outside uploaded data.
@@ -39,6 +76,9 @@ export class CacheHostedProducerApproval extends S.Opaque<
     repositoryId: Identifier,
     workflowPath: S.NonEmptyString.check(S.isPattern(/^\.github\/workflows\/[A-Za-z0-9_-]+\.ya?ml$/)),
     workflowSha256: Sha256Hex,
+    reusableWorkflows: S.Array(CacheHostedProducerReusableWorkflowApproval)
+      .check(S.isMaxLength(1))
+      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([]))),
     binding: CacheProducerBinding,
   }).pipe(
     $I.annoteSchema("CacheHostedProducerApproval", {

@@ -3,7 +3,20 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "inputs": ["$TURBO_EXTENDS$", ".env*"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!README.md",
+        "!CHANGELOG.md",
+        "!LICENSE",
+        "!.beep/**",
+        "!.fallow/**",
+        "$TURBO_ROOT$/tools/tsgo-shim/tsgo.js",
+        "$TURBO_ROOT$/tools/tsgo-shim/package.json",
+        "$TURBO_ROOT$/vitest.shared.ts",
+        "$TURBO_ROOT$/vite.shared.ts",
+        "$TURBO_ROOT$/vitest.aliases.generated.json",
+        ".env*"
+      ],
       "env": [
         "$TURBO_EXTENDS$",
         "ANALYZE",

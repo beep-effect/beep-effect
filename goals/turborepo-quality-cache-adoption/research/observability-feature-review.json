@@ -1,0 +1,371 @@
+{
+  "schemaVersion": "cache-observability-feature-review/v1",
+  "recordedAt": "2026-11-02T23:28:05.923796+00:00",
+  "feature": "futureFlag:experimentalObservability",
+  "decision": "retain-current-absence",
+  "disposition": "accepted-retain-current-absence",
+  "authority": "Current tracked repository applicability decision plus pinned synthetic native admission controls. No enabled exporter payload, deployed telemetry safety, computation qualification or production speed claim.",
+  "sourceBaseRevision": "f7d2c39b136bc7d36bc756e9d9a5f0f468d68405",
+  "sourceReview": {
+    "schemaVersion": "cache-observability-feature-source-review/v1",
+    "recordedAt": "2026-11-02T23:21:52.231305+00:00",
+    "sourceRevision": "f7d2c39b136bc7d36bc756e9d9a5f0f468d68405",
+    "authority": "Tracked repository configuration and caller applicability only; no arbitrary shell, ignored host configuration or enabled-exporter payload audit.",
+    "configurationCount": 27,
+    "configurations": [
+      {
+        "path": "apps/beep-effect-web/turbo.json",
+        "sha256": "377d43a7204b727d9cb97534c959078fab21fdc406f0687b3f1d3b88c6b3a65d",
+        "exporterConfigured": false,
+        "flagConfigured": false
+      },
+      {
+        "path": "apps/docket-intake/turbo.json",
+        "sha256": "80938e084f3274721a66d1b33b35cfa250168e89775191d5bfde311a98954709",
+        "exporterConfigured": false,
+        "flagConfigured": false
+      },
+      {
+        "path": "apps/labs/api-docs/turbo.json",
+        "sha256": "80938e084f3274721a66d1b33b35cfa250168e89775191d5bfde311a98954709",
+        "exporterConfigured": false,
+        "flagConfigured": false
+      },
+      {
+        "path": "apps/labs/ciops/turbo.json",
+        "sha256": "80938e084f3274721a66d1b33b35cfa250168e89775191d5bfde311a98954709",
+        "exporterConfigured": false,
+        "flagConfigured": false
+      },
+      {
+        "path": "apps/labs/lejeune-bolt-workbench/turbo.json",
+        "sha256": "377d43a7204b727d9cb97534c959078fab21fdc406f0687b3f1d3b88c6b3a65d",
+        "exporterConfigured": false,
+        "flagConfigured": false
+      },
+      {
+        "path": "apps/labs/semantica/turbo.json",
+        "sha256": "377d43a7204b727d9cb97534c959078fab21fdc406f0687b3f1d3b88c6b3a65d",
+        "exporterConfigured": false,
+        "flagConfigured": false
+      },
+      {
+        "path": "apps/labs/trustgraph-workbench/turbo.json",
+        "sha256": "377d43a7204b727d9cb97534c959078fab21fdc406f0687b3f1d3b88c6b3a65d",
+        "exporterConfigured": false,
+        "flagConfigured": false
+      },
+      {
+        "path": "apps/oip-web/turbo.json",
+        "sha256": "dba3f716c7a3ec2b6241eeffd2004a31c054c0e1e4ac8ab572ccc3a4d5a3e468",
+        "exporterConfigured": false,
+        "flagConfigured": false
+      },
+      {
+        "path": "apps/practice-claude-mod/turbo.json",
+        "sha256": "80938e084f3274721a66d1b33b35cfa250168e89775191d5bfde311a98954709",
+        "exporterConfigured": false,
+        "flagConfigured": false
+      },
+      {
+        "path": "apps/practice-identify/turbo.json",
+        "sha256": "80938e084f3274721a66d1b33b35cfa250168e89775191d5bfde311a98954709",
+        "exporterConfigured": false,
+        "flagConfigured": false
+      },
+      {
+        "path": "apps/practice-m365-contacts/turbo.json",
+        "sha256": "80938e084f3274721a66d1b33b35cfa250168e89775191d5bfde311a98954709",
+        "exporterConfigured": false,
+        "flagConfigured": false
+      },
+      {
+        "path": "apps/practice-mail-tagging/turbo.json",
+        "sha256": "80938e084f3274721a66d1b33b35cfa250168e89775191d5bfde311a98954709",
+        "exporterConfigured": false,
+        "flagConfigured": false
+      },
+      {
+        "path": "apps/practice-review-hub/turbo.json",
+        "sha256": "80938e084f3274721a66d1b33b35cfa250168e89775191d5bfde311a98954709",
+        "exporterConfigured": false,
+        "flagConfigured": false
+      },
+      {
+        "path": "apps/practice-setup/turbo.json",
+        "sha256": "80938e084f3274721a66d1b33b35cfa250168e89775191d5bfde311a98954709",
+        "exporterConfigured": false,
+        "flagConfigured": false
+      },
+      {
+        "path": "apps/professional-desktop/turbo.json",
+        "sha256": "fbabf0485199158999e72970af6f5551adfb690191bad72aab962d415554b543",
+        "exporterConfigured": false,
+        "flagConfigured": false
+      },
+      {
+        "path": "apps/storybook/turbo.json",
+        "sha256": "1e2b850fcd13e1031be1dcdb1f9b42678d76827f032250d871955a815c2f4dac",
+        "exporterConfigured": false,
+        "flagConfigured": false
+      },
+      {
+        "path": "apps/todox/turbo.json",
+        "sha256": "1ca8e70d24d01aed40278dc1629160ec67a528edcca367ef9c1438142ba2baf4",
+        "exporterConfigured": false,
+        "flagConfigured": false
+      },
+      {
+        "path": "infra/turbo.json",
+        "sha256": "3466632a41e387b7b6fe8c455d81771b77bb3997fa521bf5559624c499df4340",
+        "exporterConfigured": false,
+        "flagConfigured": false
+      },
+      {
+        "path": "packages/foundation/modeling/identity/turbo.json",
+        "sha256": "1c694094dcfeef53b714e7980f8193cf93b2c34690f9a9a4dcd5936f328456e8",
+        "exporterConfigured": false,
+        "flagConfigured": false
+      },
+      {
+        "path": "packages/foundation/primitive/types/turbo.json",
+        "sha256": "6c8d1d6e3c12318fa0273a3ec1585487e4661e8a80bda2ccf5d48a2c821dedd4",
+        "exporterConfigured": false,
+        "flagConfigured": false
+      },
+      {
+        "path": "packages/tooling/library/ai-sync/turbo.json",
+        "sha256": "e68a2becd965278b7ef29b9540d2b71695e77fd476931d3ba0f6e24fdc4d082b",
+        "exporterConfigured": false,
+        "flagConfigured": false
+      },
+      {
+        "path": "packages/tooling/policy-pack/repo-configs/turbo.json",
+        "sha256": "a8d6070aa5f31cb7d0f9fd42550a5adba806912fdd18ca84c18ee47f5649987b",
+        "exporterConfigured": false,
+        "flagConfigured": false
+      },
+      {
+        "path": "packages/tooling/test-kit/fc-runs/turbo.json",
+        "sha256": "427d28a29603a6fd99910c3de7f75fee1b5437f345e52890300c994753c3bf57",
+        "exporterConfigured": false,
+        "flagConfigured": false
+      },
+      {
+        "path": "packages/tooling/test-kit/test-runner/turbo.json",
+        "sha256": "427d28a29603a6fd99910c3de7f75fee1b5437f345e52890300c994753c3bf57",
+        "exporterConfigured": false,
+        "flagConfigured": false
+      },
+      {
+        "path": "packages/tooling/tool/cli/test/fixtures/proof-epoch/turbo.json",
+        "sha256": "2ef47f50a33dccec36bb7d308ebc132669fa410c7562c85edaaa50b22660ed2e",
+        "exporterConfigured": false,
+        "flagConfigured": false
+      },
+      {
+        "path": "packages/tooling/tool/cli/turbo.json",
+        "sha256": "c52155e26db44b552bf3462bf1da200496fb5792050908fd2f16dd80f2483f8d",
+        "exporterConfigured": false,
+        "flagConfigured": false
+      },
+      {
+        "path": "turbo.json",
+        "sha256": "44c446d3cac904e1bcdb16feefd1b7b4f3509223066beb2f38ec0dfafb111d2e",
+        "exporterConfigured": false,
+        "flagConfigured": false
+      }
+    ],
+    "scriptMatches": [],
+    "runtimeSearch": {
+      "roots": [".github", "scripts", "infra", "apps", "packages"],
+      "pattern": "experimentalObservability|experimental[-_]otel|TURBO_[A-Z0-9_]*OTEL|--otel",
+      "matchingPaths": [],
+      "scope": "Current tracked runtime, workflow and script roots; packet prose is not an exporter consumer."
+    },
+    "adjacentTelemetry": [
+      {
+        "path": "infra/r2-cache/policy_runtime.py",
+        "sha256": "e7bfdadc442e6652f31ea844790ebd3733ca66a2c789c0aaa3b9939005a9fe6c",
+        "classification": "Adapter/application/agent telemetry, not a Turbo exporter configuration or invocation."
+      },
+      {
+        "path": "infra/r2-cache/policy-lab.py",
+        "sha256": "ce3b2015c210f50ece8115e5143403c37840c261d778ec38b217526ade8d3f5e",
+        "classification": "Adapter/application/agent telemetry, not a Turbo exporter configuration or invocation."
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Palantiri/Palantiri.service.ts",
+        "sha256": "eb6f71e0c34d86ce3bc913a430fd232b2c57e02d0626553b2c642deb031c5b1b",
+        "classification": "Adapter/application/agent telemetry, not a Turbo exporter configuration or invocation."
+      },
+      {
+        "path": "apps/professional-desktop/src/runtime/Observability.ts",
+        "sha256": "19edc8eb6d1e4ddd62421202f6ec64ae28e88202f75a6fcaa14f47b8039bd20b",
+        "classification": "Adapter/application/agent telemetry, not a Turbo exporter configuration or invocation."
+      },
+      {
+        "path": "apps/professional-desktop/src-tauri/src/lib.rs",
+        "sha256": "5d8d15ce212677afc2cca4a5457a36a838e99ce8711f6edc884c4a8334cb5106",
+        "classification": "Adapter/application/agent telemetry, not a Turbo exporter configuration or invocation."
+      }
+    ],
+    "qualificationGranted": false,
+    "runtimeConfigurationChanged": false,
+    "trackedManifestCount": 214,
+    "manifestInventorySha256": "be64bcf1881b41f0b699905b35358a96aa2838254ce83a0198d8e1e355274a90",
+    "manifestInventoryProjection": "Sorted objects with path and sha256 for the selected tracked manifests, encoded as compact sorted-key JSON."
+  },
+  "registryRefresh": {
+    "observedAt": "2026-11-02T23:19:33.947367+00:00",
+    "rows": [
+      {
+        "package": "turbo",
+        "url": "https://registry.npmjs.org/-/package/turbo/dist-tags",
+        "latest": "2.11.10",
+        "canary": "2.11.11-canary.1",
+        "responseSha256": "e02b1ed750aa5e9b3550b1c642f9434390eb9c2636cbd43923abf4a105698753"
+      },
+      {
+        "package": "@turbo%2flinux-64",
+        "url": "https://registry.npmjs.org/-/package/@turbo%2flinux-64/dist-tags",
+        "latest": "2.11.10",
+        "canary": "2.11.11-canary.1",
+        "responseSha256": "833a2520fb137f7ae6360c9d06ae069d3446387abf58ea4f08e2470016c22a79"
+      }
+    ]
+  },
+  "pinnedUpstreamSource": {
+    "observedAt": "2026-11-02T23:24:36.538513+00:00",
+    "authority": "Static exact-tag source inspection; upstream unit tests were read, not executed. Native controls are a separate report.",
+    "rows": [
+      {
+        "tag": "v2.11.10",
+        "commit": "e521641a142a24abe4554a77fdd6551e47e96fb3",
+        "files": [
+          {
+            "path": "crates/turborepo-config/src/turbo_json.rs",
+            "sha256": "275155b1ea1bd5136fa0c133af132826aa91d6a904afe67c9f2a35274c4d5545",
+            "url": "https://github.com/vercel/turborepo/blob/e521641a142a24abe4554a77fdd6551e47e96fb3/crates/turborepo-config/src/turbo_json.rs"
+          },
+          {
+            "path": "crates/turborepo-config/src/env.rs",
+            "sha256": "cf95decd0408e0ff37346c8b8cc39fda15d624dde00bc91dfa3262da43799cee",
+            "url": "https://github.com/vercel/turborepo/blob/e521641a142a24abe4554a77fdd6551e47e96fb3/crates/turborepo-config/src/env.rs"
+          },
+          {
+            "path": "crates/turborepo-run/src/builder.rs",
+            "sha256": "9519eb3fb0ea370e3f9cee39d87512fa299a19c683b17e1822ea38d07456deda",
+            "url": "https://github.com/vercel/turborepo/blob/e521641a142a24abe4554a77fdd6551e47e96fb3/crates/turborepo-run/src/builder.rs"
+          },
+          {
+            "path": "crates/turborepo-turbo-json/src/raw.rs",
+            "sha256": "7db1ba355316f5fd88112b4863d648f57dca2e5d75c3f9334fc4897f1681fb77",
+            "url": "https://github.com/vercel/turborepo/blob/e521641a142a24abe4554a77fdd6551e47e96fb3/crates/turborepo-turbo-json/src/raw.rs"
+          },
+          {
+            "path": "crates/turborepo-cli/src/cli/observability.rs",
+            "sha256": "aaae6a65bea5095d8a8f0e2f9254865f12774cb1f13ab70496d50df5cc7fcffb",
+            "url": "https://github.com/vercel/turborepo/blob/e521641a142a24abe4554a77fdd6551e47e96fb3/crates/turborepo-cli/src/cli/observability.rs"
+          }
+        ]
+      },
+      {
+        "tag": "v2.11.11-canary.1",
+        "commit": "a4ab545cd10a4db4e8e8c58cd2792d82c630a2f0",
+        "files": [
+          {
+            "path": "crates/turborepo-config/src/turbo_json.rs",
+            "sha256": "275155b1ea1bd5136fa0c133af132826aa91d6a904afe67c9f2a35274c4d5545",
+            "url": "https://github.com/vercel/turborepo/blob/a4ab545cd10a4db4e8e8c58cd2792d82c630a2f0/crates/turborepo-config/src/turbo_json.rs"
+          },
+          {
+            "path": "crates/turborepo-config/src/env.rs",
+            "sha256": "b49c6bdd02b834c1ffae948d2378db5138296c500bd0030633fc1b91bc23555d",
+            "url": "https://github.com/vercel/turborepo/blob/a4ab545cd10a4db4e8e8c58cd2792d82c630a2f0/crates/turborepo-config/src/env.rs"
+          },
+          {
+            "path": "crates/turborepo-run/src/builder.rs",
+            "sha256": "81ba7b86ee08e6f0e7623717cd8251520a7ecd274c7c81a036b4472138c5c8b0",
+            "url": "https://github.com/vercel/turborepo/blob/a4ab545cd10a4db4e8e8c58cd2792d82c630a2f0/crates/turborepo-run/src/builder.rs"
+          },
+          {
+            "path": "crates/turborepo-turbo-json/src/raw.rs",
+            "sha256": "7db1ba355316f5fd88112b4863d648f57dca2e5d75c3f9334fc4897f1681fb77",
+            "url": "https://github.com/vercel/turborepo/blob/a4ab545cd10a4db4e8e8c58cd2792d82c630a2f0/crates/turborepo-turbo-json/src/raw.rs"
+          },
+          {
+            "path": "crates/turborepo-cli/src/cli/observability.rs",
+            "sha256": "aaae6a65bea5095d8a8f0e2f9254865f12774cb1f13ab70496d50df5cc7fcffb",
+            "url": "https://github.com/vercel/turborepo/blob/a4ab545cd10a4db4e8e8c58cd2792d82c630a2f0/crates/turborepo-cli/src/cli/observability.rs"
+          }
+        ]
+      }
+    ],
+    "findings": [
+      "File-based OTEL config is parsed then omitted when the feature flag is false or absent, with explicit upstream tests for both cases.",
+      "CLI/environment OTEL options survive option merging and are rejected by the run builder when the feature flag is absent or false.",
+      "Bundled prose claiming rejection for every configuration source does not describe the file-reader branch.",
+      "Global experimental observability is intentionally hidden from generated schema; schema omission alone does not prove the feature is unavailable."
+    ]
+  },
+  "nativeEvidence": {
+    "path": "research/native-observability-default-controls.json",
+    "sha256": "94bd262fb9b5bd5790bb4ce75213083eadf1aa360472e14a28c6c4944fd78cf0",
+    "cases": 24,
+    "syntheticTaskExecutions": 16,
+    "preTaskRefusals": 8,
+    "clients": {
+      "stable": {
+        "reportedVersion": "2.11.10",
+        "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+      },
+      "canary": {
+        "reportedVersion": "2.11.11-canary.1",
+        "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
+      }
+    },
+    "driverControls": {
+      "path": "research/observability-driver-controls.json",
+      "sha256": "c4291653342e432f8142af2de3a2c2c44bc874a2f387cee17d6a436ba62cb76a",
+      "refusals": 3
+    },
+    "scope": "Eight successful synthetic task cases and four pre-task refusals per client in an isolated network. Enabled exporter transport is not exercised.",
+    "reproduce": "python3 goals/turborepo-quality-cache-adoption/research/native-observability-default-controls.py --output <new-private-report.json>"
+  },
+  "observations": [
+    "Absent/false flag and no exporter configuration execute the owned synthetic task on both pins.",
+    "A file-based exporter configuration is dropped when the flag is absent/false; the pinned config-reader implementation and its explicit tests explain this behavior.",
+    "Environment and CLI exporter configurations require the flag and are rejected before the task when it is absent/false.",
+    "An explicitly disabled exporter with the flag enabled permits the task through file, environment and CLI configuration paths.",
+    "Synthetic header and cache-bearer values do not appear in any captured diagnostic. This does not establish enabled-exporter payload safety."
+  ],
+  "rationale": "The tracked repository has no Turbo exporter consumer. Retain the current absent flag and the existing structured-summary/backend-event path. A new collector and credential surface has no demonstrated benefit for a named current consumer. Adjacent application and agent OTEL sources are separate.",
+  "expectedBenefit": "Avoid an unneeded exporter integration while preserving the existing bounded attribution work. No measured time or money saving is claimed.",
+  "reopenWhen": [
+    "A named Turbo exporter consumer has a measured requirement not served by structured summaries and bounded backend events.",
+    "Capture the actual exporter payload with synthetic secrets, paths and artifact bytes; prove allowlists, label cardinality, sampling/queue/retention bounds and a disable path.",
+    "Use separately approved telemetry credentials and an exact endpoint policy; do not reuse the remote-cache bearer as a generic collector credential.",
+    "Review current client/source behavior and preserve fresh hosted-status and computation-qualification boundaries."
+  ],
+  "earlierFailure": {
+    "driverSha256": "d4db3aa5e6a38e8453fb0cd3e06190204d73a9d5e74f5c3158752651a229edc8",
+    "result": {
+      "exit": 1,
+      "elapsedSeconds": 0.995,
+      "finishedAt": "2026-11-02T23:21:51.371498+00:00"
+    },
+    "logSha256": "2c86576e05aa6e26d3d45b2e1be13375730e52ad943b7eca9de082771edc6123",
+    "finding": "The initial documentation-derived file-config rejection expectation failed on stable before the exact-tag source review. Original source and failed receipt remain retained separately. The source-reviewed replay does not rewrite that failure."
+  },
+  "limitations": [
+    "No arbitrary shell or ignored host configuration census.",
+    "Upstream code and upstream unit tests were read at exact tags; those upstream tests were not executed.",
+    "No enabled-exporter network payload, resource overhead, reliability or performance measurement.",
+    "No production runtime setting, trust key, namespace, credential, qualification state or whole-goal acceptance changed."
+  ],
+  "qualificationGranted": false,
+  "productionConfigurationChanged": false,
+  "wholeGoalAcceptanceChanged": false,
+  "rollback": "Revert this feature-decision registration and its research evidence; runtime configuration is unchanged."
+}

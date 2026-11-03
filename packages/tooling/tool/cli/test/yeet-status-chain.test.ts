@@ -26,6 +26,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import { commandArgs } from "./support/commandArgs.ts";
+import { provideLegacyGh } from "./support/YeetGithub.ts";
 
 // W10 (goals/yeet-pr-events): the `--until-ready` poll reads its snapshot
 // through collectYeetStatus. Before the collapse the remote half ran five gh
@@ -229,6 +230,7 @@ const withFakeRunner = (
   exitCodes = HashMap.empty<string, number>()
 ) =>
   flow(
+    provideLegacyGh,
     Effect.provideServiceEffect(Git, Git.make),
     Effect.provideService(
       ChildProcessSpawner.ChildProcessSpawner,

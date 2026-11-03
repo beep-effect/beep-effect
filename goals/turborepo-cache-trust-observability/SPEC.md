@@ -957,3 +957,101 @@ untrusted diagnostic observation, not root-cause or qualification authority.
 Existing exit/truncation gates, input checks, deadlines and rollout policy stay
 intact. Reversal removes hint recognition from the same guard while retaining
 its existing bounded failure behavior.
+
+
+### Bounded private complete-observation transfer, 2026-11-02
+
+- Reuse the existing private R2 pilot bucket for issued complete observations at
+  a fixed namespace/run/attempt/canonical-digest prefix. Keep private payloads
+  out of GitHub artifacts and logs; only the existing bounded digest report is
+  public. Preserve the eight-MiB complete-observation bound including a local
+  newline, one-MiB archive and sixty-four-KiB report bounds.
+- Share the executor's exact approved destination check. Load only the two R2
+  capabilities for object transfer; compare their identities to the independently
+  approved artifact-key identity and refuse aliasing. Do not load the artifact
+  signing key or any adapter bearer. Preserve every existing executor check.
+- Use Effect's installed Bun HTTP client with explicit S3 credentials, no ambient
+  session token, native retry zero, one queued transfer, eight-MiB part size,
+  redirect refusal, TLS verification and disabled verbose output. Each exchange
+  has a thirty-second bound including streamed-body consumption and interruption
+  cleanup. Preserve typed finite faults; a missing private object is not a cache
+  miss, and uncertain PUT failures are not automatically retried.
+- The optional publisher reads the already saved observation and verifies its
+  issuer before upload. Producer execution and its private outputs remain
+  separate, so publication failure cannot force another native matrix run.
+  Fetch and cleanup select only an authenticated immutable publication and its
+  independently approved private destination. Fetch verifies canonical bytes,
+  issuer MAC, hosted observation join and unchanged approval/profile before
+  creating a new owner-only output outside the checkout.
+- No activation, grant or trial-budget increase is included. Before real use,
+  retain the existing fifty-MiB, two-hundred-Class-A, two-thousand-Class-B and
+  ten-minute aggregate trial limits in its execution preview. Local controls
+  do not qualify a tuple or satisfy the protected R2/representative-window gates.
+- Reversal removes these opt-in commands and the private-object transport.
+  Existing cache artifacts and services are unchanged. Exact-object cleanup and
+  the existing retention policy govern synthetic observations already uploaded.
+
+
+### Private storage module quality-seal acknowledgement, 2026-11-02
+
+Follow the existing generated quality-input review path for the additive
+`Cache.workflow.storage.ts` dependency. The canonical fingerprint writer adds
+that one path; a reviewed compare-and-swap request stamps only root subject
+`//` and preserves every other review, scope, current profile/epoch and ledger.
+This records a conservative implementation input, not task qualification or a
+cached security verdict. Reverse through a fresh reviewed request after restoring
+the prior closure, never by overwriting a newer baseline or the ledger.
+
+
+- 2026-11-02: Resolve the accepted a88d baseline conflict using the canonical CAS writer and the [named configuration review](research/private-object-a88d-baseline-review-2026-11-02.md). Preserve main's party-domain expansion and all unrelated reviews, add only the owned storage policy input, and leave scope/profile/epoch/qualification unchanged. This is configuration provenance, not computation qualification or production activation. Reverse only with the corresponding owned input removal; never discard accepted package definitions.
+
+
+- 2026-11-02: Propose the [source-bound hosted identity](research/producer-object-coverage-identity-review-2026-11-02.md) for the newly introduced private storage file. Retain all previous coverage floors and safeguards, add real negative controls, and require primary review plus fresh CI. Use the canonical reporter's exact measured row, not an invented threshold or a broad baseline regeneration. Reversal removes only the newly added file identity.
+
+### Independently approve the resolved main Heavy leaf, 2026-11-02
+
+- The admitted runner path executes the same-repository `heavy.yml@main`
+  reusable workflow. Bind this leaf in the independently supplied hosted
+  approval to its exact resolved commit and reviewed file digest. The caller
+  keeps its own exact workflow revision and digest; they need not resolve to
+  the same commit. Never derive approval from the uploaded report.
+- The optional approval list defaults to empty and admits at most that one
+  Heavy leaf. GitHub metadata must contain exactly the approved path, protected
+  main ref and resolved revision. Refuse another repository, path, ref,
+  duplicate or additional callee before fetching workflow source. Read both
+  workflow files at their immutable commits and retain the original aggregate
+  sixty-four-KiB ASCII workflow-text budget, archive bound and receipt expiry.
+- Re-read the complete authenticated run and artifact metadata after inspection,
+  including the resolved callee. A changed resolution fails closed. Snapshot
+  independent approval before network effects so a mutable caller cannot change
+  the approval during verification.
+- Reverse by removing the optional callee approval; reusable producer runs then
+  fail closed. This component enables verification only. Private transport,
+  protected execution, credential controls, issuer/HMAC checks, real R2 replay,
+  tuple qualification, deployment and representative windows remain separate
+  gates. No runtime setting, cloud grant or acceptance criterion changes here.
+
+### Bind contained source directory aliases, 2026-11-02
+
+- Actual protected inspection reached the admitted Heavy runner, then failed when
+  a declared relative YAML fixture alias resolved to a directory. The collector
+  tried to read that directory as a file. Keep that failed run as execution
+  evidence; the routing repair itself worked.
+- Bind the complete bounded directory tree and canonical target using a
+  domain-separated manifest. Every regular file or child alias must also appear
+  in the declared source inventory. That inventory independently binds its
+  contents or relative target; do not omit fixture trees or follow child aliases
+  recursively. Nested directories require a declared descendant.
+- Preserve checkout containment, absolute-alias refusal, no-follow file reads,
+  source-list stability, clean execution profile and existing byte/entry limits.
+  Bind complete POSIX modes to distinguish directories, files and aliases as well
+  as permissions. Directory manifests have an explicit 20,000-entry ceiling.
+- Obtain a fresh inspection and independent implementation approval after this
+  source change. Existing reports remain historical; their approvals do not
+  authorize the changed collector. No producer upload, signing activation or
+  ordinary R2 service change is included.
+- Reverse by reverting this collector change and retaining inspection refusal;
+  preserve prior observations, private credentials and the existing cache.
+
+
+- 2026-11-02: Consume accepted #2632 without changing any accepted coverage baseline byte. Preserve its stronger storage-file row and both test sets; retain the earlier lower proposal as historical evidence in the [reconciliation](research/producer-object-coverage-identity-review-2026-11-02.md). This adds no floor exception or qualification authority. Reversal must retain the accepted main baseline.
