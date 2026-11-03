@@ -162,9 +162,8 @@ export class UsptoClaimSet extends S.Opaque<UsptoClaimSet, { readonly brand: uni
  */
 export class UsptoClaimInputSet extends S.Opaque<UsptoClaimInputSet, { readonly brand: unique symbol }>()(
   S.Struct({
-    input: ClaimInputCollection.annotateKey({
-      description: "Every original source record, with explicit text extraction failures.",
-    }),
+    // Keep the nominal collection schema itself: annotateKey rebuilds an Opaque as its structural base.
+    input: ClaimInputCollection,
     documentIdentifier: S.NonEmptyString.annotateKey({
       description: "Exact public USPTO document whose bytes were inspected.",
     }),
