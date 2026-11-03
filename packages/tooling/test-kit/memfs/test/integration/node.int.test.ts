@@ -22,11 +22,14 @@ layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
   it.effect("the reference resolves a link it created on the host temp volume", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const d = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "memfs-node-" }));
+      const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped({ prefix: "memfs-node-" });
+      const d = yield* fs.realPath(madeTempDirectoryScoped);
       yield* fs.writeFileString(`${d}/target.txt`, "x");
       yield* fs.symlink(`${d}/target.txt`, `${d}/link`);
-      assert.strictEqual(yield* fs.realPath(`${d}/link`), `${d}/target.txt`);
-      assert.strictEqual(yield* fs.readLink(`${d}/link`), `${d}/target.txt`);
+      const realPath1 = yield* fs.realPath(`${d}/link`);
+      assert.strictEqual(realPath1, `${d}/target.txt`);
+      const readLink2 = yield* fs.readLink(`${d}/link`);
+      assert.strictEqual(readLink2, `${d}/target.txt`);
     })
   );
 

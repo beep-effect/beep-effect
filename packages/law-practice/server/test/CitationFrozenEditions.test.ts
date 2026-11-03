@@ -28,28 +28,32 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("authenticated froze
         const edition = yield* adapter.lookup(row.edition, row.family);
         expect(edition.value.short_name).toBe(row.shortName);
         const encoded = yield* encodeCitationRuntimeEdition(edition.value);
-        expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(encoded)), row.edition).toBe(
-          row.runtimePayloadSha256
-        );
+        const citationResult1 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(encoded));
+        expect(citationResult1, row.edition).toBe(row.runtimePayloadSha256);
       }
       const first = A.getUnsafe(expected.editions, 0);
       const sameKind = A.filter(expected.editions, (row) => row.family === first.family);
       const second = A.getUnsafe(sameKind, 1);
       const refs = [second.edition, first.edition, second.edition];
-      expect(A.map(yield* adapter.lookupMany(refs, first.family), (edition) => edition.edition)).toEqual(refs);
-      expect((yield* Effect.flip(adapter.lookup(first.edition, first.family === "case" ? "law" : "case"))).reason).toBe(
-        "kind-mismatch"
+      const citationResult2 = yield* adapter.lookupMany(refs, first.family);
+      expect(A.map(citationResult2, (edition) => edition.edition)).toEqual(refs);
+      const citationResult3 = yield* Effect.flip(
+        adapter.lookup(first.edition, first.family === "case" ? "law" : "case")
       );
-      expect(
-        (yield* Effect.flip(adapter.lookup(CitationEditionRef.make(Str.repeat(64)("0")), first.family))).reason
-      ).toBe("missing-edition");
+      expect(citationResult3.reason).toBe("kind-mismatch");
+      const citationResult4 = yield* Effect.flip(
+        adapter.lookup(CitationEditionRef.make(Str.repeat(64)("0")), first.family)
+      );
+      expect(citationResult4.reason).toBe("missing-edition");
       const returned = yield* adapter.lookup(first.edition, first.family);
       const originalName = returned.value.reporter.name;
       const mutable: { name: string } = returned.value.reporter;
       mutable.name = "Changed";
-      expect((yield* adapter.lookup(first.edition, first.family)).value.reporter.name).toBe(originalName);
+      const citationResult5 = yield* adapter.lookup(first.edition, first.family);
+      expect(citationResult5.value.reporter.name).toBe(originalName);
       A.getUnsafe(bundle.reporters, 0).payload = "changed caller state";
-      expect((yield* adapter.lookup(first.edition, first.family)).value.reporter.name).toBe(originalName);
+      const citationResult6 = yield* adapter.lookup(first.edition, first.family);
+      expect(citationResult6.value.reporter.name).toBe(originalName);
     })
   );
 
@@ -58,43 +62,43 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("authenticated froze
     () =>
       Effect.gen(function* () {
         const { bundle } = yield* loadCitationFrozenEditionFixtures();
-        expect(
-          (yield* Effect.flip(makeCitationFrozenEditions({ ...bundle, reporters: A.drop(bundle.reporters, 1) }))).reason
-        ).toBe("invalid-input");
+        const citationResult7 = yield* Effect.flip(
+          makeCitationFrozenEditions({ ...bundle, reporters: A.drop(bundle.reporters, 1) })
+        );
+        expect(citationResult7.reason).toBe("invalid-input");
         const duplicate = {
           ...bundle,
           reporters: O.getOrThrow(A.replace(bundle.reporters, 1, A.getUnsafe(bundle.reporters, 0))),
         };
-        expect((yield* Effect.flip(makeCitationFrozenEditions(duplicate))).reason).toBe("manifest-mismatch");
+        const citationResult8 = yield* Effect.flip(makeCitationFrozenEditions(duplicate));
+        expect(citationResult8.reason).toBe("manifest-mismatch");
         const first = A.getUnsafe(bundle.reporters, 0);
         const edited = { ...first, payload: Str.replace("false", "true")(first.payload) };
         if (edited.payload === first.payload) throw new Error("fixture requires false reporter flag");
-        expect(
-          (yield* Effect.flip(
-            makeCitationFrozenEditions({ ...bundle, reporters: O.getOrThrow(A.replace(bundle.reporters, 0, edited)) })
-          )).reason
-        ).toBe("corrupt-artifact");
+        const citationResult9 = yield* Effect.flip(
+          makeCitationFrozenEditions({ ...bundle, reporters: O.getOrThrow(A.replace(bundle.reporters, 0, edited)) })
+        );
+        expect(citationResult9.reason).toBe("corrupt-artifact");
         const replacementRef = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(edited.payload));
-        expect(
-          (yield* Effect.flip(
-            makeCitationFrozenEditions({
-              ...bundle,
-              reporters: O.getOrThrow(A.replace(bundle.reporters, 0, { ref: replacementRef, payload: edited.payload })),
-            })
-          )).reason
-        ).toBe("manifest-mismatch");
+        const citationResult10 = yield* Effect.flip(
+          makeCitationFrozenEditions({
+            ...bundle,
+            reporters: O.getOrThrow(A.replace(bundle.reporters, 0, { ref: replacementRef, payload: edited.payload })),
+          })
+        );
+        expect(citationResult10.reason).toBe("manifest-mismatch");
         const firstEdition = A.getUnsafe(bundle.editions, 0);
-        expect(
-          (yield* Effect.flip(
-            makeCitationFrozenEditions({
-              ...bundle,
-              editions: O.getOrThrow(
-                A.replace(bundle.editions, 0, { ...firstEdition, payload: `${firstEdition.payload} ` })
-              ),
-            })
-          )).reason
-        ).toBe("corrupt-artifact");
-        expect((yield* Effect.flip(makeCitationFrozenEditions({}))).reason).toBe("invalid-input");
+        const citationResult11 = yield* Effect.flip(
+          makeCitationFrozenEditions({
+            ...bundle,
+            editions: O.getOrThrow(
+              A.replace(bundle.editions, 0, { ...firstEdition, payload: `${firstEdition.payload} ` })
+            ),
+          })
+        );
+        expect(citationResult11.reason).toBe("corrupt-artifact");
+        const citationResult12 = yield* Effect.flip(makeCitationFrozenEditions({}));
+        expect(citationResult12.reason).toBe("invalid-input");
       })
   );
 

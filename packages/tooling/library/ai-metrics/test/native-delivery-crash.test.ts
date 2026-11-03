@@ -46,7 +46,9 @@ const scenario = Effect.fn("DeliveryCrashTest.scenario")(function* () {
         yield* Ref.update(reads, (n) => n + 1);
         return yield* HttpServerResponse.json({ data: [], next_cursor: null });
       }
-      const wire = new TextDecoder().decode(yield* request.arrayBuffer);
+      const argument = new TextDecoder();
+      const arrayBuffer1 = yield* request.arrayBuffer;
+      const wire = argument.decode(arrayBuffer1);
       expect(wire).not.toContain("synthetic-private-ledger-source");
       expect(wire).toContain("synthetic-process");
       yield* Ref.update(calls, (n) => n + 1);
@@ -76,7 +78,8 @@ const scenario = Effect.fn("DeliveryCrashTest.scenario")(function* () {
     );
     if (mode === "before-result" || mode === "after-result" || mode === "schedule-before-result") {
       while (!(yield* fs.exists(marker))) {
-        expect(yield* child.isRunning).toBe(true);
+        const isRunning1 = yield* child.isRunning;
+        expect(isRunning1).toBe(true);
         yield* Effect.sleep("10 millis");
       }
       const observed = yield* fs.readFileString(marker).pipe(Effect.flatMap(decodeJsonValue));
@@ -85,13 +88,17 @@ const scenario = Effect.fn("DeliveryCrashTest.scenario")(function* () {
         attempts: [{ n: 1 }],
         results: [{ n: mode === "before-result" || mode === "schedule-before-result" ? 0 : 1 }],
       });
-      expect(yield* fs.exists(output)).toBe(false);
+      const exists2 = yield* fs.exists(output);
+      expect(exists2).toBe(false);
       yield* child.kill({ killSignal: "SIGKILL" });
-      expect(Exit.isFailure(yield* Effect.exit(child.exitCode))).toBe(true);
-      expect(yield* child.isRunning).toBe(false);
+      const exit3 = yield* Effect.exit(child.exitCode);
+      expect(Exit.isFailure(exit3)).toBe(true);
+      const isRunning4 = yield* child.isRunning;
+      expect(isRunning4).toBe(false);
       return;
     }
-    expect(yield* child.exitCode).toBe(0);
+    const exitCode5 = yield* child.exitCode;
+    expect(exitCode5).toBe(0);
     return yield* fs.readFileString(output).pipe(Effect.flatMap(decodeBoundaryValueJson));
   });
   return { run, calls, reads };
@@ -101,9 +108,12 @@ for (const mode of ["before-result", "after-result"])
     it.effect(`survives sender death ${mode} without sending the same attempt twice`, () =>
       Effect.gen(function* () {
         const { run, calls } = yield* scenario();
-        if (mode !== "before-result" && mode !== "after-result") return yield* Effect.die("Invalid fixture mode");
+        if (mode !== "before-result" && mode !== "after-result") {
+          return yield* Effect.die("Invalid fixture mode");
+        }
         yield* run(mode);
-        expect(yield* Ref.get(calls)).toBe(1);
+        const got = yield* Ref.get(calls);
+        expect(got).toBe(1);
         const inspected = yield* run("inspect");
         expect(inspected).toMatchObject({
           state: { state: mode === "before-result" ? "unresolved" : "accepted-unverified", attempts: 1 },
@@ -115,7 +125,8 @@ for (const mode of ["before-result", "after-result"])
           state: inspected?.state,
           attempts: [{ n: 1 }],
         });
-        expect(yield* Ref.get(calls)).toBe(1);
+        const got6 = yield* Ref.get(calls);
+        expect(got6).toBe(1);
       }).pipe(Effect.timeout("20 seconds"))
     )
   );
@@ -125,7 +136,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
     Effect.gen(function* () {
       const { run, calls, reads } = yield* scenario();
       yield* run("schedule-before-result");
-      expect(yield* Ref.get(calls)).toBe(1);
+      const got7 = yield* Ref.get(calls);
+      expect(got7).toBe(1);
       const next = yield* run("schedule-tick");
       expect(next).toMatchObject({
         sendResult: { _tag: "Complete", outcomes: [{ _tag: "Sent", result: { outcome: { _tag: "Accepted" } } }] },
@@ -143,8 +155,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
         state: { state: "unresolved", attempts: 1 },
         attempts: [{ n: 2 }],
       });
-      expect(yield* Ref.get(calls)).toBe(2);
-      expect(yield* Ref.get(reads)).toBe(1);
+      const got8 = yield* Ref.get(calls);
+      expect(got8).toBe(2);
+      const got9 = yield* Ref.get(reads);
+      expect(got9).toBe(1);
     }).pipe(Effect.timeout("20 seconds"))
   )
 );

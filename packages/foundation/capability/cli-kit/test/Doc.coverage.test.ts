@@ -31,8 +31,12 @@ it.effect.prop(
   ([overflow]) =>
     Effect.gen(function* () {
       const block = Doc.list([], { overflow });
-      const decoded = yield* S.decodeEffect(Block)(yield* S.encodeEffect(Block)(block));
-      if (decoded._tag !== "List") return yield* Effect.die("List must retain its tag");
+      const argument = S.decodeEffect(Block);
+      const value1 = yield* S.encodeEffect(Block)(block);
+      const decoded = yield* argument(value1);
+      if (decoded._tag !== "List") {
+        return yield* Effect.die("List must retain its tag");
+      }
       assertDefined(decoded.overflow);
       for (const hidden of [0, 3]) {
         const expected = overflow(hidden);
@@ -80,15 +84,21 @@ it.effect("Block's generated total callback survives encoding and controls the o
           (property) => property.name === "total"
         )
       : O.none();
-    if (O.isNone(field)) return yield* Effect.die("Block must declare its total callback");
+    if (O.isNone(field)) {
+      return yield* Effect.die("Block must declare its total callback");
+    }
     const schema = S.make<S.Codec<(counters: ReadonlyArray<Counter.Encoded>) => number>>(field.value.type);
     const [total] = yield* Arbitrary.sampleEffect(Arbitrary.schema(schema), { count: 1, seed: 0 });
     assertDefined(total);
     const expected = total([]);
     const counter = Doc.counter(Status.core, "success", { key: "ok", label: "items", n: 2 });
     const block = Doc.counts({ counters: [counter], total, layout: "inline" });
-    const decoded = yield* S.decodeEffect(Block)(yield* S.encodeEffect(Block)(block));
-    if (decoded._tag !== "Counts") return yield* Effect.die("Counts must retain its tag");
+    const argument1 = S.decodeEffect(Block);
+    const value2 = yield* S.encodeEffect(Block)(block);
+    const decoded = yield* argument1(value2);
+    if (decoded._tag !== "Counts") {
+      return yield* Effect.die("Counts must retain its tag");
+    }
     assert.strictEqual(Doc.total(block), expected);
     assert.strictEqual(Doc.total(decoded), expected);
     assert.notStrictEqual(expected, 2);

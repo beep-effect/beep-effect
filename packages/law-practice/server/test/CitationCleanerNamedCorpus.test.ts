@@ -11,7 +11,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("admitted named sour
     "matches all 600 non-HTML named/official outcomes, builtin boundaries and final registry state",
     () =>
       Effect.gen(function* () {
-        expect(yield* replayNamedCleanerScenes("literal")).toEqual({
+        const citationResult1 = yield* replayNamedCleanerScenes("literal");
+        expect(citationResult1).toEqual({
           cases: 600,
           successes: 599,
           parseFailures: 0,

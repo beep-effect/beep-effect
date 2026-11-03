@@ -106,7 +106,8 @@ export const normalizeCallbackFixtureResource = Effect.fn("CallbackTest.resource
     value = { kind: "tuple", value: [] };
     truthy = false;
   }
-  const key = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(yield* S.encodeEffect(Json)(token)));
+  const citationResult1 = yield* S.encodeEffect(Json)(token);
+  const key = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(citationResult1));
   return CitationCallbackResource.cases.Hashable.make({
     identity: CitationResourceIdentity.cases.External.make({ scope, key }),
     truthy,

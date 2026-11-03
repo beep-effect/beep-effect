@@ -109,14 +109,16 @@ export const makeCitationTokenEditions = Effect.fn("Citation.makeTokenEditions")
         .add(CitationRuntimeDictionaryKey.make({ objectId: id, hash: row.hash }))
         .pipe(Effect.mapError(probeFailure));
     }
-    return A.map(yield* result.read, (key) => key.objectId);
+    const citationResult1 = yield* result.read;
+    return A.map(citationResult1, (key) => key.objectId);
   }, timing.timed);
   const nominative = Effect.fn("Citation.tokenIsNominative")(function* (exact: unknown, variation: unknown) {
     const a = yield* decode(exact);
     const b = yield* decode(variation);
     const chosen = a.length > 0 ? a : b;
     const first = yield* Effect.fromOption(A.head(chosen)).pipe(Effect.mapError(failure));
-    return HashSet.has(nominativeNames, (yield* read(first)).reporterShortName);
+    const citationResult2 = yield* read(first);
+    return HashSet.has(nominativeNames, citationResult2.reporterShortName);
   }, timing.timed);
   return { deduplicate, nominative };
 });

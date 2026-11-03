@@ -59,15 +59,13 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestSer
               new URL("../../../use-cases/test/fixtures/eyecite/operation-cases.json", import.meta.url)
             )
           );
-          expect(yield* digest.digestHex(Digest.sha256, raw)).toBe(
-            "ae441000ddc90537864e3fdd4a9dfc4aa81af37a65818b48ce9bf37d95d1eeb1"
-          );
+          const citationResult1 = yield* digest.digestHex(Digest.sha256, raw);
+          expect(citationResult1).toBe("ae441000ddc90537864e3fdd4a9dfc4aa81af37a65818b48ce9bf37d95d1eeb1");
           const corpus = yield* S.decodeEffect(Operations)(new TextDecoder().decode(raw));
           const captured = yield* Effect.fromOption(R.get(corpus.artifacts, controls.canonical.extractorsSha256));
           const artifact = yield* S.decodeUnknownEffect(Artifact)(captured);
-          expect(yield* digest.digestHex(Digest.sha256, new TextEncoder().encode(artifact.payload))).toBe(
-            controls.canonical.extractorsSha256
-          );
+          const citationResult2 = yield* digest.digestHex(Digest.sha256, new TextEncoder().encode(artifact.payload));
+          expect(citationResult2).toBe(controls.canonical.extractorsSha256);
           const extractors = yield* S.decodeEffect(Extractors)(artifact.payload);
           const limits = (yield* defaultCitationEnginePolicy).limits;
           const unicode = yield* makeCitationPythonUnicode(limits);
@@ -95,7 +93,8 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestSer
             const selected = yield* selector.select(row.source);
             expect(selected.indices, `case ${row.id}`).toEqual(row.selected);
             expect(selected.insertions, `case ${row.id}`).toEqual(row.insertions);
-            expect((yield* ordering.ordered(row.source)).indices, `case ${row.id}`).toEqual(row.ordered);
+            const citationResult3 = yield* ordering.ordered(row.source);
+            expect(citationResult3.indices, `case ${row.id}`).toEqual(row.ordered);
           }
         }),
       { timeout: 120_000 }

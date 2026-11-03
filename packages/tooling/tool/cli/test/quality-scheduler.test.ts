@@ -220,11 +220,10 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
         identity.pipe(O.isSome, assertTrue);
         if (O.isSome(identity)) {
           expect(Str.startsWith((yield* HostProcessPlatform) === "win32" ? "win:" : "ps:")(identity.value)).toBe(true);
-          expect(
-            yield* processIdentityStatus({ pid: process.pid, procStart: identity.value }).pipe(
-              Effect.provideService(FileSystem.FileSystem, withoutProcfs)
-            )
-          ).toBe("alive");
+          const pipe1 = yield* processIdentityStatus({ pid: process.pid, procStart: identity.value }).pipe(
+            Effect.provideService(FileSystem.FileSystem, withoutProcfs)
+          );
+          expect(pipe1).toBe("alive");
         }
         (yield* processStartIdentityForPid(DEAD_PID)).pipe(assertNone);
       }).pipe(Effect.provideService(HostProcessPlatform, currentHostPlatform))
@@ -232,25 +231,31 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
 
     it.effect("classifies a recorded identity as unknown when the current process start is unreadable", () =>
       Effect.gen(function* () {
-        expect(
-          yield* processIdentityStatusWithStartForTesting({ pid: process.pid, procStart: "recorded-start" }, O.none())
-        ).toBe("unknown");
+        const processIdentityStatusWithStartForTesting2 = yield* processIdentityStatusWithStartForTesting(
+          { pid: process.pid, procStart: "recorded-start" },
+          O.none()
+        );
+        expect(processIdentityStatusWithStartForTesting2).toBe("unknown");
       })
     );
 
     it.effect("retains an unverifiable recorded identity during admission repair", () =>
       Effect.gen(function* () {
-        expect(
-          yield* isProcessIdentityAliveWithStartForTesting({ pid: process.pid, procStart: "recorded-start" }, O.none())
-        ).toBe(true);
+        const isProcessIdentityAliveWithStartForTesting3 = yield* isProcessIdentityAliveWithStartForTesting(
+          { pid: process.pid, procStart: "recorded-start" },
+          O.none()
+        );
+        expect(isProcessIdentityAliveWithStartForTesting3).toBe(true);
       })
     );
 
     it.effect("retains PID-only liveness for legacy identities", () =>
       Effect.gen(function* () {
-        expect(yield* isProcessIdentityAliveWithStartForTesting({ pid: process.pid, procStart: "" }, O.none())).toBe(
-          true
+        const isProcessIdentityAliveWithStartForTesting4 = yield* isProcessIdentityAliveWithStartForTesting(
+          { pid: process.pid, procStart: "" },
+          O.none()
         );
+        expect(isProcessIdentityAliveWithStartForTesting4).toBe(true);
       })
     );
   });
@@ -317,7 +322,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
 
   const readAttemptJournalEvents = Effect.fnUntraced(function* (checkoutRoot: string, branch: string) {
     const fs = yield* FileSystem.FileSystem;
-    const text = yield* fs.readFileString(yield* attemptJournalPathForCheckout(checkoutRoot, branch));
+    const attemptJournalPathForCheckout5 = yield* attemptJournalPathForCheckout(checkoutRoot, branch);
+    const text = yield* fs.readFileString(attemptJournalPathForCheckout5);
     return yield* Effect.forEach(pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
       decodeYeetAttemptJournalEvent(line)
     );
@@ -586,8 +592,10 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
     it.effect("observes absent lazy directories and journals as empty", () =>
       Effect.gen(function* () {
         const { tempRoot } = yield* admissionTemporaryRoot;
-        expect(yield* listDirectory(tempRoot.queue)).toEqual([]);
-        expect(yield* readJournalEvents(tempRoot.root)).toEqual([]);
+        const listDirectory6 = yield* listDirectory(tempRoot.queue);
+        expect(listDirectory6).toEqual([]);
+        const readJournalEvents7 = yield* readJournalEvents(tempRoot.root);
+        expect(readJournalEvents7).toEqual([]);
       })
     );
 
@@ -606,18 +614,16 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             readDirectory: () => Effect.fail(failure),
             readFile: () => Effect.fail(failure),
           });
-          expect(
-            yield* listDirectory("/unreadable").pipe(
-              Effect.provideService(FileSystem.FileSystem, unreadable),
-              Effect.flip
-            )
-          ).toBe(failure);
-          expect(
-            yield* readJournalEvents("/unreadable").pipe(
-              Effect.provideService(FileSystem.FileSystem, unreadable),
-              Effect.flip
-            )
-          ).toBe(failure);
+          const pipe8 = yield* listDirectory("/unreadable").pipe(
+            Effect.provideService(FileSystem.FileSystem, unreadable),
+            Effect.flip
+          );
+          expect(pipe8).toBe(failure);
+          const pipe9 = yield* readJournalEvents("/unreadable").pipe(
+            Effect.provideService(FileSystem.FileSystem, unreadable),
+            Effect.flip
+          );
+          expect(pipe9).toBe(failure);
         })
       );
     }
@@ -799,8 +805,10 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
         Effect.gen(function* () {
           const stats = yield* MemoryStats;
 
-          expect(yield* stats.availableGib).toBeGreaterThan(0);
-          expect(yield* stats.totalGib).toBeGreaterThan(0);
+          const availableGib10 = yield* stats.availableGib;
+          expect(availableGib10).toBeGreaterThan(0);
+          const totalGib11 = yield* stats.totalGib;
+          expect(totalGib11).toBeGreaterThan(0);
         })
       );
     });
@@ -813,9 +821,12 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
           const filePath = `${directory}/existing`;
           yield* fs.writeFileString(filePath, "original");
 
-          expect(yield* tryCreateExclusiveForTesting(filePath, "replacement")).toBe(false);
-          expect(yield* fs.readFileString(filePath)).toBe("original");
-          expect(A.some(yield* fs.readDirectory(directory), Str.includes(".tmp-"))).toBe(false);
+          const tryCreateExclusiveForTesting12 = yield* tryCreateExclusiveForTesting(filePath, "replacement");
+          expect(tryCreateExclusiveForTesting12).toBe(false);
+          const readFileString13 = yield* fs.readFileString(filePath);
+          expect(readFileString13).toBe("original");
+          const readDirectory14 = yield* fs.readDirectory(directory);
+          expect(A.some(readDirectory14, Str.includes(".tmp-"))).toBe(false);
         })
       );
     });
@@ -833,11 +844,13 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
           );
           yield* Deferred.await(reached);
           // The writer is parked with its staging sibling already on disk.
-          expect(A.some(yield* fs.readDirectory(directory), Str.includes(".tmp-"))).toBe(true);
+          const readDirectory15 = yield* fs.readDirectory(directory);
+          expect(A.some(readDirectory15, Str.includes(".tmp-"))).toBe(true);
 
           yield* Fiber.interrupt(writer);
 
-          expect(yield* fs.readDirectory(directory)).toStrictEqual([]);
+          const readDirectory16 = yield* fs.readDirectory(directory);
+          expect(readDirectory16).toStrictEqual([]);
         })
       );
     });
@@ -857,11 +870,13 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
           );
           yield* Deferred.await(reached);
           // The stage completed; the writer is parked on the rename itself.
-          expect(A.some(yield* fs.readDirectory(directory), Str.includes(".tmp-"))).toBe(true);
+          const readDirectory17 = yield* fs.readDirectory(directory);
+          expect(A.some(readDirectory17, Str.includes(".tmp-"))).toBe(true);
 
           yield* Fiber.interrupt(writer);
 
-          expect(yield* fs.readDirectory(directory)).toStrictEqual([]);
+          const readDirectory18 = yield* fs.readDirectory(directory);
+          expect(readDirectory18).toStrictEqual([]);
         })
       );
     });
@@ -879,12 +894,15 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             Effect.forkChild
           );
           yield* Deferred.await(reached);
-          expect(A.some(yield* fs.readDirectory(directory), Str.includes(".tmp-"))).toBe(true);
+          const readDirectory19 = yield* fs.readDirectory(directory);
+          expect(A.some(readDirectory19, Str.includes(".tmp-"))).toBe(true);
 
           yield* Fiber.interrupt(writer);
 
-          expect(yield* fs.readDirectory(directory)).toStrictEqual(["existing"]);
-          expect(yield* fs.readFileString(filePath)).toBe("original");
+          const readDirectory20 = yield* fs.readDirectory(directory);
+          expect(readDirectory20).toStrictEqual(["existing"]);
+          const readFileString21 = yield* fs.readFileString(filePath);
+          expect(readFileString21).toBe("original");
         })
       );
     });
@@ -909,8 +927,10 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
           );
 
           expect(created).toBe(false);
-          expect(yield* fs.readFileString(filePath)).toBe("original");
-          const errors = A.map(yield* TestConsole.errorLines, String);
+          const readFileString22 = yield* fs.readFileString(filePath);
+          expect(readFileString22).toBe("original");
+          const errorLines23 = yield* TestConsole.errorLines;
+          const errors = A.map(errorLines23, String);
           expect(A.some(errors, Str.includes("failed to remove admission staging file"))).toBe(true);
         }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
       );
@@ -1038,10 +1058,12 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             yield* runQualityCommand(["scheduler"]);
             const beforeDefaultStatus = yield* TestConsole.logLines;
             yield* runQualityCommand(["scheduler", "status"]);
-            const defaultStatusLines = A.drop(yield* TestConsole.logLines, A.length(beforeDefaultStatus));
+            const logLines24 = yield* TestConsole.logLines;
+            const defaultStatusLines = A.drop(logLines24, A.length(beforeDefaultStatus));
             const beforeExplicitStatus = yield* TestConsole.logLines;
             yield* runQualityCommand(["scheduler", "status", "--no-json"]);
-            const explicitStatusLines = A.drop(yield* TestConsole.logLines, A.length(beforeExplicitStatus));
+            const logLines25 = yield* TestConsole.logLines;
+            const explicitStatusLines = A.drop(logLines25, A.length(beforeExplicitStatus));
             expect(defaultStatusLines).toEqual(explicitStatusLines);
             yield* runQualityCommand(["scheduler", "status", "--json"]);
             yield* runQualityCommand(["scheduler", "reap", "--no-apply"]);
@@ -1054,7 +1076,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             yield* runQualityCommand(["scheduler", "reap", "--no-apply"]);
             yield* runQualityCommand(["scheduler", "reap", "--apply"]);
 
-            const output = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+            const logLines26 = yield* TestConsole.logLines;
+            const output = A.join(A.map(logLines26, String), "\n");
             expect(output).toContain("Quality scheduler commands:");
             expect(output).toContain("admission capacity:");
             expect(output).toContain('"capacityTokens": 8');
@@ -1088,8 +1111,10 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             );
             expect(during.leases).toBe(1);
             expect(during.queue).toBe(0);
-            expect(A.length(yield* listDirectory(tempRoot.leases))).toBe(0);
-            expect(A.length(yield* listDirectory(tempRoot.queue))).toBe(0);
+            const listDirectory27 = yield* listDirectory(tempRoot.leases);
+            expect(A.length(listDirectory27)).toBe(0);
+            const listDirectory28 = yield* listDirectory(tempRoot.queue);
+            expect(A.length(listDirectory28)).toBe(0);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -1158,7 +1183,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
                 request(facts),
                 noAdmissionOriginGate,
                 Effect.gen(function* () {
-                  const leaseName = pipe(yield* listDirectory(tempRoot.leases), A.head, O.getOrThrow);
+                  const listDirectory29 = yield* listDirectory(tempRoot.leases);
+                  const leaseName = pipe(listDirectory29, A.head, O.getOrThrow);
                   return yield* fs
                     .readFileString(path.join(tempRoot.leases, leaseName))
                     .pipe(Effect.flatMap(decodeLease));
@@ -1196,8 +1222,10 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
           return yield* Effect.gen(function* () {
             const admissionRequest = request({ attemptId: O.some(JOURNALED_ATTEMPT_ID) });
             yield* withQualityAdmission(admissionRequest, noAdmissionOriginGate, Effect.void, fastConfig);
-            expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
-            expect(yield* listDirectory(tempRoot.queue)).toHaveLength(0);
+            const listDirectory30 = yield* listDirectory(tempRoot.leases);
+            expect(listDirectory30).toHaveLength(0);
+            const listDirectory31 = yield* listDirectory(tempRoot.queue);
+            expect(listDirectory31).toHaveLength(0);
             const events = yield* readJournalEvents(tempRoot.root);
             expect(A.map(events, (event) => event._tag)).toStrictEqual([
               "admission-enqueued",
@@ -1385,12 +1413,15 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             const content = `${A.join(lines, "\n")}\n`;
             const journalPath = yield* admissionJournalPath(tempRoot.root);
             yield* fs.writeFileString(journalPath, content);
-            expect(yield* readJournalEvents(tempRoot.root)).toStrictEqual(events);
+            const readJournalEvents32 = yield* readJournalEvents(tempRoot.root);
+            expect(readJournalEvents32).toStrictEqual(events);
             yield* runQualityCommand(["scheduler", "status", "--json"]);
             yield* runQualityCommand(["scheduler", "status", "--no-json"]);
             yield* runQualityCommand(["scheduler", "reap", "--apply"]);
-            expect(yield* fs.readFileString(journalPath)).toBe(content);
-            expect(yield* listDirectory(tempRoot.quarantine)).toHaveLength(0);
+            const readFileString33 = yield* fs.readFileString(journalPath);
+            expect(readFileString33).toBe(content);
+            const listDirectory34 = yield* listDirectory(tempRoot.quarantine);
+            expect(listDirectory34).toHaveLength(0);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -1431,11 +1462,14 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(201)).pipe(
               Effect.provideService(AdmissionJournalReader, reader)
             );
-            expect(yield* Ref.get(unknownCount)).toBe(5);
+            const got = yield* Ref.get(unknownCount);
+            expect(got).toBe(5);
             const appended = yield* encodeUnknownAdmissionJournalEventJson(journalAdmitted(201));
             const expected = `${A.join([...unknownRows, ...A.drop(admittedRows, 2), evictionRow, appended], "\n")}\n`;
-            expect(yield* fs.readFileString(journalPath)).toBe(expected);
-            expect(yield* listDirectory(tempRoot.quarantine)).toHaveLength(0);
+            const readFileString35 = yield* fs.readFileString(journalPath);
+            expect(readFileString35).toBe(expected);
+            const listDirectory36 = yield* listDirectory(tempRoot.quarantine);
+            expect(listDirectory36).toHaveLength(0);
             const decoded = yield* readJournalEvents(tempRoot.root);
             expect(A.take(decoded, 5)).toStrictEqual(journalV3Events());
             expect(A.filter(decoded, AdmissionJournalEvent.guards["admission-admitted"])).toHaveLength(200);
@@ -1510,7 +1544,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               // Seed the oversized history cheaply, then exercise repeated real locked appends.
               for (const event of A.flatMap(A.range(1300, 1302), queuedPair)) {
                 yield* appendAdmissionJournalEvent(tempRoot.root, event);
-                const lines = pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty));
+                const readFileString37 = yield* fs.readFileString(journalPath);
+                const lines = pipe(readFileString37, Str.split("\n"), A.filter(Str.isNonEmpty));
                 assertSome(A.head(lines), opaque);
                 expect(lines).toHaveLength(2401);
                 const decoded = yield* Effect.forEach(A.drop(lines, 1), (line) => decodeAdmissionJournalEvent(line));
@@ -1524,9 +1559,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               const admittedLines = yield* Effect.forEach(admissions, (event) =>
                 encodeUnknownAdmissionJournalEventJson(event)
               );
-              expect(yield* fs.readFileString(journalPath)).toBe(
-                `${A.join([opaque, ...admittedLines, ...expectedTail], "\n")}\n`
-              );
+              const readFileString38 = yield* fs.readFileString(journalPath);
+              expect(readFileString38).toBe(`${A.join([opaque, ...admittedLines, ...expectedTail], "\n")}\n`);
             }).pipe(
               provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
               Effect.provideService(
@@ -1597,8 +1631,10 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               Effect.provideService(FileSystem.FileSystem, displacedFileSystem)
             );
 
-            expect(yield* fs.exists(tombstonePath)).toBe(false);
-            expect(A.map(yield* readJournalEvents(tempRoot.root), (event) => event.nonce)).toStrictEqual(["nonce-1"]);
+            const exists39 = yield* fs.exists(tombstonePath);
+            expect(exists39).toBe(false);
+            const readJournalEvents40 = yield* readJournalEvents(tempRoot.root);
+            expect(A.map(readJournalEvents40, (event) => event.nonce)).toStrictEqual(["nonce-1"]);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -1635,7 +1671,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
 
             expect(failure.reason).toBe("journal-lock-retry-exhausted");
             expect(failure.message).toContain("retry bound exhausted");
-            expect(yield* fs.exists(journalPath)).toBe(false);
+            const exists41 = yield* fs.exists(journalPath);
+            expect(exists41).toBe(false);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -1664,7 +1701,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               Effect.flip
             );
             expect(evictionBusy.message).toContain("dropping one admission-lease-evicted event");
-            expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(0);
+            const readJournalEvents42 = yield* readJournalEvents(tempRoot.root);
+            expect(readJournalEvents42).toHaveLength(0);
             const agedLiveSeconds = ((yield* Clock.currentTimeMillis) - 301_000) / 1_000;
             yield* fs.utimes(lockPath, agedLiveSeconds, agedLiveSeconds);
             const agedLive = yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(0)).pipe(Effect.flip);
@@ -1752,8 +1790,10 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(1));
 
             (yield* fs.stat(claimPath).pipe(Effect.option)).pipe(assertNone);
-            expect(A.filter(yield* fs.readDirectory(tempRoot.root), Str.includes(".tombstone-"))).toHaveLength(0);
-            expect(A.map(yield* readJournalEvents(tempRoot.root), (event) => event.nonce)).toStrictEqual(["nonce-1"]);
+            const readDirectory43 = yield* fs.readDirectory(tempRoot.root);
+            expect(A.filter(readDirectory43, Str.includes(".tombstone-"))).toHaveLength(0);
+            const readJournalEvents44 = yield* readJournalEvents(tempRoot.root);
+            expect(A.map(readJournalEvents44, (event) => event.nonce)).toStrictEqual(["nonce-1"]);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -1798,8 +1838,10 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             yield* Deferred.succeed(finishAdoption, undefined);
             yield* Fiber.join(interrupter);
 
-            expect(yield* fs.exists(lockPath)).toBe(false);
-            expect(A.filter(yield* fs.readDirectory(tempRoot.root), Str.includes(".reap-"))).toHaveLength(0);
+            const exists45 = yield* fs.exists(lockPath);
+            expect(exists45).toBe(false);
+            const readDirectory46 = yield* fs.readDirectory(tempRoot.root);
+            expect(A.filter(readDirectory46, Str.includes(".reap-"))).toHaveLength(0);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -1859,20 +1901,26 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
                   )
                 );
                 yield* Deferred.await(takeoverReachedLock);
-                expect(yield* fs.exists(lockPath)).toBe(false);
+                const exists47 = yield* fs.exists(lockPath);
+                expect(exists47).toBe(false);
 
                 const replacementToken = `${process.pid}:replacement-after-takeover`;
-                expect(yield* acquireJournalFileLock(lockPath, replacementToken, 1)).toBe(true);
+                const acquireJournalFileLock48 = yield* acquireJournalFileLock(lockPath, replacementToken, 1);
+                expect(acquireJournalFileLock48).toBe(true);
                 yield* Deferred.succeed(resumeFirst, undefined);
 
-                expect(yield* Fiber.join(first)).toBe(false);
-                expect(yield* Fiber.join(takeover)).toBe(false);
+                const join49 = yield* Fiber.join(first);
+                expect(join49).toBe(false);
+                const join50 = yield* Fiber.join(takeover);
+                expect(join50).toBe(false);
                 const replacement = yield* fs
                   .readFileString(lockPath)
                   .pipe(Effect.flatMap(decodeJournalLockGeneration));
                 expect(replacement.ownerToken).toBe(replacementToken);
-                expect(A.join(A.map(yield* TestConsole.errorLines, String), "\n")).toContain("reap claim lost");
-                expect(A.filter(yield* fs.readDirectory(tempRoot.root), Str.includes(".reap-"))).toHaveLength(0);
+                const errorLines51 = yield* TestConsole.errorLines;
+                expect(A.join(A.map(errorLines51, String), "\n")).toContain("reap claim lost");
+                const readDirectory52 = yield* fs.readDirectory(tempRoot.root);
+                expect(A.filter(readDirectory52, Str.includes(".reap-"))).toHaveLength(0);
                 yield* releaseAdmissionJournalLockForTesting(lockPath, replacementToken);
               }).pipe(Effect.ensuring(Deferred.succeed(resumeFirst, undefined)));
             }).pipe(
@@ -1903,13 +1951,13 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               yield* fs.writeFileString(lockPath, observedToken);
               const claimLoss = yield* fileSystemWithLostJournalReapClaim(fs, lossAtRead);
 
-              expect(
-                yield* acquireJournalFileLock(lockPath, `${process.pid}:claim-loss-contender`, 1).pipe(
-                  Effect.provideService(FileSystem.FileSystem, claimLoss.fileSystem)
-                )
-              ).toBe(false);
+              const pipe53 = yield* acquireJournalFileLock(lockPath, `${process.pid}:claim-loss-contender`, 1).pipe(
+                Effect.provideService(FileSystem.FileSystem, claimLoss.fileSystem)
+              );
+              expect(pipe53).toBe(false);
 
-              expect(yield* Ref.get(claimLoss.adopterReads)).toBe(lossAtRead);
+              const got54 = yield* Ref.get(claimLoss.adopterReads);
+              expect(got54).toBe(lossAtRead);
             }).pipe(
               provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
               Effect.provideService(
@@ -1937,15 +1985,17 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             yield* fs.writeFileString(lockPath, observedToken);
             const claimLoss = yield* fileSystemWithLostJournalReapClaim(fs, 3);
 
-            expect(
-              yield* acquireJournalFileLock(lockPath, `${process.pid}:claim-loss-contender`, 1).pipe(
-                Effect.provideService(FileSystem.FileSystem, claimLoss.fileSystem)
-              )
-            ).toBe(false);
+            const pipe55 = yield* acquireJournalFileLock(lockPath, `${process.pid}:claim-loss-contender`, 1).pipe(
+              Effect.provideService(FileSystem.FileSystem, claimLoss.fileSystem)
+            );
+            expect(pipe55).toBe(false);
 
-            expect(yield* Ref.get(claimLoss.adopterReads)).toBe(3);
-            expect(yield* fs.exists(lockPath)).toBe(false);
-            expect(A.filter(yield* fs.readDirectory(tempRoot.root), Str.includes(".tombstone-"))).toHaveLength(1);
+            const got56 = yield* Ref.get(claimLoss.adopterReads);
+            expect(got56).toBe(3);
+            const exists57 = yield* fs.exists(lockPath);
+            expect(exists57).toBe(false);
+            const readDirectory58 = yield* fs.readDirectory(tempRoot.root);
+            expect(A.filter(readDirectory58, Str.includes(".tombstone-"))).toHaveLength(1);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -1973,9 +2023,12 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
 
             yield* finishAdmissionJournalLockReapForTesting(lockPath, claimPath, adopterPath, observedToken);
 
-            expect(yield* fs.exists(lockPath)).toBe(false);
-            expect(yield* fs.exists(adopterPath)).toBe(false);
-            expect(A.filter(yield* fs.readDirectory(tempRoot.root), Str.includes(".tombstone-"))).toHaveLength(0);
+            const exists59 = yield* fs.exists(lockPath);
+            expect(exists59).toBe(false);
+            const exists60 = yield* fs.exists(adopterPath);
+            expect(exists60).toBe(false);
+            const readDirectory61 = yield* fs.readDirectory(tempRoot.root);
+            expect(A.filter(readDirectory61, Str.includes(".tombstone-"))).toHaveLength(0);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -2000,7 +2053,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             const adopterReads = yield* Ref.make(0);
             yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
             yield* fs.writeFileString(lockPath, observedToken);
-            expect(yield* acquireJournalFileLock(replacementSeedPath, replacementToken, 1)).toBe(true);
+            const acquireJournalFileLock62 = yield* acquireJournalFileLock(replacementSeedPath, replacementToken, 1);
+            expect(acquireJournalFileLock62).toBe(true);
             const replacementGeneration = yield* fs.readFileString(replacementSeedPath);
             yield* releaseAdmissionJournalLockForTesting(replacementSeedPath, replacementToken);
             const claimLosingFileSystem = FileSystem.FileSystem.of({
@@ -2023,15 +2077,19 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               }),
             });
 
-            expect(
-              yield* acquireJournalFileLock(lockPath, `${process.pid}:restore-without-claim-contender`, 1).pipe(
-                Effect.provideService(FileSystem.FileSystem, claimLosingFileSystem)
-              )
-            ).toBe(false);
+            const pipe63 = yield* acquireJournalFileLock(
+              lockPath,
+              `${process.pid}:restore-without-claim-contender`,
+              1
+            ).pipe(Effect.provideService(FileSystem.FileSystem, claimLosingFileSystem));
+            expect(pipe63).toBe(false);
 
-            expect(yield* fs.exists(lockPath)).toBe(false);
-            expect(yield* Ref.get(adopterReads)).toBe(3);
-            expect(A.filter(yield* fs.readDirectory(tempRoot.root), Str.includes(".tombstone-"))).toHaveLength(1);
+            const exists64 = yield* fs.exists(lockPath);
+            expect(exists64).toBe(false);
+            const got65 = yield* Ref.get(adopterReads);
+            expect(got65).toBe(3);
+            const readDirectory66 = yield* fs.readDirectory(tempRoot.root);
+            expect(A.filter(readDirectory66, Str.includes(".tombstone-"))).toHaveLength(1);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -2053,7 +2111,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             const replacementSeedPath = path.join(tempRoot.root, "replacement-seed.lock");
             const replacementToken = `${process.pid}:replacement-writer`;
             yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
-            expect(yield* acquireJournalFileLock(replacementSeedPath, replacementToken, 1)).toBe(true);
+            const acquireJournalFileLock67 = yield* acquireJournalFileLock(replacementSeedPath, replacementToken, 1);
+            expect(acquireJournalFileLock67).toBe(true);
             const replacementGeneration = yield* fs.readFileString(replacementSeedPath);
             yield* releaseAdmissionJournalLockForTesting(replacementSeedPath, replacementToken);
             yield* fs.writeFileString(lockPath, `${DEAD_PID}:abandoned-generation`);
@@ -2103,8 +2162,10 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             );
 
             expect(acquired).toStrictEqual([false, false]);
-            expect(yield* Ref.get(lockTombstones)).toBe(1);
-            expect(yield* fs.readFileString(lockPath)).toBe(replacementGeneration);
+            const got68 = yield* Ref.get(lockTombstones);
+            expect(got68).toBe(1);
+            const readFileString69 = yield* fs.readFileString(lockPath);
+            expect(readFileString69).toBe(replacementGeneration);
             yield* releaseAdmissionJournalLockForTesting(lockPath, replacementToken);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
@@ -2132,7 +2193,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             const replacementSeedPath = path.join(tempRoot.root, "replacement-seed.lock");
             const replacementToken = `${process.pid}:replacement-writer`;
             yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
-            expect(yield* acquireJournalFileLock(replacementSeedPath, replacementToken, 1)).toBe(true);
+            const acquireJournalFileLock70 = yield* acquireJournalFileLock(replacementSeedPath, replacementToken, 1);
+            expect(acquireJournalFileLock70).toBe(true);
             const replacementGeneration = yield* fs.readFileString(replacementSeedPath);
             yield* releaseAdmissionJournalLockForTesting(replacementSeedPath, replacementToken);
             yield* fs.writeFileString(lockPath, `${DEAD_PID}:abandoned-generation`);
@@ -2237,9 +2299,12 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             );
 
             expect(acquired).toStrictEqual([false, false]);
-            expect(yield* Ref.get(lockTombstones)).toBe(1);
-            expect(yield* fs.readFileString(lockPath)).toBe(replacementGeneration);
-            expect(A.filter(yield* fs.readDirectory(tempRoot.root), Str.includes(".reap-"))).toStrictEqual([]);
+            const got71 = yield* Ref.get(lockTombstones);
+            expect(got71).toBe(1);
+            const readFileString72 = yield* fs.readFileString(lockPath);
+            expect(readFileString72).toBe(replacementGeneration);
+            const readDirectory73 = yield* fs.readDirectory(tempRoot.root);
+            expect(A.filter(readDirectory73, Str.includes(".reap-"))).toStrictEqual([]);
             yield* releaseAdmissionJournalLockForTesting(lockPath, replacementToken);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
@@ -2265,8 +2330,10 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             const replacementToken = `${process.pid}:displaced-writer`;
             const thirdToken = `${process.pid}:third-writer`;
             yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
-            expect(yield* acquireJournalFileLock(replacementSeedPath, replacementToken, 1)).toBe(true);
-            expect(yield* acquireJournalFileLock(thirdSeedPath, thirdToken, 1)).toBe(true);
+            const acquireJournalFileLock74 = yield* acquireJournalFileLock(replacementSeedPath, replacementToken, 1);
+            expect(acquireJournalFileLock74).toBe(true);
+            const acquireJournalFileLock75 = yield* acquireJournalFileLock(thirdSeedPath, thirdToken, 1);
+            expect(acquireJournalFileLock75).toBe(true);
             const replacementGeneration = yield* fs.readFileString(replacementSeedPath);
             const thirdGeneration = yield* fs.readFileString(thirdSeedPath);
             yield* releaseAdmissionJournalLockForTesting(replacementSeedPath, replacementToken);
@@ -2286,14 +2353,15 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               }),
             });
 
-            expect(
-              yield* acquireJournalFileLock(lockPath, `${process.pid}:reclaimer`, 1).pipe(
-                Effect.provideService(FileSystem.FileSystem, interleavedFileSystem)
-              )
-            ).toBe(false);
+            const pipe76 = yield* acquireJournalFileLock(lockPath, `${process.pid}:reclaimer`, 1).pipe(
+              Effect.provideService(FileSystem.FileSystem, interleavedFileSystem)
+            );
+            expect(pipe76).toBe(false);
 
-            expect(yield* fs.readFileString(lockPath)).toBe(thirdGeneration);
-            const tombstones = A.filter(yield* fs.readDirectory(tempRoot.root), Str.includes(".tombstone-"));
+            const readFileString77 = yield* fs.readFileString(lockPath);
+            expect(readFileString77).toBe(thirdGeneration);
+            const readDirectory78 = yield* fs.readDirectory(tempRoot.root);
+            const tombstones = A.filter(readDirectory78, Str.includes(".tombstone-"));
             expect(tombstones).toHaveLength(1);
             const lockLost = yield* publishAdmissionJournalForTesting(
               journalPath,
@@ -2302,14 +2370,19 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               "displaced writer must not publish\n"
             ).pipe(Effect.flip);
             expect(lockLost.message).toContain("was lost before publication");
-            expect(yield* fs.exists(journalPath)).toBe(false);
-            expect(A.filter(yield* fs.readDirectory(tempRoot.root), Str.includes(".tombstone-"))).toHaveLength(1);
+            const exists79 = yield* fs.exists(journalPath);
+            expect(exists79).toBe(false);
+            const readDirectory80 = yield* fs.readDirectory(tempRoot.root);
+            expect(A.filter(readDirectory80, Str.includes(".tombstone-"))).toHaveLength(1);
             yield* releaseAdmissionJournalLockForTesting(lockPath, thirdToken);
             const recoveryToken = `${process.pid}:recovery-contender`;
-            expect(yield* acquireJournalFileLock(lockPath, recoveryToken, 1)).toBe(true);
-            expect(A.filter(yield* fs.readDirectory(tempRoot.root), Str.includes(".tombstone-"))).toHaveLength(0);
+            const acquireJournalFileLock81 = yield* acquireJournalFileLock(lockPath, recoveryToken, 1);
+            expect(acquireJournalFileLock81).toBe(true);
+            const readDirectory82 = yield* fs.readDirectory(tempRoot.root);
+            expect(A.filter(readDirectory82, Str.includes(".tombstone-"))).toHaveLength(0);
             yield* publishAdmissionJournalForTesting(journalPath, lockPath, recoveryToken, "fresh recovery writer\n");
-            expect(yield* fs.readFileString(journalPath)).toBe("fresh recovery writer\n");
+            const readFileString83 = yield* fs.readFileString(journalPath);
+            expect(readFileString83).toBe("fresh recovery writer\n");
             yield* releaseAdmissionJournalLockForTesting(lockPath, recoveryToken);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
@@ -2338,35 +2411,45 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
 
             const systemLockPath = path.join(tempRoot.root, "system-source.lock");
             const systemOwner = `${process.pid}:system-source-owner`;
-            expect(
-              yield* acquireJournalFileLock(systemLockPath, systemOwner, 1).pipe(
-                Effect.provideService(FileSystem.FileSystem, withoutProcfs)
-              )
-            ).toBe(true);
+            const pipe84 = yield* acquireJournalFileLock(systemLockPath, systemOwner, 1).pipe(
+              Effect.provideService(FileSystem.FileSystem, withoutProcfs)
+            );
+            expect(pipe84).toBe(true);
             const systemGeneration = yield* fs
               .readFileString(systemLockPath)
               .pipe(Effect.flatMap(decodeJournalLockGeneration));
             expect(
               Str.startsWith((yield* HostProcessPlatform) === "win32" ? "win:" : "ps:")(systemGeneration.procStart)
             ).toBe(true);
-            expect(yield* acquireJournalFileLock(systemLockPath, `${process.pid}:proc-contender`, 1)).toBe(false);
-            expect(Str.includes(systemOwner)(yield* fs.readFileString(systemLockPath))).toBe(true);
+            const acquireJournalFileLock85 = yield* acquireJournalFileLock(
+              systemLockPath,
+              `${process.pid}:proc-contender`,
+              1
+            );
+            expect(acquireJournalFileLock85).toBe(false);
+            const argument1 = Str.includes(systemOwner);
+            const readFileString1 = yield* fs.readFileString(systemLockPath);
+            expect(argument1(readFileString1)).toBe(true);
             yield* releaseAdmissionJournalLockForTesting(systemLockPath, systemOwner);
 
             const procLockPath = path.join(tempRoot.root, "proc-source.lock");
             const procOwner = `${process.pid}:proc-source-owner`;
-            expect(yield* acquireJournalFileLock(procLockPath, procOwner, 1)).toBe(true);
+            const acquireJournalFileLock86 = yield* acquireJournalFileLock(procLockPath, procOwner, 1);
+            expect(acquireJournalFileLock86).toBe(true);
             const procGeneration = yield* fs
               .readFileString(procLockPath)
               .pipe(Effect.flatMap(decodeJournalLockGeneration));
-            expect(procGeneration.procStart).toBe(O.getOrThrow(yield* processStartIdentityForPid(process.pid)));
+            const expectation = expect(procGeneration.procStart);
+            const processStartIdentityForPid2 = yield* processStartIdentityForPid(process.pid);
+            expectation.toBe(O.getOrThrow(processStartIdentityForPid2));
             expect(Str.isNonEmpty(procGeneration.procStart) && !Str.includes(":")(procGeneration.procStart)).toBe(true);
-            expect(
-              yield* acquireJournalFileLock(procLockPath, `${process.pid}:system-contender`, 1).pipe(
-                Effect.provideService(FileSystem.FileSystem, withoutProcfs)
-              )
-            ).toBe(false);
-            expect(Str.includes(procOwner)(yield* fs.readFileString(procLockPath))).toBe(true);
+            const pipe87 = yield* acquireJournalFileLock(procLockPath, `${process.pid}:system-contender`, 1).pipe(
+              Effect.provideService(FileSystem.FileSystem, withoutProcfs)
+            );
+            expect(pipe87).toBe(false);
+            const argument2 = Str.includes(procOwner);
+            const readFileString3 = yield* fs.readFileString(procLockPath);
+            expect(argument2(readFileString3)).toBe(true);
             yield* releaseAdmissionJournalLockForTesting(procLockPath, procOwner);
           }).pipe(
             Effect.provideService(HostProcessPlatform, currentHostPlatform),
@@ -2392,9 +2475,11 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
             yield* fs.writeFileString(claimPath, `${DEAD_PID}:orphaned-claim`);
 
-            expect(yield* acquireJournalFileLock(lockPath, ownerToken, 1)).toBe(true);
+            const acquireJournalFileLock88 = yield* acquireJournalFileLock(lockPath, ownerToken, 1);
+            expect(acquireJournalFileLock88).toBe(true);
 
-            expect(yield* fs.exists(claimPath)).toBe(false);
+            const exists89 = yield* fs.exists(claimPath);
+            expect(exists89).toBe(false);
             yield* releaseAdmissionJournalLockForTesting(lockPath, ownerToken);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
@@ -2417,11 +2502,18 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             const liveOwnerToken = `${process.pid}:live-tombstone-owner`;
             const liveTombstonePath = `${liveLockPath}.reap-stale.tombstone-orphan`;
             yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
-            expect(yield* acquireJournalFileLock(liveLockPath, liveOwnerToken, 1)).toBe(true);
+            const acquireJournalFileLock90 = yield* acquireJournalFileLock(liveLockPath, liveOwnerToken, 1);
+            expect(acquireJournalFileLock90).toBe(true);
             yield* fs.writeFileString(liveTombstonePath, `${DEAD_PID}:stale-tombstone`);
 
-            expect(yield* acquireJournalFileLock(liveLockPath, `${process.pid}:live-contender`, 1)).toBe(false);
-            expect(yield* fs.exists(liveTombstonePath)).toBe(false);
+            const acquireJournalFileLock91 = yield* acquireJournalFileLock(
+              liveLockPath,
+              `${process.pid}:live-contender`,
+              1
+            );
+            expect(acquireJournalFileLock91).toBe(false);
+            const exists92 = yield* fs.exists(liveTombstonePath);
+            expect(exists92).toBe(false);
             yield* releaseAdmissionJournalLockForTesting(liveLockPath, liveOwnerToken);
 
             const crashLockPath = path.join(tempRoot.root, "crashed-reclaimer.lock");
@@ -2430,16 +2522,20 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             const journalPath = yield* admissionJournalPath(tempRoot.root);
             yield* fs.writeFileString(crashTombstonePath, `${process.pid}:abandoned-live-generation`);
 
-            expect(yield* acquireJournalFileLock(crashLockPath, recoveryOwnerToken, 1)).toBe(true);
-            expect(yield* fs.exists(crashTombstonePath)).toBe(false);
+            const acquireJournalFileLock93 = yield* acquireJournalFileLock(crashLockPath, recoveryOwnerToken, 1);
+            expect(acquireJournalFileLock93).toBe(true);
+            const exists94 = yield* fs.exists(crashTombstonePath);
+            expect(exists94).toBe(false);
             yield* publishAdmissionJournalForTesting(
               journalPath,
               crashLockPath,
               recoveryOwnerToken,
               "post-crash writer\n"
             );
-            expect(yield* fs.readFileString(journalPath)).toBe("post-crash writer\n");
-            expect(A.join(A.map(yield* TestConsole.errorLines, String), "\n")).toContain(crashTombstonePath);
+            const readFileString95 = yield* fs.readFileString(journalPath);
+            expect(readFileString95).toBe("post-crash writer\n");
+            const errorLines96 = yield* TestConsole.errorLines;
+            expect(A.join(A.map(errorLines96, String), "\n")).toContain(crashTombstonePath);
             yield* releaseAdmissionJournalLockForTesting(crashLockPath, recoveryOwnerToken);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
@@ -2466,11 +2562,13 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               ownerToken: `${process.pid}:reused-generation`,
             });
             yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
-            yield* fs.writeFileString(lockPath, yield* encodeJournalLockGeneration(reusedGeneration));
+            const encodedJournalLockGeneration = yield* encodeJournalLockGeneration(reusedGeneration);
+            yield* fs.writeFileString(lockPath, encodedJournalLockGeneration);
 
             yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(1));
 
-            expect(A.map(yield* readJournalEvents(tempRoot.root), (event) => event.nonce)).toStrictEqual(["nonce-1"]);
+            const readJournalEvents97 = yield* readJournalEvents(tempRoot.root);
+            expect(A.map(readJournalEvents97, (event) => event.nonce)).toStrictEqual(["nonce-1"]);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -2506,7 +2604,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             );
 
             expect(acquired).toBe(false);
-            expect(yield* fs.readFileString(lockPath)).toBe(observedToken);
+            const readFileString98 = yield* fs.readFileString(lockPath);
+            expect(readFileString98).toBe(observedToken);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -2525,7 +2624,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
             yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
-            const procStart = O.getOrThrow(yield* processStartIdentityForPid(process.pid));
+            const processStartIdentityForPid99 = yield* processStartIdentityForPid(process.pid);
+            const procStart = O.getOrThrow(processStartIdentityForPid99);
             const nowMillis = yield* Clock.currentTimeMillis;
 
             const liveLockPath = path.join(tempRoot.root, "live-adopter.lock");
@@ -2543,8 +2643,14 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             );
             yield* fs.writeFileString(liveLockPath, liveToken);
             yield* fs.writeFileString(liveAdopterPath, liveToken);
-            expect(yield* acquireJournalFileLock(liveLockPath, `${process.pid}:contender-live`, 1)).toBe(false);
-            expect(yield* fs.exists(liveLockPath)).toBe(true);
+            const acquireJournalFileLock100 = yield* acquireJournalFileLock(
+              liveLockPath,
+              `${process.pid}:contender-live`,
+              1
+            );
+            expect(acquireJournalFileLock100).toBe(false);
+            const exists101 = yield* fs.exists(liveLockPath);
+            expect(exists101).toBe(true);
 
             const legacyLockPath = path.join(tempRoot.root, "legacy-live-adopter.lock");
             const legacyToken = `${DEAD_PID}:legacy-live-adopter-generation`;
@@ -2552,16 +2658,28 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             const legacyAdopterPath = `${legacyClaimPath}.adopt-${process.pid}.${Base64Url.encode(procStart)}.${Base64Url.encode(`${process.pid}:legacy-live-adopter`)}`;
             yield* fs.writeFileString(legacyLockPath, legacyToken);
             yield* fs.link(legacyLockPath, legacyAdopterPath);
-            expect(yield* acquireJournalFileLock(legacyLockPath, `${process.pid}:contender-legacy`, 1)).toBe(false);
-            expect(yield* fs.exists(legacyLockPath)).toBe(true);
+            const acquireJournalFileLock102 = yield* acquireJournalFileLock(
+              legacyLockPath,
+              `${process.pid}:contender-legacy`,
+              1
+            );
+            expect(acquireJournalFileLock102).toBe(false);
+            const exists103 = yield* fs.exists(legacyLockPath);
+            expect(exists103).toBe(true);
 
             const freshLockPath = path.join(tempRoot.root, "fresh-malformed-adopter.lock");
             const freshToken = `${DEAD_PID}:fresh-malformed-generation`;
             const freshClaimPath = yield* reapClaimPath(freshLockPath, freshToken);
             yield* fs.writeFileString(freshLockPath, freshToken);
             yield* fs.writeFileString(`${freshClaimPath}.adopt-malformed`, freshToken);
-            expect(yield* acquireJournalFileLock(freshLockPath, `${process.pid}:contender-fresh`, 1)).toBe(false);
-            expect(yield* fs.exists(freshLockPath)).toBe(true);
+            const acquireJournalFileLock104 = yield* acquireJournalFileLock(
+              freshLockPath,
+              `${process.pid}:contender-fresh`,
+              1
+            );
+            expect(acquireJournalFileLock104).toBe(false);
+            const exists105 = yield* fs.exists(freshLockPath);
+            expect(exists105).toBe(true);
 
             const unreadableLockPath = path.join(tempRoot.root, "unreadable-adopter-directory.lock");
             const unreadableToken = `${DEAD_PID}:unreadable-adopter-generation`;
@@ -2573,12 +2691,14 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
                 Str.Equivalence(target, tempRoot.root) ? unavailableDirectory : fs.readDirectory(target)
               ),
             });
-            expect(
-              yield* acquireJournalFileLock(unreadableLockPath, `${process.pid}:contender-unreadable`, 1).pipe(
-                Effect.provideService(FileSystem.FileSystem, unreadableFileSystem)
-              )
-            ).toBe(false);
-            expect(yield* fs.exists(unreadableLockPath)).toBe(true);
+            const pipe106 = yield* acquireJournalFileLock(
+              unreadableLockPath,
+              `${process.pid}:contender-unreadable`,
+              1
+            ).pipe(Effect.provideService(FileSystem.FileSystem, unreadableFileSystem));
+            expect(pipe106).toBe(false);
+            const exists107 = yield* fs.exists(unreadableLockPath);
+            expect(exists107).toBe(true);
 
             const vanishedLockPath = path.join(tempRoot.root, "vanished-adopter.lock");
             const vanishedToken = `${DEAD_PID}:vanished-adopter-generation`;
@@ -2593,12 +2713,14 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
                   : fs.readDirectory(target)
               ),
             });
-            expect(
-              yield* acquireJournalFileLock(vanishedLockPath, `${process.pid}:contender-vanished`, 1).pipe(
-                Effect.provideService(FileSystem.FileSystem, vanishedFileSystem)
-              )
-            ).toBe(false);
-            expect(yield* fs.exists(vanishedLockPath)).toBe(true);
+            const pipe108 = yield* acquireJournalFileLock(
+              vanishedLockPath,
+              `${process.pid}:contender-vanished`,
+              1
+            ).pipe(Effect.provideService(FileSystem.FileSystem, vanishedFileSystem));
+            expect(pipe108).toBe(false);
+            const exists109 = yield* fs.exists(vanishedLockPath);
+            expect(exists109).toBe(true);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -2623,12 +2745,13 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             const staleLiveLockPath = path.join(tempRoot.root, "stale-live-adopter.lock");
             const staleLiveToken = `${DEAD_PID}:stale-live-adopter-generation`;
             const staleLiveClaimPath = yield* reapClaimPath(staleLiveLockPath, staleLiveToken);
+            const processStartIdentityForPid110 = yield* processStartIdentityForPid(process.pid);
             const staleLiveAdopterPath = reapAdopterPath(
               staleLiveClaimPath,
               AdmissionJournalLockGeneration.make({
                 schemaVersion: "yeet-admission-journal-lock/v1",
                 pid: process.pid,
-                procStart: O.getOrThrow(yield* processStartIdentityForPid(process.pid)),
+                procStart: O.getOrThrow(processStartIdentityForPid110),
                 ownerToken: `${process.pid}:stale-live-adopter`,
               }),
               nowMillis - 31_000
@@ -2636,8 +2759,10 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             yield* fs.writeFileString(staleLiveLockPath, staleLiveToken);
             yield* fs.link(staleLiveLockPath, staleLiveAdopterPath);
             const staleLiveContender = `${process.pid}:stale-live-contender`;
-            expect(yield* acquireJournalFileLock(staleLiveLockPath, staleLiveContender, 2)).toBe(true);
-            expect(yield* fs.exists(staleLiveAdopterPath)).toBe(false);
+            const acquireJournalFileLock111 = yield* acquireJournalFileLock(staleLiveLockPath, staleLiveContender, 2);
+            expect(acquireJournalFileLock111).toBe(true);
+            const exists112 = yield* fs.exists(staleLiveAdopterPath);
+            expect(exists112).toBe(false);
             yield* releaseAdmissionJournalLockForTesting(staleLiveLockPath, staleLiveContender);
 
             const staleLockPath = path.join(tempRoot.root, "stale-malformed-adopter.lock");
@@ -2647,8 +2772,14 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             yield* fs.writeFileString(staleLockPath, staleToken);
             yield* fs.link(staleLockPath, staleAdopterPath);
             yield* fs.utimes(staleAdopterPath, agedSeconds, agedSeconds);
-            expect(yield* acquireJournalFileLock(staleLockPath, `${process.pid}:contender-stale`, 1)).toBe(false);
-            expect(yield* fs.exists(staleLockPath)).toBe(false);
+            const acquireJournalFileLock113 = yield* acquireJournalFileLock(
+              staleLockPath,
+              `${process.pid}:contender-stale`,
+              1
+            );
+            expect(acquireJournalFileLock113).toBe(false);
+            const exists114 = yield* fs.exists(staleLockPath);
+            expect(exists114).toBe(false);
 
             const deadLockPath = path.join(tempRoot.root, "dead-adopter.lock");
             const deadToken = `${DEAD_PID}:dead-adopter-generation`;
@@ -2665,8 +2796,14 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             );
             yield* fs.writeFileString(deadLockPath, deadToken);
             yield* fs.link(deadLockPath, deadAdopterPath);
-            expect(yield* acquireJournalFileLock(deadLockPath, `${process.pid}:contender-dead`, 1)).toBe(false);
-            expect(yield* fs.exists(deadLockPath)).toBe(false);
+            const acquireJournalFileLock115 = yield* acquireJournalFileLock(
+              deadLockPath,
+              `${process.pid}:contender-dead`,
+              1
+            );
+            expect(acquireJournalFileLock115).toBe(false);
+            const exists116 = yield* fs.exists(deadLockPath);
+            expect(exists116).toBe(false);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -2697,12 +2834,12 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
                   : fs.readFileString(target, encoding)
               ),
             });
-            expect(
-              yield* acquireJournalFileLock(changedLockPath, `${process.pid}:contender-changed`, 1).pipe(
-                Effect.provideService(FileSystem.FileSystem, changedFileSystem)
-              )
-            ).toBe(false);
-            expect(yield* fs.readFileString(changedLockPath)).toBe(changedToken);
+            const pipe117 = yield* acquireJournalFileLock(changedLockPath, `${process.pid}:contender-changed`, 1).pipe(
+              Effect.provideService(FileSystem.FileSystem, changedFileSystem)
+            );
+            expect(pipe117).toBe(false);
+            const readFileString118 = yield* fs.readFileString(changedLockPath);
+            expect(readFileString118).toBe(changedToken);
 
             const tombstoneLockPath = path.join(tempRoot.root, "failed-tombstone.lock");
             const tombstoneToken = `${DEAD_PID}:failed-tombstone-generation`;
@@ -2719,12 +2856,14 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
                   : fs.rename(oldPath, newPath)
               ),
             });
-            expect(
-              yield* acquireJournalFileLock(tombstoneLockPath, `${process.pid}:contender-tombstone`, 1).pipe(
-                Effect.provideService(FileSystem.FileSystem, tombstoneFileSystem)
-              )
-            ).toBe(false);
-            expect(yield* fs.readFileString(tombstoneLockPath)).toBe(tombstoneToken);
+            const pipe119 = yield* acquireJournalFileLock(
+              tombstoneLockPath,
+              `${process.pid}:contender-tombstone`,
+              1
+            ).pipe(Effect.provideService(FileSystem.FileSystem, tombstoneFileSystem));
+            expect(pipe119).toBe(false);
+            const readFileString120 = yield* fs.readFileString(tombstoneLockPath);
+            expect(readFileString120).toBe(tombstoneToken);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -2751,12 +2890,11 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
                 Str.startsWith("/proc/")(target) ? Effect.succeed("") : fs.readFileString(target, encoding)
               ),
             });
-            expect(
-              yield* acquireJournalFileLock(unavailableLockPath, `${process.pid}:unavailable`, 1).pipe(
-                Effect.provideService(FileSystem.FileSystem, unavailableFileSystem),
-                Effect.provideService(HostProcessPlatform, "win32")
-              )
-            ).toBe(false);
+            const pipe121 = yield* acquireJournalFileLock(unavailableLockPath, `${process.pid}:unavailable`, 1).pipe(
+              Effect.provideService(FileSystem.FileSystem, unavailableFileSystem),
+              Effect.provideService(HostProcessPlatform, "win32")
+            );
+            expect(pipe121).toBe(false);
 
             const unavailableAdopterPath = path.join(tempRoot.root, "unavailable-adopter-identity.lock");
             const unavailableAdopterToken = `${DEAD_PID}:unavailable-adopter-generation`;
@@ -2772,16 +2910,16 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
                 return readCount === 1 ? yield* fs.readFileString(target, encoding) : Str.empty;
               }),
             });
-            expect(
-              yield* withProcessPath(
-                Str.empty,
-                acquireJournalFileLock(unavailableAdopterPath, `${process.pid}:adopter-unavailable`, 1).pipe(
-                  Effect.provideService(FileSystem.FileSystem, unavailableAdopterFileSystem),
-                  Effect.provideService(HostProcessPlatform, "win32")
-                )
+            const withProcessPath122 = yield* withProcessPath(
+              Str.empty,
+              acquireJournalFileLock(unavailableAdopterPath, `${process.pid}:adopter-unavailable`, 1).pipe(
+                Effect.provideService(FileSystem.FileSystem, unavailableAdopterFileSystem),
+                Effect.provideService(HostProcessPlatform, "win32")
               )
-            ).toBe(false);
-            expect(yield* fs.readFileString(unavailableAdopterPath)).toBe(unavailableAdopterToken);
+            );
+            expect(withProcessPath122).toBe(false);
+            const readFileString123 = yield* fs.readFileString(unavailableAdopterPath);
+            expect(readFileString123).toBe(unavailableAdopterToken);
 
             const vanishedLockPath = path.join(tempRoot.root, "vanished-contention.lock");
             const missingSource = path.join(tempRoot.root, "missing-link-source");
@@ -2791,12 +2929,12 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
                 Str.includes(".stage-")(existingPath) ? fs.link(missingSource, newPath) : fs.link(existingPath, newPath)
               ),
             });
-            expect(
-              yield* acquireJournalFileLock(vanishedLockPath, `${process.pid}:vanished`, 1).pipe(
-                Effect.provideService(FileSystem.FileSystem, vanishedFileSystem)
-              )
-            ).toBe(false);
-            expect(yield* fs.exists(vanishedLockPath)).toBe(false);
+            const pipe124 = yield* acquireJournalFileLock(vanishedLockPath, `${process.pid}:vanished`, 1).pipe(
+              Effect.provideService(FileSystem.FileSystem, vanishedFileSystem)
+            );
+            expect(pipe124).toBe(false);
+            const exists125 = yield* fs.exists(vanishedLockPath);
+            expect(exists125).toBe(false);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -2819,8 +2957,10 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             const ownerToken = `${process.pid}:release-race-owner`;
             const replacementToken = `${process.pid}:release-race-replacement`;
             yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
-            expect(yield* acquireJournalFileLock(lockPath, ownerToken, 1)).toBe(true);
-            expect(yield* acquireJournalFileLock(replacementSeedPath, replacementToken, 1)).toBe(true);
+            const acquireJournalFileLock126 = yield* acquireJournalFileLock(lockPath, ownerToken, 1);
+            expect(acquireJournalFileLock126).toBe(true);
+            const acquireJournalFileLock127 = yield* acquireJournalFileLock(replacementSeedPath, replacementToken, 1);
+            expect(acquireJournalFileLock127).toBe(true);
             const replacementGeneration = yield* fs.readFileString(replacementSeedPath);
             yield* releaseAdmissionJournalLockForTesting(replacementSeedPath, replacementToken);
 
@@ -2853,8 +2993,10 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               Effect.provideService(FileSystem.FileSystem, interleavedFileSystem)
             );
 
-            expect(yield* fs.readFileString(lockPath)).toBe(replacementGeneration);
-            expect(A.filter(yield* fs.readDirectory(tempRoot.root), Str.includes(".tombstone-"))).toHaveLength(0);
+            const readFileString128 = yield* fs.readFileString(lockPath);
+            expect(readFileString128).toBe(replacementGeneration);
+            const readDirectory129 = yield* fs.readDirectory(tempRoot.root);
+            expect(A.filter(readDirectory129, Str.includes(".tombstone-"))).toHaveLength(0);
             yield* releaseAdmissionJournalLockForTesting(lockPath, replacementToken);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
@@ -2877,7 +3019,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             const replacementToken = `${process.pid}:release-displaced-replacement`;
             const thirdToken = `${process.pid}:release-third-writer`;
             yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
-            expect(yield* acquireJournalFileLock(lockPath, replacementToken, 1)).toBe(true);
+            const acquireJournalFileLock130 = yield* acquireJournalFileLock(lockPath, replacementToken, 1);
+            expect(acquireJournalFileLock130).toBe(true);
 
             const interleavedFileSystem = FileSystem.FileSystem.of({
               ...fs,
@@ -2892,12 +3035,16 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               Effect.provideService(FileSystem.FileSystem, interleavedFileSystem)
             );
 
-            expect(yield* fs.readFileString(lockPath)).toBe(thirdToken);
-            expect(A.filter(yield* fs.readDirectory(tempRoot.root), Str.includes(".tombstone-"))).toHaveLength(1);
+            const readFileString131 = yield* fs.readFileString(lockPath);
+            expect(readFileString131).toBe(thirdToken);
+            const readDirectory132 = yield* fs.readDirectory(tempRoot.root);
+            expect(A.filter(readDirectory132, Str.includes(".tombstone-"))).toHaveLength(1);
             yield* releaseAdmissionJournalLockForTesting(lockPath, thirdToken);
             const recoveryToken = `${process.pid}:release-recovery`;
-            expect(yield* acquireJournalFileLock(lockPath, recoveryToken, 1)).toBe(true);
-            expect(A.filter(yield* fs.readDirectory(tempRoot.root), Str.includes(".tombstone-"))).toHaveLength(0);
+            const acquireJournalFileLock133 = yield* acquireJournalFileLock(lockPath, recoveryToken, 1);
+            expect(acquireJournalFileLock133).toBe(true);
+            const readDirectory134 = yield* fs.readDirectory(tempRoot.root);
+            expect(A.filter(readDirectory134, Str.includes(".tombstone-"))).toHaveLength(0);
             yield* releaseAdmissionJournalLockForTesting(lockPath, recoveryToken);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
@@ -2919,7 +3066,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             const lockPath = path.join(tempRoot.root, "journal.lock");
             yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
             const ownerToken = `${process.pid}:owned-release`;
-            expect(yield* acquireJournalFileLock(lockPath, ownerToken, 1)).toBe(true);
+            const acquireJournalFileLock135 = yield* acquireJournalFileLock(lockPath, ownerToken, 1);
+            expect(acquireJournalFileLock135).toBe(true);
 
             yield* releaseAdmissionJournalLockForTesting(lockPath, `${process.pid}:not-the-owner`);
 
@@ -2950,10 +3098,10 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
 
             yield* releaseAdmissionJournalLockForTesting(lockPath, "absent");
 
-            expect(yield* fs.exists(lockPath)).toBe(false);
-            expect(
-              A.filter(yield* fs.readDirectory(tempRoot.root), Str.startsWith("absent-release.lock.reap-"))
-            ).toHaveLength(0);
+            const exists136 = yield* fs.exists(lockPath);
+            expect(exists136).toBe(false);
+            const readDirectory137 = yield* fs.readDirectory(tempRoot.root);
+            expect(A.filter(readDirectory137, Str.startsWith("absent-release.lock.reap-"))).toHaveLength(0);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -2977,7 +3125,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             yield* setAdmissionEvictionProtocol("on");
             const lockPath = path.join(tempRoot.root, "journal.lock");
             const lockToken = `${process.pid}:00000000-0000-4000-8000-000000000124`;
-            expect(yield* acquireJournalFileLock(lockPath, lockToken, 1)).toBe(true);
+            const acquireJournalFileLock138 = yield* acquireJournalFileLock(lockPath, lockToken, 1);
+            expect(acquireJournalFileLock138).toBe(true);
             const disabling = yield* Effect.forkChild(setAdmissionEvictionProtocol("off"));
             yield* Effect.sleep("75 millis");
             expect(disabling.pollUnsafe()).toBeUndefined();
@@ -3007,11 +3156,21 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             const event = O.getOrThrow(
               A.findFirst(journalV3Events(), AdmissionJournalEvent.guards["admission-lease-evicted"])
             );
-            expect(yield* appendAdmissionEvictionJournalEvent(tempRoot.root, event)).toBe(false);
-            expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(0);
+            const appendAdmissionEvictionJournalEvent139 = yield* appendAdmissionEvictionJournalEvent(
+              tempRoot.root,
+              event
+            );
+            expect(appendAdmissionEvictionJournalEvent139).toBe(false);
+            const readJournalEvents140 = yield* readJournalEvents(tempRoot.root);
+            expect(readJournalEvents140).toHaveLength(0);
             expect((yield* setAdmissionEvictionProtocol("on")).schemaVersion).toBe("yeet-admission-protocol/v2");
-            expect(yield* appendAdmissionEvictionJournalEvent(tempRoot.root, event)).toBe(true);
-            expect(yield* readJournalEvents(tempRoot.root)).toStrictEqual([event]);
+            const appendAdmissionEvictionJournalEvent141 = yield* appendAdmissionEvictionJournalEvent(
+              tempRoot.root,
+              event
+            );
+            expect(appendAdmissionEvictionJournalEvent141).toBe(true);
+            const readJournalEvents142 = yield* readJournalEvents(tempRoot.root);
+            expect(readJournalEvents142).toStrictEqual([event]);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -3053,14 +3212,16 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               expect((yield* readOnlyReapClaim(tempRoot)).claim.admissionJournal).toBe("pending");
               const journalPath = yield* admissionJournalPath(tempRoot.root);
               const original = yield* fs.readFileString(journalPath);
-              expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(1);
+              const readJournalEvents143 = yield* readJournalEvents(tempRoot.root);
+              expect(readJournalEvents143).toHaveLength(1);
               (yield* decodeLegacyAdmissionJournalEvent(Str.trim(original)).pipe(Effect.option)).pipe(assertNone);
               const legacyWrites = yield* Ref.make(0);
               const legacySink = AdmissionEvictionJournal.of({
                 appendOnce: Effect.fnUntraced(function* (root, event) {
                   // Model the pre-v3 sink: its old marker decoder fails closed before
                   // the old event reader can miss the already-written v3 identity.
-                  const marker = yield* fs.readFileString(yield* admissionProtocolPath(root)).pipe(Effect.option);
+                  const admissionProtocolPath144 = yield* admissionProtocolPath(root);
+                  const marker = yield* fs.readFileString(admissionProtocolPath144).pipe(Effect.option);
                   const protocol = O.flatMap(marker, decodeLegacyAdmissionProtocol);
                   if (!O.exists(protocol, (value) => AdmissionEvictionEmission.is.on(value.eviction))) {
                     return false;
@@ -3083,12 +3244,16 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
                 }),
               });
               yield* reap.pipe(Effect.provideService(AdmissionEvictionJournal, legacySink));
-              expect(yield* Ref.get(legacyWrites)).toBe(0);
+              const got145 = yield* Ref.get(legacyWrites);
+              expect(got145).toBe(0);
               expect((yield* readOnlyReapClaim(tempRoot)).claim.admissionJournal).toBe("pending-protocol-off");
-              expect(yield* fs.readFileString(journalPath)).toBe(original);
+              const readFileString146 = yield* fs.readFileString(journalPath);
+              expect(readFileString146).toBe(original);
               yield* reap;
-              expect(yield* listDirectory(tempRoot.claims)).toHaveLength(0);
-              expect(yield* fs.readFileString(journalPath)).toBe(original);
+              const listDirectory147 = yield* listDirectory(tempRoot.claims);
+              expect(listDirectory147).toHaveLength(0);
+              const readFileString148 = yield* fs.readFileString(journalPath);
+              expect(readFileString148).toBe(original);
             }).pipe(
               provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
               Effect.provideService(
@@ -3173,7 +3338,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
 
             expect(failure.message).toContain("Failed to create Yeet attempt journal directory");
             const queued = yield* listDirectory(tempRoot.queue);
-            const claims = yield* Effect.forEach(yield* listDirectory(tempRoot.claims), (name) =>
+            const listDirectory149 = yield* listDirectory(tempRoot.claims);
+            const claims = yield* Effect.forEach(listDirectory149, (name) =>
               fs.readFileString(path.join(tempRoot.claims, name)).pipe(Effect.flatMap(decodeAdmissionReapClaim))
             );
             expect(queued).not.toContain("dead-unwritable-attempt.ticket.json");
@@ -3217,10 +3383,12 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
                 heartbeatAtMillis: 100,
               })
             );
-            const legacy = pipe(yield* decodeJsonObject(encoded), Struct.omit(["nonce", "enqueuedAtMillis"]));
+            const decodedJsonObject = yield* decodeJsonObject(encoded);
+            const legacy = pipe(decodedJsonObject, Struct.omit(["nonce", "enqueuedAtMillis"]));
             yield* fs.makeDirectory(tempRoot.leases, { recursive: true, mode: 0o700 });
             const leasePath = path.join(tempRoot.leases, `legacy-${process.pid}.lease.json`);
-            yield* fs.writeFileString(leasePath, yield* encodeJsonObject(legacy));
+            const encodedJsonObject = yield* encodeJsonObject(legacy);
+            yield* fs.writeFileString(leasePath, encodedJsonObject);
             const raw = yield* fs.readFileString(leasePath);
             const decoded = yield* decodeLease(raw);
             expect(decoded.nonce).toBe("");
@@ -3256,15 +3424,18 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               fastConfig
             );
             expect(during.leases).toHaveLength(1);
-            expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
-            expect(yield* listDirectory(tempRoot.queue)).toHaveLength(0);
-            expect(yield* listDirectory(tempRoot.promotions)).toHaveLength(1);
+            const listDirectory150 = yield* listDirectory(tempRoot.leases);
+            expect(listDirectory150).toHaveLength(0);
+            const listDirectory151 = yield* listDirectory(tempRoot.queue);
+            expect(listDirectory151).toHaveLength(0);
+            const listDirectory152 = yield* listDirectory(tempRoot.promotions);
+            expect(listDirectory152).toHaveLength(1);
             yield* fs.remove(journalPath, { force: true, recursive: true });
             yield* reapAdmissionState({ apply: true });
-            expect(yield* listDirectory(tempRoot.promotions)).toHaveLength(0);
-            expect(A.map(yield* readJournalEvents(tempRoot.root), (event) => event._tag)).toStrictEqual([
-              "admission-admitted",
-            ]);
+            const listDirectory153 = yield* listDirectory(tempRoot.promotions);
+            expect(listDirectory153).toHaveLength(0);
+            const readJournalEvents154 = yield* readJournalEvents(tempRoot.root);
+            expect(A.map(readJournalEvents154, (event) => event._tag)).toStrictEqual(["admission-admitted"]);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -3285,7 +3456,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             yield* Effect.forEach([tempRoot.leases, tempRoot.queue], (directory) =>
               fs.makeDirectory(directory, { recursive: true, mode: 0o700 })
             );
-            const ownIdentity = O.getOrElse(yield* processStartIdentityForPid(process.pid), () => "");
+            const processStartIdentityForPid155 = yield* processStartIdentityForPid(process.pid);
+            const ownIdentity = O.getOrElse(processStartIdentityForPid155, () => "");
             expect(ownIdentity).not.toBe("");
             const crypto = yield* SecureRandom.SecureRandom;
             // Legacy names carry only the writer pid; identity-bearing names
@@ -3314,15 +3486,21 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             // The dry run previews exactly the staging files apply removes.
             const dryRun = yield* reapAdmissionState({ apply: false });
             expect(A.sort(dryRun.dead, Order.String)).toStrictEqual(A.sort([staleLegacy, reusedPid], Order.String));
-            expect(yield* fs.exists(staleLegacy)).toBe(true);
-            expect(yield* fs.exists(reusedPid)).toBe(true);
+            const exists156 = yield* fs.exists(staleLegacy);
+            expect(exists156).toBe(true);
+            const exists157 = yield* fs.exists(reusedPid);
+            expect(exists157).toBe(true);
 
             const applied = yield* reapAdmissionState({ apply: true });
             expect(A.sort(applied.dead, Order.String)).toStrictEqual(A.sort([staleLegacy, reusedPid], Order.String));
-            expect(yield* fs.exists(staleLegacy)).toBe(false);
-            expect(yield* fs.exists(reusedPid)).toBe(false);
-            expect(yield* fs.exists(liveLegacy)).toBe(true);
-            expect(yield* fs.exists(current)).toBe(true);
+            const exists158 = yield* fs.exists(staleLegacy);
+            expect(exists158).toBe(false);
+            const exists159 = yield* fs.exists(reusedPid);
+            expect(exists159).toBe(false);
+            const exists160 = yield* fs.exists(liveLegacy);
+            expect(exists160).toBe(true);
+            const exists161 = yield* fs.exists(current);
+            expect(exists161).toBe(true);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -3344,7 +3522,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
           expect(decoded.nonce).toBe(event.nonce);
           // JSON drops the sign of -0, so the codec law is encode-stability
           // rather than Object.is identity on numeric fields.
-          expect(yield* encodeAdmissionJournalEventJsonEffect(decoded)).toBe(encoded);
+          const encodedAdmissionJournalEventJsonEffect = yield* encodeAdmissionJournalEventJsonEffect(decoded);
+          expect(encodedAdmissionJournalEventJsonEffect).toBe(encoded);
         }),
         { arbitrary: fcRuns(32) }
       );
@@ -3371,8 +3550,10 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             expect(queued).toHaveLength(1);
             expect(fiber.pollUnsafe()).toBeUndefined();
             yield* fs.remove(blocking, { force: true });
-            expect(yield* Fiber.join(fiber)).toBe("ran");
-            expect(A.length(yield* listDirectory(tempRoot.queue))).toBe(0);
+            const join162 = yield* Fiber.join(fiber);
+            expect(join162).toBe("ran");
+            const listDirectory163 = yield* listDirectory(tempRoot.queue);
+            expect(A.length(listDirectory163)).toBe(0);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -3450,7 +3631,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             expect(sibling).toBe("sibling");
 
             yield* fs.remove(blocking, { force: true });
-            expect(yield* Fiber.join(sameCheckout)).toBe("same-checkout");
+            const join164 = yield* Fiber.join(sameCheckout);
+            expect(join164).toBe("same-checkout");
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -3500,7 +3682,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             yield* Effect.sleep("100 millis");
             expect(current.pollUnsafe()).toBeUndefined();
             yield* fs.remove(legacyPath, { force: true });
-            expect(yield* Fiber.join(current)).toBe("current");
+            const join165 = yield* Fiber.join(current);
+            expect(join165).toBe("current");
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -3550,7 +3733,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             expect(currentTicket.blockedOnOriginAtMillis).toBeGreaterThan(0);
 
             yield* fs.remove(legacyPath, { force: true });
-            expect(yield* Fiber.join(current)).toBe("current");
+            const join166 = yield* Fiber.join(current);
+            expect(join166).toBe("current");
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -3605,7 +3789,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
 
             yield* fs.remove(legacyPath, { force: true });
             yield* Ref.set(gibRef, 50);
-            expect(yield* Fiber.join(current)).toBe("current");
+            const join167 = yield* Fiber.join(current);
+            expect(join167).toBe("current");
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -3703,7 +3888,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             yield* Effect.sleep("100 millis");
             expect(fiber.pollUnsafe()).toBeUndefined();
             yield* fs.remove(A.headNonEmpty(capLeases as A.NonEmptyReadonlyArray<string>), { force: true });
-            expect(yield* Fiber.join(fiber)).toBe("review");
+            const join168 = yield* Fiber.join(fiber);
+            expect(join168).toBe("review");
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -3733,7 +3919,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             expect(result).toBe("ran");
             const quarantined = yield* listDirectory(tempRoot.quarantine);
             expect(A.some(quarantined, Str.startsWith("garbage.lease.json"))).toBe(true);
-            expect(A.length(yield* listDirectory(tempRoot.leases))).toBe(0);
+            const listDirectory169 = yield* listDirectory(tempRoot.leases);
+            expect(A.length(listDirectory169)).toBe(0);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -3770,8 +3957,10 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             expect(fiber.pollUnsafe()).toBeUndefined();
             expect(queued).toHaveLength(1);
             yield* Ref.set(busy, false);
-            expect(yield* Fiber.join(fiber)).toBe("ran");
-            expect(yield* Ref.get(releases)).toBe(1);
+            const join170 = yield* Fiber.join(fiber);
+            expect(join170).toBe("ran");
+            const got171 = yield* Ref.get(releases);
+            expect(got171).toBe(1);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -3797,7 +3986,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             expect(fiber.pollUnsafe()).toBeUndefined();
             expect(queued).toHaveLength(1);
             yield* Ref.set(gibRef, 50);
-            expect(yield* Fiber.join(fiber)).toBe("ran");
+            const join172 = yield* Fiber.join(fiber);
+            expect(join172).toBe("ran");
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -3827,7 +4017,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             }).pipe(Effect.timeout(Duration.seconds(5)));
             expect(queued).toHaveLength(1);
             yield* Fiber.interrupt(fiber);
-            expect(A.length(yield* listDirectory(tempRoot.queue))).toBe(0);
+            const listDirectory173 = yield* listDirectory(tempRoot.queue);
+            expect(A.length(listDirectory173)).toBe(0);
             const events = yield* readJournalEvents(tempRoot.root);
             expect(A.map(events, (event) => event._tag)).toStrictEqual(["admission-enqueued", "admission-withdrawn"]);
             const enqueued = pipe(
@@ -3869,8 +4060,10 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               fastConfig
             ).pipe(Effect.flip);
             expect(failed).toBe("boom");
-            expect(A.length(yield* listDirectory(tempRoot.leases))).toBe(0);
-            expect(A.length(yield* listDirectory(tempRoot.queue))).toBe(0);
+            const listDirectory174 = yield* listDirectory(tempRoot.leases);
+            expect(A.length(listDirectory174)).toBe(0);
+            const listDirectory175 = yield* listDirectory(tempRoot.queue);
+            expect(A.length(listDirectory175)).toBe(0);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -3906,11 +4099,13 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             expect(A.length(snapshot.leases)).toBe(1);
             expect(snapshot.activeTokens).toBe(3);
             expect(snapshot.dead).toStrictEqual([dead]);
-            expect(A.length(yield* listDirectory(tempRoot.leases))).toBe(2);
+            const listDirectory176 = yield* listDirectory(tempRoot.leases);
+            expect(A.length(listDirectory176)).toBe(2);
 
             const dryRun = yield* reapAdmissionState({ apply: false });
             expect(dryRun.dead).toStrictEqual([dead]);
-            expect(A.length(yield* listDirectory(tempRoot.leases))).toBe(2);
+            const listDirectory177 = yield* listDirectory(tempRoot.leases);
+            expect(A.length(listDirectory177)).toBe(2);
 
             const applied = yield* withPrependedPath(binDirectory, reapAdmissionState({ apply: true }));
             expect(applied.dead).toStrictEqual([dead]);
@@ -3918,13 +4113,12 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             expect(remaining).toStrictEqual([path.basename(live)]);
             const events = yield* readJournalEvents(tempRoot.root);
             expect(events).toHaveLength(0);
-            const attemptLines = pipe(
-              yield* fs.readFileString(yield* attemptJournalPathForCheckout(checkoutRoot, "feat/other")),
-              Str.split("\n"),
-              A.filter(Str.isNonEmpty)
-            );
+            const attemptJournalPathForCheckout277 = yield* attemptJournalPathForCheckout(checkoutRoot, "feat/other");
+            const readFileString178 = yield* fs.readFileString(attemptJournalPathForCheckout277);
+            const attemptLines = pipe(readFileString178, Str.split("\n"), A.filter(Str.isNonEmpty));
             expect(attemptLines).toHaveLength(1);
-            expect(yield* decodeYeetAttemptJournalEvent(attemptLines[0])).toMatchObject({
+            const decodedYeetAttemptJournalEvent = yield* decodeYeetAttemptJournalEvent(attemptLines[0]);
+            expect(decodedYeetAttemptJournalEvent).toMatchObject({
               _tag: "attempt-terminated",
               reason: "lease-eviction",
             });
@@ -3959,11 +4153,13 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             const exit = yield* Effect.exit(runQualityCommand(["scheduler", "reap"]));
             expect(exit._tag, String(exit)).toBe("Success");
 
-            const output = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+            const logLines179 = yield* TestConsole.logLines;
+            const output = A.join(A.map(logLines179, String), "\n");
             expect(output).toContain("dry run — would reap:");
             expect(output).toContain(deadTicket);
             expect(output).not.toContain("reaped dead admission state:");
-            expect(yield* listDirectory(tempRoot.queue)).toStrictEqual([path.basename(deadTicket)]);
+            const listDirectory180 = yield* listDirectory(tempRoot.queue);
+            expect(listDirectory180).toStrictEqual([path.basename(deadTicket)]);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -4054,7 +4250,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             // The second reaper must observe the claim repeatedly without taking it over.
             yield* Deferred.await(claimObserved).pipe(Effect.timeout(Duration.seconds(5)));
             yield* Effect.sleep(Duration.seconds(1));
-            expect(yield* Ref.get(claimChecks)).toBeGreaterThan(2);
+            const got181 = yield* Ref.get(claimChecks);
+            expect(got181).toBeGreaterThan(2);
             expect(observer.pollUnsafe()).toBeUndefined();
             yield* Deferred.succeed(finishSinks, undefined);
             yield* Fiber.join(owner);
@@ -4099,7 +4296,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
                       tasks: [],
                     }),
                   });
-                  const text = yield* fs.readFileString(yield* attemptJournalPath(context));
+                  const attemptJournalPath182 = yield* attemptJournalPath(context);
+                  const text = yield* fs.readFileString(attemptJournalPath182);
                   const rows = yield* Effect.forEach(pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
                     decodeYeetAttemptJournalEvent(line)
                   );
@@ -4155,9 +4353,12 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
                 expectedProjection
               );
             }
-            expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
-            expect(yield* listDirectory(tempRoot.queue)).toHaveLength(0);
-            expect(yield* listDirectory(tempRoot.claims)).toHaveLength(0);
+            const listDirectory183 = yield* listDirectory(tempRoot.leases);
+            expect(listDirectory183).toHaveLength(0);
+            const listDirectory184 = yield* listDirectory(tempRoot.queue);
+            expect(listDirectory184).toHaveLength(0);
+            const listDirectory185 = yield* listDirectory(tempRoot.claims);
+            expect(listDirectory185).toHaveLength(0);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -4187,9 +4388,12 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
 
             const snapshot = yield* reapAdmissionState({ apply: true });
 
-            expect(yield* listDirectory(tempRoot.claims)).toHaveLength(0);
-            expect(yield* listDirectory(tempRoot.promotions)).toHaveLength(0);
-            expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(0);
+            const listDirectory186 = yield* listDirectory(tempRoot.claims);
+            expect(listDirectory186).toHaveLength(0);
+            const listDirectory187 = yield* listDirectory(tempRoot.promotions);
+            expect(listDirectory187).toHaveLength(0);
+            const readJournalEvents188 = yield* readJournalEvents(tempRoot.root);
+            expect(readJournalEvents188).toHaveLength(0);
             expect(
               A.some(snapshot.quarantined, (entry) => Str.startsWith("malformed.reap.json.")(path.basename(entry)))
             ).toBe(true);
@@ -4229,7 +4433,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               Effect.provideService(FileSystem.FileSystem, unreadableClaimFileSystem)
             );
 
-            expect(yield* fs.exists(claimPath)).toBe(true);
+            const exists189 = yield* fs.exists(claimPath);
+            expect(exists189).toBe(true);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -4287,7 +4492,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             );
 
             expect(failure.message).toContain("changed lifecycle identity");
-            expect(yield* fs.exists(claimPath)).toBe(true);
+            const exists190 = yield* fs.exists(claimPath);
+            expect(exists190).toBe(true);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -4311,7 +4517,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             });
             const claimLockPath = `${claimPath}.lock`;
             const claimLockToken = `${process.pid}:busy-reap-claim-lock`;
-            expect(yield* acquireJournalFileLock(claimLockPath, claimLockToken, 1)).toBe(true);
+            const acquireJournalFileLock191 = yield* acquireJournalFileLock(claimLockPath, claimLockToken, 1);
+            expect(acquireJournalFileLock191).toBe(true);
 
             const busyClaim = yield* reapAdmissionState({ apply: true }).pipe(Effect.flip);
             expect(busyClaim.message).toContain("outputs remain pending");
@@ -4330,7 +4537,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             });
             const promotionLockPath = `${promotion.promotionPath}.lock`;
             const promotionLockToken = `${process.pid}:busy-promotion-lock`;
-            expect(yield* acquireJournalFileLock(promotionLockPath, promotionLockToken, 1)).toBe(true);
+            const acquireJournalFileLock192 = yield* acquireJournalFileLock(promotionLockPath, promotionLockToken, 1);
+            expect(acquireJournalFileLock192).toBe(true);
 
             const busyPromotion = yield* reapAdmissionState({ apply: true }).pipe(Effect.flip);
             expect(busyPromotion.message).toContain("recovery remains pending");
@@ -4365,7 +4573,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               });
               const promotionLockPath = `${promotion.promotionPath}.lock`;
               const promotionLockToken = `${process.pid}:settling-promotion-lock`;
-              expect(yield* acquireJournalFileLock(promotionLockPath, promotionLockToken, 1)).toBe(true);
+              const acquireJournalFileLock193 = yield* acquireJournalFileLock(promotionLockPath, promotionLockToken, 1);
+              expect(acquireJournalFileLock193).toBe(true);
 
               const recovery = yield* Effect.forkChild(reapAdmissionState({ apply: true }));
               yield* TestClock.adjust(Duration.millis(175));
@@ -4409,7 +4618,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             yield* reapAdmissionState({ apply: true }).pipe(
               Effect.provideService(FileSystem.FileSystem, unreadableClaimFileSystem)
             );
-            expect(yield* fs.exists(claimPath)).toBe(true);
+            const exists194 = yield* fs.exists(claimPath);
+            expect(exists194).toBe(true);
             yield* fs.remove(claimPath, { force: true });
 
             const promotion = yield* writePromotionFixture(tempRoot, {
@@ -4427,7 +4637,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             yield* reapAdmissionState({ apply: true }).pipe(
               Effect.provideService(FileSystem.FileSystem, unreadablePromotionFileSystem)
             );
-            expect(yield* fs.exists(promotion.promotionPath)).toBe(true);
+            const exists195 = yield* fs.exists(promotion.promotionPath);
+            expect(exists195).toBe(true);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -4473,7 +4684,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             );
 
             expect(failure.message).toContain("changed nonce");
-            expect(yield* fs.exists(promotion.promotionPath)).toBe(true);
+            const exists196 = yield* fs.exists(promotion.promotionPath);
+            expect(exists196).toBe(true);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -4550,10 +4762,14 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             expect(A.filter(events, AdmissionJournalEvent.guards["admission-admitted"])).toHaveLength(1);
             expect(A.filter(events, AdmissionJournalEvent.guards["admission-lease-evicted"])).toHaveLength(1);
             expect(A.filter(events, AdmissionJournalEvent.guards["admission-ticket-evicted"])).toHaveLength(0);
-            expect(yield* listDirectory(tempRoot.promotions)).toHaveLength(0);
-            expect(yield* listDirectory(tempRoot.queue)).toHaveLength(0);
-            expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
-            expect(yield* listDirectory(tempRoot.claims)).toHaveLength(0);
+            const listDirectory197 = yield* listDirectory(tempRoot.promotions);
+            expect(listDirectory197).toHaveLength(0);
+            const listDirectory198 = yield* listDirectory(tempRoot.queue);
+            expect(listDirectory198).toHaveLength(0);
+            const listDirectory199 = yield* listDirectory(tempRoot.leases);
+            expect(listDirectory199).toHaveLength(0);
+            const listDirectory200 = yield* listDirectory(tempRoot.claims);
+            expect(listDirectory200).toHaveLength(0);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -4596,12 +4812,14 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
 
             yield* reapAdmissionState({ apply: true });
 
-            expect(yield* listDirectory(tempRoot.promotions)).toHaveLength(0);
-            expect(yield* listDirectory(tempRoot.queue)).toHaveLength(0);
-            expect(yield* listDirectory(tempRoot.leases)).toHaveLength(1);
-            expect(
-              A.filter(yield* readJournalEvents(tempRoot.root), AdmissionJournalEvent.guards["admission-admitted"])
-            ).toHaveLength(1);
+            const listDirectory201 = yield* listDirectory(tempRoot.promotions);
+            expect(listDirectory201).toHaveLength(0);
+            const listDirectory202 = yield* listDirectory(tempRoot.queue);
+            expect(listDirectory202).toHaveLength(0);
+            const listDirectory203 = yield* listDirectory(tempRoot.leases);
+            expect(listDirectory203).toHaveLength(1);
+            const readJournalEvents204 = yield* readJournalEvents(tempRoot.root);
+            expect(A.filter(readJournalEvents204, AdmissionJournalEvent.guards["admission-admitted"])).toHaveLength(1);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -4664,12 +4882,18 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
 
             yield* reapAdmissionState({ apply: true });
 
-            expect(yield* fs.exists(live.promotionPath)).toBe(true);
-            expect(yield* fs.exists(live.ticketPath)).toBe(true);
-            expect(yield* fs.exists(dead.promotionPath)).toBe(false);
-            expect(yield* fs.exists(dead.ticketPath)).toBe(false);
-            expect(yield* fs.exists(removed.promotionPath)).toBe(false);
-            expect(yield* fs.exists(journaled.promotionPath)).toBe(false);
+            const exists205 = yield* fs.exists(live.promotionPath);
+            expect(exists205).toBe(true);
+            const exists206 = yield* fs.exists(live.ticketPath);
+            expect(exists206).toBe(true);
+            const exists207 = yield* fs.exists(dead.promotionPath);
+            expect(exists207).toBe(false);
+            const exists208 = yield* fs.exists(dead.ticketPath);
+            expect(exists208).toBe(false);
+            const exists209 = yield* fs.exists(removed.promotionPath);
+            expect(exists209).toBe(false);
+            const exists210 = yield* fs.exists(journaled.promotionPath);
+            expect(exists210).toBe(false);
             const events = yield* readJournalEvents(tempRoot.root);
             expect(A.filter(events, AdmissionJournalEvent.guards["admission-admitted"])).toHaveLength(2);
             expect(A.filter(events, AdmissionJournalEvent.guards["admission-ticket-evicted"])).toHaveLength(1);
@@ -4700,13 +4924,14 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
 
             yield* reapAdmissionState({ apply: true });
 
-            expect(yield* fs.exists(promotion.promotionPath)).toBe(true);
+            const exists211 = yield* fs.exists(promotion.promotionPath);
+            expect(exists211).toBe(true);
             yield* fs.remove(journalPath, { recursive: true });
             yield* reapAdmissionState({ apply: true });
-            expect(yield* fs.exists(promotion.promotionPath)).toBe(false);
-            expect(
-              A.filter(yield* readJournalEvents(tempRoot.root), AdmissionJournalEvent.guards["admission-admitted"])
-            ).toHaveLength(1);
+            const exists212 = yield* fs.exists(promotion.promotionPath);
+            expect(exists212).toBe(false);
+            const readJournalEvents213 = yield* readJournalEvents(tempRoot.root);
+            expect(A.filter(readJournalEvents213, AdmissionJournalEvent.guards["admission-admitted"])).toHaveLength(1);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -4737,8 +4962,10 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             const events = yield* readJournalEvents(tempRoot.root);
             expect(A.filter(events, AdmissionJournalEvent.guards["admission-lease-evicted"])).toHaveLength(1);
             expect(A.filter(events, AdmissionJournalEvent.guards["admission-ticket-evicted"])).toHaveLength(0);
-            expect(yield* listDirectory(tempRoot.queue)).toHaveLength(0);
-            expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
+            const listDirectory214 = yield* listDirectory(tempRoot.queue);
+            expect(listDirectory214).toHaveLength(0);
+            const listDirectory215 = yield* listDirectory(tempRoot.leases);
+            expect(listDirectory215).toHaveLength(0);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -4766,40 +4993,45 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
 
             yield* reap();
 
-            expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
+            const listDirectory216 = yield* listDirectory(tempRoot.leases);
+            expect(listDirectory216).toHaveLength(0);
             const first = yield* readOnlyReapClaim(tempRoot);
             expect(first.names).toHaveLength(1);
             expect(first.name).toMatch(/\.reap\.pending-protocol-off\.json$/u);
             expect(A.filter(first.names, Str.endsWith(".reap.json"))).toHaveLength(0);
             expect(first.claim.attemptJournal).toBe("complete");
             expect(first.claim.admissionJournal).toBe("pending-protocol-off");
-            expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(0);
-            expect(
-              A.filter(
-                yield* readAttemptJournalEvents(checkoutRoot, "feat/protocol-deferred"),
-                (event) => event._tag === "attempt-terminated"
-              )
-            ).toHaveLength(1);
+            const readJournalEvents217 = yield* readJournalEvents(tempRoot.root);
+            expect(readJournalEvents217).toHaveLength(0);
+            const readAttemptJournalEvents218 = yield* readAttemptJournalEvents(checkoutRoot, "feat/protocol-deferred");
+            expect(A.filter(readAttemptJournalEvents218, (event) => event._tag === "attempt-terminated")).toHaveLength(
+              1
+            );
 
             yield* reap();
 
             const second = yield* readOnlyReapClaim(tempRoot);
             expect(second.names).toStrictEqual(first.names);
             expect(second.claim.admissionJournal).toBe("pending-protocol-off");
-            expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(0);
+            const readJournalEvents219 = yield* readJournalEvents(tempRoot.root);
+            expect(readJournalEvents219).toHaveLength(0);
 
             yield* setAdmissionEvictionProtocol("on");
             yield* reap();
 
-            expect(yield* listDirectory(tempRoot.claims)).toHaveLength(0);
+            const listDirectory220 = yield* listDirectory(tempRoot.claims);
+            expect(listDirectory220).toHaveLength(0);
+            const readJournalEvents221 = yield* readJournalEvents(tempRoot.root);
             expect(
-              A.filter(yield* readJournalEvents(tempRoot.root), AdmissionJournalEvent.guards["admission-lease-evicted"])
+              A.filter(readJournalEvents221, AdmissionJournalEvent.guards["admission-lease-evicted"])
             ).toHaveLength(1);
-            expect(yield* readAttemptJournalEvents(checkoutRoot, "feat/protocol-deferred")).toHaveLength(1);
+            const readAttemptJournalEvents222 = yield* readAttemptJournalEvents(checkoutRoot, "feat/protocol-deferred");
+            expect(readAttemptJournalEvents222).toHaveLength(1);
 
             yield* reap();
+            const readJournalEvents223 = yield* readJournalEvents(tempRoot.root);
             expect(
-              A.filter(yield* readJournalEvents(tempRoot.root), AdmissionJournalEvent.guards["admission-lease-evicted"])
+              A.filter(readJournalEvents223, AdmissionJournalEvent.guards["admission-lease-evicted"])
             ).toHaveLength(1);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
@@ -4827,19 +5059,23 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
 
             yield* reapAdmissionState({ apply: true });
 
-            expect(yield* fs.exists(legacyPath)).toBe(false);
+            const exists224 = yield* fs.exists(legacyPath);
+            expect(exists224).toBe(false);
             const deferred = yield* readOnlyReapClaim(tempRoot);
             expect(deferred.name).toMatch(/\.reap\.pending-protocol-off\.json$/u);
             expect(deferred.claim.attemptJournal).toBe("complete");
             expect(deferred.claim.admissionJournal).toBe("pending-protocol-off");
-            expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(0);
+            const readJournalEvents225 = yield* readJournalEvents(tempRoot.root);
+            expect(readJournalEvents225).toHaveLength(0);
 
             yield* setAdmissionEvictionProtocol("on");
             yield* reapAdmissionState({ apply: true });
 
-            expect(yield* listDirectory(tempRoot.claims)).toHaveLength(0);
+            const listDirectory226 = yield* listDirectory(tempRoot.claims);
+            expect(listDirectory226).toHaveLength(0);
+            const readJournalEvents227 = yield* readJournalEvents(tempRoot.root);
             expect(
-              A.filter(yield* readJournalEvents(tempRoot.root), AdmissionJournalEvent.guards["admission-lease-evicted"])
+              A.filter(readJournalEvents227, AdmissionJournalEvent.guards["admission-lease-evicted"])
             ).toHaveLength(1);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
@@ -4878,7 +5114,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             );
 
             expect(failure.message).toContain("Failed to read admission journal");
-            expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
+            const listDirectory228 = yield* listDirectory(tempRoot.leases);
+            expect(listDirectory228).toHaveLength(0);
             const pendingClaims = yield* listDirectory(tempRoot.claims);
             expect(pendingClaims).toHaveLength(1);
             const pendingClaim = yield* fs
@@ -4888,9 +5125,11 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             expect(pendingClaim.admissionJournal).toBe("pending");
             yield* fs.remove(path.join(tempRoot.root, "journal.ndjson"), { force: true, recursive: true });
             yield* withPrependedPath(binDirectory, reapAdmissionState({ apply: true }));
-            expect(yield* listDirectory(tempRoot.claims)).toHaveLength(0);
+            const listDirectory229 = yield* listDirectory(tempRoot.claims);
+            expect(listDirectory229).toHaveLength(0);
+            const readJournalEvents230 = yield* readJournalEvents(tempRoot.root);
             expect(
-              A.filter(yield* readJournalEvents(tempRoot.root), AdmissionJournalEvent.guards["admission-lease-evicted"])
+              A.filter(readJournalEvents230, AdmissionJournalEvent.guards["admission-lease-evicted"])
             ).toHaveLength(1);
             const attemptRows = yield* readAttemptJournalEvents(checkoutRoot, "feat/other");
             expect(A.filter(attemptRows, (event) => event._tag === "attempt-terminated")).toHaveLength(1);
@@ -4935,7 +5174,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             );
 
             expect(failure.message).toContain("attempt termination sink unavailable");
-            expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
+            const listDirectory231 = yield* listDirectory(tempRoot.leases);
+            expect(listDirectory231).toHaveLength(0);
             const pendingClaims = yield* listDirectory(tempRoot.claims);
             expect(pendingClaims).toHaveLength(1);
             const pendingClaim = yield* fs
@@ -4943,12 +5183,15 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               .pipe(Effect.flatMap(decodeAdmissionReapClaim));
             expect(pendingClaim.attemptJournal).toBe("pending");
             expect(pendingClaim.admissionJournal).toBe("pending");
-            expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(0);
+            const readJournalEvents232 = yield* readJournalEvents(tempRoot.root);
+            expect(readJournalEvents232).toHaveLength(0);
 
             yield* withPrependedPath(binDirectory, reapAdmissionState({ apply: true }));
-            expect(yield* listDirectory(tempRoot.claims)).toHaveLength(0);
+            const listDirectory233 = yield* listDirectory(tempRoot.claims);
+            expect(listDirectory233).toHaveLength(0);
+            const readJournalEvents234 = yield* readJournalEvents(tempRoot.root);
             expect(
-              A.filter(yield* readJournalEvents(tempRoot.root), AdmissionJournalEvent.guards["admission-lease-evicted"])
+              A.filter(readJournalEvents234, AdmissionJournalEvent.guards["admission-lease-evicted"])
             ).toHaveLength(1);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
@@ -4988,14 +5231,20 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             );
 
             expect(failure.message).toContain("Failed to remove claimed admission state");
-            expect(yield* listDirectory(tempRoot.leases)).toStrictEqual([path.basename(dead)]);
-            expect(yield* listDirectory(tempRoot.claims)).toHaveLength(1);
-            expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(0);
+            const listDirectory235 = yield* listDirectory(tempRoot.leases);
+            expect(listDirectory235).toStrictEqual([path.basename(dead)]);
+            const listDirectory236 = yield* listDirectory(tempRoot.claims);
+            expect(listDirectory236).toHaveLength(1);
+            const readJournalEvents237 = yield* readJournalEvents(tempRoot.root);
+            expect(readJournalEvents237).toHaveLength(0);
             yield* withPrependedPath(binDirectory, reapAdmissionState({ apply: true }));
-            expect(yield* listDirectory(tempRoot.claims)).toHaveLength(0);
-            expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
+            const listDirectory238 = yield* listDirectory(tempRoot.claims);
+            expect(listDirectory238).toHaveLength(0);
+            const listDirectory239 = yield* listDirectory(tempRoot.leases);
+            expect(listDirectory239).toHaveLength(0);
+            const readJournalEvents240 = yield* readJournalEvents(tempRoot.root);
             expect(
-              A.filter(yield* readJournalEvents(tempRoot.root), AdmissionJournalEvent.guards["admission-lease-evicted"])
+              A.filter(readJournalEvents240, AdmissionJournalEvent.guards["admission-lease-evicted"])
             ).toHaveLength(1);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
@@ -5099,11 +5348,13 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               const verifyReap = Effect.fnUntraced(function* () {
                 const dryRun = yield* reapAdmissionState({ apply: false });
                 expect(dryRun.dead).toStrictEqual([dead]);
-                expect(yield* fs.exists(capturePath)).toBe(false);
+                const exists241 = yield* fs.exists(capturePath);
+                expect(exists241).toBe(false);
 
                 const applied = yield* reapAdmissionState({ apply: true });
                 expect(applied.dead).toStrictEqual([dead]);
-                expect(yield* fs.readFileString(capturePath)).toBe(`--user\nstop\n${unitName}\n`);
+                const readFileString242 = yield* fs.readFileString(capturePath);
+                expect(readFileString242).toBe(`--user\nstop\n${unitName}\n`);
               });
               yield* withPrependedPath(binDirectory, verifyReap());
             }).pipe(
@@ -5147,7 +5398,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               binDirectory,
               Effect.gen(function* () {
                 yield* reapAdmissionState({ apply: true });
-                expect(yield* fs.readFileString(capturePath)).toBe("--user\nstop\nagent-run-deadbeef.scope\n");
+                const readFileString243 = yield* fs.readFileString(capturePath);
+                expect(readFileString243).toBe("--user\nstop\nagent-run-deadbeef.scope\n");
               })
             );
           }).pipe(
@@ -5189,20 +5441,23 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               binDirectory,
               Effect.gen(function* () {
                 yield* reapAdmissionState({ apply: true });
-                expect(yield* fs.exists(dead)).toBe(true);
+                const exists244 = yield* fs.exists(dead);
+                expect(exists244).toBe(true);
 
                 yield* fs.remove(systemctl);
                 yield* withProcessPath(
                   binDirectory,
                   Effect.gen(function* () {
                     yield* reapAdmissionState({ apply: true });
-                    expect(yield* fs.exists(dead)).toBe(true);
+                    const exists245 = yield* fs.exists(dead);
+                    expect(exists245).toBe(true);
                   })
                 );
 
                 yield* writeExecutable(systemctl, "#!/bin/sh\nexit 0\n");
                 yield* reapAdmissionState({ apply: true });
-                expect(yield* fs.exists(dead)).toBe(false);
+                const exists246 = yield* fs.exists(dead);
+                expect(exists246).toBe(false);
               })
             );
           }).pipe(
@@ -5245,12 +5500,15 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               binDirectory,
               Effect.gen(function* () {
                 yield* reapAdmissionState({ apply: true });
-                expect(yield* fs.readFileString(capturePath)).toBe(
+                const readFileString247 = yield* fs.readFileString(capturePath);
+                expect(readFileString247).toBe(
                   "--user\nstop\nagent-run-duplicate.scope\n" +
                     "--user\nshow\nagent-run-duplicate.scope\n--property=LoadState\n--value\n"
                 );
-                expect(yield* fs.exists(first)).toBe(true);
-                expect(yield* fs.exists(second)).toBe(true);
+                const exists248 = yield* fs.exists(first);
+                expect(exists248).toBe(true);
+                const exists249 = yield* fs.exists(second);
+                expect(exists249).toBe(true);
               })
             );
           }).pipe(
@@ -5307,9 +5565,12 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               binDirectory,
               Effect.gen(function* () {
                 yield* reapAdmissionState({ apply: true });
-                expect(yield* fs.exists(capturePath)).toBe(false);
-                expect(yield* fs.exists(disabled)).toBe(false);
-                expect(yield* fs.exists(unsupported)).toBe(false);
+                const exists250 = yield* fs.exists(capturePath);
+                expect(exists250).toBe(false);
+                const exists251 = yield* fs.exists(disabled);
+                expect(exists251).toBe(false);
+                const exists252 = yield* fs.exists(unsupported);
+                expect(exists252).toBe(false);
               })
             );
           }).pipe(
@@ -5347,7 +5608,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               binDirectory,
               Effect.gen(function* () {
                 yield* reapAdmissionState({ apply: true });
-                expect(yield* fs.exists(dead)).toBe(false);
+                const exists253 = yield* fs.exists(dead);
+                expect(exists253).toBe(false);
               })
             );
           }).pipe(
@@ -5401,8 +5663,10 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
                   .readFileString(capturePath)
                   .pipe(Effect.orElseSucceed(() => Str.empty));
                 expect(Str.includes("stop")(systemctlArguments)).toBe(false);
-                expect(yield* fs.exists(dead)).toBe(true);
-                expect(yield* fs.exists(live)).toBe(true);
+                const exists254 = yield* fs.exists(dead);
+                expect(exists254).toBe(true);
+                const exists255 = yield* fs.exists(live);
+                expect(exists255).toBe(true);
               })
             );
           }).pipe(
@@ -5447,8 +5711,10 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               binDirectory,
               Effect.gen(function* () {
                 yield* reapAdmissionState({ apply: true });
-                expect(yield* fs.exists(capturePath)).toBe(false);
-                expect(yield* fs.exists(dead)).toBe(true);
+                const exists256 = yield* fs.exists(capturePath);
+                expect(exists256).toBe(false);
+                const exists257 = yield* fs.exists(dead);
+                expect(exists257).toBe(true);
               })
             );
           }).pipe(
@@ -5493,8 +5759,10 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               binDirectory,
               Effect.gen(function* () {
                 yield* reapAdmissionState({ apply: true });
-                expect(yield* fs.exists(capturePath)).toBe(false);
-                expect(yield* fs.exists(dead)).toBe(true);
+                const exists258 = yield* fs.exists(capturePath);
+                expect(exists258).toBe(false);
+                const exists259 = yield* fs.exists(dead);
+                expect(exists259).toBe(true);
               })
             );
           }).pipe(
@@ -5584,7 +5852,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               binDirectory,
               Effect.gen(function* () {
                 yield* reapAdmissionState({ apply: true });
-                expect(yield* fs.exists(capturePath)).toBe(false);
+                const exists260 = yield* fs.exists(capturePath);
+                expect(exists260).toBe(false);
               })
             );
           }).pipe(
@@ -5626,7 +5895,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               fastConfig
             );
             expect(other).toBe("elsewhere");
-            expect(A.length(yield* listDirectory(tempRoot.queue))).toBe(1);
+            const listDirectory261 = yield* listDirectory(tempRoot.queue);
+            expect(A.length(listDirectory261)).toBe(1);
             yield* Fiber.interrupt(stuck);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
@@ -5734,11 +6004,13 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
                     fastConfig
                   ).pipe(Effect.flip);
                   expect(failure._tag).toBe("QualitySchedulerError");
-                  expect(yield* Ref.get(releases)).toBe(1);
+                  const got262 = yield* Ref.get(releases);
+                  expect(got262).toBe(1);
                 }),
               () => fs.chmod(tempRoot.leases, 0o700).pipe(Effect.orDie)
             );
-            expect(A.length(yield* listDirectory(tempRoot.queue))).toBe(0);
+            const listDirectory263 = yield* listDirectory(tempRoot.queue);
+            expect(A.length(listDirectory263)).toBe(0);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -5773,19 +6045,24 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               fastConfig
             ).pipe(Effect.provideService(FileSystem.FileSystem, failedPromotionCleanup), Effect.flip);
             expect(failure._tag).toBe("QualitySchedulerError");
-            expect(yield* Ref.get(useRan)).toBe(false);
-            expect(yield* listDirectory(tempRoot.queue)).toHaveLength(0);
-            expect(yield* listDirectory(tempRoot.leases)).toHaveLength(1);
-            expect(yield* listDirectory(tempRoot.promotions)).toHaveLength(1);
-            expect(A.map(yield* readJournalEvents(tempRoot.root), (event) => event._tag)).toStrictEqual([
-              "admission-enqueued",
-            ]);
+            const got264 = yield* Ref.get(useRan);
+            expect(got264).toBe(false);
+            const listDirectory265 = yield* listDirectory(tempRoot.queue);
+            expect(listDirectory265).toHaveLength(0);
+            const listDirectory266 = yield* listDirectory(tempRoot.leases);
+            expect(listDirectory266).toHaveLength(1);
+            const listDirectory267 = yield* listDirectory(tempRoot.promotions);
+            expect(listDirectory267).toHaveLength(1);
+            const readJournalEvents268 = yield* readJournalEvents(tempRoot.root);
+            expect(A.map(readJournalEvents268, (event) => event._tag)).toStrictEqual(["admission-enqueued"]);
             yield* reapAdmissionState({ apply: true });
-            expect(A.map(yield* readJournalEvents(tempRoot.root), (event) => event._tag)).toStrictEqual([
+            const readJournalEvents269 = yield* readJournalEvents(tempRoot.root);
+            expect(A.map(readJournalEvents269, (event) => event._tag)).toStrictEqual([
               "admission-enqueued",
               "admission-admitted",
             ]);
-            expect(yield* listDirectory(tempRoot.promotions)).toHaveLength(0);
+            const listDirectory270 = yield* listDirectory(tempRoot.promotions);
+            expect(listDirectory270).toHaveLength(0);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -5832,8 +6109,10 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               fastConfig
             );
             expect(result).toBe("ran");
-            expect(A.length(yield* listDirectory(tempRoot.queue))).toBe(0);
-            expect(A.length(yield* listDirectory(tempRoot.leases))).toBe(0);
+            const listDirectory271 = yield* listDirectory(tempRoot.queue);
+            expect(A.length(listDirectory271)).toBe(0);
+            const listDirectory272 = yield* listDirectory(tempRoot.leases);
+            expect(A.length(listDirectory272)).toBe(0);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -5857,10 +6136,13 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             };
             const result = yield* withQualityAdmission(request(), gate, Effect.succeed("ran"), fastConfig);
             expect(result).toBe("ran");
-            expect(yield* Ref.get(releases)).toBe(1);
+            const got273 = yield* Ref.get(releases);
+            expect(got273).toBe(1);
             // No ticket or lease bookkeeping happens below the envelope.
-            expect(A.length(yield* listDirectory(tempRoot.queue))).toBe(0);
-            expect(A.length(yield* listDirectory(tempRoot.leases))).toBe(0);
+            const listDirectory274 = yield* listDirectory(tempRoot.queue);
+            expect(A.length(listDirectory274)).toBe(0);
+            const listDirectory275 = yield* listDirectory(tempRoot.leases);
+            expect(A.length(listDirectory275)).toBe(0);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -5878,8 +6160,9 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
           return yield* Effect.gen(function* () {
             const admissionRequest = request({ kind: "merged-preview", weightTokens: 5 });
             yield* withQualityAdmission(admissionRequest, noAdmissionOriginGate, Effect.void, fastConfig);
+            const readJournalEvents276 = yield* readJournalEvents(tempRoot.root);
             const admitted = pipe(
-              yield* readJournalEvents(tempRoot.root),
+              readJournalEvents276,
               A.findFirst(AdmissionJournalEvent.guards["admission-admitted"]),
               O.getOrThrow
             );

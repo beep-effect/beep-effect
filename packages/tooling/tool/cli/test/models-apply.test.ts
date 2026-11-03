@@ -83,7 +83,8 @@ const restoreLinkRace = Effect.fnUntraced(function* (dangling: boolean) {
   const backups = path.join(root, "backups");
   yield* fs.writeFileString(file, native);
   const writer = yield* writerWithFs(fs);
-  const journal = O.getOrThrow(yield* writer.apply(file, [topLevel], "write", backups));
+  const apply1 = yield* writer.apply(file, [topLevel], "write", backups);
+  const journal = O.getOrThrow(apply1);
   const applied = yield* fs.readFileString(file);
   const modelsTestExchange = yield* ModelsAtomicExchange;
   let exchanges = 0;
@@ -104,9 +105,14 @@ const restoreLinkRace = Effect.fnUntraced(function* (dangling: boolean) {
   const error = yield* Effect.flip(restoring.restore(path.join(backups, `${journal.id}.json`), backups));
   expect(error._tag).toBe("ModelsLocatorError");
   expect(error.message).toContain(`Journal: ${journal.id}`);
-  expect(yield* fs.readLink(file)).toBe(dangling ? path.join(root, "absent.toml") : relocated);
-  if (!dangling) expect(yield* fs.readFileString(file)).toBe(applied);
-  expect(yield* fs.readFileString(relocated)).toBe(applied);
+  const readLink2 = yield* fs.readLink(file);
+  expect(readLink2).toBe(dangling ? path.join(root, "absent.toml") : relocated);
+  if (!dangling) {
+    const readFileString1 = yield* fs.readFileString(file);
+    expect(readFileString1).toBe(applied);
+  }
+  const readFileString3 = yield* fs.readFileString(relocated);
+  expect(readFileString3).toBe(applied);
   expect(exchanges).toBe(2);
 });
 
@@ -152,23 +158,29 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
         const originalBytes = new TextEncoder().encode(original);
         if (originalBytes.includes(63)) originalBytes[originalBytes.indexOf(63)] = 0xff;
         yield* fs.writeFile(backup, originalBytes);
+        const digest4 = yield* crypto.digest(Digest.sha256, originalBytes);
+        const argument = Hex.encode(digest4);
+        const digest2 = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(current));
         const journal = ModelsApplyJournal.make({
           id: "models-synthetic",
           file,
           backup,
-          beforeHash: Hex.encode(yield* crypto.digest(Digest.sha256, originalBytes)),
-          afterHash: Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(current))),
+          beforeHash: argument,
+          afterHash: Hex.encode(digest2),
           mode: (yield* fs.stat(file)).mode,
           writes: O.some([request]),
           requestedFile: O.some(file),
           requestedLink: O.none(),
         });
-        yield* fs.writeFileString(journalFile, yield* encodeRecoveryJournal(journal));
+        const encodedRecoveryJournal = yield* encodeRecoveryJournal(journal);
+        yield* fs.writeFileString(journalFile, encodedRecoveryJournal);
         const refusal = yield* Effect.flip(writer.restore(journalFile, backups));
         expect(refusal.message).toContain("Ineligible native target");
         expect(refusal.reason).toBe("ineligible");
-        expect(yield* fs.readFileString(file)).toBe(current);
-        expect(A.fromIterable(yield* fs.readFile(backup))).toEqual(A.fromIterable(originalBytes));
+        const readFileString5 = yield* fs.readFileString(file);
+        expect(readFileString5).toBe(current);
+        const readFile6 = yield* fs.readFile(backup);
+        expect(A.fromIterable(readFile6)).toEqual(A.fromIterable(originalBytes));
       }
     })
   );
@@ -186,19 +198,17 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
         const journalFile = path.join(backups, "models-empty.json");
         yield* fs.writeFileString(file, "invalid native state");
         yield* fs.writeFileString(backup, "old native state");
-        yield* fs.writeFileString(
-          journalFile,
-          yield* jsonStringifyPretty({
-            id: "models-empty",
-            file,
-            requestedFile: file,
-            backup,
-            beforeHash: "before",
-            afterHash: "after",
-            mode: 420,
-            writes: [],
-          })
-        );
+        const jsonStringifyPretty7 = yield* jsonStringifyPretty({
+          id: "models-empty",
+          file,
+          requestedFile: file,
+          backup,
+          beforeHash: "before",
+          afterHash: "after",
+          mode: 420,
+          writes: [],
+        });
+        yield* fs.writeFileString(journalFile, jsonStringifyPretty7);
         const accesses: Array<string> = [];
         const recording = FileSystem.FileSystem.of({
           ...fs,
@@ -216,8 +226,10 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
         expect(error._tag).toBe("ModelsLocatorError");
         expect(error.message).toBe("Invalid recovery journal.");
         expect(accesses).toEqual([]);
-        expect(yield* fs.readFileString(file)).toBe("invalid native state");
-        expect(yield* fs.readFileString(backup)).toBe("old native state");
+        const readFileString8 = yield* fs.readFileString(file);
+        expect(readFileString8).toBe("invalid native state");
+        const readFileString9 = yield* fs.readFileString(backup);
+        expect(readFileString9).toBe("old native state");
       }
     })
   );
@@ -234,9 +246,12 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
       const writer = yield* writerWithFs(fs);
       const request = write({ _tag: "json-key", pointer: ["model"], fallbacks: [], binding, render });
       for (const mode of ["check", "write"] as const) {
-        assertNone(yield* writer.apply(file, [request], mode, backups));
-        expect(yield* fs.readFileString(file)).toBe(content);
-        expect(yield* fs.exists(backups)).toBe(false);
+        const apply10 = yield* writer.apply(file, [request], mode, backups);
+        assertNone(apply10);
+        const readFileString11 = yield* fs.readFileString(file);
+        expect(readFileString11).toBe(content);
+        const exists12 = yield* fs.exists(backups);
+        expect(exists12).toBe(false);
       }
     })
   );
@@ -262,38 +277,41 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
         const error = yield* Effect.flip(writer.apply(file, [request], "write", backups));
         expect(error._tag).toBe("ModelsLocatorError");
         expect(error.message).toContain("Target format mismatch");
-        expect(yield* fs.exists(backups)).toBe(false);
-        expect(yield* fs.readFileString(file)).toBe(text);
+        const exists13 = yield* fs.exists(backups);
+        expect(exists13).toBe(false);
+        const readFileString14 = yield* fs.readFileString(file);
+        expect(readFileString14).toBe(text);
         // Historical journals can carry a writable tag for an excluded destination.
         yield* fs.makeDirectory(backups);
         const journalFile = path.join(backups, "historical.json");
-        yield* fs.writeFileString(
-          journalFile,
-          yield* encodeRecoveryJournal(
-            ModelsApplyJournal.make({
-              id: "historical",
-              file,
-              backup: path.join(backups, "historical.backup"),
-              beforeHash: "unused",
-              afterHash: "unused",
-              mode: 0o644,
-              writes: O.some([request]),
-              requestedFile: O.some(file),
-              requestedLink: O.none(),
-            })
-          )
+        const encodedRecoveryJournal15 = yield* encodeRecoveryJournal(
+          ModelsApplyJournal.make({
+            id: "historical",
+            file,
+            backup: path.join(backups, "historical.backup"),
+            beforeHash: "unused",
+            afterHash: "unused",
+            mode: 0o644,
+            writes: O.some([request]),
+            requestedFile: O.some(file),
+            requestedLink: O.none(),
+          })
         );
+        yield* fs.writeFileString(journalFile, encodedRecoveryJournal15);
         const restoreError = yield* Effect.flip(writer.restore(journalFile, backups));
         expect(restoreError.message).toContain("Target format mismatch");
-        expect(yield* fs.readFileString(file)).toBe(text);
-        expect(yield* fs.readDirectory(backups)).toEqual(["historical.json"]);
+        const readFileString16 = yield* fs.readFileString(file);
+        expect(readFileString16).toBe(text);
+        const readDirectory17 = yield* fs.readDirectory(backups);
+        expect(readDirectory17).toEqual(["historical.json"]);
         // A matching visible extension cannot hide a mismatched canonical target.
         const link = path.join(root, `${name}${request.locator._tag === "json-key" ? ".json" : ".toml"}`);
         yield* fs.symlink(file, link);
         expect((yield* Effect.flip(writer.apply(link, [request], "write", backups))).message).toContain(
           "Target format mismatch"
         );
-        expect(yield* fs.readFileString(file)).toBe(text);
+        const readFileString18 = yield* fs.readFileString(file);
+        expect(readFileString18).toBe(text);
       }
     })
   );
@@ -302,7 +320,8 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
     Effect.gen(function* () {
       const spans = yield* modelsWriteSpans(native, topLevel);
       expect(spans).toHaveLength(1);
-      expect(yield* modelsApplySpans(native, spans)).toBe(Str.replace('"old"', '"gpt-6.1-sol"')(native));
+      const modelsApplySpans19 = yield* modelsApplySpans(native, spans);
+      expect(modelsApplySpans19).toBe(Str.replace('"old"', '"gpt-6.1-sol"')(native));
     })
   );
 
@@ -397,8 +416,11 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
         if (O.isSome(modelsCheckOnlyFormat(locator))) {
           const error = yield* Effect.flip(modelsWriteSpans(content, write(locator)));
           expect(error.message).toContain("targets are check-only; edit by hand.");
-        } else
-          expect(yield* modelsApplySpans(content, yield* modelsWriteSpans(content, write(locator)))).toBe(expected);
+        } else {
+          const modelsWriteSpans11 = yield* modelsWriteSpans(content, write(locator));
+          const modelsApplySpans3 = yield* modelsApplySpans(content, modelsWriteSpans11);
+          expect(modelsApplySpans3).toBe(expected);
+        }
       }
     })
   );
@@ -415,24 +437,31 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
       const backupDirectory = path.join(root, ".config-backups");
       yield* fs.writeFileString(file, native, { mode: 0o644 });
       const writer = yield* writerWithFs(fs);
-      assertNone(yield* writer.apply(file, [topLevel], "dry-run", backupDirectory));
-      expect(yield* fs.exists(backupDirectory)).toBe(false);
-      const journal = O.getOrThrow(yield* writer.apply(file, [topLevel], "write", backupDirectory));
-      expect(yield* fs.readFileString(journal.backup)).toBe(native);
+      const apply20 = yield* writer.apply(file, [topLevel], "dry-run", backupDirectory);
+      assertNone(apply20);
+      const exists21 = yield* fs.exists(backupDirectory);
+      expect(exists21).toBe(false);
+      const apply22 = yield* writer.apply(file, [topLevel], "write", backupDirectory);
+      const journal = O.getOrThrow(apply22);
+      const readFileString23 = yield* fs.readFileString(journal.backup);
+      expect(readFileString23).toBe(native);
       expect((yield* fs.stat(file)).mode & 0o777).toBe(0o644);
       const journalFile = path.join(backupDirectory, `${journal.id}.json`);
       yield* writer.restore(journalFile, backupDirectory);
-      expect(yield* fs.readFileString(file)).toBe(native);
+      const readFileString24 = yield* fs.readFileString(file);
+      expect(readFileString24).toBe(native);
       expect((yield* fs.stat(file)).mode & 0o777).toBe(0o644);
       yield* Effect.flip(writer.restore(journalFile, backupDirectory));
-      const second = O.getOrThrow(yield* writer.apply(file, [topLevel], "write", backupDirectory));
+      const apply25 = yield* writer.apply(file, [topLevel], "write", backupDirectory);
+      const second = O.getOrThrow(apply25);
       for (const changed of [`${native}\n# external native write\n`, "unknown = true\n", "this is invalid\n"]) {
         yield* fs.writeFileString(file, changed);
         const error = yield* Effect.flip(
           writer.restore(path.join(backupDirectory, `${second.id}.json`), backupDirectory)
         );
         expect(error.message).toContain(`Journal: ${second.id}`);
-        expect(yield* fs.readFileString(file)).toBe(changed);
+        const readFileString26 = yield* fs.readFileString(file);
+        expect(readFileString26).toBe(changed);
       }
     })
   );
@@ -461,15 +490,22 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
         });
         const writer = yield* writerWithFs(fs);
         yield* Effect.flip(writer.apply(file, [request], "check", backups));
-        const journal = O.getOrThrow(yield* writer.apply(file, [request], "write", backups));
-        expect(yield* fs.readFileString(file)).toBe(native);
-        assertNone(yield* writer.apply(file, [request], "check", backups));
-        assertNone(yield* writer.apply(file, [request], "write", backups));
+        const apply27 = yield* writer.apply(file, [request], "write", backups);
+        const journal = O.getOrThrow(apply27);
+        const readFileString28 = yield* fs.readFileString(file);
+        expect(readFileString28).toBe(native);
+        const apply29 = yield* writer.apply(file, [request], "check", backups);
+        assertNone(apply29);
+        const apply30 = yield* writer.apply(file, [request], "write", backups);
+        assertNone(apply30);
         const refusal = yield* Effect.flip(writer.restore(path.join(backups, `${journal.id}.json`), backups));
         expect(refusal.message).toContain("Owned path is absent");
-        expect(yield* fs.readFileString(file)).toBe(native);
-        expect(yield* fs.readFileString(journal.backup)).toBe(before);
-        assertNone(yield* writer.apply(file, [request], "check", backups));
+        const readFileString31 = yield* fs.readFileString(file);
+        expect(readFileString31).toBe(native);
+        const readFileString32 = yield* fs.readFileString(journal.backup);
+        expect(readFileString32).toBe(before);
+        const apply33 = yield* writer.apply(file, [request], "check", backups);
+        assertNone(apply33);
       }
       const request = ModelsLocatorWrite.make({
         locator: {
@@ -517,16 +553,21 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
       for (const [extension, text, locator] of cases) {
         const file = path.join(root, `config.${extension}`);
         yield* fs.writeFileString(file, text);
-        assertNone(yield* writer.apply(file, [write(locator)], "check", path.join(root, "backups")));
-        if (locator._tag === "toml-top-level-key")
-          assertNone(yield* writer.apply(file, [write(locator)], "write", path.join(root, "backups")));
-        else
+        const apply34 = yield* writer.apply(file, [write(locator)], "check", path.join(root, "backups"));
+        assertNone(apply34);
+        if (locator._tag === "toml-top-level-key") {
+          const apply4 = yield* writer.apply(file, [write(locator)], "write", path.join(root, "backups"));
+          assertNone(apply4);
+        } else {
           expect(
             (yield* Effect.flip(writer.apply(file, [write(locator)], "write", path.join(root, "backups")))).message
           ).toContain("check-only");
-        expect(yield* fs.readFileString(file)).toBe(text);
+        }
+        const readFileString35 = yield* fs.readFileString(file);
+        expect(readFileString35).toBe(text);
       }
-      expect(yield* fs.exists(path.join(root, "backups"))).toBe(false);
+      const exists36 = yield* fs.exists(path.join(root, "backups"));
+      expect(exists36).toBe(false);
     })
   );
 
@@ -548,7 +589,9 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
         yield* fs.writeFileString(file, 'model = "old"\n', { mode: 0o644 });
         const writer = yield* writerWithFs(fs);
         const journal =
-          phase === "restore" ? O.getOrThrow(yield* writer.apply(file, [topLevel], "write", backups)) : undefined;
+          phase === "restore"
+            ? yield* Effect.map(writer.apply(file, [topLevel], "write", backups), O.getOrThrow)
+            : undefined;
         const modelsTestExchange = yield* ModelsAtomicExchange;
         let exchanges = 0;
         const replace = Effect.fnUntraced(function* (bytes: string) {
@@ -586,8 +629,9 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
               );
             }
             yield* modelsTestExchange.exchange(left, right);
-            if (publication && exchanges === 1)
+            if (publication && exchanges === 1) {
               yield* post.pipe(ModelsLocatorError.mapError("Test interference failed."));
+            }
           }),
         });
         const racer = yield* writerWithFs(wrappedFs, wrappedExchange);
@@ -611,10 +655,10 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
               ) && Str.endsWith(".concurrent")(entry)
           )
         ).toHaveLength(expectedMarkers);
-        expect(yield* fs.readFileString(file)).toBe(expected);
-        expect(A.filter(yield* fs.readDirectory(root), (entry) => Str.endsWith(".preimage")(entry))).toHaveLength(
-          expectedRetained
-        );
+        const readFileString37 = yield* fs.readFileString(file);
+        expect(readFileString37).toBe(expected);
+        const readDirectory38 = yield* fs.readDirectory(root);
+        expect(A.filter(readDirectory38, (entry) => Str.endsWith(".preimage")(entry))).toHaveLength(expectedRetained);
       })
     );
   }
@@ -635,16 +679,22 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
       const applied = yield* writer.apply(link, [topLevel], "write", backups);
       applied.pipe(O.isSome, assertTrue);
       const journal = O.getOrThrow(applied);
-      expect(yield* fs.readLink(link)).toBe(target);
-      expect(yield* fs.readFileString(target)).toContain('"gpt-6.1-sol"');
-      expect(yield* fs.readFileString(journal.backup)).toBe(native);
+      const readLink39 = yield* fs.readLink(link);
+      expect(readLink39).toBe(target);
+      const readFileString40 = yield* fs.readFileString(target);
+      expect(readFileString40).toContain('"gpt-6.1-sol"');
+      const readFileString41 = yield* fs.readFileString(journal.backup);
+      expect(readFileString41).toBe(native);
       yield* writer.restore(path.join(backups, `${journal.id}.json`), backups);
-      expect(yield* fs.readFileString(target)).toBe(native);
-      expect(yield* fs.readLink(link)).toBe(target);
+      const readFileString42 = yield* fs.readFileString(target);
+      expect(readFileString42).toBe(native);
+      const readLink43 = yield* fs.readLink(link);
+      expect(readLink43).toBe(target);
       const dangling = path.join(root, "dangling.toml");
       yield* fs.symlink(path.join(root, "absent"), dangling);
       yield* Effect.flip(writer.apply(dangling, [topLevel], "write", path.join(root, "absent-backups")));
-      expect(yield* fs.exists(path.join(root, "absent-backups"))).toBe(false);
+      const exists44 = yield* fs.exists(path.join(root, "absent-backups"));
+      expect(exists44).toBe(false);
     })
   );
 
@@ -675,7 +725,8 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
         expect(error._tag).toBe("ModelsLocatorError");
         expect(error.message).toContain("drift detected");
         yield* Effect.flip(writer.apply(file, [write(assignment.locator, "wrong, gpt-6-luna")], "check", backups));
-        expect(yield* fs.readFileString(file)).toBe(text);
+        const readFileString45 = yield* fs.readFileString(file);
+        expect(readFileString45).toBe(text);
       }
       for (const text of [
         "export 'ANTHROPIC_DEFAULT_HAIKU_MODEL=wrong'; claude\nANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna claude\n",
@@ -687,7 +738,8 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
         yield* fs.writeFileString(file, text);
         const error = yield* Effect.flip(writer.apply(file, [assignment], "check", backups));
         expect(error.message).toContain("Unsupported shell form: line");
-        expect(yield* fs.readFileString(file)).toBe(text);
+        const readFileString46 = yield* fs.readFileString(file);
+        expect(readFileString46).toBe(text);
       }
       const flag = write(
         {
@@ -712,11 +764,14 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
         // Unsupported evidence is never an in-sync scalar, even if a caller
         // supplies the diagnostic marker itself as the expected value.
         yield* Effect.flip(writer.apply(file, [write(flag.locator, "Unsupported shell form")], "check", backups));
-        expect(yield* fs.readFileString(file)).toBe(text);
+        const readFileString47 = yield* fs.readFileString(file);
+        expect(readFileString47).toBe(text);
       }
       yield* fs.writeFileString(file, 'claude --model "old" # native\n');
-      assertNone(yield* writer.apply(file, [flag], "check", backups));
-      expect(yield* fs.exists(backups)).toBe(false);
+      const apply48 = yield* writer.apply(file, [flag], "check", backups);
+      assertNone(apply48);
+      const exists49 = yield* fs.exists(backups);
+      expect(exists49).toBe(false);
     })
   );
 
@@ -761,12 +816,15 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
         expect(error.message).toBe(
           `${request.locator._tag === "yaml-path" ? "YAML" : "XML"} targets are check-only; edit by hand.`
         );
-        expect(yield* fs.readFileString(file)).toBe(text);
-        expect(yield* fs.exists(backups)).toBe(false);
+        const readFileString50 = yield* fs.readFileString(file);
+        expect(readFileString50).toBe(text);
+        const exists51 = yield* fs.exists(backups);
+        expect(exists51).toBe(false);
       }
       yield* fs.remove(file);
-      for (const request of [yaml, xml, escaped])
+      for (const request of [yaml, xml, escaped]) {
         expect((yield* Effect.flip(writer.apply(file, [request], "write", backups))).message).toContain("check-only");
+      }
     })
   );
 
@@ -826,13 +884,16 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
           const error = yield* Effect.flip(writer.apply(file, [owned], "write", backups));
           expect(error._tag).toBe("ModelsLocatorError");
           expect(error.message).toBe("Shell targets are check-only; edit by hand.");
-          expect(yield* fs.readFileString(file)).toBe(text);
-          expect(yield* fs.exists(backups)).toBe(false);
+          const readFileString52 = yield* fs.readFileString(file);
+          expect(readFileString52).toBe(text);
+          const exists53 = yield* fs.exists(backups);
+          expect(exists53).toBe(false);
         }
       }
       const text = "claude --model old\n";
       yield* fs.writeFileString(file, text);
-      assertNone(yield* writer.apply(file, [request], "dry-run", backups));
+      const apply54 = yield* writer.apply(file, [request], "dry-run", backups);
+      assertNone(apply54);
       yield* Effect.flip(writer.apply(file, [request], "check", backups));
       const current = write(
         {
@@ -845,9 +906,11 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
         },
         "old"
       );
-      assertNone(yield* writer.apply(file, [current], "check", backups));
+      const apply55 = yield* writer.apply(file, [current], "check", backups);
+      assertNone(apply55);
       yield* Effect.flip(modelsWriteSpans(text, request));
-      expect(yield* fs.exists(backups)).toBe(false);
+      const exists56 = yield* fs.exists(backups);
+      expect(exists56).toBe(false);
     })
   );
 
@@ -867,9 +930,12 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
         const backups = path.join(root, "backups");
         yield* fs.writeFileString(file, native);
         const linked = phase === "replaced-link" || phase === "retargeted-link";
-        if (linked) yield* fs.symlink(file, link);
+        if (linked) {
+          yield* fs.symlink(file, link);
+        }
         const writer = yield* writerWithFs(fs);
-        const journal = O.getOrThrow(yield* writer.apply(linked ? link : file, [topLevel], "write", backups));
+        const apply57 = yield* writer.apply(linked ? link : file, [topLevel], "write", backups);
+        const journal = O.getOrThrow(apply57);
         const applied = yield* fs.readFileString(file);
         yield* Match.value(phase).pipe(
           Match.when("parent-link", () => {
@@ -890,16 +956,23 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
         const error = yield* Effect.flip(writer.restore(path.join(backups, `${journal.id}.json`), backups));
         expect(error._tag).toBe("ModelsLocatorError");
         expect(error.message).toContain(`Journal: ${journal.id}`);
-        expect(yield* fs.readDirectory(backups)).toHaveLength(2);
-        if (phase !== "moved-target") expect(yield* fs.readFileString(file)).toBe(applied);
-        if (phase === "introduced-link") expect(yield* fs.readLink(file)).toBe(relocated);
-        if (A.contains(["introduced-link", "moved-target", "retargeted-link"], phase))
-          expect(yield* fs.readFileString(relocated)).toBe(applied);
+        const readDirectory58 = yield* fs.readDirectory(backups);
+        expect(readDirectory58).toHaveLength(2);
+        if (phase !== "moved-target") {
+          const readFileString6 = yield* fs.readFileString(file);
+          expect(readFileString6).toBe(applied);
+        }
+        if (phase === "introduced-link") {
+          const readLink7 = yield* fs.readLink(file);
+          expect(readLink7).toBe(relocated);
+        }
+        if (A.contains(["introduced-link", "moved-target", "retargeted-link"], phase)) {
+          const readFileString10 = yield* fs.readFileString(relocated);
+          expect(readFileString10).toBe(applied);
+        }
+        const readDirectory59 = yield* fs.readDirectory(directory);
         expect(
-          A.filter(
-            yield* fs.readDirectory(directory),
-            (entry) => Str.endsWith(".tmp")(entry) || Str.endsWith(".preimage")(entry)
-          )
+          A.filter(readDirectory59, (entry) => Str.endsWith(".tmp")(entry) || Str.endsWith(".preimage")(entry))
         ).toHaveLength(0);
       })
     );
@@ -919,7 +992,8 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
       const backups = path.join(root, "backups");
       yield* fs.writeFileString(file, native);
       const writer = yield* writerWithFs(fs);
-      const journal = O.getOrThrow(yield* writer.apply(file, [topLevel], "write", backups));
+      const apply60 = yield* writer.apply(file, [topLevel], "write", backups);
+      const journal = O.getOrThrow(apply60);
       const journalFile = path.join(backups, `${journal.id}.json`);
       const applied = yield* fs.readFileString(file);
       const shell = write({
@@ -954,20 +1028,20 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
         ],
       ]) {
         const { writes: _owned, ...legacy } = journal;
-        yield* fs.writeFileString(
-          journalFile,
-          yield* encodeRecoveryJournal(
-            ModelsApplyJournal.make({
-              ...legacy,
-              writes: O.flatMap(O.fromUndefinedOr(writes), A.head).pipe(O.map((first) => [first])),
-            })
-          )
+        const encodedRecoveryJournal61 = yield* encodeRecoveryJournal(
+          ModelsApplyJournal.make({
+            ...legacy,
+            writes: O.flatMap(O.fromUndefinedOr(writes), A.head).pipe(O.map((first) => [first])),
+          })
         );
+        yield* fs.writeFileString(journalFile, encodedRecoveryJournal61);
         const error = yield* Effect.flip(writer.restore(journalFile, backups));
         expect(Str.toLowerCase(error.message)).toContain("targets are check-only");
         expect(error.message).toContain(`Journal: ${journal.id}`);
-        expect(yield* fs.readFileString(file)).toBe(applied);
-        expect(yield* fs.readDirectory(backups)).toHaveLength(2);
+        const readFileString62 = yield* fs.readFileString(file);
+        expect(readFileString62).toBe(applied);
+        const readDirectory63 = yield* fs.readDirectory(backups);
+        expect(readDirectory63).toHaveLength(2);
       }
     })
   );
@@ -990,12 +1064,11 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
       const error = yield* Effect.flip(writer.apply(file, [topLevel], "write", backups));
       expect(error._tag).toBe("ModelsLocatorError");
       expect(error.message).toContain("Journal:");
-      expect(yield* fs.readFileString(file)).toBe(native);
+      const readFileString64 = yield* fs.readFileString(file);
+      expect(readFileString64).toBe(native);
+      const readDirectory65 = yield* fs.readDirectory(root);
       expect(
-        A.filter(
-          yield* fs.readDirectory(root),
-          (entry) => Str.endsWith(".preimage")(entry) || Str.endsWith(".tmp")(entry)
-        )
+        A.filter(readDirectory65, (entry) => Str.endsWith(".preimage")(entry) || Str.endsWith(".tmp")(entry))
       ).toHaveLength(0);
     })
   );
@@ -1024,8 +1097,10 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
       );
       const error = yield* Effect.flip(writer.apply(file, [request], "write", path.join(root, "backups")));
       expect(error.message).toBe("Text targets are check-only; edit by hand.");
-      expect(yield* fs.readFileString(file)).toBe(text);
-      expect(yield* fs.exists(path.join(root, "backups"))).toBe(false);
+      const readFileString66 = yield* fs.readFileString(file);
+      expect(readFileString66).toBe(text);
+      const exists67 = yield* fs.exists(path.join(root, "backups"));
+      expect(exists67).toBe(false);
     })
   );
 
@@ -1040,12 +1115,14 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
       const backups = path.join(root, "backups");
       yield* fs.writeFileString(file, 'model = "old"\n');
       const writer = yield* writerWithFs(fs);
-      const journal = O.getOrThrow(yield* writer.apply(file, [topLevel], "write", backups));
+      const apply68 = yield* writer.apply(file, [topLevel], "write", backups);
+      const journal = O.getOrThrow(apply68);
       const applied = yield* fs.readFileString(file);
       yield* fs.writeFileString(journal.backup, "tampered");
       const error = yield* Effect.flip(writer.restore(path.join(backups, `${journal.id}.json`), backups));
       expect(error.message).toContain("Ineligible native target");
-      expect(yield* fs.readFileString(file)).toBe(applied);
+      const readFileString69 = yield* fs.readFileString(file);
+      expect(readFileString69).toBe(applied);
     })
   );
 
@@ -1068,7 +1145,8 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
       const absent = '"sandbox_mode.foo" = "native"\n';
       const spans = yield* modelsWriteSpans(absent, request);
       expect(spans).toHaveLength(0);
-      expect(yield* modelsApplySpans(absent, spans)).toBe(absent);
+      const modelsApplySpans70 = yield* modelsApplySpans(absent, spans);
+      expect(modelsApplySpans70).toBe(absent);
     })
   );
 
@@ -1131,7 +1209,8 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
       const error = yield* Effect.flip(writer.apply(file, [request], "write", path.join(root, "backups")));
       expect(error.message).toBe("Ineligible native target: Invalid JSON target.");
       expect(error.cause).toBeUndefined();
-      expect(yield* fs.exists(path.join(root, "backups"))).toBe(false);
+      const exists71 = yield* fs.exists(path.join(root, "backups"));
+      expect(exists71).toBe(false);
     })
   );
 
@@ -1147,8 +1226,10 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
       yield* fs.writeFile(file, bytes);
       const writer = yield* writerWithFs(fs);
       yield* Effect.flip(writer.apply(file, [topLevel], "write", path.join(root, "backups")));
-      expect(A.fromIterable(yield* fs.readFile(file))).toEqual(A.fromIterable(bytes));
-      expect(yield* fs.exists(path.join(root, "backups"))).toBe(false);
+      const readFile72 = yield* fs.readFile(file);
+      expect(A.fromIterable(readFile72)).toEqual(A.fromIterable(bytes));
+      const exists73 = yield* fs.exists(path.join(root, "backups"));
+      expect(exists73).toBe(false);
     })
   );
 });

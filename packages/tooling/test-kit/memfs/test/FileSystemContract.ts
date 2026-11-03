@@ -88,7 +88,8 @@ const readAllocUpTo = Effect.fnUntraced(function* (file: FileSystem.File, size: 
 const writeUsingWrite = Effect.fnUntraced(function* (file: FileSystem.File, bytes: Uint8Array) {
   let offset = 0;
   while (offset < bytes.length) {
-    const bytesWritten = Number(yield* file.write(bytes.subarray(offset)));
+    const write1 = yield* file.write(bytes.subarray(offset));
+    const bytesWritten = Number(write1);
     assert.isTrue(bytesWritten > 0);
     assert.isTrue(bytesWritten <= bytes.length - offset);
     offset += bytesWritten;
@@ -138,7 +139,8 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
         const firstRead = yield* fs.readFile(file);
         assert.deepStrictEqual(firstRead, expected);
         firstRead[2] = 0;
-        assert.deepStrictEqual(yield* fs.readFile(file), expected);
+        const readFile2 = yield* fs.readFile(file);
+        assert.deepStrictEqual(readFile2, expected);
       })
     );
 
@@ -150,7 +152,8 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
 
         yield* fs.writeFileString(file, text);
 
-        assert.strictEqual(yield* fs.readFileString(file), text);
+        const readFileString3 = yield* fs.readFileString(file);
+        assert.strictEqual(readFileString3, text);
       })
     );
 
@@ -171,9 +174,8 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
         const { fs, path } = yield* makeTestContext;
         yield* writeSourceTree(fs, path);
 
-        const entries = A.map(yield* fs.readDirectory(path("src"), { recursive: true }), (path) =>
-          Str.replaceAll("\\", "/")(path)
-        ).sort();
+        const readDirectory4 = yield* fs.readDirectory(path("src"), { recursive: true });
+        const entries = A.map(readDirectory4, (path) => Str.replaceAll("\\", "/")(path)).sort();
 
         assert.isTrue(entries.includes("features/chat.ts"));
         assert.isTrue(entries.includes("index.ts"));
@@ -214,7 +216,8 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
         yield* fs.writeFileString(file, "content");
         const error = yield* Effect.flip(fs.makeDirectory(file, { recursive: true }));
         assertSystemError(error, { tag: "AlreadyExists", method: "makeDirectory", pathOrDescriptor: file });
-        assert.strictEqual(yield* fs.readFileString(file), "content");
+        const readFileString5 = yield* fs.readFileString(file);
+        assert.strictEqual(readFileString5, "content");
       })
     );
 
@@ -223,11 +226,14 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
         const { fs, path } = yield* makeTestContext;
         const file = path("exists.txt");
 
-        assert.isFalse(yield* fs.exists(file));
+        const exists6 = yield* fs.exists(file);
+        assert.isFalse(exists6);
         yield* fs.writeFileString(file, "exists");
-        assert.isTrue(yield* fs.exists(file));
+        const exists7 = yield* fs.exists(file);
+        assert.isTrue(exists7);
         yield* fs.remove(file);
-        assert.isFalse(yield* fs.exists(file));
+        const exists8 = yield* fs.exists(file);
+        assert.isFalse(exists8);
       })
     );
 
@@ -254,7 +260,8 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
 
         yield* fs.remove(directory, { recursive: true });
 
-        assert.isFalse(yield* fs.exists(directory));
+        const exists9 = yield* fs.exists(directory);
+        assert.isFalse(exists9);
       })
     );
 
@@ -269,7 +276,8 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
         const error = yield* Effect.flip(fs.remove(directory));
         assertSystemError(error, { method: "remove", pathOrDescriptor: directory });
 
-        assert.strictEqual(yield* fs.readFileString(file), "content");
+        const readFileString10 = yield* fs.readFileString(file);
+        assert.strictEqual(readFileString10, "content");
       })
     );
 
@@ -293,11 +301,13 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
 
         yield* fs.writeFileString(file, "replacement");
         yield* fs.writeFileString(file, " appended", { flag: "a" });
-        assert.strictEqual(yield* fs.readFileString(file), "replacement appended");
+        const readFileString11 = yield* fs.readFileString(file);
+        assert.strictEqual(readFileString11, "replacement appended");
 
         const error = yield* Effect.flip(fs.writeFile(file, encoder.encode("exclusive"), { flag: "wx" }));
         assertSystemError(error, { tag: "AlreadyExists", method: "writeFile", pathOrDescriptor: file });
-        assert.strictEqual(yield* fs.readFileString(file), "replacement appended");
+        const readFileString12 = yield* fs.readFileString(file);
+        assert.strictEqual(readFileString12, "replacement appended");
       })
     );
 
@@ -308,11 +318,13 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
 
         yield* fs.writeFileString(file, "content");
         yield* fs.writeFileString(file, "");
-        assert.strictEqual(yield* fs.readFileString(file), "");
+        const readFileString13 = yield* fs.readFileString(file);
+        assert.strictEqual(readFileString13, "");
 
         yield* fs.writeFileString(file, "content");
         yield* fs.writeFileString(file, "", { flag: "r+" });
-        assert.strictEqual(yield* fs.readFileString(file), "content");
+        const readFileString14 = yield* fs.readFileString(file);
+        assert.strictEqual(readFileString14, "content");
       })
     );
 
@@ -329,9 +341,12 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
         yield* fs.writeFileString(path("source", "file.txt"), "changed file");
         yield* fs.writeFileString(path("source", "nested", "child.txt"), "changed child");
 
-        assert.strictEqual(yield* fs.readFileString(path("copy.txt")), "file");
-        assert.strictEqual(yield* fs.readFileString(path("copy", "file.txt")), "file");
-        assert.strictEqual(yield* fs.readFileString(path("copy", "nested", "child.txt")), "child");
+        const readFileString15 = yield* fs.readFileString(path("copy.txt"));
+        assert.strictEqual(readFileString15, "file");
+        const readFileString16 = yield* fs.readFileString(path("copy", "file.txt"));
+        assert.strictEqual(readFileString16, "file");
+        const readFileString17 = yield* fs.readFileString(path("copy", "nested", "child.txt"));
+        assert.strictEqual(readFileString17, "child");
       })
     );
 
@@ -345,7 +360,8 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
 
         yield* fs.copy(source, destination, { overwrite: true });
 
-        assert.strictEqual(yield* fs.readFileString(destination), "source");
+        const readFileString18 = yield* fs.readFileString(destination);
+        assert.strictEqual(readFileString18, "source");
       })
     );
 
@@ -358,9 +374,12 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
         yield* fs.rename(path("before"), path("after"));
         yield* fs.rename(path("after", "nested", "file.txt"), path("after", "nested", "renamed.txt"));
 
-        assert.isFalse(yield* fs.exists(path("before")));
-        assert.isFalse(yield* fs.exists(path("after", "nested", "file.txt")));
-        assert.strictEqual(yield* fs.readFileString(path("after", "nested", "renamed.txt")), "content");
+        const exists19 = yield* fs.exists(path("before"));
+        assert.isFalse(exists19);
+        const exists20 = yield* fs.exists(path("after", "nested", "file.txt"));
+        assert.isFalse(exists20);
+        const readFileString21 = yield* fs.readFileString(path("after", "nested", "renamed.txt"));
+        assert.strictEqual(readFileString21, "content");
       })
     );
 
@@ -371,13 +390,16 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
         yield* fs.writeFileString(file, "hello world");
 
         yield* fs.truncate(file, 5);
-        assert.strictEqual(yield* fs.readFileString(file), "hello");
+        const readFileString22 = yield* fs.readFileString(file);
+        assert.strictEqual(readFileString22, "hello");
 
         yield* fs.truncate(file, 8);
-        assert.deepStrictEqual(yield* fs.readFile(file), encoder.encode("hello\0\0\0"));
+        const readFile23 = yield* fs.readFile(file);
+        assert.deepStrictEqual(readFile23, encoder.encode("hello\0\0\0"));
 
         yield* fs.truncate(file);
-        assert.deepStrictEqual(yield* fs.readFile(file), new Uint8Array(0));
+        const readFile24 = yield* fs.readFile(file);
+        assert.deepStrictEqual(readFile24, new Uint8Array(0));
       })
     );
 
@@ -504,7 +526,8 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
 
         yield* Stream.run(Stream.make(encoder.encode("new "), encoder.encode("content")), fs.sink(file));
 
-        assert.strictEqual(yield* fs.readFileString(file), "new content");
+        const readFileString25 = yield* fs.readFileString(file);
+        assert.strictEqual(readFileString25, "new content");
       })
     );
 
@@ -516,7 +539,8 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
 
         yield* Stream.run(Stream.make(encoder.encode(" appended")), fs.sink(file, { flag: "a" }));
 
-        assert.strictEqual(yield* fs.readFileString(file), "seed appended");
+        const readFileString26 = yield* fs.readFileString(file);
+        assert.strictEqual(readFileString26, "seed appended");
       })
     );
   });
@@ -532,13 +556,17 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
         const second = yield* fs.open(file);
 
         const buffer = new Uint8Array(2);
-        assert.strictEqual(yield* fillBuffer(first, buffer), 2);
+        const fillBuffer27 = yield* fillBuffer(first, buffer);
+        assert.strictEqual(fillBuffer27, 2);
         assert.strictEqual(decoder.decode(buffer), "01");
-        assert.strictEqual(decoder.decode(yield* readAllocUpTo(second, 2)), "01");
+        const readAllocUpTo28 = yield* readAllocUpTo(second, 2);
+        assert.strictEqual(decoder.decode(readAllocUpTo28), "01");
         yield* first.seek(BigInt(3), "current");
-        assert.strictEqual(decoder.decode(yield* readAllocUpTo(first, 2)), "56");
+        const readAllocUpTo29 = yield* readAllocUpTo(first, 2);
+        assert.strictEqual(decoder.decode(readAllocUpTo29), "56");
         yield* first.seek(BigInt(0), "start");
-        assert.strictEqual(decoder.decode(yield* readAllocUpTo(first, 2)), "01");
+        const readAllocUpTo30 = yield* readAllocUpTo(first, 2);
+        assert.strictEqual(decoder.decode(readAllocUpTo30), "01");
       })
     );
 
@@ -550,18 +578,21 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
 
         yield* writeUsingWrite(file, encoder.encode("abc"));
         yield* writeUsingWrite(file, encoder.encode("def"));
-        assert.strictEqual(yield* fs.readFileString(filePath), "abcdef");
+        const readFileString31 = yield* fs.readFileString(filePath);
+        assert.strictEqual(readFileString31, "abcdef");
 
         yield* file.seek(BigInt(-2), "current");
         yield* writeUsingWrite(file, encoder.encode("WXYZ"));
-        assert.strictEqual(yield* fs.readFileString(filePath), "abcdWXYZ");
+        const readFileString32 = yield* fs.readFileString(filePath);
+        assert.strictEqual(readFileString32, "abcdWXYZ");
 
         yield* file.seek(BigInt(2), "start");
         yield* writeUsingWrite(file, encoder.encode("!!"));
         yield* file.sync;
 
         assert.strictEqual((yield* file.stat).size, ByteSize.bytes(8));
-        assert.strictEqual(yield* fs.readFileString(filePath), "ab!!WXYZ");
+        const readFileString33 = yield* fs.readFileString(filePath);
+        assert.strictEqual(readFileString33, "ab!!WXYZ");
       })
     );
 
@@ -575,7 +606,8 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
         yield* file.seek(BigInt(0), "start");
         yield* writeUsingWrite(file, encoder.encode("xy"));
 
-        assert.strictEqual(yield* fs.readFileString(filePath), "seedxy");
+        const readFileString34 = yield* fs.readFileString(filePath);
+        assert.strictEqual(readFileString34, "seedxy");
       })
     );
 
@@ -588,11 +620,13 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
 
         yield* file.truncate(3);
         assert.strictEqual((yield* file.stat).size, ByteSize.bytes(3));
-        assert.strictEqual(yield* fs.readFileString(filePath), "abc");
+        const readFileString35 = yield* fs.readFileString(filePath);
+        assert.strictEqual(readFileString35, "abc");
 
         yield* file.truncate(5);
         assert.strictEqual((yield* file.stat).size, ByteSize.bytes(5));
-        assert.deepStrictEqual(yield* fs.readFile(filePath), encoder.encode("abc\0\0"));
+        const readFile36 = yield* fs.readFile(filePath);
+        assert.deepStrictEqual(readFile36, encoder.encode("abc\0\0"));
       })
     );
 
@@ -605,7 +639,8 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
 
         const contents = yield* readAllocUpTo(file, 10);
         assert.strictEqual(decoder.decode(contents), "abc");
-        assertNone(yield* file.readAlloc(1));
+        const readAlloc37 = yield* file.readAlloc(1);
+        assertNone(readAlloc37);
       })
     );
 
@@ -632,7 +667,8 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
       if (existingBehavior !== "rejects") return;
       const error = yield* Effect.flip(fs.open(existing, { flag }));
       assertSystemError(error, { tag: "AlreadyExists", method: "open", pathOrDescriptor: existing });
-      assert.strictEqual(yield* fs.readFileString(existing), "seed");
+      const readFileString38 = yield* fs.readFileString(existing);
+      assert.strictEqual(readFileString38, "seed");
     });
 
     const assertMissingRejected = Effect.fnUntraced(function* (
@@ -660,7 +696,8 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
     ) {
       if (access !== "write") {
         yield* file.seek(BigInt(0), "start");
-        assert.strictEqual(decoder.decode(yield* readAllocUpTo(file, 1)), Str.slice(0, 1)(expectedContent));
+        const readAllocUpTo39 = yield* readAllocUpTo(file, 1);
+        assert.strictEqual(decoder.decode(readAllocUpTo39), Str.slice(0, 1)(expectedContent));
         return;
       }
       const error = yield* Effect.flip(file.readAlloc(1));
@@ -674,7 +711,8 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
     ) {
       if (existingBehavior === "rejects" || missing !== "creates") return;
       yield* fs.open(created, { flag });
-      assert.isTrue(yield* fs.exists(created));
+      const exists40 = yield* fs.exists(created);
+      assert.isTrue(exists40);
     });
 
     it.effect.each(openFlags)("supports the $flag open flag", (row) =>
@@ -691,10 +729,12 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
         const filePath = rejectsExisting ? created : existing;
         const file = yield* fs.open(filePath, { flag: row.flag });
 
-        assert.strictEqual(yield* fs.readFileString(filePath), rejectsExisting ? "" : row.existing);
+        const readFileString41 = yield* fs.readFileString(filePath);
+        assert.strictEqual(readFileString41, rejectsExisting ? "" : row.existing);
 
         yield* assertWriteAccess(file, row);
-        assert.strictEqual(yield* fs.readFileString(filePath), row.expectedContent);
+        const readFileString42 = yield* fs.readFileString(filePath);
+        assert.strictEqual(readFileString42, row.expectedContent);
         yield* assertReadAccess(file, row);
         yield* assertCreatesMissing(fs, row, created);
       })
@@ -712,7 +752,8 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
 
         const statError = yield* Effect.flip(fs.stat(child));
         assertSystemError(statError, { tag: "BadResource", method: "stat", pathOrDescriptor: child });
-        assert.strictEqual(yield* fs.readFileString(parent), "content");
+        const readFileString43 = yield* fs.readFileString(parent);
+        assert.strictEqual(readFileString43, "content");
       })
     );
 
@@ -742,10 +783,12 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
             const error = existingResult.pipe(Exit.findError, Result.getOrThrow);
             assertExitFailure(existingResult, Cause.fail(error));
             assertSystemError(error, { method: "writeFile", pathOrDescriptor: existing });
-            assert.strictEqual(yield* fs.readFileString(existing), "seed");
+            const readFileString44 = yield* fs.readFileString(existing);
+            assert.strictEqual(readFileString44, "seed");
           } else {
             assertExitSuccess(existingResult, undefined);
-            assert.strictEqual(yield* fs.readFileString(existing), expectedExisting);
+            const readFileString45 = yield* fs.readFileString(existing);
+            assert.strictEqual(readFileString45, expectedExisting);
           }
 
           const missingResult = yield* Effect.exit(fs.writeFileString(missing, "x", { flag }));
@@ -759,7 +802,8 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
             });
           } else {
             assertExitSuccess(missingResult, undefined);
-            assert.strictEqual(yield* fs.readFileString(missing), expectedMissing);
+            const readFileString46 = yield* fs.readFileString(missing);
+            assert.strictEqual(readFileString46, expectedMissing);
           }
         }
       })
@@ -776,7 +820,8 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
         yield* file.seek(BigInt(4), "start");
         yield* file.writeAll(new Uint8Array([42, 255]));
 
-        assert.deepStrictEqual(yield* fs.readFile(filePath), new Uint8Array([0, 0, 0, 0, 42, 255]));
+        const readFile47 = yield* fs.readFile(filePath);
+        assert.deepStrictEqual(readFile47, new Uint8Array([0, 0, 0, 0, 42, 255]));
       })
     );
 
@@ -792,8 +837,10 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
         yield* file.seek(BigInt(0), "start");
         yield* file.writeAll(encoder.encode("renamed"));
 
-        assert.isFalse(yield* fs.exists(before));
-        assert.strictEqual(yield* fs.readFileString(after), "renamed");
+        const exists48 = yield* fs.exists(before);
+        assert.isFalse(exists48);
+        const readFileString49 = yield* fs.readFileString(after);
+        assert.strictEqual(readFileString49, "renamed");
       })
     );
 
@@ -809,10 +856,14 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
 
         yield* fs.rename(source, destination);
 
-        assert.isFalse(yield* fs.exists(source));
-        assert.strictEqual(yield* fs.readFileString(destination), "source");
-        assert.strictEqual(decoder.decode(yield* readAllocUpTo(sourceHandle, 6)), "source");
-        assert.strictEqual(decoder.decode(yield* readAllocUpTo(destinationHandle, 11)), "destination");
+        const exists50 = yield* fs.exists(source);
+        assert.isFalse(exists50);
+        const readFileString51 = yield* fs.readFileString(destination);
+        assert.strictEqual(readFileString51, "source");
+        const readAllocUpTo52 = yield* readAllocUpTo(sourceHandle, 6);
+        assert.strictEqual(decoder.decode(readAllocUpTo52), "source");
+        const readAllocUpTo53 = yield* readAllocUpTo(destinationHandle, 11);
+        assert.strictEqual(decoder.decode(readAllocUpTo53), "destination");
       })
     );
 
@@ -824,8 +875,10 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
         const file = yield* fs.open(filePath, { flag: "r+" });
 
         yield* fs.remove(filePath);
-        assert.isFalse(yield* fs.exists(filePath));
-        assert.strictEqual(decoder.decode(yield* readAllocUpTo(file, 7)), "content");
+        const exists54 = yield* fs.exists(filePath);
+        assert.isFalse(exists54);
+        const readAllocUpTo55 = yield* readAllocUpTo(file, 7);
+        assert.strictEqual(decoder.decode(readAllocUpTo55), "content");
         assert.strictEqual((yield* file.stat).size, ByteSize.bytes(7));
       })
     );
@@ -839,11 +892,14 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
         yield* file.writeAll(encoder.encode("foo"));
         yield* file.seek(BigInt(0), "start");
         yield* file.writeAll(encoder.encode("bar"));
-        assert.strictEqual(decoder.decode(yield* readAllocUpTo(file, 3)), "foo");
+        const readAllocUpTo56 = yield* readAllocUpTo(file, 3);
+        assert.strictEqual(decoder.decode(readAllocUpTo56), "foo");
 
         yield* file.writeAll(encoder.encode("baz"));
-        assert.strictEqual(decoder.decode(yield* readAllocUpTo(file, 6)), "barbaz");
-        assert.strictEqual(yield* fs.readFileString(filePath), "foobarbaz");
+        const readAllocUpTo57 = yield* readAllocUpTo(file, 6);
+        assert.strictEqual(decoder.decode(readAllocUpTo57), "barbaz");
+        const readFileString58 = yield* fs.readFileString(filePath);
+        assert.strictEqual(readFileString58, "foobarbaz");
       })
     );
 
@@ -852,8 +908,10 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
         const { fs, path } = yield* makeTestContext;
         const file = yield* fs.open(path("seek-cursor.txt"), { flag: "w+" });
 
-        assert.strictEqual(yield* file.seek(BigInt(6), "start"), BigInt(6));
-        assert.strictEqual(yield* file.seek(BigInt(-2), "current"), BigInt(4));
+        const seek59 = yield* file.seek(BigInt(6), "start");
+        assert.strictEqual(seek59, BigInt(6));
+        const seek60 = yield* file.seek(BigInt(-2), "current");
+        assert.strictEqual(seek60, BigInt(4));
       })
     );
 
@@ -867,11 +925,13 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
         yield* file.seek(BigInt(6), "start");
         yield* file.truncate(11);
         yield* file.writeAll(encoder.encode("!"));
-        assert.strictEqual(yield* fs.readFileString(filePath), "lorem !psum");
+        const readFileString61 = yield* fs.readFileString(filePath);
+        assert.strictEqual(readFileString61, "lorem !psum");
 
         yield* file.truncate(5);
         yield* file.writeAll(encoder.encode("?"));
-        assert.strictEqual(yield* fs.readFileString(filePath), "lorem?");
+        const readFileString62 = yield* fs.readFileString(filePath);
+        assert.strictEqual(readFileString62, "lorem?");
       })
     );
 
@@ -885,7 +945,8 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
         yield* file.truncate(5);
         yield* fs.writeFile(filePath, encoder.encode("xyz"), { flag: "a" });
 
-        assert.strictEqual(decoder.decode(yield* readAllocUpTo(file, 3)), "xyz");
+        const readAllocUpTo63 = yield* readAllocUpTo(file, 3);
+        assert.strictEqual(decoder.decode(readAllocUpTo63), "xyz");
       })
     );
   });
@@ -905,8 +966,10 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
         const renameError = yield* Effect.flip(fs.rename(missing, renameDestination));
         assertSystemError(renameError, { tag: "NotFound", method: "rename", pathOrDescriptor: missing });
 
-        assert.strictEqual(yield* fs.readFileString(copyDestination), "copy destination");
-        assert.strictEqual(yield* fs.readFileString(renameDestination), "rename destination");
+        const readFileString64 = yield* fs.readFileString(copyDestination);
+        assert.strictEqual(readFileString64, "copy destination");
+        const readFileString65 = yield* fs.readFileString(renameDestination);
+        assert.strictEqual(readFileString65, "rename destination");
       })
     );
 
@@ -925,10 +988,14 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
         yield* fs.copyFile(copySource, copyDestination);
         yield* fs.rename(renameSource, renameDestination);
 
-        assert.strictEqual(yield* fs.readFileString(copySource), "copied");
-        assert.strictEqual(yield* fs.readFileString(copyDestination), "copied");
-        assert.isFalse(yield* fs.exists(renameSource));
-        assert.strictEqual(yield* fs.readFileString(renameDestination), "renamed");
+        const readFileString66 = yield* fs.readFileString(copySource);
+        assert.strictEqual(readFileString66, "copied");
+        const readFileString67 = yield* fs.readFileString(copyDestination);
+        assert.strictEqual(readFileString67, "copied");
+        const exists68 = yield* fs.exists(renameSource);
+        assert.isFalse(exists68);
+        const readFileString69 = yield* fs.readFileString(renameDestination);
+        assert.strictEqual(readFileString69, "renamed");
       })
     );
 
@@ -945,9 +1012,12 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
 
         yield* fs.copyFile(source, destination);
 
-        assert.strictEqual(yield* fs.readFileString(destination), "source");
-        assert.strictEqual(yield* fs.readFileString(alias), "source");
-        assert.strictEqual(decoder.decode(yield* readAllocUpTo(destinationHandle, 6)), "source");
+        const readFileString70 = yield* fs.readFileString(destination);
+        assert.strictEqual(readFileString70, "source");
+        const readFileString71 = yield* fs.readFileString(alias);
+        assert.strictEqual(readFileString71, "source");
+        const readAllocUpTo72 = yield* readAllocUpTo(destinationHandle, 6);
+        assert.strictEqual(decoder.decode(readAllocUpTo72), "source");
       })
     );
 
@@ -975,8 +1045,10 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
           });
         }
 
-        assert.strictEqual(yield* fs.readFileString(source), "source");
-        assert.strictEqual(yield* fs.readFileString(destination), "destination");
+        const readFileString73 = yield* fs.readFileString(source);
+        assert.strictEqual(readFileString73, "source");
+        const readFileString74 = yield* fs.readFileString(destination);
+        assert.strictEqual(readFileString74, "destination");
       })
     );
   });
@@ -1083,7 +1155,8 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
         );
 
         assertExitFailure(failedResult, Cause.fail("expected failure"));
-        assert.deepStrictEqual(yield* Ref.get(finalized), [streamed, sunk, failed]);
+        const got = yield* Ref.get(finalized);
+        assert.deepStrictEqual(got, [streamed, sunk, failed]);
       })
     );
   });
@@ -1145,7 +1218,8 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
         yield* fs.link(source, linked);
         yield* fs.writeFileString(linked, "linked");
 
-        assert.strictEqual(yield* fs.readFileString(source), "linked");
+        const readFileString75 = yield* fs.readFileString(source);
+        assert.strictEqual(readFileString75, "linked");
         const sourceInfo = yield* fs.stat(source);
         const linkedInfo = yield* fs.stat(linked);
         if (O.isSome(sourceInfo.ino) && O.isSome(linkedInfo.ino)) {
@@ -1171,8 +1245,10 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
 
         yield* fs.remove(source);
 
-        assert.isFalse(yield* fs.exists(source));
-        assert.strictEqual(yield* fs.readFileString(alias), "original");
+        const exists76 = yield* fs.exists(source);
+        assert.isFalse(exists76);
+        const readFileString77 = yield* fs.readFileString(alias);
+        assert.strictEqual(readFileString77, "original");
         const linkedInfo = yield* fs.stat(alias);
         if (O.isSome(linkedInfo.nlink)) {
           assert.strictEqual(linkedInfo.nlink.value, 1n);
@@ -1183,9 +1259,11 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
         yield* handle.seek(BigInt(0), "start");
         yield* handle.writeAll(encoder.encode("retained"));
 
-        assert.strictEqual(yield* fs.readFileString(source), "replacement");
+        const readFileString78 = yield* fs.readFileString(source);
+        assert.strictEqual(readFileString78, "replacement");
         yield* handle.seek(BigInt(0), "start");
-        assert.strictEqual(decoder.decode(yield* readAllocUpTo(handle, 8)), "retained");
+        const readAllocUpTo79 = yield* readAllocUpTo(handle, 8);
+        assert.strictEqual(decoder.decode(readAllocUpTo79), "retained");
       })
     );
 
@@ -1200,12 +1278,20 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
         yield* fs.symlink("target.txt", relativeLink);
         yield* fs.symlink(target, absoluteLink);
 
-        assert.strictEqual(yield* fs.readLink(relativeLink), "target.txt");
-        assert.strictEqual(yield* fs.readLink(absoluteLink), target);
-        assert.strictEqual(yield* fs.realPath(relativeLink), yield* fs.realPath(target));
-        assert.strictEqual(yield* fs.realPath(absoluteLink), yield* fs.realPath(target));
-        assert.strictEqual(yield* fs.readFileString(relativeLink), "content");
-        assert.strictEqual(yield* fs.readFileString(absoluteLink), "content");
+        const readLink80 = yield* fs.readLink(relativeLink);
+        assert.strictEqual(readLink80, "target.txt");
+        const readLink81 = yield* fs.readLink(absoluteLink);
+        assert.strictEqual(readLink81, target);
+        const realPath82 = yield* fs.realPath(relativeLink);
+        const realPath87 = yield* fs.realPath(target);
+        assert.strictEqual(realPath82, realPath87);
+        const realPath83 = yield* fs.realPath(absoluteLink);
+        const realPath88 = yield* fs.realPath(target);
+        assert.strictEqual(realPath83, realPath88);
+        const readFileString84 = yield* fs.readFileString(relativeLink);
+        assert.strictEqual(readFileString84, "content");
+        const readFileString85 = yield* fs.readFileString(absoluteLink);
+        assert.strictEqual(readFileString85, "content");
       })
     );
 
@@ -1275,13 +1361,11 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
         yield* fs.writeFileString(`${root}/src/index.test.ts`, "export {}");
         yield* fs.writeFileString(`${root}/src/readme.md`, "readme");
 
-        const matches = A.map(
-          yield* fs.glob("**/*.ts", {
-            root,
-            exclude: ["**/*.test.ts"],
-          }),
-          (entry) => Str.replaceAll("\\", "/")(entry)
-        ).sort();
+        const glob86 = yield* fs.glob("**/*.ts", {
+          root,
+          exclude: ["**/*.test.ts"],
+        });
+        const matches = A.map(glob86, (entry) => Str.replaceAll("\\", "/")(entry)).sort();
 
         assert.strictEqual(matches.length, 1);
         assert.isTrue((matches[0] === undefined ? undefined : Str.endsWith("src/index.ts")(matches[0])) === true);

@@ -144,16 +144,21 @@ describe("@beep/workspace-domain", () => {
       pipe(relativeExit, Exit.isFailure, assertTrue);
       pipe(tildeExit, Exit.isFailure, assertTrue);
       pipe(blankExit, Exit.isFailure, assertTrue);
-      expect(yield* decodeWorkspaceVaultRootPath("C:\\Vault")).toBe("C:\\Vault");
+      const decodedWorkspaceVaultRootPath = yield* decodeWorkspaceVaultRootPath("C:\\Vault");
+      expect(decodedWorkspaceVaultRootPath).toBe("C:\\Vault");
     })
   );
 
   it.effect("normalizes trailing separators on workspace vault roots but still rejects bare roots", () =>
     Effect.gen(function* () {
-      expect(yield* decodeWorkspaceVaultRootPath("/home/user/vault1/")).toBe("/home/user/vault1");
-      expect(yield* decodeWorkspaceVaultRootPath("/home/user/vault1///")).toBe("/home/user/vault1");
-      expect(yield* decodeWorkspaceVaultRootPath("C:\\Vault\\")).toBe("C:\\Vault");
-      expect(yield* decodeWorkspaceVaultRootPath("\\\\server\\share\\vault\\")).toBe("\\\\server\\share\\vault");
+      const decodedWorkspaceVaultRootPath1 = yield* decodeWorkspaceVaultRootPath("/home/user/vault1/");
+      expect(decodedWorkspaceVaultRootPath1).toBe("/home/user/vault1");
+      const decodedWorkspaceVaultRootPath2 = yield* decodeWorkspaceVaultRootPath("/home/user/vault1///");
+      expect(decodedWorkspaceVaultRootPath2).toBe("/home/user/vault1");
+      const decodedWorkspaceVaultRootPath3 = yield* decodeWorkspaceVaultRootPath("C:\\Vault\\");
+      expect(decodedWorkspaceVaultRootPath3).toBe("C:\\Vault");
+      const decodedWorkspaceVaultRootPath4 = yield* decodeWorkspaceVaultRootPath("\\\\server\\share\\vault\\");
+      expect(decodedWorkspaceVaultRootPath4).toBe("\\\\server\\share\\vault");
       const rootExit = yield* Effect.exit(decodeWorkspaceVaultRootPath("/"));
       const driveExit = yield* Effect.exit(decodeWorkspaceVaultRootPath("C:\\"));
       pipe(rootExit, Exit.isFailure, assertTrue);
@@ -187,8 +192,10 @@ describe("@beep/workspace-domain", () => {
         to: [{ address: "agent@example.com" }],
       };
 
-      const encodedWorkspace = yield* encodeWorkspaceEntity(yield* decodeUnknownWorkspaceEntity(workspaceWire));
-      const encodedEmail = yield* encodeEmailArtifact(yield* decodeUnknownEmailArtifact(emailWire));
+      const decodedUnknownWorkspaceEntity = yield* decodeUnknownWorkspaceEntity(workspaceWire);
+      const encodedWorkspace = yield* encodeWorkspaceEntity(decodedUnknownWorkspaceEntity);
+      const decodedUnknownEmailArtifact = yield* decodeUnknownEmailArtifact(emailWire);
+      const encodedEmail = yield* encodeEmailArtifact(decodedUnknownEmailArtifact);
       expect(encodedWorkspace).toStrictEqual(workspaceWire);
       expect(encodedEmail).toStrictEqual(emailWire);
     })
@@ -263,7 +270,8 @@ describe("@beep/workspace-domain", () => {
       const constructed = Turn.make(turnInput);
 
       assertNone(constructed.parentTurnId);
-      expect(yield* encodeTurn(constructed)).toStrictEqual(turnWire);
+      const encodedTurn = yield* encodeTurn(constructed);
+      expect(encodedTurn).toStrictEqual(turnWire);
       const emptyItemsExit = yield* Effect.exit(decodeUnknownTurnItems([]));
       pipe(emptyItemsExit, Exit.isFailure, assertTrue);
     })

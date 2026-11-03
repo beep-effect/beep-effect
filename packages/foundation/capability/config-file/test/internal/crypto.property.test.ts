@@ -32,7 +32,8 @@ describe("crypto byte fidelity properties", () => {
         assert.strictEqual(normalized, encoded);
         const reparsed = yield* fromBase64(normalized);
         assert.deepStrictEqual(reparsed, decoded);
-        assert.strictEqual(yield* toBase64(reparsed.slice(IV_LENGTH).buffer)(reparsed.slice(0, IV_LENGTH)), normalized);
+        const value = yield* toBase64(reparsed.slice(IV_LENGTH).buffer)(reparsed.slice(0, IV_LENGTH));
+        assert.strictEqual(value, normalized);
       }),
     runs
   );
@@ -48,12 +49,14 @@ describe("crypto byte fidelity properties", () => {
         const iv = randomIv();
         const plaintext = toArrayBufferView(new Uint8Array(sample));
         const ciphertext = yield* encrypt(iv, plaintext)(key);
-        const envelope = yield* fromBase64(yield* toBase64(iv, ciphertext));
+        const toBase641 = yield* toBase64(iv, ciphertext);
+        const envelope = yield* fromBase64(toBase641);
         const decoded = yield* decrypt(key, envelope.slice(0, IV_LENGTH), envelope.slice(IV_LENGTH));
         assert.deepStrictEqual(new Uint8Array(decoded), plaintext);
         const direct = yield* encrypt(key, iv, plaintext);
         assert.deepStrictEqual(direct, ciphertext);
-        assert.deepStrictEqual(new Uint8Array(yield* decrypt(iv, new Uint8Array(direct))(key)), plaintext);
+        const value2 = yield* decrypt(iv, new Uint8Array(direct))(key);
+        assert.deepStrictEqual(new Uint8Array(value2), plaintext);
       }),
     runs
   );

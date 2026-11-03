@@ -6,11 +6,14 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { deliberatelyInvalid } from "./support/deliberatelyInvalid.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const runtimeEnvJson = S.fromJsonString(RuntimeEnv);
 
@@ -325,11 +328,13 @@ describe("RuntimeEnv.fromRecord", () => {
     it.layer(CurrentRuntimeEnv.layer.pipe(Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown(record)))), {
       timeout: "30 seconds",
     })((it) => {
-      it.effect(`equals what the layer reads from the same record: ${JSON.stringify(record)}`, () =>
-        Effect.gen(function* () {
-          const viaLayer = yield* CurrentRuntimeEnv;
-          assert.deepStrictEqual(RuntimeEnv.fromRecord(record), viaLayer);
-        })
+      it.effect(
+        `equals what the layer reads from the same record: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(record), identity)}`,
+        () =>
+          Effect.gen(function* () {
+            const viaLayer = yield* CurrentRuntimeEnv;
+            assert.deepStrictEqual(RuntimeEnv.fromRecord(record), viaLayer);
+          })
       );
     });
   }
@@ -471,11 +476,12 @@ describe("RuntimeEnvOverrides property floor", () => {
     [Arbitrary.schema(RuntimeEnvOverrides)],
     ([overrides]) =>
       Effect.gen(function* () {
-        const decoded = yield* S.decodeEffect(RuntimeEnvOverrides)(
-          yield* S.encodeEffect(RuntimeEnvOverrides)(overrides)
-        );
+        const argument1 = S.decodeEffect(RuntimeEnvOverrides);
+        const value1 = yield* S.encodeEffect(RuntimeEnvOverrides)(overrides);
+        const decoded = yield* argument1(value1);
         assert.isTrue(S.toEquivalence(RuntimeEnvOverrides)(decoded, overrides));
-        const env = Context.get(yield* Layer.build(CurrentRuntimeEnv.layerTest(overrides)), CurrentRuntimeEnv);
+        const build1 = yield* Layer.build(CurrentRuntimeEnv.layerTest(overrides));
+        const env = Context.get(build1, CurrentRuntimeEnv);
         assert.deepStrictEqual(env.agent, overrides.agent ?? O.none());
         assert.deepStrictEqual(env.ci, overrides.ci ?? O.none());
       }),

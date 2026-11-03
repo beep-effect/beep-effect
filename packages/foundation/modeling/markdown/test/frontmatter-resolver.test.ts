@@ -329,9 +329,12 @@ describe("SchemaResolver.fromRegistry", () => {
         ["1.2.9007199254740992", "1.2.9007199254740993", "01.002.009007199254740993"],
       ] as const) {
         const large = SchemaResolver.fromRegistry({ [`skill@${lower}`]: Skill, [`skill@${upper}`]: BlogPost });
-        assert.strictEqual(yield* large.resolve(declare(`skill@${lower}`), {}), Skill);
-        assert.strictEqual(yield* large.resolve(declare(`skill@${upper}`), {}), BlogPost);
-        assert.strictEqual(yield* large.resolve(declare(`skill@${paddedUpper}`), {}), BlogPost);
+        const resolved = yield* large.resolve(declare(`skill@${lower}`), {});
+        assert.strictEqual(resolved, Skill);
+        const resolved1 = yield* large.resolve(declare(`skill@${upper}`), {});
+        assert.strictEqual(resolved1, BlogPost);
+        const resolved2 = yield* large.resolve(declare(`skill@${paddedUpper}`), {});
+        assert.strictEqual(resolved2, BlogPost);
       }
     })
   );
@@ -357,9 +360,12 @@ describe("SchemaResolver.fromRegistry", () => {
   it.effect("canonicalizes zero segments without losing their count", () =>
     Effect.gen(function* () {
       const zeros = SchemaResolver.fromRegistry({ "skill@0": Skill, "skill@0.0": BlogPost, "skill@0.0.0": S.String });
-      assert.strictEqual(yield* zeros.resolve(declare("skill@000"), {}), Skill);
-      assert.strictEqual(yield* zeros.resolve(declare("skill@000.00"), {}), BlogPost);
-      assert.strictEqual(yield* zeros.resolve(declare("skill@000.00.0000"), {}), S.String);
+      const resolved3 = yield* zeros.resolve(declare("skill@000"), {});
+      assert.strictEqual(resolved3, Skill);
+      const resolved4 = yield* zeros.resolve(declare("skill@000.00"), {});
+      assert.strictEqual(resolved4, BlogPost);
+      const resolved5 = yield* zeros.resolve(declare("skill@000.00.0000"), {});
+      assert.strictEqual(resolved5, S.String);
       const partial = SchemaResolver.fromRegistry({ "skill@9007199254740993": Skill });
       const failure = yield* Effect.flip(partial.resolve(declare("skill@9007199254740993.0"), {}));
       assert.instanceOf(failure, SchemaVersionUnresolvableError);

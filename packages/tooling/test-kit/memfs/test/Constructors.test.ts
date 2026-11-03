@@ -54,10 +54,12 @@ describe("the seed is optional", () => {
   it.effect("makeWith() and makeWith(undefined, options) build empty volumes", () =>
     Effect.gen(function* () {
       const plain = yield* MemoryFileSystem.makeWith();
-      assert.isFalse(yield* plain.exists("/a.txt"));
+      const exists1 = yield* plain.exists("/a.txt");
+      assert.isFalse(exists1);
       const folded = yield* MemoryFileSystem.makeWith(undefined, { caseSensitive: false });
       yield* folded.writeFileString("/Docs.json", "{}");
-      assert.strictEqual(yield* folded.readFileString("/docs.json"), "{}");
+      const readFileString2 = yield* folded.readFileString("/docs.json");
+      assert.strictEqual(readFileString2, "{}");
     })
   );
 
@@ -119,7 +121,8 @@ describe("options.faults", () => {
       const options = { faults: { readFile: MemoryFileSystem.failTimes(1, denied("readFile", "/a.txt")) } };
       const first = yield* MemoryFileSystem.makeWith({ "/a.txt": "a" }, options);
       assert.strictEqual((yield* Effect.flip(first.readFileString("/a.txt"))).reason._tag, "PermissionDenied");
-      assert.strictEqual(yield* first.readFileString("/a.txt"), "a");
+      const readFileString3 = yield* first.readFileString("/a.txt");
+      assert.strictEqual(readFileString3, "a");
       const second = yield* MemoryFileSystem.makeWith({ "/a.txt": "a" }, options);
       assert.strictEqual((yield* Effect.flip(second.readFileString("/a.txt"))).reason._tag, "PermissionDenied");
     })
@@ -144,7 +147,8 @@ describe("options.faults", () => {
           faults: (base) => ({ readFile: (path) => (path === "/alias.txt" ? base.readFile("/real.txt") : undefined) }),
         }
       );
-      assert.strictEqual(yield* fs.readFileString("/alias.txt"), "real");
+      const readFileString4 = yield* fs.readFileString("/alias.txt");
+      assert.strictEqual(readFileString4, "real");
     })
   );
 });
@@ -156,7 +160,8 @@ describe("MemoryFileSystem.layerWith", () => {
     it.effect("provides FileSystem backed by the seeded volume", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        assert.strictEqual(yield* fs.readFileString("/seed.txt"), "seeded");
+        const readFileString5 = yield* fs.readFileString("/seed.txt");
+        assert.strictEqual(readFileString5, "seeded");
       })
     );
   });
@@ -167,12 +172,16 @@ describe("MemoryFileSystem.layerWith", () => {
       // volumes, as two provides are. (Sharing happens through layer-graph
       // memoization — the suite-boundary `layer(...)` block — and is
       // documented on the facade.)
-      const first = Context.get(yield* Layer.build(Seeded), FileSystem.FileSystem);
+      const build6 = yield* Layer.build(Seeded);
+      const first = Context.get(build6, FileSystem.FileSystem);
       yield* first.writeFileString("/scratch.txt", "first volume");
 
-      const second = Context.get(yield* Layer.build(Seeded), FileSystem.FileSystem);
-      assert.isFalse(yield* second.exists("/scratch.txt"));
-      assert.isTrue(yield* first.exists("/scratch.txt"));
+      const build7 = yield* Layer.build(Seeded);
+      const second = Context.get(build7, FileSystem.FileSystem);
+      const exists8 = yield* second.exists("/scratch.txt");
+      assert.isFalse(exists8);
+      const exists9 = yield* first.exists("/scratch.txt");
+      assert.isTrue(exists9);
     })
   );
 

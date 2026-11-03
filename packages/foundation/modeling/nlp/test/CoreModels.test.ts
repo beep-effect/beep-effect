@@ -117,7 +117,8 @@ describe("Core models", () => {
         score: UnitInterval.make(0.8),
       });
 
-      expect(yield* encodeUnknownToken(token)).toEqual({
+      const encodedUnknownToken = yield* encodeUnknownToken(token);
+      expect(encodedUnknownToken).toEqual({
         end: 6,
         index: 0,
         start: 0,
@@ -159,7 +160,8 @@ describe("Core models", () => {
           text: "Effect",
         },
       ]);
-      expect(yield* encodeUnknownSimilarityScore(similarity)).toEqual({
+      const encodedUnknownSimilarityScore = yield* encodeUnknownSimilarityScore(similarity);
+      expect(encodedUnknownSimilarityScore).toEqual({
         document1Id: "doc-a",
         document2Id: "doc-b",
         method: "set.tversky",
@@ -178,10 +180,14 @@ describe("Core models", () => {
         const encodedDocument = yield* encodeDocument(document);
         const encodedSimilarity = yield* encodeSimilarityScore(similarity);
 
-        expect(yield* decodeToken(encodedToken)).toEqual(token);
-        expect(yield* decodeSentence(encodedSentence)).toEqual(sentence);
-        expect(yield* decodeDocument(encodedDocument)).toEqual(document);
-        expect(yield* decodeSimilarityScore(encodedSimilarity)).toEqual(similarity);
+        const decodedToken = yield* decodeToken(encodedToken);
+        expect(decodedToken).toEqual(token);
+        const decodedSentence = yield* decodeSentence(encodedSentence);
+        expect(decodedSentence).toEqual(sentence);
+        const decodedDocument = yield* decodeDocument(encodedDocument);
+        expect(decodedDocument).toEqual(document);
+        const decodedSimilarityScore = yield* decodeSimilarityScore(encodedSimilarity);
+        expect(decodedSimilarityScore).toEqual(similarity);
 
         return true;
       }),

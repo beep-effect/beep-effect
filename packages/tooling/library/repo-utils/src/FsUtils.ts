@@ -341,7 +341,8 @@ export const FsUtilsLive: Layer.Layer<FsUtils, never, FileSystem.FileSystem | Pa
           );
         });
 
-        const matched = A.flatten(yield* Effect.forEach(includes, expandOne).pipe(Effect.provide(platform)));
+        const pipe1 = yield* Effect.forEach(includes, expandOne).pipe(Effect.provide(platform));
+        const matched = A.flatten(pipe1);
         const resolved = options.absolute === true ? A.map(matched, (match) => path.resolve(cwd, match)) : matched;
         return pipe(resolved, A.dedupe, A.sort(Order.String));
       },
@@ -527,10 +528,8 @@ export const findNearestPackageDir: {
     const path = yield* Path.Path;
     const boundary = path.resolve(stopAt);
     // `Walker.ascend` stops at its ceiling inclusively; this lookup excludes the boundary itself.
-    const dirs = A.filter(
-      yield* Walker.ascend(path.resolve(startDir), { stopAt: boundary }),
-      (dir) => dir !== boundary
-    );
+    const ascend2 = yield* Walker.ascend(path.resolve(startDir), { stopAt: boundary });
+    const dirs = A.filter(ascend2, (dir) => dir !== boundary);
     const manifest = yield* Walker.findUpward(dirs, (dir) => [path.join(dir, "package.json")]);
     return O.map(manifest, path.dirname);
   })

@@ -431,7 +431,8 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
         return ClassUnit.make({ point: escapedPoint, ranges });
       }
       index++;
-      return ClassUnit.make({ point, ranges: yield* literal(point) });
+      const citationResult1 = yield* literal(point);
+      return ClassUnit.make({ point, ranges: citationResult1 });
     });
     const rangeAhead = () => peek() === 45 && peek(1) !== 93 && peek(1) >= 0;
     const classPart = Effect.fn("Citation.readRegexClassPart")(function* () {
@@ -444,7 +445,8 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
     });
     const appendClassPart = Effect.fnUntraced(function* (values: ReadonlyArray<CitationRegexPointRange>) {
       if (peek() < 0) return yield* unsupported();
-      const next = normalizeCitationRegexRanges(A.appendAll(values, yield* classPart()));
+      const citationResult2 = yield* classPart();
+      const next = normalizeCitationRegexRanges(A.appendAll(values, citationResult2));
       if (A.length(next) > limits.patternUtf16) return yield* budget();
       return next;
     });
@@ -564,7 +566,8 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       }
       if (point === 36) {
         index++;
-        yield* emit("end", yield* atom([range(10)]));
+        const citationResult3 = yield* atom([range(10)]);
+        yield* emit("end", citationResult3);
         return summary(0, false, false);
       }
       const kind = peek(1) === 65 ? "begin" : "end-strict";
@@ -585,7 +588,8 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
           return literal(point);
         })
       );
-      yield* emit("atom", yield* atom(values));
+      const citationResult4 = yield* atom(values);
+      yield* emit("atom", citationResult4);
       return summary(1);
     });
     const parseAtom = Effect.fn("Citation.parseRegexAtom")(function* (): Effect.fn.Return<Summary, ParseFailure> {
@@ -601,7 +605,9 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       let result = summary(0);
       while (peek() >= 0 && peek() !== 41 && peek() !== 124) {
         if (index % 64 === 0) yield* Effect.yieldNow;
-        result = combine(result, yield* repeat(yield* parseAtom()), false);
+        const citationResult5 = yield* parseAtom();
+        const citationResult6 = yield* repeat(citationResult5);
+        result = combine(result, citationResult6, false);
       }
       return result;
     });
@@ -613,7 +619,8 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       while (peek() === 124) {
         index++;
         yield* emit("alternative");
-        result = combine(result, yield* sequence(), true);
+        const citationResult7 = yield* sequence();
+        result = combine(result, citationResult7, true);
       }
       return result;
     });

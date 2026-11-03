@@ -26,7 +26,8 @@ describe("EthAmount", () => {
   it.effect(
     "encodes decoded ETH amounts back to JSON numbers",
     Effect.fnUntraced(function* () {
-      const encoded = yield* encodeEthAmountEffect(yield* decodeUnknownEthAmountEffect(24));
+      const decodedUnknownEthAmountEffect = yield* decodeUnknownEthAmountEffect(24);
+      const encoded = yield* encodeEthAmountEffect(decodedUnknownEthAmountEffect);
 
       expect(encoded).toBe(24);
     })

@@ -88,7 +88,8 @@ const setup = Effect.fn("RegexWorkerTest.setup")(function* (
   const timer = yield* makeCitationNativeManualClock(limits.regexDeadline);
   const admission = yield* makeCitationNativeProcessAdmission(limits);
   const observed = yield* makeCitationObservedSpawner();
-  const cwd = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped({ prefix: "citation-regex-worker-" });
+  const citationResult1 = yield* FileSystem.FileSystem;
+  const cwd = yield* citationResult1.makeTempDirectoryScoped({ prefix: "citation-regex-worker-" });
   const runtime =
     kind === "node"
       ? yield* makeCitationNodeTestRuntime(
@@ -166,16 +167,22 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
       const completed = yield* worker.evaluate(pattern, native("b ab"), 0);
       expect(completed.result.matches).toBe(2);
       expect(completed.result.groups).toBe(2);
-      expect(yield* completed.result.capture(0, 0)).toEqual({ _tag: "Range", start: 0, end: 1 });
-      expect(yield* completed.result.capture(0, 1)).toEqual({ _tag: "Unmatched" });
-      expect(yield* completed.result.capture(1, 1)).toEqual({ _tag: "Range", start: 2, end: 3 });
-      expect(yield* completed.source.project({ start: 2, end: 4 })).toEqual({
+      const citationResult2 = yield* completed.result.capture(0, 0);
+      expect(citationResult2).toEqual({ _tag: "Range", start: 0, end: 1 });
+      const citationResult3 = yield* completed.result.capture(0, 1);
+      expect(citationResult3).toEqual({ _tag: "Unmatched" });
+      const citationResult4 = yield* completed.result.capture(1, 1);
+      expect(citationResult4).toEqual({ _tag: "Range", start: 2, end: 3 });
+      const citationResult5 = yield* completed.source.project({ start: 2, end: 4 });
+      expect(citationResult5).toEqual({
         _tag: "Range",
         startChar: 2,
         endChar: 4,
       });
-      expect(yield* observed.snapshot).toEqual({ spawned: 1, confirmed: 1 });
-      expect(yield* admission.snapshot).toMatchObject({ active: 0, regexActive: 0, queued: 0, quarantined: 0 });
+      const citationResult6 = yield* observed.snapshot;
+      expect(citationResult6).toEqual({ spawned: 1, confirmed: 1 });
+      const citationResult7 = yield* admission.snapshot;
+      expect(citationResult7).toMatchObject({ active: 0, regexActive: 0, queued: 0, quarantined: 0 });
     })
   );
 
@@ -190,9 +197,8 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
             new URL("../../use-cases/test/fixtures/eyecite/regex-modes.json", import.meta.url)
           );
           const bytes = yield* fs.readFile(file);
-          expect(yield* crypto.digestHex(Digest.sha256, bytes)).toBe(
-            "6176aed02afda7ca709db880b438b2a8174e689ef97048a3ee018ccc487ba506"
-          );
+          const citationResult8 = yield* crypto.digestHex(Digest.sha256, bytes);
+          expect(citationResult8).toBe("6176aed02afda7ca709db880b438b2a8174e689ef97048a3ee018ccc487ba506");
           const corpus = yield* S.decodeEffect(ModeControls)(new TextDecoder().decode(bytes));
           const { worker, admission, observed } = yield* setup(
             [{ patternSha256: corpus.patternSha256, flags: corpus.flags, profile: corpus.profile }],
@@ -212,8 +218,10 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
               yield* assertModeCaptures(completed, expected, corpus.profile.groups);
             }
           }
-          expect(yield* observed.snapshot).toEqual({ spawned: 15, confirmed: 15 });
-          expect(yield* admission.snapshot).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
+          const citationResult9 = yield* observed.snapshot;
+          expect(citationResult9).toEqual({ spawned: 15, confirmed: 15 });
+          const citationResult10 = yield* admission.snapshot;
+          expect(citationResult10).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
         }),
       { timeout: 30_000 }
     );
@@ -241,47 +249,61 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
       const pairResult = yield* worker.evaluate(pair, source, 0);
       expect(scalarResult.result.matches).toBe(2);
       expect(pairResult.result.matches).toBe(1);
-      expect(yield* scalarResult.result.capture(0, 0)).toEqual({ _tag: "Range", start: 0, end: 1 });
-      expect(yield* scalarResult.result.capture(1, 0)).toEqual({ _tag: "Range", start: 4, end: 5 });
-      expect(yield* pairResult.result.capture(0, 0)).toEqual({ _tag: "Range", start: 1, end: 3 });
-      expect(yield* pairResult.source.project({ start: 1, end: 3 })).toEqual({
+      const citationResult11 = yield* scalarResult.result.capture(0, 0);
+      expect(citationResult11).toEqual({ _tag: "Range", start: 0, end: 1 });
+      const citationResult12 = yield* scalarResult.result.capture(1, 0);
+      expect(citationResult12).toEqual({ _tag: "Range", start: 4, end: 5 });
+      const citationResult13 = yield* pairResult.result.capture(0, 0);
+      expect(citationResult13).toEqual({ _tag: "Range", start: 1, end: 3 });
+      const citationResult14 = yield* pairResult.source.project({ start: 1, end: 3 });
+      expect(citationResult14).toEqual({
         _tag: "Range",
         startChar: 2,
         endChar: 4,
       });
-      expect(yield* scalarResult.source.project({ start: 4, end: 5 })).toEqual({
+      const citationResult15 = yield* scalarResult.source.project({ start: 4, end: 5 });
+      expect(citationResult15).toEqual({
         _tag: "Range",
         startChar: 5,
         endChar: 7,
       });
-      expect(yield* observed.snapshot).toEqual({ spawned: 2, confirmed: 2 });
-      expect(yield* admission.snapshot).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
+      const citationResult16 = yield* observed.snapshot;
+      expect(citationResult16).toEqual({ spawned: 2, confirmed: 2 });
+      const citationResult17 = yield* admission.snapshot;
+      expect(citationResult17).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
     })
   );
 
   it.effect("allows zero remaining matches only for a complete no-match result", () =>
     Effect.gen(function* () {
       const { worker, admission, observed } = yield* setup([descriptor]);
-      expect((yield* worker.evaluate(pattern, native("zzz"), 0, 0)).result.matches).toBe(0);
-      expect(yield* worker.evaluate(pattern, native("b"), 0, 0).pipe(Effect.flip)).toMatchObject({
+      const citationResult18 = yield* worker.evaluate(pattern, native("zzz"), 0, 0);
+      expect(citationResult18.result.matches).toBe(0);
+      const citationResult19 = yield* worker.evaluate(pattern, native("b"), 0, 0).pipe(Effect.flip);
+      expect(citationResult19).toMatchObject({
         _tag: "CitationSafetyLimitExceeded",
         operation: "extract",
         limit: "patternMatches",
       });
-      expect(yield* observed.snapshot).toEqual({ spawned: 2, confirmed: 2 });
-      expect(yield* admission.snapshot).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
+      const citationResult20 = yield* observed.snapshot;
+      expect(citationResult20).toEqual({ spawned: 2, confirmed: 2 });
+      const citationResult21 = yield* admission.snapshot;
+      expect(citationResult21).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
     })
   );
 
   it.effect("rejects uninstalled native patterns before spawning and returns their reservation", () =>
     Effect.gen(function* () {
       const { worker, admission, observed } = yield* setup([descriptor]);
-      expect(yield* worker.evaluate(native("c"), native("c"), 0).pipe(Effect.flip)).toMatchObject({
+      const citationResult22 = yield* worker.evaluate(native("c"), native("c"), 0).pipe(Effect.flip);
+      expect(citationResult22).toMatchObject({
         _tag: "CitationRegexDescriptorFailure",
         reason: "unknown-pattern",
       });
-      expect(yield* observed.snapshot).toEqual({ spawned: 0, confirmed: 0 });
-      expect(yield* admission.snapshot).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
+      const citationResult23 = yield* observed.snapshot;
+      expect(citationResult23).toEqual({ spawned: 0, confirmed: 0 });
+      const citationResult24 = yield* admission.snapshot;
+      expect(citationResult24).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
     })
   );
   for (const kind of CitationNativeRuntimeKind.literals) {
@@ -305,9 +327,12 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
         yield* timer.trigger;
         const failed = yield* Fiber.join(pending).pipe(Effect.flip);
         expect(failed).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "regexDeadline" });
-        expect(yield* worker.snapshot).toMatchObject({ processes: 0, quarantined: 0 });
-        expect(yield* observed.snapshot).toEqual({ spawned: 1, confirmed: 1 });
-        expect(yield* admission.snapshot).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
+        const citationResult25 = yield* worker.snapshot;
+        expect(citationResult25).toMatchObject({ processes: 0, quarantined: 0 });
+        const citationResult26 = yield* observed.snapshot;
+        expect(citationResult26).toEqual({ spawned: 1, confirmed: 1 });
+        const citationResult27 = yield* admission.snapshot;
+        expect(citationResult27).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
       })
     );
 
@@ -317,10 +342,14 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
         const pending = yield* Effect.forkChild(worker.evaluate(pattern, native("private input"), 0));
         yield* waitForCitationNativeTest(fixture.fs.exists(fixture.marker));
         yield* Fiber.interrupt(pending);
-        expect(Exit.hasInterrupts(yield* Fiber.await(pending))).toBe(true);
-        expect(yield* observed.snapshot).toEqual({ spawned: 1, confirmed: 1 });
-        expect(yield* worker.snapshot).toMatchObject({ processes: 0, quarantined: 0 });
-        expect(yield* admission.snapshot).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
+        const citationResult28 = yield* Fiber.await(pending);
+        expect(Exit.hasInterrupts(citationResult28)).toBe(true);
+        const citationResult29 = yield* observed.snapshot;
+        expect(citationResult29).toEqual({ spawned: 1, confirmed: 1 });
+        const citationResult30 = yield* worker.snapshot;
+        expect(citationResult30).toMatchObject({ processes: 0, quarantined: 0 });
+        const citationResult31 = yield* admission.snapshot;
+        expect(citationResult31).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
       })
     );
 
@@ -335,20 +364,27 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
         const pending = yield* Effect.forkChild(worker.evaluate(pattern, native("private input"), 0));
         yield* waitForCitationNativeTest(fixture.fs.exists(fixture.marker));
         yield* timer.trigger;
-        expect(yield* Fiber.join(pending).pipe(Effect.flip)).toMatchObject({
+        const citationResult32 = yield* Fiber.join(pending).pipe(Effect.flip);
+        expect(citationResult32).toMatchObject({
           _tag: "CitationSafetyLimitExceeded",
           limit: "cleanupDeadline",
         });
-        expect(yield* worker.snapshot).toMatchObject({ processes: 1, quarantined: 1 });
-        expect(yield* admission.snapshot).toMatchObject({ active: 1, regexActive: 1, quarantined: 1 });
-        expect(yield* worker.evaluate(pattern, native("replacement"), 0).pipe(Effect.flip)).toMatchObject({
+        const citationResult33 = yield* worker.snapshot;
+        expect(citationResult33).toMatchObject({ processes: 1, quarantined: 1 });
+        const citationResult34 = yield* admission.snapshot;
+        expect(citationResult34).toMatchObject({ active: 1, regexActive: 1, quarantined: 1 });
+        const citationResult35 = yield* worker.evaluate(pattern, native("replacement"), 0).pipe(Effect.flip);
+        expect(citationResult35).toMatchObject({
           reason: "quarantined",
         });
-        expect(yield* observed.snapshot).toEqual({ spawned: 1, confirmed: 0 });
+        const citationResult36 = yield* observed.snapshot;
+        expect(citationResult36).toEqual({ spawned: 1, confirmed: 0 });
         yield* Deferred.succeed(acknowledged, undefined);
         yield* waitForCitationNativeTest(worker.snapshot.pipe(Effect.map((state) => state.processes === 0)));
-        expect(yield* observed.snapshot).toEqual({ spawned: 1, confirmed: 1 });
-        expect(yield* admission.snapshot).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
+        const citationResult37 = yield* observed.snapshot;
+        expect(citationResult37).toEqual({ spawned: 1, confirmed: 1 });
+        const citationResult38 = yield* admission.snapshot;
+        expect(citationResult38).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
       })
     );
   }

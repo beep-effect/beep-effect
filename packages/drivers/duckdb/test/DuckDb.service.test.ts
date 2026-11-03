@@ -137,82 +137,87 @@ const assertSchemaRoundTrip = Effect.fn("assertSchemaRoundTrip")(function* <Sche
 describe("@beep/duckdb", { concurrent: false }, () => {
   it.effect("preserves encoded schema wire shapes", () =>
     Effect.gen(function* () {
-      expect(
-        yield* encodeJson(
-          yield* encodeSchema(DuckDbConnectionOptions, DuckDbConnectionOptions.make({ databasePath: ":memory:" }))
-        )
-      ).toBe(yield* encodeJson({ databasePath: ":memory:" }));
-      expect(
-        yield* encodeJson(
-          yield* encodeSchema(
-            DuckDbConnectionOptions,
-            DuckDbConnectionOptions.make({
-              databaseOptions: { access_mode: "READ_ONLY" },
-              databasePath: "metrics.duckdb",
-            })
-          )
-        )
-      ).toBe(yield* encodeJson({ databaseOptions: { access_mode: "READ_ONLY" }, databasePath: "metrics.duckdb" }));
-      expect(
-        yield* encodeJson(
-          yield* encodeSchema(
-            DuckDbParquetExport,
-            DuckDbParquetExport.make({ filePath: "exports/events.parquet", tableName: "events" })
-          )
-        )
-      ).toBe(yield* encodeJson({ filePath: "exports/events.parquet", tableName: "events" }));
-      expect(
-        yield* encodeJson(
-          yield* encodeSchema(
-            DuckDbRow,
-            Result.getOrThrow(S.decodeResult(DuckDbRow)({ empty: null, id: "run-1", ok: true, value: 42 }))
-          )
-        )
-      ).toBe(yield* encodeJson({ empty: null, id: "run-1", ok: true, value: 42 }));
-      expect(
-        yield* encodeJson(
-          yield* encodeSchema(DuckDbRows, Result.getOrThrow(S.decodeResult(DuckDbRows)([{ id: "run-1", value: 42 }])))
-        )
-      ).toBe(yield* encodeJson([{ id: "run-1", value: 42 }]));
-      expect(
-        yield* encodeJson(
-          yield* encodeSchema(
-            DuckDbErrorFromUnknownOptions,
-            DuckDbErrorFromUnknownOptions.make({
-              databasePath: O.some("metrics.duckdb"),
-              message: "Custom DuckDB failure.",
-              statement: O.some("SELECT broken"),
-            })
-          )
-        )
-      ).toBe(
-        yield* encodeJson({
+      const encodedSchema = yield* encodeSchema(
+        DuckDbConnectionOptions,
+        DuckDbConnectionOptions.make({ databasePath: ":memory:" })
+      );
+      const encodedJson = yield* encodeJson(encodedSchema);
+      const expectation = expect(encodedJson);
+      const encodedJson7 = yield* encodeJson({ databasePath: ":memory:" });
+      expectation.toBe(encodedJson7);
+      const encodedSchema85 = yield* encodeSchema(
+        DuckDbConnectionOptions,
+        DuckDbConnectionOptions.make({
+          databaseOptions: { access_mode: "READ_ONLY" },
           databasePath: "metrics.duckdb",
-          message: "Custom DuckDB failure.",
-          statement: "SELECT broken",
         })
       );
-      expect(
-        yield* encodeJson(
-          yield* encodeSchema(
-            DuckDbError,
-            DuckDbError.make({
-              databasePath: O.some("metrics.duckdb"),
-              message: "Custom DuckDB failure.",
-              operation: "query",
-              statement: O.some("SELECT broken"),
-            })
-          )
-        )
-      ).toBe(
-        yield* encodeJson({
-          _tag: "DuckDbError",
-          databasePath: "metrics.duckdb",
+      const encodedJson1 = yield* encodeJson(encodedSchema85);
+      const expectation1 = expect(encodedJson1);
+      const encodedJson8 = yield* encodeJson({
+        databaseOptions: { access_mode: "READ_ONLY" },
+        databasePath: "metrics.duckdb",
+      });
+      expectation1.toBe(encodedJson8);
+      const encodedSchema86 = yield* encodeSchema(
+        DuckDbParquetExport,
+        DuckDbParquetExport.make({ filePath: "exports/events.parquet", tableName: "events" })
+      );
+      const encodedJson2 = yield* encodeJson(encodedSchema86);
+      const expectation2 = expect(encodedJson2);
+      const encodedJson9 = yield* encodeJson({ filePath: "exports/events.parquet", tableName: "events" });
+      expectation2.toBe(encodedJson9);
+      const encodedSchema87 = yield* encodeSchema(
+        DuckDbRow,
+        Result.getOrThrow(S.decodeResult(DuckDbRow)({ empty: null, id: "run-1", ok: true, value: 42 }))
+      );
+      const encodedJson3 = yield* encodeJson(encodedSchema87);
+      const expectation3 = expect(encodedJson3);
+      const encodedJson10 = yield* encodeJson({ empty: null, id: "run-1", ok: true, value: 42 });
+      expectation3.toBe(encodedJson10);
+      const encodedSchema88 = yield* encodeSchema(
+        DuckDbRows,
+        Result.getOrThrow(S.decodeResult(DuckDbRows)([{ id: "run-1", value: 42 }]))
+      );
+      const encodedJson4 = yield* encodeJson(encodedSchema88);
+      const expectation4 = expect(encodedJson4);
+      const encodedJson11 = yield* encodeJson([{ id: "run-1", value: 42 }]);
+      expectation4.toBe(encodedJson11);
+      const encodedSchema89 = yield* encodeSchema(
+        DuckDbErrorFromUnknownOptions,
+        DuckDbErrorFromUnknownOptions.make({
+          databasePath: O.some("metrics.duckdb"),
+          message: "Custom DuckDB failure.",
+          statement: O.some("SELECT broken"),
+        })
+      );
+      const encodedJson5 = yield* encodeJson(encodedSchema89);
+      const expectation5 = expect(encodedJson5);
+      const encodedJson12 = yield* encodeJson({
+        databasePath: "metrics.duckdb",
+        message: "Custom DuckDB failure.",
+        statement: "SELECT broken",
+      });
+      expectation5.toBe(encodedJson12);
+      const encodedSchema90 = yield* encodeSchema(
+        DuckDbError,
+        DuckDbError.make({
+          databasePath: O.some("metrics.duckdb"),
           message: "Custom DuckDB failure.",
           operation: "query",
-          statement: "SELECT broken",
+          statement: O.some("SELECT broken"),
         })
       );
+      const encodedJson6 = yield* encodeJson(encodedSchema90);
+      const expectation6 = expect(encodedJson6);
+      const encodedJson13 = yield* encodeJson({
+        _tag: "DuckDbError",
+        databasePath: "metrics.duckdb",
+        message: "Custom DuckDB failure.",
+        operation: "query",
+        statement: "SELECT broken",
+      });
+      expectation6.toBe(encodedJson13);
     })
   );
 
@@ -281,7 +286,9 @@ describe("@beep/duckdb", { concurrent: false }, () => {
         const encoded = yield* encodeDuckDbErrorFromUnknownOptions(options);
         expect(encoded).toEqual(expectedWire);
         const json = yield* encodeJson(encoded);
-        expect(json).toBe(yield* encodeJson(expectedWire));
+        const expectation7 = expect(json);
+        const encodedJson14 = yield* encodeJson(expectedWire);
+        expectation7.toBe(encodedJson14);
         const decoded = yield* decodeDuckDbErrorFromUnknownOptionsJson(json);
         assertSome(decoded.cause, { name, message: causeMessage, stack });
         pipe(S.toEquivalence(DuckDbErrorFromUnknownOptions)(decoded, options), assertTrue);
@@ -315,9 +322,12 @@ describe("@beep/duckdb", { concurrent: false }, () => {
         };
         const encoded = yield* encodeDuckDbError(error);
         expect(encoded).toEqual(expectedWire);
-        expect(yield* encodeDuckDbError(made)).toEqual(expectedWire);
+        const encodedDuckDbError = yield* encodeDuckDbError(made);
+        expect(encodedDuckDbError).toEqual(expectedWire);
         const json = yield* encodeJson(encoded);
-        expect(json).toBe(yield* encodeJson(expectedWire));
+        const expectation8 = expect(json);
+        const encodedJson15 = yield* encodeJson(expectedWire);
+        expectation8.toBe(encodedJson15);
         const decoded = yield* decodeDuckDbErrorJson(json);
         assertSome(decoded.cause, { name, message: causeMessage, stack });
         pipe(S.toEquivalence(DuckDbError)(decoded, error), assertTrue);
@@ -395,7 +405,8 @@ describe("@beep/duckdb", { concurrent: false }, () => {
             tableName: "events",
           })
         );
-        expect(yield* fs.exists(parquetPath)).toBe(true);
+        const exists7 = yield* fs.exists(parquetPath);
+        expect(exists7).toBe(true);
       })
     );
   });
@@ -439,7 +450,8 @@ describe("@beep/duckdb", { concurrent: false }, () => {
           .pipe(Effect.exit);
 
         pipe(exit, Exit.isFailure, assertTrue);
-        expect(yield* fs.exists(parquetPath)).toBe(false);
+        const exists8 = yield* fs.exists(parquetPath);
+        expect(exists8).toBe(false);
 
         const rows = yield* duckdb.query("SELECT id FROM transaction_export_events ORDER BY id");
         expect(rows).toEqual([]);
@@ -503,12 +515,16 @@ describe("@beep/duckdb", { concurrent: false }, () => {
             const secondFiber = yield* duckdb
               .query("SELECT 2 AS value")
               .pipe(Effect.forkChild({ startImmediately: true }));
-            expect(yield* latchResolvesWithin(secondStarted, 50)).toBe(false);
+            const latchResolvesWithin9 = yield* latchResolvesWithin(secondStarted, 50);
+            expect(latchResolvesWithin9).toBe(false);
             releaseFirst.resolve();
-            expect(yield* latchResolvesWithin(secondStarted, 1000)).toBe(true);
-            expect(yield* Fiber.join(secondFiber)).toEqual([{ value: 2 }]);
+            const latchResolvesWithin10 = yield* latchResolvesWithin(secondStarted, 1000);
+            expect(latchResolvesWithin10).toBe(true);
+            const join11 = yield* Fiber.join(secondFiber);
+            expect(join11).toEqual([{ value: 2 }]);
             yield* Fiber.join(interruption);
-            pipe(yield* Fiber.await(firstFiber), Exit.hasInterrupts, assertTrue);
+            const await12 = yield* Fiber.await(firstFiber);
+            pipe(await12, Exit.hasInterrupts, assertTrue);
           }).pipe(Effect.ensuring(Effect.sync(() => releaseFirst.resolve())));
         })
       );
@@ -557,12 +573,16 @@ describe("@beep/duckdb", { concurrent: false }, () => {
             const readFiber = yield* duckdb
               .query("SELECT 2 AS value")
               .pipe(Effect.forkChild({ startImmediately: true }));
-            expect(yield* latchResolvesWithin(readStarted, 50)).toBe(false);
+            const latchResolvesWithin13 = yield* latchResolvesWithin(readStarted, 50);
+            expect(latchResolvesWithin13).toBe(false);
             releaseRun.resolve();
-            expect(yield* latchResolvesWithin(readStarted, 1000)).toBe(true);
-            expect(yield* Fiber.join(readFiber)).toEqual([{ value: 2 }]);
+            const latchResolvesWithin14 = yield* latchResolvesWithin(readStarted, 1000);
+            expect(latchResolvesWithin14).toBe(true);
+            const join15 = yield* Fiber.join(readFiber);
+            expect(join15).toEqual([{ value: 2 }]);
             yield* Fiber.join(interruption);
-            pipe(yield* Fiber.await(firstFiber), Exit.hasInterrupts, assertTrue);
+            const await16 = yield* Fiber.await(firstFiber);
+            pipe(await16, Exit.hasInterrupts, assertTrue);
           }).pipe(Effect.ensuring(Effect.sync(() => releaseRun.resolve())));
         })
       );
@@ -611,12 +631,16 @@ describe("@beep/duckdb", { concurrent: false }, () => {
             const readFiber = yield* duckdb
               .query("SELECT 2 AS value")
               .pipe(Effect.forkChild({ startImmediately: true }));
-            expect(yield* latchResolvesWithin(readStarted, 50)).toBe(false);
+            const latchResolvesWithin17 = yield* latchResolvesWithin(readStarted, 50);
+            expect(latchResolvesWithin17).toBe(false);
             releaseCopy.resolve();
-            expect(yield* latchResolvesWithin(readStarted, 1000)).toBe(true);
-            expect(yield* Fiber.join(readFiber)).toEqual([{ value: 2 }]);
+            const latchResolvesWithin18 = yield* latchResolvesWithin(readStarted, 1000);
+            expect(latchResolvesWithin18).toBe(true);
+            const join19 = yield* Fiber.join(readFiber);
+            expect(join19).toEqual([{ value: 2 }]);
             yield* Fiber.join(interruption);
-            pipe(yield* Fiber.await(firstFiber), Exit.hasInterrupts, assertTrue);
+            const await20 = yield* Fiber.await(firstFiber);
+            pipe(await20, Exit.hasInterrupts, assertTrue);
           }).pipe(Effect.ensuring(Effect.sync(() => releaseCopy.resolve())));
         })
       );
@@ -779,7 +803,8 @@ describe("@beep/duckdb", { concurrent: false }, () => {
             yield* Fiber.interrupt(transactionFiber).pipe(Effect.forkChild({ startImmediately: true }));
             expect(statements).toEqual(["BEGIN TRANSACTION"]);
             releaseBegin.resolve();
-            expect(yield* latchResolvesWithin(rollbackStarted, 1000)).toBe(true);
+            const latchResolvesWithin21 = yield* latchResolvesWithin(rollbackStarted, 1000);
+            expect(latchResolvesWithin21).toBe(true);
             return yield* Fiber.await(transactionFiber);
           }).pipe(Effect.ensuring(Effect.sync(() => releaseBegin.resolve())));
 
@@ -826,7 +851,8 @@ describe("@beep/duckdb", { concurrent: false }, () => {
           }).pipe(Effect.exit);
 
           pipe(exit, Exit.isFailure, assertTrue);
-          expect(yield* latchResolvesWithin(rollbackStarted, 50)).toBe(false);
+          const latchResolvesWithin22 = yield* latchResolvesWithin(rollbackStarted, 50);
+          expect(latchResolvesWithin22).toBe(false);
           expect(statements).toEqual(["BEGIN TRANSACTION"]);
         })
       );
@@ -1033,7 +1059,8 @@ describe("DuckDbClient native lifecycle", { concurrent: false }, () => {
         release.resolve();
         yield* Fiber.join(interrupted);
         expect(closed).toBe(1);
-        expect(yield* client`SELECT count(*) AS n FROM append_cancel`).toEqual([{ n: 0 }]);
+        const value23 = yield* client`SELECT count(*) AS n FROM append_cancel`;
+        expect(value23).toEqual([{ n: 0 }]);
       })
     );
 
@@ -1065,12 +1092,15 @@ describe("DuckDbClient native lifecycle", { concurrent: false }, () => {
           .appendRows({ table: "append_cancel_buffer", rows: [[1], [2]] })
           .pipe(Effect.forkChild({ startImmediately: true }));
         interruptAppend = () => fiber.interruptUnsafe();
-        expect(Exit.hasInterrupts(yield* Fiber.await(fiber))).toBe(true);
+        const await24 = yield* Fiber.await(fiber);
+        expect(Exit.hasInterrupts(await24)).toBe(true);
         expect(endedRows).toBe(1);
         expect(closed).toBe(1);
-        expect(yield* client`SELECT count(*) AS n FROM append_cancel_buffer`).toEqual([{ n: 0 }]);
+        const value25 = yield* client`SELECT count(*) AS n FROM append_cancel_buffer`;
+        expect(value25).toEqual([{ n: 0 }]);
         yield* client.appendRows({ table: "append_cancel_buffer", rows: [[3]] });
-        expect(yield* client`SELECT * FROM append_cancel_buffer`).toEqual([{ id: 3 }]);
+        const value26 = yield* client`SELECT * FROM append_cancel_buffer`;
+        expect(value26).toEqual([{ id: 3 }]);
       })
     );
 
@@ -1113,11 +1143,15 @@ describe("DuckDbClient native lifecycle", { concurrent: false }, () => {
           const secondFiber = yield* sql
             .unsafe<{ readonly value: number }>("SELECT 2 AS value")
             .unprepared.pipe(Effect.forkChild({ startImmediately: true }));
-          expect(yield* latchResolvesWithin(secondStarted, 50)).toBe(false);
+          const latchResolvesWithin27 = yield* latchResolvesWithin(secondStarted, 50);
+          expect(latchResolvesWithin27).toBe(false);
           releaseFirst.resolve();
-          expect(yield* latchResolvesWithin(secondStarted, 1000)).toBe(true);
-          expect(yield* Fiber.join(firstFiber)).toEqual([{ value: 1 }]);
-          expect(yield* Fiber.join(secondFiber)).toEqual([{ value: 2 }]);
+          const latchResolvesWithin28 = yield* latchResolvesWithin(secondStarted, 1000);
+          expect(latchResolvesWithin28).toBe(true);
+          const join29 = yield* Fiber.join(firstFiber);
+          expect(join29).toEqual([{ value: 1 }]);
+          const join30 = yield* Fiber.join(secondFiber);
+          expect(join30).toEqual([{ value: 2 }]);
           expect(maxActiveExecutions).toBe(1);
         }).pipe(Effect.ensuring(Effect.sync(() => releaseFirst.resolve())));
       })
@@ -1195,12 +1229,16 @@ describe("DuckDbClient native lifecycle", { concurrent: false }, () => {
           const secondFiber = yield* client
             .unsafe<{ readonly value: number }>("SELECT 2 AS value")
             .unprepared.pipe(Effect.forkChild({ startImmediately: true }));
-          expect(yield* latchResolvesWithin(secondStarted, 50)).toBe(false);
+          const latchResolvesWithin31 = yield* latchResolvesWithin(secondStarted, 50);
+          expect(latchResolvesWithin31).toBe(false);
           releaseFirst.resolve();
-          expect(yield* latchResolvesWithin(secondStarted, 1000)).toBe(true);
-          expect(yield* Fiber.join(secondFiber)).toEqual([{ value: 2 }]);
+          const latchResolvesWithin32 = yield* latchResolvesWithin(secondStarted, 1000);
+          expect(latchResolvesWithin32).toBe(true);
+          const join33 = yield* Fiber.join(secondFiber);
+          expect(join33).toEqual([{ value: 2 }]);
           yield* Fiber.join(interruption);
-          pipe(yield* Fiber.await(firstFiber), Exit.hasInterrupts, assertTrue);
+          const await34 = yield* Fiber.await(firstFiber);
+          pipe(await34, Exit.hasInterrupts, assertTrue);
         }).pipe(Effect.ensuring(Effect.sync(() => releaseFirst.resolve())));
       })
     );
@@ -1249,13 +1287,17 @@ describe("DuckDbClient native lifecycle", { concurrent: false }, () => {
           const secondFiber = yield* client
             .unsafe<{ readonly value: number }>("select ? as value", [2])
             .pipe(Effect.forkChild({ startImmediately: true }));
-          expect(yield* latchResolvesWithin(secondStarted, 50)).toBe(false);
+          const latchResolvesWithin35 = yield* latchResolvesWithin(secondStarted, 50);
+          expect(latchResolvesWithin35).toBe(false);
           releaseFirst.resolve();
-          expect(yield* latchResolvesWithin(secondStarted, 1000)).toBe(true);
-          expect(yield* Fiber.join(secondFiber)).toEqual([{ value: 2 }]);
+          const latchResolvesWithin36 = yield* latchResolvesWithin(secondStarted, 1000);
+          expect(latchResolvesWithin36).toBe(true);
+          const join37 = yield* Fiber.join(secondFiber);
+          expect(join37).toEqual([{ value: 2 }]);
           yield* Fiber.join(interruption);
           expect(destroyCalls).toBe(1);
-          pipe(yield* Fiber.await(firstFiber), Exit.hasInterrupts, assertTrue);
+          const await38 = yield* Fiber.await(firstFiber);
+          pipe(await38, Exit.hasInterrupts, assertTrue);
         }).pipe(Effect.ensuring(Effect.sync(() => releaseFirst.resolve())));
       })
     );
@@ -1282,8 +1324,10 @@ describe("DuckDbClient native lifecycle", { concurrent: false }, () => {
       const client = yield* DuckDbClient.fromConnection({
         connection: fakeConnection as unknown as DuckDBConnection,
       });
-      expect(yield* client.unsafe("select ? as value; select 2", [1])).toEqual([{ value: 1 }]);
-      expect(yield* client.unsafe("select ? as value; select 2", [3])).toEqual([{ value: 3 }]);
+      const unsafe39 = yield* client.unsafe("select ? as value; select 2", [1]);
+      expect(unsafe39).toEqual([{ value: 1 }]);
+      const unsafe40 = yield* client.unsafe("select ? as value; select 2", [3]);
+      expect(unsafe40).toEqual([{ value: 3 }]);
       expect(prepares).toBe(1);
       expect(runs).toEqual([[1], [3]]);
     }).pipe(Effect.provideServiceEffect(Reactivity.Reactivity, Reactivity.make))
@@ -1319,15 +1363,19 @@ describe("DuckDbClient native lifecycle", { concurrent: false }, () => {
       });
       const select = client.unsafe<{ readonly generation: number }>("select ? as generation", [1]);
 
-      expect(yield* select).toEqual([{ generation: 1 }]);
+      const select41 = yield* select;
+      expect(select41).toEqual([{ generation: 1 }]);
       // A use inside the TTL reuses the statement and does not extend its lifetime.
       yield* TestClock.adjust("30 millis");
-      expect(yield* select).toEqual([{ generation: 1 }]);
+      const select42 = yield* select;
+      expect(select42).toEqual([{ generation: 1 }]);
       yield* TestClock.adjust("20 millis");
-      expect(yield* select).toEqual([{ generation: 2 }]);
+      const select43 = yield* select;
+      expect(select43).toEqual([{ generation: 2 }]);
       expect(events).toEqual(["prepare 1", "destroy 1", "prepare 2"]);
       yield* TestClock.adjust("49 millis");
-      expect(yield* select).toEqual([{ generation: 2 }]);
+      const select44 = yield* select;
+      expect(select44).toEqual([{ generation: 2 }]);
       expect(events).toEqual(["prepare 1", "destroy 1", "prepare 2"]);
     }).pipe(Effect.provideServiceEffect(Reactivity.Reactivity, Reactivity.make))
   );
@@ -1364,22 +1412,27 @@ describe("DuckDbClient native lifecycle", { concurrent: false }, () => {
           .withTransaction(source.exportDatabase({ directory: refusedDir }))
           .pipe(Effect.flip);
         expect(refused.reason._tag).toBe("UnknownError");
-        expect(yield* fs.exists(refusedDir)).toBe(false);
+        const exists45 = yield* fs.exists(refusedDir);
+        expect(exists45).toBe(false);
         for (const format of ["csv", "parquet"] as const) {
           const directory = path.join(tmpDir, format);
           yield* source.exportDatabase({ directory, format });
           const target = yield* DuckDbClient.make({ databasePath: path.join(tmpDir, `import-${format}.duckdb`) });
           yield* target.importDatabase({ directory });
-          expect(yield* target`SELECT * FROM a_child`).toEqual([{ id: 1, parent: 3 }]);
-          expect(yield* target`SELECT count(*) AS n FROM z_parent`).toEqual([{ n: 3 }]);
-          expect(yield* target`SELECT nextval('serial') AS n`).toEqual([{ n: 4 }]);
+          const value46 = yield* target`SELECT * FROM a_child`;
+          expect(value46).toEqual([{ id: 1, parent: 3 }]);
+          const value47 = yield* target`SELECT count(*) AS n FROM z_parent`;
+          expect(value47).toEqual([{ n: 3 }]);
+          const value48 = yield* target`SELECT nextval('serial') AS n`;
+          expect(value48).toEqual([{ n: 4 }]);
           expect((yield* target.importDatabase({ directory }).pipe(Effect.flip)).reason._tag).toBe("SqlSyntaxError");
         }
         yield* Scope.close(sourceScope, Exit.void);
         const reader = yield* DuckDbClient.make({ databasePath, readOnly: true });
         const directory = path.join(tmpDir, "readonly-export");
         yield* reader.exportDatabase({ directory });
-        expect(yield* fs.exists(path.join(directory, "schema.sql"))).toBe(true);
+        const exists49 = yield* fs.exists(path.join(directory, "schema.sql"));
+        expect(exists49).toBe(true);
       })
     );
 
@@ -1416,28 +1469,41 @@ describe("DuckDbClient native lifecycle", { concurrent: false }, () => {
             }),
           }),
         }).pipe(Effect.provideService(SqlClient.SqlClient, source));
-        expect(yield* run).toEqual([[1, "catalog"]]);
+        const result50 = yield* run;
+        expect(result50).toEqual([[1, "catalog"]]);
         const file = path.join(tmpDir, "dump", "_schema.sql");
         const text = yield* fs.readFileString(file);
         expect(text).not.toContain("outside");
         const target = yield* DuckDbClient.make({ databasePath: ":memory:" });
         yield* target.unsafe(text);
-        expect(yield* target`SELECT * FROM nested_view`).toEqual([{ n: 42 }]);
-        expect(yield* target`SELECT typed(42) AS a, typed('hello') AS b`).toEqual([{ a: "int", b: "str" }]);
-        expect(yield* target`SELECT overloaded(41) AS a, overloaded(20, 22) AS b`).toEqual([{ a: 42, b: 42 }]);
-        expect(yield* target`SELECT * FROM overloaded_table(42)`).toEqual([{ n: 42 }]);
-        expect(yield* target`SELECT * FROM overloaded_table(20, 22)`).toEqual([{ n: 42 }]);
-        expect(yield* target`SELECT * FROM table_view`).toEqual([]);
+        const value51 = yield* target`SELECT * FROM nested_view`;
+        expect(value51).toEqual([{ n: 42 }]);
+        const value52 = yield* target`SELECT typed(42) AS a, typed('hello') AS b`;
+        expect(value52).toEqual([{ a: "int", b: "str" }]);
+        const value53 = yield* target`SELECT overloaded(41) AS a, overloaded(20, 22) AS b`;
+        expect(value53).toEqual([{ a: 42, b: 42 }]);
+        const value54 = yield* target`SELECT * FROM overloaded_table(42)`;
+        expect(value54).toEqual([{ n: 42 }]);
+        const value55 = yield* target`SELECT * FROM overloaded_table(20, 22)`;
+        expect(value55).toEqual([{ n: 42 }]);
+        const value56 = yield* target`SELECT * FROM table_view`;
+        expect(value56).toEqual([]);
         yield* target`INSERT INTO base (mood) VALUES ('good')`;
-        expect(yield* target`SELECT * FROM base`).toEqual([{ id: 7, mood: "good" }]);
-        expect(yield* target`SELECT index_name FROM duckdb_indexes()`).toEqual([{ index_name: "mood_idx" }]);
-        expect(yield* target`SELECT * FROM custom.other`).toEqual([]);
-        expect(yield* target`SELECT * FROM effect_sql_migrations`).toEqual(
-          yield* source`SELECT * FROM effect_sql_migrations`
-        );
+        const value57 = yield* target`SELECT * FROM base`;
+        expect(value57).toEqual([{ id: 7, mood: "good" }]);
+        const value58 = yield* target`SELECT index_name FROM duckdb_indexes()`;
+        expect(value58).toEqual([{ index_name: "mood_idx" }]);
+        const value59 = yield* target`SELECT * FROM custom.other`;
+        expect(value59).toEqual([]);
+        const value60 = yield* target`SELECT * FROM effect_sql_migrations`;
+        const expectation9 = expect(value60);
+        const value16 = yield* source`SELECT * FROM effect_sql_migrations`;
+        expectation9.toEqual(value16);
         yield* fs.writeFileString(file, "unchanged");
-        expect(yield* run).toEqual([]);
-        expect(yield* fs.readFileString(file)).toBe("unchanged");
+        const result61 = yield* run;
+        expect(result61).toEqual([]);
+        const readFileString62 = yield* fs.readFileString(file);
+        expect(readFileString62).toBe("unchanged");
         // Re-applying a no-op migration triggers a second dump of the same catalog.
         yield* source`DELETE FROM effect_sql_migrations`;
         const redump = DuckDbMigrator.run({
@@ -1466,10 +1532,8 @@ describe("DuckDbClient native lifecycle", { concurrent: false }, () => {
         yield* source`CREATE VIEW before_view AS SELECT 1 AS n`;
         yield* source`CREATE VIEW after_view AS SELECT 2 AS n`;
         yield* source`CREATE OR REPLACE VIEW before_view AS SELECT * FROM after_view`;
-        expect(yield* source`SELECT view_name FROM duckdb_views() WHERE NOT internal ORDER BY view_oid`).toEqual([
-          { view_name: "after_view" },
-          { view_name: "before_view" },
-        ]);
+        const value63 = yield* source`SELECT view_name FROM duckdb_views() WHERE NOT internal ORDER BY view_oid`;
+        expect(value63).toEqual([{ view_name: "after_view" }, { view_name: "before_view" }]);
         yield* DuckDbMigrator.run({
           schemaDirectory: path.join(tmpDir, "alter"),
           loader: DuckDbMigrator.fromRecord({ "1_noop": Effect.void }),
@@ -1496,14 +1560,15 @@ describe("DuckDbClient native lifecycle", { concurrent: false }, () => {
         const source = yield* DuckDbClient.make({ databasePath: ":memory:" });
         const schemaDirectory = path.join(tmpDir, "not-a-directory");
         yield* fs.writeFileString(schemaDirectory, "preserved");
-        expect(
-          yield* DuckDbMigrator.run({
-            schemaDirectory,
-            loader: DuckDbMigrator.fromRecord({ "1_noop": Effect.void }),
-          }).pipe(Effect.provideService(SqlClient.SqlClient, source))
-        ).toEqual([[1, "noop"]]);
-        expect(yield* fs.readFileString(schemaDirectory)).toBe("preserved");
-        expect(yield* source`SELECT migration_id FROM effect_sql_migrations`).toEqual([{ migration_id: 1 }]);
+        const pipe64 = yield* DuckDbMigrator.run({
+          schemaDirectory,
+          loader: DuckDbMigrator.fromRecord({ "1_noop": Effect.void }),
+        }).pipe(Effect.provideService(SqlClient.SqlClient, source));
+        expect(pipe64).toEqual([[1, "noop"]]);
+        const readFileString65 = yield* fs.readFileString(schemaDirectory);
+        expect(readFileString65).toBe("preserved");
+        const value66 = yield* source`SELECT migration_id FROM effect_sql_migrations`;
+        expect(value66).toEqual([{ migration_id: 1 }]);
       })
     );
 
@@ -1523,7 +1588,8 @@ describe("DuckDbClient native lifecycle", { concurrent: false }, () => {
 
         yield* first`CREATE TABLE shared_events (id INTEGER)`;
         yield* first`INSERT INTO shared_events VALUES (${1})`;
-        expect(yield* second<{ readonly id: number }>`SELECT id FROM shared_events`).toEqual([{ id: 1 }]);
+        const value67 = yield* second<{ readonly id: number }>`SELECT id FROM shared_events`;
+        expect(value67).toEqual([{ id: 1 }]);
 
         const mismatch = yield* DuckDbClient.make({ databasePath, databaseOptions: { threads: "2" } }).pipe(
           Effect.flip
@@ -1534,7 +1600,8 @@ describe("DuckDbClient native lifecycle", { concurrent: false }, () => {
         yield* Scope.close(secondScope, Exit.void);
 
         const fresh = (yield* DuckDbClient.make({ databasePath })).withoutTransforms();
-        expect(yield* fresh<{ readonly id: number }>`SELECT id FROM shared_events`).toEqual([{ id: 1 }]);
+        const value68 = yield* fresh<{ readonly id: number }>`SELECT id FROM shared_events`;
+        expect(value68).toEqual([{ id: 1 }]);
       })
     );
   });
@@ -1565,8 +1632,10 @@ describe("DuckDbClient native lifecycle", { concurrent: false }, () => {
           databaseOptions: { ACCESS_MODE: "READ_WRITE" },
         })).withoutTransforms();
         const readerB = (yield* DuckDbClient.make({ databasePath, readOnly: true })).withoutTransforms();
-        expect(yield* readerA<{ readonly id: number }>`SELECT id FROM ro_events`).toEqual([{ id: 7 }]);
-        expect(yield* readerB<{ readonly id: number }>`SELECT id FROM ro_events`).toEqual([{ id: 7 }]);
+        const value69 = yield* readerA<{ readonly id: number }>`SELECT id FROM ro_events`;
+        expect(value69).toEqual([{ id: 7 }]);
+        const value70 = yield* readerB<{ readonly id: number }>`SELECT id FROM ro_events`;
+        expect(value70).toEqual([{ id: 7 }]);
 
         const writeError = yield* readerA`INSERT INTO ro_events VALUES (${8})`.pipe(Effect.flip);
         expect(reasonTagOf(writeError)).toBe("AuthorizationError");
@@ -1591,7 +1660,8 @@ describe("DuckDbClient native lifecycle", { concurrent: false }, () => {
         yield* legacy.run("INSERT INTO legacy_events VALUES ('legacy')");
 
         const sql = (yield* DuckDbClient.make({ databasePath })).withoutTransforms();
-        expect(yield* sql<{ readonly id: string }>`SELECT id FROM legacy_events`).toEqual([{ id: "legacy" }]);
+        const value71 = yield* sql<{ readonly id: string }>`SELECT id FROM legacy_events`;
+        expect(value71).toEqual([{ id: "legacy" }]);
         yield* sql`INSERT INTO legacy_events VALUES (${"client"})`;
 
         const rows = yield* legacy.query("SELECT id FROM legacy_events ORDER BY id");
@@ -1631,23 +1701,27 @@ describe("DuckDbClient native lifecycle", { concurrent: false }, () => {
         const readerScope = yield* Scope.make();
         const readerContext = yield* Layer.build(readOnlyLayer).pipe(Scope.provide(readerScope));
         const reader = Context.get(readerContext, DuckDb);
-        expect(yield* reader.query("SELECT id FROM legacy_ro_events ORDER BY id")).toEqual([{ id: 7 }, { id: 8 }]);
+        const query72 = yield* reader.query("SELECT id FROM legacy_ro_events ORDER BY id");
+        expect(query72).toEqual([{ id: 7 }, { id: 8 }]);
         const secondScope = yield* Scope.make();
         const secondContext = yield* Layer.build(readOnlyLayer).pipe(Scope.provide(secondScope));
         const second = Context.get(secondContext, DuckDb);
-        expect(yield* second.query("SELECT id FROM legacy_ro_events ORDER BY id")).toEqual([{ id: 7 }, { id: 8 }]);
+        const query73 = yield* second.query("SELECT id FROM legacy_ro_events ORDER BY id");
+        expect(query73).toEqual([{ id: 7 }, { id: 8 }]);
         const writeError = yield* reader.run("INSERT INTO legacy_ro_events VALUES (9)").pipe(Effect.flip);
         expect(writeError._tag).toBe("DuckDbError");
         const refusedWriter = yield* DuckDbClient.make({ databasePath }).pipe(Effect.flip);
         expect(reasonTagOf(refusedWriter)).toBe("ConnectionError");
         yield* Scope.close(readerScope, Exit.void);
-        expect(yield* second.query("SELECT id FROM legacy_ro_events ORDER BY id")).toEqual([{ id: 7 }, { id: 8 }]);
+        const query74 = yield* second.query("SELECT id FROM legacy_ro_events ORDER BY id");
+        expect(query74).toEqual([{ id: 7 }, { id: 8 }]);
         yield* Scope.close(secondScope, Exit.void);
         const attachedReader = (yield* DuckDbClient.make({ databasePath: ":memory:" })).withoutTransforms();
         yield* attachedReader.attach(databasePath, "legacy_snapshot", { readOnly: true });
-        expect(
-          yield* attachedReader<{ readonly id: number }>`SELECT id FROM legacy_snapshot.legacy_ro_events ORDER BY id`
-        ).toEqual([{ id: 7 }, { id: 8 }]);
+        const value75 = yield* attachedReader<{
+          readonly id: number;
+        }>`SELECT id FROM legacy_snapshot.legacy_ro_events ORDER BY id`;
+        expect(value75).toEqual([{ id: 7 }, { id: 8 }]);
         const attachedWriteError = yield* attachedReader`INSERT INTO legacy_snapshot.legacy_ro_events VALUES (9)`.pipe(
           Effect.flip
         );
@@ -1656,11 +1730,8 @@ describe("DuckDbClient native lifecycle", { concurrent: false }, () => {
         const reopened = (yield* DuckDbClient.make({ databasePath })).withoutTransforms();
         yield* reopened`INSERT INTO legacy_ro_events VALUES (${9})`;
         yield* reopened.checkpoint({ force: true });
-        expect(yield* reopened<{ readonly id: number }>`SELECT id FROM legacy_ro_events ORDER BY id`).toEqual([
-          { id: 7 },
-          { id: 8 },
-          { id: 9 },
-        ]);
+        const value76 = yield* reopened<{ readonly id: number }>`SELECT id FROM legacy_ro_events ORDER BY id`;
+        expect(value76).toEqual([{ id: 7 }, { id: 8 }, { id: 9 }]);
       })
     );
   });
@@ -1686,19 +1757,21 @@ describe("DuckDbClient native lifecycle", { concurrent: false }, () => {
 
         const client = yield* DuckDbClient.DuckDbClient;
         const sql = (yield* SqlClient.SqlClient).withoutTransforms();
-        expect(client).toBe(yield* SqlClient.SqlClient);
+        const expectation10 = expect(client);
+        const SqlClient17 = yield* SqlClient.SqlClient;
+        expectation10.toBe(SqlClient17);
 
         yield* sql`CREATE TABLE parquet_events (id VARCHAR, value INTEGER)`;
         yield* sql`INSERT INTO parquet_events VALUES (${"parquet-1"}, ${1})`;
         yield* client.copyTableToParquet(
           DuckDbParquetExport.make({ filePath: parquetPath, tableName: "parquet_events" })
         );
-        expect(yield* fs.exists(parquetPath)).toBe(true);
-        expect(
-          yield* sql.unsafe<{ readonly id: string; readonly value: number }>(
-            `SELECT id, value FROM read_parquet('${parquetPath}')`
-          )
-        ).toEqual([{ id: "parquet-1", value: 1 }]);
+        const exists77 = yield* fs.exists(parquetPath);
+        expect(exists77).toBe(true);
+        const unsafe78 = yield* sql.unsafe<{ readonly id: string; readonly value: number }>(
+          `SELECT id, value FROM read_parquet('${parquetPath}')`
+        );
+        expect(unsafe78).toEqual([{ id: "parquet-1", value: 1 }]);
 
         const refused = yield* sql
           .withTransaction(
@@ -1708,7 +1781,8 @@ describe("DuckDbClient native lifecycle", { concurrent: false }, () => {
           )
           .pipe(Effect.flip);
         expect(reasonTagOf(refused)).toBe("UnknownError");
-        expect(yield* fs.exists(transactionParquetPath)).toBe(false);
+        const exists79 = yield* fs.exists(transactionParquetPath);
+        expect(exists79).toBe(false);
       })
     );
   });
@@ -1763,7 +1837,8 @@ describe("DuckDb legacy re-base", { concurrent: false }, () => {
           expect(error.operation).toBe("withTransaction");
           expect(error.message).toContain("DuckDB aborted this transaction");
           pipe(error.cause, O.isSome, assertTrue);
-          expect(yield* duckdb.query("SELECT id FROM aborted_events ORDER BY id")).toEqual([{ id: 1 }]);
+          const query80 = yield* duckdb.query("SELECT id FROM aborted_events ORDER BY id");
+          expect(query80).toEqual([{ id: 1 }]);
         })
       );
 
@@ -1789,7 +1864,8 @@ describe("DuckDb legacy re-base", { concurrent: false }, () => {
           expect(error._tag).toBe("DuckDbError");
           expect(error.operation).toBe("withTransaction");
           expect(error.message).toContain("DuckDB aborted this transaction");
-          expect(yield* duckdb.query("SELECT count(*)::INTEGER AS n FROM interrupted_events")).toEqual([{ n: 0 }]);
+          const query81 = yield* duckdb.query("SELECT count(*)::INTEGER AS n FROM interrupted_events");
+          expect(query81).toEqual([{ n: 0 }]);
         })
       );
     }
@@ -1806,7 +1882,8 @@ describe("DuckDb legacy re-base", { concurrent: false }, () => {
             .pipe(Effect.timeout(Duration.millis(200)), TestClock.withLive, Effect.exit);
 
           pipe(exit, Exit.isFailure, assertTrue);
-          expect(yield* duckdb.query("SELECT 42 AS answer")).toEqual([{ answer: 42 }]);
+          const query82 = yield* duckdb.query("SELECT 42 AS answer");
+          expect(query82).toEqual([{ answer: 42 }]);
         })
       );
     }
@@ -1870,15 +1947,14 @@ describe("DuckDbClient read-only first open", { concurrent: false }, () => {
         expect(legacyError.message).toBe("Failed to open DuckDB connection.");
         expect(String(O.getOrUndefined(legacyError.cause))).toContain(DIFFERENT_CONFIGURATION);
 
-        expect(yield* reader<{ readonly id: number }>`SELECT id FROM ro_first_events`).toEqual([{ id: 1 }]);
+        const value83 = yield* reader<{ readonly id: number }>`SELECT id FROM ro_first_events`;
+        expect(value83).toEqual([{ id: 1 }]);
         yield* Scope.close(readerScope, Exit.void);
 
         const writer = (yield* DuckDbClient.make({ databasePath })).withoutTransforms();
         yield* writer`INSERT INTO ro_first_events VALUES (${2})`;
-        expect(yield* writer<{ readonly id: number }>`SELECT id FROM ro_first_events ORDER BY id`).toEqual([
-          { id: 1 },
-          { id: 2 },
-        ]);
+        const value84 = yield* writer<{ readonly id: number }>`SELECT id FROM ro_first_events ORDER BY id`;
+        expect(value84).toEqual([{ id: 1 }, { id: 2 }]);
       })
     );
   });

@@ -78,3 +78,28 @@ coverage exclusions or floors change. The reviewed cache writer stamps the serve
 subject, carries 192 prior reviews, and its audit reports zero blocking findings.
 The generated script audit reports 193 manifests and zero drifting script blocks.
 Hosted confirmation for the newly published head remains necessary.
+
+## Effect 4.1.2 merge verification
+
+The native capture implementation is committed as `17f15c1f68`. Its merge with
+published conflict repair `815ddda047` brings in main `31e2ac20f3` and Effect 4.1.2.
+Newly enforced diagnostics require separating yielded values from call arguments
+throughout the private server adapters and their tests. The adaptation preserves
+left-to-right effect execution, short-circuit conditions and per-iteration work.
+Optional results use Effect.asSome; test-only Node bundling uses Effect.promise
+because a rejected build is deliberately a defect. No diagnostic is suppressed.
+
+After adaptation, quick server and domain lint/type checks pass. The 57 tests in
+14 focused files pass; a final 21-test subset rechecks native admission, capture,
+objects and Unicode dictionary mutation. An inherited direct Arbitrary.checkEffect
+in ClaimElement.input is moved to the provided it.effect.prop registration with
+the same 100 runs and seed; all 14 tests in that file pass. Fallow's new-only audit
+passes with zero introduced findings (27 complexity and 59 duplication findings
+are inherited). Scoped server source/test Oxlint passes.
+
+Inventory refresh retains the previously reviewed shorter child Scope and fixed
+independent race-trial exceptions after inspecting the adapted code. None of the
+trials retry a failed outcome, and each child still retires before its slot is
+reused. Schema-first refresh updates moved evidence locations while preserving
+review reasons and unrelated inventory records. Broader runtime and coverage
+verification remains a hosted-CI obligation on the next pushed head.

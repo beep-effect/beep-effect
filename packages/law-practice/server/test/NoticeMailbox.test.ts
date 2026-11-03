@@ -107,7 +107,9 @@ describe("@beep/law-practice-server NoticeMailbox", () => {
       oneRun(
         Effect.gen(function* () {
           const calls = yield* noCalls();
-          const mailbox = yield* serviceOf(NoticeMailbox)(mailboxLayer(yield* temporaryDirectory, calls));
+          const argument = serviceOf(NoticeMailbox);
+          const temporaryDirectory2 = yield* temporaryDirectory;
+          const mailbox = yield* argument(mailboxLayer(temporaryDirectory2, calls));
 
           yield* mailbox.send(
             NoticeMessage.make({ subject: "Claude: 2 questions waiting", body: "2 questions are waiting in Claude." })
@@ -135,7 +137,9 @@ describe("@beep/law-practice-server NoticeMailbox", () => {
         Effect.gen(function* () {
           const calls = yield* noCalls();
           const link = NoticeClaudeLink.make({ folder: NoticeClaudeFolder.make(LINK_FOLDER), prompt: LINK_PROMPT });
-          const mailbox = yield* serviceOf(NoticeMailbox)(mailboxLayer(yield* temporaryDirectory, calls, O.some(link)));
+          const argument1 = serviceOf(NoticeMailbox);
+          const temporaryDirectory3 = yield* temporaryDirectory;
+          const mailbox = yield* argument1(mailboxLayer(temporaryDirectory3, calls, O.some(link)));
 
           yield* mailbox.send(
             NoticeMessage.make({ subject: "Claude: 2 questions waiting", body: "2 questions are waiting in Claude." })
@@ -214,7 +218,9 @@ describe("@beep/law-practice-server NoticeMailbox", () => {
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const dataDirectory = yield* temporaryDirectory;
-          const mailbox = yield* serviceOf(NoticeMailbox)(mailboxLayer(dataDirectory, yield* noCalls()));
+          const argument2 = serviceOf(NoticeMailbox);
+          const noCalls4 = yield* noCalls();
+          const mailbox = yield* argument2(mailboxLayer(dataDirectory, noCalls4));
 
           const claims = yield* Effect.all([
             mailbox.claimDay(day(14)),
@@ -233,8 +239,10 @@ describe("@beep/law-practice-server NoticeMailbox", () => {
       oneRun(
         Effect.gen(function* () {
           const calls = yield* noCalls();
-          const notice = yield* serviceOf(DailyNotice)(
-            DailyNoticeLive.pipe(Layer.provide(mailboxLayer(yield* temporaryDirectory, calls)))
+          const argument3 = serviceOf(DailyNotice);
+          const temporaryDirectory5 = yield* temporaryDirectory;
+          const notice = yield* argument3(
+            DailyNoticeLive.pipe(Layer.provide(mailboxLayer(temporaryDirectory5, calls)))
           );
 
           const outcomes = yield* Effect.all(
@@ -260,9 +268,12 @@ describe("@beep/law-practice-server NoticeMailbox", () => {
       oneRun(
         Effect.gen(function* () {
           const path = yield* Path.Path;
-          const notADirectory = path.join(yield* temporaryDirectory, "data-file");
+          const temporaryDirectory1 = yield* temporaryDirectory;
+          const notADirectory = path.join(temporaryDirectory1, "data-file");
           yield* (yield* FileSystem.FileSystem).writeFileString(notADirectory, "not a directory\n");
-          const mailbox = yield* serviceOf(NoticeMailbox)(mailboxLayer(notADirectory, yield* noCalls()));
+          const argument4 = serviceOf(NoticeMailbox);
+          const noCalls6 = yield* noCalls();
+          const mailbox = yield* argument4(mailboxLayer(notADirectory, noCalls6));
 
           const failure = yield* Effect.flip(mailbox.claimDay(day(14)));
 

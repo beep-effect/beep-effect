@@ -16,7 +16,8 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
       () =>
         Effect.gen(function* () {
           const native = yield* makeCitationObservedSpawner();
-          expect(yield* replayNamedCleanerScenes("html", native.spawner)).toEqual({
+          const citationResult1 = yield* replayNamedCleanerScenes("html", native.spawner);
+          expect(citationResult1).toEqual({
             cases: 504,
             successes: 304,
             parseFailures: 142,
@@ -24,7 +25,8 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
             unknownSteps: 0,
             events: 2416,
           });
-          expect(yield* native.snapshot).toEqual(CitationNativeExitCounts.make({ spawned: 507, confirmed: 507 }));
+          const citationResult2 = yield* native.snapshot;
+          expect(citationResult2).toEqual(CitationNativeExitCounts.make({ spawned: 507, confirmed: 507 }));
         }),
       { timeout: 1_200_000 }
     );

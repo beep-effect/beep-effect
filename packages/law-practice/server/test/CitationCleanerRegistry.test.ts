@@ -15,11 +15,16 @@ describe("live cleaner registry", () => {
   it.effect("dispatches native hashed names through real builtins without host hooks", () =>
     Effect.gen(function* () {
       const h = yield* setup();
-      h.select(yield* Effect.forEach(["underscores", "all_whitespace"], h.values.text));
+      const citationResult1 = yield* Effect.forEach(["underscores", "all_whitespace"], h.values.text);
+      h.select(citationResult1);
       const result = yield* h.pipeline.run({ text: "  a__   b  ", plan: "registered" });
-      expect(O.getOrThrow(yield* h.values.getText(result.value)).text).toBe(" a b ");
-      expect(yield* h.calls).toEqual([]);
-      expect((yield* (yield* h.work).snapshot).closed).toBe(true);
+      const citationResult2 = yield* h.values.getText(result.value);
+      expect(O.getOrThrow(citationResult2).text).toBe(" a b ");
+      const citationResult3 = yield* h.calls;
+      expect(citationResult3).toEqual([]);
+      const citationResult4 = yield* h.work;
+      const citationResult5 = yield* citationResult4.snapshot;
+      expect(citationResult5.closed).toBe(true);
     })
   );
   it.effect("hashes membership and lookup separately and preserves reentrant deletion", () =>
@@ -35,8 +40,10 @@ describe("live cleaner registry", () => {
       });
       h.select([step]);
       const result = yield* h.pipeline.run({ text: "__a  b__", plan: "changing-hash" });
-      expect(O.getOrThrow(yield* h.values.getText(result.value)).text).toBe("__a b__");
-      expect(yield* h.calls).toEqual(["hash", "equal", "hash", "equal"]);
+      const citationResult6 = yield* h.values.getText(result.value);
+      expect(O.getOrThrow(citationResult6).text).toBe("__a b__");
+      const citationResult7 = yield* h.calls;
+      expect(citationResult7).toEqual(["hash", "equal", "hash", "equal"]);
       const key = yield* h.values.text("underscores");
       hashes = 0;
       h.hooks({
@@ -47,11 +54,15 @@ describe("live cleaner registry", () => {
         }),
         equal: () => Effect.succeed(true),
       });
-      expect(yield* Effect.flip(h.pipeline.run({ text: "__a__", plan: "deleted-on-get" }))).toMatchObject({
+      const citationResult8 = yield* Effect.flip(h.pipeline.run({ text: "__a__", plan: "deleted-on-get" }));
+      expect(citationResult8).toMatchObject({
         reason: "lookup-key-missing",
       });
-      expect(yield* h.calls).toEqual(["hash", "equal", "hash"]);
-      expect((yield* (yield* h.work).snapshot).closed).toBe(true);
+      const citationResult9 = yield* h.calls;
+      expect(citationResult9).toEqual(["hash", "equal", "hash"]);
+      const citationResult10 = yield* h.work;
+      const citationResult11 = yield* citationResult10.snapshot;
+      expect(citationResult11.closed).toBe(true);
     })
   );
   it.effect("retains lazy callback state and host output through live registry replacement", () =>
@@ -69,18 +80,22 @@ describe("live cleaner registry", () => {
             h.select([key, key]);
             return CitationCleanerProduced.make({ value: host, charges: [] });
           }
-          expect(yield* h.values.same(value, host)).toBe(true);
+          const citationResult12 = yield* h.values.same(value, host);
+          expect(citationResult12).toBe(true);
           const text = "restored";
           const charge = yield* work.reserveText(text.length);
-          return CitationCleanerProduced.make({ value: yield* h.values.text(text), charges: [charge] });
+          const citationResult13 = yield* h.values.text(text);
+          return CitationCleanerProduced.make({ value: citationResult13, charges: [charge] });
         }),
       });
       yield* h.registry.set(key, callback);
       h.select([key]);
       const result = yield* h.pipeline.run({ text: "input", plan: "lazy-mutation" });
-      expect(O.getOrThrow(yield* h.values.getText(result.value)).text).toBe("restored");
+      const citationResult14 = yield* h.values.getText(result.value);
+      expect(O.getOrThrow(citationResult14).text).toBe("restored");
       expect(invokes).toBe(2);
-      expect(yield* h.calls).toEqual(["invoke", "invoke"]);
+      const citationResult15 = yield* h.calls;
+      expect(citationResult15).toEqual(["invoke", "invoke"]);
     })
   );
   it.effect("keeps native pair/scalar keys distinct and rejects structural handles", () =>
@@ -93,26 +108,29 @@ describe("live cleaner registry", () => {
       const callback = yield* h.values.retainHost("answer");
       yield* h.registry.set(pair, callback);
       h.select([scalar]);
-      expect(yield* Effect.flip(h.pipeline.run({ text: "input", plan: "scalar-is-absent" }))).toMatchObject({
+      const citationResult16 = yield* Effect.flip(h.pipeline.run({ text: "input", plan: "scalar-is-absent" }));
+      expect(citationResult16).toMatchObject({
         reason: "unknown-step",
       });
       h.hooks({
         invoke: (_fn, _value, _work) => Effect.succeed(CitationCleanerProduced.make({ value: callback, charges: [] })),
       });
-      h.select([
-        yield* h.values.unicode(
-          CitationPythonUnicodeStorage.make({ width: 2, bytes: new Uint8Array([0x3d, 0xd8, 0, 0xde]) })
-        ),
-      ]);
-      expect((yield* h.pipeline.run({ text: "input", plan: "same-native-content" })).value).toBe(callback);
-      expect(
-        yield* Effect.flip(h.registry.set(CitationCleanerObject.make({ slot: pair.slot }), callback))
-      ).toMatchObject({ reason: "unissued-value" });
+      const citationResult17 = yield* h.values.unicode(
+        CitationPythonUnicodeStorage.make({ width: 2, bytes: new Uint8Array([0x3d, 0xd8, 0, 0xde]) })
+      );
+      h.select([citationResult17]);
+      const citationResult18 = yield* h.pipeline.run({ text: "input", plan: "same-native-content" });
+      expect(citationResult18.value).toBe(callback);
+      const citationResult19 = yield* Effect.flip(
+        h.registry.set(CitationCleanerObject.make({ slot: pair.slot }), callback)
+      );
+      expect(citationResult19).toMatchObject({ reason: "unissued-value" });
     })
   );
   it.effect("bounds retained registry work and invalidates the closed owner", () =>
     Effect.gen(function* () {
-      expect(yield* Effect.flip(setup(undefined, 4))).toMatchObject({
+      const citationResult20 = yield* Effect.flip(setup(undefined, 4));
+      expect(citationResult20).toMatchObject({
         _tag: "CitationSafetyLimitExceeded",
         limit: "authorities",
       });
@@ -122,12 +140,14 @@ describe("live cleaner registry", () => {
         for (let index = 0; index < 200; index++) yield* h.registry.remove(absent);
         return yield* Effect.die("Registry lifetime work ceiling did not reject within 200 probes");
       });
-      expect(yield* Effect.flip(exhaust)).toMatchObject({
+      const citationResult21 = yield* Effect.flip(exhaust);
+      expect(citationResult21).toMatchObject({
         _tag: "CitationSafetyLimitExceeded",
         limit: "resolutionIterations",
       });
       const closed = yield* Effect.scoped(setup());
-      expect(yield* Effect.flip(closed.pipeline.run({ text: "input", plan: "closed" }))).toMatchObject({
+      const citationResult22 = yield* Effect.flip(closed.pipeline.run({ text: "input", plan: "closed" }));
+      expect(citationResult22).toMatchObject({
         reason: "closed-owner",
       });
     })
@@ -136,25 +156,31 @@ describe("live cleaner registry", () => {
     Effect.gen(function* () {
       const h = yield* setup();
       const bytes = new TextEncoder().encode("underscores");
-      expect(yield* h.hashes.bytes(bytes)).toBe(yield* h.hashes.text("underscores"));
+      const citationResult23 = yield* h.hashes.bytes(bytes);
+      const citationResult24 = yield* h.hashes.text("underscores");
+      expect(citationResult23).toBe(citationResult24);
       const key = yield* h.values.bytes(bytes);
       h.select([key]);
-      expect(yield* Effect.flip(h.pipeline.run({ text: "__a__", plan: "byte-name-absent" }))).toMatchObject({
+      const citationResult25 = yield* Effect.flip(h.pipeline.run({ text: "__a__", plan: "byte-name-absent" }));
+      expect(citationResult25).toMatchObject({
         reason: "unknown-step",
       });
-      expect(yield* h.calls).toEqual([]);
+      const citationResult26 = yield* h.calls;
+      expect(citationResult26).toEqual([]);
       const callback = yield* h.values.retainHost("byte callback");
       yield* h.registry.set(key, callback);
-      h.select([yield* h.values.text("underscores")]);
-      expect(
-        O.getOrThrow(
-          yield* h.values.getText((yield* h.pipeline.run({ text: "__a__", plan: "string-name-retained" })).value)
-        ).text
-      ).toBe("a");
+      const citationResult27 = yield* h.values.text("underscores");
+      h.select([citationResult27]);
+      const citationResult28 = yield* h.pipeline.run({ text: "__a__", plan: "string-name-retained" });
+      const citationResult29 = yield* h.values.getText(citationResult28.value);
+      expect(O.getOrThrow(citationResult29).text).toBe("a");
       h.hooks({ invoke: () => Effect.succeed(CitationCleanerProduced.make({ value: callback, charges: [] })) });
-      h.select([yield* h.values.bytes(new Uint8Array(bytes))]);
-      expect((yield* h.pipeline.run({ text: "input", plan: "byte-key-retained" })).value).toBe(callback);
-      expect(yield* h.calls).toEqual(["invoke"]);
+      const citationResult30 = yield* h.values.bytes(new Uint8Array(bytes));
+      h.select([citationResult30]);
+      const citationResult31 = yield* h.pipeline.run({ text: "input", plan: "byte-key-retained" });
+      expect(citationResult31.value).toBe(callback);
+      const citationResult32 = yield* h.calls;
+      expect(citationResult32).toEqual(["invoke"]);
     })
   );
   it.effect("prefers registered function keys and retains callback state across runs", () =>
@@ -169,15 +195,18 @@ describe("live cleaner registry", () => {
         equal: () => Effect.succeed(false),
         callable: () => Effect.die("Membership must precede callable dispatch"),
         invoke: Effect.fn("CleanerRegistryTest.retainedState")(function* (fn) {
-          expect(yield* h.values.same(fn, replacement)).toBe(true);
+          const citationResult33 = yield* h.values.same(fn, replacement);
+          expect(citationResult33).toBe(true);
           invokes++;
           return CitationCleanerProduced.make({ value: output, charges: [] });
         }),
       });
       yield* h.registry.set(original, replacement);
       h.select([original]);
-      expect((yield* h.pipeline.run({ text: "first", plan: "retained-state" })).value).toBe(output);
-      expect((yield* h.pipeline.run({ text: "second", plan: "retained-state" })).value).toBe(output);
+      const citationResult34 = yield* h.pipeline.run({ text: "first", plan: "retained-state" });
+      expect(citationResult34.value).toBe(output);
+      const citationResult35 = yield* h.pipeline.run({ text: "second", plan: "retained-state" });
+      expect(citationResult35.value).toBe(output);
       expect(invokes).toBe(2);
     })
   );
@@ -195,7 +224,8 @@ describe("live cleaner registry", () => {
         yield* h.registry.set(equivalent, replacement);
         const before = yield* h.calls;
         const bindings = yield* h.registry.read;
-        expect(yield* h.calls).toEqual(before);
+        const citationResult36 = yield* h.calls;
+        expect(citationResult36).toEqual(before);
         expect(bindings).toHaveLength(6);
         const binding = A.getUnsafe(bindings, 5);
         expect(binding[0]).toBe(key);
@@ -205,7 +235,8 @@ describe("live cleaner registry", () => {
         yield* h.values.assertOwned(binding[0]);
         yield* h.values.assertOwned(binding[1]);
         yield* h.registry.remove(equivalent);
-        expect(yield* h.registry.read).toHaveLength(5);
+        const citationResult37 = yield* h.registry.read;
+        expect(citationResult37).toHaveLength(5);
         expect(bindings).toHaveLength(6);
       })
   );
@@ -216,12 +247,14 @@ describe("live cleaner registry", () => {
         for (let index = 0; index < 200; index++) yield* h.registry.read;
         return yield* Effect.die("Registry inspection did not consume its lifetime work ceiling");
       });
-      expect(yield* Effect.flip(exhaust)).toMatchObject({
+      const citationResult38 = yield* Effect.flip(exhaust);
+      expect(citationResult38).toMatchObject({
         _tag: "CitationSafetyLimitExceeded",
         limit: "resolutionIterations",
       });
       const closed = yield* Effect.scoped(setup());
-      expect(yield* Effect.flip(closed.registry.read)).toMatchObject({ reason: "closed-owner" });
+      const citationResult39 = yield* Effect.flip(closed.registry.read);
+      expect(citationResult39).toMatchObject({ reason: "closed-owner" });
     })
   );
 });

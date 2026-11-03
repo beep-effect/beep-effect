@@ -51,7 +51,8 @@ const fixture = Effect.fn("NativeHttpTest.fixture")(function* (maxPages = 16, bo
   );
   const context = yield* Layer.build(NodeHttpServer.layerTest.pipe(Layer.fresh));
   const server = Context.get(context, HttpServer.HttpServer);
-  const client = Context.get(yield* Layer.build(NodeHttpClient.layerNodeHttp), HttpClient.HttpClient);
+  const build1 = yield* Layer.build(NodeHttpClient.layerNodeHttp);
+  const client = Context.get(build1, HttpClient.HttpClient);
   yield* server.serve(intake.handler);
   const url = `${HttpServer.formatAddress(server.address)}/v1/traces`;
   const post = Effect.fn("NativeHttpTest.post")(function* (
@@ -66,7 +67,8 @@ const fixture = Effect.fn("NativeHttpTest.fixture")(function* (maxPages = 16, bo
       HttpClientRequest.setHeaders({ "content-type": contentType, "content-encoding": encoding })
     );
     const received = yield* client.execute(request);
-    const bytes = new Uint8Array(yield* received.arrayBuffer);
+    const arrayBuffer2 = yield* received.arrayBuffer;
+    const bytes = new Uint8Array(arrayBuffer2);
     return {
       status: received.status,
       headers: new Headers(received.headers),
@@ -113,7 +115,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
   it.effect("acknowledges committed JSON metadata, partial rejection and exact retry over a real socket", () =>
     Effect.gen(function* () {
       const { post, journal, health } = yield* fixture(1);
-      const first = yield* post(yield* spanBody(true));
+      const spanBody3 = yield* spanBody(true);
+      const first = yield* post(spanBody3);
       expect(first.status).toBe(200);
       expect(first.text).toBe(
         '{"partialSuccess":{"rejectedSpans":"1","errorMessage":"Some spans were rejected by local admission"}}'
@@ -121,15 +124,19 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const receiptId = yield* S.decodeUnknownEffect(Sha256Hex)(first.headers.get("x-observation-receipt"));
       const stored = yield* journal.receipt(receiptId);
       expect(stored).toMatchObject({ _tag: "Some", value: { accepted: 1, rejected: 1, newEvents: 1 } });
-      expect(yield* journal.stats).toMatchObject({ pages: 1, frames: 1 });
-      const replay = yield* post(yield* spanBody(true));
+      const stats4 = yield* journal.stats;
+      expect(stats4).toMatchObject({ pages: 1, frames: 1 });
+      const spanBody5 = yield* spanBody(true);
+      const replay = yield* post(spanBody5);
       expect(replay.headers.get("x-observation-receipt")).toBe(receiptId);
-      const refused = yield* post(yield* spanBody());
+      const spanBody6 = yield* spanBody();
+      const refused = yield* post(spanBody6);
       expect(refused.status).toBe(503);
       expect(refused.headers.get("retry-after")).toBe("1");
       expect(refused.headers.get("x-observation-receipt")).toBeNull();
       expect((yield* post()).status).toBe(200);
-      expect(yield* journal.stats).toMatchObject({ pages: 1 });
+      const stats7 = yield* journal.stats;
+      expect(stats7).toMatchObject({ pages: 1 });
       expect(first.text).not.toContain("private");
       const observation = yield* health;
       expect(observation.counts).toMatchObject({ partial: 2, accepted: 1, capacity: 1 });
@@ -175,10 +182,12 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
           errorMessage: "Some spans were rejected by local admission",
         },
       });
-      const json = yield* post(Zlib.gzipSync(yield* spanBody()), "application/json; charset=utf-8", "gzip");
+      const spanBody8 = yield* spanBody();
+      const json = yield* post(Zlib.gzipSync(spanBody8), "application/json; charset=utf-8", "gzip");
       expect(json.status).toBe(200);
       expect(json.text).toBe("{}");
-      expect(yield* journal.stats).toMatchObject({ pages: 2, frames: 2 });
+      const stats9 = yield* journal.stats;
+      expect(stats9).toMatchObject({ pages: 2, frames: 2 });
     })
   )
 );
@@ -203,7 +212,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
         code: 3,
         message: "Local intake refused the request",
       });
-      expect(yield* journal.stats).toEqual({ pages: 0, frames: 0, payloadBytes: 0 });
+      const stats10 = yield* journal.stats;
+      expect(stats10).toEqual({ pages: 0, frames: 0, payloadBytes: 0 });
     })
   )
 );
@@ -214,16 +224,21 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const { post, journal, health } = yield* fixture();
       const sql = yield* SqlClient.SqlClient;
       yield* sql`CREATE TRIGGER synthetic_receipt_failure BEFORE INSERT ON observation_native_receipts BEGIN SELECT RAISE(ABORT, 'private-storage-cause'); END`;
-      const refused = yield* post(yield* spanBody());
+      const spanBody11 = yield* spanBody();
+      const refused = yield* post(spanBody11);
       expect(refused.status).toBe(503);
       expect(refused.text).not.toContain("private");
       expect((yield* health).counts.storage).toBe(1);
       expect(refused.headers.get("x-observation-receipt")).toBeNull();
-      expect(yield* journal.stats).toEqual({ pages: 0, frames: 0, payloadBytes: 0 });
-      expect(yield* sql`SELECT count(*) AS n FROM observation_native_events`).toEqual([{ n: 0 }]);
+      const stats12 = yield* journal.stats;
+      expect(stats12).toEqual({ pages: 0, frames: 0, payloadBytes: 0 });
+      const value13 = yield* sql`SELECT count(*) AS n FROM observation_native_events`;
+      expect(value13).toEqual([{ n: 0 }]);
       yield* sql`DROP TRIGGER synthetic_receipt_failure`;
-      expect((yield* post(yield* spanBody())).status).toBe(200);
-      expect(yield* journal.stats).toMatchObject({ pages: 1, frames: 1 });
+      const spanBody14 = yield* spanBody();
+      expect((yield* post(spanBody14)).status).toBe(200);
+      const stats15 = yield* journal.stats;
+      expect(stats15).toMatchObject({ pages: 1, frames: 1 });
     })
   )
 );
@@ -260,9 +275,11 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       expect(busy).toBe(503);
       expect((yield* health).counts.overloaded).toBeGreaterThanOrEqual(1);
       yield* pending.end(Str.repeat(262145)(" "));
-      expect(yield* pending.status).toBe(413);
+      const status16 = yield* pending.status;
+      expect(status16).toBe(413);
       expect((yield* post()).status).toBe(200);
-      expect(yield* journal.stats).toEqual({ pages: 0, frames: 0, payloadBytes: 0 });
+      const stats17 = yield* journal.stats;
+      expect(stats17).toEqual({ pages: 0, frames: 0, payloadBytes: 0 });
     })
   )
 );
@@ -272,11 +289,15 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
     Effect.gen(function* () {
       const { post, journal, url, client, health } = yield* fixture(16, 100);
       const pending = yield* openChunked(url, client);
-      expect(yield* pending.status).toBe(503);
+      const status18 = yield* pending.status;
+      expect(status18).toBe(503);
       expect((yield* health).counts.timedOut).toBe(1);
-      expect(yield* journal.stats).toEqual({ pages: 0, frames: 0, payloadBytes: 0 });
-      expect((yield* post(yield* spanBody())).status).toBe(200);
-      expect(yield* journal.stats).toMatchObject({ pages: 1, frames: 1 });
+      const stats19 = yield* journal.stats;
+      expect(stats19).toEqual({ pages: 0, frames: 0, payloadBytes: 0 });
+      const spanBody20 = yield* spanBody();
+      expect((yield* post(spanBody20)).status).toBe(200);
+      const stats21 = yield* journal.stats;
+      expect(stats21).toMatchObject({ pages: 1, frames: 1 });
     }).pipe(Effect.timeout("3 seconds"))
   )
 );
@@ -342,11 +363,13 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       });
       const partial = yield* post(mixed);
       expect(partial.status).toBe(200);
-      expect(yield* decodeJsonValue(partial.text)).toMatchObject({
+      const decodedJsonValue = yield* decodeJsonValue(partial.text);
+      expect(decodedJsonValue).toMatchObject({
         partialSuccess: { rejectedSpans: "1" },
       });
       const mixedId = yield* S.decodeUnknownEffect(Sha256Hex)(partial.headers.get("x-observation-receipt"));
-      expect(yield* journal.receipt(mixedId)).toMatchObject({
+      const receipt22 = yield* journal.receipt(mixedId);
+      expect(receipt22).toMatchObject({
         _tag: "Some",
         value: { accepted: 1, rejected: 1, newEvents: 1, expiredIndices: [0] },
       });

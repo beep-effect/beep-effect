@@ -48,11 +48,11 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
       const bytes = yield* fs.readFile(
         NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/token-text.json", import.meta.url))
       );
-      expect(yield* digest.digestHex(Digest.sha256, bytes)).toBe(
-        "f50330d18ec0566fb7ebd04add831da401ade8f054a5aef0ffc88c321721508a"
-      );
+      const citationResult1 = yield* digest.digestHex(Digest.sha256, bytes);
+      expect(citationResult1).toBe("f50330d18ec0566fb7ebd04add831da401ade8f054a5aef0ffc88c321721508a");
       const corpus = yield* S.decodeEffect(Corpus)(new TextDecoder().decode(bytes));
-      const tokenizer = yield* makeCitationTokenText((yield* defaultCitationEnginePolicy).limits);
+      const citationResult2 = yield* defaultCitationEnginePolicy;
+      const tokenizer = yield* makeCitationTokenText(citationResult2.limits);
       for (const row of corpus.cases) {
         const result = yield* tokenizer.plan(row.source);
         expect(result.spans, `case ${row.id}`).toEqual(row.spans);
@@ -60,7 +60,8 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
       }
       for (const row of corpus.ranges) {
         const prepared = yield* tokenizer.prepare(row.source);
-        expect(yield* prepared.range({ start: row.start, end: row.end }), `range ${row.id}`).toEqual(row.spans);
+        const citationResult3 = yield* prepared.range({ start: row.start, end: row.end });
+        expect(citationResult3, `range ${row.id}`).toEqual(row.spans);
       }
     })
   );
@@ -79,40 +80,52 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
       ]);
       input.bytes.fill(32);
       expect(result.source.bytes).toEqual(new TextEncoder().encode("a b"));
-      expect(yield* tokenizer.plan(native("a b ")).pipe(Effect.flip)).toMatchObject({ limit: "tokens" });
-      expect(yield* tokenizer.plan(native("12345")).pipe(Effect.flip)).toMatchObject({ limit: "sourceUtf16" });
-      expect((yield* tokenizer.plan(native("1234"))).spans).toEqual([[0, 4]]);
+      const citationResult4 = yield* tokenizer.plan(native("a b ")).pipe(Effect.flip);
+      expect(citationResult4).toMatchObject({ limit: "tokens" });
+      const citationResult5 = yield* tokenizer.plan(native("12345")).pipe(Effect.flip);
+      expect(citationResult5).toMatchObject({ limit: "sourceUtf16" });
+      const citationResult6 = yield* tokenizer.plan(native("1234"));
+      expect(citationResult6.spans).toEqual([[0, 4]]);
     })
   );
   it.effect("shares a text-token ceiling across native gaps and protects the source from snapshot mutation", () =>
     Effect.gen(function* () {
-      const planner = yield* makeCitationTokenText({ ...(yield* defaultCitationEnginePolicy).limits, tokens: 3 });
+      const citationResult7 = yield* defaultCitationEnginePolicy;
+      const planner = yield* makeCitationTokenText({ ...citationResult7.limits, tokens: 3 });
       const input = native("a b");
       const prepared = yield* planner.prepare(input);
       input.bytes.fill(32);
       const snapshot = yield* prepared.snapshot;
       snapshot.bytes.fill(32);
-      expect(yield* prepared.range({ start: 0, end: 1 })).toEqual([[0, 1]]);
-      expect(yield* prepared.range({ start: 1, end: 2 })).toEqual([[1, 2]]);
-      expect(yield* prepared.range({ start: 2, end: 3 })).toEqual([[2, 3]]);
-      expect(yield* prepared.range({ start: 0, end: 1 }).pipe(Effect.flip)).toMatchObject({ limit: "tokens" });
-      expect(yield* prepared.range({ start: 3, end: 4 }).pipe(Effect.flip)).toMatchObject({ reason: "invalid-input" });
-      expect(yield* prepared.range({ start: 2, end: 1 }).pipe(Effect.flip)).toMatchObject({ reason: "invalid-input" });
+      const citationResult8 = yield* prepared.range({ start: 0, end: 1 });
+      expect(citationResult8).toEqual([[0, 1]]);
+      const citationResult9 = yield* prepared.range({ start: 1, end: 2 });
+      expect(citationResult9).toEqual([[1, 2]]);
+      const citationResult10 = yield* prepared.range({ start: 2, end: 3 });
+      expect(citationResult10).toEqual([[2, 3]]);
+      const citationResult11 = yield* prepared.range({ start: 0, end: 1 }).pipe(Effect.flip);
+      expect(citationResult11).toMatchObject({ limit: "tokens" });
+      const citationResult12 = yield* prepared.range({ start: 3, end: 4 }).pipe(Effect.flip);
+      expect(citationResult12).toMatchObject({ reason: "invalid-input" });
+      const citationResult13 = yield* prepared.range({ start: 2, end: 1 }).pipe(Effect.flip);
+      expect(citationResult13).toMatchObject({ reason: "invalid-input" });
     })
   );
   it.effect("retains its captured deadline when invoked with a disabled caller Clock", () =>
     Effect.gen(function* () {
       const timer = yield* makeCitationNativeManualClock(Duration.millis(997));
       const disabled = yield* makeCitationNativeSleepClock(() => Effect.never);
+      const citationResult14 = yield* defaultCitationEnginePolicy;
       const planner = yield* makeCitationTokenText({
-        ...(yield* defaultCitationEnginePolicy).limits,
+        ...citationResult14.limits,
         extractDeadline: Duration.millis(997),
       }).pipe(Effect.provideService(Clock.Clock, timer.clock));
       const pending = yield* planner
         .plan({ width: 1, bytes: new Uint8Array(65_536).fill(97) })
         .pipe(Effect.provideService(Clock.Clock, disabled), Effect.forkChild);
       yield* timer.trigger;
-      expect(yield* Fiber.join(pending).pipe(Effect.flip)).toMatchObject({
+      const citationResult15 = yield* Fiber.join(pending).pipe(Effect.flip);
+      expect(citationResult15).toMatchObject({
         _tag: "CitationSafetyLimitExceeded",
         limit: "extractDeadline",
       });

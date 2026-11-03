@@ -18,7 +18,8 @@ it.layer(PublishabilityDetector.layerNpm, { timeout: "10 seconds" })((it) => {
   it.effect("npm publishing defaults and the private-package veto are observable through the service", () =>
     Effect.gen(function* () {
       const detector = yield* PublishabilityDetector;
-      assert.deepStrictEqual(yield* detector.detect(pkg({ private: true })), []);
+      const detect1 = yield* detector.detect(pkg({ private: true }));
+      assert.deepStrictEqual(detect1, []);
       const targets = yield* detector.detect(pkg());
       assert.deepStrictEqual(
         A.map(targets, (target) => ({
@@ -64,10 +65,8 @@ it.layer(PublishabilityDetector.layerNone, { timeout: "10 seconds" })((it) => {
   it.effect("the disabled policy publishes nowhere regardless of package configuration", () =>
     Effect.gen(function* () {
       const detector = yield* PublishabilityDetector;
-      assert.deepStrictEqual(
-        yield* detector.detect(pkg({ publishConfig: PublishConfig.make({ access: "public" }) })),
-        []
-      );
+      const detect2 = yield* detector.detect(pkg({ publishConfig: PublishConfig.make({ access: "public" }) }));
+      assert.deepStrictEqual(detect2, []);
     })
   );
 });

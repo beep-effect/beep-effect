@@ -65,7 +65,9 @@ describe("Claim envelope", () => {
   it.effect("round-trips an encoded claim version unchanged", () =>
     Effect.gen(function* () {
       const row = encoded("cv-1", { _tag: "Interval", validFrom: 100, validTo: null }, 50, null);
-      expect(yield* encode(yield* decode(row))).toEqual(row);
+      const decoded3 = yield* decode(row);
+      const encoded1 = yield* encode(decoded3);
+      expect(encoded1).toEqual(row);
     })
   );
 
@@ -118,7 +120,8 @@ describe("Claim envelope", () => {
       };
       const decoded = yield* decodeNumeric(row);
       expect(decoded.proposition.value).toEqual(1);
-      expect(yield* encodeNumeric(decoded)).toEqual(row);
+      const encodedNumeric = yield* encodeNumeric(decoded);
+      expect(encodedNumeric).toEqual(row);
       // Applying the key function to the encoded string would concatenate to "11".
       const wrongDecode = yield* Effect.exit(decodeNumeric({ ...row, logicalKey: "11" }));
       const wrongEncode = yield* Effect.exit(encodeNumeric({ ...decoded, logicalKey: "11" }));
@@ -137,7 +140,9 @@ describe("Claim envelope", () => {
           proposition,
           logicalKey: logicalKeyOfKnows(proposition),
         };
-        expect(yield* encode(yield* decode(row))).toEqual(row);
+        const decoded4 = yield* decode(row);
+        const encoded2 = yield* encode(decoded4);
+        expect(encoded2).toEqual(row);
       })
   );
 

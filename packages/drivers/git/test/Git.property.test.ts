@@ -46,7 +46,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.strictEqual(S.toEquivalence(schema)(decoded, value), true);
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -258,8 +259,9 @@ describe("Git parser and formatter property floor", () => {
           entries,
           (entry) =>
             wireLogHeader(entry) &&
-            // A --name-only read never answers `changes`.
+            // A --name-only read never answers `changes`, and a read without includeBody never answers `body`.
             entry.changes === undefined &&
+            entry.body === undefined &&
             A.every(entry.paths, (path) => noNul(path) && path.length > 0)
         )
       )
@@ -282,7 +284,11 @@ describe("Git parser and formatter property floor", () => {
       Arbitrary.filter((entries) =>
         A.every(
           entries,
-          (entry) => wireLogHeader(entry) && entry.changes !== undefined && A.every(entry.changes, wireNameStatus)
+          (entry) =>
+            wireLogHeader(entry) &&
+            entry.body === undefined &&
+            entry.changes !== undefined &&
+            A.every(entry.changes, wireNameStatus)
         )
       ),
       // In name-status mode `paths` is DERIVED: the new path of every change.

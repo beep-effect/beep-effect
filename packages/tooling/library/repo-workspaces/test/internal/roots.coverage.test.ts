@@ -107,7 +107,9 @@ it.effect.prop(
   [Arbitrary.schema(ResolvedPackage)],
   ([value]) =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeEffect(ResolvedPackage)(yield* S.encodeEffect(ResolvedPackage)(value));
+      const argument = S.decodeEffect(ResolvedPackage);
+      const value1 = yield* S.encodeEffect(ResolvedPackage)(value);
+      const decoded = yield* argument(value1);
       assert.isTrue(S.toEquivalence(ResolvedPackage)(decoded, value));
     }),
   { arbitrary: fcRuns(50) }

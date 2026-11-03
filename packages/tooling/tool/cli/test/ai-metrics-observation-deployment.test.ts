@@ -68,7 +68,8 @@ it.layer(testServices, { timeout: "30 seconds", concurrent: false })("Observatio
     Effect.fnUntraced(function* ([plan]) {
       const encoded = yield* encodeObservationDeploymentPlanJson(plan);
       const decoded = yield* decodeObservationDeploymentPlanJson(encoded);
-      expect(yield* encodeObservationDeploymentPlanJson(decoded)).toBe(encoded);
+      const encodedObservationDeploymentPlanJson = yield* encodeObservationDeploymentPlanJson(decoded);
+      expect(encodedObservationDeploymentPlanJson).toBe(encoded);
     })
   );
 
@@ -77,7 +78,8 @@ it.layer(testServices, { timeout: "30 seconds", concurrent: false })("Observatio
       const fs = yield* FileSystem.FileSystem;
       const root = yield* directory;
       const request = `${root}/request.json`;
-      yield* fs.writeFileString(request, yield* encodeJsonValue(input));
+      const encodedJsonValue = yield* encodeJsonValue(input);
+      yield* fs.writeFileString(request, encodedJsonValue);
       yield* run(["install", "observation-plan", "--input", request]);
       const lines = yield* TestConsole.logLines;
       const text = A.join(A.filter(lines, S.is(S.String)), "\n");
@@ -117,7 +119,8 @@ it.layer(testServices, { timeout: "30 seconds", concurrent: false })("Observatio
           },
         },
       });
-      expect(yield* fs.readDirectory(root)).toEqual(["request.json"]);
+      const readDirectory1 = yield* fs.readDirectory(root);
+      expect(readDirectory1).toEqual(["request.json"]);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -135,12 +138,11 @@ it.layer(testServices, { timeout: "30 seconds", concurrent: false })("Observatio
         expect(plan.intakeUnit).toContain("LimitFSIZE=2097152");
       }
       for (const pages of [255, 8193]) {
-        expect(
-          yield* S.decodeUnknownEffect(ObservationDeploymentRequest)({
-            ...input,
-            journalMaxDatabasePages: pages,
-          }).pipe(Effect.isFailure)
-        ).toBe(true);
+        const pipe2 = yield* S.decodeUnknownEffect(ObservationDeploymentRequest)({
+          ...input,
+          journalMaxDatabasePages: pages,
+        }).pipe(Effect.isFailure);
+        expect(pipe2).toBe(true);
       }
     })
   );
@@ -158,9 +160,10 @@ it.layer(testServices, { timeout: "30 seconds", concurrent: false })("Observatio
         { runtimeMaxSeconds: 3601 },
         { intakePort: 80 },
       ]) {
-        expect(
-          yield* S.decodeUnknownEffect(ObservationDeploymentRequest)({ ...input, ...changes }).pipe(Effect.isFailure)
-        ).toBe(true);
+        const pipe3 = yield* S.decodeUnknownEffect(ObservationDeploymentRequest)({ ...input, ...changes }).pipe(
+          Effect.isFailure
+        );
+        expect(pipe3).toBe(true);
       }
       for (const changes of [
         { artifactDirectory: input.stateDirectory },
@@ -170,7 +173,8 @@ it.layer(testServices, { timeout: "30 seconds", concurrent: false })("Observatio
         { bunPath: "relative/bun" },
       ]) {
         const request = yield* S.decodeUnknownEffect(ObservationDeploymentRequest)({ ...input, ...changes });
-        expect(yield* renderObservationDeployment(request).pipe(Effect.isFailure)).toBe(true);
+        const pipe4 = yield* renderObservationDeployment(request).pipe(Effect.isFailure);
+        expect(pipe4).toBe(true);
       }
     })
   );
@@ -180,11 +184,11 @@ it.layer(testServices, { timeout: "30 seconds", concurrent: false })("Observatio
       const fs = yield* FileSystem.FileSystem;
       const root = yield* directory;
       const request = `${root}/request.json`;
-      const bodies = [
-        new TextEncoder().encode(Str.repeat(17000)("PRIVATE")),
-        new Uint8Array([255]),
-        new TextEncoder().encode(yield* encodeJsonValue({ ...input, credential: "PRIVATE" })),
-      ];
+      const argument = new TextEncoder().encode(Str.repeat(17000)("PRIVATE"));
+      const argument1 = new Uint8Array([255]);
+      const argument2 = new TextEncoder();
+      const encodedJsonValue1 = yield* encodeJsonValue({ ...input, credential: "PRIVATE" });
+      const bodies = [argument, argument1, argument2.encode(encodedJsonValue1)];
       for (const body of bodies) {
         yield* fs.writeFile(request, body);
         const result = yield* run(["install", "observation-plan", "--input", request]).pipe(

@@ -114,7 +114,8 @@ const WriteTestHttpLayer = Layer.effect(
     return WriteTestHttp.of({
       captures: Ref.get(capturesRef),
       handle: Effect.fn("WriteTestHttp.handle")(function* (request) {
-        const index = A.length(yield* Ref.get(capturesRef));
+        const got = yield* Ref.get(capturesRef);
+        const index = A.length(got);
         yield* Ref.update(
           capturesRef,
           A.append({
@@ -332,7 +333,8 @@ describe("@beep/m365 app-only lane and write verbs", () => {
             "request encoding"
           );
         }
-        expect(yield* testHttp.captures).toHaveLength(0);
+        const captures1 = yield* testHttp.captures;
+        expect(captures1).toHaveLength(0);
       })
     );
   });
@@ -366,7 +368,8 @@ describe("@beep/m365 app-only lane and write verbs", () => {
           O.map(failure, (error) => error.reason),
           "ambiguous write"
         );
-        expect(yield* testHttp.captures).toHaveLength(1);
+        const captures2 = yield* testHttp.captures;
+        expect(captures2).toHaveLength(1);
       })
     );
   });
@@ -389,7 +392,8 @@ describe("@beep/m365 app-only lane and write verbs", () => {
           O.flatMap(failure, (error) => error.status),
           503
         );
-        expect(yield* testHttp.captures).toHaveLength(1);
+        const captures3 = yield* testHttp.captures;
+        expect(captures3).toHaveLength(1);
       })
     );
   });
@@ -407,7 +411,8 @@ describe("@beep/m365 app-only lane and write verbs", () => {
         const event = yield* m365.createEvent(createRequest);
 
         expect(event.id).toBe("event-id");
-        expect(yield* testHttp.captures).toHaveLength(2);
+        const captures4 = yield* testHttp.captures;
+        expect(captures4).toHaveLength(2);
       })
     );
   });
@@ -768,7 +773,8 @@ describe("@beep/m365 app-only lane and write verbs", () => {
 
         expect(event.id).toBe("event-id");
         assertNone(event.seriesMasterId);
-        expect(yield* encodeGraphEvent(event)).not.toHaveProperty("seriesMasterId");
+        const encodedGraphEvent = yield* encodeGraphEvent(event);
+        expect(encodedGraphEvent).not.toHaveProperty("seriesMasterId");
       })
     );
   });

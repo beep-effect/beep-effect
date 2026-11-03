@@ -1051,7 +1051,8 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
       }),
 
       resolveFiles: Effect.fn("WorkspaceDiscovery.resolveFiles")(function* (filePaths: ReadonlyArray<string>) {
-        const index = owners(yield* packages);
+        const packages1 = yield* packages;
+        const index = owners(packages1);
         return ownersOf(filePaths, (filePath) => ownerOf(filePath, index));
       }),
 

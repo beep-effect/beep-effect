@@ -151,7 +151,8 @@ export const makeCitationTokenObjects = Effect.fn("Citation.makeTokenObjects")(f
     return yield* create({ ...seed, start: seed.start + offset, end: seed.end + offset });
   });
   const snapshot = Effect.fn("Citation.snapshotToken")(function* (id: number) {
-    return copySeed(yield* lookup(id));
+    const citationResult1 = yield* lookup(id);
+    return copySeed(citationResult1);
   });
   const read = Effect.fn("Citation.tokenAssemblyView")(function* (id: number) {
     const row = yield* lookup(id);

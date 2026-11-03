@@ -26,16 +26,20 @@ describe("discovery double behavior", () => {
         workspaceRoot: "/repo",
       });
       const double = WorkspaceDiscovery.makeTest({ listPackages: Effect.succeed([child, root]) });
-      assertSome(yield* double.resolveFile("/repo/child/x"), child);
-      assertSome(yield* double.resolveFile("/repo/x"), root);
-      assertNone(yield* double.resolveFile("/outside/x"));
-      assert.deepStrictEqual(yield* double.resolveFiles(["/repo/x", "/repo/child/x", "/outside/x", "/repo/child/y"]), [
-        child,
-        root,
-      ]);
-      assertSome(HashMap.get(yield* double.importerMap, "child"), child);
-      assert.strictEqual(yield* double.refresh, undefined);
-      assert.strictEqual(yield* double.refreshIn("/repo"), undefined);
+      const resolvedFile = yield* double.resolveFile("/repo/child/x");
+      assertSome(resolvedFile, child);
+      const resolvedFile1 = yield* double.resolveFile("/repo/x");
+      assertSome(resolvedFile1, root);
+      const resolvedFile2 = yield* double.resolveFile("/outside/x");
+      assertNone(resolvedFile2);
+      const resolvedFiles = yield* double.resolveFiles(["/repo/x", "/repo/child/x", "/outside/x", "/repo/child/y"]);
+      assert.deepStrictEqual(resolvedFiles, [child, root]);
+      const importerMap3 = yield* double.importerMap;
+      assertSome(HashMap.get(importerMap3, "child"), child);
+      const refresh4 = yield* double.refresh;
+      assert.strictEqual(refresh4, undefined);
+      const refreshIn5 = yield* double.refreshIn("/repo");
+      assert.strictEqual(refreshIn5, undefined);
     })
   );
 });
@@ -142,11 +146,15 @@ it.layer(
       const child = yield* discovery.getPackage("a");
       assert.strictEqual(root.publishConfig?.access, "public");
       assert.deepStrictEqual(root.optionalDependencies, { optional: "1.0.0" });
-      assertSome(yield* discovery.resolveFile("/package.json"), root);
-      assert.deepStrictEqual(
-        yield* discovery.resolveFiles(["/package.json", "/packages/a/x", "/packages/a/y", "unowned"]),
-        [child, root]
-      );
+      const resolvedFile6 = yield* discovery.resolveFile("/package.json");
+      assertSome(resolvedFile6, root);
+      const resolvedFiles7 = yield* discovery.resolveFiles([
+        "/package.json",
+        "/packages/a/x",
+        "/packages/a/y",
+        "unowned",
+      ]);
+      assert.deepStrictEqual(resolvedFiles7, [child, root]);
     })
   );
   it.effect("concurrent per-root discovery deduplicates cache construction and invalidates failures", () =>
@@ -160,8 +168,9 @@ it.layer(
         for (const list of lists) assert.strictEqual(list, lists[0]);
       }
       yield* discovery.refreshIn("/");
+      const listPackagesIn8 = yield* discovery.listPackagesIn("/");
       assert.deepStrictEqual(
-        A.map(yield* discovery.listPackagesIn("/"), (pkg) => pkg.name),
+        A.map(listPackagesIn8, (pkg) => pkg.name),
         ["z", "a"]
       );
     })
@@ -183,8 +192,9 @@ it.layer(
       const error = yield* Effect.flip(discovery.listPackagesIn("/repo"));
       assert.strictEqual(error._tag, "WorkspaceDiscoveryError");
       yield* fs.writeFileString("/repo/package.json", '{"name":"fixed","workspaces":[]}');
+      const listPackagesIn9 = yield* discovery.listPackagesIn("/repo");
       assert.deepStrictEqual(
-        A.map(yield* discovery.listPackagesIn("/repo"), (pkg) => pkg.name),
+        A.map(listPackagesIn9, (pkg) => pkg.name),
         ["fixed"]
       );
     })

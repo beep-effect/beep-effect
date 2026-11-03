@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { CitationHtmlKernelFailure } from "@beep/law-practice-server/internal/Citation/HtmlKernel";
 import {
   CitationHtmlWorkerError,
@@ -48,8 +48,9 @@ it.layer(BunFileSystem.layer)("HTML worker protocol", (it) => {
     "charges exact JSON bytes and round-trips every frozen input string",
     () =>
       Effect.gen(function* () {
-        const raw = yield* (yield* FileSystem.FileSystem).readFileString(
-          fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/html-input.json", import.meta.url))
+        const citationResult1 = yield* FileSystem.FileSystem;
+        const raw = yield* citationResult1.readFileString(
+          NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/html-input.json", import.meta.url))
         );
         const corpus = yield* S.decodeEffect(CorpusJson)(raw);
         expect(corpus.artifacts).toHaveLength(1071);
@@ -58,14 +59,17 @@ it.layer(BunFileSystem.layer)("HTML worker protocol", (it) => {
           const bytes = yield* encodeCitationHtmlReply(reply, 32_000_000);
           const restored = yield* decodeCitationHtmlReply(bytes.slice(0, -1));
           expect(restored._tag).toBe("Success");
-          if (restored._tag === "Success") expect(restored.text).toBe(row.value);
+          if (restored._tag === "Success") {
+            expect(restored.text).toBe(row.value);
+          }
           const exact = yield* encodeCitationHtmlReply(reply, bytes.byteLength);
           expect(exact).toEqual(bytes);
           const failed = yield* Effect.flip(encodeCitationHtmlReply(reply, bytes.byteLength - 1));
           expect(failed._tag).toBe("CitationSafetyLimitExceeded");
           const body = yield* S.encodeEffect(StringJson)(row.value);
           const bodyBytes = utf8.encode(body).byteLength - 2;
-          expect(yield* citationHtmlJsonBodyBytes(row.value, bodyBytes)).toBe(bodyBytes);
+          const citationResult2 = yield* citationHtmlJsonBodyBytes(row.value, bodyBytes);
+          expect(citationResult2).toBe(bodyBytes);
         }
       }),
     { timeout: 30_000 }
@@ -76,15 +80,16 @@ it.layer(BunFileSystem.layer)("HTML worker protocol", (it) => {
         const bytes = Uint8Array.from(A.makeBy(length || 1, (i) => i)).slice(0, length);
         const job = CitationHtmlWorkerJob.make({ encoding: "UTF-8", bytes, fullHtml: false, outputUtf16: 99 });
         const frame = yield* encodeCitationHtmlJob(job, 1024);
-        expect(yield* encodeCitationHtmlJob(job, frame.byteLength)).toEqual(frame);
-        expect((yield* Effect.flip(encodeCitationHtmlJob(job, frame.byteLength - 1)))._tag).toBe(
-          "CitationSafetyLimitExceeded"
-        );
+        const citationResult3 = yield* encodeCitationHtmlJob(job, frame.byteLength);
+        expect(citationResult3).toEqual(frame);
+        const citationResult4 = yield* Effect.flip(encodeCitationHtmlJob(job, frame.byteLength - 1));
+        expect(citationResult4._tag).toBe("CitationSafetyLimitExceeded");
         const restored = yield* decodeCitationHtmlJob(frame.slice(0, -1));
         expect(restored.bytes).toEqual(bytes);
         expect(restored.outputUtf16).toBe(99);
       }
-      expect((yield* Effect.flip(preflightCitationHtmlControlFrames(1)))._tag).toBe("CitationSafetyLimitExceeded");
+      const citationResult5 = yield* Effect.flip(preflightCitationHtmlControlFrames(1));
+      expect(citationResult5._tag).toBe("CitationSafetyLimitExceeded");
       yield* preflightCitationHtmlControlFrames(1024);
     })
   );
@@ -106,20 +111,25 @@ it.layer(BunFileSystem.layer)("HTML worker protocol", (it) => {
         let replies: ReadonlyArray<CitationHtmlWorkerReply> = [];
         yield* readCitationHtmlFrames(Stream.fromIterable(chunks), 4096, 3, (frame) =>
           Effect.gen(function* () {
-            replies = A.append(replies, yield* decodeCitationHtmlReply(frame));
+            const citationResult6 = yield* decodeCitationHtmlReply(frame);
+            replies = A.append(replies, citationResult6);
           })
         );
         return replies;
       });
-      for (let index = 0; index <= joined.byteLength; index++)
-        expect(yield* collect([joined.slice(0, index), joined.slice(index)])).toEqual(messages);
-      expect(yield* collect(A.map(A.fromIterable(joined), (byte) => new Uint8Array([byte])))).toEqual(messages);
-      expect((yield* Effect.flip(collect([joined.slice(0, -1)])))._tag).toBe("CitationHtmlWorkerFailure");
-      expect((yield* Effect.flip(collect([joined, utf8.encode("extra")])))._tag).toBe("CitationHtmlWorkerFailure");
+      for (let index = 0; index <= joined.byteLength; index++) {
+        const citationResult12 = yield* collect([joined.slice(0, index), joined.slice(index)]);
+        expect(citationResult12).toEqual(messages);
+      }
+      const citationResult7 = yield* collect(A.map(A.fromIterable(joined), (byte) => new Uint8Array([byte])));
+      expect(citationResult7).toEqual(messages);
+      const citationResult8 = yield* Effect.flip(collect([joined.slice(0, -1)]));
+      expect(citationResult8._tag).toBe("CitationHtmlWorkerFailure");
+      const citationResult9 = yield* Effect.flip(collect([joined, utf8.encode("extra")]));
+      expect(citationResult9._tag).toBe("CitationHtmlWorkerFailure");
       const big = new Uint8Array(10_000).fill(65);
-      expect((yield* Effect.flip(readCitationHtmlFrames(Stream.make(big), 99, 1, () => Effect.void)))._tag).toBe(
-        "CitationSafetyLimitExceeded"
-      );
+      const citationResult10 = yield* Effect.flip(readCitationHtmlFrames(Stream.make(big), 99, 1, () => Effect.void));
+      expect(citationResult10._tag).toBe("CitationSafetyLimitExceeded");
     })
   );
   it.effect("rejects excess fields, arrays, nesting and malformed UTF-8 without source-bearing errors", () =>
@@ -141,7 +151,8 @@ it.layer(BunFileSystem.layer)("HTML worker protocol", (it) => {
       const failure = CitationHtmlWorkerError.make({
         failure: CitationSafetyLimitExceeded.make({ operation: "clean", limit: "nativeHtmlParserResource" }),
       });
-      const restored = yield* decodeCitationHtmlReply((yield* encodeCitationHtmlReply(failure, 4096)).slice(0, -1));
+      const citationResult11 = yield* encodeCitationHtmlReply(failure, 4096);
+      const restored = yield* decodeCitationHtmlReply(citationResult11.slice(0, -1));
       expect(restored._tag).toBe("Failure");
     })
   );

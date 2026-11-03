@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   Citation,
@@ -134,13 +134,12 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback mutatio
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const raw = yield* fs.readFileString(
-        fileURLToPath(
+        NodeURL.fileURLToPath(
           new URL("../../use-cases/test/fixtures/eyecite/callback-mutation-observations.json", import.meta.url)
         )
       );
-      expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-        "26e81eae9bfcd03ef2370be5d22f7241d96eea18591df602cced8dbc12540a63"
-      );
+      const citationResult1 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+      expect(citationResult1).toBe("26e81eae9bfcd03ef2370be5d22f7241d96eea18591df602cced8dbc12540a63");
       const data = yield* S.decodeEffect(CorpusJson)(raw);
       expect(A.length(data.cases)).toBe(16);
       expect(A.reduce(data.cases, 0, (count, row) => count + A.length(row.kinds))).toBe(38);
@@ -269,12 +268,14 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback mutatio
             );
             const fulls = action === "append-detached-full" ? A.append(arg.fulls, pair) : [pair];
             yield* dictionary.writeFulls(fulls);
-            const output = yield* defaults.supra({ ...arg, fulls: yield* dictionary.readFulls });
+            const citationResult2 = yield* dictionary.readFulls;
+            const output = yield* defaults.supra({ ...arg, fulls: citationResult2 });
+            const citationResult3 = yield* dictionary.readFulls;
             events = A.append(events, {
               slot: "supra",
               mention: { kind: "input", index: indexOf(arg.mention.id) },
               before,
-              after: A.map(yield* dictionary.readFulls, (entry) => ({
+              after: A.map(citationResult3, (entry) => ({
                 citation: memberView(entry.citation),
                 resource: presentation(entry.resource),
               })),
@@ -317,14 +318,16 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback mutatio
               ),
               Match.when("copy-to-second", () =>
                 Effect.gen(function* () {
-                  yield* dictionary.set(otherResource, yield* dictionary.allocate([first]));
+                  const citationResult4 = yield* dictionary.allocate([first]);
+                  yield* dictionary.set(otherResource, citationResult4);
                   result = baseResource;
                 })
               ),
               Match.when("falsy-key", () => dictionary.get(zeroResource).pipe(Effect.asVoid)),
               Match.when("none-key", () =>
                 Effect.gen(function* () {
-                  yield* dictionary.set(none(), yield* dictionary.allocate([first]));
+                  const citationResult5 = yield* dictionary.allocate([first]);
+                  yield* dictionary.set(none(), citationResult5);
                 })
               ),
               Match.when("insert-current", () =>
@@ -339,7 +342,8 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback mutatio
               Match.when("read-missing-default", () =>
                 Effect.gen(function* () {
                   yield* dictionary.get(unusedResource);
-                  result = (yield* defaults.id({ ...arg, groups: yield* dictionary.read })).resource;
+                  const citationResult6 = yield* dictionary.read;
+                  result = (yield* defaults.id({ ...arg, groups: citationResult6 })).resource;
                 })
               ),
               Match.when("alias-member-lists", () =>
@@ -366,19 +370,21 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback mutatio
               Match.when("detached-member", () =>
                 Effect.gen(function* () {
                   const reference = yield* registerDetached();
-                  yield* dictionary.set(otherResource, yield* dictionary.allocate([reference]));
+                  const citationResult7 = yield* dictionary.allocate([reference]);
+                  yield* dictionary.set(otherResource, citationResult7);
                 })
               ),
               Match.exhaustive
             );
             yield* apply(action);
+            const citationResult8 = yield* dictionary.read;
             const common = {
               slot: "id",
               mention: { kind: "input", index: indexOf(arg.mention.id) },
               last: presentation(arg.last),
               dictionarySlot: dictionarySlot(dictionary),
               before,
-              after: groupView(yield* dictionary.read),
+              after: groupView(citationResult8),
             };
             if (action === "dictionary-identity" || action === "retained-dictionary-full") {
               events = A.append(events, {
@@ -423,7 +429,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback mutatio
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const raw = yield* fs.readFileString(
-          fileURLToPath(
+          NodeURL.fileURLToPath(
             new URL("../../use-cases/test/fixtures/eyecite/callback-mutation-observations.json", import.meta.url)
           )
         );
@@ -510,7 +516,8 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback mutatio
             resourceBindings: A.map(nodes, (node) => node.binding),
           });
           const codec = S.fromJsonString(CitationDocumentReceipt);
-          const restored = yield* S.decodeEffect(codec)(yield* S.encodeEffect(codec)(receipt));
+          const citationResult9 = yield* S.encodeEffect(codec)(receipt);
+          const restored = yield* S.decodeEffect(codec)(citationResult9);
           expect(restored.groups, row.name).toEqual(document.groups);
           expect(restored.memberLists, row.name).toEqual(document.memberLists);
           expect(restored.detachedCitations, row.name).toEqual(detachedCitations);

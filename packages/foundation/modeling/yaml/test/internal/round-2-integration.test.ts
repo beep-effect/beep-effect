@@ -69,7 +69,8 @@ describe("round 2 integration seams", () => {
 
   it.effect("CRLF flow continuation is indented under its block parent", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* Yaml.parse("a: [\r\n  b,\r\n  c]\r\n"), { a: ["b", "c"] });
+      const parsed = yield* Yaml.parse("a: [\r\n  b,\r\n  c]\r\n");
+      assert.deepStrictEqual(parsed, { a: ["b", "c"] });
     })
   );
 

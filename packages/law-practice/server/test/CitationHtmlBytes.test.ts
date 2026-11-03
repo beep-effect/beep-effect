@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { makeCitationHtmlInput } from "@beep/law-practice-server/internal/Citation/HtmlInput";
 import { makeCitationHtmlKernel } from "@beep/law-practice-server/internal/Citation/HtmlKernel";
 import { makeCitationHtmlWorker } from "@beep/law-practice-server/internal/Citation/HtmlWorker";
@@ -51,24 +51,23 @@ const CorpusJson = S.fromJsonString(
 const load = Effect.fn("HtmlBytesTest.load")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const raw = yield* fs.readFileString(
-    fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/html-bytes.json", import.meta.url))
+    NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/html-bytes.json", import.meta.url))
   );
-  expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-    "179fc43e44d8d6048b0d4eea38a8a8667d505ce60ee23ded6aa43138cd265201"
-  );
+  const citationResult1 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+  expect(citationResult1).toBe("179fc43e44d8d6048b0d4eea38a8a8667d505ce60ee23ded6aa43138cd265201");
   const data = yield* S.decodeEffect(CorpusJson)(raw);
   expect(data.cases).toHaveLength(589);
   expect(data.artifacts).toHaveLength(488);
   expect(data.nonTextCases).toHaveLength(45);
   expect(A.filter(data.nonTextCases, (r) => r.outcome.kind === "success")).toHaveLength(6);
   expect(A.every(data.nonTextCases, (r) => r.hooks.length === 0)).toBe(true);
-  expect(
-    yield* S.decodeEffect(Sha256HexFromBytes)(
-      yield* fs.readFile(
-        fileURLToPath(new URL("../../../../goals/citation-extraction-engine/ops/probe-html-bytes.py", import.meta.url))
-      )
+  const citationResult2 = yield* fs.readFile(
+    NodeURL.fileURLToPath(
+      new URL("../../../../goals/citation-extraction-engine/ops/probe-html-bytes.py", import.meta.url)
     )
-  ).toBe(data.producerSha256);
+  );
+  const citationResult3 = yield* S.decodeEffect(Sha256HexFromBytes)(citationResult2);
+  expect(citationResult3).toBe(data.producerSha256);
   return { data, strings: HashMap.fromIterable(A.map(data.artifacts, (r) => [r.sha256, r.value] as const)) };
 });
 const verify = Effect.fn("HtmlBytesTest.verify")(function* (
@@ -77,20 +76,23 @@ const verify = Effect.fn("HtmlBytesTest.verify")(function* (
   strings: HashMap.HashMap<string, string>
 ) {
   if (A.some(row.diagnostics, (d) => d.resourceLimit)) {
-    expect(yield* Effect.flip(run), row.name).toMatchObject({
+    const citationResult4 = yield* Effect.flip(run);
+    expect(citationResult4, row.name).toMatchObject({
       _tag: "CitationSafetyLimitExceeded",
       limit: "nativeHtmlParserResource",
     });
     return "resource";
   }
   if (row.outcome.kind === "success") {
-    expect(
-      yield* run.pipe(Effect.tapError(() => Effect.logError(`Unexpected byte failure: ${row.name}`))),
-      row.name
-    ).toBe(yield* Effect.fromOption(HashMap.get(strings, row.outcome.text)));
+    const citationResult5 = yield* run.pipe(
+      Effect.tapError(() => Effect.logError(`Unexpected byte failure: ${row.name}`))
+    );
+    const citationResult6 = yield* Effect.fromOption(HashMap.get(strings, row.outcome.text));
+    expect(citationResult5, row.name).toBe(citationResult6);
     return "success";
   }
-  expect(yield* Effect.flip(run), row.name).toMatchObject({
+  const citationResult7 = yield* Effect.flip(run);
+  expect(citationResult7, row.name).toMatchObject({
     _tag: "CitationHtmlKernelFailure",
     reason: row.outcome.type === "builtins.UnicodeDecodeError" ? "unicode-decode-error" : "parse-error",
   });
@@ -107,9 +109,10 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
           const limits = (yield* defaultCitationEnginePolicy).limits;
           const prep = yield* makeCitationHtmlInput(limits);
           const fs = yield* FileSystem.FileSystem;
-          const kernel = yield* makeCitationHtmlKernel(
-            yield* fs.readFile(fileURLToPath(new URL("../assets/citation-html/kernel.wasm", import.meta.url)))
+          const citationResult8 = yield* fs.readFile(
+            NodeURL.fileURLToPath(new URL("../assets/citation-html/kernel.wasm", import.meta.url))
           );
+          const kernel = yield* makeCitationHtmlKernel(citationResult8);
           for (const row of data.cases) {
             const bytes = yield* S.decodeEffect(S.Uint8ArrayFromHex)(row.hex);
             const input = yield* prep.prepareBytes(bytes, () => Effect.void);
@@ -131,13 +134,16 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
           const real = yield* ChildProcessSpawner;
           let spawned = 0;
           let exits = 0;
+          const citationResult9 = yield* fs.makeTempDirectoryScoped({ prefix: "citation-html-bytes-" });
           const worker = yield* makeCitationHtmlWorker(
             { ...limits, concurrentOperations: 2 },
             {
               kind: "bun",
               executable: process.execPath,
-              cwd: yield* fs.makeTempDirectoryScoped({ prefix: "citation-html-bytes-" }),
-              workerFile: fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
+              cwd: citationResult9,
+              workerFile: NodeURL.fileURLToPath(
+                new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)
+              ),
             }
           ).pipe(
             Effect.provideService(ChildProcessSpawner, {
@@ -180,7 +186,8 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
           expect(A.filter(results, (r) => r === "lxml.etree.ParserError")).toHaveLength(4);
           expect(spawned).toBe(589);
           expect(exits).toBe(589);
-          expect(yield* worker.snapshot).toMatchObject({ active: 0, queued: 0, processes: 0, quarantined: 0 });
+          const citationResult10 = yield* worker.snapshot;
+          expect(citationResult10).toMatchObject({ active: 0, queued: 0, processes: 0, quarantined: 0 });
         }),
       { timeout: 600_000 }
     );

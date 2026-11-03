@@ -290,7 +290,8 @@ export const downloadCacheProducerPrivateObservation = Effect.fn("CacheObject.do
     cacheProducerObservationMaxBytes - 1
   );
   if ((yield* digest(bytes)) !== selected.report.observationSha256) return yield* objectFailure("payload-rejected");
-  const [observation, canonical] = yield* snapshotObservation(yield* decodeObservation(bytes));
+  const decodedObservation = yield* decodeObservation(bytes);
+  const [observation, canonical] = yield* snapshotObservation(decodedObservation);
   if ((yield* digest(canonical)) !== selected.report.observationSha256) return yield* objectFailure("payload-rejected");
   yield* verifier.verify(observation.envelope, observation.observation);
   yield* verifyCacheHostedProducerObservation(selected.approval, selected.reference, selected.archive, observation);

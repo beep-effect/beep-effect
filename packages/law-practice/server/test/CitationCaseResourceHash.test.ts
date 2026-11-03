@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { CitationComponents, FullCaseCitation } from "@beep/law-practice-domain/values";
 import {
   CitationCaseResourceHash,
@@ -40,11 +40,10 @@ const CasesJson = S.fromJsonString(Cases);
 const inputs = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const raw = yield* fs.readFileString(
-    fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/case-resource-hashes.json", import.meta.url))
+    NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/case-resource-hashes.json", import.meta.url))
   );
-  expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-    "b468cd539a9adc728c719ab01c941789d8cae2878c1bcb014e56999b7af462c4"
-  );
+  const citationResult1 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+  expect(citationResult1).toBe("b468cd539a9adc728c719ab01c941789d8cae2878c1bcb014e56999b7af462c4");
   return yield* S.decodeEffect(CasesJson)(raw);
 });
 
@@ -55,9 +54,11 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("exact source case r
       expect(A.length(rows)).toBe(24);
       for (const row of rows) {
         if ("error" in row.expected) {
-          expect((yield* Effect.flip(makeCitationCaseResourceHash(row.input))).reason).toBe(row.expected.error);
+          const citationResult2 = yield* Effect.flip(makeCitationCaseResourceHash(row.input));
+          expect(citationResult2.reason).toBe(row.expected.error);
         } else {
-          expect(yield* makeCitationCaseResourceHash(row.input)).toEqual(row.expected);
+          const citationResult3 = yield* makeCitationCaseResourceHash(row.input);
+          expect(citationResult3).toEqual(row.expected);
         }
       }
     })
@@ -67,37 +68,42 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("exact source case r
     Effect.gen(function* () {
       const rows = (yield* inputs).cases;
       const row = A.getUnsafe(rows, 18).input;
-      expect(
-        (yield* Effect.flip(makeCitationCaseResourceHash({ ...row, missingPageIdentityHash: O.none() }))).reason
-      ).toBe("identity-unavailable");
+      const citationResult4 = yield* Effect.flip(
+        makeCitationCaseResourceHash({ ...row, missingPageIdentityHash: O.none() })
+      );
+      expect(citationResult4.reason).toBe("identity-unavailable");
       const baseline = A.getUnsafe(rows, 0).input;
       const components = yield* S.encodeEffect(CitationComponents)(baseline.citation.components);
       const mutable = { ...baseline };
       const one = yield* makeCitationCaseResourceHash(mutable);
+      const citationResult5 = yield* S.decodeEffect(CitationComponents)({ ...components, page: "2" });
       mutable.citation = FullCaseCitation.make({
         ...baseline.citation,
-        components: yield* S.decodeEffect(CitationComponents)({ ...components, page: "2" }),
+        components: citationResult5,
       });
       const two = yield* makeCitationCaseResourceHash(mutable);
       expect(two).toEqual(A.getUnsafe(rows, 1).expected);
       expect(one.resourceHash).not.toBe(two.resourceHash);
-      expect(yield* makeCitationCaseResourceHash(A.getUnsafe(rows, 0).input)).toEqual(one);
+      const citationResult6 = yield* makeCitationCaseResourceHash(A.getUnsafe(rows, 0).input);
+      expect(citationResult6).toEqual(one);
     })
   );
 
   it.effect("rejects missing selected-edition lookup on known pages", () =>
     Effect.gen(function* () {
-      const row = A.getUnsafe((yield* inputs).cases, 14).input;
-      expect((yield* Effect.flip(makeCitationCaseResourceHash({ ...row, selectedEdition: O.none() }))).reason).toBe(
-        "missing-edition"
-      );
-      expect((yield* Effect.flip(makeCitationCaseResourceHash({}))).reason).toBe("invalid-input");
+      const citationResult7 = yield* inputs;
+      const row = A.getUnsafe(citationResult7.cases, 14).input;
+      const citationResult8 = yield* Effect.flip(makeCitationCaseResourceHash({ ...row, selectedEdition: O.none() }));
+      expect(citationResult8.reason).toBe("missing-edition");
+      const citationResult9 = yield* Effect.flip(makeCitationCaseResourceHash({}));
+      expect(citationResult9.reason).toBe("invalid-input");
     })
   );
 
   it.effect("redacts digest service errors", () =>
     Effect.gen(function* () {
-      const row = A.getUnsafe((yield* inputs).cases, 0).input;
+      const citationResult10 = yield* inputs;
+      const row = A.getUnsafe(citationResult10.cases, 0).input;
       const result = yield* Effect.flip(
         makeCitationCaseResourceHash(row).pipe(
           Effect.provideService(

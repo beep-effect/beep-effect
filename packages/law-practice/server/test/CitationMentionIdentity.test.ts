@@ -85,7 +85,8 @@ it.layer(BunCrypto.layer)("citation occurrence identity production", (it) => {
       const reverse = yield* Effect.forEach(A.reverse(inputs), makeCitationMentionId);
       expect(reverse).toEqual(A.reverse(forward));
       expect(A.dedupe(forward).length).toBe(2);
-      expect(yield* Effect.forEach(inputs, makeCitationMentionId)).toEqual(forward);
+      const citationResult1 = yield* Effect.forEach(inputs, makeCitationMentionId);
+      expect(citationResult1).toEqual(forward);
     })
   );
 
@@ -147,9 +148,13 @@ it.layer(BunCrypto.layer)("citation occurrence identity production", (it) => {
       const reverified = yield* verifyTextAnchor(
         VerifyTextAnchorInput.make({ ...restored, expectedSource: source, sourceText })
       );
-      expect(yield* makeCitationMentionId({ anchor: reverified, engineArtifact: artifact, semanticKind: "case" })).toBe(
-        yield* makeCitationMentionId({ anchor, engineArtifact: artifact, semanticKind: "case" })
-      );
+      const citationResult2 = yield* makeCitationMentionId({
+        anchor: reverified,
+        engineArtifact: artifact,
+        semanticKind: "case",
+      });
+      const citationResult3 = yield* makeCitationMentionId({ anchor, engineArtifact: artifact, semanticKind: "case" });
+      expect(citationResult2).toBe(citationResult3);
     })
   );
 
@@ -177,7 +182,8 @@ it.layer(BunCrypto.layer)("citation occurrence identity production", (it) => {
       );
       const inFlight = yield* makeCitationMentionId(input).pipe(Effect.provideService(Digest.Digest, mutatingCrypto));
       expect(inFlight).toBe(baseline);
-      expect(yield* makeCitationMentionId(input)).not.toBe(baseline);
+      const citationResult4 = yield* makeCitationMentionId(input);
+      expect(citationResult4).not.toBe(baseline);
     })
   );
 

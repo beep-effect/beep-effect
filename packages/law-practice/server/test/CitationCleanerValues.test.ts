@@ -55,20 +55,21 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("scoped cleaner valu
             new URL("../../use-cases/test/fixtures/eyecite/cleaner-identities.json", import.meta.url)
           )
         );
-        expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-          "cbfc90b78127f947c0f227392cd4af9a51f993271742f950c9802c31522b1eb6"
-        );
+        const citationResult1 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+        expect(citationResult1).toBe("cbfc90b78127f947c0f227392cd4af9a51f993271742f950c9802c31522b1eb6");
         const data = yield* S.decodeEffect(CorpusJson)(raw);
         expect(data.cases).toHaveLength(340);
         expect(data.artifacts).toHaveLength(40);
         const strings = HashMap.fromIterable(A.map(data.artifacts, (row) => [row.sha256, row.value] as const));
-        const values = yield* makeCitationCleanerValues((yield* defaultCitationEnginePolicy).limits);
+        const citationResult2 = yield* defaultCitationEnginePolicy;
+        const values = yield* makeCitationCleanerValues(citationResult2.limits);
         const limits = (yield* defaultCitationEnginePolicy).limits;
         const literal = yield* makeCitationLiteralCleaners(limits);
         const preparation = yield* makeCitationHtmlInput(limits);
-        const kernel = yield* makeCitationHtmlKernel(
-          yield* fs.readFile(NodeURL.fileURLToPath(new URL("../assets/citation-html/kernel.wasm", import.meta.url)))
+        const citationResult3 = yield* fs.readFile(
+          NodeURL.fileURLToPath(new URL("../assets/citation-html/kernel.wasm", import.meta.url))
         );
+        const kernel = yield* makeCitationHtmlKernel(citationResult3);
         const empty = yield* values.text("");
         const space = yield* values.materialize(empty, { text: " ", allocation: "space" });
         let coercions = 0;
@@ -109,7 +110,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("scoped cleaner valu
           const otherInput = yield* row.subtype === "marked" ? values.subclass(text, poison) : values.text(text);
           expect(row.hooks).toEqual([]);
           if (row.outcome.kind === "error") {
-            expect(yield* Effect.flip(apply(row, firstInput)), row.name).toMatchObject({
+            const citationResult4 = yield* Effect.flip(apply(row, firstInput));
+            expect(citationResult4, row.name).toMatchObject({
               _tag: "CitationHtmlKernelFailure",
               reason: "parse-error",
             });
@@ -120,16 +122,23 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("scoped cleaner valu
           const repeated = yield* apply(row, firstInput);
           const independent = yield* apply(row, otherInput);
           const descriptor = yield* values.getText(first).pipe(Effect.flatMap(Effect.fromOption));
-          expect(descriptor.text, row.name).toBe(yield* Effect.fromOption(HashMap.get(strings, row.outcome.text)));
+          const citationResult5 = yield* Effect.fromOption(HashMap.get(strings, row.outcome.text));
+          expect(descriptor.text, row.name).toBe(citationResult5);
           expect(descriptor.subtype, row.name).toBe(row.outcome.subtype);
+          const citationResult6 = yield* values.same(first, firstInput);
+          const citationResult7 = yield* values.same(first, repeated);
+          const citationResult8 = yield* values.same(first, independent);
+          const citationResult9 = yield* values.same(firstInput, otherInput);
+          const citationResult10 = yield* values.same(first, empty);
+          const citationResult11 = yield* values.same(first, space);
           expect(
             {
-              sameInput: yield* values.same(first, firstInput),
-              sameAcrossCalls: yield* values.same(first, repeated),
-              sameAcrossInputs: yield* values.same(first, independent),
-              sameInputObjects: yield* values.same(firstInput, otherInput),
-              cachedEmpty: yield* values.same(first, empty),
-              cachedSpace: yield* values.same(first, space),
+              sameInput: citationResult6,
+              sameAcrossCalls: citationResult7,
+              sameAcrossInputs: citationResult8,
+              sameInputObjects: citationResult9,
+              cachedEmpty: citationResult10,
+              cachedSpace: citationResult11,
             },
             row.name
           ).toEqual({
@@ -145,7 +154,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("scoped cleaner valu
         expect(successes).toBe(324);
         expect(failures).toBe(16);
         expect(coercions).toBe(0);
-        expect((yield* values.snapshot).cached).toBe(2);
+        const citationResult12 = yield* values.snapshot;
+        expect(citationResult12.cached).toBe(2);
       }),
     { timeout: 60_000 }
   );
@@ -154,15 +164,19 @@ it.effect(
   "owns original references, rejects restored/foreign values and inconsistent allocation without coercion",
   () =>
     Effect.gen(function* () {
-      const values = yield* makeCitationCleanerValues((yield* defaultCitationEnginePolicy).limits);
-      const other = yield* makeCitationCleanerValues((yield* defaultCitationEnginePolicy).limits);
+      const citationResult13 = yield* defaultCitationEnginePolicy;
+      const values = yield* makeCitationCleanerValues(citationResult13.limits);
+      const citationResult14 = yield* defaultCitationEnginePolicy;
+      const other = yield* makeCitationCleanerValues(citationResult14.limits);
       const ref = yield* values.text("A");
       expect(Object.isFrozen(ref)).toBe(true);
       const clone = CitationCleanerObject.make({ slot: ref.slot });
       const codec = S.fromJsonString(CitationCleanerObject);
-      const restored = yield* S.decodeEffect(codec)(yield* S.encodeEffect(codec)(ref));
+      const citationResult15 = yield* S.encodeEffect(codec)(ref);
+      const restored = yield* S.decodeEffect(codec)(citationResult15);
       for (const foreign of [clone, restored, yield* other.text("A")]) {
-        expect(yield* Effect.flip(values.assertOwned(foreign))).toMatchObject({ reason: "unissued-value" });
+        const citationResult16 = yield* Effect.flip(values.assertOwned(foreign));
+        expect(citationResult16).toMatchObject({ reason: "unissued-value" });
       }
       let hooks = 0;
       const forged = Object.create(null);
@@ -172,12 +186,15 @@ it.effect(
           throw new Error("getter");
         },
       });
-      expect(yield* Effect.flip(values.assertOwned(forged))).toMatchObject({ reason: "unissued-value" });
+      const citationResult17 = yield* Effect.flip(values.assertOwned(forged));
+      expect(citationResult17).toMatchObject({ reason: "unissued-value" });
       expect(hooks).toBe(0);
       const host = { state: 0 };
       const hostRef = yield* values.retainHost(host);
-      assertNone(yield* values.getText(hostRef));
-      assertSome(yield* values.getHost(hostRef), host);
+      const citationResult18 = yield* values.getText(hostRef);
+      assertNone(citationResult18);
+      const citationResult19 = yield* values.getHost(hostRef);
+      assertSome(citationResult19, host);
       host.state++;
       const retained = yield* values.getHost(hostRef).pipe(Effect.flatMap(Effect.fromOption));
       expect(retained).toBe(host);
@@ -189,29 +206,36 @@ it.effect(
         { text: "", allocation: "fresh" },
         { text: "A", allocation: "unknown" },
       ]) {
-        expect(yield* Effect.flip(values.materialize(ref, output))).toMatchObject({
+        const citationResult20 = yield* Effect.flip(values.materialize(ref, output));
+        expect(citationResult20).toMatchObject({
           reason: "invalid-text-allocation",
         });
       }
-      expect(yield* Effect.flip(values.materialize(hostRef, { text: "A", allocation: "unchanged" }))).toMatchObject({
+      const citationResult21 = yield* Effect.flip(values.materialize(hostRef, { text: "A", allocation: "unchanged" }));
+      expect(citationResult21).toMatchObject({
         reason: "invalid-text-allocation",
       });
-      expect((yield* values.snapshot).issued).toBe(before);
+      const citationResult22 = yield* values.snapshot;
+      expect(citationResult22.issued).toBe(before);
       const snapshot = yield* values.getText(ref).pipe(Effect.flatMap(Effect.fromOption));
       Reflect.set(snapshot, "text", "changed snapshot");
-      expect((yield* values.getText(ref).pipe(Effect.flatMap(Effect.fromOption))).text).toBe("A");
+      const citationResult23 = yield* values.getText(ref).pipe(Effect.flatMap(Effect.fromOption));
+      expect(citationResult23.text).toBe("A");
       const cached = yield* Effect.all(
         A.makeBy(32, () => values.materialize(ref, { text: " ", allocation: "space" })),
         { concurrency: "unbounded" }
       );
       expect(A.every(cached, (value) => value === cached[0])).toBe(true);
-      expect(yield* values.same(ref, yield* values.text("A"))).toBe(false);
+      const citationResult24 = yield* values.text("A");
+      const citationResult25 = yield* values.same(ref, citationResult24);
+      expect(citationResult25).toBe(false);
     })
 );
 it.effect("captures owner lifetime and clears all arena-held values and caches on scope closure", () =>
   Effect.gen(function* () {
     const scope = yield* Scope.make();
-    const values = yield* makeCitationCleanerValues((yield* defaultCitationEnginePolicy).limits).pipe(
+    const citationResult26 = yield* defaultCitationEnginePolicy;
+    const values = yield* makeCitationCleanerValues(citationResult26.limits).pipe(
       Effect.provideService(Scope.Scope, scope)
     );
     const ref = yield* values.text("");
@@ -219,7 +243,8 @@ it.effect("captures owner lifetime and clears all arena-held values and caches o
     yield* values.materialize(ref, { text: " ", allocation: "space" });
     const before = yield* values.snapshot;
     yield* Scope.close(scope, Exit.void);
-    expect(yield* values.snapshot).toEqual({ issued: before.issued, cached: 0, closed: true });
+    const citationResult27 = yield* values.snapshot;
+    expect(citationResult27).toEqual({ issued: before.issued, cached: 0, closed: true });
     for (const read of [
       values.assertOwned(ref),
       values.assertOwned(host),
@@ -227,7 +252,8 @@ it.effect("captures owner lifetime and clears all arena-held values and caches o
       values.subclass("A", {}).pipe(Effect.asVoid),
       values.retainHost({}).pipe(Effect.asVoid),
     ]) {
-      expect(yield* Effect.flip(read)).toMatchObject({ reason: "closed-owner" });
+      const citationResult28 = yield* Effect.flip(read);
+      expect(citationResult28).toMatchObject({ reason: "closed-owner" });
     }
   })
 );

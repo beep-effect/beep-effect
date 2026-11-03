@@ -64,8 +64,7 @@ export const loadCitationExtractorSelectionControls = Effect.fn("SelectionTest.l
   const bytes = yield* fs.readFile(
     NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/extractor-selection.json", import.meta.url))
   );
-  expect(yield* digest.digestHex(Digest.sha256, bytes)).toBe(
-    "92e8c85c63b1efca7bdfc99f12cc5e343fb4ff88a534188e98ffaff545723950"
-  );
+  const citationResult1 = yield* digest.digestHex(Digest.sha256, bytes);
+  expect(citationResult1).toBe("92e8c85c63b1efca7bdfc99f12cc5e343fb4ff88a534188e98ffaff545723950");
   return yield* S.decodeEffect(Corpus)(new TextDecoder().decode(bytes));
 });

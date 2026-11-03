@@ -156,7 +156,8 @@ describe("push → row → ack schemas", () => {
     "round trips a hook session state through the session file codec",
     [Arbitrary.schema(YeetHookSessionState)],
     Effect.fnUntraced(function* ([state]) {
-      const decoded = yield* YeetHookSessionStateJson.decode(yield* YeetHookSessionStateJson.encode(state));
+      const encoded1 = yield* YeetHookSessionStateJson.encode(state);
+      const decoded = yield* YeetHookSessionStateJson.decode(encoded1);
       assertTrue(S.toEquivalence(YeetHookSessionState)(decoded, state));
     }),
     roundTripRuns
@@ -166,7 +167,8 @@ describe("push → row → ack schemas", () => {
     "round trips a check-failed row and its failure capsule through the inbox row codec",
     [Arbitrary.schema(YeetCheckFailedRow)],
     Effect.fnUntraced(function* ([row]) {
-      const decoded = yield* YeetInboxRowJson.decode(yield* YeetInboxRowJson.encode(row));
+      const encoded2 = yield* YeetInboxRowJson.encode(row);
+      const decoded = yield* YeetInboxRowJson.decode(encoded2);
       assertTrue(S.toEquivalence(YeetInboxRow)(decoded, row));
     }),
     roundTripRuns
@@ -176,7 +178,8 @@ describe("push → row → ack schemas", () => {
     "round trips a head timeline through its JSON encoding",
     [Arbitrary.schema(YeetHeadTimeline)],
     Effect.fnUntraced(function* ([timeline]) {
-      const decoded = yield* decodeHeadTimelineJson(yield* encodeHeadTimelineJson(timeline));
+      const encodedHeadTimelineJson = yield* encodeHeadTimelineJson(timeline);
+      const decoded = yield* decodeHeadTimelineJson(encodedHeadTimelineJson);
       assertTrue(S.toEquivalence(YeetHeadTimeline)(decoded, timeline));
     }),
     roundTripRuns
@@ -190,26 +193,20 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("push → row → ack join", 
       const later = yield* writeRedRow(root, "Check / Lint", head, "2026-09-25T12:11:00.000Z");
       const first = yield* writeRedRow(root, "Check / Coverage", head, "2026-09-25T12:10:20.000Z");
       yield* writeRedRow(root, "Check / Coverage", "0ld0ld0ld", "2026-09-25T11:00:00.000Z");
-      yield* writeSessionFile(
-        root,
-        "claude-1.json",
-        yield* encodeJson({
-          schemaVersion: "yeet-hook-session/v1",
-          incidentId: null,
-          seenIds: [first],
-          firstSeenAt: { [first]: "2026-09-25T12:10:50Z", [later]: "2026-09-25T12:11:05Z" },
-        })
-      );
-      yield* writeSessionFile(
-        root,
-        "codex-2.json",
-        yield* encodeJson({
-          schemaVersion: "yeet-hook-session/v1",
-          incidentId: first,
-          seenIds: [],
-          firstSeenAt: { [first]: "2026-09-25T12:10:40Z" },
-        })
-      );
+      const encodedJson = yield* encodeJson({
+        schemaVersion: "yeet-hook-session/v1",
+        incidentId: null,
+        seenIds: [first],
+        firstSeenAt: { [first]: "2026-09-25T12:10:50Z", [later]: "2026-09-25T12:11:05Z" },
+      });
+      yield* writeSessionFile(root, "claude-1.json", encodedJson);
+      const encodedJson3 = yield* encodeJson({
+        schemaVersion: "yeet-hook-session/v1",
+        incidentId: first,
+        seenIds: [],
+        firstSeenAt: { [first]: "2026-09-25T12:10:40Z" },
+      });
+      yield* writeSessionFile(root, "codex-2.json", encodedJson3);
       // The hook's in-flight temp file and an unreadable file never count.
       yield* writeSessionFile(
         root,
@@ -272,16 +269,13 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("push → row → ack join", 
       // sixteen minutes before the required red that stamps the head's red.
       const optional = yield* writeRedRow(root, "Vercel", head, "2026-09-25T18:10:18.811Z", "P1");
       const required = yield* writeRedRow(root, "JSDoc Ratchet", head, "2026-09-25T18:27:50.483Z");
-      yield* writeSessionFile(
-        root,
-        "claude-1.json",
-        yield* encodeJson({
-          schemaVersion: "yeet-hook-session/v1",
-          incidentId: null,
-          seenIds: [optional, required],
-          firstSeenAt: { [optional]: "2026-09-25T18:10:30Z", [required]: "2026-09-25T18:28:48Z" },
-        })
-      );
+      const encodedJson4 = yield* encodeJson({
+        schemaVersion: "yeet-hook-session/v1",
+        incidentId: null,
+        seenIds: [optional, required],
+        firstSeenAt: { [optional]: "2026-09-25T18:10:30Z", [required]: "2026-09-25T18:28:48Z" },
+      });
+      yield* writeSessionFile(root, "claude-1.json", encodedJson4);
       yield* writeYeetAckReceipt(
         root,
         YeetAckReceipt.make({
@@ -338,16 +332,13 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("push → row → ack join", 
       const polledAt = "2026-09-25T12:12:00.000Z";
       const lint = yield* writeRedRow(root, "Check / Lint", head, polledAt);
       const coverage = yield* writeRedRow(root, "Check / Coverage", head, polledAt);
-      yield* writeSessionFile(
-        root,
-        "claude-1.json",
-        yield* encodeJson({
-          schemaVersion: "yeet-hook-session/v1",
-          incidentId: null,
-          seenIds: [lint, coverage],
-          firstSeenAt: { [lint]: "2026-09-25T12:12:10Z", [coverage]: "2026-09-25T12:12:40Z" },
-        })
-      );
+      const encodedJson5 = yield* encodeJson({
+        schemaVersion: "yeet-hook-session/v1",
+        incidentId: null,
+        seenIds: [lint, coverage],
+        firstSeenAt: { [lint]: "2026-09-25T12:12:10Z", [coverage]: "2026-09-25T12:12:40Z" },
+      });
+      yield* writeSessionFile(root, "claude-1.json", encodedJson5);
       yield* writeYeetAckReceipt(
         root,
         YeetAckReceipt.make({
@@ -379,8 +370,9 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("push → row → ack join", 
         }),
         YeetHeadRed.make({ at: legacyRecord.redAt, lane: "Check / Coverage" })
       );
+      const loadedYeetPushToAckTimeline = yield* loadYeetPushToAckTimeline(root, stamped, O.some(pr));
       strictEqual(
-        renderYeetPushToAckTimeline(yield* loadYeetPushToAckTimeline(root, stamped, O.some(pr))),
+        renderYeetPushToAckTimeline(loadedYeetPushToAckTimeline),
         "push→row→ack abc1234: pushed 2026-09-25T12:00:00.000Z, red 2026-09-25T12:10:00Z (+10m), " +
           "row 2026-09-25T12:12:00.000Z (+2m), injected 2026-09-25T12:12:40Z (+40s), " +
           "acked 2026-09-25T12:16:00.000Z (+3m 20s)"
@@ -389,10 +381,12 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("push → row → ack join", 
       // A record encoded before redLane existed decodes without it, and the
       // join falls back to the earliest P0 row: with equal stamps, the row
       // dispatched first.
-      const legacy = yield* decodeHeadTimelineJson(yield* encodeJson(legacyRecord));
+      const encodedJson6 = yield* encodeJson(legacyRecord);
+      const legacy = yield* decodeHeadTimelineJson(encodedJson6);
       assertNone(legacy.redLane);
+      const loadedYeetPushToAckTimeline7 = yield* loadYeetPushToAckTimeline(root, legacy, O.some(pr));
       strictEqual(
-        renderYeetPushToAckTimeline(yield* loadYeetPushToAckTimeline(root, legacy, O.some(pr))),
+        renderYeetPushToAckTimeline(loadedYeetPushToAckTimeline7),
         "push→row→ack abc1234: pushed 2026-09-25T12:00:00.000Z, red 2026-09-25T12:10:00Z (+10m), " +
           "row 2026-09-25T12:12:00.000Z (+2m), injected 2026-09-25T12:12:10Z (+10s), " +
           "acked 2026-09-25T12:13:00.000Z (+50s)"
@@ -412,16 +406,13 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("push → row → ack join", 
     Effect.gen(function* () {
       const root = yield* makeTempRoot();
       const optional = yield* writeRedRow(root, "Vercel", head, "2026-09-25T18:10:18.811Z", "P1");
-      yield* writeSessionFile(
-        root,
-        "claude-1.json",
-        yield* encodeJson({
-          schemaVersion: "yeet-hook-session/v1",
-          incidentId: null,
-          seenIds: [optional],
-          firstSeenAt: { [optional]: "2026-09-25T18:10:30Z" },
-        })
-      );
+      const encodedJson8 = yield* encodeJson({
+        schemaVersion: "yeet-hook-session/v1",
+        incidentId: null,
+        seenIds: [optional],
+        firstSeenAt: { [optional]: "2026-09-25T18:10:30Z" },
+      });
+      yield* writeSessionFile(root, "claude-1.json", encodedJson8);
       const joined = yield* loadYeetPushToAckTimeline(
         root,
         YeetHeadTimeline.make({
@@ -441,7 +432,8 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("push → row → ack join", 
   it.effect("reads no stamps when the hook never wrote a session file", () =>
     Effect.gen(function* () {
       const root = yield* makeTempRoot();
-      expect(HashMap.size(yield* loadYeetHookFirstSeen(root))).toBe(0);
+      const loadedYeetHookFirstSeen = yield* loadYeetHookFirstSeen(root);
+      expect(HashMap.size(loadedYeetHookFirstSeen)).toBe(0);
     })
   );
 });

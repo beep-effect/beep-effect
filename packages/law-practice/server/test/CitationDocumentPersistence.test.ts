@@ -200,15 +200,13 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
       expect(A.getUnsafe(restored.mentions, 0).citation.type).toBe("id");
       expect(restored.authorities).toEqual(document.authorities);
       expect("resourceBindings" in receipt).toBe(false);
-      expect((yield* Effect.flip(restoreCitationDocument({ ...data.restore, receipt, editions: [] }))).reason).toBe(
-        "authority-key-unavailable"
-      );
+      const citationResult1 = yield* Effect.flip(restoreCitationDocument({ ...data.restore, receipt, editions: [] }));
+      expect(citationResult1.reason).toBe("authority-key-unavailable");
       // A receipt cannot authorize itself by carrying an extra binding field.
-      expect(
-        (yield* Effect.flip(
-          restoreCitationDocument({ ...data.restore, receipt: { ...receipt, resourceBindings }, editions: [] })
-        )).reason
-      ).toBe("authority-key-unavailable");
+      const citationResult2 = yield* Effect.flip(
+        restoreCitationDocument({ ...data.restore, receipt: { ...receipt, resourceBindings }, editions: [] })
+      );
+      expect(citationResult2.reason).toBe("authority-key-unavailable");
     })
   );
 
@@ -254,11 +252,10 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
         resourceBindings: [originalBinding],
       });
       expect(restored.authorities).toEqual(document.authorities);
-      expect(
-        (yield* Effect.flip(
-          restoreCitationDocument({ ...data.restore, receipt, editions: [], resourceBindings: [binding] })
-        )).reason
-      ).toBe("stale-authority");
+      const citationResult3 = yield* Effect.flip(
+        restoreCitationDocument({ ...data.restore, receipt, editions: [], resourceBindings: [binding] })
+      );
+      expect(citationResult3.reason).toBe("stale-authority");
     })
   );
 
@@ -297,41 +294,37 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
       });
       expect(restored.authorities).toEqual(document.authorities);
       const incomplete = bindingFor(identity, authorityId, [first.id]);
-      expect(
-        (yield* Effect.flip(projectCitationDocumentReceipt({ document, editions: [], resourceBindings: [incomplete] })))
-          .reason
-      ).toBe("stale-authority");
+      const citationResult4 = yield* Effect.flip(
+        projectCitationDocumentReceipt({ document, editions: [], resourceBindings: [incomplete] })
+      );
+      expect(citationResult4.reason).toBe("stale-authority");
       const extra = bindingFor(identity, authorityId, [first.id, second.id, last.id, staleMention]);
-      expect(
-        (yield* Effect.flip(
-          restoreCitationDocument({ ...data.restore, receipt, editions: [], resourceBindings: [extra] })
-        )).reason
-      ).toBe("stale-authority");
-      expect(
-        (yield* Effect.flip(
-          restoreCitationDocument({ ...data.restore, receipt, editions: [], resourceBindings: [binding, binding] })
-        )).reason
-      ).toBe("invalid-input");
+      const citationResult5 = yield* Effect.flip(
+        restoreCitationDocument({ ...data.restore, receipt, editions: [], resourceBindings: [extra] })
+      );
+      expect(citationResult5.reason).toBe("stale-authority");
+      const citationResult6 = yield* Effect.flip(
+        restoreCitationDocument({ ...data.restore, receipt, editions: [], resourceBindings: [binding, binding] })
+      );
+      expect(citationResult6.reason).toBe("invalid-input");
       const changed = CitationResourceBinding.make({
         ...binding,
         identity: CitationResourceIdentity.cases.External.make({ scope: artifact, key: artifact }),
       });
-      expect(
-        (yield* Effect.flip(
-          restoreCitationDocument({ ...data.restore, receipt, editions: [], resourceBindings: [changed] })
-        )).reason
-      ).toBe("stale-authority");
-      expect(
-        (yield* Effect.flip(
-          restoreCitationDocument({
-            ...data.restore,
-            receipt,
-            editions: [],
-            resourceBindings: [binding],
-            sourceText: `${text}!`,
-          })
-        )).reason
-      ).toBe("unverifiable-evidence");
+      const citationResult7 = yield* Effect.flip(
+        restoreCitationDocument({ ...data.restore, receipt, editions: [], resourceBindings: [changed] })
+      );
+      expect(citationResult7.reason).toBe("stale-authority");
+      const citationResult8 = yield* Effect.flip(
+        restoreCitationDocument({
+          ...data.restore,
+          receipt,
+          editions: [],
+          resourceBindings: [binding],
+          sourceText: `${text}!`,
+        })
+      );
+      expect(citationResult8.reason).toBe("unverifiable-evidence");
     })
   );
 
@@ -405,11 +398,10 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
             )).reason
           ).toBe("stale-authority");
         const reversed = CitationDocumentReceipt.make({ ...receipt, groups: A.reverse(receipt.groups) });
-        expect(
-          (yield* Effect.flip(
-            restoreCitationDocument({ ...data.restore, receipt: reversed, editions: [], resourceBindings: [binding] })
-          )).reason
-        ).toBe("stale-authority");
+        const citationResult9 = yield* Effect.flip(
+          restoreCitationDocument({ ...data.restore, receipt: reversed, editions: [], resourceBindings: [binding] })
+        );
+        expect(citationResult9.reason).toBe("stale-authority");
       })
   );
 
@@ -438,19 +430,21 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
         });
         const binding = CitationResourceBinding.make({ identity, decisions: ids, groups: [expectedGroup(ordered)] });
         const receipt = yield* projectCitationDocumentReceipt({ document, editions: [], resourceBindings: [binding] });
-        expect(
-          (yield* restoreCitationDocument({ ...data.restore, receipt, editions: [], resourceBindings: [binding] }))
-            .memberLists
-        ).toEqual([ordered]);
+        const citationResult10 = yield* restoreCitationDocument({
+          ...data.restore,
+          receipt,
+          editions: [],
+          resourceBindings: [binding],
+        });
+        expect(citationResult10.memberLists).toEqual([ordered]);
         const wrongOrder = CitationResourceBinding.make({
           ...binding,
           groups: [expectedGroup(CitationMemberList.make({ ...ordered, members: A.reverse(ordered.members) }))],
         });
-        expect(
-          (yield* Effect.flip(
-            restoreCitationDocument({ ...data.restore, receipt, editions: [], resourceBindings: [wrongOrder] })
-          )).reason
-        ).toBe("stale-authority");
+        const citationResult11 = yield* Effect.flip(
+          restoreCitationDocument({ ...data.restore, receipt, editions: [], resourceBindings: [wrongOrder] })
+        );
+        expect(citationResult11.reason).toBe("stale-authority");
         const wrongId = CitationResourceBinding.make({
           ...binding,
           groups: [
@@ -459,11 +453,10 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
             ),
           ],
         });
-        expect(
-          (yield* Effect.flip(
-            restoreCitationDocument({ ...data.restore, receipt, editions: [], resourceBindings: [wrongId] })
-          )).reason
-        ).toBe("stale-authority");
+        const citationResult12 = yield* Effect.flip(
+          restoreCitationDocument({ ...data.restore, receipt, editions: [], resourceBindings: [wrongId] })
+        );
+        expect(citationResult12.reason).toBe("stale-authority");
         const emptyList = CitationMemberList.make({ ...list, members: [] });
         const empty = CitationDocument.make({ ...document, memberLists: [emptyList] });
         const emptyBinding = CitationResourceBinding.make({ ...binding, groups: [expectedGroup(emptyList)] });
@@ -473,21 +466,22 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
           resourceBindings: [emptyBinding],
         });
         const absentBinding = CitationResourceBinding.make({ ...binding, groups: [] });
-        expect(
-          (yield* Effect.flip(
-            restoreCitationDocument({
-              ...data.restore,
-              receipt: emptyReceipt,
-              editions: [],
-              resourceBindings: [absentBinding],
-            })
-          )).reason
-        ).toBe("stale-authority");
+        const citationResult13 = yield* Effect.flip(
+          restoreCitationDocument({
+            ...data.restore,
+            receipt: emptyReceipt,
+            editions: [],
+            resourceBindings: [absentBinding],
+          })
+        );
+        expect(citationResult13.reason).toBe("stale-authority");
         const absent = CitationDocument.make({ ...document, groups: [], memberLists: [] });
-        expect(
-          (yield* projectCitationDocumentReceipt({ document: absent, editions: [], resourceBindings: [absentBinding] }))
-            .groups
-        ).toEqual([]);
+        const citationResult14 = yield* projectCitationDocumentReceipt({
+          document: absent,
+          editions: [],
+          resourceBindings: [absentBinding],
+        });
+        expect(citationResult14.groups).toEqual([]);
         // Canonical identity checks alone cannot authorize a changed final list.
         const defaultChanged = CitationDocument.make({
           ...data.document,
@@ -495,10 +489,10 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
             CitationMemberList.make({ ...list, members: A.reverse(list.members) })
           ),
         });
-        expect(
-          (yield* Effect.flip(projectCitationDocumentReceipt({ document: defaultChanged, editions: data.editions })))
-            .reason
-        ).toBe("stale-authority");
+        const citationResult15 = yield* Effect.flip(
+          projectCitationDocumentReceipt({ document: defaultChanged, editions: data.editions })
+        );
+        expect(citationResult15.reason).toBe("stale-authority");
       })
   );
 
@@ -541,12 +535,12 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
         authorities: [authority],
         resolutions: [resolution],
       });
-      expect((yield* Effect.flip(projectCitationDocumentReceipt({ document, editions: data.editions }))).reason).toBe(
-        "authority-key-unavailable"
+      const citationResult16 = yield* Effect.flip(
+        projectCitationDocumentReceipt({ document, editions: data.editions })
       );
-      expect((yield* Effect.flip(restoreCitationDocument({ ...data.restore, receipt }))).reason).toBe(
-        "authority-key-unavailable"
-      );
+      expect(citationResult16.reason).toBe("authority-key-unavailable");
+      const citationResult17 = yield* Effect.flip(restoreCitationDocument({ ...data.restore, receipt }));
+      expect(citationResult17.reason).toBe("authority-key-unavailable");
     })
   );
 
@@ -560,14 +554,13 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
         A.map(data.document.mentions, (mention) => mention.id)
       );
       expect(A.getUnsafe(restored.mentions, 0).anchor).not.toBe(A.getUnsafe(data.document.mentions, 0).anchor);
-      expect(
-        yield* S.encodeEffect(Json)(
-          yield* projectCitationDocumentReceipt({ document: restored, editions: data.editions })
-        )
-      ).toBe(wire);
-      expect(
-        (yield* Effect.flip(projectCitationDocumentReceipt({ document: receipt, editions: data.editions }))).reason
-      ).toBe("invalid-input");
+      const citationResult18 = yield* projectCitationDocumentReceipt({ document: restored, editions: data.editions });
+      const citationResult19 = yield* S.encodeEffect(Json)(citationResult18);
+      expect(citationResult19).toBe(wire);
+      const citationResult20 = yield* Effect.flip(
+        projectCitationDocumentReceipt({ document: receipt, editions: data.editions })
+      );
+      expect(citationResult20.reason).toBe("invalid-input");
     })
   );
 
@@ -590,11 +583,9 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
         )
       );
       expect(hashes).toBe(6); // One source, three mentions, two resolved full keys.
-      expect(
-        yield* S.encodeEffect(Json)(
-          yield* projectCitationDocumentReceipt({ document: restored, editions: data.editions })
-        )
-      ).toBe(captured);
+      const citationResult21 = yield* projectCitationDocumentReceipt({ document: restored, editions: data.editions });
+      const citationResult22 = yield* S.encodeEffect(Json)(citationResult21);
+      expect(citationResult22).toBe(captured);
     })
   );
 
@@ -616,7 +607,8 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
           )
         )
       );
-      expect(yield* S.encodeEffect(Json)(receipt)).toBe(expected);
+      const citationResult23 = yield* S.encodeEffect(Json)(receipt);
+      expect(citationResult23).toBe(expected);
     })
   );
 
@@ -641,9 +633,8 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
           resolution.mentionId === last.id ? { ...resolution, mentionId: staleMention } : resolution
         ),
       });
-      expect((yield* Effect.flip(restoreCitationDocument({ ...data.restore, receipt: stale }))).reason).toBe(
-        "stale-mention"
-      );
+      const citationResult24 = yield* Effect.flip(restoreCitationDocument({ ...data.restore, receipt: stale }));
+      expect(citationResult24.reason).toBe("stale-mention");
       const rewritten = CitationDocumentReceipt.make({
         ...data.receipt,
         ...membership(
@@ -653,9 +644,8 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
         authorities: A.map(data.receipt.authorities, (authority) => ({ ...authority, id: staleAuthority })),
         resolutions: A.map(data.receipt.resolutions, (resolution) => ({ ...resolution, authorityId: staleAuthority })),
       });
-      expect((yield* Effect.flip(restoreCitationDocument({ ...data.restore, receipt: rewritten }))).reason).toBe(
-        "stale-authority"
-      );
+      const citationResult25 = yield* Effect.flip(restoreCitationDocument({ ...data.restore, receipt: rewritten }));
+      expect(citationResult25.reason).toBe("stale-authority");
     })
   );
 
@@ -671,31 +661,28 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
           mention.id === second.id ? CitationMention.make({ ...mention, citation: changed }) : mention
         ),
       });
-      expect((yield* Effect.flip(projectCitationDocumentReceipt({ document, editions: data.editions }))).reason).toBe(
-        "stale-authority"
+      const citationResult26 = yield* Effect.flip(
+        projectCitationDocumentReceipt({ document, editions: data.editions })
       );
+      expect(citationResult26.reason).toBe("stale-authority");
     })
   );
 
   it.effect("rejects raw quote/engine drift and missing or duplicate edition descriptors", () =>
     Effect.gen(function* () {
       const data = yield* fixture;
-      expect((yield* Effect.flip(restoreCitationDocument({ ...data.restore, sourceText: `${text}!` }))).reason).toBe(
-        "unverifiable-evidence"
+      const citationResult27 = yield* Effect.flip(restoreCitationDocument({ ...data.restore, sourceText: `${text}!` }));
+      expect(citationResult27.reason).toBe("unverifiable-evidence");
+      const citationResult28 = yield* Effect.flip(
+        restoreCitationDocument({ ...data.restore, expectedEngineArtifact: Sha256Hex.make(Str.repeat(64)("b")) })
       );
-      expect(
-        (yield* Effect.flip(
-          restoreCitationDocument({ ...data.restore, expectedEngineArtifact: Sha256Hex.make(Str.repeat(64)("b")) })
-        )).reason
-      ).toBe("stale-engine");
-      expect((yield* Effect.flip(restoreCitationDocument({ ...data.restore, editions: [] }))).reason).toBe(
-        "identity-failed"
+      expect(citationResult28.reason).toBe("stale-engine");
+      const citationResult29 = yield* Effect.flip(restoreCitationDocument({ ...data.restore, editions: [] }));
+      expect(citationResult29.reason).toBe("identity-failed");
+      const citationResult30 = yield* Effect.flip(
+        restoreCitationDocument({ ...data.restore, editions: A.appendAll(data.editions, data.editions) })
       );
-      expect(
-        (yield* Effect.flip(
-          restoreCitationDocument({ ...data.restore, editions: A.appendAll(data.editions, data.editions) })
-        )).reason
-      ).toBe("invalid-input");
+      expect(citationResult30.reason).toBe("invalid-input");
     })
   );
 
@@ -713,9 +700,8 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
           mention.id === first.id ? { ...mention, anchor } : mention
         ),
       });
-      expect((yield* Effect.flip(restoreCitationDocument({ ...data.restore, receipt }))).reason).toBe(
-        "unverifiable-evidence"
-      );
+      const citationResult31 = yield* Effect.flip(restoreCitationDocument({ ...data.restore, receipt }));
+      expect(citationResult31.reason).toBe("unverifiable-evidence");
     })
   );
 
@@ -727,9 +713,10 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
         VerifySourceTextIdentityInput.make({ source, expectedSource: source, sourceText: text })
       );
       const receipt = A.getUnsafe(data.receipt.mentions, 0);
-      expect((yield* Effect.flip(restoreCitationMentionAgainstVerifiedSource(proof, artifact)(receipt))).reason).toBe(
-        "unverifiable-evidence"
+      const citationResult32 = yield* Effect.flip(
+        restoreCitationMentionAgainstVerifiedSource(proof, artifact)(receipt)
       );
+      expect(citationResult32.reason).toBe("unverifiable-evidence");
     })
   );
 
@@ -745,10 +732,12 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
         memberLists: [],
         detachedCitations: [],
       });
-      expect((yield* restoreCitationDocument({ ...data.restore, receipt, editions: [] })).mentions).toEqual([]);
-      expect(
-        (yield* Effect.flip(restoreCitationDocument({ ...data.restore, sourceText: Str.repeat(500_001)("😀") }))).reason
-      ).toBe("invalid-input");
+      const citationResult33 = yield* restoreCitationDocument({ ...data.restore, receipt, editions: [] });
+      expect(citationResult33.mentions).toEqual([]);
+      const citationResult34 = yield* Effect.flip(
+        restoreCitationDocument({ ...data.restore, sourceText: Str.repeat(500_001)("😀") })
+      );
+      expect(citationResult34.reason).toBe("invalid-input");
     })
   );
 });

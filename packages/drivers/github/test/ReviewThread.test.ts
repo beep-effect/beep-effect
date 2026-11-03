@@ -543,7 +543,8 @@ describe("ReviewThread test doubles", () => {
     it.effect("unstubbed members name themselves and overrides are retained", () =>
       Effect.gen(function* () {
         const service = yield* ReviewThread;
-        assert.isTrue(yield* service.resolve("PRRT_1"));
+        const resolved1 = yield* service.resolve("PRRT_1");
+        assert.isTrue(resolved1);
         for (const [name, call] of [
           ["list", () => service.list(7)],
           ["listByNodeId", () => service.listByNodeId("PR_1")],

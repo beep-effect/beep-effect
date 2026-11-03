@@ -63,7 +63,9 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
               CitationTokenCaptureRuntime.of({ ...operands, construct: objects.constructFrom, beforeAllocate: allow })
             )
           );
-          expect(yield* objects.snapshot(yield* binding.build(0, row.recipe))).toEqual(row.expected);
+          const citationResult1 = yield* binding.build(0, row.recipe);
+          const citationResult2 = yield* objects.snapshot(citationResult1);
+          expect(citationResult2).toEqual(row.expected);
         }
         for (const row of controls.errors) {
           const objects = yield* makeCitationTokenObjects(limits, controls.editionBindings);
@@ -74,8 +76,10 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
               CitationTokenCaptureRuntime.of({ ...operands, construct: objects.constructFrom, beforeAllocate: allow })
             )
           );
-          expect(yield* binding.build(0, row.recipe).pipe(Effect.flip)).toMatchObject({ reason: row.reason });
-          expect(yield* objects.snapshot(0).pipe(Effect.flip)).toMatchObject({ reason: "host-failed" });
+          const citationResult3 = yield* binding.build(0, row.recipe).pipe(Effect.flip);
+          expect(citationResult3).toMatchObject({ reason: row.reason });
+          const citationResult4 = yield* objects.snapshot(0).pipe(Effect.flip);
+          expect(citationResult4).toMatchObject({ reason: "host-failed" });
         }
       })
     );
@@ -100,11 +104,13 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         const binding = yield* makeCitationTokenCapture(limits, row.bindings).pipe(
           Effect.provideService(CitationTokenCaptureRuntime, runtime)
         );
-        expect(yield* binding.build(0, { kind: "Token" }).pipe(Effect.flip)).toMatchObject({
+        const citationResult5 = yield* binding.build(0, { kind: "Token" }).pipe(Effect.flip);
+        expect(citationResult5).toMatchObject({
           limit: "producedTextUtf16",
         });
         expect(approvals).toBe(1);
-        expect(yield* objects.snapshot(0).pipe(Effect.flip)).toMatchObject({ reason: "host-failed" });
+        const citationResult6 = yield* objects.snapshot(0).pipe(Effect.flip);
+        expect(citationResult6).toMatchObject({ reason: "host-failed" });
         const denied = CitationSafetyLimitExceeded.make({ operation: "extract", limit: "producedTextUtf16" });
         const refuse = Effect.fn("CaptureTest.refuse")(() => Effect.fail(denied));
         const larger = { ...limits, producedTextUtf16: 100 };
@@ -115,7 +121,8 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
             CitationTokenCaptureRuntime.of({ ...operands, construct: permitted.constructFrom, beforeAllocate: refuse })
           )
         );
-        expect(yield* rejected.build(0, { kind: "Token" }).pipe(Effect.flip)).toBe(denied);
+        const citationResult7 = yield* rejected.build(0, { kind: "Token" }).pipe(Effect.flip);
+        expect(citationResult7).toBe(denied);
         const single = yield* makeCitationTokenObjects({ ...larger, candidates: 1 }, controls.editionBindings);
         approvals = 0;
         const parallel = yield* makeCitationTokenCapture(larger, row.bindings).pipe(
@@ -131,12 +138,11 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         expect(failures).toHaveLength(1);
         expect(A.getUnsafe(failures, 0)).toMatchObject({ limit: "candidates" });
         expect(approvals).toBe(2);
-        expect(
-          yield* makeCitationTokenCapture(limits, { groups: 1, names: { a: 1, b: 1 } }).pipe(
-            Effect.provideService(CitationTokenCaptureRuntime, runtime),
-            Effect.flip
-          )
-        ).toMatchObject({ reason: "invalid-bindings" });
+        const citationResult8 = yield* makeCitationTokenCapture(limits, { groups: 1, names: { a: 1, b: 1 } }).pipe(
+          Effect.provideService(CitationTokenCaptureRuntime, runtime),
+          Effect.flip
+        );
+        expect(citationResult8).toMatchObject({ reason: "invalid-bindings" });
       })
     );
   }

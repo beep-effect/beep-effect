@@ -18,12 +18,12 @@ describe("document-local citation identity schemas", () => {
     [CitationMentionId, CitationAuthorityId],
     ([mention, authority]) =>
       Effect.gen(function* () {
-        expect(yield* S.decodeEffect(CitationMentionId)(yield* S.encodeEffect(CitationMentionId)(mention))).toBe(
-          mention
-        );
-        expect(yield* S.decodeEffect(CitationAuthorityId)(yield* S.encodeEffect(CitationAuthorityId)(authority))).toBe(
-          authority
-        );
+        const citationResult1 = yield* S.encodeEffect(CitationMentionId)(mention);
+        const citationResult4 = yield* S.decodeEffect(CitationMentionId)(citationResult1);
+        expect(citationResult4).toBe(mention);
+        const citationResult2 = yield* S.encodeEffect(CitationAuthorityId)(authority);
+        const citationResult5 = yield* S.decodeEffect(CitationAuthorityId)(citationResult2);
+        expect(citationResult5).toBe(authority);
         expect(S.is(CitationAuthorityId)(mention)).toBe(false);
         expect(S.is(CitationMentionId)(authority)).toBe(false);
       })
@@ -32,8 +32,10 @@ describe("document-local citation identity schemas", () => {
     Effect.gen(function* () {
       const decodedMention = yield* S.decodeEffect(CitationMentionId)(mention);
       const decodedAuthority = yield* S.decodeEffect(CitationAuthorityId)(authority);
-      expect(yield* S.encodeEffect(CitationMentionId)(decodedMention)).toBe(mention);
-      expect(yield* S.encodeEffect(CitationAuthorityId)(decodedAuthority)).toBe(authority);
+      const citationResult3 = yield* S.encodeEffect(CitationMentionId)(decodedMention);
+      expect(citationResult3).toBe(mention);
+      const citationResult6 = yield* S.encodeEffect(CitationAuthorityId)(decodedAuthority);
+      expect(citationResult6).toBe(authority);
       expect(S.is(CitationAuthorityId)(decodedMention)).toBe(false);
       expect(S.is(CitationMentionId)(decodedAuthority)).toBe(false);
       expect(S.is(LawPractice.CitationId)(decodedMention)).toBe(false);

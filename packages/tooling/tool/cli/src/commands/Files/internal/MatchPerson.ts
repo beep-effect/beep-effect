@@ -2064,7 +2064,8 @@ const rollbackCommitRecord = Effect.fn("Files.rollbackPersonMatchCommitRecord")(
 const rollbackCommit = Effect.fn("Files.rollbackPersonMatchCommit")(function* (
   records: ReadonlyArray<PersonMatchCommitRecord>
 ): Effect.fn.Return<void, FilesCommandError, FileSystem.FileSystem> {
-  const failures = A.flatten(yield* Effect.forEach(A.reverse(records), rollbackCommitRecord, { concurrency: 1 }));
+  const forEach1 = yield* Effect.forEach(A.reverse(records), rollbackCommitRecord, { concurrency: 1 });
+  const failures = A.flatten(forEach1);
   if (A.isReadonlyArrayNonEmpty(failures)) {
     return yield* FilesCommandError.make({
       message: `Person-match rollback was incomplete: ${A.join(failures, "; ")}.`,
@@ -2131,9 +2132,11 @@ const materializeReport = Effect.fn("Files.materializePersonMatchReport")(functi
   return yield* Effect.ensuring(
     Effect.gen(function* () {
       for (const entry of copyPlan) {
-        records.push(yield* stageCopy(entry));
+        const stageCopy2 = yield* stageCopy(entry);
+        records.push(stageCopy2);
       }
-      records.push(yield* stageManifest(report, rendered));
+      const stageManifest3 = yield* stageManifest(report, rendered);
+      records.push(stageManifest3);
       yield* commitStagedFiles(records, overwrite);
       return rendered;
     }),

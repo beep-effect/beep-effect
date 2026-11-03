@@ -230,7 +230,8 @@ describe("SQLite derivation and family invariants", () => {
         const encoded = yield* encodeSqliteUserInsert(value);
         const decoded = yield* decodeSqliteUserInsert(encoded);
         expect(decoded).toEqual(value);
-        expect(yield* encodeSqliteUserInsert(decoded)).toEqual(encoded);
+        const encodedSqliteUserInsert = yield* encodeSqliteUserInsert(decoded);
+        expect(encodedSqliteUserInsert).toEqual(encoded);
         expect(encoded.nickname).toEqual(O.getOrNull(value.nickname));
         expect(isSqliteUserInsert(decoded)).toBe(true);
       }),
@@ -245,7 +246,8 @@ describe("SQLite derivation and family invariants", () => {
         const encoded = yield* encodeSqliteUserUpdate(value);
         const decoded = yield* decodeSqliteUserUpdate(encoded);
         expect(decoded).toEqual(value);
-        expect(yield* encodeSqliteUserUpdate(decoded)).toEqual(encoded);
+        const encodedSqliteUserUpdate = yield* encodeSqliteUserUpdate(decoded);
+        expect(encodedSqliteUserUpdate).toEqual(encoded);
         expect(decoded.rowVersion).toBe(value.rowVersion);
         expect(isSqliteUserUpdate(decoded)).toBe(true);
       }),

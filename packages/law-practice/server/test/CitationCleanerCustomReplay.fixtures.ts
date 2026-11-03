@@ -128,7 +128,8 @@ export const replayControlledCleanerScenes = Effect.fn("CleanerCustomCorpusTest.
       const outcome = yield* S.decodeUnknownEffect(Outcome)(raw);
       if (row.name === "resource-before-callback") {
         expect(outcome.kind).toBe("success");
-        expect(yield* Effect.flip(operation.run({ text, plan: row.name }))).toMatchObject({
+        const citationResult1 = yield* Effect.flip(operation.run({ text, plan: row.name }));
+        expect(citationResult1).toMatchObject({
           _tag: "CitationSafetyLimitExceeded",
           operation: "clean",
           limit: "nativeHtmlParserResource",
@@ -140,11 +141,15 @@ export const replayControlledCleanerScenes = Effect.fn("CleanerCustomCorpusTest.
         expect(failure, row.name).toMatchObject({ reason: expectedReason(row.name) });
       } else {
         const result = yield* operation.run({ text, plan: row.name });
-        expect(yield* owned.present(result.value), row.name).toEqual(expand(outcome.value));
-        expect(yield* owned.h.values.same(O.getOrThrow(initial), result.value), row.name).toBe(outcome.sameAsInput);
+        const citationResult2 = yield* owned.present(result.value);
+        expect(citationResult2, row.name).toEqual(expand(outcome.value));
+        const citationResult3 = yield* owned.h.values.same(O.getOrThrow(initial), result.value);
+        expect(citationResult3, row.name).toBe(outcome.sameAsInput);
       }
-      expect((yield* O.getOrThrow(lastWork).snapshot).closed).toBe(true);
-      expect(yield* admission.snapshot).toEqual({ active: 0, queued: 0, closed: false });
+      const citationResult4 = yield* O.getOrThrow(lastWork).snapshot;
+      expect(citationResult4.closed).toBe(true);
+      const citationResult5 = yield* admission.snapshot;
+      expect(citationResult5).toEqual({ active: 0, queued: 0, closed: false });
       runs++;
     }
     const decoded = yield* Effect.forEach(A.filter(row.events, S.is(ObservableEvent)), (value) =>
@@ -163,7 +168,8 @@ export const replayControlledCleanerScenes = Effect.fn("CleanerCustomCorpusTest.
           ]
         : expected;
     expect(observed, row.name).toEqual(comparison);
-    expect(yield* owned.bindings, row.name).toEqual(A.map(row.lookupAfter, expand));
+    const citationResult6 = yield* owned.bindings;
+    expect(citationResult6, row.name).toEqual(A.map(row.lookupAfter, expand));
     traceEvents += observed.length;
     checked++;
   });

@@ -1,3 +1,4 @@
+import { JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint";
 import { Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
@@ -5,8 +6,6 @@ import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import { dual, pipe } from "effect/Function";
 import * as Order from "effect/Order";
-import * as P from "effect/Predicate";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { BoxContentMigrationMap } from "../BoxContentMigrationMap.ts";
@@ -19,29 +18,9 @@ import type { BoxLogicalKey } from "../BoxProvisioningIntent.ts";
 
 const decodeUnknownJson = S.decodeUnknownEffect(S.Json);
 
-type CanonicalEntry = readonly [key: string, value: unknown];
-
-const byKeyAscending = Order.mapInput(Order.String, ([key]: CanonicalEntry) => key);
 const zeroDigest = Sha256Hex.make(pipe("0", Str.repeat(64)));
 const sha256Equivalence = S.toEquivalence(Sha256Hex);
 const utf8 = new TextEncoder();
-
-const canonicalJson = (value: unknown): string => {
-  if (P.isNull(value) || P.isString(value) || P.isNumber(value) || P.isBoolean(value)) {
-    return JSON.stringify(value);
-  }
-  if (A.isArray(value)) {
-    return `[${A.join(A.map(value, canonicalJson), ",")}]`;
-  }
-  if (P.isObject(value)) {
-    const entries = A.sort(R.toEntries(value), byKeyAscending);
-    return `{${A.join(
-      A.map(entries, ([key, entry]) => `${JSON.stringify(key)}:${canonicalJson(entry)}`),
-      ","
-    )}}`;
-  }
-  return "null";
-};
 
 /**
  * Schema failures raised while hashing canonical Box payloads; the digest itself cannot fail.
@@ -71,7 +50,8 @@ export const digestText = Effect.fnUntraced(function* (value: string) {
  */
 export const digestEncoded = Effect.fnUntraced(function* (value: unknown) {
   const json = yield* decodeUnknownJson(value);
-  return yield* digestText(canonicalJson(json));
+  const canonical = yield* JsoncFingerprint.canonicalize(json).pipe(Effect.orDie);
+  return yield* digestText(canonical);
 });
 
 type EncodedDigest = {
@@ -151,7 +131,8 @@ export const sealBoxProvisioningPlan = Effect.fnUntraced(function* (plan: BoxPro
 });
 
 export const hasValidBoxProvisioningPlanDigest = Effect.fnUntraced(function* (plan: BoxProvisioningPlan) {
-  return sha256Equivalence(plan.planDigest, yield* boxProvisioningPlanDigest(plan));
+  const boxProvisioningPlanDigest1 = yield* boxProvisioningPlanDigest(plan);
+  return sha256Equivalence(plan.planDigest, boxProvisioningPlanDigest1);
 });
 
 const joinPath = A.join("/");
@@ -190,5 +171,6 @@ export const sealBoxContentMigrationPlan = Effect.fnUntraced(function* (plan: Bo
 });
 
 export const hasValidBoxContentMigrationPlanDigest = Effect.fnUntraced(function* (plan: BoxContentMigrationPlan) {
-  return sha256Equivalence(plan.planDigest, yield* boxContentMigrationPlanDigest(plan));
+  const boxContentMigrationPlanDigest2 = yield* boxContentMigrationPlanDigest(plan);
+  return sha256Equivalence(plan.planDigest, boxContentMigrationPlanDigest2);
 });

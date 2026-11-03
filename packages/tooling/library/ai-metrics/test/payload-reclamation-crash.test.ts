@@ -61,7 +61,8 @@ const scenario = Effect.fn("ReclamationCrashTest.scenario")(function* () {
       mode === "after-expiry"
     ) {
       while (!(yield* fs.exists(marker))) {
-        expect(yield* child.isRunning).toBe(true);
+        const isRunning1 = yield* child.isRunning;
+        expect(isRunning1).toBe(true);
         yield* Effect.sleep("10 millis");
       }
       const observed = yield* fs.readFileString(marker).pipe(Effect.flatMap(decodeJsonValue));
@@ -70,13 +71,17 @@ const scenario = Effect.fn("ReclamationCrashTest.scenario")(function* () {
         pages: [{ n: 0 }],
         dispositions: [{ n: mode === "before-disposition" || mode === "before-expiry" ? 0 : 1 }],
       });
-      expect(yield* fs.exists(output)).toBe(false);
+      const exists2 = yield* fs.exists(output);
+      expect(exists2).toBe(false);
       yield* child.kill({ killSignal: "SIGKILL" });
-      expect(Exit.isFailure(yield* Effect.exit(child.exitCode))).toBe(true);
-      expect(yield* child.isRunning).toBe(false);
+      const exit3 = yield* Effect.exit(child.exitCode);
+      expect(Exit.isFailure(exit3)).toBe(true);
+      const isRunning4 = yield* child.isRunning;
+      expect(isRunning4).toBe(false);
       return;
     }
-    expect(yield* child.exitCode).toBe(0);
+    const exitCode5 = yield* child.exitCode;
+    expect(exitCode5).toBe(0);
     return yield* fs.readFileString(output).pipe(Effect.flatMap(decodeInspectionJson));
   });
   return { run };
@@ -86,7 +91,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
     Effect.gen(function* () {
       const { run } = yield* scenario();
       yield* run("before-disposition");
-      expect(yield* run("inspect")).toMatchObject({
+      const result6 = yield* run("inspect");
+      expect(result6).toMatchObject({
         state: { state: "visible", attempts: 1 },
         pages: [{ n: 1 }],
         dispositions: [{ n: 0 }],
@@ -98,7 +104,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
         dispositions: [{ n: 1 }],
         replayAccepted: true,
       });
-      expect(yield* run("accept")).toEqual(reclaimed);
+      const result7 = yield* run("accept");
+      expect(result7).toEqual(reclaimed);
     }).pipe(Effect.timeout("20 seconds"))
   )
 );
@@ -107,12 +114,14 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
     Effect.gen(function* () {
       const { run } = yield* scenario();
       yield* run("after-disposition");
-      expect(yield* run("inspect")).toMatchObject({
+      const result8 = yield* run("inspect");
+      expect(result8).toMatchObject({
         state: { state: "visible", attempts: 1 },
         pages: [{ n: 0 }],
         dispositions: [{ n: 1 }],
       });
-      expect(yield* run("accept")).toMatchObject({
+      const result9 = yield* run("accept");
+      expect(result9).toMatchObject({
         state: { state: "visible", attempts: 1 },
         pages: [{ n: 0 }],
         dispositions: [{ n: 1 }],
@@ -127,13 +136,15 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
     Effect.gen(function* () {
       const { run } = yield* scenario();
       yield* run("before-expiry");
-      expect(yield* run("inspect")).toMatchObject({
+      const result10 = yield* run("inspect");
+      expect(result10).toMatchObject({
         state: { state: "unresolved", attempts: 1, ambiguousAttempts: 1 },
         pages: [{ n: 1 }],
         dispositions: [{ n: 0 }],
       });
       yield* run("after-expiry");
-      expect(yield* run("retry-expiry")).toMatchObject({
+      const result11 = yield* run("retry-expiry");
+      expect(result11).toMatchObject({
         state: { state: "unresolved", attempts: 1, ambiguousAttempts: 1 },
         pages: [{ n: 0 }],
         dispositions: [{ n: 1 }],
@@ -147,12 +158,14 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
     Effect.gen(function* () {
       const { run } = yield* scenario();
       yield* run("after-expiry");
-      expect(yield* run("inspect")).toMatchObject({
+      const result12 = yield* run("inspect");
+      expect(result12).toMatchObject({
         state: { state: "unresolved", attempts: 1, ambiguousAttempts: 1 },
         pages: [{ n: 0 }],
         dispositions: [{ n: 1 }],
       });
-      expect(yield* run("retry-expiry")).toMatchObject({
+      const result13 = yield* run("retry-expiry");
+      expect(result13).toMatchObject({
         state: { state: "unresolved", attempts: 1, ambiguousAttempts: 1 },
         pages: [{ n: 0 }],
         dispositions: [{ n: 1 }],

@@ -94,9 +94,12 @@ describe("@beep/docket-intake dry run", () => {
           "docket:0f3a"
         );
         assertSome(below, existing);
-        expect(yield* recorder.entries).toStrictEqual([entry]);
-        expect(yield* mailbox.receivedSince(O.none())).toStrictEqual([message]);
-        expect(yield* mailbox.sourceDocuments(message)).toStrictEqual([]);
+        const entries1 = yield* recorder.entries;
+        expect(entries1).toStrictEqual([entry]);
+        const receivedSince2 = yield* mailbox.receivedSince(O.none());
+        expect(receivedSince2).toStrictEqual([message]);
+        const sourceDocuments3 = yield* mailbox.sourceDocuments(message);
+        expect(sourceDocuments3).toStrictEqual([]);
       })
     );
   });

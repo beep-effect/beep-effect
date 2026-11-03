@@ -18,9 +18,14 @@ import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const repository = PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" });
 
@@ -52,21 +57,24 @@ const ledgerRow = (
 
 describe("session ledger role", () => {
   it("decodes rows written before the role existed as role none", () => {
-    const legacy = JSON.stringify({
-      schemaVersion: "session-ledger/v1",
-      repository,
-      clone: "/work/beep-effect",
-      checkout: "/work/beep-effect-worktrees/lane",
-      lane: "lane",
-      branch: "feat/lane",
-      state: "open",
-      next: "resume",
-      summary: null,
-      pr: null,
-      harness: "claude-code",
-      sessionId: null,
-      recordedAt: "2026-10-06T00:00:00.000Z",
-    });
+    const legacy = Result.getOrThrowWith(
+      S.encodeUnknownResult(UnknownJson)({
+        schemaVersion: "session-ledger/v1",
+        repository,
+        clone: "/work/beep-effect",
+        checkout: "/work/beep-effect-worktrees/lane",
+        lane: "lane",
+        branch: "feat/lane",
+        state: "open",
+        next: "resume",
+        summary: null,
+        pr: null,
+        harness: "claude-code",
+        sessionId: null,
+        recordedAt: "2026-10-06T00:00:00.000Z",
+      }),
+      identity
+    );
     const decoded = SessionLedgerRowJson.decodeOption(legacy);
     decoded.pipe(O.isSome, assertTrue);
     if (O.isSome(decoded)) assertNone(decoded.value.role);

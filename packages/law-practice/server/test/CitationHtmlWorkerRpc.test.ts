@@ -37,8 +37,9 @@ it.effect("an immediate complete reply waits for request registration and a stal
     const read = yield* Deferred.make<void>();
     const finish = yield* Deferred.make<void>();
     let sends = 0;
+    const citationResult1 = yield* replies;
     const child = {
-      stdout: Stream.fromIterable(yield* replies).pipe(Stream.ensuring(Deferred.succeed(read, undefined))),
+      stdout: Stream.fromIterable(citationResult1).pipe(Stream.ensuring(Deferred.succeed(read, undefined))),
       stdin: Sink.forEach<Uint8Array, void, never, never>(() =>
         Effect.gen(function* () {
           sends++;
@@ -53,7 +54,8 @@ it.effect("an immediate complete reply waits for request registration and a stal
     yield* Effect.yieldNow;
     expect(running.pollUnsafe()).toBeUndefined();
     yield* Deferred.succeed(finish, undefined);
-    expect(yield* Fiber.join(running)).toBe("a\ud800b");
+    const citationResult2 = yield* Fiber.join(running);
+    expect(citationResult2).toBe("a\ud800b");
     expect(sends).toBe(1);
   })
 );

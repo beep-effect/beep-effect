@@ -1277,8 +1277,10 @@ export const makeOpenClawGeneration: (
     args.paths.configRoot
   );
   const rendered = yield* renderOpenclawConfig(intent);
-  const soulHash = OpenclawSha256Hex.make(yield* sha256Hex(openClawLegalSoulMarkdown));
-  const proofSkillHash = OpenclawSha256Hex.make(yield* sha256Hex(openClawProofSkillMarkdown));
+  const sha256Hex1 = yield* sha256Hex(openClawLegalSoulMarkdown);
+  const soulHash = OpenclawSha256Hex.make(sha256Hex1);
+  const sha256Hex2 = yield* sha256Hex(openClawProofSkillMarkdown);
+  const proofSkillHash = OpenclawSha256Hex.make(sha256Hex2);
   return OpenClawGeneration.make({
     agentId: args.deployment.agentId,
     canonicalJson: rendered.canonicalJson,

@@ -89,7 +89,8 @@ export const makeCitationBuiltinCleaners = Effect.fn("Citation.makeBuiltinCleane
       Effect.mapError(() => fail("unknown-step"))
     );
     if (name !== "html") {
-      const source = yield* Effect.fromOption(yield* values.getUnicode(value), () => fail("builtin-input-type"));
+      const citationResult1 = yield* values.getUnicode(value);
+      const source = yield* Effect.fromOption(citationResult1, () => fail("builtin-input-type"));
       const output = yield* literal.stageUnicode(name, source.storage, work);
       const result = yield* values.materializeUnicode(value, output, output.storage);
       return CitationCleanerProduced.make({ value: result, charges: output.charges });

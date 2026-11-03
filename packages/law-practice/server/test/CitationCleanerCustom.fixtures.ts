@@ -126,7 +126,9 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
   const mode = Str.replace("dispatch:", "")(scene);
   const slot = (value: CitationCleanerObject) => {
     const found = HashMap.get(slots, value.slot);
-    if (O.isSome(found)) return found.value;
+    if (O.isSome(found)) {
+      return found.value;
+    }
     const next = HashMap.size(slots);
     slots = HashMap.set(slots, value.slot, next);
     return next;
@@ -135,14 +137,19 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
     value: CitationCleanerObject
   ): Effect.fn.Return<S.Json, CitationCleanerFailure> {
     const text = yield* h.values.getText(value);
-    if (O.isSome(text))
+    if (O.isSome(text)) {
       return { kind: "text", text: text.value.text, subtype: text.value.subtype === "plain" ? "plain" : "marked" };
+    }
     const callbackName = HashMap.get(names, value.slot);
-    if (O.isSome(callbackName)) return { kind: "callback", name: callbackName.value };
+    if (O.isSome(callbackName)) {
+      return { kind: "callback", name: callbackName.value };
+    }
     const bytes = yield* h.values.getBytes(value);
-    if (O.isSome(bytes))
+    if (O.isSome(bytes)) {
       return { kind: "bytes", hex: yield* S.encodeEffect(Hex)(bytes.value).pipe(Effect.mapError(fail)) };
-    return (yield* Effect.fromOption(HashMap.get(views, value.slot), fail))();
+    }
+    const citationResult1 = yield* Effect.fromOption(HashMap.get(views, value.slot), fail);
+    return citationResult1();
   });
   const emit = Effect.fn("CleanerCustomTest.emit")(function* (value: CitationCleanerObject, work: CitationCleanerWork) {
     const native = yield* h.values.getUnicode(value);
@@ -200,9 +207,14 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
           Effect.gen(function* () {
             const value = yield* retain(null, () => ({ kind: "none" }));
             steps = [yield* callback("none", (_input, work) => emit(value, work))];
-            if (scene === "none-to-text")
-              steps.push(yield* callback("restore", (_input, work) => emitText("RESTORED", work)));
-            if (scene === "none-to-builtin") steps.push(yield* h.values.text("inline_whitespace"));
+            if (scene === "none-to-text") {
+              const citationResult11 = yield* callback("restore", (_input, work) => emitText("RESTORED", work));
+              steps.push(citationResult11);
+            }
+            if (scene === "none-to-builtin") {
+              const citationResult12 = yield* h.values.text("inline_whitespace");
+              steps.push(citationResult12);
+            }
           })
       ),
       Match.when(
@@ -211,9 +223,14 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
           Effect.gen(function* () {
             const value = yield* retain(7, () => ({ kind: "int", value: "7" }));
             steps = [yield* callback("int", (_input, work) => emit(value, work))];
-            if (scene === "int-to-text")
-              steps.push(yield* callback("restore", (_input, work) => emitText("RESTORED", work)));
-            if (scene === "int-to-builtin") steps.push(yield* h.values.text("underscores"));
+            if (scene === "int-to-text") {
+              const citationResult13 = yield* callback("restore", (_input, work) => emitText("RESTORED", work));
+              steps.push(citationResult13);
+            }
+            if (scene === "int-to-builtin") {
+              const citationResult14 = yield* h.values.text("underscores");
+              steps.push(citationResult14);
+            }
           })
       ),
       Match.when(
@@ -222,21 +239,25 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
           Effect.gen(function* () {
             const value = yield* h.values.bytes(new TextEncoder().encode("A__B"));
             steps = [yield* callback("bytes", (_input, work) => emit(value, work))];
-            if (scene === "bytes-to-text")
-              steps.push(
-                yield* callback(
-                  "decode",
-                  Effect.fn("CleanerCustomTest.decodeBytes")(function* (input, work) {
-                    const bytes = yield* Effect.fromOption(yield* h.values.getBytes(input), fail);
-                    const text = yield* Effect.try({
-                      try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
-                      catch: fail,
-                    });
-                    return yield* emitText(text, work);
-                  })
-                )
+            if (scene === "bytes-to-text") {
+              const citationResult15 = yield* callback(
+                "decode",
+                Effect.fn("CleanerCustomTest.decodeBytes")(function* (input, work) {
+                  const citationResult2 = yield* h.values.getBytes(input);
+                  const bytes = yield* Effect.fromOption(citationResult2, fail);
+                  const text = yield* Effect.try({
+                    try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
+                    catch: fail,
+                  });
+                  return yield* emitText(text, work);
+                })
               );
-            if (scene === "bytes-to-builtin") steps.push(yield* h.values.text("all_whitespace"));
+              steps.push(citationResult15);
+            }
+            if (scene === "bytes-to-builtin") {
+              const citationResult16 = yield* h.values.text("all_whitespace");
+              steps.push(citationResult16);
+            }
           })
       ),
       Match.when(
@@ -245,12 +266,12 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
           Effect.gen(function* () {
             const value = yield* retain({ sourceHost: true }, (ref) => ({ kind: "host", slot: slot(ref) }));
             steps = [yield* callback("host", (_input, work) => emit(value, work))];
-            if (scene === "host-to-text")
-              steps.push(
-                yield* callback("consume", (input, work) =>
-                  input === value ? emitText("SAME-HOST", work) : Effect.fail(fail())
-                )
+            if (scene === "host-to-text") {
+              const citationResult17 = yield* callback("consume", (input, work) =>
+                input === value ? emitText("SAME-HOST", work) : Effect.fail(fail())
               );
+              steps.push(citationResult17);
+            }
           })
       ),
       Match.when(
@@ -266,7 +287,9 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
             steps = [
               yield* callback("list", (_input, work) => emit(value, work)),
               yield* callback("mutate", (input, work) => {
-                if (input !== value) return Effect.fail(fail());
+                if (input !== value) {
+                  return Effect.fail(fail());
+                }
                 // This source callback mutates the retained host list in place.
                 items.push("B");
                 return emit(input, work);
@@ -274,7 +297,8 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
               yield* callback(
                 "join",
                 Effect.fn("CleanerCustomTest.joinList")(function* (input, work) {
-                  const host = yield* Effect.fromOption(yield* h.values.getHost(input), fail);
+                  const citationResult3 = yield* h.values.getHost(input);
+                  const host = yield* Effect.fromOption(citationResult3, fail);
                   const contents = yield* S.decodeUnknownEffect(HostStrings)(host).pipe(Effect.mapError(fail));
                   return yield* emitText(A.join(contents, ""), work);
                 })
@@ -291,8 +315,9 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
                 "marked",
                 Effect.fn("CleanerCustomTest.marked")(function* (_input, work) {
                   const charge = yield* work.reserveText(6);
+                  const citationResult4 = yield* h.values.subclass("MARKED", "marked-source-text");
                   return CitationCleanerProduced.make({
-                    value: yield* h.values.subclass("MARKED", "marked-source-text"),
+                    value: citationResult4,
                     charges: [charge],
                   });
                 })
@@ -435,7 +460,8 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
               yield* callback(
                 "nested",
                 Effect.fn("CleanerCustomTest.nested")(function* (value, work) {
-                  return yield* emit(yield* work.nested("nested-source", value), work);
+                  const citationResult5 = yield* work.nested("nested-source", value);
+                  return yield* emit(citationResult5, work);
                 })
               ),
               suffix,
@@ -471,12 +497,14 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
             const update = yield* callback(
               "update-registry",
               Effect.fn("CleanerCustomTest.updateRegistry")(function* (value, work) {
-                if (scene === "registry-delete") yield* h.registry.remove(html);
-                else
+                if (scene === "registry-delete") {
+                  yield* h.registry.remove(html);
+                } else {
                   yield* h.registry.set(
                     scene === "registry-add" ? added : html,
                     scene === "registry-noncallable" ? noncallable : replacement
                   );
+                }
                 return yield* emit(value, work);
               })
             );
@@ -506,8 +534,9 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
       const fn = yield* h.registry.runtime.get(key, work);
       actualBuiltin = O.some(fn);
       views = HashMap.set(views, fn.slot, () => ({ kind: "builtin-function", name: "html" }));
-      if (scene === "builtin-function-step") steps = [fn, suffix];
-      else {
+      if (scene === "builtin-function-step") {
+        steps = [fn, suffix];
+      } else {
         const replacement = yield* callback("registered", (value, current) =>
           asText(value).pipe(Effect.flatMap((text) => emitText(`${text}:REGISTERED`, current)))
         );
@@ -528,13 +557,24 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
         O.contains(dispatch, value) || O.contains(callableText, value) || HashMap.has(callbacks, value.slot)
       ),
     hash: Effect.fn("CleanerCustomTest.hash")(function* (value) {
-      if (O.contains(callableText, value)) return yield* h.hashes.text("html").pipe(Effect.mapError(fail));
-      if (HashSet.has(unhashable, value.slot)) return yield* fail();
-      if (!O.contains(dispatch, value)) return O.contains(integer, value.slot) ? BigInt(1) : BigInt(value.slot + 100);
+      if (O.contains(callableText, value)) {
+        return yield* h.hashes.text("html").pipe(Effect.mapError(fail));
+      }
+      if (HashSet.has(unhashable, value.slot)) {
+        return yield* fail();
+      }
+      if (!O.contains(dispatch, value)) {
+        return O.contains(integer, value.slot) ? BigInt(1) : BigInt(value.slot + 100);
+      }
       hashCalls++;
       events = A.append(events, { kind: "step-hash", mode, call: hashCalls });
-      if (mode === "hash-raises") return yield* fail();
-      if (deleteOnThisHash()) yield* h.registry.remove(yield* h.values.text("html"));
+      if (mode === "hash-raises") {
+        return yield* fail();
+      }
+      if (deleteOnThisHash()) {
+        const citationResult18 = yield* h.values.text("html");
+        yield* h.registry.remove(citationResult18);
+      }
       const key = dispatchHashKey();
       const result = yield* h.hashes.text(key).pipe(Effect.mapError(fail));
       events = A.append(events, { kind: "step-hash-return", raw: result.toString() });
@@ -542,9 +582,13 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
     }),
     open: Effect.fn("CleanerCustomTest.open")(function* (plan, _initial, work) {
       yield* configureBuiltin(work);
-      if (scene === "reused-generator" && O.isSome(reusedCursor)) return reusedCursor.value;
+      if (scene === "reused-generator" && O.isSome(reusedCursor)) {
+        return reusedCursor.value;
+      }
       const sequence = plan === "nested-source" ? [yield* h.values.text("html"), suffix] : steps;
-      if (scene === "steps-none") return yield* CitationCleanerFailure.make({ reason: "iteration-failed" });
+      if (scene === "steps-none") {
+        return yield* CitationCleanerFailure.make({ reason: "iteration-failed" });
+      }
       const traced = A.contains(
         [
           "iterator-raises",
@@ -567,11 +611,15 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
         }
       };
       const finish = () => {
-        if (traced && !complete) events = A.append(events, { kind: "iterator-complete" });
+        if (traced && !complete) {
+          events = A.append(events, { kind: "iterator-complete" });
+        }
         complete = true;
       };
       const yielded = Effect.fnUntraced(function* (value: CitationCleanerObject) {
-        if (!traced) return;
+        if (!traced) {
+          return;
+        }
         const name = HashMap.get(names, value.slot);
         const descriptor = O.isSome(name) ? { kind: "callback", name: name.value } : yield* present(value);
         events = A.append(events, { kind: "iterator-yield", index, value: descriptor });
@@ -595,19 +643,31 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
           })
         ),
       };
-      if (scene === "reused-generator") reusedCursor = O.some(cursor);
+      if (scene === "reused-generator") {
+        reusedCursor = O.some(cursor);
+      }
       return cursor;
     }),
     equal: Effect.fn("CleanerCustomTest.equal")(function* (left, right) {
-      if (eitherContains(callableText, left, right)) return (yield* asText(left)) === (yield* asText(right));
-      if (!eitherContains(dispatch, left, right)) return yield* h.values.same(left, right);
+      if (eitherContains(callableText, left, right)) {
+        return (yield* asText(left)) === (yield* asText(right));
+      }
+      if (!eitherContains(dispatch, left, right)) {
+        return yield* h.values.same(left, right);
+      }
+      const citationResult6 = yield* present(O.contains(dispatch, left) ? right : left);
       events = A.append(events, {
         kind: "step-equality",
         mode,
-        other: yield* present(O.contains(dispatch, left) ? right : left),
+        other: citationResult6,
       });
-      if (mode === "equality-raises") return yield* fail();
-      if (mode === "delete-during-equality") yield* h.registry.remove(yield* h.values.text("html"));
+      if (mode === "equality-raises") {
+        return yield* fail();
+      }
+      if (mode === "delete-during-equality") {
+        const citationResult19 = yield* h.values.text("html");
+        yield* h.registry.remove(citationResult19);
+      }
       if (mode === "false-equality" || mode === "true-equality") {
         const result = mode === "true-equality";
         events = A.append(events, { kind: "equality-bool", result });
@@ -621,7 +681,8 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
         return yield* emitText("CALLBACK", work);
       }
       if (O.contains(dispatch, fn)) {
-        events = A.append(events, { kind: "step-call", mode, value: yield* present(value) });
+        const citationResult7 = yield* present(value);
+        events = A.append(events, { kind: "step-call", mode, value: citationResult7 });
         return yield* emitText("CALLBACK", work);
       }
       const body = yield* Effect.fromOption(HashMap.get(callbacks, fn.slot), () =>
@@ -630,9 +691,11 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
       const name = yield* Effect.fromOption(HashMap.get(names, fn.slot), fail);
       const call = O.getOrElse(HashMap.get(counts, fn.slot), () => 0) + 1;
       counts = HashMap.set(counts, fn.slot, call);
-      events = A.append(events, { kind: "callback-enter", name, call, value: yield* present(value) });
+      const citationResult8 = yield* present(value);
+      events = A.append(events, { kind: "callback-enter", name, call, value: citationResult8 });
       const result = yield* body(value, work);
-      events = A.append(events, { kind: "callback-return", name, value: yield* present(result.value) });
+      const citationResult9 = yield* present(result.value);
+      events = A.append(events, { kind: "callback-return", name, value: citationResult9 });
       return result;
     }),
   });
@@ -641,7 +704,8 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
     present,
     events: Effect.sync(() => events),
     bindings: Effect.gen(function* () {
-      return yield* Effect.forEach(yield* h.registry.read, ([key, value, builtin]) =>
+      const citationResult10 = yield* h.registry.read;
+      return yield* Effect.forEach(citationResult10, ([key, value, builtin]) =>
         Effect.gen(function* () {
           const descriptor = O.isSome(builtin)
             ? { kind: "builtin-function", name: builtin.value }

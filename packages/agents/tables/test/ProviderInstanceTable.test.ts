@@ -184,22 +184,20 @@ describe("ProviderInstance table", () => {
       const providerInstance = yield* Effect.fromResult(fromProviderInstanceRow(providerInstanceRow));
       const insert = yield* Effect.fromResult(toProviderInstanceInsert(providerInstance));
 
-      expectConverterFailure(
-        yield* converterFailure(toProviderInstanceInsert(withUnencodablePublicId(providerInstance))),
-        "ProviderInstanceConverterError"
+      const converterFailure1 = yield* converterFailure(
+        toProviderInstanceInsert(withUnencodablePublicId(providerInstance))
       );
-      expectConverterFailure(
-        yield* converterFailure(
-          fromProviderInstanceRow({
-            ...insert,
-            homePath: insert.homePath ?? null,
-            id: 10,
-            lastProbe: insert.lastProbe ?? null,
-            publicId: 42,
-          } as unknown as ProviderInstanceRow)
-        ),
-        "ProviderInstanceConverterError"
+      expectConverterFailure(converterFailure1, "ProviderInstanceConverterError");
+      const converterFailure2 = yield* converterFailure(
+        fromProviderInstanceRow({
+          ...insert,
+          homePath: insert.homePath ?? null,
+          id: 10,
+          lastProbe: insert.lastProbe ?? null,
+          publicId: 42,
+        } as unknown as ProviderInstanceRow)
       );
+      expectConverterFailure(converterFailure2, "ProviderInstanceConverterError");
     })
   );
 });

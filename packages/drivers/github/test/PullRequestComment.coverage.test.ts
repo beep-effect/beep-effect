@@ -61,13 +61,14 @@ describe("PullRequestComment coverage", () => {
     it.effect("layerTest retains every supplied override and its arguments", () =>
       Effect.gen(function* () {
         const service = yield* PullRequestComment;
-        assert.deepStrictEqual(yield* service.create(7, "new"), CommentRecord.make({ ...record, id: 7, body: "new" }));
-        assert.deepStrictEqual(
-          yield* service.upsert(7, marker, "new"),
-          CommentRecord.make({ ...record, id: 7, body: `new\n\n${marker.html}` })
-        );
-        assertSome(yield* service.find(7, marker), record);
-        assert.strictEqual(yield* service.delete(42), undefined);
+        const created = yield* service.create(7, "new");
+        assert.deepStrictEqual(created, CommentRecord.make({ ...record, id: 7, body: "new" }));
+        const upsert1 = yield* service.upsert(7, marker, "new");
+        assert.deepStrictEqual(upsert1, CommentRecord.make({ ...record, id: 7, body: `new\n\n${marker.html}` }));
+        const found = yield* service.find(7, marker);
+        assertSome(found, record);
+        const delete2 = yield* service.delete(42);
+        assert.strictEqual(delete2, undefined);
       })
     );
   });
@@ -91,22 +92,19 @@ describe("PullRequestComment coverage", () => {
     it.effect("normalizes absent bodies, searches markers, and creates or updates sticky comments", () =>
       Effect.gen(function* () {
         const service = yield* PullRequestComment;
-        assert.deepStrictEqual(yield* service.create(7, "text"), CommentRecord.make({ ...record, body: "" }));
-        assertSome(
-          yield* service.find(7, marker, { page: PageOptions.make({ perPage: 3, maxPages: 1 }) }),
-          CommentRecord.make({ ...record, body: `old\n\n${marker.html}` })
-        );
+        const created3 = yield* service.create(7, "text");
+        assert.deepStrictEqual(created3, CommentRecord.make({ ...record, body: "" }));
+        const found4 = yield* service.find(7, marker, { page: PageOptions.make({ perPage: 3, maxPages: 1 }) });
+        assertSome(found4, CommentRecord.make({ ...record, body: `old\n\n${marker.html}` }));
         assert.strictEqual(script.queryOf(1).get("per_page"), "3");
-        assertNone(yield* service.find(7, marker));
-        assert.deepStrictEqual(
-          yield* service.upsert(7, marker, "new"),
-          CommentRecord.make({ ...record, body: `new\n\n${marker.html}` })
-        );
-        assert.deepStrictEqual(
-          yield* service.upsert(7, marker, "updated"),
-          CommentRecord.make({ ...record, body: `updated\n\n${marker.html}` })
-        );
-        assert.strictEqual(yield* service.delete(42), undefined);
+        const found5 = yield* service.find(7, marker);
+        assertNone(found5);
+        const upsert6 = yield* service.upsert(7, marker, "new");
+        assert.deepStrictEqual(upsert6, CommentRecord.make({ ...record, body: `new\n\n${marker.html}` }));
+        const upsert7 = yield* service.upsert(7, marker, "updated");
+        assert.deepStrictEqual(upsert7, CommentRecord.make({ ...record, body: `updated\n\n${marker.html}` }));
+        const delete8 = yield* service.delete(42);
+        assert.strictEqual(delete8, undefined);
         assert.deepStrictEqual(
           A.map(script.calls, (call) => [call.method, call.path]),
           [
@@ -120,11 +118,14 @@ describe("PullRequestComment coverage", () => {
             ["DELETE", "/repos/acme/widget/issues/comments/42"],
           ]
         );
-        assert.deepStrictEqual(yield* S.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}"), { body: "text" });
-        assert.deepStrictEqual(yield* S.decodeEffect(JsonObject)(script.calls[4]?.body ?? "{}"), {
+        const value9 = yield* S.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}");
+        assert.deepStrictEqual(value9, { body: "text" });
+        const value10 = yield* S.decodeEffect(JsonObject)(script.calls[4]?.body ?? "{}");
+        assert.deepStrictEqual(value10, {
           body: `new\n\n${marker.html}`,
         });
-        assert.deepStrictEqual(yield* S.decodeEffect(JsonObject)(script.calls[6]?.body ?? "{}"), {
+        const value11 = yield* S.decodeEffect(JsonObject)(script.calls[6]?.body ?? "{}");
+        assert.deepStrictEqual(value11, {
           body: `updated\n\n${marker.html}`,
         });
       })
@@ -140,7 +141,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(CommentRecord)(value);
       const decoded = yield* S.decodeEffect(CommentRecord)(encoded);
       assert.isTrue(S.toEquivalence(CommentRecord)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(CommentRecord)(decoded), encoded);
+      const value12 = yield* S.encodeEffect(CommentRecord)(decoded);
+      assert.deepStrictEqual(value12, encoded);
     }),
   { arbitrary: fcRuns(100) }
 );

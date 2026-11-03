@@ -158,7 +158,7 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
           Effect.catchDefect(() => Effect.fail(bad()))
         );
         const identities = O.isSome(identityFactory)
-          ? O.some(yield* identityFactory.value.build.pipe(Effect.mapError(bad)))
+          ? yield* identityFactory.value.build.pipe(Effect.mapError(bad), Effect.asSome)
           : O.none();
         let identityHashes = HashMap.empty<string, bigint>();
         const identityHash = Effect.fn("Citation.callbackMissingPageIdentity")(function* (
@@ -243,7 +243,7 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
           return citation;
         });
         const host: O.Option<CitationHostResourceAdapter> = O.isSome(hostFactory)
-          ? O.some(yield* hostFactory.value.build({ hash: canonicalHash, citation: canonicalCitation }))
+          ? yield* hostFactory.value.build({ hash: canonicalHash, citation: canonicalCitation }).pipe(Effect.asSome)
           : O.none();
         const comparisonError = (error: CitationCallbackFailure) =>
           CitationRuntimeDictionaryFailure.make({
@@ -306,14 +306,13 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
         });
         const resourceView = Effect.fn("Citation.callbackResourceView")(function* (record: typeof Record.Type) {
           const codec = S.fromJsonString(CitationCallbackResource);
-          if (record._tag === "Canonical")
-            return yield* S.decodeEffect(codec)(
-              yield* S.encodeEffect(codec)(record.resource).pipe(Effect.mapError(bad))
-            ).pipe(Effect.mapError(bad));
+          if (record._tag === "Canonical") {
+            const encodedResource = yield* S.encodeEffect(codec)(record.resource).pipe(Effect.mapError(bad));
+            return yield* S.decodeEffect(codec)(encodedResource).pipe(Effect.mapError(bad));
+          }
           if (O.isNone(host) || record.resource._tag !== "Registered") return yield* bad();
-          const value = yield* S.decodeEffect(S.Json)(yield* host.value.presentation(record.handle)).pipe(
-            Effect.mapError(bad)
-          );
+          const citationResult1 = yield* host.value.presentation(record.handle);
+          const value = yield* S.decodeEffect(S.Json)(citationResult1).pipe(Effect.mapError(bad));
           return CitationCallbackResource.cases.Registered.make({ scope, slot: record.resource.slot, value });
         });
         const entry = Effect.fn("Citation.callbackRuntimeEntry")(function* (value: {
@@ -328,7 +327,8 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
         const read = table.read.pipe(Effect.flatMap((values) => Effect.forEach(values, entry, { concurrency: 1 })));
         return {
           view: Effect.fn("Citation.callbackCurrentResource")(function* (resource: CitationCallbackResource) {
-            return yield* resourceView((yield* objectOf(resource)).record);
+            const citationResult2 = yield* objectOf(resource);
+            return yield* resourceView(citationResult2.record);
           }),
           createHost: Effect.fn("Citation.callbackHostCreate")(function* (input: unknown) {
             if (closed || O.isNone(host)) return yield* bad();
@@ -338,11 +338,13 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
             const handle = yield* host.value.capture(input);
             if (!S.is(CitationHostResource)(handle)) return yield* bad();
             const existing = HashMap.get(hostSlots, handle.slot);
-            if (O.isSome(existing)) return yield* resourceView(yield* recordAt(existing.value));
+            if (O.isSome(existing)) {
+              const record = yield* recordAt(existing.value);
+              return yield* resourceView(record);
+            }
             const slot = yield* issueSlot;
-            const value = yield* S.decodeEffect(S.Json)(yield* host.value.presentation(handle)).pipe(
-              Effect.mapError(bad)
-            );
+            const citationResult3 = yield* host.value.presentation(handle);
+            const value = yield* S.decodeEffect(S.Json)(citationResult3).pipe(Effect.mapError(bad));
             const resource = CitationCallbackResource.cases.Registered.make({ scope, slot, value });
             registered = HashMap.set(registered, slot, { _tag: "Host", handle, resource });
             hostSlots = HashMap.set(hostSlots, handle.slot, slot);
@@ -374,9 +376,8 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
               value,
             });
             const codec = S.fromJsonString(CitationCallbackResource);
-            const captured = yield* S.decodeEffect(codec)(
-              yield* S.encodeEffect(codec)(resource).pipe(Effect.mapError(bad))
-            ).pipe(Effect.mapError(bad));
+            const citationResult4 = yield* S.encodeEffect(codec)(resource).pipe(Effect.mapError(bad));
+            const captured = yield* S.decodeEffect(codec)(citationResult4).pipe(Effect.mapError(bad));
             registered = HashMap.set(registered, slot, {
               _tag: "Canonical",
               object,
@@ -395,24 +396,31 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
             }).pipe(Effect.provideService(CitationRuntimeDictionaryComparison, comparison), Effect.mapError(mapped));
             for (const resource of resources) {
               yield* owner.step;
-              yield* set.add(yield* key(resource)).pipe(Effect.mapError(mapped));
+              const citationResult5 = yield* key(resource);
+              yield* set.add(citationResult5).pipe(Effect.mapError(mapped));
             }
-            return A.length(yield* set.read);
+            const citationResult6 = yield* set.read;
+            return A.length(citationResult6);
           }),
           equalityKey: Effect.fn("Citation.callbackRuntimeEqualityKey")(function* (resource: CitationCallbackResource) {
             if ((yield* objectOf(resource)).record._tag !== "Canonical") return yield* bad();
-            return yield* S.encodeEffect(S.BigIntFromString)((yield* key(resource)).hash).pipe(Effect.mapError(bad));
+            const citationResult7 = yield* key(resource);
+            return yield* S.encodeEffect(S.BigIntFromString)(citationResult7.hash).pipe(Effect.mapError(bad));
           }),
           get: Effect.fn("Citation.callbackRuntimeGet")(function* (resource: CitationCallbackResource) {
-            const hit = yield* table.get(yield* key(resource)).pipe(Effect.mapError(mapped));
-            return O.isSome(hit) ? O.some(yield* entry(hit.value)) : O.none();
+            const citationResult8 = yield* key(resource);
+            const hit = yield* table.get(citationResult8).pipe(Effect.mapError(mapped));
+            return O.isSome(hit) ? yield* entry(hit.value).pipe(Effect.asSome) : O.none();
           }),
           set: Effect.fn("Citation.callbackRuntimeSet")(function* (resource: CitationCallbackResource, slot: number) {
-            return yield* entry(yield* table.set(yield* key(resource), slot).pipe(Effect.mapError(mapped)));
+            const citationResult9 = yield* key(resource);
+            const citationResult10 = yield* table.set(citationResult9, slot).pipe(Effect.mapError(mapped));
+            return yield* entry(citationResult10);
           }),
           remove: Effect.fn("Citation.callbackRuntimeRemove")(function* (resource: CitationCallbackResource) {
-            const hit = yield* table.remove(yield* key(resource)).pipe(Effect.mapError(mapped));
-            return O.isSome(hit) ? O.some(yield* entry(hit.value)) : O.none();
+            const citationResult11 = yield* key(resource);
+            const hit = yield* table.remove(citationResult11).pipe(Effect.mapError(mapped));
+            return O.isSome(hit) ? yield* entry(hit.value).pipe(Effect.asSome) : O.none();
           }),
           read,
           origins: Effect.suspend(() =>

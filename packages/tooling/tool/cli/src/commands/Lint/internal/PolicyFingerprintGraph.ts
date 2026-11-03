@@ -499,7 +499,7 @@ export const makePolicyGraph = ({ tree, workspaces }: PolicyGraphOptions) => {
 
   const resolveRelative = Effect.fnUntraced(function* (from: string, specifier: string) {
     for (const candidate of resolutionCandidates(joinPath(directoryOf(from), specifier)))
-      if (O.isSome(yield* syntaxOf(candidate))) return O.some(candidate);
+      if (yield* Effect.map(syntaxOf(candidate), O.isSome)) return O.some(candidate);
     return O.none<string>();
   });
 
@@ -806,7 +806,8 @@ const assetExtension = (file: string): O.Option<string> => {
 // A reached workspace's manifest plus its asset globs, or its whole `src` when opaque.
 const workspaceInputs = Effect.fnUntraced(function* (tree: PolicySourceTree, directory: string, opaque: boolean) {
   if (opaque) return [`${directory}/package.json`, `${directory}/src/**`];
-  const extensions = A.dedupe(A.getSomes(A.map(yield* tree.files(`${directory}/src`), assetExtension)));
+  const files1 = yield* tree.files(`${directory}/src`);
+  const extensions = A.dedupe(A.getSomes(A.map(files1, assetExtension)));
   return [`${directory}/package.json`, ...A.map(extensions, (extension) => `${directory}/src/**/*.${extension}`)];
 });
 

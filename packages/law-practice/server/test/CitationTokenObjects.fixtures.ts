@@ -70,8 +70,7 @@ export const loadCitationTokenObjectsControls = Effect.fn("TokenTest.loadObjects
   const bytes = yield* fs.readFile(
     NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/token-objects.json", import.meta.url))
   );
-  expect(yield* digest.digestHex(Digest.sha256, bytes)).toBe(
-    "220603353c0c1536be49c48d132abdcfa9b6bbd861b6acba08c2ac68640ddbd2"
-  );
+  const citationResult1 = yield* digest.digestHex(Digest.sha256, bytes);
+  expect(citationResult1).toBe("220603353c0c1536be49c48d132abdcfa9b6bbd861b6acba08c2ac68640ddbd2");
   return yield* S.decodeEffect(Corpus)(new TextDecoder().decode(bytes));
 });

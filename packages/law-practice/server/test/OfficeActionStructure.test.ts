@@ -83,8 +83,10 @@ it.layer(ConsumerLive, { timeout: "10 seconds", concurrent: false })("office-act
           OfficeActionAttemptRequest.make({ attemptId: "a-1", document, verification: state.verification })
         );
         yield* intake.deliver(outcome);
-        yield* Ref.set(state.originalBytes, yield* fs.readFileString(filename));
-        expect(yield* Ref.get(state.delivered)).toBe(1);
+        const readFileString1 = yield* fs.readFileString(filename);
+        yield* Ref.set(state.originalBytes, readFileString1);
+        const got = yield* Ref.get(state.delivered);
+        expect(got).toBe(1);
       })
     );
   });
@@ -132,8 +134,9 @@ it.layer(ConsumerLive, { timeout: "10 seconds", concurrent: false })("office-act
           A.head(first.extractions),
           () => "missing retained extraction"
         );
-        if (!GroundedExtraction.guards.match_exact(firstExtraction))
+        if (!GroundedExtraction.guards.match_exact(firstExtraction)) {
           return yield* Effect.die("Expected retained exact extraction.");
+        }
         const badQuote = Str.repeat(Str.length(firstExtraction.matchedText))("x");
         const tamperedExtractions = OfficeActionStructureAttempt.make({
           ...first,
@@ -196,10 +199,13 @@ it.layer(ConsumerLive, { timeout: "10 seconds", concurrent: false })("office-act
         const fourth = yield* Effect.fromOption(A.get(finalHistory, 3), () => "missing fourth attempt");
         assertSome(fourth.previousAttemptId, "a-3");
         expect((yield* intake.replay(first, state.verification)).status).toBe("recognized");
-        expect(yield* store.find(first.source, first.rule)).toHaveLength(1);
+        const found = yield* store.find(first.source, first.rule);
+        expect(found).toHaveLength(1);
         const bytes = yield* fs.readFileString(filename);
-        expect(Str.startsWith(yield* Ref.get(state.originalBytes))(bytes)).toBe(true);
-        expect(yield* Ref.get(state.delivered)).toBe(2);
+        const got2 = yield* Ref.get(state.originalBytes);
+        expect(Str.startsWith(got2)(bytes)).toBe(true);
+        const got3 = yield* Ref.get(state.delivered);
+        expect(got3).toBe(2);
         const page = yield* fixtureOcrPage(state.text);
         const lowQuality = yield* intake.record(
           OfficeActionAttemptRequest.make({
@@ -214,12 +220,14 @@ it.layer(ConsumerLive, { timeout: "10 seconds", concurrent: false })("office-act
         const final = yield* store.read;
         const ocrAttempt = yield* Effect.fromOption(A.last(final), () => "missing OCR attempt");
         expect(ocrAttempt.ocrPages).toHaveLength(1);
-        expect(yield* intake.replay(ocrAttempt, state.verification)).toMatchObject({
+        const replay4 = yield* intake.replay(ocrAttempt, state.verification);
+        expect(replay4).toMatchObject({
           status: "abstained",
           code: "low-quality-source",
         });
         yield* intake.deliver(lowQuality);
-        expect(yield* Ref.get(state.delivered)).toBe(2);
+        const got5 = yield* Ref.get(state.delivered);
+        expect(got5).toBe(2);
         const foreignSource = SourceTextIdentity.make({ ...state.verification.source, scopeRef: "matter:foreign" });
         const foreignVerification = VerifySourceTextIdentityInput.make({
           expectedSource: state.verification.expectedSource,
@@ -252,7 +260,8 @@ it.layer(ConsumerLive, { timeout: "10 seconds", concurrent: false })("office-act
           })
         );
         expect(restored.status).toBe("recognized");
-        expect(yield* store.read).toHaveLength(7);
+        const read6 = yield* store.read;
+        expect(read6).toHaveLength(7);
       })
     );
     it.effect("rejects partial lines and a tampered predecessor chain", () =>
@@ -272,7 +281,8 @@ it.layer(ConsumerLive, { timeout: "10 seconds", concurrent: false })("office-act
         yield* fs.writeFileString(filename, firstLine + firstLine);
         expect((yield* store.read.pipe(Effect.flip))._tag).toBe("OfficeActionStructureStorageError");
         yield* fs.writeFileString(filename, "");
-        expect(yield* store.read).toHaveLength(0);
+        const read7 = yield* store.read;
+        expect(read7).toHaveLength(0);
         yield* fs.writeFileString(filename, original);
       })
     );
@@ -327,7 +337,9 @@ it.effect.prop(
   ({ closed }) =>
     Effect.gen(function* () {
       const codec = S.fromJsonString(DocStructureAbstention);
-      const restored = yield* S.decodeEffect(codec)(yield* S.encodeEffect(codec)(closed));
+      const argument = S.decodeEffect(codec);
+      const value = yield* S.encodeEffect(codec)(closed);
+      const restored = yield* argument(value);
       expect(S.toEquivalence(DocStructureAbstention)(closed, restored)).toBe(true);
       expect(restored.status).toBe("abstained");
       expect("candidates" in restored).toBe(false);

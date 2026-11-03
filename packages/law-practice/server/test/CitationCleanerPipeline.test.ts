@@ -170,7 +170,8 @@ const pipeline = Effect.fn("CleanerTest.pipeline")(function* (
   h: Effect.Success<typeof harness>,
   overrides: Partial<Effect.Success<typeof defaultCitationEnginePolicy>["limits"]> = {}
 ) {
-  return yield* makeCitationCleanerPipeline({ ...(yield* defaultCitationEnginePolicy).limits, ...overrides }).pipe(
+  const citationResult1 = yield* defaultCitationEnginePolicy;
+  return yield* makeCitationCleanerPipeline({ ...citationResult1.limits, ...overrides }).pipe(
     Effect.provideService(CitationCleanerRuntime, h.runtime)
   );
 });
@@ -199,10 +200,13 @@ it.effect("consumes a live cursor and performs membership before a separate valu
         }),
       };
     });
-    const run = yield* (yield* pipeline(h)).run({ text: "x", plan: "lazy" });
-    expect(yield* h.raw(run.value)).toBe("B");
+    const citationResult2 = yield* pipeline(h);
+    const run = yield* citationResult2.run({ text: "x", plan: "lazy" });
+    const citationResult3 = yield* h.raw(run.value);
+    expect(citationResult3).toBe("B");
     expect(run.producedTextUtf16).toBe(2);
-    expect(yield* h.events).toEqual([
+    const citationResult4 = yield* h.events;
+    expect(citationResult4).toEqual([
       "fromText",
       "open:lazy",
       "next",
@@ -215,7 +219,9 @@ it.effect("consumes a live cursor and performs membership before a separate valu
       "invoke",
       "next",
     ]);
-    expect((yield* (yield* h.work).snapshot).closed).toBe(true);
+    const citationResult5 = yield* h.work;
+    const citationResult6 = yield* citationResult5.snapshot;
+    expect(citationResult6.closed).toBe(true);
   })
 );
 it.effect("preserves non-string values, identities and callback state across operations", () =>
@@ -226,7 +232,8 @@ it.effect("preserves non-string values, identities and callback state across ope
     const produceHost = h.callback(() => Effect.succeed(CitationCleanerProduced.make({ value: hostRef, charges: [] })));
     const useHost = h.callback((value, work) =>
       Effect.gen(function* () {
-        expect(yield* h.raw(value)).toBe(host);
+        const citationResult7 = yield* h.raw(value);
+        expect(citationResult7).toBe(host);
         host.count++;
         return yield* h.emit(work, 1, () => `${host.count}`);
       })
@@ -237,8 +244,12 @@ it.effect("preserves non-string values, identities and callback state across ope
     const object = yield* p.run({ text: "x", plan: "host" });
     expect(object.value).toBe(hostRef);
     expect(object.producedTextUtf16).toBe(0);
-    expect(yield* h.raw((yield* p.run({ text: "x", plan: "state" })).value)).toBe("1");
-    expect(yield* h.raw((yield* p.run({ text: "x", plan: "state" })).value)).toBe("2");
+    const citationResult8 = yield* p.run({ text: "x", plan: "state" });
+    const citationResult9 = yield* h.raw(citationResult8.value);
+    expect(citationResult9).toBe("1");
+    const citationResult10 = yield* p.run({ text: "x", plan: "state" });
+    const citationResult11 = yield* h.raw(citationResult10.value);
+    expect(citationResult11).toBe("2");
   })
 );
 it.effect("does not fall back from a matched non-callable and stops before fetching another step on failure", () =>
@@ -247,10 +258,12 @@ it.effect("does not fall back from a matched non-callable and stops before fetch
     const name = h.own("name");
     h.registry.set("name", h.own(7));
     h.plans.set("invalid", () => h.sequence([name, h.own("later")]));
-    const failed = yield* Effect.flip((yield* pipeline(h)).run({ text: "x", plan: "invalid" }));
+    const citationResult12 = yield* pipeline(h);
+    const failed = yield* Effect.flip(citationResult12.run({ text: "x", plan: "invalid" }));
     expect(failed._tag).toBe("CitationCleanerFailure");
     if (failed._tag === "CitationCleanerFailure") expect(failed.reason).toBe("not-callable");
-    expect(yield* h.events).toEqual(["fromText", "open:invalid", "next", "contains", "get", "invoke"]);
+    const citationResult13 = yield* h.events;
+    expect(citationResult13).toEqual(["fromText", "open:invalid", "next", "contains", "get", "invoke"]);
   })
 );
 it.effect("shares nested reservations and permits intermediate values larger than the original source allowance", () =>
@@ -260,21 +273,23 @@ it.effect("shares nested reservations and permits intermediate values larger tha
     const outer = h.callback((value, work) =>
       Effect.gen(function* () {
         const result = yield* work.nested("inner", value);
-        return CitationCleanerProduced.make({ value: result, charges: [yield* work.reserveText(2)] });
+        const citationResult14 = yield* work.reserveText(2);
+        return CitationCleanerProduced.make({ value: result, charges: [citationResult14] });
       })
     );
     h.plans.set("inner", () => h.sequence([inner]));
     h.plans.set("outer", () => h.sequence([outer]));
     const p = yield* pipeline(h, { sourceUtf16: 1, producedTextUtf16: 4 });
     const result = yield* p.run({ text: "x", plan: "outer" });
-    expect(yield* h.raw(result.value)).toBe("YY");
+    const citationResult15 = yield* h.raw(result.value);
+    expect(citationResult15).toBe("YY");
     expect(result.producedTextUtf16).toBe(4);
-    const stale = yield* Effect.flip((yield* h.work).nested("inner", result.value));
+    const citationResult16 = yield* h.work;
+    const stale = yield* Effect.flip(citationResult16.nested("inner", result.value));
     expect(stale._tag).toBe("CitationCleanerFailure");
     if (stale._tag === "CitationCleanerFailure") expect(stale.reason).toBe("closed-work");
-    const failed = yield* Effect.flip(
-      (yield* pipeline(h, { sourceUtf16: 1, producedTextUtf16: 3 })).run({ text: "x", plan: "outer" })
-    );
+    const citationResult17 = yield* pipeline(h, { sourceUtf16: 1, producedTextUtf16: 3 });
+    const failed = yield* Effect.flip(citationResult17.run({ text: "x", plan: "outer" }));
     expect(failed._tag).toBe("CitationSafetyLimitExceeded");
     if (failed._tag === "CitationSafetyLimitExceeded") expect(failed.limit).toBe("producedTextUtf16");
   })
@@ -291,7 +306,8 @@ it.effect("reserves before materialization, rejects forged/reused charges and ac
     );
     h.plans.set("large", () => h.sequence([large]));
     const p = yield* pipeline(h, { producedTextUtf16: 2 });
-    expect((yield* Effect.flip(p.run({ text: "x", plan: "large" })))._tag).toBe("CitationSafetyLimitExceeded");
+    const citationResult18 = yield* Effect.flip(p.run({ text: "x", plan: "large" }));
+    expect(citationResult18._tag).toBe("CitationSafetyLimitExceeded");
     expect(materialized).toBe(false);
     const forged = h.callback(() =>
       Effect.succeed(
@@ -324,9 +340,11 @@ it.effect("reserves before materialization, rejects forged/reused charges and ac
     }
     h.plans.set("empty", () => h.sequence([]));
     const empty = yield* p.run({ text: "AB", plan: "empty" });
-    expect(yield* h.raw(empty.value)).toBe("AB");
+    const citationResult19 = yield* h.raw(empty.value);
+    expect(citationResult19).toBe("AB");
     expect(empty.producedTextUtf16).toBe(2);
-    expect(yield* Effect.flip(p.run({ text: "ABC", plan: "empty" }))).toMatchObject({
+    const citationResult20 = yield* Effect.flip(p.run({ text: "ABC", plan: "empty" }));
+    expect(citationResult20).toMatchObject({
       _tag: "CitationSafetyLimitExceeded",
       limit: "producedTextUtf16",
     });
@@ -362,11 +380,14 @@ it.effect(
       yield* TestClock.adjust(Duration.millis(50));
       const failed = yield* Fiber.join(fiber).pipe(Effect.flip);
       expect(failed).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "operationDeadline" });
-      expect((yield* (yield* h.work).snapshot).closed).toBe(true);
+      const citationResult21 = yield* h.work;
+      const citationResult22 = yield* citationResult21.snapshot;
+      expect(citationResult22.closed).toBe(true);
       const interrupted = yield* Effect.forkChild(p.run({ text: "x", plan: "wait" }));
       yield* Effect.yieldNow;
       yield* Fiber.interrupt(interrupted);
-      expect(Exit.hasInterrupts(yield* Fiber.await(interrupted))).toBe(true);
+      const citationResult23 = yield* Fiber.await(interrupted);
+      expect(Exit.hasInterrupts(citationResult23)).toBe(true);
     })
 );
 it.effect("redacts runtime defects and mixed interruption causes, and rejects functions in request data", () =>
@@ -377,7 +398,8 @@ it.effect("redacts runtime defects and mixed interruption causes, and rejects fu
     h.plans.set("defect", () => h.sequence([defect]));
     h.plans.set("mixed", () => h.sequence([mixed]));
     const p = yield* pipeline(h);
-    expect(yield* Effect.flip(p.run({ text: "private source", plan: "defect" }))).toMatchObject({
+    const citationResult24 = yield* Effect.flip(p.run({ text: "private source", plan: "defect" }));
+    expect(citationResult24).toMatchObject({
       _tag: "CitationCleanerFailure",
       reason: "runtime-failed",
     });
@@ -390,11 +412,13 @@ it.effect("redacts runtime defects and mixed interruption causes, and rejects fu
       },
       plan: "defect",
     };
-    expect(yield* Effect.flip(p.run(malformed))).toMatchObject({
+    const citationResult25 = yield* Effect.flip(p.run(malformed));
+    expect(citationResult25).toMatchObject({
       _tag: "CitationCleanerFailure",
       reason: "runtime-failed",
     });
-    expect(yield* Effect.flip(p.run({ text: "x", plan: "defect", callback: () => "x" }))).toMatchObject({
+    const citationResult26 = yield* Effect.flip(p.run({ text: "x", plan: "defect", callback: () => "x" }));
+    expect(citationResult26).toMatchObject({
       _tag: "CitationCleanerFailure",
       reason: "invalid-input",
     });
@@ -406,12 +430,12 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("reserved literal cl
     "preserves all 440 frozen primitive text outputs through the executor and pre-allocation stage reservations",
     () =>
       Effect.gen(function* () {
-        const raw = yield* (yield* FileSystem.FileSystem).readFileString(
+        const citationResult27 = yield* FileSystem.FileSystem;
+        const raw = yield* citationResult27.readFileString(
           NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/literal-cleaners.json", import.meta.url))
         );
-        expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-          "242701dc5547bc00fa441117925f934e45c4505f1515e4c51ab0e8380dd199e8"
-        );
+        const citationResult28 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+        expect(citationResult28).toBe("242701dc5547bc00fa441117925f934e45c4505f1515e4c51ab0e8380dd199e8");
         const corpus = yield* S.decodeEffect(CorpusJson)(raw);
         const texts = HashMap.fromIterable(A.map(corpus.artifacts, (row) => [row.sha256, row.value] as const));
         const limits = (yield* defaultCitationEnginePolicy).limits;
@@ -445,7 +469,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("reserved literal cl
           const text = yield* Effect.fromOption(HashMap.get(texts, row.text));
           const expected = yield* Effect.fromOption(HashMap.get(texts, row.expected));
           const result = yield* p.run({ text, plan: row.cleaner });
-          expect(yield* h.raw(result.value)).toBe(expected);
+          const citationResult29 = yield* h.raw(result.value);
+          expect(citationResult29).toBe(expected);
           expect(result.producedTextUtf16).toBe(expected.length);
         }
       }),
@@ -456,9 +481,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("reserved literal cl
       const h = yield* harness;
       const limits = { ...(yield* defaultCitationEnginePolicy).limits, sourceUtf16: 1, producedTextUtf16: 6 };
       const literal = yield* makeCitationLiteralCleaners(limits);
-      expect((yield* Effect.flip(literal.apply({ cleaner: "underscores", text: "__A__" }))).reason).toBe(
-        "limit-exceeded"
-      );
+      const citationResult30 = yield* Effect.flip(literal.apply({ cleaner: "underscores", text: "__A__" }));
+      expect(citationResult30.reason).toBe("limit-exceeded");
       const first = h.callback((_, work) => h.emit(work, 5, () => "__A__"));
       const second = h.callback((value, work) =>
         Effect.gen(function* () {
@@ -474,12 +498,13 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("reserved literal cl
         })
       );
       h.plans.set("stages", () => h.sequence([first, second]));
-      const result = yield* (yield* pipeline(h, limits)).run({ text: "x", plan: "stages" });
-      expect(yield* h.raw(result.value)).toBe("A");
+      const citationResult31 = yield* pipeline(h, limits);
+      const result = yield* citationResult31.run({ text: "x", plan: "stages" });
+      const citationResult32 = yield* h.raw(result.value);
+      expect(citationResult32).toBe("A");
       expect(result.producedTextUtf16).toBe(6);
-      const failed = yield* Effect.flip(
-        (yield* pipeline(h, { ...limits, producedTextUtf16: 5 })).run({ text: "x", plan: "stages" })
-      );
+      const citationResult33 = yield* pipeline(h, { ...limits, producedTextUtf16: 5 });
+      const failed = yield* Effect.flip(citationResult33.run({ text: "x", plan: "stages" }));
       expect(failed).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
     })
   );
@@ -498,7 +523,8 @@ it.effect("lends exclusive remaining text capacity and settles exact issued char
           .withTextCapacity((remaining) =>
             Effect.gen(function* () {
               expect(remaining).toBe(4);
-              reentry = O.some(yield* Effect.exit(work.reserveText(1)));
+              const citationResult34 = yield* Effect.exit(work.reserveText(1));
+              reentry = O.some(citationResult34);
               yield* Deferred.succeed(entered, undefined);
               yield* Deferred.await(release);
               return { value: "abc", units: 3 };
@@ -516,7 +542,8 @@ it.effect("lends exclusive remaining text capacity and settles exact issued char
         );
         yield* Effect.yieldNow;
         expect(competingFinished).toBe(false);
-        expect((yield* work.snapshot).producedTextUtf16).toBe(0);
+        const citationResult35 = yield* work.snapshot;
+        expect(citationResult35.producedTextUtf16).toBe(0);
         yield* Deferred.succeed(release, undefined);
         const result = yield* Fiber.join(native);
         const extra = yield* Fiber.join(competing);
@@ -524,8 +551,10 @@ it.effect("lends exclusive remaining text capacity and settles exact issued char
       })
     );
     h.plans.set("capacity", () => h.sequence([step]));
-    const result = yield* (yield* pipeline(h, { producedTextUtf16: 4 })).run({ text: "x", plan: "capacity" });
-    expect(yield* h.raw(result.value)).toBe("abcd");
+    const citationResult36 = yield* pipeline(h, { producedTextUtf16: 4 });
+    const result = yield* citationResult36.run({ text: "x", plan: "capacity" });
+    const citationResult37 = yield* h.raw(result.value);
+    expect(citationResult37).toBe("abcd");
     expect(result.producedTextUtf16).toBe(4);
     const reentryFailure = Exit.match(O.getOrThrow(reentry), {
       onFailure: (cause) => cause.pipe(Cause.findErrorOption, O.getOrThrow),
@@ -533,16 +562,16 @@ it.effect("lends exclusive remaining text capacity and settles exact issued char
     });
     expect(reentryFailure).toMatchObject({ _tag: "CitationCleanerFailure", reason: "invalid-reservation" });
     let called = false;
-    expect(
-      yield* Effect.flip(
-        (yield* h.work).withTextCapacity(() =>
-          Effect.sync(() => {
-            called = true;
-            return { value: "", units: 0 };
-          })
-        )
+    const citationResult38 = yield* h.work;
+    const citationResult39 = yield* Effect.flip(
+      citationResult38.withTextCapacity(() =>
+        Effect.sync(() => {
+          called = true;
+          return { value: "", units: 0 };
+        })
       )
-    ).toMatchObject({ reason: "closed-work" });
+    );
+    expect(citationResult39).toMatchObject({ reason: "closed-work" });
     expect(called).toBe(false);
   })
 );
@@ -563,7 +592,8 @@ it.effect("permits empty native output at zero capacity and rejects excess or ma
     h.plans.set("empty", () => h.sequence([full, empty]));
     const p = yield* pipeline(h, { producedTextUtf16: 1 });
     const result = yield* p.run({ text: "x", plan: "empty" });
-    expect(yield* h.raw(result.value)).toBe("");
+    const citationResult40 = yield* h.raw(result.value);
+    expect(citationResult40).toBe("");
     expect(result.producedTextUtf16).toBe(1);
     for (const units of [2, -1, 0.5, Number.NaN]) {
       const invalid = h.callback((_, work) =>
@@ -574,7 +604,9 @@ it.effect("permits empty native output at zero capacity and rejects excess or ma
       h.plans.set("invalid-capacity", () => h.sequence([invalid]));
       const error = yield* Effect.flip(p.run({ text: "x", plan: "invalid-capacity" }));
       expect(error._tag).toBe(units === 2 ? "CitationSafetyLimitExceeded" : "CitationCleanerFailure");
-      expect((yield* (yield* h.work).snapshot).producedTextUtf16).toBe(0);
+      const citationResult41 = yield* h.work;
+      const citationResult42 = yield* citationResult41.snapshot;
+      expect(citationResult42.producedTextUtf16).toBe(0);
     }
   })
 );
@@ -599,22 +631,27 @@ it.effect("releases borrowed capacity after producer failure and interruption wi
         const waiting = yield* work.reserveText(1).pipe(
           Effect.tap(() =>
             Effect.gen(function* () {
-              expect(yield* Deferred.isDone(retired)).toBe(true);
+              const citationResult43 = yield* Deferred.isDone(retired);
+              expect(citationResult43).toBe(true);
             })
           ),
           Effect.forkChild
         );
         yield* Effect.yieldNow;
-        expect((yield* work.snapshot).producedTextUtf16).toBe(0);
+        const citationResult44 = yield* work.snapshot;
+        expect(citationResult44.producedTextUtf16).toBe(0);
         yield* Fiber.interrupt(native);
         const charge = yield* Fiber.join(waiting);
-        expect(yield* Deferred.isDone(retired)).toBe(true);
+        const citationResult45 = yield* Deferred.isDone(retired);
+        expect(citationResult45).toBe(true);
         return CitationCleanerProduced.make({ value: h.own("R"), charges: [charge] });
       })
     );
     h.plans.set("release", () => h.sequence([step]));
-    const result = yield* (yield* pipeline(h, { producedTextUtf16: 1 })).run({ text: "x", plan: "release" });
-    expect(yield* h.raw(result.value)).toBe("R");
+    const citationResult46 = yield* pipeline(h, { producedTextUtf16: 1 });
+    const result = yield* citationResult46.run({ text: "x", plan: "release" });
+    const citationResult47 = yield* h.raw(result.value);
+    expect(citationResult47).toBe("R");
     expect(result.producedTextUtf16).toBe(1);
   })
 );

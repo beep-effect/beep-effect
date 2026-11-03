@@ -738,13 +738,14 @@ const make = (client: GitHubClient["Service"]): CheckRunShape => {
     Effect.fn("CheckRun.create")(function* (name: string, headSha: string) {
       const { owner, repo } = yield* Repo;
       yield* Effect.annotateCurrentSpan({ owner, repo, name, headSha });
+      const now1 = yield* DateTime.now;
       const created = yield* client.request("POST /repos/{owner}/{repo}/check-runs", {
         owner,
         repo,
         name,
         head_sha: headSha,
         status: "in_progress",
-        started_at: DateTime.formatIso(yield* DateTime.now),
+        started_at: DateTime.formatIso(now1),
       });
       return yield* refOf(created, "CheckRun.create");
     })
@@ -759,13 +760,14 @@ const make = (client: GitHubClient["Service"]): CheckRunShape => {
     ) {
       const { owner, repo } = yield* Repo;
       yield* Effect.annotateCurrentSpan({ owner, repo, id, conclusion });
+      const now2 = yield* DateTime.now;
       yield* client.request("PATCH /repos/{owner}/{repo}/check-runs/{check_run_id}", {
         owner,
         repo,
         check_run_id: id,
         status: "completed",
         conclusion,
-        completed_at: DateTime.formatIso(yield* DateTime.now),
+        completed_at: DateTime.formatIso(now2),
         ...O.getSomesStruct({ output: O.map(O.fromUndefinedOr(output), wireOutput) }),
       });
     })

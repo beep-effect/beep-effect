@@ -92,10 +92,11 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
     () =>
       Effect.gen(function* () {
         const limits = (yield* defaultCitationEnginePolicy).limits;
+        const citationResult1 = yield* FileSystem.FileSystem;
         const paths = {
           kind: "bun",
           executable: process.execPath,
-          cwd: yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped({ prefix: "citation-html-stage-" }),
+          cwd: yield* citationResult1.makeTempDirectoryScoped({ prefix: "citation-html-stage-" }),
           workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
         };
         const policy = {
@@ -139,8 +140,10 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
           Effect.provideService(CitationCleanerRuntime, h.runtime)
         );
         const result = yield* pipeline.run({ text: "x", plan: "expand-html" });
-        expect(Str.length(yield* h.read(result.value))).toBe(units);
-        expect(yield* h.read(result.value)).toBe(`${Str.repeat(1_000_001)("A")}😀`);
+        const citationResult2 = yield* h.read(result.value);
+        expect(Str.length(citationResult2)).toBe(units);
+        const citationResult3 = yield* h.read(result.value);
+        expect(citationResult3).toBe(`${Str.repeat(1_000_001)("A")}😀`);
         expect(result.producedTextUtf16).toBe(units * 2);
         expect(exits).toBe(1);
         const zeroUnits = 1_000_028;
@@ -151,25 +154,31 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
           Effect.provideService(CitationCleanerRuntime, empty.runtime)
         );
         const zero = yield* zeroPipeline.run({ text: "x", plan: "zero-html" });
-        expect(yield* empty.read(zero.value)).toBe("");
+        const citationResult4 = yield* empty.read(zero.value);
+        expect(citationResult4).toBe("");
         expect(zero.producedTextUtf16).toBe(zeroUnits);
-        expect(yield* zeroWorker.snapshot).toMatchObject({ active: 0, processes: 0, quarantined: 0 });
+        const citationResult5 = yield* zeroWorker.snapshot;
+        expect(citationResult5).toMatchObject({ active: 0, processes: 0, quarantined: 0 });
         const fullPolicy = { ...policy, producedTextUtf16: 1 };
         const fullWorker = yield* makeCitationHtmlWorker(fullPolicy, paths);
         const full = owned(fullWorker, 1, () => "A");
         const fullPipeline = yield* makeCitationCleanerPipeline(fullPolicy).pipe(
           Effect.provideService(CitationCleanerRuntime, full.runtime)
         );
-        expect(yield* Effect.flip(fullPipeline.run({ text: "x", plan: "full-html" }))).toMatchObject({
+        const citationResult6 = yield* Effect.flip(fullPipeline.run({ text: "x", plan: "full-html" }));
+        expect(citationResult6).toMatchObject({
           _tag: "CitationSafetyLimitExceeded",
           limit: "producedTextUtf16",
         });
-        expect(yield* fullWorker.snapshot).toMatchObject({ active: 0, processes: 0, quarantined: 0 });
-        expect(yield* Effect.flip(worker.clean("AB"))).toMatchObject({
+        const citationResult7 = yield* fullWorker.snapshot;
+        expect(citationResult7).toMatchObject({ active: 0, processes: 0, quarantined: 0 });
+        const citationResult8 = yield* Effect.flip(worker.clean("AB"));
+        expect(citationResult8).toMatchObject({
           _tag: "CitationSafetyLimitExceeded",
           limit: "sourceUtf16",
         });
-        expect(yield* worker.snapshot).toMatchObject({ active: 0, processes: 0, quarantined: 0 });
+        const citationResult9 = yield* worker.snapshot;
+        expect(citationResult9).toMatchObject({ active: 0, processes: 0, quarantined: 0 });
       }),
     { timeout: 90_000 }
   );
@@ -222,11 +231,17 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
             Effect.repeat({ times: 2999, until: (exists) => exists, schedule: Schedule.spaced(Duration.millis(10)) })
           );
         expect(observed).toBe(true);
-        expect((yield* (yield* h.work).snapshot).closed).toBe(false);
+        const citationResult10 = yield* h.work;
+        const citationResult11 = yield* citationResult10.snapshot;
+        expect(citationResult11.closed).toBe(false);
         yield* Fiber.interrupt(running);
-        expect(Exit.hasInterrupts(yield* Fiber.await(running))).toBe(true);
-        expect((yield* (yield* h.work).snapshot).closed).toBe(true);
-        expect(yield* worker.snapshot).toMatchObject({ active: 0, queued: 0, processes: 0, quarantined: 0 });
+        const citationResult12 = yield* Fiber.await(running);
+        expect(Exit.hasInterrupts(citationResult12)).toBe(true);
+        const citationResult13 = yield* h.work;
+        const citationResult14 = yield* citationResult13.snapshot;
+        expect(citationResult14.closed).toBe(true);
+        const citationResult15 = yield* worker.snapshot;
+        expect(citationResult15).toMatchObject({ active: 0, queued: 0, processes: 0, quarantined: 0 });
         const pid = yield* Effect.fromOption(childPid, fail);
         expect(() => process.kill(pid, 0)).toThrow();
       }),
@@ -237,10 +252,12 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
     () =>
       Effect.gen(function* () {
         const limits = { ...(yield* defaultCitationEnginePolicy).limits, sourceUtf16: 1, producedTextUtf16: 1 };
+        const citationResult16 = yield* FileSystem.FileSystem;
+        const citationResult17 = yield* citationResult16.makeTempDirectoryScoped({ prefix: "citation-byte-stage-" });
         const worker = yield* makeCitationHtmlWorker(limits, {
           kind: "bun",
           executable: process.execPath,
-          cwd: yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped({ prefix: "citation-byte-stage-" }),
+          cwd: citationResult17,
           workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
         });
         const h = owned(worker, 0, () => new TextEncoder().encode("<div>A</div>"));
@@ -248,17 +265,20 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
           Effect.provideService(CitationCleanerRuntime, h.runtime)
         );
         const result = yield* pipeline.run({ text: "x", plan: "bytes-html" });
-        expect(yield* h.read(result.value)).toBe("A");
+        const citationResult18 = yield* h.read(result.value);
+        expect(citationResult18).toBe("A");
         expect(result.producedTextUtf16).toBe(1);
         const wide = owned(worker, 0, () => new TextEncoder().encode('<meta charset="utf-8"><div>😀</div>'));
         const widePipeline = yield* makeCitationCleanerPipeline(limits).pipe(
           Effect.provideService(CitationCleanerRuntime, wide.runtime)
         );
-        expect(yield* Effect.flip(widePipeline.run({ text: "x", plan: "bytes-html" }))).toMatchObject({
+        const citationResult19 = yield* Effect.flip(widePipeline.run({ text: "x", plan: "bytes-html" }));
+        expect(citationResult19).toMatchObject({
           _tag: "CitationSafetyLimitExceeded",
           limit: "producedTextUtf16",
         });
-        expect(yield* worker.snapshot).toMatchObject({ active: 0, queued: 0, processes: 0, quarantined: 0 });
+        const citationResult20 = yield* worker.snapshot;
+        expect(citationResult20).toMatchObject({ active: 0, queued: 0, processes: 0, quarantined: 0 });
       }),
     { timeout: 30_000 }
   );

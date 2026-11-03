@@ -55,13 +55,13 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native regex transla
           );
           const root = new URL("../../../../../", import.meta.url);
           const versionFile = new URL(kind === "bun" ? ".bun-version" : ".nvmrc", root);
-          const expectedVersion = Str.trim(yield* fs.readFileString(NodeURL.fileURLToPath(versionFile)));
+          const citationResult1 = yield* fs.readFileString(NodeURL.fileURLToPath(versionFile));
+          const expectedVersion = Str.trim(citationResult1);
           const runtime =
             kind === "node"
-              ? yield* makeCitationNodeTestRuntime(
-                  NodeURL.fileURLToPath(subjectUrl),
-                  yield* fs.makeTempDirectoryScoped({ prefix: "citation-node-corpus-" })
-                )
+              ? yield* fs
+                  .makeTempDirectoryScoped({ prefix: "citation-node-corpus-" })
+                  .pipe(Effect.flatMap((cwd) => makeCitationNodeTestRuntime(NodeURL.fileURLToPath(subjectUrl), cwd)))
               : { executable: process.execPath, workerFile: NodeURL.fileURLToPath(subjectUrl) };
           const native = yield* makeCitationObservedSpawner();
           const runSubject = Effect.fn("Qualification.runRegexSubject")(function* (subject: number) {
@@ -94,7 +94,9 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native regex transla
                   Stream.mapEffect((chunk) =>
                     Effect.gen(function* () {
                       bytes += chunk.byteLength;
-                      if (bytes > 2048) return yield* Effect.die("qualification reply exceeded its fixed bound");
+                      if (bytes > 2048) {
+                        return yield* Effect.die("qualification reply exceeded its fixed bound");
+                      }
                       return new TextDecoder("utf-8", { fatal: true }).decode(chunk);
                     })
                   ),
@@ -103,11 +105,13 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native regex transla
                     (text, chunk) => text + chunk
                   )
                 );
-                expect(yield* child.exitCode, text).toBe(0);
+                const citationResult2 = yield* child.exitCode;
+                expect(citationResult2, text).toBe(0);
                 return { child, reply: yield* S.decodeEffect(Reply)(text) };
               })
             ).pipe(Effect.timeout(Duration.seconds(90)));
-            expect(yield* completed.child.isRunning).toBe(false);
+            const citationResult3 = yield* completed.child.isRunning;
+            expect(citationResult3).toBe(false);
             expect(completed.reply.runtime).toBe(kind);
             expect(completed.reply.runtimeVersion).toBe(expectedVersion);
             expect(completed.reply.programInstances).toBe(
@@ -120,7 +124,8 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native regex transla
             return completed.reply;
           });
           const replies = yield* Effect.forEach(smoke ? [0] : A.range(0, 16), runSubject, { concurrency: 2 });
-          expect(yield* native.snapshot).toEqual({ spawned: smoke ? 1 : 17, confirmed: smoke ? 1 : 17 });
+          const citationResult4 = yield* native.snapshot;
+          expect(citationResult4).toEqual({ spawned: smoke ? 1 : 17, confirmed: smoke ? 1 : 17 });
           const sum = (pick: (reply: typeof Reply.Type) => number) =>
             A.reduce(replies, 0, (total, reply) => total + pick(reply));
           expect(A.reduce(replies, 0, (maximum, reply) => Num.max(maximum, reply.programMaxUtf16))).toBeGreaterThan(0);

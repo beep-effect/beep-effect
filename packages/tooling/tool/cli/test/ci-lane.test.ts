@@ -63,6 +63,12 @@ import { commandArgs } from "./support/commandArgs.ts";
 import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
 import type { SpawnRecord } from "@beep/commands/ScriptedSpawner";
 
+class CiLaneTestOperationError extends S.TaggedError<CiLaneTestOperationError, { readonly brand: unique symbol }>()(
+  "CiLaneTestOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in ci-lane.test.ts." }
+) {}
+
 // `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
 const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
 const gitPlatform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer);
@@ -252,7 +258,8 @@ const withPartitionShim = <A, E, R>(
         );
         yield* fs.chmod(bunxPath, 0o755);
         const bunPath = path.join(binDir, "bun");
-        yield* fs.writeFileString(bunPath, yield* fs.readFileString(bunxPath));
+        const readFileString1 = yield* fs.readFileString(bunxPath);
+        yield* fs.writeFileString(bunPath, readFileString1);
         yield* fs.chmod(bunPath, 0o755);
 
         return yield* withEnvVarEffect(
@@ -363,9 +370,10 @@ describe("CI lane descriptors", () => {
 
   it.effect("matches captured workflow checks apart from the optional external reviewer App check", () =>
     Effect.gen(function* () {
-      const snapshot = yield* Effect.tryPromise(() => Bun.file(branchProtectionContextSnapshotUrl).text()).pipe(
-        Effect.flatMap(decodeBranchProtectionContextSnapshot)
-      );
+      const snapshot = yield* Effect.tryPromise({
+        try: () => Bun.file(branchProtectionContextSnapshotUrl).text(),
+        catch: (cause) => CiLaneTestOperationError.make({ cause }),
+      }).pipe(Effect.flatMap(decodeBranchProtectionContextSnapshot));
       const requiredContexts = pipe(
         CI_LANE_DESCRIPTORS,
         A.filter((descriptor) => descriptor.required),
@@ -900,7 +908,10 @@ describe("CI lane partitions", () => {
   // that can only fail; a failed shard still fails its aggregator.
   it.effect("keeps literal required aggregators and fails every non-success shard result", () =>
     Effect.gen(function* () {
-      const workflowText = yield* Effect.tryPromise(() => Bun.file(checkWorkflowUrl).text());
+      const workflowText = yield* Effect.tryPromise({
+        try: () => Bun.file(checkWorkflowUrl).text(),
+        catch: (cause) => CiLaneTestOperationError.make({ cause }),
+      });
       const workflow = parseWorkflowYaml(workflowText);
       expect(workflowText).not.toMatch(/ci lane (?:lint|test-unit)[^\n]*--force/u);
       expect(yamlAt(workflow, ["jobs", "lint", "name"])).toBe("Lint");
@@ -969,7 +980,8 @@ describe("partitioned CI lane execution", () => {
               })
             );
 
-            const commands = pipe(yield* fs.readFileString(commandLogPath), Str.split("\n"), A.filter(Str.isNonEmpty));
+            const readFileString2 = yield* fs.readFileString(commandLogPath);
+            const commands = pipe(readFileString2, Str.split("\n"), A.filter(Str.isNonEmpty));
             expect(commands).toHaveLength(2);
             const selection = firstOf(commands);
             const execution = lastOf(commands);
@@ -983,7 +995,8 @@ describe("partitioned CI lane execution", () => {
             expect(execution).toContain("--force --summarize");
             expect(execution).not.toContain("--affected");
 
-            const output = A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
+            const logLines3 = yield* TestConsole.logLines;
+            const output = A.join(A.filter(logLines3, P.isString), "\n");
             const taskCount = A.length(selectedPackages);
             expect(output).toContain(
               `lint partition union proved: ${taskCount} executable tasks, ${taskCount} selected, ${effectivePartitionSize("lint", "lint-a", selectedPackages)} in lint-a`
@@ -1034,14 +1047,18 @@ describe("partitioned CI lane execution", () => {
               })
             );
 
-            const commands = pipe(yield* fs.readFileString(commandLogPath), Str.split("\n"), A.filter(Str.isNonEmpty));
+            const readFileString4 = yield* fs.readFileString(commandLogPath);
+            const commands = pipe(readFileString4, Str.split("\n"), A.filter(Str.isNonEmpty));
             expect(commands).toHaveLength(1);
             expect(firstOf(commands)).toContain("turbo run test");
             expect(firstOf(commands)).toContain("--affected --filter=!./apps/labs/** --only --dry-run=json");
 
-            const output = A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
-            expect(output).toContain(
-              `test-unit partition union proved: ${A.length(yield* liveTaskPackages("test"))} executable tasks, 1 selected, 0 in repo-cli-1`
+            const logLines5 = yield* TestConsole.logLines;
+            const output = A.join(A.filter(logLines5, P.isString), "\n");
+            const expectation = expect(output);
+            const liveTaskPackages1 = yield* liveTaskPackages("test");
+            expectation.toContain(
+              `test-unit partition union proved: ${A.length(liveTaskPackages1)} executable tasks, 1 selected, 0 in repo-cli-1`
             );
             expect(output).toContain("test-unit repo-cli-1: partition has no selected tasks (skipped)");
           })
@@ -1061,9 +1078,11 @@ describe("partitioned CI lane execution", () => {
               CiLaneRunOptions.make({ ...baseOptions, dryRun: true, partition: "repo-cli-1" })
             );
 
-            const commands = pipe(yield* fs.readFileString(commandLogPath), Str.split("\n"), A.filter(Str.isNonEmpty));
+            const readFileString6 = yield* fs.readFileString(commandLogPath);
+            const commands = pipe(readFileString6, Str.split("\n"), A.filter(Str.isNonEmpty));
             expect(commands).toHaveLength(1);
-            const output = A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
+            const logLines7 = yield* TestConsole.logLines;
+            const output = A.join(A.filter(logLines7, P.isString), "\n");
             expect(output).toContain("test-unit repo-cli-1: planned execution: bunx turbo run @beep/repo-cli#test");
             expect(output).toContain("--filter=@beep/repo-cli -- --shard=1/6");
             expect(output).toContain("test-unit repo-cli-1: dry-run proof complete; no tasks executed");
@@ -1802,7 +1821,8 @@ it.layer(storybookCiLayer(foreignStorybook), { timeout: "10 seconds" })(
         yield* runCiLane("storybook", prShapeOptions);
 
         expect(foreignStorybook.spawns).toHaveLength(1);
-        expect(yield* consoleOutput).toContain("does not select @beep/storybook#storybook:build (2 task(s) selected)");
+        const consoleOutput8 = yield* consoleOutput;
+        expect(consoleOutput8).toContain("does not select @beep/storybook#storybook:build (2 task(s) selected)");
       })
     );
   }
@@ -1835,7 +1855,8 @@ it.layer(storybookCiLayer(selectedStorybook), { timeout: "10 seconds" })(
         expect(lines[2]).toContain("cache execute -- run test:storybook");
         expect(lines[2]).not.toContain("--affected");
         expect(lines[3]).toBe("test -f apps/storybook/storybook-static/index.html");
-        expect(yield* consoleOutput).toContain(
+        const consoleOutput9 = yield* consoleOutput;
+        expect(consoleOutput9).toContain(
           "Turbo's affected plan (origin/main...HEAD) selects @beep/storybook#storybook:build (3 task(s) selected)"
         );
       })
@@ -2376,7 +2397,8 @@ describe("public CI coverage lane dispatch", () => {
           Effect.gen(function* () {
             yield* runCiLane("test-unit", options);
             const fs = yield* FileSystem.FileSystem;
-            const commands = pipe(yield* fs.readFileString(commandLogPath), Str.split("\n"), A.filter(Str.isNonEmpty));
+            const readFileString10 = yield* fs.readFileString(commandLogPath);
+            const commands = pipe(readFileString10, Str.split("\n"), A.filter(Str.isNonEmpty));
             expect(commands).toHaveLength(1);
             expect(firstOf(commands)).toContain("--dry-run=json");
           })
@@ -2432,7 +2454,8 @@ describe("public CI coverage lane dispatch", () => {
         expect(proof.selectedTaskCount).toBe(0);
         expect(proof.partitionTaskCount).toBe(0);
         expect(step).toBeUndefined();
-        expect(A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n")).toContain(
+        const logLines11 = yield* TestConsole.logLines;
+        expect(A.join(A.filter(logLines11, P.isString), "\n")).toContain(
           "test-unit unit-a: partition has no selected tasks (skipped)"
         );
       })

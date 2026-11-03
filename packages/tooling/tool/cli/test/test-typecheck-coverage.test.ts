@@ -163,12 +163,14 @@ describe("test-typecheck coverage", () => {
         const searchRoot = path.join(root, "ws");
         const relativeTo = A.map((file: string) => Str.replace(`${searchRoot}/`, "")(file));
 
-        expect(relativeTo(yield* expandWorkspaceFiles(searchRoot, "**/package.json"))).toEqual([
+        const expandWorkspaceFiles1 = yield* expandWorkspaceFiles(searchRoot, "**/package.json");
+        expect(relativeTo(expandWorkspaceFiles1)).toEqual([
           ".hidden/b/package.json",
           "a/package.json",
           "linked/c/package.json",
         ]);
-        expect(yield* expandWorkspaceFiles(path.join(root, "missing"), "**/package.json")).toEqual([]);
+        const expandWorkspaceFiles2 = yield* expandWorkspaceFiles(path.join(root, "missing"), "**/package.json");
+        expect(expandWorkspaceFiles2).toEqual([]);
       })
     );
   });
@@ -218,7 +220,8 @@ describe("test-typecheck coverage", () => {
         );
         expect(spawner.spawns).toEqual([]);
 
-        const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+        const logLines3 = yield* TestConsole.logLines;
+        const logText = A.join(A.filter(logLines3, isString), "\n");
         expect(logText).toContain("[quality:test-tsgo] skipped 2 package(s) already covered by their check script");
         expect(logText).toContain("[quality:test-tsgo] every package's check script already typechecks its test files");
         expect(logText).not.toContain("checking");

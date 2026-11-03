@@ -28,7 +28,8 @@ afterEach(() => vi.unstubAllGlobals());
 describe("Bun runtime version comparison", () => {
   it.effect("accepts equal versions after trimming command and pin newlines", () =>
     Effect.gen(function* () {
-      expect(yield* compareBunRuntimeVersion(O.some("1.4.3\n"), "1.4.3\n")).toBe("1.4.3");
+      const compareBunRuntimeVersion1 = yield* compareBunRuntimeVersion(O.some("1.4.3\n"), "1.4.3\n");
+      expect(compareBunRuntimeVersion1).toBe("1.4.3");
     })
   );
 
@@ -85,13 +86,15 @@ it.layer(commandLayer, { timeout: "30 seconds" })("version-sync runtime command"
       for (const flags of [[], ["--write"], ["--write", "--dry-run"]]) {
         yield* runVersionSync(["--check-runtime", ...flags]);
       }
-      expect(yield* TestConsole.logLines).toEqual([
+      const logLines2 = yield* TestConsole.logLines;
+      expect(logLines2).toEqual([
         "bun-version: .bun-version=1.4.3; bun --version=1.4.3",
         "bun-version: .bun-version=1.4.3; bun --version=1.4.3",
         "bun-version: .bun-version=1.4.3; bun --version=1.4.3",
       ]);
       // No package.json exists: entering the normal sync handler would fail.
-      expect(yield* fs.exists(path.join(root, "package.json"))).toBe(false);
+      const exists3 = yield* fs.exists(path.join(root, "package.json"));
+      expect(exists3).toBe(false);
     }).pipe(
       Effect.provideServiceEffect(FileSystem.FileSystem, MemoryFileSystem.make),
       Effect.provideServiceEffect(Console.Console, TestConsole.make)
@@ -107,8 +110,10 @@ it.layer(commandLayer, { timeout: "30 seconds" })("version-sync runtime command"
       yield* fs.makeDirectory(root, { recursive: true });
       yield* fs.writeFileString(path.join(root, "bun.lock"), "");
       yield* fs.writeFileString(path.join(root, ".bun-version"), "1.4.3\n");
-      expectReportedExit(yield* runVersionSync(["--check-runtime"]).pipe(Effect.exit));
-      expect(yield* TestConsole.errorLines).toEqual([
+      const pipe4 = yield* runVersionSync(["--check-runtime"]).pipe(Effect.exit);
+      expectReportedExit(pipe4);
+      const errorLines5 = yield* TestConsole.errorLines;
+      expect(errorLines5).toEqual([
         "version-sync: Bun version mismatch: .bun-version=1.4.3; bun --version=1.4.2 (.bun-version)",
       ]);
     }).pipe(
@@ -119,10 +124,10 @@ it.layer(commandLayer, { timeout: "30 seconds" })("version-sync runtime command"
 
   it.effect("reports missing repository roots as a failing CLI exit", () =>
     Effect.gen(function* () {
-      expectReportedExit(yield* runVersionSync(["--check-runtime"]).pipe(Effect.exit));
-      expect(yield* TestConsole.errorLines).toEqual([
-        expect.stringContaining("version-sync: Could not find repository root"),
-      ]);
+      const pipe6 = yield* runVersionSync(["--check-runtime"]).pipe(Effect.exit);
+      expectReportedExit(pipe6);
+      const errorLines7 = yield* TestConsole.errorLines;
+      expect(errorLines7).toEqual([expect.stringContaining("version-sync: Could not find repository root")]);
     }).pipe(
       Effect.provideServiceEffect(FileSystem.FileSystem, MemoryFileSystem.make),
       Effect.provideServiceEffect(Console.Console, TestConsole.make)
@@ -185,7 +190,8 @@ it.layer(runtimeLayer, { timeout: "30 seconds" })("Bun runtime preflight I/O", (
       );
       expect(error.message).toBe("Bun version mismatch: .bun-version=1.4.3; bun --version=1.4.2");
       yield* fs.writeFileString(path.join(root, ".bun-version"), "1.4.2\n");
-      expect(yield* checkBunRuntimeVersion(root)).toBe("1.4.2");
+      const checkBunRuntimeVersion8 = yield* checkBunRuntimeVersion(root);
+      expect(checkBunRuntimeVersion8).toBe("1.4.2");
     })
   );
 });

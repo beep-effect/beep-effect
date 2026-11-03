@@ -85,7 +85,8 @@ describe("DuckDbMigrator", () => {
 
         assert.deepStrictEqual(first, [[1, "create"]]);
         assert.deepStrictEqual(second, []);
-        assert.deepStrictEqual(yield* recordedIds(table), [1]);
+        const recordedIds1 = yield* recordedIds(table);
+        assert.deepStrictEqual(recordedIds1, [1]);
       })
     );
 
@@ -96,9 +97,8 @@ describe("DuckDbMigrator", () => {
         const base = {
           "1_base": withSql((sql) => sql`CREATE TABLE failing_base (id INTEGER)`),
         };
-        assert.deepStrictEqual(yield* DuckDbMigrator.run({ loader: DuckDbMigrator.fromRecord(base), table }), [
-          [1, "base"],
-        ]);
+        const result = yield* DuckDbMigrator.run({ loader: DuckDbMigrator.fromRecord(base), table });
+        assert.deepStrictEqual(result, [[1, "base"]]);
 
         const exit = yield* DuckDbMigrator.run({
           loader: DuckDbMigrator.fromRecord({
@@ -121,9 +121,12 @@ describe("DuckDbMigrator", () => {
         assert.strictEqual(error.kind, "Failed");
         assert.strictEqual(error.cause, "boom");
 
-        assert.deepStrictEqual(yield* recordedIds(table), [1]);
-        assert.deepStrictEqual(yield* sql`SELECT * FROM failing_base`, []);
-        assert.isFalse(yield* tableExists("failing_extra"));
+        const recordedIds2 = yield* recordedIds(table);
+        assert.deepStrictEqual(recordedIds2, [1]);
+        const value3 = yield* sql`SELECT * FROM failing_base`;
+        assert.deepStrictEqual(value3, []);
+        const tableExists4 = yield* tableExists("failing_extra");
+        assert.isFalse(tableExists4);
       })
     );
 
@@ -140,12 +143,15 @@ describe("DuckDbMigrator", () => {
           ),
         });
 
-        assert.deepStrictEqual(yield* DuckDbMigrator.run({ loader, table }), [
+        const result5 = yield* DuckDbMigrator.run({ loader, table });
+        assert.deepStrictEqual(result5, [
           [1, "create"],
           [2, "nested"],
         ]);
-        assert.deepStrictEqual(yield* sql`SELECT id FROM nested_tx_test ORDER BY id`, [{ id: 1 }, { id: 2 }]);
-        assert.deepStrictEqual(yield* recordedIds(table), [1, 2]);
+        const value6 = yield* sql`SELECT id FROM nested_tx_test ORDER BY id`;
+        assert.deepStrictEqual(value6, [{ id: 1 }, { id: 2 }]);
+        const recordedIds7 = yield* recordedIds(table);
+        assert.deepStrictEqual(recordedIds7, [1, 2]);
       })
     );
 
@@ -154,9 +160,12 @@ describe("DuckDbMigrator", () => {
         const table = "custom migrations";
         const loader = DuckDbMigrator.fromRecord({ "1_first": Effect.void });
 
-        assert.deepStrictEqual(yield* DuckDbMigrator.run({ loader, table }), [[1, "first"]]);
-        assert.deepStrictEqual(yield* DuckDbMigrator.run({ loader, table }), []);
-        assert.deepStrictEqual(yield* recordedIds(table), [1]);
+        const result8 = yield* DuckDbMigrator.run({ loader, table });
+        assert.deepStrictEqual(result8, [[1, "first"]]);
+        const result9 = yield* DuckDbMigrator.run({ loader, table });
+        assert.deepStrictEqual(result9, []);
+        const recordedIds10 = yield* recordedIds(table);
+        assert.deepStrictEqual(recordedIds10, [1]);
       })
     );
   });
@@ -173,8 +182,10 @@ describe("DuckDbMigrator", () => {
     it.effect("DuckDbMigrator.layer builds and migrates", () =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
-        assert.deepStrictEqual(yield* sql`SELECT value FROM layer_test`, [{ value: "hello" }]);
-        assert.deepStrictEqual(yield* recordedIds("effect_sql_migrations"), [1, 2]);
+        const value11 = yield* sql`SELECT value FROM layer_test`;
+        assert.deepStrictEqual(value11, [{ value: "hello" }]);
+        const recordedIds12 = yield* recordedIds("effect_sql_migrations");
+        assert.deepStrictEqual(recordedIds12, [1, 2]);
       })
     );
   });

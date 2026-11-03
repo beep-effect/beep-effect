@@ -23,7 +23,9 @@ const Points = S.Array(Point)
 const native = (points: ReadonlyArray<number>) => {
   const bytes = new Uint8Array(A.length(points) * 4);
   const view = new DataView(bytes.buffer);
-  for (let index = 0; index < A.length(points); index++) view.setUint32(index * 4, A.getUnsafe(points, index), true);
+  for (let index = 0; index < A.length(points); index++) {
+    view.setUint32(index * 4, A.getUnsafe(points, index), true);
+  }
   return { width: 4, bytes };
 };
 const letters = (cells: ReadonlyArray<number>) =>
@@ -34,7 +36,8 @@ const letters = (cells: ReadonlyArray<number>) =>
 
 it.effect("partitions intersecting atom sets into constant-membership cells", () =>
   Effect.gen(function* () {
-    const alphabet = yield* makeCitationRegexAlphabet((yield* defaultCitationEnginePolicy).limits);
+    const citationResult1 = yield* defaultCitationEnginePolicy;
+    const alphabet = yield* makeCitationRegexAlphabet(citationResult1.limits);
     const result = yield* alphabet.prepare(
       {
         atoms: 3,
@@ -59,7 +62,8 @@ it.effect("partitions intersecting atom sets into constant-membership cells", ()
 
 it.effect("distinguishes literal surrogate points from a scalar with identical display projection", () =>
   Effect.gen(function* () {
-    const alphabet = yield* makeCitationRegexAlphabet((yield* defaultCitationEnginePolicy).limits);
+    const citationResult2 = yield* defaultCitationEnginePolicy;
+    const alphabet = yield* makeCitationRegexAlphabet(citationResult2.limits);
     const sets = {
       atoms: 4,
       intervals: [
@@ -92,7 +96,8 @@ it.effect.prop(
     Effect.gen(function* () {
       const start = Num.min(left, right);
       const end = Num.max(left, right);
-      const alphabet = yield* makeCitationRegexAlphabet((yield* defaultCitationEnginePolicy).limits);
+      const citationResult3 = yield* defaultCitationEnginePolicy;
+      const alphabet = yield* makeCitationRegexAlphabet(citationResult3.limits);
       const inputs = [...points, start, end, 0x10ffff];
       const result = yield* alphabet.prepare({ atoms: 1, intervals: [{ atom: 0, start, end }] }, native(inputs));
       const wanted = letters([start === 0 ? 0 : 1]);
@@ -107,7 +112,8 @@ it.effect.prop(
 
 it.effect("retains empty predicates and handles a complete universe without extra cells", () =>
   Effect.gen(function* () {
-    const alphabet = yield* makeCitationRegexAlphabet((yield* defaultCitationEnginePolicy).limits);
+    const citationResult4 = yield* defaultCitationEnginePolicy;
+    const alphabet = yield* makeCitationRegexAlphabet(citationResult4.limits);
     const result = yield* alphabet.prepare(
       { atoms: 2, intervals: [{ atom: 1, start: 0, end: 0x10ffff }] },
       native([0, 0xd800, 0x10ffff])
@@ -137,17 +143,19 @@ it.effect("rejects noncanonical sets and charges encoded atom expansion before s
         { atom: 0, start: 1, end: 2 },
         { atom: 0, start: 3, end: 4 },
       ],
-    ])
-      expect(
-        yield* alphabet.prepare({ atoms: 1, intervals }, { width: 1, bytes: new Uint8Array(0) }).pipe(Effect.flip)
-      ).toMatchObject({ reason: "invalid-frame" });
+    ]) {
+      const citationResult8 = yield* alphabet
+        .prepare({ atoms: 1, intervals }, { width: 1, bytes: new Uint8Array(0) })
+        .pipe(Effect.flip);
+      expect(citationResult8).toMatchObject({ reason: "invalid-frame" });
+    }
     const small = yield* makeCitationRegexAlphabet({ ...policy, patternUtf16: 2 });
-    expect(
-      yield* small
-        .prepare({ atoms: 1, intervals: [{ atom: 0, start: 48, end: 57 }] }, "invalid source")
-        .pipe(Effect.flip)
-    ).toMatchObject({ limit: "patternUtf16" });
-    expect(yield* S.decodeEffect(CitationRegexAtomSets)({ atoms: 0, intervals: [] }).pipe(Effect.flip)).toBeDefined();
+    const citationResult5 = yield* small
+      .prepare({ atoms: 1, intervals: [{ atom: 0, start: 48, end: 57 }] }, "invalid source")
+      .pipe(Effect.flip);
+    expect(citationResult5).toMatchObject({ limit: "patternUtf16" });
+    const citationResult6 = yield* S.decodeEffect(CitationRegexAtomSets)({ atoms: 0, intervals: [] }).pipe(Effect.flip);
+    expect(citationResult6).toBeDefined();
   })
 );
 
@@ -160,10 +168,9 @@ it.effect("captures Clock identity and the shorter total-operation deadline", ()
     const alphabet = yield* makeCitationRegexAlphabet({ ...limits, operationDeadline: Duration.millis(1) }).pipe(
       Effect.provideService(Clock.Clock, immediate)
     );
-    expect(
-      yield* alphabet
-        .prepare({ atoms: 1, intervals: [] }, { width: 1, bytes: new Uint8Array(0) })
-        .pipe(Effect.provideService(Clock.Clock, disabled), Effect.flip)
-    ).toMatchObject({ operation: "extract", limit: "operationDeadline" });
+    const citationResult7 = yield* alphabet
+      .prepare({ atoms: 1, intervals: [] }, { width: 1, bytes: new Uint8Array(0) })
+      .pipe(Effect.provideService(Clock.Clock, disabled), Effect.flip);
+    expect(citationResult7).toMatchObject({ operation: "extract", limit: "operationDeadline" });
   })
 );

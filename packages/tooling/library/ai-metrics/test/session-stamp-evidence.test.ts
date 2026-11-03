@@ -216,7 +216,8 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "30 seco
       [AiMetricsSessionStampCompleteness, AiMetricsSessionStampQualification],
       Effect.fnUntraced(function* ([completeness, qualification]) {
         const record = yield* makeRecord({ completeness, hash: O.none(), qualification });
-        const decoded = yield* decodeRecord(yield* encodeRecord(record));
+        const encodedRecord = yield* encodeRecord(record);
+        const decoded = yield* decodeRecord(encodedRecord);
         expect(decoded.sessionStampCompleteness).toBe(completeness);
         expect(decoded.sessionStampQualification).toBe(qualification);
       }),
@@ -226,9 +227,12 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "30 seco
     it.effect(
       "decodes historical records without the fields as unknown and rejects malformed values",
       Effect.fnUntraced(function* () {
-        const encoded = yield* encodeRecord(
-          yield* makeRecord({ completeness: "complete", hash: O.some(stampX), qualification: "qualified" })
-        );
+        const madeRecord = yield* makeRecord({
+          completeness: "complete",
+          hash: O.some(stampX),
+          qualification: "qualified",
+        });
+        const encoded = yield* encodeRecord(madeRecord);
         const { sessionStampCompleteness: _completeness, sessionStampQualification: _qualification, ...rest } = encoded;
         // A round-2 record carried only the conflated boolean; it must not become verified.
         const historical = yield* decodeRecord({ ...rest, sessionStampCollectionComplete: true });
@@ -247,15 +251,16 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "30 seco
           const verified = { hash: stampX, completeness: "complete", qualification: "qualified", legacy: true };
           // Complete stamped.
           yield* writeVerdict("run-1", { completeness: "complete", hash: O.some(stampX), qualification: "qualified" });
-          expect(yield* readSession()).toEqual([verified]);
+          const readSession1 = yield* readSession();
+          expect(readSession1).toEqual([verified]);
 
           // Partial collection the gates could not evaluate keeps the stored verdict.
           yield* writeVerdict("run-2", { completeness: "partial", hash: O.none(), qualification: "unknown" });
-          expect(yield* readSession()).toEqual([verified]);
+          const readSession2 = yield* readSession();
+          expect(readSession2).toEqual([verified]);
           // The run-scoped source-file row records what run 2 itself observed.
-          expect(yield* readSourceFile("run-2")).toEqual([
-            { hash: null, completeness: "partial", qualification: "unknown" },
-          ]);
+          const readSourceFile3 = yield* readSourceFile("run-2");
+          expect(readSourceFile3).toEqual([{ hash: null, completeness: "partial", qualification: "unknown" }]);
           const preserved = yield* readAiMetricsOtlpSpanProjections;
           expect(preserved.projections.length).toBeGreaterThan(0);
           for (const span of preserved.projections) {
@@ -266,33 +271,38 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "30 seco
 
           // Partial collection whose own evidence disqualifies the session still clears it.
           yield* writeVerdict("run-3", { completeness: "partial", hash: O.none(), qualification: "unqualified" });
-          expect(yield* readSession()).toEqual([
+          const readSession4 = yield* readSession();
+          expect(readSession4).toEqual([
             { hash: null, completeness: "partial", qualification: "unqualified", legacy: false },
           ]);
 
           // Partial stamped: a stamp retained from decodable evidence replaces the stored one.
           yield* writeVerdict("run-4", { completeness: "complete", hash: O.some(stampX), qualification: "qualified" });
           yield* writeVerdict("run-5", { completeness: "partial", hash: O.some(stampY), qualification: "qualified" });
-          expect(yield* readSession()).toEqual([
+          const readSession5 = yield* readSession();
+          expect(readSession5).toEqual([
             { hash: stampY, completeness: "partial", qualification: "qualified", legacy: false },
           ]);
 
           // Complete unstamped: complete collection that finds no stamp clears the stored one.
           yield* writeVerdict("run-6", { completeness: "complete", hash: O.none(), qualification: "unqualified" });
-          expect(yield* readSession()).toEqual([
+          const readSession6 = yield* readSession();
+          expect(readSession6).toEqual([
             { hash: null, completeness: "complete", qualification: "unqualified", legacy: false },
           ]);
 
           // With nothing stored, an unknown verdict is recorded as unknown, never as non-use.
           yield* writeVerdict("run-7", { completeness: "partial", hash: O.none(), qualification: "unknown" });
-          expect(yield* readSession()).toEqual([
+          const readSession7 = yield* readSession();
+          expect(readSession7).toEqual([
             { hash: null, completeness: "partial", qualification: "unknown", legacy: false },
           ]);
 
           // Historical-default records (unknown/unknown) also never clear a stored stamp.
           yield* writeVerdict("run-8", { completeness: "complete", hash: O.some(stampX), qualification: "qualified" });
           yield* writeVerdict("run-9", { completeness: "unknown", hash: O.none(), qualification: "unknown" });
-          expect(yield* readSession()).toEqual([verified]);
+          const readSession8 = yield* readSession();
+          expect(readSession8).toEqual([verified]);
         }).pipe(provideScopedLayer(memoryDuckDb));
       })
     );
@@ -305,7 +315,8 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "30 seco
           // Build the pre-split shape: current schema minus the two new columns and ledger row.
           yield* ensureAiMetricsDerivedStorage;
           yield* rollbackAiMetricsSessionStampEvidence;
-          expect(yield* evidenceColumnCount()).toEqual({ columns: [{ count: 0 }], ledger: [{ count: 0 }] });
+          const evidenceColumnCount9 = yield* evidenceColumnCount();
+          expect(evidenceColumnCount9).toEqual({ columns: [{ count: 0 }], ledger: [{ count: 0 }] });
           const insert = (id: string, hash: string | null, legacy: boolean | null) =>
             db.run(
               `INSERT INTO ai_metrics_sessions (
@@ -334,20 +345,22 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "30 seco
             { id: "unstamped", completeness: "unknown", qualification: "unknown" },
             { id: "verified", completeness: "complete", qualification: "qualified" },
           ];
-          expect(yield* readAll).toEqual(migrated);
+          const readAll10 = yield* readAll;
+          expect(readAll10).toEqual(migrated);
           // Re-running ensure is idempotent through the ledger.
           yield* ensureAiMetricsDerivedStorage;
-          expect(yield* readAll).toEqual(migrated);
+          const readAll11 = yield* readAll;
+          expect(readAll11).toEqual(migrated);
 
           // Down path: columns and ledger row go; the legacy marker and stamps stay intact.
           yield* rollbackAiMetricsSessionStampEvidence;
-          expect(yield* evidenceColumnCount()).toEqual({ columns: [{ count: 0 }], ledger: [{ count: 0 }] });
-          expect(
-            yield* db.query(
-              `SELECT agent_session_id AS id, session_harness_hash AS hash, session_stamp_collection_complete AS legacy
+          const evidenceColumnCount12 = yield* evidenceColumnCount();
+          expect(evidenceColumnCount12).toEqual({ columns: [{ count: 0 }], ledger: [{ count: 0 }] });
+          const query13 = yield* db.query(
+            `SELECT agent_session_id AS id, session_harness_hash AS hash, session_stamp_collection_complete AS legacy
              FROM ai_metrics_sessions ORDER BY agent_session_id`
-            )
-          ).toEqual([
+          );
+          expect(query13).toEqual([
             { id: "pre-round-2", hash: null, legacy: null },
             { id: "pre-round-2-stamped", hash: stampX, legacy: null },
             { id: "stamped-unverified", hash: stampY, legacy: false },
@@ -356,8 +369,10 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "30 seco
           ]);
           // Re-applying after a rollback reproduces the same conservative translation.
           yield* ensureAiMetricsDerivedStorage;
-          expect(yield* evidenceColumnCount()).toEqual({ columns: [{ count: 4 }], ledger: [{ count: 1 }] });
-          expect(yield* readAll).toEqual(migrated);
+          const evidenceColumnCount14 = yield* evidenceColumnCount();
+          expect(evidenceColumnCount14).toEqual({ columns: [{ count: 4 }], ledger: [{ count: 1 }] });
+          const readAll15 = yield* readAll;
+          expect(readAll15).toEqual(migrated);
         }).pipe(provideScopedLayer(memoryDuckDb));
       })
     );

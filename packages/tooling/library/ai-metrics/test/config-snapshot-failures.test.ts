@@ -74,7 +74,8 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("config snapshot failure bo
         );
         expect(failure.message).toBe(message);
         expect(failure.cause).toBe(denied);
-        expect(yield* fs.readFileString(latestPath)).toBe("previous pointer\n");
+        const readFileString1 = yield* fs.readFileString(latestPath);
+        expect(readFileString1).toBe("previous pointer\n");
       }
     })
   );
@@ -85,7 +86,8 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("config snapshot failure bo
       const root = yield* fs.makeTempDirectoryScoped();
       const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
       const init = yield* ChildProcess.make("git", ["init", "--quiet"], { cwd: root });
-      expect(yield* init.exitCode).toBe(0);
+      const exitCode2 = yield* init.exitCode;
+      expect(exitCode2).toBe(0);
       const input = AiMetricsConfigSnapshotInput.make({ repoRoot: root });
       const cases: ReadonlyArray<{
         readonly message: string;
@@ -134,7 +136,8 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("config snapshot failure bo
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.makeTempDirectoryScoped();
       const init = yield* ChildProcess.make("git", ["init", "--quiet"], { cwd: root });
-      expect(yield* init.exitCode).toBe(0);
+      const exitCode3 = yield* init.exitCode;
+      expect(exitCode3).toBe(0);
       // The index read runs through `Git.lsFiles` (W2b): git never ran, its output overran the
       // kit's bound, or git reported an exit code.
       const failed = (fields: { readonly kind: "failed" | "truncated"; readonly exitCode?: number }) =>
@@ -169,7 +172,8 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("config snapshot failure bo
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.makeTempDirectoryScoped();
       const init = yield* ChildProcess.make("git", ["init", "--quiet"], { cwd: root });
-      expect(yield* init.exitCode).toBe(0);
+      const exitCode4 = yield* init.exitCode;
+      expect(exitCode4).toBe(0);
       for (const failAt of [1, 2]) {
         let resolutions = 0;
         const filesystem: FileSystem.FileSystem = {
@@ -206,7 +210,8 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("config snapshot failure bo
         ["add", "package/AGENTS.md"],
       ]) {
         const command = yield* ChildProcess.make("git", args, { cwd: repoRoot });
-        expect(yield* command.exitCode).toBe(0);
+        const exitCode5 = yield* command.exitCode;
+        expect(exitCode5).toBe(0);
       }
       const input = AiMetricsConfigSnapshotInput.make({ repoRoot: subdirectory });
       const result = yield* makeAiMetricsConfigSnapshot(input);
@@ -247,7 +252,8 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("config snapshot failure bo
       const root = yield* fs.makeTempDirectoryScoped();
       const unrelated = yield* fs.makeTempDirectoryScoped();
       const init = yield* ChildProcess.make("git", ["init", "--quiet"], { cwd: root });
-      expect(yield* init.exitCode).toBe(0);
+      const exitCode6 = yield* init.exitCode;
+      expect(exitCode6).toBe(0);
       const missing = PlatformError.systemError({ _tag: "NotFound", module: "FileSystem", method: "stat" });
       const failure = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot: root })).pipe(
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, {

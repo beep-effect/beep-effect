@@ -332,7 +332,8 @@ describe("ActionOutputs", () => {
           // real layer this exact assertion fails (see the control below):
           // stdout in a detached worker is a log file no runner parses, so the
           // mask both masks nothing and writes the plaintext into the log.
-          assert.notInclude(yield* captured, PLAINTEXT);
+          const captured1 = yield* captured;
+          assert.notInclude(captured1, PLAINTEXT);
         })
       );
     });
@@ -347,7 +348,8 @@ describe("ActionOutputs", () => {
             // the output, workflow-command prefix and all. In a `uses:` step the
             // runner consumes this line; in a detached worker it IS the leak.
             yield* Secret.forSigning(Redacted.make(PLAINTEXT));
-            assert.include(yield* captured, `::add-mask::${PLAINTEXT}`);
+            const captured2 = yield* captured;
+            assert.include(captured2, `::add-mask::${PLAINTEXT}`);
           })
         );
       });
@@ -356,7 +358,8 @@ describe("ActionOutputs", () => {
       it.effect("setSecret is a silent no-op — the value must not be written anywhere", () =>
         Effect.gen(function* () {
           yield* (yield* ActionOutputs).setSecret("s3cr3t");
-          assert.strictEqual(yield* captured, "[]", "a detached worker must write nothing for a mask");
+          const captured3 = yield* captured;
+          assert.strictEqual(captured3, "[]", "a detached worker must write nothing for a mask");
         })
       );
     });
@@ -378,7 +381,8 @@ describe("ActionOutputs", () => {
             assert.include(error.message, "detached worker");
           }
           // Failing typed, not silently: nothing was logged on the way.
-          assert.strictEqual(yield* captured, "[]");
+          const captured4 = yield* captured;
+          assert.strictEqual(captured4, "[]");
         })
       );
     });
@@ -393,7 +397,8 @@ describe("ActionOutputs", () => {
           );
           // The ::error:: protocol means nothing in a worker's log file —
           // emitting it would be pretending a runner is listening.
-          assert.notInclude(yield* captured, "::error::");
+          const captured5 = yield* captured;
+          assert.notInclude(captured5, "::error::");
         })
       );
     });

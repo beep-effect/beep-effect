@@ -18,12 +18,16 @@ import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { expectReportedExit, temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
+
+const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
 
 const EXPLORATION = "graduation-fixture";
 const PROVENANCE = `explorations/${EXPLORATION}`;
@@ -35,8 +39,8 @@ const decodeGraduationPlanJson = S.decodeUnknownEffect(S.fromJsonString(Graduati
 const runExploreCommand = Command.runWith(exploreCommand, { version: "0.0.0" });
 
 const manifestText = (status: string, stage: string, goals: ReadonlyArray<string> = []): string =>
-  `${JSON.stringify(
-    {
+  `${Result.getOrThrowWith(
+    encodePrettyJson({
       schemaVersion: "exploration-manifest/v1",
       exploration: {
         slug: EXPLORATION,
@@ -48,9 +52,8 @@ const manifestText = (status: string, stage: string, goals: ReadonlyArray<string
         created: "2026-10-01",
         updated: "2026-10-01",
       },
-    },
-    null,
-    2
+    }),
+    identity
   )}\n`;
 
 const snapshotOf = (
@@ -77,18 +80,18 @@ const requestOf = (...children: ReadonlyArray<GraduationChildInput>) =>
 const reasons = (plan: GraduationPlan) => A.map(plan.conflicts, (conflict) => conflict.reason);
 
 const childGoalManifest = (provenance?: string): string =>
-  `${JSON.stringify(
-    {
+  `${Result.getOrThrowWith(
+    encodePrettyJson({
       schemaVersion: "initiative-manifest/v2",
       initiative: { id: "child", title: "Child" },
       ...(provenance === undefined ? {} : { provenance: { exploration: provenance, graduated: TODAY } }),
-    },
-    null,
-    2
+    }),
+    identity
   )}\n`;
 
 const consoleLogText = Effect.fnUntraced(function* () {
-  return A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
+  const logLines1 = yield* TestConsole.logLines;
+  return A.join(A.filter(logLines1, P.isString), "\n");
 });
 
 it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: false, timeout: "60 seconds" })((it) => {
@@ -274,7 +277,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: fal
               ])
             );
             happy.pipe(Exit.isSuccess, assertTrue);
-            const plan = yield* decodeGraduationPlanJson(yield* consoleLogText());
+            const consoleLogText2 = yield* consoleLogText();
+            const plan = yield* decodeGraduationPlanJson(consoleLogText2);
             expect(A.map(plan.children, (childPlan) => childPlan.slug)).toEqual(["first-child"]);
             expect(A.map(plan.alreadyPublished, (published) => published.slug)).toEqual(["own-child"]);
             expect(plan.explorationEdit?.appendGoals).toEqual(["goals/first-child", "goals/own-child"]);

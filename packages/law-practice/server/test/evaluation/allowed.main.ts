@@ -60,30 +60,37 @@ const program = Effect.gen(function* () {
   const manifestFile = "goals/claim-element-antecedent-check/research/allowed-sampling.json";
   const manifestText = yield* fs.readFileString(manifestFile);
   const manifest = yield* S.decodeEffect(allowedSampleJson)(manifestText);
-  const implementation = yield* S.decodeEffect(implementationFreezeJson)(yield* fs.readFileString(implementationFile));
+  const argument = S.decodeEffect(implementationFreezeJson);
+  const readFileString1 = yield* fs.readFileString(implementationFile);
+  const implementation = yield* argument(readFileString1);
   const digest = (text: string) => digestService.digestHex(Digest.sha256, new TextEncoder().encode(text));
   const verifiedText = Effect.fn("AllowedEvaluation.verifiedText")(function* (path: string, expected: string) {
     const text = yield* fs.readFileString(path);
-    if ((yield* digest(text)) !== expected)
+    if ((yield* digest(text)) !== expected) {
       return yield* StructuralEvaluationError.make({ message: `Frozen file hash mismatch: ${path}` });
+    }
     return text;
   });
-  if (!isCompleteSample(manifest))
+  if (!isCompleteSample(manifest)) {
     return yield* StructuralEvaluationError.make({
       message: "Frozen allowed sample has inconsistent counts or duplicate patents.",
     });
+  }
   // Verify the entire source and implementation before emitting any prediction.
-  for (const file of implementation.files) yield* verifiedText(file.path, file.sha256);
+  for (const file of implementation.files) {
+    yield* verifiedText(file.path, file.sha256);
+  }
   const inputs = yield* Effect.forEach(manifest.sets, (row) =>
     verifiedText(
       `packages/law-practice/domain/test/fixtures/claim-element/allowed/${row.patentNumber}.claims.xml`,
       row.claimsXmlSha256
     ).pipe(Effect.map((xml) => ({ row, xml })))
   );
-  if (yield* fs.exists(output))
+  if (yield* fs.exists(output)) {
     return yield* StructuralEvaluationError.make({
       message: "Allowed evaluation output already exists; choose a new directory.",
     });
+  }
   yield* fs.makeDirectory(output, { recursive: true });
   const rows = yield* Effect.forEach(
     inputs,
@@ -134,11 +141,14 @@ const program = Effect.gen(function* () {
         const progress = Console.log(`Replayed frozen allowed set ${index + 1}/${inputs.length}: ${row.patentNumber}`);
         if (checked._tag === "Success") {
           const report = checked.success;
-          if (report.claimSet.claims.length !== row.claimCount)
+          if (report.claimSet.claims.length !== row.claimCount) {
             return yield* StructuralEvaluationError.make({
               message: `Allowed adapter claim count mismatch: ${row.patentNumber}`,
             });
-          yield* fs.writeFileString(`${output}/${row.patentNumber}.prediction.json`, yield* encodeReport(report));
+          }
+          const argument1 = `${output}/${row.patentNumber}.prediction.json`;
+          const encodedReport = yield* encodeReport(report);
+          yield* fs.writeFileString(argument1, encodedReport);
           yield* progress;
           return {
             ...row,
@@ -159,20 +169,19 @@ const program = Effect.gen(function* () {
       }),
     { concurrency: 1 }
   );
-  yield* fs.writeFileString(
-    `${output}/results.json`,
-    yield* encode({
-      schemaVersion: "claim-antecedent-allowed-replay/v1",
-      manifestSha256: yield* digest(manifestText),
-      implementationDigest: implementation.implementationDigest,
-      selectedSetCount: manifest.selectedSetCount,
-      selectedClaimCount: manifest.selectedClaimCount,
-      transport: "offline recorded native XML with explicit synthetic metadata aliases; no live download",
-      actualAttorneyAdjudicationRecorded: false,
-      falsePositiveRate: null,
-      sets: rows,
-    })
-  );
+  const argument2 = `${output}/results.json`;
+  const encoded = yield* encode({
+    schemaVersion: "claim-antecedent-allowed-replay/v1",
+    manifestSha256: yield* digest(manifestText),
+    implementationDigest: implementation.implementationDigest,
+    selectedSetCount: manifest.selectedSetCount,
+    selectedClaimCount: manifest.selectedClaimCount,
+    transport: "offline recorded native XML with explicit synthetic metadata aliases; no live download",
+    actualAttorneyAdjudicationRecorded: false,
+    falsePositiveRate: null,
+    sets: rows,
+  });
+  yield* fs.writeFileString(argument2, encoded);
 });
 BunRuntime.runMain(
   Effect.gen(function* () {

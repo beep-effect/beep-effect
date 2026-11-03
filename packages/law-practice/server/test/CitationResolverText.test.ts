@@ -45,7 +45,9 @@ it.effect("matches all 60 canonical punctuation/whitespace observations", () =>
   Effect.gen(function* () {
     const data = yield* fixture;
     expect(A.length(data.punctuation)).toBe(60);
-    for (const row of data.punctuation) expect(stripCitationAntecedentPunctuation(row.input)).toBe(row.output);
+    for (const row of data.punctuation) {
+      expect(stripCitationAntecedentPunctuation(row.input)).toBe(row.output);
+    }
   })
 );
 
@@ -57,7 +59,9 @@ it.effect("retains all frozen digit classifications and Unicode-version boundari
     expect(A.length(A.fromIterable(citationPythonTextData.decimalDigits))).toBe(660);
     expect(A.length(A.fromIterable(citationPythonTextData.whitespace))).toBe(29);
     expect(A.length(data.digits)).toBe(955);
-    for (const row of data.digits) expect(isCitationPythonDigit(row.input)).toBe(row.output);
+    for (const row of data.digits) {
+      expect(isCitationPythonDigit(row.input)).toBe(row.output);
+    }
   })
 );
 
@@ -69,9 +73,10 @@ it.effect("matches 38 pin checks including Unicode decimals, big integers and ca
       data.pins,
       Effect.fnUntraced(function* (row) {
         const index = row.kind === "case" ? 0 : row.kind === "law" ? 8 : 11;
-        const base = yield* S.encodeEffect(FullCitation)(
-          yield* S.decodeUnknownEffect(FullCitation)(A.getUnsafe(authorities.cases, index).input.citation)
+        const citationResult1 = yield* S.decodeUnknownEffect(FullCitation)(
+          A.getUnsafe(authorities.cases, index).input.citation
         );
+        const base = yield* S.encodeEffect(FullCitation)(citationResult1);
         const components =
           row.page === "missing" ? R.remove(base.components, "page") : { ...base.components, page: row.page };
         const fullCitation = yield* S.decodeEffect(FullCitation)({ ...base, components });
@@ -81,8 +86,10 @@ it.effect("matches 38 pin checks including Unicode decimals, big integers and ca
           metadata: { pinCite: row.pin, parenthetical: null },
         });
         const effect = hasInvalidCitationPinCite({ fullCitation, idCitation });
-        if (row.outcome.status === "value") expect(yield* effect).toBe(row.outcome.invalid);
-        else {
+        if (row.outcome.status === "value") {
+          const citationResult2 = yield* effect;
+          expect(citationResult2).toBe(row.outcome.invalid);
+        } else {
           const failure = yield* Effect.flip(effect);
           expect(failure.reason).toBe(row.outcome.kind === "ValueError" ? "integer-conversion" : "canonical-page-type");
           expect("cause" in failure).toBe(false);

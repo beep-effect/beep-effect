@@ -28,18 +28,22 @@ it.layer(BunCrypto.layer)("trusted resource identity descriptors", (it) => {
       for (const row of fixture.cases) {
         const authority = yield* S.decodeUnknownEffect(CitationAuthorityIdentityInput)(row.input);
         const identity = CitationResourceIdentity.cases.Canonical.make({ authority });
-        expect(yield* makeCitationResourceAuthorityId(identity), row.name).toBe(row.expectedId);
+        const citationResult1 = yield* makeCitationResourceAuthorityId(identity);
+        expect(citationResult1, row.name).toBe(row.expectedId);
       }
     })
   );
 
   it.effect("matches independent external protocol vectors and separates adapter scopes", () =>
     Effect.gen(function* () {
-      expect(yield* makeCitationResourceAuthorityId(external())).toBe(expected);
-      expect(yield* makeCitationResourceAuthorityId(external())).toBe(expected);
-      expect(
-        yield* makeCitationResourceAuthorityId(CitationResourceIdentity.cases.External.make({ scope: b, key: a }))
-      ).toBe("ca1:e1df0e52299f97791ddd0bb524ad1bc790a980be12948c305acd2b39a16eb258");
+      const citationResult2 = yield* makeCitationResourceAuthorityId(external());
+      expect(citationResult2).toBe(expected);
+      const citationResult3 = yield* makeCitationResourceAuthorityId(external());
+      expect(citationResult3).toBe(expected);
+      const citationResult4 = yield* makeCitationResourceAuthorityId(
+        CitationResourceIdentity.cases.External.make({ scope: b, key: a })
+      );
+      expect(citationResult4).toBe("ca1:e1df0e52299f97791ddd0bb524ad1bc790a980be12948c305acd2b39a16eb258");
     })
   );
 

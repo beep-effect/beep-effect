@@ -88,9 +88,8 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("source runtime d
           new URL("../../use-cases/test/fixtures/eyecite/runtime-dictionary-observations.json", import.meta.url)
         )
       );
-      expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-        "1b66065c5ec4abd4564e01d24dda81d20f2f2358dac4911c5c13f12786275d4c"
-      );
+      const citationResult1 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+      expect(citationResult1).toBe("1b66065c5ec4abd4564e01d24dda81d20f2f2358dac4911c5c13f12786275d4c");
       const data = yield* S.decodeEffect(CorpusJson)(raw);
       expect(A.map(data.cases, (row) => row.name)).toEqual([
         "same-bucket-pointer",
@@ -128,16 +127,17 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("source runtime d
           const prepareOperation = Effect.fnUntraced(function* (operation: typeof Operation.Type) {
             return yield* Operation.match(operation, {
               get: Effect.fnUntraced(function* (op) {
-                return { run: table.get(yield* operationKey(op.key)) };
+                const citationResult2 = yield* operationKey(op.key);
+                return { run: table.get(citationResult2) };
               }),
               remove: Effect.fnUntraced(function* (op) {
-                return { run: table.remove(yield* operationKey(op.key)) };
+                const citationResult3 = yield* operationKey(op.key);
+                return { run: table.remove(citationResult3) };
               }),
               set: Effect.fnUntraced(function* (op) {
+                const citationResult4 = yield* operationKey(op.key);
                 return {
-                  run: table
-                    .set(yield* operationKey(op.key), op.value)
-                    .pipe(Effect.as(O.none<CitationRuntimeDictionaryEntry>())),
+                  run: table.set(citationResult4, op.value).pipe(Effect.as(O.none<CitationRuntimeDictionaryEntry>())),
                 };
               }),
               clear: () =>
@@ -163,8 +163,9 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("source runtime d
               }
               expect(actual, row.name).toEqual(event.outcome);
               expect(comparisons, row.name).toEqual(event.comparisons);
+              const citationResult5 = yield* table.read;
               expect(
-                A.map(yield* table.read, (entry) => ({ objectId: entry.objectId, value: entry.value })),
+                A.map(citationResult5, (entry) => ({ objectId: entry.objectId, value: entry.value })),
                 row.name
               ).toEqual(event.entries);
             }),
@@ -186,21 +187,27 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("source runtime d
       ).pipe(Effect.provideService(CitationRuntimeDictionaryComparison, comparison));
       const key = (objectId: number) => CitationRuntimeDictionaryKey.make({ objectId, hash: BigInt(objectId) });
       yield* Effect.all([table.set(key(0), 10), table.set(key(1), 11)], { concurrency: "unbounded" });
-      expect((yield* Effect.flip(table.set(key(2), 12))).reason).toBe("limit-exceeded");
-      expect(A.map(yield* table.read, (entry) => entry.value)).toEqual([10, 11]);
+      const citationResult6 = yield* Effect.flip(table.set(key(2), 12));
+      expect(citationResult6.reason).toBe("limit-exceeded");
+      const citationResult7 = yield* table.read;
+      expect(A.map(citationResult7, (entry) => entry.value)).toEqual([10, 11]);
       const read = yield* table.read;
       Reflect.set(A.getUnsafe(read, 0), "value", 999);
+      const citationResult8 = yield* table.get(key(0));
       assertSome(
-        O.map(yield* table.get(key(0)), (entry) => entry.value),
+        O.map(citationResult8, (entry) => entry.value),
         10
       );
       yield* table.set(key(0), 13);
-      expect(A.map(yield* table.read, (entry) => entry.value)).toEqual([13, 11]);
+      const citationResult9 = yield* table.read;
+      expect(A.map(citationResult9, (entry) => entry.value)).toEqual([13, 11]);
       const tiny = yield* makeCitationRuntimeDictionary(
         CitationRuntimeDictionaryLimits.make({ entries: 2, iterations: 1 })
       ).pipe(Effect.provideService(CitationRuntimeDictionaryComparison, comparison));
-      expect((yield* Effect.flip(tiny.set(key(0), 10))).reason).toBe("limit-exceeded");
-      expect(yield* tiny.read).toEqual([]);
+      const citationResult10 = yield* Effect.flip(tiny.set(key(0), 10));
+      expect(citationResult10.reason).toBe("limit-exceeded");
+      const citationResult11 = yield* tiny.read;
+      expect(citationResult11).toEqual([]);
     })
   );
 });

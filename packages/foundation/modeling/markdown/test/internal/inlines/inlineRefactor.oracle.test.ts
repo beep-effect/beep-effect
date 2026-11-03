@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // The differentials that pin the inline pass across its complexity
 // refactors (wave 2d review correction 10): `processEmphasis`, the
 // close-bracket handler, the reference grammar, and the GFM autolink-literal
@@ -35,6 +36,8 @@ import { renderOracleHtml } from "../../support/oracle.ts";
 import { inlineCorpus } from "./inlineCorpus.ts";
 import type { MarkdownDialect } from "@beep/markdown/Markdown";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 /** Our HTML for `markdown`, or `undefined` when a hardening guard tripped. */
 const renderOurs = (markdown: string): string | undefined => {
   const result = Markdown.parseResult(markdown, { dialect: "commonmark" });
@@ -49,7 +52,11 @@ const agreesWithOracle = (markdown: string): boolean => {
   const ours = renderOurs(markdown);
   // A guard trip is a legitimate outcome the oracle does not model.
   if (ours !== undefined) {
-    assert.strictEqual(ours, renderOracle(markdown), `disagreement on input:\n${JSON.stringify(markdown)}`);
+    assert.strictEqual(
+      ours,
+      renderOracle(markdown),
+      `disagreement on input:\n${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(markdown), identity)}`
+    );
   }
   return true;
 };
@@ -163,7 +170,9 @@ const corpusDigest = (dialect: MarkdownDialect) =>
   Effect.promise(() => {
     const outputs = A.map(inlineCorpus({ seed: 20_261_022, count: 20_000 }), (source) => {
       const result = Markdown.parsePhrasingResult(source, { dialect });
-      return Result.isFailure(result) ? "guard" : JSON.stringify(result.success);
+      return Result.isFailure(result)
+        ? "guard"
+        : Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(result.success), identity);
     });
     return crypto.subtle.digest("SHA-256", new TextEncoder().encode(A.join(outputs, "\u0000")));
   }).pipe(Effect.map((digest) => Hex.encode(new Uint8Array(digest))));
@@ -171,19 +180,15 @@ const corpusDigest = (dialect: MarkdownDialect) =>
 describe("inline refactor differential: the pre-refactor engine", () => {
   it.effect("reproduces the audited GFM phrasing trees after the #2137 corrections", () =>
     Effect.gen(function* () {
-      assert.strictEqual(
-        yield* corpusDigest("gfm"),
-        "6f438e5c32819cc1e10d304588ccc8c6062d1c56c1e355ddca461535f34b174d"
-      );
+      const corpusDigest1 = yield* corpusDigest("gfm");
+      assert.strictEqual(corpusDigest1, "6f438e5c32819cc1e10d304588ccc8c6062d1c56c1e355ddca461535f34b174d");
     })
   );
 
   it.effect("reproduces every CommonMark phrasing tree of the seeded corpus", () =>
     Effect.gen(function* () {
-      assert.strictEqual(
-        yield* corpusDigest("commonmark"),
-        "af1831ef2fd95386b38bab705668f23880861e80a8c2f2cf0a155bbdc910714a"
-      );
+      const corpusDigest2 = yield* corpusDigest("commonmark");
+      assert.strictEqual(corpusDigest2, "af1831ef2fd95386b38bab705668f23880861e80a8c2f2cf0a155bbdc910714a");
     })
   );
 });

@@ -73,7 +73,8 @@ const taken = Effect.fn("MailTaggingDocumentsTest.taken")(function* (conflict: {
   const store = yield* storeOver(calls, () =>
     Promise.reject(boxRejection({ statusCode: 409, code: "item_name_in_use", ...conflict }))
   );
-  return [outcomeOf(yield* store.upload(pdf)), yield* Ref.get(calls)];
+  const upload1 = yield* store.upload(pdf);
+  return [outcomeOf(upload1), yield* Ref.get(calls)];
 });
 
 const failureOf = Effect.fn("MailTaggingDocumentsTest.failureOf")(function* (rejection: unknown) {
@@ -137,7 +138,8 @@ describe("MailTagging Box document store", () => {
       const results = [yield* store.upload(pdf), yield* store.upload(untyped)];
 
       expect(A.map(results, outcomeOf)).toStrictEqual(["created 7001", "created 7002"]);
-      expect(yield* Ref.get(calls)).toBe(2);
+      const got = yield* Ref.get(calls);
+      expect(got).toBe(2);
       expect(
         A.map(bodies, (body) => [
           body.attributes.name,
@@ -155,71 +157,48 @@ describe("MailTagging Box document store", () => {
   it.effect(
     "answers a taken name as an outcome, with the conflicting file's id when the driver retains it",
     Effect.fnUntraced(function* () {
-      const uncoded = yield* storeOver(yield* Ref.make(0), () => Promise.reject(boxRejection({ statusCode: 409 })));
+      const made2 = yield* Ref.make(0);
+      const uncoded = yield* storeOver(made2, () => Promise.reject(boxRejection({ statusCode: 409 })));
 
-      expect(
-        yield* taken({
-          contextInfo: {
-            conflicts: [
-              { id: "8000", type: "folder" },
-              { id: "8001", type: "file", name: "never retained" },
-            ],
-          },
-        })
-      ).toStrictEqual(["name taken by 8001 size=null sha1=null", 1]);
+      const taken3 = yield* taken({
+        contextInfo: {
+          conflicts: [
+            { id: "8000", type: "folder" },
+            { id: "8001", type: "file", name: "never retained" },
+          ],
+        },
+      });
+      expect(taken3).toStrictEqual(["name taken by 8001 size=null sha1=null", 1]);
       // Box reports the holder's size and SHA-1 for a file; both reach the outcome when well formed.
-      expect(
-        yield* taken({
-          contextInfo: {
-            conflicts: { id: "8002", type: "file", sha1: "7037807198c22a7d2b0807371d763779a84fdfcf", size: 3 },
-          },
-        })
-      ).toStrictEqual(["name taken by 8002 size=3 sha1=7037807198c22a7d2b0807371d763779a84fdfcf", 1]);
-      expect(yield* taken({ contextInfo: { conflicts: [{ id: "8000", type: "folder" }] } })).toStrictEqual([
-        "name taken",
-        1,
-      ]);
+      const taken4 = yield* taken({
+        contextInfo: {
+          conflicts: { id: "8002", type: "file", sha1: "7037807198c22a7d2b0807371d763779a84fdfcf", size: 3 },
+        },
+      });
+      expect(taken4).toStrictEqual(["name taken by 8002 size=3 sha1=7037807198c22a7d2b0807371d763779a84fdfcf", 1]);
+      const taken5 = yield* taken({ contextInfo: { conflicts: [{ id: "8000", type: "folder" }] } });
+      expect(taken5).toStrictEqual(["name taken", 1]);
       // The upload shape: Box sends one conflict object, which the driver normalizes to a list.
-      expect(yield* taken({ contextInfo: { conflicts: { id: "8001", type: "file" } } })).toStrictEqual([
-        "name taken by 8001 size=null sha1=null",
-        1,
-      ]);
-      expect(yield* taken({})).toStrictEqual(["name taken", 1]);
-      expect(outcomeOf(yield* uncoded.upload(pdf))).toBe("name taken");
+      const taken6 = yield* taken({ contextInfo: { conflicts: { id: "8001", type: "file" } } });
+      expect(taken6).toStrictEqual(["name taken by 8001 size=null sha1=null", 1]);
+      const taken7 = yield* taken({});
+      expect(taken7).toStrictEqual(["name taken", 1]);
+      const upload8 = yield* uncoded.upload(pdf);
+      expect(outcomeOf(upload8)).toBe("name taken");
     })
   );
 
   it.effect(
     "reports another conflict, a rate limit, and a quota refusal as distinct typed failures, each counted once",
     Effect.fnUntraced(function* () {
-      expect(yield* failureOf(boxRejection({ statusCode: 409, code: "operation_blocked_temporary" }))).toStrictEqual([
-        "DocumentStore",
-        "upload",
-        "conflict",
-        "response status 409",
-        1,
-      ]);
-      expect(yield* failureOf(boxRejection({ statusCode: 409, code: "storage_limit_exceeded" }))).toStrictEqual([
-        "DocumentStore",
-        "upload",
-        "throttled",
-        "response status 409",
-        1,
-      ]);
-      expect(yield* failureOf(boxRejection({ statusCode: 429 }))).toStrictEqual([
-        "DocumentStore",
-        "upload",
-        "throttled",
-        "response status 429",
-        1,
-      ]);
-      expect(yield* failureOf(boxRejection({ statusCode: 403, code: "storage_limit_exceeded" }))).toStrictEqual([
-        "DocumentStore",
-        "upload",
-        "throttled",
-        "response status 403",
-        1,
-      ]);
+      const failureOf9 = yield* failureOf(boxRejection({ statusCode: 409, code: "operation_blocked_temporary" }));
+      expect(failureOf9).toStrictEqual(["DocumentStore", "upload", "conflict", "response status 409", 1]);
+      const failureOf10 = yield* failureOf(boxRejection({ statusCode: 409, code: "storage_limit_exceeded" }));
+      expect(failureOf10).toStrictEqual(["DocumentStore", "upload", "throttled", "response status 409", 1]);
+      const failureOf11 = yield* failureOf(boxRejection({ statusCode: 429 }));
+      expect(failureOf11).toStrictEqual(["DocumentStore", "upload", "throttled", "response status 429", 1]);
+      const failureOf12 = yield* failureOf(boxRejection({ statusCode: 403, code: "storage_limit_exceeded" }));
+      expect(failureOf12).toStrictEqual(["DocumentStore", "upload", "throttled", "response status 403", 1]);
     })
   );
 
@@ -230,20 +209,10 @@ describe("MailTagging Box document store", () => {
       const empty = yield* storeOver(calls, () => Promise.resolve({ entries: [], totalCount: 0 }));
       const error = yield* Effect.flip(empty.upload(pdf));
 
-      expect(yield* failureOf(boxRejection({ statusCode: 500, code: "internal_server_error" }))).toStrictEqual([
-        "DocumentStore",
-        "upload",
-        "unavailable",
-        "response status 500",
-        1,
-      ]);
-      expect(yield* failureOf("connection reset")).toStrictEqual([
-        "DocumentStore",
-        "upload",
-        "unavailable",
-        "sdk thrown",
-        1,
-      ]);
+      const failureOf13 = yield* failureOf(boxRejection({ statusCode: 500, code: "internal_server_error" }));
+      expect(failureOf13).toStrictEqual(["DocumentStore", "upload", "unavailable", "response status 500", 1]);
+      const failureOf14 = yield* failureOf("connection reset");
+      expect(failureOf14).toStrictEqual(["DocumentStore", "upload", "unavailable", "sdk thrown", 1]);
       expect([error.failure, error.reason]).toStrictEqual(["unavailable", "upload answered without a file id"]);
     })
   );

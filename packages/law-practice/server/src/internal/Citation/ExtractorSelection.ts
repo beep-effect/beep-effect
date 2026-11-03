@@ -243,7 +243,10 @@ export const makeCitationExtractorSelection = Effect.fn("Citation.makeExtractorS
         }
       });
       yield* scan(exact, original.storage, 0);
-      if (!Trie.isEmpty(insensitive)) yield* scan(insensitive, yield* lowercase.lower(original.storage), 1);
+      if (!Trie.isEmpty(insensitive)) {
+        const lowered = yield* lowercase.lower(original.storage);
+        yield* scan(insensitive, lowered, 1);
+      }
       return CitationExtractorSelection.make({
         indices: A.sort(A.fromIterable(selected), Order.Number),
         insertions: firstEvents.pipe(

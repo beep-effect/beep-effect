@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { Citation, CitationMention, citationAuthorityMentionIds } from "@beep/law-practice-domain/values";
 import { resolveCitationMentions } from "@beep/law-practice-server/internal/Citation/Resolve";
 import { it } from "@beep/test-runner";
@@ -29,7 +29,9 @@ const CasesJson = S.fromJsonString(Cases);
 const cases = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const text = yield* fs.readFileString(
-    fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/default-resolution-cases.json", import.meta.url))
+    NodeURL.fileURLToPath(
+      new URL("../../use-cases/test/fixtures/eyecite/default-resolution-cases.json", import.meta.url)
+    )
   );
   return yield* S.decodeEffect(CasesJson)(text);
 });
@@ -77,7 +79,8 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("canonical defaul
         expect(A.length(A.dedupe(A.map(data.contexts, (row) => row.context.name)))).toBe(30);
         expect(A.reduce(data.contexts, 0, (total, row) => total + A.length(row.context.mentions))).toBe(94);
         for (const row of data.contexts) {
-          const document = yield* resolveCitationMentions(yield* prepare(row.context));
+          const citationResult1 = yield* prepare(row.context);
+          const document = yield* resolveCitationMentions(citationResult1);
           const indices = HashMap.fromIterable(
             A.map(document.mentions, (mention, index) => Tuple.make(mention.id, index))
           );
@@ -95,8 +98,11 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("canonical defaul
 
   it.effect("retains ambiguity as data and resets the next Id. after an ambiguous result", () =>
     Effect.gen(function* () {
-      const row = A.findFirst((yield* cases).cases, (row) => row.name === "short-multiple-resets-id");
-      const document = yield* resolveCitationMentions(yield* prepare(yield* Effect.fromOption(row)));
+      const citationResult2 = yield* cases;
+      const row = A.findFirst(citationResult2.cases, (row) => row.name === "short-multiple-resets-id");
+      const citationResult3 = yield* Effect.fromOption(row);
+      const citationResult4 = yield* prepare(citationResult3);
+      const document = yield* resolveCitationMentions(citationResult4);
       expect(A.getUnsafe(document.resolutions, 2).status).toBe("Ambiguous");
       const last = A.getUnsafe(document.resolutions, 3);
       expect(last.status).toBe("Unresolved");
@@ -106,7 +112,8 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("canonical defaul
 
   it.effect("snapshots semantic and adapter data before the first asynchronous identity check", () =>
     Effect.gen(function* () {
-      const input = yield* prepare(A.getUnsafe((yield* cases).cases, 0));
+      const citationResult5 = yield* cases;
+      const input = yield* prepare(A.getUnsafe(citationResult5.cases, 0));
       const crypto = yield* Digest.Digest;
       let hashes = 0;
       const document = yield* resolveCitationMentions(input).pipe(
@@ -128,7 +135,8 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("canonical defaul
 
   it.effect("enforces explicit source, mention, authority, edge and iteration counts", () =>
     Effect.gen(function* () {
-      const input = yield* prepare(A.getUnsafe((yield* cases).cases, 1));
+      const citationResult6 = yield* cases;
+      const input = yield* prepare(A.getUnsafe(citationResult6.cases, 1));
       for (const limits of [
         { ...input.limits, sourceUtf16: 1 },
         { ...input.limits, mentions: 1 },
@@ -136,14 +144,16 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("canonical defaul
         { ...input.limits, resolutionEdges: 1 },
         { ...input.limits, resolutionIterations: 1 },
       ]) {
-        expect((yield* Effect.flip(resolveCitationMentions({ ...input, limits }))).reason).toBe("limit-exceeded");
+        const citationResult7 = yield* Effect.flip(resolveCitationMentions({ ...input, limits }));
+        expect(citationResult7.reason).toBe("limit-exceeded");
       }
     })
   );
 
   it.effect("accepts exact count ceilings without rejecting the final permitted unit", () =>
     Effect.gen(function* () {
-      const input = yield* prepare(A.getUnsafe((yield* cases).cases, 0));
+      const citationResult8 = yield* cases;
+      const input = yield* prepare(A.getUnsafe(citationResult8.cases, 0));
       const limits = {
         ...input.limits,
         sourceUtf16: Str.length(input.verifiedSource.sourceText),
@@ -160,8 +170,9 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("canonical defaul
 
   it.effect("matches a versioned known court identifier as canonical court metadata", () =>
     Effect.gen(function* () {
+      const citationResult9 = yield* cases;
       const row = yield* Effect.fromOption(
-        A.findFirst((yield* cases).cases, (row) => row.name === "reference-court-metadata")
+        A.findFirst(citationResult9.cases, (row) => row.name === "reference-court-metadata")
       );
       const input = yield* prepare(row);
       const first = A.getUnsafe(input.mentions, 0);
@@ -184,30 +195,32 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("canonical defaul
 
   it.effect("rejects missing or duplicate frozen edition descriptors", () =>
     Effect.gen(function* () {
-      const input = yield* prepare(A.getUnsafe((yield* cases).cases, 0));
-      expect((yield* Effect.flip(resolveCitationMentions({ ...input, editions: [] }))).reason).toBe("edition-missing");
-      expect(
-        (yield* Effect.flip(
-          resolveCitationMentions({ ...input, editions: A.appendAll(input.editions, input.editions) })
-        )).reason
-      ).toBe("invalid-input");
+      const citationResult10 = yield* cases;
+      const input = yield* prepare(A.getUnsafe(citationResult10.cases, 0));
+      const citationResult11 = yield* Effect.flip(resolveCitationMentions({ ...input, editions: [] }));
+      expect(citationResult11.reason).toBe("edition-missing");
+      const citationResult12 = yield* Effect.flip(
+        resolveCitationMentions({ ...input, editions: A.appendAll(input.editions, input.editions) })
+      );
+      expect(citationResult12.reason).toBe("invalid-input");
     })
   );
 
   it.effect("rejects stale occurrence identities and unverified source substitutes", () =>
     Effect.gen(function* () {
-      const input = yield* prepare(A.getUnsafe((yield* cases).cases, 0));
-      expect(
-        (yield* Effect.flip(
-          resolveCitationMentions({
-            ...input,
-            verifiedSource: { source: input.verifiedSource.source, sourceText: input.verifiedSource.sourceText },
-          })
-        )).reason
-      ).toBe("invalid-input");
+      const citationResult13 = yield* cases;
+      const input = yield* prepare(A.getUnsafe(citationResult13.cases, 0));
+      const citationResult14 = yield* Effect.flip(
+        resolveCitationMentions({
+          ...input,
+          verifiedSource: { source: input.verifiedSource.source, sourceText: input.verifiedSource.sourceText },
+        })
+      );
+      expect(citationResult14.reason).toBe("invalid-input");
       const first = A.getUnsafe(input.mentions, 0);
       Reflect.set(first, "id", `cm1:${Str.repeat(64)("f")}`);
-      expect((yield* Effect.flip(resolveCitationMentions(input))).reason).toBe("evidence-failed");
+      const citationResult15 = yield* Effect.flip(resolveCitationMentions(input));
+      expect(citationResult15.reason).toBe("evidence-failed");
     })
   );
 });

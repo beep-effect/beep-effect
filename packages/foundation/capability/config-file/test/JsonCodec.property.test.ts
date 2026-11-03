@@ -18,7 +18,9 @@ describe("JsonCodec properties", () => {
     ([value]) =>
       Effect.gen(function* () {
         const encoded = yield* JsonCodec.stringify(value);
-        const decoded = yield* S.decodeUnknownEffect(S.Json)(yield* JsonCodec.parse(encoded));
+        const argument = S.decodeUnknownEffect(S.Json);
+        const parsed1 = yield* JsonCodec.parse(encoded);
+        const decoded = yield* argument(parsed1);
         assert.isTrue(equivalent(decoded, value));
       }),
     runs
@@ -34,7 +36,8 @@ describe("JsonCodec properties", () => {
         const formatted = yield* JsonCodec.stringify(parsed);
         const reparsed = yield* JsonCodec.parse(formatted);
         assert.deepStrictEqual(reparsed, parsed);
-        assert.strictEqual(yield* JsonCodec.stringify(reparsed), formatted);
+        const stringify1 = yield* JsonCodec.stringify(reparsed);
+        assert.strictEqual(stringify1, formatted);
       }),
     runs
   );

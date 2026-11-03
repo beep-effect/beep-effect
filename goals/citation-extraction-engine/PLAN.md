@@ -323,7 +323,8 @@ Raw decoded captures and ordinal-sorted named groups drive all 378 built-in
 constructor cases, 15 valid extras and 54 source failure cases; all 216 merge
 controls remain. The existing store serializes capacity borrowing and publication,
 with preallocation ledger approval and captured deadlines. Thirty-seven focused
-tests pass at the pre-main-merge checkpoint. General Python extras/custom protocols,
+tests pass at the pre-main-merge checkpoint; after integrating Effect 4.1.2, server/domain
+lint and type checks plus 57 focused tests pass. General Python extras/custom protocols,
 whole-operation reservations, canonical extractor wiring and public tokenizer
 integration remain open. See [capture evidence](history/evidence/2026-11-03-native-capture-binding.md).
 

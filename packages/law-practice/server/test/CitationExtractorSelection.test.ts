@@ -20,10 +20,8 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestSer
     it.effect("matches source membership across prefixes, overlaps, casing and native surrogate distinctions", () =>
       Effect.gen(function* () {
         const corpus = yield* loadCitationExtractorSelectionControls();
-        const selector = yield* makeCitationExtractorSelection(
-          (yield* defaultCitationEnginePolicy).limits,
-          corpus.bindings
-        );
+        const citationResult1 = yield* defaultCitationEnginePolicy;
+        const selector = yield* makeCitationExtractorSelection(citationResult1.limits, corpus.bindings);
         for (const row of corpus.cases) {
           const result = yield* selector.select(row.source);
           expect(result.indices, `case ${row.id}`).toEqual(row.selected);
@@ -41,11 +39,13 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestSer
       Effect.gen(function* () {
         const limits = (yield* defaultCitationEnginePolicy).limits;
         const binding = { id: 0, flags: 0, strings: [] };
-        expect(yield* makeCitationExtractorSelection(limits, [binding, binding]).pipe(Effect.flip)).toMatchObject({
+        const citationResult2 = yield* makeCitationExtractorSelection(limits, [binding, binding]).pipe(Effect.flip);
+        expect(citationResult2).toMatchObject({
           reason: "invalid-bindings",
         });
         const selector = yield* makeCitationExtractorSelection(limits, [binding]);
-        expect(yield* selector.select(native(""))).toEqual({
+        const citationResult3 = yield* selector.select(native(""));
+        expect(citationResult3).toEqual({
           indices: [0],
           insertions: [],
           prefixQueries: 0,
@@ -61,11 +61,14 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestSer
         const selector = yield* makeCitationExtractorSelection(limits, [binding]);
         key.bytes.fill(120);
         binding.id = 1;
-        expect((yield* selector.select(native("see"))).indices).toEqual([0]);
-        expect((yield* selector.select(native("xxx"))).indices).toEqual([]);
-        expect(
-          yield* makeCitationExtractorSelection({ ...limits, patternUtf16: 2 }, [binding]).pipe(Effect.flip)
-        ).toMatchObject({
+        const citationResult4 = yield* selector.select(native("see"));
+        expect(citationResult4.indices).toEqual([0]);
+        const citationResult5 = yield* selector.select(native("xxx"));
+        expect(citationResult5.indices).toEqual([]);
+        const citationResult6 = yield* makeCitationExtractorSelection({ ...limits, patternUtf16: 2 }, [binding]).pipe(
+          Effect.flip
+        );
+        expect(citationResult6).toMatchObject({
           _tag: "CitationSafetyLimitExceeded",
           limit: "patternUtf16",
         });
@@ -75,15 +78,17 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestSer
       Effect.gen(function* () {
         const timer = yield* makeCitationNativeManualClock(Duration.millis(997));
         const disabled = yield* makeCitationNativeSleepClock(() => Effect.never);
+        const citationResult7 = yield* defaultCitationEnginePolicy;
         const selector = yield* makeCitationExtractorSelection(
-          { ...(yield* defaultCitationEnginePolicy).limits, extractDeadline: Duration.millis(997) },
+          { ...citationResult7.limits, extractDeadline: Duration.millis(997) },
           [{ id: 0, flags: 0, strings: [native("a")] }]
         ).pipe(Effect.provideService(Clock.Clock, timer.clock));
         const pending = yield* selector
           .select({ width: 1, bytes: new Uint8Array(65_536).fill(97) })
           .pipe(Effect.provideService(Clock.Clock, disabled), Effect.forkChild);
         yield* timer.trigger;
-        expect(yield* Fiber.join(pending).pipe(Effect.flip)).toMatchObject({
+        const citationResult8 = yield* Fiber.join(pending).pipe(Effect.flip);
+        expect(citationResult8).toMatchObject({
           _tag: "CitationSafetyLimitExceeded",
           limit: "extractDeadline",
         });

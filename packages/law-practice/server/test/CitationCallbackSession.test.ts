@@ -101,11 +101,10 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
       expect(invalid.reason).toBe("evidence-failed");
       expect(calls).toBe(0);
       const limits = { ...input.limits, resolutionIterations: 2 };
-      expect(
-        (yield* runCitationCallbackSession({ ...input, limits }).pipe(
-          Effect.provideService(CitationResolutionCallbacks, callbacks)
-        )).groups
-      ).toEqual([]);
+      const citationResult1 = yield* runCitationCallbackSession({ ...input, limits }).pipe(
+        Effect.provideService(CitationResolutionCallbacks, callbacks)
+      );
+      expect(citationResult1.groups).toEqual([]);
       expect(calls).toBe(2);
       calls = 0;
       const exceeded = yield* Effect.flip(
@@ -148,7 +147,8 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
 
   it.effect("owns stable list handles, preserves aliases and retained lists, and serializes concurrent appends", () =>
     Effect.gen(function* () {
-      const prepared = yield* prepareCitationResolution(yield* controls());
+      const citationResult2 = yield* controls();
+      const prepared = yield* prepareCitationResolution(citationResult2);
       const work = yield* makeCitationResolutionWork(prepared.limits);
       const firstId = A.getUnsafe(prepared.mentions, 0).id;
       const first = member(firstId);
@@ -165,13 +165,17 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
       const base = yield* resource("base");
       const other = yield* resource("other");
       const list = yield* dictionary.get(base);
-      expect(yield* dictionary.get(base)).toBe(list);
+      const citationResult3 = yield* dictionary.get(base);
+      expect(citationResult3).toBe(list);
       const forged = CitationCallbackList.make({ slot: list.slot });
-      expect((yield* Effect.flip(dictionary.write(forged, [first]))).reason).toBe("invalid-input");
-      expect((yield* Effect.flip(otherOwner.set(base, list))).reason).toBe("invalid-input");
+      const citationResult4 = yield* Effect.flip(dictionary.write(forged, [first]));
+      expect(citationResult4.reason).toBe("invalid-input");
+      const citationResult5 = yield* Effect.flip(otherOwner.set(base, list));
+      expect(citationResult5.reason).toBe("invalid-input");
       yield* dictionary.write(list, [first]);
       yield* dictionary.set(other, list);
-      expect(yield* dictionary.get(other)).toBe(list);
+      const citationResult6 = yield* dictionary.get(other);
+      expect(citationResult6).toBe(list);
       Reflect.set(list, "slot", 999);
       yield* dictionary.appendCurrent(base, secondId);
       const snapshot = yield* dictionary.read;
@@ -182,22 +186,30 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
       expect(A.map(snapshot, (group) => group.listSlot)).toEqual([0, 0]);
       Reflect.set(A.getUnsafe(snapshot, 0).members, "0", staleId());
       Reflect.set(A.getUnsafe(snapshot, 0).resource, "value", "changed snapshot");
-      expect(A.getUnsafe(yield* dictionary.read, 0).members).toEqual([first, second]);
-      expect(A.getUnsafe(yield* dictionary.read, 0).resource).toEqual(base);
+      const citationResult7 = yield* dictionary.read;
+      expect(A.getUnsafe(citationResult7, 0).members).toEqual([first, second]);
+      const citationResult8 = yield* dictionary.read;
+      expect(A.getUnsafe(citationResult8, 0).resource).toEqual(base);
       yield* dictionary.clear;
       yield* dictionary.set(other, list);
-      expect(A.getUnsafe(yield* dictionary.read, 0).members).toEqual([first, second]);
+      const citationResult9 = yield* dictionary.read;
+      expect(A.getUnsafe(citationResult9, 0).members).toEqual([first, second]);
       const fresh = yield* dictionary.get(base);
       expect(fresh).not.toBe(list);
       yield* Effect.all([dictionary.appendCurrent(base, firstId), dictionary.appendCurrent(base, secondId)], {
         concurrency: "unbounded",
       });
-      expect(A.getUnsafe(yield* dictionary.read, 1).members).toEqual([first, second]);
-      expect(A.getUnsafe(yield* dictionary.read, 0).listSlot).not.toBe(A.getUnsafe(yield* dictionary.read, 1).listSlot);
+      const citationResult10 = yield* dictionary.read;
+      expect(A.getUnsafe(citationResult10, 1).members).toEqual([first, second]);
+      const citationResult11 = yield* dictionary.read;
+      const citationResult12 = yield* dictionary.read;
+      expect(A.getUnsafe(citationResult11, 0).listSlot).not.toBe(A.getUnsafe(citationResult12, 1).listSlot);
       yield* dictionary.close;
       yield* otherOwner.close;
-      expect((yield* Effect.flip(dictionary.read)).reason).toBe("invalid-input");
-      expect((yield* Effect.flip(dictionary.get(base))).reason).toBe("invalid-input");
+      const citationResult13 = yield* Effect.flip(dictionary.read);
+      expect(citationResult13.reason).toBe("invalid-input");
+      const citationResult14 = yield* Effect.flip(dictionary.get(base));
+      expect(citationResult14.reason).toBe("invalid-input");
     })
   );
 
@@ -224,10 +236,14 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
           calls += 1;
           const list = yield* dictionary.get(base);
           yield* dictionary.write(list, [first, first]);
-          aliasFailure = O.some(yield* Effect.exit(dictionary.set(other, list)));
-          afterAlias = A.length(yield* dictionary.read);
-          writeFailure = O.some(yield* Effect.exit(dictionary.write(list, [first, first, first])));
-          afterWrite = A.getUnsafe(yield* dictionary.read, 0).members;
+          const citationResult15 = yield* Effect.exit(dictionary.set(other, list));
+          aliasFailure = O.some(citationResult15);
+          const citationResult16 = yield* dictionary.read;
+          afterAlias = A.length(citationResult16);
+          const citationResult17 = yield* Effect.exit(dictionary.write(list, [first, first, first]));
+          writeFailure = O.some(citationResult17);
+          const citationResult18 = yield* dictionary.read;
+          afterWrite = A.getUnsafe(citationResult18, 0).members;
           return yield* fail();
         }),
       });
@@ -246,9 +262,12 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
       );
       expect(mismatch.reason).toBe("invalid-input");
       expect(calls).toBe(0);
-      expect((yield* Effect.flip(run)).reason).toBe("callback-failed");
-      expect((yield* Effect.flip(dictionary.read)).reason).toBe("invalid-input");
-      expect((yield* Effect.flip(run)).reason).toBe("invalid-input");
+      const citationResult19 = yield* Effect.flip(run);
+      expect(citationResult19.reason).toBe("callback-failed");
+      const citationResult20 = yield* Effect.flip(dictionary.read);
+      expect(citationResult20.reason).toBe("invalid-input");
+      const citationResult21 = yield* Effect.flip(run);
+      expect(citationResult21.reason).toBe("invalid-input");
       expect(calls).toBe(1);
       yield* Effect.forEach(
         [aliasFailure, writeFailure],
@@ -268,7 +287,8 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
 
   it.effect("closes retained dictionary capabilities when a running callback is interrupted", () =>
     Effect.gen(function* () {
-      const prepared = yield* prepareCitationResolution(yield* controls());
+      const citationResult22 = yield* controls();
+      const prepared = yield* prepareCitationResolution(citationResult22);
       const work = yield* makeCitationResolutionWork(prepared.limits);
       const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
         Effect.provideService(CitationResolutionWork, work)
@@ -289,8 +309,10 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
       );
       yield* Deferred.await(entered);
       yield* Fiber.interrupt(fiber);
-      expect((yield* Effect.flip(dictionary.read)).reason).toBe("invalid-input");
-      expect((yield* Effect.flip(dictionary.start)).reason).toBe("invalid-input");
+      const citationResult23 = yield* Effect.flip(dictionary.read);
+      expect(citationResult23.reason).toBe("invalid-input");
+      const citationResult24 = yield* Effect.flip(dictionary.start);
+      expect(citationResult24.reason).toBe("invalid-input");
     })
   );
 
@@ -336,8 +358,12 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
       expect(first).toEqual(same);
       expect(second).not.toEqual(first);
       expect(hashes).toBe(2);
-      expect(yield* S.encodeEffect(codec)(yield* dictionary.citationOf(first))).toBe(wire);
-      expect(yield* S.encodeEffect(codec)(yield* dictionary.citationOf(second))).toBe(wire);
+      const citationResult25 = yield* dictionary.citationOf(first);
+      const citationResult26 = yield* S.encodeEffect(codec)(citationResult25);
+      expect(citationResult26).toBe(wire);
+      const citationResult27 = yield* dictionary.citationOf(second);
+      const citationResult28 = yield* S.encodeEffect(codec)(citationResult27);
+      expect(citationResult28).toBe(wire);
       const objects = yield* dictionary.detachedCitations;
       expect(objects).toHaveLength(2);
       expect(A.map(objects, (object) => CitationGroupMember.cases.Detached.make({ detachedId: object.id }))).toEqual([
@@ -346,15 +372,21 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
       ]);
       expect(A.every(objects, (object) => !("anchor" in object) && !("mentionId" in object))).toBe(true);
       Reflect.set(A.getUnsafe(objects, 0), "citation", A.getUnsafe(prepared.mentions, 1).citation);
-      expect(yield* S.encodeEffect(codec)(yield* dictionary.citationOf(first))).toBe(wire);
+      const citationResult29 = yield* dictionary.citationOf(first);
+      const citationResult30 = yield* S.encodeEffect(codec)(citationResult29);
+      expect(citationResult30).toBe(wire);
       const unknown = CitationGroupMember.cases.Detached.make({
         detachedId: CitationDetachedId.make(`cd1:${Str.repeat(64)("f")}`),
       });
-      expect((yield* Effect.flip(dictionary.citationOf(unknown))).reason).toBe("invalid-input");
-      expect((yield* Effect.flip(dictionary.allocate([unknown]))).reason).toBe("invalid-input");
+      const citationResult31 = yield* Effect.flip(dictionary.citationOf(unknown));
+      expect(citationResult31.reason).toBe("invalid-input");
+      const citationResult32 = yield* Effect.flip(dictionary.allocate([unknown]));
+      expect(citationResult32.reason).toBe("invalid-input");
       yield* dictionary.close;
-      expect((yield* Effect.flip(dictionary.citationOf(first))).reason).toBe("invalid-input");
-      expect((yield* Effect.flip(dictionary.registerDetached(equalModel))).reason).toBe("invalid-input");
+      const citationResult33 = yield* Effect.flip(dictionary.citationOf(first));
+      expect(citationResult33.reason).toBe("invalid-input");
+      const citationResult34 = yield* Effect.flip(dictionary.registerDetached(equalModel));
+      expect(citationResult34.reason).toBe("invalid-input");
     })
   );
 
@@ -369,15 +401,21 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
       yield* dictionary.start;
       const model = A.getUnsafe(prepared.mentions, 0).citation;
       const codec = S.fromJsonString(Citation);
-      const copy = yield* S.decodeEffect(codec)(yield* S.encodeEffect(codec)(model));
+      const citationResult35 = yield* S.encodeEffect(codec)(model);
+      const copy = yield* S.decodeEffect(codec)(citationResult35);
       const reference = yield* dictionary.registerDetached(model);
-      expect(yield* dictionary.registerDetached(model)).toEqual(reference);
-      expect((yield* Effect.flip(dictionary.registerDetached(copy))).reason).toBe("limit-exceeded");
-      expect(yield* dictionary.detachedCitations).toHaveLength(1);
+      const citationResult36 = yield* dictionary.registerDetached(model);
+      expect(citationResult36).toEqual(reference);
+      const citationResult37 = yield* Effect.flip(dictionary.registerDetached(copy));
+      expect(citationResult37.reason).toBe("limit-exceeded");
+      const citationResult38 = yield* dictionary.detachedCitations;
+      expect(citationResult38).toHaveLength(1);
       expect(prepared.mentions).toHaveLength(2);
       const resourceValue = yield* resource("detached");
-      yield* dictionary.set(resourceValue, yield* dictionary.allocate([reference, reference]));
-      expect(A.getUnsafe(yield* dictionary.read, 0).members).toEqual([reference, reference]);
+      const citationResult39 = yield* dictionary.allocate([reference, reference]);
+      yield* dictionary.set(resourceValue, citationResult39);
+      const citationResult40 = yield* dictionary.read;
+      expect(A.getUnsafe(citationResult40, 0).members).toEqual([reference, reference]);
       yield* dictionary.close;
     })
   );
@@ -393,9 +431,8 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
           )
         );
         const data = yield* S.decodeEffect(CorpusJson)(raw);
-        expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-          "19ce5a31fbcae943e71a0d580145d499a9fb911cd8fe5cf16226dc08a686a7af"
-        );
+        const citationResult41 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+        expect(citationResult41).toBe("19ce5a31fbcae943e71a0d580145d499a9fb911cd8fe5cf16226dc08a686a7af");
         expect(A.length(data.cases)).toBe(18);
         expect(A.length(A.dedupe(A.map(data.cases, (row) => row.name)))).toBe(18);
         expect(A.reduce(data.cases, 0, (count, row) => count + A.length(row.kinds))).toBe(56);
@@ -440,7 +477,8 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
               const value = binding.value;
               if (P.isObject(value) && !A.isArray(value)) {
                 const record = yield* S.decodeUnknownEffect(S.JsonObject)(value);
-                return O.getOrElse(R.get(record, yield* S.encodeEffect(S.FiniteFromString)(indexOf(id))), () => null);
+                const citationResult42 = yield* S.encodeEffect(S.FiniteFromString)(indexOf(id));
+                return O.getOrElse(R.get(record, citationResult42), () => null);
               }
               return value;
             });

@@ -531,7 +531,8 @@ const resolvePaths = Effect.fnUntraced(function* (
   // The toolkit roots relative patterns at the process working directory and
   // relativizes matches against GITHUB_WORKSPACE; on a runner the two are the
   // same directory, and the variable is the one a test controls.
-  const workspace = O.getOrElse(yield* resolution.env.getOptional("GITHUB_WORKSPACE"), () => ".");
+  const gotOptional = yield* resolution.env.getOptional("GITHUB_WORKSPACE");
+  const workspace = O.getOrElse(gotOptional, () => ".");
   const base = posixFor(resolution.windows, resolution.path.resolve(workspace));
   const rooted = yield* Effect.forEach(cleaned, (pattern) => rootPattern(resolution, base, failed, pattern));
   const set = yield* GlobSet.compile(rooted).pipe(

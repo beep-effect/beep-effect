@@ -121,7 +121,8 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
     const stripped = stripCitationAntecedentPunctuation(guess);
     for (const entry of fulls) {
       yield* work.step;
-      if (partyMatches(yield* citationOf(entry.citation), stripped)) found = A.append(found, entry);
+      const citationResult1 = yield* citationOf(entry.citation);
+      if (partyMatches(citationResult1, stripped)) found = A.append(found, entry);
     }
     return found;
   });
@@ -208,7 +209,8 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
         if (!(yield* dictionary.isTruthy(input.last)))
           return yield* unresolved(input.mention.id, "no-previous-authority");
         const list = yield* dictionary.get(input.last);
-        const first = yield* Effect.fromOption(A.head(yield* dictionary.readList(list)), invalid);
+        const citationResult2 = yield* dictionary.readList(list);
+        const first = yield* Effect.fromOption(A.head(citationResult2), invalid);
         const prior = yield* citationOf(first);
         const bad = yield* hasInvalidCitationPinCite({ fullCitation: prior, idCitation: citation }).pipe(
           Effect.mapError(() => CitationCallbackFailure.make({ reason: "callback-failed" }))

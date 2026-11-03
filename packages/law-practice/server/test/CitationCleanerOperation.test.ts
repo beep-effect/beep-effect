@@ -51,7 +51,8 @@ it.layer(BunCrypto.layer)("admitted cleaner operations", (it) => {
           yield* Deferred.succeed(entered, undefined);
           yield* Deferred.await(release);
           const result = yield* work.nested("inner", value);
-          const text = yield* Effect.fromOption(yield* h.values.getText(result), () =>
+          const citationResult1 = yield* h.values.getText(result);
+          const text = yield* Effect.fromOption(citationResult1, () =>
             CitationCleanerFailure.make({ reason: "callback-failed" })
           );
           const charge = yield* work.reserveText(text.text.length);
@@ -62,15 +63,19 @@ it.layer(BunCrypto.layer)("admitted cleaner operations", (it) => {
       yield* Deferred.await(entered);
       const queued = yield* second.run({ text: "c__d", plan: "inner" }).pipe(Effect.forkChild);
       yield* TestClock.adjust(Duration.zero);
-      expect(yield* admission.snapshot).toEqual({ active: 1, queued: 1, closed: false });
+      const citationResult2 = yield* admission.snapshot;
+      expect(citationResult2).toEqual({ active: 1, queued: 1, closed: false });
       yield* Deferred.succeed(release, undefined);
       const outerResult = yield* Fiber.join(outer);
       const nextResult = yield* Fiber.join(queued);
-      expect(O.getOrThrow(yield* h.values.getText(outerResult.value)).text).toBe("ab");
+      const citationResult3 = yield* h.values.getText(outerResult.value);
+      expect(O.getOrThrow(citationResult3).text).toBe("ab");
       expect(outerResult.producedTextUtf16).toBe(4);
-      expect(O.getOrThrow(yield* h.values.getText(nextResult.value)).text).toBe("cd");
+      const citationResult4 = yield* h.values.getText(nextResult.value);
+      expect(O.getOrThrow(citationResult4).text).toBe("cd");
       expect(nextResult.producedTextUtf16).toBe(2);
-      expect(yield* admission.snapshot).toEqual({ active: 0, queued: 0, closed: false });
+      const citationResult5 = yield* admission.snapshot;
+      expect(citationResult5).toEqual({ active: 0, queued: 0, closed: false });
     })
   );
 });

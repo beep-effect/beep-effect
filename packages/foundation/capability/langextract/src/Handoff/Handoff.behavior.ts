@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { $LangExtractId } from "@beep/identity";
 import { GroundedExtraction } from "@beep/langextract/Extraction";
 import { Contract } from "@beep/nlp/Handoff";
 import { O } from "@beep/utils";
@@ -14,11 +15,19 @@ import * as Str from "effect/String";
 import type { DocumentId } from "@beep/nlp/Core";
 import type { AnnotatedDocumentInput } from "./Handoff.model.ts";
 
-type AlignedGroundedExtraction =
-  | typeof GroundedExtraction.cases.match_exact.Type
-  | typeof GroundedExtraction.cases.match_lesser.Type
-  | typeof GroundedExtraction.cases.match_minimal_fold.Type
-  | typeof GroundedExtraction.cases.match_fuzzy.Type;
+const $I = $LangExtractId.create("Handoff/Handoff.behavior");
+
+const AlignedGroundedExtraction = S.Union([
+  GroundedExtraction.cases.match_exact,
+  GroundedExtraction.cases.match_lesser,
+  GroundedExtraction.cases.match_minimal_fold,
+  GroundedExtraction.cases.match_fuzzy,
+]).pipe(
+  $I.annoteSchema("AlignedGroundedExtraction", {
+    description: "Grounded extractions with an aligned source span that can become annotations.",
+  })
+);
+type AlignedGroundedExtraction = typeof AlignedGroundedExtraction.Type;
 
 const alignedExtraction = GroundedExtraction.isAnyOf([
   "match_exact",

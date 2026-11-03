@@ -42,7 +42,8 @@ it.layer(layer, { timeout: "30 seconds" })((it) => {
         .pipe(Scope.provide(takeScope));
       yield* Scope.close(takeScope, Exit.void);
       assert.strictEqual(taken.element, "payload");
-      assert.deepStrictEqual(yield* sql`SELECT state FROM wide_queue`, [{ state: "completed" }]);
+      const value1 = yield* sql`SELECT state FROM wide_queue`;
+      assert.deepStrictEqual(value1, [{ state: "completed" }]);
     })
   );
 });
@@ -76,7 +77,8 @@ it.layer(layer, { timeout: "30 seconds" })((it) => {
       });
       assert.strictEqual(duplicate._tag, "Duplicate");
       if (duplicate._tag === "Duplicate") assert.strictEqual(String(duplicate.originalId), id);
-      assert.deepStrictEqual(yield* storage.unprocessedMessages(["default:1"], 1793131200122), []);
+      const unprocessedMessages2 = yield* storage.unprocessedMessages(["default:1"], 1793131200122);
+      assert.deepStrictEqual(unprocessedMessages2, []);
       const messages = yield* storage.unprocessedMessages(["default:1"], 1793131200123);
       assert.strictEqual(messages[0]?.envelope._tag, "Request");
       if (messages[0]?.envelope._tag === "Request") assert.strictEqual(messages[0].envelope.requestId, id);
@@ -87,10 +89,12 @@ it.layer(layer, { timeout: "30 seconds" })((it) => {
         sequence: 4294967296,
         values: ["chunk"],
       });
-      assert.deepStrictEqual(yield* storage.repliesFor([id]), [
+      const repliesFor3 = yield* storage.repliesFor([id]);
+      assert.deepStrictEqual(repliesFor3, [
         { _tag: "Chunk", id: "9007199254740997", requestId: id, sequence: 4294967296, values: ["chunk"] },
       ]);
-      assert.deepStrictEqual(yield* sql`SELECT deliver_at FROM wide_messages`, [{ deliver_at: 1793131200123 }]);
+      const value4 = yield* sql`SELECT deliver_at FROM wide_messages`;
+      assert.deepStrictEqual(value4, [{ deliver_at: 1793131200123 }]);
     }).pipe(Effect.asVoid)
   );
 
@@ -103,18 +107,24 @@ it.layer(layer, { timeout: "30 seconds" })((it) => {
       const address = RunnerAddress.make("localhost", 1234);
       const other = RunnerAddress.make("localhost", 5678);
       const runner = Runner.make({ address, groups: ["default"], weight: 1 });
-      assert.strictEqual(yield* a.register(runner, true), 3000000000);
+      const register5 = yield* a.register(runner, true);
+      assert.strictEqual(register5, 3000000000);
       const shard = ShardId.make("default", 1);
-      assert.deepStrictEqual(yield* a.acquire(address, [shard]), [shard]);
-      assert.deepStrictEqual(yield* b.acquire(other, [shard]), []);
+      const acquire6 = yield* a.acquire(address, [shard]);
+      assert.deepStrictEqual(acquire6, [shard]);
+      const acquire7 = yield* b.acquire(other, [shard]);
+      assert.deepStrictEqual(acquire7, []);
       yield* sql`UPDATE wide_locks SET acquired_at = now() - INTERVAL '1 hour'`;
-      assert.deepStrictEqual(yield* b.acquire(other, [shard]), [shard]);
+      const acquire8 = yield* b.acquire(other, [shard]);
+      assert.deepStrictEqual(acquire8, [shard]);
       yield* a.releaseAll(address);
-      assert.deepStrictEqual(yield* b.refresh(other, [shard]), [shard]);
+      const refresh9 = yield* b.refresh(other, [shard]);
+      assert.deepStrictEqual(refresh9, [shard]);
       const rows = yield* sql<{ millis: number }>`SELECT epoch_ms(last_heartbeat) AS millis FROM wide_runners`;
       assert.isAbove(rows[0]?.millis ?? 0, 2147483647);
       yield* b.releaseAll(other);
-      assert.deepStrictEqual(yield* a.acquire(address, [shard]), [shard]);
+      const acquire10 = yield* a.acquire(address, [shard]);
+      assert.deepStrictEqual(acquire10, [shard]);
     })
   );
 });

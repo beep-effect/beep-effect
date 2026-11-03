@@ -73,9 +73,11 @@ describe("cli/FsGuards contained writes", () => {
         const { fs, path, root } = yield* makeRoot;
         const written = yield* writeContainedFileString(root, "a/b/value.txt", "one");
         expect(written).toBe(path.join(root, "a", "b", "value.txt"));
-        expect(yield* fs.readFileString(written)).toBe("one");
+        const readFileString1 = yield* fs.readFileString(written);
+        expect(readFileString1).toBe("one");
         yield* writeContainedFileString(root, written, "two");
-        expect(yield* fs.readFileString(written)).toBe("two");
+        const readFileString2 = yield* fs.readFileString(written);
+        expect(readFileString2).toBe("two");
       })
     );
 
@@ -129,7 +131,8 @@ describe("cli/FsGuards contained writes", () => {
         yield* fs.symlink(path.join(root, "real.txt"), path.join(root, "link.txt"));
         const link = yield* writeContainedFileString(root, "link.txt", "x").pipe(Effect.flip);
         expect(link.reason).toBe("symlink");
-        expect(yield* fs.readFileString(path.join(root, "real.txt"))).toBe("real");
+        const readFileString3 = yield* fs.readFileString(path.join(root, "real.txt"));
+        expect(readFileString3).toBe("real");
 
         yield* fs.makeDirectory(path.join(root, "folder"));
         const folder = yield* writeContainedFileString(root, "folder", "x").pipe(Effect.flip);
@@ -219,7 +222,8 @@ describe("cli/FsGuards contained writes", () => {
         rename.mockRestore();
         expect(renameError.reason).toBe("filesystem-failure");
         expect(renameError.path).toBe(target);
-        expect(yield* fs.exists(target)).toBe(false);
+        const exists4 = yield* fs.exists(target);
+        expect(exists4).toBe(false);
       })
     );
 
@@ -264,10 +268,12 @@ describe("cli/FsGuards exclusive create and append", () => {
       Effect.gen(function* () {
         const { fs, root } = yield* makeRoot;
         const created = yield* createContainedFileString(root, "new/file.txt", "fresh");
-        expect(yield* fs.readFileString(created)).toBe("fresh");
+        const readFileString5 = yield* fs.readFileString(created);
+        expect(readFileString5).toBe("fresh");
         const error = yield* createContainedFileString(root, "new/file.txt", "again").pipe(Effect.flip);
         expect(error.reason).toBe("filesystem-failure");
-        expect(yield* fs.readFileString(created)).toBe("fresh");
+        const readFileString6 = yield* fs.readFileString(created);
+        expect(readFileString6).toBe("fresh");
       })
     );
 
@@ -276,7 +282,8 @@ describe("cli/FsGuards exclusive create and append", () => {
         const { fs, root } = yield* makeRoot;
         const target = yield* appendContainedFileString(root, "logs/events.ndjson", "a\n");
         yield* appendContainedFileString(root, "logs/events.ndjson", "b\n");
-        expect(yield* fs.readFileString(target)).toBe("a\nb\n");
+        const readFileString7 = yield* fs.readFileString(target);
+        expect(readFileString7).toBe("a\nb\n");
       })
     );
 
@@ -308,7 +315,8 @@ describe("cli/FsGuards exclusive create and append", () => {
           );
         yield* restoreOnExit(write);
         yield* appendContainedFileString(root, "race.txt", "late\n");
-        expect(yield* fs.readFileString(target)).toBe("winner\nlate\n");
+        const readFileString8 = yield* fs.readFileString(target);
+        expect(readFileString8).toBe("winner\nlate\n");
       })
     );
 
@@ -356,7 +364,8 @@ describe("cli/FsGuards exclusive create and append", () => {
         const appendError = yield* appendContainedFileString(root, "events.txt", "x").pipe(Effect.flip);
         append.mockRestore();
         expect(appendError.message).toContain("append through");
-        expect(yield* fs.readFileString(target)).toBe("seed\n");
+        const readFileString9 = yield* fs.readFileString(target);
+        expect(readFileString9).toBe("seed\n");
       })
     );
   });

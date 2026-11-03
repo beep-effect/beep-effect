@@ -83,9 +83,8 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("frozen tokenizer rege
           new URL("../../use-cases/test/fixtures/eyecite/regex-character-facts.json", import.meta.url)
         )
       );
-      expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-        "9dec7f6a29162fd6b479cf083546bf07655c23437a362f034d4ff72a1adb59c0"
-      );
+      const citationResult1 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+      expect(citationResult1).toBe("9dec7f6a29162fd6b479cf083546bf07655c23437a362f034d4ff72a1adb59c0");
       const facts = yield* S.decodeEffect(Facts)(raw);
       expect(citationPythonRegexData).toEqual({ unicodeVersion: "14.0.0", ...facts.classBodies });
       const producer = yield* fs.readFile(
@@ -93,12 +92,14 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("frozen tokenizer rege
           new URL("../../../../goals/citation-extraction-engine/ops/probe-regex-characters.py", import.meta.url)
         )
       );
-      expect(yield* S.decodeEffect(Sha256HexFromBytes)(producer)).toBe(facts.producerSha256);
+      const citationResult2 = yield* S.decodeEffect(Sha256HexFromBytes)(producer);
+      expect(citationResult2).toBe(facts.producerSha256);
       for (const [name, body] of R.toEntries(facts.classBodies)) {
         const observed = facts.observations[name];
         const intervals = facts.intervals[name];
         expect(Str.length(body)).toBe(observed.utf16Units);
-        expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(body))).toBe(observed.sha256);
+        const citationResult3 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(body));
+        expect(citationResult3).toBe(observed.sha256);
         expect(intervals).toHaveLength(observed.ranges);
         expect(A.reduce(intervals, 0, (total, [start, end]) => total + end - start + 1)).toBe(observed.points);
         let prior = -2;
@@ -152,7 +153,8 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("frozen tokenizer rege
         const bytes = yield* fs.readFile(
           NodeURL.fileURLToPath(new URL(`../../../../goals/citation-extraction-engine/ops/${file}`, import.meta.url))
         );
-        expect(yield* S.decodeEffect(Sha256HexFromBytes)(bytes)).toBe(digest);
+        const citationResult4 = yield* S.decodeEffect(Sha256HexFromBytes)(bytes);
+        expect(citationResult4).toBe(digest);
       }
     })
   );

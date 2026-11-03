@@ -68,9 +68,8 @@ it.layer(TestRuntime, { excludeTestServices: true })("captured builtin cleaner i
         const raw = yield* fs.readFileString(
           NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/html-bytes.json", import.meta.url))
         );
-        expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-          "179fc43e44d8d6048b0d4eea38a8a8667d505ce60ee23ded6aa43138cd265201"
-        );
+        const citationResult1 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+        expect(citationResult1).toBe("179fc43e44d8d6048b0d4eea38a8a8667d505ce60ee23ded6aa43138cd265201");
         const corpus = yield* S.decodeEffect(CorpusJson)(raw);
         expect(corpus.nonTextCases).toHaveLength(45);
         const strings = HashMap.fromIterable(A.map(corpus.artifacts, (row) => [row.sha256, row.value] as const));
@@ -83,10 +82,11 @@ it.layer(TestRuntime, { excludeTestServices: true })("captured builtin cleaner i
         const real = yield* ChildProcessSpawner;
         let spawned = 0;
         let retired = 0;
+        const citationResult2 = yield* fs.makeTempDirectoryScoped({ prefix: "citation-builtins-" });
         const builtins = yield* makeCitationBuiltinCleaners(policy, {
           kind: "bun",
           executable: process.execPath,
-          cwd: yield* fs.makeTempDirectoryScoped({ prefix: "citation-builtins-" }),
+          cwd: citationResult2,
           workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
         }).pipe(
           Effect.provideService(CitationCleanerValues, values),
@@ -190,16 +190,18 @@ it.layer(TestRuntime, { excludeTestServices: true })("captured builtin cleaner i
             const pipeline = yield* makePipeline(value, row.cleaner);
             expect(row.hooks).toEqual([]);
             if (row.outcome.kind === "error") {
-              expect(
-                yield* Effect.flip(pipeline.run({ text: "x", plan: "captured-input-kind" })),
-                row.name
-              ).toMatchObject({ _tag: "CitationCleanerFailure", reason: "builtin-input-type" });
+              const citationResult3 = yield* Effect.flip(pipeline.run({ text: "x", plan: "captured-input-kind" }));
+              expect(citationResult3, row.name).toMatchObject({
+                _tag: "CitationCleanerFailure",
+                reason: "builtin-input-type",
+              });
               failures++;
             } else {
               const result = yield* pipeline.run({ text: "x", plan: "captured-input-kind" });
               const text = yield* values.getText(result.value).pipe(Effect.flatMap(Effect.fromOption));
+              const citationResult4 = yield* Effect.fromOption(HashMap.get(strings, row.outcome.text));
               expect(text, row.name).toEqual({
-                text: yield* Effect.fromOption(HashMap.get(strings, row.outcome.text)),
+                text: citationResult4,
                 subtype: "plain",
               });
               expect(result.producedTextUtf16, row.name).toBe(
@@ -220,7 +222,8 @@ it.layer(TestRuntime, { excludeTestServices: true })("captured builtin cleaner i
         const unchanged = yield* values.text("A");
         const repeated = yield* makePipeline(unchanged, "underscores", true);
         const result = yield* repeated.run({ text: "x", plan: "same-reference-still-charges" });
-        expect(yield* values.same(result.value, unchanged)).toBe(true);
+        const citationResult5 = yield* values.same(result.value, unchanged);
+        expect(citationResult5).toBe(true);
         expect(result.producedTextUtf16).toBe(3);
       }),
     { timeout: 60_000 }

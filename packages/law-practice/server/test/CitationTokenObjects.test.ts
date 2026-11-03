@@ -19,23 +19,37 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
     it.effect("matches all nine source constructors and distinct merge identity/truth results", () =>
       Effect.gen(function* () {
         const controls = yield* loadCitationTokenObjectsControls();
-        const objects = yield* makeCitationTokenObjects((yield* defaultCitationEnginePolicy).limits, []);
+        const citationResult1 = yield* defaultCitationEnginePolicy;
+        const objects = yield* makeCitationTokenObjects(citationResult1.limits, []);
         for (const row of controls.constructors) {
           const id = yield* objects.fromCapture(row.input, row.offset);
-          expect(yield* objects.snapshot(id), `constructor ${row.id}`).toEqual(row.expected);
+          const citationResult2 = yield* objects.snapshot(id);
+          expect(citationResult2, `constructor ${row.id}`).toEqual(row.expected);
         }
         const checkMerge = Effect.fn("TokenTest.checkMerge")(function* (row: (typeof controls.merges)[number]) {
           const left = yield* objects.create(row.left);
           const right = yield* objects.create(row.right);
-          if (row.outcome === "error")
-            expect(yield* objects.merge(left, right).pipe(Effect.flip)).toMatchObject({ reason: "host-failed" });
-          else if (row.outcome === "left") assertSome(yield* objects.merge(left, right), left);
-          else assertNone(yield* objects.merge(left, right));
-          if (row.truth === null)
-            expect(yield* objects.mergeTruthy(left, right).pipe(Effect.flip)).toMatchObject({ reason: "host-failed" });
-          else expect(yield* objects.mergeTruthy(left, right)).toBe(row.truth);
+          if (row.outcome === "error") {
+            const citationResult9 = yield* objects.merge(left, right).pipe(Effect.flip);
+            expect(citationResult9).toMatchObject({ reason: "host-failed" });
+          } else if (row.outcome === "left") {
+            const citationResult10 = yield* objects.merge(left, right);
+            assertSome(citationResult10, left);
+          } else {
+            const citationResult11 = yield* objects.merge(left, right);
+            assertNone(citationResult11);
+          }
+          if (row.truth === null) {
+            const citationResult12 = yield* objects.mergeTruthy(left, right).pipe(Effect.flip);
+            expect(citationResult12).toMatchObject({ reason: "host-failed" });
+          } else {
+            const citationResult13 = yield* objects.mergeTruthy(left, right);
+            expect(citationResult13).toBe(row.truth);
+          }
         });
-        for (const row of controls.merges) yield* checkMerge(row);
+        for (const row of controls.merges) {
+          yield* checkMerge(row);
+        }
       })
     );
     it.effect("owns native inputs and snapshots and captures aggregate token-store ceilings", () =>
@@ -58,22 +72,29 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         seed.data.bytes[0] = 121;
         const snapshot = yield* objects.snapshot(first);
         expect(snapshot.data?.bytes).toEqual(new Uint8Array([120]));
-        if (snapshot.data !== null) snapshot.data.bytes.fill(122);
-        expect((yield* objects.snapshot(first)).data?.bytes).toEqual(new Uint8Array([120]));
+        if (snapshot.data !== null) {
+          snapshot.data.bytes.fill(122);
+        }
+        const citationResult3 = yield* objects.snapshot(first);
+        expect(citationResult3.data?.bytes).toEqual(new Uint8Array([120]));
         yield* objects.create(seed);
-        expect(yield* objects.create(seed).pipe(Effect.flip)).toMatchObject({ limit: "candidates" });
+        const citationResult4 = yield* objects.create(seed).pipe(Effect.flip);
+        expect(citationResult4).toMatchObject({ limit: "candidates" });
         const textBounded = yield* makeCitationTokenObjects({ ...limits, producedTextUtf16: 1 }, []);
         yield* textBounded.create(seed);
-        expect(yield* textBounded.create(seed).pipe(Effect.flip)).toMatchObject({ limit: "producedTextUtf16" });
-        expect(yield* textBounded.snapshot(1).pipe(Effect.flip)).toMatchObject({ reason: "host-failed" });
+        const citationResult5 = yield* textBounded.create(seed).pipe(Effect.flip);
+        expect(citationResult5).toMatchObject({ limit: "producedTextUtf16" });
+        const citationResult6 = yield* textBounded.snapshot(1).pipe(Effect.flip);
+        expect(citationResult6).toMatchObject({ reason: "host-failed" });
       })
     );
     it.effect("retains the captured object-operation deadline against a disabled caller Clock", () =>
       Effect.gen(function* () {
         const timer = yield* makeCitationNativeManualClock(Duration.millis(997));
         const disabled = yield* makeCitationNativeSleepClock(() => Effect.never);
+        const citationResult7 = yield* defaultCitationEnginePolicy;
         const objects = yield* makeCitationTokenObjects(
-          { ...(yield* defaultCitationEnginePolicy).limits, extractDeadline: Duration.millis(997) },
+          { ...citationResult7.limits, extractDeadline: Duration.millis(997) },
           []
         ).pipe(Effect.provideService(Clock.Clock, timer.clock));
         const pending = yield* objects
@@ -89,7 +110,8 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
           })
           .pipe(Effect.provideService(Clock.Clock, disabled), Effect.forkChild);
         yield* timer.trigger;
-        expect(yield* Fiber.join(pending).pipe(Effect.flip)).toMatchObject({ limit: "extractDeadline" });
+        const citationResult8 = yield* Fiber.join(pending).pipe(Effect.flip);
+        expect(citationResult8).toMatchObject({ limit: "extractDeadline" });
       })
     );
   }

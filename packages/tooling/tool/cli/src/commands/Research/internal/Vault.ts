@@ -140,7 +140,8 @@ export const sha256HexOf = Effect.fn("ResearchVault.sha256HexOf")(function* (
   content: string
 ): Effect.fn.Return<string, never, Digest.Digest> {
   const crypto = yield* Digest.Digest;
-  return Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(content)));
+  const digest1 = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(content));
+  return Hex.encode(digest1);
 });
 
 /**
@@ -166,7 +167,9 @@ export const slugFor = Effect.fn("ResearchVault.slugFor")(function* (
     Str.slice(0, 60),
     Str.replace(/-+$/, "")
   );
-  const suffix = Str.slice(0, 8)(yield* sha256HexOf(urlNorm));
+  const argument = Str.slice(0, 8);
+  const sha256HexOf1 = yield* sha256HexOf(urlNorm);
+  const suffix = argument(sha256HexOf1);
   return Str.isEmpty(base) ? suffix : `${base}--${suffix}`;
 });
 

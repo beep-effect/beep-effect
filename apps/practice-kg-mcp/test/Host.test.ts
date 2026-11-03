@@ -221,7 +221,8 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
           expect(failure.ok).toBe(false);
           expect(failure.message).toBe(error.message);
           expect(failure.message).toContain("store format pglite 2 / duckdb 2");
-          expect(yield* fs.exists(path.join(bundleDir, "kg.pglite"))).toBe(false);
+          const exists1 = yield* fs.exists(path.join(bundleDir, "kg.pglite"));
+          expect(exists1).toBe(false);
         })
       );
 
@@ -231,7 +232,9 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
           const bundleDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-practice-kg-self-check-" });
-          yield* fs.writeFileString(path.join(bundleDir, "bundle.manifest.json"), yield* encodeManifest(manifest));
+          const argument = path.join(bundleDir, "bundle.manifest.json");
+          const encodedManifest = yield* encodeManifest(manifest);
+          yield* fs.writeFileString(argument, encodedManifest);
 
           const missing = yield* Effect.flip(runPracticeKgMcpSelfCheck(bundleDir));
           expect(missing.message).toBe(
@@ -385,7 +388,8 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
               )
             )
           );
-          return PracticeKgBundle.of(yield* loadPracticeKgBundleContext(bundleDir));
+          const loadedPracticeKgBundleContext = yield* loadPracticeKgBundleContext(bundleDir);
+          return PracticeKgBundle.of(loadedPracticeKgBundleContext);
         })
       ).pipe(Layer.provide(TestServices));
       it.layer(Layer.mergeAll(TestServices, fixtureLayer), { timeout: "2 minutes" })((it) => {
@@ -426,7 +430,8 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
         Effect.gen(function* () {
           const line = yield* encodeReportLine(report);
           expect(line).not.toContain("\n");
-          expect(yield* decodeReportLine(line)).toStrictEqual(PracticeKgSelfCheckReport.make(report));
+          const decodedReportLine = yield* decodeReportLine(line);
+          expect(decodedReportLine).toStrictEqual(PracticeKgSelfCheckReport.make(report));
         })
     );
 
@@ -437,7 +442,8 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
         Effect.gen(function* () {
           const line = yield* encodeRefusalLine(refusal);
           expect(line).not.toContain("\n");
-          expect(yield* decodeFailureLine(line)).toStrictEqual(PracticeKgSelfCheckRefusal.make(refusal));
+          const decodedFailureLine = yield* decodeFailureLine(line);
+          expect(decodedFailureLine).toStrictEqual(PracticeKgSelfCheckRefusal.make(refusal));
         })
     );
   });

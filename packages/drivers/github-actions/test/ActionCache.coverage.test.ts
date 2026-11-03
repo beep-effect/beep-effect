@@ -117,7 +117,8 @@ const failed = (
   it.layer(fixture(options), { timeout: "30 seconds" })((it) => {
     it.effect(name, () =>
       Effect.gen(function* () {
-        const error = yield* Effect.flip(operation(yield* ActionCache));
+        const ActionCache1 = yield* ActionCache;
+        const error = yield* Effect.flip(operation(ActionCache1));
         assert.strictEqual(error.reason, reason);
         assert.strictEqual(error.key, "key");
       })
@@ -216,7 +217,9 @@ describe("cache supplemental failure paths", () => {
   it.layer(fixture({ code: 1, env: { RUNNER_OS: "Windows" } }), { timeout: "30 seconds" })((it) => {
     it.effect("Windows extraction tolerates warnings and returns primary key", () =>
       Effect.gen(function* () {
-        assertSome(yield* restore(yield* ActionCache), "key");
+        const ActionCache7 = yield* ActionCache;
+        const restore2 = yield* restore(ActionCache7);
+        assertSome(restore2, "key");
       })
     );
   });
@@ -253,7 +256,9 @@ it.layer(fixture(), { timeout: "30 seconds" })((it) => {
   it.effect("root wildcard folds descendants and repeated include roots", () =>
     Effect.gen(function* () {
       yield* (yield* ActionCache).save(["/*", "/work", "/work/*", "/work/*.txt"], "key");
-      assertSome(yield* restore(yield* ActionCache), "key");
+      const ActionCache8 = yield* ActionCache;
+      const restore3 = yield* restore(ActionCache8);
+      assertSome(restore3, "key");
     })
   );
 });
@@ -261,7 +266,9 @@ it.layer(fixture({ env: { GITHUB_WORKSPACE: "" } }), { timeout: "30 seconds" })(
   it.effect("missing workspace falls back to the filesystem working directory", () =>
     Effect.gen(function* () {
       yield* (yield* ActionCache).save(["/work/a.txt"], "key");
-      assertSome(yield* restore(yield* ActionCache), "key");
+      const ActionCache9 = yield* ActionCache;
+      const restore4 = yield* restore(ActionCache9);
+      assertSome(restore4, "key");
     })
   );
 });
@@ -270,7 +277,9 @@ it.layer(fixture({ expectedPath: "/work" }), { timeout: "30 seconds" })((it) => 
   it.effect("a literal ancestor covers its wildcard descendants with one recursive tar input", () =>
     Effect.gen(function* () {
       yield* (yield* ActionCache).save(["/work", "/work/sub/*.txt"], "key");
-      assertSome(yield* restore(yield* ActionCache), "key");
+      const ActionCache10 = yield* ActionCache;
+      const restore5 = yield* restore(ActionCache10);
+      assertSome(restore5, "key");
     })
   );
 });
@@ -279,7 +288,9 @@ it.layer(fixture({ expectedPath: "/" }), { timeout: "30 seconds" })((it) => {
   it.effect("a filesystem-root candidate is kept and covers every other match", () =>
     Effect.gen(function* () {
       yield* (yield* ActionCache).save(["/", "/work", "/work/a.txt"], "key");
-      assertSome(yield* restore(yield* ActionCache), "key");
+      const ActionCache11 = yield* ActionCache;
+      const restore6 = yield* restore(ActionCache11);
+      assertSome(restore6, "key");
     })
   );
 });

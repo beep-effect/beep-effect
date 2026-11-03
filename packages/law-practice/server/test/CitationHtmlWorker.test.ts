@@ -49,7 +49,8 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
         const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "citation-html-real-" });
         const real = yield* ChildProcessSpawner;
         let pids: ReadonlyArray<number> = [];
-        const worker = yield* makeCitationHtmlWorker((yield* defaultCitationEnginePolicy).limits, {
+        const citationResult1 = yield* defaultCitationEnginePolicy;
+        const worker = yield* makeCitationHtmlWorker(citationResult1.limits, {
           kind: "bun",
           executable: process.execPath,
           cwd,
@@ -75,8 +76,10 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
           | CitationHtmlKernelFailure
           | CitationHtmlCompletionFailure
         >;
-        expect(yield* run).toBe("CHILD");
-        expect(yield* worker.clean("<p>😀\ufeffAB</p>")).toBe("😀\ufeffAB");
+        const citationResult2 = yield* run;
+        expect(citationResult2).toBe("CHILD");
+        const citationResult3 = yield* worker.clean("<p>😀\ufeffAB</p>");
+        expect(citationResult3).toBe("😀\ufeffAB");
         const failed = yield* Effect.flip(
           worker.clean(`${Str.repeat(256)("<div>")}VISIBLE${Str.repeat(256)("</div>")}`)
         );
@@ -84,7 +87,8 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
         if (failed._tag === "CitationSafetyLimitExceeded") expect(failed.limit).toBe("nativeHtmlParserResource");
         expect(pids).toHaveLength(3);
         for (const pid of pids) expect(() => process.kill(pid, 0)).toThrow();
-        expect(yield* worker.snapshot).toEqual({ active: 0, queued: 0, processes: 0, quarantined: 0, closed: false });
+        const citationResult4 = yield* worker.snapshot;
+        expect(citationResult4).toEqual({ active: 0, queued: 0, processes: 0, quarantined: 0, closed: false });
       }),
     { timeout: 30_000 }
   );
@@ -130,14 +134,17 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
         const failed = yield* result.pipe(Effect.flip);
         expect(failed._tag).toBe("CitationSafetyLimitExceeded");
         if (failed._tag === "CitationSafetyLimitExceeded") expect(failed.limit).toBe("cleanDeadline");
-        expect((yield* worker.snapshot).processes).toBe(0);
+        const citationResult5 = yield* worker.snapshot;
+        expect(citationResult5.processes).toBe(0);
         yield* f.fs.remove(f.marker);
         const long = yield* makeCitationHtmlWorker({ ...limits, cleanDeadline: Duration.seconds(30) }, f);
         const interrupted = yield* Effect.forkChild(long.clean("private input"));
         yield* waitFor(f.fs.exists(f.marker));
         yield* Fiber.interrupt(interrupted);
-        expect(Exit.hasInterrupts(yield* Fiber.await(interrupted))).toBe(true);
-        expect((yield* long.snapshot).processes).toBe(0);
+        const citationResult6 = yield* Fiber.await(interrupted);
+        expect(Exit.hasInterrupts(citationResult6)).toBe(true);
+        const citationResult7 = yield* long.snapshot;
+        expect(citationResult7.processes).toBe(0);
       }),
     { timeout: 60_000 }
   );
@@ -163,10 +170,13 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
         const waiting = yield* Fiber.join(second).pipe(Effect.flip);
         expect(waiting._tag).toBe("CitationSafetyLimitExceeded");
         if (waiting._tag === "CitationSafetyLimitExceeded") expect(waiting.limit).toBe("queueDeadline");
-        expect((yield* worker.snapshot).processes).toBe(1);
+        const citationResult8 = yield* worker.snapshot;
+        expect(citationResult8.processes).toBe(1);
         yield* f.fs.writeFileString(f.release, "yes");
-        expect(yield* Fiber.join(first)).toBe("released");
-        expect((yield* worker.snapshot).processes).toBe(0);
+        const citationResult9 = yield* Fiber.join(first);
+        expect(citationResult9).toBe("released");
+        const citationResult10 = yield* worker.snapshot;
+        expect(citationResult10.processes).toBe(0);
       }),
     { timeout: 60_000 }
   );
@@ -209,7 +219,8 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
         expect(spawned).toBe(1);
         yield* Deferred.succeed(acknowledgement, undefined);
         yield* waitFor(worker.snapshot.pipe(Effect.map((s) => s.processes === 0)));
-        expect((yield* worker.snapshot).active).toBe(0);
+        const citationResult11 = yield* worker.snapshot;
+        expect(citationResult11.active).toBe(0);
       }),
     { timeout: 60_000 }
   );
@@ -259,30 +270,37 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
         const secondCall = yield* second.clean("second").pipe(Effect.forkChild);
         yield* waitFor(admission.snapshot.pipe(Effect.map((state) => state.queued === 1)));
         yield* timer.trigger;
-        expect(yield* Fiber.join(firstCall).pipe(Effect.flip)).toMatchObject({ limit: "cleanupDeadline" });
-        expect(yield* Fiber.join(secondCall).pipe(Effect.flip)).toMatchObject({ reason: "quarantined" });
-        expect(yield* admission.snapshot).toEqual({
+        const citationResult12 = yield* Fiber.join(firstCall).pipe(Effect.flip);
+        expect(citationResult12).toMatchObject({ limit: "cleanupDeadline" });
+        const citationResult13 = yield* Fiber.join(secondCall).pipe(Effect.flip);
+        expect(citationResult13).toMatchObject({ reason: "quarantined" });
+        const citationResult14 = yield* admission.snapshot;
+        expect(citationResult14).toEqual({
           active: 1,
           regexActive: 0,
           queued: 0,
           quarantined: 1,
           closed: false,
         });
-        expect(yield* second.clean("replacement").pipe(Effect.flip)).toMatchObject({ reason: "quarantined" });
+        const citationResult15 = yield* second.clean("replacement").pipe(Effect.flip);
+        expect(citationResult15).toMatchObject({ reason: "quarantined" });
         expect(spawned).toBe(1);
         yield* Deferred.succeed(acknowledgement, undefined);
         yield* waitFor(admission.snapshot.pipe(Effect.map((state) => state.active === 0)));
         const recovered = yield* admission.acquire("clean");
         yield* recovered.release;
-        expect(yield* admission.snapshot).toEqual({
+        const citationResult16 = yield* admission.snapshot;
+        expect(citationResult16).toEqual({
           active: 0,
           regexActive: 0,
           queued: 0,
           quarantined: 0,
           closed: false,
         });
-        expect((yield* first.snapshot).processes).toBe(0);
-        expect((yield* second.snapshot).active).toBe(0);
+        const citationResult17 = yield* first.snapshot;
+        expect(citationResult17.processes).toBe(0);
+        const citationResult18 = yield* second.snapshot;
+        expect(citationResult18.active).toBe(0);
       }),
     { timeout: 60_000 }
   );
@@ -330,7 +348,8 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
         expect(spawned).toBe(1);
         yield* Deferred.succeed(acknowledgement, undefined);
         yield* waitFor(worker.snapshot.pipe(Effect.map((s) => s.processes === 0)));
-        expect((yield* worker.snapshot).active).toBe(0);
+        const citationResult19 = yield* worker.snapshot;
+        expect(citationResult19.active).toBe(0);
       }),
     { timeout: 60_000 }
   );
@@ -360,8 +379,10 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
           expect(failed._tag).toBe("CitationSafetyLimitExceeded");
           if (failed._tag === "CitationSafetyLimitExceeded") expect(failed.limit).toBe("operationDeadline");
         }
-        expect((yield* worker.snapshot).active).toBe(0);
-        expect((yield* worker.snapshot).processes).toBe(0);
+        const citationResult20 = yield* worker.snapshot;
+        expect(citationResult20.active).toBe(0);
+        const citationResult21 = yield* worker.snapshot;
+        expect(citationResult21.processes).toBe(0);
       }),
     { timeout: 60_000 }
   );
@@ -379,7 +400,8 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
           `process.stdout.write('${ready}');process.stdin.resume();process.stdin.on('end',()=>{process.stdout.write('${started}');process.stdout.write(process.env.CITATION_HTML_ENV_PROBE?'${leaked}':'${absent}');});`
         );
         const real = yield* ChildProcessSpawner;
-        const worker = yield* makeCitationHtmlWorker((yield* defaultCitationEnginePolicy).limits, f).pipe(
+        const citationResult22 = yield* defaultCitationEnginePolicy;
+        const worker = yield* makeCitationHtmlWorker(citationResult22.limits, f).pipe(
           Effect.provideService(ChildProcessSpawner, {
             ...real,
             spawn: (command) => {
@@ -395,7 +417,8 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
             },
           })
         );
-        expect(yield* worker.clean("ignored")).toBe("absent");
+        const citationResult23 = yield* worker.clean("ignored");
+        expect(citationResult23).toBe("absent");
       }),
     { timeout: 60_000 }
   );
@@ -413,8 +436,10 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
         ];
         for (const script of scripts) {
           yield* f.fs.writeFileString(f.workerFile, script);
-          expect((yield* Effect.flip(worker.clean("ignored")))._tag).toBe("CitationHtmlWorkerFailure");
-          expect((yield* worker.snapshot).processes).toBe(0);
+          const citationResult24 = yield* Effect.flip(worker.clean("ignored"));
+          expect(citationResult24._tag).toBe("CitationHtmlWorkerFailure");
+          const citationResult25 = yield* worker.snapshot;
+          expect(citationResult25.processes).toBe(0);
         }
         yield* f.fs.writeFileString(
           f.workerFile,
@@ -423,7 +448,8 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
         const failed = yield* Effect.flip(worker.clean("ignored"));
         expect(failed._tag).toBe("CitationSafetyLimitExceeded");
         if (failed._tag === "CitationSafetyLimitExceeded") expect(failed.limit).toBe("processMessageBytes");
-        expect((yield* worker.snapshot).processes).toBe(0);
+        const citationResult26 = yield* worker.snapshot;
+        expect(citationResult26.processes).toBe(0);
       }),
     { timeout: 60_000 }
   );
@@ -440,8 +466,10 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
         const running = yield* Effect.forkChild(worker.clean("private input"));
         yield* waitFor(f.fs.exists(f.marker));
         yield* Scope.close(owner, Exit.void);
-        expect(yield* worker.snapshot).toEqual({ active: 0, queued: 0, processes: 0, quarantined: 0, closed: true });
-        (yield* Fiber.await(running)).pipe(Exit.isFailure, assertTrue);
+        const citationResult27 = yield* worker.snapshot;
+        expect(citationResult27).toEqual({ active: 0, queued: 0, processes: 0, quarantined: 0, closed: true });
+        const citationResult28 = yield* Fiber.await(running);
+        citationResult28.pipe(Exit.isFailure, assertTrue);
         const closed = yield* Effect.flip(worker.clean("replacement"));
         expect(closed._tag).toBe("CitationHtmlWorkerFailure");
         if (closed._tag === "CitationHtmlWorkerFailure") expect(closed.reason).toBe("closed");
@@ -449,7 +477,8 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
         const failed = yield* Effect.flip(missing.clean("private input"));
         expect(failed._tag).toBe("CitationHtmlWorkerFailure");
         if (failed._tag === "CitationHtmlWorkerFailure") expect(failed.reason).toBe("spawn-failed");
-        expect(yield* missing.snapshot).toEqual({ active: 0, queued: 0, processes: 0, quarantined: 0, closed: false });
+        const citationResult29 = yield* missing.snapshot;
+        expect(citationResult29).toEqual({ active: 0, queued: 0, processes: 0, quarantined: 0, closed: false });
       }),
     { timeout: 60_000 }
   );

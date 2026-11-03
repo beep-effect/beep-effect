@@ -65,9 +65,8 @@ export const loadResolutionOperationContexts = Effect.gen(function* () {
   const raw = yield* fs.readFileString(NodeURL.fileURLToPath(corpusUrl));
   const corpus = yield* S.decodeEffect(CitationOracleOperationsJson)(raw);
   const corpusSha256 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
-  const vocabulary = yield* S.decodeEffect(VocabularyJson)(
-    yield* fs.readFileString(NodeURL.fileURLToPath(vocabularyUrl))
-  );
+  const citationResult1 = yield* fs.readFileString(NodeURL.fileURLToPath(vocabularyUrl));
+  const vocabulary = yield* S.decodeEffect(VocabularyJson)(citationResult1);
   const editions = HashMap.fromIterable(
     A.map(vocabulary.editions, (edition) => Tuple.make(edition.artifactSha256, edition))
   );
@@ -75,9 +74,13 @@ export const loadResolutionOperationContexts = Effect.gen(function* () {
   const artifacts = corpus.artifacts;
   const selectedDescriptor = Effect.fnUntraced(function* (selected: Sha256Hex) {
     const artifact = yield* Effect.fromOption(R.get(artifacts, selected));
-    if (artifact.kind !== "model-value") return yield* Effect.die("Expected model edition artifact");
+    if (artifact.kind !== "model-value") {
+      return yield* Effect.die("Expected model edition artifact");
+    }
     const digest = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(artifact.payload.raw));
-    if (digest !== selected) return yield* Effect.die("Edition artifact hash mismatch");
+    if (digest !== selected) {
+      return yield* Effect.die("Edition artifact hash mismatch");
+    }
     const edition = yield* S.decodeUnknownEffect(Edition)(artifact.payload.value);
     return yield* S.decodeEffect(CitationAuthorityEdition)({ edition: selected, shortName: edition.fields.short_name });
   });
@@ -102,7 +105,8 @@ export const loadResolutionOperationContexts = Effect.gen(function* () {
   const project = Effect.fn("ResolveTest.projectOracleCitation")(function* (source: OracleCitation) {
     const meta = yield* S.decodeUnknownEffect(Metadata)(source.fields.metadata);
     const read = Effect.fn("ResolveTest.readMetadata")(function* (key: string) {
-      return yield* S.decodeUnknownEffect(NullableText)(yield* Effect.fromOption(R.get(meta.fields, key)));
+      const citationResult2 = yield* Effect.fromOption(R.get(meta.fields, key));
+      return yield* S.decodeUnknownEffect(NullableText)(citationResult2);
     });
     let metadata: S.JsonObject = {
       pinCite: yield* read("pin_cite"),
@@ -135,16 +139,21 @@ export const loadResolutionOperationContexts = Effect.gen(function* () {
       yield* Effect.forEach(
         ["year", "month", "day"],
         Effect.fnUntraced(function* (key) {
-          metadata = R.set<string, S.Json, string, S.Json>(metadata, key, yield* read(key));
+          const citationResult3 = yield* read(key);
+          metadata = R.set<string, S.Json, string, S.Json>(metadata, key, citationResult3);
         }),
         { concurrency: 1, discard: true }
       );
-      if (selected !== null) selectedEdition = O.some(yield* selectedDescriptor(selected));
+      if (selected !== null) {
+        const citationResult5 = yield* selectedDescriptor(selected);
+        selectedEdition = O.some(citationResult5);
+      }
     }
     yield* Effect.forEach(
       metadataFields(kind),
       Effect.fnUntraced(function* ([to, from]) {
-        metadata = R.set<string, S.Json, string, S.Json>(metadata, to, yield* read(from));
+        const citationResult4 = yield* read(from);
+        metadata = R.set<string, S.Json, string, S.Json>(metadata, to, citationResult4);
       }),
       { concurrency: 1, discard: true }
     );
@@ -161,20 +170,24 @@ export const loadResolutionOperationContexts = Effect.gen(function* () {
       const body = row.payload.value;
       yield* S.decodeUnknownEffect(Callbacks)(body.input);
       const digest = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(row.payload.raw));
-      if (digest !== row.normalizedSha256) return yield* Effect.die("Observation payload hash mismatch");
-      if (body.outcome.kind !== "success")
+      if (digest !== row.normalizedSha256) {
+        return yield* Effect.die("Observation payload hash mismatch");
+      }
+      if (body.outcome.kind !== "success") {
         return yield* Effect.die("Expected successful committed default observation");
+      }
       let text = "";
       let descriptors = HashMap.empty<Sha256Hex, CitationAuthorityEdition>();
       const mentions = yield* Effect.forEach(body.input.citations, (source) =>
         Effect.gen(function* () {
           const projected = yield* project(source);
-          if (O.isSome(projected.selectedEdition))
+          if (O.isSome(projected.selectedEdition)) {
             descriptors = HashMap.set(
               descriptors,
               projected.selectedEdition.value.edition,
               projected.selectedEdition.value
             );
+          }
           const start = Str.length(text);
           const quote = source.matchedText;
           text = `${text}${quote}; `;

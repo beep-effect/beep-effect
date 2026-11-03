@@ -53,7 +53,8 @@ const scratchRootFor = Effect.fn("Holds.scratchRoot")(function* () {
 
 const headCommitSha = Effect.fn("Holds.headCommitSha")(function* () {
   const root = yield* resolveRoot;
-  return Str.trim(yield* runGitOutput(root, ["rev-parse", "HEAD"], gitAdapter));
+  const resultGitOutput = yield* runGitOutput(root, ["rev-parse", "HEAD"], gitAdapter);
+  return Str.trim(resultGitOutput);
 });
 
 const layerHoldLedgerLive = Layer.effect(HoldLedger, Effect.flatMap(resolveRoot, makeHoldLedger));

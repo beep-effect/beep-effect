@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { makeCitationPythonHash } from "@beep/law-practice-server/internal/Citation/PythonHash";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
@@ -35,45 +35,52 @@ const CorpusJson = S.fromJsonString(S.Struct({ cases: S.Array(Row) }));
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("frozen Python primitive hashing", (it) => {
   it.effect("matches every full byte/Unicode vector and preserves explicit surrogate storage", () =>
     Effect.gen(function* () {
-      const raw = yield* (yield* FileSystem.FileSystem).readFileString(
-        fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/python-hashes.json", import.meta.url))
+      const citationResult1 = yield* FileSystem.FileSystem;
+      const raw = yield* citationResult1.readFileString(
+        NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/python-hashes.json", import.meta.url))
       );
-      expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-        "844816162ce40d63b3e21a447bb4d1aa2c2310157a959c8c5c0f4ae8d86b0c89"
-      );
+      const citationResult2 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+      expect(citationResult2).toBe("844816162ce40d63b3e21a447bb4d1aa2c2310157a959c8c5c0f4ae8d86b0c89");
       const corpus = yield* S.decodeEffect(CorpusJson)(raw);
       expect(corpus.cases).toHaveLength(1056);
-      const hash = yield* makeCitationPythonHash((yield* defaultCitationEnginePolicy).limits);
+      const citationResult3 = yield* defaultCitationEnginePolicy;
+      const hash = yield* makeCitationPythonHash(citationResult3.limits);
       let binary = 0;
       let unicode = 0;
       let direct = 0;
       let explicit = 0;
       for (const row of corpus.cases) {
         const bytes = yield* S.decodeEffect(S.Uint8ArrayFromHex)(row.hex);
-        expect(yield* hash.bytes(bytes), row.name).toBe(row.hash);
+        const citationResult4 = yield* hash.bytes(bytes);
+        expect(citationResult4, row.name).toBe(row.hash);
         if (row.kind === "bytes") {
           binary++;
           continue;
         }
-        expect(yield* hash.unicode({ width: row.width, bytes }), row.name).toBe(row.hash);
+        const citationResult5 = yield* hash.unicode({ width: row.width, bytes });
+        expect(citationResult5, row.name).toBe(row.hash);
         unicode++;
         if (row.javascriptRoundtrip) {
-          expect(yield* hash.text(row.value), row.name).toBe(row.hash);
+          const citationResult6 = yield* hash.text(row.value);
+          expect(citationResult6, row.name).toBe(row.hash);
           direct++;
         } else {
           // JavaScript text merges a paired surrogate representation into a
           // scalar; explicit native storage is the faithful source path.
-          expect(yield* hash.text(row.value), row.name).not.toBe(row.hash);
+          const citationResult7 = yield* hash.text(row.value);
+          expect(citationResult7, row.name).not.toBe(row.hash);
           explicit++;
         }
       }
       expect({ binary, unicode, direct, explicit }).toEqual({ binary: 526, unicode: 530, direct: 528, explicit: 2 });
-      expect(yield* hash.text("html")).toBe(-BigInt("4559037671519806539"));
+      const citationResult8 = yield* hash.text("html");
+      expect(citationResult8).toBe(-BigInt("4559037671519806539"));
     })
   );
   it.effect("rejects malformed and noncanonical native storage without coercing text", () =>
     Effect.gen(function* () {
-      const hash = yield* makeCitationPythonHash((yield* defaultCitationEnginePolicy).limits);
+      const citationResult9 = yield* defaultCitationEnginePolicy;
+      const hash = yield* makeCitationPythonHash(citationResult9.limits);
       let hooks = 0;
       const text = {
         toString: () => {
@@ -82,11 +89,13 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("frozen Python primi
         },
       };
       for (const input of [text, null, 7, Str.repeat(8_000_001)("A")]) {
-        expect(yield* Effect.flip(hash.text(input))).toMatchObject({ reason: "invalid-input" });
+        const citationResult10 = yield* Effect.flip(hash.text(input));
+        expect(citationResult10).toMatchObject({ reason: "invalid-input" });
       }
       expect(hooks).toBe(0);
       for (const input of [null, "bytes", new Uint8Array(32_000_001)]) {
-        expect(yield* Effect.flip(hash.bytes(input))).toMatchObject({ reason: "invalid-input" });
+        const citationResult11 = yield* Effect.flip(hash.bytes(input));
+        expect(citationResult11).toMatchObject({ reason: "invalid-input" });
       }
       for (const input of [
         { width: 3, bytes: new Uint8Array() },
@@ -95,8 +104,10 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("frozen Python primi
         { width: 4, bytes: new Uint8Array([0, 1, 0, 0]) },
         { width: 4, bytes: new Uint8Array([0, 0, 17, 0]) },
         { width: 2, bytes: new Uint8Array() },
-      ])
-        expect(yield* Effect.flip(hash.unicode(input))).toMatchObject({ reason: "invalid-input" });
+      ]) {
+        const citationResult16 = yield* Effect.flip(hash.unicode(input));
+        expect(citationResult16).toMatchObject({ reason: "invalid-input" });
+      }
     })
   );
 });
@@ -111,20 +122,23 @@ it.effect("captures policy/clock, interrupts a cooperative scan and returns no p
         Deferred.succeed(entered, Duration.toMillis(duration)).pipe(Effect.andThen(Deferred.await(wake))),
     };
     const deadline = Duration.seconds(1);
+    const citationResult12 = yield* defaultCitationEnginePolicy;
     const hash = yield* makeCitationPythonHash({
-      ...(yield* defaultCitationEnginePolicy).limits,
+      ...citationResult12.limits,
       cleanDeadline: deadline,
     }).pipe(Effect.provideService(Clock.Clock, controlled));
     expect(Reflect.set(deadline.value, "millis", 20_000)).toBe(true);
     const run = yield* hash
       .text(Str.repeat(8_000_000)("A"))
       .pipe(Effect.provideService(Clock.Clock, { ...original, sleep: () => Effect.never }), Effect.forkChild);
-    expect(yield* Deferred.await(entered)).toBe(1000);
+    const citationResult13 = yield* Deferred.await(entered);
+    expect(citationResult13).toBe(1000);
     yield* Deferred.succeed(wake, undefined);
     const failure = yield* Fiber.join(run).pipe(Effect.flip);
     expect(failure).toMatchObject({ _tag: "CitationPythonHashFailure", reason: "deadline-exceeded" });
     const cancelEntered = yield* Deferred.make<void>();
-    const cancellable = yield* makeCitationPythonHash((yield* defaultCitationEnginePolicy).limits).pipe(
+    const citationResult14 = yield* defaultCitationEnginePolicy;
+    const cancellable = yield* makeCitationPythonHash(citationResult14.limits).pipe(
       Effect.provideService(Clock.Clock, {
         ...original,
         sleep: () => Deferred.succeed(cancelEntered, undefined).pipe(Effect.andThen(Effect.never)),
@@ -133,6 +147,7 @@ it.effect("captures policy/clock, interrupts a cooperative scan and returns no p
     const cancelled = yield* cancellable.bytes(new Uint8Array(32_000_000)).pipe(Effect.forkChild);
     yield* Deferred.await(cancelEntered);
     yield* Fiber.interrupt(cancelled);
-    expect(Exit.hasInterrupts(yield* Fiber.await(cancelled))).toBe(true);
+    const citationResult15 = yield* Fiber.await(cancelled);
+    expect(Exit.hasInterrupts(citationResult15)).toBe(true);
   })
 );

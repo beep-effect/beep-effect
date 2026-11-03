@@ -51,9 +51,11 @@ describe("canonical semantic citation models", () => {
       const citation = yield* S.decodeEffect(FullCaseCitation)(fullWire);
       assertSome(O.fromUndefinedOr(citation.components.volume).pipe(O.getOrThrow), "410");
       assertSome(citation.metadata.plaintiff, "Smith");
-      expect(yield* S.encodeEffect(FullCaseCitation)(citation)).toEqual(fullWire);
+      const citationResult8 = yield* S.encodeEffect(FullCaseCitation)(citation);
+      expect(citationResult8).toEqual(fullWire);
       const transformInput: FullCitation.Type = citation;
-      expect(yield* S.encodeEffect(FullCitation)(transformInput)).toEqual(fullWire);
+      const citationResult10 = yield* S.encodeEffect(FullCitation)(transformInput);
+      expect(citationResult10).toEqual(fullWire);
       const wire = {
         ...fullWire,
         components: { ...fullWire.components, volume: "0410", page: null },
@@ -62,7 +64,8 @@ describe("canonical semantic citation models", () => {
       const decoded = yield* S.decodeEffect(FullCaseCitation)(wire);
       O.fromUndefinedOr(decoded.components.page).pipe(O.getOrThrow, assertNone);
       assertSome(decoded.metadata.year, "0999");
-      expect(yield* S.encodeEffect(FullCaseCitation)(decoded)).toEqual(wire);
+      const citationResult6 = yield* S.encodeEffect(FullCaseCitation)(decoded);
+      expect(citationResult6).toEqual(wire);
     })
   );
 
@@ -74,7 +77,8 @@ describe("canonical semantic citation models", () => {
       expect(CitationCourt.guards.unmapped(unmapped)).toBe(true);
       const wire = { ...fullWire, metadata: { ...fullMetadata, court: { status: "unmapped", value: "" } } } as const;
       const value = yield* S.decodeEffect(FullCaseCitation)(wire);
-      expect(yield* S.encodeEffect(FullCaseCitation)(value)).toEqual(wire);
+      const citationResult3 = yield* S.encodeEffect(FullCaseCitation)(value);
+      expect(citationResult3).toEqual(wire);
       S.decodeResult(CitationKnownCourt)({ status: "known", id: "", vocabularyVersion }).pipe(
         Result.isFailure,
         assertTrue
@@ -98,9 +102,11 @@ describe("canonical semantic citation models", () => {
       };
       const value = yield* S.decodeEffect(CitationCasePublication)(candidates);
       expect(value.editions).toHaveLength(2);
-      expect(yield* S.encodeEffect(CitationCasePublication)(value)).toEqual(candidates);
+      const citationResult15 = yield* S.encodeEffect(CitationCasePublication)(value);
+      expect(citationResult15).toEqual(candidates);
       const retained = yield* S.decodeEffect(CitationCasePublication)({ ...candidates, editions: [] });
-      expect(yield* S.encodeEffect(CitationCasePublication)(retained)).toEqual({ ...candidates, editions: [] });
+      const citationResult20 = yield* S.encodeEffect(CitationCasePublication)(retained);
+      expect(citationResult20).toEqual({ ...candidates, editions: [] });
     })
   );
 
@@ -130,23 +136,32 @@ describe("canonical semantic citation models", () => {
         },
       } as const;
       const unknownWire = { type: "unknown", components: {}, metadata: locator } as const;
-      expect(
-        yield* S.encodeEffect(ShortFormCaseCitation)(yield* S.decodeEffect(ShortFormCaseCitation)(shortWire))
-      ).toEqual(shortWire);
-      expect(yield* S.encodeEffect(IdCitation)(yield* S.decodeEffect(IdCitation)(idWire))).toEqual(idWire);
-      expect(yield* S.encodeEffect(SupraCitation)(yield* S.decodeEffect(SupraCitation)(supraWire))).toEqual(supraWire);
-      expect(yield* S.encodeEffect(ReferenceCitation)(yield* S.decodeEffect(ReferenceCitation)(referenceWire))).toEqual(
-        referenceWire
-      );
-      expect(yield* S.encodeEffect(UnknownCitation)(yield* S.decodeEffect(UnknownCitation)(unknownWire))).toEqual(
-        unknownWire
-      );
+      const citationResult17 = yield* S.decodeEffect(ShortFormCaseCitation)(shortWire);
+      const citationResult23 = yield* S.encodeEffect(ShortFormCaseCitation)(citationResult17);
+      expect(citationResult23).toEqual(shortWire);
+      const citationResult2 = yield* S.decodeEffect(IdCitation)(idWire);
+      const citationResult9 = yield* S.encodeEffect(IdCitation)(citationResult2);
+      expect(citationResult9).toEqual(idWire);
+      const citationResult5 = yield* S.decodeEffect(SupraCitation)(supraWire);
+      const citationResult16 = yield* S.encodeEffect(SupraCitation)(citationResult5);
+      expect(citationResult16).toEqual(supraWire);
+      const citationResult18 = yield* S.decodeEffect(ReferenceCitation)(referenceWire);
+      const citationResult22 = yield* S.encodeEffect(ReferenceCitation)(citationResult18);
+      expect(citationResult22).toEqual(referenceWire);
+      const citationResult11 = yield* S.decodeEffect(UnknownCitation)(unknownWire);
+      const citationResult21 = yield* S.encodeEffect(UnknownCitation)(citationResult11);
+      expect(citationResult21).toEqual(unknownWire);
       for (const wire of [shortWire, idWire, supraWire, referenceWire, unknownWire]) {
-        expect(yield* S.encodeEffect(Citation)(yield* S.decodeEffect(Citation)(wire))).toEqual(wire);
+        const citationResult1 = yield* S.decodeEffect(Citation)(wire);
+        const citationResult7 = yield* S.encodeEffect(Citation)(citationResult1);
+        expect(citationResult7).toEqual(wire);
       }
-      expect(S.is(FullCitation)(yield* S.decodeEffect(UnknownCitation)(unknownWire))).toBe(false);
-      expect(S.is(ShortFormCitation)(yield* S.decodeEffect(UnknownCitation)(unknownWire))).toBe(false);
-      expect(S.is(ShortFormCitation)(yield* S.decodeEffect(ReferenceCitation)(referenceWire))).toBe(true);
+      const citationResult12 = yield* S.decodeEffect(UnknownCitation)(unknownWire);
+      expect(S.is(FullCitation)(citationResult12)).toBe(false);
+      const citationResult13 = yield* S.decodeEffect(UnknownCitation)(unknownWire);
+      expect(S.is(ShortFormCitation)(citationResult13)).toBe(false);
+      const citationResult19 = yield* S.decodeEffect(ReferenceCitation)(referenceWire);
+      expect(S.is(ShortFormCitation)(citationResult19)).toBe(true);
     })
   );
 
@@ -159,7 +174,8 @@ describe("canonical semantic citation models", () => {
         metadata: { ...dated, year: "1980", pinCite: "520" },
       } as const;
       const journal = yield* S.decodeEffect(FullJournalCitation)(wire);
-      expect(yield* S.encodeEffect(FullJournalCitation)(journal)).toEqual(wire);
+      const citationResult14 = yield* S.encodeEffect(FullJournalCitation)(journal);
+      expect(citationResult14).toEqual(wire);
       expect(S.is(FullCitation)(journal)).toBe(true);
     })
   );
@@ -173,7 +189,8 @@ describe("canonical semantic citation models", () => {
         confidence: 1,
         parentheticals: [{ text: "quoting other case", citations: [fullWire] }],
       });
-      expect(yield* S.encodeEffect(FullCaseCitation)(value)).toEqual(fullWire);
+      const citationResult4 = yield* S.encodeEffect(FullCaseCitation)(value);
+      expect(citationResult4).toEqual(fullWire);
       const formatterIsRemoved: "toBlueBook" extends keyof typeof FullCaseCitation ? false : true = true;
       expect(formatterIsRemoved).toBe(true);
     })

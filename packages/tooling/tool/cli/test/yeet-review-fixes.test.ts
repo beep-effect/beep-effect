@@ -225,19 +225,22 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             );
 
             expect(checkpoints).toEqual({ preflight: true, proof: true });
-            expect(yield* fs.readFileString(lockPath)).toContain('"schemaVersion":"yeet-proof-lock/v4"');
+            const readFileString1 = yield* fs.readFileString(lockPath);
+            expect(readFileString1).toContain('"schemaVersion":"yeet-proof-lock/v4"');
 
             const failure = yield* runWithFullProofCoordinatorForTesting(
               context,
               [plannedProof],
               Effect.gen(function* () {
-                expect(yield* fs.exists(lockPath)).toBe(true);
+                const exists2 = yield* fs.exists(lockPath);
+                expect(exists2).toBe(true);
                 return yield* Effect.fail("expected proof failure");
               })
             ).pipe(Effect.flip);
 
             expect(failure).toBe("expected proof failure");
-            expect(yield* fs.readFileString(lockPath)).toContain('"coordination":"quality-scheduler/v1"');
+            const readFileString3 = yield* fs.readFileString(lockPath);
+            expect(readFileString3).toContain('"coordination":"quality-scheduler/v1"');
           })
         ).pipe(
           provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: `${tmpDir}/runtime` })),
@@ -285,9 +288,12 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             );
 
             yield* Deferred.await(secondEntered).pipe(Effect.timeout("2 seconds"));
-            expect(yield* Fiber.join(first)).toBe("first");
-            expect(yield* Fiber.join(second)).toBe("second");
-            expect(yield* fs.readFileString(lockPath)).toContain('"schemaVersion":"yeet-proof-lock/v4"');
+            const join4 = yield* Fiber.join(first);
+            expect(join4).toBe("first");
+            const join5 = yield* Fiber.join(second);
+            expect(join5).toBe("second");
+            const readFileString6 = yield* fs.readFileString(lockPath);
+            expect(readFileString6).toContain('"schemaVersion":"yeet-proof-lock/v4"');
           })
         ).pipe(
           provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: `${tmpDir}/runtime` })),
@@ -331,12 +337,17 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
             yield* Effect.sleep("100 millis");
             expect(second.pollUnsafe()).toBeUndefined();
-            expect(yield* Deferred.isDone(secondEntered)).toBe(false);
+            const isDone7 = yield* Deferred.isDone(secondEntered);
+            expect(isDone7).toBe(false);
             yield* Deferred.succeed(releaseFirst, undefined);
-            expect(yield* Fiber.join(first)).toBe("first");
-            expect(yield* Fiber.join(second)).toBe("second");
-            expect(yield* fs.readFileString(lockPath)).toContain('"schemaVersion":"yeet-proof-lock/v4"');
-            expect(yield* fs.exists(path.join(path.dirname(lockPath), "scheduler-fallback.lock"))).toBe(false);
+            const join8 = yield* Fiber.join(first);
+            expect(join8).toBe("first");
+            const join9 = yield* Fiber.join(second);
+            expect(join9).toBe("second");
+            const readFileString10 = yield* fs.readFileString(lockPath);
+            expect(readFileString10).toContain('"schemaVersion":"yeet-proof-lock/v4"');
+            const exists11 = yield* fs.exists(path.join(path.dirname(lockPath), "scheduler-fallback.lock"));
+            expect(exists11).toBe(false);
           })
         ).pipe(
           provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: `${tmpDir}/runtime` })),
@@ -369,12 +380,14 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(environment)),
             Effect.provideService(FileSystem.FileSystem, FileSystem.makeNoop({}))
           );
+        const HostProcessPlatform12 = yield* HostProcessPlatform;
         const canonicalPrefix = path.join(
-          canonicalRuntimeRootForTesting(yield* HostProcessPlatform, NodeOS.userInfo().homedir),
+          canonicalRuntimeRootForTesting(HostProcessPlatform12, NodeOS.userInfo().homedir),
           "beep-yeet-proof-locks-"
         );
+        const HostProcessPlatform13 = yield* HostProcessPlatform;
         const configuredRoot = path.join(
-          canonicalRuntimeRootForTesting(yield* HostProcessPlatform, NodeOS.userInfo().homedir),
+          canonicalRuntimeRootForTesting(HostProcessPlatform13, NodeOS.userInfo().homedir),
           "configured-yeet-runtime"
         );
 

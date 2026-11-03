@@ -26,7 +26,9 @@ it.effect.prop(
       const serialized = yield* Toml.stringify(value);
       const text = `\uFEFF# leading${eol}${Str.replaceAll("\n", eol)(serialized)}${eol}  # trailing${eol}\t`;
       const parsed = yield* Toml.parse(text);
-      assert.deepStrictEqual(yield* Toml.parse(yield* Toml.stringify(parsed)), parsed);
+      const stringify3 = yield* Toml.stringify(parsed);
+      const parsed1 = yield* Toml.parse(stringify3);
+      assert.deepStrictEqual(parsed1, parsed);
       const expressions = parseExpressions(text);
       const reconstructed = A.join(
         A.map(expressions, (expression) => Str.slice(expression.offset, expression.offset + expression.length)(text)),
@@ -37,7 +39,8 @@ it.effect.prop(
       assert.strictEqual((yield* TomlDocument.parse(text)).stringify(), text);
       const formatted = TomlFormat.formatToString(text);
       assert.strictEqual(TomlFormat.formatToString(formatted), formatted);
-      assert.deepStrictEqual(yield* Toml.parse(formatted), parsed);
+      const parsed2 = yield* Toml.parse(formatted);
+      assert.deepStrictEqual(parsed2, parsed);
     }),
   runs
 );

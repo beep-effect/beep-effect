@@ -299,7 +299,7 @@ const installTimers = Effect.fn("ResearchCommand.installTimers")(function* (opti
   // A refresh re-renders what is installed: the recorded repo root and page
   // are reused unless a flag overrides them, and only the Bun is re-resolved.
   const recorded =
-    options.refresh === true ? O.some(yield* recordedResearchTimer(home)) : O.none<ResearchRecordedTimer>();
+    options.refresh === true ? yield* Effect.asSome(recordedResearchTimer(home)) : O.none<ResearchRecordedTimer>();
   const bunPath = yield* resolveUnitBunPath({ home, pinned: options.bunPath });
   const repoRoot = O.match(options.repoRoot ?? O.none<string>(), {
     onNone: () =>

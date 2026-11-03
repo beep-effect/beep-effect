@@ -366,12 +366,15 @@ describe("clean-HEAD install receipt reuse (A4)", () => {
         const head = yield* commit("README.md", "# one\n");
         const first = yield* collectHeadInstallInputs(root, head);
         expect(first.lockfileDigest).toHaveLength(40);
-        const readme = yield* collectHeadInstallInputs(root, yield* commit("README.md", "# two\n"));
+        const commit1 = yield* commit("README.md", "# two\n");
+        const readme = yield* collectHeadInstallInputs(root, commit1);
         expect(readme.manifestsDigest).toBe(first.manifestsDigest);
         expect(readme.lockfileDigest).toBe(first.lockfileDigest);
-        const manifest = yield* collectHeadInstallInputs(root, yield* commit("packages/a/package.json", "{}\n"));
+        const commit2 = yield* commit("packages/a/package.json", "{}\n");
+        const manifest = yield* collectHeadInstallInputs(root, commit2);
         expect(manifest.manifestsDigest).not.toBe(first.manifestsDigest);
-        const lockfile = yield* collectHeadInstallInputs(root, yield* commit("bun.lock", "lock-v2\n"));
+        const commit3 = yield* commit("bun.lock", "lock-v2\n");
+        const lockfile = yield* collectHeadInstallInputs(root, commit3);
         expect(lockfile.lockfileDigest).not.toBe(first.lockfileDigest);
       })
     );
@@ -390,23 +393,31 @@ describe("clean-HEAD install receipt reuse (A4)", () => {
           tier: "full",
         }).steps;
         const steps = A.filter(preflight, (step) => step.id === "publish:00-head-install-preflight");
-        expect(yield* reuseVerifiedHeadInstallForTesting(context, recorder, steps)).toBe(true);
-        expect(A.map(yield* Ref.get(recorder), (entry) => entry.status)).toEqual(["skipped"]);
-        expect(yield* logged).toContain("[yeet] skipped clean-HEAD install preflight: install receipt from");
+        const reuseVerifiedHeadInstallForTesting4 = yield* reuseVerifiedHeadInstallForTesting(context, recorder, steps);
+        expect(reuseVerifiedHeadInstallForTesting4).toBe(true);
+        const got = yield* Ref.get(recorder);
+        expect(A.map(got, (entry) => entry.status)).toEqual(["skipped"]);
+        const logged5 = yield* logged;
+        expect(logged5).toContain("[yeet] skipped clean-HEAD install preflight: install receipt from");
       }).pipe(withTestConsole)
     );
 
     it.effect("runs the preflight when the verified state carries no receipt for this commit", () =>
       Effect.gen(function* () {
         const { context, git, commit } = yield* fixture();
-        yield* recordHeadInstallReceipt(context, yield* git("rev-parse", "HEAD"));
+        const git6 = yield* git("rev-parse", "HEAD");
+        yield* recordHeadInstallReceipt(context, git6);
         const next = yield* commit("README.md", "# moved\n");
-        assertNone(yield* loadHeadInstallReceipt(context, next));
+        const loadedHeadInstallReceipt = yield* loadHeadInstallReceipt(context, next);
+        assertNone(loadedHeadInstallReceipt);
         yield* writeVerifiedState(context, "full", []);
         const recorder = yield* emptyRecorder;
-        expect(yield* reuseVerifiedHeadInstallForTesting(context, recorder, [])).toBe(false);
-        expect(yield* Ref.get(recorder)).toEqual([]);
-        expect(yield* logged).toContain(
+        const reuseVerifiedHeadInstallForTesting7 = yield* reuseVerifiedHeadInstallForTesting(context, recorder, []);
+        expect(reuseVerifiedHeadInstallForTesting7).toBe(false);
+        const got8 = yield* Ref.get(recorder);
+        expect(got8).toEqual([]);
+        const logged9 = yield* logged;
+        expect(logged9).toContain(
           "[yeet] running clean-HEAD install preflight: install receipt not reused (no receipt)"
         );
       }).pipe(withTestConsole)
@@ -425,16 +436,19 @@ describe("clean-HEAD install receipt reuse (A4)", () => {
         const installed = yield* git("rev-parse", "HEAD");
         const clean = yield* Effect.forEach(preflight, (step) => executeStepWithArtifacts(context, step));
         expect(A.map(clean, (result) => result.exitCode)).toEqual([0]);
+        const loadedHeadInstallReceipt10 = yield* loadHeadInstallReceipt(context, installed);
         assertSome(
-          O.map(yield* loadHeadInstallReceipt(context, installed), (receipt) => receipt.inputs.lockfileDigest),
+          O.map(loadedHeadInstallReceipt10, (receipt) => receipt.inputs.lockfileDigest),
           "absent"
         );
         // An unparseable lockfile fails the frozen install and drops the receipt.
         const broken = yield* commit("bun.lock", "not a lockfile\n");
         const failed = yield* Effect.forEach(preflight, (step) => executeStepWithArtifacts(context, step));
         expect(A.map(failed, (result) => result.exitCode === 0)).toEqual([false]);
-        assertNone(yield* loadHeadInstallReceipt(context, broken));
-        assertNone(yield* loadHeadInstallReceipt(context, installed));
+        const loadedHeadInstallReceipt11 = yield* loadHeadInstallReceipt(context, broken);
+        assertNone(loadedHeadInstallReceipt11);
+        const loadedHeadInstallReceipt12 = yield* loadHeadInstallReceipt(context, installed);
+        assertNone(loadedHeadInstallReceipt12);
       }).pipe(withTestConsole)
     );
   });

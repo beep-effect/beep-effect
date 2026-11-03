@@ -596,7 +596,9 @@ describe("MarkdownDocument schema-derived properties", () => {
       Effect.gen(function* () {
         const document = yield* MarkdownDocument.parse(source, options);
         assert.strictEqual(document.dialect, options.dialect ?? "gfm");
-        const decoded = yield* S.decodeEffect(MarkdownDocument)(yield* S.encodeEffect(MarkdownDocument)(document));
+        const argument = S.decodeEffect(MarkdownDocument);
+        const value1 = yield* S.encodeEffect(MarkdownDocument)(document);
+        const decoded = yield* argument(value1);
         assert.strictEqual(decoded.source, document.source);
         assert.deepStrictEqual(decoded.headings, document.headings);
       }),

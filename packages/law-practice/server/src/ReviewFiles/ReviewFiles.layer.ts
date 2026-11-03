@@ -142,9 +142,11 @@ export const makeReviewFilesLayer = (
     Effect.gen(function* () {
       const path = yield* Path.Path;
       const file = (name: string) => path.join(config.dataDirectory, name);
-      return Context.make(VerdictLog, yield* verdictLog(file("verdicts.jsonl"))).pipe(
-        Context.add(AnswerLog, yield* answerLog(file("answers.jsonl"))),
-        Context.add(ReviewItemStore, yield* reviewItemStore(file("items.jsonl")))
-      );
+      const verdictLog1 = yield* verdictLog(file("verdicts.jsonl"));
+      const argument = Context.make(VerdictLog, verdictLog1);
+      const answerLog1 = yield* answerLog(file("answers.jsonl"));
+      const argument1 = Context.add(AnswerLog, answerLog1);
+      const reviewItemStore2 = yield* reviewItemStore(file("items.jsonl"));
+      return argument.pipe(argument1, Context.add(ReviewItemStore, reviewItemStore2));
     })
   );

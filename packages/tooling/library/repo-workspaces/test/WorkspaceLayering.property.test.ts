@@ -14,7 +14,8 @@ const roundTrip = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -34,8 +35,12 @@ it.effect.prop(
   ([edge]) =>
     Effect.gen(function* () {
       assert.strictEqual(edge.label, `${edge.from} -> ${edge.to} (${edge.field})`);
-      const decoded = yield* S.decodeEffect(LayerEdge)(yield* S.encodeEffect(LayerEdge)(edge));
-      const twice = yield* S.decodeEffect(LayerEdge)(yield* S.encodeEffect(LayerEdge)(decoded));
+      const argument = S.decodeEffect(LayerEdge);
+      const value2 = yield* S.encodeEffect(LayerEdge)(edge);
+      const decoded = yield* argument(value2);
+      const argument1 = S.decodeEffect(LayerEdge);
+      const value3 = yield* S.encodeEffect(LayerEdge)(decoded);
+      const twice = yield* argument1(value3);
       assert.strictEqual(decoded.label, edge.label);
       assert.strictEqual(twice.label, decoded.label);
     }),
@@ -50,8 +55,12 @@ it.effect.prop(
   [Arbitrary.schema(LayeringReport)],
   ([report]) =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeEffect(LayeringReport)(yield* S.encodeEffect(LayeringReport)(report));
-      const twice = yield* S.decodeEffect(LayeringReport)(yield* S.encodeEffect(LayeringReport)(decoded));
+      const argument2 = S.decodeEffect(LayeringReport);
+      const value4 = yield* S.encodeEffect(LayeringReport)(report);
+      const decoded = yield* argument2(value4);
+      const argument3 = S.decodeEffect(LayeringReport);
+      const value5 = yield* S.encodeEffect(LayeringReport)(decoded);
+      const twice = yield* argument3(value5);
       assert.deepStrictEqual(twice.violations, decoded.violations);
       assert.deepStrictEqual(decoded.violations, report.violations);
       assert.deepStrictEqual(report.violations, [

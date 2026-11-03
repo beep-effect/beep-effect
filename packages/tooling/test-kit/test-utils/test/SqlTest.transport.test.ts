@@ -76,7 +76,8 @@ describe("SqlTest transport lifecycle", () => {
           const sql = yield* SqlClient.SqlClient;
           yield* sql`CREATE TABLE transport_probe (value INTEGER)`;
           yield* sql`INSERT INTO transport_probe VALUES (42)`;
-          expect(yield* sql`SELECT value FROM transport_probe`).toEqual([{ value: 42 }]);
+          const value1 = yield* sql`SELECT value FROM transport_probe`;
+          expect(value1).toEqual([{ value: 42 }]);
           const info = yield* TestDatabaseInfo;
           expect(info.driver).toBe("bun-sqlite");
           expect(O.getOrThrow(info.databasePath)).toMatch(/\/test\.db$/);
@@ -97,7 +98,8 @@ describe("SqlTest transport lifecycle", () => {
         const sql = yield* SqlClient.SqlClient;
         const info = yield* TestDatabaseInfo;
         const schema = O.getOrThrow(info.schema);
-        expect(yield* sql`SELECT current_schema() AS schema`).toEqual([{ schema }]);
+        const value2 = yield* sql`SELECT current_schema() AS schema`;
+        expect(value2).toEqual([{ schema }]);
         yield* sql`CREATE TABLE transport_probe (value INTEGER)`;
         expect(info.driver).toBe("pg-external");
         assertSome(info.database, "fixture");

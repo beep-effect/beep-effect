@@ -480,7 +480,8 @@ const reasonOf = (outcome: DocketIntakeOutcome): string =>
 
 const ledgerRecord = Effect.fnUntraced(function* (messageId: string) {
   const harness = yield* Harness;
-  return O.flatMap(A.last(yield* Ref.get(harness.saves)), (state) => R.get(state.ledger, messageId));
+  const got = yield* Ref.get(harness.saves);
+  return O.flatMap(A.last(got), (state) => R.get(state.ledger, messageId));
 });
 
 const titled = (input: CritiqueInput, title: string): boolean =>
@@ -544,13 +545,15 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
           A.every(kinds(entries, "reminder"), (entry) => !entry.tentative && entry.category === "Docket - reminder")
         );
         expect(outcome._tag === "DocketEntered" ? outcome.flags : ["unexpected"]).toStrictEqual([]);
-        expect(yield* Ref.get(harness.marked)).toStrictEqual(["m1"]);
+        const got1 = yield* Ref.get(harness.marked);
+        expect(got1).toStrictEqual(["m1"]);
         // Accepted in the first round: one reading, one critique, nothing to revise.
         assertSome(
           O.map(reviewOf(outcome), (review) => [review.status, review.rounds, review.finalScore, review.maxRounds]),
           ["accepted", 1, 1, 3]
         );
-        expect(yield* Ref.get(harness.revises)).toHaveLength(0);
+        const got2 = yield* Ref.get(harness.revises);
+        expect(got2).toHaveLength(0);
 
         // Processing the same message again finds every entry by key and creates nothing, and the
         // completed round is read back from the ledger instead of asking the agents again.
@@ -558,8 +561,10 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         const again = yield* intake.processMessage(message("m1"), TODAY);
 
         expect(tagOf(again)).toBe("DocketEntered");
-        expect(yield* Ref.get(harness.creates)).toBe(createsBefore);
-        expect(yield* entriesOf).toHaveLength(5);
+        const got3 = yield* Ref.get(harness.creates);
+        expect(got3).toBe(createsBefore);
+        const entriesOf4 = yield* entriesOf;
+        expect(entriesOf4).toHaveLength(5);
         expect([
           yield* Ref.get(harness.enters),
           yield* Ref.get(harness.reviews),
@@ -582,8 +587,10 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
           DocketMessage.make({ ...message("thread-2"), conversationId: O.some("thread") }),
           TODAY
         );
-        expect(kinds(yield* entriesOf, "due")).toHaveLength(1);
-        expect(kinds(yield* entriesOf, "reminder")).toHaveLength(4);
+        const entriesOf5 = yield* entriesOf;
+        expect(kinds(entriesOf5, "due")).toHaveLength(1);
+        const entriesOf6 = yield* entriesOf;
+        expect(kinds(entriesOf6, "reminder")).toHaveLength(4);
         assertTrue(
           first._tag === "DocketEntered" &&
             second._tag === "DocketEntered" &&
@@ -615,11 +622,13 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
           DocketMessage.make({ ...statedMessage, messageId: "dates-2", conversationId: O.some("dates") }),
           TODAY
         );
-        expect(A.map(kinds(yield* entriesOf, "due"), (entry) => entry.date.toISOString())).toStrictEqual([
+        const entriesOf7 = yield* entriesOf;
+        expect(A.map(kinds(entriesOf7, "due"), (entry) => entry.date.toISOString())).toStrictEqual([
           "2030-04-08",
           "2030-04-15",
         ]);
-        expect(kinds(yield* entriesOf, "reminder")).toHaveLength(8);
+        const entriesOf8 = yield* entriesOf;
+        expect(kinds(entriesOf8, "reminder")).toHaveLength(8);
       })
     );
   });
@@ -631,9 +640,12 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         const intake = yield* DocketIntake;
         yield* intake.processMessage(message("no-thread-1"), TODAY);
         yield* intake.processMessage(message("no-thread-2"), TODAY);
-        expect(kinds(yield* entriesOf, "due")).toHaveLength(2);
-        expect(kinds(yield* entriesOf, "reminder")).toHaveLength(8);
-        assertTrue(A.every(yield* entriesOf, (entry) => Str.length(entry.key) === 47));
+        const entriesOf9 = yield* entriesOf;
+        expect(kinds(entriesOf9, "due")).toHaveLength(2);
+        const entriesOf10 = yield* entriesOf;
+        expect(kinds(entriesOf10, "reminder")).toHaveLength(8);
+        const entriesOf11 = yield* entriesOf;
+        assertTrue(A.every(entriesOf11, (entry) => Str.length(entry.key) === 47));
       })
     );
   });
@@ -686,8 +698,10 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
           DocketMessage.make({ ...message("undated-2"), conversationId: O.some("undated") }),
           TODAY
         );
-        expect(yield* entriesOf).toHaveLength(2);
-        assertTrue(A.every(yield* entriesOf, (entry) => Str.startsWith("[NO DUE DATE FOUND]")(entry.subject)));
+        const entriesOf12 = yield* entriesOf;
+        expect(entriesOf12).toHaveLength(2);
+        const entriesOf13 = yield* entriesOf;
+        assertTrue(A.every(entriesOf13, (entry) => Str.startsWith("[NO DUE DATE FOUND]")(entry.subject)));
       })
     );
   });
@@ -708,10 +722,10 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
           DocketMessage.make({ ...message("flagged-2"), conversationId: O.some("flagged") }),
           TODAY
         );
-        expect(yield* entriesOf).toHaveLength(1);
-        assertTrue(
-          A.every(yield* entriesOf, (entry) => entry.kind === "needs-review" && sameDate(entry.date, computedDue))
-        );
+        const entriesOf14 = yield* entriesOf;
+        expect(entriesOf14).toHaveLength(1);
+        const entriesOf15 = yield* entriesOf;
+        assertTrue(A.every(entriesOf15, (entry) => entry.kind === "needs-review" && sameDate(entry.date, computedDue)));
       })
     );
   });
@@ -739,9 +753,10 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         const intake = yield* DocketIntake;
         const outcome = yield* intake.processMessage(message("later-sheet"), TODAY);
         expect(reasonOf(outcome)).toBe("no-usable-date");
+        const entriesOf16 = yield* entriesOf;
         assertTrue(
           A.every(
-            yield* entriesOf,
+            entriesOf16,
             (entry) => sameDate(entry.date, TODAY) && Str.startsWith("[NO DUE DATE FOUND]")(entry.subject)
           )
         );
@@ -759,8 +774,10 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         const outcome = yield* intake.processMessage(message("m1"), TODAY);
 
         expect(tagOf(outcome)).toBe("DocketEntered");
-        expect(kinds(yield* entriesOf, "due")).toHaveLength(1);
-        expect(yield* Ref.get(harness.creates)).toBe(5);
+        const entriesOf17 = yield* entriesOf;
+        expect(kinds(entriesOf17, "due")).toHaveLength(1);
+        const got18 = yield* Ref.get(harness.creates);
+        expect(got18).toBe(5);
       })
     );
   });
@@ -803,9 +820,8 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
           }),
           TODAY
         );
-        const due = A.findFirst(kinds(yield* entriesOf, "due"), (entry) =>
-          Str.includes(`/mail/${id}\n`)(entry.bodyText)
-        );
+        const entriesOf19 = yield* entriesOf;
+        const due = A.findFirst(kinds(entriesOf19, "due"), (entry) => Str.includes(`/mail/${id}\n`)(entry.bodyText));
 
         assertTrue(O.exists(due, (entry) => !isAfter(entry.date, stated) && !isAfter(entry.date, computed)));
         assertTrue(O.exists(due, (entry) => sameDate(entry.date, stated) || sameDate(entry.date, computed)));
@@ -909,11 +925,10 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
           assertTrue(O.exists(flagged, (entry) => Str.includes(fragment)(entry.bodyText)));
         }
         // The same entry came back each round, so the critic was asked for findings only once.
-        expect([
-          A.length(yield* Ref.get(harness.revises)),
-          A.length(yield* Ref.get(harness.rereads)),
-          yield* Ref.get(harness.critiques),
-        ]).toStrictEqual([2, 2, 1]);
+        const got20 = yield* Ref.get(harness.revises);
+        const argument1 = A.length(got20);
+        const got4 = yield* Ref.get(harness.rereads);
+        expect([argument1, A.length(got4), yield* Ref.get(harness.critiques)]).toStrictEqual([2, 2, 1]);
       })
     );
   });
@@ -931,7 +946,8 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         const intake = yield* DocketIntake;
 
         const outcome = yield* intake.processMessage(message("m1"), TODAY);
-        const entry = A.head(kinds(yield* entriesOf, "needs-review"));
+        const entriesOf21 = yield* entriesOf;
+        const entry = A.head(kinds(entriesOf21, "needs-review"));
 
         expect(reasonOf(outcome)).toBe("agents-disagree");
         assertSome(
@@ -959,10 +975,14 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         const outcome = yield* intake.processMessage(message("m1"), TODAY);
 
         expect(tagOf(outcome)).toBe("NotDocketItem");
-        expect(yield* entriesOf).toHaveLength(0);
-        expect(yield* Ref.get(harness.reviews)).toBe(1);
-        expect(yield* Ref.get(harness.critiques)).toBe(0);
-        expect(yield* Ref.get(harness.marked)).toStrictEqual([]);
+        const entriesOf22 = yield* entriesOf;
+        expect(entriesOf22).toHaveLength(0);
+        const got23 = yield* Ref.get(harness.reviews);
+        expect(got23).toBe(1);
+        const got24 = yield* Ref.get(harness.critiques);
+        expect(got24).toBe(0);
+        const got25 = yield* Ref.get(harness.marked);
+        expect(got25).toStrictEqual([]);
       })
     );
   });
@@ -980,8 +1000,10 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         const intake = yield* DocketIntake;
         const harness = yield* Harness;
 
-        expect(tagOf(yield* intake.processMessage(message("m1"), TODAY))).toBe("NotDocketItem");
-        expect(yield* Ref.get(harness.reviews)).toBe(0);
+        const processMessage26 = yield* intake.processMessage(message("m1"), TODAY);
+        expect(tagOf(processMessage26)).toBe("NotDocketItem");
+        const got27 = yield* Ref.get(harness.reviews);
+        expect(got27).toBe(0);
       })
     );
   });
@@ -1017,9 +1039,11 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         const bounded = DocketPollOptions.make({ maxMessages: O.some(2) });
 
         const first = yield* intake.pollOnce(TODAY, bounded);
-        const afterFirst = A.last(yield* Ref.get(harness.saves));
+        const got28 = yield* Ref.get(harness.saves);
+        const afterFirst = A.last(got28);
         const second = yield* intake.pollOnce(TODAY, bounded);
-        const afterSecond = A.last(yield* Ref.get(harness.saves));
+        const got29 = yield* Ref.get(harness.saves);
+        const afterSecond = A.last(got29);
 
         expect([first.processed, first.entered, first.seen]).toStrictEqual([2, 2, 3]);
         assertSome(
@@ -1057,10 +1081,12 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         const harness = yield* Harness;
 
         const first = yield* intake.pollOnce(TODAY);
-        const afterFirst = O.flatMap(A.last(yield* Ref.get(harness.saves)), (state) => state.cursor);
+        const got30 = yield* Ref.get(harness.saves);
+        const afterFirst = O.flatMap(A.last(got30), (state) => state.cursor);
         const second = yield* intake.pollOnce(TODAY);
         const third = yield* intake.pollOnce(TODAY);
-        const afterThird = O.flatMap(A.last(yield* Ref.get(harness.saves)), (state) => state.cursor);
+        const got31 = yield* Ref.get(harness.saves);
+        const afterThird = O.flatMap(A.last(got31), (state) => state.cursor);
         const fourth = yield* intake.pollOnce(TODAY);
         const sinceSeen = yield* Ref.get(harness.sinceSeen);
 
@@ -1072,18 +1098,22 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         expect(fourth.processed).toBe(0);
         assertNone(pipe(A.head(sinceSeen), O.flatten));
         assertSome(pipe(A.get(sinceSeen, 1), O.flatten), "2030-01-09T08:01:00.000Z");
-        expect(kinds(yield* entriesOf, "due")).toHaveLength(2);
-        expect(kinds(yield* entriesOf, "needs-review")).toHaveLength(1);
+        const entriesOf32 = yield* entriesOf;
+        expect(kinds(entriesOf32, "due")).toHaveLength(2);
+        const entriesOf33 = yield* entriesOf;
+        expect(kinds(entriesOf33, "needs-review")).toHaveLength(1);
 
         // The digest of that day: one entry, written once, with counts and links but no message text.
         const digest = yield* intake.writeDigest(TODAY);
         const again = yield* intake.writeDigest(TODAY);
         const quiet = yield* intake.writeDigest(addDays(TODAY, 1));
-        const state = A.last(yield* Ref.get(harness.saves));
+        const got34 = yield* Ref.get(harness.saves);
+        const state = A.last(got34);
 
         expect([digest.entered, digest.needsReview, digest.failed]).toStrictEqual([2, 1, 0]);
         expect(digest.written).toStrictEqual(again.written);
-        expect(kinds(yield* entriesOf, "digest")).toHaveLength(1);
+        const entriesOf35 = yield* entriesOf;
+        expect(kinds(entriesOf35, "digest")).toHaveLength(1);
         assertTrue(!Str.includes("Synthetic fixture body")(digest.bodyText));
         assertNone(quiet.written);
         assertTrue(
@@ -1124,14 +1154,16 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         const intake = yield* DocketIntake;
 
         const outcome = yield* intake.processMessage(oldMessage("m-old"), TODAY);
-        const due = A.head(kinds(yield* entriesOf, "due"));
+        const entriesOf36 = yield* entriesOf;
+        const due = A.head(kinds(entriesOf36, "due"));
 
         expect(outcome._tag === "DocketEntered" ? outcome.flags : ["unexpected"]).toStrictEqual([
           "matter-unverified",
           "source-document-missing",
           "ladder-truncated",
         ]);
-        expect(kinds(yield* entriesOf, "reminder")).toHaveLength(0);
+        const entriesOf37 = yield* entriesOf;
+        expect(kinds(entriesOf37, "reminder")).toHaveLength(0);
         for (const fragment of [
           "family 0000.0001 (unverified; needs attorney)",
           "client 0000",
@@ -1163,7 +1195,8 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         const intake = yield* DocketIntake;
 
         const outcome = yield* intake.processMessage(oldMessage("m-old"), TODAY);
-        const entry = A.head(kinds(yield* entriesOf, "needs-review"));
+        const entriesOf38 = yield* entriesOf;
+        const entry = A.head(kinds(entriesOf38, "needs-review"));
 
         expect(reasonOf(outcome)).toBe("agents-disagree");
         assertTrue(O.exists(entry, (value) => sameDate(value.date, TODAY)));
@@ -1181,7 +1214,8 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         const outcome = yield* intake.processMessage(message("m1"), TODAY);
 
         expect(outcome._tag === "IntakeFailed" ? outcome.stage : "unexpected").toBe("calendar");
-        expect(yield* entriesOf).toHaveLength(0);
+        const entriesOf39 = yield* entriesOf;
+        expect(entriesOf39).toHaveLength(0);
       })
     );
   });
@@ -1196,7 +1230,8 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         const exit = yield* Effect.exit(intake.processMessage(message("m1"), TODAY));
 
         assertTrue(Exit.isFailure(exit) && Exit.hasDies(exit));
-        expect(yield* Ref.get(harness.creates)).toBe(0);
+        const got40 = yield* Ref.get(harness.creates);
+        expect(got40).toBe(0);
       })
     );
   });
@@ -1255,7 +1290,8 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
           messages: [messageAt("m-later", "2030-01-10T15:00:00Z")],
         }));
         yield* intake.pollOnce(addDays(TODAY, 1));
-        const ledger = O.map(A.last(yield* Ref.get(harness.saves)), (state) => R.keys(state.ledger));
+        const got41 = yield* Ref.get(harness.saves);
+        const ledger = O.map(A.last(got41), (state) => R.keys(state.ledger));
 
         assertTrue(Str.includes("event event:docket:")(digest.bodyText));
         assertSome(ledger, ["m-later"]);
@@ -1272,7 +1308,8 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         const intake = yield* DocketIntake;
 
         const outcome = yield* intake.processMessage(message("m1"), TODAY);
-        const due = A.head(kinds(yield* entriesOf, "due"));
+        const entriesOf42 = yield* entriesOf;
+        const due = A.head(kinds(entriesOf42, "due"));
 
         expect(outcome._tag === "DocketEntered" ? outcome.flags : ["unexpected"]).toStrictEqual([]);
         assertTrue(O.exists(due, (entry) => Str.includes("Matter: family 0000.0002\n")(entry.bodyText)));
@@ -1287,15 +1324,18 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         const intake = yield* DocketIntake;
 
         const outcome = yield* intake.processMessage(foundIn("m1", "junk"), TODAY);
-        const due = A.head(kinds(yield* entriesOf, "due"));
+        const entriesOf43 = yield* entriesOf;
+        const due = A.head(kinds(entriesOf43, "due"));
 
         expect(tagOf(outcome)).toBe("DocketEntered");
         expect(outcome._tag === "DocketEntered" ? outcome.flags : ["unexpected"]).toStrictEqual(["junk-folder"]);
         assertTrue(O.exists(due, (entry) => Str.includes("Found in the Junk Email folder.")(entry.bodyText)));
         // Every reminder says where the message was found too.
-        expect(kinds(yield* entriesOf, "reminder")).toHaveLength(4);
+        const entriesOf44 = yield* entriesOf;
+        expect(kinds(entriesOf44, "reminder")).toHaveLength(4);
+        const entriesOf45 = yield* entriesOf;
         assertTrue(
-          A.every(kinds(yield* entriesOf, "reminder"), (entry) =>
+          A.every(kinds(entriesOf45, "reminder"), (entry) =>
             Str.includes("Found in the Junk Email folder.\n")(entry.bodyText)
           )
         );
@@ -1317,7 +1357,8 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         const intake = yield* DocketIntake;
 
         const outcome = yield* intake.processMessage(foundIn("m1", "deleted"), TODAY);
-        const review = A.head(kinds(yield* entriesOf, "needs-review"));
+        const entriesOf46 = yield* entriesOf;
+        const review = A.head(kinds(entriesOf46, "needs-review"));
 
         expect(outcome._tag === "DocketNeedsReview" ? outcome.flags : ["unexpected"]).toStrictEqual([
           "source-document-missing",
@@ -1346,7 +1387,8 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         const outcome = yield* intake.processMessage(foundIn("m1", "junk"), TODAY);
 
         expect(tagOf(outcome)).toBe("NotDocketItem");
-        expect(yield* entriesOf).toHaveLength(0);
+        const entriesOf47 = yield* entriesOf;
+        expect(entriesOf47).toHaveLength(0);
       })
     );
   });
@@ -1407,8 +1449,10 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
           A.flatMap(rereads, (input) => A.map(input.extractorResponses, (response) => response.action))
         ).toStrictEqual(["revised"]);
         // What the critic is shown of the entry did not change, so it was not asked for findings again.
-        expect(yield* Ref.get(harness.critiques)).toBe(1);
-        expect(kinds(yield* entriesOf, "due")).toHaveLength(1);
+        const got48 = yield* Ref.get(harness.critiques);
+        expect(got48).toBe(1);
+        const entriesOf49 = yield* entriesOf;
+        expect(kinds(entriesOf49, "due")).toHaveLength(1);
         // Both rounds are kept on the outcome in ids and enums only (D-46).
         expect(A.map(traceOf(outcome), traceRow)).toStrictEqual([
           {
@@ -1499,9 +1543,12 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
           assertTrue(O.exists(flagged, (entry) => Str.includes(fragment)(entry.bodyText)));
         }
         // A disputed title is nothing the critic can read again, but it does look at the new entry.
-        expect(yield* Ref.get(harness.rereads)).toHaveLength(0);
-        expect(yield* Ref.get(harness.critiques)).toBe(2);
-        expect(yield* Ref.get(harness.marked)).toStrictEqual(["m1"]);
+        const got50 = yield* Ref.get(harness.rereads);
+        expect(got50).toHaveLength(0);
+        const got51 = yield* Ref.get(harness.critiques);
+        expect(got51).toBe(2);
+        const got52 = yield* Ref.get(harness.marked);
+        expect(got52).toStrictEqual(["m1"]);
       })
     );
   });
@@ -1537,9 +1584,11 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
           assertTrue(O.exists(flagged, (entry) => Str.includes(fragment)(entry.bodyText)));
         }
         // Only the material finding was put to the extractor, and only with its reason.
-        expect(
-          A.map(yield* Ref.get(harness.revises), (input) => A.map(input.disputes, (dispute) => dispute.field))
-        ).toStrictEqual([["matter-references"], ["matter-references"]]);
+        const got53 = yield* Ref.get(harness.revises);
+        expect(A.map(got53, (input) => A.map(input.disputes, (dispute) => dispute.field))).toStrictEqual([
+          ["matter-references"],
+          ["matter-references"],
+        ]);
         assertTrue(Str.includes("- NEEDS REVIEW (flagged-max-rounds)")(digest.bodyText));
         expect([digest.entered, digest.needsReview]).toStrictEqual([0, 1]);
         // The settled record keeps the verdict and drops the rounds.
@@ -1589,7 +1638,8 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         assertTrue(
           O.exists(flagged, (entry) => Str.includes("- failed check (extractor): cited-span-exists")(entry.bodyText))
         );
-        expect(yield* Ref.get(harness.revises)).toHaveLength(0);
+        const got54 = yield* Ref.get(harness.revises);
+        expect(got54).toHaveLength(0);
       })
     );
   });
@@ -1609,7 +1659,8 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         const intake = yield* DocketIntake;
 
         const outcome = yield* intake.processMessage(message("m1"), TODAY);
-        const flagged = A.head(yield* entriesOf);
+        const entriesOf55 = yield* entriesOf;
+        const flagged = A.head(entriesOf55);
 
         expect(reasonOf(outcome)).toBe("due-date-past");
         expect(outcome._tag === "DocketNeedsReview" ? outcome.flags : ["unexpected"]).toStrictEqual([
@@ -1649,12 +1700,13 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         const outcome = yield* intake.processMessage(message("m1"), TODAY);
 
         expect(tagOf(outcome)).toBe("NotDocketItem");
-        expect(yield* entriesOf).toHaveLength(0);
-        expect(A.map(yield* Ref.get(harness.rereads), (input) => input.fields)).toStrictEqual([
-          ["classification", "matter-references"],
-        ]);
+        const entriesOf56 = yield* entriesOf;
+        expect(entriesOf56).toHaveLength(0);
+        const got57 = yield* Ref.get(harness.rereads);
+        expect(A.map(got57, (input) => input.fields)).toStrictEqual([["classification", "matter-references"]]);
         // Once both dismiss the message there is no entry to find fault with.
-        expect(yield* Ref.get(harness.critiques)).toBe(1);
+        const got58 = yield* Ref.get(harness.critiques);
+        expect(got58).toBe(1);
       })
     );
   });
@@ -1697,13 +1749,13 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
           ["IntakeFailed", 1, [1]]
         );
         expect([second.processed, second.entered]).toStrictEqual([1, 1]);
-        expect([
-          yield* Ref.get(harness.enters),
-          yield* Ref.get(harness.reviews),
-          yield* Ref.get(harness.critiques),
-          A.length(yield* Ref.get(harness.revises)),
-          A.length(yield* Ref.get(harness.rereads)),
-        ]).toStrictEqual([1, 1, 1, 2, 2]);
+        const argument2 = yield* Ref.get(harness.enters);
+        const argument3 = yield* Ref.get(harness.reviews);
+        const argument4 = yield* Ref.get(harness.critiques);
+        const got5 = yield* Ref.get(harness.revises);
+        const argument5 = A.length(got5);
+        const got6 = yield* Ref.get(harness.rereads);
+        expect([argument2, argument3, argument4, argument5, A.length(got6)]).toStrictEqual([1, 1, 1, 2, 2]);
         assertSome(
           O.map(settled, (record) => [tagOf(record.outcome), record.attempts, O.isNone(record.review)]),
           ["DocketEntered", 2, true]
@@ -1715,7 +1767,8 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
           ),
           ["accepted", 2]
         );
-        expect(kinds(yield* entriesOf, "due")).toHaveLength(1);
+        const entriesOf59 = yield* entriesOf;
+        expect(kinds(entriesOf59, "due")).toHaveLength(1);
       })
     );
   });
@@ -1758,7 +1811,8 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         const harness = yield* Harness;
 
         const outcome = yield* intake.processMessage(statedMessage, TODAY);
-        const due = A.head(kinds(yield* entriesOf, "due"));
+        const entriesOf60 = yield* entriesOf;
+        const due = A.head(kinds(entriesOf60, "due"));
 
         expect(tagOf(outcome)).toBe("DocketEntered");
         assertSome(
@@ -1775,7 +1829,8 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
             Str.includes("Due date the reviewer read stated in the source: 2030-04-15")(entry.bodyText)
           )
         );
-        expect(yield* Ref.get(harness.revises)).toHaveLength(0);
+        const got61 = yield* Ref.get(harness.revises);
+        expect(got61).toHaveLength(0);
       })
     );
   });
@@ -1814,12 +1869,14 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
           assertTrue(O.exists(flagged, (entry) => Str.includes(fragment)(entry.bodyText)));
         }
         // The critic read its stated date again each round; the extractor was never shown it.
-        expect(A.map(yield* Ref.get(harness.rereads), (input) => input.fields)).toStrictEqual([
+        const got62 = yield* Ref.get(harness.rereads);
+        expect(A.map(got62, (input) => input.fields)).toStrictEqual([
           ["stated-due-date", "due-date"],
           ["stated-due-date", "due-date"],
         ]);
+        const got63 = yield* Ref.get(harness.revises);
         assertTrue(
-          A.every(yield* Ref.get(harness.revises), (input) =>
+          A.every(got63, (input) =>
             A.every(input.disputes, (dispute) => A.every(dispute.reasons, (reason) => !Str.includes("16")(reason)))
           )
         );
@@ -1873,7 +1930,8 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         const intake = yield* DocketIntake;
 
         const outcome = yield* intake.processMessage(statedMessage, TODAY);
-        const due = A.head(kinds(yield* entriesOf, "due"));
+        const entriesOf64 = yield* entriesOf;
+        const due = A.head(kinds(entriesOf64, "due"));
 
         expect(tagOf(outcome)).toBe("DocketEntered");
         expect(outcome._tag === "DocketEntered" ? [outcome.dueDate.basis, outcome.flags] : []).toStrictEqual([
@@ -1982,9 +2040,8 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
           O.map(reviewOf(outcome), (review) => [review.status, review.rounds, review.finalScore]),
           ["accepted", 2, 1]
         );
-        expect(A.map(yield* Ref.get(harness.rereads), (input) => input.fields)).toStrictEqual([
-          ["mail-date", "stated-due-date"],
-        ]);
+        const got65 = yield* Ref.get(harness.rereads);
+        expect(A.map(got65, (input) => input.fields)).toStrictEqual([["mail-date", "stated-due-date"]]);
       })
     );
   });
@@ -2019,7 +2076,8 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         const intake = yield* DocketIntake;
 
         const outcome = yield* intake.processMessage(message("m1"), TODAY);
-        const flagged = A.head(yield* entriesOf);
+        const entriesOf66 = yield* entriesOf;
+        const flagged = A.head(entriesOf66);
 
         expect(reasonOf(outcome)).toBe("deterministic-failure");
         assertTrue(
@@ -2094,7 +2152,8 @@ describe("@beep/law-practice-use-cases DocketIntake docket sheet cross-check", (
         ]) {
           assertTrue(bodyIncludes(due, fragment));
         }
-        expect(yield* Ref.get(harness.trackedAsked)).toStrictEqual([["0000.00001US01", "0000.00001EP02"]]);
+        const got67 = yield* Ref.get(harness.trackedAsked);
+        expect(got67).toStrictEqual([["0000.00001US01", "0000.00001EP02"]]);
       })
     );
   });
@@ -2121,13 +2180,15 @@ describe("@beep/law-practice-use-cases DocketIntake docket sheet cross-check", (
         const harness = yield* Harness;
 
         const outcome = yield* intake.processMessage(message("m1"), TODAY);
-        const due = A.head(kinds(yield* entriesOf, "due"));
+        const entriesOf68 = yield* entriesOf;
+        const due = A.head(kinds(entriesOf68, "due"));
 
         expect(flagsOf(outcome)).toStrictEqual(["tracked-date-differs"]);
         assertTrue(O.exists(due, (entry) => sameDate(entry.date, computedDue)));
         assertTrue(bodyIncludes(due, "Docket sheet: 2030-04-20 (Final Date: Final response)"));
         assertTrue(!bodyIncludes(due, "the docket sheet's date"));
-        expect(yield* Ref.get(harness.trackedAsked)).toStrictEqual([["0000.00001US01"]]);
+        const got69 = yield* Ref.get(harness.trackedAsked);
+        expect(got69).toStrictEqual([["0000.00001US01"]]);
       })
     );
   });
@@ -2146,7 +2207,8 @@ describe("@beep/law-practice-use-cases DocketIntake docket sheet cross-check", (
         const intake = yield* DocketIntake;
 
         const outcome = yield* intake.processMessage(message("m1"), TODAY);
-        const due = A.head(kinds(yield* entriesOf, "due"));
+        const entriesOf70 = yield* entriesOf;
+        const due = A.head(kinds(entriesOf70, "due"));
 
         expect(flagsOf(outcome)).toStrictEqual([]);
         assertTrue(bodyIncludes(due, "Docket sheet: 2030-04-08 (Due Date: Fixture response)"));
@@ -2168,7 +2230,8 @@ describe("@beep/law-practice-use-cases DocketIntake docket sheet cross-check", (
         const intake = yield* DocketIntake;
 
         const outcome = yield* intake.processMessage(message("m1"), TODAY);
-        const due = A.head(kinds(yield* entriesOf, "due"));
+        const entriesOf71 = yield* entriesOf;
+        const due = A.head(kinds(entriesOf71, "due"));
 
         expect(flagsOf(outcome)).toStrictEqual([]);
         assertTrue(O.exists(due, (entry) => sameDate(entry.date, computedDue)));
@@ -2191,7 +2254,8 @@ describe("@beep/law-practice-use-cases DocketIntake docket sheet cross-check", (
         const intake = yield* DocketIntake;
 
         const outcome = yield* intake.processMessage(message("m1"), TODAY);
-        const due = A.head(kinds(yield* entriesOf, "due"));
+        const entriesOf72 = yield* entriesOf;
+        const due = A.head(kinds(entriesOf72, "due"));
 
         expect(tagOf(outcome)).toBe("DocketEntered");
         expect(flagsOf(outcome)).toStrictEqual(["tracked-dates-unavailable"]);
@@ -2253,7 +2317,8 @@ describe("@beep/law-practice-use-cases DocketIntake docket sheet cross-check", (
         const harness = yield* Harness;
 
         const outcome = yield* intake.processMessage(message("m1"), TODAY);
-        const review = A.head(kinds(yield* entriesOf, "needs-review"));
+        const entriesOf73 = yield* entriesOf;
+        const review = A.head(kinds(entriesOf73, "needs-review"));
 
         expect(reasonOf(outcome)).toBe("due-date-past");
         expect(flagsOf(outcome)).toStrictEqual([
@@ -2263,7 +2328,8 @@ describe("@beep/law-practice-use-cases DocketIntake docket sheet cross-check", (
           "due-date-past",
         ]);
         assertTrue(O.exists(review, (entry) => sameDate(entry.date, TODAY)));
-        expect(yield* Ref.get(harness.trackedAsked)).toStrictEqual([["0000.00001WO01-CA1"]]);
+        const got74 = yield* Ref.get(harness.trackedAsked);
+        expect(got74).toStrictEqual([["0000.00001WO01-CA1"]]);
       })
     );
   });
@@ -2284,7 +2350,8 @@ describe("@beep/law-practice-use-cases DocketIntake docket sheet cross-check", (
         const intake = yield* DocketIntake;
 
         const outcome = yield* intake.processMessage(message("m1"), TODAY);
-        const flagged = A.head(yield* entriesOf);
+        const entriesOf75 = yield* entriesOf;
+        const flagged = A.head(entriesOf75);
 
         expect(reasonOf(outcome)).toBe("due-date-past");
         expect(flagsOf(outcome)).toStrictEqual(["tracked-date-differs", "source-document-missing", "due-date-past"]);
@@ -2307,7 +2374,8 @@ describe("@beep/law-practice-use-cases DocketIntake docket sheet cross-check", (
         const harness = yield* Harness;
 
         const outcome = yield* intake.processMessage(message("m1"), TODAY);
-        const due = A.head(kinds(yield* entriesOf, "due"));
+        const entriesOf76 = yield* entriesOf;
+        const due = A.head(kinds(entriesOf76, "due"));
 
         expect(flagsOf(outcome)).toStrictEqual(["matter-suggested"]);
         assertTrue(
@@ -2316,7 +2384,8 @@ describe("@beep/law-practice-use-cases DocketIntake docket sheet cross-check", (
             "Matter: not attached in the records; suggested candidates: 0000.00001, 0001.00001; needs attorney"
           )
         );
-        expect(yield* Ref.get(harness.trackedAsked)).toStrictEqual([]);
+        const got77 = yield* Ref.get(harness.trackedAsked);
+        expect(got77).toStrictEqual([]);
       })
     );
   });
@@ -2366,7 +2435,9 @@ describe("@beep/law-practice-use-cases DocketIntake needs-review identity", () =
         assertNone(absent);
       }
       assertNone(outcome.receivedDate);
-      expect(yield* decodeStateJson(yield* encodeStateJson(state))).toStrictEqual(state);
+      const encodedStateJson = yield* encodeStateJson(state);
+      const decodedStateJson = yield* decodeStateJson(encodedStateJson);
+      expect(decodedStateJson).toStrictEqual(state);
     })
   );
 
@@ -2406,7 +2477,8 @@ describe("@beep/law-practice-use-cases DocketIntake needs-review identity", () =
         const intake = yield* DocketIntake;
 
         const report = yield* intake.pollOnce(TODAY);
-        const record = yield* Effect.fromOption(yield* ledgerRecord("m-named"));
+        const ledgerRecord78 = yield* ledgerRecord("m-named");
+        const record = yield* Effect.fromOption(ledgerRecord78);
         const outcome = yield* Effect.fromOption(
           O.liftPredicate(record.outcome, DocketIntakeOutcome.guards.DocketNeedsReview)
         );
@@ -2529,7 +2601,8 @@ describe("@beep/law-practice-use-cases DocketIntake needs-review identity", () =
         const intake = yield* DocketIntake;
 
         const report = yield* intake.pollOnce(TODAY);
-        const record = yield* Effect.fromOption(yield* ledgerRecord("m-named"));
+        const ledgerRecord79 = yield* ledgerRecord("m-named");
+        const record = yield* Effect.fromOption(ledgerRecord79);
         const outcome = yield* Effect.fromOption(
           O.liftPredicate(record.outcome, DocketIntakeOutcome.guards.DocketNeedsReview)
         );

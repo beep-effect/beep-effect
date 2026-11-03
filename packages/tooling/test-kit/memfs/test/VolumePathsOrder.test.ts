@@ -65,7 +65,8 @@ describe("MemoryFileSystem.Volume.paths", () => {
       assert.strictEqual(volume.text("/wide/renamed"), "entry-000");
       assert.strictEqual(volume.has("/wide/entry-001"), false);
       assert.strictEqual(volume.text("/alias/entry-128"), undefined);
-      assert.deepStrictEqual(yield* fileSystem.readDirectory("/wide"), [...names.slice(2), "nested", "renamed"]);
+      const readDirectory1 = yield* fileSystem.readDirectory("/wide");
+      assert.deepStrictEqual(readDirectory1, [...names.slice(2), "nested", "renamed"]);
       assert.deepStrictEqual(volume.paths(), expected);
     })
   );

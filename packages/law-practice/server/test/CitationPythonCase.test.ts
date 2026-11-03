@@ -56,12 +56,12 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestSer
         const bytes = yield* fs.readFile(
           NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/python-lower.json", import.meta.url))
         );
-        expect(yield* digest.digestHex(Digest.sha256, bytes)).toBe(
-          "9e33744b1f9c8ca860058bfaad677f2ef932abec1c333df93a4c7a2c3b911848"
-        );
+        const citationResult1 = yield* digest.digestHex(Digest.sha256, bytes);
+        expect(citationResult1).toBe("9e33744b1f9c8ca860058bfaad677f2ef932abec1c333df93a4c7a2c3b911848");
         const corpus = yield* S.decodeEffect(Corpus)(new TextDecoder().decode(bytes));
         expect(S.toEquivalence(CitationPythonCaseData)(corpus.data, citationPythonCaseData)).toBe(true);
-        const { lower } = yield* makeCitationPythonLower((yield* defaultCitationEnginePolicy).limits);
+        const citationResult2 = yield* defaultCitationEnginePolicy;
+        const { lower } = yield* makeCitationPythonLower(citationResult2.limits);
         for (const row of corpus.cases) {
           const output = yield* lower({ width: row.source.width, bytes: row.source.bytes });
           expect(output, `case ${row.id}`).toEqual({ width: row.lower.width, bytes: row.lower.bytes });
@@ -73,11 +73,13 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestSer
         const limits = { ...(yield* defaultCitationEnginePolicy).limits, producedTextUtf16: 1 };
         const { lower } = yield* makeCitationPythonLower(limits);
         limits.producedTextUtf16 = 10;
-        expect(yield* lower({ width: 2, bytes: new Uint8Array([0x30, 1]) }).pipe(Effect.flip)).toMatchObject({
+        const citationResult3 = yield* lower({ width: 2, bytes: new Uint8Array([0x30, 1]) }).pipe(Effect.flip);
+        expect(citationResult3).toMatchObject({
           _tag: "CitationPythonUnicodeFailure",
           reason: "limit-exceeded",
         });
-        expect(yield* lower({ width: 1, bytes: new Uint8Array([65]) })).toEqual({
+        const citationResult4 = yield* lower({ width: 1, bytes: new Uint8Array([65]) });
+        expect(citationResult4).toEqual({
           width: 1,
           bytes: new Uint8Array([97]),
         });
@@ -88,8 +90,9 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestSer
         const deadline = Duration.millis(997);
         const timer = yield* makeCitationNativeManualClock(deadline);
         const disabled = yield* makeCitationNativeSleepClock(() => Effect.never);
+        const citationResult5 = yield* defaultCitationEnginePolicy;
         const { lower } = yield* makeCitationPythonLower({
-          ...(yield* defaultCitationEnginePolicy).limits,
+          ...citationResult5.limits,
           cleanDeadline: deadline,
         }).pipe(Effect.provideService(Clock.Clock, timer.clock));
         const pending = yield* lower({ width: 1, bytes: new Uint8Array(65_536).fill(65) }).pipe(
@@ -97,7 +100,8 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestSer
           Effect.forkChild
         );
         yield* timer.trigger;
-        expect(yield* Fiber.join(pending).pipe(Effect.flip)).toMatchObject({ reason: "deadline-exceeded" });
+        const citationResult6 = yield* Fiber.join(pending).pipe(Effect.flip);
+        expect(citationResult6).toMatchObject({ reason: "deadline-exceeded" });
       })
     );
   }

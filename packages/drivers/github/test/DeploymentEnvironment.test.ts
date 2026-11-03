@@ -129,8 +129,9 @@ describe("DeploymentEnvironment.list", () => {
       it.effect(`returns a typed list decode failure for a ${name}`, () =>
         Effect.gen(function* () {
           const service = yield* DeploymentEnvironment;
+          const result1 = yield* Effect.result(service.list);
           assertFailure(
-            Result.mapError(yield* Effect.result(service.list), (error) => ({
+            Result.mapError(result1, (error) => ({
               tag: error._tag,
               kind: error.kind,
               operation: error.operation,
@@ -255,7 +256,8 @@ describe("DeploymentEnvironmentInfo", () => {
       const input = { name: "preview/customer branch" };
       const value = yield* S.decodeEffect(DeploymentEnvironmentInfo)(input);
       assert.deepStrictEqual(value, input);
-      assert.deepStrictEqual(yield* S.encodeEffect(DeploymentEnvironmentInfo)(value), input);
+      const value2 = yield* S.encodeEffect(DeploymentEnvironmentInfo)(value);
+      assert.deepStrictEqual(value2, input);
     })
   );
 });

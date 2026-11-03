@@ -43,34 +43,40 @@ describe("protobuf scalar schemas", { concurrent: false }, () => {
     it.effect(
       "accepts protobuf float and double boundaries",
       Effect.fnUntraced(function* () {
-        expect(yield* decodeUnknownFloat(floatMinimum)).toBe(floatMinimum);
-        expect(yield* decodeUnknownFloat(0.5)).toBe(0.5);
-        expect(yield* decodeUnknownFloat(floatMaximum)).toBe(floatMaximum);
-        expect(globalThis.Number.isNaN(yield* decodeUnknownFloat(globalThis.Number.NaN))).toBe(true);
-        expect(yield* decodeUnknownFloat(globalThis.Number.POSITIVE_INFINITY)).toBe(
-          globalThis.Number.POSITIVE_INFINITY
-        );
-        expect(yield* decodeUnknownFloat(globalThis.Number.NEGATIVE_INFINITY)).toBe(
-          globalThis.Number.NEGATIVE_INFINITY
-        );
-        expect(yield* decodeUnknownDouble(-globalThis.Number.MAX_VALUE)).toBe(-globalThis.Number.MAX_VALUE);
-        expect(yield* decodeUnknownDouble(globalThis.Number.MAX_VALUE)).toBe(globalThis.Number.MAX_VALUE);
-        expect(globalThis.Number.isNaN(yield* decodeUnknownDouble(globalThis.Number.NaN))).toBe(true);
-        expect(yield* decodeUnknownDouble(globalThis.Number.POSITIVE_INFINITY)).toBe(
-          globalThis.Number.POSITIVE_INFINITY
-        );
-        expect(yield* decodeUnknownDouble(globalThis.Number.NEGATIVE_INFINITY)).toBe(
-          globalThis.Number.NEGATIVE_INFINITY
-        );
+        const decodedUnknownFloat = yield* decodeUnknownFloat(floatMinimum);
+        expect(decodedUnknownFloat).toBe(floatMinimum);
+        const decodedUnknownFloat1 = yield* decodeUnknownFloat(0.5);
+        expect(decodedUnknownFloat1).toBe(0.5);
+        const decodedUnknownFloat2 = yield* decodeUnknownFloat(floatMaximum);
+        expect(decodedUnknownFloat2).toBe(floatMaximum);
+        const decodedUnknownFloat3 = yield* decodeUnknownFloat(globalThis.Number.NaN);
+        expect(globalThis.Number.isNaN(decodedUnknownFloat3)).toBe(true);
+        const decodedUnknownFloat4 = yield* decodeUnknownFloat(globalThis.Number.POSITIVE_INFINITY);
+        expect(decodedUnknownFloat4).toBe(globalThis.Number.POSITIVE_INFINITY);
+        const decodedUnknownFloat5 = yield* decodeUnknownFloat(globalThis.Number.NEGATIVE_INFINITY);
+        expect(decodedUnknownFloat5).toBe(globalThis.Number.NEGATIVE_INFINITY);
+        const decodedUnknownDouble = yield* decodeUnknownDouble(-globalThis.Number.MAX_VALUE);
+        expect(decodedUnknownDouble).toBe(-globalThis.Number.MAX_VALUE);
+        const decodedUnknownDouble6 = yield* decodeUnknownDouble(globalThis.Number.MAX_VALUE);
+        expect(decodedUnknownDouble6).toBe(globalThis.Number.MAX_VALUE);
+        const decodedUnknownDouble7 = yield* decodeUnknownDouble(globalThis.Number.NaN);
+        expect(globalThis.Number.isNaN(decodedUnknownDouble7)).toBe(true);
+        const decodedUnknownDouble8 = yield* decodeUnknownDouble(globalThis.Number.POSITIVE_INFINITY);
+        expect(decodedUnknownDouble8).toBe(globalThis.Number.POSITIVE_INFINITY);
+        const decodedUnknownDouble9 = yield* decodeUnknownDouble(globalThis.Number.NEGATIVE_INFINITY);
+        expect(decodedUnknownDouble9).toBe(globalThis.Number.NEGATIVE_INFINITY);
       })
     );
 
     it.effect(
       "rejects overflowing finite float values and non-number floating-point inputs",
       Effect.fnUntraced(function* () {
-        pipe(yield* Effect.exit(decodeUnknownFloat(floatMaximum * 2)), Exit.isFailure, assertTrue);
-        pipe(yield* Effect.exit(decodeUnknownFloat("NaN")), Exit.isFailure, assertTrue);
-        pipe(yield* Effect.exit(decodeUnknownDouble("1.5")), Exit.isFailure, assertTrue);
+        const exit10 = yield* Effect.exit(decodeUnknownFloat(floatMaximum * 2));
+        pipe(exit10, Exit.isFailure, assertTrue);
+        const exit11 = yield* Effect.exit(decodeUnknownFloat("NaN"));
+        pipe(exit11, Exit.isFailure, assertTrue);
+        const exit12 = yield* Effect.exit(decodeUnknownDouble("1.5"));
+        pipe(exit12, Exit.isFailure, assertTrue);
       })
     );
 
@@ -102,18 +108,24 @@ describe("protobuf scalar schemas", { concurrent: false }, () => {
     it.effect(
       "accepts unsigned 64-bit protobuf bigint boundaries",
       Effect.fnUntraced(function* () {
-        expect(yield* decodeUnknownFixed64(uint64Minimum)).toBe(uint64Minimum);
-        expect(yield* decodeUnknownFixed64(uint64Maximum)).toBe(uint64Maximum);
+        const decodedUnknownFixed64 = yield* decodeUnknownFixed64(uint64Minimum);
+        expect(decodedUnknownFixed64).toBe(uint64Minimum);
+        const decodedUnknownFixed6413 = yield* decodeUnknownFixed64(uint64Maximum);
+        expect(decodedUnknownFixed6413).toBe(uint64Maximum);
       })
     );
 
     it.effect(
       "accepts protobufjs-compatible unsigned 64-bit input shapes",
       Effect.fnUntraced(function* () {
-        expect(yield* decodeUnknownFixed64("42")).toBe(BigInt(42));
-        expect(yield* decodeUnknownFixed64("18446744073709551615")).toBe(uint64Maximum);
-        expect(yield* decodeUnknownFixed64(42)).toBe(BigInt(42));
-        expect(yield* decodeUnknownFixed64(makeLongLike("18446744073709551615", true))).toBe(uint64Maximum);
+        const decodedUnknownFixed6414 = yield* decodeUnknownFixed64("42");
+        expect(decodedUnknownFixed6414).toBe(BigInt(42));
+        const decodedUnknownFixed6415 = yield* decodeUnknownFixed64("18446744073709551615");
+        expect(decodedUnknownFixed6415).toBe(uint64Maximum);
+        const decodedUnknownFixed6416 = yield* decodeUnknownFixed64(42);
+        expect(decodedUnknownFixed6416).toBe(BigInt(42));
+        const decodedUnknownFixed6417 = yield* decodeUnknownFixed64(makeLongLike("18446744073709551615", true));
+        expect(decodedUnknownFixed6417).toBe(uint64Maximum);
       })
     );
 
@@ -122,11 +134,16 @@ describe("protobuf scalar schemas", { concurrent: false }, () => {
       Effect.fnUntraced(function* () {
         const unsafePositive64Number = Number.MAX_SAFE_INTEGER + 1;
 
-        pipe(yield* Effect.exit(decodeUnknownFixed64(-BigInt(1))), Exit.isFailure, assertTrue);
-        pipe(yield* Effect.exit(decodeUnknownFixed64(uint64Maximum + BigInt(1))), Exit.isFailure, assertTrue);
-        pipe(yield* Effect.exit(decodeUnknownFixed64(1.5)), Exit.isFailure, assertTrue);
-        pipe(yield* Effect.exit(decodeUnknownFixed64(unsafePositive64Number)), Exit.isFailure, assertTrue);
-        pipe(yield* Effect.exit(decodeUnknownFixed64("1.5")), Exit.isFailure, assertTrue);
+        const exit18 = yield* Effect.exit(decodeUnknownFixed64(-BigInt(1)));
+        pipe(exit18, Exit.isFailure, assertTrue);
+        const exit19 = yield* Effect.exit(decodeUnknownFixed64(uint64Maximum + BigInt(1)));
+        pipe(exit19, Exit.isFailure, assertTrue);
+        const exit20 = yield* Effect.exit(decodeUnknownFixed64(1.5));
+        pipe(exit20, Exit.isFailure, assertTrue);
+        const exit21 = yield* Effect.exit(decodeUnknownFixed64(unsafePositive64Number));
+        pipe(exit21, Exit.isFailure, assertTrue);
+        const exit22 = yield* Effect.exit(decodeUnknownFixed64("1.5"));
+        pipe(exit22, Exit.isFailure, assertTrue);
       })
     );
 
@@ -146,13 +163,12 @@ describe("protobuf scalar schemas", { concurrent: false }, () => {
           (spy) => Effect.sync(() => spy.mockRestore())
         );
 
-        pipe(yield* Effect.exit(decodeUnknownFixed64(oversizedDecimal)), Exit.isFailure, assertTrue);
-        pipe(
-          yield* Effect.exit(decodeUnknownFixed64(makeLongLike(oversizedDecimal, true))),
-          Exit.isFailure,
-          assertTrue
-        );
-        pipe(yield* Effect.exit(decodeUnknownFixed64(nonStringLongLike)), Exit.isFailure, assertTrue);
+        const exit23 = yield* Effect.exit(decodeUnknownFixed64(oversizedDecimal));
+        pipe(exit23, Exit.isFailure, assertTrue);
+        const exit24 = yield* Effect.exit(decodeUnknownFixed64(makeLongLike(oversizedDecimal, true)));
+        pipe(exit24, Exit.isFailure, assertTrue);
+        const exit25 = yield* Effect.exit(decodeUnknownFixed64(nonStringLongLike));
+        pipe(exit25, Exit.isFailure, assertTrue);
         expect(coerceDecimal).not.toHaveBeenCalled();
         expect(bigIntSpy).not.toHaveBeenCalled();
       })
@@ -190,7 +206,8 @@ describe("protobuf scalar schemas", { concurrent: false }, () => {
             for (const value of [0, 1.25, -1.25, Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
               const encoded = yield* S.encodeEffect(codec)(value);
               expect(encoded).toBe(Number.isFinite(value) ? value : String(value));
-              expect(yield* S.decodeUnknownEffect(codec)(encoded)).toBe(value);
+              const value26 = yield* S.decodeUnknownEffect(codec)(encoded);
+              expect(value26).toBe(value);
             }
           })
       );
@@ -209,7 +226,8 @@ describe("protobuf scalar schemas", { concurrent: false }, () => {
           );
 
           const encoded = yield* S.encodeEffect(codec)(value);
-          expect(yield* S.decodeUnknownEffect(codec)(encoded)).toBe(value);
+          const value27 = yield* S.decodeUnknownEffect(codec)(encoded);
+          expect(value27).toBe(value);
           return true;
         }),
         { arbitrary: fcRuns(100) }

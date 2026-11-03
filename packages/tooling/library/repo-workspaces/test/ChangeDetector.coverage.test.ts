@@ -35,12 +35,14 @@ describe("ChangeDetector coverage", () => {
       Effect.gen(function* () {
         const service = yield* ChangeDetector;
         const options = ChangeDetectionOptions.make({ base: "main" });
+        const changedPackages1 = yield* service.changedPackages(options);
         assert.deepStrictEqual(
-          A.map(yield* service.changedPackages(options), (pkg) => pkg.name),
+          A.map(changedPackages1, (pkg) => pkg.name),
           ["core"]
         );
+        const affectedPackages2 = yield* service.affectedPackages(options);
         assert.deepStrictEqual(
-          A.map(yield* service.affectedPackages(options), (pkg) => pkg.name),
+          A.map(affectedPackages2, (pkg) => pkg.name),
           ["core"]
         );
       })

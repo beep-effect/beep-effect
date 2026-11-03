@@ -31,9 +31,11 @@ describe("Sbom filesystem coverage", () => {
         const fs = yield* FileSystem.FileSystem;
         yield* fs.writeFileString("/bom.json", "old");
         yield* Sbom.write(document, "/bom.json", { space: 0 });
-        assert.strictEqual(yield* fs.readFileString("/bom.json"), Sbom.toJson(document, { space: 0 }));
+        const readFileString1 = yield* fs.readFileString("/bom.json");
+        assert.strictEqual(readFileString1, Sbom.toJson(document, { space: 0 }));
         yield* Sbom.write(document, "/bom.json");
-        assert.strictEqual(yield* fs.readFileString("/bom.json"), Sbom.toJson(document));
+        const readFileString2 = yield* fs.readFileString("/bom.json");
+        assert.strictEqual(readFileString2, Sbom.toJson(document));
       })
     );
     it.effect("reports the path and original filesystem failure when the parent is absent", () =>

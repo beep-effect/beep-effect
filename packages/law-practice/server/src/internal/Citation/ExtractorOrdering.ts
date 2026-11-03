@@ -114,13 +114,20 @@ export const makeCitationExtractorOrdering = Effect.fn("Citation.makeExtractorOr
     entries: limits.patterns,
     iterations: limits.patternEvaluations,
   }).pipe(Effect.provideService(CitationRuntimeDictionaryComparison, comparison), Effect.mapError(setFailure));
-  for (const id of unfiltered) yield* initial.add(yield* keyFor(id)).pipe(Effect.mapError(setFailure));
+  for (const id of unfiltered) {
+    const key = yield* keyFor(id);
+    yield* initial.add(key).pipe(Effect.mapError(setFailure));
+  }
   const ordered = Effect.fn("Citation.orderSelectedExtractors")(function* (source: unknown) {
     const selected = yield* selector.select(source);
     const result = yield* initial.copy.pipe(Effect.mapError(setFailure));
-    for (const id of selected.insertions) yield* result.add(yield* keyFor(id)).pipe(Effect.mapError(setFailure));
+    for (const id of selected.insertions) {
+      const key = yield* keyFor(id);
+      yield* result.add(key).pipe(Effect.mapError(setFailure));
+    }
+    const citationResult1 = yield* result.read;
     return CitationOrderedExtractors.make({
-      indices: A.map(yield* result.read, (key) => key.objectId),
+      indices: A.map(citationResult1, (key) => key.objectId),
       prefixQueries: selected.prefixQueries,
       matchedKeys: selected.matchedKeys,
     });

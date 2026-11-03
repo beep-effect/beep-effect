@@ -120,7 +120,8 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
     const ref = yield* lookup(id);
     const text = yield* values.getText(ref);
     if (O.isNone(text) || text.value.subtype !== "plain") return O.none();
-    return O.map(yield* values.getUnicode(ref), (value) => value.storage);
+    const citationResult1 = yield* values.getUnicode(ref);
+    return O.map(citationResult1, (value) => value.storage);
   });
   const equalBytes = Effect.fn("Citation.registryEqualBytes")(function* (left: Uint8Array, right: Uint8Array) {
     if (left.byteLength !== right.byteLength) return false;
@@ -140,8 +141,10 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
     // General tables retain primitive equality after conversion. Subclasses
     // and other host values still use reflected adapter protocols.
     if (aPlain && bPlain) {
-      const x = yield* Effect.fromOption(yield* values.getUnicode(a), () => fail("unissued-value"));
-      const y = yield* Effect.fromOption(yield* values.getUnicode(b), () => fail("unissued-value"));
+      const citationResult2 = yield* values.getUnicode(a);
+      const x = yield* Effect.fromOption(citationResult2, () => fail("unissued-value"));
+      const citationResult3 = yield* values.getUnicode(b);
+      const y = yield* Effect.fromOption(citationResult3, () => fail("unissued-value"));
       return x.storage.width === y.storage.width && (yield* equalBytes(x.storage.bytes, y.storage.bytes));
     }
     const aBytes = yield* values.getBytes(a);
@@ -234,7 +237,10 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
               O.isSome(text) && text.value.subtype === "plain"
                 ? yield* hashes
                     .unicode(
-                      (yield* Effect.fromOption(yield* values.getUnicode(key), () => fail("unissued-value"))).storage
+                      (yield* values
+                        .getUnicode(key)
+                        .pipe(Effect.flatMap((unicode) => Effect.fromOption(unicode, () => fail("unissued-value")))))
+                        .storage
                     )
                     .pipe(
                       Effect.mapError((error) =>
@@ -336,7 +342,8 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
       if (HashMap.has(functions, value.slot)) return true;
       const text = yield* values.getText(value);
       if (O.isSome(text) && text.value.subtype === "plain") return false;
-      if (O.isSome(yield* values.getBytes(value))) return false;
+      const citationResult4 = yield* values.getBytes(value);
+      if (O.isSome(citationResult4)) return false;
       return yield* protocols.callable(value, work);
     }),
     invoke: Effect.fn("Citation.registryInvoke")(function* (fn, value, work) {
@@ -346,7 +353,7 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
       const builtin = HashMap.get(functions, fn.slot);
       if (O.isSome(builtin)) return yield* builtins.invoke(builtin.value, value, work);
       const text = yield* values.getText(fn);
-      if ((O.isSome(text) && text.value.subtype === "plain") || O.isSome(yield* values.getBytes(fn)))
+      if ((O.isSome(text) && text.value.subtype === "plain") || (yield* values.getBytes(fn).pipe(Effect.map(O.isSome))))
         return yield* fail("not-callable");
       return yield* protocols.invoke(fn, value, work);
     }),

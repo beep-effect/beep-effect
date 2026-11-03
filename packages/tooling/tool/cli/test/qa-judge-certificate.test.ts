@@ -139,9 +139,10 @@ it.layer(TestLayer, { timeout: "30 seconds" })("commands/Qa judge settlement gat
       expect(receipt.predicate.contractSubject).toEqual(QaJudgeContractSubject);
       expect(receipt.predicateType).toBe(GateCertificatePredicateType);
       expect(receipt.subject).toEqual([subject]);
-      expect(
-        S.toEquivalence(GateCertificateReceipt)(yield* decodeReceipt(yield* encodeReceipt(receipt)), receipt)
-      ).toBe(true);
+      const argument = S.toEquivalence(GateCertificateReceipt);
+      const encodedReceipt = yield* encodeReceipt(receipt);
+      const decodedReceipt = yield* decodeReceipt(encodedReceipt);
+      expect(argument(decodedReceipt, receipt)).toBe(true);
     })
   );
 
@@ -210,7 +211,9 @@ it.layer(TestLayer, { timeout: "30 seconds" })("commands/Qa judge settlement gat
         GateCertificateApplyPlan.make({ certificate: written.subject, checkIds: A.map(ids, (id) => GateId.make(id)) });
 
       // The producer's subject is the digest of exactly what it wrote.
-      expect(written.subject).toEqual(yield* subjectFor(GATE_CERTIFICATE_FILE, new TextDecoder().decode(bytes)));
+      const expectation = expect(written.subject);
+      const subjectFor1 = yield* subjectFor(GATE_CERTIFICATE_FILE, new TextDecoder().decode(bytes));
+      expectation.toEqual(subjectFor1);
 
       const applied = yield* applyQaJudgeCertificatePlan(plan(["cited-artifact-exists"]), bytes);
       const unknown = yield* applyQaJudgeCertificatePlan(plan(["not-a-qa-gate"]), bytes);
@@ -239,16 +242,14 @@ it.layer(TestLayer, { timeout: "30 seconds" })("commands/Qa judge settlement gat
         plan(["cited-artifact-exists"]),
         new TextEncoder().encode("{")
       );
-      const incoherent = yield* applyQaJudgeCertificatePlan(
-        plan(["cited-artifact-exists"]),
-        new TextEncoder().encode(
-          yield* encodeJson({
-            predicate: "not a certificate",
-            predicateType: written.receipt.predicateType,
-            subject: written.receipt.subject,
-          })
-        )
-      );
+      const argument1 = plan(["cited-artifact-exists"]);
+      const argument2 = new TextEncoder();
+      const encodedJson = yield* encodeJson({
+        predicate: "not a certificate",
+        predicateType: written.receipt.predicateType,
+        subject: written.receipt.subject,
+      });
+      const incoherent = yield* applyQaJudgeCertificatePlan(argument1, argument2.encode(encodedJson));
       expect(corrupt).toMatchObject({ reason: "stale-digest", unknownIds: [], verdict: "refused" });
       expect(incoherent).toMatchObject({ reason: "stale-digest", unknownIds: [], verdict: "refused" });
     })

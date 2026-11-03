@@ -18,7 +18,8 @@ const roundTrips = <T, E>(name: string, codec: S.Codec<T, E>, schema: S.Codec<T,
         const encoded = yield* S.encodeEffect(codec)(value);
         const decoded = yield* S.decodeEffect(codec)(encoded);
         assertTrue(S.toEquivalence(codec)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(codec)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(codec)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -57,7 +58,9 @@ describe("manifest property floor", () => {
         const parsed = yield* S.decodeEffect(Json)(text);
         const decoded = yield* PackageManifest.decode(parsed);
         assert.strictEqual(decoded.toJsonString(), text);
-        const expectedRest = yield* S.decodeEffect(Json)(yield* S.encodeEffect(Json)(value.rest));
+        const argument = S.decodeEffect(Json);
+        const value2 = yield* S.encodeEffect(Json)(value.rest);
+        const expectedRest = yield* argument(value2);
         assert.deepStrictEqual(decoded.rest, expectedRest);
         assertTrue(S.toEquivalence(PackageManifest)(decoded, value));
       }),

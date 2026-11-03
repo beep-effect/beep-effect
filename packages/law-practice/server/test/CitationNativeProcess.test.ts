@@ -45,14 +45,18 @@ it.layer(BunServices.layer, { excludeTestServices: true })("shared native proces
         }).pipe(Effect.andThen(permit.release)),
       });
       yield* started.child;
-      expect(yield* admission.snapshot).toMatchObject({ active: 1, regexActive: 1 });
+      const citationResult1 = yield* admission.snapshot;
+      expect(citationResult1).toMatchObject({ active: 1, regexActive: 1 });
       yield* Effect.all([started.process.retire(false), started.process.retire(true), owner.reap()], {
         concurrency: 3,
       });
       expect(releases).toBe(1);
-      expect(yield* observed.snapshot).toEqual({ spawned: 1, confirmed: 1 });
-      expect(yield* owner.snapshot).toEqual({ processes: 0, quarantined: 0, closed: false });
-      expect(yield* admission.snapshot).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
+      const citationResult2 = yield* observed.snapshot;
+      expect(citationResult2).toEqual({ spawned: 1, confirmed: 1 });
+      const citationResult3 = yield* owner.snapshot;
+      expect(citationResult3).toEqual({ processes: 0, quarantined: 0, closed: false });
+      const citationResult4 = yield* admission.snapshot;
+      expect(citationResult4).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
     })
   );
 
@@ -63,15 +67,20 @@ it.layer(BunServices.layer, { excludeTestServices: true })("shared native proces
       const owner = yield* makeCitationNativeProcessOwner(limits, "extract", failure);
       const permit = yield* admission.acquireRegex("extract");
       const started = yield* owner.start(ChildProcess.make("/citation-nonexistent-executable"), permit);
-      expect(yield* started.child.pipe(Effect.flip)).toMatchObject({
+      const citationResult5 = yield* started.child.pipe(Effect.flip);
+      expect(citationResult5).toMatchObject({
         _tag: "CitationRegexWorkerFailure",
         reason: "spawn-failed",
       });
-      expect(yield* owner.snapshot).toMatchObject({ processes: 1 });
-      expect(yield* admission.snapshot).toMatchObject({ active: 1, regexActive: 1 });
+      const citationResult6 = yield* owner.snapshot;
+      expect(citationResult6).toMatchObject({ processes: 1 });
+      const citationResult7 = yield* admission.snapshot;
+      expect(citationResult7).toMatchObject({ active: 1, regexActive: 1 });
       yield* started.process.retire(false);
-      expect(yield* owner.snapshot).toMatchObject({ processes: 0 });
-      expect(yield* admission.snapshot).toMatchObject({ active: 0, regexActive: 0 });
+      const citationResult8 = yield* owner.snapshot;
+      expect(citationResult8).toMatchObject({ processes: 0 });
+      const citationResult9 = yield* admission.snapshot;
+      expect(citationResult9).toMatchObject({ active: 0, regexActive: 0 });
     })
   );
 
@@ -85,13 +94,18 @@ it.layer(BunServices.layer, { excludeTestServices: true })("shared native proces
         Effect.provideService(ChildProcessSpawner, observed.spawner),
         Effect.provideService(Scope.Scope, scope)
       );
-      const started = yield* owner.start(command(), yield* admission.acquireRegex("extract"));
+      const citationResult10 = yield* admission.acquireRegex("extract");
+      const started = yield* owner.start(command(), citationResult10);
       yield* started.child;
       yield* Scope.close(scope, Exit.void);
-      expect(yield* observed.snapshot).toEqual({ spawned: 1, confirmed: 1 });
-      expect(yield* owner.snapshot).toEqual({ processes: 0, quarantined: 0, closed: true });
-      expect(yield* admission.snapshot).toMatchObject({ active: 0, regexActive: 0 });
-      expect(yield* owner.ensureOpen.pipe(Effect.flip)).toMatchObject({
+      const citationResult11 = yield* observed.snapshot;
+      expect(citationResult11).toEqual({ spawned: 1, confirmed: 1 });
+      const citationResult12 = yield* owner.snapshot;
+      expect(citationResult12).toEqual({ processes: 0, quarantined: 0, closed: true });
+      const citationResult13 = yield* admission.snapshot;
+      expect(citationResult13).toMatchObject({ active: 0, regexActive: 0 });
+      const citationResult14 = yield* owner.ensureOpen.pipe(Effect.flip);
+      expect(citationResult14).toMatchObject({
         _tag: "CitationRegexWorkerFailure",
         reason: "closed",
       });

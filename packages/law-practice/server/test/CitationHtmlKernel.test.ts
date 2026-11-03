@@ -41,7 +41,8 @@ const CorpusJson = S.fromJsonString(
 );
 
 const loadAsset = Effect.fn("HtmlKernelTest.loadAsset")(function* () {
-  return yield* (yield* FileSystem.FileSystem).readFile(
+  const citationResult1 = yield* FileSystem.FileSystem;
+  return yield* citationResult1.readFile(
     NodeURL.fileURLToPath(new URL("../assets/citation-html/kernel.wasm", import.meta.url))
   );
 });
@@ -99,20 +100,21 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("private HTML kernel
     "matches full source cleaner outcomes with the approved resource exception",
     () =>
       Effect.gen(function* () {
-        const raw = yield* (yield* FileSystem.FileSystem).readFileString(
+        const citationResult2 = yield* FileSystem.FileSystem;
+        const raw = yield* citationResult2.readFileString(
           NodeURL.fileURLToPath(
             new URL("../../use-cases/test/fixtures/eyecite/html-kernel-cases.json", import.meta.url)
           )
         );
-        expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-          "34a9b3b4667a71c0234f77fb898f6d6de55a85e7306ea66a55144b3ca95d24d0"
-        );
+        const citationResult3 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+        expect(citationResult3).toBe("34a9b3b4667a71c0234f77fb898f6d6de55a85e7306ea66a55144b3ca95d24d0");
         const corpus = yield* S.decodeEffect(CorpusJson)(raw);
         expect(corpus.cases).toHaveLength(1097);
         const texts = HashMap.fromIterable(A.map(corpus.artifacts, (a) => [a.sha256, a.value] as const));
         const limits = (yield* defaultCitationEnginePolicy).limits;
         const preparation = yield* makeCitationHtmlInput(limits);
-        const kernel = yield* makeCitationHtmlKernel(yield* loadAsset());
+        const citationResult4 = yield* loadAsset();
+        const kernel = yield* makeCitationHtmlKernel(citationResult4);
         let successes = 0;
         let declarations = 0;
         let parseErrors = 0;
@@ -148,7 +150,9 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("private HTML kernel
               expect(failed, row.name).toMatchObject({ _tag: "CitationHtmlKernelFailure", reason: "parse-error" });
               parseErrors++;
             } else {
-              expect(yield* run, row.name).toBe(yield* Effect.fromOption(HashMap.get(texts, row.outcome.value)));
+              const citationResult5 = yield* run;
+              const citationResult6 = yield* Effect.fromOption(HashMap.get(texts, row.outcome.value));
+              expect(citationResult5, row.name).toBe(citationResult6);
               successes++;
             }
           }),
@@ -170,9 +174,13 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("private HTML kernel
         });
         const text = Str.repeat(1_000_000)("A");
         const input = yield* preparation.prepare(text);
-        const kernel = yield* makeCitationHtmlKernel(yield* loadAsset());
-        expect(yield* kernel.run({ input, outputUtf16: 1_000_000 })).toBe(text);
-        expect(yield* kernel.run({ input: yield* preparation.prepare("B"), outputUtf16: 1 })).toBe("B");
+        const citationResult7 = yield* loadAsset();
+        const kernel = yield* makeCitationHtmlKernel(citationResult7);
+        const citationResult8 = yield* kernel.run({ input, outputUtf16: 1_000_000 });
+        expect(citationResult8).toBe(text);
+        const citationResult9 = yield* preparation.prepare("B");
+        const citationResult10 = yield* kernel.run({ input: citationResult9, outputUtf16: 1 });
+        expect(citationResult10).toBe("B");
       }),
     { timeout: 30_000 }
   );
@@ -181,22 +189,27 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("private HTML kernel
       const bytes = yield* loadAsset();
       const changed = new Uint8Array(bytes);
       changed[0] = 1;
-      expect((yield* Effect.flip(makeCitationHtmlKernel(changed))).reason).toBe("invalid-asset");
+      const citationResult11 = yield* Effect.flip(makeCitationHtmlKernel(changed));
+      expect(citationResult11.reason).toBe("invalid-asset");
       const kernel = yield* makeCitationHtmlKernel(bytes);
-      const prep = yield* makeCitationHtmlInput((yield* defaultCitationEnginePolicy).limits);
+      const citationResult12 = yield* defaultCitationEnginePolicy;
+      const prep = yield* makeCitationHtmlInput(citationResult12.limits);
       const input = yield* prep.prepare("<p>😀AB</p>");
       const failed = yield* Effect.flip(kernel.run({ input, outputUtf16: 3 }));
       expect(failed._tag).toBe("CitationSafetyLimitExceeded");
       if (failed._tag === "CitationSafetyLimitExceeded") expect(failed.limit).toBe("producedTextUtf16");
-      expect(yield* kernel.run({ input, outputUtf16: 4 })).toBe("😀AB");
-      expect(
-        yield* kernel.run({ input: yield* prep.prepare(""), outputUtf16: 4 }).pipe(
-          Effect.flip,
-          Effect.map((f) => f._tag)
-        )
-      ).toBe("CitationHtmlKernelFailure");
-      expect(yield* kernel.run({ input, outputUtf16: 4 })).toBe("😀AB");
-      expect((yield* Effect.flip(kernel.run({ input, outputUtf16: -1 })))._tag).toBe("CitationHtmlKernelFailure");
+      const citationResult13 = yield* kernel.run({ input, outputUtf16: 4 });
+      expect(citationResult13).toBe("😀AB");
+      const citationResult14 = yield* prep.prepare("");
+      const citationResult15 = yield* kernel.run({ input: citationResult14, outputUtf16: 4 }).pipe(
+        Effect.flip,
+        Effect.map((f) => f._tag)
+      );
+      expect(citationResult15).toBe("CitationHtmlKernelFailure");
+      const citationResult16 = yield* kernel.run({ input, outputUtf16: 4 });
+      expect(citationResult16).toBe("😀AB");
+      const citationResult17 = yield* Effect.flip(kernel.run({ input, outputUtf16: -1 }));
+      expect(citationResult17._tag).toBe("CitationHtmlKernelFailure");
     })
   );
 });

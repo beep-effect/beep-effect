@@ -156,7 +156,7 @@ export const makeHoldSites = Effect.fn("HoldSites.make")(function* (repoRoot: st
     const exists = yield* fs
       .exists(path.join(repoRoot, relative))
       .pipe(Effect.mapError(holdsPlatformError(`Could not stat ${relative}`)));
-    return exists ? O.some(yield* readText(relative)) : O.none();
+    return exists ? yield* Effect.asSome(readText(relative)) : O.none();
   });
 
   const manifestSites = Effect.fn("HoldSites.manifest")(function* (manifest: string) {

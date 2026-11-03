@@ -76,9 +76,8 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("retained prior-f
           new URL("../../use-cases/test/fixtures/eyecite/prior-full-observations.json", import.meta.url)
         )
       );
-      expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-        "191b4e7f872ffb886f2532aba1a4fc68f25a5022141df7207197906d49c9b2ac"
-      );
+      const citationResult1 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+      expect(citationResult1).toBe("191b4e7f872ffb886f2532aba1a4fc68f25a5022141df7207197906d49c9b2ac");
       const data = yield* S.decodeEffect(CorpusJson)(raw);
       expect(data.cases).toHaveLength(8);
       expect(A.reduce(data.cases, 0, (count, row) => count + A.length(row.events))).toBe(31);
@@ -108,7 +107,9 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("retained prior-f
           const mentions = yield* Effect.forEach(input.mentions, (mention) =>
             Effect.gen(function* () {
               const wire = yield* S.encodeEffect(Citation)(mention.citation);
-              if (wire.type !== "reference") return mention;
+              if (wire.type !== "reference") {
+                return mention;
+              }
               const citation = yield* S.decodeEffect(Citation)({
                 ...wire,
                 metadata: {
@@ -142,7 +143,9 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("retained prior-f
           let pairSlots = A.empty<number>();
           const pairSlot = (value: number) => {
             const found = A.findFirstIndex(pairSlots, (slot) => slot === value);
-            if (O.isSome(found)) return found.value;
+            if (O.isSome(found)) {
+              return found.value;
+            }
             const slot = A.length(pairSlots);
             pairSlots = A.append(pairSlots, value);
             return slot;
@@ -150,7 +153,9 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("retained prior-f
           let owners = A.empty<typeof owner>();
           const listSlot = (value: typeof owner) => {
             const found = A.findFirstIndex(owners, (entry) => entry === value);
-            if (O.isSome(found)) return found.value;
+            if (O.isSome(found)) {
+              return found.value;
+            }
             const slot = A.length(owners);
             owners = A.append(owners, value);
             return slot;
@@ -184,13 +189,14 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("retained prior-f
               Match.when("shortFormCase", () => defaults.shortCase(current)),
               Match.orElse(() => defaults.reference(current))
             );
+            const citationResult2 = yield* owner.readFulls;
             const common = {
               slot: A.getUnsafe(row.kinds, indexOf(arg.mention.id)),
               mention: indexOf(arg.mention.id),
               listSlot: listSlot(owner),
               before,
               retainedListMatches,
-              after: fullsView(yield* owner.readFulls),
+              after: fullsView(citationResult2),
               result: resourceValue(output.resource),
             };
             if (O.isSome(retainedPair)) {
@@ -200,7 +206,9 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("retained prior-f
                 retainedPair: pairView(retainedPair.value),
                 retainedPairMatchesFirst: retainedPair.value.pairSlot === first.pairSlot,
               });
-            } else events = A.append(events, common);
+            } else {
+              events = A.append(events, common);
+            }
             return output;
           });
           const callbacks = CitationResolutionCallbacks.of({
@@ -211,21 +219,28 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("retained prior-f
             full: Effect.fn("PriorFullTest.full")(function* (mention: (typeof prepared.mentions)[number]) {
               let event: S.Json = { slot: "full", mention: indexOf(mention.id) };
               if (O.isSome(retained)) {
-                const before = fullsView(yield* retained.value.readFulls);
-                if (row.name === "retained-clear-from-full") yield* retained.value.writeFulls([]);
-                if (row.name === "retained-reverse-from-full")
-                  yield* retained.value.writeFulls(A.reverse(yield* retained.value.readFulls));
+                const citationResult3 = yield* retained.value.readFulls;
+                const before = fullsView(citationResult3);
+                if (row.name === "retained-clear-from-full") {
+                  yield* retained.value.writeFulls([]);
+                }
+                if (row.name === "retained-reverse-from-full") {
+                  const citationResult17 = yield* retained.value.readFulls;
+                  yield* retained.value.writeFulls(A.reverse(citationResult17));
+                }
                 if (row.name === "retained-insert-current-full") {
                   const reference = CitationGroupMember.cases.Mention.make({ mentionId: mention.id });
                   const pair = yield* retained.value.createFullPair(reference, foreign);
-                  yield* retained.value.writeFulls(A.append(yield* retained.value.readFulls, pair));
+                  const citationResult4 = yield* retained.value.readFulls;
+                  yield* retained.value.writeFulls(A.append(citationResult4, pair));
                 }
+                const citationResult5 = yield* retained.value.readFulls;
                 event = {
                   slot: "full",
                   mention: indexOf(mention.id),
                   retainedListSlot: listSlot(retained.value),
                   before,
-                  after: fullsView(yield* retained.value.readFulls),
+                  after: fullsView(citationResult5),
                 };
               }
               events = A.append(events, event);
@@ -233,15 +248,17 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("retained prior-f
             }),
             id: Effect.fn("PriorFullTest.id")(function* (arg: CitationIdCallbackInput) {
               const saved = yield* Effect.fromOption(retained, invalid);
-              const before = fullsView(yield* saved.readFulls);
+              const citationResult6 = yield* saved.readFulls;
+              const before = fullsView(citationResult6);
               yield* saved.writeFulls([]);
               const output = yield* defaults.id(arg);
+              const citationResult7 = yield* saved.readFulls;
               events = A.append(events, {
                 slot: "id",
                 mention: indexOf(arg.mention.id),
                 retainedListSlot: listSlot(saved),
                 before,
-                after: fullsView(yield* saved.readFulls),
+                after: fullsView(citationResult7),
                 result: resourceValue(output.resource),
               });
               return output;
@@ -297,20 +314,29 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("retained prior-f
         const equal = yield* owner.createFullPair(citation, resource);
         expect(pair.pairSlot).not.toBe(equal.pairSlot);
         yield* owner.writeFulls([pair, pair]);
-        expect(A.map(yield* owner.readFulls, (entry) => entry.pairSlot)).toEqual([pair.pairSlot, pair.pairSlot]);
+        const citationResult8 = yield* owner.readFulls;
+        expect(A.map(citationResult8, (entry) => entry.pairSlot)).toEqual([pair.pairSlot, pair.pairSlot]);
         const snapshot = yield* owner.readFulls;
         Reflect.set(A.getUnsafe(snapshot, 0), "resource", foreign);
-        expect(A.getUnsafe(yield* owner.readFulls, 0).resource).toEqual(resource);
-        expect((yield* Effect.flip(owner.writeFulls(snapshot))).reason).toBe("invalid-input");
-        expect((yield* Effect.flip(owner.writeFulls([pair, pair, pair]))).reason).toBe("limit-exceeded");
-        expect(A.map(yield* owner.readFulls, (entry) => entry.pairSlot)).toEqual([pair.pairSlot, pair.pairSlot]);
+        const citationResult9 = yield* owner.readFulls;
+        expect(A.getUnsafe(citationResult9, 0).resource).toEqual(resource);
+        const citationResult10 = yield* Effect.flip(owner.writeFulls(snapshot));
+        expect(citationResult10.reason).toBe("invalid-input");
+        const citationResult11 = yield* Effect.flip(owner.writeFulls([pair, pair, pair]));
+        expect(citationResult11.reason).toBe("limit-exceeded");
+        const citationResult12 = yield* owner.readFulls;
+        expect(A.map(citationResult12, (entry) => entry.pairSlot)).toEqual([pair.pairSlot, pair.pairSlot]);
         yield* owner.writeFulls([equal]);
-        expect(A.getUnsafe(yield* owner.readFulls, 0).pairSlot).toBe(equal.pairSlot);
+        const citationResult13 = yield* owner.readFulls;
+        expect(A.getUnsafe(citationResult13, 0).pairSlot).toBe(equal.pairSlot);
         expect(pair.resource).toEqual(resource);
-        expect(yield* owner.read).toEqual([]);
+        const citationResult14 = yield* owner.read;
+        expect(citationResult14).toEqual([]);
         yield* owner.close;
-        expect((yield* Effect.flip(owner.readFulls)).reason).toBe("invalid-input");
-        expect((yield* Effect.flip(owner.writeFulls([]))).reason).toBe("invalid-input");
+        const citationResult15 = yield* Effect.flip(owner.readFulls);
+        expect(citationResult15.reason).toBe("invalid-input");
+        const citationResult16 = yield* Effect.flip(owner.writeFulls([]));
+        expect(citationResult16.reason).toBe("invalid-input");
       })
   );
 });

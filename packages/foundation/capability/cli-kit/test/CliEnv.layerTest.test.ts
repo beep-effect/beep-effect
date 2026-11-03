@@ -38,7 +38,8 @@ describe("CliEnv.layerTest", () => {
     it.layer(Layer.mergeAll(layerSeen0), { timeout: "30 seconds" })((it) => {
       it.effect("by default: a human on no terminal, not interactive, colour none, Unicode glyphs, width 80", () =>
         Effect.gen(function* () {
-          assert.deepStrictEqual(yield* Observed0, {
+          const Observed01 = yield* Observed0;
+          assert.deepStrictEqual(Observed01, {
             interactive: false,
             audience: "human",
             stdinIsTerminal: false,

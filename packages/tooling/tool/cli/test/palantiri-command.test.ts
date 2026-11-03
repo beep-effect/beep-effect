@@ -169,7 +169,8 @@ describe("printParcel over a stub source", () => {
           O.map(MutableHashMap.get(spans, ParcelsReadSpan.name), (span) => span.traceId),
           TRACE_ID
         );
-        const gauges = A.filter(yield* Metric.snapshot, (metric) => metric.id === AccountsWindowRemaining.name);
+        const snapshot1 = yield* Metric.snapshot;
+        const gauges = A.filter(snapshot1, (metric) => metric.id === AccountsWindowRemaining.name);
         expect(A.map(gauges, (metric) => metric.attributes?.["beep.provider"])).toContain("openai");
         const text = yield* captureOutput(printParcel("account-headroom", false)).pipe(withEnv({}));
         expect(text).toContain("account-headroom: 2 of 2 accounts fresh");
@@ -264,13 +265,16 @@ describe("beep palantiri parcel account-headroom", () => {
         );
         const read = source.snapshot.pipe(withEnv({ BEEP_PALANTIRI_STATE_ROOT: root }));
         const first = yield* read;
-        expect(yield* Ref.get(polls)).toBe(2);
-        expect(yield* fs.exists(file)).toBe(true);
+        const got = yield* Ref.get(polls);
+        expect(got).toBe(2);
+        const exists2 = yield* fs.exists(file);
+        expect(exists2).toBe(true);
         // Account labels stay private to the owner.
         expect(((yield* fs.stat(file)).mode & 0o777).toString(8)).toBe("600");
         expect(((yield* fs.stat(root)).mode & 0o777).toString(8)).toBe("700");
         const cached = yield* read;
-        expect(yield* Ref.get(polls)).toBe(2);
+        const got3 = yield* Ref.get(polls);
+        expect(got3).toBe(2);
         expect(cached.report.generatedAt).toEqual(first.report.generatedAt);
         assertSome(first.expectedProviders, ["claude", "codex"]);
         // Age the snapshot past the five-minute bound.
@@ -281,7 +285,8 @@ describe("beep palantiri parcel account-headroom", () => {
         });
         yield* AccountsStatusReportJson.encode(aged).pipe(Effect.flatMap((text) => fs.writeFileString(file, text)));
         yield* read;
-        expect(yield* Ref.get(polls)).toBe(4);
+        const got4 = yield* Ref.get(polls);
+        expect(got4).toBe(4);
         // A live poll that fails serves the stale snapshot instead.
         yield* AccountsStatusReportJson.encode(aged).pipe(Effect.flatMap((text) => fs.writeFileString(file, text)));
         const offline = yield* makeAccountHeadroomSourceLive.pipe(
@@ -297,7 +302,8 @@ describe("beep palantiri parcel account-headroom", () => {
         expect(served.report.generatedAt).toEqual(aged.generatedAt);
         // The provider listing failed too, so attribution is unknown rather than empty.
         assertNone(served.expectedProviders);
-        const parcel = reduceAccountHeadroom(served, yield* DateTime.now, 20);
+        const now5 = yield* DateTime.now;
+        const parcel = reduceAccountHeadroom(served, now5, 20);
         expect(parcel.freshness._tag === "Unknown" ? parcel.freshness.reason : "fresh").toBe("stale");
       })
     );

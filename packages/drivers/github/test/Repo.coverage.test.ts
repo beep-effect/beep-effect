@@ -23,7 +23,8 @@ describe("Repo parsing and provisioning", () => {
         ]) {
           assertFalse(S.is(RepoRef)(fields));
           assert.throws(() => RepoRef.make(fields));
-          assertTrue(yield* S.decodeEffect(RepoRef)(fields).pipe(Effect.result, Effect.map(Result.isFailure)));
+          const pipe1 = yield* S.decodeEffect(RepoRef)(fields).pipe(Effect.result, Effect.map(Result.isFailure));
+          assertTrue(pipe1);
         }
       }
     })
@@ -32,8 +33,10 @@ describe("Repo parsing and provisioning", () => {
     Effect.gen(function* () {
       const fields = { owner: " .@\\é💫\n\u0000 ", repo: "\t?:#\\仓库\r\n " };
       const decoded = yield* S.decodeEffect(RepoRef)(fields);
-      assert.deepStrictEqual(yield* S.encodeEffect(RepoRef)(decoded), fields);
-      assert.deepStrictEqual(yield* RepoRef.parse(decoded.slug), decoded);
+      const value2 = yield* S.encodeEffect(RepoRef)(decoded);
+      assert.deepStrictEqual(value2, fields);
+      const parsed3 = yield* RepoRef.parse(decoded.slug);
+      assert.deepStrictEqual(parsed3, decoded);
       assert.deepStrictEqual(RepoRef.make(fields), decoded);
     })
   );
@@ -52,12 +55,14 @@ describe("Repo parsing and provisioning", () => {
   it.effect("parses exactly two nonempty segments and preserves invalid input in its error", () =>
     Effect.gen(function* () {
       assertSuccess(RepoRef.parseResult("acme/widget"), ref);
-      assert.deepStrictEqual(yield* RepoRef.parse("acme/widget"), ref);
+      const parsed4 = yield* RepoRef.parse("acme/widget");
+      assert.deepStrictEqual(parsed4, ref);
       assert.strictEqual(ref.slug, "acme/widget");
       for (const slug of ["", "widget", "/widget", "acme/", "acme/widget/extra"]) {
         const error = InvalidRepoRefError.make({ input: slug });
         assertFailure(RepoRef.parseResult(slug), error);
-        assertFailure(yield* Effect.result(RepoRef.parse(slug)), error);
+        const result5 = yield* Effect.result(RepoRef.parse(slug));
+        assertFailure(result5, error);
         assert.strictEqual(error.message, `not an owner/repo slug: ${yield* S.encodeEffect(JsonString)(slug)}`);
       }
     })
@@ -65,10 +70,13 @@ describe("Repo parsing and provisioning", () => {
   it.layer(Repo.layerFromSlug("acme/widget"), { timeout: "30 seconds" })((it) => {
     it.effect("layerFromSlug supplies the parsed value and provide redirects an operation", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* Repo, ref);
+        const Repo6 = yield* Repo;
+        assert.deepStrictEqual(Repo6, ref);
         const other = RepoRef.make({ owner: "other", repo: "docs" });
-        assert.strictEqual(yield* Effect.map(Repo, (value) => value.slug).pipe(Repo.provide(other)), "other/docs");
-        assert.deepStrictEqual(yield* Repo, ref);
+        const pipe7 = yield* Effect.map(Repo, (value) => value.slug).pipe(Repo.provide(other));
+        assert.strictEqual(pipe7, "other/docs");
+        const Repo8 = yield* Repo;
+        assert.deepStrictEqual(Repo8, ref);
       })
     );
   });
@@ -78,7 +86,8 @@ describe("Repo parsing and provisioning", () => {
   it.layer(Repo.layerFromConfig().pipe(Layer.provide(provider)), { timeout: "30 seconds" })((it) => {
     it.effect("configuration defaults to GITHUB_REPOSITORY", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* Repo, ref);
+        const Repo9 = yield* Repo;
+        assert.deepStrictEqual(Repo9, ref);
       })
     );
   });

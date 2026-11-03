@@ -63,10 +63,12 @@ const badFrame = () => CitationHtmlWorkerFailure.make({ reason: "invalid-frame" 
  */
 export const citationHtmlWorkerProgram = Effect.gen(function* () {
   const stdio = yield* Stdio.Stdio;
-  const [maximum] = yield* S.decodeUnknownEffect(Args)(yield* stdio.args).pipe(Effect.mapError(badRuntime));
+  const citationResult1 = yield* stdio.args;
+  const [maximum] = yield* S.decodeUnknownEffect(Args)(citationResult1).pipe(Effect.mapError(badRuntime));
   yield* preflightCitationHtmlControlFrames(maximum);
   const fs = yield* FileSystem.FileSystem;
-  const assetPath = yield* (yield* Path.Path)
+  const citationResult2 = yield* Path.Path;
+  const assetPath = yield* citationResult2
     .fromFileUrl(new URL("../../../assets/citation-html/kernel.wasm", import.meta.url))
     .pipe(Effect.mapError(badRuntime));
   const chunks = yield* Stream.runCollect(fs.stream(assetPath, { bytesToRead: 1753105 })).pipe(
@@ -93,7 +95,8 @@ export const citationHtmlWorkerProgram = Effect.gen(function* () {
     maximum,
     1,
     Effect.fnUntraced(function* (bytes) {
-      request = O.some(yield* decodeCitationHtmlJob(bytes));
+      const citationResult3 = yield* decodeCitationHtmlJob(bytes);
+      request = O.some(citationResult3);
     })
   );
   const job = yield* Effect.fromOption(request).pipe(Effect.mapError(badFrame));

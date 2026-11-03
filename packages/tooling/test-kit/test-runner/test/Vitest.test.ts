@@ -182,7 +182,8 @@ it.effect("preserves typed runner error messages and encoded diagnostic fields",
   Effect.gen(function* () {
     const missing = TestContextUnavailable.make({ method: "each" });
     expect(missing.message).toBe("Instrumented each callback ran without its Vitest execution context");
-    expect(yield* encodeMissingContext(missing)).toEqual({
+    const encodedMissingContext = yield* encodeMissingContext(missing);
+    expect(encodedMissingContext).toEqual({
       _tag: "TestContextUnavailable",
       method: "each",
     });
@@ -190,13 +191,15 @@ it.effect("preserves typed runner error messages and encoded diagnostic fields",
     expect(withoutLog.message).toBe('Instrumented test "no output" exceeded its 25ms watchdog. Last log: <none>');
     const withLog = TestHang.make({ testName: "queue worker", timeoutMillis: 175, lastLogLine: O.some("waiting") });
     expect(withLog.message).toBe('Instrumented test "queue worker" exceeded its 175ms watchdog. Last log: waiting');
-    expect(yield* encodeTestHang(withLog)).toEqual({
+    const encodedTestHang = yield* encodeTestHang(withLog);
+    expect(encodedTestHang).toEqual({
       _tag: "TestHang",
       testName: "queue worker",
       timeoutMillis: 175,
       lastLogLine: "waiting",
     });
-    expect(yield* encodeTestHang(withoutLog)).toEqual({
+    const encodedTestHang1 = yield* encodeTestHang(withoutLog);
+    expect(encodedTestHang1).toEqual({
       _tag: "TestHang",
       testName: "no output",
       timeoutMillis: 25,
@@ -275,7 +278,8 @@ controlledIt.effect(
   () =>
     Effect.gen(function* () {
       yield* TestClock.adjust("2 seconds");
-      expect(yield* Clock.currentTimeMillis).toBe(2_000);
+      const currentTimeMillis2 = yield* Clock.currentTimeMillis;
+      expect(currentTimeMillis2).toBe(2_000);
     }),
   0
 );
@@ -301,7 +305,8 @@ it.layer(ConfigProvider.layer(ConfigProvider.fromUnknown({ CI: "invalid", compon
 })("invalid trace configuration", (quietIt) => {
   quietIt.effect("keeps configuration failure from failing the test body", () =>
     Effect.gen(function* () {
-      expect(yield* Config.String("component")).toBe("runner");
+      const String3 = yield* Config.String("component");
+      expect(String3).toBe("runner");
     })
   );
 });
@@ -311,8 +316,10 @@ it.layer(ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_TEST_TRACE: "1",
 })("traced ordinary execution", (tracedIt) => {
   tracedIt.effect("preserves configuration and body services while emitting an ordinary lifecycle", () =>
     Effect.gen(function* () {
-      expect(yield* Config.Boolean("CI")).toBe(false);
-      expect(yield* Clock.currentTimeMillis).toBe(0);
+      const Boolean4 = yield* Config.Boolean("CI");
+      expect(Boolean4).toBe(false);
+      const currentTimeMillis5 = yield* Clock.currentTimeMillis;
+      expect(currentTimeMillis5).toBe(0);
     })
   );
 });

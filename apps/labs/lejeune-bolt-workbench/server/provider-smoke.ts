@@ -328,9 +328,8 @@ const recordProviderSmoke = Effect.fn("LeJeuneProviderSmoke.record")(function* (
       providerSmokeErrorWithCause("hashing", "The sanitized provider candidates could not be hashed.", cause)
     )
   );
-  const recordedAt = IsoTimestamp.make(
-    DateTime.formatIso(DateTime.makeUnsafe(yield* Effect.clockWith((clock) => clock.currentTimeMillis)))
-  );
+  const clockWith1 = yield* Effect.clockWith((clock) => clock.currentTimeMillis);
+  const recordedAt = IsoTimestamp.make(DateTime.formatIso(DateTime.makeUnsafe(clockWith1)));
   const recording = ProviderRecording.make({
     candidates: verifiedCandidates,
     documentId: PROVIDER_RECORDING_DOCUMENT_ID,

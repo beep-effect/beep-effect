@@ -82,11 +82,11 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("mixed live resource
       const raw = yield* fs.readFileString(
         NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/live-resources.json", import.meta.url))
       );
-      expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-        "92a6dd9e59d5808536a4a83b92f3a099713f690cca781dcd5cde1439e75e8b1f"
-      );
+      const citationResult1 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+      expect(citationResult1).toBe("92a6dd9e59d5808536a4a83b92f3a099713f690cca781dcd5cde1439e75e8b1f");
       const data = yield* S.decodeEffect(Corpus)(raw);
-      const frozen = yield* makeCitationFrozenEditions((yield* loadCitationFrozenEditionFixtures()).bundle);
+      const citationResult2 = yield* loadCitationFrozenEditionFixtures();
+      const frozen = yield* makeCitationFrozenEditions(citationResult2.bundle);
       expect(data.cases).toHaveLength(6);
       let count = 0;
       yield* Effect.forEach(
@@ -173,7 +173,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("mixed live resource
             operation: Extract<typeof Operation.Type, { readonly kind: "change" | "editions" }>
           ) {
             const ref = reference(operation.reference);
-            const wire = yield* S.encodeEffect(Citation)(yield* owner.citationOf(ref));
+            const citationResult3 = yield* owner.citationOf(ref);
+            const wire = yield* S.encodeEffect(Citation)(citationResult3);
             const value =
               operation.kind === "change"
                 ? yield* S.decodeEffect(Citation)({
@@ -223,8 +224,9 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("mixed live resource
                   comparisons = [];
                   const result = yield* applyOperation(event.operation);
                   expect(result, `${row.name}:${count}`).toEqual(event.outcome);
+                  const citationResult4 = yield* table.read;
                   expect(
-                    A.map(yield* table.read, (entry) => ({ objectId: entry.objectId, value: entry.value })),
+                    A.map(citationResult4, (entry) => ({ objectId: entry.objectId, value: entry.value })),
                     row.name
                   ).toEqual(event.entries);
                   expect(comparisons, row.name).toEqual(event.comparisons);

@@ -280,8 +280,8 @@ export const readLocalSkillFiles = Effect.fn("SkillsProvenance.readLocalSkillFil
           SkillsCommandError.mapError(`Failed to stat installed skill path ${absoluteEntry}.`, absoluteEntry, skill)
         );
       files = Str.Equivalence(stat.type, "Directory")
-        ? A.appendAll(files, yield* walk(absoluteEntry))
-        : A.appendAll(files, yield* readLeafEntries(absoluteEntry, stat));
+        ? yield* Effect.map(walk(absoluteEntry), (value) => A.appendAll(files, value))
+        : yield* Effect.map(readLeafEntries(absoluteEntry, stat), (value) => A.appendAll(files, value));
     }
     return files;
   });
@@ -339,7 +339,8 @@ export const readTargetTree = Effect.fn("SkillTree.readTargetTree")(function* (
     return O.none();
   }
   const files = yield* readLocalSkillFiles(absolute, skill);
-  return O.some(yield* computeSkillTree(files, `${skill}:${target}`));
+  const computeSkillTree1 = yield* computeSkillTree(files, `${skill}:${target}`);
+  return O.some(computeSkillTree1);
 });
 
 /**

@@ -120,7 +120,11 @@ it.layer(AppliersTestLayer, { timeout: "30 seconds" })("VersionSync update appli
       "gives 0 for an empty report",
       Effect.fn(function* () {
         const { root } = yield* makeRepo({ ".bun-version": "1.3.0\n" });
-        strictEqual(yield* applyReport(root, VersionCategoryReport.cases.bun.make({ status: "ok", items: [] })), 0);
+        const applyReport1 = yield* applyReport(
+          root,
+          VersionCategoryReport.cases.bun.make({ status: "ok", items: [] })
+        );
+        strictEqual(applyReport1, 0);
       })
     );
 
@@ -139,8 +143,10 @@ it.layer(AppliersTestLayer, { timeout: "30 seconds" })("VersionSync update appli
             driftItem("unknown.txt", "version", "1", "2"),
           ],
         });
-        strictEqual(yield* applyReport(root, report), 1);
-        strictEqual(yield* read(".bun-version"), "1.4.0\n");
+        const applyReport2 = yield* applyReport(root, report);
+        strictEqual(applyReport2, 1);
+        const read3 = yield* read(".bun-version");
+        strictEqual(read3, "1.4.0\n");
       })
     );
 
@@ -157,7 +163,8 @@ it.layer(AppliersTestLayer, { timeout: "30 seconds" })("VersionSync update appli
         });
         const error = yield* Effect.flip(applyReport(root, report));
         expect(error.message).toContain("package.json");
-        strictEqual(yield* read(".bun-version"), "1.3.0\n");
+        const read4 = yield* read(".bun-version");
+        strictEqual(read4, "1.3.0\n");
       })
     );
   });
@@ -167,7 +174,11 @@ it.layer(AppliersTestLayer, { timeout: "30 seconds" })("VersionSync update appli
       "gives 0 for an empty report",
       Effect.fn(function* () {
         const { root } = yield* makeRepo({});
-        strictEqual(yield* applyReport(root, VersionCategoryReport.cases.biome.make({ status: "ok", items: [] })), 0);
+        const applyReport5 = yield* applyReport(
+          root,
+          VersionCategoryReport.cases.biome.make({ status: "ok", items: [] })
+        );
+        strictEqual(applyReport5, 0);
       })
     );
 
@@ -184,11 +195,13 @@ it.layer(AppliersTestLayer, { timeout: "30 seconds" })("VersionSync update appli
             driftItem("biome.jsonc", "formatter.lineWidth", "80", "120"),
           ],
         });
-        strictEqual(yield* applyReport(root, report), 1);
+        const applyReport6 = yield* applyReport(root, report);
+        strictEqual(applyReport6, 1);
         const updated = yield* read("biome.jsonc");
         expect(updated).toContain(`"$schema": "${biomeSchema("2.5.6")}"`);
         expect(updated).toContain("// keep me");
-        strictEqual(yield* applyReport(root, report), 0);
+        const applyReport7 = yield* applyReport(root, report);
+        strictEqual(applyReport7, 0);
       })
     );
   });
@@ -198,7 +211,11 @@ it.layer(AppliersTestLayer, { timeout: "30 seconds" })("VersionSync update appli
       "gives 0 for an empty report",
       Effect.fn(function* () {
         const { root } = yield* makeRepo({});
-        strictEqual(yield* applyReport(root, VersionCategoryReport.cases.turbo.make({ status: "ok", items: [] })), 0);
+        const applyReport8 = yield* applyReport(
+          root,
+          VersionCategoryReport.cases.turbo.make({ status: "ok", items: [] })
+        );
+        strictEqual(applyReport8, 0);
       })
     );
 
@@ -217,8 +234,10 @@ it.layer(AppliersTestLayer, { timeout: "30 seconds" })("VersionSync update appli
             driftItem("turbo.json", "tasks", "{}", "{}"),
           ],
         });
-        strictEqual(yield* applyReport(root, report), 1);
-        expect(yield* read("turbo.json")).toContain(turboSchema);
+        const applyReport9 = yield* applyReport(root, report);
+        strictEqual(applyReport9, 1);
+        const read10 = yield* read("turbo.json");
+        expect(read10).toContain(turboSchema);
       })
     );
   });
@@ -250,7 +269,11 @@ it.layer(AppliersTestLayer, { timeout: "30 seconds" })("VersionSync update appli
       "gives 0 for an empty report",
       Effect.fn(function* () {
         const { root } = yield* makeRepo({ "package.json": manifest });
-        strictEqual(yield* applyReport(root, VersionCategoryReport.cases.effect.make({ status: "ok", items: [] })), 0);
+        const applyReport11 = yield* applyReport(
+          root,
+          VersionCategoryReport.cases.effect.make({ status: "ok", items: [] })
+        );
+        strictEqual(applyReport11, 0);
       })
     );
 
@@ -266,11 +289,10 @@ it.layer(AppliersTestLayer, { timeout: "30 seconds" })("VersionSync update appli
             driftItem("package.json", "catalog.@effect/vitest", "4.1.0", "4.1.1"),
           ],
         });
-        strictEqual(yield* applyReport(root, report), 1);
-        strictEqual(
-          yield* read("package.json"),
-          Str.replace(`"@effect/vitest": "4.1.0"`, `"@effect/vitest": "4.1.1"`)(manifest)
-        );
+        const applyReport12 = yield* applyReport(root, report);
+        strictEqual(applyReport12, 1);
+        const read13 = yield* read("package.json");
+        strictEqual(read13, Str.replace(`"@effect/vitest": "4.1.0"`, `"@effect/vitest": "4.1.1"`)(manifest));
       })
     );
 
@@ -286,8 +308,10 @@ it.layer(AppliersTestLayer, { timeout: "30 seconds" })("VersionSync update appli
             driftItem("package.json", "catalog.effect", "4.1.1", "4.1.1"),
           ],
         });
-        strictEqual(yield* applyReport(root, report), 0);
-        strictEqual(yield* read("package.json"), manifest);
+        const applyReport14 = yield* applyReport(root, report);
+        strictEqual(applyReport14, 0);
+        const read15 = yield* read("package.json");
+        strictEqual(read15, manifest);
       })
     );
 
@@ -302,9 +326,11 @@ it.layer(AppliersTestLayer, { timeout: "30 seconds" })("VersionSync update appli
             driftItem("package.json", "config.effectSource.commit", EFFECT_4_1_0_COMMIT, EFFECT_4_1_1_COMMIT),
           ],
         });
-        strictEqual(yield* applyReport(root, report), 2);
+        const applyReport16 = yield* applyReport(root, report);
+        strictEqual(applyReport16, 2);
+        const read17 = yield* read("package.json");
         strictEqual(
-          yield* read("package.json"),
+          read17,
           pipe(
             manifest,
             Str.replace(`"version": "4.1.0"`, `"version": "4.1.1"`),

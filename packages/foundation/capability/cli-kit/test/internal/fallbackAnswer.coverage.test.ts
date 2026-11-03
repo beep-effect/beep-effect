@@ -26,6 +26,7 @@ it.effect("an explicitly undefined default still reports the missing argument or
     const prompt = yield* answerWithoutPerson({ flag: "enabled", otherwise: false });
     const terminal = yield* TestTerminal.make();
     const context = yield* Layer.build(Layer.mergeAll(MemoryFileSystem.layer, Path.layer, terminal.layer));
-    assert.strictEqual(yield* prompt.pipe(Effect.provideContext(context)), false);
+    const pipe1 = yield* prompt.pipe(Effect.provideContext(context));
+    assert.strictEqual(pipe1, false);
   })
 );

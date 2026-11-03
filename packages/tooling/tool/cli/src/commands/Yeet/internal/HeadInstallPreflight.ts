@@ -20,12 +20,13 @@ import { constant } from "effect/Function";
 import * as Path from "effect/Path";
 import {
   commandTextForStep,
+  patientGit,
   RepoStepRunResult,
   resolveBeepCacheRoot,
   runRepoCommandCapture,
 } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import { captureGitKitExit, currentCommitSha, patientGit } from "./GitExec.ts";
+import { captureGitKitExit, currentCommitSha } from "./GitExec.ts";
 import { clearHeadInstallReceipt, recordHeadInstallReceipt } from "./HeadInstallReceipt.ts";
 import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";

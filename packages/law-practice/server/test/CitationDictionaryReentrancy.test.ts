@@ -64,14 +64,14 @@ const key = (objectId: number) => CitationRuntimeDictionaryKey.make({ objectId, 
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("direct comparison reentrancy", (it) => {
   it.effect("matches all pinned restart outcomes, nested calls and retained mutation", () =>
     Effect.gen(function* () {
-      const raw = yield* (yield* FileSystem.FileSystem).readFileString(
+      const citationResult1 = yield* FileSystem.FileSystem;
+      const raw = yield* citationResult1.readFileString(
         NodeURL.fileURLToPath(
           new URL("../../use-cases/test/fixtures/eyecite/dictionary-reentrancy.json", import.meta.url)
         )
       );
-      expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-        "68a3835c917bab252d004d2066b7ca45927deca1d358f68ed957b1ecbfecb9da"
-      );
+      const citationResult2 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+      expect(citationResult2).toBe("68a3835c917bab252d004d2066b7ca45927deca1d358f68ed957b1ecbfecb9da");
       const data = yield* S.decodeEffect(CorpusJson)(raw);
       expect(data.cases).toHaveLength(13);
       expect(A.reduce(data.cases, 0, (total, row) => total + row.events.length)).toBe(26);
@@ -90,7 +90,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("direct comparison r
           });
           const project = Effect.gen(function* () {
             const current = yield* Effect.fromOption(table, invalid);
-            return A.map(yield* current.read, (entry) => ({ objectId: entry.objectId, value: entry.value }));
+            const citationResult3 = yield* current.read;
+            return A.map(citationResult3, (entry) => ({ objectId: entry.objectId, value: entry.value }));
           });
           const action = Effect.fn("ReentrantTest.action")(function* () {
             const current = yield* Effect.fromOption(table, invalid);
@@ -103,7 +104,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("direct comparison r
                   yield* current.clear;
                   trace = A.append(trace, { kind: "clear" });
                   if (row.name === "clear-refill") {
-                    yield* current.set(yield* capturedKey(0), 99);
+                    const citationResult4 = yield* capturedKey(0);
+                    yield* current.set(citationResult4, 99);
                     trace = A.append(trace, { kind: "set", key: 0, value: 99 });
                   }
                   if (row.name === "mutate-raise")
@@ -114,17 +116,20 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("direct comparison r
                 (candidate: string) =>
                   A.contains(["remove-in-get", "replace-in-get", "resize-in-set", "replace-five"], candidate),
                 Effect.fnUntraced(function* () {
-                  const result = yield* current.remove(yield* capturedKey(0));
+                  const citationResult5 = yield* capturedKey(0);
+                  const result = yield* current.remove(citationResult5);
                   trace = A.append(trace, {
                     kind: "remove",
                     key: 0,
                     result: O.getOrNull(O.map(result, (entry) => entry.value)),
                   });
                   if (row.name === "replace-in-get" || row.name === "replace-five") {
-                    yield* current.set(yield* capturedKey(0), 99 + mutations);
+                    const citationResult6 = yield* capturedKey(0);
+                    yield* current.set(citationResult6, 99 + mutations);
                     trace = A.append(trace, { kind: "set", key: 0, value: 99 + mutations });
                   } else if (row.name === "resize-in-set") {
-                    yield* current.set(yield* capturedKey(6), 106);
+                    const citationResult7 = yield* capturedKey(6);
+                    yield* current.set(citationResult7, 106);
                     trace = A.append(trace, { kind: "set", key: 6, value: 106 });
                   }
                 })
@@ -132,7 +137,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("direct comparison r
               Match.when(
                 (candidate: string) => candidate === "update-in-get",
                 Effect.fnUntraced(function* () {
-                  yield* current.set(yield* capturedKey(0), 99);
+                  const citationResult8 = yield* capturedKey(0);
+                  yield* current.set(citationResult8, 99);
                   trace = A.append(trace, { kind: "set", key: 0, value: 99 });
                 })
               ),
@@ -141,15 +147,18 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("direct comparison r
                   A.contains(["insert-no-resize", "resize-in-get", "false-after-resize"], candidate),
                 Effect.fnUntraced(function* () {
                   const id = row.name === "insert-no-resize" ? 2 : 6;
-                  yield* current.set(yield* capturedKey(id), 100 + id);
+                  const citationResult9 = yield* capturedKey(id);
+                  yield* current.set(citationResult9, 100 + id);
                   trace = A.append(trace, { kind: "set", key: id, value: 100 + id });
                 })
               ),
               Match.when(
                 (candidate: string) => candidate === "read-get",
                 Effect.fnUntraced(function* () {
-                  trace = A.append(trace, { kind: "read", entries: yield* project });
-                  const result = yield* current.get(yield* capturedKey(0));
+                  const citationResult10 = yield* project;
+                  trace = A.append(trace, { kind: "read", entries: citationResult10 });
+                  const citationResult11 = yield* capturedKey(0);
+                  const result = yield* current.get(citationResult11);
                   trace = A.append(trace, {
                     kind: "get",
                     key: 0,
@@ -179,7 +188,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("direct comparison r
           yield* Effect.forEach(
             row.initial,
             Effect.fnUntraced(function* (id) {
-              yield* current.set(yield* capturedKey(id), 100 + id);
+              const citationResult12 = yield* capturedKey(id);
+              yield* current.set(citationResult12, 100 + id);
             }),
             { concurrency: 1, discard: true }
           );
@@ -204,7 +214,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("direct comparison r
                 expect(O.getOrNull(O.map(value, (entry) => entry.value)), row.name).toBe(event.outcome.result);
               }
               expect(trace, row.name).toEqual(event.trace);
-              expect(yield* project, row.name).toEqual(event.entries);
+              const citationResult13 = yield* project;
+              expect(citationResult13, row.name).toEqual(event.entries);
             }),
             { concurrency: 1, discard: true }
           );
@@ -230,9 +241,11 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("direct comparison r
       );
       table = O.some(current);
       yield* current.set(key(0), 1);
-      expect((yield* Effect.flip(current.get(key(1)))).reason).toBe("limit-exceeded");
+      const citationResult14 = yield* Effect.flip(current.get(key(1)));
+      expect(citationResult14.reason).toBe("limit-exceeded");
       yield* current.clear;
-      expect(yield* current.read).toEqual([]);
+      const citationResult15 = yield* current.read;
+      expect(citationResult15).toEqual([]);
       const entered = yield* Deferred.make<void>();
       const blocked = yield* makeCitationRuntimeDictionary({ entries: 8, iterations: 100 }).pipe(
         Effect.provideService(CitationRuntimeDictionaryComparison, {
@@ -246,8 +259,10 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("direct comparison r
       const second = yield* Effect.forkChild(blocked.clear);
       yield* Fiber.interrupt(first);
       yield* Fiber.join(second);
-      expect(yield* blocked.read).toEqual([]);
-      expect((yield* blocked.set(key(0), 2)).value).toBe(2);
+      const citationResult16 = yield* blocked.read;
+      expect(citationResult16).toEqual([]);
+      const citationResult17 = yield* blocked.set(key(0), 2);
+      expect(citationResult17.value).toBe(2);
     })
   );
 });

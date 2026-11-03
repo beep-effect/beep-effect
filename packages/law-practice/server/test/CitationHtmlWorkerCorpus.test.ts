@@ -45,10 +45,11 @@ const CorpusJson = S.fromJsonString(
 );
 
 const runtime = Effect.gen(function* () {
+  const citationResult1 = yield* FileSystem.FileSystem;
   return {
     kind: "bun",
     executable: process.execPath,
-    cwd: yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped({ prefix: "citation-html-corpus-" }),
+    cwd: yield* citationResult1.makeTempDirectoryScoped({ prefix: "citation-html-corpus-" }),
     workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
   };
 });
@@ -59,22 +60,27 @@ it.layer(TestRuntime, { excludeTestServices: true })("HTML worker qualification"
     Effect.gen(function* () {
       const limits = (yield* defaultCitationEnginePolicy).limits;
       const admission = yield* makeCitationNativeProcessAdmission(limits);
-      const worker = yield* makeCitationHtmlWorker(limits, yield* runtime).pipe(
+      const citationResult2 = yield* runtime;
+      const worker = yield* makeCitationHtmlWorker(limits, citationResult2).pipe(
         Effect.provideService(CitationNativeProcessAdmission, admission)
       );
-      expect(yield* worker.clean("").pipe(Effect.flip)).toMatchObject({
+      const citationResult3 = yield* worker.clean("").pipe(Effect.flip);
+      expect(citationResult3).toMatchObject({
         _tag: "CitationHtmlKernelFailure",
         reason: "parse-error",
       });
-      expect(yield* admission.snapshot).toEqual({
+      const citationResult4 = yield* admission.snapshot;
+      expect(citationResult4).toEqual({
         active: 0,
         regexActive: 0,
         queued: 0,
         quarantined: 0,
         closed: false,
       });
-      expect(yield* worker.clean("<p>ok</p>")).toBe("ok");
-      expect(yield* admission.snapshot).toEqual({
+      const citationResult5 = yield* worker.clean("<p>ok</p>");
+      expect(citationResult5).toBe("ok");
+      const citationResult6 = yield* admission.snapshot;
+      expect(citationResult6).toEqual({
         active: 0,
         regexActive: 0,
         queued: 0,
@@ -87,14 +93,14 @@ it.layer(TestRuntime, { excludeTestServices: true })("HTML worker qualification"
     "preserves every frozen native outcome through the owned process boundary",
     () =>
       Effect.gen(function* () {
-        const raw = yield* (yield* FileSystem.FileSystem).readFileString(
+        const citationResult7 = yield* FileSystem.FileSystem;
+        const raw = yield* citationResult7.readFileString(
           NodeURL.fileURLToPath(
             new URL("../../use-cases/test/fixtures/eyecite/html-kernel-cases.json", import.meta.url)
           )
         );
-        expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-          "34a9b3b4667a71c0234f77fb898f6d6de55a85e7306ea66a55144b3ca95d24d0"
-        );
+        const citationResult8 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+        expect(citationResult8).toBe("34a9b3b4667a71c0234f77fb898f6d6de55a85e7306ea66a55144b3ca95d24d0");
         const corpus = yield* S.decodeEffect(CorpusJson)(raw);
         expect(corpus.cases).toHaveLength(1097);
         const texts = HashMap.fromIterable(A.map(corpus.artifacts, (a) => [a.sha256, a.value] as const));
@@ -103,7 +109,8 @@ it.layer(TestRuntime, { excludeTestServices: true })("HTML worker qualification"
         const real = yield* ChildProcessSpawner;
         let spawned = 0;
         let confirmedExits = 0;
-        const worker = yield* makeCitationHtmlWorker({ ...limits, concurrentOperations: 2 }, yield* runtime).pipe(
+        const citationResult9 = yield* runtime;
+        const worker = yield* makeCitationHtmlWorker({ ...limits, concurrentOperations: 2 }, citationResult9).pipe(
           Effect.provideService(ChildProcessSpawner, {
             ...real,
             spawn: (command) =>
@@ -159,7 +166,9 @@ it.layer(TestRuntime, { excludeTestServices: true })("HTML worker qualification"
                 expect(failed, row.name).toMatchObject({ _tag: "CitationHtmlKernelFailure", reason: "parse-error" });
                 return "parse";
               }
-              expect(yield* run, row.name).toBe(yield* Effect.fromOption(HashMap.get(texts, row.outcome.value)));
+              const citationResult10 = yield* run;
+              const citationResult11 = yield* Effect.fromOption(HashMap.get(texts, row.outcome.value));
+              expect(citationResult10, row.name).toBe(citationResult11);
               return "success";
             }),
           { concurrency: 2 }
@@ -170,7 +179,8 @@ it.layer(TestRuntime, { excludeTestServices: true })("HTML worker qualification"
         expect(A.filter(outcomes, (x) => x === "resource")).toHaveLength(3);
         expect(spawned).toBe(859);
         expect(confirmedExits).toBe(859);
-        expect(yield* worker.snapshot).toEqual({ active: 0, queued: 0, processes: 0, quarantined: 0, closed: false });
+        const citationResult12 = yield* worker.snapshot;
+        expect(citationResult12).toEqual({ active: 0, queued: 0, processes: 0, quarantined: 0, closed: false });
       }),
     // The hosted 1,097-case replay exceeded the previous ten-minute suite watchdog.
     // Per-request clean/operation/cleanup deadlines and every exit assertion remain enforced.
@@ -191,10 +201,13 @@ it.layer(TestRuntime, { excludeTestServices: true })("HTML worker qualification"
         };
         const worker = yield* makeCitationHtmlWorker(policy, paths);
         const large = Str.repeat(1_000_000)("A");
-        expect(yield* worker.clean(large)).toBe(large);
+        const citationResult13 = yield* worker.clean(large);
+        expect(citationResult13).toBe(large);
         const wide = `${Str.repeat(999_998)("A")}😀`;
-        expect(yield* worker.clean(wide)).toBe(wide);
-        expect(yield* worker.clean("B")).toBe("B");
+        const citationResult14 = yield* worker.clean(wide);
+        expect(citationResult14).toBe(wide);
+        const citationResult15 = yield* worker.clean("B");
+        expect(citationResult15).toBe("B");
         const small = yield* makeCitationHtmlWorker({ ...limits, sourceUtf16: 10 }, paths);
         const source = yield* Effect.flip(small.clean(Str.repeat(11)("A")));
         expect(source._tag).toBe("CitationSafetyLimitExceeded");
@@ -211,7 +224,8 @@ it.layer(TestRuntime, { excludeTestServices: true })("HTML worker qualification"
           { ...limits, processMessageBytes: request.byteLength },
           paths
         );
-        expect(yield* exactRequest.clean(text)).toBe(text);
+        const citationResult16 = yield* exactRequest.clean(text);
+        expect(citationResult16).toBe(text);
         let spawned = 0;
         const real = yield* ChildProcessSpawner;
         const shortRequest = yield* makeCitationHtmlWorker(
@@ -238,7 +252,8 @@ it.layer(TestRuntime, { excludeTestServices: true })("HTML worker qualification"
         const reply = yield* encodeCitationHtmlReply(CitationHtmlWorkerSuccess.make({ text: quotes }), 32_000_000);
         expect(reply.byteLength).toBe(8257);
         const exactReply = yield* makeCitationHtmlWorker({ ...limits, processMessageBytes: reply.byteLength }, paths);
-        expect(yield* exactReply.clean(quotes)).toBe(quotes);
+        const citationResult17 = yield* exactReply.clean(quotes);
+        expect(citationResult17).toBe(quotes);
         const shortReply = yield* makeCitationHtmlWorker(
           { ...limits, processMessageBytes: reply.byteLength - 1 },
           paths
@@ -247,19 +262,23 @@ it.layer(TestRuntime, { excludeTestServices: true })("HTML worker qualification"
         expect(oversizedReply._tag).toBe("CitationSafetyLimitExceeded");
         if (oversizedReply._tag === "CitationSafetyLimitExceeded")
           expect(oversizedReply.limit).toBe("processMessageBytes");
-        expect(yield* shortReply.clean("B")).toBe("B");
+        const citationResult18 = yield* shortReply.clean("B");
+        expect(citationResult18).toBe("B");
         const exactOutput = yield* makeCitationHtmlWorker({ ...limits, producedTextUtf16: 4 }, paths);
-        expect(yield* exactOutput.clean("<p>😀AB</p>")).toBe("😀AB");
+        const citationResult19 = yield* exactOutput.clean("<p>😀AB</p>");
+        expect(citationResult19).toBe("😀AB");
         const shortOutput = yield* makeCitationHtmlWorker({ ...limits, producedTextUtf16: 3 }, paths);
         const oversizedOutput = yield* Effect.flip(shortOutput.clean("<p>😀AB</p>"));
         expect(oversizedOutput._tag).toBe("CitationSafetyLimitExceeded");
         if (oversizedOutput._tag === "CitationSafetyLimitExceeded")
           expect(oversizedOutput.limit).toBe("producedTextUtf16");
-        expect(yield* shortOutput.clean("B")).toBe("B");
+        const citationResult20 = yield* shortOutput.clean("B");
+        expect(citationResult20).toBe("B");
         yield* Effect.forEach(
           [worker, small, exactRequest, shortRequest, exactReply, shortReply, exactOutput, shortOutput],
           Effect.fnUntraced(function* (supervisor) {
-            expect(yield* supervisor.snapshot).toEqual({
+            const citationResult21 = yield* supervisor.snapshot;
+            expect(citationResult21).toEqual({
               active: 0,
               queued: 0,
               processes: 0,

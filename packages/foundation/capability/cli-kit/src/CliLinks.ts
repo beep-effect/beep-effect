@@ -317,7 +317,13 @@ const selectMode = Effect.fnUntraced(function* (
 
 /** Read one configured mode and warn once for an invalid override. */
 const configuredSetting = Effect.fn("CliLinks.configuredSetting")(function* (options: CliLinksOptions.Encoded) {
-  const raw = options.envVar === undefined ? "" : Str.trim(O.getOrElse(yield* readOption(options.envVar), () => ""));
+  const raw =
+    options.envVar === undefined
+      ? ""
+      : yield* Effect.map(
+          Effect.map(readOption(options.envVar), (value) => O.getOrElse(value, () => "")),
+          Str.trim
+        );
   const fromEnv = parseSetting(raw);
   if (options.envVar !== undefined && raw !== "" && fromEnv === undefined) {
     yield* Effect.logWarning(

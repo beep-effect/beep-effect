@@ -11,15 +11,15 @@ describe("config-file barrel owned exports", () => {
       assert.strictEqual(ConfigFileModule.TomlCodec, TomlCodec);
       assert.strictEqual(ConfigFileModule.YamlCodec, YamlCodec);
       assert.strictEqual(ConfigFileModule.MergeStrategy, MergeStrategy);
-      assert.deepStrictEqual(yield* ConfigFileModule.TomlCodec.parse("port = 8080"), { port: 8080 });
-      assert.deepStrictEqual(yield* ConfigFileModule.YamlCodec.parse("port: 8080"), { port: 8080 });
-      assert.strictEqual(
-        yield* ConfigFileModule.MergeStrategy.firstMatch<number>().resolve([
-          { path: "/local", resolver: "local", value: 8080 },
-          { path: "/base", resolver: "base", value: 3000 },
-        ]),
-        8080
-      );
+      const parsed = yield* ConfigFileModule.TomlCodec.parse("port = 8080");
+      assert.deepStrictEqual(parsed, { port: 8080 });
+      const parsed1 = yield* ConfigFileModule.YamlCodec.parse("port: 8080");
+      assert.deepStrictEqual(parsed1, { port: 8080 });
+      const resolved = yield* ConfigFileModule.MergeStrategy.firstMatch<number>().resolve([
+        { path: "/local", resolver: "local", value: 8080 },
+        { path: "/base", resolver: "base", value: 3000 },
+      ]);
+      assert.strictEqual(resolved, 8080);
     })
   );
 });

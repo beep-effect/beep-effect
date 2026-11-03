@@ -22,13 +22,15 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         const limits = (yield* defaultCitationEnginePolicy).limits;
         const hash = yield* makeCitationPythonHash(limits);
         for (const binding of controls.ordering.bindings) {
-          expect(yield* hash.unicode(binding.representation), `binding ${binding.id}`).toBe(binding.hash);
+          const citationResult1 = yield* hash.unicode(binding.representation);
+          expect(citationResult1, `binding ${binding.id}`).toBe(binding.hash);
         }
         const selector = yield* makeCitationExtractorSelection(limits, controls.ordering.bindings);
         const ordering = yield* makeCitationExtractorOrdering(limits, controls.ordering.bindings);
         let nonIndexOrders = 0;
         for (const row of controls.ordering.cases) {
-          expect((yield* selector.select(row.source)).insertions, `case ${row.id}`).toEqual(row.insertions);
+          const citationResult2 = yield* selector.select(row.source);
+          expect(citationResult2.insertions, `case ${row.id}`).toEqual(row.insertions);
           const result = yield* ordering.ordered(row.source);
           expect(result.indices, `case ${row.id}`).toEqual(row.ordered);
           if (!sameOrder(result.indices, row.selected)) nonIndexOrders++;

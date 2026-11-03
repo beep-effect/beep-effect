@@ -63,7 +63,8 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
               Effect.provideService(CitationOperationAdmission, admission),
               Effect.provideService(CitationCleanerRuntime, owned.runtime)
             );
-            const hash = yield* makeCitationPythonHash((yield* defaultCitationEnginePolicy).limits);
+            const citationResult1 = yield* defaultCitationEnginePolicy;
+            const hash = yield* makeCitationPythonHash(citationResult1.limits);
             let histories = 0;
             let snapshots = 0;
             let failures = 0;
@@ -76,14 +77,15 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
               for (let index = 0; index < refs.length; index++) {
                 const ref = A.getUnsafe(refs, index);
                 const expected = A.getUnsafe(row.events, index);
-                const value = yield* Effect.fromOption(yield* owned.values.getUnicode(ref));
+                const citationResult2 = yield* owned.values.getUnicode(ref);
+                const value = yield* Effect.fromOption(citationResult2);
                 expect(value.storage.width, row.name).toBe(expected.value.width);
-                expect(value.storage.bytes, row.name).toEqual(
-                  yield* S.decodeEffect(S.Uint8ArrayFromHex)(expected.value.nativeHex)
-                );
+                const citationResult3 = yield* S.decodeEffect(S.Uint8ArrayFromHex)(expected.value.nativeHex);
+                expect(value.storage.bytes, row.name).toEqual(citationResult3);
                 expect(value.pythonLength, row.name).toBe(expected.value.pythonLength);
                 expect(value.utf16Units, row.name).toBe(expected.value.utf16Units);
-                expect(yield* hash.unicode(value.storage), row.name).toBe(expected.value.hash);
+                const citationResult4 = yield* hash.unicode(value.storage);
+                expect(citationResult4, row.name).toBe(expected.value.hash);
                 let sameAs = A.empty<number>();
                 for (let prior = 0; prior < index; prior++)
                   if (yield* owned.values.same(A.getUnsafe(refs, prior), ref)) sameAs = A.append(sameAs, prior);
@@ -93,19 +95,21 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
             });
             for (const row of rows) {
               const first = A.getUnsafe(row.events, 0).value;
+              const citationResult5 = yield* S.decodeEffect(S.Uint8ArrayFromHex)(first.nativeHex);
               owned.select(
                 CitationPythonUnicodeStorage.make({
                   width: first.width,
-                  bytes: yield* S.decodeEffect(S.Uint8ArrayFromHex)(first.nativeHex),
+                  bytes: citationResult5,
                 }),
                 row.steps
               );
               if (row.failure === null) yield* operation.run({ text: "", plan: "native-source-history" });
               else {
-                expect(
-                  yield* Effect.flip(operation.run({ text: "", plan: "native-source-history" })),
-                  row.name
-                ).toMatchObject({ _tag: "CitationCleanerFailure", reason: "html-parse-error" });
+                const citationResult6 = yield* Effect.flip(operation.run({ text: "", plan: "native-source-history" }));
+                expect(citationResult6, row.name).toMatchObject({
+                  _tag: "CitationCleanerFailure",
+                  reason: "html-parse-error",
+                });
                 failures++;
               }
               yield* verifyReferences(row);
@@ -113,12 +117,15 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
                 A.take(row.steps, row.events.length - 1 + (row.failure === null ? 0 : 1)),
                 (step) => step === "html"
               ).length;
-              expect(yield* owned.nativeCounts, row.name).toEqual({
+              const citationResult7 = yield* owned.nativeCounts;
+              expect(citationResult7, row.name).toEqual({
                 spawned: expectedChildren,
                 confirmed: expectedChildren,
               });
-              const work = yield* Effect.fromOption(yield* owned.lastWork);
-              expect((yield* work.snapshot).closed).toBe(true);
+              const citationResult8 = yield* owned.lastWork;
+              const work = yield* Effect.fromOption(citationResult8);
+              const citationResult9 = yield* work.snapshot;
+              expect(citationResult9.closed).toBe(true);
               histories++;
             }
             return ReplayTotals.make({ histories, snapshots, failures, children: expectedChildren });
@@ -146,8 +153,10 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
           expect(totals.snapshots).toBe(6412);
           expect(totals.failures).toBe(482);
           expect(totals.children).toBe(1025);
-          expect(yield* admission.snapshot).toEqual({ active: 0, queued: 0, closed: false });
-          expect(yield* nativeAdmission.snapshot).toEqual({
+          const citationResult10 = yield* admission.snapshot;
+          expect(citationResult10).toEqual({ active: 0, queued: 0, closed: false });
+          const citationResult11 = yield* nativeAdmission.snapshot;
+          expect(citationResult11).toEqual({
             active: 0,
             regexActive: 0,
             queued: 0,

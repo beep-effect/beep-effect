@@ -124,7 +124,9 @@ it.layer(BunCrypto.layer)("verified citation mention composition", (it) => {
       expect(restored.id).toBe(mention.id);
       expect(restored.anchor).not.toBe(mention.anchor);
       expect(restored.anchor.anchor).toEqual({ startChar: 6, endChar: 14, quote: "1 U.S. 1" });
-      expect(yield* S.encodeEffect(ReceiptJson)(yield* projectCitationMentionReceipt(restored))).toBe(wire);
+      const citationResult1 = yield* projectCitationMentionReceipt(restored);
+      const citationResult2 = yield* S.encodeEffect(ReceiptJson)(citationResult1);
+      expect(citationResult2).toBe(wire);
     })
   );
 
@@ -137,7 +139,8 @@ it.layer(BunCrypto.layer)("verified citation mention composition", (it) => {
         { ...input, components: [{ name: "fullSpan", anchor: receipt.components[0]?.anchor }] },
         { ...input, evidenceConfidence: O.some(2) },
       ]) {
-        expect((yield* makeCitationMention(invalid).pipe(Effect.flip)).reason).toBe("invalid-input");
+        const citationResult3 = yield* makeCitationMention(invalid).pipe(Effect.flip);
+        expect(citationResult3.reason).toBe("invalid-input");
       }
     })
   );
@@ -147,19 +150,17 @@ it.layer(BunCrypto.layer)("verified citation mention composition", (it) => {
       const { source, input } = yield* fixture;
       const otherSource = yield* identity("matter:other");
       const other = yield* anchorAt(otherSource, 6, 14);
-      expect(
-        (yield* makeCitationMention({
-          ...input,
-          components: [CitationComponentAnchor.make({ name: "other", anchor: other })],
-        }).pipe(Effect.flip)).reason
-      ).toBe("invalid-input");
+      const citationResult4 = yield* makeCitationMention({
+        ...input,
+        components: [CitationComponentAnchor.make({ name: "other", anchor: other })],
+      }).pipe(Effect.flip);
+      expect(citationResult4.reason).toBe("invalid-input");
       const outside = yield* anchorAt(source, 16, 24);
-      expect(
-        (yield* makeCitationMention({
-          ...input,
-          footnote: O.some(CitationFootnoteZone.make({ label: O.none(), anchor: outside })),
-        }).pipe(Effect.flip)).reason
-      ).toBe("invalid-input");
+      const citationResult5 = yield* makeCitationMention({
+        ...input,
+        footnote: O.some(CitationFootnoteZone.make({ label: O.none(), anchor: outside })),
+      }).pipe(Effect.flip);
+      expect(citationResult5.reason).toBe("invalid-input");
     })
   );
 
@@ -218,14 +219,13 @@ it.layer(BunCrypto.layer)("verified citation mention composition", (it) => {
       }).pipe(Effect.flip);
       expect(stale.reason).toBe("stale-engine");
       for (const changed of [changedId, changedKind]) {
-        expect(
-          (yield* restoreCitationMention({
-            receipt: changed,
-            expectedSource: source,
-            expectedEngineArtifact: artifact,
-            sourceText: text,
-          }).pipe(Effect.flip)).reason
-        ).toBe("stale-identity");
+        const citationResult6 = yield* restoreCitationMention({
+          receipt: changed,
+          expectedSource: source,
+          expectedEngineArtifact: artifact,
+          sourceText: text,
+        }).pipe(Effect.flip);
+        expect(citationResult6.reason).toBe("stale-identity");
       }
     })
   );
@@ -234,7 +234,8 @@ it.layer(BunCrypto.layer)("verified citation mention composition", (it) => {
     Effect.gen(function* () {
       const { mention } = yield* fixture;
       const altered = CitationMention.make({ ...mention, id: CitationMentionId.make(`cm1:${otherArtifact}`) });
-      expect((yield* projectCitationMentionReceipt(altered).pipe(Effect.flip)).reason).toBe("stale-identity");
+      const citationResult7 = yield* projectCitationMentionReceipt(altered).pipe(Effect.flip);
+      expect(citationResult7.reason).toBe("stale-identity");
     })
   );
 
@@ -375,7 +376,9 @@ it.layer(BunCrypto.layer)("verified citation mention composition", (it) => {
         });
         expect(restored.id).toBe(mention.id);
         expect(restored.anchor.anchor).toEqual({ startChar: start, endChar: start + 8, quote: "1 U.S. 1" });
-        expect(yield* S.encodeEffect(ReceiptJson)(yield* projectCitationMentionReceipt(restored))).toBe(wire);
+        const citationResult8 = yield* projectCitationMentionReceipt(restored);
+        const citationResult9 = yield* S.encodeEffect(ReceiptJson)(citationResult8);
+        expect(citationResult9).toBe(wire);
       }),
     { arbitrary: fcRuns(25) }
   );

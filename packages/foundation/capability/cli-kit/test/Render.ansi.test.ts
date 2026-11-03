@@ -48,8 +48,10 @@ describe("Render.ansi: verbatim whitespace fidelity", () => {
   it.effect("keeps trailing spaces and whitespace-only indentation at top level and inside a list", () =>
     Effect.gen(function* () {
       const block = Doc.verbatim("x  \n  \n\ny  ", { indent: 2 });
-      assert.strictEqual(yield* ansi([block], { width: 1 }), "  x  \n    \n  \n  y  ");
-      assert.strictEqual(yield* ansi([Doc.list([block])], { width: 1 }), "-   x  \n      \n    \n    y  ");
+      const ansi1 = yield* ansi([block], { width: 1 });
+      assert.strictEqual(ansi1, "  x  \n    \n  \n  y  ");
+      const ansi2 = yield* ansi([Doc.list([block])], { width: 1 });
+      assert.strictEqual(ansi2, "-   x  \n      \n    \n    y  ");
     })
   );
 });
@@ -86,16 +88,20 @@ describe("Render.ansi at colour none is Render.plain (the main property)", () =>
       const doc = composite({ codeAndPath: false });
       const painted = yield* ansi(doc, { width: 80 });
       assert.include(painted, "\u001B[");
-      assert.notStrictEqual(painted, yield* plain(doc, { width: 80 }));
+      const plain3 = yield* plain(doc, { width: 80 });
+      assert.notStrictEqual(painted, plain3);
     })
   );
 
   it.effect("ansi does not force the agent path separator, and follows the audience it is given", () =>
     Effect.gen(function* () {
       const doc = [Doc.paragraph(Doc.path("a", "b"))];
-      assert.strictEqual(yield* ansi(doc, OFF), "a › b");
-      assert.strictEqual(yield* ansi(doc, { ...OFF, audience: "ci" }), "a › b");
-      assert.strictEqual(yield* ansi(doc, { ...OFF, glyphs: Glyphs.ascii }), "a > b");
+      const ansi4 = yield* ansi(doc, OFF);
+      assert.strictEqual(ansi4, "a › b");
+      const ansi5 = yield* ansi(doc, { ...OFF, audience: "ci" });
+      assert.strictEqual(ansi5, "a › b");
+      const ansi6 = yield* ansi(doc, { ...OFF, glyphs: Glyphs.ascii });
+      assert.strictEqual(ansi6, "a > b");
     })
   );
 });
@@ -103,23 +109,25 @@ describe("Render.ansi at colour none is Render.plain (the main property)", () =>
 describe("Render.ansi: which token paints what (decoded, never raw bytes)", () => {
   it.effect("a heading is emphasis; inline Code is accent with no backticks; a status is its token", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* tokensOf([Doc.heading(1, "Title")]), [[["emphasis", "Title"]]]);
-      assert.deepStrictEqual(yield* tokensOf([Doc.paragraph("run ", Doc.code("pnpm test"))]), [
+      const tokensOf7 = yield* tokensOf([Doc.heading(1, "Title")]);
+      assert.deepStrictEqual(tokensOf7, [[["emphasis", "Title"]]]);
+      const tokensOf8 = yield* tokensOf([Doc.paragraph("run ", Doc.code("pnpm test"))]);
+      assert.deepStrictEqual(tokensOf8, [
         [
           [undefined, "run "],
           ["accent", "pnpm test"],
         ],
       ]);
-      assert.deepStrictEqual(
-        yield* tokensOf([Doc.paragraph(Doc.status(Status.core, "failure"), " ", Doc.text("x", "info"))]),
+      const tokensOf9 = yield* tokensOf([
+        Doc.paragraph(Doc.status(Status.core, "failure"), " ", Doc.text("x", "info")),
+      ]);
+      assert.deepStrictEqual(tokensOf9, [
         [
-          [
-            ["failure", "✗"],
-            [undefined, " "],
-            ["info", "x"],
-          ],
-        ]
-      );
+          ["failure", "✗"],
+          [undefined, " "],
+          ["info", "x"],
+        ],
+      ]);
       const heading = yield* tokensOf([Doc.heading(2, [Doc.text("a "), Doc.text("b", "warning")])]);
       assert.deepStrictEqual(heading, [
         [
@@ -376,7 +384,8 @@ describe("Render.ansi: layout under colour (paint after cut)", () => {
       for (const [index, doc] of docs.entries()) {
         const a = yield* ansi([doc], OFF);
         assert.deepStrictEqual(Str.split(a, "\n"), expected[index]);
-        assert.strictEqual(a, yield* plain([doc], OFF));
+        const plain10 = yield* plain([doc], OFF);
+        assert.strictEqual(a, plain10);
       }
     })
   );
@@ -419,11 +428,8 @@ describe("Render.ansi: layout under colour (paint after cut)", () => {
           ];
           const a = yield* ansi(doc, OFF);
           assert.notMatch(a, /[\r\n]/, `${layout} ${Result.getOrThrow(S.encodeUnknownResult(Json)(label))}: one line`);
-          assert.strictEqual(
-            a,
-            yield* plain(doc, OFF),
-            `${layout} ${Result.getOrThrow(S.encodeUnknownResult(Json)(label))}`
-          );
+          const plain11 = yield* plain(doc, OFF);
+          assert.strictEqual(a, plain11, `${layout} ${Result.getOrThrow(S.encodeUnknownResult(Json)(label))}`);
         }
       }
     })
@@ -521,7 +527,8 @@ describe("Render.ansi: okfit's trial (counts paint, link suffix, annotations)", 
 
   it.effect("an annotation renders nothing", () =>
     Effect.gen(function* () {
-      assert.strictEqual(yield* ansi([Doc.annotation({ level: "warning" }, "careful")]), "");
+      const ansi12 = yield* ansi([Doc.annotation({ level: "warning" }, "careful")]);
+      assert.strictEqual(ansi12, "");
     })
   );
 });
@@ -588,7 +595,10 @@ describe("Render.ansi reporter blocks: contextOf, strong and em, diffText, pipe 
       const table = Doc.table([{ header: "File" }, { header: "% Stmts", align: "right" }], [["All files", "100"]], {
         style: "pipe",
       });
-      assert.strictEqual(stripAnsi(yield* ansi([table])), yield* plain([table], OFF));
+      const ansi13 = yield* ansi([table]);
+      const argument = stripAnsi(ansi13);
+      const plain1 = yield* plain([table], OFF);
+      assert.strictEqual(argument, plain1);
     })
   );
 });

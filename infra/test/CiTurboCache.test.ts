@@ -17,6 +17,15 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
+class CiTurboCacheTestOperationError extends S.TaggedError<
+  CiTurboCacheTestOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "CiTurboCacheTestOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in CiTurboCache.test.ts." }
+) {}
+
 const validConfigValues = {
   bucketName: "beep-turbo-cache-123456789012",
   lambdaZipPath: "/artifacts/turbo-cache.zip",
@@ -106,40 +115,46 @@ describe("@beep/infra CiTurboCache", () => {
         `arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/${functionArn(name)}/invocations`;
 
       yield* Effect.acquireUseRelease(
-        Effect.tryPromise(() =>
-          pulumi.runtime.setMocks(
-            {
-              call: () => ({
-                accountId: "123456789012",
-                json: "{}",
-                partition: "aws",
-              }),
-              newResource: (args) => {
-                const state =
-                  args.type === "aws:lambda/function:Function"
-                    ? {
-                        ...args.inputs,
-                        arn: functionArn(args.name),
-                        invokeArn: invokeArn(args.name),
-                      }
-                    : args.inputs;
-                if (args.type === "aws:apigatewayv2/integration:Integration") {
-                  MutableHashMap.set(integrationUris, args.name, args.inputs.integrationUri);
-                }
-                return { id: `${args.name}-id`, state };
+        Effect.tryPromise({
+          try: () =>
+            pulumi.runtime.setMocks(
+              {
+                call: () => ({
+                  accountId: "123456789012",
+                  json: "{}",
+                  partition: "aws",
+                }),
+                newResource: (args) => {
+                  const state =
+                    args.type === "aws:lambda/function:Function"
+                      ? {
+                          ...args.inputs,
+                          arn: functionArn(args.name),
+                          invokeArn: invokeArn(args.name),
+                        }
+                      : args.inputs;
+                  if (args.type === "aws:apigatewayv2/integration:Integration") {
+                    MutableHashMap.set(integrationUris, args.name, args.inputs.integrationUri);
+                  }
+                  return { id: `${args.name}-id`, state };
+                },
               },
-            },
-            "beep-effect",
-            "test"
-          )
-        ),
+              "beep-effect",
+              "test"
+            ),
+          catch: (cause) => CiTurboCacheTestOperationError.make({ cause }),
+        }),
         () =>
           Effect.sync(() => {
             new CiTurboCache("ci-turbo-cache-test", {
               config: CiTurboCachePulumiConfigValues.make(validConfigValues),
             });
           }),
-        () => Effect.tryPromise(() => pulumi.runtime.disconnect())
+        () =>
+          Effect.tryPromise({
+            try: () => pulumi.runtime.disconnect(),
+            catch: (cause) => CiTurboCacheTestOperationError.make({ cause }),
+          })
       );
 
       const readUri = pipe(
@@ -167,21 +182,23 @@ describe("@beep/infra CiTurboCache remediation", { concurrent: false }, () => {
   const functionInputsFor = Effect.fnUntraced(function* (remediation?: CiTurboCacheRemediation) {
     const functions = MutableHashMap.empty<string, FunctionInputs>();
     yield* Effect.acquireUseRelease(
-      Effect.tryPromise(() =>
-        pulumi.runtime.setMocks(
-          {
-            call: () => ({ accountId: "123456789012", json: "{}", partition: "aws" }),
-            newResource: (args) => {
-              if (args.type === "aws:lambda/function:Function") {
-                MutableHashMap.set(functions, args.name, args.inputs as FunctionInputs);
-              }
-              return { id: `${args.name}-id`, state: args.inputs };
+      Effect.tryPromise({
+        try: () =>
+          pulumi.runtime.setMocks(
+            {
+              call: () => ({ accountId: "123456789012", json: "{}", partition: "aws" }),
+              newResource: (args) => {
+                if (args.type === "aws:lambda/function:Function") {
+                  MutableHashMap.set(functions, args.name, args.inputs as FunctionInputs);
+                }
+                return { id: `${args.name}-id`, state: args.inputs };
+              },
             },
-          },
-          "beep-effect",
-          "test"
-        )
-      ),
+            "beep-effect",
+            "test"
+          ),
+        catch: (cause) => CiTurboCacheTestOperationError.make({ cause }),
+      }),
       () =>
         Effect.sync(() => {
           new CiTurboCache("ci-turbo-cache-test", {
@@ -189,7 +206,11 @@ describe("@beep/infra CiTurboCache remediation", { concurrent: false }, () => {
             ...(remediation === undefined ? {} : { remediation }),
           });
         }),
-      () => Effect.tryPromise(() => pulumi.runtime.disconnect())
+      () =>
+        Effect.tryPromise({
+          try: () => pulumi.runtime.disconnect(),
+          catch: (cause) => CiTurboCacheTestOperationError.make({ cause }),
+        })
     );
     return (name: string) => pipe(MutableHashMap.get(functions, `ci-turbo-cache-test-${name}`), O.getOrUndefined);
   });
@@ -243,22 +264,27 @@ describe("@beep/infra CiTurboCache throttle alarms", { concurrent: false }, () =
   const resourcesFor = Effect.fnUntraced(function* (throttleAlarmRecipients?: ReadonlyArray<string>) {
     const resources = MutableHashMap.empty<string, Declared>();
     yield* Effect.acquireUseRelease(
-      Effect.tryPromise(() =>
-        pulumi.runtime.setMocks(
-          {
-            call: () => ({ accountId: "123456789012", json: "{}", partition: "aws" }),
-            newResource: (args) => {
-              MutableHashMap.set(resources, args.name, { type: args.type, inputs: args.inputs as Declared["inputs"] });
-              return {
-                id: `${args.name}-id`,
-                state: { ...args.inputs, arn: `arn:aws:mock:us-east-1:123456789012:${args.name}` },
-              };
+      Effect.tryPromise({
+        try: () =>
+          pulumi.runtime.setMocks(
+            {
+              call: () => ({ accountId: "123456789012", json: "{}", partition: "aws" }),
+              newResource: (args) => {
+                MutableHashMap.set(resources, args.name, {
+                  type: args.type,
+                  inputs: args.inputs as Declared["inputs"],
+                });
+                return {
+                  id: `${args.name}-id`,
+                  state: { ...args.inputs, arn: `arn:aws:mock:us-east-1:123456789012:${args.name}` },
+                };
+              },
             },
-          },
-          "beep-effect",
-          "test"
-        )
-      ),
+            "beep-effect",
+            "test"
+          ),
+        catch: (cause) => CiTurboCacheTestOperationError.make({ cause }),
+      }),
       () =>
         Effect.sync(() => {
           new CiTurboCache("ci-turbo-cache-test", {
@@ -266,7 +292,11 @@ describe("@beep/infra CiTurboCache throttle alarms", { concurrent: false }, () =
             ...(throttleAlarmRecipients === undefined ? {} : { throttleAlarmRecipients }),
           });
         }),
-      () => Effect.tryPromise(() => pulumi.runtime.disconnect())
+      () =>
+        Effect.tryPromise({
+          try: () => pulumi.runtime.disconnect(),
+          catch: (cause) => CiTurboCacheTestOperationError.make({ cause }),
+        })
     );
     return (name: string) => pipe(MutableHashMap.get(resources, `ci-turbo-cache-test-${name}`), O.getOrUndefined);
   });

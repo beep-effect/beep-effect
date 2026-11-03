@@ -290,7 +290,8 @@ it.layer(TestCrypto)("verified-span persistence and re-anchor history", (it) => 
       ).pipe(Effect.provideService(Digest.Digest, countingDigest));
 
       expect(history.attempts[0].outcome.status).toBe("verified");
-      expect(yield* Ref.get(digestCalls)).toBe(1);
+      const got = yield* Ref.get(digestCalls);
+      expect(got).toBe(1);
       const encoded = yield* encodeVerifiedSpanHistory(history);
       const encodedOutcome = encoded.attempts[0].outcome;
       if (encodedOutcome.status === "verified") {

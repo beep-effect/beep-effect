@@ -20,17 +20,22 @@ it.effect("bounds shared native ownership and returns cancelled queue capacity",
     const first = yield* admission.acquire("clean");
     const waiting = yield* admission.acquire("extract").pipe(Effect.forkChild);
     yield* TestClock.adjust(Duration.zero);
-    expect(yield* admission.snapshot).toEqual({ active: 1, regexActive: 0, queued: 1, quarantined: 0, closed: false });
-    expect(yield* admission.acquire("annotate").pipe(Effect.flip)).toMatchObject({
+    const citationResult1 = yield* admission.snapshot;
+    expect(citationResult1).toEqual({ active: 1, regexActive: 0, queued: 1, quarantined: 0, closed: false });
+    const citationResult2 = yield* admission.acquire("annotate").pipe(Effect.flip);
+    expect(citationResult2).toMatchObject({
       operation: "annotate",
       limit: "queuedOperations",
     });
     yield* Fiber.interrupt(waiting);
-    expect(Exit.hasInterrupts(yield* Fiber.await(waiting))).toBe(true);
-    expect(yield* admission.snapshot).toMatchObject({ active: 1, queued: 0 });
+    const citationResult3 = yield* Fiber.await(waiting);
+    expect(Exit.hasInterrupts(citationResult3)).toBe(true);
+    const citationResult4 = yield* admission.snapshot;
+    expect(citationResult4).toMatchObject({ active: 1, queued: 0 });
     yield* first.release;
     yield* first.release;
-    expect(yield* admission.snapshot).toMatchObject({ active: 0, queued: 0 });
+    const citationResult5 = yield* admission.snapshot;
+    expect(citationResult5).toMatchObject({ active: 0, queued: 0 });
   })
 );
 
@@ -45,22 +50,28 @@ it.effect("quarantine rejects queued and new workers until every isolated lease 
     yield* first.quarantine;
     yield* first.quarantine;
     yield* second.quarantine;
-    expect(yield* Fiber.join(waiting).pipe(Effect.flip)).toMatchObject({ reason: "quarantined" });
-    expect(yield* admission.snapshot).toEqual({ active: 2, regexActive: 0, queued: 0, quarantined: 2, closed: false });
+    const citationResult6 = yield* Fiber.join(waiting).pipe(Effect.flip);
+    expect(citationResult6).toMatchObject({ reason: "quarantined" });
+    const citationResult7 = yield* admission.snapshot;
+    expect(citationResult7).toEqual({ active: 2, regexActive: 0, queued: 0, quarantined: 2, closed: false });
     yield* first.release;
-    expect(yield* admission.acquire("clean").pipe(Effect.flip)).toMatchObject({ reason: "quarantined" });
+    const citationResult8 = yield* admission.acquire("clean").pipe(Effect.flip);
+    expect(citationResult8).toMatchObject({ reason: "quarantined" });
     yield* second.release;
     yield* first.quarantine;
     const recovered = yield* admission.acquire("clean");
-    expect(yield* admission.snapshot).toMatchObject({ active: 1, quarantined: 0 });
+    const citationResult9 = yield* admission.snapshot;
+    expect(citationResult9).toMatchObject({ active: 1, quarantined: 0 });
     const recoveredSecond = yield* admission.acquire("extract");
     const laterWaiting = yield* admission.acquire("clean").pipe(Effect.forkChild);
     yield* TestClock.adjust(Duration.zero);
     yield* recovered.quarantine;
-    expect(yield* Fiber.join(laterWaiting).pipe(Effect.flip)).toMatchObject({ reason: "quarantined" });
+    const citationResult10 = yield* Fiber.join(laterWaiting).pipe(Effect.flip);
+    expect(citationResult10).toMatchObject({ reason: "quarantined" });
     yield* recoveredSecond.release;
     yield* recovered.release;
-    expect(yield* admission.snapshot).toMatchObject({ active: 0, quarantined: 0 });
+    const citationResult11 = yield* admission.snapshot;
+    expect(citationResult11).toMatchObject({ active: 0, quarantined: 0 });
   })
 );
 
@@ -77,11 +88,13 @@ it.effect("captures queue policy and Clock without releasing an active native ow
       .acquire("extract")
       .pipe(Effect.provideService(Clock.Clock, callerClock), Effect.forkChild);
     yield* TestClock.adjust(Duration.millis(20));
-    expect(yield* Fiber.join(waiting).pipe(Effect.flip)).toMatchObject({
+    const citationResult12 = yield* Fiber.join(waiting).pipe(Effect.flip);
+    expect(citationResult12).toMatchObject({
       operation: "extract",
       limit: "queueDeadline",
     });
-    expect(yield* admission.snapshot).toMatchObject({ active: 1, queued: 0 });
+    const citationResult13 = yield* admission.snapshot;
+    expect(citationResult13).toMatchObject({ active: 1, queued: 0 });
     yield* first.release;
   })
 );
@@ -89,19 +102,24 @@ it.effect("captures queue policy and Clock without releasing an active native ow
 it.effect("Scope closure cancels waiters and retains quarantine authority until later exit acknowledgement", () =>
   Effect.gen(function* () {
     const owner = yield* Scope.make();
-    const admission = yield* makeCitationNativeProcessAdmission((yield* defaultCitationEnginePolicy).limits).pipe(
+    const citationResult14 = yield* defaultCitationEnginePolicy;
+    const admission = yield* makeCitationNativeProcessAdmission(citationResult14.limits).pipe(
       Effect.provideService(Scope.Scope, owner)
     );
     const first = yield* admission.acquire("clean");
     const waiting = yield* admission.acquire("extract").pipe(Effect.forkChild);
     yield* TestClock.adjust(Duration.zero);
     yield* Scope.close(owner, Exit.void);
-    expect(yield* Fiber.join(waiting).pipe(Effect.flip)).toMatchObject({ reason: "closed" });
+    const citationResult15 = yield* Fiber.join(waiting).pipe(Effect.flip);
+    expect(citationResult15).toMatchObject({ reason: "closed" });
     yield* first.quarantine;
-    expect(yield* admission.snapshot).toEqual({ active: 1, regexActive: 0, queued: 0, quarantined: 1, closed: true });
+    const citationResult16 = yield* admission.snapshot;
+    expect(citationResult16).toEqual({ active: 1, regexActive: 0, queued: 0, quarantined: 1, closed: true });
     yield* first.release;
-    expect(yield* admission.snapshot).toEqual({ active: 0, regexActive: 0, queued: 0, quarantined: 0, closed: true });
-    expect(yield* admission.acquire("clean").pipe(Effect.flip)).toMatchObject({ reason: "closed" });
+    const citationResult17 = yield* admission.snapshot;
+    expect(citationResult17).toEqual({ active: 0, regexActive: 0, queued: 0, quarantined: 0, closed: true });
+    const citationResult18 = yield* admission.acquire("clean").pipe(Effect.flip);
+    expect(citationResult18).toMatchObject({ reason: "closed" });
   })
 );
 
@@ -115,21 +133,28 @@ it.effect("enforces both regex and total capacity without reserving unused total
     });
     const first = yield* admission.acquireRegex("extract");
     const observed = yield* admission.snapshot;
-    expect(yield* admission.snapshot).not.toBe(observed);
+    const citationResult19 = yield* admission.snapshot;
+    expect(citationResult19).not.toBe(observed);
     const waiting = yield* admission.acquireRegex("extract").pipe(Effect.forkChild);
     yield* TestClock.adjust(Duration.zero);
     const html = yield* admission.acquire("clean");
-    expect(yield* admission.snapshot).toEqual({ active: 2, regexActive: 1, queued: 1, quarantined: 0, closed: false });
+    const citationResult20 = yield* admission.snapshot;
+    expect(citationResult20).toEqual({ active: 2, regexActive: 1, queued: 1, quarantined: 0, closed: false });
     yield* first.release;
     const second = yield* Fiber.join(waiting);
-    expect(yield* admission.snapshot).toMatchObject({ active: 2, regexActive: 1, queued: 0 });
+    const citationResult21 = yield* admission.snapshot;
+    expect(citationResult21).toMatchObject({ active: 2, regexActive: 1, queued: 0 });
     yield* second.quarantine;
-    expect(yield* admission.acquire("clean").pipe(Effect.flip)).toMatchObject({ reason: "quarantined" });
-    expect(yield* admission.acquireRegex("extract").pipe(Effect.flip)).toMatchObject({ reason: "quarantined" });
+    const citationResult22 = yield* admission.acquire("clean").pipe(Effect.flip);
+    expect(citationResult22).toMatchObject({ reason: "quarantined" });
+    const citationResult23 = yield* admission.acquireRegex("extract").pipe(Effect.flip);
+    expect(citationResult23).toMatchObject({ reason: "quarantined" });
     yield* html.release;
-    expect(yield* admission.snapshot).toMatchObject({ active: 1, regexActive: 1, quarantined: 1 });
+    const citationResult24 = yield* admission.snapshot;
+    expect(citationResult24).toMatchObject({ active: 1, regexActive: 1, quarantined: 1 });
     yield* second.release;
-    expect(yield* admission.snapshot).toEqual({ active: 0, regexActive: 0, queued: 0, quarantined: 0, closed: false });
+    const citationResult25 = yield* admission.snapshot;
+    expect(citationResult25).toEqual({ active: 0, regexActive: 0, queued: 0, quarantined: 0, closed: false });
   })
 );
 
@@ -148,22 +173,26 @@ it.effect("keeps one regex queue deadline across unrelated capacity notification
     yield* TestClock.adjust(Duration.millis(10));
     yield* html.release;
     yield* TestClock.adjust(Duration.millis(10));
-    expect(yield* Fiber.join(waiting).pipe(Effect.flip)).toMatchObject({
+    const citationResult26 = yield* Fiber.join(waiting).pipe(Effect.flip);
+    expect(citationResult26).toMatchObject({
       operation: "extract",
       limit: "queueDeadline",
     });
-    expect(yield* admission.snapshot).toMatchObject({ active: 1, regexActive: 1, queued: 0 });
+    const citationResult27 = yield* admission.snapshot;
+    expect(citationResult27).toMatchObject({ active: 1, regexActive: 1, queued: 0 });
     yield* first.release;
   })
 );
 
 it.effect("serializes quarantine and retirement of the same exact lease", () =>
   Effect.gen(function* () {
-    const admission = yield* makeCitationNativeProcessAdmission((yield* defaultCitationEnginePolicy).limits);
+    const citationResult28 = yield* defaultCitationEnginePolicy;
+    const admission = yield* makeCitationNativeProcessAdmission(citationResult28.limits);
     for (let attempt = 0; attempt < 64; attempt++) {
       const lease = yield* admission.acquireRegex("extract");
       yield* Effect.all([lease.quarantine, lease.release, lease.quarantine, lease.release], { concurrency: 4 });
-      expect(yield* admission.snapshot).toEqual({
+      const citationResult29 = yield* admission.snapshot;
+      expect(citationResult29).toEqual({
         active: 0,
         regexActive: 0,
         queued: 0,
@@ -176,7 +205,8 @@ it.effect("serializes quarantine and retirement of the same exact lease", () =>
 
 it.effect("does not lose either kind of permit when queue handoff races cancellation", () =>
   Effect.gen(function* () {
-    const admission = yield* makeCitationNativeProcessAdmission((yield* defaultCitationEnginePolicy).limits);
+    const citationResult30 = yield* defaultCitationEnginePolicy;
+    const admission = yield* makeCitationNativeProcessAdmission(citationResult30.limits);
     for (const acquire of [admission.acquire, admission.acquireRegex])
       for (let attempt = 0; attempt < 32; attempt++) {
         const first = yield* acquire("extract");
@@ -185,7 +215,8 @@ it.effect("does not lose either kind of permit when queue handoff races cancella
         ).pipe(Effect.forkChild);
         yield* TestClock.adjust(Duration.zero);
         yield* Effect.all([first.release, Fiber.interrupt(waiting)], { concurrency: 2 });
-        expect(yield* admission.snapshot).toMatchObject({ active: 0, regexActive: 0, queued: 0, quarantined: 0 });
+        const citationResult31 = yield* admission.snapshot;
+        expect(citationResult31).toMatchObject({ active: 0, regexActive: 0, queued: 0, quarantined: 0 });
       }
   })
 );
@@ -193,8 +224,9 @@ it.effect("does not lose either kind of permit when queue handoff races cancella
 it.effect("closure wakes every blocked HTML and regex claimant without acknowledging active children", () =>
   Effect.gen(function* () {
     const owner = yield* Scope.make();
+    const citationResult32 = yield* defaultCitationEnginePolicy;
     const admission = yield* makeCitationNativeProcessAdmission({
-      ...(yield* defaultCitationEnginePolicy).limits,
+      ...citationResult32.limits,
       concurrentOperations: 2,
       concurrentRegexProcesses: 1,
       queuedOperations: 3,
@@ -207,24 +239,29 @@ it.effect("closure wakes every blocked HTML and regex claimant without acknowled
       admission.acquireRegex("extract").pipe(Effect.forkChild),
     ]);
     yield* TestClock.adjust(Duration.zero);
-    expect(yield* admission.snapshot).toMatchObject({ active: 2, regexActive: 1, queued: 3 });
+    const citationResult33 = yield* admission.snapshot;
+    expect(citationResult33).toMatchObject({ active: 2, regexActive: 1, queued: 3 });
     yield* Scope.close(owner, Exit.void);
     yield* Effect.forEach(
       waiting,
       Effect.fnUntraced(function* (fiber) {
-        expect(yield* Fiber.join(fiber).pipe(Effect.flip)).toMatchObject({ reason: "closed" });
+        const citationResult34 = yield* Fiber.join(fiber).pipe(Effect.flip);
+        expect(citationResult34).toMatchObject({ reason: "closed" });
       })
     );
-    expect(yield* admission.snapshot).toEqual({ active: 2, regexActive: 1, queued: 0, quarantined: 0, closed: true });
+    const citationResult35 = yield* admission.snapshot;
+    expect(citationResult35).toEqual({ active: 2, regexActive: 1, queued: 0, quarantined: 0, closed: true });
     yield* Effect.all([regex.release, html.release], { concurrency: 2 });
-    expect(yield* admission.snapshot).toEqual({ active: 0, regexActive: 0, queued: 0, quarantined: 0, closed: true });
+    const citationResult36 = yield* admission.snapshot;
+    expect(citationResult36).toEqual({ active: 0, regexActive: 0, queued: 0, quarantined: 0, closed: true });
   })
 );
 
 it.effect("queue entry and cancellation notifications do not renew an older claimant's deadline", () =>
   Effect.gen(function* () {
+    const citationResult37 = yield* defaultCitationEnginePolicy;
     const admission = yield* makeCitationNativeProcessAdmission({
-      ...(yield* defaultCitationEnginePolicy).limits,
+      ...citationResult37.limits,
       concurrentOperations: 1,
       queuedOperations: 2,
       queueDeadline: Duration.millis(20),
@@ -234,18 +271,22 @@ it.effect("queue entry and cancellation notifications do not renew an older clai
     yield* TestClock.adjust(Duration.millis(5));
     const newer = yield* admission.acquire("clean").pipe(Effect.forkChild);
     yield* TestClock.adjust(Duration.millis(5));
-    expect(yield* admission.snapshot).toMatchObject({ active: 1, regexActive: 1, queued: 2 });
+    const citationResult38 = yield* admission.snapshot;
+    expect(citationResult38).toMatchObject({ active: 1, regexActive: 1, queued: 2 });
     yield* Fiber.interrupt(newer);
     yield* TestClock.adjust(Duration.millis(10));
-    expect(yield* Fiber.join(older).pipe(Effect.flip)).toMatchObject({ operation: "extract", limit: "queueDeadline" });
-    expect(yield* admission.snapshot).toEqual({ active: 1, regexActive: 1, queued: 0, quarantined: 0, closed: false });
+    const citationResult39 = yield* Fiber.join(older).pipe(Effect.flip);
+    expect(citationResult39).toMatchObject({ operation: "extract", limit: "queueDeadline" });
+    const citationResult40 = yield* admission.snapshot;
+    expect(citationResult40).toEqual({ active: 1, regexActive: 1, queued: 0, quarantined: 0, closed: false });
     yield* owned.release;
   })
 );
 
 it.effect("a returned native claim cannot be rolled back by its caller's transaction", () =>
   Effect.gen(function* () {
-    const admission = yield* makeCitationNativeProcessAdmission((yield* defaultCitationEnginePolicy).limits);
+    const citationResult41 = yield* defaultCitationEnginePolicy;
+    const admission = yield* makeCitationNativeProcessAdmission(citationResult41.limits);
     let issued = O.none<CitationNativeProcessLease>();
     const outcome = yield* admission.acquireRegex("extract").pipe(
       Effect.tap((lease) =>
@@ -258,45 +299,59 @@ it.effect("a returned native claim cannot be rolled back by its caller's transac
       Effect.flip
     );
     expect(outcome).toBe("caller-rollback");
-    expect(yield* admission.snapshot).toMatchObject({ active: 1, regexActive: 1 });
+    const citationResult42 = yield* admission.snapshot;
+    expect(citationResult42).toMatchObject({ active: 1, regexActive: 1 });
     const lease = yield* Effect.fromOption(issued);
     yield* lease.release;
-    expect(yield* admission.snapshot).toMatchObject({ active: 0, regexActive: 0 });
+    const citationResult43 = yield* admission.snapshot;
+    expect(citationResult43).toMatchObject({ active: 0, regexActive: 0 });
   })
 );
 
 it.effect("quarantine and exit acknowledgement survive caller transaction rollback", () =>
   Effect.gen(function* () {
-    const admission = yield* makeCitationNativeProcessAdmission((yield* defaultCitationEnginePolicy).limits);
+    const citationResult44 = yield* defaultCitationEnginePolicy;
+    const admission = yield* makeCitationNativeProcessAdmission(citationResult44.limits);
     const lease = yield* admission.acquireRegex("extract");
     const callerState = yield* TxRef.make(0);
-    expect(
-      yield* TxRef.set(callerState, 1).pipe(
-        Effect.andThen(lease.quarantine),
-        Effect.andThen(Effect.fail("caller-rollback")),
-        Effect.tx,
-        Effect.flip
-      )
-    ).toBe("caller-rollback");
-    expect(yield* admission.snapshot).toMatchObject({ active: 1, regexActive: 1, quarantined: 1 });
-    expect(yield* TxRef.get(callerState)).toBe(0);
-    expect(yield* lease.release.pipe(Effect.andThen(Effect.fail("caller-rollback")), Effect.tx, Effect.flip)).toBe(
-      "caller-rollback"
+    const citationResult45 = yield* TxRef.set(callerState, 1).pipe(
+      Effect.andThen(lease.quarantine),
+      Effect.andThen(Effect.fail("caller-rollback")),
+      Effect.tx,
+      Effect.flip
     );
-    expect(yield* admission.snapshot).toEqual({ active: 0, regexActive: 0, queued: 0, quarantined: 0, closed: false });
+    expect(citationResult45).toBe("caller-rollback");
+    const citationResult46 = yield* admission.snapshot;
+    expect(citationResult46).toMatchObject({ active: 1, regexActive: 1, quarantined: 1 });
+    const citationResult47 = yield* TxRef.get(callerState);
+    expect(citationResult47).toBe(0);
+    const citationResult48 = yield* lease.release.pipe(
+      Effect.andThen(Effect.fail("caller-rollback")),
+      Effect.tx,
+      Effect.flip
+    );
+    expect(citationResult48).toBe("caller-rollback");
+    const citationResult49 = yield* admission.snapshot;
+    expect(citationResult49).toEqual({ active: 0, regexActive: 0, queued: 0, quarantined: 0, closed: false });
   })
 );
 
 it.effect("owner Scope closure cannot be undone by a caller transaction rollback", () =>
   Effect.gen(function* () {
     const owner = yield* Scope.make();
-    const admission = yield* makeCitationNativeProcessAdmission((yield* defaultCitationEnginePolicy).limits).pipe(
+    const citationResult50 = yield* defaultCitationEnginePolicy;
+    const admission = yield* makeCitationNativeProcessAdmission(citationResult50.limits).pipe(
       Effect.provideService(Scope.Scope, owner)
     );
-    expect(
-      yield* Scope.close(owner, Exit.void).pipe(Effect.andThen(Effect.fail("caller-rollback")), Effect.tx, Effect.flip)
-    ).toBe("caller-rollback");
-    expect(yield* admission.snapshot).toMatchObject({ closed: true });
-    expect(yield* admission.acquire("clean").pipe(Effect.flip)).toMatchObject({ reason: "closed" });
+    const citationResult51 = yield* Scope.close(owner, Exit.void).pipe(
+      Effect.andThen(Effect.fail("caller-rollback")),
+      Effect.tx,
+      Effect.flip
+    );
+    expect(citationResult51).toBe("caller-rollback");
+    const citationResult52 = yield* admission.snapshot;
+    expect(citationResult52).toMatchObject({ closed: true });
+    const citationResult53 = yield* admission.acquire("clean").pipe(Effect.flip);
+    expect(citationResult53).toMatchObject({ reason: "closed" });
   })
 );

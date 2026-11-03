@@ -110,7 +110,9 @@ const workspace = Effect.fn("ConformanceCommandTest.workspace")(function* () {
     yield* fs.makeDirectory(path.dirname(path.join(root, relative)), { recursive: true });
     yield* fs.copyFile(path.join(source, relative), path.join(root, relative));
   }
-  yield* fs.writeFileString(path.join(root, cacheConformanceLoadEnvelopePath), yield* encodeEnvelope(envelope));
+  const argument = path.join(root, cacheConformanceLoadEnvelopePath);
+  const encodedEnvelope = yield* encodeEnvelope(envelope);
+  yield* fs.writeFileString(argument, encodedEnvelope);
   vi.spyOn(process, "cwd").mockReturnValue(root);
   const run = Command.runWith(makeCacheCommandForTesting(unusedQualification), { version: "0.0.0" });
   const env = {
@@ -134,7 +136,8 @@ const workspace = Effect.fn("ConformanceCommandTest.workspace")(function* () {
 
 const writeTarget = Effect.fn("ConformanceCommandTest.writeTarget")(function* (file: string, url: string) {
   const fs = yield* FileSystem.FileSystem;
-  yield* fs.writeFileString(file, yield* encodeTarget(targetFor({ url })));
+  const encodedTarget = yield* encodeTarget(targetFor({ url }));
+  yield* fs.writeFileString(file, encodedTarget);
 });
 
 it.layer(Services, { timeout: "180 seconds", excludeTestServices: true })("cache conformance commands", (it) => {
@@ -143,14 +146,19 @@ it.layer(Services, { timeout: "180 seconds", excludeTestServices: true })("cache
       const w = yield* workspace();
       yield* w.run(["conformance-corpus"]);
       const corpus = w.file(CacheConformancePaths.corpus);
-      expect(yield* w.fs.exists(corpus)).toBe(true);
+      const exists1 = yield* w.fs.exists(corpus);
+      expect(exists1).toBe(true);
       yield* w.run(["conformance-corpus", "--check"]);
       const text = yield* consoleText;
       expect(text).toContain("written.");
       expect(text).toContain("is current.");
-      yield* w.fs.writeFileString(corpus, Str.replace("RC-032", "RC-099")(yield* w.fs.readFileString(corpus)));
-      expect(yield* w.run(["conformance-corpus", "--check"]).pipe(Effect.isFailure)).toBe(true);
-      expect(yield* errorText).toContain("is stale");
+      const argument1 = Str.replace("RC-032", "RC-099");
+      const readFileString1 = yield* w.fs.readFileString(corpus);
+      yield* w.fs.writeFileString(corpus, argument1(readFileString1));
+      const pipe2 = yield* w.run(["conformance-corpus", "--check"]).pipe(Effect.isFailure);
+      expect(pipe2).toBe(true);
+      const errorText3 = yield* errorText;
+      expect(errorText3).toContain("is stale");
     })
   );
 
@@ -165,34 +173,35 @@ it.layer(Services, { timeout: "180 seconds", excludeTestServices: true })("cache
       yield* w.fs.makeDirectory(w.file("runs"), { recursive: true });
       yield* w.run(["conformance-run", "--target", target, "--output", wire]);
       yield* w.run(["conformance-lab", "--target", target, "--output", lab]);
-      const wireReport = yield* decodeRun(yield* w.fs.readFileString(wire));
-      const labReport = yield* decodeRun(yield* w.fs.readFileString(lab));
+      const readFileString4 = yield* w.fs.readFileString(wire);
+      const wireReport = yield* decodeRun(readFileString4);
+      const readFileString5 = yield* w.fs.readFileString(lab);
+      const labReport = yield* decodeRun(readFileString5);
       expect(wireReport.executors).toEqual(["wire"]);
       expect(labReport.executors).toEqual(["lab"]);
-      expect(yield* consoleText).toContain("strict-openapi: pass");
+      const consoleText6 = yield* consoleText;
+      expect(consoleText6).toContain("strict-openapi: pass");
       const evidence = w.file("evidence.json");
-      yield* w.fs.writeFileString(
-        evidence,
-        yield* encodeEvidence(
-          CacheConformanceEvidence.make({
-            schemaVersion: "cache-conformance-evidence/v1",
-            source: "test/command-evidence",
-            observedAt: "2026-10-24",
-            profile: "local-container",
-            topologies: ["owned-fixture"],
-            checks: [
-              CacheConformanceEvidenceCheck.make({
-                case: "RC-029",
-                dimension: "observability",
-                verdict: "pass",
-                expectation: "retention-observable",
-                detail: "command test",
-              }),
-            ],
-            obligations: [],
-          })
-        )
+      const encodedEvidence = yield* encodeEvidence(
+        CacheConformanceEvidence.make({
+          schemaVersion: "cache-conformance-evidence/v1",
+          source: "test/command-evidence",
+          observedAt: "2026-10-24",
+          profile: "local-container",
+          topologies: ["owned-fixture"],
+          checks: [
+            CacheConformanceEvidenceCheck.make({
+              case: "RC-029",
+              dimension: "observability",
+              verdict: "pass",
+              expectation: "retention-observable",
+              detail: "command test",
+            }),
+          ],
+          obligations: [],
+        })
       );
+      yield* w.fs.writeFileString(evidence, encodedEvidence);
       const comparison = w.file("comparison.json");
       yield* w.run([
         "conformance-compare",
@@ -205,16 +214,21 @@ it.layer(Services, { timeout: "180 seconds", excludeTestServices: true })("cache
         "--output",
         comparison,
       ]);
-      const decoded = yield* decodeComparison(yield* w.fs.readFileString(comparison));
+      const readFileString7 = yield* w.fs.readFileString(comparison);
+      const decoded = yield* decodeComparison(readFileString7);
       expect(decoded.evidenceSources).toEqual(["test/command-evidence"]);
       expect(decoded.verdict).toContain("No eligible replacement");
-      expect(yield* w.fs.readFileString(w.file("comparison.md"))).toContain("No eligible replacement");
+      const readFileString8 = yield* w.fs.readFileString(w.file("comparison.md"));
+      expect(readFileString8).toContain("No eligible replacement");
       const bare = w.file("comparison-report");
       yield* w.run(["conformance-compare", "--runs", wire, "--output", bare]);
-      expect(yield* w.fs.exists(w.file("comparison-report.md"))).toBe(true);
+      const exists9 = yield* w.fs.exists(w.file("comparison-report.md"));
+      expect(exists9).toBe(true);
       for (const secret of [secrets.reader, secrets.writer]) {
-        expect(yield* w.fs.readFileString(wire)).not.toContain(secret);
-        expect(yield* w.fs.readFileString(comparison)).not.toContain(secret);
+        const readFileString10 = yield* w.fs.readFileString(wire);
+        expect(readFileString10).not.toContain(secret);
+        const readFileString11 = yield* w.fs.readFileString(comparison);
+        expect(readFileString11).not.toContain(secret);
       }
     })
   );
@@ -225,32 +239,37 @@ it.layer(Services, { timeout: "180 seconds", excludeTestServices: true })("cache
       const remote = w.file("remote.json");
       const output = w.file("refused.json");
       yield* writeTarget(remote, "http://cache.example.com");
-      expect(yield* w.run(["conformance-run", "--target", remote, "--output", output]).pipe(Effect.isFailure)).toBe(
-        true
-      );
-      expect(yield* errorText).toContain("non-loopback");
+      const pipe12 = yield* w.run(["conformance-run", "--target", remote, "--output", output]).pipe(Effect.isFailure);
+      expect(pipe12).toBe(true);
+      const errorText13 = yield* errorText;
+      expect(errorText13).toContain("non-loopback");
       const local = w.file("local.json");
       yield* writeTarget(local, "http://127.0.0.1:9");
-      expect(
-        yield* w.run(["conformance-run", "--target", local, "--output", output], { READER: "" }).pipe(Effect.isFailure)
-      ).toBe(true);
-      expect(yield* errorText).toContain("READER");
-      expect(
-        yield* w
-          .run(["conformance-native", "--target", local, "--client", "stable", "--output", output])
-          .pipe(Effect.isFailure)
-      ).toBe(true);
-      expect(yield* errorText).toContain("--fetch-client");
+      const pipe14 = yield* w
+        .run(["conformance-run", "--target", local, "--output", output], { READER: "" })
+        .pipe(Effect.isFailure);
+      expect(pipe14).toBe(true);
+      const errorText15 = yield* errorText;
+      expect(errorText15).toContain("READER");
+      const pipe16 = yield* w
+        .run(["conformance-native", "--target", local, "--client", "stable", "--output", output])
+        .pipe(Effect.isFailure);
+      expect(pipe16).toBe(true);
+      const errorText17 = yield* errorText;
+      expect(errorText17).toContain("--fetch-client");
       const remoteReads = {
         TURBO_API: "https://cache.example.com",
         TURBO_TEAM: "team_lab",
         TURBO_TOKEN_REF: "op://v/i/f",
       };
-      expect(yield* w.run(["remote-reads"], { ...remoteReads, TURBO_TOKEN_REPLACE: "2" }).pipe(Effect.isFailure)).toBe(
-        true
-      );
-      expect(yield* errorText).toContain("TURBO_TOKEN_REPLACE must be 0 or 1");
-      expect(yield* w.fs.exists(output)).toBe(false);
+      const pipe18 = yield* w
+        .run(["remote-reads"], { ...remoteReads, TURBO_TOKEN_REPLACE: "2" })
+        .pipe(Effect.isFailure);
+      expect(pipe18).toBe(true);
+      const errorText19 = yield* errorText;
+      expect(errorText19).toContain("TURBO_TOKEN_REPLACE must be 0 or 1");
+      const exists20 = yield* w.fs.exists(output);
+      expect(exists20).toBe(false);
     })
   );
 });

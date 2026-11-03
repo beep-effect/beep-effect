@@ -106,15 +106,13 @@ const writeEnvelope = Effect.fn("YeetFallowSelfHealTest.writeEnvelope")(function
   fromDir: string,
   envelope: FallowReportOk
 ) {
-  return yield* writeEnvelopeText(
-    fromDir,
-    yield* encodeJson(envelope),
-    fallowEnvelopeFileName(envelope.subcommand, true)
-  );
+  const encodedJson = yield* encodeJson(envelope);
+  return yield* writeEnvelopeText(fromDir, encodedJson, fallowEnvelopeFileName(envelope.subcommand, true));
 });
 
 const consoleText = Effect.fn("YeetFallowSelfHealTest.consoleText")(function* () {
-  return pipe(yield* TestConsole.logLines, A.filter(P.isString), A.join("\n"));
+  const logLines1 = yield* TestConsole.logLines;
+  return pipe(logLines1, A.filter(P.isString), A.join("\n"));
 });
 
 describe("yeet fallow advisory self-heal", () => {
@@ -140,9 +138,11 @@ describe("yeet fallow advisory self-heal", () => {
               runStartedAt: RUN_STARTED_AT,
             }).pipe(Effect.provideService(FallowFeedbackAllowedRoot, O.some(tmpDir)));
 
-            expect(yield* fs.exists(envelopePath)).toBe(false);
+            const exists2 = yield* fs.exists(envelopePath);
+            expect(exists2).toBe(false);
 
-            const index = yield* decodeQualityIssueIndex(yield* fs.readFileString(emitPath));
+            const readFileString3 = yield* fs.readFileString(emitPath);
+            const index = yield* decodeQualityIssueIndex(readFileString3);
             expect(index.issues).toEqual([]);
             expect(index.packages).toEqual([]);
 
@@ -179,9 +179,11 @@ describe("yeet fallow advisory self-heal", () => {
               runStartedAt: RUN_STARTED_AT,
             }).pipe(Effect.provideService(FallowFeedbackAllowedRoot, O.some(tmpDir)));
 
-            expect(yield* fs.exists(envelopePath)).toBe(false);
+            const exists4 = yield* fs.exists(envelopePath);
+            expect(exists4).toBe(false);
 
-            const index = yield* decodeQualityIssueIndex(yield* fs.readFileString(emitPath));
+            const readFileString5 = yield* fs.readFileString(emitPath);
+            const index = yield* decodeQualityIssueIndex(readFileString5);
             expect(index.issues).toEqual([]);
 
             const output = yield* consoleText();
@@ -215,9 +217,11 @@ describe("yeet fallow advisory self-heal", () => {
               runStartedAt: RUN_STARTED_AT,
             }).pipe(Effect.provideService(FallowFeedbackAllowedRoot, O.some(tmpDir)));
 
-            expect(yield* fs.exists(envelopePath)).toBe(true);
+            const exists6 = yield* fs.exists(envelopePath);
+            expect(exists6).toBe(true);
 
-            const index = yield* decodeQualityIssueIndex(yield* fs.readFileString(emitPath));
+            const readFileString7 = yield* fs.readFileString(emitPath);
+            const index = yield* decodeQualityIssueIndex(readFileString7);
             expect(index.issues).toHaveLength(1);
             expect(index.issues[0]).toMatchObject({ blocking: false, id: "fallow:health:health-advisory" });
 
@@ -252,8 +256,10 @@ describe("yeet fallow advisory self-heal", () => {
               runStartedAt: RUN_STARTED_AT,
             }).pipe(Effect.provideService(FallowFeedbackAllowedRoot, O.some(tmpDir)));
 
-            expect(yield* fs.exists(envelopePath)).toBe(false);
-            expect(yield* consoleText()).toContain("health (stale)");
+            const exists8 = yield* fs.exists(envelopePath);
+            expect(exists8).toBe(false);
+            const consoleText9 = yield* consoleText();
+            expect(consoleText9).toContain("health (stale)");
           }),
         removeTempDirectory
       )
@@ -279,8 +285,10 @@ describe("yeet fallow advisory self-heal", () => {
               Effect.provideService(FallowFeedbackAllowedRoot, O.some(tmpDir))
             );
 
-            expect(yield* fs.exists(envelopePath)).toBe(true);
-            const index = yield* decodeQualityIssueIndex(yield* fs.readFileString(emitPath));
+            const exists10 = yield* fs.exists(envelopePath);
+            expect(exists10).toBe(true);
+            const readFileString11 = yield* fs.readFileString(emitPath);
+            const index = yield* decodeQualityIssueIndex(readFileString11);
             expect(index.issues).toHaveLength(1);
           }),
         removeTempDirectory
@@ -340,9 +348,11 @@ describe("yeet fallow advisory self-heal", () => {
               runStartedAt: RUN_STARTED_AT,
             }).pipe(Effect.provideService(FallowFeedbackAllowedRoot, O.some(tmpDir)));
 
-            expect(yield* fs.exists(envelopePath)).toBe(false);
+            const exists12 = yield* fs.exists(envelopePath);
+            expect(exists12).toBe(false);
 
-            const index = yield* decodeQualityIssueIndex(yield* fs.readFileString(emitPath));
+            const readFileString13 = yield* fs.readFileString(emitPath);
+            const index = yield* decodeQualityIssueIndex(readFileString13);
             expect(index.issues).toEqual([]);
 
             const output = yield* consoleText();
@@ -383,7 +393,8 @@ describe("yeet fallow advisory self-heal", () => {
             expect(error.exitCode).toBe(1);
             // Current-run producer output, not regenerable leftover state, so the
             // envelope survives for inspection instead of being silently purged.
-            expect(yield* fs.exists(envelopePath)).toBe(true);
+            const exists14 = yield* fs.exists(envelopePath);
+            expect(exists14).toBe(true);
           }),
         removeTempDirectory
       )
@@ -416,15 +427,19 @@ describe("yeet fallow advisory self-heal", () => {
               runStartedAt: RUN_STARTED_AT,
             }).pipe(Effect.provideService(FallowFeedbackAllowedRoot, O.some(tmpDir)), Effect.flip);
 
-            expect(yield* fs.exists(stalePath)).toBe(false);
-            expect(yield* fs.exists(freshPath)).toBe(true);
+            const exists15 = yield* fs.exists(stalePath);
+            expect(exists15).toBe(false);
+            const exists16 = yield* fs.exists(freshPath);
+            expect(exists16).toBe(true);
             expect(error.message).toContain(".beep/fallow/audit.json");
 
             // The purge note and the absent-directory index are still emitted, so no
             // downstream consumer can read a half-truth built from the stale file.
-            const index = yield* decodeQualityIssueIndex(yield* fs.readFileString(emitPath));
+            const readFileString17 = yield* fs.readFileString(emitPath);
+            const index = yield* decodeQualityIssueIndex(readFileString17);
             expect(index.issues).toEqual([]);
-            expect(yield* consoleText()).toContain("health (stale)");
+            const consoleText18 = yield* consoleText();
+            expect(consoleText18).toContain("health (stale)");
           }),
         removeTempDirectory
       )

@@ -302,7 +302,8 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
       projectionAmbiguous: false,
     });
     yield* beforeAllocate(layout);
-    return yield* finish(yield* capture(unicode.fromText(text)), layout);
+    const citationResult1 = yield* capture(unicode.fromText(text));
+    return yield* finish(citationResult1, layout);
   });
   const measureNative = Effect.fn("Citation.measureRegexNativeInput")(function* (source: typeof NativeInput.Type) {
     const byteLength = source.bytes.byteLength;
@@ -343,7 +344,8 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
     if (length > producedMaximum) return yield* safety(producedLimit);
     const layout = yield* measureNative(source);
     yield* beforeAllocate(layout);
-    return yield* finish(yield* capture(unicode.fromStorage(source)), layout);
+    const citationResult2 = yield* capture(unicode.fromStorage(source));
+    return yield* finish(citationResult2, layout);
   });
   return {
     prepareText: Effect.fn("Citation.captureRegexText")(function* <E>(

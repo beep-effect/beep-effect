@@ -29,7 +29,8 @@ const invalid = () => CitationRegexWorkerFailure.make({ reason: "invalid-frame" 
 /** @internal @category programs @since 0.0.0 */
 export const citationRegexWorkerProgram = Effect.gen(function* () {
   const stdio = yield* Stdio.Stdio;
-  const startup = yield* decodeCitationRegexStartup(yield* stdio.args);
+  const citationResult1 = yield* stdio.args;
+  const startup = yield* decodeCitationRegexStartup(citationResult1);
   const maximum = startup.limits.processMessageBytes;
   yield* preflightCitationRegexControlFrames(maximum);
   const evaluator = yield* makeCitationRegexEvaluation(startup);
@@ -49,7 +50,8 @@ export const citationRegexWorkerProgram = Effect.gen(function* () {
     maximum,
     1,
     Effect.fnUntraced(function* (body) {
-      request = O.some(yield* decodeCitationRegexJob(body));
+      const citationResult2 = yield* decodeCitationRegexJob(body);
+      request = O.some(citationResult2);
     })
   );
   const job = yield* Effect.fromOption(request).pipe(Effect.mapError(invalid));

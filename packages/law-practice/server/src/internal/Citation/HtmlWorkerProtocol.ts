@@ -212,7 +212,8 @@ export const encodeCitationHtmlJob = Effect.fn("Citation.encodeHtmlJob")(functio
     job.outputUtf16,
     maximum
   );
-  const encoded = line(yield* S.encodeEffect(JobCodec)(job).pipe(Effect.mapError(invalid)));
+  const citationResult1 = yield* S.encodeEffect(JobCodec)(job).pipe(Effect.mapError(invalid));
+  const encoded = line(citationResult1);
   if (encoded.byteLength !== count) return yield* invalid();
   return encoded;
 });
@@ -230,7 +231,8 @@ export const encodeCitationHtmlReply = Effect.fn("Citation.encodeHtmlReply")(fun
   const extra = CitationHtmlWorkerReply.guards.Success(reply)
     ? yield* citationHtmlJsonBodyBytes(reply.text, limit - fixed)
     : 0;
-  const encoded = line(yield* encodeReply(reply));
+  const citationResult2 = yield* encodeReply(reply);
+  const encoded = line(citationResult2);
   if (encoded.byteLength !== fixed + extra || encoded.byteLength > limit) return yield* invalid();
   return encoded;
 });

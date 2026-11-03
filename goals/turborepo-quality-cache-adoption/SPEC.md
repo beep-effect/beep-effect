@@ -706,3 +706,38 @@ scoped reviews. No prior result is transplanted to a different binary.
 Reverse this metadata refresh by restoring the preserved pin file and prior
 matrix while retaining the discovery/observations. No credential, runtime,
 configuration flag, dependency version, cache epoch or cohort changes here.
+
+
+### Linux permission-hash observations, 2026-11-03
+
+Keep the canary-only `hashFilePermissions` flag disabled while its qualification
+remains incomplete. A source-bound driver records 132 offline native dry runs
+on stable 2.11.10 and canary 2.11.11-canary.1 across non-Git, unstaged Git and
+staged Git fixtures. Assert regular-file executable-bit invalidation only with
+the canary flag enabled, ignored non-executable mode bits, content invalidation
+and repeatability. Omit the unsupported key entirely on stable.
+
+Record symlink inclusion, target mode and equal-content target changes as
+observations. Stable non-Git planning omits the three alias cases; alias
+relationships differ by version and Git state. Linux symlink-own-mode variation
+and Windows behavior were not proved. Output restoration, cross-worktree
+portability, real computations and hash/epoch qualification remain required.
+The feature row stays pending; no dependency, flag, cache or cohort changes.
+Reverse this evidence registration without changing runtime configuration, and
+retain the immutable observations when a later source/version is reviewed.
+
+
+### Bind native observations to captured input bytes, 2026-11-03
+
+Read pin, collector and schema bytes once, parse those bytes and record their
+digests. Reject a changed source before client selection and after observation.
+Review found that a later digest read could otherwise describe different bytes
+from those parsed. Apply the same repair to the permission availability and
+shared flag availability drivers; keep the bounded collector function unchanged.
+
+Retain the original reports and exact prior checkpoint with their published
+source head. Fresh 60, four and 132-case dry-run observations replace no historical
+results. Six controlled source changes must refuse before client selection; the
+legacy prefixes lack that refusal. No task body executes, feature/tuple is
+qualified or runtime setting changes. Reverse the driver/registration wave
+through Git while retaining both source envelopes and their observations.

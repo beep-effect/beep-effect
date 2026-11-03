@@ -285,9 +285,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
         temporaryDirectory,
         Effect.fnUntraced(function* (dir) {
           const hintPath = `${dir}/record-hint.json`;
-          assertNone(yield* readRecordStartHint(hintPath));
+          const readRecordStartHint1 = yield* readRecordStartHint(hintPath);
+          assertNone(readRecordStartHint1);
           yield* writeRecordStartHint(hintPath, 1754000000123);
-          assertSome(yield* readRecordStartHint(hintPath), 1754000000123);
+          const readRecordStartHint2 = yield* readRecordStartHint(hintPath);
+          assertSome(readRecordStartHint2, 1754000000123);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -297,12 +299,14 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
         temporaryDirectory,
         Effect.fnUntraced(function* (dir) {
           const budgetPath = `${dir}/artifact-budget.json`;
-          assertNone(yield* readArtifactBudget(budgetPath));
+          const readArtifactBudget3 = yield* readArtifactBudget(budgetPath);
+          assertNone(readArtifactBudget3);
           yield* writeArtifactBudget(budgetPath, ArtifactBudget.make({ maxTotalBytes: 4096 }));
           const budget = yield* readArtifactBudget(budgetPath);
           budget.pipe(O.isSome, assertTrue);
           assertSome(budget.pipe(O.map((value) => value.maxTotalBytes)), 4096);
-          assertNone(yield* readExtractionPlan(`${dir}/extraction-plan.json`));
+          const readExtractionPlan4 = yield* readExtractionPlan(`${dir}/extraction-plan.json`);
+          assertNone(readExtractionPlan4);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -313,9 +317,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
         Effect.fnUntraced(function* (dir) {
           const fs = yield* FileSystem.FileSystem;
           const videoDir = `${dir}/video`;
-          assertNone(yield* discoverRecordedVideo(videoDir));
+          const discoverRecordedVideo5 = yield* discoverRecordedVideo(videoDir);
+          assertNone(discoverRecordedVideo5);
           yield* fs.makeDirectory(videoDir, { recursive: true });
-          assertNone(yield* discoverRecordedVideo(videoDir));
+          const discoverRecordedVideo6 = yield* discoverRecordedVideo(videoDir);
+          assertNone(discoverRecordedVideo6);
           yield* fs.writeFileString(`${videoDir}/notes.txt`, "ignore me");
           yield* fs.writeFileString(`${videoDir}/capture.mkv`, "not really a container");
           const found = yield* discoverRecordedVideo(videoDir);
@@ -342,7 +348,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
       Effect.flatMap(
         temporaryDirectory,
         Effect.fnUntraced(function* (dir) {
-          assertNone(yield* readLegacyManifest(`${dir}/manifest.json`));
+          const readLegacyManifest7 = yield* readLegacyManifest(`${dir}/manifest.json`);
+          assertNone(readLegacyManifest7);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -353,12 +360,10 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
         Effect.fnUntraced(function* (dir) {
           const fs = yield* FileSystem.FileSystem;
           const manifestPath = `${dir}/manifest.json`;
-          yield* fs.writeFileString(
-            manifestPath,
-            yield* encodeJson({
-              scenarios: [{ assertions: [], name: "dock drag", notes: ["watch the sash"], screenshots: [] }],
-            })
-          );
+          const encodedJson = yield* encodeJson({
+            scenarios: [{ assertions: [], name: "dock drag", notes: ["watch the sash"], screenshots: [] }],
+          });
+          yield* fs.writeFileString(manifestPath, encodedJson);
           const legacy = yield* readLegacyManifest(manifestPath);
           legacy.pipe(O.isSome, assertTrue);
         })
@@ -373,22 +378,20 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
         Effect.fnUntraced(function* (dir) {
           const fs = yield* FileSystem.FileSystem;
           const manifestPath = `${dir}/manifest.json`;
-          yield* fs.writeFileString(
-            manifestPath,
-            yield* encodeJson({
-              scenarios: [
-                {
-                  assertions: [
-                    { detail: "sash never moved", name: "sash moves", ok: false },
-                    { name: "no smear", ok: true },
-                  ],
-                  name: "drag",
-                  notes: ["watch the ghost"],
-                  screenshots: [],
-                },
-              ],
-            })
-          );
+          const encodedJson8 = yield* encodeJson({
+            scenarios: [
+              {
+                assertions: [
+                  { detail: "sash never moved", name: "sash moves", ok: false },
+                  { name: "no smear", ok: true },
+                ],
+                name: "drag",
+                notes: ["watch the ghost"],
+                screenshots: [],
+              },
+            ],
+          });
+          yield* fs.writeFileString(manifestPath, encodedJson8);
           const legacy = yield* readLegacyManifest(manifestPath);
           const timeline = renderTimeline(
             RenderTimelineOptions.make({
@@ -839,8 +842,10 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
             );
             expect(outcome.artifacts).toEqual([]);
             expect(outcome.failures).toEqual([]);
-            expect(yield* fs.exists(path.join(layout.root, "extraction-plan.json"))).toBe(true);
-            expect(yield* fs.exists(path.join(layout.videoDir, "normalized.mp4"))).toBe(false);
+            const exists9 = yield* fs.exists(path.join(layout.root, "extraction-plan.json"));
+            expect(exists9).toBe(true);
+            const exists10 = yield* fs.exists(path.join(layout.videoDir, "normalized.mp4"));
+            expect(exists10).toBe(false);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
       );

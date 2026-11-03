@@ -21,7 +21,8 @@ const setup = Effect.fn("RegexProgramTest.setup")(function* () {
   const compiler = yield* makeCitationRegexProgram(limits);
   const alphabet = yield* makeCitationRegexAlphabet(limits);
   const compile = Effect.fn("RegexProgramTest.compile")(function* (text: string, flags = 0) {
-    return yield* compiler.compile((yield* input.prepareText(text, () => Effect.void)).value.storage, flags);
+    const citationResult1 = yield* input.prepareText(text, () => Effect.void);
+    return yield* compiler.compile(citationResult1.value.storage, flags);
   });
   return { limits, input, source, compiler, alphabet, compile };
 });
@@ -44,10 +45,8 @@ it.effect("preserves names and source profiles while lowering dot and final-LF a
       "close",
       "end",
     ]);
-    const encoded = yield* alphabet.prepare(
-      program.sets,
-      (yield* source.prepareText("İD\r", () => Effect.void)).value.storage
-    );
+    const citationResult2 = yield* source.prepareText("İD\r", () => Effect.void);
+    const encoded = yield* alphabet.prepare(program.sets, citationResult2.value.storage);
     const rendered = yield* compiler.render(program, encoded);
     expect(Str.startsWith("^(?<identifier>")(rendered)).toBe(true);
     expect(Str.endsWith(`(?=${A.getUnsafe(encoded.atoms, 3)}?(?![\\s\\S]))`)(rendered)).toBe(true);
@@ -65,8 +64,12 @@ it.effect("interns exact frozen categories and category complements inside and o
     expect(A.length(A.filter(program.sets.intervals, (row) => row.atom === 0))).toBe(62);
     expect(A.length(A.filter(program.sets.intervals, (row) => row.atom === 1))).toBe(10);
     expect(A.length(A.filter(program.sets.intervals, (row) => row.atom === 2))).toBe(734);
-    expect((yield* compile("\\w", 2)).sets).toEqual((yield* compile("\\w", 0)).sets);
-    expect((yield* compile(`[${Str.repeat(256)("\\w")}]`)).sets).toEqual((yield* compile("\\w")).sets);
+    const citationResult3 = yield* compile("\\w", 2);
+    const citationResult4 = yield* compile("\\w", 0);
+    expect(citationResult3.sets).toEqual(citationResult4.sets);
+    const citationResult5 = yield* compile(`[${Str.repeat(256)("\\w")}]`);
+    const citationResult6 = yield* compile("\\w");
+    expect(citationResult5.sets).toEqual(citationResult6.sets);
   })
 );
 
@@ -93,7 +96,8 @@ it.effect("reports nullable alternatives and repeated captures without granting 
     const nullable = yield* compile("(?:x?)*");
     expect(nullable.nullableMultiRepeat).toBe(true);
     expect(nullable.minimumWidthFloor).toBe(0);
-    expect((yield* compile("a+?")).tokens[1]?.lazy).toBe(true);
+    const citationResult7 = yield* compile("a+?");
+    expect(citationResult7.tokens[1]?.lazy).toBe(true);
   })
 );
 
@@ -150,12 +154,18 @@ it.effect("rejects unsupported or invalid source syntax and preserves literal un
       "(?=x)",
       "\\U00110000",
       "[\\d-z]",
-    ])
-      expect(yield* compile(pattern).pipe(Effect.flip)).toMatchObject({ reason: "unsupported-syntax" });
-    expect(yield* compile("é", 2).pipe(Effect.flip)).toMatchObject({ reason: "unsupported-syntax" });
-    expect((yield* compile("ch\\[.,]")).minimumWidthFloor).toBe(6);
-    expect((yield* compile("a{broken]")).minimumWidthFloor).toBe(9);
-    expect((yield* compile("\\A[a-]\\Z")).minimumWidthFloor).toBe(1);
+    ]) {
+      const citationResult20 = yield* compile(pattern).pipe(Effect.flip);
+      expect(citationResult20).toMatchObject({ reason: "unsupported-syntax" });
+    }
+    const citationResult8 = yield* compile("é", 2).pipe(Effect.flip);
+    expect(citationResult8).toMatchObject({ reason: "unsupported-syntax" });
+    const citationResult9 = yield* compile("ch\\[.,]");
+    expect(citationResult9.minimumWidthFloor).toBe(6);
+    const citationResult10 = yield* compile("a{broken]");
+    expect(citationResult10.minimumWidthFloor).toBe(9);
+    const citationResult11 = yield* compile("\\A[a-]\\Z");
+    expect(citationResult11.minimumWidthFloor).toBe(1);
   })
 );
 
@@ -163,15 +173,17 @@ it.effect("charges pattern source, interval expansion and final rendering indepe
   Effect.gen(function* () {
     const { limits, input, alphabet } = yield* setup();
     const compiler = yield* makeCitationRegexProgram({ ...limits, patternUtf16: 2 });
-    expect(
-      yield* compiler.compile((yield* input.prepareText("abc", () => Effect.void)).value.storage, 0).pipe(Effect.flip)
-    ).toMatchObject({ limit: "patternUtf16" });
-    expect(
-      yield* compiler.compile((yield* input.prepareText("\\w", () => Effect.void)).value.storage, 0).pipe(Effect.flip)
-    ).toMatchObject({ limit: "patternUtf16" });
-    const program = yield* compiler.compile((yield* input.prepareText("x", () => Effect.void)).value.storage, 0);
+    const citationResult12 = yield* input.prepareText("abc", () => Effect.void);
+    const citationResult13 = yield* compiler.compile(citationResult12.value.storage, 0).pipe(Effect.flip);
+    expect(citationResult13).toMatchObject({ limit: "patternUtf16" });
+    const citationResult14 = yield* input.prepareText("\\w", () => Effect.void);
+    const citationResult15 = yield* compiler.compile(citationResult14.value.storage, 0).pipe(Effect.flip);
+    expect(citationResult15).toMatchObject({ limit: "patternUtf16" });
+    const citationResult16 = yield* input.prepareText("x", () => Effect.void);
+    const program = yield* compiler.compile(citationResult16.value.storage, 0);
     const encoded = yield* alphabet.prepare(program.sets, { width: 1, bytes: new Uint8Array(0) });
-    expect(yield* compiler.render(program, encoded).pipe(Effect.flip)).toMatchObject({ limit: "patternUtf16" });
+    const citationResult17 = yield* compiler.render(program, encoded).pipe(Effect.flip);
+    expect(citationResult17).toMatchObject({ limit: "patternUtf16" });
   })
 );
 
@@ -181,7 +193,8 @@ it.effect("binds rendering to the original complete atom descriptor", () =>
     const left = yield* compile("x");
     const right = yield* compile("y");
     const encoded = yield* alphabet.prepare(right.sets, { width: 1, bytes: new Uint8Array(0) });
-    expect(yield* compiler.render(left, encoded).pipe(Effect.flip)).toMatchObject({ reason: "unsupported-syntax" });
+    const citationResult18 = yield* compiler.render(left, encoded).pipe(Effect.flip);
+    expect(citationResult18).toMatchObject({ reason: "unsupported-syntax" });
   })
 );
 
@@ -199,8 +212,10 @@ it.effect("owns malformed grammar, capture bindings and LF predicates in its str
         tokens: A.map(program.tokens, (token) => (token.kind === "open" ? { ...token, name: "invalid>name" } : token)),
       },
     ];
-    for (const value of invalid)
-      expect(yield* S.decodeEffect(CitationRegexProgram)(value).pipe(Effect.flip)).toBeDefined();
+    for (const value of invalid) {
+      const citationResult21 = yield* S.decodeEffect(CitationRegexProgram)(value).pipe(Effect.flip);
+      expect(citationResult21).toBeDefined();
+    }
   })
 );
 
@@ -216,8 +231,9 @@ it.effect("captures the compiler Clock and equal-deadline operation priority", (
       operationDeadline: Duration.millis(10),
     }).pipe(Effect.provideService(Clock.Clock, immediate));
     const source = (yield* input.prepareText("abc", () => Effect.void)).value.storage;
-    expect(
-      yield* compiler.compile(source, 0).pipe(Effect.provideService(Clock.Clock, disabled), Effect.flip)
-    ).toMatchObject({ operation: "extract", limit: "operationDeadline" });
+    const citationResult19 = yield* compiler
+      .compile(source, 0)
+      .pipe(Effect.provideService(Clock.Clock, disabled), Effect.flip);
+    expect(citationResult19).toMatchObject({ operation: "extract", limit: "operationDeadline" });
   })
 );

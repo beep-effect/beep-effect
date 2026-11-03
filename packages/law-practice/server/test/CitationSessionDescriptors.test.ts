@@ -57,17 +57,23 @@ const Corpus = S.fromJsonString(
   })
 );
 const load = Effect.fn("CanonicalDescriptorsTest.load")(function* (file: string, digest: string) {
-  const text = yield* (yield* FileSystem.FileSystem).readFileString(
+  const citationResult1 = yield* FileSystem.FileSystem;
+  const text = yield* citationResult1.readFileString(
     NodeURL.fileURLToPath(new URL(`../../use-cases/test/fixtures/eyecite/${file}`, import.meta.url))
   );
-  expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(text))).toBe(digest);
+  const citationResult2 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(text));
+  expect(citationResult2).toBe(digest);
   return (yield* S.decodeEffect(Corpus)(text)).cases;
 });
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("default registered session descriptors", (it) => {
   it.effect("carries source-controlled null-page identities through dispatch and sealed projection", () =>
     Effect.gen(function* () {
+      const citationResult3 = yield* load(
+        "case-resource-hashes.json",
+        "b468cd539a9adc728c719ab01c941789d8cae2878c1bcb014e56999b7af462c4"
+      );
       const rows = A.filter(
-        yield* load("case-resource-hashes.json", "b468cd539a9adc728c719ab01c941789d8cae2878c1bcb014e56999b7af462c4"),
+        citationResult3,
         (row) =>
           row.name === "null-page" ||
           row.name === "null-page-same-identity" ||
@@ -91,7 +97,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("default registered 
           CitationMention.make({ ...mention, citation: A.getUnsafe(rows, i).input.citation })
         ),
       });
-      const frozen = yield* makeCitationFrozenEditions((yield* loadCitationFrozenEditionFixtures()).bundle);
+      const citationResult4 = yield* loadCitationFrozenEditionFixtures();
+      const frozen = yield* makeCitationFrozenEditions(citationResult4.bundle);
       let builds = 0;
       let reads = 0;
       const identities = CitationMissingPageIdentityFactory.of({
@@ -133,7 +140,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("default registered 
           const alias = yield* owner.canonicalResource(
             CitationGroupMember.cases.Mention.make({ mentionId: mention.id })
           );
-          expect(yield* owner.uniqueResourceCount([resource, alias])).toBe(1);
+          const citationResult5 = yield* owner.uniqueResourceCount([resource, alias]);
+          expect(citationResult5).toBe(1);
           return resource;
         }),
       });
@@ -160,20 +168,20 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("default registered 
         Effect.fnUntraced(function* ([decision, i]) {
           const descriptor = yield* descriptors.describe(decision.resource);
           if (descriptor._tag !== "External") return yield* Effect.die("expected canonical descriptor");
-          expect(descriptor.key).toBe(
-            yield* S.decodeEffect(Sha256HexFromBytes)(
-              new TextEncoder().encode(
-                `["eyecite-resource-current-hash/v1","${A.getUnsafe(rows, i).expected.resourceHash}"]`
-              )
+          const citationResult6 = yield* S.decodeEffect(Sha256HexFromBytes)(
+            new TextEncoder().encode(
+              `["eyecite-resource-current-hash/v1","${A.getUnsafe(rows, i).expected.resourceHash}"]`
             )
           );
+          expect(descriptor.key).toBe(citationResult6);
         }),
         { concurrency: 1, discard: true }
       );
       const projector = yield* makeCitationSessionDocumentProjector().pipe(
         Effect.provideService(CitationSessionResourceDescriptors, descriptors)
       );
-      expect((yield* projector.project(state)).document.groups).toHaveLength(2);
+      const citationResult7 = yield* projector.project(state);
+      expect(citationResult7.document.groups).toHaveLength(2);
       expect(reads).toBe(4);
     })
   );
@@ -192,7 +200,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("default registered 
         ...A.filter(publications, (row) => row.name === "law" || row.name === "journal"),
       ];
       expect(rows).toHaveLength(5);
-      const frozen = yield* makeCitationFrozenEditions((yield* loadCitationFrozenEditionFixtures()).bundle);
+      const citationResult8 = yield* loadCitationFrozenEditionFixtures();
+      const frozen = yield* makeCitationFrozenEditions(citationResult8.bundle);
       const factory = yield* makeCitationCallbackRuntimeIndexFactory().pipe(
         Effect.provideService(CitationFrozenEditions, frozen)
       );
@@ -249,7 +258,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("default registered 
                     ...wire,
                     components: { ...wire.components, page: null },
                   });
-                  unusedNull = yield* owner.canonicalResource(yield* owner.registerDetached(citation));
+                  const citationResult9 = yield* owner.registerDetached(citation);
+                  unusedNull = yield* owner.canonicalResource(citationResult9);
                 }
                 return result;
               },
@@ -272,13 +282,15 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("default registered 
           );
           expect(descriptor.scope, row.name).toBe(scope);
           expect(descriptor.key, row.name).toBe(expectedKey);
-          expect(yield* descriptors.describe(alias), row.name).toEqual(descriptor);
+          const citationResult10 = yield* descriptors.describe(alias);
+          expect(citationResult10, row.name).toEqual(descriptor);
           if (row.name === "page-1")
             expect((yield* Effect.flip(descriptors.describe(unusedNull))).reason).toBe("identity-failed");
           const projector = yield* makeCitationSessionDocumentProjector().pipe(
             Effect.provideService(CitationSessionResourceDescriptors, descriptors)
           );
-          expect((yield* projector.project(state)).document.groups).toHaveLength(1);
+          const citationResult11 = yield* projector.project(state);
+          expect(citationResult11.document.groups).toHaveLength(1);
         }),
         { concurrency: 1, discard: true }
       );

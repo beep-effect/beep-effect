@@ -17,7 +17,8 @@ it.layer(BunServices.layer)("Version", (it) => {
   it.effect("reads the docgen package version from its manifest", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const manifest = yield* decodeManifestVersion(yield* fs.readFileString("package.json"));
+      const readFileString1 = yield* fs.readFileString("package.json");
+      const manifest = yield* decodeManifestVersion(readFileString1);
       const version = yield* Version.readModuleVersion();
       expect(version).toBe(manifest.version);
       expect(version).toMatch(/^\d+\.\d+\.\d+/);
@@ -76,14 +77,16 @@ it.layer(BunServices.layer)("Version.readManifestVersion", (it) => {
   const readFrom = Effect.fn("VersionTest.readFrom")(function* (text: string) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const file = path.join(yield* fs.makeTempDirectoryScoped(), "package.json");
+    const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped();
+    const file = path.join(madeTempDirectoryScoped, "package.json");
     yield* fs.writeFileString(file, text);
     return yield* Version.readManifestVersion(file);
   });
 
   it.effect("reads the version of a manifest without other fields", () =>
     Effect.gen(function* () {
-      expect(yield* readFrom('{"version":"1.2.3"}')).toBe("1.2.3");
+      const readFrom2 = yield* readFrom('{"version":"1.2.3"}');
+      expect(readFrom2).toBe("1.2.3");
     })
   );
 

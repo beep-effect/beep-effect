@@ -92,8 +92,10 @@ describe("compat session updates", () => {
         sessionId: "session-1",
         update: { sessionUpdate: "plan", entries: [{ content: "step", priority: "high", status: "pending" }] },
       } as const;
-      assert.deepStrictEqual(yield* normalizeWireUpdate(1, plan), plan.update);
-      assert.deepStrictEqual(yield* normalizeWireUpdate(2, plan), {
+      const normalizeWireUpdate1 = yield* normalizeWireUpdate(1, plan);
+      assert.deepStrictEqual(normalizeWireUpdate1, plan.update);
+      const normalizeWireUpdate2 = yield* normalizeWireUpdate(2, plan);
+      assert.deepStrictEqual(normalizeWireUpdate2, {
         sessionUpdate: "_acp_unknown",
         originalSessionUpdate: "plan",
         raw: plan.update,
@@ -136,7 +138,8 @@ describe("compat session updates", () => {
   it.effect("accepts a generation-1 message chunk without a messageId", () =>
     Effect.gen(function* () {
       const update = { sessionUpdate: "agent_message_chunk", content: { type: "text", text: "hi" } } as const;
-      assert.deepStrictEqual(yield* normalizeWireUpdate(1, { sessionId: "session-1", update }), update);
+      const normalizeWireUpdate3 = yield* normalizeWireUpdate(1, { sessionId: "session-1", update });
+      assert.deepStrictEqual(normalizeWireUpdate3, update);
     })
   );
 
@@ -214,15 +217,12 @@ describe("compat session updates", () => {
           },
         ],
       });
-      assertNone(
-        Normalize.normalizeConfigOption(
-          yield* decodeV2ConfigOption({
-            configId: "dial",
-            name: "Dial",
-            type: "slider",
-          })
-        )
-      );
+      const decodedV2ConfigOption = yield* decodeV2ConfigOption({
+        configId: "dial",
+        name: "Dial",
+        type: "slider",
+      });
+      assertNone(Normalize.normalizeConfigOption(decodedV2ConfigOption));
     })
   );
 
@@ -319,7 +319,8 @@ describe("compat session updates", () => {
         [{ stopReason: 7 }, { stopReason: "end_turn" }],
       ] as const;
       for (const [wire, expected] of cases) {
-        assert.deepStrictEqual(Normalize.normalizePromptResponse(yield* decodePromptResult(wire)), expected);
+        const decodedPromptResult = yield* decodePromptResult(wire);
+        assert.deepStrictEqual(Normalize.normalizePromptResponse(decodedPromptResult), expected);
       }
     })
   );
@@ -463,15 +464,14 @@ describe("compat session setup", () => {
         modes: { currentModeId: "code", availableModes: [{ id: "code", name: "Code" }] },
       });
       assert.deepStrictEqual(Normalize.normalizeNewSessionResponse(legacy), legacy);
-      assert.deepStrictEqual(
-        Normalize.normalizeNewSessionResponse(
-          yield* decodeV2NewSessionResponse({
-            sessionId: "session-2",
-            configOptions: [{ configId: "plan", name: "Plan", type: "boolean", currentValue: false }],
-          })
-        ),
-        { sessionId: "session-2", configOptions: [{ id: "plan", name: "Plan", type: "boolean", currentValue: false }] }
-      );
+      const decodedV2NewSessionResponse = yield* decodeV2NewSessionResponse({
+        sessionId: "session-2",
+        configOptions: [{ configId: "plan", name: "Plan", type: "boolean", currentValue: false }],
+      });
+      assert.deepStrictEqual(Normalize.normalizeNewSessionResponse(decodedV2NewSessionResponse), {
+        sessionId: "session-2",
+        configOptions: [{ id: "plan", name: "Plan", type: "boolean", currentValue: false }],
+      });
       assert.deepStrictEqual(
         Normalize.normalizeSetSessionConfigOptionResponse({
           configOptions: [{ configId: "plan", name: "Plan", type: "boolean", currentValue: false }],
@@ -570,7 +570,8 @@ describe("compat peer requests", () => {
         message: "Continue?",
         requestedSchema: { type: "object", properties: { choice: { type: "string" } }, required: ["choice"] },
       };
-      assert.deepStrictEqual(yield* Normalize.decodeElicitationRequest(form), form);
+      const decodedElicitationRequest = yield* Normalize.decodeElicitationRequest(form);
+      assert.deepStrictEqual(decodedElicitationRequest, form);
       const malformed = yield* Normalize.decodeElicitationRequest({ mode: "form" }).pipe(Effect.flip);
       assert.strictEqual(malformed._tag, "SchemaError");
 

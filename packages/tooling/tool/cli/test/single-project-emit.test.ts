@@ -5,11 +5,15 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import type { PlatformError } from "effect/PlatformError";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 // A package's build may write only its own package directory. `tsc -b` is a
 // subgraph builder: it rebuilds every project in the tsconfig reference
@@ -184,7 +188,9 @@ const deletesOwnEmit = (script: string): boolean => Str.includes("rm -rf dist")(
 const violatesSingleProjectEmit = (script: string): boolean => usesSubgraphBuilder(script) || deletesOwnEmit(script);
 
 const emitScriptsOf = (raw: string): ReadonlyArray<string> => {
-  const parsed = JSON.parse(raw) as { readonly scripts?: Readonly<Record<string, string>> };
+  const parsed = Result.getOrThrowWith(S.decodeResult(UnknownJson)(raw), identity) as {
+    readonly scripts?: Readonly<Record<string, string>>;
+  };
   return A.getSomes([O.fromNullishOr(parsed.scripts?.["beep:build"]), O.fromNullishOr(parsed.scripts?.["beep:check"])]);
 };
 

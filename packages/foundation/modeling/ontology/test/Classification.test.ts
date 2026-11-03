@@ -20,6 +20,15 @@ import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+class ClassificationTestOperationError extends S.TaggedError<
+  ClassificationTestOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "ClassificationTestOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in Classification.test.ts." }
+) {}
+
 const manifest = "test/fixtures/classification/manifest.jsonl";
 const vendor = "test/fixtures/classification";
 const ipcPin = ClassificationPin.make({ kind: "ipc", edition: "2026.01" });
@@ -55,7 +64,10 @@ const fixtureLayer = Layer.effect(
         `${vendor}/cpc/cpc-scheme-range.xml`,
       ],
       Effect.fnUntraced(function* (file) {
-        const content = yield* Effect.tryPromise(() => Bun.file(file).text()).pipe(Effect.orDie);
+        const content = yield* Effect.tryPromise({
+          try: () => Bun.file(file).text(),
+          catch: (cause) => ClassificationTestOperationError.make({ cause }),
+        }).pipe(Effect.orDie);
         yield* fs.writeFileString(file, content);
       })
     );
@@ -74,17 +86,14 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
         expect(snapshot.concepts).toHaveLength(5);
         const concept = yield* registry.resolve(snapshot, ipcPin, "A01B1/02");
         expect(concept.prefLabel).toBe("Synthetic narrow IPC tool");
-        expect(A.map(yield* registry.broader(snapshot, ipcPin, concept.notation), (value) => value.notation)).toEqual([
-          "A01B1/00",
-          "A01B",
-          "A01",
-          "A",
-        ]);
-        expect(A.map(yield* registry.narrower(snapshot, ipcPin, "A01B1/00"), (value) => value.notation)).toEqual([
-          "A01B1/02",
-        ]);
-        expect(yield* registry.broader(snapshot, ipcPin, "A")).toEqual([]);
-        expect(yield* registry.narrower(snapshot, ipcPin, "A01B1/02")).toEqual([]);
+        const broader1 = yield* registry.broader(snapshot, ipcPin, concept.notation);
+        expect(A.map(broader1, (value) => value.notation)).toEqual(["A01B1/00", "A01B", "A01", "A"]);
+        const narrower2 = yield* registry.narrower(snapshot, ipcPin, "A01B1/00");
+        expect(A.map(narrower2, (value) => value.notation)).toEqual(["A01B1/02"]);
+        const broader3 = yield* registry.broader(snapshot, ipcPin, "A");
+        expect(broader3).toEqual([]);
+        const narrower4 = yield* registry.narrower(snapshot, ipcPin, "A01B1/02");
+        expect(narrower4).toEqual([]);
       })
     );
 
@@ -102,12 +111,8 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
         expect((yield* registry.resolve(ipc, ipcPin, "Y02A10/00").pipe(Effect.flip)).reason).toBe("symbol-not-found");
         expect((yield* registry.resolve(cpc, ipcPin, "A01B1/02").pipe(Effect.flip)).reason).toBe("scheme-mismatch");
         expect(A.every(cpc.concepts, (concept) => !Str.includes("Forbidden")(concept.prefLabel))).toBe(true);
-        expect(A.map(yield* registry.broader(cpc, cpcPin, "A01B1/02"), (value) => value.notation)).toEqual([
-          "A01B1/00",
-          "A01B",
-          "A01",
-          "A",
-        ]);
+        const broader5 = yield* registry.broader(cpc, cpcPin, "A01B1/02");
+        expect(A.map(broader5, (value) => value.notation)).toEqual(["A01B1/00", "A01B", "A01", "A"]);
       })
     );
 
@@ -119,8 +124,10 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
         expect(snapshot.concepts).toHaveLength(4);
         expect((yield* registry.resolve(snapshot, nicePin, "010001")).prefLabel).toBe("Synthetic goods term");
         expect((yield* registry.resolve(snapshot, nicePin, "350001")).prefLabel).toBe("Synthetic service term");
-        expect(A.map(yield* registry.broader(snapshot, nicePin, "350001"), (value) => value.notation)).toEqual(["35"]);
-        expect(A.map(yield* registry.narrower(snapshot, nicePin, "1"), (value) => value.notation)).toEqual(["010001"]);
+        const broader6 = yield* registry.broader(snapshot, nicePin, "350001");
+        expect(A.map(broader6, (value) => value.notation)).toEqual(["35"]);
+        const narrower7 = yield* registry.narrower(snapshot, nicePin, "1");
+        expect(A.map(narrower7, (value) => value.notation)).toEqual(["010001"]);
         expect(A.every(snapshot.concepts, (concept) => Str.startsWith($BeepId.iri)(concept.iri))).toBe(true);
       })
     );
@@ -593,11 +600,10 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
       Effect.fnUntraced(function* () {
         const registry = yield* ClassificationRegistry;
         const snapshot = yield* registry.load(manifest, vendor, cpcPin);
-        expect(A.map(yield* registry.broader(snapshot, cpcPin, "A22B"), (concept) => concept.notation)).toEqual([
-          "A22",
-          "A",
-        ]);
-        expect(A.map(yield* registry.broader(snapshot, cpcPin, "A22"), (concept) => concept.notation)).toEqual(["A"]);
+        const broader8 = yield* registry.broader(snapshot, cpcPin, "A22B");
+        expect(A.map(broader8, (concept) => concept.notation)).toEqual(["A22", "A"]);
+        const broader9 = yield* registry.broader(snapshot, cpcPin, "A22");
+        expect(A.map(broader9, (concept) => concept.notation)).toEqual(["A"]);
       })
     );
   }

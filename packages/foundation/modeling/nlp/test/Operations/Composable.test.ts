@@ -50,8 +50,10 @@ describe("Functor laws", () => {
       const dataFirst = Composable.map(len, { f: (n) => n + 1, outputSchema: S.Finite });
       const dataLast = pipe(len, Composable.map({ f: (n) => n * 2, outputSchema: S.Finite }));
 
-      expect(yield* dataFirst.run("abc")).toBe(4);
-      expect(yield* dataLast.run("abc")).toBe(6);
+      const result = yield* dataFirst.run("abc");
+      expect(result).toBe(4);
+      const result1 = yield* dataLast.run("abc");
+      expect(result1).toBe(6);
     })
   );
 });
@@ -110,8 +112,10 @@ describe("Applicative", () => {
       const dataFirst = Composable.product(lenA, { that: lenB, outputSchema });
       const dataLast = pipe(lenA, Composable.product({ that: lenB, outputSchema }));
 
-      expect(yield* dataFirst.run("abc")).toEqual([3, 30]);
-      expect(yield* dataLast.run("abc")).toEqual([3, 30]);
+      const result2 = yield* dataFirst.run("abc");
+      expect(result2).toEqual([3, 30]);
+      const result3 = yield* dataLast.run("abc");
+      expect(result3).toEqual([3, 30]);
     })
   );
 
@@ -121,7 +125,8 @@ describe("Applicative", () => {
       const lenA = Composable.makeOperation("lenA", S.String, S.Finite, (s) => Effect.succeed(s.length));
       const lenB = Composable.makeOperation("lenB", S.String, S.Finite, (s) => Effect.succeed(s.length * 10));
       const summed = lenA.zipWith(lenB, (a, b) => a + b, S.Finite);
-      expect(yield* summed.run("abc")).toBe(33);
+      const result4 = yield* summed.run("abc");
+      expect(result4).toBe(33);
     })
   );
 
@@ -134,8 +139,10 @@ describe("Applicative", () => {
       const dataFirst = Composable.zipWith(lenA, { that: lenB, f: (a, b) => a + b, resultSchema: S.Finite });
       const dataLast = pipe(lenA, Composable.zipWith({ that: lenB, f: (a, b) => a + b, resultSchema: S.Finite }));
 
-      expect(yield* dataFirst.run("abc")).toBe(33);
-      expect(yield* dataLast.run("abc")).toBe(33);
+      const result5 = yield* dataFirst.run("abc");
+      expect(result5).toBe(33);
+      const result6 = yield* dataLast.run("abc");
+      expect(result6).toBe(33);
     })
   );
 });
@@ -145,7 +152,8 @@ describe("compose + traverse + aggregate", () => {
     "compose threads output into the next operation's input",
     Effect.fnUntraced(function* () {
       const pipeline = Composable.compose(len, inc);
-      expect(yield* pipeline.run("hello")).toBe(6);
+      const result7 = yield* pipeline.run("hello");
+      expect(result7).toBe(6);
     })
   );
 
@@ -153,7 +161,8 @@ describe("compose + traverse + aggregate", () => {
     "compose supports pipe-friendly data-last usage",
     Effect.fnUntraced(function* () {
       const pipeline = pipe(len, Composable.compose(inc));
-      expect(yield* pipeline.run("hello")).toBe(6);
+      const result8 = yield* pipeline.run("hello");
+      expect(result8).toBe(6);
     })
   );
 
@@ -178,7 +187,10 @@ describe("Generated operation laws", () => {
     ([value]) =>
       Effect.gen(function* () {
         for (const input of ["", value]) {
-          expect(yield* len.map((n) => n, S.Finite).run(input)).toBe(yield* len.run(input));
+          const result9 = yield* len.map((n) => n, S.Finite).run(input);
+          const expectation = expect(result9);
+          const result13 = yield* len.run(input);
+          expectation.toBe(result13);
         }
       }),
     { arbitrary: fcRuns(100) }
@@ -206,8 +218,14 @@ describe("Generated operation laws", () => {
     ([value]) =>
       Effect.gen(function* () {
         for (const input of ["", value]) {
-          expect(yield* Composable.identity(S.String).flatMap(len).run(input)).toBe(yield* len.run(input));
-          expect(yield* len.flatMap(inc).run(input)).toBe(yield* inc.run(Str.length(input)));
+          const result10 = yield* Composable.identity(S.String).flatMap(len).run(input);
+          const expectation1 = expect(result10);
+          const result14 = yield* len.run(input);
+          expectation1.toBe(result14);
+          const result11 = yield* len.flatMap(inc).run(input);
+          const expectation2 = expect(result11);
+          const result15 = yield* inc.run(Str.length(input));
+          expectation2.toBe(result15);
         }
       }),
     { arbitrary: fcRuns(100) }
@@ -220,7 +238,10 @@ describe("Generated operation laws", () => {
       Effect.gen(function* () {
         const idOp = Composable.identity(S.Finite);
         for (const input of ["", value]) {
-          expect(yield* len.flatMap(idOp).run(input)).toBe(yield* len.run(input));
+          const result12 = yield* len.flatMap(idOp).run(input);
+          const expectation3 = expect(result12);
+          const result16 = yield* len.run(input);
+          expectation3.toBe(result16);
         }
       }),
     { arbitrary: fcRuns(100) }
@@ -246,7 +267,8 @@ describe("Generated operation laws", () => {
     ([values]) =>
       Effect.gen(function* () {
         for (const inputs of [[], [""], values]) {
-          expect(yield* Composable.traverse(len)(inputs)).toEqual(A.map(inputs, Str.length));
+          const value13 = yield* Composable.traverse(len)(inputs);
+          expect(value13).toEqual(A.map(inputs, Str.length));
         }
       }),
     { arbitrary: fcRuns(100) }

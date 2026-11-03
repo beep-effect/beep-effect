@@ -49,7 +49,8 @@ describe("GitHubClient coverage", () => {
     it.effect("test layer defaults to no rate-limit snapshot", () =>
       Effect.gen(function* () {
         const client = yield* GitHubClient;
-        assertNone(yield* client.rateLimit);
+        const rateLimit1 = yield* client.rateLimit;
+        assertNone(rateLimit1);
       })
     );
   });
@@ -79,15 +80,20 @@ describe("GitHubClient coverage", () => {
     it.effect("test layer preserves all provided members", () =>
       Effect.gen(function* () {
         const client = yield* GitHubClient;
-        assert.strictEqual(yield* Effect.flip(client.request("DELETE /repos/{owner}/{repo}", params)), denied);
-        assert.strictEqual(yield* client.requestDecoded("GET /probe", {}, S.String), "decoded");
-        assert.deepStrictEqual(yield* client.paginate("GET /repos/{owner}/{repo}/commits", params), []);
-        assert.deepStrictEqual(
-          yield* Stream.runCollect(client.paginateStream("GET /repos/{owner}/{repo}/commits", params)),
-          []
+        const flip2 = yield* Effect.flip(client.request("DELETE /repos/{owner}/{repo}", params));
+        assert.strictEqual(flip2, denied);
+        const requestDecoded3 = yield* client.requestDecoded("GET /probe", {}, S.String);
+        assert.strictEqual(requestDecoded3, "decoded");
+        const paginate4 = yield* client.paginate("GET /repos/{owner}/{repo}/commits", params);
+        assert.deepStrictEqual(paginate4, []);
+        const resultCollect = yield* Stream.runCollect(
+          client.paginateStream("GET /repos/{owner}/{repo}/commits", params)
         );
-        assert.strictEqual(yield* client.graphql(doc, {}), "graphql");
-        assertSome(yield* client.rateLimit, snapshot);
+        assert.deepStrictEqual(resultCollect, []);
+        const graphql5 = yield* client.graphql(doc, {});
+        assert.strictEqual(graphql5, "graphql");
+        const rateLimit6 = yield* client.rateLimit;
+        assertSome(rateLimit6, snapshot);
       })
     );
   });
@@ -120,7 +126,8 @@ describe("GitHubClient remaining fixture paths", () => {
     Effect.gen(function* () {
       const script = scriptedFetch([{ status: 200, body: "ok" }]);
       const client = yield* makeClientShape({ fetch: script.fetch });
-      assert.strictEqual(yield* client.requestDecoded("GET /probe", {}, S.String), "ok");
+      const requestDecoded7 = yield* client.requestDecoded("GET /probe", {}, S.String);
+      assert.strictEqual(requestDecoded7, "ok");
       assert.strictEqual(script.calls.length, 1);
     })
   );

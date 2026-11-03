@@ -125,8 +125,10 @@ describe("TomlDocument", () => {
         Effect.gen(function* () {
           const text = yield* Toml.stringify(entry);
           const doc = yield* S.decodeEffect(codec)(text);
-          assert.deepStrictEqual(yield* doc.toValue(), entry);
-          assert.strictEqual(yield* S.encodeUnknownEffect(codec)(doc), text);
+          const toValue1 = yield* doc.toValue();
+          assert.deepStrictEqual(toValue1, entry);
+          const value2 = yield* S.encodeUnknownEffect(codec)(doc);
+          assert.strictEqual(value2, text);
         }),
       { arbitrary: fcRuns(100) }
     );

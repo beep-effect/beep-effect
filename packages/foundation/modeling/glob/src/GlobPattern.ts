@@ -17,7 +17,7 @@
 import { $GlobId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { dual, pipe } from "effect/Function";
+import { dual, identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
@@ -28,6 +28,8 @@ import { EXPANSION_MAX, GuardMeasurement, GuardReason, isGuardExceeded } from ".
 import { escape as engineEscape, unescape as engineUnescape, GLOBSTAR, Minimatch } from "./internal/minimatch.ts";
 import { Platform } from "./internal/types.ts";
 import type { EngineOptionsInput, ParseReturnFiltered } from "./internal/types.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const $I = $GlobId.create("GlobPattern");
 
@@ -126,7 +128,7 @@ export class GlobPatternError extends S.TaggedError<GlobPatternError, { readonly
    */
   override get message(): string {
     const shown = this.pattern.length > 64 ? `${Str.slice(0, 64)(this.pattern)}…` : this.pattern;
-    return `glob pattern ${JSON.stringify(shown)} rejected: ${this.reason} (limit ${this.limit}, actual ${this.actual})`;
+    return `glob pattern ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(shown), identity)} rejected: ${this.reason} (limit ${this.limit}, actual ${this.actual})`;
   }
 }
 

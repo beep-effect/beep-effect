@@ -51,9 +51,12 @@ describe("DeploymentEnvironment test doubles", () => {
       it.effect("layer preserves all supplied overrides", () =>
         Effect.gen(function* () {
           const service = yield* DeploymentEnvironment;
-          assert.strictEqual(yield* service.upsert("prod"), undefined);
-          assert.deepStrictEqual(yield* service.list, [DeploymentEnvironmentInfo.make({ name: "prod" })]);
-          assert.strictEqual(yield* service.delete("prod"), undefined);
+          const upsert1 = yield* service.upsert("prod");
+          assert.strictEqual(upsert1, undefined);
+          const list2 = yield* service.list;
+          assert.deepStrictEqual(list2, [DeploymentEnvironmentInfo.make({ name: "prod" })]);
+          const delete3 = yield* service.delete("prod");
+          assert.strictEqual(delete3, undefined);
         })
       );
     });

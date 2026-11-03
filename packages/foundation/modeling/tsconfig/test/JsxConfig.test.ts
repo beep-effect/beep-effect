@@ -60,7 +60,8 @@ describe("JsxConfig runtime variants", () => {
       const config = yield* S.decodeEffect(JsxConfig)(input);
       assert(config.runtime === "automatic");
       assert.strictEqual(config.importSource, "preact");
-      assert.deepEqual(yield* S.encodeEffect(JsxConfig)(config), input);
+      const value = yield* S.encodeEffect(JsxConfig)(config);
+      assert.deepEqual(value, input);
     })
   );
 
@@ -69,7 +70,8 @@ describe("JsxConfig runtime variants", () => {
       const config = yield* S.decodeUnknownEffect(JsxConfig)({ runtime: "classic", importSource: "ignored" });
       assert.strictEqual(config.runtime, "classic");
       assert.isFalse("importSource" in config);
-      assert.deepEqual(yield* S.encodeEffect(JsxConfig)(config), { runtime: "classic" });
+      const value1 = yield* S.encodeEffect(JsxConfig)(config);
+      assert.deepEqual(value1, { runtime: "classic" });
     })
   );
 });

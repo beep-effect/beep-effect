@@ -101,9 +101,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
           new URL("../../use-cases/test/fixtures/eyecite/live-case-resources.json", import.meta.url)
         )
       );
-      expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-        "ec5e5887236e755082f1c2e56f87f6f0f4de68e815f471fda20505977597b791"
-      );
+      const citationResult1 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+      expect(citationResult1).toBe("ec5e5887236e755082f1c2e56f87f6f0f4de68e815f471fda20505977597b791");
       const data = yield* S.decodeEffect(CorpusJson)(raw);
       expect(data.cases).toHaveLength(5);
       let events = 0;
@@ -211,7 +210,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
                       result = resource.slot;
                     } else if (operation.kind === "change") {
                       const ref = reference(operation.reference);
-                      const wire = yield* S.encodeEffect(Citation)(yield* owner.citationOf(ref));
+                      const citationResult2 = yield* owner.citationOf(ref);
+                      const wire = yield* S.encodeEffect(Citation)(citationResult2);
                       const citation = yield* S.decodeEffect(Citation)({
                         ...wire,
                         components: { ...wire.components, [operation.field]: operation.value },
@@ -221,12 +221,14 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
                       result = yield* comparison.equal(operation.left, operation.right);
                     else if (operation.kind === "clear") yield* table.clear;
                     else {
-                      keyedOutcome = O.some(yield* keyedOperation(operation, event.outcome));
+                      const citationResult3 = yield* keyedOperation(operation, event.outcome);
+                      keyedOutcome = O.some(citationResult3);
                     }
                     const outcome = O.getOrElse(keyedOutcome, () => ({ status: "value", result }));
                     expect(outcome, row.name).toEqual(event.outcome);
+                    const citationResult4 = yield* table.read;
                     expect(
-                      A.map(yield* table.read, (entry) => ({ objectId: entry.objectId, value: entry.value })),
+                      A.map(citationResult4, (entry) => ({ objectId: entry.objectId, value: entry.value })),
                       row.name
                     ).toEqual(event.entries);
                     expect(comparisons, row.name).toEqual(event.comparisons);
@@ -234,13 +236,13 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
                   }),
                   { concurrency: 1, discard: true }
                 );
-                expect((yield* Effect.flip(objects.key(CitationResourceObject.make({ slot: 0 })))).reason).toBe(
-                  "unknown-object"
-                );
+                const citationResult5 = yield* Effect.flip(objects.key(CitationResourceObject.make({ slot: 0 })));
+                expect(citationResult5.reason).toBe("unknown-object");
               }),
             () => objects.close.pipe(Effect.andThen(owner.close))
           );
-          expect((yield* Effect.flip(objects.key(A.getUnsafe(resources, 0)))).reason).toBe("closed");
+          const citationResult6 = yield* Effect.flip(objects.key(A.getUnsafe(resources, 0)));
+          expect(citationResult6.reason).toBe("closed");
         }),
         { concurrency: 1, discard: true }
       );
@@ -280,30 +282,36 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
         expect(first.slot).toBe(0);
         expect(reads).toBe(0);
         denied = true;
-        expect((yield* Effect.flip(objects.create(ref))).reason).toBe("limit-exceeded");
+        const citationResult7 = yield* Effect.flip(objects.create(ref));
+        expect(citationResult7.reason).toBe("limit-exceeded");
         denied = false;
         const second = yield* objects.create(ref);
         expect(second.slot).toBe(1);
-        expect((yield* Effect.flip(objects.create(ref))).reason).toBe("limit-exceeded");
-        expect(yield* objects.referenceOf(first)).toEqual(ref);
-        expect((yield* Effect.flip(objects.key(yield* foreign.create(ref)))).reason).toBe("unknown-object");
-        expect((yield* Effect.flip(objects.key(CitationResourceObject.make({ slot: first.slot })))).reason).toBe(
-          "unknown-object"
-        );
-        expect((yield* Effect.flip(objects.key(first))).reason).toBe("model-failed");
+        const citationResult8 = yield* Effect.flip(objects.create(ref));
+        expect(citationResult8.reason).toBe("limit-exceeded");
+        const citationResult9 = yield* objects.referenceOf(first);
+        expect(citationResult9).toEqual(ref);
+        const citationResult10 = yield* foreign.create(ref);
+        const citationResult11 = yield* Effect.flip(objects.key(citationResult10));
+        expect(citationResult11.reason).toBe("unknown-object");
+        const citationResult12 = yield* Effect.flip(objects.key(CitationResourceObject.make({ slot: first.slot })));
+        expect(citationResult12.reason).toBe("unknown-object");
+        const citationResult13 = yield* Effect.flip(objects.key(first));
+        expect(citationResult13.reason).toBe("model-failed");
         expect(reads).toBe(1);
-        expect((yield* Effect.flip(objects.comparison.equal(0, 99))).reason).toBe("comparison-failed");
+        const citationResult14 = yield* Effect.flip(objects.comparison.equal(0, 99));
+        expect(citationResult14.reason).toBe("comparison-failed");
         yield* objects.close;
-        expect((yield* Effect.flip(objects.referenceOf(first))).reason).toBe("closed");
+        const citationResult15 = yield* Effect.flip(objects.referenceOf(first));
+        expect(citationResult15.reason).toBe("closed");
         yield* foreign.close;
-        expect(
-          (yield* Effect.flip(
-            makeCitationResourceObjects({}).pipe(
-              Effect.provideService(CitationResourceModels, models),
-              Effect.provideService(CitationFrozenEditions, unusedEditions)
-            )
-          )).reason
-        ).toBe("invalid-input");
+        const citationResult16 = yield* Effect.flip(
+          makeCitationResourceObjects({}).pipe(
+            Effect.provideService(CitationResourceModels, models),
+            Effect.provideService(CitationFrozenEditions, unusedEditions)
+          )
+        );
+        expect(citationResult16.reason).toBe("invalid-input");
       })
   );
 

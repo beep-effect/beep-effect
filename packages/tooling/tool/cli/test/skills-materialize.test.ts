@@ -223,7 +223,8 @@ const makeRepo = Effect.fn("SkillsMaterializeTest.makeRepo")(function* (layout: 
       });
     })
   );
-  const base = (yield* decodeSkillsLockDocumentJson(yield* fs.readFileString(oracleLockFixture))).skills.oracle;
+  const readFileString1 = yield* fs.readFileString(oracleLockFixture);
+  const base = (yield* decodeSkillsLockDocumentJson(readFileString1)).skills.oracle;
   assert(base !== undefined && base._tag === "vendored");
   const localTree = yield* computeSkillTree([file("SKILL.md", "---\nname: local-one\n---\n")], "local");
   const vendored = VendoredSkillLockEntry.make({
@@ -398,18 +399,23 @@ layer(TestLayer, { timeout: "60 seconds" })("skills materialize", (it) => {
 
       const checked = yield* materialize(repoRoot, "check");
       expect(rowOf(checked, SKILL).status).toBe("would-rebuild");
-      expect(yield* readText(repoRoot, `${AGENTS_TARGET}/SKILL.md`)).toBe("hand edit\n");
+      const readText2 = yield* readText(repoRoot, `${AGENTS_TARGET}/SKILL.md`);
+      expect(readText2).toBe("hand edit\n");
 
       const written = yield* materialize(repoRoot, "write");
       expect(rowOf(written, SKILL).status).toBe("rebuilt");
       for (const target of TARGETS) {
-        expect(yield* readText(repoRoot, `${target}/SKILL.md`)).toBe(effectiveSkill);
+        const readText3 = yield* readText(repoRoot, `${target}/SKILL.md`);
+        expect(readText3).toBe(effectiveSkill);
       }
       expect((yield* fs.stat(path.join(repoRoot, CLAUDE_TARGET, "scripts/run.sh"))).mode & 0o777).toBe(0o644);
       // `.agents/skills` is still the link, and no stage or set-aside tree is left behind.
-      expect(yield* fs.readLink(path.join(repoRoot, ".agents/skills"))).toBe("../.claude/skills");
-      expect(yield* fs.exists(path.join(repoRoot, ".claude/.skills-materialize"))).toBe(false);
-      expect(rowOf(yield* materialize(repoRoot, "check"), SKILL).status).toBe("current");
+      const readLink4 = yield* fs.readLink(path.join(repoRoot, ".agents/skills"));
+      expect(readLink4).toBe("../.claude/skills");
+      const exists5 = yield* fs.exists(path.join(repoRoot, ".claude/.skills-materialize"));
+      expect(exists5).toBe(false);
+      const materialize6 = yield* materialize(repoRoot, "check");
+      expect(rowOf(materialize6, SKILL).status).toBe("current");
     })
   );
 
@@ -432,10 +438,14 @@ layer(TestLayer, { timeout: "60 seconds" })("skills materialize", (it) => {
 
       const repaired = yield* materialize(repoRoot, "write");
       expect(rowOf(repaired, SKILL).status).toBe("rebuilt");
-      expect(yield* readText(repoRoot, `${AGENTS_TARGET}/agents/openai.yaml`)).toBe(openaiText);
-      expect(yield* fs.exists(path.join(repoRoot, AGENTS_TARGET, "rules/gone.md"))).toBe(false);
-      expect(yield* fs.exists(path.join(repoRoot, ".agents/.skills-materialize"))).toBe(false);
-      expect(targetStates(yield* materialize(repoRoot, "check"), SKILL)).toEqual([
+      const readText7 = yield* readText(repoRoot, `${AGENTS_TARGET}/agents/openai.yaml`);
+      expect(readText7).toBe(openaiText);
+      const exists8 = yield* fs.exists(path.join(repoRoot, AGENTS_TARGET, "rules/gone.md"));
+      expect(exists8).toBe(false);
+      const exists9 = yield* fs.exists(path.join(repoRoot, ".agents/.skills-materialize"));
+      expect(exists9).toBe(false);
+      const materialize10 = yield* materialize(repoRoot, "check");
+      expect(targetStates(materialize10, SKILL)).toEqual([
         [CLAUDE_TARGET, "matches"],
         [AGENTS_TARGET, "matches"],
       ]);
@@ -475,10 +485,13 @@ layer(TestLayer, { timeout: "60 seconds" })("skills materialize", (it) => {
 
       expect(error._tag).toBe("SkillsCommandError");
       expect(error.message).toContain("Failed to publish");
-      expect(yield* Ref.get(renames)).toBeGreaterThanOrEqual(4);
+      const got = yield* Ref.get(renames);
+      expect(got).toBeGreaterThanOrEqual(4);
       for (const target of TARGETS) {
-        expect(yield* readText(repoRoot, `${target}/SKILL.md`)).toBe("hand edit\n");
-        expect(yield* fs.exists(path.join(repoRoot, target, "agents/openai.yaml"))).toBe(true);
+        const readText11 = yield* readText(repoRoot, `${target}/SKILL.md`);
+        expect(readText11).toBe("hand edit\n");
+        const exists12 = yield* fs.exists(path.join(repoRoot, target, "agents/openai.yaml"));
+        expect(exists12).toBe(true);
       }
       for (const workDir of [".claude/.skills-materialize", ".agents/.skills-materialize"]) {
         const leftovers = yield* fs
@@ -487,8 +500,10 @@ layer(TestLayer, { timeout: "60 seconds" })("skills materialize", (it) => {
         expect(leftovers).toEqual([]);
       }
       // A plain re-run then publishes both targets.
-      expect(rowOf(yield* materialize(repoRoot, "write"), SKILL).status).toBe("rebuilt");
-      expect(rowOf(yield* materialize(repoRoot, "check"), SKILL).status).toBe("current");
+      const materialize13 = yield* materialize(repoRoot, "write");
+      expect(rowOf(materialize13, SKILL).status).toBe("rebuilt");
+      const materialize14 = yield* materialize(repoRoot, "check");
+      expect(rowOf(materialize14, SKILL).status).toBe("current");
     })
   );
 
@@ -523,13 +538,16 @@ layer(TestLayer, { timeout: "60 seconds" })("skills materialize", (it) => {
       expect(error._tag).toBe("SkillsCommandError");
       expect(error.message).toContain("could not be moved back");
       const workDir = path.join(repoRoot, ".claude/.skills-materialize");
-      const kept = A.filter(yield* fs.readDirectory(workDir), Str.endsWith(".previous"));
+      const readDirectory15 = yield* fs.readDirectory(workDir);
+      const kept = A.filter(readDirectory15, Str.endsWith(".previous"));
       expect(A.length(kept)).toBe(1);
-      expect(yield* fs.readFileString(path.join(workDir, A.getUnsafe(kept, 0), "SKILL.md"))).toBe("hand edit\n");
+      const readFileString16 = yield* fs.readFileString(path.join(workDir, A.getUnsafe(kept, 0), "SKILL.md"));
+      expect(readFileString16).toBe("hand edit\n");
 
       const refused = yield* materialize(repoRoot, "write").pipe(Effect.flip);
       expect(refused.message).toContain(A.getUnsafe(kept, 0));
-      expect(yield* fs.exists(path.join(workDir, A.getUnsafe(kept, 0)))).toBe(true);
+      const exists17 = yield* fs.exists(path.join(workDir, A.getUnsafe(kept, 0)));
+      expect(exists17).toBe(true);
     })
   );
 
@@ -539,7 +557,8 @@ layer(TestLayer, { timeout: "60 seconds" })("skills materialize", (it) => {
       const path = yield* Path.Path;
       const repoRoot = yield* makeRepo("linked");
       const lockPath = path.join(repoRoot, "skills-lock.json");
-      const lock = yield* decodeSkillsLockDocumentJson(yield* fs.readFileString(lockPath));
+      const readFileString18 = yield* fs.readFileString(lockPath);
+      const lock = yield* decodeSkillsLockDocumentJson(readFileString18);
       const entry = lock.skills[SKILL];
       assert(entry !== undefined && entry._tag === "vendored");
       const widened = VendoredSkillLockEntry.make({
@@ -575,9 +594,12 @@ layer(TestLayer, { timeout: "60 seconds" })("skills materialize", (it) => {
       const refused = yield* materialize(repoRoot, "write").pipe(Effect.flip);
       expect(refused._tag).toBe("SkillsCommandError");
       expect(refused.message).toContain("outside the repository");
-      expect(yield* fs.readFileString(path.join(outsideSkill, "SKILL.md"))).toBe("outside sentinel\n");
-      expect(yield* fs.readFileString(path.join(repoRoot, CLAUDE_TARGET, "SKILL.md"))).toBe("hand edit\n");
-      expect(yield* fs.exists(path.join(outside, ".skills-materialize"))).toBe(false);
+      const readFileString19 = yield* fs.readFileString(path.join(outsideSkill, "SKILL.md"));
+      expect(readFileString19).toBe("outside sentinel\n");
+      const readFileString20 = yield* fs.readFileString(path.join(repoRoot, CLAUDE_TARGET, "SKILL.md"));
+      expect(readFileString20).toBe("hand edit\n");
+      const exists21 = yield* fs.exists(path.join(outside, ".skills-materialize"));
+      expect(exists21).toBe(false);
     })
   );
 
@@ -596,8 +618,10 @@ layer(TestLayer, { timeout: "60 seconds" })("skills materialize", (it) => {
       const refused = yield* materialize(repoRoot, "write").pipe(Effect.flip);
       expect(refused._tag).toBe("SkillsCommandError");
       expect(refused.message).toContain("permitted skills directories");
-      expect(yield* fs.readFileString(path.join(unrelatedSkill, "SKILL.md"))).toBe("unrelated sentinel\n");
-      expect(yield* fs.readFileString(path.join(repoRoot, CLAUDE_TARGET, "SKILL.md"))).toBe("hand edit\n");
+      const readFileString22 = yield* fs.readFileString(path.join(unrelatedSkill, "SKILL.md"));
+      expect(readFileString22).toBe("unrelated sentinel\n");
+      const readFileString23 = yield* fs.readFileString(path.join(repoRoot, CLAUDE_TARGET, "SKILL.md"));
+      expect(readFileString23).toBe("hand edit\n");
     })
   );
 
@@ -622,7 +646,8 @@ layer(TestLayer, { timeout: "60 seconds" })("skills materialize", (it) => {
       expect(tampered._tag === "SkillMaterializeRefusal" ? tampered.reason : tampered._tag).toBe(
         "patch-digest-mismatch"
       );
-      expect(yield* readText(repoRoot, `${CLAUDE_TARGET}/SKILL.md`)).toBe("hand edit\n");
+      const readText24 = yield* readText(repoRoot, `${CLAUDE_TARGET}/SKILL.md`);
+      expect(readText24).toBe("hand edit\n");
     })
   );
 
@@ -634,7 +659,8 @@ layer(TestLayer, { timeout: "60 seconds" })("skills materialize", (it) => {
       yield* fs.writeFileString(path.join(repoRoot, ".claude/skills/local-one/SKILL.md"), "edited\n");
       const report = yield* materialize(repoRoot, "write");
       expect(rowOf(report, "local-one").status).toBe("local-drift");
-      expect(yield* readText(repoRoot, ".claude/skills/local-one/SKILL.md")).toBe("edited\n");
+      const readText25 = yield* readText(repoRoot, ".claude/skills/local-one/SKILL.md");
+      expect(readText25).toBe("edited\n");
     })
   );
 });

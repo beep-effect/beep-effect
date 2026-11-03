@@ -96,9 +96,8 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback semanti
           new URL("../../use-cases/test/fixtures/eyecite/model-mutation-observations.json", import.meta.url)
         )
       );
-      expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-        "dca8b55d551d50c6ca0a2917ebce372b20894d4001b7a9738053c7d96d3cf841"
-      );
+      const citationResult1 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+      expect(citationResult1).toBe("dca8b55d551d50c6ca0a2917ebce372b20894d4001b7a9738053c7d96d3cf841");
       const data = yield* S.decodeEffect(CorpusJson)(raw);
       expect(data.cases).toHaveLength(11);
       const rows = A.filter(data.cases, (row) => row.family === "semantic");
@@ -171,7 +170,8 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback semanti
               ? Reference.cases.input.make({ index: indexOf(reference.mentionId) })
               : Reference.cases.detached.make({ slot: 0 });
           const view = Effect.fn("ModelMutationTest.view")(function* (reference: CitationGroupMember) {
-            const wire = yield* S.encodeEffect(Citation)(yield* owner.citationOf(reference));
+            const citationResult2 = yield* owner.citationOf(reference);
+            const wire = yield* S.encodeEffect(Citation)(citationResult2);
             const metadata = yield* S.decodeEffect(JsonMetadata)(wire.metadata);
             return {
               reference: referenceView(reference),
@@ -191,9 +191,8 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback semanti
             field: "plaintiff" | "page" | "volume" | "pin" | "antecedent",
             value: string
           ) {
-            const wire = yield* S.encodeEffect(Citation)(yield* owner.citationOf(reference)).pipe(
-              Effect.mapError(invalid)
-            );
+            const citationResult3 = yield* owner.citationOf(reference);
+            const wire = yield* S.encodeEffect(Citation)(citationResult3).pipe(Effect.mapError(invalid));
             let patched: S.Json;
             if (field === "page" || field === "volume")
               patched = { ...wire, components: { ...wire.components, [field]: value } };
@@ -212,9 +211,8 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback semanti
           let events = A.empty<S.Json>();
           const changeDetached = Effect.fnUntraced(function* (arg: CitationFullsCallbackInput) {
             if (O.isNone(detachedRef)) {
-              const wire = yield* S.encodeEffect(Citation)(
-                yield* owner.citationOf(A.getUnsafe(arg.fulls, 0).citation)
-              ).pipe(Effect.mapError(invalid));
+              const citationResult4 = yield* owner.citationOf(A.getUnsafe(arg.fulls, 0).citation);
+              const wire = yield* S.encodeEffect(Citation)(citationResult4).pipe(Effect.mapError(invalid));
               if (wire.type !== "case") return yield* invalid();
               const model = yield* S.decodeEffect(Citation)({
                 ...wire,
@@ -222,7 +220,8 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback semanti
               }).pipe(Effect.mapError(invalid));
               const reference = yield* owner.registerDetached(model);
               detachedRef = O.some(reference);
-              yield* owner.writeFulls(A.append(arg.fulls, yield* owner.createFullPair(reference, foreign)));
+              const citationResult5 = yield* owner.createFullPair(reference, foreign);
+              yield* owner.writeFulls(A.append(arg.fulls, citationResult5));
             } else yield* change(detachedRef.value, "plaintiff", "Changed");
           });
           const callbacks = CitationResolutionCallbacks.of({
@@ -232,11 +231,12 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback semanti
               if (row.name === "full-rename-current") yield* change(mentionRef(mention), "plaintiff", "Changed");
               if (row.name === "retained-metadata-from-full" && O.isSome(retained))
                 yield* change(retained.value, "plaintiff", "Changed");
+              const citationResult6 = yield* objects();
               events = A.append(events, {
                 slot: "full",
                 mention: indexOf(mention.id),
                 before,
-                after: yield* objects(),
+                after: citationResult6,
                 result: callbackResourcePresentation(base),
               });
               return base;
@@ -249,15 +249,19 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback semanti
               if (row.name === "current-supra-antecedent")
                 yield* change(mentionRef(arg.mention), "antecedent", "Missing");
               if (row.name === "detached-alias-metadata") yield* changeDetached(arg);
-              const output = yield* defaults.supra({ ...arg, fulls: yield* owner.readFulls });
+              const citationResult7 = yield* owner.readFulls;
+              const output = yield* defaults.supra({ ...arg, fulls: citationResult7 });
+              const citationResult8 = yield* owner.readFulls;
+              const citationResult9 = yield* Effect.forEach(citationResult8, (entry) => view(entry.citation), {
+                concurrency: 1,
+              });
+              const citationResult10 = yield* view(mentionRef(arg.mention));
               events = A.append(events, {
                 slot: "supra",
                 mention: indexOf(arg.mention.id),
                 before,
-                after: yield* Effect.forEach(yield* owner.readFulls, (entry) => view(entry.citation), {
-                  concurrency: 1,
-                }),
-                current: yield* view(mentionRef(arg.mention)),
+                after: citationResult9,
+                current: citationResult10,
                 result: callbackResourcePresentation(output.resource),
               });
               return output;
@@ -266,14 +270,17 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback semanti
               const before = yield* Effect.forEach(arg.fulls, (entry) => view(entry.citation), { concurrency: 1 });
               yield* change(A.getUnsafe(arg.fulls, 0).citation, "volume", "2");
               const output = yield* defaults.shortCase(arg);
+              const citationResult11 = yield* owner.readFulls;
+              const citationResult12 = yield* Effect.forEach(citationResult11, (entry) => view(entry.citation), {
+                concurrency: 1,
+              });
+              const citationResult13 = yield* view(mentionRef(arg.mention));
               events = A.append(events, {
                 slot: "short",
                 mention: indexOf(arg.mention.id),
                 before,
-                after: yield* Effect.forEach(yield* owner.readFulls, (entry) => view(entry.citation), {
-                  concurrency: 1,
-                }),
-                current: yield* view(mentionRef(arg.mention)),
+                after: citationResult12,
+                current: citationResult13,
                 result: callbackResourcePresentation(output.resource),
               });
               return output;
@@ -288,16 +295,19 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback semanti
                 yield* change(A.getUnsafe(A.getUnsafe(arg.groups, 0).members, 0), "page", "20");
               if (row.name === "current-id-pin") yield* change(mentionRef(arg.mention), "pin", "200");
               const output = yield* defaults.id(arg);
+              const citationResult14 = yield* owner.read;
+              const citationResult15 = yield* Effect.forEach(
+                A.flatMap(citationResult14, (group) => group.members),
+                view,
+                { concurrency: 1 }
+              );
+              const citationResult16 = yield* view(mentionRef(arg.mention));
               events = A.append(events, {
                 slot: "id",
                 mention: indexOf(arg.mention.id),
                 before,
-                after: yield* Effect.forEach(
-                  A.flatMap(yield* owner.read, (group) => group.members),
-                  view,
-                  { concurrency: 1 }
-                ),
-                current: yield* view(mentionRef(arg.mention)),
+                after: citationResult15,
+                current: citationResult16,
                 result: callbackResourcePresentation(output.resource),
               });
               return output;
@@ -335,16 +345,14 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback semanti
               },
             };
           });
-          expect(
-            yield* Effect.forEach(result.mentions, (mention) => finalView(mentionRef(mention), mention.citation)),
-            row.name
-          ).toEqual(row.objects);
-          expect(
-            yield* Effect.forEach(result.detachedCitations, (object) =>
-              finalView(CitationGroupMember.cases.Detached.make({ detachedId: object.id }), object.citation)
-            ),
-            row.name
-          ).toEqual(row.detachedObjects);
+          const citationResult17 = yield* Effect.forEach(result.mentions, (mention) =>
+            finalView(mentionRef(mention), mention.citation)
+          );
+          expect(citationResult17, row.name).toEqual(row.objects);
+          const citationResult18 = yield* Effect.forEach(result.detachedCitations, (object) =>
+            finalView(CitationGroupMember.cases.Detached.make({ detachedId: object.id }), object.citation)
+          );
+          expect(citationResult18, row.name).toEqual(row.detachedObjects);
           yield* Effect.forEach(
             A.map(result.mentions, (mention, index) => Tuple.make(index, mention)),
             Effect.fnUntraced(function* ([index, mention]) {
@@ -387,25 +395,35 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback semanti
         yield* owner.writeCitation(reference, next);
         if (next.type !== "case") return yield* invalid();
         Reflect.set(next.metadata, "plaintiff", O.some("mutated caller copy"));
-        expect(yield* S.encodeEffect(Citation)(yield* owner.citationOf(reference))).toEqual(expected);
+        const citationResult19 = yield* owner.citationOf(reference);
+        const citationResult20 = yield* S.encodeEffect(Citation)(citationResult19);
+        expect(citationResult20).toEqual(expected);
         const snapshot = yield* owner.readMentions;
         const changed = A.getUnsafe(snapshot, 0);
         expect(changed.anchor).toBe(original.anchor);
         expect(changed.id).toBe(original.id);
         expect(original.citation).not.toEqual(changed.citation);
         Reflect.set(changed.citation, "components", {});
-        expect(yield* S.encodeEffect(Citation)(yield* owner.citationOf(reference))).toEqual(expected);
-        expect(
-          (yield* Effect.flip(owner.writeCitation(reference, A.getUnsafe(prepared.mentions, 1).citation))).reason
-        ).toBe("invalid-input");
+        const citationResult21 = yield* owner.citationOf(reference);
+        const citationResult22 = yield* S.encodeEffect(Citation)(citationResult21);
+        expect(citationResult22).toEqual(expected);
+        const citationResult23 = yield* Effect.flip(
+          owner.writeCitation(reference, A.getUnsafe(prepared.mentions, 1).citation)
+        );
+        expect(citationResult23.reason).toBe("invalid-input");
         const unknown = CitationGroupMember.cases.Mention.make({
           mentionId: CitationMentionId.make(`cm1:${Str.repeat(64)("f")}`),
         });
-        expect((yield* Effect.flip(owner.writeCitation(unknown, original.citation))).reason).toBe("invalid-input");
-        expect(yield* S.encodeEffect(Citation)(yield* owner.citationOf(reference))).toEqual(expected);
+        const citationResult24 = yield* Effect.flip(owner.writeCitation(unknown, original.citation));
+        expect(citationResult24.reason).toBe("invalid-input");
+        const citationResult25 = yield* owner.citationOf(reference);
+        const citationResult26 = yield* S.encodeEffect(Citation)(citationResult25);
+        expect(citationResult26).toEqual(expected);
         yield* owner.close;
-        expect((yield* Effect.flip(owner.readMentions)).reason).toBe("invalid-input");
-        expect((yield* Effect.flip(owner.writeCitation(reference, original.citation))).reason).toBe("invalid-input");
+        const citationResult27 = yield* Effect.flip(owner.readMentions);
+        expect(citationResult27.reason).toBe("invalid-input");
+        const citationResult28 = yield* Effect.flip(owner.writeCitation(reference, original.citation));
+        expect(citationResult28.reason).toBe("invalid-input");
       })
   );
 });

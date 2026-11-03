@@ -20,11 +20,10 @@ it.effect.prop(
       const runtime = RuntimeEnv.fromRecord(runtimeRecord(ci));
       const result = yield* autoFormat(audience).pipe(Effect.provideService(CurrentRuntimeEnv, runtime));
       assert.strictEqual(result, expectedFormat(audience, ci));
-      assert.strictEqual(yield* autoFormat(audience).pipe(Effect.provideService(CurrentRuntimeEnv, runtime)), result);
-      assert.strictEqual(
-        yield* underGithubActions.pipe(Effect.provideService(CurrentRuntimeEnv, runtime)),
-        ci === "github"
-      );
+      const pipe1 = yield* autoFormat(audience).pipe(Effect.provideService(CurrentRuntimeEnv, runtime));
+      assert.strictEqual(pipe1, result);
+      const pipe2 = yield* underGithubActions.pipe(Effect.provideService(CurrentRuntimeEnv, runtime));
+      assert.strictEqual(pipe2, ci === "github");
     }),
   runs
 );

@@ -429,7 +429,8 @@ it.layer(RecordingTestLayer)("SSRF refusal before HTTP execution", (it) => {
       const probeResults = yield* Stream.runCollect(probeStream);
       assert.isDefined(probeResults[0]);
       assert.strictEqual(probeResults[0].isFailure, true);
-      assert.strictEqual(yield* Ref.get(requests), 1);
+      const got = yield* Ref.get(requests);
+      assert.strictEqual(got, 1);
       yield* Ref.set(requests, 0);
       const assertBlocked = Effect.fn("assertBlocked")(function* (location: string, hostname: string) {
         const message = `Refusing to load from a loopback, link-local, or private host: ${hostname}`;
@@ -447,12 +448,14 @@ it.layer(RecordingTestLayer)("SSRF refusal before HTTP execution", (it) => {
         });
         const failure = yield* Effect.flip(DatasetLoader.loadText(location));
         const refusal = yield* decodeDatasetLoadError(failure);
-        assert.deepStrictEqual(yield* encodeDatasetLoadError(refusal), {
+        const encodedDatasetLoadError = yield* encodeDatasetLoadError(refusal);
+        assert.deepStrictEqual(encodedDatasetLoadError, {
           _tag: "DatasetLoadError",
           location,
           message,
         });
-        assert.strictEqual(yield* Ref.get(requests), 0);
+        const got1 = yield* Ref.get(requests);
+        assert.strictEqual(got1, 0);
       });
 
       yield* assertBlocked("http://[::ffff:127.0.0.1]/data.txt", "[::ffff:7f00:1]");

@@ -106,7 +106,8 @@ export const inspectIntakeActor = Effect.fn("professional_desktop.intake.inspect
   );
   const inspector = Context.get(services, driver.StatelyInspector);
   // Attach before the relay answers so the transitions made meanwhile reach the timeline.
-  const attachment = yield* Scope.fork(yield* Effect.scope);
+  const scope1 = yield* Effect.scope;
+  const attachment = yield* Scope.fork(scope1);
   yield* inspector.attach(actor).pipe(Scope.provide(attachment));
   const accepted = yield* inspector.ready.pipe(
     Effect.as(true),

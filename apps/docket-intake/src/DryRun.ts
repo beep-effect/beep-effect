@@ -123,7 +123,8 @@ export const DocketDryRunPortsLive: Layer.Layer<
             return recordedEntry(entry.key);
           }),
           findByKey: Effect.fn("DocketDryRun.findByKey")(function* (key) {
-            const own = HashMap.get(yield* Ref.get(recorded), key);
+            const got = yield* Ref.get(recorded);
+            const own = HashMap.get(got, key);
             return O.isSome(own) ? O.some(recordedEntry(key)) : yield* calendar.findByKey(key);
           }),
         })
@@ -276,7 +277,8 @@ export const dryRunCycle = Effect.fn("DocketIntakeApp.dryRunCycle")(function* (i
   const report = yield* intake.pollOnce(docketDayInZone(now, input.config.timeZone), input.options);
   const state = yield* store.load;
   const owners = HashMap.fromIterable(A.flatMap(R.values(state.ledger), (record) => ownersOf(record.outcome)));
-  const entries = A.map(yield* recorder.entries, entryReport(owners));
+  const entries1 = yield* recorder.entries;
+  const entries = A.map(entries1, entryReport(owners));
   yield* Effect.logInfo("docket intake dry run finished", {
     processed: report.processed,
     seen: report.seen,

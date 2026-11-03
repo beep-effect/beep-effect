@@ -40,12 +40,12 @@ const NativeHtmlSafetyFailureJson = S.fromJsonString(
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("approved HTML safety completion", (it) => {
   it.effect("changes only the three source native-depth exhaustion outcomes", () =>
     Effect.gen(function* () {
-      const raw = yield* (yield* FileSystem.FileSystem).readFileString(
+      const citationResult1 = yield* FileSystem.FileSystem;
+      const raw = yield* citationResult1.readFileString(
         NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/html-cleaner-audit.json", import.meta.url))
       );
-      expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-        "049bbadd90348588e2e7a1c62daf1f5dba0b6865df9f2001b9461b8b80f9cb71"
-      );
+      const citationResult2 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+      expect(citationResult2).toBe("049bbadd90348588e2e7a1c62daf1f5dba0b6865df9f2001b9461b8b80f9cb71");
       const corpus = yield* S.decodeEffect(CorpusJson)(raw);
       const values = HashMap.fromIterable(A.map(corpus.artifacts, (row) => [row.sha256, row.value] as const));
       let changed = 0;
@@ -72,7 +72,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("approved HTML safet
             }
             changed++;
           } else {
-            expect(yield* result, row.name).toBe(text);
+            const citationResult3 = yield* result;
+            expect(citationResult3, row.name).toBe(text);
             preserved++;
           }
         }),
@@ -99,7 +100,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("approved HTML safet
       if (failed._tag !== "CitationSafetyLimitExceeded") return yield* Effect.die("expected safety failure");
       const encoded = yield* S.encodeEffect(CitationSafetyLimitExceededJson)(failed);
       expect(encoded).not.toContain("private");
-      expect(yield* S.decodeEffect(NativeHtmlSafetyFailureJson)(encoded)).toEqual({
+      const citationResult4 = yield* S.decodeEffect(NativeHtmlSafetyFailureJson)(encoded);
+      expect(citationResult4).toEqual({
         _tag: "CitationSafetyLimitExceeded",
         operation: "clean",
         limit: "nativeHtmlParserResource",

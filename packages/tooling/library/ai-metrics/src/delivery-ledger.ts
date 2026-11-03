@@ -214,7 +214,9 @@ const decodeOutcome = S.decodeEffect(S.fromJsonString(DeliveryOutcome), { onExce
 const decodeVisibility = S.decodeEffect(S.fromJsonString(DeliveryVisibility), { onExcessProperty: "error" });
 const checkedPayload = Effect.fn("AiMetrics.delivery.checkedPayload")(function* (rows: typeof PayloadRows.Type) {
   if (rows[0] === undefined) return O.none<string>();
-  if ((yield* hashPublicTextSha256(rows[0].payload)) !== rows[0].digest) return yield* failure("storage");
+  if ((yield* hashPublicTextSha256(rows[0].payload)) !== rows[0].digest) {
+    return yield* failure("storage");
+  }
   return O.some(rows[0].payload);
 });
 const encodeDeliveryLedgerConfigJson = S.encodeEffect(S.fromJsonString(DeliveryLedgerConfig));
@@ -262,7 +264,9 @@ export const makeDeliveryLedger = Effect.fn("AiMetrics.makeDeliveryLedger")(
               yield* sql`SELECT substr(payload,1,4097) AS payload FROM observation_delivery_config WHERE singleton=1`.pipe(
                 Effect.flatMap(decodeArguments)
               );
-            if (existing[0].payload !== configJson) return yield* failure("configuration");
+            if (existing[0].payload !== configJson) {
+              return yield* failure("configuration");
+            }
             yield* sql`CREATE TABLE IF NOT EXISTS observation_delivery_pages(receipt_id TEXT PRIMARY KEY, events INTEGER NOT NULL)`;
             yield* sql`CREATE TABLE IF NOT EXISTS observation_delivery_events(event_id TEXT PRIMARY KEY, receipt_id TEXT NOT NULL, payload_hash TEXT NOT NULL)`;
             // One replaceable scheduling reservation per bounded delivery event.
@@ -285,7 +289,9 @@ export const makeDeliveryLedger = Effect.fn("AiMetrics.makeDeliveryLedger")(
                 );
               if (O.isNone(payload)) return O.none<DeliveryAttempt>();
               const decoded = yield* decodeAttempt(payload.value);
-              if (decoded.attemptId !== attemptId) return yield* failure("storage");
+              if (decoded.attemptId !== attemptId) {
+                return yield* failure("storage");
+              }
               return O.some(decoded);
             })
           )
@@ -295,10 +301,14 @@ export const makeDeliveryLedger = Effect.fn("AiMetrics.makeDeliveryLedger")(
             yield* sql`SELECT substr(payload,1,4194305) AS payload,source_key AS "sourceKey",evidence_epoch AS "evidenceEpoch" FROM observation_intake_pages WHERE receipt_id=${receiptId}`.pipe(
               Effect.flatMap(decodePayloadSourceKeyRecordRows)
             );
-          if (rows[0] === undefined) return yield* failure("unknown-page");
+          if (rows[0] === undefined) {
+            return yield* failure("unknown-page");
+          }
           if (Str.startsWith("native:")(rows[0].sourceKey)) {
             const events = yield* native.readNewEvents(receiptId);
-            if (O.isNone(events)) return yield* failure("storage");
+            if (O.isNone(events)) {
+              return yield* failure("storage");
+            }
             return yield* Effect.forEach(events.value, (span) =>
               encodeNativeTraceMetadataJson(span).pipe(
                 Effect.flatMap(hashPublicTextSha256),
@@ -312,10 +322,13 @@ export const makeDeliveryLedger = Effect.fn("AiMetrics.makeDeliveryLedger")(
                 ? `transcript-acceptance/v1:${intakeConfig.hostId}:${intakeConfig.namespaceId}:${rows[0].payload}`
                 : `transcript-acceptance/v2:${intakeConfig.hostId}:${intakeConfig.namespaceId}:${rows[0].evidenceEpoch}:${rows[0].payload}`
             )) !== receiptId
-          )
+          ) {
             return yield* failure("storage");
+          }
           const page = yield* decodeTranscriptPageJson(rows[0].payload);
-          if (page.cursor.namespaceId !== intakeConfig.namespaceId) return yield* failure("storage");
+          if (page.cursor.namespaceId !== intakeConfig.namespaceId) {
+            return yield* failure("storage");
+          }
           return yield* Effect.forEach(
             A.filter(page.frames, (frame) => frame._tag === "Accepted"),
             (frame) =>
@@ -335,10 +348,14 @@ export const makeDeliveryLedger = Effect.fn("AiMetrics.makeDeliveryLedger")(
               Effect.flatMap(decodeDigestRecordRows)
             );
           if (prior[0] !== undefined) {
-            if (prior[0].digest !== candidate.digest) return yield* failure("conflict");
+            if (prior[0].digest !== candidate.digest) {
+              return yield* failure("conflict");
+            }
             return 0;
           }
-          if (population >= config.maxEvents) return yield* failure("capacity");
+          if (population >= config.maxEvents) {
+            return yield* failure("capacity");
+          }
           yield* sql`INSERT INTO observation_delivery_events(event_id,receipt_id,payload_hash) VALUES(${candidate.eventId},${receiptId},${candidate.digest})`;
           return 1;
         });
@@ -356,8 +373,9 @@ export const makeDeliveryLedger = Effect.fn("AiMetrics.makeDeliveryLedger")(
                   Effect.flatMap(S.decodeUnknownEffect(Count))
                 );
                 let added = 0;
-                for (const candidate of candidates)
+                for (const candidate of candidates) {
                   added += yield* registerCandidate(candidate, receiptId, total[0].n + added);
+                }
                 yield* sql`INSERT INTO observation_delivery_pages(receipt_id,events) VALUES(${receiptId},${candidates.length})`;
                 return candidates.length;
               })
@@ -369,17 +387,23 @@ export const makeDeliveryLedger = Effect.fn("AiMetrics.makeDeliveryLedger")(
             yield* sql`SELECT count(*) AS n FROM observation_delivery_events WHERE event_id=${eventId}`.pipe(
               Effect.flatMap(S.decodeUnknownEffect(Count))
             );
-          if (enrolled[0].n !== 1) return yield* failure("unknown-event");
+          if (enrolled[0].n !== 1) {
+            return yield* failure("unknown-event");
+          }
           const disposed =
             yield* sql`SELECT count(*) AS n FROM observation_delivery_events e JOIN observation_page_dispositions d ON d.receipt_id=e.receipt_id WHERE e.event_id=${eventId}`.pipe(
               Effect.flatMap(S.decodeUnknownEffect(Count))
             );
-          if (disposed[0].n !== 0) return yield* failure("reclaimed");
+          if (disposed[0].n !== 0) {
+            return yield* failure("reclaimed");
+          }
           const count =
             yield* sql`SELECT count(*) AS n FROM observation_delivery_attempt_events WHERE event_id=${eventId}`.pipe(
               Effect.flatMap(S.decodeUnknownEffect(Count))
             );
-          if (count[0].n >= config.maxAttemptsPerEvent) return yield* failure("capacity");
+          if (count[0].n >= config.maxAttemptsPerEvent) {
+            return yield* failure("capacity");
+          }
         });
         const prepareAttempt = Effect.fn("AiMetrics.delivery.prepareAttempt")((input: DeliveryAttempt) =>
           safe(
@@ -389,19 +413,26 @@ export const makeDeliveryLedger = Effect.fn("AiMetrics.makeDeliveryLedger")(
                 const payload = yield* encodeDeliveryAttemptJson(normalized);
                 const prior = yield* attempt(input.attemptId);
                 if (O.isSome(prior)) {
-                  if ((yield* encodeDeliveryAttemptJson(prior.value)) !== payload) return yield* failure("conflict");
+                  if ((yield* encodeDeliveryAttemptJson(prior.value)) !== payload) {
+                    return yield* failure("conflict");
+                  }
                   return prior.value;
                 }
                 const count = yield* sql`SELECT count(*) AS n FROM observation_delivery_attempts`.pipe(
                   Effect.flatMap(S.decodeUnknownEffect(Count))
                 );
-                if (count[0].n >= config.maxAttempts) return yield* failure("capacity");
-                for (const eventId of normalized.eventIds) yield* requireSendableEvent(eventId);
+                if (count[0].n >= config.maxAttempts) {
+                  return yield* failure("capacity");
+                }
+                for (const eventId of normalized.eventIds) {
+                  yield* requireSendableEvent(eventId);
+                }
                 const digest = yield* hashPublicTextSha256(payload);
                 const now = yield* Clock.currentTimeMillis;
                 yield* sql`INSERT INTO observation_delivery_attempts(attempt_id,payload,digest,recorded_at) VALUES(${input.attemptId},${payload},${digest},${now})`;
-                for (const eventId of normalized.eventIds)
+                for (const eventId of normalized.eventIds) {
                   yield* sql`INSERT INTO observation_delivery_attempt_events(attempt_id,event_id) VALUES(${input.attemptId},${eventId})`;
+                }
                 return normalized;
               })
             )
@@ -428,12 +459,15 @@ export const makeDeliveryLedger = Effect.fn("AiMetrics.makeDeliveryLedger")(
         });
         const readStoredOutcome = Effect.fnUntraced(function* (attemptId: Sha256Hex) {
           const payload = yield* readOutcomePayload(attemptId);
-          return O.isSome(payload) ? O.some(yield* decodeOutcome(payload.value)) : O.none();
+          return O.isSome(payload) ? yield* Effect.asSome(decodeOutcome(payload.value)) : O.none();
         });
         const readOutcome = Effect.fn("AiMetrics.delivery.readOutcome")((attemptId: Sha256Hex) =>
           safe(
             Effect.gen(function* () {
-              if (O.isNone(yield* attempt(attemptId))) return yield* failure("unknown-attempt");
+              const attempt1 = yield* attempt(attemptId);
+              if (O.isNone(attempt1)) {
+                return yield* failure("unknown-attempt");
+              }
               return yield* readStoredOutcome(attemptId);
             })
           )
@@ -444,13 +478,18 @@ export const makeDeliveryLedger = Effect.fn("AiMetrics.makeDeliveryLedger")(
               sql.withTransaction(
                 Effect.gen(function* () {
                   const parent = yield* attempt(attemptId);
-                  if (O.isNone(parent)) return yield* failure("unknown-attempt");
-                  if (outcome._tag === "Partial" && outcome.rejectedCount > parent.value.eventIds.length)
+                  if (O.isNone(parent)) {
+                    return yield* failure("unknown-attempt");
+                  }
+                  if (outcome._tag === "Partial" && outcome.rejectedCount > parent.value.eventIds.length) {
                     return yield* failure("invalid-outcome");
+                  }
                   const payload = yield* encodeDeliveryOutcomeJson(outcome);
                   const prior = yield* readOutcomePayload(attemptId);
                   if (O.isSome(prior)) {
-                    if (prior.value !== payload) return yield* failure("conflict");
+                    if (prior.value !== payload) {
+                      return yield* failure("conflict");
+                    }
                     return;
                   }
                   const digest = yield* hashPublicTextSha256(payload);
@@ -465,18 +504,23 @@ export const makeDeliveryLedger = Effect.fn("AiMetrics.makeDeliveryLedger")(
             sql.withTransaction(
               Effect.gen(function* () {
                 const parent = yield* attempt(proof.attemptId);
-                if (O.isNone(parent)) return yield* failure("unknown-attempt");
+                if (O.isNone(parent)) {
+                  return yield* failure("unknown-attempt");
+                }
                 if (
                   !A.contains(parent.value.eventIds, proof.eventId) ||
                   parent.value.payloadDigest !== proof.payloadDigest
-                )
+                ) {
                   return yield* failure("conflict");
+                }
                 const prior =
                   yield* sql`SELECT substr(payload,1,4097) AS payload,digest FROM observation_delivery_visibility WHERE event_id=${proof.eventId}`.pipe(
                     Effect.flatMap(S.decodeUnknownEffect(PayloadRows)),
                     Effect.flatMap(checkedPayload)
                   );
-                if (O.isSome(prior)) return yield* decodeVisibility(prior.value);
+                if (O.isSome(prior)) {
+                  return yield* decodeVisibility(prior.value);
+                }
                 const payload = yield* encodeDeliveryVisibilityJson(proof);
                 const digest = yield* hashPublicTextSha256(payload);
                 yield* sql`INSERT INTO observation_delivery_visibility(event_id,payload,digest) VALUES(${proof.eventId},${payload},${digest})`;
@@ -487,7 +531,9 @@ export const makeDeliveryLedger = Effect.fn("AiMetrics.makeDeliveryLedger")(
         );
         const readEventOutcome = Effect.fnUntraced(function* (eventId: Sha256Hex, attemptId: Sha256Hex) {
           const parent = yield* attempt(attemptId);
-          if (O.isNone(parent) || !A.contains(parent.value.eventIds, eventId)) return yield* failure("storage");
+          if (O.isNone(parent) || !A.contains(parent.value.eventIds, eventId)) {
+            return yield* failure("storage");
+          }
           return yield* readStoredOutcome(attemptId);
         });
         const readEventHistory = Effect.fnUntraced(function* (
@@ -524,8 +570,9 @@ export const makeDeliveryLedger = Effect.fn("AiMetrics.makeDeliveryLedger")(
             O.isNone(parent) ||
             !A.contains(parent.value.eventIds, eventId) ||
             parent.value.payloadDigest !== proof.payloadDigest
-          )
+          ) {
             return yield* failure("storage");
+          }
           return true;
         });
         const state = Effect.fn("AiMetrics.delivery.state")((eventId: Sha256Hex) =>
@@ -541,7 +588,9 @@ export const makeDeliveryLedger = Effect.fn("AiMetrics.makeDeliveryLedger")(
                   yield* sql`SELECT e.attempt_id AS "attemptId" FROM observation_delivery_attempt_events e LEFT JOIN observation_delivery_attempts a ON a.attempt_id=e.attempt_id WHERE e.event_id=${eventId} ORDER BY a.sequence LIMIT 129`.pipe(
                     Effect.flatMap(decodeAttemptIdRecordRows)
                   );
-                if (rows.length > config.maxAttemptsPerEvent) return yield* failure("storage");
+                if (rows.length > config.maxAttemptsPerEvent) {
+                  return yield* failure("storage");
+                }
                 const history = yield* readEventHistory(eventId, rows);
                 const visible = yield* readEventVisibility(eventId);
                 return O.some(

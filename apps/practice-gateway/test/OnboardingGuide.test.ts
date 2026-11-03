@@ -68,7 +68,8 @@ describe("onboarding guide", () => {
       Effect.gen(function* () {
         const toolkit = yield* SetupToolkit;
         const stream = yield* toolkit.handle("setup_onboarding_guide", {});
-        const result = O.getOrThrow(yield* Stream.runHead(stream));
+        const resultHead = yield* Stream.runHead(stream);
+        const result = O.getOrThrow(resultHead);
         const view = yield* S.decodeUnknownEffect(SetupOnboardingGuide)(result.encodedResult);
         expect(view.guide).toBe(guide);
       })

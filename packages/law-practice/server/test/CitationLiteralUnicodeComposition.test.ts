@@ -32,13 +32,17 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("lossless literal comp
       const owned = yield* harness(false);
       owned.selectText(["underscores"]);
       const result = yield* owned.pipeline.run({ text: "\ud83d__\ude00", plan: "raw-text-history" });
-      const value = yield* Effect.fromOption(yield* owned.values.getUnicode(result.value));
+      const citationResult1 = yield* owned.values.getUnicode(result.value);
+      const value = yield* Effect.fromOption(citationResult1);
       expect(value.text).toBe("😀");
       expect(value.pythonLength).toBe(2);
       expect(value.storage).toEqual({ width: 2, bytes: new Uint8Array([0x3d, 0xd8, 0, 0xde]) });
-      const hash = yield* makeCitationPythonHash((yield* defaultCitationEnginePolicy).limits);
-      expect(yield* hash.unicode(value.storage)).toBe(BigInt("7910225535238332317"));
-      expect(yield* hash.text(value.text)).toBe(BigInt("-3536540696076613844"));
+      const citationResult2 = yield* defaultCitationEnginePolicy;
+      const hash = yield* makeCitationPythonHash(citationResult2.limits);
+      const citationResult3 = yield* hash.unicode(value.storage);
+      expect(citationResult3).toBe(BigInt("7910225535238332317"));
+      const citationResult4 = yield* hash.text(value.text);
+      expect(citationResult4).toBe(BigInt("-3536540696076613844"));
       expect(result.producedTextUtf16).toBe(2);
     })
   );
@@ -51,24 +55,28 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("lossless literal comp
         CitationPythonUnicodeStorage.make({ width: 2, bytes: new Uint8Array([0x3d, 0xd8, 95, 0, 95, 0, 0, 0xde]) }),
         A.makeBy(input.repetitions, () => "underscores")
       );
+      const citationResult5 = yield* defaultCitationEnginePolicy;
       const pipeline = yield* makeCitationCleanerPipeline({
-        ...(yield* defaultCitationEnginePolicy).limits,
+        ...citationResult5.limits,
         producedTextUtf16: input.budget,
       }).pipe(Effect.provideService(CitationCleanerRuntime, owned.runtime));
       const affordable = (input.budget - (input.budget % 2)) / 2;
       if (input.budget >= input.repetitions * 2) {
-        expect((yield* pipeline.run({ text: "", plan: "source-native-history" })).producedTextUtf16).toBe(
-          input.repetitions * 2
-        );
-        expect(yield* owned.references).toHaveLength(input.repetitions + 1);
+        const citationResult6 = yield* pipeline.run({ text: "", plan: "source-native-history" });
+        expect(citationResult6.producedTextUtf16).toBe(input.repetitions * 2);
+        const citationResult7 = yield* owned.references;
+        expect(citationResult7).toHaveLength(input.repetitions + 1);
       } else {
-        expect(yield* Effect.flip(pipeline.run({ text: "", plan: "source-native-history" }))).toMatchObject({
+        const citationResult8 = yield* Effect.flip(pipeline.run({ text: "", plan: "source-native-history" }));
+        expect(citationResult8).toMatchObject({
           _tag: "CitationSafetyLimitExceeded",
           limit: "producedTextUtf16",
         });
-        expect(yield* owned.references).toHaveLength(affordable + 1);
+        const citationResult9 = yield* owned.references;
+        expect(citationResult9).toHaveLength(affordable + 1);
       }
-      const work = yield* Effect.fromOption(yield* owned.lastWork);
+      const citationResult10 = yield* owned.lastWork;
+      const work = yield* Effect.fromOption(citationResult10);
       const snapshot = yield* work.snapshot;
       expect(snapshot.closed).toBe(true);
       // A failed stage may have reserved a prefix, but cannot publish a value.
@@ -82,7 +90,8 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("lossless literal comp
     Effect.gen(function* () {
       const corpus = yield* loadCitationUnicodeHistories();
       const owned = yield* harness(false);
-      const hash = yield* makeCitationPythonHash((yield* defaultCitationEnginePolicy).limits);
+      const citationResult11 = yield* defaultCitationEnginePolicy;
+      const hash = yield* makeCitationPythonHash(citationResult11.limits);
       let histories = 0;
       let snapshots = 0;
       let transitions = 0;
@@ -91,10 +100,11 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("lossless literal comp
         Effect.fnUntraced(function* (row) {
           if (A.contains(row.steps, "html")) return;
           const first = A.getUnsafe(row.events, 0).value;
+          const citationResult12 = yield* S.decodeEffect(S.Uint8ArrayFromHex)(first.nativeHex);
           owned.select(
             CitationPythonUnicodeStorage.make({
               width: first.width,
-              bytes: yield* S.decodeEffect(S.Uint8ArrayFromHex)(first.nativeHex),
+              bytes: citationResult12,
             }),
             row.steps
           );
@@ -104,14 +114,15 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("lossless literal comp
           for (let index = 0; index < refs.length; index++) {
             const ref = A.getUnsafe(refs, index);
             const expected = A.getUnsafe(row.events, index);
-            const value = yield* Effect.fromOption(yield* owned.values.getUnicode(ref));
+            const citationResult13 = yield* owned.values.getUnicode(ref);
+            const value = yield* Effect.fromOption(citationResult13);
             expect(value.storage.width, row.name).toBe(expected.value.width);
-            expect(value.storage.bytes, row.name).toEqual(
-              yield* S.decodeEffect(S.Uint8ArrayFromHex)(expected.value.nativeHex)
-            );
+            const citationResult14 = yield* S.decodeEffect(S.Uint8ArrayFromHex)(expected.value.nativeHex);
+            expect(value.storage.bytes, row.name).toEqual(citationResult14);
             expect(value.pythonLength, row.name).toBe(expected.value.pythonLength);
             expect(value.utf16Units, row.name).toBe(expected.value.utf16Units);
-            expect(yield* hash.unicode(value.storage), row.name).toBe(expected.value.hash);
+            const citationResult15 = yield* hash.unicode(value.storage);
+            expect(citationResult15, row.name).toBe(expected.value.hash);
             let sameAs = A.empty<number>();
             for (let prior = 0; prior < index; prior++)
               if (yield* owned.values.same(A.getUnsafe(refs, prior), ref)) sameAs = A.append(sameAs, prior);
@@ -141,17 +152,22 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("lossless literal comp
         CitationPythonUnicodeStorage.make({ width: 2, bytes: new Uint8Array([0x3d, 0xd8, 95, 0, 95, 0, 0, 0xde]) }),
         ["underscores", "underscores"]
       );
+      const citationResult16 = yield* defaultCitationEnginePolicy;
       const pipeline = yield* makeCitationCleanerPipeline({
-        ...(yield* defaultCitationEnginePolicy).limits,
+        ...citationResult16.limits,
         producedTextUtf16: 2,
       }).pipe(Effect.provideService(CitationCleanerRuntime, owned.runtime));
-      expect(yield* Effect.flip(pipeline.run({ text: "", plan: "source-native-history" }))).toMatchObject({
+      const citationResult17 = yield* Effect.flip(pipeline.run({ text: "", plan: "source-native-history" }));
+      expect(citationResult17).toMatchObject({
         _tag: "CitationSafetyLimitExceeded",
         limit: "producedTextUtf16",
       });
-      expect(yield* owned.references).toHaveLength(2);
-      const work = yield* Effect.fromOption(yield* owned.lastWork);
-      expect(yield* work.snapshot).toEqual({ producedTextUtf16: 2, closed: true });
+      const citationResult18 = yield* owned.references;
+      expect(citationResult18).toHaveLength(2);
+      const citationResult19 = yield* owned.lastWork;
+      const work = yield* Effect.fromOption(citationResult19);
+      const citationResult20 = yield* work.snapshot;
+      expect(citationResult20).toEqual({ producedTextUtf16: 2, closed: true });
     })
   );
 });

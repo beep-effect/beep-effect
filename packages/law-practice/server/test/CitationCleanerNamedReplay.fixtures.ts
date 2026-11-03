@@ -112,7 +112,8 @@ export const replayNamedCleanerScenes = Effect.fn("NamedCorpusTest.replay")(func
   const present = Effect.fn("NamedCorpusTest.present")(function* (
     value: CitationCleanerObject
   ): Effect.fn.Return<S.Json, CitationCleanerFailure> {
-    const descriptor = yield* Effect.fromOption(yield* h.values.getText(value), fail);
+    const citationResult1 = yield* h.values.getText(value);
+    const descriptor = yield* Effect.fromOption(citationResult1, fail);
     return { kind: "text", text: descriptor.text, subtype: descriptor.subtype === "plain" ? "plain" : "marked" };
   });
   let initial = O.none<CitationCleanerObject>();
@@ -135,7 +136,8 @@ export const replayNamedCleanerScenes = Effect.fn("NamedCorpusTest.replay")(func
     event.kind === "builtin-raise" ? event : { ...event, value: { ...event.value, text: text(event.value.text) } };
   const verify = Effect.fn("NamedCorpusTest.verify")(function* (row: typeof NamedCase.Type) {
     observed = [];
-    h.select(yield* Effect.forEach(row.steps.names, h.values.text));
+    const citationResult2 = yield* Effect.forEach(row.steps.names, h.values.text);
+    h.select(citationResult2);
     yield* Effect.forEach(
       row.runs,
       Effect.fnUntraced(function* (expected) {
@@ -156,8 +158,10 @@ export const replayNamedCleanerScenes = Effect.fn("NamedCorpusTest.replay")(func
           }
         } else {
           const result = yield* operation.run(input);
-          expect(O.getOrThrow(yield* h.values.getText(result.value)).text, row.name).toBe(text(expected.value.text));
-          expect(yield* h.values.same(O.getOrThrow(initial), result.value), row.name).toBe(expected.sameAsInput);
+          const citationResult3 = yield* h.values.getText(result.value);
+          expect(O.getOrThrow(citationResult3).text, row.name).toBe(text(expected.value.text));
+          const citationResult4 = yield* h.values.same(O.getOrThrow(initial), result.value);
+          expect(citationResult4, row.name).toBe(expected.sameAsInput);
           successes++;
         }
       }),
@@ -167,7 +171,8 @@ export const replayNamedCleanerScenes = Effect.fn("NamedCorpusTest.replay")(func
       S.decodeEffect(BuiltinEvent)(value).pipe(Effect.map(normalize))
     );
     expect(observed, row.name).toEqual(expectedEvents);
-    const actual = yield* Effect.forEach(yield* h.registry.read, ([key, _value, builtin]) =>
+    const citationResult5 = yield* h.registry.read;
+    const actual = yield* Effect.forEach(citationResult5, ([key, _value, builtin]) =>
       Effect.gen(function* () {
         return { key: yield* present(key), value: { kind: "builtin-function", name: O.getOrThrow(builtin) } };
       })
@@ -175,7 +180,8 @@ export const replayNamedCleanerScenes = Effect.fn("NamedCorpusTest.replay")(func
     expect(actual, row.name).toEqual(
       A.map(row.lookupAfter, (binding) => ({ ...binding, key: { ...binding.key, text: text(binding.key.text) } }))
     );
-    expect(yield* admission.snapshot).toEqual({ active: 0, queued: 0, closed: false });
+    const citationResult6 = yield* admission.snapshot;
+    expect(citationResult6).toEqual({ active: 0, queued: 0, closed: false });
     events += observed.length;
     checked++;
   });

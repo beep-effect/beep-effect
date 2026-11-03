@@ -46,7 +46,8 @@ describe("Azure cache transport", () => {
           const store = yield* BlobStore;
           yield* store.put("key", { metadata: "metadata", body: new Uint8Array([7, 8]) }, S.String);
           assert.deepStrictEqual(upload.mock.calls[0]?.[0], frame);
-          assertSome(yield* store.get("key", S.String), { metadata: "metadata", body: new Uint8Array([7, 8]) });
+          const got = yield* store.get("key", S.String);
+          assertSome(got, { metadata: "metadata", body: new Uint8Array([7, 8]) });
           assert.isTrue(A.some(calls, (call) => call.method === "FinalizeCacheEntryUpload"));
         }).pipe(
           Effect.ensuring(

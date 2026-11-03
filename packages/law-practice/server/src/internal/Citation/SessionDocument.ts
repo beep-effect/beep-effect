@@ -102,11 +102,12 @@ export const makeCitationSessionDocumentProjector = Effect.fn("Citation.makeSess
             resource._tag === "Registered" ? O.some(`${resource.scope}:${resource.slot}`) : O.none<string>();
           const cached = O.flatMap(reference, (key) => HashMap.get(registered, key));
           if (O.isSome(cached)) return cached.value;
-          const identity = yield* S.decodeEffect(CitationResourceIdentityType)(
-            yield* descriptors
-              .describe(resource)
-              .pipe(Effect.mapError((error) => (error.reason === "limit-exceeded" ? limit() : failed())))
-          ).pipe(Effect.mapError(failed));
+          const citationResult1 = yield* descriptors
+            .describe(resource)
+            .pipe(Effect.mapError((error) => (error.reason === "limit-exceeded" ? limit() : failed())));
+          const identity = yield* S.decodeEffect(CitationResourceIdentityType)(citationResult1).pipe(
+            Effect.mapError(failed)
+          );
           const id = yield* makeCitationResourceAuthorityId(identity).pipe(Effect.mapError(failed));
           if (!HashMap.has(identities, id)) {
             if (Chunk.size(authorities) >= state.limits.authorities) return yield* limit();
@@ -208,8 +209,9 @@ export const makeCitationSessionDocumentProjector = Effect.fn("Citation.makeSess
           if (O.isSome(list) && !membersEquivalent(list.value.members, entry.members)) return yield* invalid();
           if (O.isNone(list)) {
             if (Chunk.size(memberLists) >= state.limits.authorities) return yield* limit();
+            const citationResult2 = yield* nodeDigest("list", entry.listSlot);
             const created = CitationMemberList.make({
-              id: CitationMemberListId.make(`cl1:${yield* nodeDigest("list", entry.listSlot)}`),
+              id: CitationMemberListId.make(`cl1:${citationResult2}`),
               members: entry.members,
             });
             list = O.some(created);
@@ -217,8 +219,9 @@ export const makeCitationSessionDocumentProjector = Effect.fn("Citation.makeSess
             memberLists = Chunk.append(memberLists, created);
           }
           const value = yield* Effect.fromOption(list, failed);
+          const citationResult3 = yield* nodeDigest("entry", entry.entrySlot);
           const group = CitationResourceGroup.make({
-            id: CitationResourceGroupId.make(`cg1:${yield* nodeDigest("entry", entry.entrySlot)}`),
+            id: CitationResourceGroupId.make(`cg1:${citationResult3}`),
             authorityId: id,
             memberListId: value.id,
           });
@@ -240,10 +243,11 @@ export const makeCitationSessionDocumentProjector = Effect.fn("Citation.makeSess
             const identity = yield* Effect.fromOption(HashMap.get(identities, id), failed);
             const decisions = yield* Effect.fromOption(HashMap.get(decisionSets, id), failed);
             const expected = yield* Effect.fromOption(HashMap.get(groupSets, id), failed);
+            const citationResult4 = yield* Effect.fromOption(HashMap.get(candidateSets, id), failed);
             return CitationResourceBinding.make({
               identity,
               decisions: A.fromIterable(decisions),
-              candidates: A.fromIterable(yield* Effect.fromOption(HashMap.get(candidateSets, id), failed)),
+              candidates: A.fromIterable(citationResult4),
               groups: A.fromIterable(expected),
             });
           })

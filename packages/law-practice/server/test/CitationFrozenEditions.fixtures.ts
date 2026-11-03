@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { CitationEditionRef } from "@beep/law-practice-domain/values";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
@@ -41,11 +41,10 @@ const Expected = S.fromJsonString(
 export const loadCitationFrozenEditionFixtures = Effect.fn("FrozenEditionTest.fixtures")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const raw = yield* fs.readFileString(
-    fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/operation-cases.json", import.meta.url))
+    NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/operation-cases.json", import.meta.url))
   );
-  expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-    "ae441000ddc90537864e3fdd4a9dfc4aa81af37a65818b48ce9bf37d95d1eeb1"
-  );
+  const citationResult1 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+  expect(citationResult1).toBe("ae441000ddc90537864e3fdd4a9dfc4aa81af37a65818b48ce9bf37d95d1eeb1");
   const corpus = yield* S.decodeEffect(Corpus)(raw);
   let reporters = A.empty<{ ref: Sha256Hex; payload: string }>();
   let editions = A.empty<{ ref: Sha256Hex; payload: string }>();
@@ -56,10 +55,9 @@ export const loadCitationFrozenEditionFixtures = Effect.fn("FrozenEditionTest.fi
     if (tag.pythonType === "eyecite.models.Edition") editions = A.append(editions, { ref, payload: row.payload });
   }
   const expectedRaw = yield* fs.readFileString(
-    fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/frozen-editions.json", import.meta.url))
+    NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/frozen-editions.json", import.meta.url))
   );
-  expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(expectedRaw))).toBe(
-    "0c23ff189ec5c381303af14c79f630a4d7910a11374308f9c7400ca3f79faf0d"
-  );
+  const citationResult2 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(expectedRaw));
+  expect(citationResult2).toBe("0c23ff189ec5c381303af14c79f630a4d7910a11374308f9c7400ca3f79faf0d");
   return { bundle: { reporters, editions }, expected: yield* S.decodeEffect(Expected)(expectedRaw) };
 });

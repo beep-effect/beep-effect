@@ -138,7 +138,8 @@ const failure = (reason: typeof Reason.Type) => CitationResourceObjectFailure.ma
 const ReferenceJson = S.fromJsonString(CitationGroupMember);
 const referenceSnapshot = Effect.fn("Citation.resourceReference")(
   function* (reference: CitationGroupMember) {
-    return yield* S.decodeEffect(ReferenceJson)(yield* S.encodeEffect(ReferenceJson)(reference));
+    const citationResult1 = yield* S.encodeEffect(ReferenceJson)(reference);
+    return yield* S.decodeEffect(ReferenceJson)(citationResult1);
   },
   Effect.mapError(() => failure("invalid-input"))
 );
@@ -176,13 +177,13 @@ export const makeCitationResourceObjects = Effect.fn("Citation.makeResourceObjec
     return yield* Effect.fromOption(O.fromUndefinedOr(handles.get(resource)), () => failure("unknown-object"));
   });
   const hash = Effect.fn("Citation.resourceLiveHash")(function* (id: number) {
-    const reference = yield* referenceSnapshot(yield* byId(id));
+    const citationResult2 = yield* byId(id);
+    const reference = yield* referenceSnapshot(citationResult2);
     yield* models.step;
     const value = yield* models.read(reference).pipe(Effect.mapError(() => failure("model-failed")));
     const codec = S.fromJsonString(CitationResourceModelInput);
-    const current = yield* S.decodeEffect(codec)(
-      yield* S.encodeEffect(codec)(value).pipe(Effect.mapError(() => failure("invalid-input")))
-    ).pipe(Effect.mapError(() => failure("invalid-input")));
+    const citationResult3 = yield* S.encodeEffect(codec)(value).pipe(Effect.mapError(() => failure("invalid-input")));
+    const current = yield* S.decodeEffect(codec)(citationResult3).pipe(Effect.mapError(() => failure("invalid-input")));
     const citation = current.citation;
     if (citation.type === "case") {
       // Explicit null pages must not evaluate reporter/edition lookup.
@@ -194,7 +195,10 @@ export const makeCitationResourceObjects = Effect.fn("Citation.makeResourceObjec
       const nullPage = page === null;
       const selected = nullPage ? O.none() : citation.publication.selectedEdition;
       const edition = O.isSome(selected)
-        ? O.some(yield* editions.lookup(selected.value, "case").pipe(Effect.mapError(() => failure("artifact-failed"))))
+        ? yield* editions.lookup(selected.value, "case").pipe(
+            Effect.mapError(() => failure("artifact-failed")),
+            Effect.asSome
+          )
         : O.none();
       const result = yield* makeCitationCaseResourceHash(
         CitationCaseResourceHashInput.make({
@@ -259,14 +263,17 @@ export const makeCitationResourceObjects = Effect.fn("Citation.makeResourceObjec
       mutex.withPermit(
         Effect.gen(function* () {
           const objectId = yield* ownedId(resource);
-          return CitationRuntimeDictionaryKey.make({ objectId, hash: yield* hash(objectId) });
+          const citationResult4 = yield* hash(objectId);
+          return CitationRuntimeDictionaryKey.make({ objectId, hash: citationResult4 });
         })
       )
     ),
     referenceOf: Effect.fn("Citation.resourceReferenceOf")((resource: CitationResourceObject) =>
       mutex.withPermit(
         Effect.gen(function* () {
-          return yield* referenceSnapshot(yield* byId(yield* ownedId(resource)));
+          const citationResult5 = yield* ownedId(resource);
+          const citationResult6 = yield* byId(citationResult5);
+          return yield* referenceSnapshot(citationResult6);
         })
       )
     ),

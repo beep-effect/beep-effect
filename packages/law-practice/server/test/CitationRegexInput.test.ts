@@ -65,18 +65,19 @@ const Corpus = S.fromJsonString(
 );
 const preflight = () => Effect.void;
 const load = Effect.fn("RegexInputTest.load")(function* () {
-  const raw = yield* (yield* FileSystem.FileSystem).readFileString(
+  const citationResult1 = yield* FileSystem.FileSystem;
+  const raw = yield* citationResult1.readFileString(
     NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/regex-input.json", import.meta.url))
   );
-  expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-    "dab2793dc0edefee741b317a2558da9c01d58021a53bcb29b4e18b87d34bf51d"
-  );
+  const citationResult2 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+  expect(citationResult2).toBe("dab2793dc0edefee741b317a2558da9c01d58021a53bcb29b4e18b87d34bf51d");
   return yield* S.decodeEffect(Corpus)(raw);
 });
 
 it.effect("rejects incoherent layout and projection data through their own codecs", () =>
   Effect.gen(function* () {
-    const input = yield* makeCitationRegexInput((yield* defaultCitationEnginePolicy).limits);
+    const citationResult3 = yield* defaultCitationEnginePolicy;
+    const input = yield* makeCitationRegexInput(citationResult3.limits);
     const { layout } = yield* input.prepareText("x", preflight);
     yield* Effect.forEach(
       [
@@ -101,7 +102,8 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("native regex input so
     [Latin1Bytes],
     ([bytes]) =>
       Effect.gen(function* () {
-        const input = yield* makeCitationRegexInput((yield* defaultCitationEnginePolicy).limits);
+        const citationResult4 = yield* defaultCitationEnginePolicy;
+        const input = yield* makeCitationRegexInput(citationResult4.limits);
         const prepared = yield* input.prepareUnicode({ width: 1, bytes }, () => Effect.void);
         expect(prepared.value.storage.bytes).toEqual(bytes);
         expect(prepared.value.pythonLength).toBe(bytes.byteLength);
@@ -111,14 +113,17 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("native regex input so
             ""
           )
         );
-        for (let offset = 0; offset <= bytes.byteLength; offset++)
-          expect(yield* prepared.project({ start: offset, end: offset })).toEqual({ _tag: "Point", offset });
+        for (let offset = 0; offset <= bytes.byteLength; offset++) {
+          const citationResult23 = yield* prepared.project({ start: offset, end: offset });
+          expect(citationResult23).toEqual({ _tag: "Point", offset });
+        }
       })
   );
   it.effect("preserves all 259 source products, 2395 source projections and canonical raw string interpretations", () =>
     Effect.gen(function* () {
       const corpus = yield* load();
-      const input = yield* makeCitationRegexInput((yield* defaultCitationEnginePolicy).limits);
+      const citationResult5 = yield* defaultCitationEnginePolicy;
+      const input = yield* makeCitationRegexInput(citationResult5.limits);
       let projections = 0;
       let ambiguous = 0;
       yield* Effect.forEach(
@@ -137,7 +142,9 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("native regex input so
           expect(prepared.value.text).toBe(row.text);
           expect(prepared.value.storage.bytes).toEqual(bytes);
           expect(prepared.value.storage.bytes).not.toBe(bytes);
-          if (row.projectionAmbiguous) ambiguous++;
+          if (row.projectionAmbiguous) {
+            ambiguous++;
+          }
           const expectedProjection = (start: number, end: number) => {
             const startChar = A.getUnsafe(row.prefix, start);
             const endChar = A.getUnsafe(row.prefix, end);
@@ -147,15 +154,17 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("native regex input so
                 ? { _tag: "Point", offset: startChar }
                 : { _tag: "Range", startChar, endChar };
           };
-          for (let start = 0; start <= row.pythonLength; start++)
+          for (let start = 0; start <= row.pythonLength; start++) {
             for (let end = start; end <= row.pythonLength; end++) {
               const projected = yield* prepared.project({ start, end });
               expect(projected).toEqual(expectedProjection(start, end));
               projections++;
             }
+          }
           const raw = yield* input.prepareText(row.text, preflight);
           expect(raw.value.storage.width).toBe(row.rawStorage.width);
-          expect(raw.value.storage.bytes).toEqual(yield* S.decodeEffect(S.Uint8ArrayFromHex)(row.rawStorage.nativeHex));
+          const citationResult6 = yield* S.decodeEffect(S.Uint8ArrayFromHex)(row.rawStorage.nativeHex);
+          expect(raw.value.storage.bytes).toEqual(citationResult6);
           expect(raw.value.pythonLength).toBe(row.rawPythonLength);
           expect(raw.layout.projectionAmbiguous).toBe(false);
         }),
@@ -171,23 +180,29 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("native regex input so
 
 it.effect("retains empty and split projections without manufacturing a verified range", () =>
   Effect.gen(function* () {
-    const input = yield* makeCitationRegexInput((yield* defaultCitationEnginePolicy).limits);
+    const citationResult7 = yield* defaultCitationEnginePolicy;
+    const input = yield* makeCitationRegexInput(citationResult7.limits);
     const pair = yield* input.prepareUnicode({ width: 2, bytes: new Uint8Array([0x35, 0xd8, 0xce, 0xdf]) }, preflight);
-    expect(yield* pair.project({ start: 0, end: 1 })).toEqual({ _tag: "Split", startChar: 0, endChar: 1 });
-    expect(yield* pair.project({ start: 1, end: 1 })).toEqual({ _tag: "Split", startChar: 1, endChar: 1 });
-    expect(yield* pair.project({ start: 2, end: 2 })).toEqual({ _tag: "Point", offset: 2 });
+    const citationResult8 = yield* pair.project({ start: 0, end: 1 });
+    expect(citationResult8).toEqual({ _tag: "Split", startChar: 0, endChar: 1 });
+    const citationResult9 = yield* pair.project({ start: 1, end: 1 });
+    expect(citationResult9).toEqual({ _tag: "Split", startChar: 1, endChar: 1 });
+    const citationResult10 = yield* pair.project({ start: 2, end: 2 });
+    expect(citationResult10).toEqual({ _tag: "Point", offset: 2 });
     const rejected = yield* convertTextOffsetRange(
       TextOffsetRange.make({ start: S.Natural.make(0), end: S.Natural.make(1), unit: "utf16-code-unit" }),
       pair.value.text
     ).pipe(Effect.flip);
     expect(rejected.reason).toBe("invalid-offset");
     const ordinary = yield* input.prepareText("A😀B", preflight);
-    expect(yield* ordinary.project({ start: 1, end: 2 })).toEqual({ _tag: "Range", startChar: 1, endChar: 3 });
+    const citationResult11 = yield* ordinary.project({ start: 1, end: 2 });
+    expect(citationResult11).toEqual({ _tag: "Range", startChar: 1, endChar: 3 });
     const canonical = yield* convertTextOffsetRange(
       TextOffsetRange.make({ start: S.Natural.make(1), end: S.Natural.make(2), unit: "unicode-code-point" }),
       ordinary.value.text
     );
-    expect(yield* ordinary.project({ start: 1, end: 2 })).toEqual({
+    const citationResult12 = yield* ordinary.project({ start: 1, end: 2 });
+    expect(citationResult12).toEqual({
       _tag: "Range",
       startChar: canonical.startChar,
       endChar: canonical.endChar,
@@ -197,7 +212,8 @@ it.effect("retains empty and split projections without manufacturing a verified 
 
 it.effect("rejects malformed native layouts and invalid point ranges with closed failures", () =>
   Effect.gen(function* () {
-    const input = yield* makeCitationRegexInput((yield* defaultCitationEnginePolicy).limits);
+    const citationResult13 = yield* defaultCitationEnginePolicy;
+    const input = yield* makeCitationRegexInput(citationResult13.limits);
     yield* Effect.forEach(
       [
         { width: 2, bytes: new Uint8Array([65, 0]) },
@@ -207,15 +223,14 @@ it.effect("rejects malformed native layouts and invalid point ranges with closed
       ],
       Effect.fnUntraced(function* (storage) {
         let called = false;
-        expect(
-          yield* input
-            .prepareUnicode(storage, () =>
-              Effect.sync(() => {
-                called = true;
-              })
-            )
-            .pipe(Effect.flip)
-        ).toMatchObject({ reason: "invalid-input" });
+        const citationResult14 = yield* input
+          .prepareUnicode(storage, () =>
+            Effect.sync(() => {
+              called = true;
+            })
+          )
+          .pipe(Effect.flip);
+        expect(citationResult14).toMatchObject({ reason: "invalid-input" });
         expect(called).toBe(false);
       }),
       { concurrency: 1, discard: true }
@@ -229,7 +244,8 @@ it.effect("rejects malformed native layouts and invalid point ranges with closed
         { start: 0, end: 1.5 },
       ],
       Effect.fnUntraced(function* (range) {
-        expect(yield* prepared.project(range).pipe(Effect.flip)).toMatchObject({ reason: "invalid-range" });
+        const citationResult15 = yield* prepared.project(range).pipe(Effect.flip);
+        expect(citationResult15).toMatchObject({ reason: "invalid-range" });
       }),
       { concurrency: 1, discard: true }
     );
@@ -248,15 +264,14 @@ it.effect("checks source, intermediate and byte ceilings before trusted transpor
       Effect.fnUntraced(function* ([policy, value, limit]) {
         const input = yield* makeCitationRegexInput(policy);
         let called = false;
-        expect(
-          yield* input
-            .prepareText(value, () =>
-              Effect.sync(() => {
-                called = true;
-              })
-            )
-            .pipe(Effect.flip)
-        ).toMatchObject({ operation: "extract", limit });
+        const citationResult16 = yield* input
+          .prepareText(value, () =>
+            Effect.sync(() => {
+              called = true;
+            })
+          )
+          .pipe(Effect.flip);
+        expect(citationResult16).toMatchObject({ operation: "extract", limit });
         expect(called).toBe(false);
       }),
       { concurrency: 1, discard: true }
@@ -267,13 +282,15 @@ it.effect("checks source, intermediate and byte ceilings before trusted transpor
       producedTextUtf16: 2,
       processMessageBytes: 4,
     });
-    expect((yield* exact.prepareText("𝟎", preflight)).layout.byteLength).toBe(4);
+    const citationResult17 = yield* exact.prepareText("𝟎", preflight);
+    expect(citationResult17.layout.byteLength).toBe(4);
   })
 );
 
 it.effect("preflights before receiving allocation, propagates rejection and owns the completed snapshot", () =>
   Effect.gen(function* () {
-    const input = yield* makeCitationRegexInput((yield* defaultCitationEnginePolicy).limits);
+    const citationResult18 = yield* defaultCitationEnginePolicy;
+    const input = yield* makeCitationRegexInput(citationResult18.limits);
     const rejected = yield* input.prepareText("x", () => Effect.fail("transport-rejected")).pipe(Effect.flip);
     expect(rejected).toBe("transport-rejected");
     const source = new Uint8Array([65]);
@@ -283,7 +300,8 @@ it.effect("preflights before receiving allocation, propagates rejection and owns
     expect(prepared.value.storage.bytes).toEqual(new Uint8Array([65]));
     const run: Effect.Effect<CitationPreparedRegexInput, CitationRegexInputFailure | CitationSafetyLimitExceeded> =
       input.prepareText("x", preflight);
-    expect((yield* run).value.text).toBe("x");
+    const citationResult19 = yield* run;
+    expect(citationResult19.value.text).toBe("x");
   })
 );
 
@@ -301,7 +319,8 @@ it.effect("captures extract timing independently of clean timing and caller Cloc
       .prepareText("x", () => Effect.never)
       .pipe(Effect.provideService(Clock.Clock, changed), Effect.forkChild);
     yield* TestClock.adjust(Duration.millis(20));
-    expect(yield* Fiber.join(timed).pipe(Effect.flip)).toMatchObject({
+    const citationResult20 = yield* Fiber.join(timed).pipe(Effect.flip);
+    expect(citationResult20).toMatchObject({
       operation: "extract",
       limit: "extractDeadline",
     });
@@ -320,10 +339,12 @@ it.effect("captures policy and gives a shorter total deadline precedence during 
     const input = yield* makeCitationRegexInput(policy);
     policy.sourceUtf16 = 2;
     policy.operationDeadline = Duration.seconds(1);
-    expect(yield* input.prepareText("xx", preflight).pipe(Effect.flip)).toMatchObject({ limit: "sourceUtf16" });
+    const citationResult21 = yield* input.prepareText("xx", preflight).pipe(Effect.flip);
+    expect(citationResult21).toMatchObject({ limit: "sourceUtf16" });
     const timed = yield* input.prepareText("x", () => Effect.never).pipe(Effect.forkChild);
     yield* TestClock.adjust(Duration.millis(5));
-    expect(yield* Fiber.join(timed).pipe(Effect.flip)).toMatchObject({
+    const citationResult22 = yield* Fiber.join(timed).pipe(Effect.flip);
+    expect(citationResult22).toMatchObject({
       operation: "extract",
       limit: "operationDeadline",
     });

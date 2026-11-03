@@ -234,7 +234,8 @@ const decodePreamble = Effect.fn("PnpmEnvLockfile.decodePreamble")(function* (
   const { preamble } = yield* splitPnpmStream(content);
   if (preamble === undefined) return O.none();
   yield* gatePnpmVersion(preamble);
-  return O.some(yield* decodePnpmEnvRaw(preamble).pipe(Effect.mapError(validationFailure)));
+  const pipe1 = yield* decodePnpmEnvRaw(preamble).pipe(Effect.mapError(validationFailure));
+  return O.some(pipe1);
 });
 
 type EnvDependency = { readonly specifier: string; readonly version: string };

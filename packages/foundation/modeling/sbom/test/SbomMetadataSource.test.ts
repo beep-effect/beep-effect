@@ -128,7 +128,8 @@ describe("SbomMetadataSource.componentFor", () => {
 describe("SbomMetadataSource.rootComponent", () => {
   it.effect("maps the manifest's identity fields", () =>
     Effect.gen(function* () {
-      const component = SbomMetadataSource.rootComponent(yield* decode());
+      const decoded = yield* decode();
+      const component = SbomMetadataSource.rootComponent(decoded);
       assert.strictEqual(component.name, "@effected/sbom");
       assert.strictEqual(component.version, "0.1.0");
       assert.strictEqual(component.description, "supply-chain artifacts");
@@ -141,13 +142,15 @@ describe("SbomMetadataSource.rootComponent", () => {
   it.effect("maps keywords onto CycloneDX 1.6 tags", () =>
     Effect.gen(function* () {
       // `tags` is 1.6-only, which is part of what the 1.6-only ruling bought.
-      assert.deepStrictEqual(SbomMetadataSource.rootComponent(yield* decode()).tags, ["sbom", "cyclonedx"]);
+      const decoded1 = yield* decode();
+      assert.deepStrictEqual(SbomMetadataSource.rootComponent(decoded1).tags, ["sbom", "cyclonedx"]);
     })
   );
 
   it.effect("maps maintainers onto component authors", () =>
     Effect.gen(function* () {
-      const authors = SbomMetadataSource.rootComponent(yield* decode()).authors ?? [];
+      const decoded2 = yield* decode();
+      const authors = SbomMetadataSource.rootComponent(decoded2).authors ?? [];
       assert.deepStrictEqual(
         A.map(authors, (author) => author.name),
         ["Ray", "Vee"]
@@ -159,7 +162,8 @@ describe("SbomMetadataSource.rootComponent", () => {
   it.effect("falls back to the author when the manifest lists no maintainers", () =>
     Effect.gen(function* () {
       const { maintainers: _maintainers, ...withoutMaintainers } = manifest;
-      const authors = SbomMetadataSource.rootComponent(yield* decode(withoutMaintainers)).authors ?? [];
+      const decoded3 = yield* decode(withoutMaintainers);
+      const authors = SbomMetadataSource.rootComponent(decoded3).authors ?? [];
       assert.deepStrictEqual(
         A.map(authors, (author) => author.name),
         ["Dee"]
@@ -210,7 +214,8 @@ describe("SbomMetadataSource.externalReferences", () => {
       // `git+https://github.com/effected/kit.git` browses at
       // `https://github.com/effected/kit`. The normalization is
       // `Repository.browseUrl`'s; this package only chooses the reference type.
-      const references = SbomMetadataSource.externalReferences(yield* decode());
+      const decoded4 = yield* decode();
+      const references = SbomMetadataSource.externalReferences(decoded4);
       const vcs = referenceOf(references, "vcs");
       assert.strictEqual(vcs?.url, "https://github.com/effected/kit");
     })
@@ -235,7 +240,8 @@ describe("SbomMetadataSource.externalReferences", () => {
 
   it.effect("maps bugs onto issue-tracker and homepage onto documentation", () =>
     Effect.gen(function* () {
-      const references = SbomMetadataSource.externalReferences(yield* decode());
+      const decoded5 = yield* decode();
+      const references = SbomMetadataSource.externalReferences(decoded5);
       assert.strictEqual(referenceOf(references, "issue-tracker")?.url, "https://github.com/effected/kit/issues");
       assert.strictEqual(referenceOf(references, "documentation")?.url, "https://effected.dev");
     })
@@ -250,7 +256,8 @@ describe("SbomMetadataSource.externalReferences", () => {
 
   it.effect("lets an explicit documentation URL win over the manifest's homepage", () =>
     Effect.gen(function* () {
-      const references = SbomMetadataSource.externalReferences(yield* decode(), {
+      const decoded6 = yield* decode();
+      const references = SbomMetadataSource.externalReferences(decoded6, {
         documentationUrl: "https://docs.example",
       });
       assert.strictEqual(referenceOf(references, "documentation")?.url, "https://docs.example");
@@ -274,7 +281,8 @@ describe("SbomMetadataSource.externalReferences", () => {
 
   it.effect("emits nothing at all for a manifest carrying none of the four fields", () =>
     Effect.gen(function* () {
-      assert.lengthOf(SbomMetadataSource.externalReferences(yield* decode({ name: "bare", version: "1.0.0" })), 0);
+      const decoded7 = yield* decode({ name: "bare", version: "1.0.0" });
+      assert.lengthOf(SbomMetadataSource.externalReferences(decoded7), 0);
     })
   );
 });
@@ -282,7 +290,8 @@ describe("SbomMetadataSource.externalReferences", () => {
 describe("SbomMetadataSource.fromPackage", () => {
   it.effect("threads an explicit supplier and timestamp onto the metadata", () =>
     Effect.gen(function* () {
-      const metadata = SbomMetadataSource.fromPackage(yield* decode(), {
+      const decoded8 = yield* decode();
+      const metadata = SbomMetadataSource.fromPackage(decoded8, {
         supplier: Supplier.make({ name: "Acme" }),
         timestamp: "2026-07-25T00:00:00.000Z",
       });
@@ -293,7 +302,8 @@ describe("SbomMetadataSource.fromPackage", () => {
 
   it.effect("fills the supplier's contacts from maintainers when it has none", () =>
     Effect.gen(function* () {
-      const metadata = SbomMetadataSource.fromPackage(yield* decode(), { supplier: Supplier.make({ name: "Acme" }) });
+      const decoded9 = yield* decode();
+      const metadata = SbomMetadataSource.fromPackage(decoded9, { supplier: Supplier.make({ name: "Acme" }) });
       assert.deepStrictEqual(
         A.map(metadata.supplier?.contact ?? [], (contact) => contact.name),
         ["Ray", "Vee"]
@@ -304,7 +314,8 @@ describe("SbomMetadataSource.fromPackage", () => {
   it.effect("never overwrites contacts the caller supplied", () =>
     Effect.gen(function* () {
       const supplier = Supplier.make({ name: "Acme", contact: [Contact.make({ name: "Support" })] });
-      const metadata = SbomMetadataSource.fromPackage(yield* decode(), { supplier });
+      const decoded10 = yield* decode();
+      const metadata = SbomMetadataSource.fromPackage(decoded10, { supplier });
       assert.deepStrictEqual(
         A.map(metadata.supplier?.contact ?? [], (contact) => contact.name),
         ["Support"]
@@ -317,7 +328,8 @@ describe("SbomMetadataSource.fromPackage", () => {
       // A manifest says who wrote the software, never who assembled the SBOM or
       // which organization supplied it. Inventing either would fabricate two of
       // the NTIA elements.
-      const metadata = SbomMetadataSource.fromPackage(yield* decode());
+      const decoded11 = yield* decode();
+      const metadata = SbomMetadataSource.fromPackage(decoded11);
       assert.isUndefined(metadata.supplier);
       assert.isUndefined(metadata.authors);
       assert.isUndefined(metadata.timestamp);
@@ -326,7 +338,8 @@ describe("SbomMetadataSource.fromPackage", () => {
 
   it.effect("carries explicit SBOM authors", () =>
     Effect.gen(function* () {
-      const metadata = SbomMetadataSource.fromPackage(yield* decode(), {
+      const decoded12 = yield* decode();
+      const metadata = SbomMetadataSource.fromPackage(decoded12, {
         authors: [Contact.make({ name: "release-bot" })],
       });
       assert.strictEqual(metadata.authors?.[0]?.name, "release-bot");

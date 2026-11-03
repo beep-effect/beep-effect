@@ -256,8 +256,9 @@ export const CiOperationalLive = Layer.effect(
             (value) => decodeNumber(value),
             { concurrency: 1 }
           );
+          const now1 = yield* DateTime.now;
           return yield* decodeSample({
-            epoch: DateTime.toEpochMillis(yield* DateTime.now) / 1000,
+            epoch: DateTime.toEpochMillis(now1) / 1000,
             total: yield* readCounter(mem, "MemTotal:"),
             available: yield* readCounter(mem, "MemAvailable:"),
             cpu: A.reduce(cpu, 0, (sum, value) => sum + value),

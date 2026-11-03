@@ -48,9 +48,10 @@ it.layer(BunCrypto.layer)("source-bound regex descriptors", (it) => {
         { ...limits, extractDeadline: Duration.millis(10), operationDeadline: Duration.millis(10) },
         [descriptor()]
       ).pipe(Effect.provideService(Clock.Clock, immediate));
-      expect(
-        yield* registry.bind(pattern(), 0).pipe(Effect.provideService(Clock.Clock, disabled), Effect.flip)
-      ).toMatchObject({ operation: "extract", limit: "operationDeadline" });
+      const citationResult1 = yield* registry
+        .bind(pattern(), 0)
+        .pipe(Effect.provideService(Clock.Clock, disabled), Effect.flip);
+      expect(citationResult1).toMatchObject({ operation: "extract", limit: "operationDeadline" });
     })
   );
   it.effect("owns native pattern bytes across an asynchronous fingerprint and caller mutation", () =>
@@ -67,9 +68,10 @@ it.layer(BunCrypto.layer)("source-bound regex descriptors", (it) => {
           )
         ),
       });
-      const registry = yield* makeCitationRegexDescriptorRegistry((yield* defaultCitationEnginePolicy).limits, [
-        descriptor(),
-      ]).pipe(Effect.provideService(Digest.Digest, gated));
+      const citationResult2 = yield* defaultCitationEnginePolicy;
+      const registry = yield* makeCitationRegexDescriptorRegistry(citationResult2.limits, [descriptor()]).pipe(
+        Effect.provideService(Digest.Digest, gated)
+      );
       const input = pattern();
       const running = yield* Effect.forkChild(registry.bind(input, 0));
       yield* Deferred.await(started);
@@ -83,17 +85,18 @@ it.layer(BunCrypto.layer)("source-bound regex descriptors", (it) => {
   it.effect("binds native words, flags and fresh compiler facts against owned installed metadata", () =>
     Effect.gen(function* () {
       const source = descriptor();
-      const registry = yield* makeCitationRegexDescriptorRegistry((yield* defaultCitationEnginePolicy).limits, [
-        source,
-      ]);
+      const citationResult3 = yield* defaultCitationEnginePolicy;
+      const registry = yield* makeCitationRegexDescriptorRegistry(citationResult3.limits, [source]);
       source.profile.groups = 9;
       source.profile.names.maybe = 2;
       const bound = yield* registry.bind(pattern(), 0);
       expect(bound.descriptor.profile).toEqual(descriptor().profile);
       expect(bound.program.groups).toBe(2);
       expect(bound.prepared.value.storage.bytes).toEqual(pattern().bytes);
-      expect(yield* registry.bind(pattern(), 2).pipe(Effect.flip)).toMatchObject({ reason: "unknown-pattern" });
-      expect(yield* registry.bind({ width: 1, bytes: new Uint8Array([98]) }, 0).pipe(Effect.flip)).toMatchObject({
+      const citationResult4 = yield* registry.bind(pattern(), 2).pipe(Effect.flip);
+      expect(citationResult4).toMatchObject({ reason: "unknown-pattern" });
+      const citationResult5 = yield* registry.bind({ width: 1, bytes: new Uint8Array([98]) }, 0).pipe(Effect.flip);
+      expect(citationResult5).toMatchObject({
         reason: "unknown-pattern",
       });
     })
@@ -110,14 +113,16 @@ it.layer(BunCrypto.layer)("source-bound regex descriptors", (it) => {
         { ...descriptor().profile, nullableMultiRepeat: true },
       ]) {
         const registry = yield* makeCitationRegexDescriptorRegistry(limits, [{ ...descriptor(), profile }]);
-        expect(yield* registry.bind(pattern(), 0).pipe(Effect.flip)).toMatchObject({ reason: "profile-mismatch" });
+        const citationResult6 = yield* registry.bind(pattern(), 0).pipe(Effect.flip);
+        expect(citationResult6).toMatchObject({ reason: "profile-mismatch" });
       }
     })
   );
 
   it.effect("distinguishes literal-surrogate and scalar patterns with the same display projection", () =>
     Effect.gen(function* () {
-      const registry = yield* makeCitationRegexDescriptorRegistry((yield* defaultCitationEnginePolicy).limits, [
+      const citationResult7 = yield* defaultCitationEnginePolicy;
+      const registry = yield* makeCitationRegexDescriptorRegistry(citationResult7.limits, [
         {
           patternSha256: "6b0cc71a808904081ff51cc3266650d2eca776b7050405ddc8a93f1f1278212f",
           flags: 0,
@@ -126,41 +131,42 @@ it.layer(BunCrypto.layer)("source-bound regex descriptors", (it) => {
       ]);
       const bound = yield* registry.bind({ width: 2, bytes: new Uint8Array([0x35, 0xd8, 0xce, 0xdf]) }, 0);
       expect(bound.program.minimumWidthFloor).toBe(2);
-      expect(
-        yield* registry.bind({ width: 4, bytes: new Uint8Array([0xce, 0xd7, 1, 0]) }, 0).pipe(Effect.flip)
-      ).toMatchObject({ reason: "unknown-pattern" });
+      const citationResult8 = yield* registry
+        .bind({ width: 4, bytes: new Uint8Array([0xce, 0xd7, 1, 0]) }, 0)
+        .pipe(Effect.flip);
+      expect(citationResult8).toMatchObject({ reason: "unknown-pattern" });
     })
   );
 
   it.effect("rejects duplicate keys and checks installed pattern capacity before decoding bindings", () =>
     Effect.gen(function* () {
       const limits = (yield* defaultCitationEnginePolicy).limits;
-      expect(
-        yield* makeCitationRegexDescriptorRegistry(limits, [descriptor(), descriptor()]).pipe(Effect.flip)
-      ).toMatchObject({ reason: "invalid-bindings" });
-      expect(
-        yield* makeCitationRegexDescriptorRegistry({ ...limits, patterns: 1 }, [descriptor(), "malformed"]).pipe(
-          Effect.flip
-        )
-      ).toMatchObject({ limit: "patterns" });
+      const citationResult9 = yield* makeCitationRegexDescriptorRegistry(limits, [descriptor(), descriptor()]).pipe(
+        Effect.flip
+      );
+      expect(citationResult9).toMatchObject({ reason: "invalid-bindings" });
+      const citationResult10 = yield* makeCitationRegexDescriptorRegistry({ ...limits, patterns: 1 }, [
+        descriptor(),
+        "malformed",
+      ]).pipe(Effect.flip);
+      expect(citationResult10).toMatchObject({ limit: "patterns" });
     })
   );
 
   it.effect("captures the Digest service rather than inheriting a later caller replacement", () =>
     Effect.gen(function* () {
-      const registry = yield* makeCitationRegexDescriptorRegistry((yield* defaultCitationEnginePolicy).limits, [
-        descriptor(),
-      ]);
+      const citationResult11 = yield* defaultCitationEnginePolicy;
+      const registry = yield* makeCitationRegexDescriptorRegistry(citationResult11.limits, [descriptor()]);
       const poisoned = Digest.Digest.of({
         digest: Effect.fn("DescriptorTest.digest")(() => Effect.die("private digest cause")),
         digestHex: Effect.fn("DescriptorTest.digestHex")(() => Effect.die("private digest cause")),
       });
-      expect(
-        (yield* registry.bind(pattern(), 0).pipe(Effect.provideService(Digest.Digest, poisoned))).program.groups
-      ).toBe(2);
-      const broken = yield* makeCitationRegexDescriptorRegistry((yield* defaultCitationEnginePolicy).limits, [
-        descriptor(),
-      ]).pipe(Effect.provideService(Digest.Digest, poisoned));
+      const citationResult12 = yield* registry.bind(pattern(), 0).pipe(Effect.provideService(Digest.Digest, poisoned));
+      expect(citationResult12.program.groups).toBe(2);
+      const citationResult13 = yield* defaultCitationEnginePolicy;
+      const broken = yield* makeCitationRegexDescriptorRegistry(citationResult13.limits, [descriptor()]).pipe(
+        Effect.provideService(Digest.Digest, poisoned)
+      );
       const failed = yield* broken.bind(pattern(), 0).pipe(Effect.flip);
       expect(failed).toMatchObject({ reason: "fingerprint-unavailable" });
       expect(failed.message).not.toContain("private digest cause");

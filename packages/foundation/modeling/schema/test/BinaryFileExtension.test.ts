@@ -18,7 +18,8 @@ describe("BinaryFileExtension", () => {
   it.effect(
     "accepts dotted binary file extensions",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownBinaryFileExtensionEffect(".png")).toBe(".png");
+      const decodedUnknownBinaryFileExtensionEffect = yield* decodeUnknownBinaryFileExtensionEffect(".png");
+      expect(decodedUnknownBinaryFileExtensionEffect).toBe(".png");
     })
   );
 

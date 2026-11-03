@@ -32,7 +32,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>, observe?: (value:
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assertTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
         if (observe !== undefined) assert.deepStrictEqual(observe(decoded), observe(value));
       }),
     runs

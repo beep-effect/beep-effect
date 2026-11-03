@@ -76,9 +76,8 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         const bytes = yield* fs.readFile(
           NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/token-assembly.json", import.meta.url))
         );
-        expect(yield* digest.digestHex(Digest.sha256, bytes)).toBe(
-          "654a826469d27b64ba6530a763f85a5f7926029f386e25511825472c74d01cd1"
-        );
+        const citationResult1 = yield* digest.digestHex(Digest.sha256, bytes);
+        expect(citationResult1).toBe("654a826469d27b64ba6530a763f85a5f7926029f386e25511825472c74d01cd1");
         const corpus = yield* S.decodeEffect(Corpus)(new TextDecoder().decode(bytes));
         const limits = (yield* defaultCitationEnginePolicy).limits;
         const text = yield* makeCitationTokenText(limits);
@@ -158,14 +157,17 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         const assembler = yield* makeCitationTokenAssembly(limits).pipe(
           Effect.provideService(CitationTokenAssemblyHost, host)
         );
-        expect(yield* assembler.assemble({ length: 3, ids: [0, 0] }).pipe(Effect.flip)).toMatchObject({
+        const citationResult2 = yield* assembler.assemble({ length: 3, ids: [0, 0] }).pipe(Effect.flip);
+        expect(citationResult2).toMatchObject({
           limit: "candidates",
         });
-        expect(yield* assembler.assemble({ length: 3, ids: [0] }).pipe(Effect.flip)).toMatchObject({ limit: "tokens" });
+        const citationResult3 = yield* assembler.assemble({ length: 3, ids: [0] }).pipe(Effect.flip);
+        expect(citationResult3).toMatchObject({ limit: "tokens" });
         const failed = yield* makeCitationTokenAssembly({ ...limits, candidates: 3, tokens: 10 }).pipe(
           Effect.provideService(CitationTokenAssemblyHost, host)
         );
-        expect(yield* failed.assemble({ length: 3, ids: [0, 0] }).pipe(Effect.flip)).toMatchObject({
+        const citationResult4 = yield* failed.assemble({ length: 3, ids: [0, 0] }).pipe(Effect.flip);
+        expect(citationResult4).toMatchObject({
           reason: "host-failed",
         });
       })

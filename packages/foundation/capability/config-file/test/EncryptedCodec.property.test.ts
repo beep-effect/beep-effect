@@ -17,7 +17,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -47,12 +48,17 @@ for (const codec of [encryptedJson, encryptedJsonc]) {
     ([value]) =>
       Effect.gen(function* () {
         const encoded = yield* codec.stringify(value);
-        const decoded = yield* S.decodeUnknownEffect(S.Json)(yield* codec.parse(encoded));
+        const argument = S.decodeUnknownEffect(S.Json);
+        const parsed = yield* codec.parse(encoded);
+        const decoded = yield* argument(parsed);
         assert.isTrue(S.toEquivalence(S.Json)(decoded, value));
-        const reparsed = yield* codec.parse(yield* codec.stringify(decoded));
+        const stringify2 = yield* codec.stringify(decoded);
+        const reparsed = yield* codec.parse(stringify2);
         assert.deepStrictEqual(reparsed, decoded);
         // Normalize the plaintext: ciphertext intentionally changes with each random IV.
-        assert.strictEqual(yield* JsonCodec.stringify(reparsed), yield* JsonCodec.stringify(decoded));
+        const stringify3 = yield* JsonCodec.stringify(reparsed);
+        const stringify4 = yield* JsonCodec.stringify(decoded);
+        assert.strictEqual(stringify3, stringify4);
       }),
     runs
   );

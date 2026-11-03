@@ -194,7 +194,7 @@ const replayEntry = Effect.fn("SkillsRelock.replayEntry")(function* (
   const status = statusOf(Result.isSuccess(strict), rows);
   const replayedFiles = Result.isSuccess(strict) ? strict.success : classified.tree;
   const effective = Result.isSuccess(strict)
-    ? O.some(yield* computeSkillTree(strict.success, `${skill}:effective`))
+    ? yield* Effect.asSome(computeSkillTree(strict.success, `${skill}:effective`))
     : O.none<ComputedSkillTree>();
   const licenseMatches = Str.Equivalence(licenseSha, entry.license.sha256);
   // A relicense at an unchanged tree is still unrecorded: the lock's license digest is stale (B30).
@@ -367,18 +367,14 @@ const relockSkill = Effect.fn("SkillsRelock.relockSkill")(function* (
   if (snapshotEquivalence(snapshot, entry.snapshot) && effectiveEquivalence(effective, entry.effective)) {
     return receipt("already-current", O.none());
   }
-  return receipt(
-    "written",
-    O.some(
-      yield* publishSkillsLockEntry(
-        repoRoot,
-        lock,
-        skill,
-        VendoredSkillLockEntry.make({ ...entry, snapshot, effective }),
-        planDigest
-      )
-    )
+  const publishSkillsLockEntry1 = yield* publishSkillsLockEntry(
+    repoRoot,
+    lock,
+    skill,
+    VendoredSkillLockEntry.make({ ...entry, snapshot, effective }),
+    planDigest
   );
+  return receipt("written", O.some(publishSkillsLockEntry1));
 });
 
 // B4: an unresolved hunk the ledger already records as unresolved at another pin is a

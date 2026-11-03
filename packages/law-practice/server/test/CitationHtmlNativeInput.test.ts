@@ -93,28 +93,29 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("native HTML preparati
         ["\u0085<HTML><body>A</body></HTML>", "\u3000<!DOCTYPE html><html></html>"],
         Effect.fnUntraced(function* (text) {
           const value = yield* unicode.fromText(text);
-          expect((yield* preparation.prepareUnicode(value.storage, () => Effect.void)).fullHtml).toBe(true);
+          const citationResult1 = yield* preparation.prepareUnicode(value.storage, () => Effect.void);
+          expect(citationResult1.fullHtml).toBe(true);
         }),
         { concurrency: 1, discard: true }
       );
       const declaration = yield* unicode.fromText("<?xml version='1.0' encoding='UTF-8'?><p>A</p>");
       let preflighted = false;
-      expect(
-        yield* Effect.flip(
-          preparation.prepareUnicode(declaration.storage, () =>
-            Effect.sync(() => {
-              preflighted = true;
-            })
-          )
+      const citationResult2 = yield* Effect.flip(
+        preparation.prepareUnicode(declaration.storage, () =>
+          Effect.sync(() => {
+            preflighted = true;
+          })
         )
-      ).toMatchObject({ reason: "unicode-encoding-declaration" });
+      );
+      expect(citationResult2).toMatchObject({ reason: "unicode-encoding-declaration" });
       expect(preflighted).toBe(false);
       const bytes = new Uint8Array([0x3d, 0xd8, 0, 0xde]);
       const prepared = yield* preparation.prepareUnicode({ width: 2, bytes }, () => Effect.void);
       bytes[0] = 0;
       expect(prepared.encoding).toBe("UTF-16LE");
       expect(prepared.bytes).toEqual(new Uint8Array([0x3d, 0xd8, 0, 0xde]));
-      expect((yield* preparation.prepareStage("😀", () => Effect.void)).encoding).toBe("UTF-32LE");
+      const citationResult3 = yield* preparation.prepareStage("😀", () => Effect.void);
+      expect(citationResult3.encoding).toBe("UTF-32LE");
       yield* Effect.forEach(
         [
           { width: 2, bytes: new Uint8Array([65]) },
@@ -122,7 +123,8 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("native HTML preparati
           { width: 4, bytes: new Uint8Array([0, 0, 17, 0]) },
         ],
         Effect.fnUntraced(function* (input) {
-          expect(yield* Effect.flip(preparation.prepareUnicode(input, () => Effect.void))).toMatchObject({
+          const citationResult4 = yield* Effect.flip(preparation.prepareUnicode(input, () => Effect.void));
+          expect(citationResult4).toMatchObject({
             reason: "invalid-input",
           });
         }),
@@ -133,7 +135,8 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("native HTML preparati
 
   it.effect("rejects a native buffer detached during complete-frame preflight", () =>
     Effect.gen(function* () {
-      const preparation = yield* makeCitationHtmlInput((yield* defaultCitationEnginePolicy).limits);
+      const citationResult5 = yield* defaultCitationEnginePolicy;
+      const preparation = yield* makeCitationHtmlInput(citationResult5.limits);
       const bytes = new Uint8Array([65]);
       const failure = yield* Effect.flip(
         preparation.prepareUnicode({ width: 1, bytes }, () =>
@@ -173,12 +176,14 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("native HTML preparati
         })
       );
       policy.processMessageBytes = 64_000;
-      expect(yield* Effect.flip(worker.cleanUnicode({ width: 2, bytes }))).toMatchObject({
+      const citationResult6 = yield* Effect.flip(worker.cleanUnicode({ width: 2, bytes }));
+      expect(citationResult6).toMatchObject({
         _tag: "CitationSafetyLimitExceeded",
         limit: "processMessageBytes",
       });
       expect(spawned).toBe(0);
-      expect(yield* worker.snapshot).toEqual({ active: 0, queued: 0, processes: 0, quarantined: 0, closed: false });
+      const citationResult7 = yield* worker.snapshot;
+      expect(citationResult7).toEqual({ active: 0, queued: 0, processes: 0, quarantined: 0, closed: false });
     })
   );
 });
@@ -189,8 +194,9 @@ it.effect("captures preparation timing without publishing a partial payload", ()
     const entered = yield* Deferred.make<number>();
     const wake = yield* Deferred.make<void>();
     const deadline = Duration.millis(500);
+    const citationResult8 = yield* defaultCitationEnginePolicy;
     const preparation = yield* makeCitationHtmlInput({
-      ...(yield* defaultCitationEnginePolicy).limits,
+      ...citationResult8.limits,
       cleanDeadline: deadline,
     }).pipe(
       Effect.provideService(Clock.Clock, {
@@ -203,7 +209,8 @@ it.effect("captures preparation timing without publishing a partial payload", ()
     const pending = yield* preparation
       .prepareUnicode({ width: 1, bytes: new Uint8Array(16_384) }, () => Effect.void)
       .pipe(Effect.provideService(Clock.Clock, { ...original, sleep: () => Effect.never }), Effect.forkChild);
-    expect(yield* Deferred.await(entered)).toBe(500);
+    const citationResult9 = yield* Deferred.await(entered);
+    expect(citationResult9).toBe(500);
     yield* Deferred.succeed(wake, undefined);
     const failure = yield* Fiber.join(pending).pipe(Effect.flip);
     expect(failure).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "cleanDeadline" });

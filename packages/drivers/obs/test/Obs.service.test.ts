@@ -154,7 +154,8 @@ describe("Obs", () => {
         expect(result.inputName).toBe("beep-qa-capture");
         assert(O.isSome(result.restoreToken));
         expect(result.restoreToken.value).toBe("portal-token-1");
-        const requestTypes = calledTypes(yield* calls);
+        const calls1 = yield* calls;
+        const requestTypes = calledTypes(calls1);
         expect(A.contains(requestTypes, "CreateScene")).toBe(true);
         expect(A.contains(requestTypes, "CreateInput")).toBe(true);
         expect(A.contains(requestTypes, "SetCurrentProgramScene")).toBe(true);
@@ -191,7 +192,8 @@ describe("Obs", () => {
         expect(result.inputCreated).toBe(false);
         assert(O.isSome(result.restoreToken));
         expect(result.restoreToken.value).toBe("portal-token-2");
-        const requestTypes = calledTypes(yield* calls);
+        const calls2 = yield* calls;
+        const requestTypes = calledTypes(calls2);
         expect(A.contains(requestTypes, "CreateScene")).toBe(false);
         expect(A.contains(requestTypes, "CreateInput")).toBe(false);
         expect(A.contains(requestTypes, "CreateSceneItem")).toBe(false);

@@ -67,12 +67,12 @@ const invalid = () => CitationRuntimeDictionaryFailure.make({ reason: "invalid-i
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("combined Unicode dictionary", (it) => {
   it.effect("matches all pinned transitions, reflected host calls and equality mutation restarts", () =>
     Effect.gen(function* () {
-      const raw = yield* (yield* FileSystem.FileSystem).readFileString(
+      const citationResult1 = yield* FileSystem.FileSystem;
+      const raw = yield* citationResult1.readFileString(
         NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/unicode-dictionary.json", import.meta.url))
       );
-      expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-        "2c8625cb9c7cd72a3a3c030a8606b5d9cada4e14b45e6ffa77065a79162dc22b"
-      );
+      const citationResult2 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+      expect(citationResult2).toBe("2c8625cb9c7cd72a3a3c030a8606b5d9cada4e14b45e6ffa77065a79162dc22b");
       const corpus = yield* S.decodeEffect(CorpusJson)(raw);
       expect(corpus.cases).toHaveLength(13);
       expect(A.reduce(corpus.cases, 0, (n, row) => n + row.events.length)).toBe(40);
@@ -87,24 +87,31 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("combined Unicode di
           );
           const key = Effect.fn("UnicodeDictionaryTest.key")(function* (id: number) {
             const value = yield* state(id);
-            if (value.kind !== "text") trace = A.append(trace, { kind: "hash", key: id });
+            if (value.kind !== "text") {
+              trace = A.append(trace, { kind: "hash", key: id });
+            }
             return CitationRuntimeDictionaryKey.make({ objectId: id, hash: value.hash });
           });
           const action = Effect.fn("UnicodeDictionaryTest.action")(function* () {
-            if (changed) return;
+            if (changed) {
+              return;
+            }
             changed = true;
             const current = yield* Effect.fromOption(table, invalid);
             if (row.name === "delete-in-equality" || row.name === "delete-raise") {
-              const removed = yield* current.remove(yield* key(0));
+              const citationResult3 = yield* key(0);
+              const removed = yield* current.remove(citationResult3);
               trace = A.append(trace, {
                 kind: "remove",
                 key: 0,
                 result: O.getOrNull(O.map(removed, (entry) => entry.value)),
               });
-              if (row.name === "delete-raise")
+              if (row.name === "delete-raise") {
                 return yield* CitationRuntimeDictionaryFailure.make({ reason: "comparison-failed" });
+              }
             } else if (row.name === "update-in-equality") {
-              yield* current.set(yield* key(0), 99);
+              const citationResult4 = yield* key(0);
+              yield* current.set(citationResult4, 99);
               trace = A.append(trace, { kind: "set", key: 0, value: 99 });
             } else if (row.name === "clear-refill") {
               yield* current.clear;
@@ -112,13 +119,15 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("combined Unicode di
               yield* Effect.forEach(
                 row.initial,
                 Effect.fnUntraced(function* (id) {
-                  yield* current.set(yield* key(id), 200 + id);
+                  const citationResult5 = yield* key(id);
+                  yield* current.set(citationResult5, 200 + id);
                   trace = A.append(trace, { kind: "set", key: id, value: 200 + id });
                 }),
                 { concurrency: 1, discard: true }
               );
             } else if (row.name === "convert-in-equality") {
-              yield* current.set(yield* key(6), 106);
+              const citationResult6 = yield* key(6);
+              yield* current.set(citationResult6, 106);
               trace = A.append(trace, { kind: "set", key: 6, value: 106 });
             }
           });
@@ -132,11 +141,15 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("combined Unicode di
               const r = yield* state(right);
               // This controlled rich-compare adapter models Python's reflected
               // host/subclass dispatch. The table supplies stored/query order.
-              if (l.kind === "text" && r.kind === "text") return l.text === r.text;
+              if (l.kind === "text" && r.kind === "text") {
+                return l.text === r.text;
+              }
               const first = l.kind === "text" ? right : left;
               const second = l.kind === "text" ? left : right;
               trace = A.append(trace, { kind: "compare", left: first, right: second });
-              if (first === 5) yield* action();
+              if (first === 5) {
+                yield* action();
+              }
               return l.token === r.token;
             }),
           });
@@ -147,7 +160,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("combined Unicode di
           yield* Effect.forEach(
             row.initial,
             Effect.fnUntraced(function* (id) {
-              yield* current.set(yield* key(id), 100 + id);
+              const citationResult7 = yield* key(id);
+              yield* current.set(citationResult7, 100 + id);
             }),
             { concurrency: 1, discard: true }
           );
@@ -157,12 +171,12 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("combined Unicode di
             Effect.fnUntraced(function* (event) {
               trace = [];
               const op = event.operation;
-              const run =
-                op.kind === "clear"
-                  ? current.clear.pipe(Effect.as(O.none()))
-                  : op.kind === "set"
-                    ? current.set(yield* key(op.key), op.value).pipe(Effect.as(O.none()))
-                    : current.get(yield* key(op.key));
+              const input = op.kind === "clear" ? O.none() : yield* key(op.key).pipe(Effect.asSome);
+              const run = O.isNone(input)
+                ? current.clear.pipe(Effect.as(O.none()))
+                : op.kind === "set"
+                  ? current.set(input.value, op.value).pipe(Effect.as(O.none()))
+                  : current.get(input.value);
               if (event.outcome.status === "error") {
                 const failure = yield* Effect.flip(run);
                 expect(failure.reason, row.name).toBe("comparison-failed");
@@ -171,8 +185,9 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("combined Unicode di
                 expect(O.getOrNull(O.map(value, (entry) => entry.value)), row.name).toBe(event.outcome.result);
               }
               expect(trace, row.name).toEqual(event.trace);
+              const citationResult8 = yield* current.read;
               expect(
-                A.map(yield* current.read, (entry) => ({ objectId: entry.objectId, value: entry.value })),
+                A.map(citationResult8, (entry) => ({ objectId: entry.objectId, value: entry.value })),
                 row.name
               ).toEqual(event.entries);
             }),
@@ -203,8 +218,9 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("combined Unicode di
       );
       const key = (objectId: number) => CitationRuntimeDictionaryKey.make({ objectId, hash: BigInt(7) });
       yield* table.set(key(0), 10);
+      const citationResult9 = yield* table.get(key(1));
       assertSome(
-        O.map(yield* table.get(key(1)), (entry) => entry.value),
+        O.map(citationResult9, (entry) => entry.value),
         10
       );
       expect(calls).toBe(0);
@@ -225,7 +241,9 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("combined Unicode di
         exactUnicode: Effect.fn("UnicodeDictionaryTest.retainedText")(() => Effect.succeedSome("html")),
         equal: Effect.fn("UnicodeDictionaryTest.retainedEqual")(() => Effect.succeed(true)),
         step: Effect.suspend(() => {
-          if (remaining === 0) return Effect.fail(CitationRuntimeDictionaryFailure.make({ reason: "limit-exceeded" }));
+          if (remaining === 0) {
+            return Effect.fail(CitationRuntimeDictionaryFailure.make({ reason: "limit-exceeded" }));
+          }
           remaining--;
           return Effect.void;
         }),
@@ -236,15 +254,18 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("combined Unicode di
       const key = CitationRuntimeDictionaryKey.make({ objectId: 0, hash: BigInt(7) });
       for (let run = 0; run < 100; run++) {
         yield* table.set(key, run);
+        const citationResult10 = yield* table.remove(key);
         assertSome(
-          O.map(yield* table.remove(key), (entry) => entry.value),
+          O.map(citationResult10, (entry) => entry.value),
           run
         );
       }
       yield* table.set(key, 100);
       remaining = 0;
-      expect(yield* Effect.flip(table.get(key))).toMatchObject({ reason: "limit-exceeded" });
-      expect(A.map(yield* table.read, (entry) => entry.value)).toEqual([100]);
+      const citationResult11 = yield* Effect.flip(table.get(key));
+      expect(citationResult11).toMatchObject({ reason: "limit-exceeded" });
+      const citationResult12 = yield* table.read;
+      expect(A.map(citationResult12, (entry) => entry.value)).toEqual([100]);
     })
   );
 });

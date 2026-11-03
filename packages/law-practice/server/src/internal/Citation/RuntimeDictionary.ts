@@ -404,7 +404,7 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
     const decodedValue = yield* S.decodeEffect(S.Natural)(value).pipe(Effect.mapError(invalid));
     // insertdict converts before lookup even when rich comparison will hit
     // an existing string or fail. Publish the rebuilt key table before calls.
-    if (unicode && O.isNone(yield* exactText(key.objectId))) {
+    if (unicode && (yield* exactText(key.objectId).pipe(Effect.map(O.isNone)))) {
       const converted = yield* prepareInsertion(true);
       capacity = converted.capacity;
       usable = converted.usable;
@@ -420,7 +420,8 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
         O.flatMap(hit, (hit) => HashMap.get(entries, hit.entryId)),
         copyEntry
       );
-      yield* comparison.beforeSet(yield* read, previous, decodedValue).pipe(Effect.mapError(freshFailure));
+      const citationResult1 = yield* read;
+      yield* comparison.beforeSet(citationResult1, previous, decodedValue).pipe(Effect.mapError(freshFailure));
     }
     if (O.isSome(hit)) {
       const entry = yield* Effect.fromOption(HashMap.get(entries, hit.value.entryId), invalid);
@@ -429,7 +430,8 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
         entry.entryId,
         CitationRuntimeDictionaryEntry.make({ ...entry, value: decodedValue })
       );
-      return copyEntry(yield* Effect.fromOption(HashMap.get(entries, entry.entryId), invalid));
+      const citationResult2 = yield* Effect.fromOption(HashMap.get(entries, entry.entryId), invalid);
+      return copyEntry(citationResult2);
     }
     if (HashMap.size(entries) >= maximumEntries || nextEntry >= 9_007_199_254_740_991) return yield* exceeded();
     const next = yield* prepareInsertion(false);

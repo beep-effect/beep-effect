@@ -422,7 +422,8 @@ describe("P3 identity namespaces", () => {
       for (const spec of specs) {
         const decode = S.decodeUnknownEffect(spec.schema);
 
-        expect(yield* decode(1), spec.label).toBe(1);
+        const decoded1 = yield* decode(1);
+        expect(decoded1, spec.label).toBe(1);
         assertTrue(spec.schema.equivalence(cast(1), cast(1)), spec.label);
         assertFalse(spec.schema.equivalence(cast(1), cast(2)), spec.label);
         yield* expectFailure(decode(0));

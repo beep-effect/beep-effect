@@ -61,12 +61,12 @@ const CorpusJson = S.fromJsonString(
  * @internal @category testing @since 0.0.0
  */
 export const loadCitationUnicodeHistories = Effect.fn("UnicodePipelineTest.load")(function* () {
-  const raw = yield* (yield* FileSystem.FileSystem).readFileString(
+  const citationResult1 = yield* FileSystem.FileSystem;
+  const raw = yield* citationResult1.readFileString(
     NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/cleaner-unicode.json", import.meta.url))
   );
-  expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-    "0c314524ff16f1a8689b8aaf50d235a5c2439187f1e168c84b84d700160aead0"
-  );
+  const citationResult2 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+  expect(citationResult2).toBe("0c314524ff16f1a8689b8aaf50d235a5c2439187f1e168c84b84d700160aead0");
   return yield* S.decodeEffect(CorpusJson)(raw);
 });
 /** Capture the real value owner, builtin dispatcher and reservation ledger.

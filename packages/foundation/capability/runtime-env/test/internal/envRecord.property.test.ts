@@ -50,7 +50,8 @@ describe("environment normalization and parsing fidelity", () => {
           Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnvRecord(restored))
         );
         assert.deepStrictEqual(reparsed, parsed);
-        assert.strictEqual(yield* S.encodeUnknownEffect(json)(reparsed), text);
+        const value1 = yield* S.encodeUnknownEffect(json)(reparsed);
+        assert.strictEqual(value1, text);
       }),
     runs
   );

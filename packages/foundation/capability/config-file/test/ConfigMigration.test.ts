@@ -66,7 +66,8 @@ describe("ConfigMigration.make", () => {
           },
         })),
       });
-      assert.deepStrictEqual(yield* codec.parse(`{"version":0}`), { version: Number.POSITIVE_INFINITY });
+      const parsed1 = yield* codec.parse(`{"version":0}`);
+      assert.deepStrictEqual(parsed1, { version: Number.POSITIVE_INFINITY });
       assert.deepStrictEqual(seen, ["one", "two-first", "two-second", "infinity-first", "infinity-second"]);
       assert.deepStrictEqual(
         A.map(migrations, ({ name }) => name),
@@ -139,7 +140,8 @@ describe("ConfigMigration.make", () => {
   it.effect("with no migrations, parse is the inner codec's parse", () =>
     Effect.gen(function* () {
       const codec = ConfigMigration.make({ codec: JsonCodec, migrations: [] });
-      assert.deepStrictEqual(yield* codec.parse(`{"a":1}`), { a: 1 });
+      const parsed2 = yield* codec.parse(`{"a":1}`);
+      assert.deepStrictEqual(parsed2, { a: 1 });
     })
   );
 
@@ -216,7 +218,8 @@ describe("VersionAccess.default.set", () => {
         [undefined, { version: 2 }],
       ];
       for (const [raw, expected] of cases) {
-        assert.deepStrictEqual(yield* VersionAccess.default.set(raw, 2), expected);
+        const set3 = yield* VersionAccess.default.set(raw, 2);
+        assert.deepStrictEqual(set3, expected);
       }
     })
   );

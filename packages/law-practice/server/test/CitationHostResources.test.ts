@@ -180,19 +180,27 @@ const harness = (initial: ReadonlyArray<typeof HostState.Type>, normalized: Read
     trace = A.append(trace, event);
   };
   const owned = Effect.fn("HostTest.owned")(function* (handle: CitationHostResource) {
-    if (closed || A.getUnsafe(handles, handle.slot) !== handle) return yield* bad();
+    if (closed || A.getUnsafe(handles, handle.slot) !== handle) {
+      return yield* bad();
+    }
     return A.getUnsafe(states, handle.slot);
   });
   const rawHash = Effect.fn("HostTest.rawHash")(function* (handle: CitationHostResource) {
     const state = yield* owned(handle);
     emit({ kind: "hash", slot: handle.slot, raw: state.hashRaw });
-    if (state.failHash) return yield* bad();
-    if (state.truthAfterHash !== null) state.truth = state.truthAfterHash;
+    if (state.failHash) {
+      return yield* bad();
+    }
+    if (state.truthAfterHash !== null) {
+      state.truth = state.truthAfterHash;
+    }
     return BigInt(state.hashRaw);
   });
   const hash = Effect.fn("HostTest.hash")(function* (handle: CitationHostResource) {
     yield* rawHash(handle);
-    return BigInt(yield* Effect.fromOption(R.get(normalized, (yield* owned(handle)).hashRaw), bad));
+    const citationResult1 = yield* owned(handle);
+    const citationResult2 = yield* Effect.fromOption(R.get(normalized, citationResult1.hashRaw), bad);
+    return BigInt(citationResult2);
   });
   const operandView = (operand: CitationHostComparisonOperand): S.Json =>
     operand._tag === "Canonical"
@@ -205,8 +213,11 @@ const harness = (initial: ReadonlyArray<typeof HostState.Type>, normalized: Read
       const operandHash = (operand: CitationHostComparisonOperand) =>
         operand._tag === "Canonical" ? canonical.hash(operand.slot) : hash(operand.handle);
       const citationEqual = Effect.fnUntraced(function* (right: CitationHostComparisonOperand, token: S.Json) {
-        if (right._tag !== "Canonical") return O.none<boolean>();
-        const wire = yield* S.encodeEffect(Citation)(yield* canonical.citation(right.slot)).pipe(Effect.mapError(bad));
+        if (right._tag !== "Canonical") {
+          return O.none<boolean>();
+        }
+        const citationResult3 = yield* canonical.citation(right.slot);
+        const wire = yield* S.encodeEffect(Citation)(citationResult3).pipe(Effect.mapError(bad));
         return O.some(O.getOrNull(R.get(wire.components, "page")) === token);
       });
       const method = Effect.fn("HostTest.method")(function* (
@@ -221,15 +232,23 @@ const harness = (initial: ReadonlyArray<typeof HostState.Type>, normalized: Read
         }
         const state = yield* owned(left.handle);
         emit({ kind: "eq", slot: left.handle.slot, other: operandView(right) });
-        if (state.failEq) return yield* bad();
-        if (state.mode === "false") return O.some(false);
-        if (state.mode === "not-implemented") return O.none<boolean>();
+        if (state.failEq) {
+          return yield* bad();
+        }
+        if (state.mode === "false") {
+          return O.some(false);
+        }
+        if (state.mode === "not-implemented") {
+          return O.none<boolean>();
+        }
         if (state.mode === "normalized") {
           const a = yield* hash(left.handle);
           const b = yield* operandHash(right);
           return O.some(a === b);
         }
-        if (state.mode === "citation") return yield* citationEqual(right, state.token);
+        if (state.mode === "citation") {
+          return yield* citationEqual(right, state.token);
+        }
         return right._tag === "Host" ? O.some(state.token === (yield* owned(right.handle)).token) : O.none<boolean>();
       });
       return {
@@ -248,7 +267,9 @@ const harness = (initial: ReadonlyArray<typeof HostState.Type>, normalized: Read
         truthy: Effect.fn("HostTest.truthy")(function* (handle: CitationHostResource) {
           const state = yield* owned(handle);
           emit({ kind: "bool", slot: handle.slot, result: state.truth });
-          if (state.failBool) return yield* bad();
+          if (state.failBool) {
+            return yield* bad();
+          }
           return state.truth;
         }),
         hash,
@@ -257,7 +278,9 @@ const harness = (initial: ReadonlyArray<typeof HostState.Type>, normalized: Read
           right: CitationHostComparisonOperand
         ) {
           const first = yield* method(left, right);
-          return O.isSome(first) ? first.value : O.getOrElse(yield* method(right, left), () => false);
+          return O.isSome(first)
+            ? first.value
+            : yield* method(right, left).pipe(Effect.map((result) => O.getOrElse(result, () => false)));
         }),
         close: Effect.sync(() => {
           closed = true;
@@ -303,18 +326,19 @@ const prepare = Effect.fn("HostTest.prepare")(function* (
   return yield* prepareCitationResolution({ ...input, mentions });
 });
 const load = Effect.fn("HostTest.load")(function* () {
-  const raw = yield* (yield* FileSystem.FileSystem).readFileString(
+  const citationResult4 = yield* FileSystem.FileSystem;
+  const raw = yield* citationResult4.readFileString(
     NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/host-resources.json", import.meta.url))
   );
-  expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-    "2eaf20a0492da410f793712cb7f3b5728bb6e912b9fc7659a07764fd24bdf43f"
-  );
+  const citationResult5 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+  expect(citationResult5).toBe("2eaf20a0492da410f793712cb7f3b5728bb6e912b9fc7659a07764fd24bdf43f");
   return yield* S.decodeEffect(Corpus)(raw);
 });
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resources", (it) => {
   it.effect("classifies deceptive default-looking presentation by owned host origin and requires a host port", () =>
     Effect.gen(function* () {
-      const row = A.getUnsafe((yield* load()).callbacks, 0);
+      const citationResult6 = yield* load();
+      const row = A.getUnsafe(citationResult6.callbacks, 0);
       const prepared = yield* prepare("deceptive-default-presentation");
       const host = harness([row.host], { [row.host.hashRaw]: row.host.hashRaw });
       const deceptive = CitationHostResourceAdapterFactory.of({
@@ -328,7 +352,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
           };
         }),
       });
-      const frozen = yield* makeCitationFrozenEditions((yield* loadCitationFrozenEditionFixtures()).bundle);
+      const citationResult7 = yield* loadCitationFrozenEditionFixtures();
+      const frozen = yield* makeCitationFrozenEditions(citationResult7.bundle);
       const factory = yield* makeCitationCallbackRuntimeIndexFactory().pipe(
         Effect.provideService(CitationFrozenEditions, frozen),
         Effect.provideService(CitationHostResourceAdapterFactory, deceptive)
@@ -358,7 +383,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
         Effect.provideService(CitationFrozenEditions, frozen)
       );
       const resource = A.getUnsafe(state.groups, 0).resource;
-      expect((yield* Effect.flip(descriptors.describe(resource))).reason).toBe("identity-failed");
+      const citationResult8 = yield* Effect.flip(descriptors.describe(resource));
+      expect(citationResult8.reason).toBe("identity-failed");
       const identity = CitationResourceIdentity.cases.External.make({
         scope: prepared.engineArtifact,
         key: prepared.engineArtifact,
@@ -372,21 +398,23 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
           })
         )
       );
-      expect(yield* explicit.describe(resource)).toEqual(identity);
+      const citationResult9 = yield* explicit.describe(resource);
+      expect(citationResult9).toEqual(identity);
       expect(host.trace()).toEqual(row.trace);
     })
   );
   it.effect("captures actual returned objects and append destinations independently of surviving groups", () =>
     Effect.gen(function* () {
-      const raw = yield* (yield* FileSystem.FileSystem).readFileString(
+      const citationResult10 = yield* FileSystem.FileSystem;
+      const raw = yield* citationResult10.readFileString(
         NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/dispatch-decisions.json", import.meta.url))
       );
-      expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-        "88efa991758699d739ddac709f20efce4ba086da9eb17bca5bb9170e03a79c36"
-      );
+      const citationResult11 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+      expect(citationResult11).toBe("88efa991758699d739ddac709f20efce4ba086da9eb17bca5bb9170e03a79c36");
       const corpus = yield* S.decodeEffect(CorpusJson)(raw);
       expect(corpus.cases).toHaveLength(8);
-      const frozen = yield* makeCitationFrozenEditions((yield* loadCitationFrozenEditionFixtures()).bundle);
+      const citationResult12 = yield* loadCitationFrozenEditionFixtures();
+      const frozen = yield* makeCitationFrozenEditions(citationResult12.bundle);
       const present = (resource: CitationCallbackResource): S.Json =>
         resource._tag === "None" ? { kind: "none" } : resource._tag === "Registered" ? resource.value : null;
       let count = 0;
@@ -429,7 +457,9 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
           const callbacks = CitationResolutionCallbacks.of({
             ...defaults,
             full: Effect.fn("DispatchDecisionTest.full")(function* (mention: CitationMention) {
-              if (row.action === "none") return CitationCallbackResource.cases.None.make({});
+              if (row.action === "none") {
+                return CitationCallbackResource.cases.None.make({});
+              }
               return yield* owner.hostResource(
                 A.getUnsafe(host.states, row.action === "equal" ? indexOf(mention.id) : 0)
               );
@@ -437,14 +467,18 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
             id: Effect.fn("DispatchDecisionTest.id")(function* (input) {
               if (indexOf(input.mention.id) === 1 && (row.action === "clear-new" || row.action === "clear-same")) {
                 yield* owner.clear;
+                const citationResult13 = yield* owner.hostResource(
+                  A.getUnsafe(host.states, row.action === "clear-new" ? 1 : 0)
+                );
                 return CitationCallbackResult.make({
-                  resource: yield* owner.hostResource(A.getUnsafe(host.states, row.action === "clear-new" ? 1 : 0)),
+                  resource: citationResult13,
                 });
               }
               if (row.action === "presentation-change") {
                 A.getUnsafe(host.states, 0).token = "changed";
+                const citationResult14 = yield* owner.hostResource(A.getUnsafe(host.states, 0));
                 return CitationCallbackResult.make({
-                  resource: yield* owner.hostResource(A.getUnsafe(host.states, 0)),
+                  resource: citationResult14,
                 });
               }
               return yield* defaults.id(input);
@@ -481,7 +515,9 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
             describe: Effect.fn("SessionProjectionTest.describe")(
               function* (resource: CitationCallbackResource) {
                 described += 1;
-                if (resource._tag !== "Registered") return yield* bad();
+                if (resource._tag !== "Registered") {
+                  return yield* bad();
+                }
                 const value = yield* S.decodeUnknownEffect(HostToken)(resource.value).pipe(Effect.mapError(bad));
                 const key = yield* S.decodeEffect(Sha256HexFromBytes)(
                   new TextEncoder().encode(`controlled-host-token/v1:${value.token}`)
@@ -494,7 +530,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
           const projector = yield* makeCitationSessionDocumentProjector().pipe(
             Effect.provideService(CitationSessionResourceDescriptors, descriptors)
           );
-          expect((yield* Effect.flip(projector.project({ ...result }))).reason).toBe("identity-failed");
+          const citationResult15 = yield* Effect.flip(projector.project({ ...result }));
+          expect(citationResult15.reason).toBe("identity-failed");
           expect(described).toBe(0);
           const output = yield* projector.project(result);
           expect(described).toBe(
@@ -525,7 +562,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
           yield* Effect.forEach(
             output.document.resolutions,
             Effect.fnUntraced(function* (resolution) {
-              if (resolution.status === "Unresolved")
+              if (resolution.status === "Unresolved") {
                 expect(resolution.reason).toBe(
                   A.getUnsafe(result.decisions, indexOf(resolution.mentionId)).callback === "unknown"
                     ? "unsupported-citation"
@@ -538,6 +575,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
                         () => "callback-unresolved"
                       )
                 );
+              }
             }),
             { concurrency: 1, discard: true }
           );
@@ -563,7 +601,9 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
             const opaque = CitationSessionResourceDescriptors.of({
               describe: Effect.fn("SessionProjectionTest.opaqueIdentity")(
                 function* (resource: CitationCallbackResource) {
-                  if (resource._tag !== "Registered") return yield* bad();
+                  if (resource._tag !== "Registered") {
+                    return yield* bad();
+                  }
                   const value = yield* S.decodeUnknownEffect(HostSlot)(resource.value).pipe(Effect.mapError(bad));
                   const key = yield* S.decodeEffect(Sha256HexFromBytes)(
                     new TextEncoder().encode(`controlled-host-object/v1:${value.slot}`)
@@ -630,7 +670,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
   it.effect("matches the source's truth/hash call order through full and default Id callbacks", () =>
     Effect.gen(function* () {
       const corpus = yield* load();
-      const frozen = yield* makeCitationFrozenEditions((yield* loadCitationFrozenEditionFixtures()).bundle);
+      const citationResult16 = yield* loadCitationFrozenEditionFixtures();
+      const frozen = yield* makeCitationFrozenEditions(citationResult16.bundle);
       yield* Effect.forEach(
         corpus.callbacks,
         Effect.fnUntraced(function* (row) {
@@ -680,15 +721,16 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
   );
   it.effect("matches source set uniqueness and exact hooks through default short, supra and reference callbacks", () =>
     Effect.gen(function* () {
-      const raw = yield* (yield* FileSystem.FileSystem).readFileString(
+      const citationResult17 = yield* FileSystem.FileSystem;
+      const raw = yield* citationResult17.readFileString(
         NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/runtime-set.json", import.meta.url))
       );
-      expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-        "58ca087e488c94d2db5b6dfef2dfe1d0280f18228b6088a61b14b227d536adfa"
-      );
+      const citationResult18 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+      expect(citationResult18).toBe("58ca087e488c94d2db5b6dfef2dfe1d0280f18228b6088a61b14b227d536adfa");
       const corpus = yield* S.decodeEffect(HostCallbackCorpusJson)(raw);
       expect(corpus.callbacks).toHaveLength(12);
-      const frozen = yield* makeCitationFrozenEditions((yield* loadCitationFrozenEditionFixtures()).bundle);
+      const citationResult19 = yield* loadCitationFrozenEditionFixtures();
+      const frozen = yield* makeCitationFrozenEditions(citationResult19.bundle);
       yield* Effect.forEach(
         corpus.callbacks,
         Effect.fnUntraced(function* (row) {
@@ -779,7 +821,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
   it.effect("matches all directional comparison, mutation, alias and error histories without observer hooks", () =>
     Effect.gen(function* () {
       const corpus = yield* load();
-      const frozen = yield* makeCitationFrozenEditions((yield* loadCitationFrozenEditionFixtures()).bundle);
+      const citationResult20 = yield* loadCitationFrozenEditionFixtures();
+      const frozen = yield* makeCitationFrozenEditions(citationResult20.bundle);
       yield* Effect.forEach(
         corpus.cases,
         Effect.fnUntraced(function* (row) {
@@ -817,7 +860,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
                   () => owner.allocate([])
                 );
                 const prior = yield* owner.hostResource(A.getUnsafe(host.states, 0));
-                yield* owner.writeFulls([yield* owner.createFullPair(ref, prior)]);
+                const citationResult21 = yield* owner.createFullPair(ref, prior);
+                yield* owner.writeFulls([citationResult21]);
                 const action = Effect.fn("HostTest.action")(function* (
                   op: typeof Operation.Type
                 ): Effect.fn.Return<number | null, CitationCallbackFailure> {
@@ -831,7 +875,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
                         return (yield* owner.get(A.getUnsafe(keys, op.key))).slot;
                       }),
                       remove: Effect.fnUntraced(function* (op) {
-                        return O.getOrNull(O.map(yield* owner.remove(A.getUnsafe(keys, op.key)), (list) => list.slot));
+                        const citationResult22 = yield* owner.remove(A.getUnsafe(keys, op.key));
+                        return O.getOrNull(O.map(citationResult22, (list) => list.slot));
                       }),
                       clear: Effect.fnUntraced(function* () {
                         yield* owner.clear;
@@ -841,26 +886,26 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
                         const key = A.getUnsafe(keys, op.key);
                         const alias = yield* owner.hostResource(A.getUnsafe(host.states, 0));
                         keys = A.append(keys, alias);
-                        if (key._tag !== "Registered") return yield* bad();
+                        if (key._tag !== "Registered") {
+                          return yield* bad();
+                        }
                         return key.slot;
                       }),
                       append: Effect.fnUntraced(function* (op) {
                         const key = A.getUnsafe(keys, op.key);
-                        if (yield* owner.isTruthy(key))
+                        if (yield* owner.isTruthy(key)) {
                           yield* owner.appendCurrent(key, A.getUnsafe(prepared.mentions, op.member).id);
+                        }
                         return null;
                       }),
                       page: Effect.fnUntraced(function* (op) {
-                        const wire = yield* S.encodeEffect(Citation)(yield* owner.citationOf(ref)).pipe(
-                          Effect.mapError(bad)
-                        );
-                        yield* owner.writeCitation(
-                          ref,
-                          yield* S.decodeEffect(Citation)({
-                            ...wire,
-                            components: { ...wire.components, page: op.value },
-                          }).pipe(Effect.mapError(bad))
-                        );
+                        const citationResult23 = yield* owner.citationOf(ref);
+                        const wire = yield* S.encodeEffect(Citation)(citationResult23).pipe(Effect.mapError(bad));
+                        const citationResult24 = yield* S.decodeEffect(Citation)({
+                          ...wire,
+                          components: { ...wire.components, page: op.value },
+                        }).pipe(Effect.mapError(bad));
+                        yield* owner.writeCitation(ref, citationResult24);
                         return null;
                       }),
                       truth: Effect.fnUntraced(function* (op) {
@@ -901,7 +946,9 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
                     expect(
                       A.map(entries, (group) => {
                         const resource = group.resource;
-                        if (resource._tag !== "Registered") throw new Error("unregistered");
+                        if (resource._tag !== "Registered") {
+                          throw new Error("unregistered");
+                        }
                         return {
                           objectId: resource.slot,
                           slot: group.listSlot,
@@ -912,8 +959,9 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
                       }),
                       label
                     ).toEqual(event.entries);
+                    const citationResult25 = yield* owner.readListNodes;
                     expect(
-                      A.map(yield* owner.readListNodes, (list) => A.map(list, memberIndex)),
+                      A.map(citationResult25, (list) => A.map(list, memberIndex)),
                       label
                     ).toEqual(event.lists);
                     const pairs = yield* owner.readFulls;

@@ -136,7 +136,8 @@ if (!shouldRunPgliteIntegration) {
             const exit = yield* Fiber.await(transaction);
             expect(Exit.hasInterrupts(exit)).toBe(true);
             const afterInterruption = yield* drizzle.execute("SELECT body FROM neutral_notes ORDER BY id ASC", []);
-            expect(yield* readBodies(afterInterruption)).toEqual([]);
+            const readBodies1 = yield* readBodies(afterInterruption);
+            expect(readBodies1).toEqual([]);
 
             const committed = yield* drizzle.withTransaction(
               Effect.fnUntraced(function* (tx) {
@@ -146,7 +147,8 @@ if (!shouldRunPgliteIntegration) {
             );
             expect(committed).toBe("committed");
             const afterCommit = yield* drizzle.execute("SELECT body FROM neutral_notes ORDER BY id ASC", []);
-            expect(yield* readBodies(afterCommit)).toEqual(["after interruption"]);
+            const readBodies2 = yield* readBodies(afterCommit);
+            expect(readBodies2).toEqual(["after interruption"]);
           }),
           120_000
         );

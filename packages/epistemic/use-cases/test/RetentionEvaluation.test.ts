@@ -18,14 +18,14 @@ import * as S from "effect/Schema";
 import { keyB, makeCalibration, makeSnapshot, policyInput, provideFixture, queryInput } from "./helpers/Retention.ts";
 
 const baseline = Effect.fn("EvaluationTest.baseline")(function* (knownAt: number) {
-  return yield* generateRetentionReport(
-    yield* S.decodeEffect(RetentionQuery)({
-      ...queryInput,
-      logicalKeys: [keyB],
-      knownAt,
-    }),
-    O.none()
-  ).pipe(provideFixture(yield* makeSnapshot(), O.none()));
+  const value = yield* S.decodeEffect(RetentionQuery)({
+    ...queryInput,
+    logicalKeys: [keyB],
+    knownAt,
+  });
+  const argument = generateRetentionReport(value, O.none());
+  const madeSnapshot = yield* makeSnapshot();
+  return yield* argument.pipe(provideFixture(madeSnapshot, O.none()));
 });
 
 describe("offline retention evaluation", () => {
@@ -40,8 +40,11 @@ describe("offline retention evaluation", () => {
         const result = yield* evaluateRetentionCandidate(report, policy);
         expect(result.pressureRatio).toBe(report.payloadBytes / payloadBudgetBytes);
         expect(result.baseline.admission.state).toBe("inert");
-        expect(yield* S.encodeEffect(RetentionReport)(report)).toEqual(before);
-        assertNone(S.decodeUnknownOption(RetentionCalibration)(yield* S.encodeEffect(RetentionEvaluation)(result)));
+        const value1 = yield* S.encodeEffect(RetentionReport)(report);
+        expect(value1).toEqual(before);
+        const argument1 = S.decodeUnknownOption(RetentionCalibration);
+        const value4 = yield* S.encodeEffect(RetentionEvaluation)(result);
+        assertNone(argument1(value4));
       })
   );
   it.effect("shares inclusive cutoffs and rational decay without admitting a policy", () =>
@@ -60,11 +63,14 @@ describe("offline retention evaluation", () => {
         expect(result.rows[0]?.tier).toBe(tier);
         expect(O.getOrUndefined(result.rows[0]?.decay ?? O.none())).toBe(1 / (1 + age / 500));
         expect(result.pressureRatio).toBe(report.payloadBytes / 10);
-        expect(result.policyDigest).toBe(yield* retentionPolicyDigest(policy));
+        const expectation = expect(result.policyDigest);
+        const retentionPolicyDigest5 = yield* retentionPolicyDigest(policy);
+        expectation.toBe(retentionPolicyDigest5);
         expect(result.baseline.admission.state).toBe("inert");
         expect(report.rows[0]?.tier).toBe("unclassified");
         assertNone(report.pressureRatio);
-        expect(yield* S.encodeEffect(RetentionEvaluation)(result)).not.toHaveProperty("approvedBy");
+        const value2 = yield* S.encodeEffect(RetentionEvaluation)(result);
+        expect(value2).not.toHaveProperty("approvedBy");
       }
     })
   );
@@ -90,22 +96,25 @@ describe("offline retention evaluation", () => {
   it.effect("rejects admitted or inconsistent baselines", () =>
     Effect.gen(function* () {
       const policy = yield* S.decodeEffect(RetentionPolicy)(policyInput);
-      const admitted = yield* generateRetentionReport(
-        yield* S.decodeEffect(RetentionQuery)(queryInput),
-        O.some(policy)
-      ).pipe(provideFixture(yield* makeSnapshot(), O.some(yield* makeCalibration())));
-      assertTrue(yield* Effect.isFailure(evaluateRetentionCandidate(admitted, policy)));
+      const value3 = yield* S.decodeEffect(RetentionQuery)(queryInput);
+      const argument2 = generateRetentionReport(value3, O.some(policy));
+      const argument3 = yield* makeSnapshot();
+      const madeCalibration = yield* makeCalibration();
+      const admitted = yield* argument2.pipe(provideFixture(argument3, O.some(madeCalibration)));
+      const isFailure4 = yield* Effect.isFailure(evaluateRetentionCandidate(admitted, policy));
+      assertTrue(isFailure4);
       const report = yield* baseline(1500);
-      assertTrue(
-        yield* Effect.isFailure(
-          evaluateRetentionCandidate(RetentionReport.make({ ...report, payloadBytes: 0 }), policy)
-        )
+      const isFailure5 = yield* Effect.isFailure(
+        evaluateRetentionCandidate(RetentionReport.make({ ...report, payloadBytes: 0 }), policy)
       );
+      assertTrue(isFailure5);
     })
   );
   it.effect("rejects receipt field drift using the shipped contract", () =>
     Effect.gen(function* () {
-      const encoded = yield* S.encodeEffect(RetentionCalibration)(yield* makeCalibration());
+      const argument4 = S.encodeEffect(RetentionCalibration);
+      const madeCalibration6 = yield* makeCalibration();
+      const encoded = yield* argument4(madeCalibration6);
       for (const patch of [
         { mechanism: "retention-v2" },
         { policyDigest: "bad" },
@@ -124,11 +133,12 @@ describe("offline retention evaluation", () => {
   );
   it.effect("preserves an empty filtered baseline without inventing samples", () =>
     Effect.gen(function* () {
-      const report = yield* generateRetentionReport(
-        yield* S.decodeEffect(RetentionQuery)({ ...queryInput, logicalKeys: [] }),
-        O.none()
-      ).pipe(provideFixture(yield* makeSnapshot(), O.none()));
-      const result = yield* evaluateRetentionCandidate(report, yield* S.decodeEffect(RetentionPolicy)(policyInput));
+      const value6 = yield* S.decodeEffect(RetentionQuery)({ ...queryInput, logicalKeys: [] });
+      const argument5 = generateRetentionReport(value6, O.none());
+      const madeSnapshot7 = yield* makeSnapshot();
+      const report = yield* argument5.pipe(provideFixture(madeSnapshot7, O.none()));
+      const value7 = yield* S.decodeEffect(RetentionPolicy)(policyInput);
+      const result = yield* evaluateRetentionCandidate(report, value7);
       expect(result.rows).toEqual([]);
       expect(result.pressureRatio).toBe(0);
       expect(A.every(result.tiers, (tier) => tier.count === 0)).toBe(true);

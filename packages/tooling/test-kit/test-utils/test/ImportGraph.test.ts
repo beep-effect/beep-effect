@@ -164,7 +164,8 @@ describe("ImportGraph.closure", () => {
 
   it.effect("reads one module's edges by id", () =>
     Effect.gen(function* () {
-      expect(yield* ImportGraph.moduleImportsOf("index.ts")(SOURCES)).toStrictEqual(["./a.ts", "./nested/b.ts"]);
+      const value1 = yield* ImportGraph.moduleImportsOf("index.ts")(SOURCES);
+      expect(value1).toStrictEqual(["./a.ts", "./nested/b.ts"]);
       const error = yield* Effect.flip(ImportGraph.moduleImportsOf(SOURCES, "gone.ts"));
       expect(error.module).toBe("gone.ts");
     })

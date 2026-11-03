@@ -515,20 +515,18 @@ const discoverJsonlSource = Effect.fn("AiMetrics.discoverJsonlSource")(function*
     A.length
   );
   const includedCandidates = A.take(candidates, input.maxFiles);
-  const files = pipe(
-    yield* Effect.forEach(
-      includedCandidates,
-      (candidate) =>
-        makeDiscoveredTranscriptFile({
-          root,
-          sourceKind,
-          sourcePath: candidate.sourcePath,
-          hashSalt: input.hashSalt,
-        }).pipe(Effect.option),
-      { concurrency: 16 }
-    ),
-    A.getSomes
+  const forEach1 = yield* Effect.forEach(
+    includedCandidates,
+    (candidate) =>
+      makeDiscoveredTranscriptFile({
+        root,
+        sourceKind,
+        sourcePath: candidate.sourcePath,
+        hashSalt: input.hashSalt,
+      }).pipe(Effect.option),
+    { concurrency: 16 }
   );
+  const files = pipe(forEach1, A.getSomes);
   const includedFiles = pipe(files, A.sort(byPathHashAscending), A.sort(byModifiedDescending));
 
   return AiMetricsDiscoveredSource.make({
@@ -606,9 +604,11 @@ const discoverOpenClawSource = Effect.fn("AiMetrics.discoverOpenClawSource")(fun
     });
   }
 
+  const argument = modifiedAtMillis(unitInfo.value);
+  const hashPrivateIdentifier1 = yield* hashPrivateIdentifier("openclaw-gateway.service", input.hashSalt);
   const file = AiMetricsDiscoveredTranscriptFile.make({
-    modifiedAtMillis: modifiedAtMillis(unitInfo.value),
-    sessionIdHash: O.some(yield* hashPrivateIdentifier("openclaw-gateway.service", input.hashSalt)),
+    modifiedAtMillis: argument,
+    sessionIdHash: O.some(hashPrivateIdentifier1),
     sizeBytes: fileSizeBytes(unitInfo.value),
     sourceKind: AiMetricsTranscriptSource.Enum.openclaw,
     sourcePathHash: yield* hashPrivateIdentifier(unitPath, input.hashSalt),

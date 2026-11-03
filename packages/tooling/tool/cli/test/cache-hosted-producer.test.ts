@@ -218,7 +218,8 @@ const fixture = Effect.fn("HostedProducerTest.fixture")(function* (selectedRefer
   });
   const complete = Effect.fn("HostedProducerTest.complete")(function* () {
     const report = yield* buildCacheHostedProducerCompleteReport(observation, runReference);
-    const packed = yield* repack(yield* encodeCompleteReport(report));
+    const encodedCompleteReport = yield* encodeCompleteReport(report);
+    const packed = yield* repack(encodedCompleteReport);
     return { report, ...packed };
   });
   return { approval, report, observation, contents, archive, run, runReference, artifact, verify, repack, complete };
@@ -511,7 +512,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         const observed = yield* f.verify();
         expect(observed.authority).toBe("verified-github-artifact-observation-only");
         expect(observed.report.uploads).toEqual(f.report.uploads);
-        expect(observed.reportSha256).toBe(yield* hashBytes(new TextEncoder().encode(f.contents)));
+        const expectation = expect(observed.reportSha256);
+        const hashBytes1 = yield* hashBytes(new TextEncoder().encode(f.contents));
+        expectation.toBe(hashBytes1);
       })
     );
 
@@ -521,9 +524,11 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         const packed = yield* f.complete();
         const observed = yield* f.verify({ artifact: packed.metadata, observation: f.observation }, packed.bytes);
         expect(observed.report).toEqual(packed.report);
-        expect(packed.report.observationSha256).toBe(
-          yield* hashBytes(new TextEncoder().encode(yield* encodeObservation(f.observation)))
-        );
+        const expectation1 = expect(packed.report.observationSha256);
+        const argument = new TextEncoder();
+        const encodedObservation = yield* encodeObservation(f.observation);
+        const hashBytes2 = yield* hashBytes(argument.encode(encodedObservation));
+        expectation1.toBe(hashBytes2);
         const contents = yield* encodeCompleteReport(packed.report);
         expect(contents).not.toContain('"envelope"');
         expect(contents).not.toContain('"pilot"');
@@ -563,7 +568,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           ...original.report,
           uploads: [{ ...original.report.uploads[0], archiveBytes: original.report.uploads[0].archiveBytes + 1 }],
         });
-        const packed = yield* f.repack(yield* encodeCompleteReport(report));
+        const encodedCompleteReport1 = yield* encodeCompleteReport(report);
+        const packed = yield* f.repack(encodedCompleteReport1);
         const error = yield* f
           .verify({ artifact: packed.metadata, observation: f.observation }, packed.bytes)
           .pipe(Effect.flip);
@@ -601,10 +607,11 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         for (const change of [
           { run: { ...f.run, event: "pull_request" } },
           { afterRun: { ...f.run, run_attempt: f.run.run_attempt + 1 } },
-        ])
+        ]) {
           (yield* f
             .verify({ ...change, artifact: packed.metadata, observation: f.observation }, packed.bytes)
             .pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+        }
       })
     );
 
@@ -637,7 +644,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           { ...original.report, observationSha256: undefined },
           { ...original.report, uploads: [...original.report.uploads, ...original.report.uploads] },
         ]) {
-          const packed = yield* f.repack(yield* encodeUnknown(report));
+          const encodedUnknown = yield* encodeUnknown(report);
+          const packed = yield* f.repack(encodedUnknown);
           (yield* f
             .verify({ artifact: packed.metadata, observation: f.observation }, packed.bytes)
             .pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
@@ -655,7 +663,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           ...original.report,
           uploads: [{ ...original.report.uploads[0], archiveBytes: changedBytes }],
         });
-        const packed = yield* f.repack(yield* encodeCompleteReport(report));
+        const encodedCompleteReport2 = yield* encodeCompleteReport(report);
+        const packed = yield* f.repack(encodedCompleteReport2);
         const error = yield* f
           .verify(
             {
@@ -697,8 +706,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           { ...f.run, repository: { ...f.run.repository, fork: true } },
           { ...f.run, head_repository: { ...f.run.head_repository, id: 44 } },
           { ...f.run, repository: { ...f.run.repository, full_name: "attacker/repo" } },
-        ])
+        ]) {
           (yield* f.verify({ run }).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+        }
         (yield* f
           .verify({ artifact: { ...f.artifact, workflow_run: { ...f.artifact.workflow_run, repository_id: 44 } } })
           .pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
@@ -717,11 +727,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           { created_at: "2099-01-01T00:00:00.000Z" },
           { created_at: "1969-12-30T00:00:00.000Z" },
           { size_in_bytes: 1024 * 1024 + 1 },
-        ])
+        ]) {
           (yield* f.verify({ artifact: { ...f.artifact, ...change } }).pipe(Effect.result)).pipe(
             Result.isFailure,
             assertTrue
           );
+        }
       })
     );
 
@@ -761,14 +772,13 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
     it.effect("rejects a valid replacement ZIP whose digest was never published by GitHub", () =>
       Effect.gen(function* () {
         const f = yield* fixture();
-        const replacement = yield* f.repack(
-          yield* encodeReport(
-            CacheHostedProducerReport.make({
-              ...f.report,
-              uploads: [{ ...f.report.uploads[0], archiveBytes: 129 }],
-            })
-          )
+        const encodedReport3 = yield* encodeReport(
+          CacheHostedProducerReport.make({
+            ...f.report,
+            uploads: [{ ...f.report.uploads[0], archiveBytes: 129 }],
+          })
         );
+        const replacement = yield* f.repack(encodedReport3);
         const error = yield* f.verify({}, replacement.bytes).pipe(Effect.flip);
         expect(error.message).toContain("immutable digest");
       })
@@ -809,7 +819,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
             { ...encodedReport, uploads: [{ ...encodedReport.uploads[0], backendResult: "ambiguous-write" }] },
           ],
           Effect.fn("HostedProducerTest.rejectForgery")(function* (report) {
-            const packed = yield* f.repack(yield* encodeUnknown(report));
+            const encodedUnknown4 = yield* encodeUnknown(report);
+            const packed = yield* f.repack(encodedUnknown4);
             const error = yield* f.verify({ artifact: packed.metadata }, packed.bytes).pipe(Effect.flip);
             if (report.uploads.length > 0 && !("unsafe" in report) && report.uploads[0]?.backendResult === "allowed") {
               expect(error.cause).toBeUndefined();
@@ -828,11 +839,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           yield* f.repack(f.contents, true),
           yield* f.repack(f.contents, false, true),
           yield* f.repack(Str.repeat(100_000)("x")),
-        ])
+        ]) {
           (yield* f.verify({ artifact: packed.metadata }, packed.bytes).pipe(Effect.result)).pipe(
             Result.isFailure,
             assertTrue
           );
+        }
       })
     );
 
@@ -843,7 +855,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         const path = yield* Path.Path;
         const directory = yield* fs.makeTempDirectoryScoped({ prefix: "hosted-producer-nul-" });
         const file = path.join(directory, "report.zip");
-        yield* fs.writeFile(file, yield* zipReport(f.contents, false, false, "cache-producer.jsonx"));
+        const zipReport5 = yield* zipReport(f.contents, false, false, "cache-producer.jsonx");
+        yield* fs.writeFile(file, zipReport5);
         const modified = yield* CacheRuntimeProcess.runCaptured({
           command: "/usr/bin/python3",
           args: [

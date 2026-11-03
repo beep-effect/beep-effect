@@ -29,9 +29,11 @@ import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -70,8 +72,8 @@ const decodeManifestJson = S.decodeUnknownEffect(
 const runExploreCommand = Command.runWith(exploreCommand, { version: "0.0.0" });
 const layer = Layer.provideMerge(PacketEventStoreLive, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer));
 
-const manifestText = `${JSON.stringify(
-  {
+const manifestText = `${Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }))({
     schemaVersion: "exploration-manifest/v1",
     extension: "kept",
     exploration: {
@@ -84,9 +86,8 @@ const manifestText = `${JSON.stringify(
       created: "2026-10-01",
       updated: "2026-10-01",
     },
-  },
-  null,
-  2
+  }),
+  identity
 )}\n`;
 
 const seedFixture = Effect.gen(function* () {
@@ -95,7 +96,8 @@ const seedFixture = Effect.gen(function* () {
 });
 
 const lastLogLine = Effect.gen(function* () {
-  return O.getOrElse(A.last(A.filter(yield* TestConsole.logLines, P.isString)), () => "");
+  const logLines1 = yield* TestConsole.logLines;
+  return O.getOrElse(A.last(A.filter(logLines1, P.isString)), () => "");
 });
 
 const planFor = Effect.fn(function* (goals: ReadonlyArray<string>) {
@@ -187,20 +189,24 @@ it.layer(layer, { concurrent: false, timeout: "60 seconds" })((it) => {
               )
             );
             expectReportedExit(wrong);
-            strictEqual(yield* exists("goals/first-child"), false);
+            const exists2 = yield* exists("goals/first-child");
+            strictEqual(exists2, false);
 
             const written = yield* Effect.exit(
               runExploreCommand(graduateArgs(goals, ["--write", "--expect", plan.planId]))
             );
             written.pipe(Exit.isSuccess, assertTrue);
-            const receipt = yield* decodeReceiptJson(yield* lastLogLine);
+            const lastLogLine3 = yield* lastLogLine;
+            const receipt = yield* decodeReceiptJson(lastLogLine3);
             strictEqual(receipt.planId, plan.planId);
             expect(A.map(receipt.children, (row) => [row.slug, row.outcome])).toEqual([["first-child", "published"]]);
             strictEqual(receipt.manifestBeforeDigest, plan.explorationEdit?.preImageDigest);
             strictEqual(receipt.eventsAppended, 0);
 
-            expect(yield* readProjectFile("goals/first-child/ops/manifest.json")).toContain(PROVENANCE);
-            const manifest = yield* decodeManifestJson(yield* readProjectFile(MANIFEST_PATH));
+            const readProjectFile4 = yield* readProjectFile("goals/first-child/ops/manifest.json");
+            expect(readProjectFile4).toContain(PROVENANCE);
+            const readProjectFile5 = yield* readProjectFile(MANIFEST_PATH);
+            const manifest = yield* decodeManifestJson(readProjectFile5);
             expect(manifest).toMatchObject({
               extension: "kept",
               exploration: {
@@ -210,9 +216,11 @@ it.layer(layer, { concurrent: false, timeout: "60 seconds" })((it) => {
                 links: { goals: ["goals/earlier-child", "goals/first-child"] },
               },
             });
-            strictEqual(yield* exists(`${PROVENANCE}/ops/events`), false);
+            const exists6 = yield* exists(`${PROVENANCE}/ops/events`);
+            strictEqual(exists6, false);
             const fs = yield* FileSystem.FileSystem;
-            expect(A.filter(yield* fs.readDirectory(`${PROVENANCE}/ops`), Str.includes(".staging-"))).toEqual([]);
+            const readDirectory7 = yield* fs.readDirectory(`${PROVENANCE}/ops`);
+            expect(A.filter(readDirectory7, Str.includes(".staging-"))).toEqual([]);
 
             const again = yield* Effect.exit(
               runExploreCommand(graduateArgs(goals, ["--write", "--expect", plan.planId]))
@@ -238,8 +246,10 @@ it.layer(layer, { concurrent: false, timeout: "60 seconds" })((it) => {
             yield* writeProjectFile("goals/second-child/stray.txt", "blocker\n");
             const crashed = yield* Effect.exit(writeGraduationPlan(plan, O.some(plan.planId), AT));
             crashed.pipe(Exit.isFailure, assertTrue);
-            strictEqual(yield* exists("goals/first-child/ops/manifest.json"), true);
-            strictEqual(yield* readProjectFile(MANIFEST_PATH), manifestText);
+            const exists8 = yield* exists("goals/first-child/ops/manifest.json");
+            strictEqual(exists8, true);
+            const readProjectFile9 = yield* readProjectFile(MANIFEST_PATH);
+            strictEqual(readProjectFile9, manifestText);
 
             // The blocker is a foreign packet (no provenance): the replay refuses.
             const foreign = yield* planFor(goals);
@@ -248,7 +258,8 @@ it.layer(layer, { concurrent: false, timeout: "60 seconds" })((it) => {
             ]);
             const refused = yield* Effect.exit(writeGraduationPlan(foreign, O.some(foreign.planId), AT));
             refused.pipe(Exit.isFailure, assertTrue);
-            strictEqual(yield* readProjectFile(MANIFEST_PATH), manifestText);
+            const readProjectFile10 = yield* readProjectFile(MANIFEST_PATH);
+            strictEqual(readProjectFile10, manifestText);
 
             const fs = yield* FileSystem.FileSystem;
             yield* fs.remove("goals/second-child", { recursive: true });
@@ -260,12 +271,14 @@ it.layer(layer, { concurrent: false, timeout: "60 seconds" })((it) => {
               runExploreCommand(graduateArgs(goals, ["--write", "--expect", resumed.planId]))
             );
             written.pipe(Exit.isSuccess, assertTrue);
-            const receipt = yield* decodeReceiptJson(yield* lastLogLine);
+            const lastLogLine11 = yield* lastLogLine;
+            const receipt = yield* decodeReceiptJson(lastLogLine11);
             expect(A.map(receipt.children, (row) => [row.slug, row.outcome])).toEqual([
               ["first-child", "already-published"],
               ["second-child", "published"],
             ]);
-            const manifest = yield* decodeManifestJson(yield* readProjectFile(MANIFEST_PATH));
+            const readProjectFile12 = yield* readProjectFile(MANIFEST_PATH);
+            const manifest = yield* decodeManifestJson(readProjectFile12);
             expect(manifest.exploration.links.goals).toEqual([
               "goals/earlier-child",
               "goals/first-child",
@@ -314,8 +327,10 @@ it.layer(layer, { concurrent: false, timeout: "60 seconds" })((it) => {
             strictEqual(derived.status, "graduated");
             strictEqual(derived.resumeStage, "graduate");
             strictEqual(derived.furthestOrdinal, 6);
-            strictEqual(yield* exists(PENDING_PATH), false);
-            expect(yield* readProjectFile(`${PROVENANCE}/ops/trace.json`)).toContain(
+            const exists13 = yield* exists(PENDING_PATH);
+            strictEqual(exists13, false);
+            const readProjectFile14 = yield* readProjectFile(`${PROVENANCE}/ops/trace.json`);
+            expect(readProjectFile14).toContain(
               O.getOrElse(
                 O.map(O.fromUndefinedOr(derived.tip), (tip) => tip.id),
                 () => "missing-tip"
@@ -341,8 +356,10 @@ it.layer(layer, { concurrent: false, timeout: "60 seconds" })((it) => {
           }
           const invalid = yield* Effect.exit(runExploreCommand(["graduate", "../outside", "--resume-events"]));
           expectReportedExit(invalid);
-          strictEqual(yield* readProjectFile(MANIFEST_PATH), manifestText);
-          strictEqual(yield* exists(PENDING_PATH), false);
+          const readProjectFile15 = yield* readProjectFile(MANIFEST_PATH);
+          strictEqual(readProjectFile15, manifestText);
+          const exists16 = yield* exists(PENDING_PATH);
+          strictEqual(exists16, false);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -352,19 +369,20 @@ it.layer(layer, { concurrent: false, timeout: "60 seconds" })((it) => {
         temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* crashAfterManifestFlip;
-          const pending = yield* decodePendingEventsJson(yield* readProjectFile(PENDING_PATH));
+          const readProjectFile17 = yield* readProjectFile(PENDING_PATH);
+          const pending = yield* decodePendingEventsJson(readProjectFile17);
           const { schemaVersion: _schemaVersion, ...input } = pending;
-          yield* writeProjectFile(
-            PENDING_PATH,
-            yield* encodePendingEventsJson(
-              GraduationPendingEvents.make({ ...input, exploration: "another-exploration" })
-            )
+          const encodedPendingEventsJson = yield* encodePendingEventsJson(
+            GraduationPendingEvents.make({ ...input, exploration: "another-exploration" })
           );
+          yield* writeProjectFile(PENDING_PATH, encodedPendingEventsJson);
           const refused = yield* Effect.flip(resumeGraduationEvents(EXPLORATION));
           strictEqual(refused._tag, "GraduationRecoveryError");
           expect(refused.message).toContain('records exploration "another-exploration"');
-          strictEqual(A.length(yield* streamBodies), 0);
-          strictEqual(yield* exists(PENDING_PATH), true);
+          const streamBodies18 = yield* streamBodies;
+          strictEqual(A.length(streamBodies18), 0);
+          const exists19 = yield* exists(PENDING_PATH);
+          strictEqual(exists19, true);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -382,8 +400,10 @@ it.layer(layer, { concurrent: false, timeout: "60 seconds" })((it) => {
           yield* fs.remove(MANIFEST_PATH);
           const noManifest = yield* Effect.flip(resumeGraduationEvents(EXPLORATION));
           expect(noManifest.message).toContain("Failed to read");
-          strictEqual(A.length(yield* streamBodies), 0);
-          strictEqual(yield* exists(PENDING_PATH), true);
+          const streamBodies20 = yield* streamBodies;
+          strictEqual(A.length(streamBodies20), 0);
+          const exists21 = yield* exists(PENDING_PATH);
+          strictEqual(exists21, true);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -410,8 +430,10 @@ it.layer(layer, { concurrent: false, timeout: "60 seconds" })((it) => {
           const refused = yield* Effect.flip(resumeGraduationEvents(EXPLORATION));
           strictEqual(refused._tag, "GraduationRecoveryError");
           expect(refused.message).toContain("moved since the pending graduation events were recorded");
-          strictEqual(A.length(yield* streamBodies), 1);
-          strictEqual(yield* exists(PENDING_PATH), true);
+          const streamBodies22 = yield* streamBodies;
+          strictEqual(A.length(streamBodies22), 1);
+          const exists23 = yield* exists(PENDING_PATH);
+          strictEqual(exists23, true);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -423,33 +445,40 @@ it.layer(layer, { concurrent: false, timeout: "60 seconds" })((it) => {
           temporaryWorkingDirectory,
           Effect.gen(function* () {
             yield* crashAfterManifestFlip;
-            const flipped = yield* decodeManifestJson(yield* readProjectFile(MANIFEST_PATH));
+            const readProjectFile24 = yield* readProjectFile(MANIFEST_PATH);
+            const flipped = yield* decodeManifestJson(readProjectFile24);
             strictEqual(flipped.exploration.status, "graduated");
-            strictEqual(yield* exists(PENDING_PATH), true);
-            strictEqual(A.length(yield* streamBodies), 0);
+            const exists25 = yield* exists(PENDING_PATH);
+            strictEqual(exists25, true);
+            const streamBodies26 = yield* streamBodies;
+            strictEqual(A.length(streamBodies26), 0);
 
             yield* runExploreCheck();
-            expect(A.join(A.filter(yield* TestConsole.errorLines, P.isString), "\n")).toContain(
-              "[packet-graduation-pending]"
-            );
+            const errorLines27 = yield* TestConsole.errorLines;
+            expect(A.join(A.filter(errorLines27, P.isString), "\n")).toContain("[packet-graduation-pending]");
 
             const resumed = yield* Effect.exit(runExploreCommand(["graduate", EXPLORATION, "--resume-events"]));
             resumed.pipe(Exit.isSuccess, assertTrue);
-            const receipt = yield* decodeResumeReceiptJson(yield* lastLogLine);
+            const lastLogLine28 = yield* lastLogLine;
+            const receipt = yield* decodeResumeReceiptJson(lastLogLine28);
             strictEqual(receipt.eventsAppended, 3);
-            expect(yield* streamBodies).toMatchObject([
+            const streamBodies29 = yield* streamBodies;
+            expect(streamBodies29).toMatchObject([
               { type: "packet-created", status: "active", stage: "decompose", ordinal: 5 },
               { type: "stage-entered", stage: "graduate", ordinal: 6 },
               { type: "status-set", status: "graduated", previous: "active" },
             ]);
-            strictEqual(yield* exists(PENDING_PATH), false);
-            strictEqual(yield* exists(`${PROVENANCE}/ops/trace.json`), true);
+            const exists30 = yield* exists(PENDING_PATH);
+            strictEqual(exists30, false);
+            const exists31 = yield* exists(`${PROVENANCE}/ops/trace.json`);
+            strictEqual(exists31, true);
 
             const again = yield* Effect.exit(runExploreCommand(["graduate", EXPLORATION, "--resume-events"]));
             expectReportedExit(again);
             const direct = yield* Effect.flip(resumeGraduationEvents(EXPLORATION));
             strictEqual(direct._tag, "GraduationRecoveryError");
-            strictEqual(A.length(yield* streamBodies), 3);
+            const streamBodies32 = yield* streamBodies;
+            strictEqual(A.length(streamBodies32), 3);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       30_000
@@ -466,8 +495,10 @@ it.layer(layer, { concurrent: false, timeout: "60 seconds" })((it) => {
             const refused = yield* Effect.flip(resumeGraduationEvents(EXPLORATION));
             strictEqual(refused._tag, "GraduationRecoveryError");
             expect(refused.message).toContain("is not the graduated manifest recorded");
-            strictEqual(A.length(yield* streamBodies), 0);
-            strictEqual(yield* exists(PENDING_PATH), true);
+            const streamBodies33 = yield* streamBodies;
+            strictEqual(A.length(streamBodies33), 0);
+            const exists34 = yield* exists(PENDING_PATH);
+            strictEqual(exists34, true);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       30_000
@@ -490,7 +521,8 @@ it.layer(layer, { concurrent: false, timeout: "60 seconds" })((it) => {
           const refused = yield* Effect.flip(readExplorationSnapshot(EXPLORATION));
           strictEqual(refused._tag, "GoalPlanOperationalError");
           expect(refused.message).toContain("Failed to read");
-          strictEqual(yield* exists("goals/first-child"), false);
+          const exists35 = yield* exists("goals/first-child");
+          strictEqual(exists35, false);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -519,9 +551,12 @@ it.layer(layer, { concurrent: false, timeout: "60 seconds" })((it) => {
           const plan = yield* planFor(["first-child=First Child"]);
           const receipt = yield* writeGraduationPlan(plan, O.some(plan.planId), AT);
           strictEqual(receipt.eventsAppended, 0);
-          strictEqual(A.length(yield* streamBodies), 1);
-          strictEqual(yield* exists(PENDING_PATH), false);
-          const manifest = yield* decodeManifestJson(yield* readProjectFile(MANIFEST_PATH));
+          const streamBodies36 = yield* streamBodies;
+          strictEqual(A.length(streamBodies36), 1);
+          const exists37 = yield* exists(PENDING_PATH);
+          strictEqual(exists37, false);
+          const readProjectFile38 = yield* readProjectFile(MANIFEST_PATH);
+          const manifest = yield* decodeManifestJson(readProjectFile38);
           strictEqual(manifest.exploration.status, "graduated");
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -541,9 +576,12 @@ it.layer(layer, { concurrent: false, timeout: "60 seconds" })((it) => {
             const plan = yield* planFor(["first-child=First Child"]);
             const refused = yield* Effect.flip(writeGraduationPlan(plan, O.some(plan.planId), AT));
             expect(refused.message).toContain("failed before anything was written");
-            strictEqual(yield* exists("goals/first-child"), false);
-            strictEqual(yield* exists(PENDING_PATH), false);
-            strictEqual(yield* readProjectFile(MANIFEST_PATH), manifestText);
+            const exists39 = yield* exists("goals/first-child");
+            strictEqual(exists39, false);
+            const exists40 = yield* exists(PENDING_PATH);
+            strictEqual(exists40, false);
+            const readProjectFile41 = yield* readProjectFile(MANIFEST_PATH);
+            strictEqual(readProjectFile41, manifestText);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       30_000
@@ -565,10 +603,14 @@ it.layer(layer, { concurrent: false, timeout: "60 seconds" })((it) => {
               )
             );
             expect(failed.message).toContain("changed since the plan was reviewed");
-            strictEqual(yield* exists("goals/first-child/ops/manifest.json"), true);
-            strictEqual(yield* readProjectFile(MANIFEST_PATH), `${manifestText}\n`);
-            strictEqual(yield* exists(PENDING_PATH), false);
-            strictEqual(A.length(yield* streamBodies), 0);
+            const exists42 = yield* exists("goals/first-child/ops/manifest.json");
+            strictEqual(exists42, true);
+            const readProjectFile43 = yield* readProjectFile(MANIFEST_PATH);
+            strictEqual(readProjectFile43, `${manifestText}\n`);
+            const exists44 = yield* exists(PENDING_PATH);
+            strictEqual(exists44, false);
+            const streamBodies45 = yield* streamBodies;
+            strictEqual(A.length(streamBodies45), 0);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       30_000

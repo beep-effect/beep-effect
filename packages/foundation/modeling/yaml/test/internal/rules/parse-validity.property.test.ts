@@ -16,7 +16,8 @@ describe("parse-validity schema properties", () => {
         const encoded = yield* S.encodeEffect(parseValidityOptions)(value);
         const decoded = yield* S.decodeEffect(parseValidityOptions)(encoded);
         assert.isTrue(S.toEquivalence(parseValidityOptions)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(parseValidityOptions)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(parseValidityOptions)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );

@@ -23,11 +23,16 @@ it.effect.prop(
       assert.strictEqual(neutralizeJson(neutral), neutral);
       assert.strictEqual(Str.includes("##[")(neutral), false);
       const parsed = yield* parse(neutral);
-      assert.deepStrictEqual(parsed, yield* parse(encoded));
-      assert.deepStrictEqual(yield* parse(neutralizeJson(yield* stringify(parsed))), parsed);
+      const parsed1 = yield* parse(encoded);
+      assert.deepStrictEqual(parsed, parsed1);
+      const stringify4 = yield* stringify(parsed);
+      const parsed2 = yield* parse(neutralizeJson(stringify4));
+      assert.deepStrictEqual(parsed2, parsed);
       // Force the runner-command spelling in every sample, including scalars.
       const command = yield* stringify({ text: `##[warning]${encoded}` });
-      assert.deepStrictEqual(yield* parse(neutralizeJson(command)), yield* parse(command));
+      const parsed3 = yield* parse(neutralizeJson(command));
+      const parsed5 = yield* parse(command);
+      assert.deepStrictEqual(parsed3, parsed5);
     }),
   runs
 );

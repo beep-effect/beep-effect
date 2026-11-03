@@ -55,7 +55,8 @@ const convertAndStore = Effect.fn("ReviewerBootstrap.convertAndStore")(function*
     yield* Effect.logError(`[reviewer-bootstrap] Manifest conversion returned HTTP ${response.status}.`);
     return false;
   }
-  const converted = yield* decodeConversion(yield* response.json);
+  const json1 = yield* response.json;
+  const converted = yield* decodeConversion(json1);
   const template = yield* encodeJson({
     title: "beep-reviewer GitHub App",
     category: "API_CREDENTIAL",
@@ -106,9 +107,8 @@ const fetchWith =
 const serve = Effect.gen(function* () {
   const crypto = yield* SecureRandom.SecureRandom;
   const nonce = yield* crypto.uuidV4();
-  const manifest = yield* decodeJson(yield* Effect.promise(() => Bun.file(MANIFEST_URL).text())).pipe(
-    Effect.flatMap(decodeManifest)
-  );
+  const promise2 = yield* Effect.promise(() => Bun.file(MANIFEST_URL).text());
+  const manifest = yield* decodeJson(promise2).pipe(Effect.flatMap(decodeManifest));
   const manifestJson = yield* encodeJson(manifest);
   const escaped = pipe(
     manifestJson,

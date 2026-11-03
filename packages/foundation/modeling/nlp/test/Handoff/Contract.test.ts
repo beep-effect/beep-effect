@@ -290,6 +290,7 @@ it.effect("encodes Contract.Span through its generation link", () =>
       SchemaAST.decodeTo(link.to, SchemaAST.toType(Contract.Span.ast), link.transformation)
     );
     const value = Contract.Span.make({ start: S.Natural.make(1), end: S.Natural.make(4) });
-    expect(yield* S.encodeEffect(codec)(value)).toEqual(value);
+    const value1 = yield* S.encodeEffect(codec)(value);
+    expect(value1).toEqual(value);
   })
 );

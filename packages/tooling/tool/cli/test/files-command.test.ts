@@ -295,7 +295,8 @@ const readArchivePoorCandidatesManifest = Effect.fn("FilesTest.readArchivePoorCa
 });
 
 const readDetectBordersJsonLog = Effect.fn("FilesTest.readDetectBordersJsonLog")(function* () {
-  const lines = A.filter(yield* TestConsole.logLines, isString);
+  const logLines1 = yield* TestConsole.logLines;
+  const lines = A.filter(logLines1, isString);
   return yield* decodeDetectBordersReport(A.join("\n")(lines));
 });
 
@@ -830,7 +831,8 @@ const writeFailingFfmpegShim = Effect.fn("FilesTest.writeFailingFfmpegShim")(fun
 
 const sortedDirectoryEntries = Effect.fn("FilesTest.sortedDirectoryEntries")(function* (dir: string) {
   const fs = yield* FileSystem.FileSystem;
-  return A.sort(yield* fs.readDirectory(dir), Order.String);
+  const readDirectory2 = yield* fs.readDirectory(dir);
+  return A.sort(readDirectory2, Order.String);
 });
 
 const fileSize = Effect.fn("FilesTest.fileSize")(function* (filePath: string) {
@@ -843,7 +845,8 @@ const sha256FileRef = Effect.fn("FilesTest.sha256FileRef")(function* (filePath: 
   const fs = yield* FileSystem.FileSystem;
   const crypto = yield* Digest.Digest;
   const bytes = yield* fs.readFile(filePath);
-  return `sha256:${Hex.encode(yield* crypto.digest(Digest.sha256, bytes))}`;
+  const digest3 = yield* crypto.digest(Digest.sha256, bytes);
+  return `sha256:${Hex.encode(digest3)}`;
 });
 
 it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command", (it) => {
@@ -873,39 +876,48 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
     ]) {
       const encodedDetectBordersReport = yield* encodeDetectBordersReport(detectBordersReport);
       const decodedDetectBordersReport = yield* decodeDetectBordersReport(encodedDetectBordersReport);
-      expect(yield* encodeDetectBordersReport(decodedDetectBordersReport)).toBe(encodedDetectBordersReport);
+      const encodedDetectBordersReport4 = yield* encodeDetectBordersReport(decodedDetectBordersReport);
+      expect(encodedDetectBordersReport4).toBe(encodedDetectBordersReport);
 
       const encodedImageAuditManifest = yield* encodeImageAuditManifest(imageAuditManifest);
       const decodedImageAuditManifest = yield* decodeImageAuditManifest(encodedImageAuditManifest);
-      expect(yield* encodeImageAuditManifest(decodedImageAuditManifest)).toBe(encodedImageAuditManifest);
+      const encodedImageAuditManifest5 = yield* encodeImageAuditManifest(decodedImageAuditManifest);
+      expect(encodedImageAuditManifest5).toBe(encodedImageAuditManifest);
 
       const encodedImageCurationManifest = yield* encodeImageCurationManifest(imageCurationManifest);
       const decodedImageCurationManifest = yield* decodeImageCurationManifest(encodedImageCurationManifest);
-      expect(yield* encodeImageCurationManifest(decodedImageCurationManifest)).toBe(encodedImageCurationManifest);
+      const encodedImageCurationManifest6 = yield* encodeImageCurationManifest(decodedImageCurationManifest);
+      expect(encodedImageCurationManifest6).toBe(encodedImageCurationManifest);
 
       const encodedChildArtifactRecord = yield* encodeChildArtifactRecord(childArtifactRecord);
       const decodedChildArtifactRecord = yield* decodeChildArtifactRecord(encodedChildArtifactRecord);
-      expect(yield* encodeChildArtifactRecord(decodedChildArtifactRecord)).toBe(encodedChildArtifactRecord);
+      const encodedChildArtifactRecord7 = yield* encodeChildArtifactRecord(decodedChildArtifactRecord);
+      expect(encodedChildArtifactRecord7).toBe(encodedChildArtifactRecord);
 
       const encodedCoverageSummary = yield* encodeFileProcessingCoverageSummary(coverageSummary);
       const decodedCoverageSummary = yield* decodeFileProcessingCoverageSummary(encodedCoverageSummary);
-      expect(yield* encodeFileProcessingCoverageSummary(decodedCoverageSummary)).toBe(encodedCoverageSummary);
+      const encodedFileProcessingCoverageSummary = yield* encodeFileProcessingCoverageSummary(decodedCoverageSummary);
+      expect(encodedFileProcessingCoverageSummary).toBe(encodedCoverageSummary);
 
       const encodedFailureRecord = yield* encodeFileProcessingFailureRecord(failureRecord);
       const decodedFailureRecord = yield* decodeFileProcessingFailureRecord(encodedFailureRecord);
-      expect(yield* encodeFileProcessingFailureRecord(decodedFailureRecord)).toBe(encodedFailureRecord);
+      const encodedFileProcessingFailureRecord = yield* encodeFileProcessingFailureRecord(decodedFailureRecord);
+      expect(encodedFileProcessingFailureRecord).toBe(encodedFailureRecord);
 
       const encodedNormalizeManifest = yield* encodeNormalizeManifest(normalizeManifest);
       const decodedNormalizeManifest = yield* decodeNormalizeManifest(encodedNormalizeManifest);
-      expect(yield* encodeNormalizeManifest(decodedNormalizeManifest)).toBe(encodedNormalizeManifest);
+      const encodedNormalizeManifest8 = yield* encodeNormalizeManifest(decodedNormalizeManifest);
+      expect(encodedNormalizeManifest8).toBe(encodedNormalizeManifest);
 
       const encodedProcessRunManifest = yield* encodeProcessRunManifest(processRunManifest);
       const decodedProcessRunManifest = yield* decodeProcessRunManifest(encodedProcessRunManifest);
-      expect(yield* encodeProcessRunManifest(decodedProcessRunManifest)).toBe(encodedProcessRunManifest);
+      const encodedProcessRunManifest9 = yield* encodeProcessRunManifest(decodedProcessRunManifest);
+      expect(encodedProcessRunManifest9).toBe(encodedProcessRunManifest);
 
       const encodedSourceProcessingRecord = yield* encodeSourceProcessingRecord(sourceProcessingRecord);
       const decodedSourceProcessingRecord = yield* decodeSourceProcessingRecord(encodedSourceProcessingRecord);
-      expect(yield* encodeSourceProcessingRecord(decodedSourceProcessingRecord)).toBe(encodedSourceProcessingRecord);
+      const encodedSourceProcessingRecord10 = yield* encodeSourceProcessingRecord(decodedSourceProcessingRecord);
+      expect(encodedSourceProcessingRecord10).toBe(encodedSourceProcessingRecord);
     }),
     { arbitrary: fcRuns(25) }
   );
@@ -945,18 +957,20 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
         "--failure-policy",
         "continue",
       ]);
-      const runManifest = yield* decodeProcessRunManifest(yield* fs.readFileString(path.join(outDir, "run.json")));
-      const coverage = yield* decodeFileProcessingCoverageSummary(
-        yield* fs.readFileString(path.join(outDir, "coverage.json"))
-      );
+      const readFileString11 = yield* fs.readFileString(path.join(outDir, "run.json"));
+      const runManifest = yield* decodeProcessRunManifest(readFileString11);
+      const readFileString12 = yield* fs.readFileString(path.join(outDir, "coverage.json"));
+      const coverage = yield* decodeFileProcessingCoverageSummary(readFileString12);
+      const readFileString13 = yield* fs.readFileString(path.join(outDir, "sources.jsonl"));
       const sourceLines = pipe(
-        yield* fs.readFileString(path.join(outDir, "sources.jsonl")),
+        readFileString13,
         Str.split("\n"),
         A.filter((line) => line.length > 0)
       );
       const sourceRecords = yield* Effect.forEach(sourceLines, decodeSourceProcessingRecordLine);
+      const readFileString14 = yield* fs.readFileString(path.join(outDir, "failures.jsonl"));
       const failureLines = pipe(
-        yield* fs.readFileString(path.join(outDir, "failures.jsonl")),
+        readFileString14,
         Str.split("\n"),
         A.filter((line) => line.length > 0)
       );
@@ -966,9 +980,10 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
       const xlsRecord = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "table.xls"));
       const xlsFailure = O.getOrThrow(A.findFirst(failureRecords, (record) => record.relativePath === "table.xls"));
       const childPath = path.join(outDir, "children", `${pstRecord.artifactId}`, "artifacts.jsonl");
+      const readFileString15 = yield* fs.readFileString(childPath);
       const childRecords = yield* Effect.forEach(
         pipe(
-          yield* fs.readFileString(childPath),
+          readFileString15,
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
@@ -999,9 +1014,12 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
       expect(childRecords[0]?.sourceArtifactId).toBe(pstRecord.artifactId);
       expect(childRecords[0]?.child.id).not.toBe(pstRecord.artifactId);
       expect(childRecords[0]?.child.relativePath).toBe("children/synthetic-libpff-message.txt");
-      expect(yield* fs.readFileString(path.join(outDir, textRecord.textPath ?? ""))).toBe("hello proof");
-      expect(yield* fs.exists(path.join(outDir, "failures.jsonl"))).toBe(true);
-      expect(yield* fs.exists(childPath)).toBe(true);
+      const readFileString16 = yield* fs.readFileString(path.join(outDir, textRecord.textPath ?? ""));
+      expect(readFileString16).toBe("hello proof");
+      const exists17 = yield* fs.exists(path.join(outDir, "failures.jsonl"));
+      expect(exists17).toBe(true);
+      const exists18 = yield* fs.exists(childPath);
+      expect(exists18).toBe(true);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -1027,17 +1045,19 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
         "--tika-url",
         "http://127.0.0.1:1",
       ]);
+      const readFileString19 = yield* fs.readFileString(path.join(outDir, "sources.jsonl"));
       const sourceRecords = yield* Effect.forEach(
         pipe(
-          yield* fs.readFileString(path.join(outDir, "sources.jsonl")),
+          readFileString19,
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
         decodeSourceProcessingRecordLine
       );
+      const readFileString20 = yield* fs.readFileString(path.join(outDir, "failures.jsonl"));
       const failureRecords = yield* Effect.forEach(
         pipe(
-          yield* fs.readFileString(path.join(outDir, "failures.jsonl")),
+          readFileString20,
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
@@ -1052,7 +1072,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
       expect(pstRecord.skipReason).toBe("engine-unavailable");
       expect(pstFailure.status).toBe("skipped");
       expect(pstFailure.reason).toBe("engine-unavailable");
-      expect(yield* fs.exists(path.join(outDir, "children", `${pstRecord.artifactId}`, "artifacts.jsonl"))).toBe(false);
+      const exists21 = yield* fs.exists(path.join(outDir, "children", `${pstRecord.artifactId}`, "artifacts.jsonl"));
+      expect(exists21).toBe(false);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -1090,13 +1111,14 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
         "--pffexport",
         pffexportStubPath,
       ]);
-      const runManifest = yield* decodeProcessRunManifest(yield* fs.readFileString(path.join(outDir, "run.json")));
-      const coverage = yield* decodeFileProcessingCoverageSummary(
-        yield* fs.readFileString(path.join(outDir, "coverage.json"))
-      );
+      const readFileString22 = yield* fs.readFileString(path.join(outDir, "run.json"));
+      const runManifest = yield* decodeProcessRunManifest(readFileString22);
+      const readFileString23 = yield* fs.readFileString(path.join(outDir, "coverage.json"));
+      const coverage = yield* decodeFileProcessingCoverageSummary(readFileString23);
+      const readFileString24 = yield* fs.readFileString(path.join(outDir, "sources.jsonl"));
       const sourceRecords = yield* Effect.forEach(
         pipe(
-          yield* fs.readFileString(path.join(outDir, "sources.jsonl")),
+          readFileString24,
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
@@ -1105,9 +1127,12 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
       const textRecord = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "note.txt"));
       const pstRecord = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "mailbox.pst"));
       const xlsRecord = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "table.xls"));
+      const readFileString25 = yield* fs.readFileString(
+        path.join(outDir, "children", `${pstRecord.artifactId}`, "artifacts.jsonl")
+      );
       const childRecords = yield* Effect.forEach(
         pipe(
-          yield* fs.readFileString(path.join(outDir, "children", `${pstRecord.artifactId}`, "artifacts.jsonl")),
+          readFileString25,
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
@@ -1121,7 +1146,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
       if (textRecord.status !== "succeeded") {
         throw new Error("Expected note.txt to succeed through the tika-app stub engine.");
       }
-      expect(yield* fs.readFileString(path.join(outDir, textRecord.textPath ?? ""))).toBe("stub text body");
+      const readFileString26 = yield* fs.readFileString(path.join(outDir, textRecord.textPath ?? ""));
+      expect(readFileString26).toBe("stub text body");
       expect(pstRecord.status).toBe("succeeded");
       expect(xlsRecord.status).toBe("skipped");
       expect(childRecords.length).toBeGreaterThan(0);
@@ -1129,7 +1155,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
       expect(A.some(childRecords, (record) => Str.endsWith("/Message.eml")(record.child.relativePath))).toBe(true);
       expect(A.some(childRecords, (record) => Str.endsWith(".messages.jsonl")(record.child.relativePath))).toBe(true);
       for (const record of childRecords) {
-        expect(yield* fs.exists(path.join(outDir, record.child.relativePath))).toBe(true);
+        const exists27 = yield* fs.exists(path.join(outDir, record.child.relativePath));
+        expect(exists27).toBe(true);
       }
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
@@ -1157,17 +1184,19 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
         "--failure-policy",
         "continue",
       ]);
+      const readFileString28 = yield* fs.readFileString(path.join(outDir, "sources.jsonl"));
       const sourceRecords = yield* Effect.forEach(
         pipe(
-          yield* fs.readFileString(path.join(outDir, "sources.jsonl")),
+          readFileString28,
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
         decodeSourceProcessingRecordLine
       );
+      const readFileString29 = yield* fs.readFileString(path.join(outDir, "failures.jsonl"));
       const failureRecords = yield* Effect.forEach(
         pipe(
-          yield* fs.readFileString(path.join(outDir, "failures.jsonl")),
+          readFileString29,
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
@@ -1215,8 +1244,9 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
         "--failure-policy",
         "continue",
       ]);
+      const readFileString30 = yield* fs.readFileString(path.join(outDir, "sources.jsonl"));
       const sourceRecords = yield* Effect.forEach(
-        pipe(yield* fs.readFileString(path.join(outDir, "sources.jsonl")), Str.split("\n"), A.filter(Str.isNonEmpty)),
+        pipe(readFileString30, Str.split("\n"), A.filter(Str.isNonEmpty)),
         decodeSourceProcessingRecordLine
       );
       const representative = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "00.txt"));
@@ -1266,17 +1296,19 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
           })
         )
       );
+      const readFileString31 = yield* fs.readFileString(path.join(outDir, "sources.jsonl"));
       const sourceRecords = yield* Effect.forEach(
         pipe(
-          yield* fs.readFileString(path.join(outDir, "sources.jsonl")),
+          readFileString31,
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
         decodeSourceProcessingRecordLine
       );
+      const readFileString32 = yield* fs.readFileString(path.join(outDir, "failures.jsonl"));
       const failureRecords = yield* Effect.forEach(
         pipe(
-          yield* fs.readFileString(path.join(outDir, "failures.jsonl")),
+          readFileString32,
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
@@ -1315,9 +1347,10 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
         "--pffexport",
         "/nonexistent/pffexport-missing",
       ]);
+      const readFileString33 = yield* fs.readFileString(path.join(outDir, "sources.jsonl"));
       const sourceRecords = yield* Effect.forEach(
         pipe(
-          yield* fs.readFileString(path.join(outDir, "sources.jsonl")),
+          readFileString33,
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
@@ -1367,7 +1400,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
                   "Invalid --tika-url"
                 );
               }
-              expect(yield* fs.exists(path.join(outDir, "run.json"))).toBe(false);
+              const exists34 = yield* fs.exists(path.join(outDir, "run.json"));
+              expect(exists34).toBe(false);
             })
           )
         );
@@ -1408,9 +1442,10 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
           pffexportStubPath,
         ])
       );
+      const readFileString35 = yield* fs.readFileString(path.join(outDir, "sources.jsonl"));
       const sourceRecords = yield* Effect.forEach(
         pipe(
-          yield* fs.readFileString(path.join(outDir, "sources.jsonl")),
+          readFileString35,
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
@@ -1447,24 +1482,29 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
         "--pffexport",
         pffexportStubPath,
       ]);
+      const readFileString36 = yield* fs.readFileString(path.join(outDir, "sources.jsonl"));
       const sourceRecords = yield* Effect.forEach(
         pipe(
-          yield* fs.readFileString(path.join(outDir, "sources.jsonl")),
+          readFileString36,
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
         decodeSourceProcessingRecordLine
       );
       const pstRecord = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "mailbox.pst"));
+      const readFileString37 = yield* fs.readFileString(
+        path.join(outDir, "children", `${pstRecord.artifactId}`, "artifacts.jsonl")
+      );
       const childRecords = yield* Effect.forEach(
         pipe(
-          yield* fs.readFileString(path.join(outDir, "children", `${pstRecord.artifactId}`, "artifacts.jsonl")),
+          readFileString37,
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
         decodeChildArtifactRecordLine
       );
-      const logLines = A.filter(yield* TestConsole.logLines, isString);
+      const logLines38 = yield* TestConsole.logLines;
+      const logLines = A.filter(logLines38, isString);
       expect(pstRecord.status).toBe("succeeded");
       expect(A.some(childRecords, (record) => Str.endsWith("/Message.eml")(record.child.relativePath))).toBe(false);
       expect(A.some(childRecords, (record) => Str.endsWith(".messages.jsonl")(record.child.relativePath))).toBe(true);
@@ -1501,7 +1541,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
               );
               const output = Exit.isFailure(exit) ? Cause.pretty(exit.cause) : "";
               expect(output).toContain("Refusing to write files process output to a non-directory path");
-              expect(yield* fs.readFileString(outPath)).toBe("keep me");
+              const readFileString39 = yield* fs.readFileString(outPath);
+              expect(readFileString39).toBe("keep me");
             })
           )
         );
@@ -1533,12 +1574,12 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
         "--failure-policy",
         "continue",
       ]);
-      const coverage = yield* decodeFileProcessingCoverageSummary(
-        yield* fs.readFileString(path.join(outDir, "coverage.json"))
-      );
+      const readFileString40 = yield* fs.readFileString(path.join(outDir, "coverage.json"));
+      const coverage = yield* decodeFileProcessingCoverageSummary(readFileString40);
+      const readFileString41 = yield* fs.readFileString(path.join(outDir, "sources.jsonl"));
       const sourceRecords = yield* Effect.forEach(
         pipe(
-          yield* fs.readFileString(path.join(outDir, "sources.jsonl")),
+          readFileString41,
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
@@ -1575,7 +1616,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
         "continue",
       ]);
       expect(output).toContain("Refusing to write files process output in an overlapping source/output tree");
-      expect(yield* fs.exists(outDir)).toBe(false);
+      const exists42 = yield* fs.exists(outDir);
+      expect(exists42).toBe(false);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -1928,7 +1970,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
         A.findFirst(manifest.entries, (entry) => entry.sourceName === "aligner-rejected.jpg")
       );
       expect(workerCallCount).toBe(1);
-      expect(yield* fs.exists(liveWorkerMarkerPath)).toBe(false);
+      const exists43 = yield* fs.exists(liveWorkerMarkerPath);
+      expect(exists43).toBe(false);
       expect(manifest.manifestWritten).toBe(true);
       expect(manifest.model).toMatchObject({
         backend: "adaface-kprpe",
@@ -2011,7 +2054,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
         deviceCsv,
       ]);
       expect(message).toContain("Invalid --devices value");
-      expect(yield* fs.exists(manifestPath)).toBe(false);
+      const exists44 = yield* fs.exists(manifestPath);
+      expect(exists44).toBe(false);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -2059,8 +2103,10 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
         ])
       );
       expect(message).toContain(expectedMessage);
-      expect(yield* fs.exists(workerMarkerPath)).toBe(false);
-      expect(yield* fs.exists(manifestPath)).toBe(false);
+      const exists45 = yield* fs.exists(workerMarkerPath);
+      expect(exists45).toBe(false);
+      const exists46 = yield* fs.exists(manifestPath);
+      expect(exists46).toBe(false);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -2096,9 +2142,12 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
         ])
       );
       expect(message).toContain("Reference directory contains no supported");
-      expect(yield* fs.exists(workerMarkerPath)).toBe(false);
-      expect(yield* fs.exists(path.join(cacheDir, "adaface-kprpe", "pinned"))).toBe(false);
-      expect(yield* fs.exists(manifestPath)).toBe(false);
+      const exists47 = yield* fs.exists(workerMarkerPath);
+      expect(exists47).toBe(false);
+      const exists48 = yield* fs.exists(path.join(cacheDir, "adaface-kprpe", "pinned"));
+      expect(exists48).toBe(false);
+      const exists49 = yield* fs.exists(manifestPath);
+      expect(exists49).toBe(false);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -2157,7 +2206,8 @@ exit 73
             "--accept-model-license",
           ])
         );
-        const invocations = A.filter(Str.split(yield* fs.readFileString(invocationPath), "\n"), Str.isNonEmpty);
+        const readFileString50 = yield* fs.readFileString(invocationPath);
+        const invocations = A.filter(Str.split(readFileString50, "\n"), Str.isNonEmpty);
         expect(invocations[0]).toContain("lock --check");
         expect(A.drop(invocations, 1)).toHaveLength(A.length(expectedEnvironmentChildren));
         A.forEach(expectedEnvironmentChildren, (environmentChild, index) => {
@@ -2169,8 +2219,10 @@ exit 73
           );
         });
         expect(message).toContain("environment");
-        expect(yield* fs.exists(path.join(cacheDir, "adaface-kprpe", "pinned"))).toBe(false);
-        expect(yield* fs.exists(manifestPath)).toBe(false);
+        const exists51 = yield* fs.exists(path.join(cacheDir, "adaface-kprpe", "pinned"));
+        expect(exists51).toBe(false);
+        const exists52 = yield* fs.exists(manifestPath);
+        expect(exists52).toBe(false);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -2215,12 +2267,15 @@ exit 74
           "--accept-model-license",
         ])
       );
-      const invocations = A.filter(Str.split(yield* fs.readFileString(invocationPath), "\n"), Str.isNonEmpty);
+      const readFileString53 = yield* fs.readFileString(invocationPath);
+      const invocations = A.filter(Str.split(readFileString53, "\n"), Str.isNonEmpty);
       expect(invocations).toHaveLength(1);
       expect(invocations[0]).toContain("lock --check");
       expect(message).toContain("lock");
-      expect(yield* fs.exists(path.join(cacheDir, "adaface-kprpe", "pinned"))).toBe(false);
-      expect(yield* fs.exists(manifestPath)).toBe(false);
+      const exists54 = yield* fs.exists(path.join(cacheDir, "adaface-kprpe", "pinned"));
+      expect(exists54).toBe(false);
+      const exists55 = yield* fs.exists(manifestPath);
+      expect(exists55).toBe(false);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -2330,7 +2385,8 @@ exit 74
         ])
       );
       expect(message).toContain("reported parameters that do not match the requested scan");
-      expect(yield* fs.exists(mismatchedManifestPath)).toBe(false);
+      const exists56 = yield* fs.exists(mismatchedManifestPath);
+      expect(exists56).toBe(false);
     }).pipe(
       Effect.provideServiceEffect(Console.Console, TestConsole.make),
       Effect.provideService(PersonMatchModelArtifactVerifier, () => Effect.void)
@@ -2409,7 +2465,9 @@ exit 74
         )
       );
       const report = yield* readPersonMatchManifest(manifestPath);
-      expect(A.join(jsonChunks, "")).toBe(yield* fs.readFileString(manifestPath));
+      const expectation = expect(A.join(jsonChunks, ""));
+      const readFileString1 = yield* fs.readFileString(manifestPath);
+      expectation.toBe(readFileString1);
       expect(report.schemaVersion).toBe("beep.files.match-person.v2");
       expect(report.summary).toMatchObject({
         groupMatchCount: 1,
@@ -2431,14 +2489,22 @@ exit 74
       });
       expect(report.parameters).toEqual(buffaloParametersFixture);
       expect(report.outputDirectory).toBe(outDir);
-      expect(yield* fs.readFileString(path.join(outDir, "accepted", "solo.jpg"))).toBe("solo source");
-      expect(yield* fs.readFileString(path.join(outDir, "group-review", "group.jpg"))).toBe("group source");
-      expect(yield* fs.exists(path.join(outDir, "accepted", "other.jpg"))).toBe(false);
-      expect(yield* fs.exists(path.join(outDir, "accepted", "unreadable.jpg"))).toBe(false);
-      expect(yield* fs.readFileString(soloPath)).toBe("solo source");
-      expect(yield* fs.readFileString(groupPath)).toBe("group source");
-      expect(yield* fs.readFileString(otherPath)).toBe("other source");
-      expect(yield* fs.readFileString(unreadablePath)).toBe("unreadable source");
+      const readFileString57 = yield* fs.readFileString(path.join(outDir, "accepted", "solo.jpg"));
+      expect(readFileString57).toBe("solo source");
+      const readFileString58 = yield* fs.readFileString(path.join(outDir, "group-review", "group.jpg"));
+      expect(readFileString58).toBe("group source");
+      const exists59 = yield* fs.exists(path.join(outDir, "accepted", "other.jpg"));
+      expect(exists59).toBe(false);
+      const exists60 = yield* fs.exists(path.join(outDir, "accepted", "unreadable.jpg"));
+      expect(exists60).toBe(false);
+      const readFileString61 = yield* fs.readFileString(soloPath);
+      expect(readFileString61).toBe("solo source");
+      const readFileString62 = yield* fs.readFileString(groupPath);
+      expect(readFileString62).toBe("group source");
+      const readFileString63 = yield* fs.readFileString(otherPath);
+      expect(readFileString63).toBe("other source");
+      const readFileString64 = yield* fs.readFileString(unreadablePath);
+      expect(readFileString64).toBe("unreadable source");
       expect(hardLinkCallCount).toBe(0);
       const backupNamedManifestPath = path.join(tmpDir, ".previous-manifest");
       yield* fs.writeFileString(backupNamedManifestPath, "previous manifest");
@@ -2533,7 +2599,8 @@ exit 74
         ])
       );
       expect(incompleteMessage).toContain("did not report every eligible candidate and reference image");
-      expect(yield* fs.exists(incompleteManifestPath)).toBe(false);
+      const exists65 = yield* fs.exists(incompleteManifestPath);
+      expect(exists65).toBe(false);
       const invalidManifestPath = path.join(tmpDir, "invalid-person-match.json");
       const invalidOutDir = path.join(tmpDir, "invalid-matched");
       const invalidWorkerReport = {
@@ -2572,8 +2639,10 @@ exit 74
         ])
       );
       expect(invalidMessage).toContain("Person-match worker returned invalid");
-      expect(yield* fs.exists(invalidManifestPath)).toBe(false);
-      expect(yield* fs.exists(invalidOutDir)).toBe(false);
+      const exists66 = yield* fs.exists(invalidManifestPath);
+      expect(exists66).toBe(false);
+      const exists67 = yield* fs.exists(invalidOutDir);
+      expect(exists67).toBe(false);
       const excessiveFacesManifestPath = path.join(tmpDir, "excessive-faces-person-match.json");
       const excessiveFacesWorkerReport = {
         ...workerReport,
@@ -2602,7 +2671,8 @@ exit 74
         ])
       );
       expect(excessiveFacesMessage).toContain("reported more than 65536 faces");
-      expect(yield* fs.exists(excessiveFacesManifestPath)).toBe(false);
+      const exists68 = yield* fs.exists(excessiveFacesManifestPath);
+      expect(exists68).toBe(false);
       const inconsistentFaceCountManifestPath = path.join(tmpDir, "inconsistent-face-count-person-match.json");
       const inconsistentFaceCountWorkerReport = {
         ...workerReport,
@@ -2634,7 +2704,8 @@ exit 74
         ])
       );
       expect(inconsistentFaceCountMessage).toContain("face count inconsistent with its retained face evidence");
-      expect(yield* fs.exists(inconsistentFaceCountManifestPath)).toBe(false);
+      const exists69 = yield* fs.exists(inconsistentFaceCountManifestPath);
+      expect(exists69).toBe(false);
       const unpinnedManifestPath = path.join(tmpDir, "unpinned-model-person-match.json");
       const unpinnedWorkerReport = {
         ...workerReport,
@@ -2673,7 +2744,8 @@ exit 74
         ])
       );
       expect(unpinnedMessage).toContain("unexpected model artifact provenance");
-      expect(yield* fs.exists(unpinnedManifestPath)).toBe(false);
+      const exists70 = yield* fs.exists(unpinnedManifestPath);
+      expect(exists70).toBe(false);
       const misclassifiedManifestPath = path.join(tmpDir, "misclassified-person-match.json");
       const misclassifiedOutDir = path.join(tmpDir, "misclassified-matched");
       const misclassifiedWorkerReport = {
@@ -2717,8 +2789,10 @@ exit 74
         ])
       );
       expect(misclassifiedMessage).toContain("inconsistent with its thresholds or quality evidence");
-      expect(yield* fs.exists(misclassifiedManifestPath)).toBe(false);
-      expect(yield* fs.exists(misclassifiedOutDir)).toBe(false);
+      const exists71 = yield* fs.exists(misclassifiedManifestPath);
+      expect(exists71).toBe(false);
+      const exists72 = yield* fs.exists(misclassifiedOutDir);
+      expect(exists72).toBe(false);
       const inconsistentManifestPath = path.join(tmpDir, "inconsistent-person-match.json");
       const inconsistentOutDir = path.join(tmpDir, "inconsistent-matched");
       const inconsistentWorkerReport = {
@@ -2750,8 +2824,10 @@ exit 74
         ])
       );
       expect(inconsistentMessage).toContain("mismatched source and relative paths");
-      expect(yield* fs.exists(inconsistentManifestPath)).toBe(false);
-      expect(yield* fs.exists(inconsistentOutDir)).toBe(false);
+      const exists73 = yield* fs.exists(inconsistentManifestPath);
+      expect(exists73).toBe(false);
+      const exists74 = yield* fs.exists(inconsistentOutDir);
+      expect(exists74).toBe(false);
       const duplicateManifestPath = path.join(tmpDir, "duplicate-reference-person-match.json");
       const duplicateWorkerReport = {
         ...workerReport,
@@ -2787,7 +2863,8 @@ exit 74
         ])
       );
       expect(duplicateMessage).toContain("duplicate accepted file names");
-      expect(yield* fs.exists(duplicateManifestPath)).toBe(false);
+      const exists75 = yield* fs.exists(duplicateManifestPath);
+      expect(exists75).toBe(false);
       const acceptedTarget = path.join(outDir, "accepted", "solo.jpg");
       const groupTarget = path.join(outDir, "group-review", "group.jpg");
       yield* fs.writeFileString(acceptedTarget, "previous solo");
@@ -2850,18 +2927,28 @@ exit 74
       rollbackExit.pipe(Exit.isFailure, assertTrue);
       expect(stagedRenameCount).toBe(2);
       expect(linkCallCount).toBe(0);
-      expect(yield* fs.readFileString(acceptedTarget)).toBe("previous solo");
-      expect(yield* fs.readFileString(groupTarget)).toBe("previous group");
-      expect(yield* fs.readFileString(manifestPath)).toBe("previous manifest");
-      expect(yield* sortedDirectoryEntries(path.dirname(acceptedTarget))).toEqual(["solo.jpg"]);
-      expect(yield* sortedDirectoryEntries(path.dirname(groupTarget))).toEqual(["group.jpg"]);
-      expect(
-        A.filter(yield* sortedDirectoryEntries(tmpDir), (name) => Str.startsWith(".beep-files-person-match-")(name))
-      ).toEqual([]);
-      expect(yield* fs.readFileString(soloPath)).toBe("solo source");
-      expect(yield* fs.readFileString(groupPath)).toBe("group source");
-      expect(yield* fs.readFileString(otherPath)).toBe("other source");
-      expect(yield* fs.readFileString(unreadablePath)).toBe("unreadable source");
+      const readFileString76 = yield* fs.readFileString(acceptedTarget);
+      expect(readFileString76).toBe("previous solo");
+      const readFileString77 = yield* fs.readFileString(groupTarget);
+      expect(readFileString77).toBe("previous group");
+      const readFileString78 = yield* fs.readFileString(manifestPath);
+      expect(readFileString78).toBe("previous manifest");
+      const sortedDirectoryEntries79 = yield* sortedDirectoryEntries(path.dirname(acceptedTarget));
+      expect(sortedDirectoryEntries79).toEqual(["solo.jpg"]);
+      const sortedDirectoryEntries80 = yield* sortedDirectoryEntries(path.dirname(groupTarget));
+      expect(sortedDirectoryEntries80).toEqual(["group.jpg"]);
+      const sortedDirectoryEntries81 = yield* sortedDirectoryEntries(tmpDir);
+      expect(A.filter(sortedDirectoryEntries81, (name) => Str.startsWith(".beep-files-person-match-")(name))).toEqual(
+        []
+      );
+      const readFileString82 = yield* fs.readFileString(soloPath);
+      expect(readFileString82).toBe("solo source");
+      const readFileString83 = yield* fs.readFileString(groupPath);
+      expect(readFileString83).toBe("group source");
+      const readFileString84 = yield* fs.readFileString(otherPath);
+      expect(readFileString84).toBe("other source");
+      const readFileString85 = yield* fs.readFileString(unreadablePath);
+      expect(readFileString85).toBe("unreadable source");
     }).pipe(
       Effect.provideServiceEffect(Console.Console, TestConsole.make),
       Effect.provideService(PersonMatchModelArtifactVerifier, () => Effect.void)
@@ -2920,13 +3007,18 @@ exit 74
         );
         expect(message).toMatch(targetExists ? /symlinked|aliased/i : /failed to resolve/i);
         expect(message).toContain(path.join(cacheDir, cacheChild));
-        expect(yield* fs.exists(workerMarkerPath)).toBe(false);
-        expect(yield* fs.exists(manifestPath)).toBe(false);
+        const exists86 = yield* fs.exists(workerMarkerPath);
+        expect(exists86).toBe(false);
+        const exists87 = yield* fs.exists(manifestPath);
+        expect(exists87).toBe(false);
         if (targetExists) {
-          expect(yield* fs.readFileString(canaryPath)).toBe("untouched");
-          expect(yield* sortedDirectoryEntries(escapedDir)).toEqual(["canary.txt"]);
+          const readFileString88 = yield* fs.readFileString(canaryPath);
+          expect(readFileString88).toBe("untouched");
+          const sortedDirectoryEntries89 = yield* sortedDirectoryEntries(escapedDir);
+          expect(sortedDirectoryEntries89).toEqual(["canary.txt"]);
         } else {
-          expect(yield* fs.exists(escapedDir)).toBe(false);
+          const exists90 = yield* fs.exists(escapedDir);
+          expect(exists90).toBe(false);
         }
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
@@ -2991,7 +3083,8 @@ exit 74
       const datasetDir = yield* makeDatasetDir(tmpDir);
       yield* writePatternImage(path.join(datasetDir, "clean.png"), 64, 64);
       yield* runFilesCommand(["detect-borders", "--dir", datasetDir]);
-      expect(yield* TestConsole.logLines).toContain(
+      const logLines91 = yield* TestConsole.logLines;
+      expect(logLines91).toContain(
         `files detect-borders: 0 bordered image(s) found in "${datasetDir}" (1 analyzed, 0 skipped).`
       );
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -3086,7 +3179,8 @@ exit 74
       const metadata = yield* readImageMetadata(imagePath);
       expect(metadata.width).toBe(60);
       expect(metadata.height).toBe(80);
-      expect(yield* TestConsole.logLines).toContain("files crop-borders: cropped 1 image file(s).");
+      const logLines92 = yield* TestConsole.logLines;
+      expect(logLines92).toContain("files crop-borders: cropped 1 image file(s).");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -3101,7 +3195,8 @@ exit 74
       const metadata = yield* readImageMetadata(imagePath);
       expect(metadata.width).toBe(80);
       expect(metadata.height).toBe(80);
-      expect(yield* TestConsole.logLines).toContain("files crop-borders: dry run; no files rewritten.");
+      const logLines93 = yield* TestConsole.logLines;
+      expect(logLines93).toContain("files crop-borders: dry run; no files rewritten.");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -3133,7 +3228,8 @@ exit 74
         yield* writeSizedFile(path.join(datasetDir, `${size}.png`), size, "x");
       }
       yield* runFilesCommand(["sort-and-rename", "--prefix", "image", "--dir", datasetDir]);
-      expect(yield* sortedDirectoryEntries(datasetDir)).toEqual([
+      const sortedDirectoryEntries94 = yield* sortedDirectoryEntries(datasetDir);
+      expect(sortedDirectoryEntries94).toEqual([
         "image_00.png",
         "image_01.png",
         "image_02.png",
@@ -3142,8 +3238,10 @@ exit 74
         "image_05.png",
         "image_06.png",
       ]);
-      expect(yield* fileSize(path.join(datasetDir, "image_00.png"))).toBe(7n);
-      expect(yield* fileSize(path.join(datasetDir, "image_06.png"))).toBe(1n);
+      const fileSize95 = yield* fileSize(path.join(datasetDir, "image_00.png"));
+      expect(fileSize95).toBe(7n);
+      const fileSize96 = yield* fileSize(path.join(datasetDir, "image_06.png"));
+      expect(fileSize96).toBe(1n);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -3157,9 +3255,12 @@ exit 74
       yield* fs.writeFileString(path.join(datasetDir, "a.png"), "aa");
       yield* fs.writeFileString(path.join(datasetDir, "c.png"), "ccc");
       yield* runFilesCommand(["sort-and-rename", "--prefix", "image", "--dir", datasetDir]);
-      expect(yield* fs.readFileString(path.join(datasetDir, "image_00.png"))).toBe("ccc");
-      expect(yield* fs.readFileString(path.join(datasetDir, "image_01.png"))).toBe("aa");
-      expect(yield* fs.readFileString(path.join(datasetDir, "image_02.png"))).toBe("bb");
+      const readFileString97 = yield* fs.readFileString(path.join(datasetDir, "image_00.png"));
+      expect(readFileString97).toBe("ccc");
+      const readFileString98 = yield* fs.readFileString(path.join(datasetDir, "image_01.png"));
+      expect(readFileString98).toBe("aa");
+      const readFileString99 = yield* fs.readFileString(path.join(datasetDir, "image_02.png"));
+      expect(readFileString99).toBe("bb");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -3173,9 +3274,12 @@ exit 74
         yield* fs.writeFileString(path.join(datasetDir, `source-${index}.png`), "x");
       }
       yield* runFilesCommand(["sort-and-rename", "--prefix", "image", "--dir", datasetDir]);
-      expect(yield* fs.exists(path.join(datasetDir, "image_0000.png"))).toBe(true);
-      expect(yield* fs.exists(path.join(datasetDir, "image_0099.png"))).toBe(true);
-      expect(A.length(yield* sortedDirectoryEntries(datasetDir))).toBe(100);
+      const exists100 = yield* fs.exists(path.join(datasetDir, "image_0000.png"));
+      expect(exists100).toBe(true);
+      const exists101 = yield* fs.exists(path.join(datasetDir, "image_0099.png"));
+      expect(exists101).toBe(true);
+      const sortedDirectoryEntries102 = yield* sortedDirectoryEntries(datasetDir);
+      expect(A.length(sortedDirectoryEntries102)).toBe(100);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -3188,9 +3292,12 @@ exit 74
       yield* writeSizedFile(path.join(datasetDir, "large.png"), 2, "x");
       yield* writeSizedFile(path.join(datasetDir, "small.png"), 1, "x");
       yield* runFilesCommand(["sort-and-rename", "--prefix", "image", "--dir", datasetDir, "--dry-run"]);
-      expect(yield* sortedDirectoryEntries(datasetDir)).toEqual(["large.png", "small.png"]);
-      expect(yield* fs.exists(path.join(datasetDir, "image_00.png"))).toBe(false);
-      expect(yield* TestConsole.logLines).toContain("files sort-and-rename: dry run; no files renamed.");
+      const sortedDirectoryEntries103 = yield* sortedDirectoryEntries(datasetDir);
+      expect(sortedDirectoryEntries103).toEqual(["large.png", "small.png"]);
+      const exists104 = yield* fs.exists(path.join(datasetDir, "image_00.png"));
+      expect(exists104).toBe(false);
+      const logLines105 = yield* TestConsole.logLines;
+      expect(logLines105).toContain("files sort-and-rename: dry run; no files renamed.");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -3202,7 +3309,8 @@ exit 74
       yield* writeSizedFile(path.join(datasetDir, "large.PNG"), 2, "x");
       yield* writeSizedFile(path.join(datasetDir, "small.jpg"), 1, "x");
       yield* runFilesCommand(["sort-and-rename", "--prefix", "image", "--dir", datasetDir]);
-      expect(yield* sortedDirectoryEntries(datasetDir)).toEqual(["image_00.PNG", "image_01.jpg"]);
+      const sortedDirectoryEntries106 = yield* sortedDirectoryEntries(datasetDir);
+      expect(sortedDirectoryEntries106).toEqual(["image_00.PNG", "image_01.jpg"]);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -3215,8 +3323,10 @@ exit 74
       yield* writeSizedFile(path.join(datasetDir, "extensionless"), 2, "x");
       yield* writeSizedFile(path.join(datasetDir, "small.png"), 1, "x");
       const output = yield* expectFilesCommandFailure(["sort-and-rename", "--prefix", "image", "--dir", datasetDir]);
-      expect(yield* sortedDirectoryEntries(datasetDir)).toEqual(["extensionless", "small.png"]);
-      expect(yield* fs.exists(path.join(datasetDir, "image_00.png"))).toBe(false);
+      const sortedDirectoryEntries107 = yield* sortedDirectoryEntries(datasetDir);
+      expect(sortedDirectoryEntries107).toEqual(["extensionless", "small.png"]);
+      const exists108 = yield* fs.exists(path.join(datasetDir, "image_00.png"));
+      expect(exists108).toBe(false);
       expect(output).toBe(`Cannot rename extensionless file: "${path.join(datasetDir, "extensionless")}"`);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
@@ -3231,8 +3341,10 @@ exit 74
       yield* writeSizedFile(path.join(datasetDir, "source.png"), 1, "x");
       yield* fs.makeDirectory(collidingDirectory);
       const output = yield* expectFilesCommandFailure(["sort-and-rename", "--prefix", "image", "--dir", datasetDir]);
-      expect(yield* sortedDirectoryEntries(datasetDir)).toEqual(["image_00.png", "source.png"]);
-      expect(yield* fs.exists(path.join(datasetDir, "source.png"))).toBe(true);
+      const sortedDirectoryEntries109 = yield* sortedDirectoryEntries(datasetDir);
+      expect(sortedDirectoryEntries109).toEqual(["image_00.png", "source.png"]);
+      const exists110 = yield* fs.exists(path.join(datasetDir, "source.png"));
+      expect(exists110).toBe(true);
       expect(output).toContain("Refusing to overwrite existing target outside the rename set");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
@@ -3250,13 +3362,10 @@ exit 74
       yield* fs.writeFileString(outsideFile, "outside");
       yield* fs.symlink(outsideFile, path.join(datasetDir, "linked.png"));
       yield* runFilesCommand(["sort-and-rename", "--prefix", "image", "--dir", datasetDir]);
-      expect(yield* sortedDirectoryEntries(datasetDir)).toEqual([
-        "image_00.png",
-        "image_01.png",
-        "linked.png",
-        "nested.png",
-      ]);
-      expect(yield* fs.exists(path.join(datasetDir, "image_02.png"))).toBe(false);
+      const sortedDirectoryEntries111 = yield* sortedDirectoryEntries(datasetDir);
+      expect(sortedDirectoryEntries111).toEqual(["image_00.png", "image_01.png", "linked.png", "nested.png"]);
+      const exists112 = yield* fs.exists(path.join(datasetDir, "image_02.png"));
+      expect(exists112).toBe(false);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -3265,10 +3374,10 @@ exit 74
       const tmpDir = yield* temporaryWorkingDirectory;
       const datasetDir = yield* makeDatasetDir(tmpDir);
       yield* runFilesCommand(["sort-and-rename", "--prefix", "image", "--dir", datasetDir]);
-      expect(yield* sortedDirectoryEntries(datasetDir)).toEqual([]);
-      expect(yield* TestConsole.logLines).toEqual([
-        `files sort-and-rename: 0 file(s) in "${datasetDir}"; nothing to rename.`,
-      ]);
+      const sortedDirectoryEntries113 = yield* sortedDirectoryEntries(datasetDir);
+      expect(sortedDirectoryEntries113).toEqual([]);
+      const logLines114 = yield* TestConsole.logLines;
+      expect(logLines114).toEqual([`files sort-and-rename: 0 file(s) in "${datasetDir}"; nothing to rename.`]);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -3280,7 +3389,8 @@ exit 74
       yield* writeSvgFile(path.join(datasetDir, "small.svg"), 1, 1);
       yield* writeSvgFile(path.join(datasetDir, "large.svg"), 2, 1, 20);
       yield* runFilesCommand(["sort-and-rename", "--prefix", "image", "--dir", datasetDir, "--with-dimensions"]);
-      expect(yield* sortedDirectoryEntries(datasetDir)).toEqual(["image_00_2x1.svg", "image_01_1x1.svg"]);
+      const sortedDirectoryEntries115 = yield* sortedDirectoryEntries(datasetDir);
+      expect(sortedDirectoryEntries115).toEqual(["image_00_2x1.svg", "image_01_1x1.svg"]);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -3294,8 +3404,10 @@ exit 74
       yield* fs.writeFileString(path.join(datasetDir, "photo.txt"), "caption");
       yield* fs.writeFileString(path.join(datasetDir, "extensionless"), "notes");
       yield* runFilesCommand(["sort-and-rename", "--prefix", "image", "--dir", datasetDir, "--with-dimensions"]);
-      expect(yield* sortedDirectoryEntries(datasetDir)).toEqual(["extensionless", "image_00_1x1.svg", "photo.txt"]);
-      expect(yield* fs.readFileString(path.join(datasetDir, "photo.txt"))).toBe("caption");
+      const sortedDirectoryEntries116 = yield* sortedDirectoryEntries(datasetDir);
+      expect(sortedDirectoryEntries116).toEqual(["extensionless", "image_00_1x1.svg", "photo.txt"]);
+      const readFileString117 = yield* fs.readFileString(path.join(datasetDir, "photo.txt"));
+      expect(readFileString117).toBe("caption");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -3307,7 +3419,8 @@ exit 74
       yield* writeSvgFile(path.join(datasetDir, "source.svg"), 3, 2);
       yield* runFilesCommand(["sort-and-rename", "--prefix", "image", "--dir", datasetDir, "--with-dimensions"]);
       yield* runFilesCommand(["sort-and-rename", "--prefix", "image", "--dir", datasetDir, "--with-dimensions"]);
-      expect(yield* sortedDirectoryEntries(datasetDir)).toEqual(["image_00_3x2.svg"]);
+      const sortedDirectoryEntries118 = yield* sortedDirectoryEntries(datasetDir);
+      expect(sortedDirectoryEntries118).toEqual(["image_00_3x2.svg"]);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -3320,7 +3433,9 @@ exit 74
       const source = path.join(datasetDir, "source.svg");
       yield* writeSvgFile(source, 1920, 1080);
       yield* fs.writeFileString(path.join(datasetDir, "notes.txt"), "leave me alone");
-      const expectedHash = Str.slice(7)(yield* sha256FileRef(source));
+      const argument = Str.slice(7);
+      const sha256FileRef2 = yield* sha256FileRef(source);
+      const expectedHash = argument(sha256FileRef2);
       const sourceSize = (yield* fs.stat(source)).size;
       const hundredths = (sourceSize * BigInt(100) + BigInt(500_000)) / BigInt(1_000_000);
       const expectedSize = `${hundredths / BigInt(100)}.${pipe(`${hundredths % BigInt(100)}`, Str.padStart(2, "0"))}MB`;
@@ -3342,7 +3457,8 @@ exit 74
         new RegExp(`^image_00_[bn]\\d{8}T\\d{6}Z_1920x1080_ar16x9_${expectedSize}_sha256-${expectedHash}\\.svg$`)
       );
       expect(names[1]).toBe("notes.txt");
-      expect(yield* fs.readFileString(path.join(datasetDir, "notes.txt"))).toBe("leave me alone");
+      const readFileString119 = yield* fs.readFileString(path.join(datasetDir, "notes.txt"));
+      expect(readFileString119).toBe("leave me alone");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -3381,7 +3497,8 @@ exit 74
         );
       const zoned = yield* readDate({ "EXIF:OffsetTimeOriginal": "+02:00" });
       expect(O.isSome(zoned) ? DateTime.formatIso(zoned.value) : "missing").toBe("2020-01-02T01:04:05.000Z");
-      expect(O.isNone(yield* readDate({}))).toBe(true);
+      const readDate120 = yield* readDate({});
+      expect(O.isNone(readDate120)).toBe(true);
     })
   );
 
@@ -3396,12 +3513,14 @@ exit 74
         path.join(tmpDir, "missing-bin"),
         runFilesCommand(["sort-and-rename", "--prefix", "image", "--dir", datasetDir, "--with-date-created"])
       );
+      const errorLines121 = yield* TestConsole.errorLines;
       const warnings = A.filter(
-        yield* TestConsole.errorLines,
+        errorLines121,
         (line) => P.isString(line) && Str.includes("exiftool could not read creation metadata")(line)
       );
       expect(warnings).toHaveLength(1);
-      expect(yield* sortedDirectoryEntries(datasetDir)).toEqual([
+      const sortedDirectoryEntries122 = yield* sortedDirectoryEntries(datasetDir);
+      expect(sortedDirectoryEntries122).toEqual([
         expect.stringMatching(/^image_00_[bn]\d{8}T\d{6}Z\.svg$/),
         expect.stringMatching(/^image_01_[bn]\d{8}T\d{6}Z\.svg$/),
       ]);
@@ -3415,7 +3534,9 @@ exit 74
       const datasetDir = yield* makeDatasetDir(tmpDir);
       const source = path.join(datasetDir, "source.svg");
       yield* writeSvgFile(source, 1200, 800);
-      const expectedHash = Str.slice(7)(yield* sha256FileRef(source));
+      const argument1 = Str.slice(7);
+      const sha256FileRef3 = yield* sha256FileRef(source);
+      const expectedHash = argument1(sha256FileRef3);
       yield* runFilesCommand([
         "sort-and-rename",
         "--prefix",
@@ -3426,7 +3547,8 @@ exit 74
         "--with-size-mb",
         "--with-hash",
       ]);
-      expect(yield* sortedDirectoryEntries(datasetDir)).toEqual([`image_00_ar3x2_0.00MB_sha256-${expectedHash}.svg`]);
+      const sortedDirectoryEntries123 = yield* sortedDirectoryEntries(datasetDir);
+      expect(sortedDirectoryEntries123).toEqual([`image_00_ar3x2_0.00MB_sha256-${expectedHash}.svg`]);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -3443,7 +3565,8 @@ exit 74
         path.join(binDir, "ffprobe"),
         runFilesCommand(["sort-and-rename", "--prefix", "clip", "--dir", datasetDir, "--with-dimensions"])
       );
-      expect(yield* sortedDirectoryEntries(datasetDir)).toEqual(["clip_00_360x640.mp4"]);
+      const sortedDirectoryEntries124 = yield* sortedDirectoryEntries(datasetDir);
+      expect(sortedDirectoryEntries124).toEqual(["clip_00_360x640.mp4"]);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -3462,7 +3585,8 @@ exit 74
         datasetDir,
         "--with-dimensions",
       ]);
-      expect(yield* sortedDirectoryEntries(datasetDir)).toEqual(["broken.png", "valid.svg"]);
+      const sortedDirectoryEntries125 = yield* sortedDirectoryEntries(datasetDir);
+      expect(sortedDirectoryEntries125).toEqual(["broken.png", "valid.svg"]);
       expect(output).toContain("Failed to probe image dimensions");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
@@ -3487,15 +3611,24 @@ exit 74
       yield* fs.writeFileString(path.join(sourceDir, "notes.txt"), "keep direct");
       yield* fs.writeFileString(path.join(nestedDir, "keep.md"), "keep nested");
       yield* runFilesCommand(["flatten-media", "--dir", sourceDir, "--out-dir", outDir]);
-      expect(yield* sortedDirectoryEntries(outDir)).toEqual(["1.jpg", "1.mkv", "2.png", "beep.mp4", "secret.WEBM"]);
-      expect(yield* fs.readFileString(path.join(outDir, "1.jpg"))).toBe("direct image");
-      expect(yield* fs.readFileString(path.join(outDir, "beep.mp4"))).toBe("nested video");
-      expect(yield* fs.readFileString(path.join(outDir, "secret.WEBM"))).toBe("hidden video");
-      expect(yield* sortedDirectoryEntries(sourceDir)).toEqual([".hidden", "nestedFolder", "notes.txt"]);
-      expect(yield* sortedDirectoryEntries(nestedDir)).toEqual(["empty", "keep.md"]);
-      expect(yield* sortedDirectoryEntries(hiddenDir)).toEqual([]);
-      expect(yield* fs.readFileString(path.join(sourceDir, "notes.txt"))).toBe("keep direct");
-      expect(yield* fs.readFileString(path.join(nestedDir, "keep.md"))).toBe("keep nested");
+      const sortedDirectoryEntries126 = yield* sortedDirectoryEntries(outDir);
+      expect(sortedDirectoryEntries126).toEqual(["1.jpg", "1.mkv", "2.png", "beep.mp4", "secret.WEBM"]);
+      const readFileString127 = yield* fs.readFileString(path.join(outDir, "1.jpg"));
+      expect(readFileString127).toBe("direct image");
+      const readFileString128 = yield* fs.readFileString(path.join(outDir, "beep.mp4"));
+      expect(readFileString128).toBe("nested video");
+      const readFileString129 = yield* fs.readFileString(path.join(outDir, "secret.WEBM"));
+      expect(readFileString129).toBe("hidden video");
+      const sortedDirectoryEntries130 = yield* sortedDirectoryEntries(sourceDir);
+      expect(sortedDirectoryEntries130).toEqual([".hidden", "nestedFolder", "notes.txt"]);
+      const sortedDirectoryEntries131 = yield* sortedDirectoryEntries(nestedDir);
+      expect(sortedDirectoryEntries131).toEqual(["empty", "keep.md"]);
+      const sortedDirectoryEntries132 = yield* sortedDirectoryEntries(hiddenDir);
+      expect(sortedDirectoryEntries132).toEqual([]);
+      const readFileString133 = yield* fs.readFileString(path.join(sourceDir, "notes.txt"));
+      expect(readFileString133).toBe("keep direct");
+      const readFileString134 = yield* fs.readFileString(path.join(nestedDir, "keep.md"));
+      expect(readFileString134).toBe("keep nested");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -3515,11 +3648,16 @@ exit 74
       yield* fs.symlink(path.join(outsideDir, "target.png"), path.join(sourceDir, "linked.png"));
       yield* fs.symlink(outsideDir, path.join(sourceDir, "linked-dir"));
       yield* runFilesCommand(["flatten-media", "--dir", sourceDir, "--out-dir", outDir]);
-      expect(yield* sortedDirectoryEntries(outDir)).toEqual(["real.png"]);
-      expect(yield* fs.readFileString(path.join(outDir, "real.png"))).toBe("real image");
-      expect(yield* sortedDirectoryEntries(sourceDir)).toEqual(["linked-dir", "linked.png"]);
-      expect(yield* fs.readLink(path.join(sourceDir, "linked.png"))).toBe(path.join(outsideDir, "target.png"));
-      expect(yield* sortedDirectoryEntries(outsideDir)).toEqual(["nested.mp4", "target.png"]);
+      const sortedDirectoryEntries135 = yield* sortedDirectoryEntries(outDir);
+      expect(sortedDirectoryEntries135).toEqual(["real.png"]);
+      const readFileString136 = yield* fs.readFileString(path.join(outDir, "real.png"));
+      expect(readFileString136).toBe("real image");
+      const sortedDirectoryEntries137 = yield* sortedDirectoryEntries(sourceDir);
+      expect(sortedDirectoryEntries137).toEqual(["linked-dir", "linked.png"]);
+      const readLink138 = yield* fs.readLink(path.join(sourceDir, "linked.png"));
+      expect(readLink138).toBe(path.join(outsideDir, "target.png"));
+      const sortedDirectoryEntries139 = yield* sortedDirectoryEntries(outsideDir);
+      expect(sortedDirectoryEntries139).toEqual(["nested.mp4", "target.png"]);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -3540,7 +3678,8 @@ exit 74
       yield* fs.writeFileString(path.join(outDir, "photo.JPG"), "existing original");
       yield* fs.writeFileString(path.join(outDir, "photo_03.JPG"), "existing gap");
       yield* runFilesCommand(["flatten-media", "--dir", sourceDir, "--out-dir", outDir]);
-      expect(yield* sortedDirectoryEntries(outDir)).toEqual([
+      const sortedDirectoryEntries140 = yield* sortedDirectoryEntries(outDir);
+      expect(sortedDirectoryEntries140).toEqual([
         "photo.JPG",
         "photo_01.JPG",
         "photo_02.JPG",
@@ -3548,12 +3687,18 @@ exit 74
         "photo_04.JPG",
         "photo_05.JPG",
       ]);
-      expect(yield* fs.readFileString(path.join(outDir, "photo.JPG"))).toBe("existing original");
-      expect(yield* fs.readFileString(path.join(outDir, "photo_02.JPG"))).toBe("source a");
-      expect(yield* fs.readFileString(path.join(outDir, "photo_03.JPG"))).toBe("existing gap");
-      expect(yield* fs.readFileString(path.join(outDir, "photo_04.JPG"))).toBe("source b");
-      expect(yield* fs.readFileString(path.join(outDir, "photo_05.JPG"))).toBe("source c");
-      expect(yield* sortedDirectoryEntries(path.join(outDir, "photo_01.JPG"))).toEqual([]);
+      const readFileString141 = yield* fs.readFileString(path.join(outDir, "photo.JPG"));
+      expect(readFileString141).toBe("existing original");
+      const readFileString142 = yield* fs.readFileString(path.join(outDir, "photo_02.JPG"));
+      expect(readFileString142).toBe("source a");
+      const readFileString143 = yield* fs.readFileString(path.join(outDir, "photo_03.JPG"));
+      expect(readFileString143).toBe("existing gap");
+      const readFileString144 = yield* fs.readFileString(path.join(outDir, "photo_04.JPG"));
+      expect(readFileString144).toBe("source b");
+      const readFileString145 = yield* fs.readFileString(path.join(outDir, "photo_05.JPG"));
+      expect(readFileString145).toBe("source c");
+      const sortedDirectoryEntries146 = yield* sortedDirectoryEntries(path.join(outDir, "photo_01.JPG"));
+      expect(sortedDirectoryEntries146).toEqual([]);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -3571,15 +3716,23 @@ exit 74
       yield* fs.writeFileString(path.join(sourceDir, "b", "PHOTO.JPG"), "uppercase source");
       yield* fs.writeFileString(path.join(outDir, "Photo.jpg"), "existing mixed-case target");
       yield* runFilesCommand(["flatten-media", "--dir", sourceDir, "--out-dir", outDir, "--dry-run"]);
-      expect(yield* TestConsole.logLines).toContain("a/photo.jpg -> photo_01.jpg");
-      expect(yield* TestConsole.logLines).toContain("b/PHOTO.JPG -> PHOTO_02.JPG");
-      expect(yield* fs.readFileString(path.join(sourceDir, "a", "photo.jpg"))).toBe("lowercase source");
-      expect(yield* fs.readFileString(path.join(sourceDir, "b", "PHOTO.JPG"))).toBe("uppercase source");
+      const logLines147 = yield* TestConsole.logLines;
+      expect(logLines147).toContain("a/photo.jpg -> photo_01.jpg");
+      const logLines148 = yield* TestConsole.logLines;
+      expect(logLines148).toContain("b/PHOTO.JPG -> PHOTO_02.JPG");
+      const readFileString149 = yield* fs.readFileString(path.join(sourceDir, "a", "photo.jpg"));
+      expect(readFileString149).toBe("lowercase source");
+      const readFileString150 = yield* fs.readFileString(path.join(sourceDir, "b", "PHOTO.JPG"));
+      expect(readFileString150).toBe("uppercase source");
       yield* runFilesCommand(["flatten-media", "--dir", sourceDir, "--out-dir", outDir]);
-      expect(yield* sortedDirectoryEntries(outDir)).toEqual(["PHOTO_02.JPG", "Photo.jpg", "photo_01.jpg"]);
-      expect(yield* fs.readFileString(path.join(outDir, "Photo.jpg"))).toBe("existing mixed-case target");
-      expect(yield* fs.readFileString(path.join(outDir, "photo_01.jpg"))).toBe("lowercase source");
-      expect(yield* fs.readFileString(path.join(outDir, "PHOTO_02.JPG"))).toBe("uppercase source");
+      const sortedDirectoryEntries151 = yield* sortedDirectoryEntries(outDir);
+      expect(sortedDirectoryEntries151).toEqual(["PHOTO_02.JPG", "Photo.jpg", "photo_01.jpg"]);
+      const readFileString152 = yield* fs.readFileString(path.join(outDir, "Photo.jpg"));
+      expect(readFileString152).toBe("existing mixed-case target");
+      const readFileString153 = yield* fs.readFileString(path.join(outDir, "photo_01.jpg"));
+      expect(readFileString153).toBe("lowercase source");
+      const readFileString154 = yield* fs.readFileString(path.join(outDir, "PHOTO_02.JPG"));
+      expect(readFileString154).toBe("uppercase source");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -3594,11 +3747,12 @@ exit 74
       yield* fs.makeDirectory(nestedDir, { recursive: true });
       yield* fs.writeFileString(path.join(nestedDir, "photo.png"), "image");
       yield* runFilesCommand(["flatten-media", "--dir", sourceDir, "--out-dir", outDir, "--dry-run"]);
-      expect(yield* fs.readFileString(path.join(nestedDir, "photo.png"))).toBe("image");
-      expect(yield* fs.exists(outDir)).toBe(false);
-      expect(yield* TestConsole.logLines).toContain(
-        "files flatten-media: dry run; no directory created and no files moved."
-      );
+      const readFileString155 = yield* fs.readFileString(path.join(nestedDir, "photo.png"));
+      expect(readFileString155).toBe("image");
+      const exists156 = yield* fs.exists(outDir);
+      expect(exists156).toBe(false);
+      const logLines157 = yield* TestConsole.logLines;
+      expect(logLines157).toContain("files flatten-media: dry run; no directory created and no files moved.");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -3612,8 +3766,10 @@ exit 74
       yield* fs.makeDirectory(sourceDir, { recursive: true });
       yield* fs.writeFileString(path.join(sourceDir, "notes.txt"), "keep");
       yield* runFilesCommand(["flatten-media", "--dir", sourceDir, "--out-dir", outDir]);
-      expect(yield* fs.readFileString(path.join(sourceDir, "notes.txt"))).toBe("keep");
-      expect(yield* fs.exists(outDir)).toBe(false);
+      const readFileString158 = yield* fs.readFileString(path.join(sourceDir, "notes.txt"));
+      expect(readFileString158).toBe("keep");
+      const exists159 = yield* fs.exists(outDir);
+      expect(exists159).toBe(false);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -3629,8 +3785,10 @@ exit 74
       yield* fs.writeFileString(sourcePath, "image");
       yield* fs.writeFileString(outPath, "existing file");
       yield* expectFilesCommandFailure(["flatten-media", "--dir", sourceDir, "--out-dir", outPath]);
-      expect(yield* fs.readFileString(sourcePath)).toBe("image");
-      expect(yield* fs.readFileString(outPath)).toBe("existing file");
+      const readFileString160 = yield* fs.readFileString(sourcePath);
+      expect(readFileString160).toBe("image");
+      const readFileString161 = yield* fs.readFileString(outPath);
+      expect(readFileString161).toBe("existing file");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -3656,10 +3814,14 @@ exit 74
       yield* expectFilesCommandFailure(["flatten-media", "--dir", outerSourceDir, "--out-dir", outerSourceDir]);
       yield* expectFilesCommandFailure(["flatten-media", "--dir", nestedSourceDir, "--out-dir", outerOutDir]);
       yield* expectFilesCommandFailure(["flatten-media", "--dir", outerSourceDir, "--out-dir", aliasedNestedOutDir]);
-      expect(yield* fs.readFileString(outerSourcePath)).toBe("outer");
-      expect(yield* fs.readFileString(nestedSourcePath)).toBe("nested");
-      expect(yield* fs.exists(nestedOutDir)).toBe(false);
-      expect(yield* fs.exists(path.join(outerSourceDir, "aliased-flat"))).toBe(false);
+      const readFileString162 = yield* fs.readFileString(outerSourcePath);
+      expect(readFileString162).toBe("outer");
+      const readFileString163 = yield* fs.readFileString(nestedSourcePath);
+      expect(readFileString163).toBe("nested");
+      const exists164 = yield* fs.exists(nestedOutDir);
+      expect(exists164).toBe(false);
+      const exists165 = yield* fs.exists(path.join(outerSourceDir, "aliased-flat"));
+      expect(exists165).toBe(false);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -3680,10 +3842,14 @@ exit 74
       yield* fs.symlink(outsideFile, path.join(sourceDir, "linked.png"));
       yield* fs.symlink(outsideDir, path.join(sourceDir, "linked-dir"));
       yield* runFilesCommand(["flatten-media", "--dir", sourceDir, "--out-dir", outDir]);
-      expect(yield* sortedDirectoryEntries(outDir)).toEqual(["actual.jpg"]);
-      expect(yield* sortedDirectoryEntries(sourceDir)).toEqual(["linked-dir", "linked.png"]);
-      expect(yield* fs.readFileString(outsideFile)).toBe("outside file");
-      expect(yield* fs.readFileString(path.join(outsideDir, "hidden.mp4"))).toBe("outside directory");
+      const sortedDirectoryEntries166 = yield* sortedDirectoryEntries(outDir);
+      expect(sortedDirectoryEntries166).toEqual(["actual.jpg"]);
+      const sortedDirectoryEntries167 = yield* sortedDirectoryEntries(sourceDir);
+      expect(sortedDirectoryEntries167).toEqual(["linked-dir", "linked.png"]);
+      const readFileString168 = yield* fs.readFileString(outsideFile);
+      expect(readFileString168).toBe("outside file");
+      const readFileString169 = yield* fs.readFileString(path.join(outsideDir, "hidden.mp4"));
+      expect(readFileString169).toBe("outside directory");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -3727,9 +3893,12 @@ exit 74
               expect(error.message).toContain("different filesystems");
               expect(error.message).toContain(secondSourcePath);
               expect(renameCallCount).toBe(0);
-              expect(yield* fs.readFileString(firstSourcePath)).toBe("first");
-              expect(yield* fs.readFileString(secondSourcePath)).toBe("second");
-              expect(yield* fs.exists(outDir)).toBe(false);
+              const readFileString170 = yield* fs.readFileString(firstSourcePath);
+              expect(readFileString170).toBe("first");
+              const readFileString171 = yield* fs.readFileString(secondSourcePath);
+              expect(readFileString171).toBe("second");
+              const exists172 = yield* fs.exists(outDir);
+              expect(exists172).toBe(false);
             })
           )
         );
@@ -3783,8 +3952,10 @@ exit 74
               ).pipe(Effect.flip);
               expect(error.message).toContain("Refusing to overwrite");
               expect(injectedTarget).toBe(true);
-              expect(yield* fs.readFileString(sourcePath)).toBe("source");
-              expect(yield* fs.readFileString(targetPath)).toBe("concurrent target");
+              const readFileString173 = yield* fs.readFileString(sourcePath);
+              expect(readFileString173).toBe("source");
+              const readFileString174 = yield* fs.readFileString(targetPath);
+              expect(readFileString174).toBe("concurrent target");
             })
           )
         );
@@ -3835,9 +4006,12 @@ exit 74
               ).pipe(Effect.flip);
               expect(renameCallCount).toBe(3);
               expect(error.message).toContain("Completed moves were restored.");
-              expect(yield* fs.readFileString(firstSourcePath)).toBe("first");
-              expect(yield* fs.readFileString(secondSourcePath)).toBe("second");
-              expect(yield* sortedDirectoryEntries(outDir)).toEqual([]);
+              const readFileString175 = yield* fs.readFileString(firstSourcePath);
+              expect(readFileString175).toBe("first");
+              const readFileString176 = yield* fs.readFileString(secondSourcePath);
+              expect(readFileString176).toBe("second");
+              const sortedDirectoryEntries177 = yield* sortedDirectoryEntries(outDir);
+              expect(sortedDirectoryEntries177).toEqual([]);
             })
           )
         );
@@ -3900,10 +4074,14 @@ exit 74
               ).pipe(Effect.flip);
               expect(error.message).toContain("Completed moves were restored.");
               expect(injectedDirectory).toBe(true);
-              expect(yield* fs.exists(outDir)).toBe(true);
-              expect(yield* sortedDirectoryEntries(outDir)).toEqual([]);
-              expect(yield* fs.readFileString(firstSourcePath)).toBe("first");
-              expect(yield* fs.readFileString(secondSourcePath)).toBe("second");
+              const exists178 = yield* fs.exists(outDir);
+              expect(exists178).toBe(true);
+              const sortedDirectoryEntries179 = yield* sortedDirectoryEntries(outDir);
+              expect(sortedDirectoryEntries179).toEqual([]);
+              const readFileString180 = yield* fs.readFileString(firstSourcePath);
+              expect(readFileString180).toBe("first");
+              const readFileString181 = yield* fs.readFileString(secondSourcePath);
+              expect(readFileString181).toBe("second");
             })
           )
         );
@@ -3962,11 +4140,16 @@ exit 74
               ).pipe(Effect.flip);
               expect(renameCallCount).toBe(3);
               expect(error.message).toMatch(/rollback/i);
-              expect(yield* fs.exists(firstSourcePath)).toBe(false);
-              expect(yield* fs.readFileString(secondSourcePath)).toBe("second");
-              expect(yield* fs.readFileString(firstTargetPath)).toBe("first");
-              expect(yield* fs.readFileString(sentinelPath)).toBe("sentinel");
-              expect(yield* sortedDirectoryEntries(sentinelDirectory)).toEqual([]);
+              const exists182 = yield* fs.exists(firstSourcePath);
+              expect(exists182).toBe(false);
+              const readFileString183 = yield* fs.readFileString(secondSourcePath);
+              expect(readFileString183).toBe("second");
+              const readFileString184 = yield* fs.readFileString(firstTargetPath);
+              expect(readFileString184).toBe("first");
+              const readFileString185 = yield* fs.readFileString(sentinelPath);
+              expect(readFileString185).toBe("sentinel");
+              const sortedDirectoryEntries186 = yield* sortedDirectoryEntries(sentinelDirectory);
+              expect(sortedDirectoryEntries186).toEqual([]);
             })
           )
         );
@@ -4013,8 +4196,10 @@ exit 74
         expect(outputMetadata.width).toBe(4);
         expect(outputMetadata.height).toBe(2);
         expect(sourceMetadata.exif).toBeDefined();
-        expect(yield* sortedDirectoryEntries(rawDir)).toEqual(["portrait.jpg"]);
-        expect(yield* sortedDirectoryEntries(outDir)).toEqual(["normalize-manifest.json", "portrait.png"]);
+        const sortedDirectoryEntries187 = yield* sortedDirectoryEntries(rawDir);
+        expect(sortedDirectoryEntries187).toEqual(["portrait.jpg"]);
+        const sortedDirectoryEntries188 = yield* sortedDirectoryEntries(outDir);
+        expect(sortedDirectoryEntries188).toEqual(["normalize-manifest.json", "portrait.png"]);
         expect(manifest.schemaVersion).toBe("beep.files.normalize.v1");
         expect(manifest.sourceDirectory).toBe(rawDir);
         expect(manifest.outputDirectory).toBe(outDir);
@@ -4095,7 +4280,8 @@ exit 74
       const manifest = yield* readNormalizeManifest(path.join(outDir, "normalize-manifest.json"));
       const outputHash = manifest.entries[0]?.outputHash;
       const duplicate = manifest.skipped[0];
-      expect(yield* sortedDirectoryEntries(outDir)).toEqual(["alpha.png", "normalize-manifest.json"]);
+      const sortedDirectoryEntries189 = yield* sortedDirectoryEntries(outDir);
+      expect(sortedDirectoryEntries189).toEqual(["alpha.png", "normalize-manifest.json"]);
       expect(manifest.summary).toEqual({
         duplicateCount: 1,
         movedDuplicateCount: 0,
@@ -4149,9 +4335,12 @@ exit 74
       ]);
       const manifest = yield* readNormalizeManifest(path.join(outDir, "normalize-manifest.json"));
       const duplicate = manifest.skipped[0];
-      expect(yield* sortedDirectoryEntries(rawDir)).toEqual(["alpha.png"]);
-      expect(yield* sortedDirectoryEntries(outDir)).toEqual(["alpha.png", "normalize-manifest.json"]);
-      expect(yield* sortedDirectoryEntries(duplicatesDir)).toEqual(["copy.png"]);
+      const sortedDirectoryEntries190 = yield* sortedDirectoryEntries(rawDir);
+      expect(sortedDirectoryEntries190).toEqual(["alpha.png"]);
+      const sortedDirectoryEntries191 = yield* sortedDirectoryEntries(outDir);
+      expect(sortedDirectoryEntries191).toEqual(["alpha.png", "normalize-manifest.json"]);
+      const sortedDirectoryEntries192 = yield* sortedDirectoryEntries(duplicatesDir);
+      expect(sortedDirectoryEntries192).toEqual(["copy.png"]);
       expect(manifest.options.dedupe).toBe(true);
       expect(manifest.options.moveDuplicatesTo).toBe(duplicatesDir);
       expect(manifest.summary).toEqual({
@@ -4187,7 +4376,8 @@ exit 74
       yield* fs.symlink(path.join(rawDir, "missing.png"), path.join(rawDir, "broken.png"));
       yield* runFilesCommand(["normalize", "--dir", rawDir, "--out-dir", outDir]);
       const manifest = yield* readNormalizeManifest(path.join(outDir, "normalize-manifest.json"));
-      expect(yield* sortedDirectoryEntries(outDir)).toEqual(["foo.png", "foo_01.png", "normalize-manifest.json"]);
+      const sortedDirectoryEntries193 = yield* sortedDirectoryEntries(outDir);
+      expect(sortedDirectoryEntries193).toEqual(["foo.png", "foo_01.png", "normalize-manifest.json"]);
       expect(A.map(manifest.entries, (entry) => entry.outputName)).toEqual(["foo.png", "foo_01.png"]);
       expect(A.map(manifest.skipped, (entry) => entry.reason)).toEqual([
         "symlink",
@@ -4218,8 +4408,10 @@ exit 74
       yield* fs.makeDirectory(rawDir, { recursive: true });
       yield* writeJpegWithExif(path.join(rawDir, "photo.jpg"), 2, 2);
       yield* runFilesCommand(["normalize", "--dir", rawDir, "--out-dir", outDir, "--dry-run"]);
-      expect(yield* fs.exists(outDir)).toBe(false);
-      expect(yield* TestConsole.logLines).toContain("files normalize: dry run; no files written.");
+      const exists194 = yield* fs.exists(outDir);
+      expect(exists194).toBe(false);
+      const logLines195 = yield* TestConsole.logLines;
+      expect(logLines195).toContain("files normalize: dry run; no files written.");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -4236,12 +4428,15 @@ exit 74
       yield* writeJpegWithExif(path.join(rawDir, "photo.jpg"), 2, 2);
       yield* fs.writeFileString(outputPath, "existing");
       const output = yield* expectFilesCommandFailure(["normalize", "--dir", rawDir, "--out-dir", outDir]);
-      expect(yield* fs.readFileString(outputPath)).toBe("existing");
-      expect(yield* fs.exists(path.join(outDir, "normalize-manifest.json"))).toBe(false);
+      const readFileString196 = yield* fs.readFileString(outputPath);
+      expect(readFileString196).toBe("existing");
+      const exists197 = yield* fs.exists(path.join(outDir, "normalize-manifest.json"));
+      expect(exists197).toBe(false);
       expect(output).toContain("Refusing to overwrite existing normalize output");
       yield* runFilesCommand(["normalize", "--dir", rawDir, "--out-dir", outDir, "--overwrite"]);
       expect((yield* readImageMetadata(outputPath)).format).toBe("png");
-      expect(yield* fs.exists(path.join(outDir, "normalize-manifest.json"))).toBe(true);
+      const exists198 = yield* fs.exists(path.join(outDir, "normalize-manifest.json"));
+      expect(exists198).toBe(true);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -4258,8 +4453,10 @@ exit 74
       yield* writeJpegWithExif(path.join(rawDir, "photo.jpg"), 2, 2);
       yield* fs.writeFileString(manifestPath, "existing manifest");
       const output = yield* expectFilesCommandFailure(["normalize", "--dir", rawDir, "--out-dir", outDir]);
-      expect(yield* fs.readFileString(manifestPath)).toBe("existing manifest");
-      expect(yield* fs.exists(path.join(outDir, "photo.png"))).toBe(false);
+      const readFileString199 = yield* fs.readFileString(manifestPath);
+      expect(readFileString199).toBe("existing manifest");
+      const exists200 = yield* fs.exists(path.join(outDir, "photo.png"));
+      expect(exists200).toBe(false);
       expect(output).toContain("Refusing to overwrite existing normalize manifest");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
@@ -4276,7 +4473,8 @@ exit 74
       yield* fs.writeFileString(path.join(datasetDir, "clip.mp4"), "video");
       yield* fs.writeFileString(path.join(datasetDir, "notes.md"), "notes");
       yield* runFilesCommand(["create-captions", "--dir", datasetDir, "--caption", "trigger token"]);
-      expect(yield* sortedDirectoryEntries(datasetDir)).toEqual([
+      const sortedDirectoryEntries201 = yield* sortedDirectoryEntries(datasetDir);
+      expect(sortedDirectoryEntries201).toEqual([
         "alpha.jpg",
         "alpha.txt",
         "beta.png",
@@ -4284,9 +4482,12 @@ exit 74
         "clip.mp4",
         "notes.md",
       ]);
-      expect(yield* fs.readFileString(path.join(datasetDir, "alpha.txt"))).toBe("trigger token");
-      expect(yield* fs.readFileString(path.join(datasetDir, "beta.txt"))).toBe("existing caption");
-      expect(yield* TestConsole.logLines).toContain(
+      const readFileString202 = yield* fs.readFileString(path.join(datasetDir, "alpha.txt"));
+      expect(readFileString202).toBe("trigger token");
+      const readFileString203 = yield* fs.readFileString(path.join(datasetDir, "beta.txt"));
+      expect(readFileString203).toBe("existing caption");
+      const logLines204 = yield* TestConsole.logLines;
+      expect(logLines204).toContain(
         `files create-captions: created 1 caption sidecar file(s); overwritten 0 existing caption file(s).`
       );
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -4300,9 +4501,12 @@ exit 74
       const datasetDir = yield* makeDatasetDir(tmpDir);
       yield* writeJpegWithExif(path.join(datasetDir, "alpha.jpg"), 4, 4);
       yield* runFilesCommand(["create-captions", "--dir", datasetDir, "--caption", "caption", "--dry-run"]);
-      expect(yield* sortedDirectoryEntries(datasetDir)).toEqual(["alpha.jpg"]);
-      expect(yield* fs.exists(path.join(datasetDir, "alpha.txt"))).toBe(false);
-      expect(yield* TestConsole.logLines).toContain("files create-captions: dry run; no caption files written.");
+      const sortedDirectoryEntries205 = yield* sortedDirectoryEntries(datasetDir);
+      expect(sortedDirectoryEntries205).toEqual(["alpha.jpg"]);
+      const exists206 = yield* fs.exists(path.join(datasetDir, "alpha.txt"));
+      expect(exists206).toBe(false);
+      const logLines207 = yield* TestConsole.logLines;
+      expect(logLines207).toContain("files create-captions: dry run; no caption files written.");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -4318,9 +4522,12 @@ exit 74
       yield* fs.writeFileString(outsideFile, "outside");
       yield* fs.symlink(outsideFile, oldPredictableTempPath);
       yield* runFilesCommand(["create-captions", "--dir", datasetDir, "--caption", "caption"]);
-      expect(yield* fs.readFileString(path.join(datasetDir, "alpha.txt"))).toBe("caption");
-      expect(yield* fs.readFileString(outsideFile)).toBe("outside");
-      expect(yield* fs.readLink(oldPredictableTempPath)).toBe(outsideFile);
+      const readFileString208 = yield* fs.readFileString(path.join(datasetDir, "alpha.txt"));
+      expect(readFileString208).toBe("caption");
+      const readFileString209 = yield* fs.readFileString(outsideFile);
+      expect(readFileString209).toBe("outside");
+      const readLink210 = yield* fs.readLink(oldPredictableTempPath);
+      expect(readLink210).toBe(outsideFile);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -4334,9 +4541,11 @@ exit 74
       yield* writeJpegWithExif(path.join(datasetDir, "alpha.jpg"), 4, 4);
       yield* fs.writeFileString(captionPath, "keep me");
       yield* runFilesCommand(["create-captions", "--dir", datasetDir, "--caption", "new caption"]);
-      expect(yield* fs.readFileString(captionPath)).toBe("keep me");
+      const readFileString211 = yield* fs.readFileString(captionPath);
+      expect(readFileString211).toBe("keep me");
       yield* runFilesCommand(["create-captions", "--dir", datasetDir, "--caption", "new caption", "--overwrite"]);
-      expect(yield* fs.readFileString(captionPath)).toBe("new caption");
+      const readFileString212 = yield* fs.readFileString(captionPath);
+      expect(readFileString212).toBe("new caption");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -4349,9 +4558,12 @@ exit 74
       yield* writeJpegWithExif(path.join(datasetDir, "same.jpg"), 4, 4);
       yield* writeJpegWithExif(path.join(datasetDir, "same.png"), 4, 4);
       yield* runFilesCommand(["create-captions", "--dir", datasetDir]);
-      expect(yield* sortedDirectoryEntries(datasetDir)).toEqual(["same.jpg", "same.png", "same.txt"]);
-      expect(yield* fs.readFileString(path.join(datasetDir, "same.txt"))).toBe("");
-      expect(yield* TestConsole.logLines).toContain(
+      const sortedDirectoryEntries213 = yield* sortedDirectoryEntries(datasetDir);
+      expect(sortedDirectoryEntries213).toEqual(["same.jpg", "same.png", "same.txt"]);
+      const readFileString214 = yield* fs.readFileString(path.join(datasetDir, "same.txt"));
+      expect(readFileString214).toBe("");
+      const logLines215 = yield* TestConsole.logLines;
+      expect(logLines215).toContain(
         `same.png [caption-target-collision] Another image in this run already targets "same.txt".`
       );
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -4387,13 +4599,12 @@ exit 74
         "1.5",
       ]);
       const manifest = yield* readArchivePoorCandidatesManifest(manifestPath);
-      expect(yield* sortedDirectoryEntries(rawDir)).toEqual(["good.jpg"]);
-      expect(yield* sortedDirectoryEntries(archiveDir)).toEqual([
-        "archive-poor-candidates-manifest.json",
-        "tiny.jpg",
-        "tiny.txt",
-      ]);
-      expect(yield* fs.readFileString(path.join(archiveDir, "tiny.txt"))).toBe("tiny caption");
+      const sortedDirectoryEntries216 = yield* sortedDirectoryEntries(rawDir);
+      expect(sortedDirectoryEntries216).toEqual(["good.jpg"]);
+      const sortedDirectoryEntries217 = yield* sortedDirectoryEntries(archiveDir);
+      expect(sortedDirectoryEntries217).toEqual(["archive-poor-candidates-manifest.json", "tiny.jpg", "tiny.txt"]);
+      const readFileString218 = yield* fs.readFileString(path.join(archiveDir, "tiny.txt"));
+      expect(readFileString218).toBe("tiny caption");
       expect(manifest.schemaVersion).toBe("beep.files.archive-poor-candidates.v1");
       expect(manifest.summary).toEqual({
         archivedCount: 1,
@@ -4436,9 +4647,12 @@ exit 74
         "32",
         "--dry-run",
       ]);
-      expect(yield* sortedDirectoryEntries(rawDir)).toEqual(["tiny.jpg", "tiny.txt"]);
-      expect(yield* fs.exists(archiveDir)).toBe(false);
-      expect(yield* TestConsole.logLines).toContain("files archive-poor-candidates: dry run; no files moved.");
+      const sortedDirectoryEntries219 = yield* sortedDirectoryEntries(rawDir);
+      expect(sortedDirectoryEntries219).toEqual(["tiny.jpg", "tiny.txt"]);
+      const exists220 = yield* fs.exists(archiveDir);
+      expect(exists220).toBe(false);
+      const logLines221 = yield* TestConsole.logLines;
+      expect(logLines221).toContain("files archive-poor-candidates: dry run; no files moved.");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -4465,8 +4679,10 @@ exit 74
         "--sidecars",
         "none",
       ]);
-      expect(yield* sortedDirectoryEntries(rawDir)).toEqual(["tiny.txt"]);
-      expect(yield* sortedDirectoryEntries(archiveDir)).toEqual(["archive-poor-candidates-manifest.json", "tiny.jpg"]);
+      const sortedDirectoryEntries222 = yield* sortedDirectoryEntries(rawDir);
+      expect(sortedDirectoryEntries222).toEqual(["tiny.txt"]);
+      const sortedDirectoryEntries223 = yield* sortedDirectoryEntries(archiveDir);
+      expect(sortedDirectoryEntries223).toEqual(["archive-poor-candidates-manifest.json", "tiny.jpg"]);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -4493,8 +4709,10 @@ exit 74
         "--min-short-edge",
         "32",
       ]);
-      expect(yield* fs.readFileString(archivePath)).toBe("existing");
-      expect(yield* fs.exists(path.join(rawDir, "tiny.jpg"))).toBe(true);
+      const readFileString224 = yield* fs.readFileString(archivePath);
+      expect(readFileString224).toBe("existing");
+      const exists225 = yield* fs.exists(path.join(rawDir, "tiny.jpg"));
+      expect(exists225).toBe(true);
       expect(output).toContain("Refusing to overwrite existing archive output file");
       yield* runFilesCommand([
         "archive-poor-candidates",
@@ -4509,7 +4727,8 @@ exit 74
         "--overwrite",
       ]);
       expect((yield* readImageMetadata(archivePath)).format).toBe("jpeg");
-      expect(yield* fs.exists(path.join(rawDir, "tiny.jpg"))).toBe(false);
+      const exists226 = yield* fs.exists(path.join(rawDir, "tiny.jpg"));
+      expect(exists226).toBe(false);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -4576,7 +4795,8 @@ exit 74
       expect(metadata.exif).toBeUndefined();
       expect(metadata.width).toBe(4);
       expect(metadata.height).toBe(3);
-      expect(yield* sortedDirectoryEntries(datasetDir)).toEqual(["photo.jpg"]);
+      const sortedDirectoryEntries227 = yield* sortedDirectoryEntries(datasetDir);
+      expect(sortedDirectoryEntries227).toEqual(["photo.jpg"]);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -4588,8 +4808,10 @@ exit 74
       yield* writeSizedFile(path.join(datasetDir, "broken.jpg"), 1, "x");
       yield* writeSizedFile(path.join(datasetDir, "clip.mp4"), 1, "v");
       yield* runFilesCommand(["strip-metadata", "--dir", datasetDir, "--dry-run"]);
-      expect(yield* sortedDirectoryEntries(datasetDir)).toEqual(["broken.jpg", "clip.mp4"]);
-      expect(yield* TestConsole.logLines).toContain("files strip-metadata: dry run; no files rewritten.");
+      const sortedDirectoryEntries228 = yield* sortedDirectoryEntries(datasetDir);
+      expect(sortedDirectoryEntries228).toEqual(["broken.jpg", "clip.mp4"]);
+      const logLines229 = yield* TestConsole.logLines;
+      expect(logLines229).toContain("files strip-metadata: dry run; no files rewritten.");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -4605,10 +4827,10 @@ exit 74
       yield* fs.writeFileString(path.join(datasetDir, "caption.txt"), "caption");
       yield* runFilesCommand(["strip-metadata", "--dir", datasetDir]);
       expect((yield* readImageMetadata(imagePath)).exif).toBeUndefined();
-      expect(yield* sortedDirectoryEntries(datasetDir)).toEqual(["caption.txt", "photo.jpg", "vector.svg"]);
-      expect(yield* TestConsole.logLines).toContain(
-        "files strip-metadata: skipped 2 unsupported or non-media file(s)."
-      );
+      const sortedDirectoryEntries230 = yield* sortedDirectoryEntries(datasetDir);
+      expect(sortedDirectoryEntries230).toEqual(["caption.txt", "photo.jpg", "vector.svg"]);
+      const logLines231 = yield* TestConsole.logLines;
+      expect(logLines231).toContain("files strip-metadata: skipped 2 unsupported or non-media file(s).");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -4628,7 +4850,8 @@ exit 74
         path.join(binDir, "ffmpeg"),
         runFilesCommand(["strip-metadata", "--dir", datasetDir])
       );
-      const args = pipe(yield* fs.readFileString(argsPath), Str.split("\n"));
+      const readFileString232 = yield* fs.readFileString(argsPath);
+      const args = pipe(readFileString232, Str.split("\n"));
       expect(A.slice(args, { start: 0, end: -2 })).toEqual([
         "-hide_banner",
         "-nostdin",
@@ -4651,7 +4874,8 @@ exit 74
         "-1",
       ]);
       expect(O.getOrUndefined(A.get(args, args.length - 2))).toContain(".beep-files-strip-metadata-");
-      expect(yield* fs.readFileString(clipPath)).toBe("clean video\n");
+      const readFileString233 = yield* fs.readFileString(clipPath);
+      expect(readFileString233).toBe("clean video\n");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -4665,7 +4889,8 @@ exit 74
       yield* writeSizedFile(path.join(datasetDir, "broken.png"), 1, "x");
       const output = yield* expectFilesCommandFailure(["strip-metadata", "--dir", datasetDir]);
       expect((yield* readImageMetadata(validPath)).exif).toBeDefined();
-      expect(yield* sortedDirectoryEntries(datasetDir)).toEqual(["broken.png", "valid.jpg"]);
+      const sortedDirectoryEntries234 = yield* sortedDirectoryEntries(datasetDir);
+      expect(sortedDirectoryEntries234).toEqual(["broken.png", "valid.jpg"]);
       expect(output).toContain("Failed to normalize image metadata");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
@@ -4686,8 +4911,10 @@ exit 74
         path.join(binDir, "ffmpeg"),
         expectFilesCommandFailure(["strip-metadata", "--dir", datasetDir])
       );
-      expect(yield* fs.readFileString(clipPath)).toBe("vvvv");
-      expect(yield* fs.exists(argsPath)).toBe(true);
+      const readFileString235 = yield* fs.readFileString(clipPath);
+      expect(readFileString235).toBe("vvvv");
+      const exists236 = yield* fs.exists(argsPath);
+      expect(exists236).toBe(true);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -4737,10 +4964,12 @@ exit 74
         outDir,
         "--dry-run",
       ]);
-      expect(yield* fs.exists(outDir)).toBe(false);
+      const exists237 = yield* fs.exists(outDir);
+      expect(exists237).toBe(false);
       yield* runFilesCommand(["curate-images", "--dir", datasetDir, "--decisions", decisionsPath, "--out-dir", outDir]);
       const manifestPath = path.join(outDir, "manifests", "image-curation-manifest.json");
-      const manifest = yield* decodeImageCurationManifest(yield* fs.readFileString(manifestPath));
+      const readFileString238 = yield* fs.readFileString(manifestPath);
+      const manifest = yield* decodeImageCurationManifest(readFileString238);
       expect(manifest.schemaVersion).toBe("beep.files.image-curation.v1");
       expect(manifest.summary.plannedCount).toBe(2);
       expect(manifest.summary.materializedCount).toBe(2);
@@ -4757,8 +4986,10 @@ exit 74
         expect(metadata.iptc).toBeUndefined();
         expect(metadata.xmp).toBeUndefined();
       }
-      expect(yield* sha256FileRef(firstPath)).toBe(firstBefore);
-      expect(yield* sha256FileRef(secondPath)).toBe(secondBefore);
+      const sha256FileRef239 = yield* sha256FileRef(firstPath);
+      expect(sha256FileRef239).toBe(firstBefore);
+      const sha256FileRef240 = yield* sha256FileRef(secondPath);
+      expect(sha256FileRef240).toBe(secondBefore);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -4773,7 +5004,8 @@ exit 74
       const decisionsPath = path.join(tmpDir, "decisions.json");
       const outDir = path.join(tmpDir, "prepared");
       yield* writeJpegWithExif(firstPath, 32, 32);
-      yield* fs.writeFile(secondPath, yield* fs.readFile(firstPath));
+      const readFile241 = yield* fs.readFile(firstPath);
+      yield* fs.writeFile(secondPath, readFile241);
       const sourceHash = yield* sha256FileRef(firstPath);
       const decisionText = yield* encodeImageCurationDecisionDocument(
         ImageCurationDecisionDocument.make({
@@ -4798,15 +5030,18 @@ exit 74
       yield* fs.writeFileString(decisionsPath, decisionText);
       yield* runFilesCommand(["curate-images", "--dir", datasetDir, "--decisions", decisionsPath, "--out-dir", outDir]);
       const manifestPath = path.join(outDir, "manifests", "image-curation-manifest.json");
-      const manifest = yield* decodeImageCurationManifest(yield* fs.readFileString(manifestPath));
+      const readFileString242 = yield* fs.readFileString(manifestPath);
+      const manifest = yield* decodeImageCurationManifest(readFileString242);
       const hashPrefix = Str.slice("sha256:".length, "sha256:".length + 20)(sourceHash);
       expect(A.map(manifest.entries, (entry) => entry.outputName)).toEqual([
         `twv1_${hashPrefix}.png`,
         `twv1_${hashPrefix}_2.png`,
       ]);
       expect(manifest.entries[0]?.outputPath).not.toBe(manifest.entries[1]?.outputPath);
-      expect(yield* fs.exists(manifest.entries[0]?.outputPath ?? "")).toBe(true);
-      expect(yield* fs.exists(manifest.entries[1]?.outputPath ?? "")).toBe(true);
+      const exists243 = yield* fs.exists(manifest.entries[0]?.outputPath ?? "");
+      expect(exists243).toBe(true);
+      const exists244 = yield* fs.exists(manifest.entries[1]?.outputPath ?? "");
+      expect(exists244).toBe(true);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -4830,7 +5065,8 @@ exit 74
         path.join(sourceAlias, "audit.json"),
       ]);
       expect(sourceAliasError).toContain("must not be written inside source directory");
-      expect(yield* sha256FileRef(sourcePath)).toBe(sourceHash);
+      const sha256FileRef245 = yield* sha256FileRef(sourcePath);
+      expect(sha256FileRef245).toBe(sourceHash);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -4844,7 +5080,8 @@ exit 74
       const secondPath = path.join(datasetDir, "second.jpg");
       const manifestPath = path.join(tmpDir, "audit.json");
       yield* writeJpegWithExif(firstPath, 32, 32);
-      yield* fs.writeFile(secondPath, yield* fs.readFile(firstPath));
+      const readFile246 = yield* fs.readFile(firstPath);
+      yield* fs.writeFile(secondPath, readFile246);
       const sourceHash = yield* sha256FileRef(firstPath);
       yield* runFilesCommand(["audit-images", "--dir", datasetDir, "--manifest", manifestPath]);
       const manifestText = yield* fs.readFileString(manifestPath);
@@ -4899,10 +5136,12 @@ exit 74
       ];
       const sourceManifestError = yield* expectFilesCommandFailure([...baseArgs, sourcePath]);
       expect(sourceManifestError).toContain("must not be written inside source directory");
-      expect(yield* sha256FileRef(sourcePath)).toBe(sourceHash);
+      const sha256FileRef247 = yield* sha256FileRef(sourcePath);
+      expect(sha256FileRef247).toBe(sourceHash);
       const decisionManifestError = yield* expectFilesCommandFailure([...baseArgs, decisionsPath]);
       expect(decisionManifestError).toContain("must not overwrite decision ledger");
-      expect(yield* fs.readFileString(decisionsPath)).toBe(decisionText);
+      const readFileString248 = yield* fs.readFileString(decisionsPath);
+      expect(readFileString248).toBe(decisionText);
       const outputPath = path.join(
         outDir,
         "canonical",
@@ -4912,7 +5151,8 @@ exit 74
       );
       const derivativeManifestError = yield* expectFilesCommandFailure([...baseArgs, outputPath]);
       expect(derivativeManifestError).toContain("must not overlap generated derivative");
-      expect(yield* fs.exists(outDir)).toBe(false);
+      const exists249 = yield* fs.exists(outDir);
+      expect(exists249).toBe(false);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -4968,7 +5208,8 @@ exit 74
         path.join(ledgerAlias, "decisions.json"),
       ]);
       expect(ledgerAliasError).toContain("must not overwrite decision ledger");
-      expect(yield* fs.readFileString(decisionsPath)).toBe(decisionText);
+      const readFileString250 = yield* fs.readFileString(decisionsPath);
+      expect(readFileString250).toBe(decisionText);
       const outputAliasError = yield* expectFilesCommandFailure([
         "curate-images",
         "--dir",
@@ -4994,7 +5235,8 @@ exit 74
         "--dry-run",
       ]);
       expect(derivativeAliasError).toContain("derivative must remain inside output directory");
-      expect(yield* sha256FileRef(sourcePath)).toBe(sourceHash);
+      const sha256FileRef251 = yield* sha256FileRef(sourcePath);
+      expect(sha256FileRef251).toBe(sourceHash);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -5055,8 +5297,10 @@ exit 74
         "--overwrite",
       ]);
       expect(output).toContain("Failed to inspect canonical PNG source");
-      expect(yield* fs.readFileString(existingOutputPath)).toBe("previous-output");
-      expect(yield* fs.readFileString(manifestPath)).toBe("previous-manifest");
+      const readFileString252 = yield* fs.readFileString(existingOutputPath);
+      expect(readFileString252).toBe("previous-output");
+      const readFileString253 = yield* fs.readFileString(manifestPath);
+      expect(readFileString253).toBe("previous-manifest");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 

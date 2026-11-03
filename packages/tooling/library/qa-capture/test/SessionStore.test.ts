@@ -43,12 +43,14 @@ describe("@beep/qa-capture session store", () => {
         const tmpDir = yield* fs.makeTempDirectoryScoped();
         const qaRoot = `${tmpDir}/qa`;
 
-        expect(yield* store.discoverNextRound(qaRoot)).toBe(1);
+        const discoverNextRound1 = yield* store.discoverNextRound(qaRoot);
+        expect(discoverNextRound1).toBe(1);
 
         yield* fs.makeDirectory(`${qaRoot}/round-1`, { recursive: true });
         yield* fs.makeDirectory(`${qaRoot}/round-3`, { recursive: true });
         yield* fs.makeDirectory(`${qaRoot}/not-a-round`, { recursive: true });
-        expect(yield* store.discoverNextRound(qaRoot)).toBe(4);
+        const discoverNextRound2 = yield* store.discoverNextRound(qaRoot);
+        expect(discoverNextRound2).toBe(4);
       })
     );
   });
@@ -63,10 +65,14 @@ describe("@beep/qa-capture session store", () => {
 
         const layout = yield* store.prepareRound(qaRoot, 2);
         expect(layout.root).toBe(`${qaRoot}/round-2`);
-        expect(yield* fs.exists(layout.clipsDir)).toBe(true);
-        expect(yield* fs.exists(layout.framesDir)).toBe(true);
-        expect(yield* fs.exists(layout.sheetsDir)).toBe(true);
-        expect(yield* fs.exists(layout.videoDir)).toBe(true);
+        const exists3 = yield* fs.exists(layout.clipsDir);
+        expect(exists3).toBe(true);
+        const exists4 = yield* fs.exists(layout.framesDir);
+        expect(exists4).toBe(true);
+        const exists5 = yield* fs.exists(layout.sheetsDir);
+        expect(exists5).toBe(true);
+        const exists6 = yield* fs.exists(layout.videoDir);
+        expect(exists6).toBe(true);
       })
     );
   });
@@ -91,16 +97,24 @@ describe("@beep/qa-capture session store", () => {
         yield* fs.writeFileString(legacyManifestPath, "[]");
 
         const layout = yield* store.prepareRound(qaRoot, 1);
-        expect(yield* fs.readDirectory(layout.clipsDir)).toEqual([]);
-        expect(yield* fs.readDirectory(layout.framesDir)).toEqual([]);
-        expect(yield* fs.readDirectory(layout.sheetsDir)).toEqual([]);
-        expect(yield* fs.readDirectory(layout.videoDir)).toEqual([]);
-        expect(yield* fs.exists(layout.reportPath)).toBe(false);
-        expect(yield* fs.exists(layout.sessionPath)).toBe(false);
+        const readDirectory7 = yield* fs.readDirectory(layout.clipsDir);
+        expect(readDirectory7).toEqual([]);
+        const readDirectory8 = yield* fs.readDirectory(layout.framesDir);
+        expect(readDirectory8).toEqual([]);
+        const readDirectory9 = yield* fs.readDirectory(layout.sheetsDir);
+        expect(readDirectory9).toEqual([]);
+        const readDirectory10 = yield* fs.readDirectory(layout.videoDir);
+        expect(readDirectory10).toEqual([]);
+        const exists11 = yield* fs.exists(layout.reportPath);
+        expect(exists11).toBe(false);
+        const exists12 = yield* fs.exists(layout.sessionPath);
+        expect(exists12).toBe(false);
         // Legacy screenshot manifests stay untouched per the round-layout
         // contract, and events.ndjson is the collector's to truncate at serve.
-        expect(yield* fs.exists(legacyManifestPath)).toBe(true);
-        expect(yield* fs.readFileString(layout.eventsPath)).toBe("stale-events\n");
+        const exists13 = yield* fs.exists(legacyManifestPath);
+        expect(exists13).toBe(true);
+        const readFileString14 = yield* fs.readFileString(layout.eventsPath);
+        expect(readFileString14).toBe("stale-events\n");
       })
     );
   });
@@ -129,7 +143,8 @@ describe("@beep/qa-capture session store", () => {
         const tmpDir = yield* fs.makeTempDirectoryScoped();
         const qaRoot = `${tmpDir}/qa`;
 
-        assertNone(yield* store.readCollectorHandle(qaRoot));
+        const readCollectorHandle15 = yield* store.readCollectorHandle(qaRoot);
+        assertNone(readCollectorHandle15);
 
         const handle = CollectorHandle.make({
           eventsPath: `${qaRoot}/round-1/events.ndjson`,
@@ -154,7 +169,8 @@ describe("@beep/qa-capture session store", () => {
         });
 
         yield* store.clearCollectorHandle(qaRoot);
-        assertNone(yield* store.readCollectorHandle(qaRoot));
+        const readCollectorHandle16 = yield* store.readCollectorHandle(qaRoot);
+        assertNone(readCollectorHandle16);
       })
     );
   });

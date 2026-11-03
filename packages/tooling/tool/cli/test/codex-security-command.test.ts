@@ -23,7 +23,8 @@ const baseOptions = { outputDir: "/private/scan", maxCost: 5, timeoutMinutes: 30
 const repoFixture = Effect.fn("SecurityCommandTest.repo")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const repo = yield* fs.realPath(yield* fs.makeTempDirectoryScoped());
+  const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped();
+  const repo = yield* fs.realPath(madeTempDirectoryScoped);
   yield* fs.makeDirectory(path.join(repo, "src"));
   return repo;
 });
@@ -49,7 +50,8 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })("security scan command guards
       const repo = yield* repoFixture();
       const outside = yield* fs.makeTempDirectoryScoped();
       yield* fs.symlink(outside, path.join(repo, "escape"));
-      expect(yield* resolveScanTarget(repo, "src")).toBe("src");
+      const resolvedScanTarget = yield* resolveScanTarget(repo, "src");
+      expect(resolvedScanTarget).toBe("src");
       const escaped = yield* resolveScanTarget(repo, "escape").pipe(Effect.result);
       expect(escaped._tag).toBe("Failure");
       const missing = yield* resolveScanTarget(repo, "does-not-exist").pipe(Effect.result);
@@ -63,7 +65,8 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })("security scan command guards
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const repo = yield* repoFixture();
-      const outputDir = yield* fs.realPath(yield* fs.makeTempDirectoryScoped());
+      const madeTempDirectoryScoped1 = yield* fs.makeTempDirectoryScoped();
+      const outputDir = yield* fs.realPath(madeTempDirectoryScoped1);
       const absent = yield* assertPrivateOutputDirectory(repo, path.join(outputDir, "absent")).pipe(Effect.result);
       expect(absent._tag).toBe("Failure");
       yield* assertPrivateOutputDirectory(repo, outputDir);
@@ -81,17 +84,22 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })("security scan command guards
       const valid = { output: "/private/out", maxCost: 5, timeoutMinutes: 30, target: O.none<string>() };
       const messageOf = (values: typeof valid) =>
         Effect.map(Effect.flip(decodeScanOptions(values)), (error) => error.message);
-      expect(yield* messageOf({ ...valid, maxCost: 0 })).toContain("--max-cost");
-      expect(yield* messageOf({ ...valid, timeoutMinutes: 0 })).toContain("--timeout-minutes");
-      expect(yield* messageOf({ ...valid, target: O.some("/etc") })).toContain("--path");
-      expect(yield* messageOf({ ...valid, target: O.some("../sibling") })).toContain("--path");
+      const messageOf2 = yield* messageOf({ ...valid, maxCost: 0 });
+      expect(messageOf2).toContain("--max-cost");
+      const messageOf3 = yield* messageOf({ ...valid, timeoutMinutes: 0 });
+      expect(messageOf3).toContain("--timeout-minutes");
+      const messageOf4 = yield* messageOf({ ...valid, target: O.some("/etc") });
+      expect(messageOf4).toContain("--path");
+      const messageOf5 = yield* messageOf({ ...valid, target: O.some("../sibling") });
+      expect(messageOf5).toContain("--path");
       expect((yield* decodeScanOptions({ ...valid, target: O.some("packages") })).maxCost).toBe(5);
     })
   );
   it.effect("round-trips remote slugs and reports missing private output", () =>
     Effect.gen(function* () {
       const slug = yield* securityRepositoryFromRemote("git@github.com:example/project.git");
-      expect(yield* encodeRemote(slug)).toBe("https://github.com/example/project.git");
+      const encodedRemote = yield* encodeRemote(slug);
+      expect(encodedRemote).toBe("https://github.com/example/project.git");
       expect((yield* securityRepositoryFromRemote("https://example.com/project").pipe(Effect.flip)).message).toContain(
         "credential-free GitHub slug"
       );
@@ -114,7 +122,8 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })("security output disappearanc
       expect(error.message).toBe(
         "Scan output directory was replaced or linked into the repository; the scan is not usable."
       );
-      expect(yield* fs.exists(path.join(repo, "missing"))).toBe(false);
+      const exists6 = yield* fs.exists(path.join(repo, "missing"));
+      expect(exists6).toBe(false);
     })
   );
 });

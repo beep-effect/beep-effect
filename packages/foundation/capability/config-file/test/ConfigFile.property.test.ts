@@ -23,7 +23,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -65,12 +66,16 @@ it.layer(
         const fs = yield* FileSystem.FileSystem;
         const encoded = yield* config.encode(value);
         yield* config.write(value, "/property.json");
-        assert.strictEqual(yield* fs.readFileString("/property.json"), encoded);
+        const readFileString2 = yield* fs.readFileString("/property.json");
+        assert.strictEqual(readFileString2, encoded);
         const parsed = yield* ConfigFile.read("/property.json", { schema: S.Json, codec: JsonCodec });
         assert.isTrue(S.toEquivalence(S.Json)(parsed, value));
-        assert.strictEqual(yield* config.encode(parsed), encoded);
+        const encoded3 = yield* config.encode(parsed);
+        assert.strictEqual(encoded3, encoded);
         yield* config.write(parsed, "/property.json");
-        assert.isTrue(S.toEquivalence(S.Json)(yield* config.loadFrom("/property.json"), parsed));
+        const argument = S.toEquivalence(S.Json);
+        const loadedFrom = yield* config.loadFrom("/property.json");
+        assert.isTrue(argument(loadedFrom, parsed));
       }),
     runs
   );

@@ -25,7 +25,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(equivalent(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -42,8 +43,10 @@ describe("ReleaseTag schema laws", () => {
 
 it.effect("tag option schemas preserve omitted keys without resolving defaults", () =>
   Effect.gen(function* () {
-    assert.deepStrictEqual(yield* S.decodeEffect(TagFormatOptions)({}), TagFormatOptions.make({}));
-    assert.deepStrictEqual(yield* S.decodeEffect(TrackingTagOptions)({}), TrackingTagOptions.make({}));
+    const value2 = yield* S.decodeEffect(TagFormatOptions)({});
+    assert.deepStrictEqual(value2, TagFormatOptions.make({}));
+    const value3 = yield* S.decodeEffect(TrackingTagOptions)({});
+    assert.deepStrictEqual(value3, TrackingTagOptions.make({}));
     assert.isTrue(S.is(TagFormatOptions)({ versionPrefix: "" }));
     assert.isTrue(S.is(TrackingTagOptions)({ packageName: "", precision: "both", includePrerelease: false }));
     assert.isFalse(S.is(TagFormatOptions)({ versionPrefix: undefined }));

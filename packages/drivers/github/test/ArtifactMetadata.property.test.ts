@@ -15,7 +15,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(StorageRecordInput)(value);
       const decoded = yield* S.decodeEffect(StorageRecordInput)(encoded);
       assert.isTrue(S.toEquivalence(StorageRecordInput)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(StorageRecordInput)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(StorageRecordInput)(decoded);
+      assert.deepStrictEqual(value1, encoded);
     }),
   runs
 );

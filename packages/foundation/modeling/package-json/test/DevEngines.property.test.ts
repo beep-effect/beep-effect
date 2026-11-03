@@ -16,7 +16,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -38,7 +39,8 @@ describe("DevEngine.onFail", () => {
       const wire = { runtime: { name: "node", version: "^24.0.0", onFail: "download" as const } };
       const decoded = yield* S.decodeEffect(DevEnginesSchema)(wire);
       assertTrue(S.is(DevEngine)(decoded.runtime));
-      deepStrictEqual(yield* S.encodeEffect(DevEnginesSchema)(decoded), wire);
+      const value2 = yield* S.encodeEffect(DevEnginesSchema)(decoded);
+      deepStrictEqual(value2, wire);
       const devEngines = { packageManager: { name: "pnpm", onFail: "download" as const } };
       const pkg = yield* Package.decode({ name: "pkg", version: "1.0.0", devEngines });
       deepStrictEqual((yield* S.encodeUnknownEffect(Package.schema)(pkg)).devEngines, devEngines);

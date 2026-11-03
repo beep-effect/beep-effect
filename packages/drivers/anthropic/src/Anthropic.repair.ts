@@ -284,7 +284,8 @@ export const collectToolParamsJsonWithUsage = Effect.fn("collectToolParamsJsonWi
   E,
   R,
 >(parts: Stream.Stream<Response.StreamPart<Tools, ParametersMode>, E, R>) {
-  const streamParts = A.fromIterable(yield* Stream.runCollect(parts));
+  const resultCollect = yield* Stream.runCollect(parts);
+  const streamParts = A.fromIterable(resultCollect);
   const paramsJson = pipe(
     streamParts,
     A.takeWhile((part) => part.type !== "tool-params-end"),

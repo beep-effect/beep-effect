@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { makeCitationHtmlInput } from "@beep/law-practice-server/internal/Citation/HtmlInput";
 import {
   CitationHtmlWorkerJob,
@@ -57,12 +57,12 @@ const CorpusJson = S.fromJsonString(
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("bounded citation HTML input", (it) => {
   it.effect("matches every source encoding byte and wrapper decision", () =>
     Effect.gen(function* () {
-      const raw = yield* (yield* FileSystem.FileSystem).readFileString(
-        fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/html-input.json", import.meta.url))
+      const citationResult1 = yield* FileSystem.FileSystem;
+      const raw = yield* citationResult1.readFileString(
+        NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/html-input.json", import.meta.url))
       );
-      expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-        "66dc28d39e9c82120857af03227dfea59396fb3b7a65202248d52f53fa5a2a8a"
-      );
+      const citationResult2 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+      expect(citationResult2).toBe("66dc28d39e9c82120857af03227dfea59396fb3b7a65202248d52f53fa5a2a8a");
       const corpus = yield* S.decodeEffect(CorpusJson)(raw);
       expect(corpus.cases).toHaveLength(1075);
       expect(corpus.artifacts).toHaveLength(1071);
@@ -73,7 +73,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("bounded citation HT
         )
       );
       const texts = HashMap.fromIterable(A.map(corpus.artifacts, (row) => [row.sha256, row.value] as const));
-      const preparation = yield* makeCitationHtmlInput((yield* defaultCitationEnginePolicy).limits);
+      const citationResult3 = yield* defaultCitationEnginePolicy;
+      const preparation = yield* makeCitationHtmlInput(citationResult3.limits);
       for (const row of corpus.cases) {
         const text = yield* Effect.fromOption(HashMap.get(texts, row.text));
         const operation = preparation.prepare(text) satisfies Effect.Effect<
@@ -89,7 +90,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("bounded citation HT
           expect(prepared.encoding, row.name).toBe(row.outcome.encoding);
           expect(prepared.fullHtml, row.name).toBe(row.outcome.fullHtml);
           expect(prepared.bytes.byteLength, row.name).toBe(row.outcome.byteLength);
-          expect(yield* S.decodeEffect(Sha256HexFromBytes)(prepared.bytes), row.name).toBe(row.outcome.bytesSha256);
+          const citationResult4 = yield* S.decodeEffect(Sha256HexFromBytes)(prepared.bytes);
+          expect(citationResult4, row.name).toBe(row.outcome.bytesSha256);
         }
       }
     })
@@ -109,9 +111,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("bounded citation HT
       const another = yield* preparation.prepare("ĀĀ");
       exact.bytes[0] = 255;
       expect(A.fromIterable(another.bytes)).toEqual([0, 1, 0, 1]);
-      expect((yield* Effect.flip(preparation.prepare({ text: "private source" })))._tag).toBe(
-        "CitationHtmlInputFailure"
-      );
+      const citationResult5 = yield* Effect.flip(preparation.prepare({ text: "private source" }));
+      expect(citationResult5._tag).toBe("CitationHtmlInputFailure");
     })
   );
   it.effect("uses its captured clock and interrupts scans without returning partial bytes", () =>
@@ -141,7 +142,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("bounded citation HT
       const fiber = yield* Effect.forkChild(interruptible.prepare(`<?xml a encoding="${Str.repeat(100_000)("a")}`));
       yield* Effect.yieldNow;
       yield* Fiber.interrupt(fiber);
-      expect(Exit.hasInterrupts(yield* Fiber.await(fiber))).toBe(true);
+      const citationResult6 = yield* Fiber.await(fiber);
+      expect(Exit.hasInterrupts(citationResult6)).toBe(true);
     })
   );
 });
@@ -166,7 +168,8 @@ it.effect(
       );
       expect(checked).toBe(true);
       expect(prepared.bytes.byteLength).toBe(12);
-      expect(yield* Effect.flip(preparation.prepare("AB"))).toMatchObject({
+      const citationResult7 = yield* Effect.flip(preparation.prepare("AB"));
+      expect(citationResult7).toMatchObject({
         _tag: "CitationSafetyLimitExceeded",
         limit: "sourceUtf16",
       });
@@ -178,25 +181,23 @@ it.effect(
         preflightCitationHtmlJob(layout, 0, frame.byteLength).pipe(Effect.asVoid)
       );
       expect(exact.bytes).toEqual(prepared.bytes);
-      expect(
-        yield* Effect.flip(
-          preparation.prepareStage("AB😀", (layout) =>
-            preflightCitationHtmlJob(layout, 0, frame.byteLength - 1).pipe(Effect.asVoid)
-          )
+      const citationResult8 = yield* Effect.flip(
+        preparation.prepareStage("AB😀", (layout) =>
+          preflightCitationHtmlJob(layout, 0, frame.byteLength - 1).pipe(Effect.asVoid)
         )
-      ).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "processMessageBytes" });
+      );
+      expect(citationResult8).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "processMessageBytes" });
       // Every ASCII point uses four native bytes when one supplementary point is present.
       // Layout is 31,999,996 bytes; base64 plus framing exceeds the frozen 32 MB channel.
       let oversizedLayout = false;
-      expect(
-        yield* Effect.flip(
-          preparation.prepareStage(`${Str.repeat(7_999_998)("A")}😀`, (layout) => {
-            oversizedLayout = true;
-            expect(layout.byteLength).toBe(31_999_996);
-            return preflightCitationHtmlJob(layout, 0, 32_000_000).pipe(Effect.asVoid);
-          })
-        )
-      ).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "processMessageBytes" });
+      const citationResult9 = yield* Effect.flip(
+        preparation.prepareStage(`${Str.repeat(7_999_998)("A")}😀`, (layout) => {
+          oversizedLayout = true;
+          expect(layout.byteLength).toBe(31_999_996);
+          return preflightCitationHtmlJob(layout, 0, 32_000_000).pipe(Effect.asVoid);
+        })
+      );
+      expect(citationResult9).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "processMessageBytes" });
       expect(oversizedLayout).toBe(true);
     }),
   { timeout: 60_000 }
@@ -221,19 +222,20 @@ it.effect("preflights owned byte jobs before snapshot allocation and keeps the t
     yield* prep.prepareBytes(prepared.bytes, (layout) =>
       preflightCitationHtmlJob(layout, 0, frame.byteLength).pipe(Effect.asVoid)
     );
-    expect(
-      yield* Effect.flip(
-        prep.prepareBytes(prepared.bytes, (layout) =>
-          preflightCitationHtmlJob(layout, 0, frame.byteLength - 1).pipe(Effect.asVoid)
-        )
+    const citationResult10 = yield* Effect.flip(
+      prep.prepareBytes(prepared.bytes, (layout) =>
+        preflightCitationHtmlJob(layout, 0, frame.byteLength - 1).pipe(Effect.asVoid)
       )
-    ).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "processMessageBytes" });
+    );
+    expect(citationResult10).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "processMessageBytes" });
     const small = yield* makeCitationHtmlInput({ ...limits, processMessageBytes: 1 });
-    expect(yield* Effect.flip(small.prepareBytes(new Uint8Array(2), () => Effect.void))).toMatchObject({
+    const citationResult11 = yield* Effect.flip(small.prepareBytes(new Uint8Array(2), () => Effect.void));
+    expect(citationResult11).toMatchObject({
       _tag: "CitationSafetyLimitExceeded",
       limit: "processMessageBytes",
     });
-    expect(yield* Effect.flip(prep.prepareBytes("not a byte value", () => Effect.void))).toMatchObject({
+    const citationResult12 = yield* Effect.flip(prep.prepareBytes("not a byte value", () => Effect.void));
+    expect(citationResult12).toMatchObject({
       _tag: "CitationHtmlInputFailure",
       reason: "invalid-input",
     });
@@ -242,6 +244,7 @@ it.effect("preflights owned byte jobs before snapshot allocation and keeps the t
       .pipe(Effect.forkChild);
     yield* Effect.yieldNow;
     yield* Fiber.interrupt(running);
-    expect(Exit.hasInterrupts(yield* Fiber.await(running))).toBe(true);
+    const citationResult13 = yield* Fiber.await(running);
+    expect(Exit.hasInterrupts(citationResult13)).toBe(true);
   })
 );

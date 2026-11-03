@@ -57,26 +57,30 @@ it.layer(BunCrypto.layer)("canonical authority identity", (it) => {
         mentionId: A.getUnsafe(data.cases, 1).input.mentionId,
         citation: { ...wire.citation, components: { page: "1", reporter: "U.S.", volume: "1" } },
       });
-      expect(yield* makeCitationAuthorityId(reordered)).toBe(yield* makeCitationAuthorityId(row));
+      const citationResult1 = yield* makeCitationAuthorityId(reordered);
+      const citationResult2 = yield* makeCitationAuthorityId(row);
+      expect(citationResult1).toBe(citationResult2);
     })
   );
 
   it.effect("rejects missing or mismatched selected edition adapter data", () =>
     Effect.gen(function* () {
-      const row = A.getUnsafe((yield* inputs).cases, 0).input;
+      const citationResult3 = yield* inputs;
+      const row = A.getUnsafe(citationResult3.cases, 0).input;
       row.selectedEdition.pipe(O.isSome, assertTrue);
       const noLookup = yield* Effect.flip(makeCitationAuthorityId({ ...row, selectedEdition: O.none() }));
       expect(noLookup.reason).toBe("missing-edition");
-      const other = A.getUnsafe((yield* inputs).cases, 6).input.selectedEdition;
-      expect((yield* Effect.flip(makeCitationAuthorityId({ ...row, selectedEdition: other }))).reason).toBe(
-        "missing-edition"
-      );
+      const citationResult4 = yield* inputs;
+      const other = A.getUnsafe(citationResult4.cases, 6).input.selectedEdition;
+      const citationResult5 = yield* Effect.flip(makeCitationAuthorityId({ ...row, selectedEdition: other }));
+      expect(citationResult5.reason).toBe("missing-edition");
     })
   );
 
   it.effect("preserves all law groups, absent/null distinctions and edition multiplicity", () =>
     Effect.gen(function* () {
-      const row = A.getUnsafe((yield* inputs).cases, 8).input;
+      const citationResult6 = yield* inputs;
+      const row = A.getUnsafe(citationResult6.cases, 8).input;
       const wire = yield* S.encodeEffect(CitationAuthorityIdentityInput)(row);
       if (wire.citation.type !== "law") throw new Error("law fixture required");
       const baseline = yield* makeCitationAuthorityId(row);
@@ -84,7 +88,8 @@ it.layer(BunCrypto.layer)("canonical authority identity", (it) => {
         ...wire,
         citation: { ...wire.citation, components: { ...wire.citation.components, extra: null } },
       });
-      expect(yield* makeCitationAuthorityId(extra)).not.toBe(baseline);
+      const citationResult7 = yield* makeCitationAuthorityId(extra);
+      expect(citationResult7).not.toBe(baseline);
       const duplicate = yield* S.decodeEffect(CitationAuthorityIdentityInput)({
         ...wire,
         citation: {
@@ -95,13 +100,15 @@ it.layer(BunCrypto.layer)("canonical authority identity", (it) => {
           },
         },
       });
-      expect(yield* makeCitationAuthorityId(duplicate)).not.toBe(baseline);
+      const citationResult8 = yield* makeCitationAuthorityId(duplicate);
+      expect(citationResult8).not.toBe(baseline);
     })
   );
 
   it.effect("normalizes edition-bag order while retaining multiplicity", () =>
     Effect.gen(function* () {
-      const row = A.getUnsafe((yield* inputs).cases, 8).input;
+      const citationResult9 = yield* inputs;
+      const row = A.getUnsafe(citationResult9.cases, 8).input;
       const wire = yield* S.encodeEffect(CitationAuthorityIdentityInput)(row);
       if (wire.citation.type !== "law") throw new Error("law fixture required");
       const editions = A.append(wire.citation.publication.editions, Str.repeat(64)("0"));
@@ -113,13 +120,16 @@ it.layer(BunCrypto.layer)("canonical authority identity", (it) => {
         ...wire,
         citation: { ...wire.citation, publication: { ...wire.citation.publication, editions: A.reverse(editions) } },
       });
-      expect(yield* makeCitationAuthorityId(forward)).toBe(yield* makeCitationAuthorityId(reverse));
+      const citationResult10 = yield* makeCitationAuthorityId(forward);
+      const citationResult11 = yield* makeCitationAuthorityId(reverse);
+      expect(citationResult10).toBe(citationResult11);
     })
   );
 
   it.effect("drops sensitive digest causes", () =>
     Effect.gen(function* () {
-      const row = A.getUnsafe((yield* inputs).cases, 0).input;
+      const citationResult12 = yield* inputs;
+      const row = A.getUnsafe(citationResult12.cases, 0).input;
       const failure = yield* Effect.flip(
         makeCitationAuthorityId(row).pipe(
           Effect.provideService(

@@ -22,7 +22,8 @@ describe("review-source quote contract after citation locator retirement", () =>
     Effect.gen(function* () {
       for (const wire of [{ exact: "" }, { exact: "claim language", prefix: "", suffix: " after" }]) {
         const quote = yield* S.decodeEffect(TextQuote)(wire);
-        expect(yield* S.encodeEffect(TextQuote)(quote)).toEqual(wire);
+        const citationResult2 = yield* S.encodeEffect(TextQuote)(quote);
+        expect(citationResult2).toEqual(wire);
       }
       const quote = TextQuote.make({ exact: "" });
       assertNone(quote.prefix);
@@ -34,7 +35,8 @@ describe("review-source quote contract after citation locator retirement", () =>
     Effect.gen(function* () {
       const wire = { boxFileId: "1234567890", page: 3, quote: { exact: "claim language", prefix: "before " } };
       const ref = yield* S.decodeEffect(SourceRef)(wire);
-      expect(yield* S.encodeEffect(SourceRef)(ref)).toEqual(wire);
+      const citationResult1 = yield* S.encodeEffect(SourceRef)(ref);
+      expect(citationResult1).toEqual(wire);
       assertNone(ref.crop);
     })
   );

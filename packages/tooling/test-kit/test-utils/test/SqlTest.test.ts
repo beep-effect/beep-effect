@@ -409,7 +409,8 @@ describe("SqlTest", () => {
         return yield* doesTableExist("notes");
       }).pipe(provideScopedLayer(makeLayer()));
 
-      expect(yield* createTable).toBe(true);
+      const createdTable = yield* createTable;
+      expect(createdTable).toBe(true);
       const tableExistsAfterFreshProvision = yield* doesTableExist("notes").pipe(provideScopedLayer(makeLayer()));
       expect(tableExistsAfterFreshProvision).toBe(false);
     })
@@ -530,9 +531,11 @@ describe("SqlTest", () => {
       const fs = Context.get(services, FileSystem.FileSystem);
       const tempDir = yield* Effect.fromOption(info.tempDir).pipe(Effect.orDie);
 
-      expect(yield* fs.exists(tempDir)).toBe(true);
+      const exists1 = yield* fs.exists(tempDir);
+      expect(exists1).toBe(true);
       yield* Scope.close(scope, Exit.void);
-      expect(yield* fs.exists(tempDir)).toBe(false);
+      const exists2 = yield* fs.exists(tempDir);
+      expect(exists2).toBe(false);
     })
   );
 
@@ -670,11 +673,14 @@ describe("SqlTest", () => {
         phase: "provision",
       });
 
-      expect(yield* encodeUnknownPgliteSqlTestLayerMode("auto")).toBe("auto");
-      expect(yield* encodeUnknownPgExternalConnectionUri(pgExternalConfig.connectionUri)).toBe(
-        "postgres://user:pass@localhost:5432/test_db"
+      const encodedUnknownPgliteSqlTestLayerMode = yield* encodeUnknownPgliteSqlTestLayerMode("auto");
+      expect(encodedUnknownPgliteSqlTestLayerMode).toBe("auto");
+      const encodedUnknownPgExternalConnectionUri = yield* encodeUnknownPgExternalConnectionUri(
+        pgExternalConfig.connectionUri
       );
-      deepStrictEqual(yield* encodeUnknownTestDatabaseInfoShape(info), {
+      expect(encodedUnknownPgExternalConnectionUri).toBe("postgres://user:pass@localhost:5432/test_db");
+      const encodedUnknownTestDatabaseInfoShape = yield* encodeUnknownTestDatabaseInfoShape(info);
+      deepStrictEqual(encodedUnknownTestDatabaseInfoShape, {
         connectionUri: O.some("postgres://user:pass@localhost:5432/test_db"),
         containerId: O.some("container-1"),
         database: O.some("test_db"),
@@ -686,7 +692,9 @@ describe("SqlTest", () => {
         tempDir: O.none(),
         username: O.some("user"),
       });
-      expect(yield* encodeUnknownPgliteTestcontainersTestDriverConfig(pgliteConfig)).toEqual({
+      const encodedUnknownPgliteTestcontainersTestDriverConfig =
+        yield* encodeUnknownPgliteTestcontainersTestDriverConfig(pgliteConfig);
+      expect(encodedUnknownPgliteTestcontainersTestDriverConfig).toEqual({
         database: "postgres",
         internalPort: 5432,
         maxConnections: 1,
@@ -694,7 +702,8 @@ describe("SqlTest", () => {
         startupTimeoutMs: 60_000,
         username: "postgres",
       });
-      expect(yield* encodeUnknownPgExternalTestDriverConfig(pgExternalConfig)).toEqual({
+      const encodedUnknownPgExternalTestDriverConfig = yield* encodeUnknownPgExternalTestDriverConfig(pgExternalConfig);
+      expect(encodedUnknownPgExternalTestDriverConfig).toEqual({
         connectTimeoutMs: 5_000,
         connectionUri: "postgres://user:pass@localhost:5432/test_db",
         isolation: "schema",
@@ -702,7 +711,8 @@ describe("SqlTest", () => {
         schemaPrefix: "beep_test",
         ssl: false,
       });
-      expect(yield* encodeUnknownSqlTestHarnessError(harnessError)).toEqual({
+      const encodedUnknownSqlTestHarnessError = yield* encodeUnknownSqlTestHarnessError(harnessError);
+      expect(encodedUnknownSqlTestHarnessError).toEqual({
         _tag: "SqlTestHarnessError",
         driver: "pg-external",
         message: "setup failed",
@@ -723,7 +733,8 @@ describe("SqlTest", () => {
       Effect.gen(function* () {
         const decoded = yield* decodeUnknownSqlTestHarnessError(encoded);
         expect(SqlTestHarnessError.is(decoded)).toBe(true);
-        expect(yield* encodeUnknownSqlTestHarnessError(decoded)).toEqual(encoded);
+        const encodedUnknownSqlTestHarnessError3 = yield* encodeUnknownSqlTestHarnessError(decoded);
+        expect(encodedUnknownSqlTestHarnessError3).toEqual(encoded);
       }),
     { arbitrary: fcRuns(10) }
   );

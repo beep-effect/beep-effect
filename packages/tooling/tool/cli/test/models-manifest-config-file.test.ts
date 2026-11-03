@@ -27,6 +27,15 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { readFixtureText } from "./helpers/models-fixtures.ts";
 
+class ModelsManifestConfigFileTestOperationError extends S.TaggedError<
+  ModelsManifestConfigFileTestOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "ModelsManifestConfigFileTestOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in models-manifest-config-file.test.ts." }
+) {}
+
 const manifestFixtures = [
   "manifest.yaml",
   "manifest-codex-current.yaml",
@@ -39,7 +48,11 @@ const decodeManifest = S.decodeUnknownEffect(ModelsManifest);
 const encodeManifest = S.encodeUnknownEffect(ModelsManifest);
 
 // An independent reader: Effect's YAML parser, then the schema decode.
-const independentLoad = (text: string) => Effect.try(() => EffectYaml.parse(text)).pipe(Effect.flatMap(decodeManifest));
+const independentLoad = (text: string) =>
+  Effect.try({
+    try: () => EffectYaml.parse(text),
+    catch: (cause) => ModelsManifestConfigFileTestOperationError.make({ cause }),
+  }).pipe(Effect.flatMap(decodeManifest));
 
 const writeTemp = Effect.fnUntraced(function* (name: string, content: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -76,17 +89,26 @@ layer(Layer.mergeAll(storeLayer, NodeServices.layer), { timeout: "30 seconds" })
           const file = yield* writeTemp("models.yaml", text);
           const loaded = yield* store.load(file);
           const independent = yield* independentLoad(text);
-          expect(yield* encodeManifest(loaded)).toEqual(yield* encodeManifest(independent));
+          const encodedManifest = yield* encodeManifest(loaded);
+          const expectation = expect(encodedManifest);
+          const encodedManifest1 = yield* encodeManifest(independent);
+          expectation.toEqual(encodedManifest1);
         })
       );
 
       it.effect(`round-trips ${fixture} through the writer and the reader`, () =>
         Effect.gen(function* () {
           const store = yield* ModelsManifestStore;
-          const loaded = yield* store.load(yield* writeTemp("models.yaml", yield* readFixtureText(fixture)));
+          const readFixtureText10 = yield* readFixtureText(fixture);
+          const writeTemp1 = yield* writeTemp("models.yaml", readFixtureText10);
+          const loaded = yield* store.load(writeTemp1);
           const target = yield* freshTarget();
           yield* store.init(target, loaded);
-          expect(yield* encodeManifest(yield* store.load(target))).toEqual(yield* encodeManifest(loaded));
+          const loaded11 = yield* store.load(target);
+          const encodedManifest2 = yield* encodeManifest(loaded11);
+          const expectation1 = expect(encodedManifest2);
+          const encodedManifest4 = yield* encodeManifest(loaded);
+          expectation1.toEqual(encodedManifest4);
         })
       );
     }
@@ -96,7 +118,11 @@ layer(Layer.mergeAll(storeLayer, NodeServices.layer), { timeout: "30 seconds" })
         const store = yield* ModelsManifestStore;
         const target = yield* freshTarget();
         yield* store.init(target, seedModelsManifest);
-        expect(yield* encodeManifest(yield* store.load(target))).toEqual(yield* encodeManifest(seedModelsManifest));
+        const loaded12 = yield* store.load(target);
+        const encodedManifest3 = yield* encodeManifest(loaded12);
+        const expectation2 = expect(encodedManifest3);
+        const encodedManifest6 = yield* encodeManifest(seedModelsManifest);
+        expectation2.toEqual(encodedManifest6);
       })
     );
 
@@ -124,8 +150,11 @@ layer(Layer.mergeAll(storeLayer, NodeServices.layer), { timeout: "30 seconds" })
           bindings: [...seed.bindings, retiredBinding],
           targets: [...seed.targets, retiredTarget],
         };
-        const loaded = yield* store.load(yield* writeTemp("models.yaml", yield* Yaml.stringify(legacy, legacyLayout)));
-        expect(yield* encodeManifest(loaded)).toEqual(seed);
+        const stringify13 = yield* Yaml.stringify(legacy, legacyLayout);
+        const writeTemp4 = yield* writeTemp("models.yaml", stringify13);
+        const loaded = yield* store.load(writeTemp4);
+        const encodedManifest5 = yield* encodeManifest(loaded);
+        expect(encodedManifest5).toEqual(seed);
       })
     );
 
@@ -148,8 +177,11 @@ layer(Layer.mergeAll(storeLayer, NodeServices.layer), { timeout: "30 seconds" })
           ],
         };
         const legacy = { ...seed, targets: [...seed.targets, retiredTarget] };
-        const loaded = yield* store.load(yield* writeTemp("models.yaml", yield* Yaml.stringify(legacy, legacyLayout)));
-        expect(yield* encodeManifest(loaded)).toEqual(seed);
+        const stringify14 = yield* Yaml.stringify(legacy, legacyLayout);
+        const writeTemp6 = yield* writeTemp("models.yaml", stringify14);
+        const loaded = yield* store.load(writeTemp6);
+        const encodedManifest7 = yield* encodeManifest(loaded);
+        expect(encodedManifest7).toEqual(seed);
       })
     );
 
@@ -187,12 +219,15 @@ layer(Layer.mergeAll(storeLayer, NodeServices.layer), { timeout: "30 seconds" })
           locators: [block("retired-only", ["jsdoc.migrate-titles"])],
         };
         const legacy = { ...seed, targets: [...seed.targets, mixedTarget, retiredOnlyTarget] };
-        const loaded = yield* store.load(yield* writeTemp("models.yaml", yield* Yaml.stringify(legacy, legacyLayout)));
+        const stringify15 = yield* Yaml.stringify(legacy, legacyLayout);
+        const writeTemp8 = yield* writeTemp("models.yaml", stringify15);
+        const loaded = yield* store.load(writeTemp8);
         const expected = {
           ...seed,
           targets: [...seed.targets, { ...mixedTarget, locators: [block("mixed-roles", ["qa.judge"])] }],
         };
-        expect(yield* encodeManifest(loaded)).toEqual(expected);
+        const encodedManifest9 = yield* encodeManifest(loaded);
+        expect(encodedManifest9).toEqual(expected);
       })
     );
 

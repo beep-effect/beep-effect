@@ -65,7 +65,8 @@ const makeQuestionQueue = (log: AnswerLogShape, writeLock: Semaphore.Semaphore):
     items: ReadonlyArray<QuestionReviewItem>
   ) {
     const asked = HashSet.fromIterable(A.map(items, ({ itemId }) => itemId));
-    return latestRowByItem(A.filter(yield* log.rows, ({ itemId }) => HashSet.has(asked, itemId)));
+    const rows1 = yield* log.rows;
+    return latestRowByItem(A.filter(rows1, ({ itemId }) => HashSet.has(asked, itemId)));
   });
 
   const digest = Effect.fn("QuestionQueue.digest")(function* (selection: DigestSelection) {
@@ -81,7 +82,9 @@ const makeQuestionQueue = (log: AnswerLogShape, writeLock: Semaphore.Semaphore):
   }) {
     yield* ensureAnswers(input.item, input.answer);
     const rows = yield* log.rows;
-    const row = answerRow(input.answer, nextItemRevision(rows, input.item.itemId), yield* DateTime.now);
+    const argument = nextItemRevision(rows, input.item.itemId);
+    const now1 = yield* DateTime.now;
+    const row = answerRow(input.answer, argument, now1);
     yield* log.append(row);
     return row;
   }, writeLock.withPermits(1));

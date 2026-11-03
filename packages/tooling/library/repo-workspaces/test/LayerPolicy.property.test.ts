@@ -15,7 +15,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -34,12 +35,18 @@ it.effect.prop(
       const json = S.fromJsonString(S.Unknown);
       const input = yield* S.encodeEffect(LayerPolicy)(policy);
       const decoded = yield* LayerPolicy.decode(input);
-      const text = yield* S.encodeEffect(json)(yield* S.encodeEffect(LayerPolicy)(decoded));
-      const reparsed = yield* LayerPolicy.decode(yield* S.decodeEffect(json)(text));
+      const argument = S.encodeEffect(json);
+      const value4 = yield* S.encodeEffect(LayerPolicy)(decoded);
+      const text = yield* argument(value4);
+      const value2 = yield* S.decodeEffect(json)(text);
+      const reparsed = yield* LayerPolicy.decode(value2);
       assert.isTrue(S.toEquivalence(LayerPolicy)(decoded, policy));
       assert.isTrue(S.toEquivalence(LayerPolicy)(reparsed, decoded));
       assert.deepStrictEqual(reparsed.effectiveFields, decoded.effectiveFields);
-      assert.strictEqual(yield* S.encodeEffect(json)(yield* S.encodeEffect(LayerPolicy)(reparsed)), text);
+      const argument1 = S.encodeEffect(json);
+      const value5 = yield* S.encodeEffect(LayerPolicy)(reparsed);
+      const value3 = yield* argument1(value5);
+      assert.strictEqual(value3, text);
     }),
   runs
 );

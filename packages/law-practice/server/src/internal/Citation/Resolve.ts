@@ -269,7 +269,8 @@ export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(fun
   ) {
     if (!O.exists(citation.metadata.antecedentGuess, Str.isNonEmpty)) return yield* missingAntecedent(mention);
     const guess = stripCitationAntecedentPunctuation(O.getOrElse(citation.metadata.antecedentGuess, () => ""));
-    return yield* select(A.fromIterable(yield* partyCandidates(fulls, guess)), mention);
+    const citationResult1 = yield* partyCandidates(fulls, guess);
+    return yield* select(A.fromIterable(citationResult1), mention);
   });
   const resolveReference = Effect.fn("Citation.resolveReferenceMention")(function* (
     mention: CitationMention,

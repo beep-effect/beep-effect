@@ -96,12 +96,13 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
           new URL("../../use-cases/test/fixtures/eyecite/model-mutation-observations.json", import.meta.url)
         )
       );
-      expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-        "dca8b55d551d50c6ca0a2917ebce372b20894d4001b7a9738053c7d96d3cf841"
-      );
-      const rows = A.filter((yield* S.decodeEffect(Corpus)(raw)).cases, (row) => row.family === "mutable-key");
+      const citationResult1 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+      expect(citationResult1).toBe("dca8b55d551d50c6ca0a2917ebce372b20894d4001b7a9738053c7d96d3cf841");
+      const citationResult2 = yield* S.decodeEffect(Corpus)(raw);
+      const rows = A.filter(citationResult2.cases, (row) => row.family === "mutable-key");
       expect(rows).toHaveLength(3);
-      const frozen = yield* makeCitationFrozenEditions((yield* loadCitationFrozenEditionFixtures()).bundle);
+      const citationResult3 = yield* loadCitationFrozenEditionFixtures();
+      const frozen = yield* makeCitationFrozenEditions(citationResult3.bundle);
       const factory = yield* makeCitationCallbackRuntimeIndexFactory().pipe(
         Effect.provideService(CitationFrozenEditions, frozen)
       );
@@ -195,11 +196,13 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
             reference: CitationGroupMember,
             page: string
           ) {
-            const wire = yield* S.encodeEffect(Citation)(yield* owner.citationOf(reference));
-            yield* owner.writeCitation(
-              reference,
-              yield* S.decodeEffect(Citation)({ ...wire, components: { ...wire.components, page } })
-            );
+            const citationResult4 = yield* owner.citationOf(reference);
+            const wire = yield* S.encodeEffect(Citation)(citationResult4);
+            const citationResult5 = yield* S.decodeEffect(Citation)({
+              ...wire,
+              components: { ...wire.components, page },
+            });
+            yield* owner.writeCitation(reference, citationResult5);
           }, Effect.mapError(invalid));
           let events = A.empty<S.Json>();
           const callbacks = CitationResolutionCallbacks.of({
@@ -208,12 +211,14 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
               const before = yield* objects;
               const resource = yield* defaults.full(mention);
               if (row.name === "default-page-before-insertion") yield* change(ref(mention), "2");
+              const citationResult6 = yield* objects;
+              const citationResult7 = yield* present(resource);
               events = A.append(events, {
                 slot: "full",
                 mention: indexOf(mention.id),
                 before,
-                after: yield* objects,
-                result: yield* present(resource),
+                after: citationResult6,
+                result: citationResult7,
               });
               return resource;
             }),
@@ -224,15 +229,19 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
                 row.name === "default-page-after-insertion-two" ? "2" : "20"
               );
               const output = yield* defaults.supra(arg);
+              const citationResult8 = yield* owner.readFulls;
+              const citationResult9 = yield* Effect.forEach(citationResult8, (entry) => view(entry.citation), {
+                concurrency: 1,
+              });
+              const citationResult10 = yield* view(ref(arg.mention));
+              const citationResult11 = yield* present(output.resource);
               events = A.append(events, {
                 slot: "supra",
                 mention: indexOf(arg.mention.id),
                 before,
-                after: yield* Effect.forEach(yield* owner.readFulls, (entry) => view(entry.citation), {
-                  concurrency: 1,
-                }),
-                current: yield* view(ref(arg.mention)),
-                result: yield* present(output.resource),
+                after: citationResult9,
+                current: citationResult10,
+                result: citationResult11,
               });
               return output;
             }),
@@ -243,17 +252,21 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
                 { concurrency: 1 }
               );
               const output = yield* defaults.id(arg);
+              const citationResult12 = yield* owner.read;
+              const citationResult13 = yield* Effect.forEach(
+                A.flatMap(citationResult12, (group) => group.members),
+                view,
+                { concurrency: 1 }
+              );
+              const citationResult14 = yield* view(ref(arg.mention));
+              const citationResult15 = yield* present(output.resource);
               events = A.append(events, {
                 slot: "id",
                 mention: indexOf(arg.mention.id),
                 before,
-                after: yield* Effect.forEach(
-                  A.flatMap(yield* owner.read, (group) => group.members),
-                  view,
-                  { concurrency: 1 }
-                ),
-                current: yield* view(ref(arg.mention)),
-                result: yield* present(output.resource),
+                after: citationResult13,
+                current: citationResult14,
+                result: citationResult15,
               });
               return output;
             }),
@@ -270,10 +283,10 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
             )
           );
           expect({ status: "value", groups }, row.name).toEqual(row.outcome);
-          expect(
-            yield* Effect.forEach(result.mentions, (mention) => semanticView(ref(mention), mention.citation)),
-            row.name
-          ).toEqual(row.objects);
+          const citationResult16 = yield* Effect.forEach(result.mentions, (mention) =>
+            semanticView(ref(mention), mention.citation)
+          );
+          expect(citationResult16, row.name).toEqual(row.objects);
           const descriptors = yield* makeCitationRegisteredSessionDescriptors(result).pipe(
             Effect.provideService(CitationFrozenEditions, frozen)
           );
@@ -295,7 +308,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
             row.name
           ).toEqual(row.name === "default-page-after-insertion" ? [0, 1, 1] : A.map(result.mentions, () => 0));
           const codec = S.fromJsonString(CitationDocumentReceipt);
-          const persisted = yield* S.decodeEffect(codec)(yield* S.encodeEffect(codec)(receipt));
+          const citationResult17 = yield* S.encodeEffect(codec)(receipt);
+          const persisted = yield* S.decodeEffect(codec)(citationResult17);
           const restored = yield* restoreCitationDocument({
             receipt: persisted,
             editions: [],
@@ -332,15 +346,13 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
               full: Effect.fn("RuntimeSessionProjector.replayFull")(function* (mention: CitationMention) {
                 const resource = yield* replayDefaults.full(mention);
                 const reference = ref(mention);
-                const wire = yield* S.encodeEffect(Citation)(yield* replayOwner.citationOf(reference)).pipe(
-                  Effect.mapError(invalid)
-                );
-                yield* replayOwner.writeCitation(
-                  reference,
-                  yield* S.decodeEffect(Citation)({ ...wire, components: { ...wire.components, page: "2" } }).pipe(
-                    Effect.mapError(invalid)
-                  )
-                );
+                const citationResult18 = yield* replayOwner.citationOf(reference);
+                const wire = yield* S.encodeEffect(Citation)(citationResult18).pipe(Effect.mapError(invalid));
+                const citationResult19 = yield* S.decodeEffect(Citation)({
+                  ...wire,
+                  components: { ...wire.components, page: "2" },
+                }).pipe(Effect.mapError(invalid));
+                yield* replayOwner.writeCitation(reference, citationResult19);
                 return resource;
               }),
             });
@@ -377,7 +389,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
   );
   it.effect("preserves runtime list aliases and rejects forged/foreign references without corrupting entries", () =>
     Effect.gen(function* () {
-      const frozen = yield* makeCitationFrozenEditions((yield* loadCitationFrozenEditionFixtures()).bundle);
+      const citationResult20 = yield* loadCitationFrozenEditionFixtures();
+      const frozen = yield* makeCitationFrozenEditions(citationResult20.bundle);
       const factory = yield* makeCitationCallbackRuntimeIndexFactory().pipe(
         Effect.provideService(CitationFrozenEditions, frozen)
       );
@@ -403,26 +416,31 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
         owner.start,
         () =>
           Effect.gen(function* () {
-            expect(yield* owner.readListNodes).toEqual([]);
+            const citationResult21 = yield* owner.readListNodes;
+            expect(citationResult21).toEqual([]);
             const first = yield* owner.canonicalResource(ref);
             const alias = yield* owner.canonicalResource(ref);
             const list = yield* owner.allocate([ref]);
             yield* owner.set(first, list);
-            expect((yield* owner.get(alias)).slot).toBe(list.slot);
+            const citationResult22 = yield* owner.get(alias);
+            expect(citationResult22.slot).toBe(list.slot);
             yield* owner.write(list, [other, ref]);
-            expect(yield* owner.readList(yield* owner.get(first))).toEqual([other, ref]);
+            const citationResult23 = yield* owner.get(first);
+            const citationResult24 = yield* owner.readList(citationResult23);
+            expect(citationResult24).toEqual([other, ref]);
             const before = yield* owner.read;
             if (first._tag !== "Registered") return yield* invalid();
-            expect((yield* Effect.flip(owner.get({ ...first, slot: 999 }))).reason).toBe("identity-failed");
-            expect((yield* Effect.flip(owner.get(yield* normalizeCallbackFixtureResource("base")))).reason).toBe(
-              "identity-failed"
+            const citationResult25 = yield* Effect.flip(owner.get({ ...first, slot: 999 }));
+            expect(citationResult25.reason).toBe("identity-failed");
+            const citationResult26 = yield* normalizeCallbackFixtureResource("base");
+            const citationResult27 = yield* Effect.flip(owner.get(citationResult26));
+            expect(citationResult27.reason).toBe("identity-failed");
+            const citationResult28 = yield* Effect.flip(
+              owner.resourceKey(CitationCallbackResource.cases.Unhashable.make({ truthy: false, value: [] }))
             );
-            expect(
-              (yield* Effect.flip(
-                owner.resourceKey(CitationCallbackResource.cases.Unhashable.make({ truthy: false, value: [] }))
-              )).reason
-            ).toBe("unhashable-resource");
-            expect(yield* owner.read).toEqual(before);
+            expect(citationResult28.reason).toBe("unhashable-resource");
+            const citationResult29 = yield* owner.read;
+            expect(citationResult29).toEqual(before);
             const foreignWork = yield* makeCitationResolutionWork(prepared.limits);
             const foreign = yield* makeCitationCallbackDictionary(prepared).pipe(
               Effect.provideService(CitationResolutionWork, foreignWork),
@@ -433,28 +451,36 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
               () =>
                 Effect.gen(function* () {
                   const resource = yield* foreign.canonicalResource(ref);
-                  expect((yield* Effect.flip(owner.validateResource(resource))).reason).toBe("identity-failed");
+                  const citationResult30 = yield* Effect.flip(owner.validateResource(resource));
+                  expect(citationResult30.reason).toBe("identity-failed");
                 }),
               () => foreign.close
             );
-            expect(
-              (yield* Effect.flip(owner.validateResource({ ...first, value: "forged canonical presentation" }))).reason
-            ).toBe("identity-failed");
+            const citationResult31 = yield* Effect.flip(
+              owner.validateResource({ ...first, value: "forged canonical presentation" })
+            );
+            expect(citationResult31.reason).toBe("identity-failed");
             yield* owner.clear;
-            expect(yield* owner.read).toEqual([]);
+            const citationResult32 = yield* owner.read;
+            expect(citationResult32).toEqual([]);
             yield* owner.write(list, []);
             yield* owner.set(first, list);
-            expect((yield* owner.read)[0]?.members).toEqual([]);
+            const citationResult33 = yield* owner.read;
+            expect(citationResult33[0]?.members).toEqual([]);
+            const citationResult34 = yield* owner.remove(first);
             assertSome(
-              O.map(yield* owner.remove(first), (handle) => handle.slot),
+              O.map(citationResult34, (handle) => handle.slot),
               list.slot
             );
-            expect(yield* owner.read).toEqual([]);
-            expect(yield* owner.readList(list)).toEqual([]);
+            const citationResult35 = yield* owner.read;
+            expect(citationResult35).toEqual([]);
+            const citationResult36 = yield* owner.readList(list);
+            expect(citationResult36).toEqual([]);
           }),
         () => owner.close
       );
-      expect((yield* Effect.flip(owner.read)).reason).toBe("invalid-input");
+      const citationResult37 = yield* Effect.flip(owner.read);
+      expect(citationResult37.reason).toBe("invalid-input");
     })
   );
 });

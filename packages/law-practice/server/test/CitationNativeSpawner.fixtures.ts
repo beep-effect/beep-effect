@@ -73,7 +73,7 @@ export const makeCitationNodeTestRuntime = Effect.fn("NativeSourceTest.nodeRunti
 ) {
   const path = yield* Path.Path;
   const executable = yield* citationNodeTestExecutable;
-  const bundle = yield* Effect.tryPromise(() =>
+  const bundle = yield* Effect.promise(() =>
     Bun.build({
       entrypoints: [entrypoint],
       target: "node",
@@ -82,7 +82,7 @@ export const makeCitationNodeTestRuntime = Effect.fn("NativeSourceTest.nodeRunti
       outdir: cwd,
       naming: "worker.mjs",
     })
-  ).pipe(Effect.orDie);
+  );
   expect(bundle.success).toBe(true);
   return CitationNativeProcessRuntime.make({ kind: "node", executable, cwd, workerFile: path.join(cwd, "worker.mjs") });
 });

@@ -17,6 +17,15 @@ import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
+class AccountCostControlsTestOperationError extends S.TaggedError<
+  AccountCostControlsTestOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "AccountCostControlsTestOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in AccountCostControls.test.ts." }
+) {}
+
 const decode = S.decodeUnknownResult(AccountCostControlsConfig);
 
 describe("@beep/infra AccountCostControls", { concurrent: false }, () => {
@@ -67,13 +76,15 @@ describe("@beep/infra AccountCostControls", { concurrent: false }, () => {
 
   it.effect("redacts malformed recipient values at the Pulumi output boundary", () =>
     Effect.acquireUseRelease(
-      Effect.tryPromise(() =>
-        pulumi.runtime.setMocks(
-          { call: () => ({}), newResource: (args) => ({ id: `${args.name}-id`, state: args.inputs }) },
-          "beep-effect",
-          "test"
-        )
-      ),
+      Effect.tryPromise({
+        try: () =>
+          pulumi.runtime.setMocks(
+            { call: () => ({}), newResource: (args) => ({ id: `${args.name}-id`, state: args.inputs }) },
+            "beep-effect",
+            "test"
+          ),
+        catch: (cause) => AccountCostControlsTestOperationError.make({ cause }),
+      }),
       () =>
         Effect.sync(() => {
           const invalid = ["private-recipient-value"];
@@ -94,7 +105,11 @@ describe("@beep/infra AccountCostControls", { concurrent: false }, () => {
             apply.mockRestore();
           }
         }),
-      () => Effect.tryPromise(() => pulumi.runtime.disconnect())
+      () =>
+        Effect.tryPromise({
+          try: () => pulumi.runtime.disconnect(),
+          catch: (cause) => AccountCostControlsTestOperationError.make({ cause }),
+        })
     )
   );
 
@@ -104,20 +119,22 @@ describe("@beep/infra AccountCostControls", { concurrent: false }, () => {
       const resources = MutableHashMap.empty<string, unknown>();
       const types = MutableHashMap.empty<string, string>();
       yield* Effect.acquireUseRelease(
-        Effect.tryPromise(() =>
-          pulumi.runtime.setMocks(
-            {
-              call: () => ({}),
-              newResource: (args) => {
-                MutableHashMap.set(resources, args.name, args.inputs);
-                MutableHashMap.set(types, args.name, args.type);
-                return { id: `${args.name}-id`, state: { ...args.inputs, arn: `arn:example:${args.name}` } };
+        Effect.tryPromise({
+          try: () =>
+            pulumi.runtime.setMocks(
+              {
+                call: () => ({}),
+                newResource: (args) => {
+                  MutableHashMap.set(resources, args.name, args.inputs);
+                  MutableHashMap.set(types, args.name, args.type);
+                  return { id: `${args.name}-id`, state: { ...args.inputs, arn: `arn:example:${args.name}` } };
+                },
               },
-            },
-            "beep-effect",
-            "test"
-          )
-        ),
+              "beep-effect",
+              "test"
+            ),
+          catch: (cause) => AccountCostControlsTestOperationError.make({ cause }),
+        }),
         () =>
           Effect.sync(
             () =>
@@ -127,7 +144,11 @@ describe("@beep/infra AccountCostControls", { concurrent: false }, () => {
                 pulumi.secret(["operator@example.com", "operator@example.com"])
               )
           ),
-        () => Effect.tryPromise(() => pulumi.runtime.disconnect())
+        () =>
+          Effect.tryPromise({
+            try: () => pulumi.runtime.disconnect(),
+            catch: (cause) => AccountCostControlsTestOperationError.make({ cause }),
+          })
       );
 
       const resource = (name: string) => O.getOrThrow(MutableHashMap.get(resources, name));

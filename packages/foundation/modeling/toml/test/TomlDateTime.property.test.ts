@@ -15,7 +15,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assertTrue(S.toEquivalence(schema)(value, decoded));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -32,12 +33,17 @@ const dateLaws = <T extends { toString(): string }, E>(name: string, schema: S.C
     ([value]) =>
       Effect.gen(function* () {
         const source = `value = ${value.toString()}\n`;
-        const parsed = yield* S.decodeUnknownEffect(S.Struct({ value: schema }))(yield* Toml.parse(source));
+        const argument = S.decodeUnknownEffect(S.Struct({ value: schema }));
+        const parsed1 = yield* Toml.parse(source);
+        const parsed = yield* argument(parsed1);
         assertTrue(S.toEquivalence(schema)(parsed.value, value));
         assert.strictEqual(parsed.value.toString(), value.toString());
         const canonical = yield* Toml.stringify(parsed);
-        assert.strictEqual(yield* Toml.stringify(yield* Toml.parse(canonical)), canonical);
-        assert.deepStrictEqual(yield* Toml.parse(canonical), parsed);
+        const parsed4 = yield* Toml.parse(canonical);
+        const stringify2 = yield* Toml.stringify(parsed4);
+        assert.strictEqual(stringify2, canonical);
+        const parsed3 = yield* Toml.parse(canonical);
+        assert.deepStrictEqual(parsed3, parsed);
       }),
     runs
   );

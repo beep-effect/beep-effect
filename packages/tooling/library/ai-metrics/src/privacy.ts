@@ -676,8 +676,9 @@ export const makeAiMetricsSourceAttribution = Effect.fn("AiMetrics.makeAiMetrics
   readonly sourcePath: string;
 }) {
   const claudeAttribution = Effect.fn("AiMetrics.makeAiMetricsSourceAttribution.claude")(function* () {
+    const hashPrivateIdentifier1 = yield* hashPrivateIdentifier(sourcePath, hashSalt);
     return AiMetricsSourceAttribution.make({
-      sessionIdHash: O.some(yield* hashPrivateIdentifier(sourcePath, hashSalt)),
+      sessionIdHash: O.some(hashPrivateIdentifier1),
       sourceRole: pathRoleFor(relativePath),
     });
   });
@@ -702,8 +703,9 @@ export const makeAiMetricsSourceAttribution = Effect.fn("AiMetrics.makeAiMetrics
     });
   });
   const openClawAttribution = Effect.fn("AiMetrics.makeAiMetricsSourceAttribution.openclaw")(function* () {
+    const hashPrivateIdentifier2 = yield* hashPrivateIdentifier("openclaw-gateway.service", hashSalt);
     return AiMetricsSourceAttribution.make({
-      sessionIdHash: O.some(yield* hashPrivateIdentifier("openclaw-gateway.service", hashSalt)),
+      sessionIdHash: O.some(hashPrivateIdentifier2),
       sourceRole: AiMetricsSourceRole.Enum.gateway_metadata,
     });
   });

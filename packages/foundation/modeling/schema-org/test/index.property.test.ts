@@ -36,7 +36,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assertTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -70,8 +71,13 @@ it.effect.prop(
       const body = document.toScriptBody();
       const parsed = yield* S.decodeEffect(json)(body);
       assertTrue(S.toEquivalence(S.Json)(parsed, document.toJsonLd()));
-      assert.deepStrictEqual(yield* S.decodeEffect(json)(yield* S.encodeEffect(json)(parsed)), parsed);
-      const restored = yield* S.decodeEffect(JsonLdDocument)(yield* S.encodeEffect(JsonLdDocument)(document));
+      const argument = S.decodeEffect(json);
+      const value3 = yield* S.encodeEffect(json)(parsed);
+      const value2 = yield* argument(value3);
+      assert.deepStrictEqual(value2, parsed);
+      const argument1 = S.decodeEffect(JsonLdDocument);
+      const value4 = yield* S.encodeEffect(JsonLdDocument)(document);
+      const restored = yield* argument1(value4);
       assert.strictEqual(restored.toScriptBody(), body);
       const escape = flow(
         Str.replaceAll("<", "\\u003c"),

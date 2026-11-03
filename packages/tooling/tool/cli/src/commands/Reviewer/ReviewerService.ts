@@ -205,7 +205,8 @@ export const ReviewerLive = Layer.effect(
         const before = yield* readClassifiedPull(pr);
         if (!A.every([before.head.sha === sha, before.changed_files < 3000], identity))
           return yield* error("Cannot classify a moved or truncated PR head as L0.");
-        const files = A.map(yield* pulls.listFiles(pr, { page: PageOptions.all }).pipe(onRepo), (file) =>
+        const pipe1 = yield* pulls.listFiles(pr, { page: PageOptions.all }).pipe(onRepo);
+        const files = A.map(pipe1, (file) =>
           ReviewerChangedFile.make({
             filename: file.path,
             ...O.getSomesStruct({ previous_filename: O.fromUndefinedOr(file.previousPath) }),

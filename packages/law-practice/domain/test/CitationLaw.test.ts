@@ -50,9 +50,14 @@ describe("canonical full law semantic schema", () => {
         [cfrWire, regulation],
         [uscWire, statute],
       ] as const) {
-        expect(yield* S.encodeEffect(FullLawCitation)(value)).toEqual(wire);
-        expect(yield* S.encodeEffect(Citation)(yield* S.decodeEffect(Citation)(wire))).toEqual(wire);
-        expect(yield* S.encodeEffect(FullCitation)(yield* S.decodeEffect(FullCitation)(wire))).toEqual(wire);
+        const citationResult3 = yield* S.encodeEffect(FullLawCitation)(value);
+        expect(citationResult3).toEqual(wire);
+        const citationResult1 = yield* S.decodeEffect(Citation)(wire);
+        const citationResult4 = yield* S.encodeEffect(Citation)(citationResult1);
+        expect(citationResult4).toEqual(wire);
+        const citationResult2 = yield* S.decodeEffect(FullCitation)(wire);
+        const citationResult6 = yield* S.encodeEffect(FullCitation)(citationResult2);
+        expect(citationResult6).toEqual(wire);
       }
     })
   );
@@ -67,7 +72,8 @@ describe("canonical full law semantic schema", () => {
       O.fromUndefinedOr(components.page).pipe(O.getOrThrow, assertNone);
       expect(R.has(components, "chapter")).toBe(false);
       assertSome(O.fromUndefinedOr(components.title).pipe(O.getOrThrow), "0035");
-      expect(yield* S.encodeEffect(CitationComponents)(components)).toEqual({
+      const citationResult8 = yield* S.encodeEffect(CitationComponents)(components);
+      expect(citationResult8).toEqual({
         page: null,
         custom_section: "§ 2-A",
         title: "0035",
@@ -86,9 +92,11 @@ describe("canonical full law semantic schema", () => {
       assertNone(unknown.selectedEdition);
       expect(ambiguous.editions).toEqual([cfr, usc, cfr]);
       const retained = yield* S.decodeEffect(CitationPublication)({ editions: [cfr], selectedEdition: usc });
-      expect(yield* S.encodeEffect(CitationPublication)(retained)).toEqual({ editions: [cfr], selectedEdition: usc });
+      const citationResult7 = yield* S.encodeEffect(CitationPublication)(retained);
+      expect(citationResult7).toEqual({ editions: [cfr], selectedEdition: usc });
       const cleared = yield* S.decodeEffect(CitationPublication)({ editions: [], selectedEdition: cfr });
-      expect(yield* S.encodeEffect(CitationPublication)(cleared)).toEqual({ editions: [], selectedEdition: cfr });
+      const citationResult5 = yield* S.encodeEffect(CitationPublication)(cleared);
+      expect(citationResult5).toEqual({ editions: [], selectedEdition: cfr });
     })
   );
 

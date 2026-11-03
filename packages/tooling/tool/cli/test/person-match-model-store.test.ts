@@ -132,8 +132,10 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
 
           yield* expectIntegrityFailure(prepareAdaFaceArtifacts(root), "integrity mismatch for aligner");
 
-          expect(yield* fs.exists(lockPath)).toBe(false);
-          expect(yield* fs.readDirectory(path.join(root, "pinned"))).toEqual(["aligner"]);
+          const exists1 = yield* fs.exists(lockPath);
+          expect(exists1).toBe(false);
+          const readDirectory2 = yield* fs.readDirectory(path.join(root, "pinned"));
+          expect(readDirectory2).toEqual(["aligner"]);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -151,8 +153,10 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
 
           yield* expectIntegrityFailure(prepareAdaFaceArtifacts(root), "Refusing a dangling model artifact symlink");
 
-          expect(yield* fs.exists(lockPath)).toBe(false);
-          expect(yield* fs.readLink(artifactPath)).toBe(path.join(root, "missing-model.safetensors"));
+          const exists3 = yield* fs.exists(lockPath);
+          expect(exists3).toBe(false);
+          const readLink4 = yield* fs.readLink(artifactPath);
+          expect(readLink4).toBe(path.join(root, "missing-model.safetensors"));
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -174,7 +178,8 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
             "Refusing a symlinked or aliased model artifact"
           );
 
-          expect(yield* fs.exists(path.join(root, ".adaface-model-store.lock"))).toBe(false);
+          const exists5 = yield* fs.exists(path.join(root, ".adaface-model-store.lock"));
+          expect(exists5).toBe(false);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -191,7 +196,8 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
 
           expect(error._tag).toBe("MatchPersonModelAcquisitionError");
           expect(error.message).toContain("Could not acquire the AdaFace model-store lock");
-          expect(yield* fs.readFileString(lockPath)).toBe("active-owner-token");
+          const readFileString6 = yield* fs.readFileString(lockPath);
+          expect(readFileString6).toBe("active-owner-token");
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );

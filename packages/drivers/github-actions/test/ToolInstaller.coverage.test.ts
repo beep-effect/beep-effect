@@ -136,8 +136,10 @@ describe("ToolInstaller failure boundaries", () => {
           yield* fs.writeFileString("/source", "payload");
           const tool = yield* ToolInstaller;
           yield* expectError(tool.cacheFile("/source", "bin", "tool", "1"), "cacheFailed", "tool");
-          assertNone(yield* tool.find("tool", "1"));
-          assert.strictEqual(yield* fs.readFileString("/source"), "payload");
+          const found = yield* tool.find("tool", "1");
+          assertNone(found);
+          const readFileString1 = yield* fs.readFileString("/source");
+          assert.strictEqual(readFileString1, "payload");
         })
       );
     });
@@ -211,15 +213,17 @@ it.effect("every unstubbed installer member dies with its member-specific diagno
       ["cacheFile", tool.cacheFile("source", "bin", "tool", "1")],
       ["provisionFile", tool.provisionFile({ tool: "tool", version: "1", url: "url", binary: "bin" })],
     ];
-    for (const [name, operation] of operations)
+    for (const [name, operation] of operations) {
+      const exit1 = yield* Effect.exit(operation);
       assertExitFailure(
-        yield* Effect.exit(operation),
+        exit1,
         Cause.die(
           UnstubbedMemberError.make({
             message: `ToolInstaller.makeTest: ${name}() was called but not stubbed — pass a \`${name}\` override.`,
           })
         )
       );
+    }
   })
 );
 it.layer(ToolInstaller.layerTest({ find: dual(2, (_tool: string, _version: string) => Effect.succeedNone) }), {
@@ -227,7 +231,8 @@ it.layer(ToolInstaller.layerTest({ find: dual(2, (_tool: string, _version: strin
 })((it) => {
   it.effect("layerTest provides the requested override", () =>
     Effect.gen(function* () {
-      assertNone(yield* (yield* ToolInstaller).find("tool", "1"));
+      const found2 = yield* (yield* ToolInstaller).find("tool", "1");
+      assertNone(found2);
     })
   );
 });
@@ -237,8 +242,9 @@ for (const mode of ["root-fault", "destination-fault", "dangling-link"] as const
     runtime((fs) => ({
       ...fs,
       realPath: Effect.fnUntraced(function* (file) {
-        if (mode === "root-fault" || (mode === "destination-fault" && Str.endsWith("/bin")(file)))
+        if (mode === "root-fault" || (mode === "destination-fault" && Str.endsWith("/bin")(file))) {
           return yield* refused;
+        }
         return yield* fs.realPath(mode === "dangling-link" && Str.endsWith("/bin")(file) ? "/missing-binary" : file);
       }),
       readLink: Effect.fnUntraced(function* (file) {

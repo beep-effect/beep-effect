@@ -48,14 +48,16 @@ it.layer(Path.layer, { timeout: "10 seconds" })("@beep/practice-m365-contacts st
   for (const [name, env, expected] of rows) {
     it.effect(name, () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* directoryIn(env), expected);
+        const directoryIn1 = yield* directoryIn(env);
+        assert.strictEqual(directoryIn1, expected);
       })
     );
   }
   for (const [name, env, , after] of divergent) {
     it.effect(`${name} (diverges on purpose: XDG absolute-only)`, () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* directoryIn(env), after);
+        const directoryIn2 = yield* directoryIn(env);
+        assert.strictEqual(directoryIn2, after);
       })
     );
   }

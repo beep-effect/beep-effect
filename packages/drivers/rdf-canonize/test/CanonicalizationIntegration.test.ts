@@ -58,21 +58,19 @@ it.layer(CanonicalizationServiceLive, { timeout: "10 seconds" })("canonicalizati
     Effect.fnUntraced(function* () {
       const service = yield* CanonicalizationService;
       const encodedDataset = yield* encodeDataset(dataset);
-      const canonicalized = yield* service.canonicalize(
-        yield* decodeCanonicalizeDatasetRequest({
-          algorithm: "rdfc-1.0",
-          dataset: encodedDataset,
-        })
-      );
+      const decodedCanonicalizeDatasetRequest = yield* decodeCanonicalizeDatasetRequest({
+        algorithm: "rdfc-1.0",
+        dataset: encodedDataset,
+      });
+      const canonicalized = yield* service.canonicalize(decodedCanonicalizeDatasetRequest);
 
       expect(pipe(canonicalized.canonicalText, Str.split("\n"))).toHaveLength(2);
 
-      const fingerprint = yield* service.fingerprint(
-        yield* decodeFingerprintDatasetRequest({
-          algorithm: "rdfc-1.0",
-          dataset: encodedDataset,
-        })
-      );
+      const decodedFingerprintDatasetRequest = yield* decodeFingerprintDatasetRequest({
+        algorithm: "rdfc-1.0",
+        dataset: encodedDataset,
+      });
+      const fingerprint = yield* service.fingerprint(decodedFingerprintDatasetRequest);
 
       expect(fingerprint.fingerprint).toMatch(/^[0-9a-f]{64}$/);
       expect(fingerprint.canonicalText).toBe(canonicalized.canonicalText);

@@ -50,12 +50,12 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("source runtime cand
     "matches all source comparison traces and bucket iteration through collisions, growth and changed hashes",
     () =>
       Effect.gen(function* () {
-        const raw = yield* (yield* FileSystem.FileSystem).readFileString(
+        const citationResult1 = yield* FileSystem.FileSystem;
+        const raw = yield* citationResult1.readFileString(
           NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/runtime-set.json", import.meta.url))
         );
-        expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-          "58ca087e488c94d2db5b6dfef2dfe1d0280f18228b6088a61b14b227d536adfa"
-        );
+        const citationResult2 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+        expect(citationResult2).toBe("58ca087e488c94d2db5b6dfef2dfe1d0280f18228b6088a61b14b227d536adfa");
         const corpus = yield* S.decodeEffect(Corpus)(raw);
         expect(corpus.cases).toHaveLength(8);
         let events = 0;
@@ -91,8 +91,9 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("source runtime cand
                 } else yield* run;
               }
               expect(comparisons, label).toEqual(event.comparisons);
+              const citationResult3 = yield* set.read;
               expect(
-                A.map(yield* set.read, (key) => key.objectId),
+                A.map(citationResult3, (key) => key.objectId),
                 label
               ).toEqual(event.objects);
             }
@@ -113,16 +114,20 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("source runtime cand
       );
       const first = CitationRuntimeDictionaryKey.make({ objectId: 0, hash: BigInt(7) });
       yield* set.add(first);
-      expect(
-        (yield* Effect.flip(set.add(CitationRuntimeDictionaryKey.make({ objectId: 1, hash: BigInt(7) })))).reason
-      ).toBe("limit-exceeded");
-      expect(yield* set.read).toEqual([first]);
+      const citationResult4 = yield* Effect.flip(
+        set.add(CitationRuntimeDictionaryKey.make({ objectId: 1, hash: BigInt(7) }))
+      );
+      expect(citationResult4.reason).toBe("limit-exceeded");
+      const citationResult5 = yield* set.read;
+      expect(citationResult5).toEqual([first]);
       const exhausted = yield* makeCitationRuntimeSet({ entries: 100, iterations: 1 }).pipe(
         Effect.provideService(CitationRuntimeDictionaryComparison, comparison)
       );
       yield* exhausted.add(first);
-      expect((yield* Effect.flip(exhausted.add(first))).reason).toBe("limit-exceeded");
-      expect(yield* exhausted.read).toEqual([first]);
+      const citationResult6 = yield* Effect.flip(exhausted.add(first));
+      expect(citationResult6.reason).toBe("limit-exceeded");
+      const citationResult7 = yield* exhausted.read;
+      expect(citationResult7).toEqual([first]);
     })
   );
 });
@@ -182,8 +187,9 @@ const replayCopyCase = Effect.fn("RuntimeSetTest.replayCopy")(function* (row: ty
   comparisons = A.empty();
   const target = yield* parent.copy;
   expect(comparisons, row.name).toEqual([]);
+  const citationResult8 = yield* target.read;
   expect(
-    A.map(yield* target.read, (key) => key.objectId),
+    A.map(citationResult8, (key) => key.objectId),
     row.name
   ).toEqual(row.copied);
   for (const event of row.events) {
@@ -193,20 +199,23 @@ const replayCopyCase = Effect.fn("RuntimeSetTest.replayCopy")(function* (row: ty
       CitationRuntimeDictionaryKey.make({ objectId: event.key, hash: A.getUnsafe(row.currentHashes, event.key) })
     );
     expect(comparisons, row.name).toEqual(event.comparisons);
+    const citationResult9 = yield* parent.read;
     expect(
-      A.map(yield* parent.read, (key) => key.objectId),
+      A.map(citationResult9, (key) => key.objectId),
       row.name
     ).toEqual(event.parent);
+    const citationResult10 = yield* target.read;
     expect(
-      A.map(yield* target.read, (key) => key.objectId),
+      A.map(citationResult10, (key) => key.objectId),
       row.name
     ).toEqual(event.target);
   }
   comparisons = A.empty();
   const nested = yield* target.copy;
   expect(comparisons, row.name).toEqual([]);
+  const citationResult11 = yield* nested.read;
   expect(
-    A.map(yield* nested.read, (key) => key.objectId),
+    A.map(citationResult11, (key) => key.objectId),
     row.name
   ).toEqual(row.nested);
 });
@@ -214,12 +223,12 @@ const replayCopyCase = Effect.fn("RuntimeSetTest.replayCopy")(function* (row: ty
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("source runtime set copies", (it) => {
   it.effect("matches independent copy layouts, cached hashes and later mutation traces", () =>
     Effect.gen(function* () {
-      const raw = yield* (yield* FileSystem.FileSystem).readFileString(
+      const citationResult12 = yield* FileSystem.FileSystem;
+      const raw = yield* citationResult12.readFileString(
         NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/runtime-set-copy.json", import.meta.url))
       );
-      expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-        "2e2a92b749916ab9dd277233fcec200402a7e629c37a5355eba8a8e1d3e69195"
-      );
+      const citationResult13 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+      expect(citationResult13).toBe("2e2a92b749916ab9dd277233fcec200402a7e629c37a5355eba8a8e1d3e69195");
       const corpus = yield* S.decodeEffect(CopyCorpus)(raw);
       let different = 0;
       for (const row of corpus.cases) {
@@ -240,8 +249,10 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("source runtime set 
       );
       const key = CitationRuntimeDictionaryKey.make({ objectId: 0, hash: BigInt(5) });
       yield* parent.add(key);
-      expect(yield* parent.copy.pipe(Effect.flip)).toMatchObject({ reason: "limit-exceeded" });
-      expect(yield* parent.read).toEqual([key]);
+      const citationResult14 = yield* parent.copy.pipe(Effect.flip);
+      expect(citationResult14).toMatchObject({ reason: "limit-exceeded" });
+      const citationResult15 = yield* parent.read;
+      expect(citationResult15).toEqual([key]);
     })
   );
 });

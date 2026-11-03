@@ -38,7 +38,8 @@ it.layer(Platform, { timeout: "30 seconds" })("CliTest", (it) => {
   it.effect("the sandbox never inherits the host HOME", () =>
     Effect.gen(function* () {
       const sandbox = yield* CliTest.sandbox({ path: yield* HOST_PATH });
-      assert.notStrictEqual(sandbox.env.HOME, O.getOrUndefined(yield* HOST_HOME));
+      const HOST_HOME1 = yield* HOST_HOME;
+      assert.notStrictEqual(sandbox.env.HOME, O.getOrUndefined(HOST_HOME1));
       assert.strictEqual(sandbox.env.NO_COLOR, "1");
       assert.isTrue(O.exists(O.fromUndefinedOr(sandbox.env.XDG_CONFIG_HOME), Str.startsWith(sandbox.home)));
     })

@@ -114,17 +114,25 @@ const program = Effect.gen(function* () {
     })
   );
   const event = batch.spans[0];
-  if (event === undefined) return yield* Effect.die("Missing fixture event");
+  if (event === undefined) {
+    return yield* Effect.die("Missing fixture event");
+  }
   let acceptedEpoch: number | null = null;
-  if (mode === "new-epoch") acceptedEpoch = (yield* native.acceptBatch(batch)).page.evidenceEpoch;
+  if (mode === "new-epoch") {
+    acceptedEpoch = (yield* native.acceptBatch(batch)).page.evidenceEpoch;
+  }
   if (mode === "before-window" || mode === "after-window") {
     const existing =
       yield* client`SELECT receipt_id AS id FROM observation_native_events WHERE event_id=${event.eventId}`.pipe(
         Effect.flatMap(decodeIdRecordRows)
       );
     const receipt =
-      existing[0] === undefined ? O.some(yield* native.acceptBatch(batch)) : yield* native.receipt(existing[0].id);
-    if (O.isNone(receipt)) return yield* Effect.die("Missing fixture receipt");
+      existing[0] === undefined
+        ? yield* Effect.asSome(native.acceptBatch(batch))
+        : yield* native.receipt(existing[0].id);
+    if (O.isNone(receipt)) {
+      return yield* Effect.die("Missing fixture receipt");
+    }
     yield* ledger.registerPage(receipt.value.page.receiptId);
     yield* ledger.prepareAttempt(
       DeliveryAttempt.make({ attemptId: id("d"), eventIds: [event.eventId], payloadDigest: id("e") })
@@ -165,10 +173,14 @@ const program = Effect.gen(function* () {
       return yield* Effect.never;
     }
   }
+  const argument = S.encodeEffect(EvidenceWindow);
+  const window1 = yield* retention.window;
+  const argument1 = yield* argument(window1);
+  const state2 = yield* ledger.state(event.eventId);
   yield* writeJson(output, {
     restored,
-    window: yield* S.encodeEffect(EvidenceWindow)(yield* retention.window),
-    state: O.getOrNull(yield* ledger.state(event.eventId)),
+    window: argument1,
+    state: O.getOrNull(state2),
     acceptedEpoch,
     events: yield* client`SELECT count(*) AS n FROM observation_delivery_events`,
     integrity: yield* client`PRAGMA integrity_check`,

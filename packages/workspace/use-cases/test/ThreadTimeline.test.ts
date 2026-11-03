@@ -72,7 +72,8 @@ describe("ThreadTimeline", () => {
         title: "Matter intake",
         workspaceId,
       });
-      expect(yield* encodeServerThreadCreateThreadInput(createInput)).toStrictEqual({
+      const encodedServerThreadCreateThreadInput = yield* encodeServerThreadCreateThreadInput(createInput);
+      expect(encodedServerThreadCreateThreadInput).toStrictEqual({
         title: "Matter intake",
         workspaceId: 7,
       });
@@ -83,7 +84,8 @@ describe("ThreadTimeline", () => {
         threadId,
       });
       assertNone(appendInput.parentTurnId);
-      deepStrictEqual(yield* encodeServerThreadAppendTurnInput(appendInput), {
+      const encodedServerThreadAppendTurnInput = yield* encodeServerThreadAppendTurnInput(appendInput);
+      deepStrictEqual(encodedServerThreadAppendTurnInput, {
         content: encodedContent,
         parentTurnId: O.none(),
         role: "user",
@@ -106,22 +108,23 @@ describe("ThreadTimeline", () => {
         ],
       };
       const timeline = yield* decodeUnknownThreadThreadTimeline(wireTimeline);
-      expect(yield* encodeThreadThreadTimeline(timeline)).toStrictEqual(wireTimeline);
+      const encodedThreadThreadTimeline = yield* encodeThreadThreadTimeline(timeline);
+      expect(encodedThreadThreadTimeline).toStrictEqual(wireTimeline);
       expect(S.is(Thread.TimelineItem)(timeline.turns[0]?.items[0])).toBe(true);
 
-      expect(
-        yield* decodeThreadTimelineTurn({
-          turnId: 20,
-          turnIndex: 0,
-          parentTurnId: null,
-          costMicros: -1,
-          items: [],
-        }).pipe(Effect.flip)
-      ).toBeDefined();
+      const pipe1 = yield* decodeThreadTimelineTurn({
+        turnId: 20,
+        turnIndex: 0,
+        parentTurnId: null,
+        costMicros: -1,
+        items: [],
+      }).pipe(Effect.flip);
+      expect(pipe1).toBeDefined();
 
       const unavailable = ServerThread.ThreadStoreUnavailable.make({ reason: "database unavailable" });
       expect(S.is(ServerThread.ThreadStoreError)(unavailable)).toBe(true);
-      expect(yield* encodeServerThreadThreadStoreError(unavailable)).toStrictEqual({
+      const encodedServerThreadThreadStoreError = yield* encodeServerThreadThreadStoreError(unavailable);
+      expect(encodedServerThreadThreadStoreError).toStrictEqual({
         _tag: "ThreadStoreUnavailable",
         reason: "database unavailable",
       });

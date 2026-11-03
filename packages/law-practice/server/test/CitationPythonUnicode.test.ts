@@ -38,12 +38,12 @@ const ShortText = S.String.check(S.isMaxLength(256));
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("lossless Python Unicode views", (it) => {
   it.effect("retains every audited native layout and its source hash independently of the text projection", () =>
     Effect.gen(function* () {
-      const raw = yield* (yield* FileSystem.FileSystem).readFileString(
+      const citationResult1 = yield* FileSystem.FileSystem;
+      const raw = yield* citationResult1.readFileString(
         NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/cleaner-unicode.json", import.meta.url))
       );
-      expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-        "0c314524ff16f1a8689b8aaf50d235a5c2439187f1e168c84b84d700160aead0"
-      );
+      const citationResult2 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+      expect(citationResult2).toBe("0c314524ff16f1a8689b8aaf50d235a5c2439187f1e168c84b84d700160aead0");
       const corpus = yield* S.decodeEffect(CorpusJson)(raw);
       const limits = (yield* defaultCitationEnginePolicy).limits;
       const unicode = yield* makeCitationPythonUnicode(limits);
@@ -60,7 +60,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("lossless Python Uni
           expect(value.pythonLength, row.name).toBe(source.pythonLength);
           expect(value.utf16Units, row.name).toBe(source.utf16Units);
           expect(Str.length(value.text), row.name).toBe(source.utf16Units);
-          expect(yield* hash.unicode(value.storage), row.name).toBe(source.hash);
+          const citationResult3 = yield* hash.unicode(value.storage);
+          expect(citationResult3, row.name).toBe(source.hash);
           const projected = yield* unicode.fromText(value.text);
           if (source.javascriptRoundtrip) expect(projected.storage, row.name).toEqual(value.storage);
           else {
@@ -79,7 +80,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("lossless Python Uni
     "round-trips schema-derived JavaScript text through canonical native storage",
     [ShortText],
     Effect.fnUntraced(function* ([text]) {
-      const unicode = yield* makeCitationPythonUnicode((yield* defaultCitationEnginePolicy).limits);
+      const citationResult4 = yield* defaultCitationEnginePolicy;
+      const unicode = yield* makeCitationPythonUnicode(citationResult4.limits);
       const value = yield* unicode.fromText(text);
       const restored = yield* unicode.fromStorage(value.storage);
       expect(restored).toEqual(value);
@@ -98,7 +100,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("lossless Python Uni
       expect(source.storage.bytes[0]).toBe(0x3d);
       expect(source.text).toBe("😀");
       expect(source.pythonLength).toBe(2);
-      expect((yield* unicode.fromText(source.text)).pythonLength).toBe(1);
+      const citationResult5 = yield* unicode.fromText(source.text);
+      expect(citationResult5.pythonLength).toBe(1);
       for (const bad of [
         null,
         { width: 3, bytes },
@@ -107,15 +110,18 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("lossless Python Uni
         { width: 4, bytes: new Uint8Array([0, 0, 17, 0]) },
         { width: 4, bytes: new Uint8Array() },
       ]) {
-        expect((yield* Effect.flip(unicode.fromStorage(bad))).reason).toBe("invalid-input");
+        const citationResult6 = yield* Effect.flip(unicode.fromStorage(bad));
+        expect(citationResult6.reason).toBe("invalid-input");
       }
       const policy = { ...limits, producedTextUtf16: 1 };
       const tight = yield* makeCitationPythonUnicode(policy);
       policy.producedTextUtf16 = 16;
-      expect((yield* Effect.flip(tight.fromText("😀"))).reason).toBe("limit-exceeded");
+      const citationResult7 = yield* Effect.flip(tight.fromText("😀"));
+      expect(citationResult7.reason).toBe("limit-exceeded");
       const tooWide = yield* Effect.flip(tight.fromStorage({ width: 4, bytes: new Uint8Array([0, 0xf6, 1, 0]) }));
       expect(tooWide.reason).toBe("limit-exceeded");
-      expect((yield* unicode.fromText("")).storage).toEqual({ width: 1, bytes: new Uint8Array() });
+      const citationResult8 = yield* unicode.fromText("");
+      expect(citationResult8.storage).toEqual({ width: 1, bytes: new Uint8Array() });
     })
   );
 });
@@ -126,8 +132,9 @@ it.effect("captures the deadline and Clock without returning a partial projectio
     const entered = yield* Deferred.make<number>();
     const wake = yield* Deferred.make<void>();
     const deadline = Duration.seconds(1);
+    const citationResult9 = yield* defaultCitationEnginePolicy;
     const unicode = yield* makeCitationPythonUnicode({
-      ...(yield* defaultCitationEnginePolicy).limits,
+      ...citationResult9.limits,
       cleanDeadline: deadline,
     }).pipe(
       Effect.provideService(Clock.Clock, {
@@ -140,7 +147,8 @@ it.effect("captures the deadline and Clock without returning a partial projectio
     const running = yield* unicode
       .fromText(Str.repeat(16_384)("A"))
       .pipe(Effect.provideService(Clock.Clock, { ...original, sleep: () => Effect.never }), Effect.forkChild);
-    expect(yield* Deferred.await(entered)).toBe(1000);
+    const citationResult10 = yield* Deferred.await(entered);
+    expect(citationResult10).toBe(1000);
     yield* Deferred.succeed(wake, undefined);
     const failed = yield* Fiber.join(running).pipe(Effect.flip);
     expect(failed.reason).toBe("deadline-exceeded");
@@ -152,7 +160,8 @@ it.effect("interrupts both representation scans without publishing a partial val
     const original = yield* Clock.Clock;
     for (const kind of ["text", "storage"]) {
       const entered = yield* Deferred.make<void>();
-      const unicode = yield* makeCitationPythonUnicode((yield* defaultCitationEnginePolicy).limits).pipe(
+      const citationResult11 = yield* defaultCitationEnginePolicy;
+      const unicode = yield* makeCitationPythonUnicode(citationResult11.limits).pipe(
         Effect.provideService(Clock.Clock, {
           ...original,
           sleep: () => Deferred.succeed(entered, undefined).pipe(Effect.andThen(Effect.never)),
@@ -165,7 +174,8 @@ it.effect("interrupts both representation scans without publishing a partial val
       ).pipe(Effect.forkChild);
       yield* Deferred.await(entered);
       yield* Fiber.interrupt(pending);
-      expect(Exit.hasInterrupts(yield* Fiber.await(pending))).toBe(true);
+      const citationResult12 = yield* Fiber.await(pending);
+      expect(Exit.hasInterrupts(citationResult12)).toBe(true);
     }
   })
 );

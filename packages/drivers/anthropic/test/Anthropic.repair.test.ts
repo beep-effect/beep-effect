@@ -58,7 +58,8 @@ describe("Anthropic repair helpers", () => {
 
       const encoded = yield* encodeJsonAnthropicToolJsonResponse(result);
       const decoded = yield* decodeJsonAnthropicToolJsonResponse(encoded);
-      expect(yield* encodeJsonAnthropicToolJsonResponse(decoded)).toBe(encoded);
+      const encodedJsonAnthropicToolJsonResponse = yield* encodeJsonAnthropicToolJsonResponse(decoded);
+      expect(encodedJsonAnthropicToolJsonResponse).toBe(encoded);
     })
   );
 

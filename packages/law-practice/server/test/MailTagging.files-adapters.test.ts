@@ -86,11 +86,15 @@ describe("MailTagging file adapters", () => {
     it.effect(
       "resolves each destination to its column, tolerates extra keys, and has no folder for an unlisted matter",
       Effect.fnUntraced(function* () {
-        const path = yield* writeText(yield* temporaryDirectory, "matter-folders.json", folderMap("9001"));
+        const temporaryDirectory1 = yield* temporaryDirectory;
+        const path = yield* writeText(temporaryDirectory1, "matter-folders.json", folderMap("9001"));
 
-        expect(yield* folderOfRun(path, acme, "uspto-incoming")).toBe("9001");
-        expect(yield* folderOfRun(path, acme, "from-client")).toBe("9002");
-        expect(yield* folderOfRun(path, globex, "uspto-incoming")).toBeNull();
+        const folderOfRun2 = yield* folderOfRun(path, acme, "uspto-incoming");
+        expect(folderOfRun2).toBe("9001");
+        const folderOfRun3 = yield* folderOfRun(path, acme, "from-client");
+        expect(folderOfRun3).toBe("9002");
+        const folderOfRun4 = yield* folderOfRun(path, globex, "uspto-incoming");
+        expect(folderOfRun4).toBeNull();
       })
     );
 
@@ -114,18 +118,10 @@ describe("MailTagging file adapters", () => {
         const corrupt = yield* writeText(directory, "matter-folders.json", '[{"familyKey":"1234.10001"}]');
         const missing = path.join(directory, "absent.json");
 
-        expect(stateError(yield* Effect.flip(folderOfRun(corrupt, acme, "from-client")))).toStrictEqual([
-          "matter-folders",
-          "corrupt",
-          "matter-folders.json",
-          null,
-        ]);
-        expect(stateError(yield* Effect.flip(folderOfRun(missing, acme, "from-client")))).toStrictEqual([
-          "matter-folders",
-          "unavailable",
-          "absent.json",
-          null,
-        ]);
+        const flip5 = yield* Effect.flip(folderOfRun(corrupt, acme, "from-client"));
+        expect(stateError(flip5)).toStrictEqual(["matter-folders", "corrupt", "matter-folders.json", null]);
+        const flip6 = yield* Effect.flip(folderOfRun(missing, acme, "from-client"));
+        expect(stateError(flip6)).toStrictEqual(["matter-folders", "unavailable", "absent.json", null]);
       })
     );
   });
@@ -139,20 +135,26 @@ describe("MailTagging file adapters", () => {
           "",
           `{"sha256":"${sha("b")}","familyKey":"5678.20002"}`,
         ];
-        const path = yield* writeText(yield* temporaryDirectory, "box-files.jsonl", A.join(index, "\n"));
+        const temporaryDirectory7 = yield* temporaryDirectory;
+        const path = yield* writeText(temporaryDirectory7, "box-files.jsonl", A.join(index, "\n"));
 
-        expect(yield* knownInRun(path, sha("a"), acme)).toBe(true);
-        expect(yield* knownInRun(path, sha("a"), globex)).toBe(false);
-        expect(yield* knownInRun(path, sha("b"), globex)).toBe(true);
-        expect(yield* knownInRun(path, sha("c"), acme)).toBe(false);
+        const knownInRun8 = yield* knownInRun(path, sha("a"), acme);
+        expect(knownInRun8).toBe(true);
+        const knownInRun9 = yield* knownInRun(path, sha("a"), globex);
+        expect(knownInRun9).toBe(false);
+        const knownInRun10 = yield* knownInRun(path, sha("b"), globex);
+        expect(knownInRun10).toBe(true);
+        const knownInRun11 = yield* knownInRun(path, sha("c"), acme);
+        expect(knownInRun11).toBe(false);
       })
     );
 
     it.effect(
       "ignores files held outside any matter, whether the family key is null or absent",
       Effect.fnUntraced(function* () {
+        const temporaryDirectory12 = yield* temporaryDirectory;
         const path = yield* writeText(
-          yield* temporaryDirectory,
+          temporaryDirectory12,
           "box-files.jsonl",
           A.join(
             [
@@ -164,9 +166,12 @@ describe("MailTagging file adapters", () => {
           )
         );
 
-        expect(yield* knownInRun(path, sha("a"), acme)).toBe(false);
-        expect(yield* knownInRun(path, sha("b"), acme)).toBe(false);
-        expect(yield* knownInRun(path, sha("c"), acme)).toBe(true);
+        const knownInRun13 = yield* knownInRun(path, sha("a"), acme);
+        expect(knownInRun13).toBe(false);
+        const knownInRun14 = yield* knownInRun(path, sha("b"), acme);
+        expect(knownInRun14).toBe(false);
+        const knownInRun15 = yield* knownInRun(path, sha("c"), acme);
+        expect(knownInRun15).toBe(true);
       })
     );
 
@@ -196,9 +201,8 @@ describe("MailTagging file adapters", () => {
 
         expect(stateError(error)).toStrictEqual(["known-documents", "corrupt", "box-files.jsonl", 2]);
         expect(error.message).toBe("box-files.jsonl line 2 did not decode");
-        expect(
-          stateError(yield* Effect.flip(knownInRun(path.join(directory, "absent.jsonl"), sha("a"), acme)))
-        ).toStrictEqual(["known-documents", "unavailable", "absent.jsonl", null]);
+        const flip16 = yield* Effect.flip(knownInRun(path.join(directory, "absent.jsonl"), sha("a"), acme));
+        expect(stateError(flip16)).toStrictEqual(["known-documents", "unavailable", "absent.jsonl", null]);
       })
     );
   });
@@ -208,13 +212,15 @@ describe("MailTagging file adapters", () => {
       "appends one line per run with the run's total, also when the run fails, and none for a run without calls",
       Effect.fnUntraced(function* () {
         const path = yield* Path.Path;
-        const ledger = path.join(yield* temporaryDirectory, "shared", "box-api-calls.jsonl");
+        const temporaryDirectory17 = yield* temporaryDirectory;
+        const ledger = path.join(temporaryDirectory17, "shared", "box-api-calls.jsonl");
         yield* oneRun(
           Effect.gen(function* () {
             const meter = yield* meterAt(ledger, "run-0001");
             yield* meter.record(box(2));
             yield* meter.record(box(1));
-            expect(yield* linesOf(ledger)).toStrictEqual([]);
+            const linesOf18 = yield* linesOf(ledger);
+            expect(linesOf18).toStrictEqual([]);
           })
         );
         const failed = yield* Effect.gen(function* () {
@@ -225,7 +231,8 @@ describe("MailTagging file adapters", () => {
         yield* oneRun(meterAt(ledger, "run-0003"));
 
         expect(failed._tag).toBe("Failure");
-        expect(yield* linesOf(ledger)).toStrictEqual([
+        const linesOf19 = yield* linesOf(ledger);
+        expect(linesOf19).toStrictEqual([
           '{"workstream":"email-tagging","runLabel":"run-0001","calls":3,"at":"1970-01-01T00:00:00.000Z","exact":true}',
           '{"workstream":"email-tagging","runLabel":"run-0002","calls":4,"at":"1970-01-01T00:00:00.000Z","exact":true}',
         ]);
@@ -236,7 +243,8 @@ describe("MailTagging file adapters", () => {
       "keeps the run's outcome when the ledger cannot be written",
       Effect.fnUntraced(function* () {
         const path = yield* Path.Path;
-        const blocker = yield* writeText(yield* temporaryDirectory, "not-a-directory", "x");
+        const temporaryDirectory20 = yield* temporaryDirectory;
+        const blocker = yield* writeText(temporaryDirectory20, "not-a-directory", "x");
         const outcome = yield* oneRun(
           Effect.gen(function* () {
             const meter = yield* meterAt(path.join(blocker, "box-api-calls.jsonl"), "run-0004");

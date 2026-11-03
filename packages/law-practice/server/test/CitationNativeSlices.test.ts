@@ -52,11 +52,11 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         const bytes = yield* fs.readFile(
           NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/native-slices.json", import.meta.url))
         );
-        expect(yield* digest.digestHex(Digest.sha256, bytes)).toBe(
-          "8c2e33785c8f38fd84875570f6e293c4e573384926e9bc7ba58b1ce8baccdec3"
-        );
+        const citationResult1 = yield* digest.digestHex(Digest.sha256, bytes);
+        expect(citationResult1).toBe("8c2e33785c8f38fd84875570f6e293c4e573384926e9bc7ba58b1ce8baccdec3");
         const controls = yield* S.decodeEffect(Corpus)(new TextDecoder().decode(bytes));
-        const input = yield* makeCitationRegexInput((yield* defaultCitationEnginePolicy).limits);
+        const citationResult2 = yield* defaultCitationEnginePolicy;
+        const input = yield* makeCitationRegexInput(citationResult2.limits);
         for (const row of controls.cases) {
           const source = yield* input.prepareUnicode(row.source, allow);
           let calls = 0;
@@ -72,13 +72,15 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
           expect(calls).toBe(1);
           expect(result, `case ${row.id}`).toEqual(row.expected);
           result.bytes.fill(255);
-          expect(yield* source.slice(row, allow)).toEqual(row.expected);
+          const citationResult3 = yield* source.slice(row, allow);
+          expect(citationResult3).toEqual(row.expected);
         }
       })
     );
     it.effect("rejects invalid bounds and preserves an allocation refusal without yielding a payload", () =>
       Effect.gen(function* () {
-        const input = yield* makeCitationRegexInput((yield* defaultCitationEnginePolicy).limits);
+        const citationResult4 = yield* defaultCitationEnginePolicy;
+        const input = yield* makeCitationRegexInput(citationResult4.limits);
         const source = yield* input.prepareText("abc", allow);
         const denied = CitationSafetyLimitExceeded.make({ operation: "extract", limit: "producedTextUtf16" });
         let calls = 0;
@@ -92,12 +94,15 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
           { start: 0, end: 4 },
           { start: 2, end: 1 },
         ]) {
-          expect(yield* source.slice(range, refuse).pipe(Effect.flip)).toMatchObject({ reason: "invalid-range" });
+          const citationResult5 = yield* source.slice(range, refuse).pipe(Effect.flip);
+          expect(citationResult5).toMatchObject({ reason: "invalid-range" });
         }
         expect(calls).toBe(0);
-        expect(yield* source.slice({ start: 0, end: 3 }, refuse).pipe(Effect.flip)).toBe(denied);
+        const citationResult6 = yield* source.slice({ start: 0, end: 3 }, refuse).pipe(Effect.flip);
+        expect(citationResult6).toBe(denied);
         expect(calls).toBe(1);
-        expect((yield* source.slice({ start: 1, end: 2 }, allow)).bytes).toEqual(new Uint8Array([98]));
+        const citationResult7 = yield* source.slice({ start: 1, end: 2 }, allow);
+        expect(citationResult7.bytes).toEqual(new Uint8Array([98]));
       })
     );
     it.effect(
@@ -107,8 +112,9 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
           const timer = yield* makeCitationNativeManualClock(Duration.millis(997));
           const disabled = yield* makeCitationNativeSleepClock(() => Effect.never);
           const entered = yield* Deferred.make<void>();
+          const citationResult8 = yield* defaultCitationEnginePolicy;
           const input = yield* makeCitationRegexInput({
-            ...(yield* defaultCitationEnginePolicy).limits,
+            ...citationResult8.limits,
             extractDeadline: Duration.millis(997),
           }).pipe(Effect.provideService(Clock.Clock, timer.clock));
           const source = yield* input.prepareText("abc", allow);
@@ -122,7 +128,8 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
             .pipe(Effect.provideService(Clock.Clock, disabled), Effect.forkChild);
           yield* Deferred.await(entered);
           yield* timer.trigger;
-          expect(yield* Fiber.join(pending).pipe(Effect.flip)).toMatchObject({ limit: "extractDeadline" });
+          const citationResult9 = yield* Fiber.join(pending).pipe(Effect.flip);
+          expect(citationResult9).toMatchObject({ limit: "extractDeadline" });
         })
     );
   }

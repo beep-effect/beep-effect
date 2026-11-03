@@ -19,7 +19,8 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
           const native = yield* makeCitationObservedSpawner();
           const totals = yield* replayControlledCleanerScenes(controlledNativeScenes, native.spawner);
           expect(totals).toEqual({ scenes: 11, runs: 12, events: 79, safetyDivergences: 1 });
-          expect(yield* native.snapshot).toEqual(CitationNativeExitCounts.make({ spawned: 10, confirmed: 10 }));
+          const citationResult1 = yield* native.snapshot;
+          expect(citationResult1).toEqual(CitationNativeExitCounts.make({ spawned: 10, confirmed: 10 }));
         }),
       { timeout: 180_000 }
     );

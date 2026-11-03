@@ -162,7 +162,8 @@ const encodeAtoms = Effect.fn("Citation.encodeRegexAtoms")(function* (
   });
   for (let atom = 0; atom < sets.atoms; atom++) {
     yield* Effect.yieldNow;
-    atoms.push(yield* encodeAtom(atom));
+    const citationResult1 = yield* encodeAtom(atom);
+    atoms.push(citationResult1);
   }
   return atoms;
 });

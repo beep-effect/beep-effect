@@ -158,7 +158,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
             EffectImportRulesOptions.make({ mode: "markdown", effectOnly: true, excludePaths: [] })
           ).pipe(Effect.provideService(FileSystem.FileSystem, racingFs));
           expect(removed).toBe(true);
-          expect(yield* fs.exists(directory)).toBe(false);
+          const exists1 = yield* fs.exists(directory);
+          expect(exists1).toBe(false);
           expect(summary.scannedFiles).toBe(1);
           expect(summary.changedFiles).toEqual(["docs/guide.md"]);
           expect(summary.rootImportsRewritten).toBe(1);
@@ -248,8 +249,10 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
             "--exclude",
             "packages/demo/src/ignored.ts",
           ]);
-          expect(yield* TestConsole.logLines).toContain("[effect-governance-imports] operation=dry-run");
-          expect(yield* TestConsole.logLines).toContain("[effect-governance-imports] candidate=true");
+          const logLines2 = yield* TestConsole.logLines;
+          expect(logLines2).toContain("[effect-governance-imports] operation=dry-run");
+          const logLines3 = yield* TestConsole.logLines;
+          expect(logLines3).toContain("[effect-governance-imports] candidate=true");
 
           const jsonChunks: Array<string> = [];
           const strictJson = yield* Effect.exit(
@@ -297,7 +300,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           expect(summary.touchedFiles).toBe(0);
           expect(summary.rootImportsRewritten).toBe(0);
           expect(summary.strictFailure).toBe(false);
-          expect(yield* readProjectFile("packages/demo/src/index.ts")).toBe(demoSource);
+          const readProjectFile4 = yield* readProjectFile("packages/demo/src/index.ts");
+          expect(readProjectFile4).toBe(demoSource);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -326,7 +330,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           expect(summary.rootSpecifierCounts).toEqual({ effect: 1 });
           expect(summary.manualReviews).toEqual([]);
           expect(summary.strictFailure).toBe(true);
-          expect(yield* readProjectFile("packages/ecosystem/member/test/index.test.ts")).toBe(demoSource);
+          const readProjectFile5 = yield* readProjectFile("packages/ecosystem/member/test/index.test.ts");
+          expect(readProjectFile5).toBe(demoSource);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -349,7 +354,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
 
           expect(failure._tag).toBe("EffectImportRulesConfigurationError");
           expect(failure.message).toContain("dry-run only");
-          expect(yield* readProjectFile("apps/demo/src/index.ts")).toBe(demoSource);
+          const readProjectFile6 = yield* readProjectFile("apps/demo/src/index.ts");
+          expect(readProjectFile6).toBe(demoSource);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -361,7 +367,9 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           yield* writeTsconfig;
           const files = A.makeBy(80, (index) => `apps/bounded/source-${index}.ts`);
           const source = 'import { Effect } from "effect";\nexport const value = Effect.void;\n';
-          for (const file of files) yield* writeProjectFile(file, source);
+          for (const file of files) {
+            yield* writeProjectFile(file, source);
+          }
           const options = EffectImportRulesOptions.make({
             effectOnly: true,
             strictCheck: true,
@@ -371,12 +379,16 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           expect(dryRun.scannedFiles).toBe(80);
           expect(dryRun.rootImportsRewritten).toBe(80);
           expect(dryRun.strictFailure).toBe(true);
-          for (const file of files) expect(yield* readProjectFile(file)).toBe(source);
+          for (const file of files) {
+            const readProjectFile1 = yield* readProjectFile(file);
+            expect(readProjectFile1).toBe(source);
+          }
           const written = yield* runEffectImportRules(EffectImportRulesOptions.make({ ...options, write: true }));
           expect(written.scannedFiles).toBe(80);
           expect(written.rootImportsRewritten).toBe(80);
           for (const file of files) {
-            expect(yield* readProjectFile(file)).toContain('import * as Effect from "effect/Effect";');
+            const readProjectFile7 = yield* readProjectFile(file);
+            expect(readProjectFile7).toContain('import * as Effect from "effect/Effect";');
           }
           const checked = yield* runEffectImportRules(options);
           expect(checked.scannedFiles).toBe(80);
@@ -434,10 +446,14 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
 
           expect(summary.scannedFiles).toBe(4);
           expect(summary.rootImportsRewritten).toBe(4);
-          expect(yield* readProjectFile("packages/demo/src/index.ts")).not.toContain('from "effect"');
-          expect(yield* readProjectFile("packages/demo/src/_generated/schema.ts")).not.toContain('from "effect"');
-          expect(yield* readProjectFile("packages/demo/src/generated/client.ts")).not.toContain('from "effect"');
-          expect(yield* readProjectFile("packages/demo/src/schema.gen.ts")).not.toContain('from "effect"');
+          const readProjectFile8 = yield* readProjectFile("packages/demo/src/index.ts");
+          expect(readProjectFile8).not.toContain('from "effect"');
+          const readProjectFile9 = yield* readProjectFile("packages/demo/src/_generated/schema.ts");
+          expect(readProjectFile9).not.toContain('from "effect"');
+          const readProjectFile10 = yield* readProjectFile("packages/demo/src/generated/client.ts");
+          expect(readProjectFile10).not.toContain('from "effect"');
+          const readProjectFile11 = yield* readProjectFile("packages/demo/src/schema.gen.ts");
+          expect(readProjectFile11).not.toContain('from "effect"');
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -461,8 +477,10 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
 
           expect(summary.scannedFiles).toBe(1);
           expect(summary.changedFiles).toEqual([".claude/skills/example.ts"]);
-          expect(yield* readProjectFile(".claude/skills/example.ts")).not.toContain('from "effect"');
-          expect(yield* readProjectFile(".claude/worktrees/other-lane/src/index.ts")).toBe(demoSource);
+          const readProjectFile12 = yield* readProjectFile(".claude/skills/example.ts");
+          expect(readProjectFile12).not.toContain('from "effect"');
+          const readProjectFile13 = yield* readProjectFile(".claude/worktrees/other-lane/src/index.ts");
+          expect(readProjectFile13).toBe(demoSource);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -534,7 +552,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           expect(second.rootImportsRewritten).toBe(0);
           expect(second.emittedImports).toBe(0);
           expect(second.strictFailure).toBe(false);
-          expect(yield* readProjectFile("packages/demo/src/index.ts")).toBe(source);
+          const readProjectFile14 = yield* readProjectFile("packages/demo/src/index.ts");
+          expect(readProjectFile14).toBe(source);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -673,7 +692,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
               _tag: "EffectImportRulesConfigurationError",
               message: "The installed Effect package must expose an unconditional string-or-null export map.",
             });
-            expect(yield* readProjectFile("packages/demo/src/index.ts")).toBe(original);
+            const readProjectFile15 = yield* readProjectFile("packages/demo/src/index.ts");
+            expect(readProjectFile15).toBe(original);
           }
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -779,7 +799,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
             expect.arrayContaining(["root-namespace", "dynamic-import", "require", "import-type", "missing-mapping"])
           );
           expect(summary.rootSpecifierCounts).toEqual({ "effect/cli": 2, "effect/http": 2, "effect/rpc": 1 });
-          expect(yield* readProjectFile("packages/demo/src/index.ts")).toBe(original);
+          const readProjectFile16 = yield* readProjectFile("packages/demo/src/index.ts");
+          expect(readProjectFile16).toBe(original);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -801,10 +822,10 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
             expect(summary.rootImportsRewritten).toBe(1);
             expect(summary.manualReviews).toEqual([]);
           }
-          expect(yield* readProjectFile("docs/guide.md")).toContain('import * as Cmd from "effect/cli/Command";');
-          expect(yield* readProjectFile("packages/demo/src/index.ts")).toContain(
-            'import * as HttpClient from "effect/http/HttpClient";'
-          );
+          const readProjectFile17 = yield* readProjectFile("docs/guide.md");
+          expect(readProjectFile17).toContain('import * as Cmd from "effect/cli/Command";');
+          const readProjectFile18 = yield* readProjectFile("packages/demo/src/index.ts");
+          expect(readProjectFile18).toContain('import * as HttpClient from "effect/http/HttpClient";');
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -852,12 +873,10 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           );
           expect(A.map(summaries, (summary) => summary.rootImportsRewritten)).toEqual([1, 1]);
           expect(A.flatMap(summaries, (summary) => summary.manualReviews)).toEqual([]);
-          expect(yield* readProjectFile("docs/commented.md")).toContain(
-            'import * as Command from "effect/cli/Command";'
-          );
-          expect(yield* readProjectFile("packages/demo/src/commented.ts")).toContain(
-            'import * as HttpClient from "effect/http/HttpClient";'
-          );
+          const readProjectFile19 = yield* readProjectFile("docs/commented.md");
+          expect(readProjectFile19).toContain('import * as Command from "effect/cli/Command";');
+          const readProjectFile20 = yield* readProjectFile("packages/demo/src/commented.ts");
+          expect(readProjectFile20).toContain('import * as HttpClient from "effect/http/HttpClient";');
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -911,7 +930,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
             })
           );
           expect(second.touchedFiles).toBe(0);
-          expect(yield* readProjectFile("apps/demo/src/bin.ts")).toBe(rewritten);
+          const readProjectFile21 = yield* readProjectFile("apps/demo/src/bin.ts");
+          expect(readProjectFile21).toBe(rewritten);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -940,7 +960,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           expect(summary.manualReviews[0]?.kind).toBe("side-effect");
           expect(summary.manualReviews[0]?.binding).toBe("side-effect import");
           expect(summary.strictFailure).toBe(true);
-          expect(yield* readProjectFile("apps/demo/src/index.ts")).toBe(source);
+          const readProjectFile22 = yield* readProjectFile("apps/demo/src/index.ts");
+          expect(readProjectFile22).toBe(source);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -975,7 +996,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           expect(summary.manualReviews).toHaveLength(1);
           expect(summary.manualReviews[0]?.binding).toBe("FutureModule");
           expect(summary.manualReviews[0]?.line).toBe(3);
-          expect(yield* readProjectFile("apps/demo/src/bin.ts")).toBe(source);
+          const readProjectFile23 = yield* readProjectFile("apps/demo/src/bin.ts");
+          expect(readProjectFile23).toBe(source);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -1002,7 +1024,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           expect(summary.manualReviews).toHaveLength(1);
           expect(summary.manualReviews[0]?.binding).toBe("FutureModule");
           expect(summary.strictFailure).toBe(true);
-          expect(yield* readProjectFile("infra/example.ts")).toBe(source);
+          const readProjectFile24 = yield* readProjectFile("infra/example.ts");
+          expect(readProjectFile24).toBe(source);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -1116,7 +1139,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           expect(summary.rootImportsRewritten).toBe(0);
           expect(summary.manualReviews).toHaveLength(1);
           expect(summary.manualReviews[0]?.binding).toBe("Model");
-          expect(yield* readProjectFile("apps/demo/src/index.ts")).toBe(source);
+          const readProjectFile25 = yield* readProjectFile("apps/demo/src/index.ts");
+          expect(readProjectFile25).toBe(source);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -1143,7 +1167,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           expect(summary.manualReviews).toHaveLength(1);
           expect(summary.manualReviews[0]?.kind).toBe("missing-mapping");
           expect(summary.manualReviews[0]?.binding).toBe("Demo");
-          expect(yield* readProjectFile("apps/demo/src/index.ts")).toBe(source);
+          const readProjectFile26 = yield* readProjectFile("apps/demo/src/index.ts");
+          expect(readProjectFile26).toBe(source);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -1170,7 +1195,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           expect(summary.manualReviews).toHaveLength(1);
           expect(summary.manualReviews[0]?.kind).toBe("ambiguous");
           expect(summary.manualReviews[0]?.binding).toBe("renamedHelper");
-          expect(yield* readProjectFile("apps/demo/src/index.ts")).toBe(source);
+          const readProjectFile27 = yield* readProjectFile("apps/demo/src/index.ts");
+          expect(readProjectFile27).toBe(source);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -1354,7 +1380,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           ]);
           expect(A.map(summary.manualReviews, (review) => review.line)).toEqual([1, 2, 3]);
           expect(summary.strictFailure).toBe(true);
-          expect(yield* readProjectFile("packages/demo/src/index.ts")).toBe(source);
+          const readProjectFile28 = yield* readProjectFile("packages/demo/src/index.ts");
+          expect(readProjectFile28).toBe(source);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -1394,7 +1421,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           expect(A.map(summary.manualReviews, (review) => review.line)).toEqual([1, 2, 3]);
           expect(summary.rootSpecifierCounts).toEqual({ effect: 3 });
           expect(summary.strictFailure).toBe(true);
-          expect(yield* readProjectFile("infra/manual.ts")).toBe(source);
+          const readProjectFile29 = yield* readProjectFile("infra/manual.ts");
+          expect(readProjectFile29).toBe(source);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -1454,7 +1482,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
             })
           );
           expect(second.touchedFiles).toBe(0);
-          expect(yield* readProjectFile("packages/demo/src/index.ts")).toBe(rewritten);
+          const readProjectFile30 = yield* readProjectFile("packages/demo/src/index.ts");
+          expect(readProjectFile30).toBe(rewritten);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -1495,7 +1524,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
               promotedFamilyPrefixes: ["docs"],
             })
           );
-          expect(yield* readProjectFile("docs/guide.md")).toBe(markdown);
+          const readProjectFile31 = yield* readProjectFile("docs/guide.md");
+          expect(readProjectFile31).toBe(markdown);
           expect(written.scannedFences).toBe(2);
           expect(written.rootImportsRewritten).toBe(0);
           expect(written.changedFiles).toEqual(["docs/guide.md"]);
@@ -1543,11 +1573,16 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           expect(advisory.scannedFences).toBe(1);
           expect(advisory.touchedFiles).toBe(1);
           expect(advisory.strictFailure).toBe(false);
-          expect(yield* readProjectFile("docs/guide.md")).toBe(markdown);
-          expect(yield* readProjectFile("docs/generated/example.md")).toBe(markdown);
-          expect(yield* readProjectFile("docs/_internal/example.md")).toBe(markdown);
-          expect(yield* readProjectFile("packages/demo/docs/modules/example.ts.md")).toBe(markdown);
-          expect(yield* readProjectFile(".claude/worktrees/other-lane/docs/guide.md")).toBe(markdown);
+          const readProjectFile32 = yield* readProjectFile("docs/guide.md");
+          expect(readProjectFile32).toBe(markdown);
+          const readProjectFile33 = yield* readProjectFile("docs/generated/example.md");
+          expect(readProjectFile33).toBe(markdown);
+          const readProjectFile34 = yield* readProjectFile("docs/_internal/example.md");
+          expect(readProjectFile34).toBe(markdown);
+          const readProjectFile35 = yield* readProjectFile("packages/demo/docs/modules/example.ts.md");
+          expect(readProjectFile35).toBe(markdown);
+          const readProjectFile36 = yield* readProjectFile(".claude/worktrees/other-lane/docs/guide.md");
+          expect(readProjectFile36).toBe(markdown);
 
           const written = yield* runEffectImportRules(
             EffectImportRulesOptions.make({
@@ -1629,10 +1664,10 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           expect(summary.scannedFiles).toBe(2);
           expect(summary.scannedFences).toBe(2);
           expect(summary.rootImportsRewritten).toBe(2);
-          expect(yield* readProjectFile("goals/demo/PLAN.md")).toContain('import * as Effect from "effect/Effect";');
-          expect(yield* readProjectFile("explorations/demo/research.md")).toContain(
-            'import { flow } from "effect/Function";'
-          );
+          const readProjectFile37 = yield* readProjectFile("goals/demo/PLAN.md");
+          expect(readProjectFile37).toContain('import * as Effect from "effect/Effect";');
+          const readProjectFile38 = yield* readProjectFile("explorations/demo/research.md");
+          expect(readProjectFile38).toContain('import { flow } from "effect/Function";');
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );

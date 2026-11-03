@@ -285,10 +285,13 @@ export const uniqueMatterCorrespondents = Effect.fn("MatterDirectoryPracticeKg.u
   const read = <Row>(statement: string, decode: (rows: unknown) => Effect.Effect<Row, S.SchemaError>) =>
     db.query(statement).pipe(Effect.flatMap(decode), Effect.mapError(unreadable));
   const contacts = yield* read(contactsSql, decodeContactRows);
-  const practiceAddresses = normalizedAddresses(yield* read(practiceAddressesSql, decodePracticeRows));
+  const read1 = yield* read(practiceAddressesSql, decodePracticeRows);
+  const practiceAddresses = normalizedAddresses(read1);
+  const argument = byNormalizedAddress(contacts);
+  const read2 = yield* read(linksSql, decodeLinkRows);
   const tables: AddressTables = {
-    contacts: byNormalizedAddress(contacts),
-    links: byNormalizedAddress(yield* read(linksSql, decodeLinkRows)),
+    contacts: argument,
+    links: byNormalizedAddress(read2),
     practiceAddresses: HashSet.fromIterable(practiceAddresses),
     practiceDomains: HashSet.fromIterable(A.map(practiceAddresses, domainOf)),
     matterKeys: HashSet.fromIterable(matterKeys),

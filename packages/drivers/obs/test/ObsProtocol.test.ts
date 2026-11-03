@@ -158,9 +158,12 @@ describe("computeObsAuthentication", () => {
     cryptoIt.effect(
       "reproduces the documented obs-websocket authentication vector",
       Effect.fnUntraced(function* () {
-        expect(
-          yield* computeObsAuthentication({ challenge: DOC_CHALLENGE, password: DOC_PASSWORD, salt: DOC_SALT })
-        ).toBe(DOC_AUTHENTICATION);
+        const computeObsAuthentication1 = yield* computeObsAuthentication({
+          challenge: DOC_CHALLENGE,
+          password: DOC_PASSWORD,
+          salt: DOC_SALT,
+        });
+        expect(computeObsAuthentication1).toBe(DOC_AUTHENTICATION);
       })
     );
   });
@@ -273,7 +276,8 @@ describe("ObsProtocol.connectWith", () => {
         })
       );
 
-      expect(O.isNone(yield* protocol.request("GetVersion"))).toBe(true);
+      const request2 = yield* protocol.request("GetVersion");
+      expect(O.isNone(request2)).toBe(true);
     })
   );
 

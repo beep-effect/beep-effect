@@ -155,7 +155,8 @@ export const makeCitationNativeProcessOwner = Effect.fn("Citation.makeNativeProc
   const closed = yield* Ref.make(false);
   const owned = yield* Ref.make<ReadonlyArray<OwnedProcess>>([]);
   const quarantine = Effect.gen(function* () {
-    const phases = yield* Effect.forEach(yield* Ref.get(owned), (lease) => Ref.get(lease.phase), { concurrency: 1 });
+    const citationResult1 = yield* Ref.get(owned);
+    const phases = yield* Effect.forEach(citationResult1, (lease) => Ref.get(lease.phase), { concurrency: 1 });
     return A.filter(phases, (phase) => phase === "quarantined").length;
   });
   const ensureOpen = Effect.gen(function* () {
@@ -190,10 +191,13 @@ export const makeCitationNativeProcessOwner = Effect.fn("Citation.makeNativeProc
     Effect.provideService(Clock.Clock, clock)
   );
   const snapshot = Effect.gen(function* () {
+    const citationResult2 = yield* Ref.get(owned);
+    const citationResult3 = yield* quarantine;
+    const citationResult4 = yield* Ref.get(closed);
     return CitationNativeProcessOwnerSnapshot.make({
-      processes: (yield* Ref.get(owned)).length,
-      quarantined: yield* quarantine,
-      closed: yield* Ref.get(closed),
+      processes: citationResult2.length,
+      quarantined: citationResult3,
+      closed: citationResult4,
     });
   });
   const reap = Effect.fn("Citation.reapNativeWorkers")(

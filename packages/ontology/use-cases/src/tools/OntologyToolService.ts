@@ -288,7 +288,7 @@ const validateSession = Effect.fn("Ontology.Tools.validateSession")(function* (
   includeInferred: boolean
 ) {
   const validation = yield* OntologyValidationRunner;
-  const inference = includeInferred ? O.some(yield* inferForTool(session)) : O.none();
+  const inference = includeInferred ? yield* Effect.asSome(inferForTool(session)) : O.none();
   return yield* validation
     .run(
       RunOntologyValidationInput.make({
@@ -498,7 +498,7 @@ const makeOntologyToolService = Effect.gen(function* () {
       provideDependencies(
         Effect.gen(function* () {
           const opened = yield* openSavedOntology(request);
-          const inference = request.includeInferred ? O.some(yield* inferForTool(opened.session)) : O.none();
+          const inference = request.includeInferred ? yield* Effect.asSome(inferForTool(opened.session)) : O.none();
           const result = yield* sparql
             .run(
               RunOntologySparqlInput.make({

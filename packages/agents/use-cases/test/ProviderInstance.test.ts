@@ -93,7 +93,8 @@ describe("@beep/agents-use-cases ProviderInstance", () => {
         label: initial.label,
       });
       expect((yield* useCases.add(add)).id).toBe(id);
-      assertSome(yield* Ref.get(observedAdd), add);
+      const got = yield* Ref.get(observedAdd);
+      assertSome(got, add);
       const updated = yield* useCases.update(
         UpdateProviderInstanceCommand.make({
           id,
@@ -106,7 +107,8 @@ describe("@beep/agents-use-cases ProviderInstance", () => {
       );
       expect(updated.kind).toBe("codex");
       expect((yield* useCases.get(GetProviderInstanceQuery.make({ id }))).label).toBe("Work");
-      expect(yield* useCases.list(ListProviderInstancesQuery.make({}))).toHaveLength(1);
+      const list1 = yield* useCases.list(ListProviderInstancesQuery.make({}));
+      expect(list1).toHaveLength(1);
       yield* useCases.remove(RemoveProviderInstanceCommand.make({ id }));
       expect(state.read()).toHaveLength(0);
     })

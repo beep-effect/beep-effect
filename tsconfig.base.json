@@ -96,6 +96,13 @@
         ],
         // @effect-identifier constructor matching stays off; $I identity annotations are the repo's key source.
         "extendedKeyDetection": false,
+        "brandedSchemaClasses": [
+          "Class",
+          "TaggedClass",
+          "Error",
+          "TaggedError",
+          "Opaque"
+        ],
         // missedPipeableOpportunity fires from two contiguous pipeable calls (upstream default, explicit).
         "pipeableMinArgCount": 2,
         // No package may ship twice in the graph; duplicatePackage reports every duplicate.
@@ -135,7 +142,9 @@
           "effectMapFlatten": "error",
           "effectMapVoid": "error",
           "effectSleepZeroToYieldNow": "error",
+          "effectSucceedWithUndefined": "error",
           "effectSucceedWithVoid": "error",
+          "effectTryWithoutCatch": "error",
           "errorPayloadShadowsName": "error",
           "experimentalApiUsage": "off",
           "extendsNativeError": "error",
@@ -156,6 +165,8 @@
           "globalErrorInEffectFailure": "error",
           "globalFetch": "error",
           "globalFetchInEffect": "error",
+          "globalJson": "error",
+          "globalJsonInEffect": "error",
           "globalRandom": "error",
           "globalRandomInEffect": "error",
           "globalTimers": "error",
@@ -168,7 +179,9 @@
           "manualMetricTapToTrack": "error",
           "mapConstToAs": "error",
           "mapMapErrorToMapBoth": "error",
+          "mapSomeCatchNoSuchElement": "error",
           "mapSomeToAsSome": "error",
+          "matchBooleanToIsSuccess": "error",
           "matchEffectToMapBoth": "error",
           "matchEffectToMatch": "error",
           "missedPipeableOpportunity": "error",
@@ -196,7 +209,6 @@
           "preferEffectRecord": "error",
           "preferEffectString": "error",
           "preferNamespaceImport": "off",
-          "preferSchemaOverJson": "error",
           "preferSchemaTaggedError": "error",
           "preferSchemaTypeProperty": "error",
           "preferSucceedSomeOrNone": "error",
@@ -206,10 +218,12 @@
           "processEnvInEffect": "error",
           "promiseInEffectSuccess": "error",
           "provideLayerSucceedToProvideService": "error",
+          "provideMergeAllToArray": "error",
           "raceFirstWithSleepToTimeout": "error",
           "redundantMapError": "error",
           "redundantOrDie": "error",
           "redundantSchemaTagIdentifier": "error",
+          "resultMatchToFromResult": "error",
           "returnEffectInGen": "error",
           "runEffectInsideEffect": "error",
           "runOfExitToRunExit": "error",
@@ -226,9 +240,11 @@
           "serviceNotAsClass": "error",
           "strictBooleanExpressions": "error",
           "strictEffectProvide": "error",
+          "suspendFailToFailSync": "error",
           "syncToSucceed": "error",
           "timeoutCatchTagToTimeoutOrElse": "error",
           "tryCatchInEffectGen": "error",
+          "typeUnionToSchemaUnion": "error",
           "unknownInEffectCatch": "error",
           "unnecessaryArrowBlock": "error",
           "unnecessaryEffectGen": "error",
@@ -237,7 +253,8 @@
           "unnecessaryPipeChain": "error",
           "unnecessaryTypeofType": "error",
           "unsafeEffectTypeAssertion": "error",
-          "unstableApiUsage": "off"
+          "unstableApiUsage": "off",
+          "yieldInCallArgument": "error"
         }
       }
     ]

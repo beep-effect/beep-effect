@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // The differential oracle suite: our parser plus the test-only HTML writer,
 // against commonmark.js 0.31.2 — the reference implementation this engine is
 // a port of — over the full 652-example spec corpus and generated
@@ -22,6 +23,10 @@ import { loadSpecExamples } from "./support/corpus.ts";
 import { renderHtml } from "./support/htmlWriter.ts";
 import { normalizeHtml } from "./support/normalizeHtml.ts";
 import { renderOracleHtml } from "./support/oracle.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
+
+const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
 
 /**
  * Render with our stack; `undefined` if the parse tripped a hardening guard.
@@ -219,7 +224,11 @@ const agreesWithOracle = (markdown: string): boolean => {
   const ours = renderOurs(markdown);
   if (ours !== undefined) {
     const oracle = correctOracleDefect(normalizeHtml(renderOracleHtml(markdown)));
-    assert.strictEqual(ours, oracle, `disagreement on input:\n${JSON.stringify(markdown)}`);
+    assert.strictEqual(
+      ours,
+      oracle,
+      `disagreement on input:\n${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(markdown), identity)}`
+    );
   }
   return true;
 };
@@ -246,7 +255,7 @@ describe("differential oracle: commonmark.js 0.31.2", () => {
     assert.deepStrictEqual(
       A.map(disagreements, (d) => d.example),
       [],
-      `differential disagreement on ${disagreements.length} corpus example(s): ${JSON.stringify(disagreements.slice(0, 3), null, 2)}`
+      `differential disagreement on ${disagreements.length} corpus example(s): ${Result.getOrThrowWith(encodePrettyJson(disagreements.slice(0, 3)), identity)}`
     );
   });
 
@@ -264,7 +273,11 @@ describe("differential oracle: commonmark.js 0.31.2", () => {
         return true;
       }
       const oracle = correctOracleDefect(normalizeHtml(renderOracleHtml(markdown)));
-      assert.strictEqual(ours, oracle, `disagreement on input:\n${JSON.stringify(markdown)}`);
+      assert.strictEqual(
+        ours,
+        oracle,
+        `disagreement on input:\n${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(markdown), identity)}`
+      );
       return true;
     },
     { arbitrary: { runs: 250, size: 12 } }

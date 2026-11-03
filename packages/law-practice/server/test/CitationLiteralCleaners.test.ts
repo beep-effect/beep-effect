@@ -39,12 +39,12 @@ const Corpus = S.fromJsonString(
   })
 );
 const load = Effect.fn("LiteralCleanerTest.load")(function* () {
-  const raw = yield* (yield* FileSystem.FileSystem).readFileString(
+  const citationResult1 = yield* FileSystem.FileSystem;
+  const raw = yield* citationResult1.readFileString(
     NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/literal-cleaners.json", import.meta.url))
   );
-  expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-    "242701dc5547bc00fa441117925f934e45c4505f1515e4c51ab0e8380dd199e8"
-  );
+  const citationResult2 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+  expect(citationResult2).toBe("242701dc5547bc00fa441117925f934e45c4505f1515e4c51ab0e8380dd199e8");
   return yield* S.decodeEffect(Corpus)(raw);
 });
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("literal citation cleaners", (it) => {
@@ -65,11 +65,11 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("literal citation cl
         yield* Effect.forEach(
           corpus.artifacts,
           Effect.fnUntraced(function* (artifact) {
-            expect(
-              yield* S.decodeEffect(Sha256HexFromBytes)(
-                new TextEncoder().encode(yield* encodeCitationRuntimeString(artifact.value))
-              )
-            ).toBe(artifact.sha256);
+            const citationResult3 = yield* encodeCitationRuntimeString(artifact.value);
+            const citationResult4 = yield* S.decodeEffect(Sha256HexFromBytes)(
+              new TextEncoder().encode(citationResult3)
+            );
+            expect(citationResult4).toBe(artifact.sha256);
           }),
           { concurrency: 1, discard: true }
         );
@@ -77,7 +77,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("literal citation cl
           A.map(corpus.artifacts, (artifact) => [artifact.sha256, artifact.value] as const)
         );
         expect(corpus.cases).toHaveLength(440);
-        const cleaners = yield* makeCitationLiteralCleaners((yield* defaultCitationEnginePolicy).limits);
+        const citationResult5 = yield* defaultCitationEnginePolicy;
+        const cleaners = yield* makeCitationLiteralCleaners(citationResult5.limits);
         yield* Effect.forEach(
           corpus.cases,
           Effect.fnUntraced(function* (row) {
@@ -87,7 +88,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("literal citation cl
               string,
               CitationLiteralCleanerFailure
             >;
-            expect(yield* evaluated, row.name).toBe(expected);
+            const citationResult6 = yield* evaluated;
+            expect(citationResult6, row.name).toBe(expected);
           }),
           { concurrency: 1, discard: true }
         );
@@ -100,14 +102,14 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("literal citation cl
     () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const cleaners = yield* makeCitationLiteralCleaners((yield* defaultCitationEnginePolicy).limits);
+        const citationResult7 = yield* defaultCitationEnginePolicy;
+        const cleaners = yield* makeCitationLiteralCleaners(citationResult7.limits);
         const Rows = S.Struct({ operation: S.String, payload: S.String });
         const operationsText = yield* fs.readFileString(
           NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/operation-cases.json", import.meta.url))
         );
-        expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(operationsText))).toBe(
-          "ae441000ddc90537864e3fdd4a9dfc4aa81af37a65818b48ce9bf37d95d1eeb1"
-        );
+        const citationResult8 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(operationsText));
+        expect(citationResult8).toBe("ae441000ddc90537864e3fdd4a9dfc4aa81af37a65818b48ce9bf37d95d1eeb1");
         const operationRows = (yield* S.decodeEffect(S.fromJsonString(S.Struct({ cases: S.Array(Rows) })))(
           operationsText
         )).cases;
@@ -116,9 +118,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("literal citation cl
             new URL("../../use-cases/test/fixtures/eyecite/supplemental-extraction.json", import.meta.url)
           )
         );
-        expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(supplementalText))).toBe(
-          "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9"
-        );
+        const citationResult9 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(supplementalText));
+        expect(citationResult9).toBe("4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9");
         const supplemental = yield* S.decodeEffect(S.fromJsonString(S.Struct({ textCases: S.Array(Rows) })))(
           supplementalText
         );
@@ -159,21 +160,22 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("literal citation cl
       const cleaners = yield* makeCitationLiteralCleaners(limits);
       Reflect.set(limits, "sourceUtf16", 1000);
       Reflect.set(limits, "producedTextUtf16", 1000);
-      expect(yield* cleaners.apply({ cleaner: "xml", text: "abc" })).toBe("abc");
-      expect((yield* Effect.flip(cleaners.apply({ cleaner: "xml", text: "abcd" }))).reason).toBe("limit-exceeded");
-      expect((yield* Effect.flip(cleaners.apply({ cleaner: "underscores", text: "_____" }))).reason).toBe(
-        "limit-exceeded"
+      const citationResult10 = yield* cleaners.apply({ cleaner: "xml", text: "abc" });
+      expect(citationResult10).toBe("abc");
+      const citationResult11 = yield* Effect.flip(cleaners.apply({ cleaner: "xml", text: "abcd" }));
+      expect(citationResult11.reason).toBe("limit-exceeded");
+      const citationResult12 = yield* Effect.flip(cleaners.apply({ cleaner: "underscores", text: "_____" }));
+      expect(citationResult12.reason).toBe("limit-exceeded");
+      const citationResult13 = yield* Effect.all(
+        [
+          cleaners.apply({ cleaner: "underscores", text: "__ab" }),
+          cleaners.apply({ cleaner: "underscores", text: "__ab" }),
+        ],
+        { concurrency: 2 }
       );
-      expect(
-        yield* Effect.all(
-          [
-            cleaners.apply({ cleaner: "underscores", text: "__ab" }),
-            cleaners.apply({ cleaner: "underscores", text: "__ab" }),
-          ],
-          { concurrency: 2 }
-        )
-      ).toEqual(["ab", "ab"]);
-      expect((yield* Effect.flip(cleaners.apply({ cleaner: "html", text: "a" }))).reason).toBe("invalid-input");
+      expect(citationResult13).toEqual(["ab", "ab"]);
+      const citationResult14 = yield* Effect.flip(cleaners.apply({ cleaner: "html", text: "a" }));
+      expect(citationResult14.reason).toBe("invalid-input");
     })
   );
 
@@ -203,7 +205,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("literal citation cl
       );
       const fiber = yield* Effect.forkChild(interruptible.apply({ cleaner: "underscores", text }));
       yield* Fiber.interrupt(fiber);
-      expect(Exit.hasInterrupts(yield* Fiber.await(fiber))).toBe(true);
+      const citationResult15 = yield* Fiber.await(fiber);
+      expect(Exit.hasInterrupts(citationResult15)).toBe(true);
     })
   );
 });

@@ -61,22 +61,26 @@ describe("@beep/editor schema crispening parity", () => {
       });
       const features = ComposerFeatures.make({ toolbar: false });
 
-      expect(yield* encodeAttachmentRejection(tooLarge)).toEqual({
+      const encodedAttachmentRejection = yield* encodeAttachmentRejection(tooLarge);
+      expect(encodedAttachmentRejection).toEqual({
         _tag: "AttachmentTooLarge",
         filename: "recording.mov",
         size: 15_000_000,
         maxBytes: 10_485_760,
       });
-      expect(yield* encodeAttachmentRejection(invalidMimeType)).toEqual({
+      const encodedAttachmentRejection1 = yield* encodeAttachmentRejection(invalidMimeType);
+      expect(encodedAttachmentRejection1).toEqual({
         _tag: "AttachmentInvalidMimeType",
         filename: "payload.bin",
         mimeType: "",
       });
-      expect(yield* encodeAttachmentFailure(portFailure)).toEqual({
+      const encodedAttachmentFailure = yield* encodeAttachmentFailure(portFailure);
+      expect(encodedAttachmentFailure).toEqual({
         _tag: "AttachmentPortFailed",
         message: "Files could not be attached.",
       });
-      expect(yield* encodeComposerFeatures(features)).toEqual({
+      const encodedComposerFeatures = yield* encodeComposerFeatures(features);
+      expect(encodedComposerFeatures).toEqual({
         toolbar: false,
         slash: true,
         mentions: true,

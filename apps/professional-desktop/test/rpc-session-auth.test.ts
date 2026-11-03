@@ -96,12 +96,14 @@ it.layer(AuthProbeServer, { timeout: "10 seconds" })("desktop RPC HTTP authentic
       );
       const missing = yield* client.execute(request);
       expect(missing.status).toBe(401);
-      expect(yield* missing.text).toBe("Unauthorized desktop RPC session.");
+      const text1 = yield* missing.text;
+      expect(text1).toBe("Unauthorized desktop RPC session.");
       expect(listCandidates).not.toHaveBeenCalled();
 
       const wrong = yield* client.execute(HttpClientRequest.bearerToken(request, "wrong-boundary-token"));
       expect(wrong.status).toBe(401);
-      expect(yield* wrong.text).toBe("Unauthorized desktop RPC session.");
+      const text2 = yield* wrong.text;
+      expect(text2).toBe("Unauthorized desktop RPC session.");
       expect(listCandidates).not.toHaveBeenCalled();
 
       const accepted = yield* client.execute(HttpClientRequest.bearerToken(request, Redacted.value(authProbeToken)));

@@ -381,12 +381,8 @@ export const makeStoreSql: (
       Effect.catchCause(
         Effect.gen(function* () {
           const now = yield* Clock.Clock.defaultValue().currentTimeMillis;
-          return yield* offer(
-            id,
-            name,
-            yield* encodeJsonEffect(element),
-            delay === undefined ? sqlNow : delayedVisibleAt(delay, now)
-          );
+          const encodedJsonEffect = yield* encodeJsonEffect(element);
+          return yield* offer(id, name, encodedJsonEffect, delay === undefined ? sqlNow : delayedVisibleAt(delay, now));
         }),
         (cause) =>
           Effect.fail(

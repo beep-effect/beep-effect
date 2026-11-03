@@ -52,9 +52,8 @@ const load = Effect.fn("EditionTest.load")(function* () {
   const bytes = yield* fs.readFile(
     NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/token-editions.json", import.meta.url))
   );
-  expect(yield* digest.digestHex(Digest.sha256, bytes)).toBe(
-    "b42419aa8c06a5ccb3a15ea6e46650219e1f50445dbd827224b4d771e9f2932c"
-  );
+  const citationResult1 = yield* digest.digestHex(Digest.sha256, bytes);
+  expect(citationResult1).toBe("b42419aa8c06a5ccb3a15ea6e46650219e1f50445dbd827224b4d771e9f2932c");
   return yield* S.decodeEffect(Corpus)(new TextDecoder().decode(bytes));
 });
 it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestServices: true })(
@@ -63,25 +62,31 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
     it.effect("performs actual target set deduplication and source nominative choice in every captured case", () =>
       Effect.gen(function* () {
         const controls = yield* load();
-        const editions = yield* makeCitationTokenEditions(
-          (yield* defaultCitationEnginePolicy).limits,
-          controls.bindings
-        );
+        const citationResult2 = yield* defaultCitationEnginePolicy;
+        const editions = yield* makeCitationTokenEditions(citationResult2.limits, controls.bindings);
         for (const row of controls.cases) {
           const exact = yield* editions.deduplicate(row.exactInput);
           const variation = yield* editions.deduplicate(row.variationInput);
           expect(exact, `case ${row.id}`).toEqual(row.exact);
           expect(variation, `case ${row.id}`).toEqual(row.variation);
-          if (row.nominative === null)
-            expect(yield* editions.nominative(exact, variation).pipe(Effect.flip)).toMatchObject({
+          if (row.nominative === null) {
+            const citationResult10 = yield* editions.nominative(exact, variation).pipe(Effect.flip);
+            expect(citationResult10).toMatchObject({
               reason: "host-failed",
             });
-          else expect(yield* editions.nominative(exact, variation)).toBe(row.nominative);
+          } else {
+            const citationResult11 = yield* editions.nominative(exact, variation);
+            expect(citationResult11).toBe(row.nominative);
+          }
         }
-        for (const row of controls.choices)
-          expect(yield* editions.nominative(row.exact, row.variation)).toBe(row.result);
-        expect(yield* editions.nominative([9], [0])).toBe(false);
-        expect(yield* editions.nominative([], [0])).toBe(true);
+        for (const row of controls.choices) {
+          const citationResult12 = yield* editions.nominative(row.exact, row.variation);
+          expect(citationResult12).toBe(row.result);
+        }
+        const citationResult3 = yield* editions.nominative([9], [0]);
+        expect(citationResult3).toBe(false);
+        const citationResult4 = yield* editions.nominative([], [0]);
+        expect(citationResult4).toBe(true);
       })
     );
     it.effect(
@@ -95,11 +100,16 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
           row.reporterShortName = "U.S.";
           row.equalityClass = 100;
           limits.candidates = 100;
-          expect(yield* editions.nominative([0], [])).toBe(true);
-          expect(yield* editions.deduplicate([0, 0])).toEqual([0]);
-          expect(yield* editions.deduplicate([0, 0, 0]).pipe(Effect.flip)).toMatchObject({ limit: "candidates" });
-          expect(yield* editions.deduplicate([1]).pipe(Effect.flip)).toMatchObject({ reason: "host-failed" });
-          expect(yield* makeCitationTokenEditions(limits, [row, row]).pipe(Effect.flip)).toMatchObject({
+          const citationResult5 = yield* editions.nominative([0], []);
+          expect(citationResult5).toBe(true);
+          const citationResult6 = yield* editions.deduplicate([0, 0]);
+          expect(citationResult6).toEqual([0]);
+          const citationResult7 = yield* editions.deduplicate([0, 0, 0]).pipe(Effect.flip);
+          expect(citationResult7).toMatchObject({ limit: "candidates" });
+          const citationResult8 = yield* editions.deduplicate([1]).pipe(Effect.flip);
+          expect(citationResult8).toMatchObject({ reason: "host-failed" });
+          const citationResult9 = yield* makeCitationTokenEditions(limits, [row, row]).pipe(Effect.flip);
+          expect(citationResult9).toMatchObject({
             reason: "host-failed",
           });
         })

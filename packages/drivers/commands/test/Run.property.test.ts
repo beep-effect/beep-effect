@@ -29,7 +29,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(equivalent(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -72,7 +73,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(RunOptions)(options);
       const decoded = yield* S.decodeEffect(RunOptions)(encoded);
       assert.isTrue(S.toEquivalence(RunOptions)(decoded, options));
-      assert.deepStrictEqual(yield* S.encodeEffect(RunOptions)(decoded), encoded);
+      const value2 = yield* S.encodeEffect(RunOptions)(decoded);
+      assert.deepStrictEqual(value2, encoded);
     }),
   runs
 );
@@ -92,7 +94,8 @@ it.effect.prop(
       );
       assert.isTrue(S.toEquivalence(S.Json)(parsed, value));
       assert.isTrue(S.toEquivalence(S.Json)(reparsed, parsed));
-      assert.strictEqual(yield* S.encodeEffect(codec)(reparsed), rendered);
+      const value3 = yield* S.encodeEffect(codec)(reparsed);
+      assert.strictEqual(value3, rendered);
     }),
   runs
 );
@@ -115,7 +118,8 @@ it.effect.prop(
       );
       assert.isTrue(S.toEquivalence(S.Json)(parsed, value));
       assert.isTrue(S.toEquivalence(S.Json)(reparsed, parsed));
-      assert.strictEqual(yield* S.encodeEffect(codec)(reparsed), encoded);
+      const value4 = yield* S.encodeEffect(codec)(reparsed);
+      assert.strictEqual(value4, encoded);
     }),
   runs
 );
@@ -130,10 +134,8 @@ it.effect.prop(
       const transmitted = new TextDecoder().decode(new TextEncoder().encode(stdout));
       const text = yield* Run.text(command).pipe(withLayer(spawner.layer));
       assert.strictEqual(text, Str.trim(transmitted));
-      assert.strictEqual(
-        yield* Run.text(command).pipe(withLayer(ScriptedSpawner.make(() => ({ stdout: text })).layer)),
-        text
-      );
+      const pipe5 = yield* Run.text(command).pipe(withLayer(ScriptedSpawner.make(() => ({ stdout: text })).layer));
+      assert.strictEqual(pipe5, text);
       const lines = yield* Run.lines(command).pipe(withLayer(spawner.layer));
       assert.deepStrictEqual(
         lines,
