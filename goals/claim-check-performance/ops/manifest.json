@@ -51,7 +51,7 @@
     {
       "id": "P1",
       "name": "General structural and advisory accuracy repairs",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",
@@ -83,5 +83,5 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Active performance follow-up: no usefulness gate passed yet. Preserve original evidence and all 37 passes; completion requires all frozen numerical gates plus reviewed delivery, never a poor-floor stop."
+  "statusNote": "Active performance follow-up: current product candidate39/538, parsed537/538, abstained455/538. PR2685 delivers a supporting inspection/tooling/parser increment; the goal remains active until every frozen usefulness gate and final reviewed delivery pass. Original references, outputs and all37baselinepasses remain protected."
 }

@@ -1,6 +1,6 @@
 # Claim Checker Performance Plan
 
-Status: active. The retained local product candidate now recovers 39/538; published source-adapter PR2685 remains a separate 37/538 increment. The qualified per-record domain policy is implemented; service/tool integration and every usefulness gate remain unproved. Frozen references, all previous results and the original 37 passes are retained.
+Status: active. The current product candidate recovers39/538 and parses537/538;455/538claims remain abstained or unknown. PR2685 now carries the source adapter, qualified inspection policy, read-only service/tool and measured parser repairs. Independent development annotation is in progress; usefulness remains unproved. Original references, previous results and all original37passes are retained.
 
 ## P0 — Baseline and evaluation integrity
 
