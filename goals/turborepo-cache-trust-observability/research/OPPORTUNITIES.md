@@ -2162,7 +2162,7 @@ must establish the current policy before that acceptance gate can pass.
 Run 41584463472 passed all unit shards and Fallow, then Lint Policy found one
 introduced EV006 Option-shape assertion and two live host-path observations.
 Use assertSome with the independently expected secret-reference value, reusing
-the existing secretReference helper. Also strengthen selection-shell refusal
+the direct manual-workflow reference. Also strengthen selection-shell refusal
 checks to exact exit status 0/1 instead of any nonzero failure.
 Replace the host-specific temporary root and exact cleanup comparator with the
 same fixed HOME-cache path, retaining exclusive creation and guarded cleanup.
@@ -2170,3 +2170,13 @@ Author path assertions and preserve every policy check; no knowledge exemption,
 Effect-Vitest baseline or proof threshold changes. Workflow/Bash/Python syntax
 parses; fresh hosted proof remains required, with no local verify/publish or
 repository test suite.
+
+### Push-only helper reused in a manual-caller expectation, 2026-11-03
+
+Run 41587001295 repo-cli-5 caught an introduced assertion mismatch: the existing
+secretReference helper wraps secrets in a push-event condition, while the manual
+caller intentionally forwards direct named references. Keep assertSome and the
+independently expected direct reference; preserve the helper for its original
+push-only consumers. Source inspection of the helper body would have prevented
+this round. The workflow delivery policy is unchanged. No baseline adjustment,
+local verify/publish or repository test suite; require fresh hosted proof.

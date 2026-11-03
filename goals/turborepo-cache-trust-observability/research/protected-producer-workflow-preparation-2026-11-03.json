@@ -15,7 +15,7 @@
     },
     {
       "path": "packages/tooling/tool/cli/test/ci-runner-security.test.ts",
-      "sha256": "f938bdd07d42f6fab534664aa267d5568e7a528a86dce3c749e5c04a43787400"
+      "sha256": "e202fab41ce7e371834336a001c6f1a1e633c1cb202c90a98bb0aeebb351ebfe"
     }
   ],
   "route": {
@@ -184,9 +184,20 @@
     "failedHead": "e6472d940435440c267434737f8aa95504e52321",
     "runId": 41584463472,
     "jobId": 125747400599,
-    "effectVitest": "One introduced EV006 Option-shape assertion in forwarded secret checking. Use assertSome with the independently expected secret-reference value and the existing secretReference helper. Also strengthen selection-shell refusals to exact exit 0/1 instead of any nonzero failure.",
+    "effectVitest": "Use assertSome with the independently expected direct named secret-reference value. The existing secretReference helper is specific to push-only delivery and is not valid for the manual caller. Selection-shell refusals additionally require exact exit 0/1.",
     "knowledgeReferences": "Two introduced actionable host-path findings on the fixed temporary root and its cleanup comparator. Use one fixed HOME-cache path, preserving exclusive creation, ownership and exact cleanup; no exemption or baseline change.",
     "syntax": "Both workflows and 15 Bash / 5 Python bodies parse; no workflow body, local quality gate or test suite executed.",
+    "hostedProof": "pending"
+  },
+  "manualSecretExpectationRepair": {
+    "recordedAt": "2026-11-03T06:10:45.409471+00:00",
+    "failedHead": "0ef3a9ea8c850ec59c0953da50596a935037c5fa",
+    "runId": 41587001295,
+    "jobId": 125754733602,
+    "logSha256": "e7ff7428155c4b4bfe65910fb67166028f9f7c849900f8f0b1c891f692e9a4de",
+    "diagnostic": "The reused helper adds a push-only event condition, while the protected manual caller correctly forwards the direct named secret reference.",
+    "repair": "Keep assertSome and restore the independent exact direct reference as its payload expectation. Leave the existing push-only helper and workflow delivery policy intact.",
+    "localTestsExecuted": false,
     "hostedProof": "pending"
   }
 }
