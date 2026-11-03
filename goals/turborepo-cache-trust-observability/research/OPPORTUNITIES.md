@@ -2267,3 +2267,13 @@ compiled-artifact proof.
   masking without running local verification or repository tests.
 - The live snapshot stays held. Retain the failed read and contradictory output;
   no cache result, old report or zero exit proves current hosted readiness.
+
+### 2026-11-03 — preserve the same read failure in historical recovery
+
+- Hosted Repo Sanity on #2684 found that the narrowed completion-recovery
+  decoder omitted the new required readiness input. Its schema must retain the
+  existing typed `readFailure`, including when other counters claim green.
+- Add the optional encoded field to that decoder. A legacy absent failure
+  decodes to None; a recorded failure survives and refuses recovery. Extend the
+  existing recovery matrix with an exact refusal-message assertion so a decode
+  error cannot stand in for the intended readiness hold. No local suite ran.
