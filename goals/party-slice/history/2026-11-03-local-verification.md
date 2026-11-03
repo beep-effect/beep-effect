@@ -132,3 +132,18 @@ lacks. This is a monitor-launch failure, not a gate or push failure. The workflo
 continues attached; no authentication/service restart or duplicate publish is
 needed for that failure. The PR-specific proposedCloseout is now prepared with
 initiative status active. Hosted/final-head readiness and merge are not yet proven.
+
+### Hosted release-policy correction
+
+The first hosted Repo Sanity run failed on `.changeset/party-reference-ownership.md`
+referencing the private `@beep/law-practice-domain` workspace. The source command
+`bun run beep quality changeset-graph` reproduced that failure locally. The earlier
+local sanity receipt did not prove this current source check and is superseded for
+this requirement. The repository's explicit private-release policy forbids the
+note; the breaking-change and reversal guidance is retained in
+[the migration note](2026-11-03-legal-party-reference-migration.md).
+
+The closeout proposal passed publish gates and was pushed as `1d4576ad30`.
+There were zero actionable review threads at the first closeout read. Optional
+Vercel deployment statuses reported rate limits; these are separate from the
+required release-policy failure. Final verification and readiness remain open.
