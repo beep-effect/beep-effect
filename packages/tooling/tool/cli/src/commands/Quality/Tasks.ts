@@ -66,6 +66,7 @@ import { manifestParser } from "../../internal/ManifestRead.ts";
 import {
   CapturedStep,
   formatCommandLine,
+  OutputBound,
   QualityTaskStep,
   qualityStepOutputBound,
   repoRunOutputBound,
@@ -91,6 +92,7 @@ import {
   planWorkspaceCoverageAffectedScope,
   workspaceCoverageScopeOwners,
 } from "./internal/CoverageScope.ts";
+import { DOCS_OXLINT_CONFIG, prepareDocsOxlintConfig } from "./internal/DocsOxlintPlugin.ts";
 import {
   detectNoLocationTs2589Flake,
   FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH,
@@ -110,11 +112,19 @@ import {
   renderLaneProofRefusal,
 } from "./internal/LaneProofReuse.ts";
 import {
+  LINT_POLICY_TARGET_TASKS,
+  LintPolicyFullScope,
+  LintPolicyScope,
+  lintPolicyAffectedTargetsFromDryRun,
+  resolveLintPolicyScope,
+} from "./internal/LintPolicyScope.ts";
+import {
   appendTurboLaneLedger,
   closeTurboLaneLedger,
   readTurboLaneDigest,
   readTurboLaneLedger,
   TURBO_LANE_LEDGER_ENV,
+  turboLaneDigestCacheable,
   turboLaneDigestPackages,
 } from "./internal/TurboLaneDigest.ts";
 import { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroupFailed } from "./Quality.errors.ts";
@@ -150,10 +160,11 @@ import type { PgliteTestcontainerResource } from "@beep/test-utils";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
-import type { CaptureCommandTimedOutError, OutputBound } from "../../internal/process/index.ts";
+import type { CaptureCommandTimedOutError } from "../../internal/process/index.ts";
 import type { CoverageBaselineRowDelta } from "./internal/CoverageScope.ts";
 import type { FlakeQuarantineTask } from "./internal/FlakeQuarantine.ts";
 import type { LaneProofSession } from "./internal/LaneProofReuse.ts";
+import type { LintPolicyAffectedTargets } from "./internal/LintPolicyScope.ts";
 import type { TurboLaneDigest } from "./internal/TurboLaneDigest.ts";
 import type { UnexpectedQualityTaskFailure } from "./Quality.errors.ts";
 import type { GithubCheckLaneSpec, GithubCheckLaneWaveSpec, QualityConcurrencyPlan } from "./Quality.schemas.ts";
@@ -1904,12 +1915,14 @@ export type QualityTaskLaneInput = readonly [
 ];
 
 /**
- * What a lane's Turbo inputs resolved to: the digest it can be reused by, and
- * the workspace packages that digest folds (ruling 68).
+ * What a lane's Turbo inputs resolved to: the digest it can be reused by, the
+ * workspace packages that digest folds (ruling 68), and whether Turbo caches
+ * every task it folds (ruling 69's lock).
  */
 type LaneInputResolution = {
   readonly inputDigest: O.Option<string>;
   readonly inputPackages: ReadonlyArray<string>;
+  readonly inputsCacheable: boolean;
 };
 
 const qualityTaskLaneRunFromOutcome = (
@@ -1934,6 +1947,7 @@ const qualityTaskLaneRunFromOutcome = (
     ),
     inputDigest: inputs.inputDigest,
     inputPackages: inputs.inputPackages,
+    inputsCacheable: inputs.inputsCacheable,
     redSchedulingDecision: O.isSome(outcome.failure) ? redSchedulingDecision : O.none(),
     commandText: O.some(commandText(outcome.step.command, outcome.step.args)),
   });
@@ -2013,14 +2027,17 @@ const digestValue = (digest: TurboLaneDigest): string => digest.digest;
 // the same wrapper-ledger or direct-Turbo path as a pass, so its key is the one
 // a pass of the same inputs records, the ledger can see a hit-versus-failed
 // disagreement, and the changed-package tripwire sees a failed lane's scope.
+// Such a lane is not cacheable either: no Turbo definition vouches for its digest.
 const unscopedLaneInputs = (inputDigest: O.Option<string>): LaneInputResolution => ({
   inputDigest,
   inputPackages: A.empty<string>(),
+  inputsCacheable: false,
 });
 
 const laneInputsFromTurboDigest = (digest: O.Option<TurboLaneDigest>): LaneInputResolution => ({
   inputDigest: O.map(digest, digestValue),
   inputPackages: O.match(digest, { onNone: A.empty<string>, onSome: turboLaneDigestPackages }),
+  inputsCacheable: O.exists(digest, turboLaneDigestCacheable),
 });
 
 const readLaneInputs = <Failure, Requirements>(
@@ -2044,7 +2061,7 @@ const readLaneInputs = <Failure, Requirements>(
  * @param outcome - The finished lane step.
  * @param declared - Digest the caller declared, if any.
  * @param ledger - Wrapper lane ledger path, if the step carries one.
- * @returns The lane's input digest and package scope (ruling 68).
+ * @returns The lane's input digest, package scope (ruling 68) and cacheability (ruling 69).
  */
 const resolveLaneInputDigestSource = Effect.fn("QualityTasks.resolveLaneInputDigestSource")(function* (
   outcome: StreamingStepOutcome,
@@ -3087,20 +3104,21 @@ const rootCheckSteps = (
 ];
 
 // Policy lint takes its width from the concurrency plan: Check's accepted overrides
-// (`BEEP_QUALITY_CHECK_CONCURRENCY`) over the profile's policy lint budget.
+// (`BEEP_QUALITY_CHECK_CONCURRENCY`) over the profile's policy lint budget. Two graphs that
+// run abreast split that budget through `width`.
 const policyLintTurboStep = (
   repoRoot: string,
   label: string,
   tasks: ReadonlyArray<string>,
   base?: string,
-  plan: QualityConcurrencyPlan = localQualityConcurrencyPlan()
+  plan: QualityConcurrencyPlan = localQualityConcurrencyPlan(),
+  width: number = plan.policyLint
 ): QualityTaskStep => {
-  const concurrency = plan.policyLint;
   // Scope is the caller's decision: a base means a scoped local run, no base means full scope
   // (the policy task folds CI into full scope before building the plan).
   const affected = !P.isUndefined(base);
   const step = turboStep(repoRoot, label, tasks, [
-    `--concurrency=${concurrency}`,
+    `--concurrency=${width}`,
     "--continue=dependencies-successful",
     "--summarize",
     ...(affected ? ["--affected"] : []),
@@ -3196,13 +3214,33 @@ const policyStateTasks = [
 ];
 const fullScopeStateTasks = (hosted: boolean): ReadonlyArray<string> =>
   hosted ? policyStateTasks : A.filter(policyStateTasks, (task) => !A.contains(policyGitDeltaTasks, task));
+// Changed scope splits the state phase by cache contract. The cached tasks' inputs are certified
+// (standards/cache-qualification-baseline.json), so Turbo's task-input selection skips them exactly
+// when a cache hit would replay them; they join the affected medium graph. The D2 git-delta and
+// clock checks and the uncertified binary walkers stay unfiltered (standards/turbo-remote-cache.md)
+// in a graph that runs abreast of the medium one, so its long poles overlap as they do in the
+// single full-scope graph.
+const policyCachedStateTasks = ["lint:jsdoc-module-tags", "jsdoc:inventory:check", "jsdoc:ratchet:check"];
+const policyUnscopedStateTasks = A.filter(policyStateTasks, (task) => !A.contains(policyCachedStateTasks, task));
+// The unfiltered state graph is a handful of single-process tasks whose serial sum stays under
+// the medium graph's long pole, so one slot of the budget is enough for it.
+const POLICY_UNSCOPED_STATE_WIDTH = 1;
 // Root documentation lint always runs oxlint; Turbo owns package/incremental caches.
-const rootDocsArgs = (_cacheKey: string): ReadonlyArray<string> => [
+const rootDocsArgs = (docsConfig: string): ReadonlyArray<string> => [
   "oxlint",
   ".",
   "--config",
-  ".oxlintrc.docs.json",
+  docsConfig,
   "--max-warnings=0",
+];
+// Changed scope: one oxlint process over the package directories Turbo's `lint:jsdoc` selection
+// picked (perf audit M16), instead of one repo-cli boot plus plugin load per package.
+const affectedDocsArgs = (docsConfig: string, targets: ReadonlyArray<string>): ReadonlyArray<string> => [
+  "oxlint",
+  "--config",
+  docsConfig,
+  "--max-warnings=0",
+  ...targets,
 ];
 const rootDocsCacheKeySources = [
   ".oxlintrc.docs.json",
@@ -3282,10 +3320,160 @@ const knowledgeDoctorPolicySteps = (repoRoot: string, base: string | undefined, 
     onSome: (ref) => [repoCliStep(repoRoot, "knowledge:doctor", ["knowledge", "doctor", "ci", "--base", ref])],
   });
 
+// Inputs the runtime resolves before planning; a pure plan reads the source docs config and has no
+// Turbo target probe, so its changed-scope medium graph keeps the per-package `lint:jsdoc` tasks.
+type LintPolicyPlanOptions = {
+  readonly docsConfig?: string | undefined;
+  readonly targets?: LintPolicyAffectedTargets | undefined;
+};
+
+// A stage's steps run abreast; stages run in order.
+type LintPolicyStage = A.NonEmptyReadonlyArray<QualityTaskStep>;
+
+const withPolicyCaptureTimeout = (step: QualityTaskStep): QualityTaskStep =>
+  QualityTaskStep.make({ ...step, captureTimeoutMillis: QUALITY_CAPTURE_TIMEOUT_MILLIS });
+
+const policyStage = (...steps: A.NonEmptyReadonlyArray<QualityTaskStep>): LintPolicyStage =>
+  A.map(steps, withPolicyCaptureTimeout);
+
+// The test lane's own Turbo task is `package-test-typecheck` (uncached by tripwire
+// ruling); the orchestrating command stays a repo-cli step.
+const testTsgoPolicyStage = (repoRoot: string): LintPolicyStage =>
+  policyStage(repoCliStep(repoRoot, "quality:test-tsgo", ["quality", "test-tsgo"]));
+
+const fullScopePolicyStages = (
+  repoRoot: string,
+  sweeps: LintPolicySweeps,
+  hosted: boolean,
+  docsConfig: string,
+  plan: QualityConcurrencyPlan
+): ReadonlyArray<LintPolicyStage> => [
+  policyStage(policyLintTurboStep(repoRoot, "lint:policy:cheap", policyCheapTasks, undefined, plan)),
+  policyStage(
+    policyLintTurboStep(
+      repoRoot,
+      "lint:policy:medium",
+      [...policyMediumTasks, ...fullScopeStateTasks(hosted)],
+      undefined,
+      plan
+    )
+  ),
+  ...A.map(knowledgeDoctorPolicySteps(repoRoot, undefined, hosted), (step) => policyStage(step)),
+  // Ruling 31 retains the hosted root docs program independently of the
+  // deprecated-API sweep switch. It has no Turbo summary of its own.
+  policyStage(bunxStep(repoRoot, "lint:jsdoc", rootDocsArgs(docsConfig))),
+  policyStage(
+    sweeps.deprecatedApis === "oxlint"
+      ? repoCliStep(repoRoot, "lint:deprecated-apis", ["lint", "deprecated-apis", "--full"])
+      : deprecatedApisTurboStep(repoRoot, undefined, plan)
+  ),
+  testTsgoPolicyStage(repoRoot),
+];
+
+// With a Turbo target probe, the documentation and (oxlint-swept) deprecated-API package tasks
+// each run as one root process over the directories Turbo selected; an empty selection plans no
+// step. Without one, the per-package Turbo tasks stay in their graphs.
+const changedScopeDocsStages = (
+  repoRoot: string,
+  docsConfig: string,
+  targets: O.Option<LintPolicyAffectedTargets>
+): ReadonlyArray<LintPolicyStage> =>
+  pipe(
+    targets,
+    O.flatMap(({ jsdoc }) => O.liftPredicate(jsdoc, A.isReadonlyArrayNonEmpty)),
+    O.match({
+      onNone: A.empty<LintPolicyStage>,
+      onSome: (jsdoc) => [policyStage(bunxStep(repoRoot, "lint:jsdoc", affectedDocsArgs(docsConfig, jsdoc)))],
+    })
+  );
+
+const changedScopeDeprecatedApisStages = (
+  repoRoot: string,
+  base: string,
+  sweeps: LintPolicySweeps,
+  targets: O.Option<LintPolicyAffectedTargets>,
+  plan: QualityConcurrencyPlan
+): ReadonlyArray<LintPolicyStage> =>
+  O.match(
+    O.filter(targets, () => sweeps.deprecatedApis === "oxlint"),
+    {
+      onNone: () => [policyStage(deprecatedApisTurboStep(repoRoot, base, plan))],
+      onSome: ({ deprecatedApis }) =>
+        A.isReadonlyArrayNonEmpty(deprecatedApis)
+          ? [
+              policyStage(
+                repoCliStep(repoRoot, "lint:deprecated-apis", [
+                  "lint",
+                  "deprecated-apis",
+                  ...A.flatMap(deprecatedApis, (target) => ["--target", target]),
+                ])
+              ),
+            ]
+          : [],
+    }
+  );
+
+const changedScopePolicyStages = (
+  repoRoot: string,
+  base: string,
+  sweeps: LintPolicySweeps,
+  hosted: boolean,
+  docsConfig: string,
+  targets: O.Option<LintPolicyAffectedTargets>,
+  plan: QualityConcurrencyPlan
+): ReadonlyArray<LintPolicyStage> => [
+  policyStage(policyLintTurboStep(repoRoot, "lint:policy:cheap", policyCheapTasks, base, plan)),
+  policyStage(
+    policyLintTurboStep(
+      repoRoot,
+      "lint:policy:medium",
+      [
+        ...policyMediumTasks,
+        ...(O.isNone(targets) ? ["lint:jsdoc"] : []),
+        "lint:jsdoc:root",
+        ...policyCachedStateTasks,
+      ],
+      base,
+      plan,
+      Math.max(1, plan.policyLint - POLICY_UNSCOPED_STATE_WIDTH)
+    ),
+    policyLintTurboStep(
+      repoRoot,
+      "lint:policy:state",
+      policyUnscopedStateTasks,
+      undefined,
+      plan,
+      POLICY_UNSCOPED_STATE_WIDTH
+    )
+  ),
+  ...A.map(knowledgeDoctorPolicySteps(repoRoot, base, hosted), (step) => policyStage(step)),
+  ...changedScopeDocsStages(repoRoot, docsConfig, targets),
+  ...changedScopeDeprecatedApisStages(repoRoot, base, sweeps, targets, plan),
+  testTsgoPolicyStage(repoRoot),
+];
+
 // The overlay, test-typecheck, effect-vitest and JSDoc ratchet checks are root Turbo
 // tasks (cached, fingerprint-closed) inside the medium and state phases; the JSDoc ratchet
 // depends on the inventory task, so Turbo's `--continue=dependencies-successful` skips the
-// compare whenever the inventory phase is red instead of a label-keyed rule here.
+// compare whenever the inventory phase is red instead of a label-keyed rule here. The
+// documentation input digest stays a plan input for consumers; the argv does not carry it.
+const rootRepoLintPolicyStages = (
+  repoRoot: string,
+  base: string | undefined,
+  sweeps: LintPolicySweeps,
+  hosted: boolean,
+  _docsCacheKey: string,
+  plan: QualityConcurrencyPlan = localQualityConcurrencyPlan(),
+  options: LintPolicyPlanOptions = {}
+): ReadonlyArray<LintPolicyStage> => {
+  const docsConfig = options.docsConfig ?? DOCS_OXLINT_CONFIG;
+  return O.match(O.fromUndefinedOr(base), {
+    onNone: () => fullScopePolicyStages(repoRoot, sweeps, hosted, docsConfig, plan),
+    onSome: (ref) =>
+      changedScopePolicyStages(repoRoot, ref, sweeps, hosted, docsConfig, O.fromUndefinedOr(options.targets), plan),
+  });
+};
+
 const rootRepoLintPolicySteps = (
   repoRoot: string,
   _files: ReadonlyArray<string> | undefined,
@@ -3293,64 +3481,49 @@ const rootRepoLintPolicySteps = (
   sweeps: LintPolicySweeps,
   hosted: boolean,
   docsCacheKey: string,
-  plan: QualityConcurrencyPlan = localQualityConcurrencyPlan()
-): ReadonlyArray<QualityTaskStep> => {
-  const full = P.isUndefined(base);
-  return A.map(
-    [
-      policyLintTurboStep(repoRoot, "lint:policy:cheap", policyCheapTasks, base, plan),
-      policyLintTurboStep(
-        repoRoot,
-        "lint:policy:medium",
-        [...policyMediumTasks, ...(full ? fullScopeStateTasks(hosted) : ["lint:jsdoc", "lint:jsdoc:root"])],
-        base,
-        plan
-      ),
-      ...(full ? [] : [policyLintTurboStep(repoRoot, "lint:policy:state", policyStateTasks, undefined, plan)]),
-      ...knowledgeDoctorPolicySteps(repoRoot, base, hosted),
-      // Ruling 31 retains the hosted root docs program independently of the
-      // deprecated-API sweep switch. It has no Turbo summary of its own.
-      ...(full ? [bunxStep(repoRoot, "lint:jsdoc", rootDocsArgs(docsCacheKey))] : []),
-      full && sweeps.deprecatedApis === "oxlint"
-        ? repoCliStep(repoRoot, "lint:deprecated-apis", ["lint", "deprecated-apis", "--full"])
-        : deprecatedApisTurboStep(repoRoot, base, plan),
-      // The test lane's own Turbo task is `package-test-typecheck` (uncached by tripwire
-      // ruling); the orchestrating command stays a repo-cli step.
-      repoCliStep(repoRoot, "quality:test-tsgo", ["quality", "test-tsgo"]),
-    ],
-    (step) => QualityTaskStep.make({ ...step, captureTimeoutMillis: QUALITY_CAPTURE_TIMEOUT_MILLIS })
+  plan: QualityConcurrencyPlan = localQualityConcurrencyPlan(),
+  options: LintPolicyPlanOptions = {}
+): ReadonlyArray<QualityTaskStep> =>
+  A.flatten(rootRepoLintPolicyStages(repoRoot, base, sweeps, hosted, docsCacheKey, plan, options));
+
+// Run each stage in order, its steps abreast. Full-scope and hosted runs collect every failure
+// (a hosted pull request runs changed-scope and must still report every phase); only a local
+// changed-scope run stops after a red cheap phase.
+const stopsAfterCheapRed = (step: QualityTaskStep, collectAll: boolean, result: QualityTaskStepOutput): boolean =>
+  !collectAll && step.label === "lint:policy:cheap" && result.exitCode !== 0;
+
+// Every command line is announced before the stage starts; outputs render in plan order once the
+// whole stage finishes, so abreast steps never interleave their blocks.
+const runPolicyStage = Effect.fn("QualityTasks.runPolicyStage")(function* (stage: LintPolicyStage) {
+  const resolved = yield* Effect.forEach(stage, withTurboSecretSession);
+  yield* Effect.forEach(
+    stage,
+    (step) => Console.log(`[beep-cli] ${step.label}: ${commandText(step.command, step.args)}`),
+    { discard: true }
   );
-};
-
-// Run each Turbo process graph in order. Hosted runs collect every failure;
-// local runs stop after a red cheap phase.
-// Local runs stop after a red cheap phase; hosted runs collect every phase.
-const stopsAfterCheapRed = (step: QualityTaskStep, full: boolean, result: QualityTaskStepOutput): boolean =>
-  !full && step.label === "lint:policy:cheap" && result.exitCode !== 0;
-
-const runPolicyStep = Effect.fn("QualityTasks.runPolicyStep")(function* (step: QualityTaskStep) {
-  const resolved = yield* withTurboSecretSession(step);
-  yield* Console.log(`[beep-cli] ${step.label}: ${commandText(step.command, step.args)}`);
-  const result = yield* collectResolvedStepOutput(resolved);
-  yield* renderStepOutput(result);
-  return result;
+  const results = yield* Effect.forEach(resolved, collectResolvedStepOutput, { concurrency: "unbounded" });
+  yield* Effect.forEach(results, renderStepOutput, { discard: true });
+  return results;
 });
 
-const runPolicySteps = Effect.fn("QualityTasks.runPolicySteps")(function* (
-  steps: ReadonlyArray<QualityTaskStep>,
-  full: boolean
+const runPolicyStages = Effect.fn("QualityTasks.runPolicyStages")(function* (
+  stages: ReadonlyArray<LintPolicyStage>,
+  collectAll: boolean
 ) {
   const results = A.empty<QualityTaskStepOutput>();
-  yield* Console.log(`[beep-cli] lint:policy: running ${A.length(steps)} ordered step(s)`);
-  for (const step of steps) {
-    const result = yield* runPolicyStep(step);
-    A.appendInPlace(results, result);
-    if (stopsAfterCheapRed(step, full, result)) {
+  yield* Console.log(`[beep-cli] lint:policy: running ${A.length(A.flatten(stages))} ordered step(s)`);
+  for (const stage of stages) {
+    const stageResults = yield* runPolicyStage(stage);
+    A.appendAllInPlace(results, stageResults);
+    if (A.some(A.zip(stage, stageResults), ([step, result]) => stopsAfterCheapRed(step, collectAll, result))) {
       yield* failQualityTaskGroup("lint:policy", failedStepOutputs(results));
     }
   }
   yield* failQualityTaskGroup("lint:policy", failedStepOutputs(results));
 });
+
+const runPolicySteps = (steps: ReadonlyArray<QualityTaskStep>, collectAll: boolean) =>
+  runPolicyStages(A.map(steps, A.of), collectAll);
 
 /**
  * Build the repo-wide root lint policy subprocess steps.
@@ -3372,6 +3545,8 @@ const runPolicySteps = Effect.fn("QualityTasks.runPolicySteps")(function* (
  *   the live CI detection.
  * @param docsCacheKey - Documentation input digest; the runtime digests the docs
  *   configuration sources, a pure plan carries `unkeyed`.
+ * @param options - Runtime-resolved documentation config and Turbo target probe; a pure plan
+ *   lints with the source docs config and keeps the per-package documentation tasks.
  * @returns Planned subprocess steps for policy-only lint verification.
  * @category utilities
  * @since 0.0.0
@@ -3382,7 +3557,8 @@ export const rootLintPolicyStepsForTesting: {
     base?: string,
     sweeps?: LintPolicySweeps,
     hosted?: boolean,
-    docsCacheKey?: string
+    docsCacheKey?: string,
+    options?: LintPolicyPlanOptions
   ): (repoRoot: string) => ReadonlyArray<QualityTaskStep>;
   (
     repoRoot: string,
@@ -3390,7 +3566,8 @@ export const rootLintPolicyStepsForTesting: {
     base?: string,
     sweeps?: LintPolicySweeps,
     hosted?: boolean,
-    docsCacheKey?: string
+    docsCacheKey?: string,
+    options?: LintPolicyPlanOptions
   ): ReadonlyArray<QualityTaskStep>;
 } = dual(
   (args: IArguments) => P.isString(args[0]),
@@ -3400,9 +3577,132 @@ export const rootLintPolicyStepsForTesting: {
     base?: string,
     sweeps = oxlintPolicySweeps,
     hosted = isCiSync(),
-    docsCacheKey = UNKEYED_ROOT_DOCS_CACHE
-  ): ReadonlyArray<QualityTaskStep> => rootRepoLintPolicySteps(repoRoot, files, base, sweeps, hosted, docsCacheKey)
+    docsCacheKey = UNKEYED_ROOT_DOCS_CACHE,
+    options: LintPolicyPlanOptions = {}
+  ): ReadonlyArray<QualityTaskStep> =>
+    rootRepoLintPolicySteps(repoRoot, files, base, sweeps, hosted, docsCacheKey, localQualityConcurrencyPlan(), options)
 );
+
+// A stage-level plan request: the scope base, the hosted posture and the runtime-resolved inputs.
+type LintPolicyStagesRequest = LintPolicyPlanOptions & {
+  readonly base?: string | undefined;
+  readonly hosted?: boolean | undefined;
+};
+
+/**
+ * Build the repo-wide root lint policy plan as ordered stages of abreast steps.
+ *
+ * **Example** (Inspect the changed-scope stages)
+ *
+ * ```ts
+ * import { rootLintPolicyStagesForTesting } from "@beep/repo-cli/test/Quality"
+ *
+ * const stages = rootLintPolicyStagesForTesting("/repo", { base: "origin/main", hosted: true })
+ * console.log(stages.map((stage) => stage.map((step) => step.label)))
+ * ```
+ *
+ * @param repoRoot - Repository root directory.
+ * @param request - Scope base (omitted for full scope), hosted posture (defaults to the live CI
+ *   detection), documentation config and Turbo target probe.
+ * @returns The plan's stages; each stage's steps run abreast.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const rootLintPolicyStagesForTesting: {
+  (request: LintPolicyStagesRequest): (repoRoot: string) => ReadonlyArray<ReadonlyArray<QualityTaskStep>>;
+  (repoRoot: string, request: LintPolicyStagesRequest): ReadonlyArray<ReadonlyArray<QualityTaskStep>>;
+} = dual(
+  2,
+  (repoRoot: string, request: LintPolicyStagesRequest): ReadonlyArray<ReadonlyArray<QualityTaskStep>> =>
+    rootRepoLintPolicyStages(
+      repoRoot,
+      request.base,
+      oxlintPolicySweeps,
+      request.hosted ?? isCiSync(),
+      UNKEYED_ROOT_DOCS_CACHE,
+      localQualityConcurrencyPlan(),
+      request
+    )
+);
+
+// Turbo's dry-run plan carries every task's input hash map (tens of MiB on this graph), so the
+// probe reads stdout under its own bound instead of the step output bound.
+const LINT_POLICY_TARGET_PROBE_BOUND = OutputBound.make({
+  maxChars: 512 * 1024 * 1024,
+  truncatedNotice: "\n[beep-cli] lint:policy:targets: dry-run plan truncated",
+});
+
+const lintPolicyTargetProbeArgs = (): ReadonlyArray<string> => [
+  "turbo",
+  "run",
+  ...LINT_POLICY_TARGET_TASKS,
+  "--affected",
+  "--dry=json",
+  "--cache=local:r",
+];
+
+// Ask Turbo which `lint:jsdoc` / `lint:deprecated-apis` package tasks its changed-scope plan selects
+// (the same `affectedUsingTaskInputs` selection the per-package tasks used). Any failure keeps the
+// per-package Turbo tasks, which are slower but select the same packages.
+const probeLintPolicyAffectedTargets = Effect.fn("QualityTasks.probeLintPolicyAffectedTargets")(function* (
+  repoRoot: string,
+  base: string
+) {
+  const args = lintPolicyTargetProbeArgs();
+  yield* Console.log(`[beep-cli] lint:policy:targets: TURBO_SCM_BASE=${base} ${commandText("bunx", args)}`);
+  const probe = yield* runCaptured({
+    command: "bunx",
+    args,
+    cwd: repoRoot,
+    env: { TURBO_SCM_BASE: base },
+    extendEnv: true,
+    source: "stdout",
+    bound: LINT_POLICY_TARGET_PROBE_BOUND,
+  }).pipe(
+    QualityTaskConfigurationError.mapError("Failed to spawn the lint policy target probe."),
+    Effect.filterOrFail(
+      (result) => result.exitCode === 0 && !result.truncated,
+      (result) =>
+        QualityTaskConfigurationError.new(
+          result.truncated
+            ? "The lint policy target probe exceeded its capture bound."
+            : `The lint policy target probe exited with code ${result.exitCode}.`
+        )
+    ),
+    Effect.flatMap((result) => lintPolicyAffectedTargetsFromDryRun(result.output)),
+    Effect.tapError((error) =>
+      Console.log(`[beep-cli] lint:policy:targets: ${error.message} Keeping the per-package Turbo tasks.`)
+    ),
+    Effect.option
+  );
+  yield* O.match(probe, {
+    onNone: () => Effect.void,
+    onSome: ({ jsdoc, deprecatedApis }) =>
+      Console.log(
+        `[beep-cli] lint:policy:targets: lint:jsdoc ${A.length(jsdoc)} package(s), lint:deprecated-apis ${A.length(deprecatedApis)} package(s)`
+      ),
+  });
+  return probe;
+});
+
+const LINT_POLICY_SCOPE_LOGGED_ESCALATIONS = 10;
+
+const lintPolicyScopeLine = (scope: LintPolicyScope): string =>
+  LintPolicyScope.match(scope, {
+    affected: ({ changedFileCount }) => `changed (${changedFileCount} files)`,
+    full: ({ escalations }) =>
+      A.match(escalations, {
+        onEmpty: () => "full",
+        onNonEmpty: (all) => {
+          const shown = A.map(
+            A.take(all, LINT_POLICY_SCOPE_LOGGED_ESCALATIONS),
+            ({ trigger, path }) => `${trigger} ${path}`
+          );
+          const hidden = A.length(all) - A.length(shown);
+          return `full (escalated: ${A.join(shown, "; ")}${hidden > 0 ? `; +${hidden} more` : ""})`;
+        },
+      }),
+  });
 
 /**
  * Run the repo-wide root lint policy checks without the aggregate Turbo lint lane.
@@ -3428,23 +3728,19 @@ const runRootLintPolicyTaskInternal = Effect.fn("QualityTasks.runRootLintPolicyT
   const cwd = path.resolve(process.cwd());
   const repoRoot = yield* findRepoRoot(cwd);
   const sweeps = yield* readLintPolicySweeps(repoRoot);
-  const runFull = full;
-  let files: ReadonlyArray<string> | undefined;
-  if (!runFull) {
-    files = yield* collectChangedFiles(repoRoot, base, "HEAD");
-  }
-  const changedFileCount = pipe(
-    O.fromUndefinedOr(files),
-    O.map(A.length),
-    O.getOrElse(() => 0)
-  );
-
-  yield* Console.log(`[beep-cli] lint:policy: scope=${runFull ? "full" : `changed (${changedFileCount} files)`}`);
+  const scope = full ? LintPolicyFullScope.make({ escalations: [] }) : yield* resolveLintPolicyScope(repoRoot, base);
+  yield* Console.log(`[beep-cli] lint:policy: scope=${lintPolicyScopeLine(scope)}`);
+  const runFull = scope._tag === "full";
+  const targets = runFull ? O.none() : yield* probeLintPolicyAffectedTargets(repoRoot, base);
+  const docsConfig = yield* prepareDocsOxlintConfig(repoRoot);
   const docsCacheKey = yield* rootDocsCacheKey(repoRoot);
   const plan = yield* qualityConcurrencyPlan;
-  yield* runPolicySteps(
-    rootRepoLintPolicySteps(repoRoot, files, runFull ? undefined : base, sweeps, isCiSync(), docsCacheKey, plan),
-    runFull
+  yield* runPolicyStages(
+    rootRepoLintPolicyStages(repoRoot, runFull ? undefined : base, sweeps, isCiSync(), docsCacheKey, plan, {
+      docsConfig,
+      targets: O.getOrUndefined(targets),
+    }),
+    runFull || isCiSync()
   );
 });
 

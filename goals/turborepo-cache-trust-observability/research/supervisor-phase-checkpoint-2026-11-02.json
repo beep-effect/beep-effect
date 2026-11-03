@@ -1,0 +1,328 @@
+{
+  "schemaVersion": "cache-supervisor-phase-checkpoint/v1",
+  "recordedAt": "2026-11-02T11:18:01.664216+00:00",
+  "authority": "Current source and focused local diagnostic controls only; no ordinary native qualification, protected publication, production signing or whole-goal acceptance.",
+  "sourceBaseRevision": "560195af6030ef73651add0c37924b15f2c6b03a",
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "a7c9c9449e0f1ff5f7599b0e7a4755d02e8e1a716a4843753fd9134293a08728",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.signed.schemas.ts": "f0d28ec943ab2472d9cf1b4d7bd542099ecfafd48cbf7800d6f14c3c368ef045",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts": "4e9e57c518f67bbdd6d966528afe0015860494163623a7701ebc7ce3281e7e95",
+    "packages/tooling/tool/cli/src/commands/Cache/index.ts": "3ead2b1e09cbb44463b1e5accabf3eed5df8b9d4df3ca9c11019294988fa0ee1",
+    "packages/tooling/tool/cli/test/cache-signed-runner.test.ts": "2ca8defb85d4e66d40ed0891149fad7b54153097ba686743c753ae0b254ed67e",
+    "standards/schema-catalog/@beep/repo-cli.generated.jsonc": "44cbd027a13518e9dc28be3011316fc1433a10c7331d146c8df79441ef8f2a07",
+    "standards/jsdoc-documentation.inventory.jsonc": "d58181a28ed627a45b0c9173626deba4ad3d6de2f85ceecf687ea17f02c3342f",
+    "standards/jsdoc-documentation.inventory.md": "e13f0ad2ed38d37f4d855542c335e449608a7bbb5f7b5bb00257190e776aaa15"
+  },
+  "failureThatMotivatedChange": {
+    "ordinaryStableElapsedSeconds": 1221.589,
+    "exit": 1,
+    "diagnostic": "Signed pilot comparison exceeded its twenty-minute execution limit.",
+    "phase": "unknown; no retroactive attribution",
+    "observationProduced": false,
+    "instrumentedSuccessAuthority": "Separate private diagnostic only; not used as ordinary qualification."
+  },
+  "contract": {
+    "fixedPhaseMembers": 11,
+    "progressAuthority": "Untrusted diagnostic observation only; last observed phase is not an established root cause.",
+    "stdoutAndStderrMaxCharsEach": 65536,
+    "hint": "Last complete exact known newline-terminated stdout marker, in actual observation order, only when stdout has not overflowed.",
+    "excluded": [
+      "unknown markers",
+      "decorated lines",
+      "incomplete final lines",
+      "truncated stdout",
+      "captured substrings",
+      "raw causes"
+    ],
+    "markerPlacement": "Orchestration boundaries outside native selected-task intervals and pair dispatch.",
+    "existingGatesRetained": [
+      "twenty-minute comparison timeout",
+      "ten-minute upload timeout",
+      "successful exit",
+      "stdout/stderr truncation refusal",
+      "decoded report authority",
+      "issuer isolation/integrity",
+      "positive actual selected-task overlap",
+      "independent upload authorization"
+    ],
+    "reusedProcessAPI": [
+      "runFoldedStdout",
+      "boundedChunkReducer",
+      "emptyBoundedOutput",
+      "CapturedStreams"
+    ]
+  },
+  "controls": {
+    "focusedRunnerProtocolAndEvidence": {
+      "tests": 60,
+      "files": 3,
+      "result": {
+        "exit": 0,
+        "elapsedSeconds": 4.169,
+        "finishedAt": "2026-11-02T11:10:53.940493+00:00"
+      }
+    },
+    "packageQuick": {
+      "lint": "passed",
+      "check": "passed",
+      "result": {
+        "exit": 0,
+        "elapsedSeconds": 11.585,
+        "finishedAt": "2026-11-02T11:11:01.378441+00:00"
+      }
+    },
+    "scopedRunnerComplexity": {
+      "result": {
+        "exit": 0,
+        "elapsedSeconds": 4.402,
+        "finishedAt": "2026-11-02T11:10:54.222558+00:00"
+      }
+    },
+    "newCases": [
+      "split chunks and observation order",
+      "unknown or incomplete phase",
+      "private prefix/suffix on a phase line",
+      "complete phase preceding incomplete later marker",
+      "overflow suppresses timeout phase",
+      "real child nonzero exit preserves fixed safe hint",
+      "real child successful exit with stdout overflow is refused"
+    ],
+    "scopedDocgen": {
+      "packages": ["@beep/repo-cli", "@beep/scratchpad"],
+      "repoCliExamplesCompiled": 3670,
+      "result": {
+        "exit": 0,
+        "elapsedSeconds": 53.703,
+        "finishedAt": "2026-11-02T11:21:07.067925+00:00"
+      },
+      "authority": "Scoped package/example proof, not the complete repository hosted gate."
+    },
+    "goalMetadataDoctor": {
+      "result": {
+        "exit": 0,
+        "elapsedSeconds": 2.791,
+        "finishedAt": "2026-11-02T11:18:19.877381+00:00"
+      },
+      "newBlockingFindings": 0,
+      "authority": "Existing historical and completion-gate notices retained; no full-goal acceptance."
+    }
+  },
+  "schemaCatalog": {
+    "result": {
+      "exit": 0,
+      "elapsedSeconds": 28.078,
+      "finishedAt": "2026-11-02T11:16:25.809957+00:00"
+    },
+    "delta": "Exactly one new annotated LiteralKit entry; other schema-catalog rows unchanged."
+  },
+  "canonicalJSDocInventory": {
+    "result": {
+      "exit": 0,
+      "elapsedSeconds": 340.296,
+      "finishedAt": "2026-11-02T11:22:26.036701+00:00"
+    },
+    "baseRevision": "8d5745e33e2709e809d949c8eb9f71aaf9c4e5df",
+    "baseTotals": {
+      "packages": 184,
+      "cleanPackages": 167,
+      "packagesWithoutPublicSrcSurface": 2,
+      "packagesNeedingRemediation": 15,
+      "publicModules": 3573,
+      "publicExports": 25389,
+      "openModules": 115,
+      "openExports": 94,
+      "missingExportExamples": 0,
+      "missingExportCategories": 0,
+      "missingExportSince": 0,
+      "forbiddenTagFindings": 0,
+      "malformedConditionalTagFindings": 0,
+      "exampleImportFindings": 50,
+      "unsafeExampleFindings": 0,
+      "schemaAnnotationFindings": 0,
+      "undescribed-see": 1,
+      "multiple-description-paragraphs": 158,
+      "leading-blank": 0,
+      "trailing-blank": 0,
+      "invalid-heading": 1,
+      "section-out-of-order": 0,
+      "duplicate-section": 0,
+      "empty-section": 0,
+      "section-after-example": 0,
+      "invalid-when-to-use-prefix": 0,
+      "malformed-example": 0,
+      "duplicate-example": 0,
+      "loose-ts-fence": 0,
+      "forbidden-remarks": 0,
+      "no-root-package-import": 47,
+      "rootPolicyOpen": 0
+    },
+    "currentTotals": {
+      "packages": 184,
+      "cleanPackages": 167,
+      "packagesWithoutPublicSrcSurface": 2,
+      "packagesNeedingRemediation": 15,
+      "publicModules": 3574,
+      "publicExports": 25401,
+      "openModules": 115,
+      "openExports": 94,
+      "missingExportExamples": 0,
+      "missingExportCategories": 0,
+      "missingExportSince": 0,
+      "forbiddenTagFindings": 0,
+      "malformedConditionalTagFindings": 0,
+      "exampleImportFindings": 50,
+      "unsafeExampleFindings": 0,
+      "schemaAnnotationFindings": 0,
+      "undescribed-see": 1,
+      "multiple-description-paragraphs": 158,
+      "leading-blank": 0,
+      "trailing-blank": 0,
+      "invalid-heading": 1,
+      "section-out-of-order": 0,
+      "duplicate-section": 0,
+      "empty-section": 0,
+      "section-after-example": 0,
+      "invalid-when-to-use-prefix": 0,
+      "malformed-example": 0,
+      "duplicate-example": 0,
+      "loose-ts-fence": 0,
+      "forbidden-remarks": 0,
+      "no-root-package-import": 47,
+      "rootPolicyOpen": 0
+    },
+    "inheritedAddedExports": [
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Goals/CompletionReceiptStore.service.ts",
+        "symbol": "GoalCompletionReceiptJson",
+        "kind": "const"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Goals/CompletionReceiptStore.service.ts",
+        "symbol": "GoalCompletionReceiptStore",
+        "kind": "class"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Goals/CompletionReceiptStore.service.ts",
+        "symbol": "GoalCompletionReceiptStoreShape",
+        "kind": "interface"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Goals/CompletionReceiptStore.service.ts",
+        "symbol": "goalCompletionReceiptPartition",
+        "kind": "const"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Goals/CompletionReceiptStore.service.ts",
+        "symbol": "goalCompletionReceiptStore",
+        "kind": "const"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Goals/CompletionReceiptStore.service.ts",
+        "symbol": "layerGoalCompletionReceiptStoreLive",
+        "kind": "const"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Goals/CompletionReceiptStore.service.ts",
+        "symbol": "layerGoalCompletionReceiptStoreMemory",
+        "kind": "const"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Goals/CompletionReceiptStore.service.ts",
+        "symbol": "makeGoalCompletionReceiptStoreAt",
+        "kind": "const"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Goals/CompletionReceiptStore.service.ts",
+        "symbol": "makeGoalCompletionReceiptStoreLive",
+        "kind": "const"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
+        "symbol": "export * from \"./CompletionReceiptStore.service.ts\";",
+        "kind": "re-export"
+      }
+    ],
+    "inheritedSourceFilesUnchanged": true,
+    "ownChanges": "Two new schema/type exports and one replaced named re-export declaration.",
+    "ownedExportPositionsVerified": 52,
+    "findingTotalsUnchanged": true
+  },
+  "earlierFailuresRetained": [
+    "Initial 31/32 runner result had an incorrect overflow error expectation; corrected to the existing guard contract.",
+    "Initial two real-child test-body layer provisions failed strictEffectProvide; moved to their isolated test layer.",
+    "Initial runner callback exceeded cognitive complexity by one; reused effect/Boolean.or without changing the rule.",
+    "Inherited applyScaffoldRuleForTesting type diagnostic repaired once by accepted main PR #2567; no duplicate patch."
+  ],
+  "remaining": [
+    "Verify post-hook source identities and publish the complete component.",
+    "Publish one source-complete wave, obtain hosted checks/reviews; primary orchestrator alone merges.",
+    "Freeze ordinary runner source and verify its dependency closure and private-file isolation before the next current stable/canary run.",
+    "Obtain actual protected source inspection and signed producer publication.",
+    "Complete all adoption reviews, trust/rotation/rollback obligations and representative windows."
+  ],
+  "qualificationGranted": false,
+  "productionConfigurationChanged": false,
+  "wholeGoalAcceptanceChanged": false,
+  "mainIntegration": {
+    "acceptedBaseRevision": "8d5745e33e2709e809d949c8eb9f71aaf9c4e5df",
+    "changedPaths": [
+      "packages/drivers/git/test/integration/GitSurface.int.test.ts",
+      "packages/tooling/tool/cli/test/yeet-merge-gate.test.ts"
+    ],
+    "cacheSourceAndRuntimeDependenciesUnchanged": true,
+    "sourceControlReceiptsRetainOriginalExecutedBase": true,
+    "packageQuick": {
+      "exit": 0,
+      "elapsedSeconds": 17.52,
+      "finishedAt": "2026-11-02T11:24:04.856057+00:00"
+    }
+  },
+  "ordinaryNativeFollowup": {
+    "checkpoint": "research/ordinary-native-matrix-checkpoint-2026-11-02.json",
+    "executedSupervisorAndWorkerRevision": "976ca2a943b13bd32f9690ebfdbfc69bd64f239b",
+    "frozenTaskSourceRevision": "68834a997e97a0504df6feee6f57d083b3258c1b",
+    "stableAndCurrentCanaryPassed": true,
+    "originalRemainingListScope": "Retained historical state from the component implementation checkpoint; subsequent proof is explicitly bound in the followup.",
+    "qualificationOrProductionActivationGranted": false
+  },
+  "processFixtureRegressionFollowup": {
+    "sourceRevisionBeforeRepair": "c6efd0e5417b1fc67190dac997b56e98ab47940f",
+    "testPath": "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts",
+    "testSha256": "944fc0ff9bfd9730772d041dca1368c23051612922f2f32bda67617727f7132d",
+    "hostedFailure": {
+      "runId": 41540669315,
+      "jobId": 125603695913,
+      "failed": 4,
+      "cause": "The process double retained a root-policy deprecated-import failure after the native package-lint correction."
+    },
+    "localBefore": {
+      "tests": 32,
+      "failed": 4,
+      "exit": 1,
+      "elapsedSeconds": 26.678,
+      "finishedAt": "2026-11-02T23:04:11.723041+00:00"
+    },
+    "localAfter": {
+      "command": "node node_modules/vitest/vitest.mjs run --config vitest.config.ts test/cache-pilot-orchestration.test.ts test/cache-signed-pilot.test.ts test/cache-signed-runner.test.ts --fileParallelism=false --maxWorkers=1",
+      "workingDirectory": "packages/tooling/tool/cli",
+      "runtime": "Node 24.22.1",
+      "tests": 90,
+      "files": 3,
+      "exit": 0,
+      "elapsedSeconds": 23.3,
+      "finishedAt": "2026-11-02T23:05:29.029321+00:00"
+    },
+    "retainedContracts": [
+      "A dependency-byte mutation still changes the key and requires fresh comparison and authenticated replay.",
+      "The dependency mutation seed succeeds at the package-lint boundary; root-policy failure is tested separately.",
+      "No production implementation, native report, signing, timeout, capture bound or acceptance state changed."
+    ],
+    "authority": "Current process-double regression evidence only. Historical checkpoint fields and native observation bindings remain unchanged.",
+    "packageQuick": {
+      "command": "bun run beep quality package-verify @beep/repo-cli --quick",
+      "exit": 0,
+      "elapsedSeconds": 13.16,
+      "finishedAt": "2026-11-02T23:06:04.741607+00:00"
+    }
+  }
+}

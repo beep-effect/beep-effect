@@ -2105,6 +2105,11 @@ const LaneInputPackages = S.Array(S.String).pipe(
   S.withConstructorDefault(EffectRuntime.succeed(laneInputPackagesDefault)),
   S.withDecodingDefaultType(EffectRuntime.succeed(laneInputPackagesDefault))
 );
+const laneInputsCacheableDefault = false;
+const LaneInputsCacheable = S.Boolean.pipe(
+  S.withConstructorDefault(EffectRuntime.succeed(laneInputsCacheableDefault)),
+  S.withDecodingDefaultType(EffectRuntime.succeed(laneInputsCacheableDefault))
+);
 
 /**
  * Timing and outcome facts for one lane executed inside a wrapper command.
@@ -2127,6 +2132,13 @@ const LaneInputPackages = S.Array(S.String).pipe(
  * Turbo digest — undeclared inputs, no lane ledger — carries an empty scope,
  * and both the constructor and a decode of a report written before the field
  * existed default it to empty.
+ *
+ * `inputsCacheable` is true when the lane's digest folds at least one Turbo
+ * task and Turbo's resolved definition caches every one of them. The tripwire
+ * reads it (time-to-certainty ruling 69's lock): a lane that is not cacheable
+ * has no Turbo contract covering the root files it reads, so any change trips
+ * it. It is observation data, never part of the reuse key, and both the
+ * constructor and a decode of an older report default it to `false`.
  *
  * **Example** (Record a completed lane)
  *
@@ -2163,6 +2175,7 @@ export class QualityTaskLaneRun extends S.Opaque<QualityTaskLaneRun, { readonly 
     exitCode: OptionalLaneRunFinite,
     inputDigest: NullableLaneInputDigest,
     inputPackages: LaneInputPackages,
+    inputsCacheable: LaneInputsCacheable,
     redSchedulingDecision: OptionalGateRedSchedulingDecision,
     commandText: OptionalLaneRunString,
   }).pipe(

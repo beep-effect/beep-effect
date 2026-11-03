@@ -1201,7 +1201,12 @@ export const stageReviewedPublishIntent = Effect.fn("Yeet.stageReviewedPublishIn
 > {
   yield* validatePublishIntentStillSafe(context, intent, stagedOnly);
   const existingPaths = yield* collectExistingPublishIntentPaths(context, intent);
-  const restagePaths = publishRestagePaths(intent.paths, existingPaths);
+  // A reviewed path that is on disk but absent from the index was staged as an
+  // untrack (`git rm --cached`); `git add` would silently reverse it.
+  const indexedPaths = A.isReadonlyArrayEmpty(existingPaths)
+    ? existingPaths
+    : yield* runGitPathList(context.repoRoot, ["ls-files", "--cached", "-z", "--", ...existingPaths]);
+  const restagePaths = publishRestagePaths(intent.paths, indexedPaths);
   if (!A.isReadonlyArrayEmpty(restagePaths)) {
     const ignoredRestagePaths = yield* runGitPathList(context.repoRoot, [
       "ls-files",

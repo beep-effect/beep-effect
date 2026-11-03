@@ -252,6 +252,7 @@ export {
   CacheSignedPilotMutation,
   CacheSignedPilotNonExecution,
   CacheSignedPilotPair,
+  CacheSignedPilotPhase,
   CacheSignedPilotPolicyRefusal,
   CacheSignedPilotProtection,
   CacheSignedPilotReceipt,

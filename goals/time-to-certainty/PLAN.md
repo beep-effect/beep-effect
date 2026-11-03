@@ -183,6 +183,9 @@ orchestrator owns schemas, contracts, and judgment.
         `bun run beep yeet proof-report --since <round-25 merge instant>` ready in the owning
         clone, zero malformed rows, every C5 fixture green, and the ruling-69 root-input gap
         closed with its own must-fail fixture. The flip PR is the packet's final PR.
+        Root-input gap closed 2026-11-02 (ruling 82): a lane is decided by its digest only when
+        Turbo caches every task it folds; any other lane trips on any changed path. Sample on
+        2026-11-02: 87/200 attempts, 40/10 branches, 0 disagreements, 0 malformed rows.
 - [x] C5 must-fail fixtures: changed package, epoch change, cross-profile reuse — done 2026-09-24
       (epoch and cross-profile fixtures in #1214; the changed-package tripwire, its package-scope
       plumbing and its fixtures in this PR under rulings 68–70).

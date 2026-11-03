@@ -1,15 +1,28 @@
 import { Git } from "@beep/git/Git";
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { GitHubContent } from "@beep/github/GitHubContent";
-import { CacheConformanceTarget, CacheProducerEnvelope, CacheQualificationLive } from "@beep/repo-cli/commands/Cache";
+import {
+  CacheConformanceTarget,
+  CachePilotRun,
+  CacheProducerBinding,
+  CacheProducerBundle,
+  CacheProducerEnvelope,
+  CacheQualificationLive,
+  CacheSignedPilotCaptureControl,
+  CacheSignedPilotFreshPair,
+  CacheSignedPilotReceipt,
+} from "@beep/repo-cli/commands/Cache";
 import {
   buildCacheHostedProducerCompleteReport,
   CacheHostedProducerApproval,
+  CacheHostedProducerCompleteReport,
   CacheHostedProducerReference,
+  CacheHostedProducerReport,
   CacheHostedProducerRunReference,
   CacheProducerExecutionProfile,
   CacheProducerObservation,
   downloadCacheProducerPrivateObservation,
+  initializeCacheProducerIssuer,
   loadCacheProducerStorageRuntime,
   makeCacheCommandForTesting,
   readCacheProducerPrivateObservation,
@@ -18,11 +31,12 @@ import {
   uploadCacheProducerPrivateObservation,
 } from "@beep/repo-cli/test/Cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
-import { Sha256Hex } from "@beep/schema";
+import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Command from "effect/cli/Command";
 import * as Deferred from "effect/Deferred";
@@ -38,7 +52,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
-import { preparePublishedProducerObservation } from "./helpers/cache-hosted-publication-fixture.ts";
+import { preparePublishedProducerObservation, zipProducerReport } from "./helpers/cache-hosted-publication-fixture.ts";
 import {
   makeProducerExecutionFixture as executionFixture,
   makeIssuedProducerObservationFixture as issuedFixture,
@@ -47,6 +61,29 @@ import {
 const encodeObservation = S.encodeEffect(S.fromJsonString(CacheProducerObservation));
 const encodeProfile = S.encodeEffect(S.fromJsonString(CacheProducerExecutionProfile));
 const encodeApproval = S.encodeEffect(S.fromJsonString(CacheHostedProducerApproval));
+const encodeReport = S.encodeEffect(S.fromJsonString(CacheHostedProducerReport));
+const encodeCompleteReport = S.encodeEffect(S.fromJsonString(CacheHostedProducerCompleteReport));
+const hashBytes = S.decodeEffect(Sha256HexFromBytes);
+
+type PublishedObservation = Effect.Success<ReturnType<typeof preparePublishedProducerObservation>>;
+
+/** Serve authenticated metadata for one publication, running `beforeWorkflow` when its workflow bytes are read. */
+const metadataFor = (published: PublishedObservation, beforeWorkflow: Effect.Effect<void> = Effect.void) =>
+  Layer.build(
+    Layer.mergeAll(
+      GitHubClient.layerFixture({
+        requestDecoded: {
+          "GET /repos/{owner}/{repo}/actions/runs/{run_id}": published.run,
+          "GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}": published.artifact,
+        },
+      }),
+      GitHubContent.layerTest({
+        getFile: dual(2, (_file: string, _options?: { readonly ref?: string | undefined }) =>
+          Effect.as(beforeWorkflow, published.workflow)
+        ),
+      })
+    )
+  );
 
 function controlledFetch(
   handler: (
@@ -81,23 +118,86 @@ const publishedFixture = Effect.fn("PrivateProducerObjectTest.publish")(function
     fixture.binding,
     fixture.run.runId
   );
-  const metadata = yield* Layer.build(
-    Layer.mergeAll(
-      GitHubClient.layerFixture({
-        requestDecoded: {
-          "GET /repos/{owner}/{repo}/actions/runs/{run_id}": published.run,
-          "GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}": published.artifact,
-        },
-      }),
-      GitHubContent.layerTest({
-        getFile: dual(2, (_file: string, _options?: { readonly ref?: string | undefined }) =>
-          Effect.succeed(published.workflow)
-        ),
-      })
-    )
-  );
+  const metadata = yield* metadataFor(published);
   return { ...fixture, published, metadata };
 });
+
+type PublishedFixture = Effect.Success<ReturnType<typeof publishedFixture>>;
+
+/** Re-archive a hosted report and give GitHub metadata that authenticates exactly the new archive. */
+const republishedReport = Effect.fn("PrivateProducerObjectTest.republish")(function* (
+  fixture: PublishedFixture,
+  contents: string
+) {
+  const archive = yield* zipProducerReport(contents);
+  const artifact = {
+    ...fixture.published.artifact,
+    size_in_bytes: archive.byteLength,
+    digest: `sha256:${yield* hashBytes(archive)}`,
+  };
+  return { archive, metadata: yield* metadataFor({ ...fixture.published, artifact }) };
+});
+
+/** Replace the whole private store with a differently bound issuer while hosted workflow bytes are read. */
+const swapStoreDuringMetadata = Effect.fn("PrivateProducerObjectTest.swapStore")(function* (fixture: PublishedFixture) {
+  const parent = yield* fixture.fs.makeTempDirectoryScoped();
+  const replacement = fixture.path.join(parent, "issuer");
+  const binding = CacheProducerBinding.make({
+    ...fixture.binding,
+    workflowRevision: CacheProducerBinding.fields.workflowRevision.make(Str.repeat(40)("f")),
+  });
+  yield* initializeCacheProducerIssuer(replacement, binding, fixture.contract);
+  yield* fixture.fs.writeFileString(
+    fixture.path.join(replacement, "runtime.json"),
+    yield* encodeProfile(fixture.profile),
+    {
+      mode: 0o600,
+    }
+  );
+  const swap = fixture.fs
+    .rename(fixture.directory, fixture.path.join(parent, "original"))
+    .pipe(Effect.andThen(fixture.fs.rename(replacement, fixture.directory)), Effect.orDie);
+  return yield* metadataFor(fixture.published, swap);
+});
+
+/** Count private-object requests while answering each with one fixed response. */
+const countingFetch = (respond: () => Response) => {
+  const calls = { requests: 0 };
+  const fetch = controlledFetch(() => {
+    calls.requests += 1;
+    return Promise.resolve(respond());
+  });
+  return { calls, fetch };
+};
+
+/** Rebuild one issued observation with every capture diagnostic replaced, bypassing construction checks. */
+const withCaptureDiagnostics = (observation: CacheProducerObservation, diagnostic: string) => {
+  const unchecked = { disableChecks: true };
+  const pilot = observation.observation.pilot;
+  return CacheProducerObservation.make(
+    {
+      ...observation,
+      observation: CacheProducerBundle.make(
+        {
+          ...observation.observation,
+          pilot: CacheSignedPilotReceipt.make(
+            {
+              ...pilot,
+              captureControls: A.map(pilot.captureControls, (control) =>
+                CacheSignedPilotCaptureControl.make({ ...control, diagnostic }, unchecked)
+              ),
+            },
+            unchecked
+          ),
+        },
+        unchecked
+      ),
+    },
+    unchecked
+  );
+};
+
+const deniedCredentials = ConfigProvider.make(() => Effect.die("Credential lookup must remain unreachable."));
 
 it.layer(
   Layer.mergeAll(
@@ -175,6 +275,54 @@ it.layer(
       expect((yield* readCacheProducerPrivateObservation(alias).pipe(Effect.flip)).message).toBe(
         "Cannot read the bounded private producer observation."
       );
+    })
+  );
+
+  it.effect.each(["", "{}"])("rejects an empty or malformed private observation %j", (contents) =>
+    Effect.gen(function* () {
+      const fixture = yield* issuedFixture();
+      const file = fixture.path.join(fixture.directory, "invalid-observation.json");
+      yield* fixture.fs.writeFileString(file, contents, { mode: 0o600 });
+      const error = yield* readCacheProducerPrivateObservation(file).pipe(Effect.flip);
+      expect(error.message).toBe("Private producer object GET failed (payload-rejected).");
+      expect(yield* fixture.fs.readFileString(file)).toBe(contents);
+    })
+  );
+
+  it.effect("rejects an oversized observation before issuer or storage authentication", () =>
+    Effect.gen(function* () {
+      const fixture = yield* issuedFixture();
+      const pilot = fixture.observation.observation.pilot;
+      const observation = CacheProducerObservation.make({
+        ...fixture.observation,
+        observation: CacheProducerBundle.make({
+          ...fixture.observation.observation,
+          pilot: CacheSignedPilotReceipt.make({
+            ...pilot,
+            freshPairs: A.map(pilot.freshPairs, (pair, index) =>
+              index === 0
+                ? CacheSignedPilotFreshPair.make({
+                    ...pair,
+                    left: CachePilotRun.make({ ...pair.left, id: Str.repeat(8 * 1024 * 1024)("x") }),
+                  })
+                : pair
+            ),
+          }),
+        }),
+      });
+      let requests = 0;
+      const fetch = controlledFetch(() => {
+        requests += 1;
+        return Promise.resolve(new Response(null, { status: 200 }));
+      });
+      const denied = ConfigProvider.make(() => Effect.die("Oversized observations must not load credentials."));
+      const error = yield* uploadCacheProducerPrivateObservation(fixture.directory, fixture.run, observation).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, denied),
+        Effect.provideService(FetchHttpClient.Fetch, fetch),
+        Effect.flip
+      );
+      expect(error.message).toBe("Private producer object GET failed (payload-rejected).");
+      expect(requests).toBe(0);
     })
   );
 
@@ -556,6 +704,38 @@ it.layer(
     })
   );
 
+  it.effect("classifies a broken response body as transport failure without leaking its cause", () =>
+    Effect.gen(function* () {
+      const fixture = yield* publishedFixture();
+      let requests = 0;
+      const fetch = controlledFetch(() => {
+        requests += 1;
+        return Promise.resolve(
+          new Response(
+            new ReadableStream({
+              start(controller) {
+                controller.error(new Error("synthetic-private-body-detail"));
+              },
+            })
+          )
+        );
+      });
+      const error = yield* downloadCacheProducerPrivateObservation(
+        fixture.directory,
+        fixture.published.reference,
+        fixture.published.publication.archive
+      ).pipe(
+        Effect.provideContext(fixture.metadata),
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnvRecord(fixture.storageEnvironment)),
+        Effect.provideService(FetchHttpClient.Fetch, fetch),
+        Effect.flip
+      );
+      expect(error.message).toBe("Private producer object GET failed (transport-error).");
+      expect(error.cause).toBe("transport-error");
+      expect(requests).toBe(1);
+    })
+  );
+
   it.effect("classifies an absent authenticated private object as not-found rather than a cache miss", () =>
     Effect.gen(function* () {
       const fixture = yield* publishedFixture();
@@ -700,5 +880,225 @@ it.layer(
         const error = yield* Fiber.join(fiber);
         expect(error.message).toContain(change === "revocation" ? "revoked" : "payload-rejected");
       })
+  );
+
+  it.effect("rejects a private UTF-8 file that is not a producer observation", () =>
+    Effect.gen(function* () {
+      const fixture = yield* issuedFixture();
+      const file = fixture.path.join(fixture.directory, "not-an-observation.json");
+      yield* fixture.fs.writeFileString(file, `{"schemaVersion":"cache-producer-observation/v1"}`, { mode: 0o600 });
+      const error = yield* readCacheProducerPrivateObservation(file).pipe(Effect.flip);
+      expect(error.message).toBe("Private producer object GET failed (payload-rejected).");
+      expect(error.cause).toBe("payload-rejected");
+    })
+  );
+
+  it.effect.each([
+    { shape: "an unencodable", length: 0 },
+    { shape: "an oversized", length: 2_200_000 },
+  ])("rejects $shape observation before issuer, credential or private-object access", ({ length }) =>
+    Effect.gen(function* () {
+      const fixture = yield* issuedFixture();
+      const { calls, fetch } = countingFetch(() => new Response(null, { status: 200 }));
+      const error = yield* uploadCacheProducerPrivateObservation(
+        fixture.directory,
+        fixture.run,
+        withCaptureDiagnostics(fixture.observation, Str.repeat(length)("a"))
+      ).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, deniedCredentials),
+        Effect.provideService(FetchHttpClient.Fetch, fetch),
+        Effect.flip
+      );
+      expect(error.message).toBe("Private producer object GET failed (payload-rejected).");
+      expect(error.cause).toBe("payload-rejected");
+      expect(calls.requests).toBe(0);
+    })
+  );
+
+  it.effect("refuses a publication whose store has no independent upload approval", () =>
+    Effect.gen(function* () {
+      const fixture = yield* publishedFixture();
+      const unapproved = yield* executionFixture(false);
+      yield* preparePublishedProducerObservation(
+        unapproved.directory,
+        fixture.observation,
+        unapproved.binding,
+        fixture.run.runId
+      );
+      const { calls, fetch } = countingFetch(() => new Response(null, { status: 204 }));
+      const error = yield* removeCacheProducerPrivateObservation(
+        unapproved.directory,
+        fixture.published.reference,
+        fixture.published.publication.archive
+      ).pipe(
+        Effect.provideContext(fixture.metadata),
+        Effect.provideService(ConfigProvider.ConfigProvider, deniedCredentials),
+        Effect.provideService(FetchHttpClient.Fetch, fetch),
+        Effect.flip
+      );
+      expect(error.message).toBe("Private producer object GET failed (payload-rejected).");
+      expect(calls.requests).toBe(0);
+    })
+  );
+
+  it.effect.each(["binding", "target"])(
+    "refuses a publication whose approval or execution profile has a different %s",
+    (change) =>
+      Effect.gen(function* () {
+        const fixture = yield* publishedFixture();
+        yield* Match.value(change).pipe(
+          Match.when("binding", () =>
+            Effect.gen(function* () {
+              const approval = CacheHostedProducerApproval.make({
+                ...fixture.published.approval,
+                binding: CacheProducerBinding.make({
+                  ...fixture.binding,
+                  workflowRevision: CacheProducerBinding.fields.workflowRevision.make(Str.repeat(40)("e")),
+                }),
+              });
+              yield* fixture.fs.writeFileString(
+                fixture.path.join(fixture.directory, "publication.json"),
+                yield* encodeApproval(approval)
+              );
+            })
+          ),
+          Match.orElse(() =>
+            Effect.gen(function* () {
+              const profile = CacheProducerExecutionProfile.make({
+                ...fixture.profile,
+                target: CacheConformanceTarget.make({
+                  ...fixture.profile.target,
+                  storage: O.map(fixture.profile.target.storage, (storage) => ({
+                    ...storage,
+                    bucket: "beep-turbo-r2-other",
+                  })),
+                }),
+              });
+              yield* fixture.fs.writeFileString(fixture.file, yield* encodeProfile(profile));
+            })
+          )
+        );
+        const { calls, fetch } = countingFetch(() => new Response(fixture.text));
+        const error = yield* downloadCacheProducerPrivateObservation(
+          fixture.directory,
+          fixture.published.reference,
+          fixture.published.publication.archive
+        ).pipe(
+          Effect.provideContext(fixture.metadata),
+          Effect.provideService(ConfigProvider.ConfigProvider, deniedCredentials),
+          Effect.provideService(FetchHttpClient.Fetch, fetch),
+          Effect.flip
+        );
+        expect(error.message).toBe("Private producer object GET failed (payload-rejected).");
+        expect(calls.requests).toBe(0);
+      })
+  );
+
+  it.effect("refuses an authenticated legacy upload-only report before credential or private-object access", () =>
+    Effect.gen(function* () {
+      const fixture = yield* publishedFixture();
+      const complete = yield* buildCacheHostedProducerCompleteReport(fixture.observation, fixture.run);
+      const legacy = CacheHostedProducerReport.make({
+        binding: complete.binding,
+        runId: complete.runId,
+        attempt: complete.attempt,
+        uploads: complete.uploads,
+      });
+      const republished = yield* republishedReport(fixture, yield* encodeReport(legacy));
+      const { calls, fetch } = countingFetch(() => new Response(fixture.text));
+      const error = yield* downloadCacheProducerPrivateObservation(
+        fixture.directory,
+        fixture.published.reference,
+        republished.archive
+      ).pipe(
+        Effect.provideContext(republished.metadata),
+        Effect.provideService(ConfigProvider.ConfigProvider, deniedCredentials),
+        Effect.provideService(FetchHttpClient.Fetch, fetch),
+        Effect.flip
+      );
+      expect(error.message).toBe("Private producer object GET failed (payload-rejected).");
+      expect(calls.requests).toBe(0);
+    })
+  );
+
+  it.effect("rejects non-canonical private bytes even when the authenticated report digests those exact bytes", () =>
+    Effect.gen(function* () {
+      const fixture = yield* publishedFixture();
+      const nonCanonical = `${fixture.text}\n`;
+      const complete = yield* buildCacheHostedProducerCompleteReport(fixture.observation, fixture.run);
+      const report = CacheHostedProducerCompleteReport.make({
+        ...complete,
+        observationSha256: yield* hashBytes(new TextEncoder().encode(nonCanonical)),
+      });
+      const republished = yield* republishedReport(fixture, yield* encodeCompleteReport(report));
+      const { calls, fetch } = countingFetch(() => new Response(nonCanonical));
+      const error = yield* downloadCacheProducerPrivateObservation(
+        fixture.directory,
+        fixture.published.reference,
+        republished.archive
+      ).pipe(
+        Effect.provideContext(republished.metadata),
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnvRecord(fixture.storageEnvironment)),
+        Effect.provideService(FetchHttpClient.Fetch, fetch),
+        Effect.flip
+      );
+      expect(error.message).toBe("Private producer object GET failed (payload-rejected).");
+      expect(calls.requests).toBe(1);
+    })
+  );
+
+  it.effect("classifies a private body stream error as a transport error without exposing it", () =>
+    Effect.gen(function* () {
+      const fixture = yield* publishedFixture();
+      const { calls, fetch } = countingFetch(
+        () =>
+          new Response(
+            new ReadableStream<Uint8Array>({
+              start(controller) {
+                controller.enqueue(new TextEncoder().encode(fixture.text));
+                controller.error(new Error("synthetic-private-stream"));
+              },
+            })
+          )
+      );
+      const error = yield* downloadCacheProducerPrivateObservation(
+        fixture.directory,
+        fixture.published.reference,
+        fixture.published.publication.archive
+      ).pipe(
+        Effect.provideContext(fixture.metadata),
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnvRecord(fixture.storageEnvironment)),
+        Effect.provideService(FetchHttpClient.Fetch, fetch),
+        Effect.flip
+      );
+      expect(error.message).toBe("Private producer object GET failed (transport-error).");
+      expect(error.cause).toBe("transport-error");
+      expect(calls.requests).toBe(1);
+    })
+  );
+
+  it.effect.each([
+    { operation: "download", method: "GET" },
+    { operation: "remove", method: "DELETE" },
+  ])("refuses to $operation after the private store is rebound during publication checks", ({ operation, method }) =>
+    Effect.gen(function* () {
+      const fixture = yield* publishedFixture();
+      const metadata = yield* swapStoreDuringMetadata(fixture);
+      const { calls, fetch } = countingFetch(() => new Response(fixture.text));
+      const reference = fixture.published.reference;
+      const archive = fixture.published.publication.archive;
+      const error = yield* Match.value(operation).pipe(
+        Match.when("download", () =>
+          Effect.asVoid(downloadCacheProducerPrivateObservation(fixture.directory, reference, archive))
+        ),
+        Match.orElse(() => removeCacheProducerPrivateObservation(fixture.directory, reference, archive)),
+        Effect.provideContext(metadata),
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnvRecord(fixture.storageEnvironment)),
+        Effect.provideService(FetchHttpClient.Fetch, fetch),
+        Effect.flip
+      );
+      expect(error.message).toBe(`Private producer object ${method} failed (payload-rejected).`);
+      expect(calls.requests).toBe(0);
+    })
   );
 });

@@ -459,8 +459,9 @@ export class ProofChangedPackagesUnavailable extends S.Opaque<
  * package scope is non-empty (ruling 70): `known` fires only on a real
  * intersection, and `unavailable` fires for every scoped lane, because a
  * changed set that could not be read is not evidence that nothing changed. A
- * lane with an empty scope — a root-task-only lane — is decided by its digest
- * alone in both states.
+ * cacheable lane with an empty scope — a root-task-only lane — is decided by
+ * its digest alone in both states. A lane that is not cacheable trips on any
+ * changed path and on `unavailable` (ruling 69's lock).
  *
  * **Example** (Match on what is known)
  *
@@ -571,14 +572,14 @@ const readChangedPackages = Effect.fn("Yeet.ProofShadow.readChangedPackages")(fu
  * fuses a NUL-less fragment into the record beside it. Each path maps to the
  * deepest workspace containing it, resolved against the canonical checkout path
  * so a symlinked root still matches; paths under no workspace contribute
- * nothing, which is ruling 69's scope and not a claim that they are covered
- * elsewhere. Six root inputs are covered, by the epoch rather than the tripwire
- * (`bun.lock`, `.bun-version`, `.nvmrc`, `turbo.json`, `tsconfig.base.json` and
- * the policy pack's manifest), and documentation is not package source. Other
- * root-level lane inputs — `standards/*.jsonc`, `biome.json`,
- * `.github/workflows/`, `scripts/` — are in no workspace and in no epoch
- * component, so a change to one trips nothing: a known gap, open against
- * ruling 69.
+ * no package, which is ruling 69's scope. They still count toward `paths`.
+ * Six root inputs are covered by the epoch (`bun.lock`, `.bun-version`,
+ * `.nvmrc`, `turbo.json`, `tsconfig.base.json` and the policy pack's manifest).
+ * The rest — `standards/*.jsonc`, the Biome configuration,
+ * `.github/workflows/`, `scripts/`, documentation — are decided by ruling 69's
+ * lock in {@link changedPackageTripwireFor}: a lane whose Turbo tasks are all
+ * cacheable is covered by its digest, and any other lane trips on any changed
+ * path at all.
  *
  * It never fails. Five things yield `unavailable` carrying their reason: a
  * checkout path that cannot be canonicalised, a workspace list that could not
@@ -665,20 +666,43 @@ const laneInputScopes = (
       )
   );
 
+// Lane id to whether every journal entry for it was cacheable: one uncacheable
+// entry makes the lane uncacheable, the conservative read of a repeated id.
+const laneInputsCacheable = (reports: ReadonlyArray<QualityTaskLaneRunReport>): HashMap.HashMap<string, boolean> =>
+  A.reduce(
+    A.flatMap(reports, (report) => report.lanes),
+    HashMap.empty<string, boolean>(),
+    (cacheable, lane) =>
+      HashMap.modifyAt(cacheable, lane.id, (existing) =>
+        O.some(O.getOrElse(existing, () => true) && lane.inputsCacheable)
+      )
+  );
+
 /**
  * Build the ledger's changed-package tripwire from one attempt's own reports
- * and its changed package set (ruling 70).
+ * and its changed package set (rulings 69 and 70).
  *
  * **Details**
+ *
+ * The rules below apply to a cacheable lane: one whose Turbo tasks are all
+ * cached by Turbo (`inputsCacheable`). A lane that is not cacheable trips
+ * whenever the attempt changed any path at all, and whenever the changed set
+ * is unavailable. That is ruling 69's lock on root-level inputs: a path in no
+ * workspace (`standards/*.jsonc`, the Biome configuration, a workflow file)
+ * moves a cacheable lane's digest when a task declares it, and when none does,
+ * Turbo would replay the same cached result on the same hash, so a reused proof
+ * claims no more than a cache hit. An uncacheable task's hash carries no such
+ * contract, so nothing proves the lane did not read the changed path.
  *
  * A lane's package scope is the union of the `inputPackages` its reports carry
  * for that lane id. When the changed set is `known` the tripwire fires only on
  * a non-empty intersection, so a repo-wide lane that verified `@beep/x` is
  * refused when `@beep/x` changed and served when only `@beep/y` did. When the
  * changed set is `unavailable` it fires for every lane with a non-empty scope,
- * which is the conservative side of an unknown. A root-task-only lane has an
- * empty scope and is decided by its digest alone in both cases, because that
- * digest already spans every input Turbo declares for the root task. Undeclared
+ * which is the conservative side of an unknown. A cacheable root-task-only
+ * lane has an empty scope and is decided by its digest alone in both cases,
+ * because that digest already spans every input Turbo declares for the root
+ * task. Undeclared
  * lanes never reach the tripwire: the ledger refuses them as
  * `undeclared-inputs` first.
  *
@@ -710,7 +734,8 @@ const laneInputScopes = (
  *         label: "quality:check",
  *         status: "passed",
  *         inputDigest: O.some("d1"),
- *         inputPackages: ["@beep/x"]
+ *         inputPackages: ["@beep/x"],
+ *         inputsCacheable: true
  *       })
  *     ]
  *   })
@@ -741,14 +766,21 @@ export const changedPackageTripwireFor: {
   (reports: ReadonlyArray<QualityTaskLaneRunReport>, changed: ProofChangedPackages): ProofChangedPackageTripwire;
 } = dual(2, (reports: ReadonlyArray<QualityTaskLaneRunReport>, changed: ProofChangedPackages) => {
   const scopes = laneInputScopes(reports);
+  const cacheable = laneInputsCacheable(reports);
   const scopeFor = (laneId: string): HashSet.HashSet<string> =>
     O.getOrElse(HashMap.get(scopes, laneId), HashSet.empty<string>);
+  const uncacheable = (laneId: string): boolean => !O.getOrElse(HashMap.get(cacheable, laneId), () => false);
   return ProofChangedPackages.match(changed, {
     known: (known): ProofChangedPackageTripwire => {
       const changedPackages = HashSet.fromIterable(known.packages);
-      return (key) => !HashSet.isEmpty(HashSet.intersection(scopeFor(key.laneId), changedPackages));
+      const anyPathChanged = known.paths > 0;
+      return (key) =>
+        uncacheable(key.laneId)
+          ? anyPathChanged
+          : !HashSet.isEmpty(HashSet.intersection(scopeFor(key.laneId), changedPackages));
     },
-    unavailable: (): ProofChangedPackageTripwire => (key) => !HashSet.isEmpty(scopeFor(key.laneId)),
+    unavailable: (): ProofChangedPackageTripwire => (key) =>
+      uncacheable(key.laneId) || !HashSet.isEmpty(scopeFor(key.laneId)),
   });
 });
 

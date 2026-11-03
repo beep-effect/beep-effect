@@ -433,7 +433,9 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     required: false,
     laneClass: "cli-runnable",
     replay: "exact",
-    flags: [],
+    flags: [...TURBO_SHAPE_FLAGS],
+    notes:
+      "Pull-request runs pass --affected --base: `beep lint policy --affected` runs Turbo's changed scope unless the change set escalates it; push runs state --full.",
   }),
   CiLaneDescriptor.make({
     id: "repo-sanity",
@@ -1643,9 +1645,9 @@ export const ciLaneStepsForTesting: {
           })
         ),
       // lab-apps-lifecycle P2 (ratified row 10): one bundled turbo invocation
-      // over the labs glob. Deliberately no --affected — turbo unions filter
-      // selectors, so --affected plus the positive labs filter would WIDEN the
-      // selection to affected-products plus labs; the workflow path gate scopes
+      // over the labs glob. Deliberately no --affected: this lane's contract
+      // runs the full labs set, even though the pinned clients intersect the
+      // affected set with positive filters. The workflow path gate scopes
       // PRs, while push and local replays want the full labs set.
       labs: () => [
         QualityTaskStep.make({
@@ -1677,11 +1679,21 @@ export const ciLaneStepsForTesting: {
           options
         ),
       ],
-      // `--full` states the hosted scope in the argv instead of inheriting it
-      // from ambient `CI=true`, so a local replay scans the same repo-wide
-      // surface the required Lint Policy context does. Hosted runs are
-      // unchanged: `beep lint policy` already forces the full sweep under CI.
-      "lint-policy": () => [bunRunStep(repoRoot, "ci:lint-policy", ["beep", "lint", "policy", "--full"])],
+      // The argv states the scope instead of inheriting it from ambient
+      // `CI=true`. Pull requests (perf audit K1) run the changed scope, which
+      // `beep lint policy` widens to the full sweep on deletions, `@deprecated`,
+      // tsconfig, dependency, Turbo, lint-config or policy-implementation
+      // changes; pushes and local replays without the affected shape run
+      // `--full`. `--summarize` is accepted for the shared matrix argv: the
+      // policy graphs always write their Turbo summaries.
+      "lint-policy": () => [
+        bunRunStep(repoRoot, "ci:lint-policy", [
+          "beep",
+          "lint",
+          "policy",
+          ...(options.affected ? ["--affected", "--base", options.base] : ["--full"]),
+        ]),
+      ],
       nix: () => [
         QualityTaskStep.make({
           label: "ci:nix:flake-check",
@@ -2702,13 +2714,13 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
     ecosystem: A.empty<string>,
     fallow: () => ["--base", plan.base, "--validate-envelopes"],
     "jsdoc-ratchet": A.empty<string>,
-    // check.yml runs `ci lane labs --summarize` with no affected shape (a
-    // positive filter plus --affected would widen the selection). The summary
+    // check.yml runs `ci lane labs --summarize` over the full labs set, so
+    // local replay deliberately omits the affected shape too. The summary
     // is what folds the lab check/lint/test task hashes into the lane digest
     // (TTC ruling 58), so the local replay passes it too.
     labs: () => ["--summarize"],
     lint: () => turboShapeFlags,
-    "lint-policy": A.empty<string>,
+    "lint-policy": () => turboShapeFlags,
     nix: A.empty<string>,
     property: () => turboShapeFlags,
     "repo-sanity": () => (plan.onMainBranch ? A.empty<string>() : ["--changeset-status"]),

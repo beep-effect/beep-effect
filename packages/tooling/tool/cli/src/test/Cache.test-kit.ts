@@ -109,6 +109,7 @@ export {
   CacheHostedProducerObservation,
   CacheHostedProducerReference,
   CacheHostedProducerReport,
+  CacheHostedProducerReusableWorkflowApproval,
   CacheHostedProducerRunReference,
   CacheHostedProducerUpload,
 } from "../commands/Cache/Cache.workflow.github.schemas.ts";

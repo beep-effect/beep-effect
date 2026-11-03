@@ -27001,6 +27001,165 @@
         }
       }
     },
+    "@beep/party-domain": {
+      "path": "packages/party/domain",
+      "lines": 98.68,
+      "statements": 97.6,
+      "branches": 91.66,
+      "functions": 94.44,
+      "uncovered": {
+        "lines": 2,
+        "statements": 4,
+        "branches": 2,
+        "functions": 4
+      },
+      "files": {
+        "packages/party/domain/src/Identifier.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/PartyKey.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/internal/IdentifierCore.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/values/Identifier/Identifier.behavior.ts": {
+          "lines": 97.87,
+          "statements": 95.91,
+          "branches": 75,
+          "functions": 90,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 1,
+            "functions": 2
+          }
+        },
+        "packages/party/domain/src/values/Identifier/Identifier.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/values/Identifier/Identifier.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/values/Identifier/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/values/PartyKey/PartyKey.behavior.ts": {
+          "lines": 97.82,
+          "statements": 96.22,
+          "branches": 83.33,
+          "functions": 92.85,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 1,
+            "functions": 2
+          }
+        },
+        "packages/party/domain/src/values/PartyKey/PartyKey.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/values/PartyKey/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/values/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
     "@beep/pdf-tools": {
       "path": "packages/drivers/pdf-tools",
       "lines": 90.47,
@@ -32285,6 +32444,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.storage.ts": {
+          "lines": 98.05,
+          "statements": 94.82,
+          "branches": 93.47,
+          "functions": 88.46,
+          "uncovered": {
+            "lines": 2,
+            "statements": 6,
+            "branches": 3,
+            "functions": 3
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": {
           "lines": 100,
           "statements": 100,
@@ -35967,6 +36138,18 @@
             "statements": 5,
             "branches": 4,
             "functions": 3
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Lint/internal/PolicyRootFiles.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 95.23,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 1,
+            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstArbitraryCoverage.ts": {
