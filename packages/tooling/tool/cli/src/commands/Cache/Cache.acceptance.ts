@@ -19,6 +19,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CacheProducerImportPreview, CacheProducerImportRequest } from "./Cache.acceptance.schemas.ts";
+import { CacheCommandError } from "./Cache.errors.ts";
 import {
   CacheSignedPilotCaptureControl,
   CacheSignedPilotFreshPair,
@@ -37,7 +38,6 @@ import {
   validateCacheProducerBinding,
 } from "./Cache.producer.ts";
 import { CacheProtocolExecution } from "./Cache.protocol.runner.schemas.ts";
-import { CacheCommandError } from "./Cache.schemas.ts";
 import { CacheHostedProducerApproval } from "./Cache.workflow.github.schemas.ts";
 import * as HostedProducer from "./Cache.workflow.github.ts";
 import type { CacheProducerTrustLocations } from "./Cache.acceptance.schemas.ts";

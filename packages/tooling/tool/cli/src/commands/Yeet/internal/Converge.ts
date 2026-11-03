@@ -65,13 +65,13 @@ import {
   yeetPrCommentRowId,
   yeetReviewThreadRowId,
 } from "./Inbox.ts";
+import { yeetCommentExcerpt } from "./MonitorComments.schemas.ts";
 import {
   acknowledgeYeetMonitorComments,
   collectNewYeetMonitorComments,
   openYeetMonitorCommentStream,
   YEET_MONITOR_COMMENT_EXCERPT_LENGTH,
   YeetMonitorCommentConsumer,
-  yeetCommentExcerpt,
   yeetMonitorCommentFromBot,
 } from "./MonitorComments.ts";
 import { dispatchYeetCheckFailure } from "./Remediation.ts";
