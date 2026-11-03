@@ -2272,3 +2272,11 @@ empty mask observation initially retained its tool-version message. Normalize
 this boundary to the mask-specific typed error and discard raw native output
 from its cause. The authored empty-output regression covers that distinction;
 no local regression execution is claimed.
+
+Hosted Check and Build at revision 662bb066 identified two introduced Effect
+diagnostics in the mask helper: schemaNumber and preferTypedSchemaDecoder.
+Use FiniteFromString and decodeEffect for the already numeric value, retaining
+the bounded mask schema. Add NaN and both infinities to the native-output
+rejection controls. Do not disable diagnostics, relabel this as inherited, or
+treat the older static review as functional proof. Current hosted jobs
+126267896866 and 126267896900 retain the failures; fresh proof is required.

@@ -179,8 +179,8 @@ const fingerprintExecutable = Effect.fn("CacheFingerprint.executable")(function*
 export const collectCacheFileCreationMask = Effect.fn("CacheFingerprint.fileCreationMask")(
   function* (root: string, executable: string) {
     const text = yield* captureVersion(root, executable, ["--no-env-file", "-p", "process.umask()"]);
-    const value = yield* S.decodeEffect(S.NumberFromString)(text);
-    return yield* S.decodeUnknownEffect(CacheFileCreationMask)(value);
+    const value = yield* S.decodeEffect(S.FiniteFromString)(text);
+    return yield* S.decodeEffect(CacheFileCreationMask)(value);
   },
   Effect.mapError(() => CacheCommandError.new("Cannot observe the process file creation mask."))
 );

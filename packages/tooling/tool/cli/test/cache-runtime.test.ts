@@ -230,7 +230,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("file creation runtime i
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "cache-invalid-mask-" });
       const executable = path.join(root, "invalid");
-      for (const output of ["", "-1", "512", "1.5", "not-a-mask"]) {
+      for (const output of ["", "-1", "512", "1.5", "not-a-mask", "NaN", "Infinity", "-Infinity"]) {
         yield* fs.writeFileString(executable, `#!/bin/sh\nprintf '%s\\n' '${output}'\n`);
         yield* fs.chmod(executable, 0o700);
         const result = yield* Fingerprint.collectCacheFileCreationMask(root, executable).pipe(Effect.result);
