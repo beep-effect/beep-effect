@@ -1859,7 +1859,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const forwarded = yield* decodeYamlRecord(yamlAt(caller, ["jobs", "produce", "secrets"]));
       expect(A.sort(R.keys(forwarded), Order.String)).toEqual(A.sort(secretNames, Order.String));
       for (const name of secretNames) {
-        expect(R.get(forwarded, name)).toEqual(O.some("${{ secrets." + name + " }}"));
+        expect(R.get(forwarded, name)).toEqual(O.some(`\${{ secrets.${name} }}`));
         expect(yamlAt(heavy, ["on", "workflow_call", "secrets", name, "required"])).toBe(false);
       }
       expect(yamlAt(heavy, ["on", "workflow_call", "inputs", "producer_execution", "default"])).toBe(false);
