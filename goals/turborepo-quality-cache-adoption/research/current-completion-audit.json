@@ -3,14 +3,14 @@
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "365bd154b05b4d425cecaf6ce5cb966cf00b9cb3",
-  "specSha256": "0342ed1f66fd798aee2d94e9dada8e1a96d1561184707b7806bc0f87cf24e1a5",
+  "specSha256": "43211471361f403995f6ecee21eefb1a0092cf38e2b3de9d8a1abd9c5730aaff",
   "acceptance": [
     {
       "id": "AC-01",
       "source": "SPEC.md:165",
       "requirement": "Current executable/lane population and applicable stable/canary feature matrix are complete, source-backed and assigned to owners.",
       "status": "unproven",
-      "nextProof": "Reconcile the source-bound 2,434-computation census (2,236 remaining reviews) to current source, finish every in-scope computation review and the 24 pending feature decisions, and consume the economics owner baseline. Completed feature reviews do not qualify actual computations."
+      "nextProof": "Reconcile the source-bound 2,400-computation native census (2,202 remaining reviews), resolve its two entrypoint obligations and non-Turbo/nested execution coverage, finish every in-scope computation review and the 24 pending feature decisions, and consume the economics owner baseline. Scoped freshness reviews do not qualify pure counterparts."
     },
     {
       "id": "AC-02",
@@ -168,7 +168,7 @@
     },
     "remainingPersistentServiceDisposition": {
       "path": "research/remaining-persistent-service-disposition-review.json",
-      "scope": "Ten additional source-only persistent-service keep-fresh dispositions. All twelve current persistent computations are classified; 198 reviewed fresh boundaries and 2373 remaining gaps. Finite builds and all acceptance criteria remain unfinished."
+      "scope": "Historical source-only review of ten additional persistent services. Its recorded 198 fresh boundaries and 2373 pending entries are historical; latestPopulationCheckpoint supplies the current source-bound population. No acceptance criterion is complete."
     },
     "credentialBootstrap": {
       "path": "goals/turborepo-cache-trust-observability/research/normal-source-worker-observation.json",
@@ -376,5 +376,11 @@
     "path": "research/watch-feature-review.json",
     "sha256": "d587ce4bf6fd40206e5b11a31e48032094eff26a24764eb6a41f4c96f8896bf0",
     "authority": "Scoped applicability decision for current tracked repository commands. No native watch semantics, timing, runtime adoption, task qualification or whole-goal acceptance."
+  },
+  "priorSpecDigestBeforeCurrentPopulationRefresh": "0342ed1f66fd798aee2d94e9dada8e1a96d1561184707b7806bc0f87cf24e1a5",
+  "latestPopulationCheckpoint": {
+    "path": "research/population-current-source-checkpoint-2026-11-03.json",
+    "sha256": "a31e89921602a5ae28b07daf301d0a93fcfe91c2a7330a263b414552115bec2e",
+    "authority": "Native static census, literal-source freshness review and exact history preservation only. No quality-task execution, qualification, activation or whole-goal acceptance."
   }
 }

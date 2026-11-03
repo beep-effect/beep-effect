@@ -2237,3 +2237,19 @@ preserving the same digest; no scanner configuration or allowlist changes.
 - Prevention: inspect the current consolidated unblocker and confirm ownership
   before starting a parallel shared repair. The replacement coordination rule
   requires T3 MCP; those tools are absent here, so no alternate relay is used.
+
+
+### Minimal runner Perl caused a candidate build failure, 2026-11-03
+
+Credential-free hosted preparation passed native compiler setup but failed in
+vendored OpenSSL Configure: `Can't locate FindBin.pm`. The existing step tested
+only `cc`, `ld` and `readelf`, so it did not represent the complete native build
+prerequisites. The failure cost a queued runner attempt without producing a
+candidate. Run/job 41610315729/125830272148 retains the exact evidence, skipped
+upload and successful cleanup.
+
+Check Make and required Perl core modules before Cargo, including when the C
+toolchain is already present. Follow upstream package guidance (`perl-core` on
+RPM systems, `perl` on Debian), keep the existing bounds and retain an actual
+accepted-source build as the gate. Do not convert a source regression check into
+compiled-artifact proof.

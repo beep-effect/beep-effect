@@ -1840,13 +1840,17 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         override: "false",
         matcher: "false",
       });
-      const hostTools = "Ensure native host compiler and ELF inspection tools";
+      const hostTools = "Ensure native build and ELF inspection prerequisites";
       const hostSetup = stepRun(steps, hostTools);
       expect(hostSetup).toContain("command -v cc");
       expect(hostSetup).toContain("command -v ld");
       expect(hostSetup).toContain("command -v readelf");
-      expect(hostSetup).toContain("dnf install -y gcc binutils");
-      expect(hostSetup).toContain("apt-get install -y --no-install-recommends gcc binutils");
+      expect(hostSetup).toContain("! command -v make");
+      expect(hostSetup).toContain("! perl -MFindBin -MIPC::Cmd -MFile::Compare -MFile::Copy -e 'use 5.010;'");
+      expect(hostSetup).toContain("dnf install -y gcc binutils make perl-core");
+      expect(hostSetup).toContain("apt-get install -y --no-install-recommends gcc binutils make perl");
+      expect(hostSetup).toContain("make --version");
+      expect(hostSetup).toContain("perl --version");
       assertPrunesAptSourcesBefore(hostSetup, '"${privilege[@]}" apt-get update');
       expect(stepIndexByName(steps, hostTools)).toBeLessThan(stepIndexByName(steps, "Build pinned portable candidate"));
       const install = stepByName(steps, "Install pinned portable build tools");

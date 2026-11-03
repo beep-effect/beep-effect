@@ -783,3 +783,17 @@ The collector now accepts Git exit 1 only for a no-match grep. Other Git errors
 and a truncated NUL-delimited inventory fail before applicability classification.
 The source-only replay and three early collector refusals remain separate from
 repository quality or native behavior proof.
+
+
+### 2026-11-03 — keep native population distinct from package counts
+
+- Evidence: accepted `fae5b2098c` removes T3, adds Party and replaces root
+  fingerprint commands. Workspace count stays 191 while executable graph
+  entries fall from 2,434 to 2,400. Subtracting one package would be incorrect.
+- Prevention: use the existing Cache-owned query/dry-plan census and its
+  manifest/source joins; distinguish root scripts, executable graph entries and
+  graph-only nodes. Preserve the retired review and all prior snapshot bytes.
+- An initial freshness join assumed a single Biome write command. Four existing
+  manifest-specific write scopes refused that assumption. Inspect and preserve
+  each exact implementation; no broader command substitution or runtime proof
+  was used. The corrected join revalidates 198 keep-fresh boundaries only.
