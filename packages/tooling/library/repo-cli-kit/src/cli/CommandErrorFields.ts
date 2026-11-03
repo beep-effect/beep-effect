@@ -111,7 +111,7 @@ export const messageWithCause: {
  *
  * @param exitCode - The error's optional `exitCode` field.
  * @returns The provided exit code, or `1` when absent.
- * @category runtime
+ * @category error-handling
  * @since 0.0.0
  */
 export const resolveCommandExitCode = (exitCode: number | undefined): number => exitCode ?? 1;
@@ -138,7 +138,7 @@ export const resolveCommandExitCode = (exitCode: number | undefined): number => 
  *
  * @param prefix - The command label prepended to the error message.
  * @returns A handler consuming an error with a `message` field.
- * @category runtime
+ * @category error-handling
  * @since 0.0.0
  */
 export const reportCommandError = (prefix: string) =>

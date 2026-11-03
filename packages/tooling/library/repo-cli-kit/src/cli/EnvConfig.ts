@@ -505,7 +505,7 @@ export const turboCacheSecretSessionEnvironment = (
  * console.log(turboSecretSessionStep(step, { PATH: "/usr/bin" }).command) // "op"
  * ```
  *
- * @category execution
+ * @category processes
  * @since 0.0.0
  */
 export const turboSecretSessionStep: {
@@ -1020,7 +1020,7 @@ export const clearTurboCacheSecretSessionVerdictsForTesting = (): void => {
  * @param repoRoot - Working directory used for the 1Password reference check.
  * @param environment - Loaded checkout environment; defaults to the current process environment.
  * @returns Whether local 1Password reference resolution is available.
- * @category execution
+ * @category processes
  * @since 0.0.0
  */
 export const canUseTurboCacheSecretSession = Effect.fn("EnvConfig.canUseTurboCacheSecretSession")(function* (
@@ -1049,7 +1049,7 @@ export const canUseTurboCacheSecretSession = Effect.fn("EnvConfig.canUseTurboCac
  * console.log(Effect.isEffect(resolveTurboCacheStep(QualityTaskStep.make({ label: "docgen", command: "turbo", args: ["run", "docgen"], cwd: "/repo" }))))
  * ```
  *
- * @category execution
+ * @category processes
  * @since 0.0.0
  */
 export const resolveTurboCacheStep = Effect.fn("EnvConfig.resolveTurboCacheStep")(function* (

@@ -32,7 +32,7 @@ import { dual } from "effect/Function";
  * ```
  *
  * @returns The current instant in ISO-8601 form.
- * @category time
+ * @category utilities
  * @since 0.0.0
  */
 export const timestampIso = (): string => DateTime.formatIso(DateTime.nowUnsafe());
@@ -50,7 +50,7 @@ export const timestampIso = (): string => DateTime.formatIso(DateTime.nowUnsafe(
  *
  * @param startedAtMs - A prior `globalThis.performance.now()` reading.
  * @returns The non-negative rounded elapsed milliseconds.
- * @category time
+ * @category utilities
  * @since 0.0.0
  */
 export const durationMsSince = (startedAtMs: number): number =>
@@ -68,7 +68,7 @@ export const durationMsSince = (startedAtMs: number): number =>
  * ```
  *
  * @returns Today's UTC date as `YYYY-MM-DD`.
- * @category time
+ * @category utilities
  * @since 0.0.0
  */
 export const todayYmd = (): string => {
@@ -92,7 +92,7 @@ export const todayYmd = (): string => {
  *
  * @param value - The text whose first line is extracted.
  * @returns The trimmed first line, or the trimmed whole value when unsplit.
- * @category text
+ * @category formatting
  * @since 0.0.0
  */
 export const firstLine = (value: string): string => {
@@ -115,7 +115,7 @@ export const firstLine = (value: string): string => {
  * @param value - The text to bound.
  * @param maxLength - The inclusive maximum output length.
  * @returns The original value when within bounds, otherwise an ellipsized slice.
- * @category text
+ * @category formatting
  * @since 0.0.0
  */
 export const boundedText: {

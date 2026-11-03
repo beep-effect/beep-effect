@@ -555,7 +555,7 @@ const makeContainedFileStringOperation = (
  * @param target - Absolute or root-relative target path.
  * @param contents - Complete text to replace the target with.
  * @returns The resolved target path after the atomic write.
- * @category filesystem
+ * @category resources
  * @since 0.0.0
  */
 export const writeContainedFileString = makeContainedFileStringOperation(
@@ -582,7 +582,7 @@ export const writeContainedFileString = makeContainedFileStringOperation(
  * console.log(Effect.isEffect(createContainedFileString("/repo", "/repo/new.txt", "ready")))
  * ```
  *
- * @category filesystem
+ * @category resources
  * @since 0.0.0
  */
 export const createContainedFileString = makeContainedFileStringOperation(
@@ -744,7 +744,7 @@ const appendPreparedFileString = Effect.fnUntraced(function* (
  * @param target - Absolute or root-relative target path.
  * @param contents - Text to append.
  * @returns The resolved target path after the atomic replacement.
- * @category filesystem
+ * @category resources
  * @since 0.0.0
  */
 export const appendContainedFileString = makeContainedFileStringOperation(
@@ -772,7 +772,7 @@ export const appendContainedFileString = makeContainedFileStringOperation(
  * @param expectedRoot - Root that owns the read authority.
  * @param target - Absolute or root-relative target path.
  * @returns Existence plus optional text contents.
- * @category filesystem
+ * @category resources
  * @since 0.0.0
  */
 export const readContainedFileStringNoFollow = Effect.fn("RepoCli.FsGuards.readContainedFileStringNoFollow")(function* (
@@ -828,7 +828,7 @@ const decodeByteLimit = S.decodeEffect(S.Natural);
  * @param target - Absolute or root-relative file path.
  * @param maxBytes - Maximum accepted file size, excluding the one-byte overflow probe.
  * @returns Existence and optional original file bytes.
- * @category filesystem
+ * @category resources
  * @since 0.0.0
  */
 export const readContainedFileBytesNoFollow = Effect.fn("RepoCli.FsGuards.readContainedFileBytesNoFollow")(function* (
@@ -965,7 +965,7 @@ export interface RenameOrFailOptions<E> {
  * @param left - The first byte array.
  * @param right - The second byte array.
  * @returns `true` when both arrays have identical length and contents.
- * @category comparison
+ * @category predicates
  * @since 0.0.0
  */
 export const bytesEqual: {
@@ -999,7 +999,7 @@ export const bytesEqual: {
  *
  * @param records - The records to deduplicate by digest.
  * @returns The first record per digest and the number skipped.
- * @category deduplication
+ * @category utilities
  * @since 0.0.0
  */
 export const dedupeBySha256 = <A extends { readonly sha256: string }>(
@@ -1034,7 +1034,7 @@ export const dedupeBySha256 = <A extends { readonly sha256: string }>(
  * @param extension - The extension (including any leading dot) to append.
  * @param usedNames - The set of already-allocated names.
  * @returns The free name and the set updated to include it.
- * @category naming
+ * @category formatting
  * @since 0.0.0
  */
 export const allocateUniqueName: {
@@ -1068,7 +1068,7 @@ export const allocateUniqueName: {
  * console.log(hashFileChunkBytes) // 1048576
  * ```
  *
- * @category hashing
+ * @category utilities
  * @since 0.0.0
  */
 export const hashFileChunkBytes = 1024 * 1024;
@@ -1099,7 +1099,7 @@ export const hashFileChunkBytes = 1024 * 1024;
  * @param filePath - The file to hash.
  * @param onError - Builds the caller's error from a read or hashing failure.
  * @returns The lowercase hex digest of the file's contents.
- * @category hashing
+ * @category utilities
  * @since 0.0.0
  */
 export const hashFileSha256: {
@@ -1306,7 +1306,7 @@ export const preflightOverwritableFile: {
  * @param targetPath - The destination path.
  * @param options - Bundle carrying `onError`, which builds the caller's error.
  * @returns A void effect that fails when the rename cannot complete.
- * @category filesystem
+ * @category resources
  * @since 0.0.0
  */
 export const renameOrFail: {

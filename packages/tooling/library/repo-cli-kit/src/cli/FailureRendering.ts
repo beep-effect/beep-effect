@@ -71,7 +71,7 @@ const separatedLogLevel = (argv: ReadonlyArray<string>, entry: string, index: nu
  *
  * @param argv - The command-line arguments to inspect.
  * @returns `true` when the arguments opt in to verbose failure output.
- * @category utils
+ * @category utilities
  * @since 0.0.0
  */
 export const shouldRenderFailureCause = (argv: ReadonlyArray<string>): boolean =>
@@ -112,7 +112,7 @@ export const shouldRenderFailureCause = (argv: ReadonlyArray<string>): boolean =
  *
  * @param argv - The raw CLI arguments, read for `--verbose` and `--log-level`.
  * @returns The hook, taking the squashed error and the failure details.
- * @category utils
+ * @category utilities
  * @since 0.0.0
  */
 export const renderCliFailure =

@@ -107,7 +107,7 @@ export const printJsonOrLines = Effect.fn("RepoCli.Printer.printJsonOrLines")(fu
  *
  * @param tag - The marker printed in brackets before each message.
  * @returns A logger that writes `[tag] message` to the console.
- * @category logging
+ * @category observability
  * @since 0.0.0
  */
 export const makeTaggedLogger =
@@ -141,7 +141,7 @@ export const makeTaggedLogger =
  * })
  * ```
  *
- * @category logging
+ * @category observability
  * @since 0.0.0
  */
 export const logTaggedSummary = Effect.fn("RepoCli.Printer.logTaggedSummary")(function* (

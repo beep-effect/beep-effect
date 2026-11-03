@@ -143,7 +143,7 @@ type RunModeCandidates = ReadonlyArray<readonly [enabled: boolean, mode: RunMode
  * @param candidates - Ordered `[enabled, mode]` pairs, highest priority first.
  * @param fallback - Mode returned when no candidate flag is set.
  * @returns The resolved run mode.
- * @category resolution
+ * @category queries
  * @since 0.0.0
  */
 export const resolveRunMode: {
@@ -180,7 +180,7 @@ export const resolveRunMode: {
  * @param first - The first mode flag.
  * @param second - The second mode flag.
  * @returns `true` when both flags are set.
- * @category resolution
+ * @category queries
  * @since 0.0.0
  */
 export const runModeFlagsConflict: {

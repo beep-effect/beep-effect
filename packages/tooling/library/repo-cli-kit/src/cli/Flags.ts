@@ -37,7 +37,7 @@ import * as Flag from "effect/cli/Flag";
  * @param description - Help text shown beside `--json`.
  * @returns A boolean `--json` flag defaulting to `false`.
  * @see {@link jsonFlag} for the shared flag most commands should use.
- * @category flags
+ * @category configuration
  * @since 0.0.0
  */
 export const jsonFlagWith = (description: string) =>
@@ -62,7 +62,7 @@ export const jsonFlagWith = (description: string) =>
  * ```
  *
  * @see {@link jsonFlagWith} for a command that needs its own wording.
- * @category flags
+ * @category configuration
  * @since 0.0.0
  */
 export const jsonFlag = jsonFlagWith("Emit machine-readable JSON output");
@@ -84,7 +84,7 @@ export const jsonFlag = jsonFlagWith("Emit machine-readable JSON output");
  * console.log(aiMetricsDataRootEnvVar) // BEEP_AI_METRICS_DATA_ROOT
  * ```
  *
- * @category flags
+ * @category configuration
  * @since 0.0.0
  */
 export const aiMetricsDataRootEnvVar = "BEEP_AI_METRICS_DATA_ROOT";
@@ -114,7 +114,7 @@ export const aiMetricsDataRootEnvVar = "BEEP_AI_METRICS_DATA_ROOT";
  * console.log(aiMetricsDataRootFlag.kind) // "flag"
  * ```
  *
- * @category flags
+ * @category configuration
  * @since 0.0.0
  */
 export const aiMetricsDataRootFlag = Flag.String("data-root").pipe(
@@ -137,7 +137,7 @@ export const aiMetricsDataRootFlag = Flag.String("data-root").pipe(
  * console.log(environment.BEEP_YEET_STATE_ROOT) // "/var/lib/beep/yeet"
  * ```
  *
- * @category flags
+ * @category configuration
  * @since 0.0.0
  */
 export const yeetStateRootEnvVar = "BEEP_YEET_STATE_ROOT";
@@ -158,7 +158,7 @@ export const yeetStateRootEnvVar = "BEEP_YEET_STATE_ROOT";
  * console.log(yeetStateRootFlag.kind) // "flag"
  * ```
  *
- * @category flags
+ * @category configuration
  * @since 0.0.0
  */
 export const yeetStateRootFlag = Flag.String("state-root").pipe(
@@ -197,7 +197,7 @@ export const yeetStateRootFlag = Flag.String("state-root").pipe(
  *
  * @param description - Help text shown beside `--package`.
  * @returns A string `--package` flag with the `-p` alias.
- * @category flags
+ * @category configuration
  * @since 0.0.0
  */
 export const packageFlag = (description = "Target a workspace package by name or repo-relative path") =>
@@ -225,7 +225,7 @@ export const packageFlag = (description = "Target a workspace package by name or
  * @param description - Help text shown beside `--output`.
  * @returns A string `--output` flag with the `-o` alias.
  * @see {@link forceFlag} for the companion flag that permits overwriting.
- * @category flags
+ * @category configuration
  * @since 0.0.0
  */
 export const outputFlag = (description = "Write output to a specific file path") =>
@@ -253,7 +253,7 @@ export const outputFlag = (description = "Write output to a specific file path")
  *
  * @param description - Help text shown beside `--verbose`.
  * @returns A boolean `--verbose` flag defaulting to `false`.
- * @category flags
+ * @category configuration
  * @since 0.0.0
  */
 export const verboseFlag = (description = "Print additional diagnostic output") =>
@@ -286,7 +286,7 @@ export const verboseFlag = (description = "Print additional diagnostic output") 
  *
  * @param description - Help text shown beside `--dry-run`.
  * @returns A boolean `--dry-run` flag defaulting to `false`.
- * @category flags
+ * @category configuration
  * @since 0.0.0
  */
 export const dryRunFlag = (description = "Preview changes without writing files") =>
@@ -320,7 +320,7 @@ export const dryRunFlag = (description = "Preview changes without writing files"
  *
  * @param description - Help text shown beside `--force`.
  * @returns A boolean `--force` flag defaulting to `false`.
- * @category flags
+ * @category configuration
  * @since 0.0.0
  */
 export const forceFlag = (description = "Overwrite existing output") =>
@@ -352,7 +352,7 @@ export const forceFlag = (description = "Overwrite existing output") =>
  * ```
  *
  * @see {@link normalizedTokens} for the case-folding variant.
- * @category coercion
+ * @category normalization
  * @since 0.0.0
  */
 export const csvValues: (value: string) => ReadonlyArray<string> = Text.splitCommaSeparatedTrimmed;
@@ -388,7 +388,7 @@ export const csvValues: (value: string) => ReadonlyArray<string> = Text.splitCom
  * ```
  *
  * @see {@link csvValues} for the variant that preserves case.
- * @category coercion
+ * @category normalization
  * @since 0.0.0
  */
 export const normalizedTokens: (value: string) => ReadonlyArray<string> = flow(
@@ -425,7 +425,7 @@ export const normalizedTokens: (value: string) => ReadonlyArray<string> = flow(
  * console.log(values.length) // 2
  * ```
  *
- * @category coercion
+ * @category normalization
  * @since 0.0.0
  */
 export const variadicStrings: (values: ReadonlyArray<unknown>) => ReadonlyArray<string> = A.filter(P.isString);

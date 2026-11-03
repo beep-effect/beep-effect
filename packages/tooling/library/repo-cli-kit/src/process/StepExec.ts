@@ -1078,7 +1078,7 @@ export type RunCapturedWatchedOptions<E, R> = RunCapturedOptions & {
  *
  * @param options - Command, spawn fields, and capture configuration.
  * @returns Captured combined output, exit code, and truncation flag.
- * @category execution
+ * @category processes
  * @since 0.0.0
  */
 export interface RunCaptured {
@@ -1115,7 +1115,7 @@ export interface RunCaptured {
  * console.log(result)
  * ```
  *
- * @category execution
+ * @category processes
  * @since 0.0.0
  */
 export const runCaptured: RunCaptured = Effect.fn("StepExec.runCaptured")(function* <E, R>(
@@ -1262,7 +1262,7 @@ const runPipedChild = <A>(
  *
  * @param options - Command, spawn fields, and capture configuration.
  * @returns Captured stdout, stderr, exit code, and truncation flag.
- * @category execution
+ * @category processes
  * @since 0.0.0
  */
 export const runCapturedStreams = Effect.fn("StepExec.runCapturedStreams")(function* (
@@ -1363,7 +1363,7 @@ export type RunFoldedStdoutOptions = SpawnFields & {
  *
  * @param options - Command, spawn fields, stdout fold, and stderr bound.
  * @returns The folded stdout value, bounded stderr, exit code, and stderr truncation flag.
- * @category execution
+ * @category processes
  * @since 0.0.0
  */
 export const runFoldedStdout = Effect.fn("StepExec.runFoldedStdout")(function* (
@@ -1428,7 +1428,7 @@ export type RunToExitOptions = SpawnFields & {
  *
  * @param options - Command, spawn fields, and stdio disposition.
  * @returns The subprocess exit code.
- * @category execution
+ * @category processes
  * @since 0.0.0
  */
 export const runToExit = Effect.fn("StepExec.runToExit")(function* (
@@ -1470,7 +1470,7 @@ export const runToExit = Effect.fn("StepExec.runToExit")(function* (
  * console.log(proven)
  * ```
  *
- * @category execution
+ * @category processes
  * @since 0.0.0
  */
 export const ensureZeroExit: {

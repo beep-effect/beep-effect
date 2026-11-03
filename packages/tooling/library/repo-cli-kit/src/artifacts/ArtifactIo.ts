@@ -97,7 +97,7 @@ export const formatJsonc = Effect.fn("ArtifactIo.formatJsonc")(function* (value:
  * @param input - Absolute artifact path, target schema, and read/decode error
  * factories.
  * @returns Effect yielding the decoded document.
- * @category filesystem
+ * @category resources
  * @since 0.0.0
  */
 export const readArtifact = Effect.fn("ArtifactIo.readArtifact")(function* <Schema extends S.Top, E>(input: {
@@ -140,7 +140,7 @@ export const readArtifact = Effect.fn("ArtifactIo.readArtifact")(function* <Sche
  * @param input - Absolute artifact path, optional header block, body, and an
  * error factory.
  * @returns Effect that writes the artifact.
- * @category filesystem
+ * @category resources
  * @since 0.0.0
  */
 export const writeArtifact = Effect.fn("ArtifactIo.writeArtifact")(function* <E>(input: {

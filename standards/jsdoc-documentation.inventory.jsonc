@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-03T08:59:28.663Z",
+  "generatedAt": "2026-11-03T09:26:38.004Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -520659,8 +520659,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/Knowledge.command-surface.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.command-surface.ts",
-          "line": 1254,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledge-command-surface-ts-1254-knowledgecommandsurface",
+          "line": 1253,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledge-command-surface-ts-1253-knowledgecommandsurface",
           "currentTags": [
             "@internal",
             "@category",
@@ -520682,8 +520682,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Knowledge/Knowledge.command-surface.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.command-surface.ts",
-          "line": 1272,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledge-command-surface-ts-1272-knowledgestaticcommandtree",
+          "line": 1271,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledge-command-surface-ts-1271-knowledgestaticcommandtree",
           "currentTags": [
             "@internal",
             "@category",

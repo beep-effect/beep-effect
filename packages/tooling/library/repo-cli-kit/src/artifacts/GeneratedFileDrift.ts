@@ -75,7 +75,7 @@ export const assertExclusiveModeFlags = <E, R>(input: {
  * @param input - Absolute path, rendered content, a post-write effect (for
  * example the `wrote ...` log), and an fs error factory.
  * @returns Effect that writes the generated file.
- * @category filesystem
+ * @category resources
  * @since 0.0.0
  */
 export const writeGeneratedFile = Effect.fn("GeneratedFileDrift.writeGeneratedFile")(function* <E, R>(input: {
@@ -118,7 +118,7 @@ export const writeGeneratedFile = Effect.fn("GeneratedFileDrift.writeGeneratedFi
  * and an fs read error factory.
  * @returns Effect that fails stale (or missing) with the caller's failure
  * effect, or succeeds when the committed file matches.
- * @category filesystem
+ * @category resources
  * @since 0.0.0
  */
 export const checkGeneratedFile = Effect.fn("GeneratedFileDrift.checkGeneratedFile")(function* <E, R>(input: {
@@ -169,7 +169,7 @@ export const checkGeneratedFile = Effect.fn("GeneratedFileDrift.checkGeneratedFi
  *
  * @param input - The `write` flag plus the write-mode and check-mode fields.
  * @returns Effect running the selected branch.
- * @category filesystem
+ * @category resources
  * @since 0.0.0
  */
 export const syncGeneratedFile = <E, R>(input: {

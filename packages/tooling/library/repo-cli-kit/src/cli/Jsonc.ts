@@ -98,7 +98,7 @@ export class JsoncModification extends S.Opaque<JsoncModification, { readonly br
  * @returns The edited JSONC text with comments and unrelated formatting preserved.
  * @throws The kit's `JsoncModificationError`, `JsoncPlacementError` or
  *   `JsoncStringifyError` when the path cannot be edited or the value encoded.
- * @category editing
+ * @category utilities
  * @since 0.0.0
  */
 export const applyJsoncModification = (request: JsoncModification): string =>

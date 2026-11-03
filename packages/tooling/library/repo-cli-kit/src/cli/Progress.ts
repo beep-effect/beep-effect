@@ -71,7 +71,7 @@ export const isProgressEnabled = (enabled = true): boolean => enabled && process
  * @param completed - Completed unit count.
  * @param total - Total unit count.
  * @returns The clamped completion fraction.
- * @category math
+ * @category utilities
  * @since 0.0.0
  */
 export const progressFraction: {
@@ -98,7 +98,7 @@ export const progressFraction: {
  * @param completed - Completed unit count.
  * @param total - Total unit count.
  * @returns The percent string, treating a zero total as `"100.0"`.
- * @category math
+ * @category utilities
  * @since 0.0.0
  */
 export const progressPercent: {

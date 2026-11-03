@@ -1087,8 +1087,7 @@ const buildStaticCommandTree = Effect.fn("Knowledge.buildStaticCommandTree")(fun
           moduleResolution: ModuleResolutionKind.NodeNext,
           target: ScriptTarget.ESNext,
           // Commands import the shared flags by package path since they moved to @beep/repo-cli-kit.
-          baseUrl: STATIC_PROJECT_ROOT,
-          paths: { [SHARED_FLAG_SPECIFIER]: [SHARED_FLAG_SOURCE] },
+          paths: { [SHARED_FLAG_SPECIFIER]: [`${STATIC_PROJECT_ROOT}/${SHARED_FLAG_SOURCE}`] },
         },
         skipAddingFilesFromTsConfig: true,
         skipLoadingLibFiles: true,

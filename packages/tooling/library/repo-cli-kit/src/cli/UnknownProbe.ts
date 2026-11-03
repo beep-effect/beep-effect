@@ -73,7 +73,7 @@ export const isUnknownRecord = (value: unknown): value is Readonly<Record<string
  * console.log(O.isNone(unknownRecordProperty([1, 2], "name")))
  * ```
  *
- * @category access
+ * @category getters
  * @since 0.0.0
  */
 export const unknownRecordProperty: {
@@ -105,7 +105,7 @@ export const unknownRecordProperty: {
  *
  * @param value - The unknown value whose keys are read.
  * @returns The ascending-sorted own string keys, or an empty array.
- * @category access
+ * @category getters
  * @since 0.0.0
  */
 export const unknownRecordKeys = (value: unknown): ReadonlyArray<string> =>
