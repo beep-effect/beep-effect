@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { runCaptured } from "@beep/repo-cli-kit/process/StepExec";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, Str, thunk0, thunkFalse } from "@beep/utils";
 import * as Effect from "effect/Effect";
@@ -13,7 +14,6 @@ import { dual, flow, pipe } from "effect/Function";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
-import { runCaptured } from "../../../internal/process/StepExec.ts";
 import { DocgenGenerationResult, isDocgenWorkspacePackage } from "../Docgen.schemas.ts";
 import type { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import type { DocgenWorkspacePackage } from "../Docgen.schemas.ts";

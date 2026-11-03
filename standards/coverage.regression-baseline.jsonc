@@ -40184,354 +40184,6 @@
             "functions": 0
           }
         },
-        "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/artifacts/GeneratedFileDrift.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 90,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 1,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/artifacts/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/Bytes.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/CommandErrorFields.ts": {
-          "lines": 64.28,
-          "statements": 62.5,
-          "branches": 50,
-          "functions": 40,
-          "uncovered": {
-            "lines": 5,
-            "statements": 6,
-            "branches": 4,
-            "functions": 3
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/FailureRendering.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/Flags.ts": {
-          "lines": 84.21,
-          "statements": 84.21,
-          "branches": 40,
-          "functions": 50,
-          "uncovered": {
-            "lines": 3,
-            "statements": 3,
-            "branches": 3,
-            "functions": 3
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts": {
-          "lines": 88.7,
-          "statements": 89.06,
-          "branches": 86.53,
-          "functions": 78.68,
-          "uncovered": {
-            "lines": 27,
-            "statements": 27,
-            "branches": 14,
-            "functions": 13
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/Json.ts": {
-          "lines": 97.87,
-          "statements": 97.87,
-          "branches": 100,
-          "functions": 91.66,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 1
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/Jsonc.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/Labs/LabManifest.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/Labs/LabsWorkspace.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/Labs/RetiredPackages.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/Labs/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/LintRouting.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/MixedOutputJson.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/OptionRecord.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/PolicyFindingLogger.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/Printer.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/Progress.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/RunMode.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/Stdin.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/Stdout.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/Timing.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 88.88,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 1,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/UnknownProbe.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/duckdb/WithDuckDb.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/tooling/tool/cli/src/internal/github/GhCommand.ts": {
           "lines": 96.42,
           "statements": 96.42,
@@ -40617,66 +40269,6 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/github/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/package-scripts/PackageScripts.schemas.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 96.15,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 1,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/package-scripts/PackageScriptsPolicy.ts": {
-          "lines": 97.43,
-          "statements": 94.53,
-          "branches": 91.02,
-          "functions": 89.13,
-          "uncovered": {
-            "lines": 4,
-            "statements": 10,
-            "branches": 7,
-            "functions": 5
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/package-scripts/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/process/StepExec.ts": {
-          "lines": 98.15,
-          "statements": 97.64,
-          "branches": 96.11,
-          "functions": 96.22,
-          "uncovered": {
-            "lines": 3,
-            "statements": 4,
-            "branches": 4,
-            "functions": 2
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/process/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -41024,66 +40616,6 @@
             "functions": 0
           }
         },
-        "packages/tooling/tool/cli/src/internal/schema/JsonCodec.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/schema/OpaqueDefect.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/schema/PosInt.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/schema/TextCodec.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/schema/Uuid.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/tooling/tool/cli/src/internal/state/JsonLinesStore.ts": {
           "lines": 100,
           "statements": 100,
@@ -41097,102 +40629,6 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/state/WorkstationState.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/stats/NearestRank.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/systemd/SystemdUnit.schemas.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/systemd/SystemdUnit.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/systemd/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/tsmorph/JsDoc.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/tsmorph/OwnerResolver.ts": {
-          "lines": 90,
-          "statements": 90.47,
-          "branches": 75,
-          "functions": 77.77,
-          "uncovered": {
-            "lines": 2,
-            "statements": 2,
-            "branches": 2,
-            "functions": 2
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/tsmorph/ProjectFactory.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/tsmorph/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -41565,6 +41001,585 @@
           }
         },
         "packages/tooling/tool/cli/src/test/Yeet.test-kit.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
+    "@beep/repo-cli-kit": {
+      "path": "packages/tooling/library/repo-cli-kit",
+      "lines": 99.32,
+      "statements": 98.97,
+      "branches": 97.92,
+      "functions": 98.55,
+      "uncovered": {
+        "lines": 11,
+        "statements": 18,
+        "branches": 14,
+        "functions": 8
+      },
+      "files": {
+        "packages/tooling/library/repo-cli-kit/src/artifacts/ArtifactIo.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/artifacts/GeneratedFileDrift.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 90,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 1,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/artifacts/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/cli/Bytes.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/cli/CommandErrorFields.ts": {
+          "lines": 64.28,
+          "statements": 62.5,
+          "branches": 50,
+          "functions": 40,
+          "uncovered": {
+            "lines": 5,
+            "statements": 6,
+            "branches": 4,
+            "functions": 3
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/cli/EnvConfig.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/cli/ExitCodeError.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/cli/FailureRendering.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/cli/Flags.ts": {
+          "lines": 84.21,
+          "statements": 84.21,
+          "branches": 40,
+          "functions": 50,
+          "uncovered": {
+            "lines": 3,
+            "statements": 3,
+            "branches": 3,
+            "functions": 3
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/cli/FsGuards.ts": {
+          "lines": 88.7,
+          "statements": 89.06,
+          "branches": 86.53,
+          "functions": 78.68,
+          "uncovered": {
+            "lines": 27,
+            "statements": 27,
+            "branches": 14,
+            "functions": 13
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/cli/Json.ts": {
+          "lines": 97.87,
+          "statements": 97.87,
+          "branches": 100,
+          "functions": 91.66,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/cli/Jsonc.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/cli/Labs/LabManifest.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/cli/Labs/LabsWorkspace.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/cli/Labs/RetiredPackages.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/cli/Labs/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/cli/LintRouting.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/cli/MixedOutputJson.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/cli/OptionRecord.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/cli/PolicyFindingLogger.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/cli/Printer.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/cli/Progress.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/cli/RunMode.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/cli/Stdin.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/cli/Stdout.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/cli/Timing.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 88.88,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 1,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/cli/TurboCache.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/cli/UnknownProbe.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/duckdb/WithDuckDb.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/package-scripts/PackageScripts.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 96.15,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 1,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/package-scripts/PackageScriptsPolicy.ts": {
+          "lines": 97.43,
+          "statements": 94.53,
+          "branches": 91.02,
+          "functions": 89.13,
+          "uncovered": {
+            "lines": 4,
+            "statements": 10,
+            "branches": 7,
+            "functions": 5
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/package-scripts/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts": {
+          "lines": 98.15,
+          "statements": 97.64,
+          "branches": 96.11,
+          "functions": 96.22,
+          "uncovered": {
+            "lines": 3,
+            "statements": 4,
+            "branches": 4,
+            "functions": 2
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/process/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/schema/JsonCodec.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/schema/OpaqueDefect.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/schema/PosInt.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/schema/TextCodec.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/schema/Uuid.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/stats/NearestRank.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/systemd/SystemdUnit.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/systemd/SystemdUnit.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/systemd/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/tsmorph/JsDoc.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/tsmorph/OwnerResolver.ts": {
+          "lines": 90,
+          "statements": 90.47,
+          "branches": 75,
+          "functions": 77.77,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 2,
+            "functions": 2
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/tsmorph/ProjectFactory.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-cli-kit/src/tsmorph/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

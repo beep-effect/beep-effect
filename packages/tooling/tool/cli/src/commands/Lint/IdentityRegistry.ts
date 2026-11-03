@@ -15,6 +15,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit, normalizePath } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
@@ -30,7 +31,6 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Node, Project } from "ts-morph";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { registerMissingWorkspaceIdentityPackages } from "../CreatePackage/internal/IdentityBulkRegistration.ts";
 import { CreatePackageIdentityRegistration } from "../CreatePackage/internal/IdentityRegistration.ts";
 import { LabIdentitySegment } from "../CreatePackage/internal/LabIdentitySegment.ts";

@@ -783,3 +783,31 @@ The collector now accepts Git exit 1 only for a no-match grep. Other Git errors
 and a truncated NUL-delimited inventory fail before applicability classification.
 The source-only replay and three early collector refusals remain separate from
 repository quality or native behavior proof.
+
+
+### Aggregate client pins hid a canary-only feature, 2026-11-03
+
+The matrix's aggregate pins still named 2.11.9-canary.1 while later feature-local
+experiments had frozen 2.11.11-canary.1. Fresh SRI-verified published package
+inspection found a concrete inventory gap: `hashFilePermissions` is declared
+only by the current canary, increasing its future-flag surface to 15 versus
+stable's 14. Assuming the stable list covered both clients missed this flag.
+
+Preserve historical source/version envelopes and add current-pair availability
+separately. Inventory the union of both published schemas; check unsupported
+stable cases as negatives rather than silently dropping canary-only features.
+Do not enable a hash-changing flag or transplant earlier semantic results.
+Source review initially asserted parity and stopped before publication; the
+observed schema difference changed the matrix and next qualification work.
+### 2026-11-03 — keep native population distinct from package counts
+
+- Evidence: accepted `fae5b2098c` removes T3, adds Party and replaces root
+  fingerprint commands. Workspace count stays 191 while executable graph
+  entries fall from 2,434 to 2,400. Subtracting one package would be incorrect.
+- Prevention: use the existing Cache-owned query/dry-plan census and its
+  manifest/source joins; distinguish root scripts, executable graph entries and
+  graph-only nodes. Preserve the retired review and all prior snapshot bytes.
+- An initial freshness join assumed a single Biome write command. Four existing
+  manifest-specific write scopes refused that assumption. Inspect and preserve
+  each exact implementation; no broader command substitution or runtime proof
+  was used. The corrected join revalidates 198 keep-fresh boundaries only.

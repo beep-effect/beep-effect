@@ -26,7 +26,7 @@ exploration packet — the four evidence reports in `research/` are the primary 
    repo/user surface census, and the `$HOME` sweep.
 4. `packages/tooling/tool/cli/src/commands/SyncDataToTs/`,
    `packages/tooling/tool/cli/src/commands/VersionSync/`, and
-   `packages/tooling/tool/cli/src/internal/systemd/SystemdUnit.ts` — the RunMode, updater, and
+   `packages/tooling/library/repo-cli-kit/src/systemd/SystemdUnit.ts` — the RunMode, updater, and
    home-as-parameter idioms the implementation reuses.
 
 ## Domain Model

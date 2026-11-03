@@ -34,7 +34,7 @@ adding a repo is one entry and one command. Grilled 2026-09-25
 6. `research/2026-09-25-01-current-state.md`, `research/2026-09-25-02-fleet-census.md`,
    `research/SOURCES.md`.
 7. Reused implementation idioms: the graft deep refresh service (retired 2026-10-28),
-   `packages/tooling/tool/cli/src/internal/systemd/SystemdUnit.ts`,
+   `packages/tooling/library/repo-cli-kit/src/systemd/SystemdUnit.ts`,
    `packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts`,
    `scripts/setup-effect-ref.sh`.
 

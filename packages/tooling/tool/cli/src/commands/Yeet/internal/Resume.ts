@@ -11,6 +11,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { renderPrettyCommandJson } from "@beep/repo-cli-kit/cli/Json";
 import { shellQuote } from "@beep/repo-utils/Shell";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
@@ -27,7 +28,6 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { renderPrettyCommandJson } from "../../../internal/cli/Json.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { distinctPrSessions, PrProvenanceLabel, PrRepository, PrSessionRecord } from "./Provenance.ts";
 import { detectPrRepository } from "./ProvenanceFooter.ts";

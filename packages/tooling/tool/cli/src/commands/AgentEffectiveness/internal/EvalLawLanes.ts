@@ -8,6 +8,8 @@
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
+import { REPO_CLI_ENTRY_PATH } from "@beep/repo-cli-kit/cli/EntryPath";
+import { formatCommandLine, runCapturedStreams } from "@beep/repo-cli-kit/process/index";
 import { A } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -19,8 +21,6 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { REPO_CLI_ENTRY_PATH } from "../../../internal/cli/EntryPath.ts";
-import { formatCommandLine, runCapturedStreams } from "../../../internal/process/index.ts";
 import {
   decodeSchemaFirstPolicyFindingLine,
   decodeSchemaFirstScannedFilesLine,

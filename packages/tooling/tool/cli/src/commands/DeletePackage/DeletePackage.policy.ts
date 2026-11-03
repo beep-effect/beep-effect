@@ -5,10 +5,10 @@
  * @since 0.0.0
  */
 
+import { isLabsWorkspacePath } from "@beep/repo-cli-kit/cli/Labs/index";
 import { A, Str } from "@beep/utils";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
-import { isLabsWorkspacePath } from "../../internal/cli/Labs/index.ts";
 import { DeletePackageRefusal } from "./DeletePackage.schemas.ts";
 import type { DeletePackagePolicy } from "./DeletePackage.schemas.ts";
 import type {

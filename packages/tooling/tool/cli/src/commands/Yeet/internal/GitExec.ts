@@ -41,9 +41,9 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { yeetGitOutputErrorAdapter } from "./GitErrorAdapter.ts";
 import type { GitShape } from "@beep/git/Git";
 import type { GitInvocation } from "@beep/git/GitCommand";
+import type { RunFoldedStdoutOptions } from "@beep/repo-cli-kit/process/StepExec";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { RunFoldedStdoutOptions } from "../../../internal/process/StepExec.ts";
 import type { GitCommandErrorAdapter, GitKitError, RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/GitExec");

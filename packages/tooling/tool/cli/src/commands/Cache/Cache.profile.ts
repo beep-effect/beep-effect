@@ -6,17 +6,17 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
+import { writeContainedFileString } from "@beep/repo-cli-kit/cli/FsGuards";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { writeContainedFileString } from "../../internal/cli/FsGuards.ts";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { CacheCommandError } from "./Cache.errors.ts";
 import { decodeCacheExperimentText, readCacheExperimentBytes } from "./Cache.evidence.ts";
+import type { FsGuardError } from "@beep/repo-cli-kit/cli/FsGuards";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
-import type { FsGuardError } from "../../internal/cli/FsGuards.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.profile");
 const decodeJsonObjectText = Jsonc.bind(S.JsonObject).decode;

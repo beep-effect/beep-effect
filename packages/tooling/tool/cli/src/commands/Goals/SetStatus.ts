@@ -21,6 +21,9 @@
  * @since 0.0.0
  */
 
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { applyJsoncModification, JsoncModification } from "@beep/repo-cli-kit/cli/Jsonc";
+import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, O, pipe, Str } from "@beep/utils";
 import * as Console from "effect/Console";
@@ -32,9 +35,6 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { applyJsoncModification, JsoncModification } from "../../internal/cli/Jsonc.ts";
-import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import { readGoalCloseoutView } from "./Completion.ts";
 import {
   GoalManifestInvalidError,

@@ -18,6 +18,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { isLabsWorkspacePath } from "@beep/repo-cli-kit/cli/Labs/index";
+import { workspaceDirectories } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { DomainError } from "@beep/repo-utils";
 import { A, Str, Text } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -28,8 +30,6 @@ import * as HashSet from "effect/HashSet";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { isLabsWorkspacePath } from "../../../internal/cli/Labs/index.ts";
-import { workspaceDirectories } from "../../../internal/RepoWorkspaces.ts";
 import { CreatePackageIdentityRegistration } from "./IdentityRegistration.ts";
 
 const $I = $RepoCliId.create("commands/CreatePackage/internal/LabIdentitySegment");

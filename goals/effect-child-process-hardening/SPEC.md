@@ -33,7 +33,7 @@ Higher sources outrank lower sources when they conflict.
 
 - Current TypeScript consumers of `effect/process` under `apps/` and
   `packages/`.
-- `packages/tooling/tool/cli/src/internal/process/StepExec.ts` and
+- `packages/tooling/library/repo-cli-kit/src/process/StepExec.ts` and
   `internal/repo-run/GitExec.ts`.
 - Aggregate platform composition roots and affected test layers.
 - `packages/foundation/modeling/utils/src/Stream.ts`.

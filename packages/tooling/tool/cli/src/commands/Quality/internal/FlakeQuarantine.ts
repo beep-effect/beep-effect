@@ -32,15 +32,15 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
+import { OutputBound, QualityTaskStep, StepFlakeQuarantinePolicy } from "@beep/repo-cli-kit/process/index";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { optionalProp } from "../../../internal/cli/OptionRecord.ts";
-import { OutputBound, QualityTaskStep, StepFlakeQuarantinePolicy } from "../../../internal/process/index.ts";
-import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 
 const $I = $RepoCliId.create("commands/Quality/internal/FlakeQuarantine");
 

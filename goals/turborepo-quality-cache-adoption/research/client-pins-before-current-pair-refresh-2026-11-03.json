@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "cache-adoption-client-pin-observation/v1",
+  "authority": "Native binary identity observation; no runtime qualification granted.",
+  "stable": {
+    "packageVersion": "2.11.10",
+    "reportedVersion": "2.11.10",
+    "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+  },
+  "canary": {
+    "packageVersion": "2.11.9-canary.1",
+    "reportedVersion": "2.11.9-canary.1",
+    "sha256": "f0686d3818ff00361d89919ec5e09d151aa6d9641cb5ddfda8fa734bf906cbbb",
+    "registryMetadata": "https://registry.npmjs.org/@turbo%2flinux-64/2.11.9-canary.1",
+    "tarball": "https://registry.npmjs.org/@turbo/linux-64/-/linux-64-2.11.9-canary.1.tgz",
+    "integrity": "sha512-/oz28k9JCTqzztuzD4oiyOPN692rLEoKePm5+n2zjyivej3ytEvQWL5M6qgSsw0f1Jx2pLJ7ucu+s4uC2C1OvQ==",
+    "integrityVerified": true,
+    "packageAndReportedVersionMatch": true
+  },
+  "sameBinaryBytes": false,
+  "registryTagsObserved": {
+    "latest": "2.11.10",
+    "canary": "2.11.9-canary.1"
+  },
+  "qualificationGate": "Binary pins established; runtime qualification still required.",
+  "clientSelection": "pinned-native-skip-infer",
+  "delegationControl": {
+    "withoutSkipInferFromRepository": "2.11.10",
+    "withSkipInferFromRepository": "2.11.9-canary.1",
+    "outsideRepository": "2.11.9-canary.1",
+    "existingPilotOwner": "Cache.pilot.ts already adds --skip-infer"
+  },
+  "canaryDocs": {
+    "registryMetadata": "https://registry.npmjs.org/turbo/2.11.9-canary.1",
+    "integrity": "sha512-SzpfiYzUudfnyOe1kbdQDLJeLNRs9hXVeZJYpXDhp+eGaB6vTUWHVmPJ858FVxz7PVOY/CEb4HCu+jU16EHSHQ==",
+    "integrityVerified": true,
+    "extractedPages": [
+      "crafting-your-repository/caching.mdx",
+      "crafting-your-repository/configuring-tasks.mdx",
+      "crafting-your-repository/using-environment-variables.mdx",
+      "reference/configuration.mdx",
+      "reference/run.mdx",
+      "reference/prune.mdx",
+      "reference/boundaries.mdx",
+      "reference/query.mdx",
+      "reference/watch.mdx",
+      "core-concepts/remote-caching.mdx"
+    ]
+  }
+}

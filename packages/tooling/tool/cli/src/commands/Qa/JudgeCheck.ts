@@ -12,12 +12,12 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { jsonObjectTextFromMixedOutput } from "@beep/repo-cli-kit/cli/MixedOutputJson";
 import { A, O, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
-import { jsonObjectTextFromMixedOutput } from "../../internal/cli/MixedOutputJson.ts";
 import {
   CitedArtifactExistsInput,
   CitedArtifactExistsVerdict,

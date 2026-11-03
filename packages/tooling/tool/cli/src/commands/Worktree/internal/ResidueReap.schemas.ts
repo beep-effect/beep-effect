@@ -6,10 +6,10 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { PosInt } from "@beep/repo-cli-kit/schema/PosInt";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
-import { PosInt } from "../../../internal/schema/PosInt.ts";
 
 const $I = $RepoCliId.create("commands/Worktree/internal/ResidueReap.schemas");
 const ResidueTerminalState = LiteralKit([

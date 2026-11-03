@@ -7,6 +7,7 @@
 
 import { ReviewThread } from "@beep/github/ReviewThread";
 import { $RepoCliId } from "@beep/identity/packages";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import * as O from "@beep/utils/Option";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -21,7 +22,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GhActor, GithubRest, ghOutput } from "../../../internal/github/index.ts";
 import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
-import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext, runIdForContext } from "./ArtifactPaths.ts";
 import { closeoutIssueFromReviewThread, PrCloseoutReportJson } from "./Closeout.ts";

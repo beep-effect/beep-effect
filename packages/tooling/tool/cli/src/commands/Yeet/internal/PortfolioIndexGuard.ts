@@ -14,6 +14,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { writeContainedFileString } from "@beep/repo-cli-kit/cli/FsGuards";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -21,7 +22,6 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import { writeContainedFileString } from "../../../internal/cli/FsGuards.ts";
 import { GOALS_DIR } from "../../Goals/Inventory.ts";
 import { buildPortfolioIndexContent, PORTFOLIO_INDEX_PATH } from "../../Goals/PortfolioIndex.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";

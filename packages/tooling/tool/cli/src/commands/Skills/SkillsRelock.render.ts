@@ -15,6 +15,7 @@
  * @since 0.0.0
  */
 
+import { renderPrettyCommandJson } from "@beep/repo-cli-kit/cli/Json";
 import * as A from "effect/Array";
 import * as Base64Url from "effect/encoding/Base64Url";
 import { dual } from "effect/Function";
@@ -23,7 +24,6 @@ import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { renderPrettyCommandJson } from "../../internal/cli/Json.ts";
 import {
   SkillRelockReceipt,
   SkillReplayBatch,

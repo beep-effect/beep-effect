@@ -71,6 +71,7 @@ export {
   RootAuditMode,
 } from "@beep/repo-cli/commands/Quality/Quality.schemas";
 export * from "@beep/repo-cli/commands/Quality/Tasks";
+export * from "@beep/repo-cli-kit/process/index";
 export { effectDiagnosticsAffectedPackages, effectDiagnosticsProjects } from "../commands/Quality/EffectDiagnostics.ts";
 export {
   fallowFeatureArgsForTesting,
@@ -114,4 +115,3 @@ export { testTsgoPrograms } from "../commands/Quality/internal/TestTsgoPrograms.
 export * from "../commands/Quality/internal/TurboConfigProof.ts";
 export * from "../commands/Quality/internal/TurboLaneDigest.ts";
 export { renderAdmissionSnapshotLinesForTesting } from "../commands/Quality/Quality.command.ts";
-export * from "../internal/process/index.ts";

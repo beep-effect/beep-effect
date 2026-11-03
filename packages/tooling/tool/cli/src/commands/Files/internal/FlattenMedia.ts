@@ -7,6 +7,7 @@
 
 import { isPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
+import { allocateUniqueName } from "@beep/repo-cli-kit/cli/FsGuards";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { compileAndExpand } from "@beep/walker/Expand";
@@ -19,7 +20,6 @@ import * as FileSystem from "effect/FileSystem";
 import * as HashSet from "effect/HashSet";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { allocateUniqueName } from "../../../internal/cli/FsGuards.ts";
 import { FilesCommandError, formatPlatformError, PlatformErrorOptions } from "../Files.errors.ts";
 import { hasSkippedFiles, mediaKindFromExtension } from "../Files.media.ts";
 import { decodeFlattenMediaOptions, FlattenMediaSummary } from "./FlattenMedia.schemas.ts";

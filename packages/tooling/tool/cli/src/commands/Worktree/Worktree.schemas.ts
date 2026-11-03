@@ -12,6 +12,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { PosInt } from "@beep/repo-cli-kit/schema/PosInt";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { ArrayKeyDefaultEmpty } from "@beep/schema/SchemaUtils/withKeyDefaults";
@@ -22,7 +23,6 @@ import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { ProcessPid } from "../../internal/repo-run/ProcessTable.ts";
-import { PosInt } from "../../internal/schema/PosInt.ts";
 import type { WorktreeEntry } from "@beep/git/Git";
 
 const $I = $RepoCliId.create("commands/Worktree/Worktree.schemas");

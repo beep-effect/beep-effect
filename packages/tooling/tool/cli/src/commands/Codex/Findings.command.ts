@@ -10,6 +10,8 @@
  * @since 0.0.0
  */
 
+import { dryRunFlag, forceFlag, jsonFlag } from "@beep/repo-cli-kit/cli/Flags";
+import { printJsonOrLines, printLines } from "@beep/repo-cli-kit/cli/Printer";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, O, Str } from "@beep/utils";
 import * as Command from "effect/cli/Command";
@@ -18,8 +20,6 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { dryRunFlag, forceFlag, jsonFlag } from "../../internal/cli/Flags.ts";
-import { printJsonOrLines, printLines } from "../../internal/cli/Printer.ts";
 import { writePortfolioIndex } from "../Goals/PortfolioIndex.ts";
 import {
   CodexCaptureSource,
