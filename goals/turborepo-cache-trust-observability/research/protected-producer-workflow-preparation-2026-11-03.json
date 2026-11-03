@@ -11,11 +11,11 @@
     },
     {
       "path": ".github/workflows/heavy.yml",
-      "sha256": "a0ff14f90748a8c27cf77d7e04a9f4edeadc7de45cbcd7102021dab89b5d1a4e"
+      "sha256": "e0f32e26ca4c1b50b8fc6050e4e95162357f36299e418fd8b7eea11bd4a660ff"
     },
     {
       "path": "packages/tooling/tool/cli/test/ci-runner-security.test.ts",
-      "sha256": "7b76d96f26f7e3ee01eabad4bf4ee028de3e759eeac60d877c9d228f9c86c8b2"
+      "sha256": "be8ae394f9d4323003088ac5590a75e28ff78d60cb3e784a52087545e429910f"
     }
   ],
   "route": {
@@ -61,7 +61,7 @@
     "artifactRetentionDays": 1,
     "nativeArchiveBytes": 67108864,
     "nativeExecutableBytes": 67108864,
-    "combinedHostedWorkflowTextBytes": 46001,
+    "combinedHostedWorkflowTextBytes": 45969,
     "hostedWorkflowTextLimitBytes": 65536,
     "existingTrialStorageAndOperationLimitsExpanded": false,
     "newRunnerCapacity": false
@@ -141,5 +141,9 @@
     "sha256": "a940ec237cc825936d6a1a55d4124dec0fdb544ff22e69d945bc125854b16bc1",
     "repair": "Check/install cc, ld and readelf before compiling host build scripts, record their actual executable/version identities, preserve all existing build limits.",
     "newBuildExecuted": false
+  },
+  "reviewRepair": {
+    "scope": "Source inspection found a duplicate execution guard and conflicting exact-text expectations across the three authored policy tests. Remove the redundant guard and make all three expectations identical; no execution policy or acceptance requirement weakened.",
+    "localTestsExecuted": false
   }
 }

@@ -1652,7 +1652,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         default: false,
       });
       expect(yamlAt(heavy, ["jobs", "verify", "if"])).toBe(
-        "${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.producer_execution }}"
+        "${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution }}"
       );
       expect(yamlAt(heavy, ["jobs", "producer-inspect", "if"])).toBe(
         A.join(
@@ -1734,7 +1734,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         default: false,
       });
       expect(yamlAt(heavy, ["jobs", "verify", "if"])).toBe(
-        "${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.producer_execution }}"
+        "${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution }}"
       );
       expect(yamlAt(heavy, ["jobs", "producer-prepare", "if"])).toBe(
         A.join(

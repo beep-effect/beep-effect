@@ -80,9 +80,9 @@ jobs:
     # `should_run=false`), so each context reports success without touching
     # the heavy pool. Every ordinary quality call must still expand the
     # matrix: skipping it leaves required contexts "Expected". Only the
-    # dedicated manual inspection or preparation selects an operational job below;
+    # dedicated manual inspection, preparation or execution selects a job below;
     # it does not publish quality verdicts.
-    if: ${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.producer_execution }}
+    if: ${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution }}
     runs-on: ${{ inputs.admitted && 'beep-ec2-heavy' || 'ubuntu-24.04' }}
     timeout-minutes: ${{ matrix.timeout_minutes }}
     environment: ${{ github.event_name == 'push' && inputs.admitted && matrix.uses_turbo == 'true' && 'turbo-cache-write' || null }}

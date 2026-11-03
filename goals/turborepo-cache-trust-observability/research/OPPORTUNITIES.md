@@ -2111,3 +2111,13 @@ explicitly withholding a current-policy claim. The first retained-driver call
 refused the shared evidence directory's mode before storage work; a dedicated
 mode-0700 output directory then passed. Keep that refusal and require explicit
 private output preparation, rather than weakening the guard.
+
+### Producer operational-guard expectation drift, 2026-11-03
+
+Source inspection of PR #2650 found the ordinary quality job repeated the
+execution-mode exclusion while one new policy assertion expected it once. The
+other two assertions copied the repetition. Remove the duplicate clause and
+keep the three assertions aligned. This fixes a deterministic authored-test
+mismatch without changing the mode policy. Exact-head hosted proof remains
+required; no repository test suite ran locally. A shared expected operational
+predicate would prevent this three-site text drift.
