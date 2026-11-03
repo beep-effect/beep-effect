@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "cache-creation-mask-identity-review/v1",
+  "recordedAt": "2026-11-03T22:59:02.001826+00:00",
+  "sourceBaseRevision": "31e2ac20f34a1c699a35be55f67881dbf0d8ffd0",
+  "sourceFinding": "Toolchain identity omitted inherited process umask.",
+  "beforeSources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts",
+      "sha256": "b74589300fb0e59f426b2fe6def1ef925669694906506ab78417d04387328a18"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts",
+      "sha256": "7ce4f0cba669b69bed7cba4a1fed2dbac19beda095ff5779b159250a95aff88c"
+    }
+  ],
+  "change": "New observations bind validated POSIX creation mask; historical absence remains decodable and distinct.",
+  "newHostedCases": [
+    "preserves historical observations without granting their identity to an observed creation mask",
+    "accepts only complete POSIX creation masks at the persisted boundary",
+    "reads inherited masks through real child runtimes without changing the parent",
+    "rejects empty, malformed and out-of-range child observations"
+  ],
+  "newCasesExecutedLocally": false,
+  "localVerifyOrPublishRun": false,
+  "qualificationGranted": false,
+  "nativePermissionRestorationFixed": false,
+  "productionSigningChanged": false,
+  "wholeGoalAcceptanceProven": false,
+  "reversal": "Reviewed revert after suspending affected tuples and restoring prior reviewed profile; retain evidence."
+}

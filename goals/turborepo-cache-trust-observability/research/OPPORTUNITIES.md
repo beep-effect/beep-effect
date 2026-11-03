@@ -2253,3 +2253,16 @@ toolchain is already present. Follow upstream package guidance (`perl-core` on
 RPM systems, `perl` on Debian), keep the existing bounds and retain an actual
 accepted-source build as the gate. Do not convert a source regression check into
 compiled-artifact proof.
+
+
+### Creation-mask drift was absent from runtime identity, 2026-11-03
+
+- Evidence: Cache.schemas.ts listed runtime binaries, kernel, libraries and
+  dependencies without a process creation mask; collectCacheToolchain therefore
+  could not distinguish identical tools under umask 022 and 077. The native
+  worktree mode counterexample under review in #2689 led to this source audit.
+- Repair: observe and validate the inherited mask through the existing bounded
+  subprocess, bind it to new fingerprints, and preserve historical receipt
+  decoding without inheriting qualification. Require actual hosted regressions.
+- Prevention: include filesystem creation context in runtime-profile review and
+  compare complete output metadata before qualifying permission-sensitive work.
