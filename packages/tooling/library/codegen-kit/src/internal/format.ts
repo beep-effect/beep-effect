@@ -86,7 +86,7 @@ export const makeFormatter = Effect.fn("CodegenKit.makeFormatter")(function* (pr
             stderr: "inherit",
           })
         );
-        return yield* Effect.all([Stream.mkString(Stream.decodeText(handle.stdout)), handle.exitCode], {
+        return yield* Effect.all([handle.stdout.pipe(Stream.decodeText, Stream.mkString), handle.exitCode], {
           concurrency: 2,
         });
       })

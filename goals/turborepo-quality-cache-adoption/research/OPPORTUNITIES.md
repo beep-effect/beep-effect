@@ -840,6 +840,22 @@ observed schema difference changed the matrix and next qualification work.
   an older observation onto them. A new source binding requires its own replay.
 
 
+### 2026-11-03 — Generator dependency changes need their generated configuration
+
+The first hosted run for #2686 rejected the new CodegenKit formatter for an
+unannotated boolean default and a non-pipeable stream expression. Its shared
+build failure stopped multiple downstream jobs. Repo Sanity separately reported
+five stale dependency configuration files. Apply `beep tsconfig-sync --write`
+when adding the workspace edge; repairing package scripts alone does not update
+references or generated boundaries. The canonical repair applied those five
+files in about nine seconds; no local verification suite was run.
+
+Fallow's retained hosted artifact identified a further visibility problem:
+HTML's authored generator was globally excluded, hiding its real CodegenKit
+import. Restore that script to dependency analysis while retaining its existing
+clone and complexity scoring exclusions. Do not globally suppress CodegenKit's
+dependency findings. Hosted checks remain the proof for all three repairs.
+
 ### 2026-11-03 — Two generator checks rewrote source before comparing it
 
 The entrypoint census found `@beep/html#generate:check` and
