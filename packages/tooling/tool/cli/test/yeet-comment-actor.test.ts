@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import {
   GhActor,
   GhRestIssueComment,
@@ -18,15 +19,12 @@ import { assertFalse, assertNone, assertSome, assertTrue, deepStrictEqual, stric
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { commandArgs } from "./support/commandArgs.ts";
 
 // A GitHub App can post under a login without the `[bot]` suffix: Copilot's
 // pull request reviewer posts as `Copilot`, and only the REST `user.type`
@@ -111,21 +109,6 @@ describe("REST actor type", () => {
   );
 });
 
-const handle = (output: string) =>
-  ChildProcessSpawner.makeHandle({
-    all: Stream.make(new TextEncoder().encode(output)),
-    stdout: Stream.make(new TextEncoder().encode(output)),
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    unref: Effect.succeed(Effect.void),
-  });
-
 // `gh api --paginate --slurp` answers with one array of pages per collection:
 // Copilot and a person each comment, and Copilot submits a review body.
 const pagesFor = (commandLine: string): ReadonlyArray<unknown> =>
@@ -135,15 +118,13 @@ const pagesFor = (commandLine: string): ReadonlyArray<unknown> =>
       ? [review(12, copilot)]
       : [];
 
-const gh = Layer.succeed(
-  ChildProcessSpawner.ChildProcessSpawner,
-  ChildProcessSpawner.make((command) => {
-    if (!ChildProcess.isStandardCommand(command)) return Effect.die("the comment poll never pipes a command");
-    return Effect.succeed(handle(JSON.stringify([pagesFor(A.join([command.command, ...commandArgs(command)], " "))])));
-  })
-);
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
-it.layer(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer, NodeCrypto.layer, gh), { timeout: "30 seconds" })(
+const gh = ScriptedSpawner.make((command, args) => ({
+  stdout: encodeJson([pagesFor(A.join([command, ...args], " "))]),
+}));
+
+it.layer(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer, NodeCrypto.layer, gh.layer), { timeout: "30 seconds" })(
   "until-ready comment rows from a Bot-typed actor",
   (it) => {
     it.effect("writes a row for the person only, never for Copilot's comment or review body", () =>

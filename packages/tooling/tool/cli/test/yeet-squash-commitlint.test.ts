@@ -288,6 +288,7 @@ const githubRoutes =
       "{repo}": repositorySettings(script),
     })[call.path];
 
+// Own double: decorates the real platform spawner so the real commitlint runs.
 const scriptedSpawner = (
   script: GhScript,
   calls: Ref.Ref<ReadonlyArray<string>>,

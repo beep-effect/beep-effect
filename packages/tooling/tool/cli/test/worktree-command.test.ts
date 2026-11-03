@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git, WorktreeEntry } from "@beep/git/Git";
 import {
   addWorktree,
@@ -65,14 +66,13 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as TestConsole from "effect/testing/TestConsole";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { WorktreeUpstreamState, WorktreeUpstreamVerdict } from "@beep/repo-cli/commands/Worktree";
 
 // `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
@@ -235,30 +235,13 @@ it.layer(Layer.mergeAll(WorktreeMergedPullRequestProbeLive, NodeCrypto.layer), {
   (it) => {
     it.effect("finds an older exact head when a branch name was reused", () => {
       const head = GitObjectId.make("1111111111111111111111111111111111111111");
-      const output = new TextEncoder().encode(
-        '[{"number":1100,"headRefOid":"2222222222222222222222222222222222222222"},{"number":1098,"headRefOid":"1111111111111111111111111111111111111111"}]'
-      );
-      const spawner = ChildProcessSpawner.make((command) => {
-        expect(command._tag).toBe("StandardCommand");
-        if (command._tag === "StandardCommand") {
-          expect(command.args).toContain("100");
-          expect(command.args).toContain("reused-branch");
-        }
-        return Effect.succeed(
-          ChildProcessSpawner.makeHandle({
-            pid: ChildProcessSpawner.ProcessId(1),
-            exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
-            isRunning: Effect.succeed(false),
-            kill: () => Effect.void,
-            stdin: Sink.drain,
-            stdout: Stream.make(output),
-            stderr: Stream.empty,
-            all: Stream.make(output),
-            getInputFd: () => Sink.drain,
-            getOutputFd: () => Stream.empty,
-            unref: Effect.succeed(Effect.void),
-          })
-        );
+      const output =
+        '[{"number":1100,"headRefOid":"2222222222222222222222222222222222222222"},{"number":1098,"headRefOid":"1111111111111111111111111111111111111111"}]';
+      // ScriptedSpawner scripts standard commands only, so every spawn reaching the script is one.
+      const spawner = ScriptedSpawner.make((_command, args) => {
+        expect(args).toContain("100");
+        expect(args).toContain("reused-branch");
+        return { stdout: output };
       });
       return Effect.gen(function* () {
         const probe = yield* WorktreeMergedPullRequestProbe;
@@ -270,7 +253,7 @@ it.layer(Layer.mergeAll(WorktreeMergedPullRequestProbeLive, NodeCrypto.layer), {
             GitObjectId.make("3333333333333333333333333333333333333333")
           )
         ).toEqual(O.none());
-      }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
+      }).pipe(provideSpawner(spawner));
     });
   }
 );

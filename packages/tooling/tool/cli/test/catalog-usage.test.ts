@@ -37,7 +37,7 @@ const [createPackageTemplateRoot] = CATALOG_USAGE_TEMPLATE_SOURCES;
 
 const CatalogUsageTestLayer = CatalogUsageSourceLive.pipe(Layer.provideMerge(NodeCommandTestLayer));
 
-// Fails only the generator-template listing; every other command reaches the real spawner.
+// Own double: decorates the real platform spawner, failing only the generator-template listing.
 const failingTemplateListHandle = ChildProcessSpawner.makeHandle({
   all: Stream.empty,
   exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(128)),

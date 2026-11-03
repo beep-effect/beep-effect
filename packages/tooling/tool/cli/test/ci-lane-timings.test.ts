@@ -1,4 +1,6 @@
 // Historical pre-retirement GitHub snapshots retain the former Knip context.
+
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { GitHubError } from "@beep/github/GitHubError";
 import { Repo, RepoRef } from "@beep/github/Repo";
@@ -61,17 +63,13 @@ import * as Fiber from "effect/Fiber";
 import { flow, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
-import { commandArgs } from "./support/commandArgs.ts";
 import { githubFetch, reply, unreachable } from "./support/GithubFetch.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { GithubFetchCall } from "./support/GithubFetch.ts";
 
 // The Actions jobs endpoint returns snake_case wire fields; these fixtures keep
@@ -107,23 +105,7 @@ const job = (overrides: Partial<CiWorkflowJob> = {}) =>
     ...overrides,
   });
 
-const encoder = new TextEncoder();
 const encodeCiWorkflowJobsPage = S.encodeUnknownEffect(S.fromJsonString(CiWorkflowJobsPage));
-
-const stubHandle = (output: string, exitCode = 0) =>
-  ChildProcessSpawner.makeHandle({
-    all: Stream.make(encoder.encode(output)),
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    stdout: Stream.make(encoder.encode(output)),
-    unref: Effect.succeed(Effect.void),
-  });
 
 const laneTimingsResponse = (rendered: string): string =>
   Str.includes("actions/runs?per_page=1")(rendered)
@@ -210,17 +192,17 @@ const SECONDARY_RATE_LIMIT: ScriptedGithubFailure = {
 };
 
 // The command builds its own client from `gh auth token` and `GH_REPO`, falling back to the global `fetch`.
-const ghAuthToken = ChildProcessSpawner.make((command) =>
-  ChildProcess.isStandardCommand(command) && A.join([command.command, ...commandArgs(command)], " ") === "gh auth token"
-    ? Effect.succeed(stubHandle("ghs_fixture\n"))
-    : Effect.die("lane timings spawns only gh auth token")
+const ghAuthToken = ScriptedSpawner.make((command, args) =>
+  A.join([command, ...args], " ") === "gh auth token"
+    ? { stdout: "ghs_fixture\n" }
+    : { exit: 1, stderr: "lane timings spawns only gh auth token" }
 );
 const withCommandGithub =
   (respond: (call: GithubFetchCall) => unknown) =>
   <A, E, R>(program: Effect.Effect<A, E, R>) =>
     program.pipe(
       Effect.provideService(GithubTransportFetch, O.some(githubFetch(respond).fetch)),
-      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, ghAuthToken),
+      provideSpawner(ghAuthToken),
       Effect.provideService(
         ConfigProvider.ConfigProvider,
         ConfigProvider.fromUnknown({ GH_REPO: "beep-effect/beep-effect" })
@@ -558,7 +540,7 @@ describe("ci lane timings GitHub client", () => {
         withCiGithub("."),
         Effect.as("read"),
         Effect.catchTag("CiCommandError", (error) => Effect.succeed(error.message)),
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, ghAuthToken),
+        provideSpawner(ghAuthToken),
         Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_GH_APP_ID: "1" }))
       );
       expect(message).toContain("a GitHub App identity needs BEEP_GH_APP_ID");

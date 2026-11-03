@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git, GitCommandError } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
@@ -20,78 +21,41 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { commandArgs } from "./support/commandArgs.ts";
 
 const REPO_ROOT = "/repo";
 const fixtureWorkspaceDirs: ReadonlyArray<string> = ["packages/demo", "apps/labs/cognee"];
-const encoder = new TextEncoder();
 
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
-const makeHandle = (output: string) =>
-  ChildProcessSpawner.makeHandle({
-    pid: ChildProcessSpawner.ProcessId(1),
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    stdin: Sink.drain,
-    stdout: Stream.make(encoder.encode(output)),
-    stderr: Stream.empty,
-    all: Stream.make(encoder.encode(output)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    unref: Effect.succeed(Effect.void),
-  });
+// Answers each git listing by its first matching argv flag, NUL-joined; anything else prints nothing.
+const gitFixtureSpawner = (changedFiles: ReadonlyArray<string>, addedChangesets: ReadonlyArray<string>) => {
+  const replies: ReadonlyArray<readonly [string, ReadonlyArray<string>]> = [
+    ["--diff-filter=ACMRTUXBD", changedFiles],
+    ["--diff-filter=A", addedChangesets],
+    ["ls-files", ["packages/demo/package.json", "apps/labs/cognee/package.json"]],
+  ];
+  return ScriptedSpawner.make((_command, args) => ({
+    stdout: A.findFirst(replies, ([flag]) => A.contains(args, flag)).pipe(
+      O.map(([, lines]) => A.join(lines, "\u0000")),
+      O.getOrElse(() => "")
+    ),
+  }));
+};
 
-const gitFixtureLayer = (
-  changedFiles: ReadonlyArray<string>,
-  addedChangesets: ReadonlyArray<string>,
-  spawned: Array<string>
-) =>
-  Layer.succeed(
-    ChildProcessSpawner.ChildProcessSpawner,
-    ChildProcessSpawner.make((command) =>
-      Effect.sync(() => {
-        if (command._tag !== "StandardCommand") {
-          return makeHandle("");
-        }
-        const args = commandArgs(command);
-        spawned.push(A.join([command.command, ...args], " "));
-        const output = A.contains(args, "--diff-filter=ACMRTUXBD")
-          ? A.join(changedFiles, "\u0000")
-          : A.contains(args, "--diff-filter=A")
-            ? A.join(addedChangesets, "\u0000")
-            : A.contains(args, "ls-files")
-              ? A.join(["packages/demo/package.json", "apps/labs/cognee/package.json"], "\u0000")
-              : "";
-        return makeHandle(output);
-      })
-    )
-  );
+const spawnedLines = (spawner: ScriptedSpawner) =>
+  A.map(spawner.spawns, (spawn) => A.join([spawn.command, ...spawn.args], " "));
 
-const statusTestLayer = (
-  changedFiles: ReadonlyArray<string>,
-  addedChangesets: ReadonlyArray<string>,
-  spawned: Array<string>
-) =>
+const spawnerStatusLayer = (spawner: ScriptedSpawner) =>
   // `Git` is built over the fixture spawner, so the kit's diff reads reach the scripted answers (W2).
   Layer.provideMerge(
     Git.layer,
-    Layer.mergeAll(
-      MemoryFileSystem.layer,
-      Path.layer,
-      NodeCrypto.layer,
-      TestConsole.layer,
-      gitFixtureLayer(changedFiles, addedChangesets, spawned)
-    )
+    Layer.mergeAll(MemoryFileSystem.layer, Path.layer, NodeCrypto.layer, TestConsole.layer, spawner.layer)
   );
+const statusTestLayer = flow(gitFixtureSpawner, spawnerStatusLayer);
 
 // A `Git` whose base-range diff fails with the given kit error, so the status run reaches the
 // changeset adapter's spawn-failure and non-zero-exit wordings.
@@ -101,7 +65,7 @@ const kitFailureLayer = (failure: GitCommandError) =>
     Path.layer,
     NodeCrypto.layer,
     TestConsole.layer,
-    gitFixtureLayer([], [], []),
+    gitFixtureSpawner([], []).layer,
     Git.layerTest({ changedFiles: () => Effect.fail(failure) })
   );
 
@@ -332,7 +296,7 @@ describe("changeset status wrapper", () => {
   });
 
   describe("runChangesetStatus with captured git fixtures", () => {
-    it.layer(statusTestLayer(["apps/labs/cognee/src/main.ts"], [], []), { timeout: "30 seconds" })((it) => {
+    it.layer(statusTestLayer(["apps/labs/cognee/src/main.ts"], []), { timeout: "30 seconds" })((it) => {
       it.effect("exempts a lab-only branch without consulting changesets", () =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
@@ -353,7 +317,7 @@ describe("changeset status wrapper", () => {
       );
     });
 
-    it.layer(statusTestLayer(["packages/demo/src/index.ts"], [], []), { timeout: "30 seconds" })((it) => {
+    it.layer(statusTestLayer(["packages/demo/src/index.ts"], []), { timeout: "30 seconds" })((it) => {
       it.effect("does not count a base-backlog changeset as product coverage", () =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
@@ -379,7 +343,7 @@ Base backlog coverage must not count.
       );
     });
 
-    it.layer(statusTestLayer(["packages/demo/src/index.ts"], [], []), { timeout: "30 seconds" })((it) => {
+    it.layer(statusTestLayer(["packages/demo/src/index.ts"], []), { timeout: "30 seconds" })((it) => {
       it.effect("fails the product-only path in-process when no in-range changeset covers it", () =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
@@ -401,7 +365,7 @@ Base backlog coverage must not count.
     });
 
     it.layer(
-      statusTestLayer(["packages/demo/src/index.ts", ".changeset/demo-change.md"], [".changeset/demo-change.md"], []),
+      statusTestLayer(["packages/demo/src/index.ts", ".changeset/demo-change.md"], [".changeset/demo-change.md"]),
       { timeout: "30 seconds" }
     )((it) => {
       it.effect("passes the product-only path when an in-range-added changeset covers it", () =>
@@ -436,7 +400,7 @@ Patch demo.
       );
     });
 
-    it.layer(statusTestLayer(["packages/demo/src/index.ts"], [], []), { timeout: "30 seconds" })((it) => {
+    it.layer(statusTestLayer(["packages/demo/src/index.ts"], []), { timeout: "30 seconds" })((it) => {
       it.effect("reads private from the manifest and re-engages when private flips false", () =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
@@ -461,18 +425,14 @@ Patch demo.
       );
     });
 
-    const spawned: Array<string> = [];
-    it.layer(
-      statusTestLayer(
-        ["packages/demo/src/index.ts", ".changeset/demo-change.md"],
-        [".changeset/demo-change.md"],
-        spawned
-      ),
-      { timeout: "30 seconds" }
-    )((it) => {
+    const spawner = gitFixtureSpawner(
+      ["packages/demo/src/index.ts", ".changeset/demo-change.md"],
+      [".changeset/demo-change.md"]
+    );
+    it.layer(spawnerStatusLayer(spawner), { timeout: "30 seconds" })((it) => {
       it.effect("defaults an absent --since value to origin/main without spawning stock changesets", () =>
         Effect.gen(function* () {
-          spawned.length = 0;
+          const before = spawner.spawns.length;
           const fs = yield* FileSystem.FileSystem;
           const tmpDir = yield* fs.makeTempDirectoryScoped();
           yield* writeStatusFixtureRepo(tmpDir);
@@ -489,6 +449,7 @@ Patch demo.
 
           yield* runChangesetStatus(tmpDir, O.none());
 
+          const spawned = A.drop(spawnedLines(spawner), before);
           expect(A.some(spawned, (command) => Str.includes("origin/main...HEAD")(command))).toBe(true);
           expect(A.every(spawned, (command) => !Str.includes("bunx changeset status")(command))).toBe(true);
         })

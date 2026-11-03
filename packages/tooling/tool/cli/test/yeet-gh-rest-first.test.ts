@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { GitHubError } from "@beep/github/GitHubError";
 import { GitHubGraphQLError } from "@beep/github/GraphQL";
@@ -50,16 +51,12 @@ import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
-import { commandArgs } from "./support/commandArgs.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { GraphQLDocument } from "@beep/github/GraphQL";
 
 // Recorded REST payloads (trimmed to the fields the wire schemas read).
@@ -692,31 +689,15 @@ describe("GitHub identity selection", () => {
 });
 
 it.layer(NodeCrypto.layer)("the gh-login edge", (it) => {
-  const encoder = new TextEncoder();
   // `gh auth token` answers `token` (a failure when empty); `git remote get-url origin` names the repository.
   const spawner = (token: string) =>
-    ChildProcessSpawner.make((command) => {
-      const args = ChildProcess.isStandardCommand(command) ? commandArgs(command) : [];
+    ScriptedSpawner.make((_command, args) => {
       const output = A.contains(args, "token") ? token : "git@github.com:beep-effect/beep-effect.git\n";
-      return Effect.succeed(
-        ChildProcessSpawner.makeHandle({
-          all: Stream.make(encoder.encode(output)),
-          exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(Str.isEmpty(output) ? 1 : 0)),
-          getInputFd: () => Sink.drain,
-          getOutputFd: () => Stream.empty,
-          isRunning: Effect.succeed(false),
-          kill: () => Effect.void,
-          pid: ChildProcessSpawner.ProcessId(1),
-          stderr: Stream.empty,
-          stdin: Sink.drain,
-          stdout: Stream.make(encoder.encode(output)),
-          unref: Effect.succeed(Effect.void),
-        })
-      );
+      return { stdout: output, exit: Str.isEmpty(output) ? 1 : 0 };
     });
   const withSpawner = (token: string) =>
     flow(
-      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner(token)),
+      provideSpawner(spawner(token)),
       Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env: {} }))
     );
 

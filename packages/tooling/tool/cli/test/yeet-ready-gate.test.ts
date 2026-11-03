@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { GitHubError } from "@beep/github/GitHubError";
@@ -55,17 +56,16 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
-import { commandArgs } from "./support/commandArgs.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import { provideLegacyGh } from "./support/YeetGithub.ts";
+import type { SpawnScript } from "@beep/commands/ScriptedSpawner";
 import type { GraphQLDocument } from "@beep/github/GraphQL";
 
 // `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
@@ -1007,31 +1007,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
   }
 );
 
-const fakeHandle = (output: string, exitCode = 0) =>
-  ChildProcessSpawner.makeHandle({
-    all: Stream.make(new TextEncoder().encode(output)),
-    stdout: Stream.make(new TextEncoder().encode(output)),
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    unref: Effect.succeed(Effect.void),
-  });
-const mockSpawner = ChildProcessSpawner.make((command) =>
-  Effect.succeed(fakeHandle("[]", ChildProcess.isStandardCommand(command) && command.command === "gh" ? 1 : 0))
-);
+// One scripted completed run: `output` on stdout, exiting `exitCode`.
+const reply = (output: string, exitCode = 0) => ({ stdout: output, exit: exitCode });
+const mockSpawner = ScriptedSpawner.make((command) => reply("[]", command === "gh" ? 1 : 0));
 const readyPlatform = Layer.provideMerge(
   Git.layer,
-  Layer.mergeAll(
-    MemoryFileSystem.layer,
-    Path.layer,
-    BunCrypto.layer,
-    Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, mockSpawner)
-  )
+  Layer.mergeAll(MemoryFileSystem.layer, Path.layer, BunCrypto.layer, mockSpawner.layer)
 );
 it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundaries", (it) => {
   it.effect("uses the real ancestor lookup when the head receipt is missing and refuses an empty store", () =>
@@ -1047,27 +1028,28 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
     })
   );
 
-  const fallbackRunner = (lookup: string, lookupExit = 0, comments = "[]", restStatus = "OPEN") =>
-    ChildProcessSpawner.make((command) => {
-      if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-      const route = A.join(A.take(commandArgs(command), 2), " ");
-      if (command.command === "git") {
-        return Effect.succeed(fakeHandle("git@github.com:beep/beep.git"));
+  // The fallback script on its own, so a test can override one route and defer the rest to it.
+  const fallbackScript =
+    (lookup: string, lookupExit = 0, comments = "[]", restStatus = "OPEN"): SpawnScript =>
+    (command, args) => {
+      const route = A.join(A.take(args, 2), " ");
+      if (command === "git") {
+        return reply("git@github.com:beep/beep.git");
       }
       if (route === "pr view" || route === "api graphql") {
-        return Effect.succeed(fakeHandle("GraphQL: API rate limit exceeded", 1));
+        return reply("GraphQL: API rate limit exceeded", 1);
       }
-      if (Str.includes("pulls?head=")(route)) return Effect.succeed(fakeHandle(lookup, lookupExit));
-      if (Str.includes("/comments?")(route)) return Effect.succeed(fakeHandle(comments));
+      if (Str.includes("pulls?head=")(route)) return reply(lookup, lookupExit);
+      if (Str.includes("/comments?")(route)) return reply(comments);
       if (Str.endsWith("/pulls/42")(route)) {
-        return Effect.succeed(
-          fakeHandle(
-            `{"headRefOid":"abc1234def","id":"PR_ready","isDraft":true,"labels":[],"mergeable":"MERGEABLE","mergeStateStatus":"DRAFT","number":42,"reviewDecision":null,"state":"${restStatus}","url":"https://github.com/beep/beep/pull/42"}`
-          )
+        return reply(
+          `{"headRefOid":"abc1234def","id":"PR_ready","isDraft":true,"labels":[],"mergeable":"MERGEABLE","mergeStateStatus":"DRAFT","number":42,"reviewDecision":null,"state":"${restStatus}","url":"https://github.com/beep/beep/pull/42"}`
         );
       }
-      return Effect.succeed(fakeHandle("[]"));
-    });
+      return reply("[]");
+    };
+  const fallbackRunner = (lookup: string, lookupExit = 0, comments = "[]", restStatus = "OPEN") =>
+    ScriptedSpawner.make(fallbackScript(lookup, lookupExit, comments, restStatus));
   const restFound = '[{"number":42,"headRefName":"feature/ready-gate","state":"OPEN"}]';
 
   it.effect("recovers the ready read through REST while GraphQL is rate limited", () =>
@@ -1075,7 +1057,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
       const snapshot = yield* collectYeetStatus(context, true).pipe(
         provideLegacyGh,
         Effect.provideServiceEffect(Git, Git.make),
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, fallbackRunner(restFound))
+        provideSpawner(fallbackRunner(restFound))
       );
       expect(snapshot.remote.available).toBe(true);
       assertNone(snapshot.remote.readFailure);
@@ -1096,7 +1078,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
       const snapshot = yield* collectYeetStatus(context, true).pipe(
         provideLegacyGh,
         Effect.provideServiceEffect(Git, Git.make),
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, fallbackRunner(restFound))
+        provideSpawner(fallbackRunner(restFound))
       );
       expect(snapshot.remote.available).toBe(true);
       expect(snapshot.remote.reviewDecision).toBe("UNKNOWN");
@@ -1117,7 +1099,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
       const snapshot = yield* collectYeetStatus(context, true).pipe(
         provideLegacyGh,
         Effect.provideServiceEffect(Git, Git.make),
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, fallbackRunner("[]"))
+        provideSpawner(fallbackRunner("[]"))
       );
       expect(snapshot.remote.available).toBe(false);
       assertNone(snapshot.remote.readFailure);
@@ -1141,7 +1123,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
       const snapshot = yield* collectYeetStatus(context, true).pipe(
         provideLegacyGh,
         Effect.provideServiceEffect(Git, Git.make),
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, fallbackRunner("REST unavailable", 1))
+        provideSpawner(fallbackRunner("REST unavailable", 1))
       );
       expect(snapshot.remote.available).toBe(false);
       assertTrue(snapshot.remote.readFailure.pipe(O.isSome));
@@ -1165,7 +1147,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
       const snapshot = yield* collectYeetStatus(context, true).pipe(
         provideLegacyGh,
         Effect.provideServiceEffect(Git, Git.make),
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, fallbackRunner(restFound, 0, "[]", "CLOSED"))
+        provideSpawner(fallbackRunner(restFound, 0, "[]", "CLOSED"))
       );
       expect(
         decideYeetReadyGate(
@@ -1183,7 +1165,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
       const failure = yield* collectYeetStatus(context, true).pipe(
         provideLegacyGh,
         Effect.provideServiceEffect(Git, Git.make),
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, fallbackRunner(restFound, 0, "[{}]")),
+        provideSpawner(fallbackRunner(restFound, 0, "[{}]")),
         Effect.flip
       );
       expect(failure.message).toContain("thread resolution is unknown");
@@ -1196,18 +1178,15 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
         ["REST status unavailable", 1, "Failed to read PR status through GitHub REST."],
         ["invalid status JSON", 0, "Failed to decode GitHub REST PR status."],
       ] as const) {
-        const base = fallbackRunner(restFound);
-        const runner = ChildProcessSpawner.make((command) => {
-          if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-          const route = commandArgs(command)[1] ?? "";
-          return command.command === "gh" && Str.includes("/pulls/42")(route)
-            ? Effect.succeed(fakeHandle(output, exitCode))
-            : base.spawn(command);
+        const base = fallbackScript(restFound);
+        const runner = ScriptedSpawner.make((command, args) => {
+          const route = args[1] ?? "";
+          return command === "gh" && Str.includes("/pulls/42")(route) ? reply(output, exitCode) : base(command, args);
         });
         const snapshot = yield* collectYeetStatus(context, true).pipe(
           provideLegacyGh,
           Effect.provideServiceEffect(Git, Git.make),
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner)
+          provideSpawner(runner)
         );
         expect(snapshot.remote.available).toBe(false);
         assertTrue(snapshot.remote.readFailure.pipe(O.isSome));
@@ -1224,18 +1203,15 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
         ["comments unavailable", 1, "Could not read REST review comments."],
         ["invalid comments JSON", 0, "Could not decode REST review comments."],
       ] as const) {
-        const base = fallbackRunner(restFound);
-        const runner = ChildProcessSpawner.make((command) => {
-          if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-          const route = commandArgs(command)[1] ?? "";
-          return command.command === "gh" && Str.includes("/comments?")(route)
-            ? Effect.succeed(fakeHandle(output, exitCode))
-            : base.spawn(command);
+        const base = fallbackScript(restFound);
+        const runner = ScriptedSpawner.make((command, args) => {
+          const route = args[1] ?? "";
+          return command === "gh" && Str.includes("/comments?")(route) ? reply(output, exitCode) : base(command, args);
         });
         const failure = yield* collectYeetStatus(context, true).pipe(
           provideLegacyGh,
           Effect.provideServiceEffect(Git, Git.make),
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner),
+          provideSpawner(runner),
           Effect.flip
         );
         expect(failure.message).toContain(`REST fallback: ${detail}`);
@@ -1245,23 +1221,22 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
 
   it.effect("recovers truncated and unstartable primary reads and tolerates unavailable workflow runs", () =>
     Effect.gen(function* () {
-      const spawnFailure = Effect.fail(PlatformError.badArgument({ module: "ChildProcess", method: "spawn" }));
+      const spawnFailure = PlatformError.badArgument({ module: "ChildProcess", method: "spawn" });
       for (const [failedRoute, response] of [
-        ["pr view", Effect.succeed(fakeHandle(Str.repeat(512 * 1024 + 1)("x")))],
+        ["pr view", reply(Str.repeat(512 * 1024 + 1)("x"))],
         ["pr view", spawnFailure],
         ["run list", spawnFailure],
       ] as const) {
-        const base = fallbackRunner(restFound);
-        const runner = ChildProcessSpawner.make((command) => {
-          if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-          const route = A.join(A.take(commandArgs(command), 2), " ");
-          if (command.command === "gh" && route === failedRoute) return response;
-          return base.spawn(command);
+        const base = fallbackScript(restFound);
+        const runner = ScriptedSpawner.make((command, args) => {
+          const route = A.join(A.take(args, 2), " ");
+          if (command === "gh" && route === failedRoute) return response;
+          return base(command, args);
         });
         const snapshot = yield* collectYeetStatus(context, true).pipe(
           provideLegacyGh,
           Effect.provideServiceEffect(Git, Git.make),
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner)
+          provideSpawner(runner)
         );
         expect(snapshot.remote.available).toBe(true);
         expect(snapshot.remote.reviewDecision).toBe("UNKNOWN");
@@ -1288,9 +1263,8 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
 
   it.effect("confirms and flips through the default remote reader", () =>
     Effect.gen(function* () {
-      const runner = ChildProcessSpawner.make((command) => {
-        if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-        const route = A.join(A.take(commandArgs(command), 2), " ");
+      const runner = ScriptedSpawner.make((command, args) => {
+        const route = A.join(A.take(args, 2), " ");
         const answers: Readonly<Record<string, string>> = {
           "pr view":
             '{"headRefOid":"abc1234def","id":"PR_ready","isDraft":true,"labels":[],"mergeable":"MERGEABLE","mergeStateStatus":"DRAFT","number":42,"reviewDecision":null,"state":"OPEN","url":"https://github.com/beep/beep/pull/42"}',
@@ -1300,7 +1274,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
             '{"data":{"node":{"author":{"login":"author"},"reviewThreads":{"nodes":[],"pageInfo":{"endCursor":null,"hasNextPage":false}}}}}',
           "run list": "[]",
         };
-        return Effect.succeed(fakeHandle(command.command === "gh" ? (answers[route] ?? "") : ""));
+        return reply(command === "gh" ? (answers[route] ?? "") : "");
       });
       expect(
         (yield* runYeetReadyGate(context, {
@@ -1308,11 +1282,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
           markReady: () => Effect.void,
-        }).pipe(
-          provideLegacyGh,
-          Effect.provideServiceEffect(Git, Git.make),
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner)
-        ))._tag
+        }).pipe(provideLegacyGh, Effect.provideServiceEffect(Git, Git.make), provideSpawner(runner)))._tag
       ).toBe("flip");
     })
   );
@@ -1333,20 +1303,13 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
   );
   it.effect("refuses a malformed --inherited before reading anything", () =>
     Effect.gen(function* () {
-      const spawned = yield* Ref.make(0);
-      const counting = ChildProcessSpawner.make(() =>
-        Ref.update(spawned, (n) => n + 1).pipe(Effect.as(fakeHandle("", 1)))
-      );
+      const counting = ScriptedSpawner.make(() => reply("", 1));
       const error = yield* runYeetReady(
         YeetReadyOptions.make({ base: "origin/main", head: "HEAD", packetDir: ".beep/yeet", inherited: ["Lint"] })
-      ).pipe(
-        Effect.flip,
-        Effect.provideServiceEffect(Git, Git.make),
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, counting)
-      );
+      ).pipe(Effect.flip, Effect.provideServiceEffect(Git, Git.make), provideSpawner(counting));
       expect(error).toMatchObject({ _tag: "YeetCommandError" });
       expect(error.message).toContain('--inherited needs "<check name>=<attribution>"; got "Lint".');
-      expect(yield* Ref.get(spawned)).toBe(0);
+      expect(counting.spawns).toHaveLength(0);
     })
   );
   it.effect("loses only the hint when the monitor registry is unreadable", () =>
@@ -1572,15 +1535,11 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
     it.effect("maps an unavailable GitHub token on the default flip to the command error", () =>
       Effect.gen(function* () {
         // Every child process (`gh auth token`) fails, so no request reaches GitHub.
-        const refusing = ChildProcessSpawner.make(() => Effect.succeed(fakeHandle("", 1)));
+        const refusing = ScriptedSpawner.make(() => reply("", 1));
         const error = yield* runYeetReadyGate(context, {
           finalCheck: passingFinalCheck,
           read: () => Effect.succeed(prView()),
-        }).pipe(
-          Effect.flip,
-          Effect.provideServiceEffect(Git, Git.make),
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, refusing)
-        );
+        }).pipe(Effect.flip, Effect.provideServiceEffect(Git, Git.make), provideSpawner(refusing));
         expect(error).toMatchObject({ _tag: "YeetCommandError", command: "bun run beep yeet gh pr ready 42" });
         expect(error.message).toContain("could not mark pull request #42 ready for review");
         const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
@@ -1649,7 +1608,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
     );
     it.effect("refuses the flip when the default inherited-red recorder cannot acquire its identity", () =>
       Effect.gen(function* () {
-        const refusing = ChildProcessSpawner.make(() => Effect.succeed(fakeHandle("", 1)));
+        const refusing = ScriptedSpawner.make(() => reply("", 1));
         const error = yield* runYeetReadyGate(
           context,
           {
@@ -1658,11 +1617,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
             markReady: () => Effect.die("the flip must not run before the record succeeds"),
           },
           [lintInherited]
-        ).pipe(
-          Effect.flip,
-          Effect.provideServiceEffect(Git, Git.make),
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, refusing)
-        );
+        ).pipe(Effect.flip, Effect.provideServiceEffect(Git, Git.make), provideSpawner(refusing));
         expect(error).toMatchObject({ _tag: "YeetCommandError", exitCode: 1 });
         expect(error.message).toContain("could not record the inherited reds in the body of #42");
         expect(error.message).toContain("S11 requires the record before the flip");
