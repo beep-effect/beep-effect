@@ -131,6 +131,8 @@ export const managedControllerTraceIdentity = Effect.fn("AiMetrics.managedContro
 /**
  * Encode one validated controller observation as OTLP for the bounded local intake.
  *
+ * **Details**
+ *
  * The server must independently select the managed-controller route policy.
  * Trace/span identities are domain separated from native harness identities.
  * The already salted session binding is explicitly marked, never hashed again.
