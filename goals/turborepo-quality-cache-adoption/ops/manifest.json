@@ -5,7 +5,7 @@
     "title": "Turborepo quality cache adoption",
     "status": "active",
     "created": "2026-09-08",
-    "updated": "2026-11-02",
+    "updated": "2026-11-03",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/turborepo-quality-cache-adoption",
@@ -127,7 +127,11 @@
     "research/native-prune-global-controls.py",
     "research/native-prune-global-controls.json",
     "research/prune-driver-controls.json",
-    "research/prune-global-feature-review.json"
+    "research/prune-global-feature-review.json",
+    "research/watch-source-review.py",
+    "research/watch-source-observation.json",
+    "research/watch-source-driver-controls.json",
+    "research/watch-feature-review.json"
   ],
   "agentLaunchers": [
     {
@@ -190,5 +194,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Active. The retained census has 2,434 executable computations and 2,236 remaining current-source reviews. Ten of 35 feature decisions have final scoped reviews; 25 remain pending. The optional prune global-file flag stays absent after tracked-source review and 16 synthetic native controls. Broad pruning/deployment and real pruned builds remain unproven. Qualification, supported adoption, measured value, actual observation windows and every whole-goal acceptance criterion remain incomplete."
+  "statusNote": "Active. The retained census has 2,434 executable computations and 2,236 remaining current-source reviews. Eleven of 35 feature decisions have scoped final reviews; 24 remain pending. The optional native watch-input flag stays absent after a tracked caller/source review: four watch-named scripts belong to Bun and root development uses turbo run dev. No watcher or native task was executed. Broad watch behavior, qualification, supported adoption, measured value, actual observation windows and every whole-goal acceptance criterion remain incomplete."
 }

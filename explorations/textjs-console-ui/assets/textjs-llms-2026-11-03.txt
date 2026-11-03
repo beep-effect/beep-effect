@@ -1,0 +1,74 @@
+# Text.js
+
+> Text.js is a React framework for apps that render in the DevTools console with console.log.
+
+Import components from `@textjs/app`. Lowercase DOM elements such as `<div>` throw TX003. Use `<Box>` and `<Text>` instead.
+
+## Docs
+
+- [Introduction](https://textjs.org/docs): What Text.js is, what it includes and how a frame is rendered.
+- [Installation](https://textjs.org/docs/installation): Create a Text.js app, open DevTools and configure your console.
+- [Project Structure](https://textjs.org/docs/project-structure): The app/ directory, text.config.ts and the text CLI.
+- [Routing](https://textjs.org/docs/routing): File-system App Router: layouts, pages, dynamic segments, Link and navigation hooks.
+- [Loading UI and Errors](https://textjs.org/docs/loading-and-errors): loading.tsx, error.tsx, not-found.tsx, the in-console Redbox and the Dev Overlay.
+- [Route Handlers](https://textjs.org/docs/route-handlers): Full-stack app/api/*/route.ts handlers, rewrites and local daemon proxying.
+- [Server Rendering and Partial Prerendering](https://textjs.org/docs/server-rendering): runtime = "server": routes rendered on the server and streamed as frames; prerendered console shells.
+- [Middleware](https://textjs.org/docs/middleware): middleware.ts: redirects, rewrites, headers and cookies before every request, with config.matcher.
+- [Caching and Revalidation](https://textjs.org/docs/caching): Route segment config, unstable_cache, revalidateTag / revalidatePath and stale-while-revalidate.
+- [Deploying](https://textjs.org/docs/deploying): Deploy with text build --adapter static, bun, vercel or cloudflare, or run text start behind a proxy.
+- [Styling](https://textjs.org/docs/styling): Cell-grid className utilities, typed props, responsive viewports and themes.
+- [Internationalization: Bidirectional Text](https://textjs.org/docs/internationalization): Hebrew, Arabic and mixed-direction text: UAX #9, dir, alignment, Arabic shaping and grid-exact output.
+- [Keyboard Shortcuts](https://textjs.org/docs/keyboard): useKeymap, sequences, the ? help overlay, key hints and the command palette.
+- [Testing](https://textjs.org/docs/testing): Render apps offscreen, press keys and assert on frames with @textjs/app/testing.
+- [Running in a Terminal](https://textjs.org/docs/terminal): Render an App Router app or a single component in a terminal with text run and renderToTerminal.
+- [MCP for Coding Agents](https://textjs.org/docs/mcp): text mcp: let coding agents navigate, press keys and read frames over the Model Context Protocol.
+- [ESLint](https://textjs.org/docs/eslint): eslint-plugin-textjs: console-safe JSX, cell-width glyphs, frame-paced timers and App Router checks.
+- [DevTools Extension](https://textjs.org/docs/devtools-extension): A Text.js panel next to Console: component tree, cell-level frame inspector and frame timeline.
+- [VS Code](https://textjs.org/docs/vscode): Live Preview of the console frame beside your code, App Router scaffolding, snippets and TX error links.
+- [Layout Components](https://textjs.org/docs/components-layout): <Box>, <Text>, <ScrollBox>, <Modal>, <SplitPane>, <Stack>, <Grid>, <Spacer>, <Divider> and <Badge>.
+- [Interactive Components](https://textjs.org/docs/components-interactive): <Input>, <Textarea>, <Select> and <Tabs>: focus, shortcuts and copying text while the page is unfocused.
+- [Content Components](https://textjs.org/docs/components-content): <Markdown>, <Code>, <Diff>, <Spinner> and <AsciiFont>.
+- [Fonts](https://textjs.org/docs/fonts): @textjs/font: FIGlet fonts as ES modules, laid out exactly like the figlet program.
+- [Data Components](https://textjs.org/docs/components-data): <List>, <Table> and <Tree>: virtualized, sortable and selectable.
+- [Charts and Visuals](https://textjs.org/docs/components-charts): <LineChart>, <BarChart>, <Sparkline>, <ProgressBar>, <Gradient> and <Image>.
+- [Forms and Feedback](https://textjs.org/docs/components-forms): <Button>, <Checkbox>, <Switch>, <RadioGroup>, <Slider>, <Dialog>, <Confirm> and toasts.
+- [Hooks and the Console REPL](https://textjs.org/docs/hooks-and-repl): useInput, useFocus, useViewport, useConsoleStats and window.text.
+- [Utility Hooks](https://textjs.org/docs/utility-hooks): useInterval, useAnimationFrame, useTween, useSpring, useMeasure, useBreakpoint and useLocalStorage.
+- [The Turbolog Engine](https://textjs.org/docs/turbolog-engine): How frames are run-length encoded into one console.log call, plus the CellBuffer, Chromium details and benchmarks.
+- [Release Channels](https://textjs.org/docs/release-channels): Stable, canary and LTS dist-tags, lockstep versions, provenance and cutting a release.
+- [Support Policy](https://textjs.org/docs/support-policy): Active and LTS release lines, what counts as a breaking change, and supported runtimes.
+- [OpenCode in the Console](https://textjs.org/docs/opencode): How the OpenCode Lite TUI is built on Text.js and how to run it locally.
+
+## Error codes
+
+- [TX001: Yoga is not initialized](https://textjs.org/errors/TX001)
+- [TX002: Rendered outside a console root](https://textjs.org/errors/TX002)
+- [TX003: Unknown host element](https://textjs.org/errors/TX003)
+- [TX004: <Box> nested inside <Text>](https://textjs.org/errors/TX004)
+- [TX005: Render after unmount](https://textjs.org/errors/TX005)
+- [TX006: Unknown modifier in key combo](https://textjs.org/errors/TX006)
+- [TX007: Unknown key in key combo](https://textjs.org/errors/TX007)
+- [TX008: Empty key combo](https://textjs.org/errors/TX008)
+- [TX009: Expected a single key stroke](https://textjs.org/errors/TX009)
+- [TX010: No stdout for renderToTerminal](https://textjs.org/errors/TX010)
+- [TX011: <Image src> without a DOM](https://textjs.org/errors/TX011)
+- [TX012: No 2D canvas for <Image>](https://textjs.org/errors/TX012)
+- [TX013: <Image> failed to load](https://textjs.org/errors/TX013)
+- [TX014: Used outside <AppRouter>](https://textjs.org/errors/TX014)
+- [TX015: Route file has no default component](https://textjs.org/errors/TX015)
+- [TX016: Route handler returned no Response](https://textjs.org/errors/TX016)
+- [TX017: No production build](https://textjs.org/errors/TX017)
+- [TX018: No app/ directory](https://textjs.org/errors/TX018)
+- [TX019: text run / text mcp require Bun](https://textjs.org/errors/TX019)
+- [TX020: Unknown CLI command](https://textjs.org/errors/TX020)
+- [TX021: Invalid OpenCode server URL](https://textjs.org/errors/TX021)
+- [TX022: Bridge port collides with OpenCode](https://textjs.org/errors/TX022)
+- [TX023: Bridge already running](https://textjs.org/errors/TX023)
+- [TX024: Bridge port in use](https://textjs.org/errors/TX024)
+- [TX025: Unknown template](https://textjs.org/errors/TX025)
+- [TX026: Target directory is not empty](https://textjs.org/errors/TX026)
+- [TX027: Invalid project name](https://textjs.org/errors/TX027)
+- [TX028: Blocked host](https://textjs.org/errors/TX028)
+- [TX029: Unknown text.config option](https://textjs.org/errors/TX029)
+- [TX030: Server-rendered routes need a long-lived server](https://textjs.org/errors/TX030)
+- [TX031: Invalid dynamic export](https://textjs.org/errors/TX031)
