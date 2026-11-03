@@ -241,3 +241,14 @@ limited to metadata-strings.json now ignores only its hexadecimal bytes fields;
 prose and every source/schema/hash/replay assertion remain checked. A reusable
 byte-field-aware spelling classifier would avoid repeating fixture exceptions.
 See history/evidence/2026-11-03-metadata-strings.md.
+
+
+### Share invocation allocation authority before composing metadata stages
+
+Independent context, capture and metadata helper ceilings would restart the
+same produced-text allowance. The context planner also checked retained words
+after copying them. Captured Effect Ref reservations and preflighted Unicode
+receiving copies now connect these stages without new process infrastructure.
+A source calendar ceiling is captured once and can be reinstalled under a fresh
+invocation budget. Complete compositor adoption remains required; see
+history/evidence/2026-11-03-composed-text-budget.md.

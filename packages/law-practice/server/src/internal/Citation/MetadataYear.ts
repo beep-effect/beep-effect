@@ -20,7 +20,7 @@ import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolic
 import type { CitationPythonUnicodeValue } from "./PythonUnicode.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/MetadataYear");
-const Reason = LiteralKit(["invalid-policy", "invalid-clock"]).pipe(
+const Reason = LiteralKit(["invalid-policy", "invalid-clock", "invalid-bound"]).pipe(
   $I.annoteSchema("Reason", { description: "Closed installation failure without source values." })
 );
 /** @internal @category errors @since 0.0.0 */
@@ -113,6 +113,34 @@ const parse = Effect.fn("Citation.parseMetadataYear")(function* (source: Citatio
   const value = yield* scan(source, start, end);
   return O.filter(value, (year) => !negative && year >= 1600 && year <= highest);
 });
+const CapturedYearBound = S.Int.check(S.isBetween({ minimum: 2, maximum: 10000 })).pipe(
+  $I.annoteSchema("CapturedYearBound", {
+    description: "One more than a supported Python date year, captured by the installing engine.",
+  })
+);
+/** Reinstall an already captured source year ceiling under a fresh invocation
+ * budget. This private configuration is server data, never a raw request mode.
+ * The normal constructor captures the calendar once and delegates here.
+ * @internal @category operations @since 0.0.0
+ */
+export const makeCitationMetadataYearFromBound = Effect.fn("Citation.makeMetadataYearFromBound")(function* (
+  policy: unknown,
+  bound: unknown
+) {
+  const limits = yield* decodeCitationRegexPolicy(policy, () =>
+    CitationMetadataYearFailure.make({ reason: "invalid-policy" })
+  );
+  const highest = yield* S.decodeUnknownEffect(CapturedYearBound)(bound).pipe(
+    Effect.mapError(() => CitationMetadataYearFailure.make({ reason: "invalid-bound" }))
+  );
+  const timing = yield* makeCitationRegexTiming(limits, true);
+  const input = yield* makeCitationRegexInput(limits, "source");
+  const getYear = Effect.fn("Citation.getMetadataYear")(function* (raw: unknown) {
+    const source = yield* input.prepareUnicode(raw, () => Effect.void);
+    return yield* parse(source.value, highest);
+  }, timing.timed);
+  return { highestValidYear: highest, getYear };
+});
 /** Capture the source import-time year ceiling using Effect Clock and the
  * supplied CurrentTimeZone. Each native-input method has R = never; it retains
  * Unicode 14 integer semantics and the frozen 4300-digit conversion ceiling.
@@ -126,12 +154,5 @@ export const makeCitationMetadataYear = Effect.fn("Citation.makeMetadataYear")(f
   const currentYear = yield* S.decodeEffect(SourceDateYear)(DateTime.getPart(now, "year")).pipe(
     Effect.mapError(() => CitationMetadataYearFailure.make({ reason: "invalid-clock" }))
   );
-  const highest = currentYear + 1;
-  const timing = yield* makeCitationRegexTiming(limits, true);
-  const input = yield* makeCitationRegexInput(limits, "source");
-  const getYear = Effect.fn("Citation.getMetadataYear")(function* (raw: unknown) {
-    const source = yield* input.prepareUnicode(raw, () => Effect.void);
-    return yield* parse(source.value, highest);
-  }, timing.timed);
-  return { highestValidYear: highest, getYear };
+  return yield* makeCitationMetadataYearFromBound(limits, currentYear + 1);
 });

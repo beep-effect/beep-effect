@@ -14,6 +14,7 @@ import * as Str from "effect/String";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { makeCitationPythonUnicode, measureCitationPythonSlice, sliceCitationPythonStorage } from "./PythonUnicode.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { captureCitationTextReservation } from "./TextBudget.ts";
 import type {
   CitationPythonSliceLayout,
   CitationPythonUnicodeFailure,
@@ -202,6 +203,8 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
 ) {
   const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-policy"));
   const role = yield* S.decodeUnknownEffect(Role)(roleInput).pipe(Effect.mapError(() => fail("invalid-policy")));
+  const composedReserve = yield* captureCitationTextReservation;
+  const reserve = role === "source" ? composedReserve : (_units: number) => Effect.void;
   const sourceMaximum = role === "pattern" ? limits.patternUtf16 : limits.sourceUtf16;
   const producedMaximum = role === "pattern" ? limits.patternUtf16 : limits.producedTextUtf16;
   const sourceLimit = role === "pattern" ? "patternUtf16" : "sourceUtf16";
@@ -256,7 +259,9 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
       beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E>
     ) {
       const range = yield* rangeOf(input);
-      return yield* sliceCitationPythonStorage(value.storage, range.start, range.end, beforeAllocate);
+      return yield* sliceCitationPythonStorage(value.storage, range.start, range.end, (layout) =>
+        beforeAllocate(layout).pipe(Effect.andThen(reserve(layout.utf16Units)))
+      );
     });
     return {
       layout: expected,
@@ -312,6 +317,7 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
       projectionAmbiguous: false,
     });
     yield* beforeAllocate(layout);
+    yield* reserve(layout.utf16Units);
     const citationResult1 = yield* capture(unicode.fromText(text));
     return yield* finish(citationResult1, layout);
   });
@@ -354,6 +360,7 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
     if (length > producedMaximum) return yield* safety(producedLimit);
     const layout = yield* measureNative(source);
     yield* beforeAllocate(layout);
+    yield* reserve(layout.utf16Units);
     const citationResult2 = yield* capture(unicode.fromStorage(source));
     return yield* finish(citationResult2, layout);
   });

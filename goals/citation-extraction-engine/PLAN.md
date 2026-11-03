@@ -1,5 +1,13 @@
 # Citation Extraction Engine Plan
 
+Composed text budget checkpoint (2026-11-03): an invocation-owned Effect Ref
+shares parent text reservations across receiving, slices, native context and
+metadata helpers. Word retention is checked before receiving copies. Twenty-two
+focused tests pass, including atomic refusal, transaction rollback, captured
+authority and an actual worker. Calendar capture can be retained while binding
+a fresh invocation budget. Complete law metadata / engine installation remains
+open. See [composed text budget evidence](history/evidence/2026-11-03-composed-text-budget.md).
+
 Metadata string checkpoint (2026-11-03): clean_pin_cite and
 process_parenthetical preserve all native source distinctions and early-return
 order. Source capture retains 997 cases and 989 year-search routes. Seventeen

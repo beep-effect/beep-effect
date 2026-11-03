@@ -548,6 +548,18 @@ instead of silently splitting delivery or weakening scope.
 
 ## Decision Log
 
+- **2026-11-03 composed parent text budget:** use one invocation-owned Effect
+  Ref reservation service for parent-owned text allocations, captured by stage
+  factories. Allocation reservations survive caller transaction rollback and
+  are not reset by later caller contexts. Preserve separate pattern/transport
+  ceilings and standalone behavior. Unicode reserved preparation preflights
+  immutable borrowed input before copying and revalidates owned output. Keep
+  source calendar capture separate from private per-invocation installation.
+  Reversal removes composed reservation hooks and restores the prior context
+  copy-before-cumulative-check behavior, reopening the documented safety gap.
+  Whole engine adoption and physical-memory proof remain open. See
+  `history/evidence/2026-11-03-composed-text-budget.md`.
+
 - **2026-11-03 metadata strings:** preserve native comma/space-only pincite
   cleanup and parenthetical balance scanning, including the source's early
   return before year filtering. Reuse the existing Effect context matcher and

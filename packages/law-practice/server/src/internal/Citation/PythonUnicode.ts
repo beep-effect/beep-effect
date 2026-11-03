@@ -74,6 +74,14 @@ export class CitationPythonUnicode extends Context.Service<
   {
     readonly fromText: (input: unknown) => Effect.Effect<CitationPythonUnicodeValue, CitationPythonUnicodeFailure>;
     readonly fromStorage: (input: unknown) => Effect.Effect<CitationPythonUnicodeValue, CitationPythonUnicodeFailure>;
+    readonly fromStorageReserved: <E>(
+      input: unknown,
+      beforeAllocate: (units: number) => Effect.Effect<void, E>
+    ) => Effect.Effect<CitationPythonUnicodeValue, E | CitationPythonUnicodeFailure>;
+    readonly fromTextReserved: <E>(
+      input: unknown,
+      beforeAllocate: (units: number) => Effect.Effect<void, E>
+    ) => Effect.Effect<CitationPythonUnicodeValue, E | CitationPythonUnicodeFailure>;
   }
 >()($I`CitationPythonUnicode`) {}
 const fail = (reason: typeof Reason.Type) => CitationPythonUnicodeFailure.make({ reason });
@@ -260,16 +268,20 @@ export const makeCitationPythonUnicode = Effect.fn("Citation.makePythonUnicode")
     Duration.toMillis,
     Duration.millis
   );
-  const bounded = <A>(body: Effect.Effect<A, CitationPythonUnicodeFailure>) =>
+  const bounded = <A, E>(body: Effect.Effect<A, E>) =>
     body.pipe(
       Effect.timeoutOrElse({ duration: deadline, orElse: () => Effect.fail(fail("deadline-exceeded")) }),
       Effect.provideService(Clock.Clock, clock)
     );
-  const fromStorage = Effect.fn("Citation.prepareNativeUnicode")(function* (input: unknown) {
+  const decodeStorage = Effect.fn("Citation.decodeNativeUnicodeStorage")(function* (input: unknown) {
     const decoded = yield* S.decodeUnknownEffect(Storage)(input).pipe(Effect.mapError(() => fail("invalid-input")));
+    if (decoded.bytes.length % decoded.width !== 0) return yield* fail("invalid-input");
+    if (decoded.bytes.length / decoded.width > maximum) return yield* fail("limit-exceeded");
+    return decoded;
+  });
+  const fromStorage = Effect.fn("Citation.prepareNativeUnicode")(function* (input: unknown) {
+    const decoded = yield* decodeStorage(input);
     const width = decoded.width;
-    if (decoded.bytes.length % width !== 0) return yield* fail("invalid-input");
-    if (decoded.bytes.length / width > maximum) return yield* fail("limit-exceeded");
     const bytes = new Uint8Array(decoded.bytes);
     const units = yield* validateCitationPythonStorage(
       bytes,
@@ -300,8 +312,49 @@ export const makeCitationPythonUnicode = Effect.fn("Citation.makePythonUnicode")
       utf16Units: units,
     });
   });
+  // Reserved calls borrow immutable adapter-owned input through preflight.
+  // The receiving copy is independently validated before success; ordinary
+  // fromStorage retains its existing copy-before-scan snapshot behavior.
+  const fromStorageReserved = Effect.fn("Citation.reserveNativeUnicode")(function* <E>(
+    input: unknown,
+    beforeAllocate: (units: number) => Effect.Effect<void, E>
+  ) {
+    const decoded = yield* decodeStorage(input);
+    const units = yield* validateCitationPythonStorage(
+      decoded.bytes,
+      decoded.width,
+      maximum,
+      () => fail("invalid-input"),
+      () => fail("limit-exceeded")
+    );
+    yield* beforeAllocate(units);
+    const value = yield* fromStorage(decoded);
+    if (value.utf16Units !== units) return yield* fail("invalid-input");
+    return value;
+  });
+  const fromTextReserved = Effect.fn("Citation.reserveJavaScriptUnicode")(function* <E>(
+    input: unknown,
+    beforeAllocate: (units: number) => Effect.Effect<void, E>
+  ) {
+    const text = yield* S.decodeUnknownEffect(Text)(input).pipe(Effect.mapError(() => fail("invalid-input")));
+    if (Str.length(text) > maximum) return yield* fail("limit-exceeded");
+    yield* beforeAllocate(Str.length(text));
+    return yield* fromText(text);
+  });
   return CitationPythonUnicode.of({
     fromText: Effect.fn("Citation.captureJavaScriptUnicode")((input) => bounded(fromText(input))),
     fromStorage: Effect.fn("Citation.captureNativeUnicode")((input) => bounded(fromStorage(input))),
+    fromStorageReserved: Effect.fn("Citation.captureReservedNativeUnicode")(function* <E>(
+      input: unknown,
+      beforeAllocate: (units: number) => Effect.Effect<void, E>
+    ) {
+      return yield* bounded(fromStorageReserved(input, beforeAllocate));
+    }),
+    fromTextReserved: Effect.fn("Citation.captureReservedJavaScriptUnicode")(function* <E>(
+      input: unknown,
+      beforeAllocate: (units: number) => Effect.Effect<void, E>
+    ) {
+      return yield* bounded(fromTextReserved(input, beforeAllocate));
+    }),
   });
 });

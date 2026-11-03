@@ -45,7 +45,8 @@ const Corpus = S.fromJsonString(
       "Original string helper executions, delegated year matching and retained source-bound YEAR_REGEX descriptors.",
   })
 );
-const load = Effect.fn("MetadataStringsTest.load")(function* () {
+/** Load and authenticate the original metadata string corpus. */
+export const loadCitationMetadataStrings = Effect.fn("MetadataStringsTest.load")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const bytes = yield* fs.readFile(
     NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/metadata-strings.json", import.meta.url))
@@ -73,7 +74,7 @@ export const replayCitationMetadataStrings = Effect.fn("MetadataStringsTest.repl
   kind: CitationNativeRuntimeKind,
   full: boolean
 ) {
-  const corpus = yield* load();
+  const corpus = yield* loadCitationMetadataStrings();
   const setup = yield* install(corpus, kind);
   for (const row of corpus.cases) {
     const pin = yield* setup.helpers.cleanPinCite(row.source);
@@ -94,7 +95,7 @@ export const replayCitationMetadataStrings = Effect.fn("MetadataStringsTest.repl
 const native = (text: string) => ({ width: 1, bytes: new TextEncoder().encode(text) });
 /** Additional retained copy refusal precedes matching; early source return is distinct. */
 export const assertCitationMetadataStringBudget = Effect.fn("MetadataStringsTest.budget")(function* () {
-  const corpus = yield* load();
+  const corpus = yield* loadCitationMetadataStrings();
   const refused = yield* install(corpus, "bun", 11);
   const failure = yield* refused.helpers.parenthetical(native("abc")).pipe(Effect.flip);
   expect(failure).toMatchObject({ limit: "producedTextUtf16" });
@@ -120,7 +121,7 @@ export const assertCitationMetadataStringBudget = Effect.fn("MetadataStringsTest
 
 /** Both helper operations retain installation timing independently of caller services. */
 export const assertCitationMetadataStringsDeadline = Effect.fn("MetadataStringsTest.deadline")(function* () {
-  const corpus = yield* load();
+  const corpus = yield* loadCitationMetadataStrings();
   const disabled = yield* makeCitationNativeSleepClock(() => Effect.never);
   for (const method of LiteralKit(["cleanPinCite", "parenthetical"]).literals) {
     const setup = yield* install(corpus, "bun", undefined, true);

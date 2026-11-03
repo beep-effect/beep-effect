@@ -13,6 +13,7 @@ import * as S from "effect/Schema";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { concatCitationPythonRanges, makeCitationPythonUnicode } from "./PythonUnicode.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { captureCitationTextReservation } from "./TextBudget.ts";
 import { CitationTokenSeed } from "./TokenObjects.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/TokenContext");
@@ -122,19 +123,25 @@ const selectContextRanges = Effect.fn("Citation.selectContextRanges")(function* 
 export const makeCitationTokenContext = Effect.fn("Citation.makeTokenContext")(function* (policy: unknown) {
   const limits = yield* decodeCitationRegexPolicy(policy, invalid);
   const timing = yield* makeCitationRegexTiming(limits, true);
-  const unicode = yield* makeCitationPythonUnicode(limits);
+  const native = yield* makeCitationPythonUnicode(limits);
+  const reserve = yield* captureCitationTextReservation;
   const plan = Effect.fn("Citation.planTokenContext")(function* (input: unknown) {
     const request = yield* S.decodeUnknownEffect(Input)(input).pipe(Effect.mapError(invalid));
     if (request.words.length > limits.tokens)
       return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "tokens" });
-    const prefix = yield* unicode.fromStorage(request.prefix);
-    let retained = prefix.utf16Units;
+    let retained = 0;
+    const retain = (units: number) => {
+      if (units > limits.producedTextUtf16 - retained) return Effect.fail(exhausted());
+      retained += units;
+      return reserve(units);
+    };
+    const prefix = yield* native.fromStorageReserved(request.prefix, retain);
     const words = yield* Effect.forEach(
       request.words,
       Effect.fn("Citation.ownContextWord")(function* (word) {
-        const value = yield* word.data === null ? unicode.fromText("None") : unicode.fromStorage(word.data);
-        retained += value.utf16Units;
-        if (retained > limits.producedTextUtf16) return yield* exhausted();
+        const value = yield* word.data === null
+          ? native.fromTextReserved("None", retain)
+          : native.fromStorageReserved(word.data, retain);
         return { kind: word.kind, source: value.storage, start: 0, end: value.pythonLength };
       })
     );
@@ -146,7 +153,7 @@ export const makeCitationTokenContext = Effect.fn("Citation.makeTokenContext")(f
     let contextUnits = 0;
     const source = yield* concatCitationPythonRanges(ranges, (layout) => {
       contextUnits = layout.utf16Units;
-      return retained + contextUnits > limits.producedTextUtf16 ? Effect.fail(exhausted()) : Effect.void;
+      return retained + contextUnits > limits.producedTextUtf16 ? Effect.fail(exhausted()) : reserve(contextUnits);
     });
     return CitationTokenContextPlan.make({
       source,
