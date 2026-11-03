@@ -11,19 +11,13 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { CitationFrozenEditions } from "./FrozenEditions.ts";
+import { CitationFrozenEditions, readCitationFrozenEdition } from "./FrozenEditions.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/EditionInference");
 const Reason = LiteralKit(["invalid-input", "invalid-edition", "invalid-clock"]).pipe(
   $I.annoteSchema("Reason", { description: "Closed edition inference failures without references or payloads." })
-);
-const Source = LiteralKit(["reporters", "laws", "journals"]).pipe(
-  $I.annoteSchema("Source", { description: "Authenticated source artifact families." })
-);
-const Family = LiteralKit(["case", "law", "journal"]).pipe(
-  $I.annoteSchema("Family", { description: "Existing edition lookup family routing." })
 );
 const Year = S.FiniteFromString.check(S.isInt(), S.isBetween({ minimum: 1, maximum: 9999 })).pipe(
   $I.annoteSchema("Year", { description: "Year prefix from an authenticated Python datetime payload." })
@@ -98,14 +92,7 @@ export const makeCitationEditionInference = Effect.fn("Citation.makeEditionInfer
       Effect.mapError(() => fail("invalid-clock"))
     );
     if (year > current) return false;
-    const source = yield* editions.source(ref);
-    const checked = yield* S.decodeUnknownEffect(Source)(source).pipe(Effect.mapError(() => fail("invalid-edition")));
-    const family = Source.match(checked, {
-      reporters: () => Family.Enum.case,
-      laws: () => Family.Enum.law,
-      journals: () => Family.Enum.journal,
-    });
-    const edition = yield* editions.lookup(ref, family);
+    const edition = yield* readCitationFrozenEdition(editions, ref);
 
     if (edition.value.start !== null && (yield* dateYear(edition.value.start)) > year) return false;
     return edition.value.end === null || (yield* dateYear(edition.value.end)) >= year;

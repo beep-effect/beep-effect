@@ -915,3 +915,8 @@ accounting checker.
   edition selection in one admitted/timed operation. Original full-method corpus
   has 768 cases; see history/evidence/2026-11-03-full-law-metadata.md. Full hosted
   replay and the remaining goal acceptance duties stay open.
+
+- 2026-11-03: reporter/page correction compares all 5858 original method calls,
+  including all canonical editions and native surrogate controls; captured
+  budget/owner/deadline controls participate. General corrected rendering and
+  other metadata families remain open. See the resource-correction evidence.

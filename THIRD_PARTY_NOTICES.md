@@ -828,3 +828,8 @@ copies no regex implementation. No regex runtime binary is distributed here.
 The private full-law metadata composition and full-law-metadata fixture derive
 from eyecite 2.7.6 FullLawCitation.add_metadata and ResourceCitation.add_metadata
 at the pinned revision above (Free Law Project, BSD-2-Clause).
+
+ResourceCorrection.ts and resource-correction.json derive from eyecite 2.7.6
+ResourceCitation.corrected_reporter/corrected_page and utils.py's exact
+REPORTERS_THAT_NEED_PAGE_CORRECTION set at the pinned revision above
+(Free Law Project, BSD-2-Clause).

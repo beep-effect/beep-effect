@@ -1425,3 +1425,11 @@ preflight precedes native execution; one admission/deadline covers both stages.
 The helper owns the existing text budget and fresh native Scope. Source-free
 errors retain no partial patch. This is a built-in model-state adapter; custom
 protocols and public engine lifetime integration remain separate obligations.
+
+### Resource reporter/page correction (2026-11-03)
+
+Private built-in resource correction retains missing/None/empty group states,
+source lookup short circuits and exact two-reporter page-marker membership.
+Outputs retain native Python points, use existing Unicode ownership and reserve
+before allocating. The shared authenticated edition router is also used by
+edition inference. General citation replacement and full rendering remain open.

@@ -268,3 +268,10 @@ history/evidence/2026-11-03-edition-inference.md.
   across source families, which the original model accepts. The receipt names
   that scope explicitly; default-tokenizer cross-family assignment is not
   inferred. Inspect source artifact diversity before selecting fixture controls.
+
+- 2026-11-03 resource correction: a deadline test reused its adapter after
+  releasing a manual sleep signal, making every later matching timer expire
+  immediately. The ordinary empty-reporter bypass assertion now runs before
+  timer release; the dedicated expiry assertion remains unchanged. Fallow also
+  identified cognitive complexity in the page method; extracting the exact
+  native marker scan removed the finding without suppression or floor changes.

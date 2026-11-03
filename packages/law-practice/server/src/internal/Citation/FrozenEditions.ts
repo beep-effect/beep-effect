@@ -14,6 +14,7 @@ import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
+import * as Match from "effect/Match";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -206,4 +207,22 @@ export const makeCitationFrozenEditions = Effect.fn("Citation.makeFrozenEditions
       return yield* Effect.forEach(captured, (ref) => lookup(ref, kind), { concurrency: 1 });
     }),
   });
+});
+
+/** Route a single authenticated reference through its actual source family.
+ * @internal @category operations @since 0.0.0
+ */
+export const readCitationFrozenEdition = Effect.fn("Citation.readFrozenEdition")(function* (
+  owner: CitationFrozenEditions["Service"],
+  reference: CitationEditionRef
+) {
+  const source = yield* owner.source(reference);
+  const family = Match.value(source).pipe(
+    Match.when("reporters", () => Family.Enum.case),
+    Match.when("laws", () => Family.Enum.law),
+    Match.when("journals", () => Family.Enum.journal),
+    Match.orElse(() => null)
+  );
+  if (family === null) return yield* failure("corrupt-artifact");
+  return yield* owner.lookup(reference, family);
 });
