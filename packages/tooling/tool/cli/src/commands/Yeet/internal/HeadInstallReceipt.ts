@@ -37,7 +37,6 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
 import { resolveYeetRev, yeetGitKitError } from "./GitExec.ts";
 import type { LsTreeEntry } from "@beep/git/Git";
-import type { RunFoldedStdoutOptions } from "@beep/repo-cli-kit/process/StepExec";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";

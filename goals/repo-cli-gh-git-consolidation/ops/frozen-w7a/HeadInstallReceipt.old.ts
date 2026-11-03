@@ -3,6 +3,8 @@
  * `packages/tooling/tool/cli/src/commands/Yeet/internal/HeadInstallReceipt.ts`, verbatim from the lane base 8602b24203 except for import paths, the
  * `old` name prefix, and the retiring Yeet `runGitOutput`/`runGitPathList` wrappers, which resolve to the inlined
  * copies in `GitRunners.old.ts`.
+ *
+ * Import repoint only: StepExec/Bytes moved to `@beep/repo-cli-kit` (#2669, beep-cli-composition W3).
  */
 
 import { HostProcessArchitecture, HostProcessPlatform } from "@beep/utils";
@@ -17,10 +19,10 @@ import * as Str from "effect/String";
 import { runGitFoldedStdout } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/GitExec.ts";
 import { HeadInstallInputs } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/HeadInstallReceipt.ts";
 import { oldRunGitOutput } from "./GitRunners.old.ts";
+import type { RunFoldedStdoutOptions } from "@beep/repo-cli-kit/process/StepExec";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { YeetCommandError } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/Yeet.errors.ts";
-import type { RunFoldedStdoutOptions } from "../../../../packages/tooling/tool/cli/src/internal/process/StepExec.ts";
 
 const ABSENT_LOCKFILE = "absent";
 const LOCKFILE_PATH = "bun.lock";

@@ -9,18 +9,20 @@
  * `runGitOutput`, and the stdout-only, NUL-split, sorted-unique path list under its 8 MiB stdout bound. The streamed
  * fold survives as the Y33 KEEP, so frozen bodies call the shipped `runGitFoldedStdout`. `failFromOutcome` and
  * Yeet's adapter wording are verbatim.
+ *
+ * Import repoint only: StepExec/Bytes moved to `@beep/repo-cli-kit` (#2669, beep-cli-composition W3).
  */
 
-import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
-import { yeetGitOutputErrorAdapter } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/GitErrorAdapter.ts";
 import {
   formatCommandLine,
   OutputBound,
   repoRunOutputBound,
   runCaptured,
   runCapturedStreams,
-} from "../../../../packages/tooling/tool/cli/src/internal/process/StepExec.ts";
+} from "@beep/repo-cli-kit/process/StepExec";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import { yeetGitOutputErrorAdapter } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/GitErrorAdapter.ts";
 import { gitPathListFromNulOutput } from "../../../../packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";

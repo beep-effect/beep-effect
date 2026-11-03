@@ -30,6 +30,7 @@
 import * as NodeURL from "node:url";
 import { Git, GitOptions } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
+import { runToExit } from "@beep/repo-cli-kit/process/StepExec";
 import { NodeCrypto, NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -73,7 +74,6 @@ import { buildPrBody } from "../../../packages/tooling/tool/cli/src/commands/Yee
 import { resolvePullRequestTitle } from "../../../packages/tooling/tool/cli/src/commands/Yeet/internal/PullRequestTitle.ts";
 import { sweepProbeFromGit } from "../../../packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.ts";
 import { YeetStagedPublishIntent } from "../../../packages/tooling/tool/cli/src/commands/Yeet/Yeet.schemas.ts";
-import { runToExit } from "../../../packages/tooling/tool/cli/src/internal/process/StepExec.ts";
 import { adaptGitKitError } from "../../../packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts";
 import { patientGit } from "../../../packages/tooling/tool/cli/src/internal/repo-run/PatientGit.ts";
 import { runRepoCommandCapture } from "../../../packages/tooling/tool/cli/src/internal/repo-run/RepoRun.executor.ts";

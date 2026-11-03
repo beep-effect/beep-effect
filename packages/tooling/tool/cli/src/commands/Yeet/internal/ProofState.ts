@@ -10,6 +10,7 @@ import { Git, StatusEntry } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { concatBytes } from "@beep/repo-cli-kit/cli/Bytes";
+import { formatCommandLine } from "@beep/repo-cli-kit/process/StepExec";
 import { LiteralKit } from "@beep/schema";
 import * as OptionUtils from "@beep/utils/Option";
 import * as A from "effect/Array";

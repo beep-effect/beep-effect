@@ -3,9 +3,12 @@
  * `packages/tooling/tool/cli/src/commands/Yeet/internal/ProofState.ts`, verbatim from the lane base 8602b24203 except for import paths, the
  * `old` name prefix, and the retiring Yeet `runGitOutput`/`runGitPathList` wrappers, which resolve to the inlined
  * copies in `GitRunners.old.ts`.
+ *
+ * Import repoint only: StepExec/Bytes moved to `@beep/repo-cli-kit` (#2669, beep-cli-composition W3).
  */
 
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
+import { concatBytes } from "@beep/repo-cli-kit/cli/Bytes";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
@@ -17,7 +20,6 @@ import {
   runArtifactPathForContext as runOutputPathForContext,
 } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/ArtifactPaths.ts";
 import { YeetCommandError } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/Yeet.errors.ts";
-import { concatBytes } from "../../../../packages/tooling/tool/cli/src/internal/cli/Bytes.ts";
 import { oldRunGitOutput } from "./GitRunners.old.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";

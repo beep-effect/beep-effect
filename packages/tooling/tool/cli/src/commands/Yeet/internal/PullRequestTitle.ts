@@ -17,6 +17,7 @@
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
+import { formatCommandLine } from "@beep/repo-cli-kit/process/StepExec";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -24,7 +25,6 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { formatCommandLine } from "../../../internal/process/StepExec.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { yeetGitKitError } from "./GitExec.ts";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
