@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (Yeet proof-tier dedupe, claude/perf-yeet-tier-dedupe-9fd6b5)",
-      "reason": "Record Yeet/internal/HeadInstallReceipt.ts added to the goals-doctor, knowledge and quality seal inputs; commands, outputs and cache settings are unchanged and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W6, feat/gh-git-w6-yeet-gh)",
+      "reason": "Record the W6 seal drift: MonitorComments.ts, ReviewWindow.ts and ProvenanceFooter.ts now take their GitHub services from the Yeet gh-login edge (GhOps.ts) and read through @beep/github, so GhOps.ts, Provenance.ts and the kit's GitHubCommit, GitHubRepository, PullRequest, Rest and ReviewThread modules join the goals-doctor, knowledge and quality policy seals; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
       "basis": {
-        "path": "docs/reports/perf-yeet-tier-dedupe-cache-review-2026-11-02.md",
-        "sha256": "6d7f7fa83510f7752c1975f5890a092808febf73c57dcf91d26f01256b584e0b"
+        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w6.md",
+        "sha256": "5d12bcb85127256f1595594f1ae91ea15f03a136fa45db2c3c0839cb56d43b2d"
       }
     },
     "@beep/acp": {
@@ -1146,11 +1146,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Claude Opus 5.5 (perf-turbo-granularity, claude/perf-turbo-granularity-110eae)",
-      "reason": "Re-record input lists and policy-task fingerprint edges after quality audit M9, M10 and K3: package-root README/CHANGELOG/LICENSE leave transit, build, check and test hashes, test/** leaves build and transit (eleven test-compiling builds keep it), and the policy seals move to script-less @beep/repo-cli tasks with per-seal root-config routing. Commands, outputs, cache flags and environment are unchanged; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W6, feat/gh-git-w6-yeet-gh)",
+      "reason": "Record the W6 seal drift: MonitorComments.ts, ReviewWindow.ts and ProvenanceFooter.ts now take their GitHub services from the Yeet gh-login edge (GhOps.ts) and read through @beep/github, so GhOps.ts, Provenance.ts and the kit's GitHubCommit, GitHubRepository, PullRequest, Rest and ReviewThread modules join the goals-doctor, knowledge and quality policy seals; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
       "basis": {
-        "path": "docs/reports/perf-turbo-granularity-cache-review-2026-11-02.md",
-        "sha256": "1da98f30c3c2545b941ca97f7e8bc5fcfad15810713ff25c9f92e2f2ec82fc28"
+        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w6.md",
+        "sha256": "5d12bcb85127256f1595594f1ae91ea15f03a136fa45db2c3c0839cb56d43b2d"
       }
     },
     "@beep/repo-configs": {
@@ -120308,7 +120308,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "5e09250e126b19bb369c26048f210973d83b85180318914c8fa0ef80d61a7c3d"
+        "sha256": "2ffc5e2fcea8d13922e725215b49fcce5a6078780c36cde6176024ad9235fef8"
       }
     ]
   }
