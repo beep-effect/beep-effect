@@ -69,7 +69,7 @@ import {
 } from "./AttemptJournal.ts";
 import { PrCloseoutOptions, runPrCloseout, writePrCloseoutReport } from "./Closeout.ts";
 import { printYeetEconomicsCloseoutSummary, YeetEconomicsSource, YeetReviewLaneSource } from "./Economics.ts";
-import { provideYeetGhLogin } from "./GhOps.ts";
+import { provideYeetGhLogin, recordMonitoredPrSessionAsGhLogin } from "./GhOps.ts";
 import {
   collectStagedPublishPaths,
   collectUnstagedTrackedPaths,
@@ -144,7 +144,6 @@ import {
   verifiedHeadInstallReceiptRefusals,
   writeVerifiedState,
 } from "./ProofState.ts";
-import { recordMonitoredPrSessionAsGhLogin } from "./ProvenanceFooter.ts";
 import {
   collectPublishIntent,
   enforceBaseFreshness,

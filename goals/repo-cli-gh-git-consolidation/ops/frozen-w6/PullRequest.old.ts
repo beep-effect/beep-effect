@@ -1,6 +1,8 @@
 /**
  * Frozen pre-W6 body for `ops/yeet-gh-seams-differential-w6.ts`: `packages/tooling/tool/cli/src/commands/Yeet/internal/PullRequest.ts`, verbatim from
  * the lane base 641180ade6 (W5 head) except for import paths and the identity namespace.
+ * Imports follow later moves only (beep-cli-composition W1b #2645 and the W6 login wrappers in `GhOps.ts`);
+ * the replayed logic is unchanged.
  */
 
 import { Git } from "@beep/git/Git";
@@ -22,12 +24,12 @@ import {
 import {
   runIdForContext,
   runArtifactPathForContext as runOutputPathForContext,
+  writeTextFile,
 } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/ArtifactPaths.ts";
 import {
   runGitOutput,
   yeetGitKitError,
 } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/GitExec.ts";
-import { writeTextFile } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/IssueArtifacts.ts";
 import {
   isMergeCommitSubject,
   resolvePullRequestTitle,

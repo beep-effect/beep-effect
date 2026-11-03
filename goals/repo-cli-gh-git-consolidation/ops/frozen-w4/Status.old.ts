@@ -3,6 +3,8 @@
  * main 930758e06b except for import paths, the identity namespace and its one fallow suppression comment. `collectRemoteStatus` declares `Git`, which W2b (#2606) added to the live readers it calls.
  * W6 (SPEC D-15) moved the REST branch lookup and the review-window read onto the kit; this body takes
  * them as the operator's gh login (`provideYeetGhLogin`, `readYeetReviewWindowAsGhLogin`), as the live status does.
+ * Imports follow later moves only (beep-cli-composition W1b #2645 and the W6 login wrappers in `GhOps.ts`);
+ * the replayed logic is unchanged.
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
@@ -49,7 +51,10 @@ import type { Git } from "@beep/git/Git";
 
 export { deriveYeetMergeReady } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/MergeReadiness.policy.ts";
 
-import { provideYeetGhLogin } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/GhOps.ts";
+import {
+  provideYeetGhLogin,
+  readYeetReviewWindowAsGhLogin,
+} from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/GhOps.ts";
 import { NO_CHECKS_REPORTED } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorChecks.ts";
 import { yeetCommentExcerpt } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorComments.schemas.ts";
 import { YeetHeadTimeline } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorPolicy.ts";
@@ -65,7 +70,6 @@ import {
   yeetReviewThreadStateInput,
 } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewThreadState.ts";
 import {
-  readYeetReviewWindowAsGhLogin,
   renderYeetReviewWindowHold,
   YeetReviewWindow,
   yeetReviewWindowDue,

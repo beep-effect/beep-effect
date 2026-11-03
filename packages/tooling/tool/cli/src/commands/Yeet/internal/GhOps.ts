@@ -64,6 +64,8 @@ import {
 } from "../../../internal/github/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { parsePrProvenanceFooter } from "./Provenance.ts";
+import { ensureProvenanceFooter, ProvenanceStampOutcome, recordMonitoredPrSessionThen } from "./ProvenanceFooter.ts";
+import { readYeetReviewWindow, YeetReviewWindowUnknown } from "./ReviewWindow.ts";
 import type { GitHubError } from "@beep/github/GitHubError";
 import type { Repo } from "@beep/github/Repo";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -71,7 +73,11 @@ import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
 import type { CliReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import type { GithubIdentityError, GithubRestShape, GraphqlBudgetExhausted } from "../../../internal/github/index.ts";
+import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
+import type { PrNumber } from "./Provenance.ts";
+import type { PrSessionRegistryShape } from "./PrSessionRegistry.ts";
 import type { YeetReadyInheritedRed } from "./ReadyGate.ts";
+import type { YeetReviewWindow } from "./ReviewWindow.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/GhOps");
 
@@ -1608,3 +1614,106 @@ export const runYeetGhRateLimit = (options: typeof YeetGhCommonOptions.Encoded) 
       );
     })
   );
+
+// The review-window target the reader takes, without exporting the library's interface.
+type YeetReviewWindowTarget = Parameters<typeof readYeetReviewWindow>[0];
+
+/**
+ * Read a review window as the operator's gh login, for a surface that has no
+ * GitHub services of its own.
+ *
+ * **Details**
+ *
+ * `readYeetReviewWindow` under {@link provideYeetGhLogin}: a login that does not
+ * resolve reads as `unknown` with the login's failure as the reason, so the
+ * window still never fails and never counts as elapsed.
+ *
+ * **Example** (Build the read effect)
+ *
+ * ```ts
+ * import { readYeetReviewWindowAsGhLogin, RepoRunContext } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const context = RepoRunContext.make({
+ *   base: "origin/main", branch: "feat/x", cwd: ".", head: "HEAD", originalArgv: [],
+ *   packetDir: ".beep/yeet", repoRoot: ".", turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
+ * })
+ * console.log(Effect.isEffect(readYeetReviewWindowAsGhLogin(context, { prNumber: 42, headSha: "abc" }))) // true
+ * ```
+ *
+ * @param context - Repo context whose root resolves the gh login and the repository.
+ * @param target - The pull request number and the head the window is read for.
+ * @returns The open, elapsed, or unknown review window.
+ * @category workflows
+ * @since 0.0.0
+ */
+export const readYeetReviewWindowAsGhLogin: {
+  (
+    target: YeetReviewWindowTarget
+  ): (
+    context: RepoRunContext
+  ) => Effect.Effect<YeetReviewWindow, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>;
+  (
+    context: RepoRunContext,
+    target: YeetReviewWindowTarget
+  ): Effect.Effect<YeetReviewWindow, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>;
+} = dual(2, (context: RepoRunContext, target: YeetReviewWindowTarget) =>
+  readYeetReviewWindow(target).pipe(
+    provideYeetGhLogin(context.repoRoot),
+    Effect.catchTag("YeetCommandError", (error) =>
+      Effect.succeed(
+        YeetReviewWindowUnknown.make({
+          reason: pipe(error.message, Str.trimEnd, Str.replace(/\.$/u, Str.empty)),
+        })
+      )
+    )
+  )
+);
+
+/**
+ * Record the monitored session, then stamp its provenance footer as the operator's gh login, for a
+ * surface that has no GitHub services of its own.
+ *
+ * **Details**
+ *
+ * The session is recorded first, without GitHub. Only the stamp builds the login, so a login that
+ * does not resolve skips only the stamp, logged the way any other failure inside the stamp is.
+ *
+ * **Example** (Build the monitor provenance prelude)
+ *
+ * ```ts
+ * import { recordMonitoredPrSessionAsGhLogin, RepoRunContext } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const context = RepoRunContext.make({
+ *   base: "origin/main", branch: "feat/footer", cwd: ".", head: "HEAD",
+ *   originalArgv: [], packetDir: ".beep/yeet", repoRoot: ".",
+ *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
+ * })
+ * console.log(Effect.isEffect(recordMonitoredPrSessionAsGhLogin(context, 42))) // true
+ * ```
+ *
+ * @param context - Hydrated Yeet context for the monitor invocation.
+ * @param prNumber - Pull-request number observed once before polling begins.
+ * @param registryOverride - Optional in-memory registry used by fixture-safe tests.
+ * @returns The typed stamp outcome, `skipped` when the session or the login was unavailable.
+ * @category workflows
+ * @since 0.0.0
+ */
+export const recordMonitoredPrSessionAsGhLogin = Effect.fn("GhOps.recordMonitoredPrSessionAsGhLogin")(function* (
+  context: RepoRunContext,
+  prNumber: PrNumber,
+  registryOverride?: PrSessionRegistryShape
+) {
+  return yield* recordMonitoredPrSessionThen(context, prNumber, registryOverride, (repository) =>
+    ensureProvenanceFooter(context, repository, prNumber, registryOverride).pipe(
+      provideYeetGhLogin(context.repoRoot),
+      Effect.catchTag("YeetCommandError", (error) => {
+        const warning = `[yeet] provenance footer stamp skipped: ${error.message}`;
+        return Console.warn(warning).pipe(
+          Effect.as(ProvenanceStampOutcome.make({ status: "skipped", message: warning }))
+        );
+      })
+    )
+  );
+});

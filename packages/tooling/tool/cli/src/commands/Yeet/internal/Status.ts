@@ -39,7 +39,7 @@ import type { Git } from "@beep/git/Git";
 
 export { deriveYeetMergeReady } from "./MergeReadiness.policy.ts";
 
-import { provideYeetGhLogin } from "./GhOps.ts";
+import { provideYeetGhLogin, readYeetReviewWindowAsGhLogin } from "./GhOps.ts";
 import { NO_CHECKS_REPORTED } from "./MonitorChecks.ts";
 import { yeetCommentExcerpt } from "./MonitorComments.schemas.ts";
 import { YeetHeadTimeline } from "./MonitorPolicy.ts";
@@ -55,12 +55,7 @@ import {
   yeetReviewCommentAuthorKind,
   yeetReviewThreadStateInput,
 } from "./ReviewThreadState.ts";
-import {
-  readYeetReviewWindowAsGhLogin,
-  renderYeetReviewWindowHold,
-  YeetReviewWindow,
-  yeetReviewWindowDue,
-} from "./ReviewWindow.ts";
+import { renderYeetReviewWindowHold, yeetReviewWindowDue } from "./ReviewWindow.ts";
 import {
   YeetStatusArtifact,
   YeetStatusLaneDigest,

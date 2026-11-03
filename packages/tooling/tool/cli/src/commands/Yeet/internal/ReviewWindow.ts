@@ -28,11 +28,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GithubRest } from "../../../internal/github/index.ts";
-import { provideYeetGhLogin } from "./GhOps.ts";
 import { mergeReadyCriterionHolds, YeetMergeReadyCriterion } from "./Verdict.ts";
-import type * as SecureRandom from "effect/crypto/SecureRandom";
-import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetMergeReadyCriteria } from "./Verdict.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ReviewWindow");
@@ -463,54 +459,6 @@ export const readYeetReviewWindow = Effect.fn("Yeet.readYeetReviewWindow")(funct
     window: window.value,
   });
 });
-
-/**
- * Read a review window as the operator's gh login, for a surface that has no
- * GitHub services of its own.
- *
- * **Details**
- *
- * {@link readYeetReviewWindow} under `provideYeetGhLogin`: a login that does not
- * resolve reads as `unknown` with the login's failure as the reason, so the
- * window still never fails and never counts as elapsed.
- *
- * **Example** (Build the read effect)
- *
- * ```ts
- * import { readYeetReviewWindowAsGhLogin, RepoRunContext } from "@beep/repo-cli/test/Yeet"
- * import * as Effect from "effect/Effect"
- *
- * const context = RepoRunContext.make({
- *   base: "origin/main", branch: "feat/x", cwd: ".", head: "HEAD", originalArgv: [],
- *   packetDir: ".beep/yeet", repoRoot: ".", turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
- * })
- * console.log(Effect.isEffect(readYeetReviewWindowAsGhLogin(context, { prNumber: 42, headSha: "abc" }))) // true
- * ```
- *
- * @param context - Repo context whose root resolves the gh login and the repository.
- * @param target - The pull request number and the head the window is read for.
- * @returns The open, elapsed, or unknown review window.
- * @category workflows
- * @since 0.0.0
- */
-export const readYeetReviewWindowAsGhLogin: {
-  (
-    target: YeetReviewWindowTarget
-  ): (
-    context: RepoRunContext
-  ) => Effect.Effect<YeetReviewWindow, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>;
-  (
-    context: RepoRunContext,
-    target: YeetReviewWindowTarget
-  ): Effect.Effect<YeetReviewWindow, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>;
-} = dual(2, (context: RepoRunContext, target: YeetReviewWindowTarget) =>
-  readYeetReviewWindow(target).pipe(
-    provideYeetGhLogin(context.repoRoot),
-    Effect.catchTag("YeetCommandError", (error) =>
-      Effect.succeed(unknownWindow(pipe(error.message, Str.trimEnd, Str.replace(/\.$/u, Str.empty))))
-    )
-  )
-);
 
 /**
  * Whether the review window is the only merge criterion left to establish.

@@ -58,7 +58,7 @@ import { runArtifactPathForContext } from "./ArtifactPaths.ts";
 import { YeetCheckOutcome } from "./CheckOutcome.ts";
 import { closeoutIssueFromReviewThread, PrCloseoutReportJson } from "./Closeout.ts";
 import { convergeYeetInbox, YeetConvergeObservation } from "./Converge.ts";
-import { provideYeetGhLogin } from "./GhOps.ts";
+import { provideYeetGhLogin, readYeetReviewWindowAsGhLogin } from "./GhOps.ts";
 import { NO_CHECKS_REPORTED } from "./MonitorChecks.ts";
 import {
   acknowledgeYeetMonitorComments,
@@ -75,7 +75,7 @@ import {
   yeetReviewThreadStateInputFromNode,
   yeetReviewThreadStateOutstanding,
 } from "./ReviewThreadState.ts";
-import { readYeetReviewWindowAsGhLogin, yeetReviewWindowDue, yeetReviewWindowElapsed } from "./ReviewWindow.ts";
+import { yeetReviewWindowDue, yeetReviewWindowElapsed } from "./ReviewWindow.ts";
 import { YeetSettleVerdict } from "./Settle.schemas.ts";
 import {
   deriveSettleVerdict,

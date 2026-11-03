@@ -1,6 +1,8 @@
 /**
  * Frozen pre-W6 body for `ops/yeet-gh-seams-differential-w6.ts`: `packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorComments.ts`, verbatim from
  * the lane base 641180ade6 (W5 head) except for import paths and the identity namespace.
+ * `writeTextFile` is imported from `ArtifactPaths.ts`, where beep-cli-composition W1b (#2645) moved it;
+ * the replayed logic is unchanged.
  */
 
 import { Fmt } from "@beep/cli-kit/Fmt";
@@ -20,8 +22,10 @@ import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { runArtifactPathForContext } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/ArtifactPaths.ts";
-import { writeTextFile } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/IssueArtifacts.ts";
+import {
+  runArtifactPathForContext,
+  writeTextFile,
+} from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/ArtifactPaths.ts";
 import {
   parseYeetReviewBodySignal,
   YeetReviewBodySignal,

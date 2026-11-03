@@ -34,7 +34,6 @@ import { GithubRest } from "../../../internal/github/index.ts";
 import { runGitOutput } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext, runIdForContext, writeTextFile } from "./ArtifactPaths.ts";
-import { provideYeetGhLogin } from "./GhOps.ts";
 import { yeetGitOutputErrorAdapter } from "./GitErrorAdapter.ts";
 import {
   makePrProvenanceServiceLive,
@@ -51,11 +50,13 @@ import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
-import type { YeetGithubServices } from "./GhOps.ts";
 import type { PrNumber, PrProvenanceRole } from "./Provenance.ts";
 import type { PrSessionRegistryShape } from "./PrSessionRegistry.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ProvenanceFooter");
+
+// The footer reads and writes the PR body through these two services and nothing else.
+type ProvenanceGithubServices = GithubRest | GitHubClient;
 const repositoryPattern = /github\.com[/:]([^/]+)\/([^/]+?)(?:\.git)?$/u;
 
 // One `git config --get <key>` read through `@beep/git`: `None` when the key is unset, trimmed otherwise.
@@ -285,7 +286,7 @@ const githubBodyFailure = (error: { readonly message: string }): YeetCommandErro
 
 const readPrBodySnapshot = Effect.fn("ProvenanceFooter.readPrBodySnapshot")(function* (
   prNumber: PrNumber
-): Effect.fn.Return<PrBodySnapshot, YeetCommandError, YeetGithubServices> {
+): Effect.fn.Return<PrBodySnapshot, YeetCommandError, ProvenanceGithubServices> {
   const pull = yield* GithubRest.use((rest) => rest.pullRequest(prNumber)).pipe(Effect.mapError(githubBodyFailure));
   return { body: pull.body, updatedAt: pull.updatedAt };
 });
@@ -359,7 +360,7 @@ const writePrBody = Effect.fn("ProvenanceFooter.writePrBody")(function* (
   );
 });
 
-type ReconcileRequirements = Digest.Digest | FileSystem.FileSystem | Path.Path | YeetGithubServices;
+type ReconcileRequirements = Digest.Digest | FileSystem.FileSystem | Path.Path | ProvenanceGithubServices;
 
 const yieldToConcurrentEdit = Effect.fn("ProvenanceFooter.yieldToConcurrentEdit")(function* (
   prNumber: PrNumber,
@@ -462,7 +463,7 @@ const reconcilePrBodyAfterWrite = Effect.fn("ProvenanceFooter.reconcileAfterWrit
 
 const readPrBody = Effect.fn("ProvenanceFooter.readPrBody")(function* (
   prNumber: PrNumber
-): Effect.fn.Return<string, YeetCommandError, YeetGithubServices> {
+): Effect.fn.Return<string, YeetCommandError, ProvenanceGithubServices> {
   const pull = yield* GithubRest.use((rest) => rest.pullRequest(prNumber)).pipe(Effect.mapError(githubBodyFailure));
   return pull.body;
 });
@@ -799,7 +800,7 @@ export const ensureProvenanceFooter = Effect.fn("ProvenanceFooter.ensure")(funct
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | SecureRandom.SecureRandom
-  | YeetGithubServices
+  | ProvenanceGithubServices
 > {
   return yield* Effect.gen(function* () {
     const registry = registryOverride ?? (yield* makePrSessionRegistryLive());
@@ -839,9 +840,41 @@ export const ensureProvenanceFooter = Effect.fn("ProvenanceFooter.ensure")(funct
   );
 });
 
-// The monitored session is recorded first, locally (the origin URL and the registry); `stamp`
-// then runs on the recorded repository, so a stamp that cannot reach GitHub never loses the record.
-const recordMonitoredSessionThen = Effect.fnUntraced(function* <E, R>(
+/**
+ * Record the monitored session, then run `stamp` on the recorded repository.
+ *
+ * **Details**
+ *
+ * The record is local: the origin URL and the session registry, with no GitHub call. A stamp
+ * that cannot reach GitHub therefore never loses the record. A session that cannot be recorded
+ * yields a `skipped` outcome without running the stamp.
+ *
+ * **Example** (Record and stamp in one step)
+ *
+ * ```ts
+ * import { ensureProvenanceFooter, recordMonitoredPrSessionThen, RepoRunContext } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const context = RepoRunContext.make({
+ *   base: "origin/main", branch: "feat/footer", cwd: ".", head: "HEAD",
+ *   originalArgv: [], packetDir: ".beep/yeet", repoRoot: ".",
+ *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
+ * })
+ * const program = recordMonitoredPrSessionThen(context, 42, undefined, (repository) =>
+ *   ensureProvenanceFooter(context, repository, 42)
+ * )
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param context - Hydrated Yeet context for the monitor invocation.
+ * @param prNumber - Pull-request number observed once before polling begins.
+ * @param registryOverride - Optional in-memory registry used by fixture-safe tests.
+ * @param stamp - The footer stamp to run on the recorded repository.
+ * @returns The stamp's outcome, or `skipped` when the session could not be recorded.
+ * @category workflows
+ * @since 0.0.0
+ */
+export const recordMonitoredPrSessionThen = Effect.fnUntraced(function* <E, R>(
   context: RepoRunContext,
   prNumber: PrNumber,
   registryOverride: PrSessionRegistryShape | undefined,
@@ -884,53 +917,7 @@ export const recordMonitoredPrSession = Effect.fn("ProvenanceFooter.recordMonito
   prNumber: PrNumber,
   registryOverride?: PrSessionRegistryShape
 ) {
-  return yield* recordMonitoredSessionThen(context, prNumber, registryOverride, (repository) =>
+  return yield* recordMonitoredPrSessionThen(context, prNumber, registryOverride, (repository) =>
     ensureProvenanceFooter(context, repository, prNumber, registryOverride)
   );
 });
-
-/**
- * {@link recordMonitoredPrSession} as the operator's gh login, for a surface
- * that has no GitHub services of its own.
- *
- * **Details**
- *
- * The session is recorded first, without GitHub. A login that does not resolve
- * then skips only the footer stamp, logged the way any other failure inside the
- * stamp is, so the monitor still never fails over its provenance footer.
- *
- * **Example** (Build the monitor provenance prelude)
- *
- * ```ts
- * import { recordMonitoredPrSessionAsGhLogin, RepoRunContext } from "@beep/repo-cli/test/Yeet"
- * import * as Effect from "effect/Effect"
- *
- * const context = RepoRunContext.make({
- *   base: "origin/main", branch: "feat/footer", cwd: ".", head: "HEAD",
- *   originalArgv: [], packetDir: ".beep/yeet", repoRoot: ".",
- *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
- * })
- * console.log(Effect.isEffect(recordMonitoredPrSessionAsGhLogin(context, 42))) // true
- * ```
- *
- * @param context - Hydrated Yeet context for the monitor invocation.
- * @param prNumber - Pull-request number observed once before polling begins.
- * @param registryOverride - Optional in-memory registry used by fixture-safe tests.
- * @returns The typed stamp outcome, `skipped` when the session or the login was unavailable.
- * @category workflows
- * @since 0.0.0
- */
-export const recordMonitoredPrSessionAsGhLogin = Effect.fn("ProvenanceFooter.recordMonitoredSessionAsGhLogin")(
-  function* (context: RepoRunContext, prNumber: PrNumber, registryOverride?: PrSessionRegistryShape) {
-    // Only the stamp needs GitHub, so only the stamp builds the login.
-    return yield* recordMonitoredSessionThen(context, prNumber, registryOverride, (repository) =>
-      ensureProvenanceFooter(context, repository, prNumber, registryOverride).pipe(
-        provideYeetGhLogin(context.repoRoot),
-        Effect.catchTag("YeetCommandError", (error) => {
-          const warning = `[yeet] provenance footer stamp skipped: ${error.message}`;
-          return Console.warn(warning).pipe(Effect.as(skippedStamp(warning)));
-        })
-      )
-    );
-  }
-);
