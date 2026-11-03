@@ -634,3 +634,22 @@ production qualification.
   published bytes separately from the original native report encoding.
 - The flag is still pending. Alias observations do not establish Windows,
   restoration, cross-worktree, real-task or epoch qualification.
+
+
+### Source-capture repair after #2679 review, 2026-11-03
+
+- The three native drivers now parse captured pin/collector/schema bytes and
+  derive their bindings from those same bytes. The `run_bounded` AST is unchanged.
+- Fresh `source-capture-shared-availability-2026-11-03.json`,
+  `source-capture-permission-availability-2026-11-03.json` and
+  `source-capture-permission-mode-2026-11-03.json` retain 60, four and 132 actual
+  dry plans. All execute zero task bodies; regular-mode/hash rows match the
+  earlier observation without transplanting its driver digest.
+- `source-capture-prefix-controls-2026-11-03.json` records six deterministic
+  changes immediately after a source read. The captured-byte drivers refuse
+  before client selection; the legacy prefixes at the recorded immutable head
+  do not. These are bounded prefix controls, not full repository tests.
+- The byte-identical prior checkpoint is retained in
+  `permission-mode-hash-before-source-capture-fix-2026-11-03.json`. Its source
+  bindings and earlier observation reports resolve against the recorded prior
+  Git head, rather than the repaired files now occupying those paths.

@@ -824,3 +824,17 @@ observed schema difference changed the matrix and next qualification work.
   Its report includes the three omitted stable non-Git alias cases.
 - Before activation, require supported-platform and real-profile alias/output
   controls. A schema description and a successful plan cannot supply that proof.
+
+
+### 2026-11-03 — prevent a repeated source-binding race
+
+- #2679 review found a parsed pin/collector followed by a second digest read,
+  repeating the earlier selection-driver defect. The same pattern existed in
+  permission availability, and shared availability re-read its schema digest.
+- Reuse the selection/filter drivers' captured-byte pattern. Parse and hash the
+  same bytes and refuse source movement before native client selection. Six
+  deterministic source-change prefix probes show the missing legacy refusal
+  and the fixed early refusal, with zero native processes or task bodies.
+- Keep the unchanged bounded collector AST and immutable original evidence.
+  Fresh observations record the repaired driver bytes rather than re-hashing
+  an older observation onto them. A new source binding requires its own replay.

@@ -35,10 +35,12 @@ for path in (args.output, args.raw_dir):
 repo = Path(__file__).resolve().parents[3]
 research = Path(__file__).resolve().parent
 pins_path = research / "current-client-pins.json"
-pins = json.loads(pins_path.read_text())
+pins_bytes = pins_path.read_bytes()
+pins = json.loads(pins_bytes)
 harness = research / "native-future-flag-availability.py"
+harness_bytes = harness.read_bytes()
 function = next(
-    node for node in ast.parse(harness.read_text()).body
+    node for node in ast.parse(harness_bytes).body
     if isinstance(node, ast.FunctionDef) and node.name == "run_bounded"
 )
 start = time.monotonic()
@@ -53,8 +55,14 @@ def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-sources = [Path(__file__).resolve(), pins_path, harness]
-bindings = [{"path": str(path.relative_to(repo)), "sha256": sha(path)} for path in sources]
+driver = Path(__file__).resolve()
+captured = {driver: driver.read_bytes(), pins_path: pins_bytes, harness: harness_bytes}
+bindings = [
+    {"path": str(path.relative_to(repo)), "sha256": hashlib.sha256(data).hexdigest()}
+    for path, data in captured.items()
+]
+for binding in bindings:
+    assert sha(repo / binding["path"]) == binding["sha256"], "Source changed before observation."
 clients = {
     "stable": repo / "node_modules/@turbo/linux-64/bin/turbo",
     "canary": Path.home() / ".cache/beep/turbo-goals-clients" / pins["canary"]["packageVersion"] / "turbo",

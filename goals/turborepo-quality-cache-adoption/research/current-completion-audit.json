@@ -3,7 +3,7 @@
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "365bd154b05b4d425cecaf6ce5cb966cf00b9cb3",
-  "specSha256": "dfc0b76b82359d3e9ed5fc4892fd78128ef91b82b50d64f31a21d4a88bb1e248",
+  "specSha256": "f870b7e03d102642368b7b278ae5665a25ff758d029e69a058958b989a35e1b4",
   "acceptance": [
     {
       "id": "AC-01",
@@ -392,7 +392,8 @@
   "priorSpecSha256AtPermissionModeObservation": "45b036fe83f2cf98a86fc66442883f2ae0f1675f2962d4118caa576d575ef76e",
   "permissionModeHashCheckpoint": {
     "path": "research/permission-mode-hash-checkpoint-2026-11-03.json",
-    "sha256": "10037a14edc7a05e1044e6d29e374809fa78f5707e13406657cd1cbe7dcb2c78",
+    "sha256": "7d93b61b50e5cd64750d73df31a967d4ba59d18157753ed7cfece85a2b6b491e",
     "authority": "Synthetic Linux regular-file hash invariants only; aliases are observations. No Windows, output restoration, real computation qualification, activation or performance proof."
-  }
+  },
+  "priorSpecSha256AtSourceCaptureRepair": "dfc0b76b82359d3e9ed5fc4892fd78128ef91b82b50d64f31a21d4a88bb1e248"
 }

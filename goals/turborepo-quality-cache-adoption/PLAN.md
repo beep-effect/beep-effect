@@ -755,3 +755,15 @@ portable restoration, real-task and epoch qualification remain open, as do all
 nine adoption acceptance criteria. This wave adds reproducible evidence only;
 hosted checks remain authoritative for PR quality. No local verify, publish,
 package gate or repository test suite ran.
+
+
+### Review repair: exact captured source bytes, 2026-11-03
+
+Review #2679 identified a second read between parsing pins/collector and recording
+their hashes. The permission probe and both availability drivers now parse and
+hash captured bytes, with early and final stability checks. The shared collector
+AST remains unchanged. Fresh 196 native dry plans execute no tasks; six controlled
+pin/collector/schema mutations refuse before client selection, while the retained
+legacy prefixes do not. Original reports and the prior checkpoint remain retained
+under their exact published source head. No local quality suite or qualification
+ran; the feature stays disabled and pending.
