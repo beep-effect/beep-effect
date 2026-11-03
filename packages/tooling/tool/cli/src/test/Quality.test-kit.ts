@@ -73,6 +73,7 @@ export {
 export * from "@beep/repo-cli/commands/Quality/Tasks";
 export { effectDiagnosticsAffectedPackages, effectDiagnosticsProjects } from "../commands/Quality/EffectDiagnostics.ts";
 export {
+  fallowFeatureArgsForTesting,
   inheritedCodemodDuplicationCountForTesting,
   reportInvariantDiagnosticsForTesting,
   workflowYamlValueForTesting,
