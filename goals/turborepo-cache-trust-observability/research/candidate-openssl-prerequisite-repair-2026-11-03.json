@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "cache-candidate-openssl-prerequisite-repair/v1",
+  "recordedAt": "2026-11-03T09:43:14.007590+00:00",
+  "sourceBaseRevision": "61e2a1402a1d181b14c831bb60cf86c640f81e8c",
+  "authority": "Source-level prerequisite repair only. Hosted regression proof, accepted-source build and independent artifact inspection are still required.",
+  "failure": {
+    "path": "research/candidate-openssl-prerequisite-failure-2026-11-03.json",
+    "sha256": "b49dbfe5f52cead5b60a1a275d826761bf40cb005a781ca39d877b9c311bccfb"
+  },
+  "sourceBindings": {
+    ".github/workflows/heavy.yml": "14dedc071d0d21f833d969a401bd1ba81f90329a27788538ef7593d90e814e6e",
+    "packages/tooling/tool/cli/test/ci-runner-security.test.ts": "16d2130545e56e4fbf585fbfdfee5201814cd14d917ff2065cfda4b178e6de12"
+  },
+  "preservedBounds": {
+    "existingRunners": 1,
+    "jobMinutes": 20,
+    "cargoJobs": 2,
+    "artifactBytes": 16777216,
+    "manifestBytes": 65536,
+    "retentionDays": 1
+  },
+  "localVerification": "Not run under explicit operator direction; normal commit/push hooks only. No local verify, publish, package suite or heavy proof.",
+  "runtimeActivated": false,
+  "qualificationGranted": false
+}
