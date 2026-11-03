@@ -1237,7 +1237,7 @@ const resolveTmpfsRoots = Effect.fnUntraced(function* (
  * **Example** (Build a dry-run janitor effect)
  *
  * ```ts
- * import { runTmpfsReap } from "@beep/repo-cli/test/RepoRun"
+ * import { runTmpfsReap } from "@beep/repo-cli/test/Worktree"
  * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(runTmpfsReap())) // true
  * ```

@@ -1740,7 +1740,7 @@ const classifyCheckoutName = (name: string): ResidueReapClass =>
  * **Example** (Classify `.beep` entries)
  *
  * ```ts
- * import { isRetainedCheckoutResidueName } from "@beep/repo-cli/test/RepoRun"
+ * import { isRetainedCheckoutResidueName } from "@beep/repo-cli/test/Worktree"
  *
  * console.log(isRetainedCheckoutResidueName("fallow")) // true
  * console.log(isRetainedCheckoutResidueName("yeet")) // false
@@ -2971,7 +2971,7 @@ const executeResidueReap = Effect.fnUntraced(function* (settings: ResidueReapSet
  * **Example** (Build a dry-run effect)
  *
  * ```ts
- * import { runResidueReap } from "@beep/repo-cli/test/RepoRun"
+ * import { runResidueReap } from "@beep/repo-cli/test/Worktree"
  * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(runResidueReap())) // true

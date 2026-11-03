@@ -31,7 +31,7 @@ const ResidueArchivePhase = LiteralKit(["intent", "moved", "restored", "fenced-l
  * **Example** (Recognize a cleanup class)
  *
  * ```ts
- * import { ResidueReapClass } from "@beep/repo-cli/test/RepoRun"
+ * import { ResidueReapClass } from "@beep/repo-cli/test/Worktree"
  *
  * console.log(ResidueReapClass.is["turbo-cache"]("turbo-cache")) // true
  * ```
@@ -75,7 +75,7 @@ export type ResidueReapClass = typeof ResidueReapClass.Type;
  * **Example** (Recognize a directory removal action)
  *
  * ```ts
- * import { ResidueReapAction } from "@beep/repo-cli/test/RepoRun"
+ * import { ResidueReapAction } from "@beep/repo-cli/test/Worktree"
  *
  * console.log(ResidueReapAction.is["remove-dir"]("remove-dir")) // true
  * ```
@@ -109,7 +109,7 @@ export type ResidueReapAction = typeof ResidueReapAction.Type;
  * **Example** (Recognize a liveness refusal)
  *
  * ```ts
- * import { ResidueReapSkipReason } from "@beep/repo-cli/test/RepoRun"
+ * import { ResidueReapSkipReason } from "@beep/repo-cli/test/Worktree"
  *
  * console.log(ResidueReapSkipReason.is["live-cwd-ref"]("live-cwd-ref")) // true
  * ```
@@ -161,7 +161,7 @@ export type ResidueReapSkipReason = typeof ResidueReapSkipReason.Type;
  * **Example** (Validate a threshold)
  *
  * ```ts
- * import { ResidueReapAgeDays } from "@beep/repo-cli/test/RepoRun"
+ * import { ResidueReapAgeDays } from "@beep/repo-cli/test/Worktree"
  * import * as S from "effect/Schema"
  *
  * console.log(S.is(ResidueReapAgeDays)(30)) // true
@@ -191,7 +191,7 @@ export type ResidueReapAgeDays = typeof ResidueReapAgeDays.Type;
  * **Example** (Validate a byte cap)
  *
  * ```ts
- * import { ResidueReapByteCap } from "@beep/repo-cli/test/RepoRun"
+ * import { ResidueReapByteCap } from "@beep/repo-cli/test/Worktree"
  * import * as S from "effect/Schema"
  *
  * console.log(S.is(ResidueReapByteCap)(21474836480)) // true
@@ -221,7 +221,7 @@ export type ResidueReapByteCap = typeof ResidueReapByteCap.Type;
  * **Example** (Validate a keep count)
  *
  * ```ts
- * import { ResidueReapKeepCount } from "@beep/repo-cli/test/RepoRun"
+ * import { ResidueReapKeepCount } from "@beep/repo-cli/test/Worktree"
  * import * as S from "effect/Schema"
  *
  * console.log(S.is(ResidueReapKeepCount)(2)) // true
@@ -259,7 +259,7 @@ export type ResidueReapKeepCount = typeof ResidueReapKeepCount.Type;
  * **Example** (Decode a receipt's cited view)
  *
  * ```ts
- * import { QualificationViewReceipt } from "@beep/repo-cli/test/RepoRun"
+ * import { QualificationViewReceipt } from "@beep/repo-cli/test/Worktree"
  *
  * const receipt = QualificationViewReceipt.make({
  *   schemaVersion: "cache-dependency-materialization/v1",
@@ -294,7 +294,7 @@ export class QualificationViewReceipt extends S.Opaque<QualificationViewReceipt,
  * **Example** (Reject an empty home)
  *
  * ```ts
- * import { ResidueReapHomeRoot } from "@beep/repo-cli/test/RepoRun"
+ * import { ResidueReapHomeRoot } from "@beep/repo-cli/test/Worktree"
  * import * as S from "effect/Schema"
  *
  * console.log(S.is(ResidueReapHomeRoot)("/home/me")) // true
@@ -335,7 +335,7 @@ export type ResidueReapHomeRoot = typeof ResidueReapHomeRoot.Type;
  * **Example** (Describe an eligible session file)
  *
  * ```ts
- * import { ResidueReapCandidate } from "@beep/repo-cli/test/RepoRun"
+ * import { ResidueReapCandidate } from "@beep/repo-cli/test/Worktree"
  *
  * const candidate = ResidueReapCandidate.make({
  *   root: "/home/me/.codex/sessions",
@@ -387,7 +387,7 @@ export class ResidueReapCandidate extends S.Opaque<ResidueReapCandidate, { reado
  * **Example** (Construct an empty dry-run report)
  *
  * ```ts
- * import { ResidueReapReport } from "@beep/repo-cli/test/RepoRun"
+ * import { ResidueReapReport } from "@beep/repo-cli/test/Worktree"
  *
  * const report = ResidueReapReport.make({
  *   scannedAt: "2026-09-03T12:00:00.000Z",
@@ -461,7 +461,7 @@ export class ResidueReapReport extends S.Opaque<ResidueReapReport, { readonly br
  * **Example** (Record redundant generated output)
  *
  * ```ts
- * import { ResidueRetentionRuling } from "@beep/repo-cli/test/RepoRun"
+ * import { ResidueRetentionRuling } from "@beep/repo-cli/test/Worktree"
  * const ruling = ResidueRetentionRuling.make({
  *   path: ".beep/ci/old-report", owner: "quality", state: "completed",
  *   disposition: "regenerable", evidence: "standards/retention/old-report.json",
@@ -503,7 +503,7 @@ export class ResidueRetentionRuling extends S.Opaque<ResidueRetentionRuling, { r
  * **Example** (Recognize an ancestor relation)
  *
  * ```ts
- * import { ResidueTerminalLaneHeadRelation } from "@beep/repo-cli/test/RepoRun"
+ * import { ResidueTerminalLaneHeadRelation } from "@beep/repo-cli/test/Worktree"
  *
  * console.log(ResidueTerminalLaneHeadRelation.is.ancestor("ancestor")) // true
  * ```
@@ -542,7 +542,7 @@ export type ResidueTerminalLaneHeadRelation = typeof ResidueTerminalLaneHeadRela
  * **Example** (Describe a merged lane)
  *
  * ```ts
- * import { ResidueTerminalLaneAuthority } from "@beep/repo-cli/test/RepoRun"
+ * import { ResidueTerminalLaneAuthority } from "@beep/repo-cli/test/Worktree"
  * import * as DateTime from "effect/DateTime"
  *
  * const head = "1ed08f66df016a18c6d7d56bd97aa778912cb37b"
@@ -595,7 +595,7 @@ export class ResidueTerminalLaneAuthority extends S.Opaque<
  * **Example** (Construct an intent)
  *
  * ```ts
- * import { ResidueArchiveIntent } from "@beep/repo-cli/test/RepoRun"
+ * import { ResidueArchiveIntent } from "@beep/repo-cli/test/Worktree"
  * const intent = ResidueArchiveIntent.make({
  *   source: "/repo/.beep/ci/old", lexicalSource: "/repo/.beep/ci/old", destination: "/repo/.beep/residue-reap/run/archive/0",
  *   dev: 1, ino: 42, phase: "intent",
@@ -627,7 +627,7 @@ export class ResidueArchiveIntent extends S.Opaque<ResidueArchiveIntent, { reado
  * **Example** (Construct a recovery refusal)
  *
  * ```ts
- * import { ResidueArchiveError } from "@beep/repo-cli/test/RepoRun"
+ * import { ResidueArchiveError } from "@beep/repo-cli/test/Worktree"
  * const error = ResidueArchiveError.make({ message: "Restore refuses an occupied source" })
  * console.log(error._tag) // "ResidueArchiveError"
  * ```
