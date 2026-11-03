@@ -1,13 +1,19 @@
+import { fcRuns } from "@beep/fc-runs";
 import {
   encodeManagedControllerObservation,
   ManagedControllerObservation,
 } from "@beep/repo-ai-metrics/managed-controller";
 import { encodeNativeTraceBatch, NativeExportInput } from "@beep/repo-ai-metrics/native-export";
-import { NativeTraceBatch, NativeTraceRequest, projectNativeTraceRequest } from "@beep/repo-ai-metrics/native-trace";
+import {
+  NativeTraceBatch,
+  NativeTraceError,
+  NativeTraceMetadata,
+  NativeTraceRequest,
+  projectNativeTraceRequest,
+} from "@beep/repo-ai-metrics/native-trace";
 import { hashPrivateIdentifier, hashPublicTextSha256 } from "@beep/repo-ai-metrics/privacy";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
-import { fcRuns } from "@beep/test-utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, deepStrictEqual } from "@effect/vitest/utils";
@@ -18,7 +24,18 @@ import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { nativeTraceWire as wire } from "../src/internal/native-trace-wire.ts";
+import * as Protobuf from "protobufjs";
+
+// Independent OTLP v1.9.0 fixture codec: tests do not import a private production encoder.
+const wire = Protobuf.parse(`syntax="proto3";
+message Value { oneof value { string string_value=1; bool bool_value=2; int64 int_value=3; } }
+message Attribute { string key=1; Value value=2; }
+message Resource { repeated Attribute attributes=1; }
+message Status { int32 code=3; }
+message Span { bytes trace_id=1; bytes span_id=2; bytes parent_span_id=4; string name=5; int32 kind=6; fixed64 start_time_unix_nano=7; fixed64 end_time_unix_nano=8; repeated Attribute attributes=9; Status status=15; }
+message ScopeSpans { repeated Span spans=2; }
+message ResourceSpans { Resource resource=1; repeated ScopeSpans scope_spans=2; }
+message Request { repeated ResourceSpans resource_spans=1; }`).root.lookupType("Request");
 
 const id = (c: string) => Sha256Hex.make(Str.repeat(64)(c));
 const salt = "synthetic-managed-controller-salt";
@@ -241,6 +258,104 @@ it.layer(NodeCrypto.layer)((it) => {
           Effect.isFailure
         )
       ).toBe(true);
+    })
+  );
+  it.effect("refuses absent and malformed managed provenance without retaining private values", () =>
+    Effect.gen(function* () {
+      const body = yield* encodeManagedControllerObservation(observation);
+      const value = yield* read(body);
+      const original = O.getOrThrow(
+        A.head(O.getOrThrow(A.head(O.getOrThrow(A.head(value.resourceSpans)).scopeSpans)).spans)
+      );
+      for (const key of [
+        "beep.managed.launch_id",
+        "beep.managed.launch_route_id",
+        "beep.managed.process_instance_id",
+        "beep.managed.session_hash",
+        "beep.managed.evidence_id",
+        "beep.managed.elapsed_nanos",
+      ]) {
+        for (const malformed of [false, true]) {
+          const attributes = A.filter(original.attributes, (attribute) => attribute.key !== key);
+          const changed = wire
+            .encode({
+              resourceSpans: [
+                {
+                  scopeSpans: [
+                    {
+                      spans: [
+                        {
+                          ...original,
+                          attributes: malformed
+                            ? [...attributes, { key, value: { stringValue: "PRIVATE_INVALID_BINDING" } }]
+                            : attributes,
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            })
+            .finish();
+          const batch = yield* projectNativeTraceRequest(request(changed));
+          expect(batch.spans).toEqual([]);
+          expect(batch.rejections).toEqual([{ ordinal: 0, reason: "invalid-span" }]);
+          expect(yield* encodeBatch(batch)).not.toContain("PRIVATE_INVALID_BINDING");
+        }
+      }
+    })
+  );
+
+  it.effect("refuses controller identity substitution, parent attachment and incomplete measured intervals", () =>
+    Effect.gen(function* () {
+      const body = yield* encodeManagedControllerObservation(observation);
+      const value = yield* read(body);
+      const original = O.getOrThrow(
+        A.head(O.getOrThrow(A.head(O.getOrThrow(A.head(value.resourceSpans)).scopeSpans)).spans)
+      );
+      for (const changedSpan of [
+        { ...original, traceId: new Uint8Array(16).fill(1) },
+        { ...original, spanId: new Uint8Array(8).fill(1) },
+        { ...original, parentSpanId: new Uint8Array(8).fill(1) },
+        { ...original, startTimeUnixNano: "0" },
+        { ...original, endTimeUnixNano: "0" },
+        { ...original, status: { code: 2 } },
+      ]) {
+        const changed = wire.encode({ resourceSpans: [{ scopeSpans: [{ spans: [changedSpan] }] }] }).finish();
+        const batch = yield* projectNativeTraceRequest(request(changed));
+        expect(batch.spans).toEqual([]);
+        expect(batch.rejections).toEqual([{ ordinal: 0, reason: "invalid-span" }]);
+      }
+      const convention = yield* projectNativeTraceRequest(
+        NativeTraceRequest.make({ ...request(body), usageConvention: "openinference" })
+      );
+      expect(convention.spans).toEqual([]);
+      expect(convention.rejections).toHaveLength(1);
+    })
+  );
+
+  it.effect("metadata codec refuses inconsistent controller claims while native metadata stays valid", () =>
+    Effect.gen(function* () {
+      const body = yield* encodeManagedControllerObservation(observation);
+      const batch = yield* projectNativeTraceRequest(request(body));
+      const valid = O.getOrThrow(A.head(batch.spans));
+      expect(S.is(NativeTraceMetadata)(valid)).toBe(true);
+      for (const invalid of [
+        { ...valid, kind: "LLM" },
+        { ...valid, status: "error" },
+        { ...valid, sessionHash: O.none() },
+        { ...valid, startTimeUnixNano: O.none() },
+        { ...valid, endTimeUnixNano: O.none() },
+        { ...valid, modelName: O.some("private-model") },
+        { ...valid, modelHash: O.some(id("a")) },
+        { ...valid, usage: { ...valid.usage, input: O.some(1) } },
+        { ...valid, usage: { ...valid.usage, convention: "openinference" } },
+      ])
+        expect(S.is(NativeTraceMetadata)(invalid)).toBe(false);
+      expect(S.is(NativeTraceMetadata)({ ...valid, managedController: O.none() })).toBe(true);
+      expect(NativeTraceError.make({ reason: "invalid-envelope" }).message).toBe(
+        "Native trace request refused (invalid-envelope)."
+      );
     })
   );
 });

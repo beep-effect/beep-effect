@@ -451,8 +451,8 @@ const readManagedController = Effect.fnUntraced(function* (
     sourceSessionId: yield* requiredText("beep.managed.session_hash"),
     evidenceId: yield* requiredText("beep.managed.evidence_id"),
     elapsedNanos: yield* requiredText("beep.managed.elapsed_nanos"),
-    startTimeUnixNano: O.getOrElse(timing.startTimeUnixNano, () => ""),
-    endTimeUnixNano: O.getOrElse(timing.endTimeUnixNano, () => ""),
+    startTimeUnixNano: yield* Effect.fromOption(timing.startTimeUnixNano),
+    endTimeUnixNano: yield* Effect.fromOption(timing.endTimeUnixNano),
   }).pipe(Effect.mapError(() => failure("invalid-envelope")));
 });
 const readSpanSource = Effect.fnUntraced(function* (
