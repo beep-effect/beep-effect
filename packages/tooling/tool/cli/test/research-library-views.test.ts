@@ -241,6 +241,8 @@ const fixture = Effect.gen(function* () {
   const response = LibraryArtifact.make({
     ...(yield* yield* Effect.map(
       Effect.map(
+        // Deliberate hostile JSON fixture data; the view assertions below verify HTML escaping.
+        // nosemgrep: javascript.lang.security.audit.unknown-value-with-script-tag.unknown-value-with-script-tag
         fixtureJson({
           data: {
             markdown: '<script>globalThis.pwned=true</script><img src=x onerror="alert(1)">',
@@ -250,6 +252,8 @@ const fixture = Effect.gen(function* () {
         }),
         (value) => new TextEncoder().encode(value)
       ),
+      // Save encoded fixture bytes as data, never executable markup.
+      // nosemgrep: javascript.lang.security.audit.unknown-value-with-script-tag.unknown-value-with-script-tag
       (value) => saveImmutable(root, "evidence/response.json", value)
     )),
     role: "raw-response",
