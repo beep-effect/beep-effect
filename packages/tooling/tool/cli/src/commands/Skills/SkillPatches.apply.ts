@@ -20,6 +20,7 @@
  * @since 0.0.0
  */
 
+import { SkillTreeMode, SkillUpstreamContentFile } from "@beep/ai-sync/Skills.schemas";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
@@ -32,7 +33,6 @@ import { asArrayBufferView, concatBytes } from "../../internal/cli/Bytes.ts";
 import { DiffLine, diffLines, joinDiffLines, sameDiffLine } from "./internal/DiffLines.ts";
 import { appendFramedText, hashBytes } from "./internal/SkillTree.ts";
 import { SkillPatchApplyError } from "./Skills.errors.ts";
-import { SkillTreeMode, SkillUpstreamContentFile } from "./Skills.schemas.ts";
 import { SkillHunkReport } from "./SkillsRelock.schemas.ts";
 import { SkillPatchHunk } from "./SkillsReview.schemas.ts";
 import type * as Digest from "effect/crypto/Digest";
@@ -507,7 +507,7 @@ const applySection = Effect.fn("SkillPatches.applySection")(function* (
  *
  * ```ts
  * import { applySkillPatch } from "@beep/repo-cli/commands/Skills/SkillPatches.apply"
- * import { SkillUpstreamContentFile } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillUpstreamContentFile } from "@beep/ai-sync/Skills.schemas"
  * import * as Effect from "effect/Effect"
  *
  * const encoder = new TextEncoder()
@@ -772,7 +772,7 @@ const toReports = Effect.fn("SkillPatches.toReports")(function* (
  *
  * ```ts
  * import { classifySkillPatchHunks } from "@beep/repo-cli/commands/Skills/SkillPatches.apply"
- * import { SkillUpstreamContentFile } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillUpstreamContentFile } from "@beep/ai-sync/Skills.schemas"
  * import { NodeCrypto } from "@effect/platform-node"
  * import * as Effect from "effect/Effect"
  *

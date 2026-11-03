@@ -26,6 +26,7 @@ import {
   currentEffectiveUserIdOption,
   validatePrivateCoordinationDirectory,
 } from "../../internal/repo-run/QualityScheduler.ts";
+import { CacheCommandError } from "./Cache.errors.ts";
 import { validateCacheSignedPilotReceipt } from "./Cache.pilot.signed.ts";
 import {
   CacheProducerApproval,
@@ -35,7 +36,6 @@ import {
   CacheProducerEnvelope,
 } from "./Cache.producer.schemas.ts";
 import { validateCacheProtocolExecution } from "./Cache.protocol.ts";
-import { CacheCommandError } from "./Cache.schemas.ts";
 import { CacheHostedProducerApproval } from "./Cache.workflow.github.schemas.ts";
 import { CacheProducerExecutionProfile } from "./Cache.workflow.schemas.ts";
 

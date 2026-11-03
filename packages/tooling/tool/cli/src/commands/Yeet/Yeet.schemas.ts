@@ -8,7 +8,8 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
-import { DEFAULT_YEET_PACKET_DIR, YeetProofTier, YeetRunMode } from "./internal/Planner.ts";
+import { YeetProofTier } from "../../internal/repo-run/QualityScheduler.schemas.ts";
+import { DEFAULT_YEET_PACKET_DIR, YeetRunMode } from "./internal/Planner.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/Yeet.schemas");
 

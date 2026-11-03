@@ -57,6 +57,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
+import { monitorGithubLayer } from "./support/YeetGithub.ts";
 
 const repoRoot = NodeURL.fileURLToPath(new URL("../../../../../", import.meta.url));
 const workerPath = `${repoRoot}.claude/hooks/yeet-pr-wave-notifier.sh`;
@@ -145,7 +146,12 @@ const launchedOf = (spawner: ScriptedSpawner) => A.map(spawner.spawns, (spawn) =
 // The loop's once-per-head merge-base diff runs through `Git.changedFiles` (W2b); a code-bearing
 // answer keeps the heavy-admission verdict these fixtures were written against.
 const mergeBaseDiffGit = Git.layerTest({ changedFiles: () => Effect.succeed(["packages/a/src/index.ts"]) });
-const platform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, mergeBaseDiffGit);
+const basePlatform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, mergeBaseDiffGit);
+// The merge loop reads the head commit and the acting login as its gh login (W6); both answer `at`.
+const platform = Layer.provideMerge(
+  monitorGithubLayer(() => Effect.succeed({ exitCode: 0, output: at })),
+  basePlatform
+);
 
 const withCheckout = Effect.fn("prWaveTest.checkout")(function* <V, E, R>(
   use: (root: string) => Effect.Effect<V, E, R>
@@ -666,7 +672,6 @@ it.layer(platform, { timeout: "30 seconds" })("W9 monitor escalation", (it) => {
       const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
         policy: YeetUntilReadyPolicy.make({}),
         pollInterval: Duration.zero,
-        capture: () => Effect.succeed({ exitCode: 0, output: at, truncated: false }),
         rulesetRead: () =>
           Effect.succeedSome(
             YeetRulesetRequiredContexts.make({ base: "main", readAt: at, contexts: ["Lint"], rulesetIds: [1] })
@@ -732,7 +737,6 @@ it.layer(platform, { timeout: "30 seconds" })("W9 monitor escalation", (it) => {
       const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
         policy: YeetUntilReadyPolicy.make({}),
         pollInterval: Duration.zero,
-        capture: () => Effect.succeed({ exitCode: 0, output: at, truncated: false }),
         rulesetRead: () =>
           Effect.succeedSome(
             YeetRulesetRequiredContexts.make({ base: "main", readAt: at, contexts: ["Lint"], rulesetIds: [1] })
@@ -803,7 +807,6 @@ it.layer(platform, { timeout: "30 seconds" })("W9 monitor escalation", (it) => {
         policy: YeetUntilReadyPolicy.make({}),
         attachment: "attached",
         pollInterval: Duration.zero,
-        capture: () => Effect.succeed({ exitCode: 0, output: at, truncated: false }),
         rulesetRead: () =>
           Effect.succeedSome(
             YeetRulesetRequiredContexts.make({ base: "main", readAt: at, contexts: ["Lint"], rulesetIds: [1] })

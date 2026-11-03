@@ -29,8 +29,8 @@ import {
   CacheConformanceResponseShape,
   CacheConformanceRoute,
 } from "./Cache.conformance.schemas.ts";
+import { CacheCommandError } from "./Cache.errors.ts";
 import { decodeCacheExperimentText, readCacheExperimentBytes } from "./Cache.evidence.ts";
-import { CacheCommandError } from "./Cache.schemas.ts";
 import type { CacheConformanceOrigin } from "./Cache.conformance.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.conformance.corpus");

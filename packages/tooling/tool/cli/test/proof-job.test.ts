@@ -46,6 +46,10 @@ import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { commandArgs } from "./support/commandArgs.ts";
 import { waitTimesOut } from "./support/ProofJobWait.ts";
+import { captureGithub } from "./support/YeetGithub.ts";
+
+// Every GitHub read the monitor's provenance stamp makes fails, so the stamp is skipped.
+const unreachableGithub = captureGithub(() => Effect.succeed({ exitCode: 1, output: "" }));
 
 // `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
 const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
@@ -1875,7 +1879,6 @@ it.layer(commandCheckoutLayer, { timeout: "30 seconds" })("proof job command han
           yield* Job.runYeetMergeLoop(
             { base: "origin/main", head: "HEAD", packetDir: ".beep/yeet" },
             {
-              capture: () => Effect.succeed({ exitCode: 1, output: "", truncated: false }),
               hydrate: () =>
                 Effect.succeed(
                   Job.RepoRunContext.make({
@@ -1896,7 +1899,7 @@ it.layer(commandCheckoutLayer, { timeout: "30 seconds" })("proof job command han
               registry,
               view: () => Effect.succeed(Job.GhPrView.make({ headRefName: "feat/job", number: 42, state: "OPEN" })),
             }
-          );
+          ).pipe(unreachableGithub.provide);
         });
         yield* route.pipe(Effect.provideService(ConfigProvider.ConfigProvider, jobEnvironment(root, record)));
         const read75 = yield* launcher.read(record.jobId);
@@ -1920,7 +1923,6 @@ it.layer(commandCheckoutLayer, { timeout: "30 seconds" })("proof job command han
           yield* Job.runYeetMergeLoop(
             { base: "origin/main", head: "HEAD", packetDir: ".beep/yeet" },
             {
-              capture: () => Effect.succeed({ exitCode: 1, output: "", truncated: false }),
               hydrate: () =>
                 Effect.succeed(
                   Job.RepoRunContext.make({
@@ -1943,7 +1945,7 @@ it.layer(commandCheckoutLayer, { timeout: "30 seconds" })("proof job command han
               registry,
               view: () => Effect.succeed(Job.GhPrView.make({ headRefName: "feat/job", number: 42, state: "OPEN" })),
             }
-          );
+          ).pipe(unreachableGithub.provide);
         });
         yield* route.pipe(Effect.provideService(ConfigProvider.ConfigProvider, jobEnvironment(root, record)));
         const read77 = yield* launcher.read(record.jobId);

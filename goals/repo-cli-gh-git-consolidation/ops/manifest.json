@@ -40,7 +40,8 @@
     "research/dirty-axis-differential-w2.json",
     "research/yeet-remainder-differential-w2b.json",
     "research/reviewer-ci-github-differential-w3.json",
-    "research/review-thread-differential-w4.json"
+    "research/review-thread-differential-w4.json",
+    "research/yeet-gh-seams-differential-w6.json"
   ],
   "agentLaunchers": [
     {
@@ -196,6 +197,34 @@
     {
       "path": "ops/frozen-w4/WritePlan.old.ts",
       "purpose": "Frozen pre-W4 the reply mutation from closeout/WritePlan.ts (main 930758e06b) replayed by ops/review-thread-differential-w4.ts."
+    },
+    {
+      "path": "ops/yeet-gh-seams-differential-w6.ts",
+      "purpose": "W6 differential: the frozen pre-W6 Yeet gh bodies (ops/frozen-w6: the PullRequest branch lookup, default branch, create, title rename and heavy-admission label, the ProvenanceFooter body reads, edit history and write, the ReviewWindow timeline, check-suite and creation reads, the Merge squash merge at the pinned head and its confirmation, the MonitorLoop job list, failed-job log fallback, job rerun and committer-date read, the MonitorComments acting-login and comment reads) compared with their GithubRest, GitHubRepository, kit PullRequest and GitHubClient replacements over one fixture world per scenario (a match past the first page, refused reads and writes, a GraphQL rate limit, unparsable timeline instants, a refused or late-confirmed merge, a stateful create and body write), served to the old bodies by a scripted spawner applying each call's own --jq filter and to the new ones through a paginating transport fetch."
+    },
+    {
+      "path": "ops/frozen-w6/PullRequest.old.ts",
+      "purpose": "Frozen pre-W6 PullRequest body, the pull request lookup, create, title and label calls (lane base 641180ade6), replayed by ops/yeet-gh-seams-differential-w6.ts."
+    },
+    {
+      "path": "ops/frozen-w6/ProvenanceFooter.old.ts",
+      "purpose": "Frozen pre-W6 ProvenanceFooter body, the provenance footer body reads, edit history and write (lane base 641180ade6), replayed by ops/yeet-gh-seams-differential-w6.ts."
+    },
+    {
+      "path": "ops/frozen-w6/ReviewWindow.old.ts",
+      "purpose": "Frozen pre-W6 ReviewWindow body, the review window reads (lane base 641180ade6), replayed by ops/yeet-gh-seams-differential-w6.ts."
+    },
+    {
+      "path": "ops/frozen-w6/MonitorComments.old.ts",
+      "purpose": "Frozen pre-W6 MonitorComments body, the acting-login and comment reads (lane base 641180ade6), replayed by ops/yeet-gh-seams-differential-w6.ts."
+    },
+    {
+      "path": "ops/frozen-w6/MonitorLoop.old.ts",
+      "purpose": "Frozen pre-W6 MonitorLoop body, the gh bodies of MonitorLoop (job list, job log fallback, job rerun, committer date) (lane base 641180ade6), replayed by ops/yeet-gh-seams-differential-w6.ts."
+    },
+    {
+      "path": "ops/frozen-w6/Merge.old.ts",
+      "purpose": "Frozen pre-W6 merge phase of mergePr (the gh pr merge --squash --match-head-commit call and its bounded MERGED confirmation, lane base 641180ade6), lifted below the reviewer gate and replayed by ops/yeet-gh-seams-differential-w6.ts."
     }
   ]
 }

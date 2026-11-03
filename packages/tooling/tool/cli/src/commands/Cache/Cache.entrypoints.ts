@@ -17,8 +17,9 @@ import {
   CacheEntrypointArtifact,
   CacheEntrypointArtifactFormat,
 } from "./Cache.entrypoints.schemas.ts";
+import { CacheCommandError } from "./Cache.errors.ts";
 import { readCacheEvidenceBytes } from "./Cache.evidence.ts";
-import { CacheCensusReport, CacheCommandError } from "./Cache.schemas.ts";
+import { CacheCensusReport } from "./Cache.schemas.ts";
 import type { CacheEntrypointReviewRequest } from "./Cache.entrypoints.schemas.ts";
 
 const Envelope = S.Struct({ schemaVersion: CacheEntrypointArtifactFormat });

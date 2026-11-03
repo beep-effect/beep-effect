@@ -11,7 +11,20 @@
  * @category models
  * @since 0.0.0
  */
-export { YeetRunMode } from "./internal/Planner.ts";
+export { YeetRunMode } from "./internal/Planner.schemas.ts";
+/**
+ * Yeet status artifact and remote pull request summary models.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export {
+  YeetStatusArtifact,
+  YeetStatusArtifactState,
+  YeetStatusLaneDigest,
+  YeetStatusRemote,
+  YeetStatusReviewThread,
+} from "./internal/Status.schemas.ts";
 /**
  * Yeet operator status models.
  *
@@ -28,11 +41,6 @@ export {
   renderYeetReviewThreadBlock,
   renderYeetStatusSummary,
   writeYeetStatusSnapshot,
-  YeetStatusArtifact,
-  YeetStatusArtifactState,
-  YeetStatusLaneDigest,
-  YeetStatusRemote,
-  YeetStatusReviewThread,
   YeetStatusSnapshot,
   YeetStatusSnapshotJson,
   YeetStatusWorktree,

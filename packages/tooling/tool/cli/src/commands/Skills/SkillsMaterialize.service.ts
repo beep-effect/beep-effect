@@ -21,6 +21,7 @@
  * @since 0.0.0
  */
 
+import { decodeSkillsLockDocumentJson } from "@beep/ai-sync/SkillsLock.schemas";
 import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
@@ -40,15 +41,14 @@ import {
   SkillUpstreamContentSourceLive,
   skillResolutionOfEntry,
 } from "./Skills.service.ts";
-import { decodeSkillsLockDocumentJson } from "./SkillsLock.schemas.ts";
 import { SkillMaterializeReport, SkillMaterializeRow, SkillMaterializeTarget } from "./SkillsMaterialize.schemas.ts";
+import type { SkillUpstreamContentFile } from "@beep/ai-sync/Skills.schemas";
+import type { LocalSkillLockEntry, SkillsLockEntry, VendoredSkillLockEntry } from "@beep/ai-sync/SkillsLock.schemas";
 import type { Sha256Hex } from "@beep/schema";
 import type * as Digest from "effect/crypto/Digest";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type { SkillPatchApplyError, SkillUpstreamContentError } from "./Skills.errors.ts";
-import type { SkillUpstreamContentFile } from "./Skills.schemas.ts";
-import type { LocalSkillLockEntry, SkillsLockEntry, VendoredSkillLockEntry } from "./SkillsLock.schemas.ts";
 import type { SkillMaterializeMode, SkillMaterializeTargetState } from "./SkillsMaterialize.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Skills/SkillsMaterialize.service");
@@ -181,7 +181,7 @@ const reportTargets = (
  * **Example** (Inspect the requirements before providing them)
  *
  * ```ts
- * import type { VendoredSkillLockEntry } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import type { VendoredSkillLockEntry } from "@beep/ai-sync/SkillsLock.schemas"
  * import { reconstructVendoredSkill } from "@beep/repo-cli/commands/Skills/SkillsMaterialize.service"
  * import * as Effect from "effect/Effect"
  *
@@ -386,7 +386,7 @@ const makeSkillMaterializer = Effect.gen(function* () {
  * **Example** (Close the layer over an offline source)
  *
  * ```ts
- * import { SkillUpstreamContent, SkillPathHistory } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillUpstreamContent, SkillPathHistory } from "@beep/ai-sync/Skills.schemas"
  * import { SkillUpstreamContentSource } from "@beep/repo-cli/commands/Skills/Skills.service"
  * import { SkillMaterializerLayer } from "@beep/repo-cli/commands/Skills/SkillsMaterialize.service"
  * import * as Effect from "effect/Effect"

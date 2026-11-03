@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "claim-closeout-premerge-gap/v1",
+  "observedDate": "2026-11-03",
+  "pullRequest": 2626,
+  "acceptedHead": "4805c7516884790de703250aa0e1604c0f863086",
+  "mergeCommit": "6f1a3cc9894e4c0e5b7ea0ce02be7a390efe17b9",
+  "mergedAt": "2026-11-03T04:38:59Z",
+  "checkRun": {
+    "id": 41574298081,
+    "conclusion": "success"
+  },
+  "lastPolicy": {
+    "id": 125715360203,
+    "status": "completed",
+    "conclusion": "success",
+    "completed_at": "2026-11-03T04:40:36Z"
+  },
+  "completionOutcome": "unsatisfied",
+  "completionEvidence": [
+    {
+      "ref": {
+        "kind": "hosted-required-checks",
+        "ref": "required",
+        "gating": true
+      },
+      "outcome": "verified",
+      "observedHead": "4805c7516884790de703250aa0e1604c0f863086",
+      "detail": "Required contexts observed at accepted head before merge; 15 contexts. Merge-time evidence verified: complete rule-suite inventory and 15 green required contexts at the accepted head. The merge-push rule suite supplies the merge-time ruleset inventory, including rulesets deleted since then; GitHub lists rule suites for one month."
+    },
+    {
+      "ref": {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/docs_claim-element-manual-merge-closeout-994405b54a14/verdict.json",
+        "gating": true
+      },
+      "outcome": "unsatisfied",
+      "observedHead": "d4adb31c472b2f0c35503fde6c32519c333667f1",
+      "detail": "Yeet verdict checked against resolvedHeadSha and mergeReady.ready."
+    },
+    {
+      "ref": {
+        "kind": "hosted-required-checks",
+        "ref": "required",
+        "gating": true
+      },
+      "outcome": "verified",
+      "observedHead": "4805c7516884790de703250aa0e1604c0f863086",
+      "detail": "Hosted required checks at accepted head."
+    }
+  ],
+  "positivePreMergeMonitorVerdictRetained": false,
+  "initiatingPersonOrProcessEstablished": false,
+  "retainedMeasurement": {
+    "exactMatches": 37,
+    "claims": 538,
+    "allPriorPassingClaimsRetained": 37,
+    "freshBenchmarkClaimed": false
+  },
+  "referenceLabelsChanged": false,
+  "previousResultsChanged": false,
+  "actualAttorneyReviewClaimed": false
+}

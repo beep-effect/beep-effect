@@ -40,6 +40,7 @@ import {
   classifyCacheConformanceStatus,
   readCacheConformanceReply,
 } from "./Cache.conformance.wire.ts";
+import { CacheCommandError } from "./Cache.errors.ts";
 import { CacheSyntheticRun } from "./Cache.experiment.schemas.ts";
 import {
   corruptCacheArtifactBody,
@@ -47,7 +48,6 @@ import {
   serveCachePrivateSocket,
   tamperCacheArtifactTag,
 } from "./Cache.protocol.fixture.ts";
-import { CacheCommandError } from "./Cache.schemas.ts";
 import type { Sha256Hex } from "@beep/schema";
 import type {
   CacheConformanceCredentialRole,

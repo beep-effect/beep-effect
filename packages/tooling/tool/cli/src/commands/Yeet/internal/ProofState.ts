@@ -40,6 +40,7 @@ import {
   runArtifactPathForContext as runOutputPathForContext,
   runStatePathForContext,
   safeArtifactName,
+  writeTextFile,
 } from "./ArtifactPaths.ts";
 import { currentCommitSha, runGitOutput } from "./GitExec.ts";
 import {
@@ -48,7 +49,7 @@ import {
   headInstallReceiptRefusals,
   loadHeadInstallReceipt,
 } from "./HeadInstallReceipt.ts";
-import { renderJson, writeTextFile } from "./IssueArtifacts.ts";
+import { renderJson } from "./IssueArtifacts.ts";
 import { YeetProofTier } from "./Planner.ts";
 import type { Git } from "@beep/git/Git";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";

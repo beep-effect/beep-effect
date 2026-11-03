@@ -13,6 +13,7 @@
  * @since 0.0.0
  */
 
+import { CatalogDiff } from "@beep/ai-sync/ModelCatalog.schemas";
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O } from "@beep/utils";
 import * as Context from "effect/Context";
@@ -24,7 +25,6 @@ import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as S from "effect/Schema";
-import { CatalogDiff } from "./Models.catalog.schemas.ts";
 import {
   ModelsCatalog,
   ModelsCatalogLive,
@@ -42,12 +42,12 @@ import { ModelsTargetFile, ModelsTargetLocation, resolveTargetPath } from "./Mod
 import { expectedLocatorValue, renderGeneratedBlockBody } from "./Models.render.ts";
 import { DriftFinding, ManualVerification, ModelsCheckReport } from "./Models.report.schemas.ts";
 import { modelsCheckOnlyFormat, modelsEligibility } from "./Models.spans.ts";
+import type { CatalogModel, CatalogSource, ModelId } from "@beep/ai-sync/ModelCatalog.schemas";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as HttpClient from "effect/http/HttpClient";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { CatalogModel, CatalogSource, ModelId } from "./Models.catalog.schemas.ts";
 import type { ModelsCatalogSources } from "./Models.catalog.service.ts";
 import type {
   ModelsCatalogError,

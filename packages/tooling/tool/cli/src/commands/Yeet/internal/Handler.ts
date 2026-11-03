@@ -59,6 +59,7 @@ import {
   runIdForContext,
   runArtifactPathForContext as runOutputPathForContext,
   safeArtifactName,
+  writeTextFile,
 } from "./ArtifactPaths.ts";
 import {
   appendYeetAttemptJournalEvent,
@@ -68,6 +69,7 @@ import {
 } from "./AttemptJournal.ts";
 import { PrCloseoutOptions, runPrCloseout, writePrCloseoutReport } from "./Closeout.ts";
 import { printYeetEconomicsCloseoutSummary, YeetEconomicsSource, YeetReviewLaneSource } from "./Economics.ts";
+import { provideYeetGhLogin, recordMonitoredPrSessionAsGhLogin } from "./GhOps.ts";
 import {
   collectStagedPublishPaths,
   collectUnstagedTrackedPaths,
@@ -89,7 +91,6 @@ import {
   failWithIssueArtifacts,
   publishResult,
   writeIssueArtifacts,
-  writeTextFile,
 } from "./IssueArtifacts.ts";
 import { warnKnowledgeLeases } from "./KnowledgeLeaseWarnings.ts";
 import { recordYeetLocalShardOutcome, YeetLocalShardOutcome } from "./LocalShardPoison.ts";
@@ -100,7 +101,7 @@ import {
   renderYeetCheckRegistrationExhausted,
   YEET_CHECK_REGISTRATION_BACKOFF,
 } from "./MonitorChecks.ts";
-import { replayYeetMonitorComments, runYeetPullRequestCommentMonitor } from "./MonitorComments.ts";
+import { replayYeetMonitorCommentsAsGhLogin, runYeetPullRequestCommentMonitor } from "./MonitorComments.ts";
 import { YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS } from "./MonitorPolicy.ts";
 import {
   ciParityLaneCandidates,
@@ -113,15 +114,14 @@ import {
   recordProofEnvironment,
   renderParityLaneDecision,
 } from "./ParityReuse.ts";
+import { GIT_PUSH_STEP_ID, YeetRunMode } from "./Planner.schemas.ts";
 import {
   buildYeetRunPlanWithMode,
   CI_PARITY_STEP_ID,
   emptyTurboPlanSnapshot,
-  GIT_PUSH_STEP_ID,
   MONITOR_READY_SUBMIT_STEP_ID,
   PR_HEAVY_ADMISSION_LABEL_STEP_ID,
   YeetProofTier,
-  YeetRunMode,
   YeetRunPlanModeOptions,
 } from "./Planner.ts";
 import { enforcePortfolioIndexPublishIntent } from "./PortfolioIndexGuard.ts";
@@ -144,7 +144,6 @@ import {
   verifiedHeadInstallReceiptRefusals,
   writeVerifiedState,
 } from "./ProofState.ts";
-import { recordMonitoredPrSession } from "./ProvenanceFooter.ts";
 import {
   collectPublishIntent,
   enforceBaseFreshness,
@@ -173,7 +172,8 @@ import type { QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts"
 import type { YeetPublishIntent, YeetRunOptions, YeetRunResult } from "../Yeet.schemas.ts";
 import type { ParityLaneDecision, ProofEnvironment } from "./ParityReuse.ts";
 import type { ProofEnvProfile, ProofStage } from "./ProofFact.ts";
-import type { YeetStatusReviewThread, YeetStatusSnapshot } from "./Status.ts";
+import type { YeetStatusReviewThread } from "./Status.schemas.ts";
+import type { YeetStatusSnapshot } from "./Status.ts";
 import type { YeetBaseFreshness, YeetMergeReady, YeetStashState, YeetVerdict } from "./Verdict.ts";
 
 const decodeGhPrViewJson = S.decodeEffect(S.fromJsonString(GhPrView));
@@ -436,9 +436,7 @@ const decideCiParityReuse = Effect.fn("Yeet.decideCiParityReuse")(function* (
 ) {
   const parity = yield* collectProofEnvironment(step.id, previewRoot, effectiveStepEnvironment(step), previewBaseSha);
   yield* recordProofEnvironment(context, parity);
-  const readInnerLaneReports1 = yield* readInnerLaneReports(context);
-  const readProofEnvironments6 = yield* readProofEnvironments(context);
-  const proven = provenLanesForAttempt(readInnerLaneReports1, readProofEnvironments6);
+  const proven = provenLanesForAttempt(yield* readInnerLaneReports(context), yield* readProofEnvironments(context));
   const decisions = yield* decideParityLaneReuse(
     ciParityLaneCandidates(
       previewRoot,
@@ -914,9 +912,7 @@ const stageAndCommitPublishIntent = Effect.fn("Yeet.stageAndCommitPublishIntent"
   yield* validatePublishCommitMessage(plan.context, message, options);
   yield* stageReviewedPublishIntent(plan.context, publishIntent, options.stagedOnly);
   const stash = options.stagedOnly ? yield* stashUnstagedWorktree(plan.context) : O.none<YeetStashState>();
-  if (O.isSome(stash)) {
-    yield* Ref.update(extras, (state) => ({ ...state, stash }));
-  }
+  if (O.isSome(stash)) yield* Ref.update(extras, (state) => ({ ...state, stash }));
   yield* Effect.gen(function* () {
     yield* enforcePortfolioIndexPublishIntent(plan.context, publishIntent);
     const commitResults = yield* runPhase(plan.context, commitSteps, recorder);
@@ -1202,15 +1198,23 @@ const finishPublishWithPullRequest = Effect.fn("Yeet.finishPublishWithPullReques
   if (!options.pr) {
     return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
   }
-  const argument = dependencies.ensurePullRequest ?? ensureRequestedPullRequest;
-  const validateRequiredMessage1 = yield* validateRequiredMessage(options);
-  const pullRequest = yield* argument(plan.context, plan.steps, recorder, validateRequiredMessage1);
-  yield* applyHeavyAdmissionLabel(
-    plan.context,
-    recorder,
-    A.findFirst(plan.steps, (step) => step.id === PR_HEAVY_ADMISSION_LABEL_STEP_ID),
-    pullRequest
-  );
+  const message = yield* validateRequiredMessage(options);
+  // One gh login for the pull request create (or reuse), its provenance stamp and its label.
+  const pullRequest = yield* Effect.gen(function* () {
+    const ensured = yield* (dependencies.ensurePullRequest ?? ensureRequestedPullRequest)(
+      plan.context,
+      plan.steps,
+      recorder,
+      message
+    );
+    yield* applyHeavyAdmissionLabel(
+      plan.context,
+      recorder,
+      A.findFirst(plan.steps, (step) => step.id === PR_HEAVY_ADMISSION_LABEL_STEP_ID),
+      ensured
+    );
+    return ensured;
+  }).pipe(provideYeetGhLogin(plan.context.repoRoot));
   const submitSteps = A.filter(monitorSteps, (step) => step.id === MONITOR_READY_SUBMIT_STEP_ID);
   if (A.isReadonlyArrayEmpty(submitSteps)) {
     return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
@@ -1442,33 +1446,24 @@ export const assertMergeOnlyPublish = Effect.fn("Yeet.assertMergeOnlyPublish")(f
           "yeet publish --push-only requires --reuse-verified unless HEAD is a reproducible merge of the base into the published branch.",
       })
     );
-  const resultGitOutput = yield* runGitOutput(context.repoRoot, ["show", "-s", "--format=%P", "HEAD"]);
-  const parents = Str.split(Str.trim(resultGitOutput), " ");
-  if (parents.length !== 2) {
-    return yield* refuse();
-  }
+  const parents = Str.split(
+    Str.trim(yield* runGitOutput(context.repoRoot, ["show", "-s", "--format=%P", "HEAD"])),
+    " "
+  );
+  if (parents.length !== 2) return yield* refuse();
   const first = A.get(parents, 0);
   const second = A.get(parents, 1);
-  if (O.isNone(first) || O.isNone(second)) {
-    return yield* refuse();
-  }
+  if (O.isNone(first) || O.isNone(second)) return yield* refuse();
   // FETCH_HEAD avoids trusting a stale tracking ref or updating any other checkout.
   yield* runGitOutput(context.repoRoot, ["fetch", "--quiet", "--no-tags", "origin", `refs/heads/${context.branch}`]);
-  const resultGitOutput2 = yield* runGitOutput(context.repoRoot, ["rev-parse", "FETCH_HEAD"]);
-  const published = Str.trim(resultGitOutput2);
-  const resultGitOutput3 = yield* runGitOutput(context.repoRoot, ["merge-base", second.value, context.base]);
-  const baseAncestor = Str.trim(resultGitOutput3);
-  if (first.value !== published || baseAncestor !== second.value) {
-    return yield* refuse();
-  }
+  const published = Str.trim(yield* runGitOutput(context.repoRoot, ["rev-parse", "FETCH_HEAD"]));
+  const baseAncestor = Str.trim(yield* runGitOutput(context.repoRoot, ["merge-base", second.value, context.base]));
+  if (first.value !== published || baseAncestor !== second.value) return yield* refuse();
   const merged = yield* runGitOutput(context.repoRoot, ["merge-tree", "--write-tree", first.value, second.value]).pipe(
     Effect.catchTag("YeetCommandError", () => refuse())
   );
-  const resultGitOutput4 = yield* runGitOutput(context.repoRoot, ["rev-parse", "HEAD^{tree}"]);
-  const tree = Str.trim(resultGitOutput4);
-  if (Str.trim(merged) !== tree) {
-    return yield* refuse();
-  }
+  const tree = Str.trim(yield* runGitOutput(context.repoRoot, ["rev-parse", "HEAD^{tree}"]));
+  if (Str.trim(merged) !== tree) return yield* refuse();
 });
 
 const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
@@ -1494,14 +1489,10 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
   | Git
 > {
   const reusableSkipCommit = yield* shouldSkipCommitForReusablePublish(plan.context, options);
-  if (options.reuseVerified) {
-    yield* assertReusableVerifiedState(plan.context);
-  }
+  if (options.reuseVerified) yield* assertReusableVerifiedState(plan.context);
 
   const freshness = yield* enforceBaseFreshness(plan.context, options);
-  if (options.pushOnly && !options.reuseVerified) {
-    yield* assertMergeOnlyPublish(plan.context);
-  }
+  if (options.pushOnly && !options.reuseVerified) yield* assertMergeOnlyPublish(plan.context);
   yield* Ref.update(extras, (state) => ({ ...state, baseFreshness: O.some(freshness) }));
   const [skipCommit, stash] = yield* preparePublishCommit(
     plan,
@@ -1512,8 +1503,7 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
     extras,
     reusableSkipCommit
   );
-  const got = yield* Ref.get(extras);
-  const committedAttempt = attemptAtCommittedHead(attempt, got);
+  const committedAttempt = attemptAtCommittedHead(attempt, yield* Ref.get(extras));
 
   if (!options.pr) {
     yield* Console.error(
@@ -1906,7 +1896,7 @@ const runMonitorPhase = Effect.fn("Yeet.runMonitorPhase")(function* (
       onSuccess: (pullRequest) => pullRequest.number,
     })
   );
-  yield* recordMonitoredPrSession(context, pullRequestNumber);
+  yield* recordMonitoredPrSessionAsGhLogin(context, pullRequestNumber);
   yield* Effect.raceFirst(
     runMonitorCheckWatch(context, checkSteps, recorder, failureMessage),
     runYeetPullRequestCommentMonitor(context, pullRequestNumber)
@@ -1976,7 +1966,7 @@ const runStatusMode = Effect.fn("Yeet.runStatusMode")(function* (
   // under `--json`, where a comment printed to stdout would corrupt the
   // document the caller is parsing.
   if (!options.json && snapshot.remote.number !== undefined) {
-    yield* replayYeetMonitorComments(context, snapshot.remote.number);
+    yield* replayYeetMonitorCommentsAsGhLogin(context, snapshot.remote.number);
   }
   if (options.json) {
     yield* printCommandJson(snapshot).pipe(Effect.mapError(YeetCommandError.new("Failed to print yeet status JSON.")));
@@ -2062,7 +2052,7 @@ const runCloseoutMode = Effect.fn("Yeet.runCloseoutMode")(function* (
   );
   // The closeout is the read-first surface an agent runs after a gap, so it is
   // where a comment posted while nothing was attached has to surface.
-  yield* replayYeetMonitorComments(context, report.prNumber);
+  yield* replayYeetMonitorCommentsAsGhLogin(context, report.prNumber);
   if (options.summary) {
     yield* printOperatorStatusSummary(context, true);
   }
@@ -2125,23 +2115,19 @@ const runPublishPushPhase = Effect.fn("Yeet.runPublishPushPhase")(function* (
   const verifyHead = O.match(before, {
     onNone: () => Effect.void,
     onSome: Effect.fn("Yeet.verifyPublishedHead")(function* (expected) {
-      const argument1 = S.toEquivalence(GitObjectId);
-      const readPublishedHead2 = yield* readPublishedHead(context);
-      if (!argument1(readPublishedHead2, expected)) {
+      if (!S.toEquivalence(GitObjectId)(yield* readPublishedHead(context), expected))
         return yield* YeetCommandError.make({
           message:
             "The checkout head changed during publication; the pushed commit is unproven. Inspect the remote before retrying.",
           command: "bun run beep yeet publish",
           exitCode: 1,
         });
-      }
     }),
   });
   yield* verifyHead;
   const results = yield* runPhase(context, steps, recorder);
-  if (A.some(results, (result) => result.exitCode !== 0)) {
+  if (A.some(results, (result) => result.exitCode !== 0))
     return yield* failWithIssueArtifacts(context, steps, results, "yeet publish phase failed.");
-  }
   yield* verifyHead;
   yield* Ref.update(extras, (state) => ({ ...state, publishedHeadSha: before }));
 });
@@ -2248,8 +2234,9 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
   // changed-package tripwire (rulings 69, 70); it never fails.
   const changedPackages = yield* changedPackagesForAttempt(plan.context);
   yield* Console.log(`[yeet] ${renderProofChangedPackages(changedPackages)}`);
-  const pipe5 = yield* readProofEnvironments(plan.context).pipe(Effect.orElseSucceed(A.empty<ProofEnvironment>));
-  const environmentDigests = proofEnvironmentDigests(pipe5);
+  const environmentDigests = proofEnvironmentDigests(
+    yield* readProofEnvironments(plan.context).pipe(Effect.orElseSucceed(A.empty<ProofEnvironment>))
+  );
   yield* recordProofShadowForAttempt(
     plan.context.repoRoot,
     proofShadowAttemptFacts(reached),

@@ -57,6 +57,7 @@ import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
@@ -64,7 +65,7 @@ import * as Struct from "effect/Struct";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
-import { provideLegacyGh } from "./support/YeetGithub.ts";
+import { provideLegacyGh, restPullRequest } from "./support/YeetGithub.ts";
 import type { SpawnScript } from "@beep/commands/ScriptedSpawner";
 import type { GraphQLDocument } from "@beep/github/GraphQL";
 
@@ -1036,6 +1037,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
 );
 
 // One scripted completed run: `output` on stdout, exiting `exitCode`.
+const encodeJsonText = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 const reply = (output: string, exitCode = 0) => ({ stdout: output, exit: exitCode });
 const mockSpawner = ScriptedSpawner.make((command) => reply("[]", command === "gh" ? 1 : 0));
 const readyPlatform = Layer.provideMerge(
@@ -1068,7 +1070,8 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
       if (route === "pr view" || route === "api graphql") {
         return reply("GraphQL: API rate limit exceeded", 1);
       }
-      if (Str.includes("pulls?head=")(route)) return reply(lookup, lookupExit);
+      // The kit's REST branch lookup (`GithubRest.openPullRequestForBranch`, W6).
+      if (Str.includes("pulls?per_page=100&head=")(route)) return reply(lookup, lookupExit);
       if (Str.includes("/comments?")(route)) return reply(comments);
       if (Str.endsWith("/pulls/42")(route)) {
         return reply(
@@ -1079,7 +1082,9 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
     };
   const fallbackRunner = (lookup: string, lookupExit = 0, comments = "[]", restStatus = "OPEN") =>
     ScriptedSpawner.make(fallbackScript(lookup, lookupExit, comments, restStatus));
-  const restFound = '[{"number":42,"headRefName":"feature/ready-gate","state":"OPEN"}]';
+  const restFound = Result.getOrThrow(
+    encodeJsonText([restPullRequest({ number: 42, head: { ref: "feature/ready-gate", sha: "abc1234def" } })])
+  );
 
   it.effect("recovers the ready read through REST while GraphQL is rate limited", () =>
     Effect.gen(function* () {

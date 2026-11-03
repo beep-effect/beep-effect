@@ -29,6 +29,7 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
+import { captureGithub, provideLegacyGh, restPullRequest } from "./support/YeetGithub.ts";
 import type { YeetExecutedStep } from "@beep/repo-cli/test/Yeet";
 
 const context = RepoRunContext.make({
@@ -54,11 +55,12 @@ const labelStep = RepoPlanStep.make({
 });
 const created = YeetEnsuredPullRequest.make({ number: 42, created: true });
 // `Git` is rebuilt over each substituted spawner: the pull request's remote and diff reads run
-// through the kit (W2b).
+// through the kit (W2b). The kit's GitHub calls reach the same spawner as the `gh api` argv they
+// replaced (W6).
 const provideGitOver =
   (spawner: ScriptedSpawner) =>
   <A, E, R>(self: Effect.Effect<A, E, R>) =>
-    self.pipe(Effect.provideServiceEffect(Git, Git.make), provideSpawner(spawner));
+    self.pipe(provideLegacyGh, Effect.provideServiceEffect(Git, Git.make), provideSpawner(spawner));
 const withGh = (output: string, exitCode = 0) =>
   provideGitOver(ScriptedSpawner.make(() => ({ stdout: output, exit: exitCode })));
 const encodeView = S.encodeEffect(
@@ -77,9 +79,13 @@ describe("Yeet pull request lifecycle boundaries", () => {
   it.layer(Layer.mergeAll(BunCrypto.layer, MemoryFileSystem.layer, Path.layer), { timeout: "10 seconds" })((it) => {
     it.effect("uses REST branch matches and preserves confirmed absence without a GraphQL read", () =>
       Effect.gen(function* () {
-        const view = { number: 42, state: "OPEN", headRefName: context.branch };
-        for (const views of [[view], [{ ...view, state: "CLOSED" }, { ...view, headRefName: "other" }, view], []]) {
-          const output = yield* encodeList(views);
+        const view = { number: 42, state: "open", headRefName: context.branch };
+        for (const views of [[view], [{ ...view, state: "closed" }, { ...view, headRefName: "other" }, view], []]) {
+          const output = yield* encodeList(
+            A.map(views, (pull) =>
+              restPullRequest({ number: pull.number, state: pull.state, head: { ref: pull.headRefName, sha: "abc" } })
+            )
+          );
           const runner = ScriptedSpawner.make((command) => ({
             stdout: command === "git" ? "git@github.com:beep-effect/beep-effect.git" : output,
           }));
@@ -103,8 +109,8 @@ describe("Yeet pull request lifecycle boundaries", () => {
       Effect.gen(function* () {
         for (const [output, exitCode, message] of [
           ["REST unavailable", 7, "REST unavailable"],
-          ["invalid JSON", 0, "Failed to decode GitHub REST pull request JSON"],
-          [Str.repeat(512 * 1024 + 1)("x"), 0, "capture limit"],
+          ["invalid JSON", 0, "Failed to inspect current branch pull request through GitHub REST: "],
+          [Str.repeat(512 * 1024 + 1)("x"), 0, "Failed to inspect current branch pull request through GitHub REST: "],
         ] as const) {
           const runner = ScriptedSpawner.make((command, args) =>
             command === "git"
@@ -194,15 +200,13 @@ describe("Yeet pull request lifecycle boundaries", () => {
 
     it.effect("treats a missing PR as None but rejects closed or mismatched PRs for monitoring", () =>
       Effect.gen(function* () {
-        const pipe1 = yield* findOpenPullRequest(context).pipe(withGh("no PR", 1));
-        assertNone(pipe1);
+        assertNone(yield* findOpenPullRequest(context).pipe(withGh("no PR", 1)));
         for (const view of [
           { number: 42, state: "CLOSED", headRefName: context.branch },
           { number: 42, state: "OPEN", headRefName: "feat/other" },
         ] as const) {
           const output = yield* encodeView(view);
-          const pipe2 = yield* findOpenPullRequest(context).pipe(withGh(output));
-          assertNone(pipe2);
+          assertNone(yield* findOpenPullRequest(context).pipe(withGh(output)));
           const failure = yield* validateOpenPullRequest(context).pipe(Effect.flip, withGh(output));
           expect(failure.message).toContain(view.state === "CLOSED" ? "is CLOSED" : "expected PR head");
         }
@@ -214,48 +218,34 @@ describe("Yeet pull request lifecycle boundaries", () => {
         for (const paths of [["package.json"], [], ["README.md"]]) {
           const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
           const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+          const labelled = yield* encodeList([{ name: "ready-for-heavy" }]);
           yield* applyHeavyAdmissionLabel(context, recorder, O.some(labelStep), created, {
             changedPaths: () => Effect.succeed(paths),
-            capture: (_command, args) =>
-              Ref.update(calls, A.append(args)).pipe(Effect.as({ exitCode: 0, output: "labelled", truncated: false })),
-          });
+          }).pipe(
+            captureGithub((_command, args) =>
+              Ref.update(calls, A.append(args)).pipe(Effect.as({ exitCode: 0, output: labelled }))
+            ).provide
+          );
           const docs = A.contains(paths, "README.md");
-          const got = yield* Ref.get(recorder);
-          expect(A.map(got, (entry) => entry.status)).toEqual([docs ? "skipped" : "passed"]);
-          const got3 = yield* Ref.get(calls);
-          expect(got3).toEqual(
-            docs
-              ? []
-              : [
-                  [
-                    "api",
-                    "-X",
-                    "POST",
-                    "repos/{owner}/{repo}/issues/42/labels",
-                    "-f",
-                    "labels[]=ready-for-heavy",
-                    "--jq",
-                    'map(.name) | join(",")',
-                  ],
-                ]
+          expect(A.map(yield* Ref.get(recorder), (entry) => entry.status)).toEqual([docs ? "skipped" : "passed"]);
+          expect(yield* Ref.get(calls)).toEqual(
+            docs ? [] : [["api", "-X", "POST", "repos/{owner}/{repo}/issues/42/labels", 'labels=["ready-for-heavy"]']]
           );
         }
         const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
-        yield* applyHeavyAdmissionLabel(context, recorder, O.none(), created);
-        const got4 = yield* Ref.get(recorder);
-        expect(got4).toEqual([]);
+        const denied = captureGithub(() => Effect.succeed({ exitCode: 1, output: "label denied" }));
+        yield* applyHeavyAdmissionLabel(context, recorder, O.none(), created).pipe(denied.provide);
+        expect(yield* Ref.get(recorder)).toEqual([]);
         yield* applyHeavyAdmissionLabel(
           context,
           recorder,
           O.some(labelStep),
           YeetEnsuredPullRequest.make({ number: 42, created: false })
-        );
+        ).pipe(denied.provide);
         yield* applyHeavyAdmissionLabel(context, recorder, O.some(labelStep), created, {
           changedPaths: () => Effect.succeed(["package.json"]),
-          capture: () => Effect.succeed({ exitCode: 1, output: "label denied", truncated: false }),
-        });
-        const got5 = yield* Ref.get(recorder);
-        expect(A.map(got5, (entry) => [entry.status, entry.result.exitCode])).toEqual([
+        }).pipe(denied.provide);
+        expect(A.map(yield* Ref.get(recorder), (entry) => [entry.status, entry.result.exitCode])).toEqual([
           ["skipped", 0],
           ["failed", 1],
         ]);

@@ -3711,6 +3711,7 @@
         "@beep/jsonl": "workspace:^",
         "@beep/observability": "workspace:^",
         "@beep/phoenix": "workspace:^",
+        "@beep/repo-utils": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
         "@beep/xdg": "workspace:^",
@@ -3856,6 +3857,7 @@
       "dependencies": {
         "@beep/glob": "workspace:^",
         "@beep/identity": "workspace:^",
+        "@beep/markdown": "workspace:^",
         "@beep/package-json": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",

@@ -58,7 +58,7 @@ import { runArtifactPathForContext } from "./ArtifactPaths.ts";
 import { YeetCheckOutcome } from "./CheckOutcome.ts";
 import { closeoutIssueFromReviewThread, PrCloseoutReportJson } from "./Closeout.ts";
 import { convergeYeetInbox, YeetConvergeObservation } from "./Converge.ts";
-import { provideYeetGhLogin } from "./GhOps.ts";
+import { provideYeetGhLogin, readYeetReviewWindowAsGhLogin } from "./GhOps.ts";
 import { NO_CHECKS_REPORTED } from "./MonitorChecks.ts";
 import {
   acknowledgeYeetMonitorComments,
@@ -75,7 +75,8 @@ import {
   yeetReviewThreadStateInputFromNode,
   yeetReviewThreadStateOutstanding,
 } from "./ReviewThreadState.ts";
-import { readYeetReviewWindow, yeetReviewWindowDue, yeetReviewWindowElapsed } from "./ReviewWindow.ts";
+import { yeetReviewWindowDue, yeetReviewWindowElapsed } from "./ReviewWindow.ts";
+import { YeetSettleVerdict } from "./Settle.schemas.ts";
 import {
   deriveSettleVerdict,
   readYeetChangedPaths,
@@ -86,7 +87,6 @@ import {
   YeetRulesetRequiredContexts,
   YeetSettleCheck,
   YeetSettleInput,
-  YeetSettleVerdict,
   yeetBaseConflictFor,
   yeetGatedFamiliesFor,
   yeetSettleClockReset,
@@ -360,7 +360,7 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
   // Same lazy read the status gate takes: the review window is read only once
   // it is the last criterion standing, and an unknown window stays unmet.
   const reviewWindow = yeetReviewWindowDue(unwindowed)
-    ? yield* Effect.asSome(readYeetReviewWindow(context, { prNumber: view.number, headSha: view.headRefOid }))
+    ? O.some(yield* readYeetReviewWindowAsGhLogin(context, { prNumber: view.number, headSha: view.headRefOid }))
     : O.none();
   const criteria = YeetMergeReadyCriteria.make({
     ...unwindowed,
@@ -620,7 +620,12 @@ const emitWatchCommentRows = Effect.fn("Yeet.emitWatchCommentRows")(function* (
   if (yield* Ref.get(session.stoppedRef)) {
     return 0;
   }
-  const polled = yield* Effect.result(collectNewYeetMonitorComments(context, snapshot.prNumber, session.watermarkRef));
+  // A gh login that does not build is a failed comment poll, built again on the next one.
+  const polled = yield* Effect.result(
+    collectNewYeetMonitorComments(context, snapshot.prNumber, session.watermarkRef).pipe(
+      provideYeetGhLogin(context.repoRoot)
+    )
+  );
   if (Result.isFailure(polled)) {
     const failures = yield* Ref.updateAndGet(session.failuresRef, (count) => count + 1);
     yield* Console.error(
@@ -870,8 +875,7 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
     const now = yield* config.now ?? DateTime.now;
     const millis = DateTime.toEpochMillis(now);
     if (O.isNone(head) || head.value.headSha !== snapshot.headSha) {
-      const newWatchSettleState1 = yield* newWatchSettleState(context, config, snapshot, millis);
-      head = O.some(newWatchSettleState1);
+      head = O.some(yield* newWatchSettleState(context, config, snapshot, millis));
     }
     const step = yield* advanceWatchSettleState(O.getOrThrow(head), snapshot, millis);
     const settleAt = (state: WatchSettleState): YeetSettleVerdict =>
@@ -921,9 +925,7 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
   // The opening poll drains the gap since the last session's watermark, so a
   // comment posted while nothing was watching becomes this session's first
   // batch instead of silently aging.
-  const argument = O.none();
-  const emitWatchCommentRows1 = yield* emitWatchCommentRows(context, current, comments);
-  let settleTicks = advanceSettleTicks(argument, emitWatchCommentRows1);
+  let settleTicks = advanceSettleTicks(O.none(), yield* emitWatchCommentRows(context, current, comments));
 
   while (true) {
     const end = watchStreamEnd(untilEvent, current, emptyPolls, settleTicks);
@@ -944,8 +946,7 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
     }
     current = advanced.value.snapshot;
     emptyPolls = advanced.value.emptyPolls;
-    const emitWatchCommentRows2 = yield* emitWatchCommentRows(context, current, comments);
-    settleTicks = advanceSettleTicks(settleTicks, emitWatchCommentRows2);
+    settleTicks = advanceSettleTicks(settleTicks, yield* emitWatchCommentRows(context, current, comments));
   }
 });
 

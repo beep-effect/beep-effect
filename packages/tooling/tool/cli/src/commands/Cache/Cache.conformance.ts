@@ -32,8 +32,8 @@ import {
   runCacheConformanceLabCase,
   runCacheConformanceWireCase,
 } from "./Cache.conformance.wire.ts";
+import { CacheCommandError } from "./Cache.errors.ts";
 import { decodeCacheExperimentText, readCacheExperimentBytes } from "./Cache.evidence.ts";
-import { CacheCommandError } from "./Cache.schemas.ts";
 import type {
   CacheConformanceCase,
   CacheConformanceCorpus,

@@ -43,7 +43,8 @@ import { runYeetInboxAck, runYeetInboxAppend, runYeetInboxList } from "./interna
 import { renderYeetPrWaveLine } from "./internal/InboxView.ts";
 import { MergeGateCommandOptions, runYeetMergeGate } from "./internal/MergeGate.ts";
 import { YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS, YeetUntilReadyPolicy } from "./internal/MonitorPolicy.ts";
-import { DEFAULT_YEET_PACKET_DIR, YeetProofTier } from "./internal/Planner.ts";
+import { DEFAULT_YEET_PACKET_DIR } from "./internal/Planner.schemas.ts";
+import { YeetProofTier } from "./internal/Planner.ts";
 import {
   rejectYeetUntilEventPairing,
   rejectYeetUntilReadyPairing,
@@ -76,7 +77,7 @@ import { PositiveInt, ResumeOptions } from "./internal/Resume.schemas.ts";
 import { parsePrRef, runYeetResume } from "./internal/Resume.ts";
 import { YeetCommandError } from "./Yeet.errors.ts";
 import { YeetReadyOptions, YeetRunOptions } from "./Yeet.schemas.ts";
-import type { YeetRunMode } from "./internal/Planner.ts";
+import type { YeetRunMode } from "./internal/Planner.schemas.ts";
 import type { ProofJobLauncherShape } from "./internal/ProofJobLauncher.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/Yeet.command");

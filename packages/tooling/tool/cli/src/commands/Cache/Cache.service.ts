@@ -46,6 +46,7 @@ import { PosInt } from "../../internal/schema/PosInt.ts";
 import { CacheProducerAcceptanceReference } from "./Cache.acceptance.schemas.ts";
 import { loadCacheProducerStoreConfiguration, readCacheProducerAcceptance } from "./Cache.acceptance.store.ts";
 import { collectCacheCensus } from "./Cache.census.ts";
+import { CacheCommandError } from "./Cache.errors.ts";
 import { readCacheEvidenceBytes } from "./Cache.evidence.ts";
 import {
   collectCacheToolchain,
@@ -53,7 +54,7 @@ import {
   projectCacheActivation,
   projectCacheSignedActivation,
 } from "./Cache.fingerprint.ts";
-import { CacheActivationPreview, CacheCommandError, CacheRemoteReadsRequest } from "./Cache.schemas.ts";
+import { CacheActivationPreview, CacheRemoteReadsRequest } from "./Cache.schemas.ts";
 import type { CachePolicyAuditReport, CachePolicyBaselineRecord } from "@beep/repo-configs/cache";
 import type {
   CacheActivationRequest,

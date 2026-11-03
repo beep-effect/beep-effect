@@ -41,6 +41,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
+import { provideLegacyGh } from "./support/YeetGithub.ts";
 import type { YeetPrCommentRow } from "@beep/repo-cli/test/Yeet";
 
 // pr-event-awareness W4 (D13/D21/D32/D33): the `--until-ready` merge loop turns
@@ -188,7 +189,8 @@ const withCheckout = Effect.fnUntraced(function* <Value, Failure, Requirements>(
   const spawner = ghSpawner(payloads);
   const fs = yield* FileSystem.FileSystem;
   const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-pr-comment-rows-" });
-  return yield* use(root, payloads, spawner).pipe(provideSpawner(spawner));
+  // The kit's comment reads reach the stub as the `gh api` argv they replaced (W6).
+  return yield* use(root, payloads, spawner).pipe(provideLegacyGh, provideSpawner(spawner));
 });
 
 describe("pr-comment capsule", () => {

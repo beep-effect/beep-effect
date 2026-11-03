@@ -3,6 +3,7 @@ import { resolvePathWithinCanonicalRoot, resolvePathWithinRoot } from "@beep/fil
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import { LenientManifest } from "@beep/package-json/LenientManifest";
+import { fencedLineState } from "@beep/repo-utils/JSDoc/JSDocSections";
 import { WorkspaceDiscovery } from "@beep/repo-workspaces/WorkspaceDiscovery";
 import { WorkspaceRoot } from "@beep/repo-workspaces/WorkspaceRoot";
 import { A, Err, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
@@ -19,7 +20,6 @@ import * as P from "effect/Predicate";
 import * as Regex from "effect/RegExp";
 import * as S from "effect/Schema";
 import { Node } from "ts-morph";
-import { fencedLineState } from "../../../internal/jsdoc/JSDocSections.ts";
 import { manifestDecoder, manifestParser } from "../../../internal/ManifestRead.ts";
 import { runCaptured } from "../../../internal/process/index.ts";
 import { OpaqueDefect } from "../../../internal/schema/OpaqueDefect.ts";
@@ -30,7 +30,7 @@ import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { ManifestField } from "../../../internal/ManifestRead.ts";
 
-export { fencedLineState, jsdocCommentsFromSource } from "../../../internal/jsdoc/JSDocSections.ts";
+export { fencedLineState, jsdocCommentsFromSource } from "@beep/repo-utils/JSDoc/JSDocSections";
 
 const $I = $RepoCliId.create("commands/Quality/internal/QualityArtifactSupport");
 

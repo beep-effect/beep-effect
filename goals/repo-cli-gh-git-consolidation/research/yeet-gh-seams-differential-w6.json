@@ -1,0 +1,976 @@
+{
+  "schemaVersion": "repo-cli-gh-git-consolidation/yeet-gh-seams-differential-w6/v1",
+  "base": "641180ade6",
+  "frozen": "ops/frozen-w6/",
+  "counts": {
+    "scenarios": 51,
+    "same": 40,
+    "classified": 11,
+    "unclassified": 0
+  },
+  "rows": [
+    {
+      "site": "PullRequest.findOpenPullRequestViaRest",
+      "scenario": "one open match",
+      "old": {
+        "ok": {
+          "number": 7,
+          "url": "https://github.com/beep-effect/beep-effect/pull/7",
+          "state": "OPEN",
+          "headRefOid": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "isDraft": false,
+          "title": "feat(w6): ship"
+        }
+      },
+      "new": {
+        "ok": {
+          "number": 7,
+          "url": "https://github.com/beep-effect/beep-effect/pull/7",
+          "state": "OPEN",
+          "headRefOid": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "isDraft": false,
+          "title": "feat(w6): ship"
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "PullRequest.findOpenPullRequestViaRest",
+      "scenario": "no pull request",
+      "old": {
+        "ok": "none"
+      },
+      "new": {
+        "ok": "none"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "PullRequest.findOpenPullRequestViaRest",
+      "scenario": "closed, foreign head and open match",
+      "old": {
+        "ok": {
+          "number": 7,
+          "url": "https://github.com/beep-effect/beep-effect/pull/7",
+          "state": "OPEN",
+          "headRefOid": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "isDraft": false,
+          "title": "feat(w6): ship"
+        }
+      },
+      "new": {
+        "ok": {
+          "number": 7,
+          "url": "https://github.com/beep-effect/beep-effect/pull/7",
+          "state": "OPEN",
+          "headRefOid": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "isDraft": false,
+          "title": "feat(w6): ship"
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "PullRequest.findOpenPullRequestViaRest",
+      "scenario": "draft match",
+      "old": {
+        "ok": {
+          "number": 7,
+          "url": "https://github.com/beep-effect/beep-effect/pull/7",
+          "state": "OPEN",
+          "headRefOid": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "isDraft": true,
+          "title": "feat(w6): ship"
+        }
+      },
+      "new": {
+        "ok": {
+          "number": 7,
+          "url": "https://github.com/beep-effect/beep-effect/pull/7",
+          "state": "OPEN",
+          "headRefOid": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "isDraft": true,
+          "title": "feat(w6): ship"
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "PullRequest.findOpenPullRequestViaRest",
+      "scenario": "lookup refused",
+      "old": {
+        "fail": "Failed to inspect current branch pull request through GitHub REST: gh: Bad Gateway (HTTP 502)"
+      },
+      "new": {
+        "fail": "Failed to inspect current branch pull request through GitHub REST: GET /repos/{owner}/{repo}/pulls failed (502): Bad Gateway"
+      },
+      "verdict": "classified",
+      "classification": "D-15 (b): a GitHub failure keeps the call's label and names the kit's operation, HTTP status and reason where the capture named gh's exit code and output; the exit code is 1."
+    },
+    {
+      "site": "PullRequest.findOpenPullRequestViaRest",
+      "scenario": "match past the first hundred",
+      "old": {
+        "ok": "none"
+      },
+      "new": {
+        "ok": {
+          "number": 7,
+          "url": "https://github.com/beep-effect/beep-effect/pull/7",
+          "state": "OPEN",
+          "headRefOid": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "isDraft": false,
+          "title": "feat(w6): ship"
+        }
+      },
+      "verdict": "classified",
+      "classification": "D-15 (c): the kit walks every page where the single `per_page=100` read saw only the first, so a match past the first hundred is found."
+    },
+    {
+      "site": "PullRequest.findOpenPullRequestViaRest",
+      "scenario": "no pushed origin",
+      "old": {
+        "fail": "git remote get-url --push origin failed with exit code 2."
+      },
+      "new": {
+        "fail": "git remote get-url --push origin failed with exit code 2."
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "PullRequest.ensurePullRequest (create)",
+      "scenario": "ready create",
+      "old": {
+        "ok": {
+          "number": 7,
+          "url": "https://github.com/beep-effect/beep-effect/pull/7",
+          "created": true,
+          "lanes": [
+            [
+              "gh pr create",
+              0,
+              "https://github.com/beep-effect/beep-effect/pull/7"
+            ]
+          ]
+        }
+      },
+      "new": {
+        "ok": {
+          "number": 7,
+          "url": "https://github.com/beep-effect/beep-effect/pull/7",
+          "created": true,
+          "lanes": [
+            [
+              "gh api -X POST repos/{owner}/{repo}/pulls",
+              0,
+              "https://github.com/beep-effect/beep-effect/pull/7"
+            ]
+          ]
+        }
+      },
+      "verdict": "classified",
+      "classification": "D-15 (a): the create is the kit's REST `PullRequest.create` on the one path; the GraphQL `gh pr create` and its rate-limit fallback retire, so the lane records the REST command and the console says `through REST`."
+    },
+    {
+      "site": "PullRequest.ensurePullRequest (create)",
+      "scenario": "draft create while GraphQL is rate limited",
+      "old": {
+        "ok": {
+          "number": 7,
+          "url": "https://github.com/beep-effect/beep-effect/pull/7",
+          "created": true,
+          "lanes": [
+            [
+              "gh api -X POST repos/{owner}/{repo}/pulls",
+              0,
+              "https://github.com/beep-effect/beep-effect/pull/7"
+            ]
+          ]
+        }
+      },
+      "new": {
+        "ok": {
+          "number": 7,
+          "url": "https://github.com/beep-effect/beep-effect/pull/7",
+          "created": true,
+          "lanes": [
+            [
+              "gh api -X POST repos/{owner}/{repo}/pulls",
+              0,
+              "https://github.com/beep-effect/beep-effect/pull/7"
+            ]
+          ]
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "PullRequest.ensurePullRequest (create)",
+      "scenario": "default branch names no branch",
+      "old": {
+        "fail": "GitHub REST default branch read returned no branch."
+      },
+      "new": {
+        "fail": "GitHub REST default branch read returned no branch."
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "PullRequest.ensurePullRequest (create)",
+      "scenario": "default branch read refused",
+      "old": {
+        "fail": "GitHub REST default branch read failed:\ngh: Bad Gateway (HTTP 502)"
+      },
+      "new": {
+        "fail": "GitHub REST default branch read failed:\nGET /repos/{owner}/{repo} failed (502): Bad Gateway"
+      },
+      "verdict": "classified",
+      "classification": "D-15 (b): a GitHub failure keeps the call's label and names the kit's operation, HTTP status and reason where the capture named gh's exit code and output; the exit code is 1."
+    },
+    {
+      "site": "PullRequest.ensurePullRequest (create)",
+      "scenario": "create refused",
+      "old": {
+        "fail": "gh pr create failed:\ngh: A pull request already exists (HTTP 422)"
+      },
+      "new": {
+        "fail": "GitHub REST pull request creation failed:\nPOST /repos/{owner}/{repo}/pulls failed (422): A pull request already exists"
+      },
+      "verdict": "classified",
+      "classification": "D-15 (b): a GitHub failure keeps the call's label and names the kit's operation, HTTP status and reason where the capture named gh's exit code and output; the exit code is 1."
+    },
+    {
+      "site": "PullRequest.ensurePullRequest (title)",
+      "scenario": "rename",
+      "old": {
+        "ok": {
+          "number": 7,
+          "url": "https://github.com/beep-effect/beep-effect/pull/7",
+          "created": false,
+          "lanes": [
+            [
+              "gh pr create",
+              0,
+              "skipped: open pull request #7 already exists; replaced the merge-commit subject on pull request #7 with: fix(w6): renamed"
+            ]
+          ]
+        }
+      },
+      "new": {
+        "ok": {
+          "number": 7,
+          "url": "https://github.com/beep-effect/beep-effect/pull/7",
+          "created": false,
+          "lanes": [
+            [
+              "gh pr create",
+              0,
+              "skipped: open pull request #7 already exists; replaced the merge-commit subject on pull request #7 with: fix(w6): renamed"
+            ]
+          ]
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "PullRequest.ensurePullRequest (title)",
+      "scenario": "rename while GraphQL is rate limited",
+      "old": {
+        "ok": {
+          "number": 7,
+          "url": "https://github.com/beep-effect/beep-effect/pull/7",
+          "created": false,
+          "lanes": [
+            [
+              "gh pr create",
+              0,
+              "skipped: open pull request #7 already exists; replaced the merge-commit subject on pull request #7 with: fix(w6): renamed"
+            ]
+          ]
+        }
+      },
+      "new": {
+        "ok": {
+          "number": 7,
+          "url": "https://github.com/beep-effect/beep-effect/pull/7",
+          "created": false,
+          "lanes": [
+            [
+              "gh pr create",
+              0,
+              "skipped: open pull request #7 already exists; replaced the merge-commit subject on pull request #7 with: fix(w6): renamed"
+            ]
+          ]
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "PullRequest.ensurePullRequest (title)",
+      "scenario": "rename refused",
+      "old": {
+        "ok": {
+          "number": 7,
+          "url": "https://github.com/beep-effect/beep-effect/pull/7",
+          "created": false,
+          "lanes": [
+            [
+              "gh pr create",
+              0,
+              "skipped: open pull request #7 already exists; could not replace the merge-commit subject on pull request #7; review and edit its title in GitHub.\ngh: Resource not accessible (HTTP 403)"
+            ]
+          ]
+        }
+      },
+      "new": {
+        "ok": {
+          "number": 7,
+          "url": "https://github.com/beep-effect/beep-effect/pull/7",
+          "created": false,
+          "lanes": [
+            [
+              "gh pr create",
+              0,
+              "skipped: open pull request #7 already exists; could not replace the merge-commit subject on pull request #7 through REST; review and edit its title in GitHub.\nPATCH /repos/{owner}/{repo}/pulls/{pull_number} failed (403): Resource not accessible"
+            ]
+          ]
+        }
+      },
+      "verdict": "classified",
+      "classification": "D-15 (b): a GitHub failure keeps the call's label and names the kit's operation, HTTP status and reason where the capture named gh's exit code and output; the exit code is 1."
+    },
+    {
+      "site": "PullRequest.applyHeavyAdmissionLabel",
+      "scenario": "labelled",
+      "old": {
+        "ok": [["passed", 0, "ready-for-heavy,size/M"]]
+      },
+      "new": {
+        "ok": [["passed", 0, "ready-for-heavy,size/M"]]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "PullRequest.applyHeavyAdmissionLabel",
+      "scenario": "label refused",
+      "old": {
+        "ok": [["failed", 1, "gh: Label not found (HTTP 404)"]]
+      },
+      "new": {
+        "ok": [
+          [
+            "failed",
+            1,
+            "POST /repos/{owner}/{repo}/issues/{issue_number}/labels failed (404): Label not found"
+          ]
+        ]
+      },
+      "verdict": "classified",
+      "classification": "D-15 (b): a GitHub failure keeps the call's label and names the kit's operation, HTTP status and reason where the capture named gh's exit code and output; the exit code is 1."
+    },
+    {
+      "site": "ProvenanceFooter.ensureProvenanceFooter",
+      "scenario": "footer missing, written once",
+      "old": {
+        "ok": "current"
+      },
+      "new": {
+        "ok": "current"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "ProvenanceFooter.ensureProvenanceFooter",
+      "scenario": "body read refused",
+      "old": {
+        "ok": "skipped"
+      },
+      "new": {
+        "ok": "skipped"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "ProvenanceFooter.ensureProvenanceFooter",
+      "scenario": "edit history refused",
+      "old": {
+        "ok": "current"
+      },
+      "new": {
+        "ok": "current"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "ProvenanceFooter.ensureProvenanceFooter",
+      "scenario": "write refused",
+      "old": {
+        "ok": "skipped"
+      },
+      "new": {
+        "ok": "skipped"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "ReviewWindow.readYeetReviewWindow",
+      "scenario": "elapsed after the flip",
+      "old": {
+        "ok": "review window elapsed (20 min after it was marked ready for review at 2026-11-02T08:00:00.000Z)"
+      },
+      "new": {
+        "ok": "review window elapsed (20 min after it was marked ready for review at 2026-11-02T08:00:00.000Z)"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "ReviewWindow.readYeetReviewWindow",
+      "scenario": "a force-push after the flip",
+      "old": {
+        "ok": "review window elapsed (20 min after the last push at 2026-11-02T08:30:00.000Z)"
+      },
+      "new": {
+        "ok": "review window elapsed (20 min after the last push at 2026-11-02T08:30:00.000Z)"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "ReviewWindow.readYeetReviewWindow",
+      "scenario": "opened ready",
+      "old": {
+        "ok": "review window elapsed (20 min after the last push at 2026-11-02T08:10:00.000Z)"
+      },
+      "new": {
+        "ok": "review window elapsed (20 min after the last push at 2026-11-02T08:10:00.000Z)"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "ReviewWindow.readYeetReviewWindow",
+      "scenario": "other timeline events",
+      "old": {
+        "ok": "review window elapsed (20 min after it was marked ready for review at 2026-11-02T08:00:00.000Z)"
+      },
+      "new": {
+        "ok": "review window elapsed (20 min after it was marked ready for review at 2026-11-02T08:00:00.000Z)"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "ReviewWindow.readYeetReviewWindow",
+      "scenario": "timeline refused",
+      "old": {
+        "ok": "review window unknown: the timeline of pull request #7 could not be read; unknown never counts as elapsed"
+      },
+      "new": {
+        "ok": "review window unknown: the timeline of pull request #7 could not be read; unknown never counts as elapsed"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "ReviewWindow.readYeetReviewWindow",
+      "scenario": "check suites refused",
+      "old": {
+        "ok": "review window unknown: the check suites of head aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa could not be read; unknown never counts as elapsed"
+      },
+      "new": {
+        "ok": "review window unknown: the check suites of head aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa could not be read; unknown never counts as elapsed"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "ReviewWindow.readYeetReviewWindow",
+      "scenario": "no check suite yet",
+      "old": {
+        "ok": "review window unknown: head aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa has no check suite yet, so its push time is not known; unknown never counts as elapsed"
+      },
+      "new": {
+        "ok": "review window unknown: head aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa has no check suite yet, so its push time is not known; unknown never counts as elapsed"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "ReviewWindow.readYeetReviewWindow",
+      "scenario": "a ready instant that does not parse",
+      "old": {
+        "ok": "review window unknown: the timeline of pull request #7 could not be read; unknown never counts as elapsed"
+      },
+      "new": {
+        "ok": "review window unknown: the timeline of pull request #7 could not be read; unknown never counts as elapsed"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "ReviewWindow.readYeetReviewWindow",
+      "scenario": "a force-push instant that does not parse",
+      "old": {
+        "ok": "review window unknown: the timeline of pull request #7 could not be read; unknown never counts as elapsed"
+      },
+      "new": {
+        "ok": "review window unknown: the timeline of pull request #7 could not be read; unknown never counts as elapsed"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "Merge.mergeYeetPullRequestAtHead",
+      "scenario": "merged on the first read",
+      "old": {
+        "ok": [7, "MERGED"]
+      },
+      "new": {
+        "ok": [7, "MERGED"]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "Merge.mergeYeetPullRequestAtHead",
+      "scenario": "merged on the second read",
+      "old": {
+        "ok": [7, "MERGED"]
+      },
+      "new": {
+        "ok": [7, "MERGED"]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "Merge.mergeYeetPullRequestAtHead",
+      "scenario": "never confirmed",
+      "old": {
+        "fail": "pull request #7 reports state OPEN, not MERGED."
+      },
+      "new": {
+        "fail": "pull request #7 reports state OPEN, not MERGED."
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "Merge.mergeYeetPullRequestAtHead",
+      "scenario": "head moved",
+      "old": {
+        "fail": "gh pr merge 7 --squash --match-head-commit aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa failed:\ngh: Head branch was modified (HTTP 409)"
+      },
+      "new": {
+        "fail": "gh pr merge 7 --squash --match-head-commit aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa failed:\nPUT /repos/{owner}/{repo}/pulls/{pull_number}/merge failed (409): Head branch was modified"
+      },
+      "verdict": "classified",
+      "classification": "D-15 (b): a GitHub failure keeps the call's label and names the kit's operation, HTTP status and reason where the capture named gh's exit code and output; the exit code is 1."
+    },
+    {
+      "site": "Merge.mergeYeetPullRequestAtHead",
+      "scenario": "not mergeable",
+      "old": {
+        "fail": "gh pr merge 7 --squash --match-head-commit aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa failed:\ngh: Pull Request is not mergeable (HTTP 405)"
+      },
+      "new": {
+        "fail": "gh pr merge 7 --squash --match-head-commit aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa failed:\nPUT /repos/{owner}/{repo}/pulls/{pull_number}/merge failed (405): Pull Request is not mergeable"
+      },
+      "verdict": "classified",
+      "classification": "D-15 (b): a GitHub failure keeps the call's label and names the kit's operation, HTTP status and reason where the capture named gh's exit code and output; the exit code is 1."
+    },
+    {
+      "site": "Merge.mergeYeetPullRequestAtHead",
+      "scenario": "confirmation read refused",
+      "old": {
+        "fail": "Failed to read pull request \"7\" (nonzero-exit)."
+      },
+      "new": {
+        "fail": "Failed to read pull request \"7\" (GET /repos/{owner}/{repo}/pulls/{pull_number} failed (502): Bad Gateway)."
+      },
+      "verdict": "classified",
+      "classification": "D-15 (b): a GitHub failure keeps the call's label and names the kit's operation, HTTP status and reason where the capture named gh's exit code and output; the exit code is 1."
+    },
+    {
+      "site": "MonitorLoop.collectYeetMonitorFailedJobs",
+      "scenario": "in-progress run, endpoint log classifies",
+      "old": {
+        "ok": [[991, "Test Unit", "ci-timeout", false, false]]
+      },
+      "new": {
+        "ok": [[991, "Test Unit", "ci-timeout", false, false]]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "MonitorLoop.collectYeetMonitorFailedJobs",
+      "scenario": "in-progress run, endpoint log refused",
+      "old": {
+        "ok": [[991, "Test Unit", null, true, false]]
+      },
+      "new": {
+        "ok": [[991, "Test Unit", null, true, false]]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "MonitorLoop.collectYeetMonitorFailedJobs",
+      "scenario": "primary log answers",
+      "old": {
+        "ok": [[991, "Test Unit", null, false, false]]
+      },
+      "new": {
+        "ok": [[991, "Test Unit", null, false, false]]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "MonitorLoop.collectYeetMonitorFailedJobs",
+      "scenario": "job list refused",
+      "old": {
+        "ok": []
+      },
+      "new": {
+        "ok": []
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "MonitorLoop.applyYeetMonitorJobDecision",
+      "scenario": "rerun accepted",
+      "old": {
+        "ok": [
+          "[yeet] Test Unit: ci-timeout flake fingerprint matched; rerunning once -> gh run rerun --job 991"
+        ]
+      },
+      "new": {
+        "ok": [
+          "[yeet] Test Unit: ci-timeout flake fingerprint matched; rerunning once -> gh run rerun --job 991"
+        ]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "MonitorLoop.applyYeetMonitorJobDecision",
+      "scenario": "rerun refused",
+      "old": {
+        "ok": [
+          "[yeet] Test Unit: ci-timeout flake fingerprint matched; rerunning once -> gh run rerun --job 991",
+          "[yeet] rerun of job 991 was rejected; leaving it red with its allowance spent to avoid an unbounded retry loop"
+        ]
+      },
+      "new": {
+        "ok": [
+          "[yeet] Test Unit: ci-timeout flake fingerprint matched; rerunning once -> gh run rerun --job 991",
+          "[yeet] rerun of job 991 was rejected; leaving it red with its allowance spent to avoid an unbounded retry loop"
+        ]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "MonitorLoop.readPushedAt",
+      "scenario": "committer date",
+      "old": {
+        "ok": "2026-11-02T08:30:00.000Z"
+      },
+      "new": {
+        "ok": "2026-11-02T08:30:00.000Z"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "MonitorLoop.readPushedAt",
+      "scenario": "commit read refused",
+      "old": {
+        "ok": null
+      },
+      "new": {
+        "ok": null
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "MonitorLoop.readPushedAt",
+      "scenario": "committer date not an instant",
+      "old": {
+        "ok": null
+      },
+      "new": {
+        "ok": null
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "MonitorComments.readYeetMonitorActingLogin",
+      "scenario": "login",
+      "old": {
+        "ok": "kriegcloud"
+      },
+      "new": {
+        "ok": "kriegcloud"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "MonitorComments.readYeetMonitorActingLogin",
+      "scenario": "user read refused",
+      "old": {
+        "ok": null
+      },
+      "new": {
+        "ok": null
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "MonitorComments.readYeetMonitorActingLogin",
+      "scenario": "a login with whitespace",
+      "old": {
+        "ok": null
+      },
+      "new": {
+        "ok": null
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "MonitorComments.collectNewYeetMonitorComments",
+      "scenario": "one comment per collection",
+      "old": {
+        "ok": ["review:11", "review-body:12", "issue:10"]
+      },
+      "new": {
+        "ok": ["review:11", "review-body:12", "issue:10"]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "MonitorComments.collectNewYeetMonitorComments",
+      "scenario": "more than one page of issue comments",
+      "old": {
+        "ok": [
+          "review:11",
+          "review-body:12",
+          "issue:100",
+          "issue:101",
+          "issue:102",
+          "issue:103",
+          "issue:104",
+          "issue:105",
+          "issue:106",
+          "issue:107",
+          "issue:108",
+          "issue:109",
+          "issue:110",
+          "issue:111",
+          "issue:112",
+          "issue:113",
+          "issue:114",
+          "issue:115",
+          "issue:116",
+          "issue:117",
+          "issue:118",
+          "issue:119",
+          "issue:120",
+          "issue:121",
+          "issue:122",
+          "issue:123",
+          "issue:124",
+          "issue:125",
+          "issue:126",
+          "issue:127",
+          "issue:128",
+          "issue:129",
+          "issue:130",
+          "issue:131",
+          "issue:132",
+          "issue:133",
+          "issue:134",
+          "issue:135",
+          "issue:136",
+          "issue:137",
+          "issue:138",
+          "issue:139",
+          "issue:140",
+          "issue:141",
+          "issue:142",
+          "issue:143",
+          "issue:144",
+          "issue:145",
+          "issue:146",
+          "issue:147",
+          "issue:148",
+          "issue:149",
+          "issue:150",
+          "issue:151",
+          "issue:152",
+          "issue:153",
+          "issue:154",
+          "issue:155",
+          "issue:156",
+          "issue:157",
+          "issue:158",
+          "issue:159",
+          "issue:160",
+          "issue:161",
+          "issue:162",
+          "issue:163",
+          "issue:164",
+          "issue:165",
+          "issue:166",
+          "issue:167",
+          "issue:168",
+          "issue:169",
+          "issue:170",
+          "issue:171",
+          "issue:172",
+          "issue:173",
+          "issue:174",
+          "issue:175",
+          "issue:176",
+          "issue:177",
+          "issue:178",
+          "issue:179",
+          "issue:180",
+          "issue:181",
+          "issue:182",
+          "issue:183",
+          "issue:184",
+          "issue:185",
+          "issue:186",
+          "issue:187",
+          "issue:188",
+          "issue:189",
+          "issue:190",
+          "issue:191",
+          "issue:192",
+          "issue:193",
+          "issue:194",
+          "issue:195",
+          "issue:196",
+          "issue:197",
+          "issue:198",
+          "issue:199",
+          "issue:200",
+          "issue:201",
+          "issue:202",
+          "issue:203",
+          "issue:204"
+        ]
+      },
+      "new": {
+        "ok": [
+          "review:11",
+          "review-body:12",
+          "issue:100",
+          "issue:101",
+          "issue:102",
+          "issue:103",
+          "issue:104",
+          "issue:105",
+          "issue:106",
+          "issue:107",
+          "issue:108",
+          "issue:109",
+          "issue:110",
+          "issue:111",
+          "issue:112",
+          "issue:113",
+          "issue:114",
+          "issue:115",
+          "issue:116",
+          "issue:117",
+          "issue:118",
+          "issue:119",
+          "issue:120",
+          "issue:121",
+          "issue:122",
+          "issue:123",
+          "issue:124",
+          "issue:125",
+          "issue:126",
+          "issue:127",
+          "issue:128",
+          "issue:129",
+          "issue:130",
+          "issue:131",
+          "issue:132",
+          "issue:133",
+          "issue:134",
+          "issue:135",
+          "issue:136",
+          "issue:137",
+          "issue:138",
+          "issue:139",
+          "issue:140",
+          "issue:141",
+          "issue:142",
+          "issue:143",
+          "issue:144",
+          "issue:145",
+          "issue:146",
+          "issue:147",
+          "issue:148",
+          "issue:149",
+          "issue:150",
+          "issue:151",
+          "issue:152",
+          "issue:153",
+          "issue:154",
+          "issue:155",
+          "issue:156",
+          "issue:157",
+          "issue:158",
+          "issue:159",
+          "issue:160",
+          "issue:161",
+          "issue:162",
+          "issue:163",
+          "issue:164",
+          "issue:165",
+          "issue:166",
+          "issue:167",
+          "issue:168",
+          "issue:169",
+          "issue:170",
+          "issue:171",
+          "issue:172",
+          "issue:173",
+          "issue:174",
+          "issue:175",
+          "issue:176",
+          "issue:177",
+          "issue:178",
+          "issue:179",
+          "issue:180",
+          "issue:181",
+          "issue:182",
+          "issue:183",
+          "issue:184",
+          "issue:185",
+          "issue:186",
+          "issue:187",
+          "issue:188",
+          "issue:189",
+          "issue:190",
+          "issue:191",
+          "issue:192",
+          "issue:193",
+          "issue:194",
+          "issue:195",
+          "issue:196",
+          "issue:197",
+          "issue:198",
+          "issue:199",
+          "issue:200",
+          "issue:201",
+          "issue:202",
+          "issue:203",
+          "issue:204"
+        ]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "MonitorComments.collectNewYeetMonitorComments",
+      "scenario": "issue comments refused",
+      "old": {
+        "fail": "Failed to poll pull request comments during yeet monitor: gh: Bad Gateway (HTTP 502)"
+      },
+      "new": {
+        "fail": "Failed to poll pull request comments during yeet monitor: GET /repos/{owner}/{repo}/issues/{issue_number}/comments failed (502): Bad Gateway"
+      },
+      "verdict": "classified",
+      "classification": "D-15 (b): a GitHub failure keeps the call's label and names the kit's operation, HTTP status and reason where the capture named gh's exit code and output; the exit code is 1."
+    }
+  ]
+}

@@ -61,6 +61,7 @@ import { CacheDependencyMaterialization } from "./Cache.dependencies.schemas.ts"
 import { materializeCacheDependencies } from "./Cache.dependencies.ts";
 import { CacheEntrypointReviewRequest } from "./Cache.entrypoints.schemas.ts";
 import { attachCacheEntrypointReview } from "./Cache.entrypoints.ts";
+import { CacheCommandError } from "./Cache.errors.ts";
 import { runCacheSignedPilotExperiment } from "./Cache.pilot.runner.ts";
 import { CachePilotReceipt, CachePilotRequest } from "./Cache.pilot.schemas.ts";
 import { CacheSignedPilotReceipt, CacheSignedPilotRequest } from "./Cache.pilot.signed.schemas.ts";
@@ -84,7 +85,6 @@ import {
   CacheActivationRequest,
   CacheBaselineRequest,
   CacheCensusReport,
-  CacheCommandError,
   CacheDashboardReport,
   CacheDashboardReportJson,
   CacheLambdaSummary,

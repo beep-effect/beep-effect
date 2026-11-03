@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { decodeSkillsLockDocumentJson, SkillsLockDocument } from "@beep/ai-sync/SkillsLock.schemas";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
@@ -58,7 +59,6 @@ import {
   SkillProvenanceServiceLive,
   SkillUpstreamContentSourceLive,
 } from "./Skills.service.ts";
-import { decodeSkillsLockDocumentJson, SkillsLockDocument } from "./SkillsLock.schemas.ts";
 import { renderSkillsLockDocumentText, writeSkillsLockMigration } from "./SkillsLock.write.ts";
 import { SkillMaterializer, SkillMaterializerLive } from "./SkillsMaterialize.service.ts";
 import { SkillPublicationFile } from "./SkillsPublication.schemas.ts";
@@ -73,10 +73,10 @@ import {
 import { SkillTrainPullRequests } from "./SkillsRelock.schemas.ts";
 import { isSkillReplayClean, SkillUpdateTrain, SkillUpdateTrainLive } from "./SkillsRelock.service.ts";
 import { skillsPatchCommand, skillsReviewCommand } from "./SkillsReview.command.ts";
+import type { SkillsLockEntry, VendoredSkillLockEntry } from "@beep/ai-sync/SkillsLock.schemas";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { SkillFrontmatterReport } from "./SkillFrontmatter.schemas.ts";
 import type { SkillProvenanceService } from "./Skills.service.ts";
-import type { SkillsLockEntry, VendoredSkillLockEntry } from "./SkillsLock.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Skills/Skills.command");
 

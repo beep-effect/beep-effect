@@ -91,7 +91,82 @@ const groupHome: Record<string, string> = {
 // moves to. Each wave adds the files it carves out (W1b: the PLAN "Verifier
 // must-fix list"; W2 to W7: each new library) before it moves them, and the
 // census must stay at zero library-to-tool edges. Longest prefix wins.
-const carveOuts: Record<string, string> = {};
+const carveOuts: Record<string, string> = {
+  // @beep/repo-gates: lane catalog, task runner, heavy admission, flake quarantine, wave order, findings.
+  "commands/Quality/Quality.schemas.ts": "lib:repo-gates",
+  "commands/Quality/Tasks.ts": "lib:repo-gates",
+  "commands/Quality/internal/FlakeQuarantine.ts": "lib:repo-gates",
+  "commands/Quality/internal/GithubChecks.ts": "lib:repo-gates",
+  "commands/Quality/internal/JSDocRatchet.ts": "lib:repo-gates",
+  "commands/Quality/internal/FallowEnvelope.schema.ts": "lib:repo-gates",
+  "commands/Ci/CiLane.ts": "lib:repo-gates",
+  "commands/Ci/HeavyAdmission.ts": "lib:repo-gates",
+  "commands/Ci/Ci.errors.ts": "lib:repo-gates",
+  "commands/Ci/CiCoverage.ts": "lib:repo-gates",
+  "commands/Ci/CiLanePartitions.ts": "lib:repo-gates",
+  "commands/Ci/CiOperational.schemas.ts": "lib:repo-gates",
+  "commands/Quality/Quality.errors.ts": "lib:repo-gates",
+  "commands/Quality/Quality.plan.ts": "lib:repo-gates",
+  "commands/Quality/internal/QualityArtifactSupport.ts": "lib:repo-gates",
+  "commands/Quality/internal/LaneProofReuse.ts": "lib:repo-gates",
+  "commands/Quality/internal/TurboLaneDigest.ts": "lib:repo-gates",
+  "commands/Quality/internal/DocsOxlintPlugin.ts": "lib:repo-gates",
+  "commands/Quality/internal/LintPolicyScope.ts": "lib:repo-gates",
+  "commands/Lint/PolicyFingerprint.schemas.ts": "lib:repo-gates",
+  "commands/Lint/Lint.schemas.ts": "lib:repo-gates",
+  "commands/Yeet/internal/WaveOrder.ts": "lib:repo-gates",
+  "commands/Cache/Cache.runtime.step.ts": "lib:repo-gates",
+  "commands/Cache/Cache.errors.ts": "lib:repo-gates",
+  // @beep/repo-gates/proof: issue classification, merge readiness, verdicts, review window, inbox, proof jobs.
+  "commands/Yeet/internal/IssueClassification.ts": "lib:repo-gates/proof",
+  "commands/Yeet/internal/IssueParser.ts": "lib:repo-gates/proof",
+  "commands/Yeet/internal/MergeReadiness.policy.ts": "lib:repo-gates/proof",
+  "commands/Yeet/internal/Verdict.ts": "lib:repo-gates/proof",
+  "commands/Yeet/internal/ReviewWindow.ts": "lib:repo-gates/proof",
+  "commands/Yeet/internal/Inbox.ts": "lib:repo-gates/proof",
+  "commands/Yeet/internal/InboxView.ts": "lib:repo-gates/proof",
+  "commands/Yeet/internal/ProofJob.ts": "lib:repo-gates/proof",
+  "commands/Yeet/internal/ProofJobLauncher.ts": "lib:repo-gates/proof",
+  "commands/Yeet/internal/ProofLedger.ts": "lib:repo-gates/proof",
+  "commands/Yeet/internal/MonitorPolicy.ts": "lib:repo-gates/proof",
+  "commands/Yeet/Yeet.errors.ts": "lib:repo-gates/proof",
+  "commands/Yeet/Yeet.schemas.ts": "lib:repo-gates/proof",
+  "commands/Yeet/internal/Planner.schemas.ts": "lib:repo-gates/proof",
+  "commands/Yeet/internal/ArtifactPaths.ts": "lib:repo-gates/proof",
+  "commands/Yeet/internal/LedgerFile.ts": "lib:repo-gates/proof",
+  "commands/Yeet/internal/Ack.ts": "lib:repo-gates/proof",
+  "commands/Yeet/internal/ProofFact.ts": "lib:repo-gates/proof",
+  "commands/Yeet/internal/QualityIssueIndex.ts": "lib:repo-gates/proof",
+  "commands/Yeet/internal/Remediation.ts": "lib:repo-gates/proof",
+  "commands/Yeet/internal/InnerLaneReports.ts": "lib:repo-gates/proof",
+  "commands/Yeet/internal/Status.schemas.ts": "lib:repo-gates/proof",
+  "commands/Yeet/internal/WatchStream.ts": "lib:repo-gates/proof",
+  "commands/Yeet/internal/CheckOutcome.ts": "lib:repo-gates/proof",
+  "commands/Yeet/internal/ReviewThreadState.ts": "lib:repo-gates/proof",
+  "commands/Yeet/internal/Settle.schemas.ts": "lib:repo-gates/proof",
+  "commands/Yeet/internal/MonitorComments.schemas.ts": "lib:repo-gates/proof",
+  "commands/Yeet/internal/GitErrorAdapter.ts": "lib:repo-gates/proof",
+  // @beep/repo-coverage.
+  "commands/Quality/internal/Coverage": "lib:repo-coverage",
+  // @beep/repo-run: PR identity and the session-ledger store.
+  "commands/Yeet/internal/Provenance.ts": "lib:repo-run",
+  "commands/Yeet/internal/ProvenanceFooter.ts": "lib:repo-run",
+  "commands/Yeet/internal/PrSessionRegistry.ts": "lib:repo-run",
+  "commands/Session/SessionLedger.service.ts": "lib:repo-run",
+  "commands/Session/Session.schemas.ts": "lib:repo-run",
+  "commands/Session/Session.errors.ts": "lib:repo-run",
+  // @beep/repo-packets: manifests, packet core, portfolio index, capability graph, knowledge refs.
+  "commands/Goals/PacketCore/": "lib:repo-packets",
+  "commands/Goals/PortfolioIndex.ts": "lib:repo-packets",
+  "commands/Goals/Goals.schemas.ts": "lib:repo-packets",
+  "commands/Goals/Inventory.ts": "lib:repo-packets",
+  "commands/Goals/Graph.mermaid.ts": "lib:repo-packets",
+  "commands/Goals/Graph.projection.ts": "lib:repo-packets",
+  "commands/Goals/Graph.schemas.ts": "lib:repo-packets",
+  "commands/Knowledge/Knowledge.refs.ts": "lib:repo-packets",
+  "commands/Knowledge/Knowledge.schemas.ts": "lib:repo-packets",
+  "commands/Knowledge/Knowledge.errors.ts": "lib:repo-packets",
+};
 
 // `src/internal/<dir>` to its library (design-record "New libraries").
 const internalHome = (path: string): string => {
@@ -107,17 +182,15 @@ const internalHome = (path: string): string => {
     case "quality":
     case "ratchet":
       return "lib:repo-gates";
-    case "jsdoc":
-    case "tsmorph":
-      return "lib:repo-utils";
     default:
       return "lib:repo-cli-kit";
   }
 };
 
 export const homeOf = (path: string): string => {
+  // A key ending in `.ts` names one file; any other key is a path prefix.
   const carve = Object.keys(carveOuts)
-    .filter((prefix) => path === prefix || path.startsWith(prefix.endsWith("/") ? prefix : `${prefix}/`))
+    .filter((key) => (key.endsWith(".ts") ? path === key : path.startsWith(key)))
     .sort((left, right) => right.length - left.length)[0];
   if (carve !== undefined) return carveOuts[carve] ?? "unknown";
   if (path.startsWith("test/")) return "test-kit";
@@ -169,6 +242,35 @@ const crossTool = edges.filter(
     edge.fromHome.startsWith("tool:") &&
     ((edge.toHome.startsWith("tool:") && edge.toHome !== edge.fromHome) || edge.toHome.startsWith("app:"))
 );
+// Library dependency order (design record "New libraries"): a library may import
+// only libraries at its rank or earlier. `repo-gates/proof` is a subpath of `repo-gates`.
+const libraryRank: Record<string, number> = {
+  "lib:repo-utils": 0,
+  "lib:ai-sync": 0,
+  "lib:qa-capture": 0,
+  "lib:repo-cli-kit": 1,
+  "lib:repo-run": 2,
+  "lib:repo-github": 3,
+  "lib:repo-coverage": 4,
+  "lib:repo-gates": 5,
+  "lib:repo-gates/proof": 5,
+  "lib:repo-packets": 6,
+};
+const libraryOrder = edges.filter(
+  (edge) =>
+    edge.fromHome.startsWith("lib:") &&
+    edge.toHome.startsWith("lib:") &&
+    edge.fromHome !== edge.toHome &&
+    (libraryRank[edge.toHome] ?? 99) > (libraryRank[edge.fromHome] ?? -1)
+);
+const libraryOrderPairs = Object.entries(
+  libraryOrder.reduce<Record<string, number>>((pairs, edge) => {
+    const key = `${edge.fromHome} -> ${edge.toHome}`;
+    pairs[key] = (pairs[key] ?? 0) + 1;
+    return pairs;
+  }, {})
+).sort((left, right) => right[1] - left[1]);
+
 const unknown = [
   ...new Set(edges.flatMap((edge) => [edge.fromHome, edge.toHome]).filter((home) => home.startsWith("unknown"))),
 ];
@@ -179,6 +281,8 @@ const summary = {
   unknownHomes: unknown,
   libraryToTool: libraryToTool.length,
   crossTool: crossTool.length,
+  libraryOrder: libraryOrder.length,
+  libraryOrderPairs,
   crossToolPairs: Object.entries(
     crossTool.reduce<Record<string, number>>((pairs, edge) => {
       const key = `${edge.fromHome} -> ${edge.toHome}`;
@@ -195,6 +299,7 @@ if (process.argv.includes("--json")) {
         ...summary,
         libraryToToolEdges: libraryToTool,
         crossToolEdges: crossTool,
+        libraryOrderEdges: libraryOrder,
         unknownEdges: edges.filter((edge) => edge.fromHome.startsWith("unknown") || edge.toHome.startsWith("unknown")),
       },
       null,

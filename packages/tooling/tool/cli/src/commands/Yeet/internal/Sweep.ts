@@ -95,8 +95,8 @@
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
-import { shellQuote } from "@beep/repo-ai-metrics";
 import { guardLiteralArg } from "@beep/repo-utils";
+import { shellQuote } from "@beep/repo-utils/Shell";
 import * as O from "@beep/utils/Option";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
@@ -117,9 +117,8 @@ import {
 import { recordSweepDone } from "../../Session/SessionLedger.service.ts";
 import { runTmpfsReap } from "../../Worktree/internal/TmpfsReap.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import { artifactDirForContext } from "./ArtifactPaths.ts";
+import { artifactDirForContext, writeTextFile } from "./ArtifactPaths.ts";
 import { optionFromNonEmpty, patientGit } from "./GitExec.ts";
-import { writeTextFile } from "./IssueArtifacts.ts";
 import {
   SweepPlan,
   SweepPlanStep,

@@ -25,6 +25,7 @@
  * @since 0.0.0
  */
 
+import { decodeSkillsLockDocumentJson } from "@beep/ai-sync/SkillsLock.schemas";
 import { CliInteractive } from "@beep/cli-kit/CliInteractive";
 import { CliPrompt } from "@beep/cli-kit/CliPrompt";
 import { $RepoCliId } from "@beep/identity/packages";
@@ -60,7 +61,6 @@ import { readAtMergeBase } from "./internal/MergeBase.ts";
 import { decodePatchText, readVerifiedPatchSeries } from "./internal/PatchSeries.ts";
 import { listSkillPatchHunks } from "./SkillPatches.apply.ts";
 import { SkillReviewRefusal, SkillsCommandError } from "./Skills.errors.ts";
-import { decodeSkillsLockDocumentJson } from "./SkillsLock.schemas.ts";
 import { SkillUpdateTrain, SkillUpdateTrainLive } from "./SkillsRelock.service.ts";
 import {
   SkillHunkLedgerRow,
@@ -71,6 +71,8 @@ import {
   SkillReviewSkill,
   SkillReviewSkip,
 } from "./SkillsReview.schemas.ts";
+import type { SkillGitRevision, SkillPatchLabel } from "@beep/ai-sync/Skills.schemas";
+import type { SkillsLockEntry, VendoredSkillLockEntry } from "@beep/ai-sync/SkillsLock.schemas";
 import type * as Digest from "effect/crypto/Digest";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
@@ -78,8 +80,6 @@ import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Stdio from "effect/Stdio";
 import type * as Terminal from "effect/Terminal";
 import type { HunkLedgerKey } from "./internal/HunkLedger.ts";
-import type { SkillGitRevision, SkillPatchLabel } from "./Skills.schemas.ts";
-import type { SkillsLockEntry, VendoredSkillLockEntry } from "./SkillsLock.schemas.ts";
 import type { SkillHunkReport, SkillReplayReport } from "./SkillsRelock.schemas.ts";
 import type { SkillUpdateTrainFailure } from "./SkillsRelock.service.ts";
 import type {

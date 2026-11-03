@@ -8,6 +8,7 @@
  * @since 0.0.0
  */
 
+import { isRequiredSeverity } from "@beep/qa-capture/QaInventory.schemas";
 import { O, Str } from "@beep/utils";
 import * as A from "effect/Array";
 import { dual, pipe } from "effect/Function";
@@ -15,7 +16,6 @@ import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Order from "effect/Order";
 import * as Result from "effect/Result";
-import { isRequiredSeverity } from "../Qa/Inventory.schemas.ts";
 import {
   Disposition,
   FigureOverride,

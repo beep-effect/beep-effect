@@ -17,6 +17,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { QaSeverity } from "@beep/qa-capture/QaInventory.schemas";
 import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -26,7 +27,6 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { QaSeverity } from "../Qa/Inventory.schemas.ts";
 import { FigureNumber } from "./Drawings.review.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Drawings/Drawings.critics.schemas");

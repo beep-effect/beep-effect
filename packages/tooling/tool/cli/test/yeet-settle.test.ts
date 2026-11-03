@@ -80,7 +80,7 @@ import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
-import { provideLegacyGh } from "./support/YeetGithub.ts";
+import { monitorGithubLayer, provideLegacyGh, provideMonitorGh } from "./support/YeetGithub.ts";
 
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
@@ -170,7 +170,7 @@ const rulesetArgs = ["api", "repos/{owner}/{repo}/rules/branches/main"];
 // The loop's once-per-head merge-base diff runs through `Git.changedFiles` (W2b); a code-bearing
 // answer keeps the heavy-admission verdict these fixtures were written against.
 const mergeBaseDiffGit = Git.layerTest({ changedFiles: () => Effect.succeed(["packages/a/src/index.ts"]) });
-const platform = Layer.mergeAll(
+const basePlatform = Layer.mergeAll(
   mergeBaseDiffGit,
   BunCrypto.layer,
   MemoryFileSystem.layer,
@@ -180,6 +180,11 @@ const platform = Layer.mergeAll(
     ChildProcessSpawner.ChildProcessSpawner,
     ChildProcessSpawner.make(() => Effect.die("unexpected process in stubbed merge loop"))
   )
+);
+// The merge loop reads the head commit and the acting login as its gh login (W6); both answer `at`.
+const platform = Layer.provideMerge(
+  monitorGithubLayer(() => Effect.succeed({ exitCode: 0, output: at })),
+  basePlatform
 );
 const temporary = Effect.fn("settleTest.temporary")(function* <V, E, R>(use: (root: string) => Effect.Effect<V, E, R>) {
   const text = yield* Ref.make("");
@@ -685,7 +690,6 @@ it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) 
             collectStatus: () =>
               Ref.update(calls, (n) => n + 1).pipe(Effect.as(snapshot(root, "aaa111", [check("Lint")]))),
             rulesetRead: () => Ref.update(reads, (n) => n + 1).pipe(Effect.as(expected(["Heavy / Check"]))),
-            capture: () => Effect.succeed({ exitCode: 0, output: at, truncated: false }),
             policy: YeetUntilMergedPolicy.make({ settleTimeoutMs: 1000 }),
             pollInterval: Duration.seconds(30),
           }).pipe(Effect.tap(() => Ref.set(done, true)));
@@ -780,14 +784,6 @@ it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) 
                 })
               ),
             rulesetRead: () => Effect.succeed(expected(heavyContexts)),
-            capture: (_command, args) =>
-              Ref.update(captures, A.append(args)).pipe(
-                Effect.as({
-                  exitCode: 0,
-                  output: args[0] === "diff" ? "packages/a/src/index.ts\0" : at,
-                  truncated: false,
-                })
-              ),
             closeout: () =>
               Ref.update(closeouts, (n) => n + 1).pipe(
                 Effect.as({
@@ -809,6 +805,9 @@ it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) 
             policy: YeetUntilReadyPolicy.make({ settleTimeoutMs: 50 }),
             pollInterval: Duration.millis(100),
           }).pipe(
+            provideMonitorGh((_command, args) =>
+              Ref.update(captures, A.append(args)).pipe(Effect.as({ exitCode: 0, output: at }))
+            ),
             Effect.provideService(
               Git,
               Git.makeTest({
@@ -899,12 +898,11 @@ it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) 
               })
             ),
           rulesetRead: () => Ref.update(reads, (n) => n + 1).pipe(Effect.as(expected(["Lint"]))),
-          capture: () =>
-            Ref.update(captures, (n) => n + 1).pipe(Effect.as({ exitCode: 1, output: "", truncated: false })),
           onMerged: () => Ref.update(sweeps, (n) => n + 1),
           pollInterval: Duration.millis(100),
           policy: YeetUntilMergedPolicy.make({ settleTimeoutMs: 50 }),
         }).pipe(
+          provideMonitorGh(() => Ref.update(captures, (n) => n + 1).pipe(Effect.as({ exitCode: 1, output: "" }))),
           Effect.provideService(
             Git,
             Git.makeTest({
@@ -1234,7 +1232,8 @@ it.layer(platform, { timeout: "30 seconds" })((it) => {
     temporary((root) =>
       Effect.gen(function* () {
         const polls = yield* Ref.make(0);
-        const isRerun = (args: ReadonlyArray<string>) => args[0] === "run" && args[1] === "rerun";
+        // The kit's REST job rerun and job list reach the spawner as `gh api` argv (W6).
+        const isRerun = (args: ReadonlyArray<string>) => A.some(args, Str.endsWith("/rerun"));
         const runner = ScriptedSpawner.make((_command, args) => {
           const [first, second] = args;
           if (first === "run" && second === "list")
@@ -1244,17 +1243,18 @@ it.layer(platform, { timeout: "30 seconds" })((it) => {
             );
           if (isRerun(args)) return reply(0, "");
           if (A.contains(args, "--log-failed")) return reply(0, "Test timed out in 5000ms");
-          if (first === "run" && second === "view")
+          if (A.some(args, Str.includes("/actions/runs/7/jobs")))
             return reply(
               0,
               encodeJson({
+                total_count: 1,
                 jobs: [
                   {
-                    databaseId: 991,
+                    id: 991,
                     name: "Lint",
                     status: "completed",
                     conclusion: "failure",
-                    steps: [{ name: "Test", conclusion: "failure" }],
+                    steps: [{ name: "Test", status: "completed", conclusion: "failure", number: 1 }],
                   },
                 ],
               })
@@ -1299,7 +1299,6 @@ it.layer(platform, { timeout: "30 seconds" })("B7 sleep after a spent registrati
           collectStatus: () =>
             Ref.update(calls, (n) => n + 1).pipe(Effect.as(snapshot(root, "aaa111", [check("Lint", "pending")]))),
           rulesetRead: () => Effect.succeed(expected(["Lint"])),
-          capture: () => Effect.succeed({ exitCode: 0, output: at, truncated: false }),
           policy: YeetUntilReadyPolicy.make({ settleTimeoutMs: 1000 }),
           pollInterval: Duration.seconds(30),
         });
@@ -1332,7 +1331,6 @@ it.layer(platform, { timeout: "30 seconds" })("B7 sleep after a spent registrati
           collectStatus: () =>
             Ref.update(calls, (n) => n + 1).pipe(Effect.as(snapshot(root, "aaa111", [check("Lint")]))),
           rulesetRead: () => Effect.succeed(expected(["Lint", "Heavy / Check"])),
-          capture: () => Effect.succeed({ exitCode: 0, output: at, truncated: false }),
           policy: YeetUntilReadyPolicy.make({ settleTimeoutMs: 1000 }),
           pollInterval: Duration.seconds(30),
         });

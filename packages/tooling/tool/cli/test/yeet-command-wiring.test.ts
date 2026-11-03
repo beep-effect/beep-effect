@@ -68,6 +68,7 @@ import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
+import { offlineGithubLayer } from "./support/YeetGithub.ts";
 import type { YeetExecutedStep, YeetVerdictExtrasForTesting } from "@beep/repo-cli/test/Yeet";
 
 const runYeetCommand = Command.runWith(yeetCommand, { version: "0.0.0" });
@@ -955,7 +956,11 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("attached monitor environm
   );
 });
 
-it.layer(commandTestLayer, { timeout: "30 seconds" })("publish readiness-monitor reuse", (it) => {
+// The publish tail builds the gh login once for the pull request and its label (W6); the
+// seams below keep GitHub out of the path.
+const publishTailLayer = Layer.merge(commandTestLayer, offlineGithubLayer);
+
+it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor reuse", (it) => {
   const monitorRequest = (branch: string) =>
     ProofJobRequest.make({
       mode: "monitor",

@@ -26,8 +26,8 @@ import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { CacheCommandError } from "./Cache.errors.ts";
 import { CacheFixtureArtifactKey, CacheFixtureEvent, CacheFixtureScenario } from "./Cache.protocol.fixture.schemas.ts";
-import { CacheCommandError } from "./Cache.schemas.ts";
 import type { CacheFixtureCredentials } from "./Cache.protocol.fixture.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.protocol.fixture");

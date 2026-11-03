@@ -54,6 +54,7 @@ import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+import { monitorGithubLayer } from "./support/YeetGithub.ts";
 
 const at = "2026-09-25T00:00:00.000Z";
 const url = "https://github.com/beep/repo/pull/7";
@@ -167,7 +168,7 @@ const report = (sha: string) => ({
 // The loop's once-per-head merge-base diff runs through `Git.changedFiles` (W2b); a code-bearing
 // answer keeps the heavy-admission verdict these fixtures were written against.
 const mergeBaseDiffGit = Git.layerTest({ changedFiles: () => Effect.succeed(["packages/a/src/index.ts"]) });
-const platform = Layer.mergeAll(
+const basePlatform = Layer.mergeAll(
   mergeBaseDiffGit,
   NodeFileSystem.layer,
   NodePath.layer,
@@ -176,9 +177,13 @@ const platform = Layer.mergeAll(
     args[0] === "run" && args[1] === "list" ? { stdout: "[]" } : { exit: 1, stderr: "unexpected process" }
   ).layer
 );
+// The merge loop reads the head commit and the acting login as its gh login (W6); both answer `at`.
+const platform = Layer.provideMerge(
+  monitorGithubLayer(() => Effect.succeed({ exitCode: 0, output: at })),
+  basePlatform
+);
 
 const loopOptions = {
-  capture: () => Effect.succeed({ exitCode: 0, output: at, truncated: false }),
   rulesetRead: () =>
     Effect.succeedSome(
       YeetRulesetRequiredContexts.make({ base: "main", readAt: at, contexts: ["Check"], rulesetIds: [1] })

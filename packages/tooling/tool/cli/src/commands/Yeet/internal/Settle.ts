@@ -59,7 +59,8 @@ import {
 } from "../../Ci/HeavyAdmission.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { YeetCheckOutcome, YeetSettleReason } from "./CheckOutcome.ts";
-import { YeetGitErrorWording, yeetGitErrorAdapter } from "./GitExec.ts";
+import { YeetGitErrorWording, yeetGitErrorAdapter } from "./GitErrorAdapter.ts";
+import { isMatrixChildOf, YeetExpectedContextCensus, YeetSettleVerdict } from "./Settle.schemas.ts";
 import type { GitInvocation } from "@beep/git/GitCommand";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -763,59 +764,6 @@ export class YeetExpectedContextInput extends S.Opaque<YeetExpectedContextInput,
   )
 ) {}
 
-const yeetExpectedContextCensusGatedDefault = A.empty<string>();
-/**
- * How the expected contexts line up against the reported checks.
- *
- * **Details**
- *
- * - `matched`: expected contexts that a reported check names exactly.
- * - `unmatched`: expected contexts with no exact match but at least one matrix
- *   child (`<context> (<variant>)`) reported — tolerated by name, children
- *   waited for.
- * - `missing`: expected contexts with neither an exact match nor a child.
- * - `pending`: reported checks still pending that hold the settle: matched
- *   contexts, matrix children of unmatched contexts, and every `--required` row.
- * - `gated`: expected contexts of a gated family moved out of `missing` and
- *   `pending` while the head's admission verdict is `hold` (ttc B8); empty
- *   otherwise.
- *
- * Every list is sorted so equal censuses render identically.
- *
- * **Example** (Construct a census)
- *
- * ```ts
- * import { YeetExpectedContextCensus } from "@beep/repo-cli/test/Yeet"
- *
- * const census = YeetExpectedContextCensus.make({ matched: ["Lint"], unmatched: ["Test Unit"], pending: [], missing: [] })
- * console.log(census.unmatched) // [ "Test Unit" ]
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class YeetExpectedContextCensus extends S.Opaque<YeetExpectedContextCensus, { readonly brand: unique symbol }>()(
-  S.Struct({
-    matched: S.Array(S.String),
-    unmatched: S.Array(S.String),
-    pending: S.Array(S.String),
-    missing: S.Array(S.String),
-    gated: S.Array(S.String).pipe(
-      S.withConstructorDefault(Effect.succeed(yeetExpectedContextCensusGatedDefault)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(yeetExpectedContextCensusGatedDefault))
-    ),
-  }).pipe(
-    $I.annoteSchema("YeetExpectedContextCensus", {
-      description:
-        "Expected contexts partitioned into matched, tolerated-unmatched, and missing, plus the pending checks that hold the settle.",
-    })
-  )
-) {}
-
-const matrixChildPrefix = (context: string): string => `${context} (`;
-
-const isMatrixChildOf = (context: string, name: string): boolean => Str.startsWith(matrixChildPrefix(context))(name);
-
 /**
  * Line the expected required contexts up against one poll's reported checks.
  *
@@ -933,58 +881,6 @@ export class YeetSettleInput extends S.Opaque<YeetSettleInput, { readonly brand:
     $I.annoteSchema("YeetSettleInput", {
       description:
         "Expected contexts, reported checks, closeout binding, elapsed wait, gated families, heavy admission, and base-conflict state for one settle evaluation.",
-    })
-  )
-) {}
-
-/**
- * The settle rule's answer for one poll.
- *
- * **Details**
- *
- * `settled` says the required census is complete for this head. `reason` is
- * the wait reason the gate line names: `registration`, `required-pending` or
- * `heavy-not-admitted` while unsettled, `settle-timeout` when the budget
- * expired unsettled (never while held, see {@link yeetSettleVerdictIsHeld}),
- * `closeout-pending` when settled but no closeout artifact binds the head, and
- * `None` when settled with the closeout bound — the state in which merge
- * readiness is evaluated.
- *
- * **Example** (A settled head awaiting closeout)
- *
- * ```ts
- * import { YeetExpectedContextCensus, YeetSettleVerdict } from "@beep/repo-cli/test/Yeet"
- * import * as O from "effect/Option"
- *
- * const verdict = YeetSettleVerdict.make({
- *   settled: true,
- *   reason: O.some("closeout-pending"),
- *   census: YeetExpectedContextCensus.make({ matched: ["Lint"], unmatched: [], pending: [], missing: [] }),
- *   waitedMs: 90_000,
- *   timeoutMs: 1_800_000
- * })
- * console.log(verdict.settled) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class YeetSettleVerdict extends S.Opaque<YeetSettleVerdict, { readonly brand: unique symbol }>()(
-  S.Struct({
-    settled: S.Boolean,
-    reason: YeetSettleReason.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-    census: YeetExpectedContextCensus,
-    waitedMs: S.Finite,
-    timeoutMs: S.Finite,
-    budgetApplies: S.Boolean.pipe(
-      S.withDecodingDefaultKey(Effect.succeed(true)),
-      S.withConstructorDefault(Effect.succeed(true))
-    ),
-    admission: HeavyAdmission.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-  }).pipe(
-    $I.annoteSchema("YeetSettleVerdict", {
-      description:
-        "Whether the required census settled, the wait reason the gate line names, the census behind it, whether the registration budget still applies, and the heavy admission it was judged under.",
     })
   )
 ) {}
@@ -1251,49 +1147,6 @@ export const yeetSettleClockReset: {
   2,
   (previous: O.Option<YeetSettleVerdict>, next: YeetSettleVerdict): boolean =>
     O.exists(previous, (value) => !value.budgetApplies) && next.budgetApplies
-);
-
-/**
- * Whether the settle census treats a reported check name as required: an
- * expected context matched by exact name, or a matrix child of a tolerated
- * expected parent (`Test Unit (unit-a)` under `Test Unit`).
- *
- * **Details**
- *
- * `gh pr checks --required` lists only exact context names, so a failed
- * matrix child of a required parent carries `required: false` from GitHub.
- * The merge loop's red triage and the watch's failure census both consult
- * this rule alongside that flag, so a required parent's children count as
- * required in every consumer. `None` (no settle verdict yet) requires nothing.
- *
- * **Example** (A matrix child of a required parent)
- *
- * ```ts
- * import { YeetExpectedContextCensus, YeetSettleVerdict, yeetSettleCensusRequires } from "@beep/repo-cli/test/Yeet"
- * import * as O from "effect/Option"
- *
- * const census = YeetExpectedContextCensus.make({ matched: ["Lint"], unmatched: ["Test Unit"], pending: [], missing: [] })
- * const verdict = O.some(YeetSettleVerdict.make({ settled: false, reason: O.some("required-pending"), census, waitedMs: 1, timeoutMs: 1 }))
- * console.log(yeetSettleCensusRequires(verdict, "Test Unit (unit-a)")) // true
- * console.log(yeetSettleCensusRequires(verdict, "Vercel")) // false
- * ```
- *
- * @param verdict - The head's settle verdict, when one has been derived.
- * @param name - The reported check name.
- * @returns Whether the census requires that name.
- * @category predicates
- * @since 0.0.0
- */
-export const yeetSettleCensusRequires: {
-  (name: string): (verdict: O.Option<YeetSettleVerdict>) => boolean;
-  (verdict: O.Option<YeetSettleVerdict>, name: string): boolean;
-} = dual(2, (verdict: O.Option<YeetSettleVerdict>, name: string): boolean =>
-  O.exists(
-    verdict,
-    (value) =>
-      A.contains(value.census.matched, name) ||
-      A.some(value.census.unmatched, (parent) => isMatrixChildOf(parent, name))
-  )
 );
 
 /**

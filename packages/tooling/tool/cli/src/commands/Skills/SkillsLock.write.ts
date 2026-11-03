@@ -23,6 +23,7 @@
  * @since 0.0.0
  */
 
+import { SkillsLockDocument, SkillsLockWriteReceipt, SkillsLockWrittenFile } from "@beep/ai-sync/SkillsLock.schemas";
 import { Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -40,18 +41,17 @@ import { publishSkillsLockText, requireSkillsLockUnchanged } from "./internal/Lo
 import { PATCH_ROOT, stagedPatchPath } from "./internal/PatchStaging.ts";
 import { SkillsCommandError, SkillsLockWriteRefusal } from "./Skills.errors.ts";
 import { compileSkillsLockMigration } from "./Skills.service.ts";
-import { SkillsLockDocument, SkillsLockWriteReceipt, SkillsLockWrittenFile } from "./SkillsLock.schemas.ts";
-import type { Sha256Hex } from "@beep/schema";
-import type * as Digest from "effect/crypto/Digest";
-import type { SkillPatchOwnerSource } from "./Skills.patches.ts";
-import type { SkillUpstreamContentSource } from "./Skills.service.ts";
 import type {
   SkillPatchFile,
   SkillsLockMigrationPlan,
   SkillsLockWriteOutcome,
   UnresolvedMigrationRow,
   VendoredSkillLockEntry,
-} from "./SkillsLock.schemas.ts";
+} from "@beep/ai-sync/SkillsLock.schemas";
+import type { Sha256Hex } from "@beep/schema";
+import type * as Digest from "effect/crypto/Digest";
+import type { SkillPatchOwnerSource } from "./Skills.patches.ts";
+import type { SkillUpstreamContentSource } from "./Skills.service.ts";
 
 const SKILLS_LOCK_PATH = "skills-lock.json";
 
@@ -75,7 +75,7 @@ const sha256Of = (bytes: Uint8Array, label: string) =>
  * **Example** (Check an empty plan)
  *
  * ```ts
- * import { SkillsLockMigrationPlan } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { SkillsLockMigrationPlan } from "@beep/ai-sync/SkillsLock.schemas"
  * import { skillsLockWriteConflicts } from "@beep/repo-cli/commands/Skills/SkillsLock.write"
  * import { Sha256Hex } from "@beep/schema/Sha256"
  *
@@ -109,7 +109,7 @@ export const skillsLockWriteConflicts = (plan: SkillsLockMigrationPlan): Readonl
  * **Example** (Build the document of an empty plan)
  *
  * ```ts
- * import { SkillsLockMigrationPlan } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { SkillsLockMigrationPlan } from "@beep/ai-sync/SkillsLock.schemas"
  * import { skillsLockDocumentOf } from "@beep/repo-cli/commands/Skills/SkillsLock.write"
  * import { Sha256Hex } from "@beep/schema/Sha256"
  *
@@ -145,7 +145,7 @@ export const skillsLockDocumentOf = (plan: SkillsLockMigrationPlan): SkillsLockD
  * **Example** (Render an empty v2 lock)
  *
  * ```ts
- * import { SkillsLockDocument } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { SkillsLockDocument } from "@beep/ai-sync/SkillsLock.schemas"
  * import { renderSkillsLockDocumentText } from "@beep/repo-cli/commands/Skills/SkillsLock.write"
  * import * as Effect from "effect/Effect"
  *
@@ -180,8 +180,8 @@ export const renderSkillsLockDocumentText = Effect.fn("SkillsLock.renderSkillsLo
  * **Example** (Build the publish effect)
  *
  * ```ts
- * import type { VendoredSkillLockEntry } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
- * import { SkillsLockDocument } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import type { VendoredSkillLockEntry } from "@beep/ai-sync/SkillsLock.schemas"
+ * import { SkillsLockDocument } from "@beep/ai-sync/SkillsLock.schemas"
  * import { publishSkillsLockEntry } from "@beep/repo-cli/commands/Skills/SkillsLock.write"
  * import { Sha256Hex } from "@beep/schema/Sha256"
  *

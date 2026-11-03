@@ -78,7 +78,6 @@ const fixtureRuns = A.map(checkRunsFixture.check_runs, (run) =>
   MergeGateCheckRun.make({ id: run.id, name: run.name, status: run.status, conclusion: run.conclusion })
 );
 const readyAtIso = timelineFixture[0]?.created_at ?? "2026-10-06T08:00:52Z";
-const readyEvent = timelineFixture[0]?.event ?? "ready_for_review";
 const suiteInstants = A.map(checkSuitesFixture.check_suites, (suite) => suite.created_at);
 const pushedAtIso = A.sort(suiteInstants, Str.Order)[0] ?? readyAtIso;
 const anchoredAt = DateTime.makeUnsafe(pushedAtIso > readyAtIso ? pushedAtIso : readyAtIso);
@@ -1004,11 +1003,11 @@ const postMergeAnswers = (script: ResolvedGhScript): ReadonlyArray<GhAnswerRoute
   ["/cancel", answer(0, "")],
 ];
 
-// The gate's reads: the review window (asked through --jq: timeline rows as
-// `<event>\t<instant>`, suites as instants), the threads, the ruleset and the reviewer page.
+// The gate's reads: the review window (the recorded REST timeline and check
+// suites, read through `GithubRest` since W6), the threads, the ruleset and the reviewer page.
 const gateReadAnswers = (script: ResolvedGhScript): ReadonlyArray<GhAnswerRoute> => [
-  ["/timeline", answer(script.windowExit, `${readyEvent}\t${readyAtIso}\n`)],
-  ["/check-suites", answer(script.windowExit, A.join(suiteInstants, "\n"))],
+  ["/timeline", answer(script.windowExit, encodeJson(timelineFixture))],
+  ["/check-suites", answer(script.windowExit, encodeJson(checkSuitesFixture))],
   ["graphql", answer(script.threadsExit, encodeJson(script.threads))],
   ["rules/branches/", answer(script.rulesExit, encodeJson(scriptReviewerRules(script)))],
   ["check_name=beep-reviewer", answer(0, encodeJson(scriptReviewerPage(script)))],

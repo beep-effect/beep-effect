@@ -4400,6 +4400,7 @@
           "@beep/observability",
           "@beep/phoenix",
           "@beep/repo-ai-metrics",
+          "@beep/repo-utils",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
@@ -4420,6 +4421,7 @@
           "@beep/observability",
           "@beep/phoenix",
           "@beep/repo-ai-metrics",
+          "@beep/repo-utils",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
@@ -4647,6 +4649,7 @@
         "allow": [
           "@beep/glob",
           "@beep/identity",
+          "@beep/markdown",
           "@beep/memfs",
           "@beep/package-json",
           "@beep/repo-utils",
@@ -4659,6 +4662,7 @@
         "allowTypeOnly": [
           "@beep/glob",
           "@beep/identity",
+          "@beep/markdown",
           "@beep/memfs",
           "@beep/package-json",
           "@beep/repo-utils",

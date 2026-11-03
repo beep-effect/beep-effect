@@ -65,12 +65,11 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GhActor, GhPageInfo, ghOutput } from "../../../internal/github/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import { artifactDirForContext } from "./ArtifactPaths.ts";
+import { artifactDirForContext, writeTextFile } from "./ArtifactPaths.ts";
 import { decodeGhRepoView } from "./closeout/Gh.schemas.ts";
 import { listGhRepoViewThreads } from "./closeout/GhCollect.ts";
 import { RESOLVE_THREAD_MUTATION } from "./closeout/WritePlan.ts";
 import { buildYeetGhLogin } from "./GhOps.ts";
-import { writeTextFile } from "./IssueArtifacts.ts";
 import {
   failedReplyOutcomes,
   ReplyDraft,

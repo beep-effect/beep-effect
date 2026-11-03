@@ -20,16 +20,17 @@ Execution: **active**, explicitly launched 2026-10-27. Preserve the recovery hol
 
 ## P4 closeout
 
-PR2364, PR2508 and PR2612 retain unsatisfied historical completion receipts. PR2578
-retains canonical **unknown** after external merge without positive readiness.
+PR2364, PR2508 and PR2612 retain unsatisfied historical completion receipts. PR2578, PR2644 and PR2649
+retain canonical **unknown** after external merge without positive readiness.
 Preserve those results as supporting delivery. PR2595 has separate post-merge
 source qualification; its observer did not establish pre-merge readiness.
 
-The operator reserved corrective final PR2644 for this chat and directed other
-merge activity for it to stop. Supporting PR2635 and PR2641 are accepted and
+The operator reserved final checkpoint PR2655 for this chat after directing an
+executable coordination repair. PR2649 remains historical unknown. Supporting PR2635 and PR2641 are accepted and
 integrated; their source and execution scopes remain explicit. The operator
-subsequently confirmed personally merging PR2612; the original unsatisfied
-completion result is preserved. Ship current source applicability, the new reflection
+subsequently confirmed personally merging PR2612; that unsatisfied result and
+PR2644's unknown result are preserved. The operator explicitly retained the
+pre-merge rule and left the next final merge to this chat. Ship current source applicability, the new reflection
 and a coherent prospective declaration while lifecycle remains active. Publish
 a reviewable draft; only this owner may make it ready and merge it. A draft
 monitor's `ready-pending-flip` result does not replace final readiness.
@@ -45,3 +46,5 @@ an actually verified accepted-head result and complete merge-time required-check
 inventory before completion. Later observations cannot establish missing
 historical readiness. Preserve historical originals, the recovery hold and
 unrelated work. Source delivery remains separate from production enrollment.
+
+The [coordination runbook](./research/MERGE-COORDINATION.md) requires a private exact-head reservation, successful terminal observer finalization and a positive canonical verdict before the owner merge. Use an explicit full `--head` for the new observer and classic monitor. The shared-wrapper capability is required for owner Ready there; native Ready remains outside the merge guard. No direct-website/server exclusion is claimed.

@@ -89,7 +89,6 @@ import {
   runAiMetricsRetentionCompact,
   runAiMetricsRetentionDelete,
   runAiMetricsRetentionRestoreDrill,
-  shellQuote,
   sourceDiscoveryToJson,
   summarizeTranscriptText,
   summaryToJson,
@@ -97,6 +96,7 @@ import {
   withAiMetricsDuckDb,
 } from "@beep/repo-ai-metrics";
 import { AiMetricsTranscriptTextSummaryInput } from "@beep/repo-ai-metrics/ingest";
+import { shellQuote } from "@beep/repo-utils/Shell";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Clock from "effect/Clock";

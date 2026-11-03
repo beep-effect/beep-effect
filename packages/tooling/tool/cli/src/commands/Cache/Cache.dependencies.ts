@@ -28,8 +28,9 @@ import {
   CacheDependencyMaterialization,
   CacheDependencyTree,
 } from "./Cache.dependencies.schemas.ts";
+import { CacheCommandError } from "./Cache.errors.ts";
 import { decodeCacheExperimentText, readCacheEvidenceBytes } from "./Cache.evidence.ts";
-import { CacheCommandError, CacheExecutablePin } from "./Cache.schemas.ts";
+import { CacheExecutablePin } from "./Cache.schemas.ts";
 import type { CacheEvidenceReference } from "@beep/repo-configs/cache";
 import type { CacheCensusWorkspace } from "./Cache.schemas.ts";
 

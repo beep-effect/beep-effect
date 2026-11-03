@@ -22,7 +22,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { UUID } from "../../../internal/schema/Uuid.ts";
-import { YeetRunMode } from "./Planner.ts";
+import { YeetRunMode } from "./Planner.schemas.ts";
 import { YeetOutcome } from "./Verdict.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ProofJob");

@@ -5,6 +5,7 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { FsUtils, GlobOptions, jsonStringifyPretty } from "@beep/repo-utils";
+import { doctestSourceMarker, isDoctestSourcePath } from "@beep/repo-utils/JSDoc/DoctestSource";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -19,7 +20,6 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { doctestSourceMarker, isDoctestSourcePath } from "../jsdoc/DoctestSource.ts";
 import { workspaceDirectories } from "../RepoWorkspaces.ts";
 import {
   CheckerScriptName,

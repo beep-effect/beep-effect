@@ -1,5 +1,5 @@
+import { ModelId } from "@beep/ai-sync/ModelCatalog.schemas";
 import { EndpointDispatch, makeAgentMessageRouter } from "@beep/repo-cli/commands/AgentMessage";
-import { ModelId } from "@beep/repo-cli/commands/Models/Models.catalog.schemas";
 import {
   AgentMessageStore,
   AttachedT3NativeBaseline,

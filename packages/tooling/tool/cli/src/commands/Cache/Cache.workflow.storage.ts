@@ -22,6 +22,7 @@ import { readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { cacheProducerObservationMaxBytes } from "./Cache.acceptance.store.ts";
 import { classifyCacheConformanceStatus, readCacheConformanceReply } from "./Cache.conformance.wire.ts";
+import { CacheCommandError } from "./Cache.errors.ts";
 import { CacheProducerBinding } from "./Cache.producer.schemas.ts";
 import {
   inspectCacheProducerDirectory,
@@ -30,7 +31,6 @@ import {
   readCacheProducerExecutionProfile,
   readCacheProducerHostedApproval,
 } from "./Cache.producer.ts";
-import { CacheCommandError } from "./Cache.schemas.ts";
 import { CacheHostedProducerApproval, CacheHostedProducerCompleteReport } from "./Cache.workflow.github.schemas.ts";
 import {
   buildCacheHostedProducerCompleteReport,

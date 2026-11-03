@@ -7,6 +7,7 @@
 
 import { DuckDb, DuckDbError } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
+import { shellQuote } from "@beep/repo-utils/Shell";
 import { SchemaUtils, Sha256Hex } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -60,7 +61,6 @@ import { collectJsonlFiles, statOption } from "./internal/jsonl-discovery.ts";
 import { normalizedRelativePath, resolveTranscriptSourceRoots } from "./internal/transcript-utils.ts";
 import { AiMetricsDeployTarget, AiMetricsTranscriptSource } from "./models.ts";
 import { hashPrivateIdentifier, makeAiMetricsPrivacyCheckResult } from "./privacy.ts";
-import { shellQuote } from "./shell.ts";
 
 const $I = $RepoAiMetricsId.create("forwarder");
 const DEFAULT_MAX_FILES = 200;

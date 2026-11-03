@@ -34,7 +34,7 @@ import {
   CacheConformanceMeasurement,
   CacheConformanceTarget,
 } from "./Cache.conformance.schemas.ts";
-import { CacheCommandError } from "./Cache.schemas.ts";
+import { CacheCommandError } from "./Cache.errors.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type * as HttpClientResponse from "effect/http/HttpClientResponse";
 import type {

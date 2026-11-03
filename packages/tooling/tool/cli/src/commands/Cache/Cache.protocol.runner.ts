@@ -24,6 +24,7 @@ import { OutputBound, runCapturedStreams } from "../../internal/process/index.ts
 import { AdmissionRequest } from "../../internal/repo-run/QualityScheduler.schemas.ts";
 import { noAdmissionOriginGate, withQualityAdmission } from "../../internal/repo-run/QualityScheduler.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
+import { CacheCommandError } from "./Cache.errors.ts";
 import {
   decodeCacheExperimentText,
   hashCacheExperimentExecutable,
@@ -42,7 +43,6 @@ import {
 } from "./Cache.protocol.runner.schemas.ts";
 import { CacheProtocolObservation } from "./Cache.protocol.schemas.ts";
 import { validateCacheProtocolExecution } from "./Cache.protocol.ts";
-import { CacheCommandError } from "./Cache.schemas.ts";
 
 export { CacheProtocolNativeSummary } from "./Cache.protocol.runner.schemas.ts";
 

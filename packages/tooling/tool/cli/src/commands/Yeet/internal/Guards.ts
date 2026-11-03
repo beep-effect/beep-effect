@@ -11,8 +11,10 @@ import * as O from "effect/Option";
 import { configStringOption } from "../../../internal/cli/EnvConfig.ts";
 import { resolveLocalRepoBinary, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
+import { writeTextFile } from "./ArtifactPaths.ts";
+import { provideYeetGhLogin } from "./GhOps.ts";
 import { optionFromNonEmpty } from "./GitExec.ts";
-import { commitMessagePathForContext, writeTextFile } from "./IssueArtifacts.ts";
+import { commitMessagePathForContext } from "./IssueArtifacts.ts";
 import { validateOpenPullRequest } from "./PullRequest.ts";
 import type { Git } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -209,7 +211,7 @@ export const validateMonitorGuards = Effect.fn("Yeet.validateMonitorGuards")(fun
   // `pr` defaults to true (push-first-publish D8) and only publish acts on it;
   // every other monitoring mode still needs an open pull request to watch.
   if (!options.plan && !(options.mode === "publish" && options.pr)) {
-    yield* validateOpenPullRequest(context);
+    yield* validateOpenPullRequest(context).pipe(provideYeetGhLogin(context.repoRoot));
   }
 });
 

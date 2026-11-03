@@ -102,7 +102,7 @@ screenshots-only loop.
 ## Structured inventory contract
 
 `qa-inventory/v1` schemas live in
-`packages/tooling/tool/cli/src/commands/Qa/Inventory.schemas.ts`. The judge
+`packages/tooling/library/qa-capture/src/QaInventory.schemas.ts`. The judge
 emits ONE fenced JSON block; `judge-ingest` is the only writer of
 `inventory.json`/`inventory.md`; `beep qa judge-lint --round N` re-validates
 any round (use it in campaign exit checks). The prompt's lens list is bound to
