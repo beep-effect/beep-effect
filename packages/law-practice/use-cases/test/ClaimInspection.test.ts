@@ -88,6 +88,43 @@ const largeMixed = ClaimInputCollection.make({
     })
   ),
 });
+const collectLargeInspectionPages = Effect.fn("ClaimInspectionTest.collectPages")(function* () {
+  let page = yield* claimInspectInput(ClaimInspectionPageRequest.make({ input: largeMixed }));
+  let pages: A.NonEmptyReadonlyArray<ClaimInspectionPage> = [page];
+  assert.strictEqual(page.deliveryStatus, "incomplete");
+  while (O.isSome(page.nextCursor)) {
+    const next = yield* claimInspectInput(
+      ClaimInspectionPageRequest.make({ input: largeMixed, cursor: page.nextCursor.value })
+    );
+    assert.strictEqual(next.range.startSourceOrdinal, page.range.endSourceOrdinal + 1);
+    page = next;
+    pages = A.append(pages, next);
+    assert.isAtMost(pages.length, largeMixed.records.length);
+  }
+  return { page, pages };
+});
+
+const assertPageIsGreedy = Effect.fn("ClaimInspectionTest.assertGreedyPage")(function* (
+  value: ClaimInspectionPage,
+  full: ClaimInputInspectionReport
+) {
+  if (O.isNone(value.nextCursor)) return;
+  const nextRecord = yield* Effect.fromOption(A.get(full.records, value.range.endSourceOrdinal));
+  const end = value.range.endSourceOrdinal + 1;
+  const expanded = ClaimInspectionPage.make({
+    ...value,
+    records: A.append(value.records, nextRecord),
+    range: { ...value.range, endSourceOrdinal: end },
+    deliveryStatus: end === full.records.length ? "complete" : "incomplete",
+    nextCursor:
+      end === full.records.length
+        ? O.none()
+        : O.some(ClaimInspectionCursor.make({ sourceKey: largeMixed.sourceKey, nextSourceOrdinal: end + 1 })),
+  });
+  const expandedEncoded = yield* encodePage(expanded);
+  assert.isAbove(encoder.encode(expandedEncoded).byteLength, limit);
+});
+
 const localOnly = ClaimInspectionLive.pipe(
   Layer.provide(
     Layer.succeed(UsptoClaimInputs, {
@@ -167,18 +204,7 @@ describe("ClaimInspection service and local tool", () => {
         const full = yield* (yield* ClaimInspection).inspect(largeMixed);
         const fullEncoded = yield* encodeFull(full);
         assert.isAbove(encoder.encode(fullEncoded).byteLength, limit);
-        let page = yield* claimInspectInput(ClaimInspectionPageRequest.make({ input: largeMixed }));
-        let pages: A.NonEmptyReadonlyArray<ClaimInspectionPage> = [page];
-        assert.strictEqual(page.deliveryStatus, "incomplete");
-        while (O.isSome(page.nextCursor)) {
-          const next = yield* claimInspectInput(
-            ClaimInspectionPageRequest.make({ input: largeMixed, cursor: page.nextCursor.value })
-          );
-          assert.strictEqual(next.range.startSourceOrdinal, page.range.endSourceOrdinal + 1);
-          page = next;
-          pages = A.append(pages, next);
-          assert.isAtMost(pages.length, largeMixed.records.length);
-        }
+        const { page, pages } = yield* collectLargeInspectionPages();
         assert.isAbove(pages.length, 1);
         assert.strictEqual(page.deliveryStatus, "complete");
         assert.strictEqual(page.range.endSourceOrdinal, largeMixed.records.length);
@@ -195,22 +221,7 @@ describe("ClaimInspection service and local tool", () => {
           assert.isAbove(encoder.encode(encoded).byteLength, encoded.length);
           const decoded = yield* decodePage(encoded);
           assert.deepStrictEqual(decoded, value);
-          if (O.isSome(value.nextCursor)) {
-            const nextRecord = yield* Effect.fromOption(A.get(full.records, value.range.endSourceOrdinal));
-            const end = value.range.endSourceOrdinal + 1;
-            const expanded = ClaimInspectionPage.make({
-              ...value,
-              records: A.append(value.records, nextRecord),
-              range: { ...value.range, endSourceOrdinal: end },
-              deliveryStatus: end === full.records.length ? "complete" : "incomplete",
-              nextCursor:
-                end === full.records.length
-                  ? O.none()
-                  : O.some(ClaimInspectionCursor.make({ sourceKey: largeMixed.sourceKey, nextSourceOrdinal: end + 1 })),
-            });
-            const expandedEncoded = yield* encodePage(expanded);
-            assert.isAbove(encoder.encode(expandedEncoded).byteLength, limit);
-          }
+          yield* assertPageIsGreedy(value, full);
         }
       })
     );
