@@ -679,3 +679,20 @@ Retain the absent optional flag. Ten scoped decisions and 25 pending feature
 rows remain out of 35. Broad pruning/deployment, real computations, qualification,
 value and observation windows remain open. Hosted CI provides PR proof; no local
 verify, publish, package gate or test suite was run for this evidence-only wave.
+
+
+### Native watch caller applicability, 2026-11-03
+
+Review 213 tracked manifests (fixtures included), 27 Turbo configurations and
+the tracked runtime roots under recorded source bindings. Those roots remain
+identical to accepted source 8fe07d3eed. The four watch-named
+scripts invoke Bun; root development uses `turbo run dev`. Three textual
+search hits are package prose or Yeet policy-input filenames. Retain the
+absent optional watch-input flag for this current caller set. The source-only
+collector executed no tasks or watchers; its three early refusal controls
+preserve the passing observation. Both published stable/current-canary source
+modules declare the option, but no native watch behavior is claimed.
+
+Eleven of 35 feature decisions now have scoped final reviews; 24 remain
+pending. The computation census, broader persistence/watch review, qualification,
+measured value, real observation windows and all whole-goal criteria remain open.
