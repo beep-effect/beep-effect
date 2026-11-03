@@ -15,7 +15,10 @@
         "goals/citation-extraction-engine/history/evidence/2026-11-02-regex-job-transport.md",
         "packages/law-practice/server/src/internal/Citation/RegexWorkerProtocol.ts",
         "packages/law-practice/server/src/internal/Citation/ByteFrames.ts",
-        "packages/law-practice/server/test/CitationRegexWorkerProtocol.test.ts"
+        "packages/law-practice/server/test/CitationRegexWorkerProtocol.test.ts",
+        "packages/law-practice/server/src/internal/Citation/RegexResult.ts",
+        "packages/law-practice/server/test/CitationRegexResult.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-02-regex-result-transport.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

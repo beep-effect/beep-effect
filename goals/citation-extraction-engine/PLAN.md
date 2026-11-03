@@ -279,6 +279,14 @@ tests pass, including its protocol/supervisor regressions. Result/capture frames
 the actual regex child/supervisor, matching encoding and native evaluation proof
 remain open.
 
+The [complete regex result boundary](./history/evidence/2026-11-02-regex-result-transport.md)
+now retains native source-point capture words, distinguishes unmatched from empty
+captures and checks contextual source bounds, match progress, exact payload/frame
+sizes and captured deadlines. Three focused protocol suites pass 20 tests. The
+result accessor owns decoded bytes; its ranges remain unverified. Actual regex
+execution, group descriptors, source-derived semantic replay and public span
+mapping remain open.
+
 The [admitted named-cleaner replay](./history/evidence/2026-11-02-admitted-named-cleaners.md)
 now matches all 600 non-HTML named/official outcomes in the original 1,155-case
 cleaner corpus, including 599 result/identity observations and the invalid-name
