@@ -7,7 +7,7 @@ Tmpfs models in the ordered Tier 1E subsystem batch, with guard credit allocated
 
 ## Current shape
 
-`packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts:373-397` declares
+`packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts:373-397` declares
 five real sibling values inside `discoverDanglingWorktreeStub`: `gitDir`379
 and `parentRepo`380 are Option<string>; `gitDirMissing`384 and
 `parentRepoMissing`385 are Option<boolean>; `contentsAreExact`387 is Boolean.

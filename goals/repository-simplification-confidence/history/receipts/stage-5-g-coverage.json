@@ -7,7 +7,7 @@
   "baseline": "standards/coverage.regression-baseline.jsonc",
   "rows": [
     {
-      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts",
       "current": {
         "lines": 100.0,
         "statements": 100.0,
@@ -36,7 +36,7 @@
       "increasedUncovered": []
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts",
       "current": {
         "lines": 91.01,
         "statements": 88.3,

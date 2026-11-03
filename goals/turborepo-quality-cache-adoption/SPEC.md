@@ -605,3 +605,33 @@ adaptation; route current selection through its separately named streaming
 helper. Test the real sibling preludes and process bounds before publishing a
 change to that shared source. Preserve historical report hashes against their
 original immutable whole-driver source, and bind new observations separately.
+
+
+### Retain absent Turbo exporter configuration, 2026-11-02
+
+- Keep the absent `experimentalObservability` flag and exporter configuration.
+  The tracked repository has no named Turbo exporter consumer; use structured
+  summaries and bounded backend events for the existing attribution work.
+- Follow the exact client behavior: disabled file settings are dropped, while
+  environment/CLI settings require the flag. The bundled prose does not describe
+  that difference. Preserve the failed first expectation and pinned-source proof.
+- Reopen for a named measured requirement after actual payload capture, synthetic
+  secret/path/content safety, separate credentials, bounded labels/volume/retention
+  and a disable path. Synthetic default controls grant no exporter safety, task
+  qualification or production benefit. Reversal reverts this decision record;
+  runtime settings remain unchanged.
+
+### Explicit lane scope and pinned filter composition, 2026-11-02
+
+- Interpret selector combinations against the configured exact clients. With
+  the current enabled task-level flags, the affected set intersects positive
+  filters; multiple positive selectors still union within that intersection.
+  Preserve executable prerequisite closure and verify negative filters and
+  `--only` separately. Do not infer behavior from an older comment.
+- The labs lane deliberately runs its full set under the existing workflow
+  path gate. Correct the false widening rationale without changing lane argv,
+  replay parity or claiming a newly narrowed hosted proof.
+- Synthetic plans and source review grant neither real computation qualification
+  nor final feature acceptance. Reopen runtime changes only with the complete
+  current caller, tuple and hosted evidence. Reverse this research/comment wave
+  through a reviewed Git revert, retaining the native reports.

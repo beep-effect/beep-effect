@@ -4101,7 +4101,7 @@
       "presentAtFrozenHead": true,
       "comparisonOnlyNoSemanticRescan": true
     },
-    "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.probes.ts": {
+    "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts": {
       "oldSourceSha256": "7d118605464a37620fe0fa59bc53f508b480a93566ce92720b17073845904ce5",
       "sourceSha256": "7d118605464a37620fe0fa59bc53f508b480a93566ce92720b17073845904ce5",
       "workingSha256": "7d118605464a37620fe0fa59bc53f508b480a93566ce92720b17073845904ce5",
@@ -4165,7 +4165,7 @@
       "presentAtFrozenHead": true,
       "comparisonOnlyNoSemanticRescan": true
     },
-    "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts": {
+    "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts": {
       "oldSourceSha256": "693383ab275abc92beb8c676a6fbf674cf33b70c25c28715367628f45c0c8a7f",
       "sourceSha256": "693383ab275abc92beb8c676a6fbf674cf33b70c25c28715367628f45c0c8a7f",
       "workingSha256": "693383ab275abc92beb8c676a6fbf674cf33b70c25c28715367628f45c0c8a7f",
@@ -4173,7 +4173,7 @@
       "presentAtFrozenHead": true,
       "comparisonOnlyNoSemanticRescan": true
     },
-    "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts": {
+    "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts": {
       "oldSourceSha256": "2a0253141d3ebdadfbe6b8d715012b83cb75c36876ec50969e330e2f03a5da01",
       "sourceSha256": "2a0253141d3ebdadfbe6b8d715012b83cb75c36876ec50969e330e2f03a5da01",
       "workingSha256": "2a0253141d3ebdadfbe6b8d715012b83cb75c36876ec50969e330e2f03a5da01",
@@ -20674,7 +20674,7 @@
     },
     {
       "id": "r3-tooling-registration-deletion-note-phase",
-      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.probes.ts",
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts",
       "symbol": "pending-changeset.deletionNote",
       "seedLine": 189,
       "seedStatus": "designed",
@@ -20687,7 +20687,7 @@
       "coverage": "retained-current-native-owner-evidence",
       "coverageReason": "Existing finalized current-round native owner/disposition prose or explicit audited-retention receipt; no new semantic validation claimed.",
       "lane": "r28-cli-internal-root",
-      "originalOwnerSourceHashKey": "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.probes.ts",
+      "originalOwnerSourceHashKey": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts",
       "seedRationaleSha256": "db227ff437b4b3bed0b552da786168ea2367f7b0d8fbb0e6c1ad47dc45c24484",
       "explicitAuditedRetentionReceipts": [],
       "installedArchiveEvidence": [],
@@ -21434,7 +21434,7 @@
     },
     {
       "id": "r2-tooling-tmpfs-reap-classified-reaped",
-      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
       "symbol": "DiscoveredCandidate / ApplyOutcome",
       "seedLine": 61,
       "seedStatus": "designed",
@@ -21447,7 +21447,7 @@
       "coverage": "installed-source-backed-adjudication",
       "coverageReason": "Bound actual installed integration and exact prior-row archive override primary footer assertions.",
       "lane": "r28-cli-internal-root",
-      "originalOwnerSourceHashKey": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
+      "originalOwnerSourceHashKey": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
       "seedRationaleSha256": "a43fb35cd93e8255a7537aecd75334ab80f9746666aa3bb8110a1120aaa4d2f4",
       "explicitAuditedRetentionReceipts": [],
       "installedArchiveEvidence": [
@@ -24539,7 +24539,7 @@
     },
     {
       "id": "r3-tooling-registration-authored-kind-probes",
-      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.probes.ts",
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts",
       "symbol": "authoredKindFor",
       "seedLine": 393,
       "seedStatus": "disqualified",
@@ -24552,7 +24552,7 @@
       "coverage": "installed-source-backed-adjudication",
       "coverageReason": "Bound actual installed integration and exact prior-row archive override primary footer assertions.",
       "lane": "r28-cli-internal-root",
-      "originalOwnerSourceHashKey": "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.probes.ts",
+      "originalOwnerSourceHashKey": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts",
       "seedRationaleSha256": "b94fd59cd1994e8ed7fd387a9608aae54f106abb976805f1172bc9415e272608",
       "explicitAuditedRetentionReceipts": [],
       "installedArchiveEvidence": [
@@ -25546,7 +25546,7 @@
     },
     {
       "id": "r3-tooling-tmpfs-name-brand-gates",
-      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
       "symbol": "TmpfsReap.nameBrands",
       "seedLine": 51,
       "seedStatus": "disqualified",
@@ -25559,7 +25559,7 @@
       "coverage": "installed-source-backed-adjudication",
       "coverageReason": "Bound actual installed integration and exact prior-row archive override primary footer assertions.",
       "lane": "r28-cli-internal-root",
-      "originalOwnerSourceHashKey": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
+      "originalOwnerSourceHashKey": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
       "seedRationaleSha256": "42a8007c4f5022afa2a4ea6f4494b0e866e16243eb843205afbb754a9ab77b94",
       "explicitAuditedRetentionReceipts": [],
       "installedArchiveEvidence": [
@@ -34902,7 +34902,7 @@
     },
     {
       "id": "tmpfs-dangling-stub-disposition",
-      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
       "symbol": "discoverDanglingWorktreeStub.exactness",
       "seedLine": 387,
       "seedStatus": "designed",
@@ -34915,7 +34915,7 @@
       "coverage": "installed-source-backed-adjudication",
       "coverageReason": "Bound actual installed integration and exact prior-row archive override primary footer assertions.",
       "lane": "r28-cli-internal-root",
-      "originalOwnerSourceHashKey": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
+      "originalOwnerSourceHashKey": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
       "seedRationaleSha256": "2ceb290a736490c5c45d11e61122cfaeee0ae56b910bfdf86a7b4a6896c5c951",
       "explicitAuditedRetentionReceipts": [],
       "installedArchiveEvidence": [
@@ -35040,7 +35040,7 @@
     },
     {
       "id": "r25-cli-internal-root-residue-reap-name-brands",
-      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts",
       "symbol": "ResidueReap.nameBrands",
       "seedLine": 64,
       "seedStatus": "disqualified",
@@ -35053,7 +35053,7 @@
       "coverage": "installed-source-backed-adjudication",
       "coverageReason": "Bound actual installed integration and exact prior-row archive override primary footer assertions.",
       "lane": "r28-cli-internal-root",
-      "originalOwnerSourceHashKey": "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts",
+      "originalOwnerSourceHashKey": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts",
       "seedRationaleSha256": "089af448e1ce6a9556a14900c46ef455d8a88a874c17e87dda0e25e3918ef07e",
       "explicitAuditedRetentionReceipts": [],
       "installedArchiveEvidence": [
@@ -35076,7 +35076,7 @@
             {
               "line": 445,
               "section": "canonical inventory citation map",
-              "excerpt": "| `r25-cli-internal-root-residue-reap-name-brands` | no | `packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts` P `61` -> `64` |"
+              "excerpt": "| `r25-cli-internal-root-residue-reap-name-brands` | no | `packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts` P `61` -> `64` |"
             }
           ]
         }

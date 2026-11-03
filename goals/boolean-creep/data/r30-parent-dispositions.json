@@ -3666,7 +3666,7 @@
     {
       "id": "r3-tooling-registration-deletion-note-phase",
       "lane": "r30-cli-internal-root",
-      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.probes.ts",
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts",
       "includedScanSource": true,
       "rowSha256": "5d3fbac0ff575dc46498262e0b3df619d1da14ab371bc26a24f0c79c54be9958",
       "disposition": "retain",
@@ -6356,7 +6356,7 @@
     {
       "id": "r28-cli-internal-root-tmpfs-discovered-classified-skip",
       "lane": "r30-cli-internal-root",
-      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
       "includedScanSource": true,
       "rowSha256": "bcc05c60bb04b622e1746e3d02dd8b8130f1ce498c066ae2f264b05fa0c9b81d",
       "disposition": "correct-locator-or-kind",
@@ -6366,7 +6366,7 @@
     {
       "id": "r28-cli-internal-root-tmpfs-gitfile-remove-options",
       "lane": "r30-cli-internal-root",
-      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
       "includedScanSource": true,
       "rowSha256": "755032285895120f088b922f1bb958a28856827b42772aa3e82cac3ce55652bf",
       "disposition": "retain",
@@ -6376,7 +6376,7 @@
     {
       "id": "r28-cli-internal-root-tmpfs-directory-remove-options",
       "lane": "r30-cli-internal-root",
-      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
       "includedScanSource": true,
       "rowSha256": "08bfd6fa378ea974257271c16d536a57c601018aed26f5fe2a25f4d89bf9f8b2",
       "disposition": "retain",
@@ -6386,7 +6386,7 @@
     {
       "id": "r28-cli-internal-root-tmpfs-fallow-extras-remove-options",
       "lane": "r30-cli-internal-root",
-      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
       "includedScanSource": true,
       "rowSha256": "38f67f035f5a2be2e20094fd33a23ce0d710de9577d9e7971544a7a0a45888e9",
       "disposition": "retain",
@@ -6516,7 +6516,7 @@
     {
       "id": "r28-cli-internal-root-tmpfs-stub-observations",
       "lane": "r30-cli-internal-root",
-      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
       "includedScanSource": true,
       "rowSha256": "114ced49469a92141e12bf95f164ba726ab04b48d1942ee5b409b73b9cc9d0e0",
       "disposition": "retain",

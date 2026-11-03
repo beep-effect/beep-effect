@@ -2,12 +2,6 @@
   "schemaVersion": "policy-tools-fingerprint/v2",
   "shared": [
     ".fallowrc.jsonc",
-    ".oxlintrc.circular.json",
-    ".oxlintrc.deprecated-apis.jsonc",
-    ".oxlintrc.docs.json",
-    ".oxlintrc.json",
-    "_typos.toml",
-    "biome.jsonc",
     "fallow-plugin-manual-development-tools.json",
     "package.json",
     "packages/drivers/git/package.json",
@@ -402,11 +396,8 @@
     "packages/tooling/tool/cli/src/internal/schema/OpaqueDefect.ts",
     "packages/tooling/tool/cli/src/internal/schema/PosInt.ts",
     "packages/tooling/tool/cli/src/internal/schema/Uuid.ts",
-    "standards/lint-policy.sweeps.jsonc",
-    "standards/policy-tools.fingerprint.json",
     "tsconfig.base.json",
-    "tsconfig.json",
-    "tsdoc.json"
+    "tsconfig.json"
   ],
   "sharedTasks": [],
   "check": [
@@ -678,6 +669,11 @@
       "parent": "goals",
       "tasks": ["//#goals:doctor"],
       "inputs": [
+        ".oxlintrc.circular.json",
+        ".oxlintrc.deprecated-apis.jsonc",
+        ".oxlintrc.docs.json",
+        ".oxlintrc.json",
+        "_typos.toml",
         "packages/drivers/commands/package.json",
         "packages/drivers/commands/src/Redaction.ts",
         "packages/drivers/commands/src/Run.ts",
@@ -855,7 +851,8 @@
         "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts",
         "packages/tooling/tool/cli/src/internal/repo-run/index.ts",
         "packages/tooling/tool/cli/src/internal/state/JsonLinesStore.ts",
-        "packages/tooling/tool/cli/src/internal/state/WorkstationState.ts"
+        "packages/tooling/tool/cli/src/internal/state/WorkstationState.ts",
+        "tsdoc.json"
       ]
     },
     {
@@ -989,6 +986,11 @@
       "parent": "shared",
       "tasks": ["//#knowledge:refs-check", "//#knowledge:semantic-delta"],
       "inputs": [
+        ".oxlintrc.circular.json",
+        ".oxlintrc.deprecated-apis.jsonc",
+        ".oxlintrc.docs.json",
+        ".oxlintrc.json",
+        "_typos.toml",
         "packages/drivers/commands/package.json",
         "packages/drivers/commands/src/Redaction.ts",
         "packages/drivers/commands/src/Run.ts",
@@ -1272,7 +1274,9 @@
         "packages/tooling/tool/cli/src/internal/repo-run/index.ts",
         "packages/tooling/tool/cli/src/internal/schema/TextCodec.ts",
         "packages/tooling/tool/cli/src/internal/state/JsonLinesStore.ts",
-        "packages/tooling/tool/cli/src/internal/state/WorkstationState.ts"
+        "packages/tooling/tool/cli/src/internal/state/WorkstationState.ts",
+        "tsdoc.json",
+        "turbo.json"
       ]
     },
     {
@@ -1585,11 +1589,16 @@
       "parent": "lint",
       "tasks": ["//#lint:circular"],
       "inputs": [
+        ".oxlintrc.circular.json",
+        ".oxlintrc.deprecated-apis.jsonc",
+        ".oxlintrc.docs.json",
+        ".oxlintrc.json",
         "packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.schemas.ts",
         "packages/tooling/tool/cli/src/commands/Lint/Lint.errors.ts",
         "packages/tooling/tool/cli/src/commands/Lint/LintCircular.command.ts",
         "packages/tooling/tool/cli/src/commands/Lint/internal/LintPackage.ts",
-        "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts"
+        "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts",
+        "tsdoc.json"
       ]
     },
     {
@@ -1599,6 +1608,11 @@
       "parent": "lint",
       "tasks": ["lint:deprecated-apis"],
       "inputs": [
+        ".oxlintrc.circular.json",
+        ".oxlintrc.deprecated-apis.jsonc",
+        ".oxlintrc.docs.json",
+        ".oxlintrc.json",
+        "biome.jsonc",
         "packages/foundation/capability/file-processing/package.json",
         "packages/foundation/capability/file-processing/src/PathSafety/PathSafety.errors.ts",
         "packages/foundation/capability/file-processing/src/PathSafety/PathSafety.policy.ts",
@@ -1806,7 +1820,10 @@
         "packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts",
         "packages/tooling/tool/cli/src/internal/repo-run/ProcessAttachment.ts",
         "packages/tooling/tool/cli/src/internal/repo-run/ProcessTable.ts",
-        "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts"
+        "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts",
+        "standards/lint-policy.sweeps.jsonc",
+        "tsdoc.json",
+        "turbo.json"
       ]
     },
     {
@@ -2062,6 +2079,10 @@
       "parent": "lint",
       "tasks": ["//#lint:jsdoc:root", "lint:jsdoc"],
       "inputs": [
+        ".oxlintrc.circular.json",
+        ".oxlintrc.deprecated-apis.jsonc",
+        ".oxlintrc.docs.json",
+        ".oxlintrc.json",
         "packages/foundation/modeling/glob/src/GlobSet.ts",
         "packages/foundation/modeling/glob/src/GlobString.ts",
         "packages/foundation/modeling/glob/src/index.ts",
@@ -2154,7 +2175,8 @@
         "packages/tooling/tool/cli/src/commands/Lint/LintJsdoc.command.ts",
         "packages/tooling/tool/cli/src/commands/Lint/internal/LintPackage.ts",
         "packages/tooling/tool/cli/src/internal/RepoWorkspaces.ts",
-        "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts"
+        "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts",
+        "tsdoc.json"
       ]
     },
     {
@@ -2208,6 +2230,10 @@
       "parent": "lint",
       "tasks": ["lint:laws"],
       "inputs": [
+        ".oxlintrc.circular.json",
+        ".oxlintrc.deprecated-apis.jsonc",
+        ".oxlintrc.docs.json",
+        ".oxlintrc.json",
         "packages/foundation/modeling/glob/src/GlobSet.ts",
         "packages/foundation/modeling/glob/src/GlobString.ts",
         "packages/foundation/modeling/glob/src/index.ts",
@@ -2320,7 +2346,8 @@
         "packages/tooling/tool/cli/src/internal/tsmorph/JsDoc.ts",
         "packages/tooling/tool/cli/src/internal/tsmorph/OwnerResolver.ts",
         "packages/tooling/tool/cli/src/internal/tsmorph/ProjectFactory.ts",
-        "packages/tooling/tool/cli/src/internal/tsmorph/index.ts"
+        "packages/tooling/tool/cli/src/internal/tsmorph/index.ts",
+        "tsdoc.json"
       ]
     },
     {
@@ -2436,7 +2463,8 @@
         "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts",
         "packages/tooling/tool/cli/src/internal/jsdoc/DoctestSource.ts",
         "packages/tooling/tool/cli/src/internal/package-scripts/PackageScripts.schemas.ts",
-        "packages/tooling/tool/cli/src/internal/package-scripts/PackageScriptsPolicy.ts"
+        "packages/tooling/tool/cli/src/internal/package-scripts/PackageScriptsPolicy.ts",
+        "turbo.json"
       ]
     },
     {
@@ -2612,7 +2640,8 @@
         "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts",
         "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
         "packages/tooling/tool/cli/src/internal/cli/OptionRecord.ts",
-        "packages/tooling/tool/cli/src/internal/cli/PolicyFindingLogger.ts"
+        "packages/tooling/tool/cli/src/internal/cli/PolicyFindingLogger.ts",
+        "turbo.json"
       ]
     },
     {
@@ -2905,6 +2934,12 @@
       "parent": "shared",
       "tasks": [],
       "inputs": [
+        ".oxlintrc.circular.json",
+        ".oxlintrc.deprecated-apis.jsonc",
+        ".oxlintrc.docs.json",
+        ".oxlintrc.json",
+        "_typos.toml",
+        "biome.jsonc",
         "packages/foundation/capability/chalk/package.json",
         "packages/foundation/capability/chalk/src/Chalk.ts",
         "packages/foundation/capability/chalk/src/index.ts",
@@ -3256,7 +3291,10 @@
         "packages/tooling/tool/docgen/src/Printer.ts",
         "packages/tooling/tool/docgen/src/ProofManifest.ts",
         "packages/tooling/tool/docgen/src/Version.ts",
-        "packages/tooling/tool/docgen/src/internal/JsonFile.ts"
+        "packages/tooling/tool/docgen/src/internal/JsonFile.ts",
+        "standards/lint-policy.sweeps.jsonc",
+        "tsdoc.json",
+        "turbo.json"
       ]
     },
     {
@@ -4269,6 +4307,7 @@
       "parent": "shared",
       "tasks": ["//#config-sync:check"],
       "inputs": [
+        "biome.jsonc",
         "packages/foundation/modeling/glob/src/GlobSet.ts",
         "packages/foundation/modeling/glob/src/GlobString.ts",
         "packages/foundation/modeling/glob/src/index.ts",
@@ -4388,6 +4427,7 @@
       "parent": "shared",
       "tasks": ["//#repo-sanity:versions"],
       "inputs": [
+        "biome.jsonc",
         "packages/foundation/modeling/glob/src/GlobSet.ts",
         "packages/foundation/modeling/glob/src/GlobString.ts",
         "packages/foundation/modeling/glob/src/index.ts",
@@ -4504,7 +4544,8 @@
         "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts",
         "packages/tooling/tool/cli/src/internal/cli/Jsonc.ts",
         "packages/tooling/tool/cli/src/internal/cli/RunMode.ts",
-        "packages/tooling/tool/cli/src/internal/schema/TextCodec.ts"
+        "packages/tooling/tool/cli/src/internal/schema/TextCodec.ts",
+        "turbo.json"
       ]
     }
   ]

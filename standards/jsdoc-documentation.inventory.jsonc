@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-03T01:07:36.710Z",
+  "generatedAt": "2026-11-03T02:01:53.091Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 16,
     "publicModules": 3605,
-    "publicExports": 25566,
+    "publicExports": 25568,
     "openModules": 115,
     "openExports": 94,
     "missingExportExamples": 0,
@@ -454985,7 +454985,7 @@
         "srcDir": "src",
         "sourceFileCount": 502,
         "publicModuleCount": 499,
-        "publicExportCount": 4558
+        "publicExportCount": 4560
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -456875,7 +456875,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 7,
+          "exportCount": 8,
           "remediationStatus": "resolved"
         },
         {
@@ -461740,7 +461740,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 9,
+          "exportCount": 10,
           "remediationStatus": "resolved"
         },
         {
@@ -479541,9 +479541,32 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/Cache.workflow.github.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.schemas.ts",
-          "line": 14,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-schemas-ts-14-export-cachehostedproducerupload-from-cache-workflow-upload-schemas-ts",
+          "line": 16,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-schemas-ts-16-export-cachehostedproducerupload-from-cache-workflow-upload-schemas-ts",
           "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CacheHostedProducerReusableWorkflowApproval",
+          "exportKind": "class",
+          "filePath": "src/commands/Cache/Cache.workflow.github.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.schemas.ts",
+          "line": 42,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-schemas-ts-42-cachehostedproducerreusableworkflowapproval",
+          "currentTags": [
+            "@internal",
+            "@category",
+            "@since"
+          ],
           "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
@@ -479560,8 +479583,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.workflow.github.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.schemas.ts",
-          "line": 33,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-schemas-ts-33-cachehostedproducerapproval",
+          "line": 70,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-schemas-ts-70-cachehostedproducerapproval",
           "currentTags": [
             "@category",
             "@since"
@@ -479582,8 +479605,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.workflow.github.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.schemas.ts",
-          "line": 69,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-schemas-ts-69-cachehostedproducerrunreference",
+          "line": 109,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-schemas-ts-109-cachehostedproducerrunreference",
           "currentTags": [
             "@internal",
             "@category",
@@ -479605,8 +479628,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.workflow.github.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.schemas.ts",
-          "line": 93,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-schemas-ts-93-cachehostedproducerreference",
+          "line": 133,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-schemas-ts-133-cachehostedproducerreference",
           "currentTags": [
             "@category",
             "@since"
@@ -479627,8 +479650,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.workflow.github.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.schemas.ts",
-          "line": 116,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-schemas-ts-116-cachehostedproducerreport",
+          "line": 156,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-schemas-ts-156-cachehostedproducerreport",
           "currentTags": [
             "@category",
             "@since"
@@ -479649,8 +479672,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.workflow.github.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.schemas.ts",
-          "line": 150,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-schemas-ts-150-cachehostedproducercompletereport",
+          "line": 190,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-schemas-ts-190-cachehostedproducercompletereport",
           "currentTags": [
             "@internal",
             "@category",
@@ -479672,8 +479695,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.workflow.github.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.schemas.ts",
-          "line": 186,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-schemas-ts-186-cachehostedproducerobservation",
+          "line": 226,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-schemas-ts-226-cachehostedproducerobservation",
           "currentTags": [
             "@category",
             "@since"
@@ -479765,8 +479788,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.github.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts",
-          "line": 385,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-ts-385-verifycachehostedproducerupload",
+          "line": 433,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-ts-433-verifycachehostedproducerupload",
           "currentTags": [
             "@internal",
             "@category",
@@ -479788,8 +479811,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.github.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts",
-          "line": 451,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-ts-451-buildcachehostedproducercompletereport",
+          "line": 493,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-ts-493-buildcachehostedproducercompletereport",
           "currentTags": [
             "@internal",
             "@category",
@@ -479811,8 +479834,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.github.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts",
-          "line": 499,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-ts-499-verifycachehostedproducerobservation",
+          "line": 541,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-ts-541-verifycachehostedproducerobservation",
           "currentTags": [
             "@internal",
             "@category",
@@ -479856,8 +479879,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.workflow.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
-          "line": 57,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-schemas-ts-57-cacheproducerworkflow",
+          "line": 58,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-schemas-ts-58-cacheproducerworkflow",
           "currentTags": [
             "@category",
             "@since"
@@ -479878,8 +479901,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.workflow.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
-          "line": 85,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-schemas-ts-85-cacheproducerobservation",
+          "line": 86,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-schemas-ts-86-cacheproducerobservation",
           "currentTags": [
             "@category",
             "@since"
@@ -479900,8 +479923,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.workflow.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
-          "line": 117,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-schemas-ts-117-cacheproduceruploadruntime",
+          "line": 118,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-schemas-ts-118-cacheproduceruploadruntime",
           "currentTags": [
             "@internal",
             "@category",
@@ -479923,8 +479946,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.workflow.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
-          "line": 151,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-schemas-ts-151-cacheproducerstorageruntime",
+          "line": 152,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-schemas-ts-152-cacheproducerstorageruntime",
           "currentTags": [
             "@internal",
             "@category",
@@ -479946,8 +479969,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.workflow.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
-          "line": 186,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-schemas-ts-186-cacheproducerexecutionprofile",
+          "line": 187,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-schemas-ts-187-cacheproducerexecutionprofile",
           "currentTags": [
             "@internal",
             "@category",
@@ -480061,8 +480084,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 145,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-145-assertcacheproducerworkflowprofile",
+          "line": 205,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-205-assertcacheproducerworkflowprofile",
           "currentTags": [
             "@internal",
             "@category",
@@ -480084,8 +480107,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 175,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-175-assertcacheproducerworkflowlocation",
+          "line": 235,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-235-assertcacheproducerworkflowlocation",
           "currentTags": [
             "@internal",
             "@category",
@@ -480107,8 +480130,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 200,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-200-collectcacheproducerworkflowfiles",
+          "line": 267,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-267-collectcacheproducerworkflowfiles",
           "currentTags": [
             "@internal",
             "@category",
@@ -480130,8 +480153,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 246,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-246-inspectcacheproducerworkflow",
+          "line": 321,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-321-inspectcacheproducerworkflow",
           "currentTags": [
             "@internal",
             "@category",
@@ -480153,8 +480176,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 286,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-286-hashcacheproducerworkflow",
+          "line": 361,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-361-hashcacheproducerworkflow",
           "currentTags": [
             "@internal",
             "@category",
@@ -480176,8 +480199,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 315,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-315-hashcacheproduceruploadtarget",
+          "line": 390,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-390-hashcacheproduceruploadtarget",
           "currentTags": [
             "@internal",
             "@category",
@@ -480199,8 +480222,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 335,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-335-hashcacheproduceruploadkey",
+          "line": 410,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-410-hashcacheproduceruploadkey",
           "currentTags": [
             "@internal",
             "@category",
@@ -480222,8 +480245,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 452,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-452-assertcacheproduceruploadruntime",
+          "line": 527,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-527-assertcacheproduceruploadruntime",
           "currentTags": [
             "@internal",
             "@category",
@@ -480245,8 +480268,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 485,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-485-loadcacheproducerexecutionruntime",
+          "line": 560,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-560-loadcacheproducerexecutionruntime",
           "currentTags": [
             "@internal",
             "@category",
@@ -480268,8 +480291,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 536,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-536-loadcacheproducerstorageruntime",
+          "line": 611,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-611-loadcacheproducerstorageruntime",
           "currentTags": [
             "@internal",
             "@category",
@@ -480291,8 +480314,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 580,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-580-initializecacheproducerexecution",
+          "line": 655,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-655-initializecacheproducerexecution",
           "currentTags": [
             "@internal",
             "@category",
@@ -480314,8 +480337,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 651,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-651-runcacheproducerworkflow",
+          "line": 726,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-726-runcacheproducerworkflow",
           "currentTags": [
             "@internal",
             "@category",
@@ -530012,12 +530035,34 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "PolicyRootFileRoute",
+          "exportKind": "class",
+          "filePath": "src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "line": 234,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-234-policyrootfileroute",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "PolicyCliLayout",
           "exportKind": "class",
           "filePath": "src/commands/Lint/PolicyFingerprint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
-          "line": 232,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-232-policyclilayout",
+          "line": 274,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-274-policyclilayout",
           "currentTags": [
             "@category",
             "@since"
@@ -530038,8 +530083,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/PolicyFingerprint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
-          "line": 266,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-266-policycommandnode",
+          "line": 308,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-308-policycommandnode",
           "currentTags": [
             "@category",
             "@since"
@@ -530060,8 +530105,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/PolicyFingerprint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
-          "line": 294,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-294-policyclosure",
+          "line": 336,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-336-policyclosure",
           "currentTags": [
             "@category",
             "@since"
@@ -530082,8 +530127,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 325,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-325-computepolicyfingerprint",
+          "line": 319,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-319-computepolicyfingerprint",
           "currentTags": [
             "@category",
             "@since"
@@ -530104,8 +530149,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 761,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-761-policytoolsfingerprintpolicy",
+          "line": 749,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-749-policytoolsfingerprintpolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -530126,8 +530171,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 836,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-836-lintpolicyfingerprintcommand",
+          "line": 824,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-824-lintpolicyfingerprintcommand",
           "currentTags": [
             "@category",
             "@since"

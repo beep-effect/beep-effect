@@ -47,7 +47,7 @@ const decodeGitObjectId = S.decodeUnknownEffect(GitObjectId);
  * **Example** (Describe a source with no merged pull requests)
  *
  * ```ts
- * import type { ResidueTerminalLanePullRequests } from "@beep/repo-cli/test/Quality"
+ * import type { ResidueTerminalLanePullRequests } from "@beep/repo-cli/test/Worktree"
  * import * as Effect from "effect/Effect"
  *
  * const none: ResidueTerminalLanePullRequests = () => Effect.succeedSome([])
@@ -193,7 +193,7 @@ const proveTerminalLane = Effect.fnUntraced(function* (
  * **Example** (Build the probe effect)
  *
  * ```ts
- * import { makeResidueTerminalLaneProbe } from "@beep/repo-cli/test/Quality"
+ * import { makeResidueTerminalLaneProbe } from "@beep/repo-cli/test/Worktree"
  * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(makeResidueTerminalLaneProbe())) // true
@@ -227,7 +227,7 @@ export const makeResidueTerminalLaneProbe = Effect.fnUntraced(function* (
  * **Example** (Reference the live layer)
  *
  * ```ts
- * import { ResidueTerminalLaneProbeLive } from "@beep/repo-cli/test/Quality"
+ * import { ResidueTerminalLaneProbeLive } from "@beep/repo-cli/test/Worktree"
  *
  * console.log(typeof ResidueTerminalLaneProbeLive) // "object"
  * ```

@@ -5288,7 +5288,7 @@
           "property": "encodeUnknownResult"
         },
         {
-          "file": "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.probes.ts",
+          "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts",
           "start": 19600,
           "property": "decodeEffect"
         }

@@ -100,7 +100,7 @@
       "belowBaseline": ["lines", "statements", "functions"]
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.plan.ts",
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.plan.ts",
       "measured": {
         "lines": 92.45,
         "statements": 92.59,
@@ -116,7 +116,7 @@
       "belowBaseline": []
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
       "measured": {
         "lines": 100,
         "statements": 100,

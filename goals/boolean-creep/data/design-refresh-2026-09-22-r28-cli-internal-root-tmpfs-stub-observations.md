@@ -16,8 +16,8 @@ Read source/fixtures only; no filesystem candidate probes, tmpfs cleanup, proces
 
 ## Inputs
 
-- `packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts`: `11fde46ed957f8d4a1dd59020028e3d40da53a9009017bb4278c2ac709a5dfa8`
-- `packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.schemas.ts`: `bad39e4279d1f1b9c0f6773a7645bd5b3fb31654209e312a4116066b7ea15b08`
+- `packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts`: `11fde46ed957f8d4a1dd59020028e3d40da53a9009017bb4278c2ac709a5dfa8`
+- `packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts`: `bad39e4279d1f1b9c0f6773a7645bd5b3fb31654209e312a4116066b7ea15b08`
 - `packages/tooling/tool/cli/src/internal/repo-run/index.ts`: `ca4decfbea6ae8723de13b4c1b5a28ab49d7d4a4ddf3dbd860eb2e0f11664c0e`
 - `packages/tooling/tool/cli/src/test/RepoRun.test-kit.ts`: `88affd301f15a26a60bc1aa7d9fc6bb6a43dab0fcfb35a437ab6d28a6e5f5f8f`
 - `packages/tooling/tool/cli/test/tmpfs-reap.test.ts`: `7e213124310137c3861cd0638579d8e8f9ed6111e4ae22a93c3048c664ea39e3`

@@ -842,7 +842,7 @@
     {
       "id": "r25-cli-internal-root-residue-reap-name-brands",
       "role": "P",
-      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts",
       "old": 61,
       "new": 64
     },
