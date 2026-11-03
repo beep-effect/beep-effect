@@ -1149,3 +1149,18 @@ The [configuration review](research/private-object-a88d-baseline-review-2026-11-
 ### Producer-object file identity follow-through, 2026-11-02
 
 The [named review](research/producer-object-coverage-identity-review-2026-11-02.md) and [checkpoint](research/producer-object-coverage-identity-checkpoint-2026-11-02.json) propose only the exact new-file row printed by the actual hosted comparison. Every existing floor and metadata field is unchanged. Four new failure-boundary cases bring the affected suites to 94 passing tests on both Bun and Node 24; all production storage bytes and defensive guards are retained. Separate failed diagnostics are preserved and do not count as hosted acceptance. Fresh exact-head CI, the review window and primary review remain required. No whole-goal criterion is completed.
+
+### Contained source directory aliases, 2026-11-02
+
+Protected inspection run `41413340460`, job `125171205116`, reached its admitted
+runner and failed in source collection. The declared YAML fixture alias
+`tags/alias/V55R` resolves to a directory, and other declared fixture aliases
+cover nested trees. Bind those complete contained trees with a bounded,
+domain-separated structure/mode manifest while keeping every leaf in the
+independent declared inventory. Keep absolute/outside aliases, ignored entries,
+unsupported filesystem objects and changed inventories refused.
+
+The [collector checkpoint](research/source-directory-alias-checkpoint-2026-11-02.json)
+records focused controls and real-tree replay separately from actual protected
+inspection. A new main inspection and independent approval remain required; no
+whole-goal criterion or production configuration is changed.

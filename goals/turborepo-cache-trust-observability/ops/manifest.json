@@ -130,7 +130,8 @@
     "research/private-object-accepted-main-checkpoint-2026-11-02.json",
     "research/private-object-accepted-coverage-baseline-review-2026-11-02.md",
     "research/private-object-accepted-coverage-baseline-request-2026-11-02.json",
-    "research/private-object-policy-coverage-repair-2026-11-02.json"
+    "research/private-object-policy-coverage-repair-2026-11-02.json",
+    "research/source-directory-alias-checkpoint-2026-11-02.json"
   ],
   "agentLaunchers": [
     {
