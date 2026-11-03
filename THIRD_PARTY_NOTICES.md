@@ -26,6 +26,12 @@ Upstream repositories:
   - Affected material: extraction-pipeline behavior, ported/reimplemented
     expressions and regular expressions, and attribution-safe parity fixtures.
 
+The private citation `ExtractorSelection.ts` adapts required-string selection
+behavior from the pinned eyecite `tokenizers.py`. It uses Effect Trie and
+HashSet rather than copying an Aho-Corasick implementation. Independent source
+observations and the complete default configuration binding are recorded in
+the citation-engine packet; Python set order remains separate integration work.
+
 The citation oracle fixture baseline also incorporates normalized output and
 regex/extractor data from the official eyecite lock's `reporters-db 3.2.53` and
 `courts-db 0.10.22`. These are retained behavioral-oracle inputs, separate from

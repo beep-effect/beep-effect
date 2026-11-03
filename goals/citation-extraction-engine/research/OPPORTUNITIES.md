@@ -152,3 +152,14 @@
   previous Node proof claim explicitly.
 - Prevention: actual child replies must identify runtime and pinned version;
   executable names and parent-shell version observations alone are insufficient.
+
+## 2026-11-03 — spelling check interprets encoded source bytes as prose
+
+- Work: publish independent extractor-selection observations.
+- Evidence: normal typos hook treats `Iz` inside a base64 source buffer as a
+  misspelling, failing the commit while all native-word assertions pass.
+- Resolution: use the existing Schema hex byte codec for this new fixture and
+  regenerate its hashes and repeat evidence. The observed bytes are unchanged;
+  no spelling allowlist or scanner exclusion is added.
+- Prevention: choose the existing hex carrier for opaque native-word fixtures
+  before publishing their first digest-bound format.

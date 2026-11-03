@@ -238,6 +238,15 @@ Host Unicode behavior is not substituted. Selector integration, ordering,
 family/scaling approval and full engine parity remain open. See
 [Python lowercase evidence](history/evidence/2026-11-03-python-lowercase.md).
 
+Latest selector checkpoint (2026-11-03): a private required-string selector uses
+Effect Trie/HashSet and frozen Python lowercase over native source words.
+Twenty-three independent synthetic source membership vectors pass, with exact
+query counters, immutable installation and captured deadline/limit controls.
+Hosted integration now requires all 6,805 canonical bindings and twelve default
+source membership vectors. Full installation replay, Python set order,
+family/scaling approval and public tokenizer integration remain open. See
+[extractor selection](history/evidence/2026-11-03-extractor-selection.md).
+
 Latest worker evidence (2026-10-31): private process ownership now covers bounded
 schema frames, captured Clock timers, queue/active limits, forced stop,
 acknowledged cleanup and quarantine without permit reuse. Real-process tests
