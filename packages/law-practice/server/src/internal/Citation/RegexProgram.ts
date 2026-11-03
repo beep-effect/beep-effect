@@ -34,7 +34,17 @@ const $I = $LawPracticeServerId.create("internal/Citation/RegexProgram");
 const max = CitationEngineAbsoluteMaxima;
 const sameSets = S.toEquivalence(CitationRegexAtomSets);
 const Flags = CitationRegexSourceFlags;
-const Kind = LiteralKit(["atom", "open", "close", "alternative", "begin", "end", "end-strict", "repeat"]).pipe(
+const Kind = LiteralKit([
+  "atom",
+  "open",
+  "lookahead",
+  "close",
+  "alternative",
+  "begin",
+  "end",
+  "end-strict",
+  "repeat",
+]).pipe(
   $I.annoteSchema("Kind", { description: "Closed structural program tokens; no raw executable regex fragment." })
 );
 const Count = S.Natural.check(S.isLessThanOrEqualTo(0xfffffffe)).pipe(
@@ -194,7 +204,7 @@ const grammarStep = (
   newlines: Uint8Array
 ): O.Option<GrammarState> =>
   Match.value(token.kind).pipe(
-    Match.when("open", () => openGrammar(state, token, program.names)),
+    Match.whenOr("open", "lookahead", () => openGrammar(state, token, program.names)),
     Match.when("close", () =>
       state.depth === 0 ? O.none() : O.some(GrammarState.make({ ...state, depth: state.depth - 1, quantifiable: true }))
     ),
@@ -297,6 +307,7 @@ const renderToken = (alphabet: CitationRegexAlphabetText, token: CitationRegexPr
   Match.value(token.kind).pipe(
     Match.when("atom", () => renderAtom(alphabet, token).pipe(Effect.map(fixedRender))),
     Match.when("open", () => Effect.succeed(openRender(token))),
+    Match.when("lookahead", () => Effect.succeed(fixedRender("(?="))),
     Match.when("close", () => Effect.succeed(fixedRender(")"))),
     Match.when("alternative", () => Effect.succeed(fixedRender("|"))),
     Match.when("begin", () => Effect.succeed(fixedRender("^"))),
@@ -593,17 +604,21 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       return name;
     });
     const groupHeader = Effect.fn("Citation.readRegexGroupHeader")(function* () {
-      if (peek() !== 63) return { group: ++groups, name: "" };
+      if (peek() !== 63) return { group: ++groups, name: "", assertion: false };
       index++;
       if (peek() === 58) {
         index++;
-        return { group: 0, name: "" };
+        return { group: 0, name: "", assertion: false };
+      }
+      if (peek() === 61) {
+        index++;
+        return { group: 0, name: "", assertion: true };
       }
       if (peek() !== 80) {
         yield* skipNested();
         if (peek() !== 58) return yield* unsupported();
         index++;
-        return { group: 0, name: "" };
+        return { group: 0, name: "", assertion: false };
       }
       index++;
       yield* skipNested();
@@ -611,18 +626,20 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       const name = yield* captureName();
       const group = ++groups;
       names = R.set(names, name, group);
-      return { group, name };
+      return { group, name, assertion: false };
     });
     const group = Effect.fn("Citation.parseRegexGroup")(function* (): Effect.fn.Return<Summary, ParseFailure> {
       index++;
       const header = yield* groupHeader();
-      yield* emit("open", header.group, header.name);
+      if (header.assertion) yield* emit("open");
+      yield* emit(header.assertion ? "lookahead" : "open", header.group, header.name);
       const body = yield* expression();
       if (peek() !== 41) return yield* unsupported();
       index++;
       yield* emit("close");
+      if (header.assertion) yield* emit("close");
       return summary(
-        body.minimum,
+        header.assertion ? 0 : body.minimum,
         header.group > 0 || body.captures,
         true,
         body.repeatedCaptures,

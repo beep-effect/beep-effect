@@ -275,3 +275,10 @@ history/evidence/2026-11-03-edition-inference.md.
   timer release; the dedicated expiry assertion remains unchanged. Fallow also
   identified cognitive complexity in the page method; extracting the exact
   native marker scan removed the finding without suppression or floor changes.
+
+- 2026-11-03 positive lookahead: first grammar pass accepted a verbose space
+  after '?' that the actual V0 parser rejects. An independent '(? = a ) a'
+  oracle case exposed it before publication; the header now reads the immediate
+  assertion delimiter. New replay-helper complexity and an unused helper export
+  were corrected by sharing the existing row/capture assertions and keeping
+  their inner helper private, without changing a gate or adding suppressions.

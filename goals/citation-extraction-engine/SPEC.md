@@ -1433,3 +1433,12 @@ source lookup short circuits and exact two-reporter page-marker membership.
 Outputs retain native Python points, use existing Unicode ownership and reserve
 before allocating. The shared authenticated edition router is also used by
 edition inference. General citation replacement and full rendering remain open.
+
+### Positive lookahead grammar (2026-11-03)
+
+The private data-only program can express positive lookahead with zero consumed
+width, retained capture identities and existing repetition profiles. Rendering
+adds only noncapturing structure around assertions. Raw identity/admission and
+process containment remain with existing owners. Source-invalid spaced openers
+reject. Other assertions, nullable finditer and unqualified repeated profiles
+remain explicit open work; journal metadata composition is a separate stage.

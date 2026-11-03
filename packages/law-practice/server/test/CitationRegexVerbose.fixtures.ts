@@ -23,14 +23,20 @@ const Outcome = S.Struct({
   profile: S.NullOr(CitationRegexPatternProfile),
   cases: S.Array(S.Struct({ source: Native, modes: S.Record(CitationRegexMatchMode, Matches) })),
 });
-const Pattern = S.Struct({
+/** Shared source-bound pattern/profile observations for actual-worker probes. */
+export const CitationRegexProbePattern = S.Struct({
   id: S.Natural,
   pattern: Native,
   flags: CitationRegexSourceFlags,
   smoke: S.Boolean,
   patternSha256: S.String,
   engines: S.Record(CitationRegexEngine, Outcome),
-});
+}).pipe(
+  $I.annoteSchema("CitationRegexProbePattern", {
+    description: "Native pattern identity, source flags and original profile/capture observations.",
+  })
+);
+export type CitationRegexProbePattern = typeof CitationRegexProbePattern.Type;
 const Corpus = S.fromJsonString(
   S.Struct({
     schemaVersion: S.tag("citation-regex-verbose/v1"),
@@ -39,7 +45,7 @@ const Corpus = S.fromJsonString(
     python: S.tag("3.11.15"),
     regex: S.tag("2023.12.25"),
     producerSha256: S.tag("c86c958858149b6b74f8b8b594e72123e65da2b1a71eeaac1ab8a806452834a1"),
-    patterns: S.Array(Pattern).check(S.isBetweenLength(47, 47)),
+    patterns: S.Array(CitationRegexProbePattern).check(S.isBetweenLength(47, 47)),
   })
 ).pipe(
   $I.annoteSchema("Corpus", {
@@ -57,12 +63,13 @@ const loadCitationRegexVerbose = Effect.fn("VerboseTest.load")(function* () {
   return yield* S.decodeEffect(Corpus)(new TextDecoder().decode(bytes));
 });
 /** Compare original-source success/error/profile facts without native execution. */
-export const assertCitationVerboseProfiles = Effect.fn("VerboseTest.profiles")(function* () {
-  const corpus = yield* loadCitationRegexVerbose();
+export const assertCitationRegexProgramProfiles = Effect.fn("RegexProgramTest.profiles")(function* (
+  patterns: ReadonlyArray<CitationRegexProbePattern>
+) {
   const limits = (yield* defaultCitationEnginePolicy).limits;
   for (const engine of CitationRegexEngine.literals) {
     const compiler = yield* makeCitationRegexProgram(limits, engine);
-    for (const row of corpus.patterns) {
+    for (const row of patterns) {
       const expected = row.engines[engine];
       if (expected.profile === null) {
         const error = yield* compiler.compile(row.pattern, row.flags).pipe(Effect.flip);
@@ -83,10 +90,16 @@ export const assertCitationVerboseProfiles = Effect.fn("VerboseTest.profiles")(f
     }
   }
 });
+/** Compare every original verbose source profile and closed rejection. */
+export const assertCitationVerboseProfiles = Effect.fn("VerboseTest.profiles")(function* () {
+  const corpus = yield* loadCitationRegexVerbose();
+  yield* assertCitationRegexProgramProfiles(corpus.patterns);
+});
 type Setup = Effect.Success<ReturnType<typeof setupCitationRegexWorker>>;
-const assertCase = Effect.fn("VerboseTest.case")(function* (
+/** Compare complete source capture spans using an existing observed worker. */
+const assertCitationRegexProgramCase = Effect.fn("RegexProgramTest.case")(function* (
   setup: Setup,
-  row: typeof Pattern.Type,
+  row: CitationRegexProbePattern,
   expected: typeof Outcome.Type,
   source: (typeof Outcome.Type.cases)[number]
 ) {
@@ -110,6 +123,18 @@ const assertCase = Effect.fn("VerboseTest.case")(function* (
     );
   }
   return modes.length;
+});
+/** Replay one pattern's selected source observations with shared capture checks. */
+export const replayCitationRegexProgramRow = Effect.fn("RegexProgramTest.row")(function* (
+  setup: Setup,
+  row: CitationRegexProbePattern,
+  expected: typeof Outcome.Type,
+  full: boolean
+) {
+  const counts = yield* Effect.forEach(full ? expected.cases : A.take(expected.cases, 1), (source) =>
+    assertCitationRegexProgramCase(setup, row, expected, source)
+  );
+  return A.reduce(counts, 0, (total, count) => total + count);
 });
 const replayEngine = Effect.fn("VerboseTest.engine")(function* (
   kind: CitationNativeRuntimeKind,
@@ -136,13 +161,10 @@ const replayEngine = Effect.fn("VerboseTest.engine")(function* (
       ? [{ patternSha256: fuzzy.patternSha256, flags: fuzzy.flags, profile: fuzzy.engines["python-re"].profile }]
       : [];
   const setup = yield* setupCitationRegexWorker([...bindings, ...additional], kind, engine);
-  const counts = yield* Effect.forEach(rows, (row) => {
-    const expected = row.engines[engine];
-    return Effect.forEach(full ? expected.cases : A.take(expected.cases, 1), (source) =>
-      assertCase(setup, row, expected, source)
-    );
-  });
-  const count = A.reduce(A.flatten(counts), 0, (total, n) => total + n);
+  const counts = yield* Effect.forEach(rows, (row) =>
+    replayCitationRegexProgramRow(setup, row, row.engines[engine], full)
+  );
+  const count = A.reduce(counts, 0, (total, n) => total + n);
   expect(count).toBe(wanted.calls);
   if (engine === "python-regex-v0") {
     const source = yield* Effect.fromOption(A.head(fuzzy.engines[engine].cases));

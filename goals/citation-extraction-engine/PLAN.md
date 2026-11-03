@@ -920,3 +920,8 @@ accounting checker.
   including all canonical editions and native surrogate controls; captured
   budget/owner/deadline controls participate. General corrected rendering and
   other metadata families remain open. See the resource-correction evidence.
+
+- 2026-11-03: source positive lookahead now lowers through the existing worker,
+  with independent profiles and original raw/anchored journal patterns. Ten
+  focused tests pass; complete hosted replay remains pending. Journal metadata
+  field assignment is next; family safety/scaling duties remain unchanged.

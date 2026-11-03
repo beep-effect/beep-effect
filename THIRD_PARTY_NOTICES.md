@@ -833,3 +833,8 @@ ResourceCorrection.ts and resource-correction.json derive from eyecite 2.7.6
 ResourceCitation.corrected_reporter/corrected_page and utils.py's exact
 REPORTERS_THAT_NEED_PAGE_CORRECTION set at the pinned revision above
 (Free Law Project, BSD-2-Clause).
+
+Positive-lookahead structure and regex-lookahead observations adapt pinned
+CPython re parsing (PSF-2.0), regex 2023.12.25 V0 parsing (Apache-2.0 and retained
+CNRI notices), and eyecite 2.7.6's journal/pin patterns (Free Law Project,
+BSD-2-Clause). See the existing full source/license attributions above.
