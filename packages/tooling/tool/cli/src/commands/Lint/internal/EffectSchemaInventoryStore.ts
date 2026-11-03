@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { writeArtifact } from "@beep/repo-cli-kit/artifacts/index";
 import { A, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -13,7 +14,6 @@ import * as HashSet from "effect/HashSet";
 import * as Inspectable from "effect/Inspectable";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import { writeArtifact } from "../../../internal/artifacts/index.ts";
 import {
   decodeEffectSchemaInventoryRowJson,
   decodeEffectSchemaInventoryRowOption,

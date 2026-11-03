@@ -11,6 +11,8 @@ import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import { FrontmatterSource } from "@beep/markdown/FrontmatterSource";
 import { FrontmatterFormat } from "@beep/markdown/MarkdownNode";
+import { isCi } from "@beep/repo-cli-kit/cli/EnvConfig";
+import { runCapturedStreams } from "@beep/repo-cli-kit/process/StepExec";
 import { findRepoRoot } from "@beep/repo-utils";
 import { Str } from "@beep/utils";
 import * as A from "effect/Array";
@@ -29,8 +31,6 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { isCi } from "../../internal/cli/EnvConfig.ts";
-import { runCapturedStreams } from "../../internal/process/StepExec.ts";
 import {
   readGitRenames,
   readGitTree,

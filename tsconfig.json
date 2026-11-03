@@ -2458,7 +2458,11 @@
       "@beep/party-server/*": ["./packages/party/server/src/*"],
       "@beep/law-practice-server/PartyContactSource": [
         "./packages/law-practice/server/src/PartyContactSource/index.ts"
-      ]
+      ],
+      "@beep/repo-cli-kit": [
+        "./packages/tooling/library/repo-cli-kit/src/index.ts"
+      ],
+      "@beep/repo-cli-kit/*": ["./packages/tooling/library/repo-cli-kit/src/*"]
     }
   }
 }

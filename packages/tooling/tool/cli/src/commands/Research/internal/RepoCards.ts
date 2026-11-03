@@ -11,6 +11,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { runCaptured } from "@beep/repo-cli-kit/process/StepExec";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -20,7 +21,6 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { runCaptured } from "../../../internal/process/StepExec.ts";
 import { ResearchCommandError } from "../Research.errors.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";

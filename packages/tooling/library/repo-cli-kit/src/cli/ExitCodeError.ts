@@ -1,0 +1,73 @@
+/**
+ * Shared CLI exit-code sentinel errors.
+ *
+ * @internal
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+import { $RepoCliKitId } from "@beep/identity/packages";
+import { P } from "@beep/utils";
+import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
+import * as Runtime from "effect/Runtime";
+import * as S from "effect/Schema";
+
+const $I = $RepoCliKitId.create("cli/ExitCodeError");
+
+/**
+ * Silent non-zero process exit requested after command output was rendered.
+ *
+ * **Example** (Make CliReportedExit instance)
+ *
+ * ```ts
+ * import { CliReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError"
+ *
+ * const error = CliReportedExit.make({ message: "check failed", exitCode: 1 })
+ * console.log(error.message)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class CliReportedExit extends S.TaggedError<CliReportedExit, { readonly brand: unique symbol }>(
+  $I`CliReportedExit`
+)(
+  "CliReportedExit",
+  {
+    message: S.String,
+    exitCode: S.Finite,
+  },
+  $I.annoteError<CliReportedExit>("CliReportedExit", {
+    description: "Silent non-zero process exit requested after command output was rendered.",
+  })
+) {
+  /** Process exit code reported when this sentinel reaches the runtime boundary. */
+  override readonly [Runtime.errorExitCode] = this.exitCode;
+
+  /** Suppress duplicate runtime reporting after command output has already been rendered. */
+  override readonly [Runtime.errorReported] = false;
+}
+
+/**
+ * Fail with a reported CLI exit sentinel.
+ *
+ * **Example** (Create reported exit Effect)
+ *
+ * ```ts
+ * import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError"
+ * import * as Effect from "effect/Effect";
+ * console.log(Effect.isEffect(failWithReportedExit("check failed")))
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export const failWithReportedExit: {
+  (exitCode?: number): (message: string) => Effect.Effect<never, CliReportedExit>;
+  (message: string, exitCode?: number): Effect.Effect<never, CliReportedExit>;
+} = dual(
+  (args: IArguments) => P.isString(args[0]),
+  (message: string, exitCode = 1): Effect.Effect<never, CliReportedExit> =>
+    Effect.fail(CliReportedExit.make({ message, exitCode }))
+);

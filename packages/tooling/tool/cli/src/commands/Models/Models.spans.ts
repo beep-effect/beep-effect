@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { Jsonc, JsoncParseOptions } from "@beep/jsonc/Jsonc";
+import { decodeTomlTextWith } from "@beep/repo-cli-kit/schema/TextCodec";
 import { A, O, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -18,7 +19,6 @@ import * as Regex from "effect/RegExp";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
-import { decodeTomlTextWith } from "../../internal/schema/TextCodec.ts";
 import { ModelsLocatorError } from "./Models.errors.ts";
 import { ModelsEligibilityResult, ModelsWriteSpan } from "./Models.manifest.schemas.ts";
 import type { JsoncNode } from "@beep/jsonc/JsoncNode";

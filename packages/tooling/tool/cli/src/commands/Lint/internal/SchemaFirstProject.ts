@@ -5,10 +5,10 @@
  * @since 0.0.0
  */
 
+import { createRepoTsMorphProject, createWorkspaceOwnerResolver } from "@beep/repo-cli-kit/tsmorph/index";
 import { isExcludedTypeScriptSourcePath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import * as Effect from "effect/Effect";
 import * as Path from "effect/Path";
-import { createRepoTsMorphProject, createWorkspaceOwnerResolver } from "../../../internal/tsmorph/index.ts";
 import { isEcosystemMemberSourcePath } from "../../Laws/internal/LawScan.ts";
 import { SchemaFirstSourceFileGlobs } from "../Lint.schemas.ts";
 

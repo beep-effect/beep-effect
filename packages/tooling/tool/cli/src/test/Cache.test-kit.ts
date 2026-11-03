@@ -5,6 +5,8 @@
  * @since 0.0.0
  */
 
+export * as CacheRuntimeFileGuards from "@beep/repo-cli-kit/cli/FsGuards";
+export * as CacheRuntimeProcess from "@beep/repo-cli-kit/process/StepExec";
 export {
   CacheProducerAcceptanceReference,
   CacheProducerImportPreview,
@@ -151,6 +153,4 @@ export {
 } from "../commands/Cache/Cache.workflow.ts";
 export { CacheProducerUploadApproval } from "../commands/Cache/Cache.workflow.upload.schemas.ts";
 export { joinCacheProducerUpload } from "../commands/Cache/Cache.workflow.upload.ts";
-export * as CacheRuntimeFileGuards from "../internal/cli/FsGuards.ts";
-export * as CacheRuntimeProcess from "../internal/process/StepExec.ts";
 export * as CacheRuntimeAdmission from "../internal/repo-run/QualityScheduler.ts";

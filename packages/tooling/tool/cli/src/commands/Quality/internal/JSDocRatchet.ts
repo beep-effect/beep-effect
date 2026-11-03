@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { formatJsonc, readArtifact, renderTruncatedLines, writeArtifact } from "@beep/repo-cli-kit/artifacts/index";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
@@ -20,7 +21,6 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { formatJsonc, readArtifact, renderTruncatedLines, writeArtifact } from "../../../internal/artifacts/index.ts";
 import { diffTotals, enforceRatchet } from "../../../internal/ratchet/index.ts";
 import { DiffTotalsInput } from "../../../internal/ratchet/RatchetDiff.ts";
 import { runGitLines } from "../../../internal/repo-run/index.ts";

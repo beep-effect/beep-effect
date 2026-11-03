@@ -6,6 +6,9 @@
  */
 
 import { Jsonc } from "@beep/jsonc/Jsonc";
+import { applyJsoncModification, JsoncModification } from "@beep/repo-cli-kit/cli/Jsonc";
+import { isLabsWorkspaceDir } from "@beep/repo-cli-kit/cli/Labs/index";
+import { workspaceDirectories } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { collectTsConfigPaths, DomainError, decodePackageJsonEffect, topologicalSort } from "@beep/repo-utils";
 import { renderBiomeJson } from "@beep/repo-utils/schemas/BiomeJson";
 import {
@@ -37,9 +40,6 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { applyJsoncModification, JsoncModification } from "../../internal/cli/Jsonc.ts";
-import { isLabsWorkspaceDir } from "../../internal/cli/Labs/index.ts";
-import { workspaceDirectories } from "../../internal/RepoWorkspaces.ts";
 import { FALLOW_BOUNDARY_CONFIG_PATH, renderFallowBoundaryConfig } from "../Fallow/Fallow.command.ts";
 import { TsconfigSyncFilterError } from "./TsconfigSync.errors.ts";
 import {

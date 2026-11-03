@@ -5,12 +5,12 @@
  * @since 0.0.0
  */
 
+import { readArtifact } from "@beep/repo-cli-kit/artifacts/index";
 import { A } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as Inspectable from "effect/Inspectable";
 import * as Path from "effect/Path";
-import { readArtifact } from "../../../internal/artifacts/index.ts";
 import { EffectVitestPrimitiveGraphError } from "../Lint.errors.ts";
 import { EffectVitestPrimitiveGraphDocument, EffectVitestPrimitiveGraphPath } from "../Lint.schemas.ts";
 import type { EffectVitestPrimitive } from "../Lint.schemas.ts";

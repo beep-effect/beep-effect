@@ -14,6 +14,7 @@
 import { ConfigFile } from "@beep/config-file/ConfigFile";
 import { YamlCodec } from "@beep/config-file/YamlCodec";
 import { $RepoCliId } from "@beep/identity/packages";
+import { messageWithCause } from "@beep/repo-cli-kit/cli/CommandErrorFields";
 import { Yaml, YamlStringifyOptions } from "@beep/yaml/Yaml";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
@@ -26,7 +27,6 @@ import * as Path from "effect/Path";
 import * as Random from "effect/Random";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { messageWithCause } from "../../internal/cli/CommandErrorFields.ts";
 import { ModelsManifestError } from "./Models.errors.ts";
 import { ModelsManifest } from "./Models.manifest.schemas.ts";
 

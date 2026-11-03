@@ -6,12 +6,12 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { LiteralKit } from "@beep/schema";
 import { ArrayKeyDefaultEmpty } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 
 const $I = $RepoCliId.create("commands/AgentEffectiveness/AgentEffectiveness.schemas");
 
