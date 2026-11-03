@@ -1,4 +1,5 @@
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 
 // Effect's default ConfigProvider snapshots the ambient environment once, at
 // the first config read in this (isolated) test file. Set the values the
@@ -20,13 +21,11 @@ import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as Redacted from "effect/Redacted";
-import * as Ref from "effect/Ref";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 
 Bun.env.BEEP_SI_BOOL_YES = "YES";
 Bun.env.BEEP_SI_BOOL_BAD = "maybe";
 
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git, GitCommandError } from "@beep/git/Git";
 import { QualityTaskStep } from "@beep/repo-cli/test/Process";
 import {
@@ -75,12 +74,11 @@ import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
-import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { commandArgs, commandEnv } from "./support/commandArgs.ts";
+import type { ScriptResult } from "@beep/commands/ScriptedSpawner";
 
 class SharedInternalsTestError extends S.TaggedError<SharedInternalsTestError, { readonly brand: unique symbol }>()(
   "SharedInternalsTestError",
@@ -523,39 +521,23 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
   });
 
   describe("canUseTurboCacheSecretSession", { concurrent: false }, () => {
-    const stubHandle = (exitCode: number) =>
-      ChildProcessSpawner.makeHandle({
-        all: Stream.empty,
-        exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
-        getInputFd: () => Sink.drain,
-        getOutputFd: () => Stream.empty,
-        isRunning: Effect.succeed(false),
-        kill: () => Effect.void,
-        pid: ChildProcessSpawner.ProcessId(1),
-        stderr: Stream.empty,
-        stdin: Sink.drain,
-        stdout: Stream.empty,
-        unref: Effect.succeed(Effect.void),
-      });
-
+    // The nth spawn takes the nth reply (the last one repeats); the spawn is recorded before the script runs.
     const sessionWith = Effect.fn("sessionWith")(function* (
       env: Record<string, string>,
-      spawns: ReadonlyArray<Effect.Effect<ChildProcessSpawner.ChildProcessHandle, PlatformError.PlatformError>>
+      replies: ReadonlyArray<ScriptResult.Encoded>
     ) {
       clearTurboCacheSecretSessionVerdictsForTesting();
-      const spawned = yield* Ref.make(0);
-      const spawner = ChildProcessSpawner.make(() =>
-        Ref.getAndUpdate(spawned, (count) => count + 1).pipe(
-          Effect.flatMap((index) => spawns[index] ?? spawns[spawns.length - 1] ?? Effect.succeed(stubHandle(1)))
+      const spawner: ScriptedSpawner = ScriptedSpawner.make(() =>
+        A.get(replies, spawner.spawns.length - 1).pipe(
+          O.orElse(() => A.last(replies)),
+          O.getOrElse((): ScriptResult.Encoded => ({ exit: 1 }))
         )
       );
       const usable = yield* Effect.provideService(
         ConfigProvider.ConfigProvider,
         ConfigProvider.fromUnknown(env)
-      )(canUseTurboCacheSecretSession("/repo")).pipe(
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
-      );
-      return { usable, spawned: yield* Ref.get(spawned) };
+      )(canUseTurboCacheSecretSession("/repo")).pipe(provideSpawner(spawner));
+      return { usable, spawned: spawner.spawns.length };
     });
 
     it.effect("resolves native Turbo references once and fails closed without changing step metadata", () =>
@@ -578,15 +560,12 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
         });
         for (const exitCode of [0, 78]) {
           clearTurboCacheSecretSessionVerdictsForTesting();
-          const spawned = yield* Ref.make(0);
-          const spawner = ChildProcessSpawner.make(() =>
-            Ref.update(spawned, (count) => count + 1).pipe(Effect.as(stubHandle(exitCode)))
-          );
+          const spawner = ScriptedSpawner.make(() => ({ exit: exitCode }));
           const result = yield* resolveTurboCacheStep(step, environment).pipe(
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ CI: "false" })),
-            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+            provideSpawner(spawner)
           );
-          expect(yield* Ref.get(spawned)).toBe(1);
+          expect(spawner.spawns.length).toBe(1);
           expect(result.cwd).toBe(step.cwd);
           expect(result.captureTimeoutMillis).toBe(1234);
           expect(result.env?.SAFE_LITERAL).toBe("fixture");
@@ -605,6 +584,7 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
 
     it.effect("does not open a secret session for literal credentials, local-only Turbo or other commands", () =>
       Effect.gen(function* () {
+        // Own double: a never-spawn guard dies on any spawn; ScriptedSpawner has no defect outcome.
         const spawner = ChildProcessSpawner.make(() => Effect.die("an unnecessary secret session was opened"));
         for (const step of [
           QualityTaskStep.make({ label: "git", command: "git", args: ["status"], cwd: "/repo" }),
@@ -636,25 +616,20 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
     it.effect("caches the resolvability verdict once per CLI run", () =>
       Effect.gen(function* () {
         clearTurboCacheSecretSessionVerdictsForTesting();
-        const spawned = yield* Ref.make(0);
-        const spawner = ChildProcessSpawner.make(() =>
-          Ref.updateAndGet(spawned, (count) => count + 1).pipe(Effect.as(stubHandle(0)))
-        );
+        const spawner = ScriptedSpawner.make(() => ({}));
         const probe = Effect.provideService(
           ConfigProvider.ConfigProvider,
           ConfigProvider.fromUnknown({})
-        )(canUseTurboCacheSecretSession("/repo/cache-once")).pipe(
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
-        );
+        )(canUseTurboCacheSecretSession("/repo/cache-once")).pipe(provideSpawner(spawner));
         expect(yield* probe).toBe(true);
         expect(yield* probe).toBe(true);
-        expect(yield* Ref.get(spawned)).toBe(1);
+        expect(spawner.spawns.length).toBe(1);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
     it.effect("refuses a session under CI without probing the op CLI", () =>
       Effect.gen(function* () {
-        expect(yield* sessionWith({ CI: "true" }, [Effect.succeed(stubHandle(0))])).toEqual({
+        expect(yield* sessionWith({ CI: "true" }, [{}])).toEqual({
           usable: false,
           spawned: 0,
         });
@@ -663,15 +638,15 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
 
     it.effect("requires the cache references to resolve", () =>
       Effect.gen(function* () {
-        expect(yield* sessionWith({}, [Effect.succeed(stubHandle(0))])).toEqual({
+        expect(yield* sessionWith({}, [{}])).toEqual({
           usable: true,
           spawned: 1,
         });
-        expect(yield* sessionWith({}, [Effect.succeed(stubHandle(1))])).toEqual({
+        expect(yield* sessionWith({}, [{ exit: 1 }])).toEqual({
           usable: false,
           spawned: 1,
         });
-        expect(yield* sessionWith({ CI: "false" }, [Effect.succeed(stubHandle(1))])).toEqual({
+        expect(yield* sessionWith({ CI: "false" }, [{ exit: 1 }])).toEqual({
           usable: false,
           spawned: 1,
         });
@@ -680,7 +655,7 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
           method: "spawn",
           description: "reference probe failed",
         });
-        expect(yield* sessionWith({}, [Effect.fail(probeFailure)])).toEqual({
+        expect(yield* sessionWith({}, [probeFailure])).toEqual({
           usable: false,
           spawned: 1,
         });
@@ -711,25 +686,14 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
           exists: () => Effect.succeed(true),
           readFileString: () => Effect.succeed(envFileFixture),
         });
-        const spawnedCommands = yield* Ref.make<
-          ReadonlyArray<{
-            readonly args: ReadonlyArray<string>;
-            readonly environment: Record<string, string | undefined>;
-          }>
-        >([]);
-        const spawner = ChildProcessSpawner.make((command) => {
-          if (!ChildProcess.isStandardCommand(command)) {
-            return Effect.die("the cache reference fixture never spawns a piped command");
-          }
-          const childEnvironment = commandEnv(command) ?? {};
-          const fails =
-            A.some(commandArgs(command), Str.startsWith("--env-file=")) ||
-            childEnvironment.STALE_DATABASE_URL === staleReference;
-          return Ref.update(
-            spawnedCommands,
-            A.append({ args: commandArgs(command), environment: childEnvironment })
-          ).pipe(Effect.as(stubHandle(fails ? 1 : 0)));
-        });
+        // The spawn is recorded before the script runs, so the last record carries this child's environment.
+        const spawner: ScriptedSpawner = ScriptedSpawner.make((_command, args) => ({
+          exit:
+            A.some(args, Str.startsWith("--env-file=")) ||
+            O.exists(A.last(spawner.spawns), (spawn) => spawn.env?.STALE_DATABASE_URL === staleReference)
+              ? 1
+              : 0,
+        }));
 
         clearTurboCacheSecretSessionVerdictsForTesting();
         const result = yield* flow(
@@ -743,7 +707,7 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
             const cachedWarnings = yield* turboEnvironmentHealthWarnings("/repo/correct-quad", environment);
             return { cachedWarnings, plan, usable, warnings };
           })
-        ).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
+        ).pipe(provideSpawner(spawner));
 
         expect(result.plan).toEqual(
           RemoteReadTurboCache.make({
@@ -759,10 +723,10 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
         expect(warningText).toContain("STALE_DATABASE_URL");
         expect(warningText).not.toContain(staleReference);
 
-        const spawned = yield* Ref.get(spawnedCommands);
+        const spawned = spawner.spawns;
         expect(spawned[0]?.args).toEqual(["run", "--", "true"]);
-        expect(spawned[0]?.environment.STALE_DATABASE_URL).toBeUndefined();
-        expect(spawned[0]?.environment.TURBO_TOKEN).toBe(environment.TURBO_TOKEN);
+        expect(spawned[0]?.env?.STALE_DATABASE_URL).toBeUndefined();
+        expect(spawned[0]?.env?.TURBO_TOKEN).toBe(environment.TURBO_TOKEN);
         const wholeFileProbe = A.findFirst(spawned, ({ args }) => A.some(args, Str.startsWith("--env-file="))).pipe(
           O.getOrThrow
         );
@@ -797,14 +761,12 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
             pathOrDescriptor,
             description: "fixture denied",
           });
-        const spawner = ChildProcessSpawner.make(() => Effect.succeed(stubHandle(0)));
+        const spawner = ScriptedSpawner.make(() => ({}));
         const warningsWith = (repoRoot: string, fileSystemLayer: FileSystem.FileSystem) =>
           Effect.provideService(
             FileSystem.FileSystem,
             fileSystemLayer
-          )(turboEnvironmentHealthWarnings(repoRoot, {})).pipe(
-            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
-          );
+          )(turboEnvironmentHealthWarnings(repoRoot, {})).pipe(provideSpawner(spawner));
 
         clearTurboCacheSecretSessionVerdictsForTesting();
         const existsFailure = yield* warningsWith(
@@ -851,12 +813,10 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
           TURBO_TEAM: "fixture-team",
           TURBO_CACHE: TurboCacheMode.Enum["local:rw,remote:r"],
         };
-        const spawner = ChildProcessSpawner.make((command) => {
-          if (!ChildProcess.isStandardCommand(command)) {
-            return Effect.die("the cache reference fixture never spawns a piped command");
-          }
-          return Effect.succeed(stubHandle(command.options.env?.TURBO_TOKEN === brokenReference ? 1 : 0));
-        });
+        // The spawn is recorded before the script runs, so the last record carries this child's environment.
+        const spawner: ScriptedSpawner = ScriptedSpawner.make(() => ({
+          exit: O.exists(A.last(spawner.spawns), (spawn) => spawn.env?.TURBO_TOKEN === brokenReference) ? 1 : 0,
+        }));
 
         clearTurboCacheSecretSessionVerdictsForTesting();
         const result = yield* Effect.provideService(
@@ -868,7 +828,7 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
             const usable = yield* canUseTurboCacheSecretSession("/repo/broken-quad", environment);
             return { plan, usable };
           })
-        ).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
+        ).pipe(provideSpawner(spawner));
 
         expect(result.plan._tag).toBe("remote-read");
         expect(result.usable).toBe(false);
@@ -881,7 +841,7 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
     it.effect("treats a spawn failure as an unavailable op CLI", () =>
       Effect.gen(function* () {
         const failure = PlatformError.badArgument({ module: "ChildProcess", method: "spawn", description: "ENOENT" });
-        expect(yield* sessionWith({}, [Effect.fail(failure)])).toEqual({ usable: false, spawned: 1 });
+        expect(yield* sessionWith({}, [failure])).toEqual({ usable: false, spawned: 1 });
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
   });

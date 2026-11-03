@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import {
   awaitYeetCheckRegistration,
@@ -25,15 +26,11 @@ import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
-import { commandArgs } from "./support/commandArgs.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 
 // A7 (ship-velocity): `gh pr checks --watch` reports a head with no check runs
 // as an error — exit 1, "no checks reported on the '<branch>' branch" — and
@@ -189,47 +186,22 @@ describe("the shipped check-registration backoff", () => {
 // steps through the registration wrapper and keep the comment stream racing
 // alongside. Driving `runMonitorPhaseForTesting` is what proves the seam in
 // Handler.ts, which the combinator's own tests cannot reach.
-const encoder = new TextEncoder();
-
-const stubHandle = (exitCode: number, output: string) =>
-  ChildProcessSpawner.makeHandle({
-    all: Stream.make(encoder.encode(output)),
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    stdout: Stream.make(encoder.encode(output)),
-    unref: Effect.succeed(Effect.void),
-  });
-
 const PR_VIEW_JSON = `{"number":558,"headRefName":"feat/yeet-monitor-hardening","state":"OPEN"}`;
 
 /** Answers `gh pr view` and `gh api`; the check watch answers from `watch`. */
 const monitorSpawnerLayer = (watch: { readonly exitCode: number; readonly output: string }) =>
   Layer.provideMerge(
     Git.layer,
-    Layer.effect(
-      ChildProcessSpawner.ChildProcessSpawner,
-      Effect.succeed(
-        ChildProcessSpawner.make((command) => {
-          if (!ChildProcess.isStandardCommand(command)) {
-            return Effect.die("the monitor phase never spawns a piped command");
-          }
-          const line = A.join([command.command, ...commandArgs(command)], " ");
-          if (Str.includes("pr view")(line)) {
-            return Effect.succeed(stubHandle(0, PR_VIEW_JSON));
-          }
-          if (Str.includes("pr checks")(line)) {
-            return Effect.succeed(stubHandle(watch.exitCode, watch.output));
-          }
-          return Effect.succeed(stubHandle(0, "[]"));
-        })
-      )
-    )
+    ScriptedSpawner.make((command, args) => {
+      const line = A.join([command, ...args], " ");
+      if (Str.includes("pr view")(line)) {
+        return { stdout: PR_VIEW_JSON };
+      }
+      if (Str.includes("pr checks")(line)) {
+        return { stdout: watch.output, exit: watch.exitCode };
+      }
+      return { stdout: "[]" };
+    }).layer
   );
 
 const monitorSteps = (cwd: string): ReadonlyArray<RepoPlanStep> => [
@@ -323,19 +295,15 @@ describe("the monitor phase check watch", () => {
 // passed both landed in the recorder. The verdict, the PR body, and
 // `yeet status` all read that recorder, so one step id reported as failed AND
 // passed — and status would print a repair command for a lane that passed.
-const registrationThenSuccessSpawner = (callsRef: Ref.Ref<number>) =>
-  ChildProcessSpawner.make((command) => {
-    if (!ChildProcess.isStandardCommand(command)) {
-      return Effect.die("the check watch never spawns a piped command");
-    }
-    return Effect.map(
-      Ref.updateAndGet(callsRef, (count) => count + 1),
-      (call) =>
-        call === 1
-          ? stubHandle(1, "no checks reported on the 'feat/yeet-monitor-hardening' branch")
-          : stubHandle(0, "All checks were successful")
-    );
-  });
+const registrationThenSuccessSpawner = () => {
+  // The record lands before the script runs, so the first call sees one spawn.
+  const spawner: ScriptedSpawner = ScriptedSpawner.make(() =>
+    A.length(spawner.spawns) === 1
+      ? { stdout: "no checks reported on the 'feat/yeet-monitor-hardening' branch", exit: 1 }
+      : { stdout: "All checks were successful" }
+  );
+  return spawner;
+};
 
 describe("the monitor check watch recorder", () => {
   it.layer(PlatformLayer, { timeout: "30 seconds" })((it) => {
@@ -343,7 +311,7 @@ describe("the monitor check watch recorder", () => {
       Effect.gen(function* () {
         const root = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
         const context = monitorPhaseContext(root);
-        const callsRef = yield* Ref.make(0);
+        const spawner = registrationThenSuccessSpawner();
         const priorStep = YeetExecutedStep.make({
           durationMs: 1,
           result: RepoStepRunResult.make({
@@ -358,14 +326,11 @@ describe("the monitor check watch recorder", () => {
 
         yield* runMonitorCheckWatchForTesting(context, checkSteps, recorder, "yeet monitor failed.", [
           Duration.zero,
-        ]).pipe(
-          Effect.provideServiceEffect(Git, Git.make),
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, registrationThenSuccessSpawner(callsRef))
-        );
+        ]).pipe(Effect.provideServiceEffect(Git, Git.make), provideSpawner(spawner));
 
         const recorded = yield* Ref.get(recorder);
         const watchEntries = A.filter(recorded, (entry) => entry.step.id === "monitor:02-pr-checks-watch");
-        expect(yield* Ref.get(callsRef)).toBe(2);
+        expect(A.length(spawner.spawns)).toBe(2);
         // Exactly one entry for the retried step, carrying the attempt that won.
         expect(A.length(watchEntries)).toBe(1);
         expect(A.map(watchEntries, (entry) => entry.result.exitCode)).toEqual([0]);
@@ -377,23 +342,25 @@ describe("the monitor check watch recorder", () => {
 });
 
 // B7: a nonzero fail-fast watch is only a failure when the required census is red.
+// The number of fail-fast watches spawned so far.
+const watchesOf = (spawner: ScriptedSpawner) => A.countBy(spawner.spawns, (spawn) => A.contains(spawn.args, "--watch"));
+
 const censusSpawner = (
-  calls: Ref.Ref<number>,
   required: ReadonlyArray<string>,
   all = '[{"name":"Vercel","bucket":"fail","state":"FAILURE"}]'
-) =>
-  ChildProcessSpawner.make((command) => {
-    if (!ChildProcess.isStandardCommand(command)) return Effect.die("expected a standard command");
-    if (A.contains(commandArgs(command), "--watch")) {
-      return Ref.updateAndGet(calls, (n) => n + 1).pipe(Effect.as(stubHandle(1, "checks failed")));
+) => {
+  const spawner: ScriptedSpawner = ScriptedSpawner.make((_command, args) => {
+    if (A.contains(args, "--watch")) {
+      return { stdout: "checks failed", exit: 1 };
     }
-    if (A.contains(commandArgs(command), "--required")) {
-      return Ref.get(calls).pipe(
-        Effect.map((n) => stubHandle(0, required[Math.min(n - 1, required.length - 1)] ?? "invalid"))
-      );
+    if (A.contains(args, "--required")) {
+      const n = watchesOf(spawner);
+      return { stdout: required[Math.min(n - 1, required.length - 1)] ?? "invalid" };
     }
-    return Effect.succeed(stubHandle(0, all));
+    return { stdout: all };
   });
+  return spawner;
+};
 
 const requiredGreen = '[{"name":"Check","bucket":"pass","state":"SUCCESS"}]';
 const requiredPending = '[{"name":"Check","bucket":"pending","state":"QUEUED"}]';
@@ -405,7 +372,7 @@ describe("plain monitor required census", () => {
       it.effect(`passes optional reds and replaces the recorded failure (${required})`, () =>
         Effect.gen(function* () {
           const root = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
-          const calls = yield* Ref.make(0);
+          const census = censusSpawner([required]);
           const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
           yield* runMonitorCheckWatchForTesting(
             monitorPhaseContext(root),
@@ -413,11 +380,8 @@ describe("plain monitor required census", () => {
             recorder,
             "watch failed",
             []
-          ).pipe(
-            Effect.provideServiceEffect(Git, Git.make),
-            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, censusSpawner(calls, [required]))
-          );
-          expect(yield* Ref.get(calls)).toBe(1);
+          ).pipe(Effect.provideServiceEffect(Git, Git.make), provideSpawner(census));
+          expect(watchesOf(census)).toBe(1);
           expect(A.map(yield* Ref.get(recorder), (entry) => entry.result.exitCode)).toEqual([0]);
           expect(
             A.some(
@@ -435,7 +399,7 @@ describe("plain monitor required census", () => {
       it.effect(`preserves a failure for a red or unreadable required census (${required})`, () =>
         Effect.gen(function* () {
           const root = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
-          const calls = yield* Ref.make(0);
+          const census = censusSpawner([required]);
           const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
           const error = yield* Effect.flip(
             runMonitorCheckWatchForTesting(
@@ -444,13 +408,10 @@ describe("plain monitor required census", () => {
               recorder,
               "watch failed",
               []
-            ).pipe(
-              Effect.provideServiceEffect(Git, Git.make),
-              Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, censusSpawner(calls, [required]))
-            )
+            ).pipe(Effect.provideServiceEffect(Git, Git.make), provideSpawner(census))
           );
           expect(error.message).toContain("watch failed");
-          expect(yield* Ref.get(calls)).toBe(1);
+          expect(watchesOf(census)).toBe(1);
           expect(A.map(yield* Ref.get(recorder), (entry) => entry.result.exitCode)).toEqual([1]);
         })
       );
@@ -463,7 +424,7 @@ describe("plain monitor required census", () => {
       () =>
         Effect.gen(function* () {
           const root = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
-          const calls = yield* Ref.make(0);
+          const census = censusSpawner([requiredPending, requiredGreen]);
           const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
           const retrySleeping = yield* Deferred.make<void>();
           const clock = yield* Clock.Clock;
@@ -489,17 +450,14 @@ describe("plain monitor required census", () => {
           ).pipe(
             // `Git` is rebuilt over the scripted spawner: the monitor phase's `currentCommitSha` runs through the kit (W1b).
             Effect.provideServiceEffect(Git, Git.make),
-            Effect.provideService(
-              ChildProcessSpawner.ChildProcessSpawner,
-              censusSpawner(calls, [requiredPending, requiredGreen])
-            ),
+            provideSpawner(census),
             Effect.provideService(Clock.Clock, retryClock),
             Effect.forkChild
           );
           yield* Deferred.await(retrySleeping);
           yield* TestClock.adjust("10 seconds");
           yield* Fiber.join(watch);
-          expect(yield* Ref.get(calls)).toBe(2);
+          expect(watchesOf(census)).toBe(2);
           expect(A.map(yield* Ref.get(recorder), (entry) => entry.result.exitCode)).toEqual([0]);
         }),
       20_000
@@ -511,7 +469,7 @@ describe("plain monitor required census", () => {
       it.effect(`does not relabel an unproven optional failure as green (${all})`, () =>
         Effect.gen(function* () {
           const root = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
-          const calls = yield* Ref.make(0);
+          const census = censusSpawner([requiredGreen], all);
           const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
           const error = yield* Effect.flip(
             runMonitorCheckWatchForTesting(
@@ -520,10 +478,7 @@ describe("plain monitor required census", () => {
               recorder,
               "watch failed",
               []
-            ).pipe(
-              Effect.provideServiceEffect(Git, Git.make),
-              Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, censusSpawner(calls, [requiredGreen], all))
-            )
+            ).pipe(Effect.provideServiceEffect(Git, Git.make), provideSpawner(census))
           );
           expect(error.message).toContain("watch failed");
           expect(A.map(yield* Ref.get(recorder), (entry) => entry.result.exitCode)).toEqual([1]);
@@ -540,7 +495,7 @@ describe("plain monitor required census", () => {
       layerIt.effect(`bounds pending retries and preserves their failure record (${timeout}ms)`, () =>
         Effect.gen(function* () {
           const root = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
-          const calls = yield* Ref.make(0);
+          const census = censusSpawner([requiredPending]);
           const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
           const error = yield* Effect.flip(
             runMonitorCheckWatchForTesting(
@@ -550,16 +505,13 @@ describe("plain monitor required census", () => {
               "watch failed",
               [],
               timeout
-            ).pipe(
-              Effect.provideServiceEffect(Git, Git.make),
-              Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, censusSpawner(calls, [requiredPending]))
-            )
+            ).pipe(Effect.provideServiceEffect(Git, Git.make), provideSpawner(census))
           );
           expect(error.message).toContain("settle-timeout; pending: Check");
           // The retry sleep and timeout share the remaining deadline. Either
           // timer can win: one retry may start before the timeout interrupts it.
           // A zero budget must still stop after the initial attempt.
-          const attempts = yield* Ref.get(calls);
+          const attempts = watchesOf(census);
           expect(attempts).toBeGreaterThanOrEqual(1);
           expect(attempts).toBeLessThanOrEqual(maxAttempts);
           expect(A.map(yield* Ref.get(recorder), (entry) => entry.result.exitCode)).toEqual([1]);

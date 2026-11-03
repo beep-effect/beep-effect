@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { fcRuns } from "@beep/fc-runs";
 import {
   buildTailscaleHttpsBaseUrl,
@@ -28,70 +29,25 @@ import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
-import type * as CommandLine from "effect/process/CommandLine";
 
-/** The plain text a real spawner hands the child for one argv word. */
-const wordText = (word: CommandLine.Word): string => (Redacted.isRedacted(word) ? Redacted.value(word) : word);
-
-const encoder = new TextEncoder();
 const tailscaleStatusJson = `{"Self":{"DNSName":"desktop.tail.ts.net.","TailscaleIPs":["100.100.100.100","fd7a:115c:a1e0::1","192.168.1.20"]}}`;
 const tailscaleStatusWithSingleIpJson = `{"Self":{"DNSName":"desktop.tail.ts.net.","TailscaleIPs":["100.90.1.2"]}}`;
 
-function mockHandle(result: { stdout?: string; stderr?: string; code?: number }) {
-  return ChildProcessSpawner.makeHandle({
-    pid: ChildProcessSpawner.ProcessId(1),
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(result.code ?? 0)),
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    unref: Effect.succeed(Effect.void),
-    stdin: Sink.drain,
-    stdout: Stream.make(encoder.encode(result.stdout ?? "")),
-    stderr: Stream.make(encoder.encode(result.stderr ?? "")),
-    all: Stream.empty,
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-  });
-}
-
-function neverFinishingMockHandle() {
-  return ChildProcessSpawner.makeHandle({
-    pid: ChildProcessSpawner.ProcessId(1),
-    exitCode: Effect.never,
-    isRunning: Effect.succeed(true),
-    kill: () => Effect.void,
-    unref: Effect.succeed(Effect.void),
-    stdin: Sink.drain,
-    stdout: Stream.empty,
-    stderr: Stream.empty,
-    all: Stream.empty,
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-  });
-}
-
-function mockSpawnerLayer(
-  handler: (
-    command: string,
-    args: ReadonlyArray<string>,
-    options: ChildProcess.CommandOptions
-  ) => { stdout?: string; stderr?: string; code?: number }
-) {
-  return Layer.succeed(
-    ChildProcessSpawner.ChildProcessSpawner,
-    ChildProcessSpawner.make((command) =>
-      ChildProcess.isStandardCommand(command)
-        ? Effect.succeed(mockHandle(handler(command.command, A.map(command.args, wordText), command.options)))
-        : Effect.die("Expected a standard tailscale command")
-    )
+/** The one tailscale invocation a scripted spawner saw, with the stdio and kill grace every call runs with. */
+const assertTailscaleSpawn = (spawner: ScriptedSpawner, args: ReadonlyArray<string>, stdout: "pipe" | "ignore") => {
+  assert.deepEqual(
+    A.map(spawner.spawns, (spawn) => [spawn.command, ...spawn.args]),
+    [["tailscale", ...args]]
   );
-}
+  for (const { options } of spawner.spawns) {
+    assert.equal(options.stdin, "ignore");
+    assert.equal(options.stdout, stdout);
+    assert.equal(options.stderr, "pipe");
+    assert.equal(options.forceKillAfter === undefined ? undefined : Duration.toMillis(options.forceKillAfter), 2_000);
+  }
+};
 
 const encodeTailscaleStatusJson = S.encodeEffect(S.fromJsonString(TailscaleStatusJson));
 
@@ -192,19 +148,8 @@ describe("tailscale", () => {
     })
   );
 
-  it.layer(
-    mockSpawnerLayer((command, args, options) => {
-      assert.equal(command, "tailscale");
-      assert.deepEqual(args, ["status", "--json"]);
-      assert.equal(options.stdin, "ignore");
-      assert.equal(options.stdout, "pipe");
-      assert.equal(options.stderr, "pipe");
-      assert.equal(options.forceKillAfter === undefined ? undefined : Duration.toMillis(options.forceKillAfter), 2_000);
-      return {
-        stdout: tailscaleStatusWithSingleIpJson,
-      };
-    })
-  )("with a successful tailscale status process", (it) => {
+  const statusSpawner = ScriptedSpawner.make(() => ({ stdout: tailscaleStatusWithSingleIpJson }));
+  it.layer(statusSpawner.layer, { timeout: "10 seconds" })("with a successful tailscale status process", (it) => {
     it.effect(
       "reads tailscale status through the process spawner service",
       Effect.fnUntraced(function* () {
@@ -217,6 +162,7 @@ describe("tailscale", () => {
             tailnetIpv4Addresses: ["100.90.1.2"],
           })
         );
+        assertTailscaleSpawn(statusSpawner, ["status", "--json"], "pipe");
       })
     );
   });
@@ -228,35 +174,30 @@ describe("tailscale", () => {
     method: "spawn",
     cause: systemCause,
   });
-  const SpawnFailureLayer = Layer.succeed(
-    ChildProcessSpawner.ChildProcessSpawner,
-    ChildProcessSpawner.make(() => Effect.fail(spawnCause))
+  it.layer(ScriptedSpawner.make(() => spawnCause).layer, { timeout: "10 seconds" })(
+    "with a failing tailscale process spawn",
+    (it) => {
+      it.effect(
+        "preserves tailscale spawn failures as causes",
+        Effect.fnUntraced(function* () {
+          yield* Effect.log("Tailscale phase: await in-memory status failure");
+          const error = yield* Effect.flip(readTailscaleStatus);
+
+          assert.instanceOf(error, TailscaleCommandSpawnError);
+          assert.equal(error.executable, "tailscale");
+          assert.equal(error.subcommand, "status");
+          assert.equal(error.argumentCount, 2);
+          assert.strictEqual(error.cause, spawnCause);
+          assert.equal(error.message, "Failed to spawn tailscale status.");
+          assert.notInclude(error.message, systemCause.message);
+        })
+      );
+    }
   );
 
-  it.layer(SpawnFailureLayer)("with a failing tailscale process spawn", (it) => {
-    it.effect(
-      "preserves tailscale spawn failures as causes",
-      Effect.fnUntraced(function* () {
-        yield* Effect.log("Tailscale phase: await in-memory status failure");
-        const error = yield* Effect.flip(readTailscaleStatus);
-
-        assert.instanceOf(error, TailscaleCommandSpawnError);
-        assert.equal(error.executable, "tailscale");
-        assert.equal(error.subcommand, "status");
-        assert.equal(error.argumentCount, 2);
-        assert.strictEqual(error.cause, spawnCause);
-        assert.equal(error.message, "Failed to spawn tailscale status.");
-        assert.notInclude(error.message, systemCause.message);
-      })
-    );
-  });
-
-  it.layer(
-    mockSpawnerLayer(() => ({
-      code: 7,
-      stderr: "not logged in tskey-auth-secret-token-value",
-    }))
-  )("with a nonzero tailscale status exit", (it) => {
+  it.layer(ScriptedSpawner.make(() => ({ exit: 7, stderr: "not logged in tskey-auth-secret-token-value" })).layer, {
+    timeout: "10 seconds",
+  })("with a nonzero tailscale status exit", (it) => {
     it.effect(
       "keeps nonzero exit diagnostics structured",
       Effect.fnUntraced(function* () {
@@ -278,15 +219,9 @@ describe("tailscale", () => {
     );
   });
 
-  const StatusTimeoutLayer = Layer.mergeAll(
-    TestClock.layer(),
-    Layer.succeed(
-      ChildProcessSpawner.ChildProcessSpawner,
-      ChildProcessSpawner.make(() => Effect.succeed(neverFinishingMockHandle()))
-    )
-  );
+  const StatusTimeoutLayer = Layer.mergeAll(TestClock.layer(), ScriptedSpawner.make(() => ({ hang: true })).layer);
 
-  it.layer(StatusTimeoutLayer)("with a non-terminating tailscale status process", (it) => {
+  it.layer(StatusTimeoutLayer, { timeout: "10 seconds" })("with a non-terminating tailscale status process", (it) => {
     it.effect(
       "times out tailscale status through TestClock",
       Effect.fnUntraced(function* () {
@@ -309,27 +244,20 @@ describe("tailscale", () => {
     );
   });
 
-  it.layer(
-    mockSpawnerLayer((command, args, options) => {
-      assert.equal(command, "tailscale");
-      assert.deepEqual(args, ["serve", "--bg", "--https=8443", "http://127.0.0.1:13773"]);
-      assert.equal(options.stdin, "ignore");
-      assert.equal(options.stdout, "ignore");
-      assert.equal(options.stderr, "pipe");
-      assert.equal(options.forceKillAfter === undefined ? undefined : Duration.toMillis(options.forceKillAfter), 2_000);
-      return {};
-    })
-  )("with a successful tailscale serve process", (it) => {
-    it.effect("configures tailscale serve through the process spawner service", () =>
-      ensureTailscaleServe({ localPort: 13773, servePort: 8443 })
+  const serveSpawner = ScriptedSpawner.make(() => ({}));
+  it.layer(serveSpawner.layer, { timeout: "10 seconds" })("with a successful tailscale serve process", (it) => {
+    it.effect(
+      "configures tailscale serve through the process spawner service",
+      Effect.fnUntraced(function* () {
+        yield* ensureTailscaleServe({ localPort: 13773, servePort: 8443 });
+        assertTailscaleSpawn(serveSpawner, ["serve", "--bg", "--https=8443", "http://127.0.0.1:13773"], "ignore");
+      })
     );
   });
 
   it.layer(
-    mockSpawnerLayer(() => ({
-      code: 1,
-      stderr: "serve permission denied tskey-auth-secret-token-value",
-    }))
+    ScriptedSpawner.make(() => ({ exit: 1, stderr: "serve permission denied tskey-auth-secret-token-value" })).layer,
+    { timeout: "10 seconds" }
   )("with a nonzero tailscale serve exit", (it) => {
     it.effect(
       "retains tailscale serve exit diagnostics",
@@ -349,21 +277,20 @@ describe("tailscale", () => {
     );
   });
 
-  const commands: Array<{ readonly command: string; readonly args: ReadonlyArray<string> }> = [];
-  it.layer(
-    mockSpawnerLayer((command, args) => {
-      commands.push({ command, args });
-      assert.equal(command, "tailscale");
-      assert.deepEqual(args, ["serve", "--https=8443", "off"]);
-      return {};
-    })
-  )("with a successful tailscale serve disable process", (it) => {
-    it.effect(
-      "disables tailscale serve through the process spawner service",
-      Effect.fnUntraced(function* () {
-        yield* disableTailscaleServe({ servePort: 8443 });
-        assert.deepEqual(commands, [{ command: "tailscale", args: ["serve", "--https=8443", "off"] }]);
-      })
-    );
-  });
+  const disableSpawner = ScriptedSpawner.make(() => ({}));
+  it.layer(disableSpawner.layer, { timeout: "10 seconds" })(
+    "with a successful tailscale serve disable process",
+    (it) => {
+      it.effect(
+        "disables tailscale serve through the process spawner service",
+        Effect.fnUntraced(function* () {
+          yield* disableTailscaleServe({ servePort: 8443 });
+          assert.deepEqual(
+            A.map(disableSpawner.spawns, ({ command, args }) => ({ command, args })),
+            [{ command: "tailscale", args: ["serve", "--https=8443", "off"] }]
+          );
+        })
+      );
+    }
+  );
 });

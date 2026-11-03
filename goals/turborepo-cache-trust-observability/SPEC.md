@@ -1099,4 +1099,49 @@ expectation sites and the current fixture together if reversing the repair.
   preserve prior observations, private credentials and the existing cache.
 
 
+- 2026-11-02: Prepare explicit `producer-install --from-environment` through the existing independent installer. Decode the fixed redacted approval/profile records under the existing sixteen-KiB UTF-8 bounds, validate approval before issuer lookup and require exactly 96 transferred bytes under a 128-character Base64 cap. Keep private files as the default and forbid this transport for issuer provisioning. Actual protected delivery must be installation-step scoped, outside every worker environment/mount, with the verifier off-runner. Preserve all existing source/target/executable/binding checks and exclusive-store cleanup. No credential, runtime activation or proof authority is added; reverse by removing only the opt-in transport.
+
 - 2026-11-02: Consume accepted #2632 without changing any accepted coverage baseline byte. Preserve its stronger storage-file row and both test sets; retain the earlier lower proposal as historical evidence in the [reconciliation](research/producer-object-coverage-identity-review-2026-11-02.md). This adds no floor exception or qualification authority. Reversal must retain the accepted main baseline.
+
+### Credential-free candidate adapter preparation, 2026-11-02
+
+The protected producer needs an independently approved portable executable on
+the real CI runner. Prepare it through a separate manual main-only caller and
+the already admitted `heavy.yml@main` leaf. Both operational modes default off
+and are mutually exclusive; ordinary callers still expand their full quality
+matrix. Pin the caller, repository, event, source revision and reusable leaf.
+This preparation has contents-read permission, no protected environment, no
+cache/application/issuer secrets, no shared cache restoration and no signing,
+server startup, publication or qualification operation.
+
+The numeric preparation budget is one concurrent job on the existing heavy
+pool, twenty minutes total, two Cargo compilation jobs, sixteen MiB for the
+complete candidate artifact and sixty-four KiB for its manifest, retained for
+one day. Install Rust 1.96.0, cargo-zigbuild 0.20.1 and Zig 0.14.1 in isolated
+scratch under the existing disk-backed Beep cache. Reuse `policy.sh
+cargo-build-musl` and its exact upstream/patch checks, repeat source checks
+after compilation, reject a host ELF interpreter and record source, binary,
+tool and run/attempt identities. Cleanup selects only this job's frozen
+scratch output, including on failure. No new runner, capacity increase, cloud
+resource or subscription is authorized by this preparation.
+
+The build artifact is a candidate, never producer attestation or approval.
+Before execution, the off-runner approval owner must inspect authenticated run
+and resolved workflow metadata, verify artifact/source/executable digests,
+select the resulting executable and freeze a fresh source/tool/profile
+approval. The separate normal comparison, protocol and ten-minute upload
+limits remain unchanged. Reverse by removing the preparation caller, optional
+Heavy mode and its candidate artifact; preserve ordinary cache services,
+independent issuer/verifier stores and all historical failed evidence.
+
+### Candidate build-tool content pins, 2026-11-02
+
+PR #2643 review identified that exact wheel versions alone do not bind their
+content. Lock the published Linux x86_64 cargo-zigbuild 0.20.1 and ziglang 0.14.1
+wheel SHA-256 values in the existing requirements file and require pip hash
+verification with binary-only installation. The latter is the former's only
+runtime package dependency and remains independently pinned. Unsupported host
+wheels fail closed. Record actual Rust compiler, cargo-zigbuild and Zig
+executable digests and byte sizes alongside versions in the bounded build
+manifest; resolve the compiler through Rustup rather than hashing its launcher.
+This repairs preparation, not its unexecuted build or independent approval.

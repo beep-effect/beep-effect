@@ -1569,6 +1569,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         // Manual source inspection is operational evidence, not a required quality lane.
         "cache-producer-inspect.yml:Inspect producer sources and tools",
         "heavy.yml:Heavy / Inspect producer sources and tools",
+        // A candidate adapter build grants no producer or quality verdict authority.
+        "cache-producer-prepare.yml:Build candidate producer adapter",
+        "heavy.yml:Heavy / Build candidate producer adapter",
         "data-sync.yml:Sync Official Data",
         // Prod deploy of the Alchemy stack; environment-gated, not a local lane.
         "deploy-beep-effect-web.yml:Deploy beep-effect-web (prod)",
@@ -1645,11 +1648,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         type: "boolean",
         default: false,
       });
-      expect(yamlAt(heavy, ["jobs", "verify", "if"])).toBe("${{ !inputs.producer_inspection }}");
+      expect(yamlAt(heavy, ["jobs", "verify", "if"])).toBe(
+        "${{ !inputs.producer_inspection && !inputs.producer_preparation }}"
+      );
       expect(yamlAt(heavy, ["jobs", "producer-inspect", "if"])).toBe(
         A.join(
           [
-            "inputs.producer_inspection &&",
+            "inputs.producer_inspection && !inputs.producer_preparation &&",
             "github.repository == 'beep-effect/beep-effect' &&",
             "github.event_name == 'workflow_dispatch' &&",
             "github.ref == 'refs/heads/main' &&",
@@ -1690,6 +1695,121 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "compression-level": 0,
       });
       expect(yield* workflowPolicyDiagnostics("cache-producer-inspect.yml", text)).toEqual([]);
+      expect(yield* workflowPolicyDiagnostics("heavy.yml", heavyText)).toEqual([]);
+    })
+  );
+
+  it.effect("keeps candidate adapter builds main-only, credential-free and separate from proof", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const text = yield* fs.readFileString(`${root}/.github/workflows/cache-producer-prepare.yml`);
+      const workflow = parseWorkflowYaml(text);
+      const policy = yield* decodeInspectionPolicy(workflow);
+      expect(policy.permissions).toEqual({ contents: "read" });
+      expect(policy.on).toEqual({ workflow_dispatch: null });
+      expect(yamlAt(workflow, ["concurrency"])).toEqual({
+        group: "cache-producer-preparation-main",
+        "cancel-in-progress": false,
+      });
+      expect(yamlAt(workflow, ["jobs", "prepare", "if"])).toBe("github.ref == 'refs/heads/main'");
+      expect(yamlAt(workflow, ["jobs", "prepare", "uses"])).toBe(
+        "beep-effect/beep-effect/.github/workflows/heavy.yml@main"
+      );
+      expect(yamlAt(workflow, ["jobs", "prepare", "with"])).toEqual({
+        admitted: false,
+        producer_preparation: true,
+      });
+      expect(yamlAt(workflow, ["jobs", "prepare", "secrets"])).toBeUndefined();
+      const heavyText = yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`);
+      const heavy = parseWorkflowYaml(heavyText);
+      expect(yamlAt(heavy, ["on", "workflow_call", "inputs", "producer_preparation"])).toEqual({
+        description:
+          "Build only the credential-free candidate adapter for the exact main manual dispatcher. This grants no producer or cache-write authority.",
+        required: false,
+        type: "boolean",
+        default: false,
+      });
+      expect(yamlAt(heavy, ["jobs", "verify", "if"])).toBe(
+        "${{ !inputs.producer_inspection && !inputs.producer_preparation }}"
+      );
+      expect(yamlAt(heavy, ["jobs", "producer-prepare", "if"])).toBe(
+        A.join(
+          [
+            "inputs.producer_preparation && !inputs.producer_inspection &&",
+            "github.repository == 'beep-effect/beep-effect' &&",
+            "github.event_name == 'workflow_dispatch' &&",
+            "github.ref == 'refs/heads/main' &&",
+            "github.workflow_ref == 'beep-effect/beep-effect/.github/workflows/cache-producer-prepare.yml@refs/heads/main'",
+          ],
+          " "
+        )
+      );
+      expect(yamlAt(heavy, ["jobs", "producer-prepare", "runs-on"])).toBe("beep-ec2-heavy");
+      expect(yamlAt(heavy, ["jobs", "producer-prepare", "timeout-minutes"])).toBe(20);
+      expect(yamlAt(heavy, ["jobs", "producer-prepare", "environment"])).toBeUndefined();
+      expect(yamlAt(heavy, ["jobs", "producer-prepare", "secrets"])).toBeUndefined();
+      expect(yamlAt(heavy, ["jobs", "producer-prepare", "env"])).toEqual({
+        BEEP_TURBO_HOST_CACHE_DISABLED: "true",
+        RUSTUP_TOOLCHAIN: "1.96.0",
+        CARGO_BUILD_JOBS: "2",
+      });
+      const steps = jobSteps(yield* workflowJobs(heavy), "producer-prepare");
+      expect(stepByName(steps, "Checkout exact main source").with).toEqual({
+        ref: "${{ github.sha }}",
+        "fetch-depth": 0,
+        filter: "blob:none",
+        "persist-credentials": false,
+      });
+      expect(stepByName(steps, "Setup pinned Rust without shared caches").with).toEqual({
+        toolchain: "1.96.0",
+        target: "x86_64-unknown-linux-musl",
+        cache: "false",
+        override: "false",
+        matcher: "false",
+      });
+      const install = stepByName(steps, "Install pinned portable build tools");
+      expect(install.run).toContain("--require-hashes");
+      expect(install.run).toContain("--only-binary=:all:");
+      const buildRequirements = yield* fs.readFileString(`${root}/infra/r2-cache/policy-build-requirements.txt`);
+      expect(buildRequirements).toContain("cargo-zigbuild==0.20.1");
+      expect(buildRequirements).toContain(
+        "--hash=sha256:cb9508149ee63d60e5110ff24b527ab25ed418a6329252aa4f86868197c55bf6"
+      );
+      expect(buildRequirements).toContain("ziglang==0.14.1");
+      expect(buildRequirements).toContain(
+        "--hash=sha256:6eb9d4d759b292c83810dbee2e9e8e3fbfbf01d864e6e9811bae711fd74e1c2f"
+      );
+      const build = stepByName(steps, "Build pinned portable candidate");
+      expect(build.run).toContain("infra/r2-cache/policy.sh cargo-build-musl");
+      expect(build.run).toContain("infra/r2-cache/policy.sh prepare");
+      expect(build.run).toContain("readelf -lW");
+      expect(build.run).toContain("size+len(encoded)>16*1024*1024");
+      expect(build.run).toContain("len(encoded)>64*1024");
+      expect(build.run).toContain("independent approval and runtime qualification are required");
+      expect(build.run).toContain("'toolExecutables':{name:executable_digest(path)");
+      expect(build.run).toContain("['rustup','which','rustc']");
+      expect(stepByName(steps, "Retain candidate for at most one day").with).toEqual({
+        name: "cache-producer-adapter-${{ github.run_id }}-${{ github.run_attempt }}",
+        path: "${{ steps.scratch.outputs.artifact }}",
+        "if-no-files-found": "error",
+        "retention-days": 1,
+        "compression-level": 0,
+      });
+      const cleanup = stepByName(steps, "Remove only this job's build scratch");
+      expect(cleanup.if).toBe("always() && steps.scratch.outputs.root != ''");
+      expect(cleanup.env).toEqual({ BUILD_SCRATCH_ROOT: "${{ steps.scratch.outputs.root }}" });
+      expect(cleanup.run).toContain("*/beep/cache-producer-build.??????)");
+      for (const step of steps) {
+        if (step.name !== cleanup.name) expect(step.env).toBeUndefined();
+        expect(step.uses).not.toBe(SETUP_MONOREPO_ACTION);
+        expect(step.uses ?? "").not.toContain("actions/cache");
+        expect(step.run ?? "").not.toContain("secrets.");
+        expect(step.run ?? "").not.toContain("producer-install");
+        expect(step.run ?? "").not.toContain("producer-run");
+        expect(step.run ?? "").not.toContain("op read");
+      }
+      expect(yield* workflowPolicyDiagnostics("cache-producer-prepare.yml", text)).toEqual([]);
       expect(yield* workflowPolicyDiagnostics("heavy.yml", heavyText)).toEqual([]);
     })
   );

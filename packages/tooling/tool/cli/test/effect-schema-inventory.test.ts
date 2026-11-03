@@ -1,4 +1,5 @@
 import * as NodeURL from "node:url";
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import {
   checkEffectSchemaInventoryPrompts,
   compactEffectSchemaInventoryPreview,
@@ -50,6 +51,7 @@ import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { EffectSchemaInventorySourceShape } from "@beep/repo-cli/commands/Lint";
 
 const repositoryRoot = NodeURL.fileURLToPath(new URL("../../../../..", import.meta.url));
@@ -1011,19 +1013,15 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
         const path = yield* Path.Path;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-spawn-" });
         yield* fs.makeDirectory(path.join(root, ".repos", "effect"), { recursive: true });
-        const unavailableGit = ChildProcessSpawner.make(() =>
-          Effect.fail(
-            PlatformError.badArgument({
-              description: "fixture git executable is unavailable",
-              method: "spawn",
-              module: "ChildProcess",
-            })
-          )
+        const unavailableGit = ScriptedSpawner.make(() =>
+          PlatformError.badArgument({
+            description: "fixture git executable is unavailable",
+            method: "spawn",
+            module: "ChildProcess",
+          })
         );
         // The source captures its spawner when constructed, before either git operation runs.
-        const source = yield* EffectSchemaInventorySource.make(root).pipe(
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, unavailableGit)
-        );
+        const source = yield* EffectSchemaInventorySource.make(root).pipe(provideSpawner(unavailableGit));
         const verification = yield* Effect.flip(source.verifyPin(PIN));
         strictEqual(verification._tag, "EffectSchemaInventoryReferenceMissingError");
         assertInclude(verification.message, "is not a git checkout");

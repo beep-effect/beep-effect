@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { researchCommand, runResearchInstallTimers } from "@beep/repo-cli/commands/Research";
 import {
   parseSystemdUnit,
@@ -13,7 +14,6 @@ import {
   systemdUserUnitDir,
   unquoteSystemdArgument,
 } from "@beep/repo-cli/test/Systemd";
-import { provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { assertNone, assertSome, assertSuccess, strictEqual } from "@effect/vitest/utils";
@@ -28,13 +28,10 @@ import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { commandArgs } from "./support/commandArgs.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 
 const PAGE_ID = "36869573788d8043907eddb021d99410";
 const UNIT_FILES = [
@@ -48,34 +45,11 @@ const decodeUnitPath = S.decodeUnknownEffect(SystemdUnitPath);
 
 // Every systemctl call the installer makes is recorded and answered with one
 // exit code, so nothing reaches this user's real systemd manager.
-const scriptedSystemctl = (
-  calls: Array<string>,
-  exitCode: number
-): Layer.Layer<ChildProcessSpawner.ChildProcessSpawner> =>
-  Layer.succeed(ChildProcessSpawner.ChildProcessSpawner)(
-    ChildProcessSpawner.make((command) =>
-      Effect.sync(() => {
-        if (command._tag === "StandardCommand") {
-          calls.push(A.join([command.command, ...commandArgs(command)], " "));
-        }
-        return ChildProcessSpawner.makeHandle({
-          pid: ChildProcessSpawner.ProcessId(1),
-          exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
-          isRunning: Effect.succeed(false),
-          kill: () => Effect.void,
-          stdin: Sink.drain,
-          stdout: Stream.empty,
-          stderr: Stream.empty,
-          all: Stream.empty,
-          getInputFd: () => Sink.drain,
-          getOutputFd: () => Stream.empty,
-          unref: Effect.succeed(Effect.void),
-        });
-      })
-    )
-  );
+const scriptedSystemctl = (exit = 0) => ScriptedSpawner.make(() => ({ exit }));
+const systemctlCalls = (systemctl: ScriptedSpawner) =>
+  A.map(systemctl.spawns, (spawn) => A.join([spawn.command, ...spawn.args], " "));
 
-const withSystemctl = (calls: Array<string>, exitCode = 0) => provideScopedLayer(scriptedSystemctl(calls, exitCode));
+const withSystemctl = (systemctl = scriptedSystemctl()) => provideSpawner(systemctl);
 const withHome = (home: string) =>
   Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ HOME: home }));
 const withoutHome = Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}));
@@ -171,16 +145,16 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
       "writes both unit pairs with the Bun path quoted for systemd and enables the timers",
       Effect.fn(function* () {
         const { home, readUnit, unitsPresent } = yield* fixture();
-        const calls: Array<string> = [];
+        const systemctl = scriptedSystemctl();
         const bunPath = "/opt/bun 1/bin/bun";
         const wrote = yield* captureOutput(
           runResearchInstallTimers({ bunPath: O.some(bunPath), page: O.some(PAGE_ID), uninstall: false }).pipe(
-            withSystemctl(calls),
+            withSystemctl(systemctl),
             withHome(home)
           )
         );
         assertSuccess(wrote.result, undefined);
-        expect(calls).toEqual([
+        expect(systemctlCalls(systemctl)).toEqual([
           "systemctl --user daemon-reload",
           "systemctl --user enable --now beep-research-daily.timer",
           "systemctl --user enable --now beep-research-repo-card.timer",
@@ -269,10 +243,10 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
         const { path, home, touch, execLine } = yield* fixture();
         const shim = path.join(home, ".local", "share", "mise", "shims", "bun");
         yield* touch(shim);
-        const calls: Array<string> = [];
+        const systemctl = scriptedSystemctl();
         const defaulted = yield* captureOutput(
           runResearchInstallTimers({ bunPath: O.none(), page: O.none(), uninstall: false }).pipe(
-            withSystemctl(calls),
+            withSystemctl(systemctl),
             withHome(home)
           )
         );
@@ -288,7 +262,7 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
         // An explicit --bun-path is pinned as given, with `~/` expanded against HOME.
         const pinned = yield* captureOutput(
           runResearchInstallTimers({ bunPath: O.some("~/tools/bun"), page: O.none(), uninstall: false }).pipe(
-            withSystemctl(calls),
+            withSystemctl(systemctl),
             withHome(home)
           )
         );
@@ -304,13 +278,13 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
       "refuses a page id or path systemd would reinterpret before writing anything",
       Effect.fn(function* () {
         const { fs, home, unitDir } = yield* fixture();
-        const calls: Array<string> = [];
+        const systemctl = scriptedSystemctl();
         const refusedPage = yield* captureOutput(
           runResearchInstallTimers({
             bunPath: O.some("/usr/bin/bun"),
             page: O.some("not a page id"),
             uninstall: false,
-          }).pipe(withSystemctl(calls), withHome(home))
+          }).pipe(withSystemctl(systemctl), withHome(home))
         );
         assertSome(failureTag(refusedPage.result), "ResearchCommandError");
         assertSome(
@@ -319,12 +293,12 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
         );
         const refusedBun = yield* captureOutput(
           runResearchInstallTimers({ bunPath: O.some('/opt/"bun"/bin/bun'), page: O.none(), uninstall: false }).pipe(
-            withSystemctl(calls),
+            withSystemctl(systemctl),
             withHome(home)
           )
         );
         assertSome(failureTag(refusedBun.result), "ResearchCommandError");
-        expect(calls).toEqual([]);
+        expect(systemctlCalls(systemctl)).toEqual([]);
         expect(yield* fs.exists(unitDir)).toBe(false);
         // The refinement is the single home of that rule: spaces pass because the
         // Bun path is rendered quoted; the rest systemd would rewrite.
@@ -341,7 +315,7 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
         const { home, unitsPresent } = yield* fixture();
         const installed = yield* captureOutput(
           runResearchInstallTimers({ bunPath: O.some("/usr/bin/bun"), page: O.none(), uninstall: false }).pipe(
-            withSystemctl([]),
+            withSystemctl(),
             withHome(home)
           )
         );
@@ -349,17 +323,17 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
         expect(yield* unitsPresent).toEqual([true, true, true, true]);
         // The install paths are never read on the way out, so none of them can
         // keep an installed unit from being removed.
-        const removeCalls: Array<string> = [];
+        const removeSystemctl = scriptedSystemctl();
         const removed = yield* captureOutput(
           runResearchInstallTimers({
             bunPath: O.some('/opt/"gone"/bun'),
             page: O.some("not a page id"),
             uninstall: true,
-          }).pipe(withSystemctl(removeCalls), withHome(home))
+          }).pipe(withSystemctl(removeSystemctl), withHome(home))
         );
         assertSuccess(removed.result, undefined);
         expect(removed.output).toEqual(["research install-timers: removed research timers."]);
-        expect(removeCalls).toEqual([
+        expect(systemctlCalls(removeSystemctl)).toEqual([
           "systemctl --user disable --now beep-research-daily.timer",
           "systemctl --user disable --now beep-research-repo-card.timer",
           "systemctl --user daemon-reload",
@@ -368,7 +342,7 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
         // Nothing installed is nothing to undo: a second uninstall still reloads cleanly.
         const again = yield* captureOutput(
           runResearchInstallTimers({ bunPath: O.none(), page: O.none(), uninstall: true }).pipe(
-            withSystemctl([]),
+            withSystemctl(),
             withHome(home)
           )
         );
@@ -376,7 +350,7 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
         // A daemon-reload that exits nonzero is reported on install and uninstall alike.
         const failedInstall = yield* captureOutput(
           runResearchInstallTimers({ bunPath: O.some("/usr/bin/bun"), page: O.none(), uninstall: false }).pipe(
-            withSystemctl([], 1),
+            withSystemctl(scriptedSystemctl(1)),
             withHome(home)
           )
         );
@@ -386,7 +360,7 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
         );
         const failedRemove = yield* captureOutput(
           runResearchInstallTimers({ bunPath: O.none(), page: O.none(), uninstall: true }).pipe(
-            withSystemctl([], 1),
+            withSystemctl(scriptedSystemctl(1)),
             withHome(home)
           )
         );
@@ -397,7 +371,7 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
         // Without HOME there is no unit directory to write or clear.
         const homeless = yield* captureOutput(
           runResearchInstallTimers({ bunPath: O.none(), page: O.none(), uninstall: true }).pipe(
-            withSystemctl([]),
+            withSystemctl(),
             withoutHome
           )
         );
@@ -410,11 +384,11 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
         "wires --bun-path, --page, and --uninstall through the research command tree",
         Effect.fn(function* () {
           const { home, execLine, unitsPresent } = yield* fixture();
-          const calls: Array<string> = [];
+          const systemctl = scriptedSystemctl();
           const runCommand = (args: ReadonlyArray<string>) =>
             captureOutput(
               Command.runWith(researchCommand, { version: "test", renderErrors: false })(["install-timers", ...args])
-            ).pipe(withSystemctl(calls), withHome(home));
+            ).pipe(withSystemctl(systemctl), withHome(home));
           const installed = yield* runCommand(["--bun-path", "/usr/bin/bun", "--page", PAGE_ID]);
           assertSuccess(installed.result, undefined);
           assertSome(
@@ -424,7 +398,7 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
           const removed = yield* runCommand(["--uninstall"]);
           assertSuccess(removed.result, undefined);
           expect(yield* unitsPresent).toEqual([false, false, false, false]);
-          expect(calls).toEqual([
+          expect(systemctlCalls(systemctl)).toEqual([
             "systemctl --user daemon-reload",
             "systemctl --user enable --now beep-research-daily.timer",
             "systemctl --user enable --now beep-research-repo-card.timer",
@@ -509,7 +483,7 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
                 bunPath: O.some("/usr/bin/bun"),
                 page: O.none(),
                 uninstall: false,
-              }).pipe(withSystemctl([]), withHome(home))
+              }).pipe(withSystemctl(), withHome(home))
             );
             assertSuccess(installed.result, undefined);
             expect(Str.split(yield* readUnit("beep-research-daily.service"), "\n")).toContain(
@@ -532,7 +506,7 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
             page: O.none(),
             repoRoot: O.some(file),
             uninstall: false,
-          }).pipe(withSystemctl([]), withHome(home))
+          }).pipe(withSystemctl(), withHome(home))
         );
         assertSome(O.map(failureMessage(refused.result), Str.includes("is not an existing directory")), true);
         expect(yield* fs.exists(unitDir)).toBe(false);
@@ -543,19 +517,19 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
       "refuses a missing repo root before creating the unit directory",
       Effect.fn(function* () {
         const { fs, path, home, unitDir } = yield* fixture();
-        const calls: Array<string> = [];
+        const systemctl = scriptedSystemctl();
         const refused = yield* captureOutput(
           runResearchInstallTimers({
             repoRoot: O.some(path.join(home, "missing")),
             bunPath: O.some("/usr/bin/bun"),
             page: O.none(),
             uninstall: false,
-          }).pipe(withSystemctl(calls), withHome(home))
+          }).pipe(withSystemctl(systemctl), withHome(home))
         );
         assertSome(failureTag(refused.result), "ResearchCommandError");
         assertSome(O.map(failureMessage(refused.result), Str.includes("is not an existing directory")), true);
         expect(yield* fs.exists(unitDir)).toBe(false);
-        expect(calls).toEqual([]);
+        expect(systemctlCalls(systemctl)).toEqual([]);
       })
     );
 
@@ -563,7 +537,7 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
       "refuses research timer refresh before the first install",
       Effect.fn(function* () {
         const { fs, home, unitDir } = yield* fixture();
-        const calls: Array<string> = [];
+        const systemctl = scriptedSystemctl();
         const refused = yield* captureOutput(
           runResearchInstallTimers({
             refresh: true,
@@ -571,12 +545,12 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
             bunPath: O.none(),
             page: O.none(),
             uninstall: false,
-          }).pipe(withSystemctl(calls), withHome(home))
+          }).pipe(withSystemctl(systemctl), withHome(home))
         );
         assertSome(failureTag(refused.result), "ResearchCommandError");
         assertSome(O.map(failureMessage(refused.result), Str.includes("install first")), true);
         expect(yield* fs.exists(unitDir)).toBe(false);
-        expect(calls).toEqual([]);
+        expect(systemctlCalls(systemctl)).toEqual([]);
       })
     );
 
@@ -592,7 +566,7 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
             bunPath: O.some("/usr/bin/bun"),
             page: O.some(PAGE_ID),
             uninstall: false,
-          }).pipe(withSystemctl([]), withHome(home))
+          }).pipe(withSystemctl(), withHome(home))
         );
         assertSuccess(installed.result, undefined);
         const shim = path.join(home, ".local", "share", "mise", "shims", "bun");
@@ -608,7 +582,7 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
                 bunPath: O.none(),
                 page,
                 uninstall: false,
-              }).pipe(withSystemctl([]), withHome(home))
+              }).pipe(withSystemctl(), withHome(home))
             );
             assertSuccess(refreshed.result, undefined);
             assertSome(
@@ -634,10 +608,10 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
           const { fs, path, home, touch, execLine, readUnit, unitsPresent } = yield* fixture();
           const root = path.join(home, "clone");
           yield* fs.makeDirectory(root);
-          const calls: Array<string> = [];
+          const systemctl = scriptedSystemctl();
           const runCommand = (args: ReadonlyArray<string>) =>
             captureOutput(Command.runWith(researchCommand, { version: "test", renderErrors: false })(args)).pipe(
-              withSystemctl(calls),
+              withSystemctl(systemctl),
               withHome(home)
             );
           const installed = yield* runCommand(["install-timers", "--repo-root", root, "--bun-path", "/usr/bin/bun"]);
@@ -652,7 +626,7 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
             `ExecStart="${shim}" run beep research daily --commit`
           );
           expect(Str.split(yield* readUnit("beep-research-daily.service"), "\n")).toContain(`WorkingDirectory=${root}`);
-          expect(calls).toEqual(
+          expect(systemctlCalls(systemctl)).toEqual(
             A.flatten(
               A.replicate(
                 [

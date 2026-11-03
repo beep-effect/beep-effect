@@ -31,17 +31,21 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement, W4 sites in review (this PR). The Yeet review-thread reads and resolutions of `Status`, `WatchMode`,
-`MergeGate`, `Reply`, `closeout/GhCollect` and `GhOps` run on the kit's `ReviewThread`, and the merge gate's and squash
-reader's REST calls on `GithubRest`, `GitHubRepository` and `GitHubClient`, built once per command surface as the
-operator's gh login (SPEC D-13). `GhCall.ts` is deleted, `GithubGraphql.ts` keeps only the ready-flip document and
-`GhCommand.ts` only `ghOutput`. The current-branch `gh pr view` / `gh pr checks` reads stay (no kit member);
-`PullRequest`, `ProvenanceFooter`, `ReviewWindow`, `Merge` and `Monitor*` are deferred behind their capture seams.
+P1 Implement, W5 in review (this PR). The hand-rolled `ChildProcessSpawner` test doubles move onto `@beep/commands`
+`ScriptedSpawner` (SPEC D-14): 51 repo-cli test files and `tailscale.test.ts` carry no double of their own, 5 more keep
+one guard or decorator beside their scripted doubles, and 33 files stay on their own doubles with a named reason
+(never-spawn `Effect.die` guards, decorators over the real spawner, and kill/stream/finalizer/filesystem shapes a
+`ScriptCompletion` cannot express; both ai-metrics suites among them). `@beep/test-utils` adds no second double (#291).
 Earlier waves merged: W0 (#2514), the W1 kit (#2522), W1a (#2539), W1b (#2546), W2 (#2593, D-10), W2b (#2606, D-11),
-the W3 kit (#2556), W3 sites (#2614, D-12) and the W4 kit (#2600). Next: W5.
+the W3 kit (#2556), W3 sites (#2614, D-12), the W4 kit (#2600) and W4 sites (#2622, D-13). Next: closeout C.
 
 ## Latest Evidence
 
+- 2026-11-02 W5: the 86 repo-cli suites that held a `ChildProcessSpawner.make`/`makeHandle` double run 2737 tests
+  before and after on Node and on Bun (baseline origin/main 71bc36fcb4), `tailscale.test.ts` 15 before and after on
+  both; repo-cli `check` and tailscale `check` clean; `lint effect-vitest`, Fallow audit and Fallow health introduce
+  0. Two `quality-command-dispatch` security cases fail on origin/main's file as well while another session's
+  `agent-run` scope is live (RunScope samples it), so they are environment-only.
 - 2026-11-02 W4 sites: `research/review-thread-differential-w4.json` (40 scenarios, 29 same, 11 classified, 0
   unclassified); repo-cli typecheck clean, every `yeet-*` and `shared-internals` suite green (62 files, 1577 tests),
   the `@beep/github` `ReviewThread` suite green with the cursor hardening.

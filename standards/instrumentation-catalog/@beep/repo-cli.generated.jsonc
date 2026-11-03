@@ -182,6 +182,7 @@
     {"name":"Cache.provisionProducer","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Cache.readConformanceTarget","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Cache.readHostedProducerRun","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"Cache.readProducerEnvironment","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Cache.readProducerObjectInputs","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Cache.readRequest","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Cache.readReviewRequest","owner":"@beep/repo-cli","family":"tooling","conforms":true},

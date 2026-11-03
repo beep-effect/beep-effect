@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { fcRuns } from "@beep/fc-runs";
 import { Git } from "@beep/git/Git";
 import { UUID } from "@beep/repo-cli/test/SharedInternals";
@@ -72,15 +73,10 @@ import * as FileSystem from "effect/FileSystem";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { commandArgs } from "./support/commandArgs.ts";
 import { waitTimesOut } from "./support/ProofJobWait.ts";
 import type {
   ProofJobLauncherShape,
@@ -227,21 +223,6 @@ const runUntilReady = Effect.fn("waveRerunTest.runUntilReady")(function* (
   });
 });
 
-const handle = (output: string) =>
-  ChildProcessSpawner.makeHandle({
-    all: Stream.make(new TextEncoder().encode(output)),
-    stdout: Stream.make(new TextEncoder().encode(output)),
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    unref: Effect.succeed(Effect.void),
-  });
-
 // The loop's triage lists the head's workflow runs (none here) and the job
 // launcher asks systemd whether the job's unit is still loaded and recoverable.
 // These wave tests retain a live runner, so recovery must leave the job pending.
@@ -253,40 +234,34 @@ const platform = Layer.mergeAll(
   NodeFileSystem.layer,
   NodePath.layer,
   NodeCrypto.layer,
-  Layer.succeed(
-    ChildProcessSpawner.ChildProcessSpawner,
-    ChildProcessSpawner.make((command) => {
-      if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected piped process");
-      if (commandArgs(command)[0] === "run" && commandArgs(command)[1] === "list") return Effect.succeed(handle("[]"));
-      if (A.contains(commandArgs(command), "LoadState")) return Effect.succeed(handle("loaded\n"));
-      if (
-        command.command === "systemctl" &&
-        A.contains(commandArgs(command), `beep-proof-${jobUuid}.service`) &&
-        A.contains(commandArgs(command), "ActiveState")
-      ) {
-        return Effect.succeed(
-          handle(
-            A.join(
-              [
-                "ActiveState=active",
-                "SubState=running",
-                "MainPID=1",
-                "ControlPID=0",
-                "TasksCurrent=1",
-                "ControlGroup=/agent-runs.slice/wave-test",
-                "Result=success",
-                "ExecMainCode=0",
-                "ExecMainStatus=0",
-                "InvocationID=",
-              ],
-              "\n"
-            )
-          )
-        );
-      }
-      return Effect.die(`unexpected process: ${command.command} ${A.join(commandArgs(command), " ")}`);
-    })
-  )
+  ScriptedSpawner.make((command, args) => {
+    if (args[0] === "run" && args[1] === "list") return { stdout: "[]" };
+    if (A.contains(args, "LoadState")) return { stdout: "loaded\n" };
+    if (
+      command === "systemctl" &&
+      A.contains(args, `beep-proof-${jobUuid}.service`) &&
+      A.contains(args, "ActiveState")
+    ) {
+      return {
+        stdout: A.join(
+          [
+            "ActiveState=active",
+            "SubState=running",
+            "MainPID=1",
+            "ControlPID=0",
+            "TasksCurrent=1",
+            "ControlGroup=/agent-runs.slice/wave-test",
+            "Result=success",
+            "ExecMainCode=0",
+            "ExecMainStatus=0",
+            "InvocationID=",
+          ],
+          "\n"
+        ),
+      };
+    }
+    return { exit: 1, stderr: `unexpected process: ${command} ${A.join(args, " ")}` };
+  }).layer
 );
 
 const checkout = Effect.gen(function* () {

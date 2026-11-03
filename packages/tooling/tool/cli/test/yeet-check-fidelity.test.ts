@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import {
   collectRemoteChecksForTesting,
@@ -26,15 +27,10 @@ import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { commandArgs } from "./support/commandArgs.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import { provideLegacyGh } from "./support/YeetGithub.ts";
 
 const decodeGhStatusChecks = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhStatusCheck)));
@@ -52,21 +48,6 @@ const contextFor = (root: string) =>
     packetDir: ".beep/yeet",
     repoRoot: root,
     turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] },
-  });
-
-const handle = (output: string) =>
-  ChildProcessSpawner.makeHandle({
-    all: Stream.make(new TextEncoder().encode(output)),
-    stdout: Stream.make(new TextEncoder().encode(output)),
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    unref: Effect.succeed(Effect.void),
   });
 
 // One pull request both collectors read: the union of the fields `yeet status`
@@ -126,27 +107,25 @@ const threadsJson = JSON.stringify({
   },
 });
 
-// Answers every read of both collectors; records each `gh pr checks` argv.
-const withGh = (checkArgs: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>) =>
-  flow(
-    provideLegacyGh,
-    Effect.provideServiceEffect(Git, Git.make),
-    Effect.provideService(
-      ChildProcessSpawner.ChildProcessSpawner,
-      ChildProcessSpawner.make((command) => {
-        if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-        const [first, second] = commandArgs(command);
-        if (command.command === "git") return Effect.succeed(handle(""));
-        if (first === "pr" && second === "view") return Effect.succeed(handle(pullRequestJson));
-        if (first === "pr" && second === "checks")
-          return Ref.update(checkArgs, A.append(commandArgs(command))).pipe(
-            Effect.as(handle(A.contains(commandArgs(command), "--required") ? requiredChecksJson : checksJson))
-          );
-        if (first === "api") return Effect.succeed(handle(threadsJson));
-        return Effect.succeed(handle("[]"));
-      })
-    )
+const isPrChecks = (args: ReadonlyArray<string>) => args[0] === "pr" && args[1] === "checks";
+
+// Answers every read of both collectors; each `gh pr checks` argv stays in `spawns`.
+const fidelitySpawner = () =>
+  ScriptedSpawner.make((command, args) => {
+    if (command === "git") return {};
+    if (args[0] === "pr" && args[1] === "view") return { stdout: pullRequestJson };
+    if (isPrChecks(args)) return { stdout: A.contains(args, "--required") ? requiredChecksJson : checksJson };
+    return { stdout: args[0] === "api" ? threadsJson : "[]" };
+  });
+
+const checkArgsOf = (spawner: ScriptedSpawner) =>
+  A.map(
+    A.filter(spawner.spawns, (spawn) => isPrChecks(spawn.args)),
+    (spawn) => spawn.args
   );
+
+const withGh = (spawner: ScriptedSpawner) =>
+  flow(provideLegacyGh, Effect.provideServiceEffect(Git, Git.make), provideSpawner(spawner));
 
 const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const PlatformLayer = Layer.mergeAll(BunCrypto.layer, FileSystemLayer);
@@ -252,11 +231,11 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("--until-ready check fidelity
   it.effect("requests all seven check fields and keeps each check's whole record", () =>
     Effect.gen(function* () {
       const root = yield* tempRoot();
-      const checkArgs = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
-      const status = yield* collectYeetStatus(contextFor(root), true).pipe(withGh(checkArgs));
-      const census = yield* collectRemoteChecksForTesting(contextFor(root), false).pipe(withGh(checkArgs));
+      const spawner = fidelitySpawner();
+      const status = yield* collectYeetStatus(contextFor(root), true).pipe(withGh(spawner));
+      const census = yield* collectRemoteChecksForTesting(contextFor(root), false).pipe(withGh(spawner));
 
-      const requested = yield* Ref.get(checkArgs);
+      const requested = checkArgsOf(spawner);
       expect(A.length(requested)).toBe(3);
       expect(A.map(requested, A.last)).toStrictEqual(
         A.replicate(O.some("name,state,bucket,link,workflow,completedAt,startedAt,description"), 3)
@@ -293,8 +272,7 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("--until-ready check fidelity
 
   it.effect("writes a check-failed capsule equal, field for field, to the one --watch writes", () =>
     Effect.gen(function* () {
-      const checkArgs = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
-      const gh = withGh(checkArgs);
+      const gh = withGh(fidelitySpawner());
       const [watchRows, statusRows] = yield* Effect.all([
         Effect.gen(function* () {
           const root = yield* tempRoot();

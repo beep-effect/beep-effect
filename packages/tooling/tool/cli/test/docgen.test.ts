@@ -1,4 +1,5 @@
 import * as NodeURL from "node:url";
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { docgenCommand } from "@beep/repo-cli/commands/Docgen";
 import {
@@ -68,11 +69,9 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Project, SyntaxKind } from "ts-morph";
-import { commandArgs } from "./support/commandArgs.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { DocgenQualityPackageReport, DocgenQualityReview, DocgenQualitySubject } from "@beep/repo-cli/test/Docgen";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
@@ -99,43 +98,18 @@ const decodeDoctestReport = S.decodeUnknownEffect(S.fromJsonString(DoctestReport
 const expectedTurboCacheArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
   turboCachePlanArgs(resolveTurboCachePlan(readTurboCacheEnvironment(Bun.env), { args, ci: isCiSync() }));
 
-const stubHandle = ChildProcessSpawner.makeHandle({
-  all: Stream.empty,
-  exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
-  getInputFd: () => Sink.drain,
-  getOutputFd: () => Stream.empty,
-  isRunning: Effect.succeed(false),
-  kill: () => Effect.void,
-  pid: ChildProcessSpawner.ProcessId(1),
-  stderr: Stream.empty,
-  stdin: Sink.drain,
-  stdout: Stream.empty,
-  unref: Effect.succeed(Effect.void),
-});
+const recordingSpawner = () => ScriptedSpawner.make(() => ({}));
 
-const recordingSpawner = (spawned: Array<string>) =>
-  ChildProcessSpawner.make((command) =>
-    Effect.sync(() => {
-      if (ChildProcess.isStandardCommand(command)) {
-        A.appendInPlace(spawned, A.join([command.command, ...commandArgs(command)], " "));
-      }
-      return stubHandle;
-    })
+// The base-range git query cannot spawn; every other command succeeds silently.
+const rangeRejectingSpawner = () =>
+  ScriptedSpawner.make((command, args) =>
+    command === "git" && A.some(args, Str.includes("origin/main...HEAD"))
+      ? ScriptedSpawner.permissionDenied(command)
+      : {}
   );
 
-const rangeRejectingSpawner = (spawned: Array<string>) =>
-  ChildProcessSpawner.make((command) =>
-    Effect.gen(function* () {
-      if (ChildProcess.isStandardCommand(command)) {
-        const commandText = A.join([command.command, ...commandArgs(command)], " ");
-        A.appendInPlace(spawned, commandText);
-        if (command.command === "git" && Str.includes("origin/main...HEAD")(commandText)) {
-          return yield* Effect.die(new Error("range query rejected by test stub"));
-        }
-      }
-      return stubHandle;
-    })
-  );
+const spawnedLines = (spawner: ScriptedSpawner) =>
+  A.map(spawner.spawns, (spawn) => A.join([spawn.command, ...spawn.args], " "));
 
 const expectReportedExit = (exit: Exit.Exit<unknown, unknown>, exitCode = 1) => {
   assertTrue(exit._tag === "Failure");
@@ -939,7 +913,7 @@ export const ProofFixture = 1;
   );
 
   it.effect("builds a full plan without querying the configured git range", () => {
-    const spawned = A.empty<string>();
+    const spawner = rangeRejectingSpawner();
     return Effect.gen(function* () {
       yield* temporaryRepository;
       const plan = yield* buildDocgenLocalPlan({
@@ -951,15 +925,15 @@ export const ProofFixture = 1;
         packageSelector: O.none(),
         parallel: 1,
         plan: true,
-      }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, rangeRejectingSpawner(spawned)));
+      }).pipe(provideSpawner(spawner));
 
       expect(plan.mode).toBe("full");
-      expect(spawned).toEqual([]);
+      expect(spawnedLines(spawner)).toEqual([]);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make));
   });
 
   it.effect("queries the configured git range when building an affected plan", () => {
-    const spawned = A.empty<string>();
+    const spawner = rangeRejectingSpawner();
     return Effect.gen(function* () {
       yield* temporaryRepository;
       const exit = yield* Effect.exit(
@@ -975,13 +949,16 @@ export const ProofFixture = 1;
         }).pipe(
           // `Git` is built over the stub spawner, so the kit's range read reaches the rejecting stub (W2).
           Effect.provideServiceEffect(Git, Git.make),
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, rangeRejectingSpawner(spawned))
+          provideSpawner(spawner)
         )
       );
 
       assertTrue(exit._tag === "Failure");
       expect(
-        A.some(spawned, Str.includes("git diff --name-only -z --no-relative --no-renames origin/main...HEAD"))
+        A.some(
+          spawnedLines(spawner),
+          Str.includes("git diff --name-only -z --no-relative --no-renames origin/main...HEAD")
+        )
       ).toBe(true);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make));
   });
@@ -1087,16 +1064,8 @@ export const ProofFixture = 1;
       yield* temporaryRepository;
       yield* seedDocgenPackage();
       const repoRoot = process.cwd();
-      const spawned = A.empty<string>();
-      const output = new TextEncoder().encode(yield* encodeJson({ tasks: [] }));
-      const spawner = ChildProcessSpawner.make((command) =>
-        Effect.sync(() => {
-          if (ChildProcess.isStandardCommand(command)) {
-            A.appendInPlace(spawned, A.join([command.command, ...commandArgs(command)], " "));
-          }
-          return ChildProcessSpawner.makeHandle({ ...stubHandle, stdout: Stream.make(output) });
-        })
-      );
+      const output = yield* encodeJson({ tasks: [] });
+      const spawner = ScriptedSpawner.make(() => ({ stdout: output }));
       const plan = yield* runDocgenLocal({
         allowFull: false,
         base: "origin/main",
@@ -1106,10 +1075,10 @@ export const ProofFixture = 1;
         packageSelector: O.some("@beep/schema"),
         parallel: 6,
         plan: false,
-      }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
+      }).pipe(provideSpawner(spawner));
 
       expect(plan.mode).toBe("scoped");
-      expect(spawned).toEqual([
+      expect(spawnedLines(spawner)).toEqual([
         A.join([`${repoRoot}/node_modules/.bin/turbo`, ...A.drop(plan.turboArgs, 1), "--dry-run=json"], " "),
       ]);
       expect(A.join(A.filter(yield* TestConsole.logLines, isString), "\n")).toContain(
@@ -1119,7 +1088,7 @@ export const ProofFixture = 1;
   );
 
   it.effect("executes full docgen through direct Turbo and aggregate steps", () => {
-    const spawned = A.empty<string>();
+    const spawner = recordingSpawner();
     return Effect.gen(function* () {
       yield* temporaryRepository;
       yield* seedDocgenPackage();
@@ -1133,10 +1102,10 @@ export const ProofFixture = 1;
         packageSelector: O.some("@beep/schema"),
         parallel: 6,
         plan: false,
-      }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, recordingSpawner(spawned)));
+      }).pipe(provideSpawner(spawner));
 
       expect(plan.mode).toBe("full");
-      expect(spawned).toEqual([
+      expect(spawnedLines(spawner)).toEqual([
         A.join(
           [
             `${repoRoot}/node_modules/.bin/turbo run docgen`,
@@ -1151,7 +1120,7 @@ export const ProofFixture = 1;
   });
 
   it.effect("fails full docgen on invalid JSDoc metadata before spawning Turbo", () => {
-    const spawned = A.empty<string>();
+    const spawner = recordingSpawner();
     return Effect.gen(function* () {
       yield* temporaryRepository;
       const fs = yield* FileSystem.FileSystem;
@@ -1169,7 +1138,7 @@ export const ProofFixture = 1;
           packageSelector: O.some("@beep/schema"),
           parallel: 6,
           plan: false,
-        }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, recordingSpawner(spawned)))
+        }).pipe(provideSpawner(spawner))
       );
 
       assertTrue(exit._tag === "Failure");
@@ -1179,7 +1148,7 @@ export const ProofFixture = 1;
           message: "docgen:local JSDoc check failed for 1 package(s).",
         });
       }
-      expect(spawned).toEqual([]);
+      expect(spawnedLines(spawner)).toEqual([]);
       const errors = A.join(A.filter(yield* TestConsole.errorLines, isString), "\n");
       expect(errors).toContain(
         "docgen:local: packages/foundation/modeling/schema has 1 export(s) missing docgen metadata"
@@ -1189,7 +1158,7 @@ export const ProofFixture = 1;
   });
 
   it.effect("skips the full JSDoc metadata check for packages with a non-canonical docgen outDir", () => {
-    const spawned = A.empty<string>();
+    const spawner = recordingSpawner();
     return Effect.gen(function* () {
       yield* temporaryRepository;
       const fs = yield* FileSystem.FileSystem;
@@ -1216,10 +1185,10 @@ export const ProofFixture = 1;
         packageSelector: O.some("@beep/schema"),
         parallel: 6,
         plan: false,
-      }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, recordingSpawner(spawned)));
+      }).pipe(provideSpawner(spawner));
 
       expect(plan.mode).toBe("full");
-      expect(A.length(spawned)).toBe(2);
+      expect(A.length(spawner.spawns)).toBe(2);
       const logs = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
       expect(logs).toContain(
         "docgen:local: skipped JSDoc metadata check for @beep/probe (non-canonical outDir: .jsdoc-loop/generated-docs)"

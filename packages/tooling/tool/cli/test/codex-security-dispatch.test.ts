@@ -96,6 +96,7 @@ const fixture = Effect.fn("SecurityDispatchTest.fixture")(function* (
     yield* encodeJson({ name: "codex-security", version: SECURITY_PLUGIN_VERSION })
   );
   const calls = yield* Ref.make<ReadonlyArray<ChildProcess.StandardCommand>>([]);
+  // Own double: the scan spawn swaps the output directory on disk; ScriptedSpawner scripts are synchronous.
   const spawner = ChildProcessSpawner.make(
     Effect.fnUntraced(function* (command: ChildProcess.Command) {
       if (!ChildProcess.isStandardCommand(command)) return yield* Effect.die("Unexpected pipeline");
@@ -310,6 +311,7 @@ it.layer(Layer.mergeAll(WorkingDirectory, TestConsole.layer), { timeout: "30 sec
         const clock = yield* TestClock.withLive(TestClock.make());
         const started = yield* Deferred.make<void>();
         const released = yield* Ref.make(false);
+        // Own double: the spawn registers a release finalizer and completes the `started` Deferred.
         const stalled = ChildProcessSpawner.make(() =>
           Effect.gen(function* () {
             yield* Effect.addFinalizer(() => Ref.set(released, true));

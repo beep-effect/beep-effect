@@ -35,6 +35,7 @@ const vendored = HashSet.make("shadcn");
 const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
 const TypecheckerLayer = MarkdownFenceTypechecker.layer.pipe(Layer.provideMerge(PlatformLayer));
 
+// Own double: decorates the real platform spawner, stubbing only the `tsrs` spawn.
 const encoder = new TextEncoder();
 
 /** A finished compiler process with fixed combined output and exit code. */
