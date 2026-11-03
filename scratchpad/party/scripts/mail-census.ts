@@ -1,20 +1,22 @@
 /**
- * Run the mail-index adapter over corpus provenance JSONL files and write a
- * count-only census.
+ * Stream enriched mail-index JSONL through the graduated party census.
  *
- * Usage:
- *   bun scratchpad/party/scripts/mail-census.ts <out.json> <filter-regex|-> <index.jsonl>...
- *
- * `filter-regex` (case-insensitive) is matched against the raw JSONL line, so
- * a subset can be selected without this script naming any matter. `-` = all.
- *
+ * Usage: bun scratchpad/party/scripts/mail-census.ts <out.json> <filter-regex|-> <index.jsonl>...
+ * Each row requires content: "party-sha256:<child-message-digest>" from its
+ * provenance inventory. The legacy archive id cannot supply message content identity.
+ * No corpus files are opened unless explicitly passed as arguments.
  * @packageDocumentation
  * @since 0.0.0
  */
+import { ActivityId } from "@beep/party-domain/Ids";
+import { emptyCensus, observe, recordDecodeFailure, summarize } from "@beep/party-server/MailCensus";
+import { adaptMailRecord, MailIndexInput, MailIndexRecord } from "@beep/party-server/MailIndex";
+import { jsonStringifyPretty } from "@beep/repo-utils/JsonUtils";
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { MailMessageIndexRecord } from "@beep/repo-cli/commands/Corpus";
 import * as A from "effect/Array";
+import * as Argument from "effect/cli/Argument";
+import * as Command from "effect/cli/Command";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -22,54 +24,61 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { pipe } from "effect/Function";
-import { emptyCensus, observe, summarize } from "../adapters/MailCensus.ts";
-import { adaptMailRecord } from "../adapters/MailIndex.ts";
-import { ActivityId } from "../Ids.ts";
-import { UtcInstant } from "../Time.ts";
-import { thunkTrue } from "@beep/utils";
-import { jsonStringifyPretty } from "@beep/repo-utils/JsonUtils";
+import { ContentBoundMailRecord } from "./MailInput.ts";
 
-const decodeRow = S.decodeUnknownEffect(S.fromJsonString(MailMessageIndexRecord));
-
-const program = Effect.fn("mail-census")(function* (out: string, filter: O.Option<RegExp>, inputs: ReadonlyArray<string>) {
+const decodeRow = S.decodeUnknownEffect(S.fromJsonString(ContentBoundMailRecord));
+const program = Effect.fn("mail-census")(function* (out: string, filterText: string, inputs: ReadonlyArray<string>) {
   const fs = yield* FileSystem.FileSystem;
-  const census = emptyCensus();
-  const producedBy = ActivityId.make("act:mail-index-adapter@0.0.0");
-  const observedAt = UtcInstant.make(pipe(yield* DateTime.now, DateTime.formatIso, Str.replace(/\.\d+Z$/, "Z")));
-
+  const filter = filterText === "-" ? O.none() : O.some(yield* Effect.try(() => new RegExp(filterText, "i")));
+  let census = emptyCensus();
+  const producedBy = ActivityId.make("party-act:mail-index-adapter@0.0.0");
+  const observedAt = yield* DateTime.now;
   for (const input of inputs) {
     yield* fs.stream(input).pipe(
       Stream.decodeText,
       Stream.splitLines,
-      Stream.filter((line) => Str.isNonEmpty(line) && O.match(filter, { onNone: thunkTrue, onSome: (re) => re.test(line) })),
+      Stream.filter(
+        (line) =>
+          Str.isNonEmpty(line) && O.match(filter, { onNone: () => true, onSome: (pattern) => pattern.test(line) })
+      ),
       Stream.runForEach((line) =>
         decodeRow(line).pipe(
-          Effect.match({
-            onFailure: () => {
-              census.rows += 1;
-              census.decodeFailures += 1;
-            },
-            onSuccess: (record) =>
-              observe({ census, ingest: adaptMailRecord({ record, side: "client-file", producedBy, observedAt }) }),
+          Effect.matchEffect({
+            onFailure: () =>
+              Effect.sync(() => {
+                census = recordDecodeFailure(census);
+              }),
+            onSuccess: Effect.fn("mail-census.observe")(function* (row: ContentBoundMailRecord) {
+              const ingest = yield* adaptMailRecord(
+                MailIndexInput.make({
+                  record: MailIndexRecord.make(row),
+                  content: row.content,
+                  side: "client-file",
+                  producedBy,
+                  observedAt,
+                })
+              );
+              census = observe(census, ingest);
+            }),
           })
         )
       )
     );
   }
-
   const summary = { inputs: A.length(inputs), filtered: O.isSome(filter), ...summarize(census) };
   yield* fs.writeFileString(out, `${yield* jsonStringifyPretty(summary)}\n`);
-  yield* Effect.log(`census written: ${out} (${summary.rows} rows)`);
+  yield* Effect.log(`census written: ${out} (${summary.rows} rows, ${summary.decodeFailures} decode failures)`);
 });
 
-const [out, filterArg, ...inputs] = A.drop(process.argv, 2);
-if (out === undefined || filterArg === undefined || A.isReadonlyArrayEmpty(inputs)) {
-  // @effect-diagnostics-next-line globalConsole:off -- the usage error is written before the Effect runtime starts. Owner: @beep/scratchpad. Exit: the party-slice CLI parses arguments with effect/cli.
-  console.error("usage: mail-census.ts <out.json> <filter-regex|-> <index.jsonl>...");
-  process.exit(2);
-}
-const filter = filterArg === "-" ? O.none() : O.some(new RegExp(filterArg, "i"));
+const command = Command.make(
+  "mail-census",
+  {
+    out: Argument.String("out.json"),
+    filter: Argument.String("filter-regex"),
+    inputs: Argument.String("index.jsonl").pipe(Argument.atLeast(1)),
+  },
+  ({ out, filter, inputs }) => program(out, filter, inputs)
+);
 
-// @effect-diagnostics-next-line strictEffectProvide:off -- this is the script's entry point, where the platform layer is provided once. Owner: @beep/scratchpad. Exit: never while this file is a bun entry script.
-program(out, filter, inputs).pipe(Effect.provide(BunServices.layer), BunRuntime.runMain);
+// @effect-diagnostics-next-line strictEffectProvide:off -- platform services are provided once at the script entry point. Owner: @beep/scratchpad. Exit: never while this is a Bun entry script.
+Command.run(command, { version: "0.0.0" }).pipe(Effect.provide(BunServices.layer), BunRuntime.runMain);
