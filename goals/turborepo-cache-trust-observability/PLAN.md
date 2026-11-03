@@ -1223,6 +1223,10 @@ The [new source-bound checkpoint](research/accepted-input-ordinary-native-checkp
 
 All earlier failures remain, including the short generic exit whose cause remains unattributed. The diagnostic-only pass is separate from these ordinary runs. Earlier `68834` receipts retain their original bytes and validator source. The new source and lint workload differ from that older experiment, so the elapsed-time reduction is not a matched R2/cache-savings result. No live protected producer/R2 execution, production signing, current-main adoption, qualification or whole-goal acceptance is established.
 
+### Producer-object file identity follow-through, 2026-11-02
+
+The [named review](research/producer-object-coverage-identity-review-2026-11-02.md) and [checkpoint](research/producer-object-coverage-identity-checkpoint-2026-11-02.json) propose only the exact new-file row printed by the actual hosted comparison. Every existing floor and metadata field is unchanged. Four new failure-boundary cases bring the affected suites to 94 passing tests on both Bun and Node 24; all production storage bytes and defensive guards are retained. Separate failed diagnostics are preserved and do not count as hosted acceptance. Fresh exact-head CI, the review window and primary review remain required. No whole-goal criterion is completed.
+
 ### Resolve the admitted reusable producer workflow, 2026-11-02
 
 The [resolved Heavy approval checkpoint](research/resolved-heavy-approval-checkpoint-2026-11-02.json)

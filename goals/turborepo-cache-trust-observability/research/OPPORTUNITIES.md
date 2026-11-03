@@ -1742,6 +1742,7 @@ compare the complete decoded private receipt. The original reports remain
 unchanged. No scanner rule, exception or proof requirement is changed, and the
 public view cannot substitute for a native validator input. Retain the failed
 publication-hook receipt and the rejected projection attempt.
+- 2026-11-02: Two current hosted cache branches failed inherited `yeet-merged-preview.test.ts:285` because separately minted synthetic commits were compared by SHA. Git commit metadata includes time, so crossing a clock second changes identity without changing the proved merge tree. A deterministic identity-only metadata change reproduces the failure; the repaired test verifies tree, parents, detached checkout and removal of a stale preview sentinel. Runtime code and proof gates are unchanged.
 The subsequent ordinary stable attempt, using the published diagnostic parent
 and unchanged task/worker fixtures, ended at the existing twenty-minute limit
 without an observation. Its fixed error was `Signed pilot comparison exceeded
@@ -1979,6 +1980,7 @@ scanner on touched test files: package lint alone does not include that rule.
 
 - 2026-11-02: The accepted party-domain expansion added twelve executable nodes without recording its cache baseline. Merging main produced a baseline conflict and eight expansion blockers plus root policy drift. A generator-integrated configuration review would prevent this; the touched baseline is reconciled once through the named CAS review, preserving qualification bytes.
 
+- 2026-11-02: New-file identity, rather than the numeric tier, kept the private storage module red after its first coverage repair. The actual hosted reporter supplies the reviewable row. Broad package regeneration would move unrelated floors; a narrow schema-encoded pin with before/after equivalence preserves them. A private helper's wrong record adapter was caught before commit, restored from the exact backup, and replaced with a pre-write equivalence guard. Incompatible instrumentation unions and a refused Labs collector replay are retained as diagnostics, never passing proof.
 
 ### 2026-11-02 — process double retained a root-policy verdict
 

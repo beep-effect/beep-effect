@@ -795,14 +795,15 @@
       "enabledInObservedRoot": false,
       "canaryDocumentationObserved": true,
       "prerequisites": [
-        "Exact-client regression evidence",
-        "Change only one experimental flag at a time"
+        "A named Turbo exporter consumer and measured need",
+        "Actual captured-payload safety, bounded labels/volume/retention and separate telemetry credentials",
+        "Exact-client regression and disable/rollback evidence before any activation"
       ],
-      "beepUseCase": "Review against the declared Bun workspace, trust controls and current root settings.",
+      "beepUseCase": "Retain structured Turbo summaries and bounded backend events. Existing application/agent OTEL has a separate consumer contract.",
       "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
-      "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
-      "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending",
+      "correctnessCase": "24 exact stable/canary offline observations distinguish omitted/default settings, file-config dropping, CLI/environment guard refusals and explicitly disabled exporters. Three real driver refusals preserve the report.",
+      "disposition": "Retain the absent experimentalObservability flag and exporter configuration; no named tracked Turbo exporter consumer justifies activation.",
+      "acceptanceStatus": "accepted-retain-current-absence",
       "nativeConfigurationObservation": {
         "report": "native-future-flag-availability.json",
         "stable": {
@@ -814,7 +815,13 @@
           "true": "dry-run-accepted"
         },
         "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
-      }
+      },
+      "review": {
+        "path": "research/observability-feature-review.json",
+        "sha256": "b13adb1af9774cc9cc02528942b8f1407f495e600e2fc6831f2aa36e625de743",
+        "scope": "Tracked configuration/caller applicability and synthetic native defaults only; no task qualification or enabled-exporter safety proof."
+      },
+      "nativeDefaultEvidence": "native-observability-default-controls.json"
     },
     {
       "feature": "futureFlag:experimentalPythonWorkspaces",
@@ -1148,10 +1155,10 @@
     "Feature rows carry current dispositions; reviewCounts records their totals. Native fixture evidence alone grants no real computation qualification."
   ],
   "reviewCounts": {
-    "acceptedNotApplicable": 1,
-    "acceptedRetainCurrentAbsence": 5,
+    "pending": 26,
+    "acceptedRetainCurrentAbsence": 6,
     "acceptedRetainCurrentDefault": 1,
-    "pending": 27,
+    "acceptedNotApplicable": 1,
     "acceptedRetainCurrentSetting": 1
   },
   "nativeAvailabilityCounts": {

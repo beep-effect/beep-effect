@@ -1051,6 +1051,8 @@ invalidation control. Preserve old source-bound observations and excluded ledger
 rows; this is no qualification or production activation. Revert all three
 expectation sites and the current fixture together if reversing the repair.
 
+- 2026-11-02: Propose the [source-bound hosted identity](research/producer-object-coverage-identity-review-2026-11-02.md) for the newly introduced private storage file. Retain all previous coverage floors and safeguards, add real negative controls, and require primary review plus fresh CI. Use the canonical reporter's exact measured row, not an invented threshold or a broad baseline regeneration. Reversal removes only the newly added file identity.
+
 ### Independently approve the resolved main Heavy leaf, 2026-11-02
 
 - The admitted runner path executes the same-repository `heavy.yml@main`
@@ -1095,3 +1097,6 @@ expectation sites and the current fixture together if reversing the repair.
   ordinary R2 service change is included.
 - Reverse by reverting this collector change and retaining inspection refusal;
   preserve prior observations, private credentials and the existing cache.
+
+
+- 2026-11-02: Consume accepted #2632 without changing any accepted coverage baseline byte. Preserve its stronger storage-file row and both test sets; retain the earlier lower proposal as historical evidence in the [reconciliation](research/producer-object-coverage-identity-review-2026-11-02.md). This adds no floor exception or qualification authority. Reversal must retain the accepted main baseline.
