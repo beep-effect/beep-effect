@@ -55,3 +55,13 @@ qualify a Node HTML entry, qualify the full source corpus on Node, or complete t
 public engine integration. Full Node source-corpus replay and hosted exact-head
 proof remain required. Effect upgrade work remains owned by PR #2637; this change
 uses the currently installed patched Effect 4.1.1 and does not duplicate it.
+The existing Node adapter is moved from development to runtime dependencies at
+the same catalog version; the generated lockfile changes only that classification.
+
+Publication preflight also detected stale citation cache command fingerprints.
+The schema-validated baseline writer re-recorded exactly the two citation
+subjects, carried 188 other reviews unchanged and dropped none. The cache-policy
+audit now reports zero blocking findings; no cache qualification was granted.
+The complete cheap tier was stopped after its already-observed failures rather
+than claimed green. See the separate cache posture review and incomplete local
+publish receipt. Hosted verification remains authoritative.

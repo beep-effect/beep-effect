@@ -1,11 +1,11 @@
 {
-  "previous": "fb66163dc4f064bcb55dfc24680e8f00fd58231eb49865567283fc3f633406be",
+  "previous": "77cb1eb02dd336548346446f8b616ab65689ce320a5f41ddb5f866a96dc7e816",
   "review": {
-    "reviewer": "Codex GPT-6.1-Sol (citation-extraction-engine, PR 2511)",
-    "reason": "Record the two citation package manifest changes and integration/coverage routing; preserve other subject reviews and grant no qualification.",
+    "reviewer": "GPT-6.1-Sol medium (citation-extraction-engine)",
+    "reason": "Record intentional citation test/integration commands, test configuration and runtime adapter dependency classifications for the server and use-cases subjects. Preserve existing cache settings and qualification scope; grant no qualification.",
     "basis": {
-      "path": "goals/citation-extraction-engine/history/evidence/2026-11-02-cache-policy-review.md",
-      "sha256": "55d521ca94f43e82b30d40cd96e6113832fddb699a958c1a2964e12ab73ee186"
+      "path": "goals/citation-extraction-engine/history/evidence/2026-11-03-citation-cache-posture-review.md",
+      "sha256": "b5b0aa5b0026651522777c7bc6711fe2fb40fb77b75bb721d33e23bcfd1ddf07"
     }
   },
   "subjects": ["@beep/law-practice-server", "@beep/law-practice-use-cases"],
