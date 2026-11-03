@@ -805,3 +805,18 @@ remain separate pending qualification candidates. The 201-row checkpoint is
 historical; its report remains unchanged and the new report names the prior
 population's exact Git revision and hash. No task qualification, cache setting,
 feature decision or whole-goal acceptance changed.
+
+
+### Installed scanner compatibility refresh: 2026-11-03
+
+The [maintenance receipt](research/installed-fleet-scanner-refresh-2026-11-03.json)
+records an installed-copy gap after the accepted CLI-kit move. The workstation's
+scanner now uses the already-accepted dual-path policy lookup. Four of the
+38 registered checkouts become correctly recognized in read-only discovery;
+no checkout enrollment or task execution ran. The live ordinary adapter remains
+the pinned binary on its owned loopback listener with unchanged service identity
+and reference-only configuration. Its child environment contains no forwarded
+SSH or 1Password variables; this is environment hygiene, not same-user secret
+isolation. Fresh remote observations remain unverified after the hardware-backed
+SSH route refused three authentication attempts. The protected stop and skipped
+host remain untouched. Qualification and every whole-goal criterion stay open.

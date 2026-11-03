@@ -776,3 +776,22 @@ receipts and qualification evidence keep their original source and authority.
   records the six-file accepted-Git comparison and unchanged qualification ledger.
 - Reverse only these three population decisions using the report's prior Git
   revision. No runtime setting or trust boundary needs reversal.
+
+
+### Refresh the installed fleet scanner, 2026-11-03
+
+- The workstation scanner still used the original enrollment source after
+  accepted #2669 moved policy code to `@beep/repo-cli-kit`. Its read-only plan
+  incorrectly classified four current checkouts as legacy. Apply the existing
+  accepted scanner source, preserving compatibility with both policy locations.
+- Bound this maintenance to one installed source file on this workstation,
+  under 64 KiB combined source bytes, with zero service restarts, cloud or
+  artifact requests. Retain and verify the original source backup before the
+  atomic replacement. Client/backend configuration and the ordinary adapter
+  remain unchanged; no enrollment, signing or qualification is activated.
+- Actual read-only discovery changes 5 legacy / 33 planned checkouts to
+  1 legacy / 37 planned. Source-capable read-write entries increase from 22
+  to 26. These counts establish recognition, not an artifact read/write result.
+- Reverse only the installed scanner using the verified backup or named prior
+  accepted Git source, with mode 0700. The receipt retains numeric bounds,
+  source identities, current local adapter observations and remote evidence gaps.

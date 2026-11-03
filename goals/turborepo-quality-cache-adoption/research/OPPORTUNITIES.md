@@ -875,3 +875,15 @@ effective configuration and accepted source bytes. During each population
 reconciliation, enumerate remaining service/fixer/audit candidates and follow
 the actual command before carrying a disposition forward. Their pure
 prerequisites still need qualification; this review changes no runtime setting.
+
+
+### 2026-11-03 — Installed fleet scanner lagged the CLI-kit move
+
+A deployed-boundary refresh found the workstation's installed `fleet.py` still
+looking only at the retired repo-cli policy path after accepted #2669. It
+reported four current checkouts as legacy. The accepted source already handles
+both paths; a backed-up atomic refresh corrected read-only discovery without
+restarting the adapter or applying enrollment. Include installed helper source
+parity in package-layout migration handoffs. Refresh the needed helper
+independently so maintenance does not activate a later opt-in signing extension.
+The receipt preserves the source hashes and the 38-checkout before/after plan.
