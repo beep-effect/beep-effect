@@ -77,3 +77,14 @@ subjects retain the same manifest/reference reasons. The root subject retains
 the party package registration changes; main's own Turbo changes are not
 requalified by this lane. Scope, profile, epoch, outputs and qualification stay
 unchanged. The request is rebound to the exact merged baseline and this basis.
+
+## Main merge at 41c9e36157
+
+Main's protected cache producer and T3 orchestration changes are preserved.
+The audit now names the same 29 package tasks plus
+`//#lint:policy-fingerprint`: the canonical fingerprint generator registers
+`packages/party/server/package.json` and
+`packages/party/use-cases/package.json` as root policy inputs. This is the
+only additional Turbo task input change reviewed here. Commands, outputs,
+cache flags, qualification scope, profile and epoch remain unchanged. The
+request starts from main's exact baseline bytes and retains its reviews.

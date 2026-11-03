@@ -30,7 +30,7 @@ pull timer per host. No new `beep` services, no daemon, no dispatcher.
 
 1. **T3-native orchestration.** Delete the beep agent-messaging tooling, the
    managed session adapters in `@beep/ai-provider-cli`, `@beep/t3-code`, and
-   the agent-to-agent goal and exploration packets. `goals/wake-service` is
+   the agent-to-agent goal and exploration packets. `retired:wake-service` is
    superseded, and the agent-message observation enrollment path is retired
    along with its now-unused ai-metrics modules
    ([research/removal-map.md](research/removal-map.md)). Links to the retired

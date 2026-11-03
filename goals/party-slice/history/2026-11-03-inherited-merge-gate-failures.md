@@ -40,3 +40,19 @@ the party domain/server suites are rerun after the source-style fixes.
 - `/home/elpresidank/.cache/party-base-proof-install.log`
 - `/home/elpresidank/.cache/party-base-merge-gate-tests.log`
 - `.beep/yeet/final-check/0bc39665ac00c1d9c1c2f800e8a5bbfe70692781.json`
+
+## Reproduction after the next main sync
+
+The detached baseline was advanced to `41c9e36157` and its frozen install
+passed. The same focused command again produced 79 passing tests and the
+same three failures. This branch adds no merge-gate implementation or test
+changes to that base. Raw receipts are
+`/home/elpresidank/.cache/party-base-proof-install2.log` and
+`/home/elpresidank/.cache/party-base-merge-gate-tests2.log`.
+
+After the party fixes, domain (62 tests), server (76 tests), and coverage for
+all three party packages pass. The focused policy-fingerprint suite passes
+all six tests. The full deprecated-API scan passes with no unmatched source
+files, and both party package audits/docgen pass. Full coverage remains an
+explicit inherited-failure attribution; this is not a claim of a green
+repository-wide CLI suite.

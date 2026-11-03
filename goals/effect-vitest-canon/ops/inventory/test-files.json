@@ -4831,7 +4831,7 @@
   },
   {
     "file": "packages/drivers/t3-code/test/T3Code.test.ts",
-    "package": "@beep/t3-code",
+    "package": "retired:t3-code",
     "kind": "test",
     "bytes": 12303,
     "lines": 312

@@ -1333,3 +1333,39 @@ Accepted #2643 passed full hosted code checks, real coverage comparison and the
 strict merge gate before merging. Its credential-free candidate build is now a
 separate actual hosted run, pending artifact/source verification. Protected
 producer execution and all nine trust-goal criteria remain unproven.
+
+
+### Closed protected producer wiring, 2026-11-03
+
+The [prepared workflow](research/protected-producer-workflow-preparation-2026-11-03.md)
+connects existing inspection/approval, installer, full signed pilot, private R2
+publisher and digest-artifact contracts. It adds no issuer service or new proof
+authority. All capability delivery is explicit and step-scoped; caller input is
+only the stable/canary enum. The existing protected environment and runner pool
+remain owned by their current authorities.
+
+YAML, fifteen shell blocks and five embedded Python blocks parse. Isolation controls
+and seven selection-shell cases are authored but not run locally. The next
+steps are hosted proof, reviewed candidate inspection, current independent
+approval, live protection/configuration checks and bounded real execution. The
+mode remains disabled and no secret, variable, cloud grant or cache service has
+changed. All nine trust-goal criteria remain unproven.
+
+The first [actual candidate build](research/candidate-host-compiler-failure-2026-11-03.json)
+waited 2,503 seconds for a runner and failed after 43 seconds because host `cc`
+was absent. Cleanup passed and artifact upload was skipped. The source repair
+checks/installs the native host compiler and binutils, then records all three
+additional tool identities. This operational queue sample is not a Turbo cache
+speed measurement. A new build waits for acceptance of the repair; do not retry
+the unchanged failed head.
+
+
+### Static secret boundary review, 2026-11-03
+
+PR #2650 review identified computed installer secret names and an incomplete
+unprivileged-step scan. Use explicit channel-guarded secret names without
+missing-value crossover, empty the unselected caller channel before invoking
+Heavy, and inspect environment values, action inputs and script bodies. Preserve named forwarding, setup isolation and the disabled
+producer. The earlier d256 hosted unit and official coverage passes remain
+bound to that source; this source requires fresh hosted proof. No protected
+execution, credential activation or whole-goal acceptance is claimed.

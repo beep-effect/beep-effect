@@ -307,13 +307,6 @@ export * from "./native-trace.ts";
  * @since 0.0.0
  */
 export * from "./observation-backup.ts";
-export {
-  ObservationClaimPopulationError,
-  ObservationClaimPopulationEvidence,
-  ObservationClaimPopulationReport,
-  ObservationClaimPopulationRequest,
-  readObservationClaimPopulation,
-} from "./observation-claim-population.ts";
 /**
  * Shared bounded worker admission, drain and maintenance coordination.
  * Examples live in `./observation-control.ts`.
@@ -342,18 +335,6 @@ export * from "./observation-inventory.ts";
  * @since 0.0.0
  */
 export * from "./observation-launch.ts";
-/**
- * Independent durable one-attempt launch claims.
- * @since 0.0.0
- */
-export * from "./observation-launch-claims.ts";
-/**
- * Owner-only client for exact managed-launch submissions.
- * Examples live in `./observation-launch-client.ts`.
- * @category exports
- * @since 0.0.0
- */
-export * from "./observation-launch-client.ts";
 /**
  * Durable managed-launch observations. Examples live on the owning declarations.
  * @category services
