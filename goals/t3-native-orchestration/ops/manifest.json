@@ -34,7 +34,7 @@
   },
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2670
+    "finalPullRequest": 2671
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
