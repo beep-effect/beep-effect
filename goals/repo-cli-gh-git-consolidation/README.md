@@ -31,12 +31,12 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement, W6 in review (this PR). The six Yeet modules SPEC D-13 deferred run their GitHub calls on
-`GithubRest`, `GitHubRepository`, the kit's `PullRequest` and `GitHubClient`, with one gh login per command surface and
-their `capture` seams retired (SPEC D-15); `gh pr view` of the branch, `gh pr view <branch>` in `Merge.ts` and
-`gh run view --log-failed` stay as KEEP rows. Earlier waves merged: W0 (#2514), the W1
-kit (#2522), W1a (#2539), W1b (#2546), W2 (#2593, D-10), W2b (#2606, D-11), the W3 kit (#2556), W3 sites (#2614,
-D-12), the W4 kit (#2600), W4 sites (#2622, D-13) and W5 (#2642, D-14). Next: closeout C.
+P1 Implement, the W7 kit in review (this PR). `research/w7-site-census-2026-11-03.md` counted 279 remaining git and gh
+argv templates, 208 without a recorded outcome (SPEC D-16); this PR adds the `@beep/git` members and options the 37 (B)
+rows need and moves `patientGit` to `internal/repo-run/PatientGit.ts` (SPEC D-17). Earlier waves merged: W0 (#2514),
+the W1 kit (#2522), W1a (#2539), W1b (#2546), W2 (#2593, D-10), W2b (#2606, D-11), the W3 kit (#2556), W3 sites (#2614,
+D-12), the W4 kit (#2600), W4 sites (#2622, D-13), W5 (#2642, D-14) and W6 (#2648, D-15). Next: W7a, W7b and W7c in
+parallel, then the runner retirement, then closeout C.
 
 ## Latest Evidence
 

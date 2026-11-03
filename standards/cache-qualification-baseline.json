@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W6, feat/gh-git-w6-yeet-gh)",
-      "reason": "Record the W6 seal drift: MonitorComments.ts, ReviewWindow.ts and ProvenanceFooter.ts now take their GitHub services from the Yeet gh-login edge (GhOps.ts) and read through @beep/github, so GhOps.ts, Provenance.ts and the kit's GitHubCommit, GitHubRepository, PullRequest, Rest and ReviewThread modules join the goals-doctor, knowledge and quality policy seals; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W7 kit, feat/gh-git-w7-kit)",
+      "reason": "Record the W7 kit seal drift: patientGit moved from the Yeet tool file GitExec.ts into the library file internal/repo-run/PatientGit.ts, re-exported from the repo-run barrel, so PatientGit.ts joins the goals-doctor, holds, knowledge and quality policy seals; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
       "basis": {
-        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w6.md",
-        "sha256": "f09c4fec1a770efcbe1fb46e998da98514a843d590b666d021ce5804d3f123f7"
+        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w7-kit.md",
+        "sha256": "fd4321872fad85d0bb70837dc0157929f35d370583d2a843af8d733da24135bf"
       }
     },
     "@beep/acp": {
@@ -1146,11 +1146,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W6, feat/gh-git-w6-yeet-gh)",
-      "reason": "Record the W6 seal drift: MonitorComments.ts, ReviewWindow.ts and ProvenanceFooter.ts now take their GitHub services from the Yeet gh-login edge (GhOps.ts) and read through @beep/github, so GhOps.ts, Provenance.ts and the kit's GitHubCommit, GitHubRepository, PullRequest, Rest and ReviewThread modules join the goals-doctor, knowledge and quality policy seals; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W7 kit, feat/gh-git-w7-kit)",
+      "reason": "Record the W7 kit seal drift: patientGit moved from the Yeet tool file GitExec.ts into the library file internal/repo-run/PatientGit.ts, re-exported from the repo-run barrel, so PatientGit.ts joins the goals-doctor, holds, knowledge and quality policy seals; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
       "basis": {
-        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w6.md",
-        "sha256": "f09c4fec1a770efcbe1fb46e998da98514a843d590b666d021ce5804d3f123f7"
+        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w7-kit.md",
+        "sha256": "fd4321872fad85d0bb70837dc0157929f35d370583d2a843af8d733da24135bf"
       }
     },
     "@beep/repo-configs": {
@@ -120315,7 +120315,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "9ed89e39363b1c4bfe00ebc1ebfa8294418a995d1d1556c097478a1df55250e6"
+        "sha256": "5f2e3573f530d171ba598ff3989f7059072a246c27d2c10fcfd4f6c5952fcf7c"
       }
     ]
   }

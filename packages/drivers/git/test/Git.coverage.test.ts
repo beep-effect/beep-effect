@@ -121,6 +121,10 @@ const operations: ReadonlyArray<readonly [string, (git: GitModule.GitShape) => E
   ["worktreeRemove", (git) => git.worktreeRemove(cwd, "/other")],
   ["worktreePrune", (git) => git.worktreePrune(cwd)],
   ["lsFiles", (git) => git.lsFiles(cwd)],
+  ["revListCount", (git) => git.revListCount(cwd, "main..HEAD")],
+  ["mergeTree", (git) => git.mergeTree(cwd, "main", "HEAD")],
+  ["updateRef", (git) => git.updateRef(cwd, "refs/archive/x", { create: "HEAD" })],
+  ["diffPatch", (git) => git.diffPatch(cwd, { base: "main" })],
 ];
 
 describe("Git service error contracts", () => {

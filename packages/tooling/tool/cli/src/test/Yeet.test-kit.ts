@@ -41,8 +41,6 @@ export {
   GitKitExit,
   lockfileChangedSinceBase,
   optionFromNonEmpty,
-  PATIENT_GIT_OPTIONS,
-  patientGit,
   refreshAndPinBaseRef,
   refreshBaseRef,
   runGitFoldedStdout,
@@ -126,3 +124,4 @@ export * from "../commands/Yeet/Yeet.render.ts";
 export * from "../commands/Yeet/Yeet.schemas.ts";
 export { GhActor, GhPrView } from "../internal/github/GhSchema.ts";
 export * from "../internal/repo-run/index.ts";
+export { PATIENT_GIT_OPTIONS, patientGit } from "../internal/repo-run/PatientGit.ts";

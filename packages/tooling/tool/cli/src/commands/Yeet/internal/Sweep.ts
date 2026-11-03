@@ -110,6 +110,7 @@ import * as Str from "effect/String";
 import { GhPrView, ghOutput } from "../../../internal/github/index.ts";
 import {
   adaptGitKitError,
+  patientGit,
   RepoRunContext,
   runRepoCommandCapture,
   safeOriginBranchFromBase,
@@ -118,7 +119,7 @@ import { recordSweepDone } from "../../Session/SessionLedger.service.ts";
 import { runTmpfsReap } from "../../Worktree/internal/TmpfsReap.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { artifactDirForContext, writeTextFile } from "./ArtifactPaths.ts";
-import { optionFromNonEmpty, patientGit } from "./GitExec.ts";
+import { optionFromNonEmpty } from "./GitExec.ts";
 import {
   SweepPlan,
   SweepPlanStep,

@@ -36,16 +36,18 @@ import {
   parseConfigGetAll,
   parseConfigList,
   parseForEachRef,
-  parseLog,
-  parseLogNameStatus,
+  parseLogFor,
   parseLsFiles,
   parseLsRemote,
   parseLsTree,
+  parseMergeTree,
   parseNameStatus,
   parseNulSeparated,
+  parseRevListCount,
   parseStashList,
   parseStatus,
   parseSubmoduleStatus,
+  parseUpstream,
   parseWorktreeList,
 } from "./internal/parsers.ts";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -57,6 +59,7 @@ import type {
   LsFilesEntry,
   LsRemoteEntry,
   LsTreeEntry,
+  MergeTreeResult,
   NameStatusEntry,
   RefEntry,
   StashEntry,
@@ -103,6 +106,7 @@ export {
   LsFilesEntry,
   LsRemoteEntry,
   LsTreeEntry,
+  MergeTreeResult,
   NameStatusEntry,
   RefEntry,
   StashEntry,
@@ -290,6 +294,102 @@ const rejectDiffFilter = (cwd: string, diffFilter: string | undefined): Effect.E
       );
 
 /**
+ * Refuse an option combination git rejects, or would silently misread, before
+ * any spawn: a typed `"refused"` {@link GitCommandError} whose `args` name the
+ * offending flags. Shared by every member whose options exclude each other.
+ */
+const rejectCombination = (
+  cwd: string,
+  refused: boolean,
+  args: ReadonlyArray<string>,
+  detail: string
+): Effect.Effect<void, GitCommandError> =>
+  refused
+    ? Effect.fail(GitCommandError.make({ kind: "refused", args, cwd, stderr: "", detail: `refused: ${detail}` }))
+    : Effect.void;
+
+/** The walk, filter and body-shape options `Git.log` accepts; the full contract is on `GitShape["log"]`. */
+type LogOptions = {
+  /** A git pathspec scoping the walk; `--follow` requires exactly one entry. */
+  readonly paths?: ReadonlyArray<string>;
+  /** Follow the single path across renames (git's `--follow`). Default `false`. */
+  readonly follow?: boolean;
+  /** `--max-count`: at most this many commits. `0` is the empty listing. */
+  readonly limit?: number;
+  /** `--diff-merges=first-parent`: give merge commits a path listing. Default `false`. */
+  readonly firstParentDiffMerges?: boolean;
+  /** `--name-status` instead of `--name-only`: populate each entry's `changes`. Default `false`. */
+  readonly nameStatus?: boolean;
+  /** `--diff-filter=<letters>`: keep only the named status letters (lower case excludes). */
+  readonly diffFilter?: string;
+  /** `--find-renames=<n>%`: the rename-detection similarity threshold, a whole percent 1..100. */
+  readonly findRenames?: number;
+  /** `false` prepends the global `-c core.quotePath=false`. */
+  readonly quotePath?: false;
+  /** Start the walk here instead of `HEAD`: refs, ranges, `^`-exclusions. */
+  readonly revisions?: ReadonlyArray<string>;
+  /** `--no-merges`: leave merge commits out of the walk. Default `false`. */
+  readonly noMerges?: boolean;
+  /** `--reverse`: oldest first, applied after `limit`. Default `false`. */
+  readonly reverse?: boolean;
+  /** `--since=<when>`: only commits newer than git's approxidate `when`. */
+  readonly since?: string;
+  /** List no paths: each entry's `paths` is empty. Excludes `nameStatus`. Default `false`. */
+  readonly omitPaths?: boolean;
+  /** Read each commit's raw message body into `body`. Default `false`. */
+  readonly includeBody?: boolean;
+};
+
+/** The compare-and-swap change `Git.updateRef` makes: create a new ref, or delete one that still points at a value. */
+type UpdateRefChange = { readonly create: string } | { readonly delete: string };
+
+/**
+ * The comparison and rendering options `Git.diffPatch` accepts; the combination
+ * and number guards run before the constructor sees them.
+ */
+type DiffPatchOptions = {
+  readonly base?: string;
+  readonly head?: string;
+  readonly cached?: boolean;
+  readonly noIndex?: readonly [string, string];
+  readonly binary?: boolean;
+  readonly unified?: number;
+  readonly noRenames?: boolean;
+  readonly findRenames?: number;
+  readonly pathspec?: ReadonlyArray<string>;
+};
+
+/**
+ * Every pre-spawn refusal `Git.diffPatch` makes: option-like revisions, paths
+ * and files; a `unified` that is not a natural number; a rename score outside
+ * 1..100; and the three option combinations git rejects or would misread.
+ */
+const rejectDiffPatchOptions = Effect.fnUntraced(function* (cwd: string, options: DiffPatchOptions) {
+  const { base, cached = false, findRenames, head, noIndex, noRenames = false, pathspec = [] } = options;
+  yield* rejectOptionLikeRefs(cwd, [...withDefined(withDefined([], base), head), ...pathspec, ...(noIndex ?? [])]);
+  yield* rejectNonNaturalNumber(cwd, "a unified context size", options.unified);
+  yield* rejectRenameScore(cwd, findRenames);
+  yield* rejectCombination(
+    cwd,
+    head !== undefined && base === undefined,
+    ["head"],
+    "diffPatch needs a base for a head"
+  );
+  yield* rejectCombination(
+    cwd,
+    noRenames && findRenames !== undefined,
+    ["--no-renames", "--find-renames"],
+    "diffPatch cannot combine noRenames with findRenames"
+  );
+  yield* rejectCombination(
+    cwd,
+    noIndex !== undefined && (base !== undefined || cached || pathspec.length > 0),
+    ["--no-index"],
+    "diffPatch noIndex compares two files and takes no base, head, cached or pathspec"
+  );
+});
+
+/**
  * The change-selection options the `--name-only` diff members share:
  * `diffFilter` keeps only the named status letters, `noRenames` turns rename
  * detection off, `pathspec` scopes the diff behind `--`.
@@ -433,6 +533,25 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         success: (classified) => Effect.succeedSome(Str.trim(classified.output)),
         absent: () => Effect.succeedNone,
         ...refFailureArms(cwd, `${a}...${b}`),
+      });
+    })
+  );
+
+  const mergeTree: GitShape["mergeTree"] = dual(
+    3,
+    Effect.fn("Git.mergeTree")(function* (cwd: string, base: string, head: string) {
+      yield* Effect.annotateCurrentSpan({ cwd, base, head });
+      yield* rejectOptionLikeRefs(cwd, [base, head]);
+      const invocation = GitCommand.mergeTree(base, head);
+      // "differs" kind: a conflict is a SILENT exit 1 whose stdout carries the
+      // conflicted tree, which is data rather than a failure. A revision git
+      // cannot resolve also exits 1, but names itself on stderr and stays an
+      // UnknownRefError.
+      const classified = yield* runFor(invocation, cwd, "differs");
+      return yield* Match.valueTags(classified, {
+        success: (classified) => failClosed(invocation, cwd, "merge-tree")(parseMergeTree(classified.output, false)),
+        differs: (classified) => failClosed(invocation, cwd, "merge-tree")(parseMergeTree(classified.output, true)),
+        ...refFailureArms(cwd, `${base}...${head}`),
       });
     })
   );
@@ -601,12 +720,13 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         readonly head?: string;
         readonly relative?: boolean;
         readonly findRenames?: number;
+        readonly noRenames?: boolean;
         readonly diffFilter?: string;
         readonly pathspec?: ReadonlyArray<string>;
         readonly twoDot?: boolean;
       }
     ) {
-      const { diffFilter, findRenames, pathspec = [], twoDot = false } = options;
+      const { diffFilter, findRenames, noRenames = false, pathspec = [], twoDot = false } = options;
       const relative = options.relative ?? false;
       yield* Effect.annotateCurrentSpan({
         cwd,
@@ -619,9 +739,16 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
       yield* rejectOptionLikeRefs(cwd, [...withDefined([options.base], options.head), ...pathspec]);
       yield* rejectRenameScore(cwd, findRenames);
       yield* rejectDiffFilter(cwd, diffFilter);
+      yield* rejectCombination(
+        cwd,
+        noRenames && findRenames !== undefined,
+        ["--no-renames", "--find-renames"],
+        "nameStatus cannot combine noRenames with findRenames"
+      );
       const invocation = GitCommand.nameStatus(options.base, options.head, relative, {
         ...O.getSomesStruct({ findRenames: O.fromUndefinedOr(findRenames) }),
         ...O.getSomesStruct({ diffFilter: O.fromUndefinedOr(diffFilter) }),
+        noRenames,
         pathspec,
         twoDot,
       });
@@ -814,47 +941,60 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     Effect.fn("Git.fetch")(function* (
       cwd: string,
       options: {
-        readonly ref: string;
+        readonly ref?: string;
         readonly remote?: string;
         readonly depth?: number;
         readonly tag?: boolean;
         readonly unshallow?: boolean;
         readonly prune?: boolean;
+        readonly noTags?: boolean;
+        readonly noWriteFetchHead?: boolean;
       }
     ) {
-      const remote = options.remote ?? "origin";
-      const tag = options.tag ?? false;
-      const unshallow = options.unshallow ?? false;
-      const prune = options.prune ?? false;
+      const {
+        depth,
+        noTags = false,
+        noWriteFetchHead = false,
+        prune = false,
+        ref,
+        remote = "origin",
+        tag = false,
+        unshallow = false,
+      } = options;
+      const target = O.fromUndefinedOr(ref);
       yield* Effect.annotateCurrentSpan({
         cwd,
-        ref: options.ref,
+        ref: O.getOrElse(target, () => "(configured refspecs)"),
         tag,
         unshallow,
         prune,
+        noTags,
+        noWriteFetchHead,
       });
-      yield* rejectOptionLikeRefs(cwd, [remote, options.ref]);
-      yield* rejectNonNaturalNumber(cwd, "a fetch depth", options.depth);
-      if (unshallow && options.depth !== undefined) {
-        // git itself rejects the pair (`--depth and --unshallow cannot be used
-        // together`, exit 128) — refused typed pre-spawn, the submoduleDeinit
-        // constraint-refusal precedent.
-        return yield* GitCommandError.make({
-          kind: "refused",
-          args: ["--unshallow", "--depth", String(options.depth)],
-          cwd,
-          stderr: "",
-          detail: "refused: fetch cannot combine unshallow with depth (git rejects the pair)",
-        });
-      }
+      yield* rejectOptionLikeRefs(cwd, withDefined([remote], ref));
+      yield* rejectNonNaturalNumber(cwd, "a fetch depth", depth);
+      // `git fetch <remote> tag` with no name is a usage error; refused typed.
+      yield* rejectCombination(cwd, tag && O.isNone(target), ["tag"], "fetch needs a ref to fetch as a tag");
+      // git itself rejects the pair (`--depth and --unshallow cannot be used
+      // together`, exit 128) — refused typed pre-spawn, the submoduleDeinit
+      // constraint-refusal precedent.
+      yield* rejectCombination(
+        cwd,
+        unshallow && depth !== undefined,
+        ["--unshallow", "--depth", String(depth)],
+        "fetch cannot combine unshallow with depth (git rejects the pair)"
+      );
       const classified = yield* runForNetwork(
-        GitCommand.fetch(remote, options.ref, options.depth, tag, unshallow, prune),
+        GitCommand.fetch(remote, ref, depth, tag, unshallow, prune, { noTags, noWriteFetchHead }),
         cwd,
         "generic"
       );
       return yield* Match.valueTags(classified, {
         success: () => Effect.void,
-        ...refFailureArms(cwd, options.ref),
+        ...refFailureArms(
+          cwd,
+          O.getOrElse(target, () => remote)
+        ),
       });
     })
   );
@@ -1007,10 +1147,11 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
   );
 
   const add: GitShape["add"] = dual(
-    2,
-    Effect.fn("Git.add")(function* (cwd: string, paths: ReadonlyArray<string>) {
-      yield* Effect.annotateCurrentSpan({ cwd, count: paths.length });
-      const classified = yield* runFor(GitCommand.add(paths), cwd, "generic");
+    hasStringSubject,
+    Effect.fn("Git.add")(function* (cwd: string, paths: ReadonlyArray<string>, options?: { readonly force?: boolean }) {
+      const force = options?.force ?? false;
+      yield* Effect.annotateCurrentSpan({ cwd, count: paths.length, force });
+      const classified = yield* runFor(GitCommand.add(paths, force), cwd, "generic");
       return yield* Match.valueTags(classified, {
         success: () => Effect.void,
         ...refFailureArms(cwd, "working tree"),
@@ -1071,9 +1212,18 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     });
   });
 
-  const commonDir = Effect.fn("Git.commonDir")(function* (cwd: string) {
-    yield* Effect.annotateCurrentSpan({ cwd });
-    const invocation = GitCommand.commonDir();
+  /**
+   * Runs one `rev-parse --path-format=absolute` query and answers its path.
+   * `what` names the output in the old-git failure detail and `method` names
+   * the member in the defensive unknown-ref defect, which no path query can
+   * reach through git's own stderr.
+   */
+  const absolutePathQuery = Effect.fnUntraced(function* (
+    method: string,
+    what: string,
+    invocation: GitInvocation,
+    cwd: string
+  ) {
     const classified = yield* runFor(invocation, cwd, "generic");
     return yield* Match.valueTags(classified, {
       success: Effect.fnUntraced(function* (classified) {
@@ -1088,15 +1238,35 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
             args: invocation.redactedArgs,
             cwd,
             stderr: "",
-            detail: `unparseable common-dir output (--path-format needs git 2.31 or later): ${yield* encodeJsonString(answer).pipe(Effect.orDie)}`,
+            detail: `unparseable ${what} output (--path-format needs git 2.31 or later): ${yield* encodeJsonString(answer).pipe(Effect.orDie)}`,
           });
         }
         return answer;
       }),
-      unknownRef: () => Effect.die('Git.commonDir: unexpected classification "unknownRef"'),
+      unknownRef: () => Effect.die(`${method}: unexpected classification "unknownRef"`),
       ...repositoryFailureArms(cwd),
     });
   });
+
+  const commonDir = Effect.fn("Git.commonDir")(function* (cwd: string) {
+    yield* Effect.annotateCurrentSpan({ cwd });
+    return yield* absolutePathQuery("Git.commonDir", "common-dir", GitCommand.commonDir(), cwd);
+  });
+
+  const gitDir: GitShape["gitDir"] = dual(
+    hasStringSubject,
+    Effect.fn("Git.gitDir")(function* (cwd: string, options?: { readonly path?: string }) {
+      const path = options?.path;
+      yield* Effect.annotateCurrentSpan({ cwd, path: path ?? "(git dir)" });
+      yield* rejectOptionLikeRefs(cwd, withDefined([], path));
+      return yield* absolutePathQuery(
+        "Git.gitDir",
+        path === undefined ? "git-dir" : "git-path",
+        GitCommand.gitDir(path),
+        cwd
+      );
+    })
+  );
 
   const configGet: GitShape["configGet"] = dual(
     stringAt(1),
@@ -1161,44 +1331,59 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
 
   const log: GitShape["log"] = dual(
     hasStringSubject,
-    Effect.fn("Git.log")(function* (
-      cwd: string,
-      options?: {
-        readonly paths?: ReadonlyArray<string>;
-        readonly follow?: boolean;
-        readonly limit?: number;
-        readonly firstParentDiffMerges?: boolean;
-        readonly nameStatus?: boolean;
-        readonly diffFilter?: string;
-        readonly findRenames?: number;
-        readonly quotePath?: false;
-      }
-    ) {
+    Effect.fn("Git.log")(function* (cwd: string, options?: LogOptions) {
       const {
         diffFilter,
         findRenames,
         firstParentDiffMerges = false,
         follow = false,
+        includeBody = false,
         limit,
         nameStatus = false,
+        noMerges = false,
+        omitPaths = false,
         paths = [],
         quotePath,
+        reverse = false,
+        revisions = [],
+        since,
       } = options ?? {};
       // Path VALUES are stable identifiers, but a pathspec can be long and is
       // caller-controlled; the count is what a trace needs to correlate.
-      yield* Effect.annotateCurrentSpan({ cwd, paths: paths.length, follow, nameStatus });
+      yield* Effect.annotateCurrentSpan({
+        cwd,
+        paths: paths.length,
+        revisions: revisions.length,
+        follow,
+        nameStatus,
+        omitPaths,
+        includeBody,
+      });
+      yield* rejectOptionLikeRefs(cwd, revisions);
       yield* rejectNonNaturalNumber(cwd, "a log limit", limit);
       yield* rejectRenameScore(cwd, findRenames);
       yield* rejectDiffFilter(cwd, diffFilter);
+      yield* rejectCombination(
+        cwd,
+        omitPaths && nameStatus,
+        ["--name-status"],
+        "log cannot read name-status changes while omitting paths"
+      );
       const invocation = GitCommand.log(paths, follow, limit, firstParentDiffMerges, {
         ...O.getSomesStruct({
           diffFilter: O.fromUndefinedOr(diffFilter),
           findRenames: O.fromUndefinedOr(findRenames),
           quotePath: O.fromUndefinedOr(quotePath),
+          since: O.fromUndefinedOr(since),
         }),
+        includeBody,
         nameStatus,
+        noMerges,
+        omitPaths,
+        reverse,
+        revisions,
       });
-      const parse = nameStatus ? parseLogNameStatus : parseLog;
+      const parse = parseLogFor({ includeBody, nameStatus });
       if (follow && paths.length !== 1) {
         // git's own restriction, refused pre-spawn: `--follow` walks ONE
         // path's history, and git's own diagnostic for the violation is an
@@ -1224,12 +1409,14 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         },
         ...repositoryFailureArms(cwd),
         unknownRef: () => {
-          // An unborn HEAD — however this git spells it — has no history,
-          // which is the empty log, never a failure. `Git.log` takes no ref,
-          // so there is no ref for an UnknownRefError to name and the error
-          // is absent from this member's union by construction.
+          // A walk from HEAD names no ref of its own, so an unborn HEAD,
+          // however this git spells it, has no history: the empty log. A walk
+          // from caller revisions names them, and one that does not resolve
+          // is the caller's typed UnknownRefError.
           const empty: ReadonlyArray<CommitLogEntry> = [];
-          return Effect.succeed(empty);
+          return A.isReadonlyArrayNonEmpty(revisions)
+            ? Effect.fail(UnknownRefError.make({ ref: A.join(revisions, " "), cwd }))
+            : Effect.succeed(empty);
         },
       });
     })
@@ -1428,17 +1615,18 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     Effect.fn("Git.submoduleForeach")(function* (
       cwd: string,
       command: string,
-      options?: { readonly recursive?: boolean }
+      options?: { readonly recursive?: boolean; readonly quiet?: boolean }
     ) {
       yield* Effect.annotateCurrentSpan({
         cwd,
         recursive: options?.recursive ?? false,
+        quiet: options?.quiet ?? false,
       });
       // The command is a positional git would read as a flag if it led with a
       // dash — the same option-injection guard as refs.
       yield* rejectOptionLikeRefs(cwd, [command]);
       const classified = yield* runFor(
-        GitCommand.submoduleForeach(command, options?.recursive ?? false),
+        GitCommand.submoduleForeach(command, options?.recursive ?? false, options?.quiet ?? false),
         cwd,
         "generic"
       );
@@ -1596,15 +1784,14 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         readonly message?: string;
         readonly includeUntracked?: boolean;
         readonly paths?: ReadonlyArray<string>;
+        readonly keepIndex?: boolean;
       }
     ) {
-      yield* Effect.annotateCurrentSpan({
-        cwd,
-        includeUntracked: options?.includeUntracked ?? false,
-      });
+      const { includeUntracked = false, keepIndex = false, message, paths = [] } = options ?? {};
+      yield* Effect.annotateCurrentSpan({ cwd, includeUntracked, keepIndex });
       return yield* runVoid(
         "Git.stashPush",
-        GitCommand.stashPush(options?.message, options?.includeUntracked ?? false, options?.paths ?? []),
+        GitCommand.stashPush(message, includeUntracked, paths, keepIndex),
         cwd,
         "stash"
       );
@@ -1663,18 +1850,17 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     hasStringSubject,
     Effect.fn("Git.branchList")(function* (
       cwd: string,
-      options?: { readonly remotes?: boolean; readonly all?: boolean }
+      options?: { readonly remotes?: boolean; readonly all?: boolean; readonly contains?: string }
     ) {
-      yield* Effect.annotateCurrentSpan({
-        cwd,
-        remotes: options?.remotes ?? false,
-        all: options?.all ?? false,
-      });
+      const { all = false, contains, remotes = false } = options ?? {};
+      const label = contains ?? "branches";
+      yield* Effect.annotateCurrentSpan({ cwd, remotes, all, contains: label });
+      yield* rejectOptionLikeRefs(cwd, withDefined([], contains));
       return yield* runParsed(
         "Git.branchList",
-        GitCommand.branchList(options?.remotes ?? false, options?.all ?? false),
+        GitCommand.branchList(remotes, all, contains),
         cwd,
-        "branches",
+        label,
         "generic",
         parseBranchList
       );
@@ -1743,6 +1929,24 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     })
   );
 
+  const upstream: GitShape["upstream"] = dual(
+    2,
+    Effect.fn("Git.upstream")(function* (cwd: string, branch: string) {
+      yield* Effect.annotateCurrentSpan({ cwd, branch });
+      yield* rejectOptionLikeRefs(cwd, [branch]);
+      const invocation = GitCommand.upstream(branch);
+      const classified = yield* runFor(invocation, cwd, "generic");
+      return yield* Match.valueTags(classified, {
+        success: (classified) =>
+          failClosed(invocation, cwd, "upstream")(parseUpstream(classified.output, `refs/heads/${branch}`)),
+        // for-each-ref resolves no revision, so git's own stderr never
+        // carries an unknown-ref shape here.
+        unknownRef: () => Effect.die('Git.upstream: unexpected classification "unknownRef"'),
+        ...repositoryFailureArms(cwd),
+      });
+    })
+  );
+
   const revList: GitShape["revList"] = dual(
     stringAt(1),
     Effect.fn("Git.revList")(function* (
@@ -1768,6 +1972,45 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     })
   );
 
+  const revListCount: GitShape["revListCount"] = dual(
+    stringAt(1),
+    Effect.fn("Git.revListCount")(function* (cwd: string, range: string, options?: { readonly firstParent?: boolean }) {
+      const firstParent = options?.firstParent ?? false;
+      yield* Effect.annotateCurrentSpan({ cwd, range, firstParent });
+      yield* rejectOptionLikeRefs(cwd, [range]);
+      const invocation = GitCommand.revListCount(range, firstParent);
+      const classified = yield* runFor(invocation, cwd, "generic");
+      return yield* Match.valueTags(classified, {
+        success: (classified) => failClosed(invocation, cwd, "rev-list count")(parseRevListCount(classified.output)),
+        ...refFailureArms(cwd, range),
+      });
+    })
+  );
+
+  const updateRef: GitShape["updateRef"] = dual(
+    3,
+    Effect.fn("Git.updateRef")(function* (cwd: string, ref: string, change: UpdateRefChange) {
+      const value = "create" in change ? change.create : change.delete;
+      yield* Effect.annotateCurrentSpan({ cwd, ref, change: "create" in change ? "create" : "delete" });
+      yield* rejectOptionLikeRefs(cwd, [ref, value]);
+      // git's own refname rules decide validity, before update-ref could
+      // write a ref that every later git command would refuse to read.
+      const format = yield* runFor(GitCommand.checkRefFormat(ref), cwd, "quiet");
+      yield* Match.valueTags(format, {
+        success: () => Effect.void,
+        absent: () =>
+          encodeJsonString(ref).pipe(
+            Effect.orDie,
+            Effect.flatMap((encoded) =>
+              rejectCombination(cwd, true, [ref], `updateRef needs a well-formed full refname, received ${encoded}`)
+            )
+          ),
+        ...refFailureArms(cwd, ref),
+      });
+      return yield* runVoid("Git.updateRef", GitCommand.updateRef(ref, change), cwd, value);
+    })
+  );
+
   const commit: GitShape["commit"] = dual(
     stringAt(1),
     Effect.fn("Git.commit")(function* (
@@ -1780,13 +2023,22 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         readonly author?: string;
         readonly only?: boolean;
         readonly noVerify?: boolean;
+        readonly noGpgSign?: boolean;
       }
     ) {
-      const { all = false, allowEmpty = false, amend = false, author, noVerify = false, only = false } = options ?? {};
-      yield* Effect.annotateCurrentSpan({ cwd, amend, only, noVerify });
+      const {
+        all = false,
+        allowEmpty = false,
+        amend = false,
+        author,
+        noGpgSign = false,
+        noVerify = false,
+        only = false,
+      } = options ?? {};
+      yield* Effect.annotateCurrentSpan({ cwd, amend, only, noVerify, noGpgSign });
       return yield* runVoid(
         "Git.commit",
-        GitCommand.commit(message, all, allowEmpty, amend, author, only, noVerify),
+        GitCommand.commit(message, all, allowEmpty, amend, author, only, noVerify, noGpgSign),
         cwd,
         "HEAD"
       );
@@ -2008,12 +2260,17 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
   );
 
   const checkIgnore: GitShape["checkIgnore"] = dual(
-    2,
-    Effect.fn("Git.checkIgnore")(function* (cwd: string, paths: ReadonlyArray<string>) {
-      yield* Effect.annotateCurrentSpan({ cwd, count: paths.length });
+    hasStringSubject,
+    Effect.fn("Git.checkIgnore")(function* (
+      cwd: string,
+      paths: ReadonlyArray<string>,
+      options?: { readonly noIndex?: boolean }
+    ) {
+      const noIndex = options?.noIndex ?? false;
+      yield* Effect.annotateCurrentSpan({ cwd, count: paths.length, noIndex });
       return yield* runParsed(
         "Git.checkIgnore",
-        GitCommand.checkIgnore(paths),
+        GitCommand.checkIgnore(paths, noIndex),
         cwd,
         "check-ignore",
         "quiet",
@@ -2031,12 +2288,25 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         readonly ref?: string;
         readonly detach?: boolean;
         readonly force?: boolean;
+        readonly newBranch?: string;
       }
     ) {
-      const { detach = false, force = false, ref } = options ?? {};
-      yield* Effect.annotateCurrentSpan({ cwd, path, ref: ref ?? "(default)" });
-      yield* rejectOptionLikeRefs(cwd, withDefined([path], ref));
-      return yield* runVoid("Git.worktreeAdd", GitCommand.worktreeAdd(path, ref, detach, force), cwd, ref ?? path);
+      const { detach = false, force = false, newBranch, ref } = options ?? {};
+      yield* Effect.annotateCurrentSpan({ cwd, path, ref: ref ?? "(default)", newBranch: newBranch ?? "(none)" });
+      yield* rejectOptionLikeRefs(cwd, [...withDefined([path], ref), ...withDefined([], newBranch)]);
+      // git rejects `-b` together with `--detach`; refused typed pre-spawn.
+      yield* rejectCombination(
+        cwd,
+        detach && newBranch !== undefined,
+        ["--detach", "-b"],
+        "worktreeAdd cannot create a branch in a detached worktree"
+      );
+      return yield* runVoid(
+        "Git.worktreeAdd",
+        GitCommand.worktreeAdd(path, ref, detach, force, newBranch),
+        cwd,
+        ref ?? path
+      );
     })
   );
 
@@ -2084,6 +2354,31 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     })
   );
 
+  const diffPatch: GitShape["diffPatch"] = dual(
+    hasStringSubject,
+    Effect.fn("Git.diffPatch")(function* (cwd: string, options?: DiffPatchOptions) {
+      const resolved = options ?? {};
+      const { base, head, noIndex, pathspec = [] } = resolved;
+      yield* Effect.annotateCurrentSpan({
+        cwd,
+        base: base ?? "(index)",
+        head: head ?? "(working tree)",
+        noIndex: noIndex !== undefined,
+        pathspec: pathspec.length,
+      });
+      yield* rejectDiffPatchOptions(cwd, resolved);
+      const invocation = GitCommand.diffPatch(resolved);
+      // "differs" only under --no-index, where a silent exit 1 means the two
+      // files differ; every other diff form exits 0 with or without changes.
+      const classified = yield* runFor(invocation, cwd, noIndex === undefined ? "generic" : "differs");
+      return yield* Match.valueTags(classified, {
+        success: (classified) => Effect.succeed(classified.output),
+        differs: (classified) => Effect.succeed(classified.output),
+        ...refFailureArms(cwd, head === undefined ? (base ?? "working tree") : `${base}..${head}`),
+      });
+    })
+  );
+
   return {
     add,
     branchCreate,
@@ -2105,10 +2400,12 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     configUnset,
     currentBranch,
     defaultBranch,
+    diffPatch,
     fetch,
     fetchAny,
     fetchUnshallow,
     forEachRef,
+    gitDir,
     isShallow,
     log,
     lsFiles,
@@ -2116,6 +2413,7 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     lsTree,
     mergeBase,
     mergeBaseOption,
+    mergeTree,
     isAncestor,
     mv,
     nameStatus,
@@ -2130,6 +2428,7 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     reset,
     restore,
     revList,
+    revListCount,
     revParse,
     rm,
     show,
@@ -2156,6 +2455,8 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     tagList,
     unstagedChanges,
     untrackedFiles,
+    updateRef,
+    upstream,
     workingChanges,
     worktreeAdd,
     worktreeList,
@@ -2179,16 +2480,19 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
  */
 export interface GitShape {
   /**
-   * Mutating: `git add -- <paths...>` — stages `paths` in the index for
-   * the next commit.
+   * Mutating: `git add [--force] -- <paths...>` — stages `paths` in the index for
+   * the next commit; `options.force` stages a path an ignore rule matches,
+   * which git otherwise refuses.
    */
   readonly add: {
     (
       cwd: string,
-      paths: ReadonlyArray<string>
+      paths: ReadonlyArray<string>,
+      options?: { readonly force?: boolean }
     ): Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
     (
-      paths: ReadonlyArray<string>
+      paths: ReadonlyArray<string>,
+      options?: { readonly force?: boolean }
     ): (cwd: string) => Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
@@ -2249,18 +2553,21 @@ export interface GitShape {
     ): (cwd: string) => Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
-   * `git branch --list [--remotes | --all]` — every branch as a
+   * `git branch --list [--remotes | --all] [--contains <rev>]` — every branch as a
    * {@link BranchEntry} (short name, tip sha, current marker), via the
-   * NUL-separated for-each-ref format. `all` wins when both flags are set.
+   * NUL-separated for-each-ref format. `all` wins when both flags are set;
+   * `contains` keeps only the branches whose history includes `<rev>`, and
+   * an option-like `contains` is refused typed before any spawn.
    */
   readonly branchList: {
     (
       cwd: string,
-      options?: { readonly remotes?: boolean; readonly all?: boolean }
+      options?: { readonly remotes?: boolean; readonly all?: boolean; readonly contains?: string }
     ): Effect.Effect<ReadonlyArray<BranchEntry>, GitCommandError | NotARepositoryError | UnknownRefError>;
     (options?: {
       readonly remotes?: boolean;
       readonly all?: boolean;
+      readonly contains?: string;
     }): (
       cwd: string
     ) => Effect.Effect<ReadonlyArray<BranchEntry>, GitCommandError | NotARepositoryError | UnknownRefError>;
@@ -2305,19 +2612,28 @@ export interface GitShape {
     }): (cwd: string) => Effect.Effect<ReadonlyArray<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
-   * `git check-ignore -z --stdin` — the subset of `paths` git would ignore,
+   * `git check-ignore [--no-index] -z --stdin` — the subset of `paths` git would ignore,
    * predicate-shaped: paths in, the ignored ones back. Paths are fed via
    * STDIN (NUL-separated both directions), so nothing caller-controlled
    * enters the argv and special-character paths survive unquoted. No path
    * ignored degrades to the empty array, never an error.
+   *
+   * **Details**
+   *
+   * Without `options.noIndex` git never reports a path the index tracks,
+   * whatever the ignore rules say. With it the index is not consulted, so a
+   * tracked path that an ignore rule matches (including a rule on a parent
+   * directory) is reported too.
    */
   readonly checkIgnore: {
     (
       cwd: string,
-      paths: ReadonlyArray<string>
+      paths: ReadonlyArray<string>,
+      options?: { readonly noIndex?: boolean }
     ): Effect.Effect<ReadonlyArray<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
     (
-      paths: ReadonlyArray<string>
+      paths: ReadonlyArray<string>,
+      options?: { readonly noIndex?: boolean }
     ): (cwd: string) => Effect.Effect<ReadonlyArray<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
@@ -2369,12 +2685,13 @@ export interface GitShape {
     }): (cwd: string) => Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
-   * Mutating: `git commit [--all] [--allow-empty] [--amend] [--author=<author>] -m <message>`
+   * Mutating: `git commit [--all] [--allow-empty] [--amend] [--no-gpg-sign] [--author=<author>] -m <message>`
    * — records a commit. The message rides argv; committer identity comes
    * from the caller's ENVIRONMENT (the pins this service applies are the
    * locale and the non-interactive set — never an identity), and
    * `options.author` is the explicit `--author=`
-   * override. "Nothing to commit" fails loudly as {@link GitCommandError}.
+   * override. `options.noGpgSign` overrides a configured `commit.gpgSign`
+   * for this one commit. "Nothing to commit" fails loudly as {@link GitCommandError}.
    */
   readonly commit: {
     (
@@ -2387,6 +2704,7 @@ export interface GitShape {
         readonly author?: string;
         readonly only?: boolean;
         readonly noVerify?: boolean;
+        readonly noGpgSign?: boolean;
       }
     ): Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
     (
@@ -2398,6 +2716,7 @@ export interface GitShape {
         readonly author?: string;
         readonly only?: boolean;
         readonly noVerify?: boolean;
+        readonly noGpgSign?: boolean;
       }
     ): (cwd: string) => Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
@@ -2631,7 +2950,56 @@ export interface GitShape {
     }): (cwd: string) => Effect.Effect<O.Option<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
-   * Mutating: `git fetch [--depth <n>] [--unshallow] <remote> [tag] <ref>` —
+   * `git diff --no-color --no-ext-diff [--binary] [--unified=<n>] [--no-renames | --find-renames=<n>%] [--cached] [<base> [<head>]] -- [<pathspec>...]`,
+   * or `git diff --no-color --no-ext-diff [...] --no-index -- <a> <b>` — the
+   * patch text, decoded and untrimmed. The full argv is on `GitCommand.diffPatch`.
+   *
+   * **Details**
+   *
+   * Without `base` the patch is the working tree against the index (with
+   * `cached`, the index against `HEAD`); with `base` alone it is the working
+   * tree (or the index) against `base`; with `head` too it is `base` against
+   * `head`. `noIndex` compares two files outside any index, and works
+   * outside a repository: there git's exit 1 means the files differ and is
+   * the answer, while a file git cannot read fails as `GitCommandError`.
+   *
+   * Refused typed before any spawn: a `head` without a `base`; `noRenames`
+   * with `findRenames`; `noIndex` with `base`, `head`, `cached` or
+   * `pathspec`; a `unified` that is not a non-negative integer; a
+   * `findRenames` outside 1..100; and any revision, pathspec entry or file
+   * git would read as an option. A patch larger than the instance's
+   * `maxOutputBytes` fails as kind `"truncated"`; build the instance with
+   * `Git.makeWith` for a larger bound.
+   */
+  readonly diffPatch: {
+    (
+      cwd: string,
+      options?: {
+        readonly base?: string;
+        readonly head?: string;
+        readonly cached?: boolean;
+        readonly noIndex?: readonly [string, string];
+        readonly binary?: boolean;
+        readonly unified?: number;
+        readonly noRenames?: boolean;
+        readonly findRenames?: number;
+        readonly pathspec?: ReadonlyArray<string>;
+      }
+    ): Effect.Effect<string, GitCommandError | NotARepositoryError | UnknownRefError>;
+    (options?: {
+      readonly base?: string;
+      readonly head?: string;
+      readonly cached?: boolean;
+      readonly noIndex?: readonly [string, string];
+      readonly binary?: boolean;
+      readonly unified?: number;
+      readonly noRenames?: boolean;
+      readonly findRenames?: number;
+      readonly pathspec?: ReadonlyArray<string>;
+    }): (cwd: string) => Effect.Effect<string, GitCommandError | NotARepositoryError | UnknownRefError>;
+  };
+  /**
+   * Mutating: `git fetch [--depth <n>] [--unshallow] [--prune] [--no-tags] [--no-write-fetch-head] <remote> [tag] [<ref>]` —
    * fetches `options.ref` from `options.remote` (default `origin`) into the
    * local object database, optionally shallow (`options.depth`), unshallowing
    * (`options.unshallow`), and/or as a tag (`options.tag`). A ref the remote
@@ -2653,26 +3021,37 @@ export interface GitShape {
    * `GitCommandError`, deliberately untolerated) — probe with `isShallow`
    * first. Combining it with `options.depth` is refused typed, pre-spawn,
    * exactly as git itself would reject the pair.
+   *
+   * With `options.ref` omitted git fetches the remote's configured refspecs
+   * (`git fetch --prune origin` refreshes every remote-tracking ref);
+   * `options.tag` needs a ref and is refused typed without one.
+   * `options.noTags` turns tag auto-follow off, and
+   * `options.noWriteFetchHead` leaves `FETCH_HEAD` untouched, so a fetch of
+   * one pinned commit cannot disturb a concurrent reader of it.
    */
   readonly fetch: {
     (
       cwd: string,
       options: {
-        readonly ref: string;
+        readonly ref?: string;
         readonly remote?: string;
         readonly depth?: number;
         readonly tag?: boolean;
         readonly unshallow?: boolean;
         readonly prune?: boolean;
+        readonly noTags?: boolean;
+        readonly noWriteFetchHead?: boolean;
       }
     ): Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
     (options: {
-      readonly ref: string;
+      readonly ref?: string;
       readonly remote?: string;
       readonly depth?: number;
       readonly tag?: boolean;
       readonly unshallow?: boolean;
       readonly prune?: boolean;
+      readonly noTags?: boolean;
+      readonly noWriteFetchHead?: boolean;
     }): (cwd: string) => Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
@@ -2748,6 +3127,32 @@ export interface GitShape {
     ) => Effect.Effect<ReadonlyArray<RefEntry>, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
+   * `git rev-parse --path-format=absolute --git-dir`, or with `options.path`
+   * `git rev-parse --path-format=absolute --git-path <path>` — the absolute
+   * Git directory of THIS checkout, or where git keeps `$GIT_DIR/<path>`,
+   * with git's terminating newline removed.
+   *
+   * **Details**
+   *
+   * The per-checkout sibling of `commonDir`: from a linked worktree the Git
+   * directory is its own `.git/worktrees/<name>`, while `commonDir` is the
+   * shared directory every checkout of the repository answers. `path` goes
+   * through git's own relocation rules, so `info/attributes` or `hooks`
+   * from a linked worktree resolve into the common directory, which joining
+   * the path onto `--git-dir` by hand would miss. Only the terminating
+   * newline is removed.
+   *
+   * Needs git 2.31 or later, failing as `GitCommandError` on an older git
+   * exactly as `commonDir` does; an option-like `path` is refused typed
+   * before any spawn.
+   */
+  readonly gitDir: {
+    (cwd: string, options?: { readonly path?: string }): Effect.Effect<string, GitCommandError | NotARepositoryError>;
+    (options?: {
+      readonly path?: string;
+    }): (cwd: string) => Effect.Effect<string, GitCommandError | NotARepositoryError>;
+  };
+  /**
    * `git merge-base --is-ancestor <ancestor> <descendant>` — whether
    * `ancestor` is reachable from `descendant` (a commit counts as its own
    * ancestor). The negative answer is git's silent exit 1, read as `false`,
@@ -2808,11 +3213,21 @@ export interface GitShape {
    * the merges away for the pre-rename history.
    *
    * An unborn `HEAD` and a pathspec no commit ever touched are both the
-   * EMPTY listing, not a failure — which is why `UnknownRefError` is absent
-   * from this member's error union while every other read carries it. This
+   * EMPTY listing, not a failure. A walk from `revisions` that git cannot
+   * resolve is the one `UnknownRefError` this member raises; a walk from
+   * `HEAD` never does. This
    * is the one read whose result depends on the ORDER of history rather than
    * a single tree, and the one that decodes dates: see `CommitLogEntry` for
    * what the UTC decoding does and does not preserve.
+   *
+   * `revisions` starts the walk at refs, ranges (`base..head`) or
+   * exclusions (`^ref`) instead of `HEAD`; each is refused typed when git
+   * would read it as an option. `noMerges` drops merge commits, `reverse`
+   * prints oldest first (after `limit` is applied), and `since` keeps only
+   * commits newer than git's approxidate. `omitPaths` lists no paths, so
+   * every entry's `paths` is empty and a subject listing costs a fraction of
+   * the bytes; it is refused with `nameStatus`. `includeBody` reads each
+   * commit's raw `%b` into `CommitLogEntry.body`.
    *
    * With `nameStatus: true` the body is read as `--name-status` instead of
    * `--name-only`: every entry then carries `changes`, each touched path's
@@ -2828,43 +3243,13 @@ export interface GitShape {
   readonly log: {
     (
       cwd: string,
-      options?: {
-        /** A git pathspec scoping the walk; `--follow` requires exactly one entry. */
-        readonly paths?: ReadonlyArray<string>;
-        /** Follow the single path across renames (git's `--follow`). Default `false`. */
-        readonly follow?: boolean;
-        /** `--max-count`: at most this many commits. `0` is the empty listing. */
-        readonly limit?: number;
-        /** `--diff-merges=first-parent`: give merge commits a path listing. Default `false`. */
-        readonly firstParentDiffMerges?: boolean;
-        /** `--name-status` instead of `--name-only`: populate each entry's `changes`. Default `false`. */
-        readonly nameStatus?: boolean;
-        /** `--diff-filter=<letters>`: keep only the named status letters (lower case excludes). */
-        readonly diffFilter?: string;
-        /** `--find-renames=<n>%`: the rename-detection similarity threshold, a whole percent 1..100. */
-        readonly findRenames?: number;
-        /** `false` prepends the global `-c core.quotePath=false`. */
-        readonly quotePath?: false;
-      }
-    ): Effect.Effect<ReadonlyArray<CommitLogEntry>, GitCommandError | NotARepositoryError>;
-    (options?: {
-      /** A git pathspec scoping the walk; `--follow` requires exactly one entry. */
-      readonly paths?: ReadonlyArray<string>;
-      /** Follow the single path across renames (git's `--follow`). Default `false`. */
-      readonly follow?: boolean;
-      /** `--max-count`: at most this many commits. `0` is the empty listing. */
-      readonly limit?: number;
-      /** `--diff-merges=first-parent`: give merge commits a path listing. Default `false`. */
-      readonly firstParentDiffMerges?: boolean;
-      /** `--name-status` instead of `--name-only`: populate each entry's `changes`. Default `false`. */
-      readonly nameStatus?: boolean;
-      /** `--diff-filter=<letters>`: keep only the named status letters (lower case excludes). */
-      readonly diffFilter?: string;
-      /** `--find-renames=<n>%`: the rename-detection similarity threshold, a whole percent 1..100. */
-      readonly findRenames?: number;
-      /** `false` prepends the global `-c core.quotePath=false`. */
-      readonly quotePath?: false;
-    }): (cwd: string) => Effect.Effect<ReadonlyArray<CommitLogEntry>, GitCommandError | NotARepositoryError>;
+      options?: LogOptions
+    ): Effect.Effect<ReadonlyArray<CommitLogEntry>, GitCommandError | NotARepositoryError | UnknownRefError>;
+    (
+      options?: LogOptions
+    ): (
+      cwd: string
+    ) => Effect.Effect<ReadonlyArray<CommitLogEntry>, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
    * `git ls-files --stage -z [-- <pathspec>...]` — every INDEX entry as an
@@ -2985,6 +3370,32 @@ export interface GitShape {
     ): (cwd: string) => Effect.Effect<O.Option<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
+   * `git merge-tree --write-tree -z --name-only <base> <head>` — merges two
+   * commits in the object store only, without touching the index, the
+   * working tree or any ref, and answers a {@link MergeTreeResult}.
+   *
+   * **Details**
+   *
+   * A clean merge answers `clean` with the merged tree. A conflict is data,
+   * not a failure: git's exit 1 answers `conflicted` with the tree it wrote
+   * (conflict markers included), each conflicted path once and git's
+   * informational messages. A revision git cannot resolve fails as
+   * `UnknownRefError`, unrelated histories (exit 128) as `GitCommandError`,
+   * and output the parser cannot read fails closed as `GitCommandError`
+   * with an `unparseable merge-tree output` detail. Needs git 2.38 or later.
+   */
+  readonly mergeTree: {
+    (
+      cwd: string,
+      base: string,
+      head: string
+    ): Effect.Effect<MergeTreeResult, GitCommandError | NotARepositoryError | UnknownRefError>;
+    (
+      base: string,
+      head: string
+    ): (cwd: string) => Effect.Effect<MergeTreeResult, GitCommandError | NotARepositoryError | UnknownRefError>;
+  };
+  /**
    * Mutating: `git mv [--force] -- <source> <destination>` — moves or
    * renames a tracked path, updating the index and the working tree
    * together.
@@ -3003,7 +3414,7 @@ export interface GitShape {
     ): (cwd: string) => Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
-   * `git diff --name-status -z [--relative] [--find-renames=<n>%] [--diff-filter=<letters>] [<base> | <base>...<head> | <base> <head>] [-- <pathspec>...]`
+   * `git diff --name-status -z [--relative] [--no-renames] [--find-renames=<n>%] [--diff-filter=<letters>] [<base> | <base>...<head> | <base> <head>] [-- <pathspec>...]`
    * — the changed paths with their status codes. `head` omitted diffs the
    * working tree against `base`; `head` present diffs the merge-base range,
    * or the two trees directly when `twoDot` is set.
@@ -3013,7 +3424,9 @@ export interface GitShape {
    * `findRenames` is the similarity threshold rename detection uses, a whole
    * percent 1..100; `diffFilter` keeps only the named status letters
    * (`[ACDMRTUXB*]`, lower case excludes them); `pathspec` scopes the diff;
-   * `twoDot` emits `<base> <head>` in place of `<base>...<head>`. Either
+   * `twoDot` emits `<base> <head>` in place of `<base>...<head>`;
+   * `noRenames` turns rename detection off, so a move lists as `deleted`
+   * plus `added`, and is refused together with `findRenames`. Either
    * option outside its domain, or a pathspec entry git would read as an
    * option, is refused typed before any spawn. Each rename or copy entry
    * carries git's similarity percent as {@link NameStatusEntry}'s `score`.
@@ -3028,6 +3441,7 @@ export interface GitShape {
         readonly head?: string;
         readonly relative?: boolean;
         readonly findRenames?: number;
+        readonly noRenames?: boolean;
         readonly diffFilter?: string;
         readonly pathspec?: ReadonlyArray<string>;
         readonly twoDot?: boolean;
@@ -3038,6 +3452,7 @@ export interface GitShape {
       readonly head?: string;
       readonly relative?: boolean;
       readonly findRenames?: number;
+      readonly noRenames?: boolean;
       readonly diffFilter?: string;
       readonly pathspec?: ReadonlyArray<string>;
       readonly twoDot?: boolean;
@@ -3274,6 +3689,29 @@ export interface GitShape {
     ): (cwd: string) => Effect.Effect<ReadonlyArray<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
+   * `git rev-list --count [--first-parent] <range> --` — how many commits
+   * `range` selects (`base..head`, one ref, `^a b`), as a non-negative
+   * integer.
+   *
+   * **Details**
+   *
+   * The answer is decoded fail-closed: anything but one decimal count fails
+   * as `GitCommandError` with an `unparseable rev-list count output` detail,
+   * never as zero. A range git cannot resolve fails as `UnknownRefError`;
+   * an option-like range is refused typed before any spawn.
+   */
+  readonly revListCount: {
+    (
+      cwd: string,
+      range: string,
+      options?: { readonly firstParent?: boolean }
+    ): Effect.Effect<number, GitCommandError | NotARepositoryError | UnknownRefError>;
+    (
+      range: string,
+      options?: { readonly firstParent?: boolean }
+    ): (cwd: string) => Effect.Effect<number, GitCommandError | NotARepositoryError | UnknownRefError>;
+  };
+  /**
    * `git rev-parse --verify <ref>` — resolves `ref` to its full object id,
    * trimmed. With any option the argv is
    * `rev-parse --verify [--quiet] --end-of-options <ref>[^{commit}]`:
@@ -3446,9 +3884,10 @@ export interface GitShape {
     >;
   };
   /**
-   * Mutating: `git stash push [--include-untracked] [-m <message>] [-- <paths>...]`
+   * Mutating: `git stash push [--include-untracked] [--keep-index] [-m <message>] [-- <paths>...]`
    * — saves the working-tree (and index) state onto the stash stack and
-   * resets the tree to `HEAD`.
+   * resets the tree to `HEAD`; `options.keepIndex` leaves the staged changes
+   * in the index and the working tree.
    */
   readonly stashPush: {
     (
@@ -3457,12 +3896,14 @@ export interface GitShape {
         readonly message?: string;
         readonly includeUntracked?: boolean;
         readonly paths?: ReadonlyArray<string>;
+        readonly keepIndex?: boolean;
       }
     ): Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
     (options?: {
       readonly message?: string;
       readonly includeUntracked?: boolean;
       readonly paths?: ReadonlyArray<string>;
+      readonly keepIndex?: boolean;
     }): (cwd: string) => Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
@@ -3560,21 +4001,23 @@ export interface GitShape {
     }): (cwd: string) => Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
-   * Mutating: `git submodule foreach [--recursive] <command>` — runs one
+   * Mutating: `git submodule foreach [--quiet] [--recursive] <command>` — runs one
    * shell command string in every checked-out submodule and returns the
    * collected stdout. The command can mutate anything, which is why the
    * method is marked mutating regardless of what it runs; a command
-   * beginning with `-` is refused typed before any spawn.
+   * beginning with `-` is refused typed before any spawn. Without
+   * `options.quiet` git prints `Entering '<path>'` on stdout before each
+   * submodule's output; with it the stdout is the command's alone.
    */
   readonly submoduleForeach: {
     (
       cwd: string,
       command: string,
-      options?: { readonly recursive?: boolean }
+      options?: { readonly recursive?: boolean; readonly quiet?: boolean }
     ): Effect.Effect<string, GitCommandError | NotARepositoryError | UnknownRefError>;
     (
       command: string,
-      options?: { readonly recursive?: boolean }
+      options?: { readonly recursive?: boolean; readonly quiet?: boolean }
     ): (cwd: string) => Effect.Effect<string, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
@@ -3801,6 +4244,53 @@ export interface GitShape {
     }): (cwd: string) => Effect.Effect<ReadonlyArray<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
+   * Mutating: `git check-ref-format <ref>`, then `git update-ref <ref> <new> ""`
+   * for `{ create: <new> }` or `git update-ref -d <ref> <expected>` for
+   * `{ delete: <expected> }` — creates or deletes one ref as a
+   * compare-and-swap.
+   *
+   * **Details**
+   *
+   * The refname is checked by git's own `check-ref-format` before any ref
+   * is written: an invalid name (a space, `..`, a one-level name) is
+   * refused as `GitCommandError` of kind `"refused"`. A create fails as
+   * `GitCommandError` (kind `"failed"`, git's stderr kept) when the ref
+   * already exists, and a delete when the ref no longer points at
+   * `expected`; the callers branch on the failure, not on a conflict tag. A
+   * value git cannot resolve fails as `GitCommandError`, or as
+   * `UnknownRefError` when git's stderr names it an unknown revision. An
+   * option-like ref or value is refused typed before any spawn.
+   */
+  readonly updateRef: {
+    (
+      cwd: string,
+      ref: string,
+      change: UpdateRefChange
+    ): Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
+    (
+      ref: string,
+      change: UpdateRefChange
+    ): (cwd: string) => Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
+  };
+  /**
+   * `git for-each-ref --format=%(refname)%00%(upstream) refs/heads/<branch>`
+   * — the full upstream refname a local branch tracks
+   * (`refs/remotes/origin/main`), or `Option.none` when the branch has no
+   * upstream or does not exist.
+   *
+   * **Details**
+   *
+   * The answer comes from exactly `refs/heads/<branch>`: for-each-ref also
+   * matches the pattern as a path prefix, and a prefix match for another
+   * branch (`feat/x` for `feat`) is ignored rather than reported as this
+   * branch's upstream. An option-like branch is refused typed before any
+   * spawn; a line the parser cannot read fails closed as `GitCommandError`.
+   */
+  readonly upstream: {
+    (cwd: string, branch: string): Effect.Effect<O.Option<string>, GitCommandError | NotARepositoryError>;
+    (branch: string): (cwd: string) => Effect.Effect<O.Option<string>, GitCommandError | NotARepositoryError>;
+  };
+  /**
    * The union of unstaged, staged and untracked working-tree paths —
    * `git diff --name-only -z [--relative]`, `--cached`, and
    * `git ls-files --others --exclude-standard -z`, deduplicated. Pass
@@ -3819,9 +4309,11 @@ export interface GitShape {
     }): (cwd: string) => Effect.Effect<ReadonlyArray<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
-   * Mutating: `git worktree add [--force] [--detach] <path> [<ref>]` —
+   * Mutating: `git worktree add [--force] [--detach] [-b <name>] <path> [<ref>]` —
    * creates a linked working tree at `path`, checked out at `options.ref`
-   * (or a branch named after `path`'s basename).
+   * (or a branch named after `path`'s basename). `options.newBranch`
+   * creates that branch at `options.ref` and checks it out; it is refused
+   * together with `detach`, and when git would read it as an option.
    */
   readonly worktreeAdd: {
     (
@@ -3831,6 +4323,7 @@ export interface GitShape {
         readonly ref?: string;
         readonly detach?: boolean;
         readonly force?: boolean;
+        readonly newBranch?: string;
       }
     ): Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
     (
@@ -3839,6 +4332,7 @@ export interface GitShape {
         readonly ref?: string;
         readonly detach?: boolean;
         readonly force?: boolean;
+        readonly newBranch?: string;
       }
     ): (cwd: string) => Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
@@ -4148,6 +4642,7 @@ export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
     refExists: dual(2, stubOf(overrides, "refExists")),
     mergeBase: dual(3, stubOf(overrides, "mergeBase")),
     mergeBaseOption: dual(3, stubOf(overrides, "mergeBaseOption")),
+    mergeTree: dual(3, stubOf(overrides, "mergeTree")),
     isAncestor: dual(3, stubOf(overrides, "isAncestor")),
     changedFiles: dual(2, stubOf(overrides, "changedFiles")),
     workingChanges: dual(hasStringSubject, stubOf(overrides, "workingChanges")),
@@ -4174,7 +4669,7 @@ export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
     submoduleForeach: dual(stringAt(1), stubOf(overrides, "submoduleForeach")),
     sparseCheckoutSet: dual(3, stubOf(overrides, "sparseCheckoutSet")),
     configSet: dual(stringAt(2), stubOf(overrides, "configSet")),
-    add: dual(2, stubOf(overrides, "add")),
+    add: dual(hasStringSubject, stubOf(overrides, "add")),
     nameStatus: dual(2, stubOf(overrides, "nameStatus")),
     unstagedChanges: dual(hasStringSubject, stubOf(overrides, "unstagedChanges")),
     stagedChanges: dual(hasStringSubject, stubOf(overrides, "stagedChanges")),
@@ -4183,6 +4678,7 @@ export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
     currentBranch: dual(hasStringSubject, stubOf(overrides, "currentBranch")),
     repoRoot: stubOf(overrides, "repoRoot"),
     commonDir: stubOf(overrides, "commonDir"),
+    gitDir: dual(hasStringSubject, stubOf(overrides, "gitDir")),
     configGet: dual(stringAt(1), stubOf(overrides, "configGet")),
     remoteUrl: dual(hasStringSubject, stubOf(overrides, "remoteUrl")),
     commitInfo: stubOf(overrides, "commitInfo"),
@@ -4203,6 +4699,9 @@ export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
     tagList: dual(hasStringSubject, stubOf(overrides, "tagList")),
     forEachRef: dual(hasStringSubject, stubOf(overrides, "forEachRef")),
     revList: dual(stringAt(1), stubOf(overrides, "revList")),
+    revListCount: dual(stringAt(1), stubOf(overrides, "revListCount")),
+    upstream: dual(2, stubOf(overrides, "upstream")),
+    updateRef: dual(3, stubOf(overrides, "updateRef")),
     commit: dual(stringAt(1), stubOf(overrides, "commit")),
     push: dual(hasStringSubject, stubOf(overrides, "push")),
     pull: dual(hasStringSubject, stubOf(overrides, "pull")),
@@ -4213,12 +4712,13 @@ export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
     configRenameSection: dual(stringAt(2), stubOf(overrides, "configRenameSection")),
     rm: dual(hasStringSubject, stubOf(overrides, "rm")),
     mv: dual(stringAt(2), stubOf(overrides, "mv")),
-    checkIgnore: dual(2, stubOf(overrides, "checkIgnore")),
+    checkIgnore: dual(hasStringSubject, stubOf(overrides, "checkIgnore")),
     worktreeAdd: dual(stringAt(1), stubOf(overrides, "worktreeAdd")),
     worktreeList: stubOf(overrides, "worktreeList"),
     worktreeRemove: dual(stringAt(1), stubOf(overrides, "worktreeRemove")),
     worktreePrune: stubOf(overrides, "worktreePrune"),
     lsFiles: dual(hasStringSubject, stubOf(overrides, "lsFiles")),
+    diffPatch: dual(hasStringSubject, stubOf(overrides, "diffPatch")),
   });
 
   /**
