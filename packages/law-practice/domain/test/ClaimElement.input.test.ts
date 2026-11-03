@@ -11,10 +11,17 @@ import {
 } from "@beep/law-practice-domain/values/PatentDocument";
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+
+const claimInputType = S.toType(ClaimInputCollection);
+const claimInputJson = S.fromJsonString(ClaimInputCollection);
+const claimRecordJson = S.fromJsonString(ClaimInputRecord);
+const claimRecordEquivalence = S.toEquivalence(ClaimInputRecord);
 
 const textRecord = (sourceOrdinal: number, numberText: O.Option<string>) =>
   ClaimInputRecord.cases.text.make({
@@ -25,21 +32,36 @@ const textRecord = (sourceOrdinal: number, numberText: O.Option<string>) =>
   });
 
 describe("claim inspection source identity", () => {
+  it.effect("roundtrips arbitrary source records without changing literal numbers or source fragments", () =>
+    Effect.gen(function* () {
+      const result = yield* Arbitrary.checkEffect(
+        Arbitrary.schema(ClaimInputRecord),
+        (record) =>
+          Effect.gen(function* () {
+            const encoded = yield* S.encodeEffect(claimRecordJson)(record);
+            const decoded = yield* S.decodeEffect(claimRecordJson)(encoded);
+            return claimRecordEquivalence(decoded, record);
+          }),
+        { seed: "claim-input-preservation-v1", runs: 100 }
+      );
+      assert.deepStrictEqual(result, { _tag: "Passed", runs: 100, discards: 0 });
+    })
+  );
+
   it.effect("preserves duplicate and missing literal numbers through the actual JSON codec", () =>
     Effect.gen(function* () {
       const input = ClaimInputCollection.make({
         sourceKey: "public-source",
         records: [textRecord(1, O.some("01")), textRecord(2, O.some("01")), textRecord(3, O.none())],
       });
-      const codec = S.fromJsonString(ClaimInputCollection);
-      const encoded = yield* S.encodeEffect(codec)(input);
-      const decoded = yield* S.decodeEffect(codec)(encoded);
+      const encoded = yield* S.encodeEffect(claimInputJson)(input);
+      const decoded = yield* S.decodeEffect(claimInputJson)(encoded);
       assert.deepStrictEqual(decoded, input);
       assert.deepStrictEqual(
         A.map(decoded.records, (record) => record.sourceOrdinal),
         [1, 2, 3]
       );
-      assert.isTrue(O.isNone(O.getOrThrow(A.last(decoded.records)).numberText));
+      assertNone(O.getOrThrow(A.last(decoded.records)).numberText);
     })
   );
 
@@ -55,7 +77,7 @@ describe("claim inspection source identity", () => {
         sourceKey: "public-source",
         records: [textRecord(1, O.some("1")), failed, textRecord(3, O.some("3"))],
       });
-      const actual = yield* S.decodeEffect(S.toType(ClaimInputCollection))(input);
+      const actual = yield* S.decodeEffect(claimInputType)(input);
       assert.deepStrictEqual(actual.records[1], failed);
       assert.strictEqual(actual.records.length, 3);
       assert.strictEqual(failed.sourceText, "<claim>&broken;</claim>");
@@ -71,7 +93,7 @@ describe("claim inspection source identity", () => {
         [textRecord(2, O.some("1")), textRecord(1, O.some("2"))],
       ]) {
         const failure = yield* Effect.flip(
-          S.decodeUnknownEffect(S.toType(ClaimInputCollection))({ sourceKey: "public-source", records })
+          S.decodeUnknownEffect(claimInputType)({ sourceKey: "public-source", records })
         );
         assert.strictEqual(failure._tag, "SchemaError");
       }
