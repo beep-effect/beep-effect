@@ -21,7 +21,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Complete only after all declared route acceptance is demonstrated at its actual scope, a designated final delivery retains positive exact-head pre-merge readiness and successful terminal observer finalization, strict owner merge and genuinely verified canonical completion. Supporting PR2663 is a source-bound admission checkpoint; its pre-cutover470d609 receipts remain historical while current81-input qualification is refreshed. It does not complete real enrollment.",
+    "statement": "Complete only after all declared route acceptance is demonstrated at its actual scope, a designated final delivery retains positive exact-head pre-merge readiness and successful terminal observer finalization, strict owner merge and genuinely verified canonical completion. Supporting PR2663 proves source-bound synthetic root/backend admission and separate actual-root identity only. It does not complete real harness enrollment.",
     "grandfathered": false,
     "pullRequests": [
       {
@@ -45,7 +45,10 @@
     "research/SOURCES.md",
     "research/CURRENT-SOURCE-ADMISSION.md",
     "research/HARNESS-ROUTES.md",
-    "ops/history/current-source-admission-20261103.json"
+    "ops/history/current-source-admission-20261103.json",
+    "research/COVERAGE.md",
+    "research/OPPORTUNITIES.md",
+    "ops/history/post-t3-source-admission-20261103.json"
   ],
   "agentLaunchers": [
     {
@@ -95,7 +98,7 @@
     "New spend, plan changes or purchases require the operator.",
     "Never release the historical forwarder recovery hold as part of this packet."
   ],
-  "statusNote": "Enrollment remains active. Supporting PR2663 retains successful root/backend proof at470d609. Incoming accepted T3-only orchestration retirement2594 intentionally removes its prototype managed-session dependencies; prototype and originals are preserved, not restored. Source compatibility is being repaired and fresh admission must cover the current81-input root selector before actual collection. A standalone fixed native CLI observation path must obey the new doctrine. All real harness populations remain Unknown; recovery forwarder service/timer remain masked/inactive.",
+  "statusNote": "Enrollment remains active. Supporting PR2663 refreshes source-bound admission after accepted T3-only retirement2594:81 preparation inputs,87 disposable and86 live selected bindings, exact2synthetic events per stage, fresh backend readback and independent reviews. Separate actual-root identity proof passes. Historical470d609 receipts and prototype remain preserved; incompatible active session scripts removed without restoring messaging. All seven real harness populations remain Unknown. Native one-shot producer work proceeds separately; recovery forwarder service/timer remain masked/inactive.",
   "resumeConditions": [],
   "dependencies": ["goals/agent-observability-foundation"]
 }

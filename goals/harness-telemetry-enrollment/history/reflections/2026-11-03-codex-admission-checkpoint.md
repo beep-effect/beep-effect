@@ -40,3 +40,5 @@ and owner-held readiness/merge remain pending.
 ## Source compatibility update
 
 Hosted Repo Sanity caught that main intentionally retired the prototype managed-session and message APIs during this work. The prototype is preserved privately and in Git history, removed from the active tree, and never relabelled as current proof. Fresh current-source admission and a lawful standalone observation path are required; no retired broker will be restored.
+
+Post-cutover verification passed against the unchanged selected telemetry bytes:81 preparation,87 disposable and86 live inputs, same fresh root pair, exact two synthetic events, independent fresh backend readback and owned cleanup. Actual-root identity separately passed22 checks. The initial headroom refusal is preserved; the admitted retry did not lower resource limits. All seven real collection populations remain Unknown.
