@@ -1102,39 +1102,45 @@ const yeetMonitorCommand = Command.make(
             onSuccess: Duration.millis,
           })
         );
-    if (options.detach) return yield* provideYeetStateRoot(runYeetMode("monitor", options), stateRoot);
-    const route = yeetMonitorCommandRoute({
-      plan: options.plan,
-      settleTimeout,
-      untilEvent,
-      untilMerged,
-      untilReady,
-      watch,
-    });
-    const settleTimeoutMs = yield* yeetMonitorDurationMillis(settleTimeout);
-    return yield* provideYeetStateRoot(
-      {
-        "invalid-settle-timeout": Effect.fail(
-          YeetCommandError.make({
-            message: "--settle-timeout requires --until-merged, --until-ready, or --watch.",
-            exitCode: 1,
-          })
-        ),
-        classic: runYeetMode("monitor", options),
-        "invalid-until-event": rejectYeetUntilEventPairing,
-        "invalid-until-ready": rejectYeetUntilReadyPairing,
-        "ready-loop": reportDetachedMonitor(
-          runYeetMergeLoop(options, {
-            pollInterval: interval,
-            policy: YeetUntilReadyPolicy.make({ settleTimeoutMs }),
-          }).pipe(Effect.asVoid)
-        ),
-        "merge-loop": reportDetachedMonitor(
-          runYeetMergeLoop(options, { pollInterval: interval, settleTimeoutMs }).pipe(Effect.asVoid)
-        ),
-        watch: reportDetachedMonitor(runYeetWatchLoop(options, untilEvent, { settleTimeoutMs })),
-      }[route],
-      stateRoot
+    return yield* Match.value(options.detach).pipe(
+      Match.when(true, () => provideYeetStateRoot(runYeetMode("monitor", options), stateRoot)),
+      Match.orElse(() =>
+        Effect.gen(function* () {
+          const route = yeetMonitorCommandRoute({
+            plan: options.plan,
+            settleTimeout,
+            untilEvent,
+            untilMerged,
+            untilReady,
+            watch,
+          });
+          const settleTimeoutMs = yield* yeetMonitorDurationMillis(settleTimeout);
+          return yield* provideYeetStateRoot(
+            {
+              "invalid-settle-timeout": Effect.fail(
+                YeetCommandError.make({
+                  message: "--settle-timeout requires --until-merged, --until-ready, or --watch.",
+                  exitCode: 1,
+                })
+              ),
+              classic: runYeetMode("monitor", options),
+              "invalid-until-event": rejectYeetUntilEventPairing,
+              "invalid-until-ready": rejectYeetUntilReadyPairing,
+              "ready-loop": reportDetachedMonitor(
+                runYeetMergeLoop(options, {
+                  pollInterval: interval,
+                  policy: YeetUntilReadyPolicy.make({ settleTimeoutMs }),
+                }).pipe(Effect.asVoid)
+              ),
+              "merge-loop": reportDetachedMonitor(
+                runYeetMergeLoop(options, { pollInterval: interval, settleTimeoutMs }).pipe(Effect.asVoid)
+              ),
+              watch: reportDetachedMonitor(runYeetWatchLoop(options, untilEvent, { settleTimeoutMs })),
+            }[route],
+            stateRoot
+          );
+        })
+      )
     );
   })
 ).pipe(Command.withDescription("Monitor hosted PR checks for the current branch"));
