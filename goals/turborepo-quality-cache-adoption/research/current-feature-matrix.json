@@ -1359,8 +1359,17 @@
       "sourceBindingRepair": {
         "checkpoint": "signature-key-source-binding-repair.json",
         "metadataControls": "signature-key-source-binding-controls.json",
-        "nativeSemanticReplayForCurrentDriver": "pending",
-        "historical168CaseObservationRetainsOriginalDriverBinding": true
+        "nativeSemanticReplayForCurrentDriver": "observed-synthetic-only",
+        "historical168CaseObservationRetainsOriginalDriverBinding": true,
+        "currentNativeReplayCheckpoint": "signature-key-sourcebound-native-replay.json"
+      },
+      "currentNativeSemanticObservation": {
+        "report": "signature-key-sourcebound-native-replay.json",
+        "nativeReport": "native-signature-key-sourcebound-controls-2026-11-03.json",
+        "cases": 168,
+        "sourceRevision": "105ea5acf1d800414e9f9ac4f35dd3fe2e76969d",
+        "driverSha256": "2afde39e782ed441b181ce400ac14280a4ce8a1a2c8281a0e86a9fbb80e05b78",
+        "scope": "Actual offline synthetic key-length semantics; 162 fixture tasks executed and six early key-length refusals. No signed transport, production qualification or rollout acceptance."
       }
     },
     {

@@ -783,3 +783,20 @@ The registered checkpoint is `research/signature-key-source-binding-repair.json`
 Its new source/control digests do not rebind the original 168-case observation.
 Current-harness semantic replay, production signing and tuple qualification
 remain pending; every whole-goal acceptance criterion stays unfinished.
+
+
+### Repaired-driver native semantics replayed, 2026-11-03
+
+The new [source-bound replay checkpoint](research/signature-key-sourcebound-native-replay.json)
+records 168 actual offline native cases on the same stable/canary pins. The
+162 fixture task executions and six early length refusals match historical
+semantics. One existing admission token was released after the 3.809-second
+run; all 336 raw capture digests and bounds match. Historical reports remain
+unchanged. The earlier thirteen metadata-only controls retain their separate
+zero-native/task scope.
+
+This closes only the repaired driver's synthetic semantic replay gap. Actual
+signed artifact reuse, protected producer provenance, role-policy controls,
+feature/tuple qualification and complete-goal windows remain pending. No local
+repository quality suite, verify, publish or package-verify ran. Hosted CI is
+the PR quality proof; this replay does not activate signing or change a cache.

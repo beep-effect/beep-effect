@@ -854,3 +854,16 @@ observed schema difference changed the matrix and next qualification work.
   the controls to thirteen. The original 168 native cases remain unchanged and
   retain their original source digest. A new driver digest needs a new actual
   semantic replay; this repair grants no feature, tuple or rollout acceptance.
+
+
+### 2026-11-03 — retain experiment scope after a source repair
+
+- A source-binding repair alone did not replay the earlier 168 native cases.
+  The new admitted offline experiment now runs the repaired driver and records
+  its actual source/client pins, while preserving both historical reports.
+- Check every raw stdout/stderr digest and the admission/release receipt. The
+  replay executed 162 tiny fixture tasks; six cases refused before execution.
+  Do not copy the separate metadata controls' zero-task statement onto it.
+- Matching synthetic semantics is not signed artifact transport, a protected
+  producer result, feature adoption or full-goal acceptance. Keep those gates
+  explicit rather than renaming this bounded experiment as qualification.

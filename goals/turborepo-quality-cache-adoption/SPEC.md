@@ -758,3 +758,30 @@ their original source binding; current-driver semantic replay stays pending.
 The feature and all qualification/rollout gates remain pending. Reversal is a
 reviewed Git revert of the driver and registrations, retaining both evidence
 envelopes. See `research/signature-key-source-binding-repair.json`.
+
+Use one existing admission token to replay the same 168 offline synthetic cases
+after the source repair is pushed. Keep the existing 600-second whole-run,
+20-second per-case, 1-MiB stdout and 64-KiB stderr bounds. Expose no production
+credentials or network, execute no repository quality task, and write exclusive
+private captures. Fresh observations retain their new source envelope; the
+historical report stays immutable. Reversal removes only the new observation
+references while retaining both reports. Feature and tuple acceptance remain
+separate from this replay.
+
+
+### Actual source-bound signature replay, 2026-11-03
+
+The admitted replay completed all 168 cases in 3.809 seconds: 162 isolated
+fixture tasks executed and six supplied-key length cases refused before their
+task. This is separate from the thirteen prefix controls, which execute no
+native client or task. Both pinned clients reproduce the historical semantic
+rows. Source digests still match; all 336 raw stdout/stderr capture digests and
+bounds were checked, totaling 46,878 bytes. One existing admission token was
+admitted and released; recorded peak memory was 278,233,088 bytes.
+
+Register `research/signature-key-sourcebound-native-replay.json` and its new
+native report without replacing historical bytes. The isolated endpoint was
+unavailable and no production credentials or cache traffic were used. Missing
+keys still permit task execution with a signature warning, so role-policy
+qualification remains necessary. Signed transport, protected producer proof,
+feature adoption and every whole-goal acceptance criterion remain pending.
