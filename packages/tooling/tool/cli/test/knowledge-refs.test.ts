@@ -4,6 +4,7 @@ import {
   classifyKnowledgeRef,
   encodeKnowledgeRefsReportJson,
   extractKnowledgeHostAnchors,
+  isKnowledgeArchivalPath,
   isKnowledgeScopedPath,
   KNOWLEDGE_REFS_GATED_CLASSIFICATIONS,
   KnowledgeOperationalError,
@@ -181,6 +182,17 @@ describe("knowledge reference scope", () => {
     expect(isKnowledgeScopedPath("docs/generated/index.md")).toBe(false);
     expect(isKnowledgeScopedPath("docs/_internal/notes.md")).toBe(false);
     expect(isKnowledgeScopedPath(".claude/skills/effect-first-development/SKILL.md")).toBe(true);
+  });
+
+  it("labels captured evidence roots archival and keeps live guidance live", () => {
+    expect(isKnowledgeArchivalPath("goals/example/research/notes.md")).toBe(true);
+    expect(isKnowledgeArchivalPath("goals/example/data/sweeps/run.jsonl")).toBe(true);
+    expect(isKnowledgeArchivalPath("goals/example/ops/inventory/digests/pkg.md")).toBe(true);
+    expect(isKnowledgeArchivalPath("docs/reports/example-review-2026-11-02.md")).toBe(true);
+    expect(isKnowledgeArchivalPath("goals/example/ops/manifest.json")).toBe(false);
+    expect(isKnowledgeArchivalPath("goals/example/SPEC.md")).toBe(false);
+    expect(isKnowledgeArchivalPath("docs/runbooks/systemd-timers.md")).toBe(false);
+    expect(isKnowledgeArchivalPath("packages/example/src/reports/index.ts")).toBe(false);
   });
 });
 

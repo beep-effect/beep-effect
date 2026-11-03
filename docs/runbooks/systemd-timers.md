@@ -58,7 +58,7 @@ checkout on its branch is fast-forwarded with `git pull --ff-only`. The run
 writes its receipt to `$HOME/.local/state/beep/refs/last-refresh.json` and
 sends a critical desktop notification only when a member failed.
 
-All installers share one module, `packages/tooling/tool/cli/src/internal/systemd/`:
+All installers share one module, `packages/tooling/library/repo-cli-kit/src/systemd/`:
 the Bun the unit runs is the mise shim (`$HOME/.local/share/mise/shims/bun`)
 when this user can execute it, else `$HOME/.bun/bin/bun`, else the Bun that
 ran the installer; `--bun-path` pins one explicitly. Every path is validated

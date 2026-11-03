@@ -85,7 +85,7 @@ keeps the token a 1Password reference instead of a live value in every shell.
 
 The decision is one pure resolver, `resolveTurboCachePlan`
 (`packages/tooling/library/repo-cli-kit/src/cli/TurboCache.ts`), with the matrix
-covered by `packages/tooling/tool/cli/test/turbo-cache.test.ts`:
+covered by `packages/tooling/library/repo-cli-kit/test/turbo-cache.test.ts`:
 
 | Situation | Injected flag |
 | --- | --- |
