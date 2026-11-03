@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -45,8 +45,9 @@ deferred modules' port reviews and canon exceptions under
 `bun run beep goals completion refresh --slug effected-promotion` verified the
 `completed-retained` proposal on 2026-11-01
 ([`history/completion-verified-2026-11-01.md`](./history/completion-verified-2026-11-01.md)).
-`initiative.status` reads `active` because completion is derived from
-clone-scoped receipts rather than written into the manifest (SPEC D-61).
+SPEC D-61 kept `initiative.status` derived at the time; the committed
+`closeout` record in [`ops/manifest.json`](./ops/manifest.json) now carries the
+status, since `goals set-status` adopted the verified proposal on 2026-11-02 (#2629).
 P0 research:
 [`research/promotion-map-2026-10-20.md`](./research/promotion-map-2026-10-20.md),
 [`research/wave-2b-plan-2026-10-21.md`](./research/wave-2b-plan-2026-10-21.md),

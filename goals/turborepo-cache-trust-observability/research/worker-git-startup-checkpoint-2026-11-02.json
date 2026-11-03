@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "cache-signed-worker-git-startup-checkpoint/v1",
+  "recordedAt": "2026-11-02T20:26:02.027271+00:00",
+  "authority": "Real generated-worker startup regression only; no completed current-source matrix, protected producer, R2 publication, qualification or whole-goal acceptance.",
+  "acceptedWorktreeRefactor": {
+    "pullRequest": 2593,
+    "commit": "4aecd575739f2f57be4f398a371c63573e23977b",
+    "dependency": "resolveWorktreeContext now requires the existing Git service"
+  },
+  "ordinaryAttempt": {
+    "taskSourceRevision": "930758e06bf4442d721d818fcba6a40301471784",
+    "parentRevision": "ee3c078779d16e0703f401e9c8260005b67d0188",
+    "channel": "stable",
+    "exit": 1,
+    "elapsedSeconds": 22.698,
+    "diagnostic": "Signed pilot supervisor exited with exit code 1. Hint: Service not found",
+    "completeObservationProduced": false
+  },
+  "repair": "Provide Git.layer at the generated signed-worker entrypoint, alongside existing filesystem utilities and the same NodeServices layer.",
+  "nativeStartupControl": {
+    "runtime": "Bun",
+    "generatedWorkerExecuted": true,
+    "realReadOnlyGitRepositoryQuery": true,
+    "intentionalPrivateRefusalReachedAfterQuery": true,
+    "beforeRepair": "Service not found: @beep/git/Git/Git",
+    "afterRepair": "Signed worker Git startup reached.",
+    "parentFailureRemainsGeneric": true,
+    "privateCauseAttached": false
+  },
+  "tests": {
+    "file": "packages/tooling/tool/cli/test/cache-signed-runner.test.ts",
+    "passed": 33,
+    "failed": 0,
+    "packageQuick": {
+      "package": "@beep/repo-cli",
+      "lint": "passed",
+      "typecheck": "passed",
+      "elapsedSeconds": 12.722
+    }
+  },
+  "sourceBindings": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "f73c000c2656e038ce4b46708d4b864830b1d7b25f0dc49ed3ccff6220180ab2",
+    "packages/tooling/tool/cli/test/cache-signed-runner.test.ts": "c6a3b24490127f825db3061b7b463bd4fcc7f6d73d4f09a8f267bd7593dc1b24"
+  },
+  "limitsAndAuthority": {
+    "comparisonMinutes": 20,
+    "uploadMinutes": 10,
+    "admissionBypassed": false,
+    "matrixOrOverlapRuleChanged": false,
+    "instrumentationInjectedIntoOrdinaryComparison": false,
+    "qualificationLedgerChanged": false,
+    "productionChanged": false,
+    "wholeGoalAcceptanceChanged": false
+  },
+  "followup": {
+    "recordedAt": "2026-11-02T20:47:37.562503+00:00",
+    "hostedUnitFailure": {
+      "run": 41519344241,
+      "job": 125531049312,
+      "reason": "Regression assumed repository-root cwd; hosted Unit runs from the CLI workspace, causing the generated fixture module lookup to fail."
+    },
+    "repair": "Reuse the existing source-relative repoRoot effect and canonicalize it with FileSystem.realPath; hoist the string encoder to module scope.",
+    "hostedWorkingDirectoryReplayPassed": 33,
+    "newOrdinaryComparison": {
+      "exit": 1,
+      "elapsedSeconds": 70.092,
+      "completeObservationProduced": false
+    },
+    "diagnosticOnlyObservation": {
+      "exit": 1,
+      "elapsedSeconds": 69.703,
+      "launchOptionsChanged": false,
+      "recognizedSourceError": "Signed mutation seed disagrees with its case-derived fresh verdict.",
+      "qualificationAuthority": false
+    },
+    "nativeGuardRelaxed": false
+  }
+}

@@ -128,7 +128,7 @@ problem. The weight is per-lane `node_modules` and the ai-metrics data root.
 | Worktree service managed root | `<dirname(mainCheckout)>/<basename>-worktrees` | `packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts:996`, `Worktree.constants.ts:15` |
 | `yeet sweep --fleet` candidates | every `beep-effect*` dir, `beep-effect*-worktrees/*`, and `<clone>/.claude/worktrees/*` under the projects root (ruling 73) | `packages/tooling/tool/cli/src/commands/Yeet/internal/Economics.ts:654-700`, `Yeet.command.ts:1276` |
 | `beep worktree fleet` | `fleetRoot` = parent of the repo root; also scans `~/.codex/worktrees` | `goals/fleet-mirror`, `commands/Worktree/` |
-| Residue reap | `codexRoot/worktrees`, `beep-cache-disposable` classes | `packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts:1601-1625` |
+| Residue reap | `codexRoot/worktrees`, `beep-cache-disposable` classes | `packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts:1601-1625` |
 | User units with a baked checkout | `beep-graft-deep-refresh`, `beep-refs-refresh` -> `beep-effect0`; `beep-residue-reap`, `beep-tmpfs-reap`, `beep-portfolio-watch` -> `beep-effect5`; `beep-research-daily`, `beep-research-repo-card` -> `beep-effect7` | `systemctl --user cat <unit>` |
 | Detached proof jobs | `beep-proof-<jobId>.service` bakes the lane path at submit time | two active today (`beep-effect5-worktrees/patent-document-schema-close`, `beep-effect2-worktrees/codec-statics-closeout`) |
 | Workstation config | `~/.config/beep/{ai-metrics.env,turbo-cache.env,models.yaml,cognee.env}` | clone-agnostic |
@@ -142,7 +142,7 @@ problem. The weight is per-lane `node_modules` and the ai-metrics data root.
 | Derived fleet mirror (per-checkout branch, head, dirty, liveness, conflict prediction, policy movement) | EXISTS, completed-retained | `goals/fleet-mirror`, `bun run beep worktree fleet --json` |
 | Worktree lifecycle (`add`, `remove --archive`, `list`) with sibling-root derivation | EXISTS | `packages/tooling/tool/cli/src/commands/Worktree/` |
 | Lane retirement after merge (`yeet sweep --retire`, live-checkout fence) | EXISTS | `commands/Yeet/`, memory `agent-post-merge-closeout` |
-| Fleet-wide residue reap (aged previews, turbo runs, qualification views, codex sessions) | EXISTS, timer on `beep-effect5` | `internal/repo-run/ResidueReap.ts` |
+| Fleet-wide residue reap (aged previews, turbo runs, qualification views, codex sessions) | EXISTS, timer on `beep-effect5` | `commands/Worktree/internal/ResidueReap.ts` |
 | tmpfs janitor | EXISTS (dry-run by default) | `beep quality tmpfs-reap` |
 | Timer renderers with agent-allowed `--refresh` | EXISTS | `beep research install-timers --refresh`, `beep graft deep install-timer --refresh`, `beep refs install-timer --refresh`; `docs/runbooks/systemd-timers.md` |
 | Shared turbo cache dir | EXISTS; default for CLI-driven turbo runs (`internal/cli/TurboCache.ts`), exported by `.envrc`, set on the reap unit; not guaranteed for raw `turbo` or non-direnv shells | `TURBO_CACHE_DIR=~/.cache/beep/turbo` |

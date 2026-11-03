@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "postmerge-source-qualification/v1",
+  "pullRequest": 2595,
+  "head": "564f2f59b6f8ba02b85954784ee1fb7747a31c4c",
+  "mergeCommit": "bc3e3b6cf7632a657fabd2307b0f4d16122bc516",
+  "mergedAt": "2026-11-02T16:45:12Z",
+  "workflowRun": 41475666025,
+  "hostedJobs": {
+    "passed": 37,
+    "skipped": 1,
+    "failed": 0
+  },
+  "coverageJob": 125410075635,
+  "coverageConclusion": "success",
+  "observationBoundary": "Hosted source qualification completed after external merge. No pre-merge readiness or final goal acceptance inferred.",
+  "terminalObserver": {
+    "job": "294d7085-8b5b-4424-925a-66a4651e8061",
+    "endedAt": "2026-11-02T16:45:36.414Z",
+    "exitCode": 0,
+    "readiness": false,
+    "meaning": "Observed merged after the fact; not a pre-merge ready result."
+  },
+  "focusedRegression": {
+    "redAgainstLandedIntegerSchema": true,
+    "greenAgainstFiniteSchema": true,
+    "focusedFilePassed": 24,
+    "scope": "Retained original red/green execution; current three-file delta unchanged. Synthetic fractional code exercises the finite typed producer contract; OS exit statuses are integers."
+  },
+  "retirement": {
+    "ownedCleanWorktreeRetired": true,
+    "originalYeetFilesPreserved": 18,
+    "originalFeatureHeadBundleVerified": true,
+    "canonicalResidueArchived": true
+  },
+  "recoveryHoldReleased": false
+}

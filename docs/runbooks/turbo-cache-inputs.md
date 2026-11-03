@@ -36,13 +36,34 @@ source is still an input when the command scans it. Authored documentation and
 tracked generated source must remain inputs when consumed. Apply exclusions to
 the relevant task, rather than globally hiding outputs from tasks that read them.
 
+Package prose and test sources stay out of the roles that cannot read them
+(quality audit K3 and M10, 2026-11-02). `transit`, `build`, `check`, `test`
+and `test:property` keep `$TURBO_DEFAULT$` and subtract the package-root
+`README.md`, `CHANGELOG.md` and `LICENSE`; `build` and `transit` also subtract
+`test/**`. No build, typecheck or test reads those files: tests that touch a
+README write a fixture copy, imported Markdown lives under `src/`, and the
+README generator (`effect-drizzle`'s `readme` script) writes the README rather
+than reading it. Before this, one README edit in `@beep/utils` replayed every
+dependent's `test` through `^transit` and `@beep/utils#transit`, and a test
+edit replayed every dependent's `check` through `^build`. Everything else in
+the default set stays keyed, including runtime files outside `src` (`data/`,
+`assets/`, `configs/`, `schema.json`, `docker/`) and Markdown nested under
+`src/`; the exclusions are package-relative, so a `$TURBO_ROOT$` glob into
+another package keeps that package's prose. An overlay cannot re-include what
+the root excludes: Turbo applies every negation after every inclusion, so an
+override that needs `test/**` restates the root list without `!test/**` (see
+Workspace overrides). `packages/tooling/tool/cli/test/package-role-turbo-inputs.test.ts`
+pins the boundary with a native fixture: prose and test edits replay nothing
+downstream, while `src`, `data/` and nested `src` Markdown edits still do.
+
 Bun loads package-local `.env` and `.env.*` files. Only the tasks whose
 command consumes them hash them: `test`, `test:property`, `doctest`,
 `lint:jsdoc`, `lint:deprecated-apis`, and the `build` overrides of the Vite and
 Next apps. `lint`, `check` and `build` dropped `.env`/`.env.*` on 2026-11-02
 (quality audit R8): Biome and tsrs read no dotenv file, and the `.env` globs are
 package-relative, so the only invalidation they bought was a package-local
-dotenv edit. Transit nodes retain default Git-visible package inputs.
+dotenv edit. Transit nodes keep the default Git-visible package inputs minus
+package prose and `test/**`.
 
 The Vitest instrumentation runtime tests create temporary `.runtime-*`
 directories inside their fixture tree. The root Git ignore excludes only those
@@ -77,12 +98,12 @@ match the actual task implementation were discarded.
 | `lint:deprecated-apis` | Explicit source globs must follow the dedicated type-aware Oxlint profile's output exclusions; policy fingerprint and transit carry implementation dependencies. |
 | `lint:jsdoc` | Explicit source globs exclude artifacts ignored by the JSDoc scanner; policy fingerprint carries implementation changes. |
 | `lint:laws` | Law inputs retain authored source and policy files; generated declarations and reports are excluded when the scanner excludes them. |
-| `build` | Defaults retain package source and configuration; the workspace tsgo wrapper is an explicit input. Declared outputs restore build products. No dotenv inputs: `tsrs` reads none, and the Vite/Next apps declare `.env*` in their overrides (below). |
+| `build` | Defaults retain package source and configuration; the workspace tsgo wrapper is an explicit input. Package prose and `test/**` are excluded, except in the builds whose compiler program includes `test` (overrides below). Declared outputs restore build products. No dotenv inputs: `tsrs` reads none, and the Vite/Next apps declare `.env*` in their overrides (below). |
 | `@beep/api-docs#build` | TypeScript validation emits no files; `outputs: []` is intentional. |
 | `lint` | Defaults plus shared Biome/rule configuration; Storybook also scans sibling stories. No dotenv inputs. |
 | `lint:fix` | Uncached mutation. |
-| `check` | Package inputs, the workspace tsgo wrapper and upstream builds; existing app-specific external inputs retained. No dotenv inputs. |
-| `test` | Defaults, shared Vitest files and aliases, package dependency transit and shared utils transit; fast-check seed/count are hashed. |
+| `check` | Package inputs (tests included), the workspace tsgo wrapper and upstream builds; existing app-specific external inputs retained. Package prose excluded. No dotenv inputs. |
+| `test` | Defaults minus package prose, shared Vitest files and aliases, package dependency transit and shared utils transit; fast-check seed/count are hashed. |
 | `test:property` | Same test boundary with explicit fast-check settings. |
 | `package-test-typecheck` | Uncached diagnostics/receipt task; outputs declare the package result receipt. |
 | `test:integration` | Uncached external-state checks; shared aliases remain selection inputs. |
@@ -91,7 +112,7 @@ match the actual task implementation were discarded.
 | `coverage` | Uncached coverage/ratchet computation; coverage files are declared outputs. |
 | `codegen` | Uncached source generation. |
 | `audit` | Uncached aggregate: implementations include integration checks and source generators. |
-| `transit` | Defaults honor Git ignores and propagate dependency source changes. |
+| `transit` | Defaults honor Git ignores and propagate dependency source and runtime-file changes; package prose and `test/**` are excluded, so a dependency's test or README edit replays no dependent. |
 | `docgen` | Package transit plus `@beep/repo-docgen#transit`; generated docs/proof files remain outputs. |
 | `dev` | Persistent and uncached; upstream builds run first. |
 | `storybook` | Persistent and uncached. |
@@ -103,13 +124,37 @@ match the actual task implementation were discarded.
 
 The policy fingerprint is generated by
 `bun run beep lint policy-fingerprint --write`. Each policy task depends on one
-generated seal task, `//#lint:policy-fingerprint:<key>`, whose inputs are the
-modules its `beep` command reaches beyond its parent seals; the seals chain to
-`//#lint:policy-fingerprint:shared` (the CLI shell and root checker
-configuration). `//#lint:policy-fingerprint` is the drift check: nothing
-depends on it, and it fails until `--write` follows an import edit. A new
-policy task declares `dependsOn: ["//#lint:policy-fingerprint"]`; `--write`
-rewrites that edge to its seal. Design and soundness replay:
+generated seal task, `@beep/repo-cli#lint:policy-fingerprint:<key>`, whose
+inputs are the modules its `beep` command reaches beyond its parent seals plus
+the root files those modules read; the seals chain to
+`@beep/repo-cli#lint:policy-fingerprint:shared` (the CLI shell, the root
+manifest and the root TypeScript configuration). `//#lint:policy-fingerprint`
+is the drift check: nothing depends on it, and it fails until `--write` follows
+an import edit. A new policy task declares
+`dependsOn: ["//#lint:policy-fingerprint"]`; `--write` rewrites that edge to its
+seal.
+
+Two refinements from quality audit M9 (2026-11-02):
+
+- The seals are script-less tasks of the CLI workspace, like `transit`, not root
+  tasks with a `true` script. Turbo hashes the root `turbo.json` into every root
+  task, and `!turbo.json` cannot remove it, so a root seal replayed all 188
+  `lint:laws`, 183 `lint:jsdoc` and the `lint:deprecated-apis` tasks on any
+  `turbo.json` edit: 29 commits on `main` in the two weeks to 2026-11-02 touched
+  `turbo.json` and no global input. A CLI task hashes the CLI manifest and
+  overlay instead, and the manifest is a shared input already.
+- Root checker configuration is no longer a blanket shared input. Each family
+  (Oxlint configs with the `tsdoc.json` their plugins read, `biome.jsonc`,
+  `_typos.toml`, the Fallow config and plugin, the lint-policy sweeps, the
+  fingerprint declaration, `turbo.json`) goes to the seals whose closure holds
+  a code-level string literal naming a family file, or naming the tool that
+  discovers it (`oxlint`, `biome`, `typos`, `fallow`). Comments and help text
+  never count. The CLI shell's dispatch manifest names the `fallow` group, so
+  the Fallow family stays shared; `lint:laws` and `lint:jsdoc` now replay only
+  for the Oxlint family among checker configs. The routes live in
+  `packages/tooling/tool/cli/src/commands/Lint/internal/PolicyRootFiles.ts`;
+  `policy-fingerprint-turbo-inputs.test.ts` re-derives every live chain's reads
+  from its declared modules and fails on a missing file. Design and soundness replay:
 `goals/beep-cli-composition/research/g4-task-fingerprint.md`. Root task inputs must match the command's scan scope; the root JSDoc
 scanner reads `apps/**/*.{ts,tsx}`, `packages/**/*.{ts,tsx}` and `infra/**/*.ts`,
 excluding `apps/labs`, `.context` directories and dynamically discovered workspace
@@ -127,7 +172,7 @@ maintained representation of the scanner's workspace discovery.
 
 | Tasks | Audit decision |
 | --- | --- |
-| `lint:policy-fingerprint` | Drift check over every workspace a seal reaches; the generated `lint:policy-fingerprint:<key>` seals carry each command's precise closure. |
+| `lint:policy-fingerprint` | Drift check over every workspace a seal reaches, the declaration and every routed root file; the generated `@beep/repo-cli#lint:policy-fingerprint:<key>` seals carry each command's precise closure. |
 | `lint:jsdoc:root` | Include the source trees its scanner reads; exclude artifacts according to that scanner. |
 | `lint:native-runtime:roots`, `lint:schema-first`, `lint:identity-registry`, `lint:effect-imports`, `lint:tsgo-rules`, `lint:allowlist` | Match source and configuration inputs to the corresponding scanner; preserve authored nested source. |
 | `lint:package-scripts`, `config-sync:check`, `repo-sanity:changeset-graph`, `repo-sanity:syncpack`, `repo-sanity:sherif`, `repo-sanity:versions`, `topo-sort` | Workspace metadata inputs must not expand into installed dependency or generated build manifests. |
@@ -148,7 +193,8 @@ maintained representation of the scanner's workspace discovery.
 | `lint:package-test-typecheck` | Workspace manifests, `tsconfig*.json`, test sources under `test/` and the committed blind-spot baseline. |
 | `lint:schema-catalog` | The schema-first source globs (`SchemaFirstIncludedGlobs`, `docs` trees excluded), every workspace manifest the owner resolver reads, the root `tsconfig.json`, and the committed per-package shards under `standards/schema-catalog/` plus the retired single-file catalog path. Added 2026-11-02 so the cheap-gates lane restores from cache instead of re-walking the tree (~25 s). The hosted Repo Sanity lane still calls the CLI directly. |
 | `lint:effect-vitest` | Exactly the scanner's D9 globs (`EffectVitestSourceFileGlobs`: `*.test`/`*.spec` files and `test/**/*.ts` under `apps`, `packages`, `infra`, fixtures included, `node_modules` excluded) plus the committed inventory and primitives graph the pin checks read; a tripwire pins the inputs to those constants. Check mode writes nothing. |
-| `fallow:audit:check`, `fallow:health:check`, `fallow:health:advisory`, `fallow:boundaries:advisory`, `fallow:flags:advisory`, `fallow:security:advisory`, `fallow:fix-preview:advisory`, `fallow:dead-code:check`, `fallow:boundaries:config-check` | Remain uncached with their baseline/environment/report contracts. |
+| `fallow:health:check`, `fallow:health:advisory`, `fallow:boundaries:advisory`, `fallow:flags:advisory`, `fallow:security:advisory`, `fallow:fix-preview:advisory`, `fallow:dead-code:check`, `fallow:boundaries:config-check` | Cached since 2026-11-02 (quality audit K2). The nine Fallow rows share one input set: every code file Fallow can discover (`**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,html,css}`), manifests, tsconfigs, `.gitignore` files, the root tool configuration its plugins read (`*.{json,jsonc,yml,yaml,toml}`, `.*.{json,jsonc,toml}`, `.changeset/config.json`), `standards/fallow.*.jsonc` (both regression baselines and the generated boundaries config), `bun.lock`, and the source trees, minus Git-ignored build output. The outputs restore the envelope and the raw report it cites, `BEEP_PROOF_BASE` stays in the key, and a tool failure exits non-zero even in advisory mode, so Turbo never caches one. `packages/tooling/tool/cli/test/fallow-turbo-cache.test.ts` replays two runs against a fixture built from these rows and checks the live repository: every file `fallow list --files` reports must be a hashed input. |
+| `fallow:audit:check` | Remains uncached: it diffs against the commit behind `BEEP_PROOF_BASE`, a ref name such as `origin/main` that can move while the key stays the same. |
 | `repo-sanity:bun-audit` | Remains uncached because vulnerability data can change independently of source. |
 
 Root tasks also hash root workspace dependencies through Turbo's internal
@@ -181,6 +227,59 @@ zero seconds. Three decisions follow:
   dependency lock and plugin manifest. Deprecated-API shards use the dedicated oxlint
   configuration; no ESLint profile environment or result cache remains.
 
+## Changed-scope Lint Policy (2026-11-02)
+
+Pull requests run `Heavy / Lint Policy` changed-scope (quality audit K1):
+`heavy.yml` passes `--affected --base origin/<base>` to `ci lane lint-policy`,
+which runs `beep lint policy --affected`. Pushes to `main` and scheduled runs get
+no affected shape and run `--full`. Yeet's pre-push `quality:lint-policy` lane
+replays the pull-request shape. `beep lint policy` with no flags is the same
+changed scope against `origin/main`.
+
+A changed-scope run first decides whether to widen to the full sweep
+(`commands/Quality/internal/LintPolicyScope.ts`). It widens when the change set
+touches any of these:
+
+- a deleted or renamed path;
+- a changed source file whose head content carries `@deprecated` (only an added
+  tag can create findings in unchanged callers, so the head side is enough);
+- a `tsconfig*.json`/`jsconfig*.json`, `bun.lock`, any `package.json`,
+  `.bun-version`, `.nvmrc`, `bunfig.toml` or `patches/`;
+- a `turbo.json`;
+- a root `.oxlintrc*` or Biome profile, `_typos.toml`, `tsdoc.json`,
+  `standards/lint-policy.sweeps.jsonc` or the policy fingerprint;
+- a file in the policy fingerprint seals, `packages/tooling/policy-pack/`, or
+  the repo-cli `commands/Lint/` tree.
+
+The log line names every escalation:
+`lint:policy: scope=full (escalated: <class> <path>; …)`.
+
+Otherwise Turbo's `affectedUsingTaskInputs` selection decides which tasks run.
+That selection is only as sound as the task's declared inputs, the same claim a
+cache hit makes. So only `cache: true` tasks run changed-scope: the cheap and
+medium graphs, plus the cached state tasks (`lint:jsdoc-module-tags`,
+`jsdoc:inventory:check`, `jsdoc:ratchet:check`). The D2 git-delta and clock
+checks and the uncertified binary walkers (`knowledge:semantic-delta`,
+`knowledge:refs-check`, `goals:doctor`, `lint:oxlint`, `lint:shadcn`,
+`lint:typos`) stay unfiltered. They run in a second Turbo graph alongside the
+medium one, with one slot of the policy width (the medium graph keeps the rest),
+so the inventory and semantic-delta long poles overlap as they do in the single
+full-scope graph. `lint-policy-scope.test.ts` fails if a task's `cache` flag and
+its graph disagree.
+
+`lint:jsdoc` and `lint:deprecated-apis` are package tasks. Changed scope does not
+run them per package (one repo-cli boot plus one plugin load each, audit M16).
+Instead it runs one root oxlint per task over the package directories that a
+`turbo run lint:jsdoc lint:deprecated-apis --affected --dry=json` probe selects:
+the same per-package input sets, read from Turbo. If the probe fails, the plan
+keeps the per-package Turbo tasks.
+
+The documentation plugin is bundled to plain JS on every run
+(`commands/Quality/internal/DocsOxlintPlugin.ts`, about 0.03 s). It is loaded
+through a gitignored derived config written beside the source config
+(`PREBUILT_DOCS_OXLINT_CONFIG` in that module). `.oxlintrc.docs.json` stays authoritative for lefthook,
+editors and direct runs, and a failed build falls back to it.
+
 ## Workspace overrides
 
 - `apps/oip-web`: build hashes its consumed `.env*` files and `ANALYZE`.
@@ -196,8 +295,18 @@ zero seconds. Three decisions follow:
   dependencies and uncached dev port passthrough remain. Dev-only HMR port
   settings do not affect the static build.
 - `apps/labs/api-docs` and `infra`: no-output build overrides match their commands.
+- `apps/docket-intake`, `apps/labs/api-docs`, `apps/labs/ciops` and the six
+  `apps/practice-*` apps build with `tsrs -p tsconfig.check.json`, whose program
+  includes `test`; `apps/todox` and `apps/oip-web` run `next build`, which
+  typechecks a `tsconfig.json` that includes `test`. Their build overrides
+  restate the root inputs without `!test/**` (an `$TURBO_EXTENDS$` overlay cannot
+  undo a root exclusion). `package-role-turbo-inputs.test.ts` derives this set
+  from each build's compiler program and fails when an override is missing or
+  drifts from the root list.
 - `packages/tooling/library/ai-sync`: inherited check/audit inputs retain the
-  consumed agent settings files.
+  consumed agent settings files. `ai-sync check` reads only its committed
+  `src/_generated` files and the two settings files, so the inherited prose
+  exclusion is safe; its test pins the `$TURBO_EXTENDS$` head of the overlay.
 - `packages/tooling/tool/cli`: test and property-test inputs include the root
   Turbo configuration read by their native configuration regressions; unrelated
   packages retain their narrower test inputs.

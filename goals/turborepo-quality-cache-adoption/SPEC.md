@@ -575,3 +575,63 @@ the newer evidence and change no runtime cache policy or qualification record.
   Any real input removal or client/layout change needs renewed evidence.
 - Reverse by reverting this research decision and registration, preserving the
   original failed and passing receipts. Runtime configuration is unchanged.
+
+
+### Preserve selection history while replaying current pins, 2026-11-02
+
+- Keep the original selection report and its immutable source/pin bindings.
+  Use the reviewed current client manifest for a separate 44-case replay, and
+  require a compatibility replay against the historical pair before replacing
+  the driver interface. Never relabel older-canary observations as current.
+- Reuse the existing streaming collector. An owned process wrapper preserves
+  the stricter ten-second process and three-minute experiment ceilings; new
+  reports use exclusive creation and raw output uses private unique directories.
+- A synthetic replay grants no actual-root review, feature acceptance or task
+  qualification. Preserve the 27 pending feature decisions and all production
+  settings. Real consumer and tuple evidence remain required.
+- Reverse by reverting this driver/registration change while retaining both
+  report generations and the historical Git source. Runtime policy is unchanged.
+
+Selection replay inputs use canonical checkout paths and repository-contained
+pin manifests. Bind parsed pin bytes and executed harness bytes from the same
+captured snapshots; verify those snapshots against disk before and after the
+controls. Retain source-change refusals and symlink-path regression evidence
+without replacing the earlier source-bound observations.
+
+Evidence helpers extracted by sibling drivers retain their explicit loading
+contract. Keep the historical self-contained `invoke` definition available to
+the five existing AST callers, including Cargo applicability's reviewed stdout
+adaptation; route current selection through its separately named streaming
+helper. Test the real sibling preludes and process bounds before publishing a
+change to that shared source. Preserve historical report hashes against their
+original immutable whole-driver source, and bind new observations separately.
+
+
+### Retain absent Turbo exporter configuration, 2026-11-02
+
+- Keep the absent `experimentalObservability` flag and exporter configuration.
+  The tracked repository has no named Turbo exporter consumer; use structured
+  summaries and bounded backend events for the existing attribution work.
+- Follow the exact client behavior: disabled file settings are dropped, while
+  environment/CLI settings require the flag. The bundled prose does not describe
+  that difference. Preserve the failed first expectation and pinned-source proof.
+- Reopen for a named measured requirement after actual payload capture, synthetic
+  secret/path/content safety, separate credentials, bounded labels/volume/retention
+  and a disable path. Synthetic default controls grant no exporter safety, task
+  qualification or production benefit. Reversal reverts this decision record;
+  runtime settings remain unchanged.
+
+### Explicit lane scope and pinned filter composition, 2026-11-02
+
+- Interpret selector combinations against the configured exact clients. With
+  the current enabled task-level flags, the affected set intersects positive
+  filters; multiple positive selectors still union within that intersection.
+  Preserve executable prerequisite closure and verify negative filters and
+  `--only` separately. Do not infer behavior from an older comment.
+- The labs lane deliberately runs its full set under the existing workflow
+  path gate. Correct the false widening rationale without changing lane argv,
+  replay parity or claiming a newly narrowed hosted proof.
+- Synthetic plans and source review grant neither real computation qualification
+  nor final feature acceptance. Reopen runtime changes only with the complete
+  current caller, tuple and hosted evidence. Reverse this research/comment wave
+  through a reviewed Git revert, retaining the native reports.

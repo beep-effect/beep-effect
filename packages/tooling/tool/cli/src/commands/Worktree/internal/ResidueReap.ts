@@ -42,8 +42,7 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ReplyDrafts } from "../../commands/Yeet/internal/Reply.schemas.ts";
-import { withJournalFileLock } from "./AdmissionJournal.ts";
+import { withJournalFileLock } from "../../../internal/repo-run/AdmissionJournal.ts";
 import {
   BoundMoveOutcome,
   DirectoryIdentity,
@@ -54,11 +53,16 @@ import {
   sameDirectoryIdentity,
   syncDirectoryHandle,
   unlinkBoundFile,
-} from "./DirectoryHandle.ts";
-import { isRegisteredWorktree, removeGitWorktree } from "./GitWorktree.ts";
-import { publishJournalTextAtomically } from "./JournalFile.ts";
-import { invokerAncestryPids, ProcessHandleKind, scanProcessAttachments } from "./ProcessAttachment.ts";
-import { runRepoCommandCapture } from "./RepoRun.executor.ts";
+} from "../../../internal/repo-run/DirectoryHandle.ts";
+import { isRegisteredWorktree, removeGitWorktree } from "../../../internal/repo-run/GitWorktree.ts";
+import { publishJournalTextAtomically } from "../../../internal/repo-run/JournalFile.ts";
+import {
+  invokerAncestryPids,
+  ProcessHandleKind,
+  scanProcessAttachments,
+} from "../../../internal/repo-run/ProcessAttachment.ts";
+import { runRepoCommandCapture } from "../../../internal/repo-run/RepoRun.executor.ts";
+import { ReplyDrafts } from "../../Yeet/internal/Reply.schemas.ts";
 import {
   QualificationViewReceipt,
   ResidueArchiveError,
@@ -76,12 +80,12 @@ import {
 import { ResidueTerminalLaneProbe } from "./ResidueTerminalLane.ts";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
-import type { BoundRemovalOutcome, DirectoryHandleError } from "./DirectoryHandle.ts";
-import type { QualitySchedulerError } from "./QualityScheduler.schemas.ts";
+import type { BoundRemovalOutcome, DirectoryHandleError } from "../../../internal/repo-run/DirectoryHandle.ts";
+import type { QualitySchedulerError } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 import type { ResidueReapSkipReason, ResidueTerminalLaneAuthority } from "./ResidueReap.schemas.ts";
 import type { ResidueTerminalLaneProbeShape } from "./ResidueTerminalLane.ts";
 
-const $I = $RepoCliId.create("internal/repo-run/ResidueReap");
+const $I = $RepoCliId.create("commands/Worktree/internal/ResidueReap");
 
 const decodeResidueReapAgeDays = S.decodeEffect(ResidueReapAgeDays);
 const decodeResidueReapHomeRoot = S.decodeEffect(ResidueReapHomeRoot);
@@ -1736,7 +1740,7 @@ const classifyCheckoutName = (name: string): ResidueReapClass =>
  * **Example** (Classify `.beep` entries)
  *
  * ```ts
- * import { isRetainedCheckoutResidueName } from "@beep/repo-cli/test/RepoRun"
+ * import { isRetainedCheckoutResidueName } from "@beep/repo-cli/test/Worktree"
  *
  * console.log(isRetainedCheckoutResidueName("fallow")) // true
  * console.log(isRetainedCheckoutResidueName("yeet")) // false
@@ -1887,7 +1891,7 @@ const citationSkip = Effect.fnUntraced(function* (checkout: string, candidatePat
     onSome: (result) =>
       Match.value(result.exitCode).pipe(
         Match.when(0, () => O.some<ResidueReapSkipReason>("evidence-referenced")),
-        Match.when(1, () => O.none<ResidueReapSkipReason>()),
+        Match.when(1, O.none<ResidueReapSkipReason>),
         Match.orElse(() => O.some<ResidueReapSkipReason>("census-failed"))
       ),
   });
@@ -2967,7 +2971,7 @@ const executeResidueReap = Effect.fnUntraced(function* (settings: ResidueReapSet
  * **Example** (Build a dry-run effect)
  *
  * ```ts
- * import { runResidueReap } from "@beep/repo-cli/test/RepoRun"
+ * import { runResidueReap } from "@beep/repo-cli/test/Worktree"
  * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(runResidueReap())) // true

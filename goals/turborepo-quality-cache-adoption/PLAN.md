@@ -575,3 +575,88 @@ integrity check was missing the already accepted default status; the status
 mapping now also covers this retained enabled setting. Hosted acceptance remains
 required. The broader global/child family, actual computation qualification,
 production trust and every whole-goal acceptance criterion remain open.
+
+
+### Current-canary selection regression replay, 2026-11-02
+
+The [current-pin checkpoint](research/selection-current-canary-checkpoint.json)
+adds 44 asserted synthetic cases on stable 2.11.10 and current canary
+2.11.11-canary.1. The historical 2.11.9-canary.1 report and its immutable Git
+source remain byte-bound. A separate 44-case compatibility replay has the same
+semantic projection as that original report.
+
+The existing driver now accepts an explicit pin manifest and a new report path.
+It reuses the bounded streaming collector, preserves the ten-second process and
+three-minute total ceilings, refuses report overwrite, and keeps raw output in
+private unique directories. Seven negative controls pass, including an actual
+omitted dependency and both byte/time refusals with no surviving child.
+
+Four feature rows link the current-pair observation without changing their
+acceptance state. The 27 unfinished feature decisions, actual-root consumer
+review, real computation qualification and every whole-goal criterion remain
+open. No production flag, cache policy, credential or infrastructure changes.
+
+
+### Selection driver source/path review follow-through
+
+Two review findings are repaired by canonical path resolution and hashing the
+actual harness and pin snapshots used by the driver. A before/after symlink
+control reproduces the original error, then passes all 44 cases with identical
+semantic/source projections. Real harness and pin-file mutations fail before
+controls; both files are restored exactly, and external manifests fail clearly.
+The current and historical pairs were replayed on the revised source; all seven
+existing refusals still pass. The earlier published proof remains bound to
+commit `1a32869a1dcd2e4ceadbae6808d3dceb2475b6ad`. No acceptance state,
+production setting or qualification changes.
+
+
+### Selection sibling-loader compatibility follow-through
+
+PR #2617 review reproduced a shared-helper contract regression in all five
+sibling evidence loaders. The original self-contained `invoke` definition is
+restored exactly; current selection calls the separate streaming
+`invoke_bounded`. Six regression methods exercise 25 actual sibling loader and
+process subcases plus the current routing guard. The Cargo applicability
+eight-MiB adaptation, stderr limit, deadlines and child cleanup remain intact.
+
+The current, historical-compatibility and alias selection replays each pass 44
+cases on the revised source, together with the existing refusal/source-race
+controls. Earlier reports remain bound to immutable commit `0dce46e6c115`.
+The five historical feature reports are unchanged; this helper check does not
+renew their native observations or grant feature/task acceptance.
+
+
+### Optional Turbo exporter review, 2026-11-02
+
+The [feature review](research/observability-feature-review.json) covers 27 tracked
+Turbo configurations, 214 selected manifests and the current runtime/workflow
+caller roots. No Turbo exporter is configured. Five application/agent/adapter
+telemetry sources remain distinct from this native Turbo feature.
+
+The pinned stable/current-canary pair passes 24 offline observations, including
+eight pre-task CLI/environment refusals, plus three real driver refusals. Exact
+tag source explains why file configuration is dropped when the flag is off; the
+first documentation-derived failure is retained. Keep the absent flag until a
+named consumer passes the separate payload and credential gates.
+
+This closes one optional feature decision: nine scoped decisions and 26 pending
+rows out of 35. Every computation review/qualification, deployed trust, measured
+value, observation window and whole-goal acceptance gate remains open.
+
+### Pinned affected/filter composition, 2026-11-02
+
+A source review found two CI comments claiming that a positive filter plus
+`--affected` widens selection. The exact enabled repository flags instead
+intersect those sets on stable 2.11.10 and canary 2.11.11-canary.1. The new
+[native controls](research/native-filter-composition-controls.json) assert 56
+plans across product, labs, unrelated and global changes. They retain executable
+prerequisites, negative filtering, union between positive filters and `--only`.
+No task executes and the real repository is not mounted in the network-isolated
+fixtures. The existing stream collector enforces bounded capture and lifetime.
+
+Five driver controls reject optimized Python, wrong pins, report overwrite, the
+stale union expectation and an omitted prerequisite. The CI comments now state
+the real full-labs contract; executable argv and local/hosted parity stay unchanged.
+The source review remains partial: applicable real callers and computations
+still need their complete review and qualification. No feature disposition,
+production setting, measured savings or whole-goal acceptance changes.

@@ -203,7 +203,7 @@ export const signedPilotInput = {
       { case: "lockfile", changedPath: "bun.lock", seedExit: 0 },
       { case: "package-manager", changedPath: "package.json", seedExit: 0 },
       { case: "generated-alias", changedPath: "tsconfig.json", seedExit: 0 },
-      { case: "dependency-source", changedPath: "packages/foundation/primitive/types/src/index.ts", seedExit: 1 },
+      { case: "dependency-source", changedPath: "packages/foundation/primitive/types/src/index.ts", seedExit: 0 },
     ],
     (variant, index) => {
       const pair = index + 13;

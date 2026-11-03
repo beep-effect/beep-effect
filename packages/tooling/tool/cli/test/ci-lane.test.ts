@@ -42,7 +42,9 @@ import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import { constUndefined, flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
+import * as Latch from "effect/Latch";
 import * as Layer from "effect/Layer";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
@@ -917,15 +919,17 @@ describe("CI lane partitions", () => {
     );
   });
 
+  // `!cancelled()` (not `always()`): a superseded run must not start aggregators
+  // that can only fail; a failed shard still fails its aggregator.
   it.effect("keeps literal required aggregators and fails every non-success shard result", () =>
     Effect.gen(function* () {
       const workflowText = yield* Effect.tryPromise(() => Bun.file(checkWorkflowUrl).text());
       const workflow = parseWorkflowYaml(workflowText);
       expect(workflowText).not.toMatch(/ci lane (?:lint|test-unit)[^\n]*--force/u);
       expect(yamlAt(workflow, ["jobs", "lint", "name"])).toBe("Lint");
-      expect(yamlAt(workflow, ["jobs", "lint", "if"])).toBe("${{ always() }}");
+      expect(yamlAt(workflow, ["jobs", "lint", "if"])).toBe("${{ !cancelled() }}");
       expect(yamlAt(workflow, ["jobs", "test-unit", "name"])).toBe("Test Unit");
-      expect(yamlAt(workflow, ["jobs", "test-unit", "if"])).toBe("${{ always() }}");
+      expect(yamlAt(workflow, ["jobs", "test-unit", "if"])).toBe("${{ !cancelled() }}");
       expect(yamlAt(workflow, ["jobs", "lint-shard", "strategy", "fail-fast"])).toBe(false);
       expect(yamlAt(workflow, ["jobs", "test-unit-shard", "strategy", "fail-fast"])).toBe(false);
 
@@ -1278,6 +1282,45 @@ describe("ciLaneStepsForTesting", () => {
   it("states the lint-policy full sweep in argv instead of inheriting CI=true", () => {
     const step = firstOf(ciLaneStepsForTesting(REPO_ROOT, "lint-policy", baseOptions));
     expect([...step.args]).toEqual(["run", "beep", "lint", "policy", "--full"]);
+  });
+
+  // Perf audit K1: the pull-request shape reaches `beep lint policy` as an explicit changed
+  // scope, which the policy command widens on escalating changes; it never inherits CI=true.
+  it("passes the pull-request affected shape through to the lint-policy changed scope", () => {
+    const step = firstOf(ciLaneStepsForTesting(REPO_ROOT, "lint-policy", prShapeOptions));
+    expect([...step.args]).toEqual(["run", "beep", "lint", "policy", "--affected", "--base", "origin/main"]);
+    assertSome(
+      pipe(
+        CI_LANE_DESCRIPTORS,
+        A.findFirst((descriptor) => descriptor.id === "lint-policy"),
+        O.map((descriptor) => [...descriptor.flags])
+      ),
+      ["--affected", "--base", "--summarize"]
+    );
+  });
+
+  it("replays the lint-policy lane locally with the hosted pull-request shape", () => {
+    const prPlan = CiLocalStepPlan.make({ affected: true, base: "origin/main", onMainBranch: false });
+    const fullPlan = CiLocalStepPlan.make({ ...prPlan, affected: false });
+    expect([...firstOf(ciLocalStepsForTesting(REPO_ROOT, ["lint-policy"], prPlan)).args]).toEqual([
+      "run",
+      "beep",
+      "ci",
+      "lane",
+      "lint-policy",
+      "--affected",
+      "--base",
+      "origin/main",
+      "--summarize",
+    ]);
+    expect([...firstOf(ciLocalStepsForTesting(REPO_ROOT, ["lint-policy"], fullPlan)).args]).toEqual([
+      "run",
+      "beep",
+      "ci",
+      "lane",
+      "lint-policy",
+      "--summarize",
+    ]);
   });
 
   it("runs the first ecosystem member's type and bundle contracts explicitly", () => {
@@ -1658,7 +1701,7 @@ describe("ciLaneStepsForTesting", () => {
     }
   });
 
-  // The workflow gates only on goals_only and hands the affected decision to
+  // The workflow gates only on docs_only and hands the affected decision to
   // the lane (Turbo dry-run probe); no path profile survives anywhere.
   it.layer(gitPlatform, { timeout: "10 seconds" })((it) => {
     it.effect("leaves the storybook affected decision to the lane instead of a workflow path profile", () =>
@@ -1672,7 +1715,7 @@ describe("ciLaneStepsForTesting", () => {
         expect(script).not.toContain("storybook_pattern");
         expect(workflow).not.toContain("storybook_relevant");
         expect(workflow).toContain('eval "$(scripts/ci-change-profile.sh');
-        expect(workflow).toContain('if [[ "$goals_only" == "true" ]]; then');
+        expect(workflow).toContain('if [[ "$docs_only" == "true" ]]; then');
         expect(workflow).toContain('shape_args+=(--affected --base "origin/${GITHUB_BASE_REF:-main}")');
         expect(workflow).toContain('run_lane ci lane storybook "${shape_args[@]}"');
       })
@@ -1903,6 +1946,111 @@ it.layer(storybookCiLayer("{not json", malformedStorybookSpawns), { timeout: "10
         expect(error._tag).toBe("CiCommandError");
         expect(error.message).toBe("Turbo emitted invalid JSON for the Storybook affected dry run.");
         expect(malformedStorybookSpawns).toHaveLength(1);
+      })
+    );
+  }
+);
+
+type FallowLaneProbe = {
+  readonly started: Array<string>;
+  inFlight: number;
+  maxInFlight: number;
+  status: string;
+};
+
+const FALLOW_LANE_TASKS = [
+  "fallow:audit:check",
+  "fallow:dead-code:check",
+  "fallow:health:check",
+  "fallow:boundaries:advisory",
+  "fallow:flags:advisory",
+  "fallow:security:advisory",
+  "fallow:fix-preview:advisory",
+];
+const FALLOW_STATUS_LANES = ["audit", "dead-code", "health", "boundaries", "flags", "security", "fix-preview"];
+
+const fallowLaneProbe = (): FallowLaneProbe => ({ started: [], inFlight: 0, maxInFlight: 0, status: "" });
+
+// Each fake Fallow `turbo run` holds its exit until three sub-lanes are in flight, so
+// a runner that waits for one sub-lane before starting the next never gets past the
+// first and the test times out.
+const fallowCiLayer = (probe: FallowLaneProbe, failingTask?: string) => {
+  const threeInFlight = Latch.makeUnsafe(false);
+  const fileSystemLayer = FileSystem.layerNoop({
+    exists: (file) => Effect.succeed(Str.endsWith("/.git")(file)),
+    makeDirectory: () => Effect.void,
+    readFileString: () => Effect.succeed("{}"),
+    writeFileString: (_file, content) =>
+      Effect.sync(() => {
+        probe.status = content;
+      }),
+  });
+  const processLayer = Layer.succeed(
+    ChildProcessSpawner.ChildProcessSpawner,
+    ChildProcessSpawner.make((command) => {
+      if (!ChildProcess.isStandardCommand(command)) {
+        return Effect.die("the Fallow lane test never spawns a piped command");
+      }
+      const task = A.findFirst(commandArgs(command), Str.startsWith("fallow:"));
+      if (O.isNone(task)) {
+        return Effect.succeed(commandHandle());
+      }
+      A.appendInPlace(probe.started, task.value);
+      probe.inFlight += 1;
+      probe.maxInFlight = Num.max(probe.maxInFlight, probe.inFlight);
+      if (A.length(probe.started) === 3) {
+        Latch.openUnsafe(threeInFlight);
+      }
+      const exit = Effect.sync(() => {
+        probe.inFlight -= 1;
+        return ChildProcessSpawner.ExitCode(task.value === failingTask ? 1 : 0);
+      });
+      return Effect.succeed(
+        ChildProcessSpawner.makeHandle({ ...commandHandle(), exitCode: Latch.whenOpen(threeInFlight, exit) })
+      );
+    })
+  );
+  const fileSystemAndPath = Layer.merge(fileSystemLayer, Path.layer);
+  return Layer.provideMerge(
+    Git.layer,
+    Layer.mergeAll(
+      BunCrypto.layer,
+      fileSystemAndPath,
+      FsUtilsLive.pipe(Layer.provide(fileSystemAndPath)),
+      processLayer,
+      TestConsole.layer
+    )
+  );
+};
+
+const statusLanes = flow(Str.split("\n"), A.filter(Str.isNonEmpty), A.map(Str.replace(/ \(\d+s\)$/u, "")));
+
+const concurrentFallowProbe = fallowLaneProbe();
+it.layer(fallowCiLayer(concurrentFallowProbe), { timeout: "10 seconds" })("fallow lane sub-lane concurrency", (it) => {
+  it.effect("runs the seven sub-lanes three at a time and records status in declaration order", () =>
+    Effect.gen(function* () {
+      yield* runCiLane("fallow", baseOptions);
+
+      expect(concurrentFallowProbe.started).toEqual(FALLOW_LANE_TASKS);
+      expect(concurrentFallowProbe.maxInFlight).toBe(3);
+      expect(statusLanes(concurrentFallowProbe.status)).toEqual(A.map(FALLOW_STATUS_LANES, (lane) => `- ${lane}: 0`));
+    })
+  );
+});
+
+const failingFallowProbe = fallowLaneProbe();
+it.layer(fallowCiLayer(failingFallowProbe, "fallow:health:check"), { timeout: "10 seconds" })(
+  "fallow lane blocking failure under concurrency",
+  (it) => {
+    it.effect("still runs the advisory sub-lanes and fails on the blocking exit status", () =>
+      Effect.gen(function* () {
+        const error = yield* runCiLane("fallow", baseOptions).pipe(Effect.flip);
+
+        expect(error.message).toBe("Fallow blocking lane(s) failed with status 1.");
+        expect(failingFallowProbe.started).toEqual(FALLOW_LANE_TASKS);
+        expect(statusLanes(failingFallowProbe.status)).toEqual(
+          A.map(FALLOW_STATUS_LANES, (lane) => `- ${lane}: ${lane === "health" ? 1 : 0}`)
+        );
       })
     );
   }

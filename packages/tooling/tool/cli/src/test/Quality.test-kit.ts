@@ -73,6 +73,8 @@ export {
 export * from "@beep/repo-cli/commands/Quality/Tasks";
 export { effectDiagnosticsAffectedPackages, effectDiagnosticsProjects } from "../commands/Quality/EffectDiagnostics.ts";
 export {
+  fallowFeatureArgsForTesting,
+  fallowReportPathsForTesting,
   inheritedCodemodDuplicationCountForTesting,
   reportInvariantDiagnosticsForTesting,
   workflowYamlValueForTesting,
@@ -84,6 +86,7 @@ export * as CoverageArtifacts from "../commands/Quality/internal/CoverageArtifac
 export * as CoverageConfig from "../commands/Quality/internal/CoverageConfig.runtime.ts";
 export * from "../commands/Quality/internal/CoverageRegression.ts";
 export * from "../commands/Quality/internal/CoverageScope.ts";
+export * from "../commands/Quality/internal/DocsOxlintPlugin.ts";
 export * from "../commands/Quality/internal/FallowEnvelope.schema.ts";
 export * from "../commands/Quality/internal/FlakeQuarantine.ts";
 export {
@@ -96,6 +99,7 @@ export {
 export * from "../commands/Quality/internal/JSDocDocumentationInventory.ts";
 export * from "../commands/Quality/internal/JSDocRatchet.ts";
 export * from "../commands/Quality/internal/LaneProofReuse.ts";
+export * from "../commands/Quality/internal/LintPolicyScope.ts";
 export * from "../commands/Quality/internal/PackageVerify.ts";
 export {
   collectFiles,
@@ -106,13 +110,8 @@ export {
   readWorkspacePackageText,
   tagsFromComment,
 } from "../commands/Quality/internal/QualityArtifactSupport.ts";
-export * from "../commands/Quality/internal/ResidueTerminalLaneLive.ts";
 export { testTsgoPrograms } from "../commands/Quality/internal/TestTsgoPrograms.ts";
 export * from "../commands/Quality/internal/TurboConfigProof.ts";
 export * from "../commands/Quality/internal/TurboLaneDigest.ts";
-export {
-  renderAdmissionSnapshotLinesForTesting,
-  renderResidueReportLinesForTesting,
-  renderTmpfsReportLinesForTesting,
-} from "../commands/Quality/Quality.command.ts";
+export { renderAdmissionSnapshotLinesForTesting } from "../commands/Quality/Quality.command.ts";
 export * from "../internal/process/index.ts";

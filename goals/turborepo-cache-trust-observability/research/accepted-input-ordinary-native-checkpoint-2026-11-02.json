@@ -1,0 +1,94 @@
+{
+  "schemaVersion": "cache-accepted-input-native-checkpoint/v1",
+  "recordedAt": "2026-11-02T21:42:53.577391+00:00",
+  "authority": "Ordinary complete local private-loopback matrices for frozen accepted task source 930758 only. No live R2, protected producer, qualification, current-main adoption or whole-goal acceptance.",
+  "parentAndWorkerRevision": "6fc0a6cf62aa797e935423d70d60b39f624d7f4e",
+  "taskSourceRevision": "930758e06bf4442d721d818fcba6a40301471784",
+  "channels": {
+    "stable": {
+      "result": {
+        "exit": 0,
+        "elapsedSeconds": 121.598,
+        "finishedAt": "2026-11-02T21:37:55.872237+00:00"
+      },
+      "privateReportSha256": "837b2872add386983b83818e2adab42b9672776eda1844ea244383b97baeb6db",
+      "privateReportBytes": 225868,
+      "publicObservationPath": "research/accepted-930758-ordinary-stable-signed-observation-2026-11-02.json",
+      "publicObservationSha256": "e495921377c9391a563b1a465744ba8a7f3317ec532bb766fb5409362db7cf19",
+      "client": {
+        "version": "2.11.10",
+        "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6",
+        "namespace": "accepted-930758-stable-20261102"
+      },
+      "controlCounts": {
+        "captureControls": 4,
+        "nonExecutions": 4,
+        "mutations": 7,
+        "shadows": 10,
+        "freshPairs": 3,
+        "pairs": 3
+      },
+      "freshSelectedTaskOverlapMilliseconds": [92, 98, 93],
+      "allThreeRemoteReplaysMatchFreshLogs": true,
+      "publicViewReconstructsCompleteDecodedPrivateReceipt": true
+    },
+    "canary": {
+      "result": {
+        "exit": 0,
+        "elapsedSeconds": 190.19,
+        "finishedAt": "2026-11-02T21:41:19.773867+00:00"
+      },
+      "privateReportSha256": "980ed6bb4699a44f1be8dd5a1c9eb8681ebb7b2eee62be363998059b805e3b4f",
+      "privateReportBytes": 226480,
+      "publicObservationPath": "research/accepted-930758-ordinary-canary-signed-observation-2026-11-02.json",
+      "publicObservationSha256": "51728f224685fac76b3e313564fa3de8044500a555b598afecbee72a6e4c1e0c",
+      "client": {
+        "version": "2.11.11-canary.1",
+        "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2",
+        "namespace": "accepted-930758-canary-20261102"
+      },
+      "controlCounts": {
+        "captureControls": 4,
+        "nonExecutions": 4,
+        "mutations": 7,
+        "shadows": 10,
+        "freshPairs": 3,
+        "pairs": 3
+      },
+      "freshSelectedTaskOverlapMilliseconds": [94, 93, 92],
+      "allThreeRemoteReplaysMatchFreshLogs": true,
+      "publicViewReconstructsCompleteDecodedPrivateReceipt": true
+    }
+  },
+  "executionContract": {
+    "instrumentationInjected": false,
+    "admissionBypassed": false,
+    "taskSleepPaddingOrClockManipulation": false,
+    "comparisonDeadlineMinutes": 20,
+    "actualSelectedTaskOverlapRequired": true,
+    "sourceAndToolIntegrityUnchanged": true,
+    "privateIssuerMaterialArgumentPresent": false,
+    "productionChanged": false
+  },
+  "seedOracleReview": "research/current-package-lint-seed-review-2026-11-02.md",
+  "failedOrdinaryAttemptsRetained": [
+    {
+      "receipt": "accepted-input-stable-ordinary-cli.result.json",
+      "attribution": "Generated child omitted the Git service after accepted #2593."
+    },
+    {
+      "receipt": "accepted-input-stable-git-fixed-ordinary-cli.result.json",
+      "attribution": "Stale package-lint dependency-source seed verdict after accepted #2526."
+    },
+    {
+      "receipt": "accepted-input-stable-seed-fixed-ordinary-cli.result.json",
+      "attribution": "Early generic supervisor exit remains unattributed. Separate diagnostic-only and later ordinary runs passed; do not erase or relabel the failure."
+    }
+  ],
+  "limits": [
+    "This source is frozen 930758, not the later live main; do not rebind results by changing hashes.",
+    "Timing includes command admission and orchestration. Source and lint ownership differ from older 68834 matrices; this is not a matched cache-savings comparison.",
+    "Public views retain both distinct host and sandbox toolchain fingerprints and explicitly reconstruct complete decoded receipts; private artifact byte hashes remain separate.",
+    "No qualification ledger, production trust setting or whole-goal acceptance changes."
+  ]
+}

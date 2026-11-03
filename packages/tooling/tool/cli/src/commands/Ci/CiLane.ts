@@ -29,10 +29,12 @@ import { dual, flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as Num from "effect/Number";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
 import {
   isCiSync,
   readTurboCacheEnvironment,
@@ -433,7 +435,9 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     required: false,
     laneClass: "cli-runnable",
     replay: "exact",
-    flags: [],
+    flags: [...TURBO_SHAPE_FLAGS],
+    notes:
+      "Pull-request runs pass --affected --base: `beep lint policy --affected` runs Turbo's changed scope unless the change set escalates it; push runs state --full.",
   }),
   CiLaneDescriptor.make({
     id: "repo-sanity",
@@ -1477,6 +1481,14 @@ const codegenDriverSteps = (repoRoot: string): ReadonlyArray<QualityTaskStep> =>
 const FALLOW_BLOCKING_LANES = ["audit", "dead-code", "health"] as const;
 const FALLOW_ADVISORY_LANES = ["boundaries", "flags", "security", "fix-preview"] as const;
 const FALLOW_ENVELOPE_REQUIRED_FIELDS = "schemaVersion,status,command,exitStatus,baseRef,rawOutputRef";
+type FallowSubLane = readonly [lane: string, gateFlag: "--check" | "--advisory"];
+const FALLOW_SUB_LANES: ReadonlyArray<FallowSubLane> = [
+  ...A.map(FALLOW_BLOCKING_LANES, (lane): FallowSubLane => [lane, "--check"]),
+  ...A.map(FALLOW_ADVISORY_LANES, (lane): FallowSubLane => [lane, "--advisory"]),
+];
+// The sub-lanes write disjoint envelopes, so they run abreast. Three keeps the
+// hosted runner (4 vCPU, 16 GB) at about three Fallow project graphs at once.
+const FALLOW_SUB_LANE_CONCURRENCY = 3;
 
 const fallowReportPath = (lane: string, advisory: boolean): string =>
   `.beep/fallow/${lane}.${advisory ? "advisory" : "check"}.json`;
@@ -1517,17 +1529,16 @@ const fallowEnvelopeCheckSteps = (repoRoot: string): ReadonlyArray<QualityTaskSt
 ];
 
 const fallowRunPhaseSteps = (repoRoot: string, options: CiLaneRunOptions): ReadonlyArray<QualityTaskStep> => [
-  ...A.map(FALLOW_BLOCKING_LANES, (lane) => fallowRunStep(repoRoot, lane, "--check", options.base)),
-  ...A.map(FALLOW_ADVISORY_LANES, (lane) => fallowRunStep(repoRoot, lane, "--advisory", options.base)),
+  ...A.map(FALLOW_SUB_LANES, ([lane, gateFlag]) => fallowRunStep(repoRoot, lane, gateFlag, options.base)),
   ...(options.validateEnvelopes ? fallowEnvelopeCheckSteps(repoRoot) : A.empty<QualityTaskStep>()),
 ];
 
 /**
  * Build the step plan for a CI lane. Exposed for focused unit tests.
  *
- * The fallow lane's plan lists its subprocess steps in execution order; its
- * runtime additionally maintains `.beep/fallow/status.md` accounting (see
- * {@link runCiLane}).
+ * The fallow lane's plan lists its subprocess steps in declaration order; its
+ * runtime runs the seven Fallow sub-lanes three at a time and maintains
+ * `.beep/fallow/status.md` accounting in that same order (see {@link runCiLane}).
  *
  * **Example** (Configure a CI lane)
  *
@@ -1643,9 +1654,9 @@ export const ciLaneStepsForTesting: {
           })
         ),
       // lab-apps-lifecycle P2 (ratified row 10): one bundled turbo invocation
-      // over the labs glob. Deliberately no --affected — turbo unions filter
-      // selectors, so --affected plus the positive labs filter would WIDEN the
-      // selection to affected-products plus labs; the workflow path gate scopes
+      // over the labs glob. Deliberately no --affected: this lane's contract
+      // runs the full labs set, even though the pinned clients intersect the
+      // affected set with positive filters. The workflow path gate scopes
       // PRs, while push and local replays want the full labs set.
       labs: () => [
         QualityTaskStep.make({
@@ -1677,11 +1688,21 @@ export const ciLaneStepsForTesting: {
           options
         ),
       ],
-      // `--full` states the hosted scope in the argv instead of inheriting it
-      // from ambient `CI=true`, so a local replay scans the same repo-wide
-      // surface the required Lint Policy context does. Hosted runs are
-      // unchanged: `beep lint policy` already forces the full sweep under CI.
-      "lint-policy": () => [bunRunStep(repoRoot, "ci:lint-policy", ["beep", "lint", "policy", "--full"])],
+      // The argv states the scope instead of inheriting it from ambient
+      // `CI=true`. Pull requests (perf audit K1) run the changed scope, which
+      // `beep lint policy` widens to the full sweep on deletions, `@deprecated`,
+      // tsconfig, dependency, Turbo, lint-config or policy-implementation
+      // changes; pushes and local replays without the affected shape run
+      // `--full`. `--summarize` is accepted for the shared matrix argv: the
+      // policy graphs always write their Turbo summaries.
+      "lint-policy": () => [
+        bunRunStep(repoRoot, "ci:lint-policy", [
+          "beep",
+          "lint",
+          "policy",
+          ...(options.affected ? ["--affected", "--base", options.base] : ["--full"]),
+        ]),
+      ],
       nix: () => [
         QualityTaskStep.make({
           label: "ci:nix:flake-check",
@@ -1809,25 +1830,31 @@ const runCiFallowLane = Effect.fn("CiLane.runCiFallowLane")(function* (
     .makeDirectory(fallowDirectory, { recursive: true })
     .pipe(CiCommandError.mapError(`Failed to create ${fallowDirectory}.`));
 
-  const statusLines = A.empty<string>();
+  // Status lines keep declaration order whatever order the sub-lanes finish in,
+  // and the permit stops two finishing sub-lanes from interleaving their writes.
+  const statusLines = MutableHashMap.empty<string, string>();
+  const statusPermit = yield* Semaphore.make(1);
   const writeStatus = Effect.fnUntraced(function* () {
-    const content = A.isReadonlyArrayEmpty(statusLines) ? "" : `${A.join(statusLines, "\n")}\n`;
+    const lines = A.getSomes(A.map(FALLOW_SUB_LANES, ([lane]) => MutableHashMap.get(statusLines, lane)));
+    const content = A.isReadonlyArrayEmpty(lines) ? "" : `${A.join(lines, "\n")}\n`;
     yield* fs.writeFileString(statusPath, content).pipe(CiCommandError.mapError(`Failed to write ${statusPath}.`));
   });
   yield* writeStatus();
 
-  const runFallowSubLane = Effect.fnUntraced(function* (lane: string, gateFlag: string) {
+  const runFallowSubLane = Effect.fnUntraced(function* ([lane, gateFlag]: FallowSubLane) {
     const [elapsed, exitCode] = yield* runLaneProcess(fallowRunStep(repoRoot, lane, gateFlag, options.base)).pipe(
       Effect.timed
     );
     const elapsedSeconds = Math.floor(Duration.toMillis(elapsed) / 1000);
-    A.appendInPlace(statusLines, `- ${lane}: ${exitCode} (${elapsedSeconds}s)`);
-    yield* writeStatus();
+    MutableHashMap.set(statusLines, lane, `- ${lane}: ${exitCode} (${elapsedSeconds}s)`);
+    yield* Semaphore.withPermit(statusPermit, writeStatus());
     return exitCode;
   });
 
-  const blockingExitCodes = yield* Effect.forEach(FALLOW_BLOCKING_LANES, (lane) => runFallowSubLane(lane, "--check"));
-  yield* Effect.forEach(FALLOW_ADVISORY_LANES, (lane) => runFallowSubLane(lane, "--advisory"), { discard: true });
+  const exitCodes = yield* Effect.forEach(FALLOW_SUB_LANES, runFallowSubLane, {
+    concurrency: FALLOW_SUB_LANE_CONCURRENCY,
+  });
+  const blockingExitCodes = A.take(exitCodes, A.length(FALLOW_BLOCKING_LANES));
 
   yield* Effect.forEach(
     FALLOW_BLOCKING_LANES,
@@ -2688,13 +2715,13 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
     ecosystem: A.empty<string>,
     fallow: () => ["--base", plan.base, "--validate-envelopes"],
     "jsdoc-ratchet": A.empty<string>,
-    // check.yml runs `ci lane labs --summarize` with no affected shape (a
-    // positive filter plus --affected would widen the selection). The summary
+    // check.yml runs `ci lane labs --summarize` over the full labs set, so
+    // local replay deliberately omits the affected shape too. The summary
     // is what folds the lab check/lint/test task hashes into the lane digest
     // (TTC ruling 58), so the local replay passes it too.
     labs: () => ["--summarize"],
     lint: () => turboShapeFlags,
-    "lint-policy": A.empty<string>,
+    "lint-policy": () => turboShapeFlags,
     nix: A.empty<string>,
     property: () => turboShapeFlags,
     "repo-sanity": () => (plan.onMainBranch ? A.empty<string>() : ["--changeset-status"]),

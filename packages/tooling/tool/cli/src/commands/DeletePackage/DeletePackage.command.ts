@@ -35,14 +35,6 @@ import {
   RETIRED_REGISTRY_PATH,
   readRetiredPackageNames,
 } from "../../internal/cli/Labs/index.ts";
-import {
-  DeletionNotePolicy,
-  LabTargetFacts,
-  makeRegistrationGeometryService,
-  RegistrationSurface,
-  RegistrationTarget,
-  surfacesForTarget,
-} from "../../internal/cli/RegistrationGeometry/index.ts";
 import { runToExit } from "../../internal/process/index.ts";
 import { workspaceDirectories } from "../../internal/RepoWorkspaces.ts";
 import { CreatePackageIdentityRegistration } from "../CreatePackage/internal/IdentityRegistration.ts";
@@ -62,13 +54,21 @@ import {
 } from "./DeletePackage.schemas.ts";
 import { DeletePackageDataResource } from "./internal/DataResource.ts";
 import { renderCanonicalDeletionChangeset } from "./internal/DeletionChangeset.ts";
+import {
+  DeletionNotePolicy,
+  LabTargetFacts,
+  makeRegistrationGeometryService,
+  RegistrationSurface,
+  RegistrationTarget,
+  surfacesForTarget,
+} from "./internal/RegistrationGeometry/index.ts";
 import { IDENTITY_SHAPE_TEST_PATH, shapeTestRowAccessor } from "./internal/ShapeTestRow.ts";
 import type {
   DependentsReport,
   RegistrationGeometryServiceShape,
   RegistrationObservation,
   RegistrationPlan,
-} from "../../internal/cli/RegistrationGeometry/index.ts";
+} from "./internal/RegistrationGeometry/index.ts";
 
 const decodeJsonEffect = S.decodeEffect(S.fromJsonString(S.Unknown));
 

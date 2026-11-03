@@ -15,8 +15,16 @@ import type {
   RegistrationTarget,
 } from "./RegistrationGeometry.schemas.ts";
 
-const $I = $RepoCliId.create("internal/cli/RegistrationGeometry/service");
+const $I = $RepoCliId.create("commands/DeletePackage/internal/RegistrationGeometry/service");
 
+/**
+ * Operations offered by {@link RegistrationGeometryService}: surface listing,
+ * forward and inverse planning, doctor inspection, plan application with a
+ * post-apply doctor, and reverse-dependency reporting.
+ *
+ * @category services
+ * @since 0.0.0
+ */
 export type RegistrationGeometryServiceShape = {
   readonly surfacesFor: (
     target: RegistrationTarget
@@ -35,6 +43,27 @@ export type RegistrationGeometryServiceShape = {
 /**
  * Private package-lifecycle service interpreting the shared registration declarations.
  *
+ * **Example** (Plan a deletion through the service)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { RegistrationGeometryService, RegistrationTarget } from "@beep/repo-cli/test/DeletePackage"
+ * import { PosixPath } from "@beep/schema/PosixPath"
+ *
+ * const target = RegistrationTarget.make({
+ *   packageName: "@beep/demo",
+ *   packagePath: PosixPath.make("packages/demo"),
+ *   private: true
+ * })
+ * const program = Effect.gen(function* () {
+ *   const geometry = yield* RegistrationGeometryService
+ *   const plan = yield* geometry.planInverse(target)
+ *   return plan.operations.length
+ * })
+ *
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -52,6 +81,27 @@ export class RegistrationGeometryService extends Context.Service<
  * requirements, maps failures into the geometry error channel, and performs the
  * post-apply doctor from the same declarations.
  *
+ * **Example** (Build the service with a no-op executor)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { makeRegistrationGeometryService, RegistrationTarget } from "@beep/repo-cli/test/DeletePackage"
+ * import { PosixPath } from "@beep/schema/PosixPath"
+ *
+ * const target = RegistrationTarget.make({
+ *   packageName: "@beep/demo",
+ *   packagePath: PosixPath.make("packages/demo"),
+ *   private: true
+ * })
+ * const program = makeRegistrationGeometryService(".", () => Effect.void).pipe(
+ *   Effect.flatMap((geometry) => geometry.planInverse(target))
+ * )
+ *
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param repoRoot - Repository root that inspection and dependent scans resolve against.
+ * @param executePlan - Flag-aware executor that performs a plan's file operations.
  * @category factories
  * @since 0.0.0
  */

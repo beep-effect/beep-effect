@@ -317,6 +317,49 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
         expect(calls[0]).not.toContain("apps packages infra");
       })
     );
+    // The changed-scope policy plan hands every Turbo-selected package directory to one process.
+    it.effect("lints every --target directory in one native process", () =>
+      Effect.gen(function* () {
+        yield* temporaryWorkingDirectory;
+        yield* writeDeprecatedApiLintFixture(false, false);
+        const fs = yield* FileSystem.FileSystem;
+        yield* fs.makeDirectory("apps/labs/demo", { recursive: true });
+        yield* runLintCommand([
+          "deprecated-apis",
+          "--target",
+          "packages",
+          "--target",
+          "apps/labs/demo",
+          "--target",
+          "packages",
+        ]);
+        const calls = yield* nativeInvocations();
+        expect(calls).toHaveLength(1);
+        expect(calls[0]).toContain(
+          `--disable-nested-config ${oxlintThreadsArg} --no-error-on-unmatched-pattern packages apps/labs/demo`
+        );
+      })
+    );
+    it.effect("rejects --target beside --package or --full before spawning", () =>
+      Effect.gen(function* () {
+        yield* temporaryWorkingDirectory;
+        yield* writeDeprecatedApiLintFixture(false, false);
+        for (const extra of [["--full"], ["--package", "packages"]]) {
+          const exit = yield* Effect.exit(runLintCommand(["deprecated-apis", "--target", "apps", ...extra]));
+          expectReportedExit(exit);
+        }
+        const fs = yield* FileSystem.FileSystem;
+        expect(yield* fs.exists("native-invocations.txt")).toBe(false);
+      })
+    );
+  });
+
+  describe("policy lint command", () => {
+    it.effect("rejects --full beside --affected", () =>
+      Effect.gen(function* () {
+        expectReportedExit(yield* Effect.exit(runLintCommand(["policy", "--full", "--affected"])));
+      })
+    );
   });
 
   const writePrecisionAuditInventory = Effect.fn("writePrecisionAuditInventory")(function* (

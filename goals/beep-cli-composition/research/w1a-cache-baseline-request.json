@@ -1,0 +1,20 @@
+{
+  "previous": "d2209a3ecb539ed8c83216050ba6bf01a28acd50c2a5cf9c5688fd9af048c9d2",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (W1a lane, refactor/beep-cli-w1a-hygiene)",
+    "reason": "Re-record the root subject after the W1a file moves: eleven lint policy-fingerprint seals name the moved janitor, cache-policy and entry-path modules; no task, flag, output or qualification changes.",
+    "basis": {
+      "path": "goals/beep-cli-composition/research/w1a-cache-baseline-review.md",
+      "sha256": "bf10e2225a290968ee6d1114a39ceb433accac04a4a71b77dafb950a3a61313b"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//"]
+}
