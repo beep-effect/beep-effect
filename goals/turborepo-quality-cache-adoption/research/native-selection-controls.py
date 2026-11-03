@@ -52,7 +52,7 @@ except ValueError:
     raise SystemExit("Pin manifest must be within the checkout.") from None
 harness = research / "native-future-flag-availability.py"
 source_paths = [Path(__file__).resolve(), pins_path, harness, repo / ".bun-version"]
-captured_sources = {path: (source_reader_bytes if path == source_reader else read_contained_source(path, repo)) for path in source_paths}
+captured_sources = {path: (source_reader_bytes if path == source_reader else read_contained_source(path, repo) if path == pins_path else path.read_bytes()) for path in source_paths}
 harness_bytes = captured_sources[harness]
 pins_bytes = captured_sources[pins_path]
 pins = json.loads(pins_bytes)
@@ -121,7 +121,7 @@ def invoke_bounded(command, cwd, environment):
     return result
 
 
-assert all(read_contained_source(path, repo) == data for path, data in captured_sources.items()), "Observation sources changed before probes."
+assert all((read_contained_source(path, repo) if path == pins_path else path.read_bytes()) == data for path, data in captured_sources.items()), "Observation sources changed before probes."
 bun_name = shutil.which("bun")
 assert bun_name, "Bun is required"
 bun = Path(
@@ -483,7 +483,7 @@ assert hashlib.sha256(bun.read_bytes()).hexdigest() == bun_digest, (
     "Bun changed during controls"
 )
 assert all(
-    hashlib.sha256(read_contained_source(repo / path, repo)).hexdigest() == digest
+    hashlib.sha256(read_contained_source(repo / path, repo) if repo / path == pins_path else (repo / path).read_bytes()).hexdigest() == digest
     for path, digest in source_bindings.items()
 ), "Selection sources changed during controls"
 assert hashlib.sha256(timeout.read_bytes()).hexdigest() == timeout_digest, "Process wrapper changed"

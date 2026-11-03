@@ -60,7 +60,7 @@ bindings = [
     for path, data in captured.items()
 ]
 for binding in bindings:
-    assert hashlib.sha256(read_contained_source(repo / binding["path"], repo)).hexdigest() == binding["sha256"], "Source changed before observation."
+    assert hashlib.sha256(read_contained_source(repo / binding["path"], repo) if repo / binding["path"] == pins_path else (repo / binding["path"]).read_bytes()).hexdigest() == binding["sha256"], "Source changed before observation."
 clients = {
     "stable": repo / "node_modules/@turbo/linux-64/bin/turbo",
     "canary": Path.home() / ".cache/beep/turbo-goals-clients" / pins["canary"]["packageVersion"] / "turbo",

@@ -37,7 +37,7 @@ harness = research / "native-future-flag-availability.py"
 selection = research / "native-selection-controls.py"
 sources = [Path(__file__).resolve(), pins_path, harness, selection, repo / ".bun-version"]
 sha = lambda path: hashlib.sha256(read_contained_source(path, repo) if path == pins_path else path.read_bytes()).hexdigest()
-captured_sources = {path: (source_reader_bytes if path == source_reader else read_contained_source(path, repo)) for path in sources}
+captured_sources = {path: (source_reader_bytes if path == source_reader else read_contained_source(path, repo) if path == pins_path else path.read_bytes()) for path in sources}
 before = {path.relative_to(repo).as_posix(): hashlib.sha256(data).hexdigest() for path, data in captured_sources.items()}
 pins = json.loads(captured_sources[pins_path])
 node = next(n for n in ast.parse(captured_sources[harness]).body
@@ -52,7 +52,7 @@ ns = {"time": time, "signal": signal, "capture": capture,
       "timeout": Path("/usr/bin/timeout"), "deadline": deadline}
 exec(compile(ast.Module(body=[node], type_ignores=[]), str(selection), "exec"), ns)
 invoke = ns["invoke_bounded"]
-assert all(read_contained_source(path, repo) == data for path, data in captured_sources.items()), "Observation sources changed before probes."
+assert all((read_contained_source(path, repo) if path == pins_path else path.read_bytes()) == data for path, data in captured_sources.items()), "Observation sources changed before probes."
 clients = {"stable": args.stable.resolve(), "canary": Path.home()
            / ".cache/beep/turbo-goals-clients" / pins["canary"]["packageVersion"] / "turbo"}
 for channel, binary in clients.items():

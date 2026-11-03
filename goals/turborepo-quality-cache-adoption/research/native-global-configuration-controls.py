@@ -43,7 +43,7 @@ except ValueError:
     raise SystemExit("Pin manifest must be within the checkout.") from None
 harness = research / "native-future-flag-availability.py"
 sources = [Path(__file__).resolve(), pins_path, harness, repo / ".bun-version"]
-captured_sources = {path: (source_reader_bytes if path == source_reader else read_contained_source(path, repo)) for path in sources}
+captured_sources = {path: (source_reader_bytes if path == source_reader else read_contained_source(path, repo) if path == pins_path else path.read_bytes()) for path in sources}
 before = {str(path.relative_to(repo)): hashlib.sha256(data).hexdigest() for path, data in captured_sources.items()}
 pins = json.loads(captured_sources[pins_path])
 function = next(
@@ -55,7 +55,7 @@ capture = {
     "signal": signal, "subprocess": subprocess, "start": time.monotonic(),
 }
 exec(compile(ast.Module(body=[function], type_ignores=[]), str(harness), "exec"), capture)
-assert all(read_contained_source(path, repo) == data for path, data in captured_sources.items()), "Observation sources changed before probes."
+assert all((read_contained_source(path, repo) if path == pins_path else path.read_bytes()) == data for path, data in captured_sources.items()), "Observation sources changed before probes."
 clients = {
     "stable": args.stable or repo / "node_modules/@turbo/linux-64/bin/turbo",
     "canary": Path.home() / ".cache/beep/turbo-goals-clients"

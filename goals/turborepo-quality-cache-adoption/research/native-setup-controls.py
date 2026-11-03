@@ -40,7 +40,7 @@ harness = (
 pins_file = (args.pins or research / "errors-only-client-pins.json").resolve()
 pins_file.relative_to(repo)
 source_paths = [Path(__file__).resolve(), harness, pins_file, repo / ".bun-version"]
-captured_sources = {path: (source_reader_bytes if path == source_reader else read_contained_source(path, repo)) for path in source_paths}
+captured_sources = {path: (source_reader_bytes if path == source_reader else read_contained_source(path, repo) if path == pins_file else path.read_bytes()) for path in source_paths}
 source_hashes = {str(path): hashlib.sha256(data).hexdigest() for path, data in captured_sources.items()}
 parsed = ast.parse(captured_sources[harness])
 fn = next(
@@ -59,7 +59,7 @@ exec(
 )
 run_bounded = capture_namespace["run_bounded"]
 pins = json.loads(captured_sources[pins_file])
-assert all(read_contained_source(path, repo) == data for path, data in captured_sources.items()), "Observation sources changed before probes."
+assert all((read_contained_source(path, repo) if path == pins_file else path.read_bytes()) == data for path, data in captured_sources.items()), "Observation sources changed before probes."
 clients = {
     "stable": (
         args.stable or repo / "node_modules/@turbo/linux-64/bin/turbo",
@@ -352,7 +352,7 @@ for channel, (binary, digest) in clients.items():
 assert len(rows) == 36 and time.monotonic() - start < 600
 assert all(r["fileBytesUnchanged"] and not r["sentinelExecuted"] for r in rows)
 assert all(
-    hashlib.sha256(read_contained_source(Path(p), repo)).hexdigest() == h
+    hashlib.sha256(read_contained_source(Path(p), repo) if Path(p) == pins_file else Path(p).read_bytes()).hexdigest() == h
     for p, h in source_hashes.items()
 ), "Driver/helper/pins changed."
 assert all(

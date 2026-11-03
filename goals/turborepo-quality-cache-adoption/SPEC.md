@@ -816,3 +816,12 @@ This change invalidates current-driver semantic replay claims for its affected
 source envelopes. Preserve the earlier 168-case signature replay as historical,
 with its exact original digests. Fresh native evidence remains pending. No
 qualification, key, signed epoch, cache setting or production cohort changes.
+
+
+Containment applies to pin manifests. Fixed dependency metadata can resolve
+through the approved shared install outside the lane; preserve its captured
+bytes and digest checks without imposing pin-manifest containment on it. The
+actual dependency schema/docs resolve outside this worktree. Include that
+shared-doc symlink in the metadata fixture alongside all pin replacement
+negatives. Reversal preserves the pin fence and restores only the overbroad
+dependency read restriction.

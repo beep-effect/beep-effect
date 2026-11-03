@@ -43,7 +43,7 @@ sources = [
     Path(__file__).resolve(), shared, pin_file, repo / ".bun-version",
     repo / "turbo.json", repo / "node_modules/turbo/docs/reference/configuration.mdx",
 ]
-snapshots = {path: (source_reader_bytes if path == source_reader else read_contained_source(path, repo)) for path in sources}
+snapshots = {path: (source_reader_bytes if path == source_reader else read_contained_source(path, repo) if path == pin_file else path.read_bytes()) for path in sources}
 pins = json.loads(snapshots[pin_file])
 helper = next(n for n in ast.parse(snapshots[shared]).body if isinstance(n, ast.FunctionDef) and n.name == "run_bounded")
 ns = dict(time=time, os=os, selectors=selectors, signal=signal, subprocess=subprocess, start=time.monotonic())
@@ -55,7 +55,7 @@ def invoke(argv, root, env):
     return ns["run_bounded"](argv[0], root, env)
 
 
-assert all(read_contained_source(path, repo) == data for path, data in snapshots.items()), "Observation sources changed before probes."
+assert all((read_contained_source(path, repo) if path == pin_file else path.read_bytes()) == data for path, data in snapshots.items()), "Observation sources changed before probes."
 bun = Path(subprocess.check_output(["bun", "--no-env-file", "-p", "process.execPath"], text=True, timeout=5).strip())
 bun_version = subprocess.check_output([str(bun), "--version"], text=True, timeout=5).strip()
 assert bun_version == snapshots[repo / ".bun-version"].decode().strip(), "Bun pin changed"
@@ -163,7 +163,7 @@ for channel, binary in clients.items():
                 "assertionsPassed": True,
             })
 assert len(rows) == 24
-assert all(read_contained_source(p, repo) == b for p, b in snapshots.items()), "Observation source changed"
+assert all((read_contained_source(p, repo) if p == pin_file else p.read_bytes()) == b for p, b in snapshots.items()), "Observation source changed"
 assert all(hashlib.sha256(p.read_bytes()).hexdigest() == tool_hashes[k] for k, p in tools.items()), "Tool changed"
 assert all(hashlib.sha256(p.read_bytes()).hexdigest() == pins[k]["sha256"] for k, p in clients.items()), "Client changed"
 report = {

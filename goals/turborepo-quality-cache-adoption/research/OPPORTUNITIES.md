@@ -902,3 +902,11 @@ observed schema difference changed the matrix and next qualification work.
   and their unpublished source envelopes are retained privately. The native
   signature replay predates this repair; preserve its source binding and
   require a fresh replay rather than claiming it is current.
+
+
+- A post-push source inspection caught an introduced overreach: applying the
+  pin-manifest descriptor fence to fixed dependency docs rejects this lane's
+  approved shared installation. The actual schema/docs resolve outside the
+  lane. Restrict containment to pin manifests, preserve other captured-byte
+  checks, and include a shared external-doc symlink in the208-case fixture.
+  No native execution was needed to expose or correct that layout mismatch.

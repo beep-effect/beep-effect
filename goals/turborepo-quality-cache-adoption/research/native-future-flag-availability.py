@@ -64,7 +64,7 @@ assert len(flags) == 14, (
 )
 captured_sources = {driver: driver_bytes, pins_path: pins_bytes, schema_path: schema_bytes}
 for path, data in captured_sources.items():
-    assert read_contained_source(path, repo) == data, "Source changed before observation."
+    assert (read_contained_source(path, repo) if path == pins_path else path.read_bytes()) == data, "Source changed before observation."
 clients = {
     "stable": repo / "node_modules/@turbo/linux-64/bin/turbo",
     "canary": Path.home()
@@ -212,7 +212,7 @@ for channel, binary in clients.items():
 assert time.monotonic() - start < 600
 assert len(rows) == 60
 for path, data in captured_sources.items():
-    assert read_contained_source(path, repo) == data, "Source changed during observation."
+    assert (read_contained_source(path, repo) if path == pins_path else path.read_bytes()) == data, "Source changed during observation."
 raw = {
     "schemaVersion": "cache-future-flag-native-availability/v1",
     "recordedAt": datetime.datetime.now(datetime.UTC).isoformat(),

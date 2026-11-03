@@ -153,6 +153,11 @@ for name, versions in sources.items():
                         file = root / relative
                         file.parent.mkdir(parents=True, exist_ok=True)
                         file.write_text("synthetic source metadata\n")
+                    docs = root / "node_modules/turbo/docs/reference/configuration.mdx"
+                    shared_docs = sandbox / "shared-dependency-documentation.mdx"
+                    shared_docs.write_bytes(docs.read_bytes())
+                    docs.unlink()
+                    docs.symlink_to(shared_docs)
                     pin = rr / ("current-client-pins.json" if name == "native-selection-controls.py"
                                 else "errors-only-client-pins.json")
                     observed = {"pins": pin, "helper": helper, "bun-pin": bun_pin, "driver": subject}.get(target)
@@ -306,6 +311,7 @@ report = {
     "cases": len(rows), "drivers": len(sources), "rows": rows,
     "nativeInvocations": 0, "taskExecutions": 0,
     "historicalJsonReportsUnchanged": True,
+    "sharedDependencyDocumentationOutsideCheckoutAccepted": True,
     "limits": ["Only source bootstrap prefixes execute; no experiment body executes.",
                "Earlier native observations retain their original source/client bindings.",
                "Current-driver semantic replays, feature qualification and full goal acceptance remain separate."],

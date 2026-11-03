@@ -39,14 +39,14 @@ shared = research / "native-selection-controls.py"
 pins_file = (args.pins or research / "errors-only-client-pins.json").resolve()
 pins_file.relative_to(repo)
 source_paths = [Path(__file__).resolve(), shared, pins_file, repo / ".bun-version", source_reader]
-captured_sources = {path: (source_reader_bytes if path == source_reader else read_contained_source(path, repo)) for path in source_paths}
+captured_sources = {path: (source_reader_bytes if path == source_reader else read_contained_source(path, repo) if path == pins_file else path.read_bytes()) for path in source_paths}
 source_hashes = {str(path): hashlib.sha256(data).hexdigest() for path, data in captured_sources.items()}
 node = next(n for n in ast.parse(captured_sources[shared]).body if isinstance(n, ast.FunctionDef) and n.name == "invoke")
 namespace = dict(time=time, subprocess=subprocess, os=os, signal=signal, deadline=time.monotonic() + 90)
 exec(compile(ast.Module(body=[node], type_ignores=[]), str(shared), "exec"), namespace)
 invoke = namespace["invoke"]
 pins = json.loads(captured_sources[pins_file])
-assert all(read_contained_source(path, repo) == data for path, data in captured_sources.items()), "Observation sources changed before probes."
+assert all((read_contained_source(path, repo) if path == pins_file else path.read_bytes()) == data for path, data in captured_sources.items()), "Observation sources changed before probes."
 source_revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo, text=True, timeout=5).strip()
 bun = Path(subprocess.check_output(["bun", "--no-env-file", "-p", "process.execPath"], text=True, timeout=5).strip())
 bun_version = subprocess.check_output([str(bun), "--version"], text=True, timeout=5).strip()
@@ -170,7 +170,7 @@ for channel, binary in clients.items():
                     "taskHashes": {task["taskId"]: task["hash"] for task in plan["tasks"]},
                 })
 
-assert all(hashlib.sha256(read_contained_source(Path(p), repo)).hexdigest() == digest for p, digest in source_hashes.items()), "Driver, helper or pins changed."
+assert all(hashlib.sha256(read_contained_source(Path(p), repo) if Path(p) == pins_file else Path(p).read_bytes()).hexdigest() == digest for p, digest in source_hashes.items()), "Driver, helper or pins changed."
 assert all(hashlib.sha256(Path(p).read_bytes()).hexdigest() == digest for p, digest in tool_hashes.items()), "Runtime executable changed."
 revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo, text=True, timeout=5).strip()
 assert revision == source_revision, "Source revision changed during execution."

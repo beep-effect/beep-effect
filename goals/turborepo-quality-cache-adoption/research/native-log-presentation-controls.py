@@ -37,13 +37,13 @@ shared = repo / 'goals/turborepo-quality-cache-adoption/research/native-selectio
 pins_file = (args.pins or repo / "goals/turborepo-quality-cache-adoption/research/errors-only-client-pins.json").resolve()
 pins_file.relative_to(repo)
 source_paths = [Path(__file__).resolve(), shared, pins_file, repo / ".bun-version", source_reader]
-captured_sources = {path: (source_reader_bytes if path == source_reader else read_contained_source(path, repo)) for path in source_paths}
+captured_sources = {path: (source_reader_bytes if path == source_reader else read_contained_source(path, repo) if path == pins_file else path.read_bytes()) for path in source_paths}
 node = next(n for n in ast.parse(captured_sources[shared]).body if isinstance(n, ast.FunctionDef) and n.name == 'invoke')
 namespace = dict(time=time, subprocess=subprocess, os=os, signal=signal, deadline=time.monotonic() + 90)
 exec(compile(ast.Module(body=[node], type_ignores=[]), str(shared), 'exec'), namespace)
 invoke = namespace['invoke']
 pins = json.loads(captured_sources[pins_file])
-assert all(read_contained_source(path, repo) == data for path, data in captured_sources.items()), "Observation sources changed before probes."
+assert all((read_contained_source(path, repo) if path == pins_file else path.read_bytes()) == data for path, data in captured_sources.items()), "Observation sources changed before probes."
 bun = Path(subprocess.check_output(['bun', '--no-env-file', '-p', 'process.execPath'], text=True).strip())
 clients = {
     'stable': args.stable.resolve() if args.stable else repo / 'node_modules/@turbo/linux-64/bin/turbo',
@@ -108,7 +108,7 @@ for row in rows:
     visible = row['outputLogs'] == 'full' or row['expectedTaskExit'] != 0
     assert row['stdoutVisible'] == visible and row['stderrVisible'] == visible
     assert row['hashVisible'] == (visible or row['flag'])
-assert all(read_contained_source(path, repo) == data for path, data in captured_sources.items()), "Observation sources changed."
+assert all((read_contained_source(path, repo) if path == pins_file else path.read_bytes()) == data for path, data in captured_sources.items()), "Observation sources changed."
 assert hashlib.sha256(bun.read_bytes()).hexdigest() == bun_digest, "Bun executable changed."
 assert all(hashlib.sha256(binary.read_bytes()).hexdigest() == pins[channel]["sha256"] for channel, binary in clients.items()), "Native executable changed."
 report = {
