@@ -1239,3 +1239,13 @@ The failed run remains failed and supplies no build, artifact, approval or
 qualification evidence. Reverse by disabling the optional callers and reverting
 the four repaired job permission maps. No storage/issuer grant, signing setting or bound
 changes; all whole-goal criteria remain incomplete.
+
+
+### Accepted shared permission repair, 2026-11-03
+
+Consume accepted #2666 (`fae5b2098c`) as the single shared permission fix.
+Keep its four workflow files byte-for-byte and consolidate the caller
+regression into one case. Strengthen that case against the actual execution
+leaf's read map and preserve the narrower selected-leaf defaults. Historical
+715-head CI evidence stays historical after merging this accepted base; fresh
+head checks remain required. No further permission or activation change.

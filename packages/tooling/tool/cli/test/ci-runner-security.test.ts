@@ -347,6 +347,33 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     })
   );
   it.effect(
+    "gives every Heavy caller the read-only permission ceiling required by its nested producer",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const heavy = parseWorkflowYaml(yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`));
+      const requested = yamlAt(heavy, ["jobs", "producer-execute", "permissions"]);
+      expect(requested).toEqual({ contents: "read", actions: "read" });
+      expect(yamlAt(heavy, ["permissions"])).toEqual({ contents: "read" });
+      for (const { file, job } of [
+        { file: "check.yml", job: "heavy" },
+        { file: "heavy-admit.yml", job: "heavy" },
+        { file: "cache-producer-inspect.yml", job: "inspect" },
+        { file: "cache-producer-prepare.yml", job: "prepare" },
+        { file: "cache-producer.yml", job: "produce" },
+      ]) {
+        const workflow = parseWorkflowYaml(yield* fs.readFileString(`${root}/.github/workflows/${file}`));
+        expect(yamlAt(workflow, ["jobs", job, "uses"])).toBe(
+          "beep-effect/beep-effect/.github/workflows/heavy.yml@main"
+        );
+        const permissions = O.fromUndefinedOr(yamlAt(workflow, ["jobs", job, "permissions"])).pipe(
+          O.getOrElse(() => yamlAt(workflow, ["permissions"]))
+        );
+        assert.deepEqual(permissions, requested, file);
+      }
+    })
+  );
+  it.effect(
     "scopes hosted governance reads to Security and exercises its job token on pull requests",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -1627,32 +1654,6 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           )
         ).toEqual([]);
         expect(A.filter(declared, (context) => !A.contains(contexts, context))).toEqual([]);
-      }
-    })
-  );
-  it.effect("keeps all five current Heavy callers within its requested read-only permission ceiling", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const root = yield* findRepoRoot();
-      const heavy = parseWorkflowYaml(yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`));
-      const requested = yamlAt(heavy, ["jobs", "producer-execute", "permissions"]);
-      expect(requested).toEqual({ contents: "read", actions: "read" });
-      expect(yamlAt(heavy, ["permissions"])).toEqual({ contents: "read" });
-      for (const caller of [
-        { file: "check.yml", job: "heavy" },
-        { file: "heavy-admit.yml", job: "heavy" },
-        { file: "cache-producer-prepare.yml", job: "prepare" },
-        { file: "cache-producer-inspect.yml", job: "inspect" },
-        { file: "cache-producer.yml", job: "produce" },
-      ]) {
-        const workflow = parseWorkflowYaml(yield* fs.readFileString(`${root}/.github/workflows/${caller.file}`));
-        expect(yamlAt(workflow, ["jobs", caller.job, "uses"])).toBe(
-          "beep-effect/beep-effect/.github/workflows/heavy.yml@main"
-        );
-        const ceiling = O.fromUndefinedOr(yamlAt(workflow, ["jobs", caller.job, "permissions"])).pipe(
-          O.getOrElse(() => yamlAt(workflow, ["permissions"]))
-        );
-        expect(ceiling).toEqual(requested);
       }
     })
   );

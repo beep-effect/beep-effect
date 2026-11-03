@@ -148,7 +148,7 @@ jobs:
     if: ${{ needs.admission.outputs.verdict != 'hold' }}
     permissions:
       contents: read
-      # All nested leaves are validated, including disabled producer execution.
+      # GitHub validates every nested job, including the gated producer.
       actions: read
     uses: beep-effect/beep-effect/.github/workflows/heavy.yml@main
     secrets: inherit

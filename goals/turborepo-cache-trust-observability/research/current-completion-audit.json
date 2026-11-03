@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "79c70ca24093f61c4fdedbd26c6f38572f0e564d383e01714a187da509b3c304",
+  "specSha256": "e1ec81133ca1a44b7ffad5c184e9c4b0a9f17cdb7529c8a03dcff483b8683418",
   "acceptance": [
     {
       "id": "AC-01",
@@ -535,7 +535,7 @@
   "priorSpecDigestBeforeCallerPermissionRepair": "bd9f5591fbb4337d83402b8dfd384c47d95ad98c6cb5030dae67595808bcac76",
   "callerPermissionStartupRepair": {
     "path": "research/caller-permission-startup-repair-2026-11-03.json",
-    "sha256": "7c67b3790d1c9d3f9c02fbb8afb4450e7d2eac501f55cc58e166b3b337ba26b6",
+    "sha256": "ca5ffd0d730802fb0e4eb7120a228b287a198e58cd0cd45825425e86c2ce0103",
     "authority": "Actual failed startup and source-level repair only; hosted regressions and a fresh accepted-source operational run remain required."
   }
 }

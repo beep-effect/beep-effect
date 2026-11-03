@@ -2224,3 +2224,16 @@ preserving the same digest; no scanner configuration or allowlist changes.
   has one. Extend the same PR and pin all five in one regression. Ordinary
   verification leaves retain Heavy's narrower default. Primary was notified
   that this is the shared main unblocker; no duplicate repair was opened.
+
+
+### 2026-11-03 — consolidate overlapping startup repairs
+
+- Evidence: accepted #2666 changed the same four callers; #2667 conflicted only
+  in explanatory comments on Check and label admission. Its pre-integration CI
+  was green, including 49 security tests and 187-package coverage with no floors
+  lowered, but that does not prove the new merged head.
+- Resolution: preserve index stages, retain accepted workflow bytes and combine
+  the duplicate fixture into one stronger all-caller regression.
+- Prevention: inspect the current consolidated unblocker and confirm ownership
+  before starting a parallel shared repair. The replacement coordination rule
+  requires T3 MCP; those tools are absent here, so no alternate relay is used.

@@ -744,3 +744,8 @@ protected producer provenance, current-main qualification or production rollout.
 - [Actual ordinary Check startup failure](https://github.com/beep-effect/beep-effect/actions/runs/41605514358):
   the same validation annotation identifies the ordinary caller ceiling. The
   workflow source inventory includes all five current Heavy callers.
+
+- [Accepted shared caller repair #2666](https://github.com/beep-effect/beep-effect/pull/2666):
+  the four caller permission maps are consumed unchanged from `fae5b2098c`.
+  The remaining regression compares against the actual requested leaf map and
+  pins the narrower selected-leaf defaults.

@@ -1394,3 +1394,15 @@ from scheduling any job. Extend this same repair to `check.yml` and
 regression assertion against the actual leaf ceiling, including the already
 correct protected-execution caller. This is one shared main unblocker, not
 separate copied repairs. Preserve the first repair head and its failed run.
+
+
+### Consolidation after accepted shared unblocker, 2026-11-03
+
+#2666 merged the same four caller permission maps as `fae5b2098c`, causing a
+comment-only conflict with this component's ordinary callers. Preserve both
+index-stage versions privately and retain all four accepted workflow files
+exactly. Consolidate the duplicate five-caller fixture into the accepted case,
+adding actual-leaf and narrower-default assertions. This component now carries
+regression strengthening and the operational failure record. Prior 715-head
+unit/policy/187-package coverage successes remain bound to 715; obtain fresh
+hosted proof after integration.

@@ -37,23 +37,23 @@
     "boundsChanged": false
   },
   "inspectionCallerEvidence": "Same source permission defect; no new inspection run was dispatched.",
-  "regressions": "All five current Heavy caller ceilings compared with the actual execution-leaf request; narrower Heavy defaults and absent selected-leaf overrides retained. Authored for hosted CI, not run locally.",
+  "regressions": "Strengthen the accepted single five-caller case against the actual execution-leaf permission map and narrower selected-leaf defaults; no duplicate fixture.",
   "sourceBindings": [
     {
       "path": ".github/workflows/check.yml",
-      "sha256": "9a6a6d47baacc3fed6bd312e45d0719c9076601958619dcc6003750a8328727b"
+      "sha256": "7cf8e17ac8cd828f2cedd59938619c35a68461c0701b786f11e8c15e9fbd2c24"
     },
     {
       "path": ".github/workflows/heavy-admit.yml",
-      "sha256": "b4ab0e06cc909b12311d1d5a7c653638e5d28f850145d813c6a85b4bf269a1c8"
+      "sha256": "8ade886b1308b415b18170c8f0a35fa02b066e79bdd58c108c8546ef4d1e59d9"
     },
     {
       "path": ".github/workflows/cache-producer-prepare.yml",
-      "sha256": "fac8c4dcf3f6c873ab6f7f8cc863a1ade574212b340a225fc69dcbad9ad4bc3f"
+      "sha256": "9d42a5faab20a0f5f4ac18a164e617c99f011c1b5086dd48fa03897dc5eb35fc"
     },
     {
       "path": ".github/workflows/cache-producer-inspect.yml",
-      "sha256": "4cd6c64edda311d61014eda0a7d62840ed40cc317f87faf9adfcf4b8bb7e4495"
+      "sha256": "9b0fdc6777c67d070db99758b31002b0674437fbd0b5247ea6763535e783ca92"
     },
     {
       "path": ".github/workflows/heavy.yml",
@@ -61,10 +61,10 @@
     },
     {
       "path": "packages/tooling/tool/cli/test/ci-runner-security.test.ts",
-      "sha256": "f146c00152e71f613728dcc572d48cbcbbcd584b3398f480dccf9ff6e331f9c2"
+      "sha256": "8332b832bc202b1a8acfce1b0c568eef957acef878483c973cb7776bc1c90670"
     }
   ],
-  "specSha256": "79c70ca24093f61c4fdedbd26c6f38572f0e564d383e01714a187da509b3c304",
+  "specSha256": "e1ec81133ca1a44b7ffad5c184e9c4b0a9f17cdb7529c8a03dcff483b8683418",
   "localVerification": "No verify, publish, package verification or repository test suite; normal Git hooks and targeted formatting only.",
   "hostedProofStatus": "pending new PR",
   "freshOperationalStartup": "not yet run",
@@ -78,5 +78,13 @@
     "jobs": 0,
     "diagnosis": "Same read permission ceiling mismatch in the ordinary Heavy caller."
   },
-  "alreadyCorrectCaller": "cache-producer.yml#produce"
+  "alreadyCorrectCaller": "cache-producer.yml#produce",
+  "acceptedSharedRepair": {
+    "pr": 2666,
+    "mergeCommit": "fae5b2098c8a08b77df6f9e33e370e0e01f2ea68",
+    "fourWorkflowFilesRetainedExactly": true,
+    "duplicateCallerRegressionConsolidated": true,
+    "priorHostedProofHead": "715ccfda069ee119b53bcb3c6252f158b8c360df",
+    "newHeadHostedProof": "pending"
+  }
 }
