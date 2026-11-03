@@ -15,3 +15,5 @@ Use the existing ai-metrics tooling, Phoenix driver, hook/managed-launch surface
 Advance P0 through P4 under SPEC: implement, verify, publish through current Yeet policy, ship the closeout reflection and prospective lifecycle declaration while active, obtain current hosted/review/merge evidence, then verify derived completion through the canonical goals completion refresh writer. Do not mark complete merely because fixtures pass or packets exist. New spend requires the operator; ordinary implementation choices use documented reasons and rollback within the authorized launch scope.
 
 Acceptance is the full SPEC checklist. Capture package, deployment, privacy, resource and user-interpretation evidence as applicable. Keep outcomes and limitations legible to the operator.
+
+Current reserved final checkpoint: PR2655. Follow the executable coordination runbook in research/MERGE-COORDINATION.md. Preserve PR2649 unknown; no retrospective readiness or production enrollment is authorized.
