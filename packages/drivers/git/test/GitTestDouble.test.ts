@@ -205,6 +205,12 @@ describe("Git.makeTest", () => {
         worktreeRemove: () => double.worktreeRemove(cwd, "../worktree"),
         worktreePrune: () => double.worktreePrune(cwd),
         lsFiles: () => double.lsFiles(cwd),
+        diffPatch: () => double.diffPatch(cwd),
+        gitDir: () => double.gitDir(cwd),
+        mergeTree: () => double.mergeTree(cwd, "main", "HEAD"),
+        revListCount: () => double.revListCount(cwd, "main..HEAD"),
+        updateRef: () => double.updateRef(cwd, "refs/archive/x", { create: "HEAD" }),
+        upstream: () => double.upstream(cwd, "main"),
       };
       for (const method of R.keys(double)) {
         const fn = double[method];
