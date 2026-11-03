@@ -37,6 +37,7 @@ def main():
     vector = []
     widths = collections.Counter()
     profile_vector = []
+    descriptor_vector = []
     repeated_capture_instances = 0
     nullable_repeat_instances = 0
 
@@ -78,6 +79,7 @@ def main():
         repeated_capture_instances += profile["capturesUnderMultiRepeat"] > 0
         nullable_repeat_instances += profile["nullableMultiRepeatBodies"] > 0
         profile_vector.append([identity, width, dict(sorted(profile.items()))])
+        descriptor_vector.append([identity, tree.state.groups - 1, sorted(tree.state.groupdict.items()), width])
         flags[str(fields["flags"])] += 1
         groups = tree.state.groups - 1
         maximum_groups = max(maximum_groups, groups)
@@ -99,6 +101,7 @@ def main():
         "instancesWithRepeatedCaptures": repeated_capture_instances,
         "instancesWithNullableMultiRepeats": nullable_repeat_instances,
         "instanceProfileVectorSha256": sha(json.dumps(profile_vector, sort_keys=True, separators=(",", ":")).encode()),
+        "instanceDescriptorVectorSha256": sha(json.dumps(descriptor_vector, sort_keys=True, separators=(",", ":")).encode()),
         "instanceFeatureVectorSha256": sha(json.dumps(vector, sort_keys=True, separators=(",", ":")).encode()),
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)

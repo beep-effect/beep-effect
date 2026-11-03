@@ -296,6 +296,13 @@ pass 23 tests; hosted qualification is strengthened with 4,456,448 additional
 atomic checks and two mixed astral/surrogate capture controls. Compiler lowering,
 actual worker execution, family semantics/safety and verified mapping remain open.
 
+The [native-point program compiler](./history/evidence/2026-11-02-regex-program-compiler.md)
+now lowers the reviewed grammar to bounded structural tokens and complete atom
+sets, preserving capture/name bindings and source profiles. Five focused suites
+pass 33 tests. Hosted qualification now compares every frozen descriptor and
+compiles all 13,610 programs before controlled captures. That native branch,
+actual worker/supervisor, family proofs and public composition remain open.
+
 The [admitted named-cleaner replay](./history/evidence/2026-11-02-admitted-named-cleaners.md)
 now matches all 600 non-HTML named/official outcomes in the original 1,155-case
 cleaner corpus, including 599 result/identity observations and the invalid-name

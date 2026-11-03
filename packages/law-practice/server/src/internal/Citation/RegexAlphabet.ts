@@ -83,6 +83,7 @@ export class CitationRegexAtomSets extends S.Opaque<CitationRegexAtomSets, { rea
 export class CitationRegexAlphabetText extends S.Opaque<CitationRegexAlphabetText, { readonly brand: unique symbol }>()(
   S.Struct({
     flags: S.tag("dgu"),
+    sourceSets: CitationRegexAtomSets,
     source: S.String.check(S.isMaxLength(max.producedTextUtf16)),
     atoms: S.Array(S.String.check(S.isMaxLength(max.patternUtf16))).check(S.isMaxLength(max.patternUtf16)),
     pythonLength: S.Natural.check(S.isLessThanOrEqualTo(max.producedTextUtf16)),
@@ -92,6 +93,7 @@ export class CitationRegexAlphabetText extends S.Opaque<CitationRegexAlphabetTex
       S.makeFilter(
         (value) =>
           Str.length(value.source) === value.pythonLength &&
+          A.length(value.atoms) === value.sourceSets.atoms &&
           A.reduce(value.atoms, 0, (units, text) => units + Str.length(text)) <= max.patternUtf16,
         $I.annote("OneUnitPerPoint", {
           description: "Every original Python point occupies exactly one encoded UTF-16 unit.",
@@ -221,6 +223,7 @@ export const makeCitationRegexAlphabet = Effect.fn("Citation.makeRegexAlphabet")
       const source = yield* encodeSource(prepared.value, boundaries);
       return CitationRegexAlphabetText.make({
         source,
+        sourceSets: sets,
         atoms,
         pythonLength: prepared.value.pythonLength,
         cells: A.length(boundaries) - 1,

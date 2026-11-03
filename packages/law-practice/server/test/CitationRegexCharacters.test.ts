@@ -65,6 +65,7 @@ const ProgramFacts = S.fromJsonString(
     instancesWithRepeatedCaptures: S.tag(0),
     instancesWithNullableMultiRepeats: S.tag(0),
     instanceProfileVectorSha256: S.tag("4f46f82500b6096d244ceac0c266e1ee67327a45f707c5ed1a181045fde7f1ab"),
+    instanceDescriptorVectorSha256: S.tag("f5546c424b56c59dd5702409ecf2b66b9092086391b6da804423ccc3c1bfc21a"),
     features: S.Record(S.String, S.Natural),
   })
 ).pipe(

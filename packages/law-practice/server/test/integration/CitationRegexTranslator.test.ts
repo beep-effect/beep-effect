@@ -18,6 +18,9 @@ const Reply = S.fromJsonString(
     codePointChecks: S.Natural,
     alphabetPointChecks: S.Natural,
     alphabetCaptureMatches: S.Natural,
+    programInstances: S.tag(13610),
+    programMaxUtf16: S.Int.check(S.isBetween({ minimum: 1, maximum: 4096 })),
+    programCaptureMatches: S.tag(26),
     cases: S.Natural,
     captureMatches: S.Natural,
   })
@@ -81,12 +84,16 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native regex transla
         ).pipe(Effect.timeout(Duration.seconds(90)));
         expect(yield* completed.child.isRunning).toBe(false);
         expect(yield* native.snapshot).toEqual({ spawned: 1, confirmed: 1 });
-        expect(completed.reply).toEqual({
+        const { programMaxUtf16, ...totals } = completed.reply;
+        expect(programMaxUtf16).toBeGreaterThan(0);
+        expect(totals).toEqual({
           instances: 13610,
           maxUtf16: 3183,
           codePointChecks: 4456448,
           alphabetPointChecks: 4456448,
           alphabetCaptureMatches: 2,
+          programInstances: 13610,
+          programCaptureMatches: 26,
           cases: 28,
           captureMatches: 23,
         });

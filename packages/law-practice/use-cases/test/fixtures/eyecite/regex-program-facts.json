@@ -23,6 +23,7 @@
     "0": 13602,
     "2": 8
   },
+  "instanceDescriptorVectorSha256": "f5546c424b56c59dd5702409ecf2b66b9092086391b6da804423ccc3c1bfc21a",
   "instanceFeatureVectorSha256": "82a584bde4d3e8e991d3bbda59f1842aa2639b5d7183e213cc006a0ce1866df8",
   "instanceProfileVectorSha256": "4f46f82500b6096d244ceac0c266e1ee67327a45f707c5ed1a181045fde7f1ab",
   "instances": 13610,
@@ -87,7 +88,7 @@
   },
   "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
   "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
-  "producerSha256": "31db50067cc6479d2caf5654f296ce6b259856c9fac827c0812691b5e8ec0edd",
+  "producerSha256": "59f8718f0618e88d0c5649ff5d7de7bfc31f042b9a6e03abad91d59b2bf6e5a5",
   "pythonVersion": "3.11.15",
   "schemaVersion": "citation-regex-program-facts/v1",
   "scope": "Complete parsed feature inventory; not target matching or family safety proof.",

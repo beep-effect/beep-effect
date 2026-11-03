@@ -23,7 +23,11 @@
         "packages/law-practice/server/test/CitationRegexAlphabet.test.ts",
         "goals/citation-extraction-engine/ops/probe-regex-program.py",
         "packages/law-practice/use-cases/test/fixtures/eyecite/regex-program-facts.json",
-        "goals/citation-extraction-engine/history/evidence/2026-11-02-regex-alphabet.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-02-regex-alphabet.md",
+        "packages/law-practice/server/src/internal/Citation/RegexProgram.ts",
+        "packages/law-practice/server/src/internal/Citation/RegexPointSets.ts",
+        "packages/law-practice/server/test/CitationRegexProgram.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-02-regex-program-compiler.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
