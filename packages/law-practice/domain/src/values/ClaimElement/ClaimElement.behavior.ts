@@ -36,7 +36,9 @@ import {
   isCountedHead,
   isDesignatedHead,
   isExplicitAbbreviatedHead,
+  isPluralityReferenceHead,
   isSingleModifiedHead,
+  pluralityReferenceContent,
 } from "./ClaimTerm.compatibility.ts";
 import type { PatentClaims } from "../PatentDocument/PatentDocument.model.ts";
 import type { ClaimElementEdge, ClaimFunctionalPart } from "./ClaimElement.edge.model.ts";
@@ -593,9 +595,24 @@ const scanStep =
           const headStart =
             index + width + (isReferringDeterminer(determiner) ? quantifierWidthAt(tokens, index + width) : 0);
           const head = headAt(tokens, headStart);
-          return A.isReadonlyArrayNonEmpty(head) && !isClaimReference(head)
-            ? scanStepOf(O.some(termOf(claimText, start, determiner, head)), headStart + A.length(head))
-            : scanStepOf(O.none(), index + width);
+          if (!A.isReadonlyArrayNonEmpty(head) || isClaimReference(head)) return scanStepOf(O.none(), index + width);
+          const term = termOf(claimText, start, determiner, head);
+          const lexicalStart = O.getOrThrow(A.get(tokens, index + width)).start;
+          // A referring determiner does not consume the collective noun plurality.
+          // Retain that explicit source phrase in the head, while scanning the
+          // nominal contents after the quantity's grammatical separators.
+          const lexical = surfaceAt(tokens, index + width)(["plurality", "of"])
+            ? {
+                ...term,
+                head: pipe(
+                  Str.slice(lexicalStart, term.anchor.endChar)(claimText),
+                  Str.toLowerCase,
+                  Str.replace(/\s+/gu, " "),
+                  Str.trim
+                ),
+              }
+            : term;
+          return scanStepOf(O.some(lexical), headStart + A.length(head));
         },
       })
     );
@@ -658,7 +675,11 @@ const antecedentEdges = (
   ancestors: ReadonlyArray<EncodedElement> = []
 ): ReadonlyArray<EncodedEdge> => {
   const located = A.flatMap(A.appendAll(elements, ancestors), (element: EncodedElement) =>
-    A.map(element.terms, (term) => ({ path: element.path, term }))
+    A.map(element.terms, (term) => ({
+      path: element.path,
+      // Edge resolution uses the entity contents; emitted trees retain lexical heads.
+      term: { ...term, head: O.getOrElse(pluralityReferenceContent(term.head), () => term.head) },
+    }))
   );
   const local = (path: string) => A.some(elements, (element) => element.path === path);
   const root = (path: string) => O.exists(A.head(elements), (element) => element.path === path);
@@ -939,7 +960,7 @@ const decomposeInContext = Effect.fn("ClaimElement.decomposeClaim")(function* (
                 (introduced) =>
                   introduced.anchor.startChar === edge.introducing.anchor.startChar &&
                   isIntroducingDeterminer(introduced.determiner) &&
-                  (partOwner || introduced.head === term.head)
+                  (partOwner || introduced.head === term.head || isPluralityReferenceHead(term.head)(introduced.head))
               )
           );
         })

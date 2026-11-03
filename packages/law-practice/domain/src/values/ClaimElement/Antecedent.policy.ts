@@ -44,6 +44,7 @@ import {
   isCountedHead,
   isExplicitAbbreviatedHead,
   isSingleModifiedHead as isSingleModifiedOf,
+  pluralityReferenceContent,
 } from "./ClaimTerm.compatibility.ts";
 import type { PatentClaims } from "../PatentDocument/PatentDocument.model.ts";
 import type { ClaimInputCollection } from "./ClaimElement.input.model.ts";
@@ -301,7 +302,7 @@ const uncovered = (referring: LocatedTerm, ruleId: AntecedentRuleId): Antecedent
 
 // In-chain resolution: `O.none()` when no step applies, else the step's verdict.
 const resolveInChain = (introductions: ReadonlyArray<LocatedTerm>, referring: LocatedTerm, chain: Chain) => {
-  const head = referring.term.head;
+  const head = O.getOrElse(pluralityReferenceContent(referring.term.head), () => referring.term.head);
   const resolved = (): Verdict => O.none();
   const ambiguous =
     (ruleId: AntecedentRuleId) =>
@@ -377,7 +378,13 @@ const fullVerdict =
     pipe(
       resolveInChain(introductions, referring, chain),
       O.orElse(() => {
-        const candidates = O.getOrElse(R.get(introductionsByHead, referring.term.head), () => []);
+        const candidates = O.getOrElse(
+          R.get(
+            introductionsByHead,
+            O.getOrElse(pluralityReferenceContent(referring.term.head), () => referring.term.head)
+          ),
+          () => []
+        );
         // Preserve the original first global introduction outside the chain,
         // charging its actual candidate scan before inspecting membership.
         if (!spendChainWork(remaining, (candidates.length + 1) * (chain.claims.length + 1)))
