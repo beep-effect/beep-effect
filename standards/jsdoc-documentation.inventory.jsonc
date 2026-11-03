@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-03T00:05:51.150Z",
+  "generatedAt": "2026-11-03T00:57:20.336Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -478066,8 +478066,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 190,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-190-githubapireply",
+          "line": 191,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-191-githubapireply",
           "currentTags": [
             "@category",
             "@since"
@@ -478088,8 +478088,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 240,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-240-githubpolicyclient",
+          "line": 241,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-241-githubpolicyclient",
           "currentTags": [
             "@category",
             "@since"
@@ -478110,8 +478110,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 297,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-297-githubpolicyclientlive",
+          "line": 298,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-298-githubpolicyclientlive",
           "currentTags": [
             "@category",
             "@since"
@@ -478132,8 +478132,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 372,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-372-workflowpolicydiagnostics",
+          "line": 373,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-373-workflowpolicydiagnostics",
           "currentTags": [
             "@category",
             "@since"
@@ -478150,12 +478150,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "setupCacheWriteDisabled",
+          "symbolName": "setupActionSavesNoCache",
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 407,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-407-setupcachewritedisabled",
+          "line": 414,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-414-setupactionsavesnocache",
           "currentTags": [
             "@category",
             "@since"
@@ -478176,8 +478176,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 433,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-433-workflowjobcontexts",
+          "line": 442,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-442-workflowjobcontexts",
           "currentTags": [
             "@category",
             "@since"
@@ -478198,8 +478198,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 475,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-475-prsizelabeldiff",
+          "line": 484,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-484-prsizelabeldiff",
           "currentTags": [
             "@param",
             "@returns",
@@ -478222,8 +478222,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 503,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-503-heldgrouprunids",
+          "line": 512,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-512-heldgrouprunids",
           "currentTags": [
             "@param",
             "@returns",
@@ -478246,8 +478246,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 546,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-546-desktopenvironmentapproved",
+          "line": 555,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-555-desktopenvironmentapproved",
           "currentTags": [
             "@param",
             "@returns",
@@ -478270,8 +478270,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 587,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-587-reviewerappintegrationmatches",
+          "line": 596,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-596-reviewerappintegrationmatches",
           "currentTags": [
             "@param",
             "@returns",
@@ -478294,8 +478294,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 783,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-783-cigovernancecommands",
+          "line": 792,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-792-cigovernancecommands",
           "currentTags": [
             "@category",
             "@since"
@@ -479250,8 +479250,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 28,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-28-cioperationalpatterns",
+          "line": 33,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-33-cioperationalpatterns",
           "currentTags": [
             "@category",
             "@since"
@@ -479272,8 +479272,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 53,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-53-cioperationalpatterns",
+          "line": 59,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-59-cioperationalpatterns",
           "currentTags": [
             "@category",
             "@since"
@@ -479294,8 +479294,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 75,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-75-cigoaldocument",
+          "line": 82,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-82-cigoaldocument",
           "currentTags": [
             "@category",
             "@since"
@@ -479316,8 +479316,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 92,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-92-cigoaldocument",
+          "line": 99,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-99-cigoaldocument",
           "currentTags": [
             "@category",
             "@since"
@@ -479338,8 +479338,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 108,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-108-cidesktopinput",
+          "line": 115,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-115-cidesktopinput",
           "currentTags": [
             "@category",
             "@since"
@@ -479360,8 +479360,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 125,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-125-cidesktopinput",
+          "line": 132,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-132-cidesktopinput",
           "currentTags": [
             "@category",
             "@since"
@@ -479382,8 +479382,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 141,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-141-ciresourcelane",
+          "line": 148,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-148-ciresourcelane",
           "currentTags": [
             "@category",
             "@since"
@@ -479404,8 +479404,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 158,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-158-ciresourcelane",
+          "line": 165,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-165-ciresourcelane",
           "currentTags": [
             "@category",
             "@since"
@@ -479426,8 +479426,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 173,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-173-cichangeprofile",
+          "line": 180,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-180-cichangeprofile",
           "currentTags": [
             "@category",
             "@since"
@@ -479448,8 +479448,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 192,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-192-ciresourcesample",
+          "line": 199,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-199-ciresourcesample",
           "currentTags": [
             "@category",
             "@since"
@@ -479470,8 +479470,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 226,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-226-cienvironmentselection",
+          "line": 233,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-233-cienvironmentselection",
           "currentTags": [
             "@category",
             "@since"
@@ -479492,8 +479492,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiOperational.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.service.ts",
-          "line": 83,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-service-ts-83-cioperational",
+          "line": 84,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-service-ts-84-cioperational",
           "currentTags": [
             "@category",
             "@since"
@@ -479514,8 +479514,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiOperational.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.service.ts",
-          "line": 110,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-service-ts-110-cioperationallive",
+          "line": 111,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-service-ts-111-cioperationallive",
           "currentTags": [
             "@category",
             "@since"
@@ -480850,8 +480850,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 295,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-295-heavydocsonlypattern",
+          "line": 297,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-297-heavydocsonlypattern",
           "currentTags": [
             "@category",
             "@since"
@@ -480872,8 +480872,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 317,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-317-isheavydocsonlypath",
+          "line": 319,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-319-isheavydocsonlypath",
           "currentTags": [
             "@param",
             "@returns",
@@ -480896,8 +480896,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 375,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-375-decideheavyadmission",
+          "line": 377,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-377-decideheavyadmission",
           "currentTags": [
             "@param",
             "@returns",
@@ -480920,8 +480920,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 440,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-440-ghpullrequesteventpayload",
+          "line": 442,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-442-ghpullrequesteventpayload",
           "currentTags": [
             "@category",
             "@since"
@@ -480942,8 +480942,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 474,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-474-heavyadmissionreadinput",
+          "line": 476,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-476-heavyadmissionreadinput",
           "currentTags": [
             "@category",
             "@since"
@@ -480964,8 +480964,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 523,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-523-readheavyadmissionchangedpaths",
+          "line": 525,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-525-readheavyadmissionchangedpaths",
           "currentTags": [
             "@param",
             "@returns",
@@ -480988,8 +480988,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 574,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-574-readheavyadmissionevent",
+          "line": 576,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-576-readheavyadmissionevent",
           "currentTags": [
             "@param",
             "@returns",
@@ -481012,8 +481012,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 629,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-629-heavyadmissiongithuboutputs",
+          "line": 631,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-631-heavyadmissiongithuboutputs",
           "currentTags": [
             "@param",
             "@returns",
@@ -481036,8 +481036,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 654,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-654-renderheavyadmissionsummary",
+          "line": 656,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-656-renderheavyadmissionsummary",
           "currentTags": [
             "@param",
             "@returns",
@@ -481060,8 +481060,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 687,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-687-heavyadmissionschemasfortesting",
+          "line": 689,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-689-heavyadmissionschemasfortesting",
           "currentTags": [
             "@category",
             "@since"
