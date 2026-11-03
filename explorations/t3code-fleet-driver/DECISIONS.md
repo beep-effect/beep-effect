@@ -211,7 +211,7 @@ Rejected option: doing it in this PR.
 
 ## 2026-11-01 — wake-service
 
-**Question:** `goals/wake-service` is active with no code, and it delivers
+**Question:** `retired:wake-service` is active with no code, and it delivers
 wakes through the agent-message router. What happens to it?
 
 **Answer:** It is superseded by T3 scheduled tasks and `watch_pull_request`,
@@ -275,3 +275,19 @@ operator's picture?
 **Rationale:** Approved as recommended. Rejected alternatives: folding harness
 MCP into the fleet rollout, and folding the spill rule into the orchestrate
 rewrite.
+
+## 2026-11-02 — retired-packet links
+
+**Question:** `goals/t3-native-orchestration` deleted
+`retired:cross-provider-agent-communication`, `retired:agent-message-router`,
+`retired:agent-session-bridges`, `retired:codex-security-findings-2026-10-14-agent-message`
+and `retired:wake-service`. How does this packet keep citing them?
+
+**Answer:** As `retired:<slug>` records with a GitHub permalink at the last
+commit where each packet existed: `retired:cross-provider-agent-communication` ([last tree](https://github.com/beep-effect/beep-effect/tree/6bb8584b6dbc9aee927a200901c9eebc0abd63b1/explorations/cross-provider-agent-communication)), `retired:agent-message-router` ([last tree](https://github.com/beep-effect/beep-effect/tree/6bb8584b6dbc9aee927a200901c9eebc0abd63b1/goals/agent-message-router)), `retired:agent-session-bridges` ([last tree](https://github.com/beep-effect/beep-effect/tree/6bb8584b6dbc9aee927a200901c9eebc0abd63b1/goals/agent-session-bridges)), `retired:codex-security-findings-2026-10-14-agent-message` ([last tree](https://github.com/beep-effect/beep-effect/tree/6bb8584b6dbc9aee927a200901c9eebc0abd63b1/goals/codex-security-findings-2026-10-14-agent-message)), `retired:wake-service` ([last tree](https://github.com/beep-effect/beep-effect/tree/6bb8584b6dbc9aee927a200901c9eebc0abd63b1/goals/wake-service)). Prose
+that describes the deleted stack is kept in the past tense; relative links are
+rewritten to the permalinks.
+
+**Rationale:** The PR #1975 precedent: packets are deleted outright, git is the
+archive, and surviving packets carry the tombstone plus a Decision Log entry.
+

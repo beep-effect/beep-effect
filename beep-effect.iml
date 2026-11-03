@@ -243,12 +243,9 @@
       <excludeFolder url="file://$MODULE_DIR$/goals/yeet-pr-events" />
       <excludeFolder url="file://$MODULE_DIR$/goals/yeet-pr-resume-footer" />
       <excludeFolder url="file://$MODULE_DIR$/goals/codex-security-findings-2026-10-14" />
-      <excludeFolder url="file://$MODULE_DIR$/goals/codex-security-findings-2026-10-14-agent-message" />
       <excludeFolder url="file://$MODULE_DIR$/goals/codex-security-findings-2026-10-14-c2" />
       <excludeFolder url="file://$MODULE_DIR$/goals/codex-security-findings-2026-10-14-drawing-critics" />
       <excludeFolder url="file://$MODULE_DIR$/goals/codex-security-findings-2026-10-14-l0-ledger" />
-      <excludeFolder url="file://$MODULE_DIR$/goals/agent-message-router" />
-      <excludeFolder url="file://$MODULE_DIR$/goals/agent-session-bridges" />
       <excludeFolder url="file://$MODULE_DIR$/goals/attorney-question-loop" />
       <excludeFolder url="file://$MODULE_DIR$/goals/docs-lint-oxlint-rules" />
       <excludeFolder url="file://$MODULE_DIR$/goals/effect-rules-diagnostics-lane" />
@@ -272,7 +269,6 @@
       <excludeFolder url="file://$MODULE_DIR$/explorations/attorney-review-workspace" />
       <excludeFolder url="file://$MODULE_DIR$/explorations/claim-element-graph" />
       <excludeFolder url="file://$MODULE_DIR$/explorations/claude-mods-law-practice" />
-      <excludeFolder url="file://$MODULE_DIR$/explorations/cross-provider-agent-communication" />
       <excludeFolder url="file://$MODULE_DIR$/explorations/doc-hub-spokes" />
       <excludeFolder url="file://$MODULE_DIR$/explorations/expiring-repo-facts" />
       <excludeFolder url="file://$MODULE_DIR$/explorations/gpu-document-ocr" />

@@ -108,7 +108,7 @@ transaction.
 - `law-practice` candor and legal-position repositories: append-only, enforced
   by `BEFORE UPDATE OR DELETE` triggers. They issue no UPDATE.
 - A `row_version > 0` CHECK constraint, `updatedAt` stamping on update, and
-  tooling `AgentMessage` SQLite stores (not entity tables).
+  tooling SQLite stores (not entity tables).
 
 ## Target Surfaces
 
@@ -171,6 +171,7 @@ them and record each in the Decision Log.
 
 | Date | Decision | Reason | How to reverse |
 | --- | --- | --- | --- |
+| 2026-11-02 | The tooling-store example no longer names the deleted `AgentMessage` store (`retired:agent-message-router` ([last tree](https://github.com/beep-effect/beep-effect/tree/6bb8584b6dbc9aee927a200901c9eebc0abd63b1/goals/agent-message-router))). | Reference hygiene after `goals/t3-native-orchestration` deleted the agent-message stack. | Restore the packet from git at the permalink and revert the retirement PR. |
 | 2026-10-20 | D1: `rowVersion` becomes `RowVersion.pipe(Pg.integer(), Pg.default(1), Pg.version())`, with the variant table in Design §1. The DDL gains `DEFAULT 1` through one generated migration. | `version()` is the only metadata `makeRepository` and future tooling can find; `DEFAULT 1` makes the optional insert variant honest instead of relying on every adapter writing `1`. `ALTER COLUMN SET DEFAULT` is metadata-only and instant. | Restore the explicit `VariantField({ select, update, json })`; add a migration running `ALTER COLUMN "row_version" DROP DEFAULT` on the same tables. |
 | 2026-10-20 | D1a: `@beep/effect-drizzle` drops version fields from `jsonCreate`. | A client creating a row cannot know its version. The previous `jsonCreate: select` forced a meaningless required token into create payloads and broke the entity variant contract. No production code reads `jsonCreate`. | Restore `jsonCreate: select` in both `effectiveSchema` and `PlainVariants` (pg, sqlite). |
 | 2026-10-20 | D2: route (a). Keep Drizzle query-builder repositories and add the compare-and-increment guard. Do not adopt `makeRepository`. | Every EntityKit entity is refused by `makeRepository` today: it throws on any `columnName` override (`core/repository.ts`), and the kit pins `entityType` and `publicId` with `Pg.columnName(...)`. It runs through raw `SqlClient`, and no production layer sets the `snakeCase`/`camelCase` name transforms it needs (only effect-drizzle live tests do). It has no tenant (`orgId`) predicate. Transaction scope is not a blocker if both run on one transform-configured client: Drizzle's Effect sessions read through `withoutTransform`/`values`/`raw`, so the transforms do not reach Drizzle (verified by the SqlModel session, 2026-10-20). A second client would not share the scope. Route (a) is a two-predicate change at each site. | Revisit once the repository supports `columnName` overrides (or the kit drops the overrides, which equal `snakeCase` of the key), the shared production `PgClient` sets the name transforms, and the repository gains a tenant predicate; then swap adapters behind the same ports. effect-drizzle #1938 (`makeNativeRepository`, unmerged) covers models without `version()` only. |

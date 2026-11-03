@@ -1,3 +1,0 @@
-# Ignore all raw Codex evidence; only sanitized markdown is tracked.
-*
-!.gitignore

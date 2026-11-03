@@ -1319,126 +1319,6 @@
             "functions": 48
           }
         },
-        "packages/drivers/ai-provider-cli/src/AiProviderCliSession.claude.service.ts": {
-          "lines": 93.93,
-          "statements": 92.85,
-          "branches": 90.9,
-          "functions": 78.57,
-          "uncovered": {
-            "lines": 6,
-            "statements": 8,
-            "branches": 4,
-            "functions": 6
-          }
-        },
-        "packages/drivers/ai-provider-cli/src/AiProviderCliSession.codex.service.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/ai-provider-cli/src/AiProviderCliSession.cursor.service.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/ai-provider-cli/src/AiProviderCliSession.errors.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/ai-provider-cli/src/AiProviderCliSession.grok.service.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/ai-provider-cli/src/AiProviderCliSession.models.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/ai-provider-cli/src/AiProviderCliSession.profile.service.ts": {
-          "lines": 96.96,
-          "statements": 97.05,
-          "branches": 97.05,
-          "functions": 85.71,
-          "uncovered": {
-            "lines": 2,
-            "statements": 2,
-            "branches": 1,
-            "functions": 2
-          }
-        },
-        "packages/drivers/ai-provider-cli/src/AiProviderCliSession.service.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/ai-provider-cli/src/AiProviderCliSession.stdio.service.ts": {
-          "lines": 97,
-          "statements": 93.71,
-          "branches": 84.26,
-          "functions": 91.66,
-          "uncovered": {
-            "lines": 5,
-            "statements": 12,
-            "branches": 14,
-            "functions": 3
-          }
-        },
-        "packages/drivers/ai-provider-cli/src/AiProviderCliSession.wire.models.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/drivers/ai-provider-cli/src/index.ts": {
           "lines": 100,
           "statements": 100,
@@ -1466,6 +1346,42 @@
         "functions": 24
       },
       "files": {
+        "packages/tooling/library/ai-sync/src/ModelCatalog.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/ai-sync/src/Skills.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/ai-sync/src/SkillsLock.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/library/ai-sync/src/_generated/schemas.gen.ts": {
           "lines": 100,
           "statements": 100,
@@ -29840,6 +29756,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/library/qa-capture/src/QaInventory.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/library/qa-capture/src/SessionStore.service.ts": {
           "lines": 76.47,
           "statements": 76.81,
@@ -30881,18 +30809,6 @@
             "functions": 2
           }
         },
-        "packages/tooling/library/ai-metrics/src/observation-claim-population.ts": {
-          "lines": 96.07,
-          "statements": 94.91,
-          "branches": 90,
-          "functions": 100,
-          "uncovered": {
-            "lines": 2,
-            "statements": 3,
-            "branches": 3,
-            "functions": 0
-          }
-        },
         "packages/tooling/library/ai-metrics/src/observation-coverage.ts": {
           "lines": 87.5,
           "statements": 86.48,
@@ -30915,30 +30831,6 @@
             "statements": 4,
             "branches": 1,
             "functions": 3
-          }
-        },
-        "packages/tooling/library/ai-metrics/src/observation-launch-claims.ts": {
-          "lines": 96.86,
-          "statements": 94.63,
-          "branches": 88.88,
-          "functions": 93.42,
-          "uncovered": {
-            "lines": 8,
-            "statements": 16,
-            "branches": 15,
-            "functions": 5
-          }
-        },
-        "packages/tooling/library/ai-metrics/src/observation-launch-client.ts": {
-          "lines": 92.75,
-          "statements": 88,
-          "branches": 88.46,
-          "functions": 68.18,
-          "uncovered": {
-            "lines": 5,
-            "statements": 9,
-            "branches": 6,
-            "functions": 7
           }
         },
         "packages/tooling/library/ai-metrics/src/observation-launch-facts.ts": {
@@ -31662,174 +31554,6 @@
             "statements": 1,
             "branches": 0,
             "functions": 1
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.attached.command.ts": {
-          "lines": 96.87,
-          "statements": 96.87,
-          "branches": 93.33,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 1,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.attached.schemas.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.attached.service.ts": {
-          "lines": 97.84,
-          "statements": 97.93,
-          "branches": 100,
-          "functions": 90.47,
-          "uncovered": {
-            "lines": 2,
-            "statements": 2,
-            "branches": 0,
-            "functions": 2
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.command.ts": {
-          "lines": 98.64,
-          "statements": 98.66,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.layer.ts": {
-          "lines": 91.17,
-          "statements": 91.17,
-          "branches": 90,
-          "functions": 72.72,
-          "uncovered": {
-            "lines": 3,
-            "statements": 3,
-            "branches": 1,
-            "functions": 3
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.models.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.command.ts": {
-          "lines": 32.35,
-          "statements": 30.55,
-          "branches": 0,
-          "functions": 12.5,
-          "uncovered": {
-            "lines": 23,
-            "statements": 25,
-            "branches": 4,
-            "functions": 7
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.ts": {
-          "lines": 85.18,
-          "statements": 83,
-          "branches": 81.57,
-          "functions": 73.68,
-          "uncovered": {
-            "lines": 28,
-            "statements": 35,
-            "branches": 21,
-            "functions": 15
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.peer.command.ts": {
-          "lines": 97.67,
-          "statements": 97.72,
-          "branches": 75,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 1,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.runtime.ts": {
-          "lines": 89.87,
-          "statements": 90.12,
-          "branches": 80.48,
-          "functions": 77.27,
-          "uncovered": {
-            "lines": 8,
-            "statements": 8,
-            "branches": 8,
-            "functions": 5
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.service.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.store.ts": {
-          "lines": 95.38,
-          "statements": 93.89,
-          "branches": 90.09,
-          "functions": 95.6,
-          "uncovered": {
-            "lines": 16,
-            "statements": 23,
-            "branches": 22,
-            "functions": 4
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.tools.ts": {
-          "lines": 96,
-          "statements": 96.07,
-          "branches": 88.88,
-          "functions": 95,
-          "uncovered": {
-            "lines": 2,
-            "statements": 2,
-            "branches": 1,
-            "functions": 1
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/AgentMessage/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/commands/Architecture/Architecture.command.ts": {
@@ -36416,18 +36140,6 @@
             "functions": 10
           }
         },
-        "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/tooling/tool/cli/src/commands/Models/Models.catalog.service.ts": {
           "lines": 91.66,
           "statements": 90.26,
@@ -36834,18 +36546,6 @@
             "statements": 120,
             "branches": 13,
             "functions": 73
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/Qa/Inventory.schemas.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/commands/Qa/JudgeCheck.ts": {
@@ -38348,18 +38048,6 @@
             "functions": 10
           }
         },
-        "packages/tooling/tool/cli/src/commands/Skills/Skills.schemas.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/tooling/tool/cli/src/commands/Skills/Skills.seeds.ts": {
           "lines": 100,
           "statements": 100,
@@ -38382,18 +38070,6 @@
             "statements": 16,
             "branches": 14,
             "functions": 9
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/Skills/SkillsLock.schemas.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/commands/Skills/SkillsLock.write.ts": {
@@ -40916,30 +40592,6 @@
             "functions": 0
           }
         },
-        "packages/tooling/tool/cli/src/internal/jsdoc/DoctestSource.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/jsdoc/JSDocSections.ts": {
-          "lines": 95.8,
-          "statements": 96.12,
-          "branches": 69.52,
-          "functions": 97.61,
-          "uncovered": {
-            "lines": 6,
-            "statements": 6,
-            "branches": 32,
-            "functions": 1
-          }
-        },
         "packages/tooling/tool/cli/src/internal/package-scripts/PackageScripts.schemas.ts": {
           "lines": 100,
           "statements": 100,
@@ -41529,18 +41181,6 @@
           }
         },
         "packages/tooling/tool/cli/src/test/AgentEffectiveness.test-kit.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/test/AgentMessage.test-kit.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -42536,6 +42176,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/library/repo-utils/src/JSDoc/DoctestSource.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/library/repo-utils/src/JSDoc/JSDoc.ts": {
           "lines": 93.75,
           "statements": 93.75,
@@ -42546,6 +42198,18 @@
             "statements": 1,
             "branches": 0,
             "functions": 16
+          }
+        },
+        "packages/tooling/library/repo-utils/src/JSDoc/JSDocSections.ts": {
+          "lines": 95.8,
+          "statements": 96.12,
+          "branches": 69.52,
+          "functions": 97.61,
+          "uncovered": {
+            "lines": 6,
+            "statements": 6,
+            "branches": 32,
+            "functions": 1
           }
         },
         "packages/tooling/library/repo-utils/src/JSDoc/index.ts": {
@@ -49401,69 +49065,6 @@
           }
         },
         "packages/foundation/modeling/spdx/src/internal/parser.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        }
-      }
-    },
-    "@beep/t3-code": {
-      "path": "packages/drivers/t3-code",
-      "lines": 96.46,
-      "statements": 87.87,
-      "branches": 83.92,
-      "functions": 71.05,
-      "uncovered": {
-        "lines": 4,
-        "statements": 16,
-        "branches": 9,
-        "functions": 11
-      },
-      "files": {
-        "packages/drivers/t3-code/src/T3Code.errors.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/t3-code/src/T3Code.models.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/t3-code/src/T3Code.service.ts": {
-          "lines": 96.19,
-          "statements": 87.09,
-          "branches": 83.92,
-          "functions": 71.05,
-          "uncovered": {
-            "lines": 4,
-            "statements": 16,
-            "branches": 9,
-            "functions": 11
-          }
-        },
-        "packages/drivers/t3-code/src/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

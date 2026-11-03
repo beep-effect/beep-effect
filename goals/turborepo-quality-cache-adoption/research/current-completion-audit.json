@@ -3,14 +3,14 @@
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "365bd154b05b4d425cecaf6ce5cb966cf00b9cb3",
-  "specSha256": "2cf3f45742fe3dc150c6f80cbde4c070e969c21aadf7ef356086bb0fbac9edb1",
+  "specSha256": "0342ed1f66fd798aee2d94e9dada8e1a96d1561184707b7806bc0f87cf24e1a5",
   "acceptance": [
     {
       "id": "AC-01",
       "source": "SPEC.md:165",
       "requirement": "Current executable/lane population and applicable stable/canary feature matrix are complete, source-backed and assigned to owners.",
       "status": "unproven",
-      "nextProof": "Reconcile the source-bound 2,434-computation census (2,236 remaining reviews) to current source, finish every in-scope computation review and the 25 pending feature decisions, and consume the economics owner baseline. Completed feature reviews do not qualify actual computations."
+      "nextProof": "Reconcile the source-bound 2,434-computation census (2,236 remaining reviews) to current source, finish every in-scope computation review and the 24 pending feature decisions, and consume the economics owner baseline. Completed feature reviews do not qualify actual computations."
     },
     {
       "id": "AC-02",
@@ -370,5 +370,11 @@
     "path": "research/prune-global-feature-review.json",
     "sha256": "c1b55c24c7241e42860505af7b932cd03b8481d2d46ccef0719b636bbf22bfb9",
     "authority": "One tracked-repository applicability decision and pinned synthetic Linux file-presence controls. No real deployment, build portability, sensitive/ignored-file safety, computation qualification or measured performance acceptance."
+  },
+  "priorSpecSha256AtWatchApplicability": "2cf3f45742fe3dc150c6f80cbde4c070e969c21aadf7ef356086bb0fbac9edb1",
+  "watchFeatureReview": {
+    "path": "research/watch-feature-review.json",
+    "sha256": "d587ce4bf6fd40206e5b11a31e48032094eff26a24764eb6a41f4c96f8896bf0",
+    "authority": "Scoped applicability decision for current tracked repository commands. No native watch semantics, timing, runtime adoption, task qualification or whole-goal acceptance."
   }
 }

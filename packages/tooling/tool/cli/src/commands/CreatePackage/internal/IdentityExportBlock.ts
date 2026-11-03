@@ -7,8 +7,8 @@
  * @since 0.0.0
  */
 
+import { doctestFenceInfo } from "@beep/repo-utils/JSDoc/DoctestSource";
 import { Str, Text } from "@beep/utils";
-import { doctestFenceInfo } from "../../../internal/jsdoc/DoctestSource.ts";
 
 /**
  * Build the identity composer accessor name for a package.

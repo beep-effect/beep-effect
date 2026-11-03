@@ -166,9 +166,6 @@ const carveOuts: Record<string, string> = {
   "commands/Knowledge/Knowledge.refs.ts": "lib:repo-packets",
   "commands/Knowledge/Knowledge.schemas.ts": "lib:repo-packets",
   "commands/Knowledge/Knowledge.errors.ts": "lib:repo-packets",
-  // @beep/ai-sync: the skills-lock schema closure (D9).
-  "commands/Skills/SkillsLock.schemas.ts": "lib:ai-sync",
-  "commands/Skills/Skills.schemas.ts": "lib:ai-sync",
 };
 
 // `src/internal/<dir>` to its library (design-record "New libraries").
@@ -185,9 +182,6 @@ const internalHome = (path: string): string => {
     case "quality":
     case "ratchet":
       return "lib:repo-gates";
-    case "jsdoc":
-    case "tsmorph":
-      return "lib:repo-utils";
     default:
       return "lib:repo-cli-kit";
   }
@@ -248,6 +242,35 @@ const crossTool = edges.filter(
     edge.fromHome.startsWith("tool:") &&
     ((edge.toHome.startsWith("tool:") && edge.toHome !== edge.fromHome) || edge.toHome.startsWith("app:"))
 );
+// Library dependency order (design record "New libraries"): a library may import
+// only libraries at its rank or earlier. `repo-gates/proof` is a subpath of `repo-gates`.
+const libraryRank: Record<string, number> = {
+  "lib:repo-utils": 0,
+  "lib:ai-sync": 0,
+  "lib:qa-capture": 0,
+  "lib:repo-cli-kit": 1,
+  "lib:repo-run": 2,
+  "lib:repo-github": 3,
+  "lib:repo-coverage": 4,
+  "lib:repo-gates": 5,
+  "lib:repo-gates/proof": 5,
+  "lib:repo-packets": 6,
+};
+const libraryOrder = edges.filter(
+  (edge) =>
+    edge.fromHome.startsWith("lib:") &&
+    edge.toHome.startsWith("lib:") &&
+    edge.fromHome !== edge.toHome &&
+    (libraryRank[edge.toHome] ?? 99) > (libraryRank[edge.fromHome] ?? -1)
+);
+const libraryOrderPairs = Object.entries(
+  libraryOrder.reduce<Record<string, number>>((pairs, edge) => {
+    const key = `${edge.fromHome} -> ${edge.toHome}`;
+    pairs[key] = (pairs[key] ?? 0) + 1;
+    return pairs;
+  }, {})
+).sort((left, right) => right[1] - left[1]);
+
 const unknown = [
   ...new Set(edges.flatMap((edge) => [edge.fromHome, edge.toHome]).filter((home) => home.startsWith("unknown"))),
 ];
@@ -258,6 +281,8 @@ const summary = {
   unknownHomes: unknown,
   libraryToTool: libraryToTool.length,
   crossTool: crossTool.length,
+  libraryOrder: libraryOrder.length,
+  libraryOrderPairs,
   crossToolPairs: Object.entries(
     crossTool.reduce<Record<string, number>>((pairs, edge) => {
       const key = `${edge.fromHome} -> ${edge.toHome}`;
@@ -274,6 +299,7 @@ if (process.argv.includes("--json")) {
         ...summary,
         libraryToToolEdges: libraryToTool,
         crossToolEdges: crossTool,
+        libraryOrderEdges: libraryOrder,
         unknownEdges: edges.filter((edge) => edge.fromHome.startsWith("unknown") || edge.toHome.startsWith("unknown")),
       },
       null,

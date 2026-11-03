@@ -6,7 +6,7 @@
     "title": "T3-Native Orchestration",
     "status": "active",
     "created": "2026-11-01",
-    "updated": "2026-11-01",
+    "updated": "2026-11-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/t3-native-orchestration",
@@ -23,7 +23,18 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/feat_t3-native-orchestration-v2-1975714a21cd/verdict.json",
+        "gating": true
+      }
+    ]
+  },
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2594
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -50,22 +61,22 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",

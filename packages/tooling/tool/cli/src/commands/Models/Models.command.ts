@@ -13,6 +13,7 @@
  * @since 0.0.0
  */
 
+import { CatalogSnapshot } from "@beep/ai-sync/ModelCatalog.schemas";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, O, pipe, Str } from "@beep/utils";
 import * as Config from "effect/Config";
@@ -28,7 +29,6 @@ import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { writeContainedFileString } from "../../internal/cli/FsGuards.ts";
 import { formatJsonValue } from "../../internal/cli/Json.ts";
 import { ModelsApply, ModelsApplyLive } from "./Models.apply.service.ts";
-import { CatalogSnapshot } from "./Models.catalog.schemas.ts";
 import { ModelsCatalogOptions } from "./Models.catalog.service.ts";
 import { ModelsCommandError } from "./Models.errors.ts";
 import { bindLocatorModel, modelsReadLocator } from "./Models.locator.service.ts";
