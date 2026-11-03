@@ -1766,6 +1766,46 @@ removal also removed empty parent directories. Those setup failures are separate
 from the final refusal evidence. A narrow coverage replay before publishing would
 have exposed these missing controls earlier.
 
+### Resolve the admitted workflow before transporting producer evidence, 2026-11-02
+
+The actual inspection run reported `heavy.yml@main` and its resolved commit,
+while the hosted verifier accepted only an empty `referenced_workflows` list.
+A test with an independently approved Heavy leaf reproduced that refusal before
+implementation. Preserve default denial and add explicit same-repository main
+leaf approval, exact source reads and resolution-race controls. Keep the original
+aggregate 64 KiB workflow-text limit across both files. An earlier test-helper
+setup failure was retained separately and does not count as this regression.
+The working completion audit also carried an older SPEC digest. All nine
+acceptance requirements and eight implementation requirements still match SPEC
+verbatim after whitespace normalization; refresh only that working source
+binding and preserve both prior hashes. No requirement or acceptance status is
+relaxed. This removes a verification blocker, not the remaining private
+transport or real protected R2 acceptance gates.
+
+
+### Attribute introduced gates before consolidating main repairs, 2026-11-02
+
+PR2603's completed hosted audit identifies the new verifier's cognitive
+complexity as twelve above eight. Its policy job reports an introduced EV006
+boolean assertion alongside the inherited GitHubApp SFV4 test defect. Reading
+the exact audit artifact and job log prevents incorrectly classifying the
+entire failure as inherited. Keep one coherent source-inspection helper, use
+the existing Result assertion vocabulary, and consume the shared test repair
+from accepted main. Preserve original failed receipts and all policy floors.
+The final focused replay passes 146 cases; both Fallow views and the full
+effect-vitest ratchet pass after the owned repairs.
+
+
+### Snapshot historical receipt bindings by value, 2026-11-02
+
+Review of PR2603 found that a metadata writer retained the previous binding
+array by reference and then updated its members for current source. The two
+changed historical digests therefore repeated the current values. Restore all
+four historical entries from immutable commit `3afde77309`, then independently
+compare every current entry to disk and every historical entry to that commit.
+Keep the original 136-case receipts bound to their original source; no native
+receipt, requirement or acceptance status is changed. Deep-copy retained arrays
+or reconstruct them from immutable blobs before changing current bindings.
 ### Preserve issued observations and minimize private-transfer authority, 2026-11-02
 
 The protected digest report alone cannot transport the complete private matrices.
@@ -1857,3 +1897,18 @@ scanner on touched test files: package lint alone does not include that rule.
 - 2026-11-02: The accepted party-domain expansion added twelve executable nodes without recording its cache baseline. Merging main produced a baseline conflict and eight expansion blockers plus root policy drift. A generator-integrated configuration review would prevent this; the touched baseline is reconciled once through the named CAS review, preserving qualification bytes.
 
 - 2026-11-02: New-file identity, rather than the numeric tier, kept the private storage module red after its first coverage repair. The actual hosted reporter supplies the reviewable row. Broad package regeneration would move unrelated floors; a narrow schema-encoded pin with before/after equivalence preserves them. A private helper's wrong record adapter was caught before commit, restored from the exact backup, and replaced with a pre-write equivalence guard. Incompatible instrumentation unions and a refused Labs collector replay are retained as diagnostics, never passing proof.
+
+### 2026-11-02 — source bindings after accepted-main integration
+
+PR #2603 review found that the accepted producer test-kit exports changed the
+shared helper digest while its checkpoint retained the earlier value. The three
+other bindings still matched. Preserve the entire prior binding set, record the
+current helper bytes and replay all 136 focused component cases on Node 24.
+A post-merge comparison of every declared binding would have caught this before
+push. Historical receipts remain source-bound; the new replay grants no native
+or production acceptance.
+
+
+### Generated inventory conflict cost, 2026-11-02
+
+Resolving the independent accepted-main inventory changes required the canonical `bun --no-env-file run beep quality jsdoc-inventory` writer. The sibling phase-progress merge took 515.916 seconds to regenerate the pair across 185 packages; its open totals remained 15 packages, 94 exports and 115 modules. This was a concurrent workstation observation, not an isolated benchmark or evidence of cache savings. A source-scoped canonical regeneration path that retains the complete inventory integrity checks would avoid repeating this full census for each small merge. The generated files were retained; no check, finding or acceptance requirement was waived.
