@@ -779,6 +779,41 @@ describe("knowledge static option surface", () => {
     );
 
     it.effect(
+      "reads the shared flags from a checkout that predates the repo-cli-kit move",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "knowledge-option-surface-legacy-" });
+        const legacyFlagsPath = "packages/tooling/tool/cli/src/internal/cli/Flags.ts";
+        yield* fs.makeDirectory(path.dirname(path.join(tempRoot, ROOT_MODULE_PATH)), { recursive: true });
+        yield* fs.makeDirectory(path.dirname(path.join(tempRoot, legacyFlagsPath)), { recursive: true });
+        yield* fs.writeFileString(
+          path.join(tempRoot, legacyFlagsPath),
+          doc('import { Flag } from "effect/cli"', 'export const jsonFlag = Flag.Boolean("json")', "")
+        );
+        yield* fs.writeFileString(
+          path.join(tempRoot, ROOT_MODULE_PATH),
+          doc(
+            'import { Command } from "effect/cli"',
+            'import { jsonFlag } from "../internal/cli/Flags.ts"',
+            'const legacy = Command.make("legacy", { json: jsonFlag })',
+            'export const rootCommand = Command.make("beep-cli").pipe(Command.withSubcommands([legacy]))',
+            ""
+          )
+        );
+        const tree = yield* KnowledgeCommandSurface.buildStaticCommandTree(tempRoot);
+        const legacy = A.findFirst(tree.children, (child) => child.name === "legacy");
+        assert.deepStrictEqual(
+          A.map(
+            O.getOrNull(O.flatMap(legacy, (child) => O.fromUndefinedOr(child.options))) ?? [],
+            (option) => option.name
+          ),
+          ["json"]
+        );
+      })
+    );
+
+    it.effect(
       "keeps command names usable while refusing dynamic, recursive, or untrusted flag declarations",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;

@@ -1279,13 +1279,14 @@ const isGoalPacketDataPath = (segments: ReadonlyArray<string>): boolean =>
   O.exists(A.get(segments, 1), Str.isNonEmpty) &&
   O.exists(A.get(segments, 2), (segment) => Str.Equivalence(segment, "data"));
 
-// Captured inventory digests a packet keeps under `goals/<packet>/ops/inventory/` are snapshots of a
-// past scan, regenerated only by their own pipeline.
-const isGoalPacketInventoryPath = (segments: ReadonlyArray<string>): boolean =>
+// A packet's `goals/<packet>/ops/inventory/digests/` are dated scan receipts; the generated
+// inventory rows beside them stay live, source-bound evidence.
+const isGoalPacketInventoryDigestPath = (segments: ReadonlyArray<string>): boolean =>
   O.exists(A.get(segments, 0), (segment) => Str.Equivalence(segment, "goals")) &&
   O.exists(A.get(segments, 1), Str.isNonEmpty) &&
   O.exists(A.get(segments, 2), (segment) => Str.Equivalence(segment, "ops")) &&
-  O.exists(A.get(segments, 3), (segment) => Str.Equivalence(segment, "inventory"));
+  O.exists(A.get(segments, 3), (segment) => Str.Equivalence(segment, "inventory")) &&
+  O.exists(A.get(segments, 4), (segment) => Str.Equivalence(segment, "digests"));
 
 // `docs/reports/` holds dated point-in-time reports, many bound by digest to a cache-baseline request.
 const isDocsReportPath = (segments: ReadonlyArray<string>): boolean =>
@@ -1333,8 +1334,9 @@ export const isKnowledgeScopedPath = (repoPath: string): boolean => {
  * The explicit archival directory names are matched as exact path segments, so a file merely named
  * `research-notes.md` is live. The generic name `data` is archival only at the packet-owned root
  * `goals/<packet>/data/`: those directories hold hash-pinned pipeline captures. A nested `data/`
- * directory anywhere else remains live guidance. Two more roots hold captured evidence: a packet's
- * `goals/<packet>/ops/inventory/` snapshots and the dated reports under `docs/reports/`.
+ * directory anywhere else remains live guidance. The dated reports under `docs/reports/` and a packet's
+ * `goals/<packet>/ops/inventory/digests/` receipts are captured evidence too; the generated
+ * inventory rows beside those digests stay live.
  *
  * **Example** (Separate archival evidence from live guidance)
  *
@@ -1357,7 +1359,7 @@ export const isKnowledgeArchivalPath = (repoPath: string): boolean => {
   return (
     A.some(segments, (segment) => HashSet.has(ARCHIVAL_DIRECTORY_SEGMENTS, segment)) ||
     isGoalPacketDataPath(segments) ||
-    isGoalPacketInventoryPath(segments) ||
+    isGoalPacketInventoryDigestPath(segments) ||
     isDocsReportPath(segments)
   );
 };

@@ -188,6 +188,7 @@ describe("knowledge reference scope", () => {
     expect(isKnowledgeArchivalPath("goals/example/research/notes.md")).toBe(true);
     expect(isKnowledgeArchivalPath("goals/example/data/sweeps/run.jsonl")).toBe(true);
     expect(isKnowledgeArchivalPath("goals/example/ops/inventory/digests/pkg.md")).toBe(true);
+    expect(isKnowledgeArchivalPath("goals/example/ops/inventory/detector/pkg.jsonl")).toBe(false);
     expect(isKnowledgeArchivalPath("docs/reports/example-review-2026-11-02.md")).toBe(true);
     expect(isKnowledgeArchivalPath("goals/example/ops/manifest.json")).toBe(false);
     expect(isKnowledgeArchivalPath("goals/example/SPEC.md")).toBe(false);
