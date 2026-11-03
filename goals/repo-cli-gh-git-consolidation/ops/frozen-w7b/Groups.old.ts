@@ -8,7 +8,11 @@
  * deleted (`changedPathEntriesFromNameStatus`, `gitTreeEntriesFromNulOutput`, `parseKnowledgePathRemovals`) are
  * inlined verbatim; the unchanged pure classifier (`classifyChangedPaths`) and the ref-name expansion
  * (`gitRefSpanNamesForTesting`) are imported from the shipped tree.
+ *
+ * Import repoint only: StepExec/JsonCodec moved to `@beep/repo-cli-kit` (#2669, beep-cli-composition W3).
  */
+
+import { runCaptured, runCapturedStreams, runToExit } from "@beep/repo-cli-kit/process/StepExec";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -26,11 +30,6 @@ import {
   classifyChangedPaths,
 } from "../../../../packages/tooling/tool/cli/src/commands/Ci/RouteClassify.ts";
 import { KnowledgePathRemoval } from "../../../../packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.schemas.ts";
-import {
-  runCaptured,
-  runCapturedStreams,
-  runToExit,
-} from "../../../../packages/tooling/tool/cli/src/internal/process/StepExec.ts";
 import {
   runRepoCommandCapture,
   runRepoCommandCaptureRaw,

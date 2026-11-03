@@ -13,7 +13,6 @@ import { FrontmatterSource } from "@beep/markdown/FrontmatterSource";
 import { FrontmatterFormat } from "@beep/markdown/MarkdownNode";
 import { messageWithCause } from "@beep/repo-cli-kit/cli/CommandErrorFields";
 import { manifestParser } from "@beep/repo-cli-kit/ManifestRead";
-import { runCaptured } from "@beep/repo-cli-kit/process/index";
 import { WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";

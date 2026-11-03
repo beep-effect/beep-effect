@@ -9,6 +9,7 @@
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
+import { formatCommandLine } from "@beep/repo-cli-kit/process/StepExec";
 import { findRepoRoot } from "@beep/repo-utils";
 import { Str } from "@beep/utils";
 import * as Context from "effect/Context";
@@ -19,7 +20,6 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
-import { formatCommandLine } from "../../../internal/process/StepExec.ts";
 import { adaptGitKitError } from "../../../internal/repo-run/GitExec.ts";
 import { EffectSchemaInventoryReferencePath } from "../EffectSchemaInventory.schemas.ts";
 import {

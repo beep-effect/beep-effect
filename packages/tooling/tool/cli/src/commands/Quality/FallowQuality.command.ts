@@ -11,6 +11,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc, JsoncParseOptions } from "@beep/jsonc/Jsonc";
 import { messageWithCause } from "@beep/repo-cli-kit/cli/CommandErrorFields";
 import { runCapturedStreams } from "@beep/repo-cli-kit/process/index";
+import { formatCommandLine } from "@beep/repo-cli-kit/process/StepExec";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { Fn } from "@beep/schema";
 import * as A from "effect/Array";

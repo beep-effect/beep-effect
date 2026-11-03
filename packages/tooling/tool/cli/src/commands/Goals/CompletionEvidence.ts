@@ -18,7 +18,6 @@ import { Git } from "@beep/git/Git";
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { GitHubContent } from "@beep/github/GitHubContent";
 import { Repo } from "@beep/github/Repo";
-import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";

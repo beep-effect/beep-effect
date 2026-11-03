@@ -13,7 +13,6 @@ import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { Lockfile } from "@beep/lockfiles/Lockfile";
 import { manifestParser } from "@beep/repo-cli-kit/ManifestRead";
-import { runCaptured } from "@beep/repo-cli-kit/process/index";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Console from "effect/Console";

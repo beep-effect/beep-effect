@@ -12,6 +12,7 @@ import { Jsonc } from "@beep/jsonc/Jsonc";
 import { formatJsonc, readArtifact, writeArtifact } from "@beep/repo-cli-kit/artifacts/index";
 import { messageWithCause } from "@beep/repo-cli-kit/cli/CommandErrorFields";
 import { configStringOption } from "@beep/repo-cli-kit/cli/EnvConfig";
+import { formatCommandLine } from "@beep/repo-cli-kit/process/StepExec";
 import { DomainError } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { HUNDRED as HUNDRED_PERCENTAGE, Percentage, ZERO as ZERO_PERCENTAGE } from "@beep/schema/Percentage";

@@ -7,7 +7,7 @@
 
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
-import { runToExit } from "@beep/repo-cli-kit/process/StepExec";
+import { formatCommandLine } from "@beep/repo-cli-kit/process/StepExec";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";

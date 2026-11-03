@@ -1,5 +1,8 @@
 // Frozen at 8602b24203: observation helpers and replayed wire decoders only.
 // Imports rebased; runGitOutput and its private callees inlined because W7 retires that runner.
+
+import { formatCommandLine, repoRunOutputBound, runCaptured } from "@beep/repo-cli-kit/process/StepExec";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -12,15 +15,9 @@ import {
 import { GhBranchRule } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/Settle.ts";
 import { YeetCommandError } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/Yeet.errors.ts";
 import { ghOutput } from "../../../../packages/tooling/tool/cli/src/internal/github/index.ts";
-import {
-  formatCommandLine,
-  repoRunOutputBound,
-  runCaptured,
-} from "../../../../packages/tooling/tool/cli/src/internal/process/StepExec.ts";
-import { JsonStringCodec } from "../../../../packages/tooling/tool/cli/src/internal/schema/JsonCodec.ts";
+import type { RunCapturedOptions } from "@beep/repo-cli-kit/process/StepExec";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { RunCapturedOptions } from "../../../../packages/tooling/tool/cli/src/internal/process/StepExec.ts";
 import type { GitCommandErrorAdapter } from "../../../../packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts";
 
 class GoalCompletionIo extends Context.Service<
@@ -49,6 +46,8 @@ const gitAdapter = {
  *
  * @category queries
  * @since 0.0.0
+ *
+ * Import repoint only: StepExec/JsonCodec moved to `@beep/repo-cli-kit` (#2669, beep-cli-composition W3).
  */
 export const readGoalCompletionGit = Effect.fn("Goals.Completion.git")(function* (
   root: string,

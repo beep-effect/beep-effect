@@ -13,7 +13,6 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { FrontmatterSource } from "@beep/markdown/FrontmatterSource";
 import { FrontmatterFormat } from "@beep/markdown/MarkdownNode";
 import { isCi } from "@beep/repo-cli-kit/cli/EnvConfig";
-import { runCapturedStreams } from "@beep/repo-cli-kit/process/StepExec";
 import { findRepoRoot } from "@beep/repo-utils";
 import { Str } from "@beep/utils";
 import * as A from "effect/Array";

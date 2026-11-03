@@ -5,26 +5,26 @@
  * The runner retirement deletes `runGitOutput`, `runGitPathList`, `runGitLines`, `runGitRawOutput` and their private
  * helpers from `GitExec.ts`, so they are inlined here verbatim (only the doc comments and the `Effect.fn` span names
  * dropped); they import only `StepExec.ts`, which survives the retirement, and the adapter type, which stays.
+ *
+ * Import repoint only: StepExec/JsonCodec moved to `@beep/repo-cli-kit` (#2669, beep-cli-composition W3).
  */
-import * as A from "effect/Array";
-import * as Effect from "effect/Effect";
-import { flow, pipe } from "effect/Function";
-import * as O from "effect/Option";
-import * as Order from "effect/Order";
-import * as Str from "effect/String";
+
 import {
   formatCommandLine,
   OutputBound,
   repoRunOutputBound,
   runCaptured,
   runCapturedStreams,
-} from "../../../../packages/tooling/tool/cli/src/internal/process/StepExec.ts";
+} from "@beep/repo-cli-kit/process/StepExec";
+import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
+import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Str from "effect/String";
+import type { RunCapturedOptions, RunCapturedStreamsOptions } from "@beep/repo-cli-kit/process/StepExec";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type {
-  RunCapturedOptions,
-  RunCapturedStreamsOptions,
-} from "../../../../packages/tooling/tool/cli/src/internal/process/StepExec.ts";
 import type { GitCommandErrorAdapter } from "../../../../packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts";
 
 type Requirements = SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner;
