@@ -322,12 +322,15 @@ const romanSegment = (value: number): string =>
     roman: `${roman}${Str.repeat((rest - (rest % digit)) / digit)(symbol)}`,
   })).roman;
 
+// Only complete paired quotations shield lexical function words.
+// Unpaired marks retain ordinary scanning and never suppress the remaining source.
+const quotedPhrasePattern = /“[^”]*”|"(?:\\.|[^"\\])*"|‘(?:[^’]|’(?=[\p{L}\p{N}]))*’/gu;
 const tokenPattern = /[\p{L}\p{N}]+(?:[-’'/][\p{L}\p{N}]+)*|[“”"‘’]|[,;:.()[\]]/gu;
 const digitsPattern = /^[0-9]+$/u;
 const punctuation = HashSet.make(",", ";", ":", ".", "(", ")", "[", "]");
 const boundaryWords = HashSet.fromIterable(
   Str.split(
-    "that which wherein whereby where when configured adapted operable arranged having comprising comprises including includes containing contains being is are was were has have to for in on of at by with from into onto between through via and or such so than as each said the a an its their according claim claims they it we them can may shall must should will would be been not apart respectively further out along below above beyond across",
+    "that which wherein whereby where when whether configured adapted operable arranged having comprising comprises including includes containing contains being is are was were has have to for in on of at by with from into onto between through via and or such so than as each said the a an its their according claim claims they it we them can may shall must should will would be been not apart respectively further out along below above beyond across",
     " "
   )
 );
@@ -508,10 +511,12 @@ const permitsAdverbHead = (tokens: ReadonlyArray<Span>, position: number, offset
     identity
   );
 
-const headAt = (tokens: ReadonlyArray<Span>, index: number): ReadonlyArray<Span> =>
-  A.takeWhile(A.drop(tokens, index), ({ text }, offset) => {
+const headAt = (tokens: ReadonlyArray<Span>, index: number, quotations: ReadonlyArray<Span>): ReadonlyArray<Span> =>
+  A.takeWhile(A.drop(tokens, index), ({ text, start }, offset) => {
     const word = Str.toLowerCase(text);
     const position = index + offset;
+    if (A.some(quotations, (quote) => start >= quote.start && start < quote.start + Str.length(quote.text)))
+      return true;
     if (A.some([position, position - 1, position - 2], (at) => abbreviationAt(tokens, at))) return true;
     if (isSelectorHead(tokens, index) && HashSet.has(HashSet.make(",", "or", "and"), word)) return true;
     return (
@@ -553,7 +558,7 @@ const scanStepOf = (term: O.Option<EncodedTerm>, resumeAt: number): ScanStep => 
 
 // One scan step from `index`: the term found there, if any, and where the scan resumes.
 const scanStep =
-  (claimText: string, tokens: ReadonlyArray<Span>) =>
+  (claimText: string, tokens: ReadonlyArray<Span>, quotations: ReadonlyArray<Span>) =>
   (index: number): ScanStep => {
     const idiom = A.findFirst(
       [
@@ -578,7 +583,7 @@ const scanStep =
       determinerAt(tokens, index),
       O.match({
         onNone: () => {
-          const head = headAt(tokens, index);
+          const head = headAt(tokens, index, quotations);
           const previous = O.map(A.get(tokens, index - 1), ({ text }) => text);
           const isReferenceNumber =
             O.exists(previous, (word) =>
@@ -594,7 +599,7 @@ const scanStep =
         onSome: ({ determiner, start, width }) => {
           const headStart =
             index + width + (isReferringDeterminer(determiner) ? quantifierWidthAt(tokens, index + width) : 0);
-          const head = headAt(tokens, headStart);
+          const head = headAt(tokens, headStart, quotations);
           if (!A.isReadonlyArrayNonEmpty(head) || isClaimReference(head)) return scanStepOf(O.none(), index + width);
           const term = termOf(claimText, start, determiner, head);
           const lexicalStart = O.getOrThrow(A.get(tokens, index + width)).start;
@@ -633,7 +638,7 @@ const termsIn =
       onSome: (match) => sliceSpan(span, 0, O.getOrElse(O.fromUndefinedOr(match.index), constant(span.text.length))),
     });
     const tokens = matchesIn(tokenPattern)(entitySpan);
-    const step = scanStep(claimText, tokens);
+    const step = scanStep(claimText, tokens, matchesIn(quotedPhrasePattern)(entitySpan));
     return A.getSomes(A.unfold(0, (index) => (index < A.length(tokens) ? O.some(step(index)) : O.none())));
   };
 
