@@ -439,10 +439,10 @@ const parentReferenceExpression = (value: string): O.Option<string> =>
     O.map((match) => match[0]),
     O.filter((expression) => {
       const remainder = Str.slice(Str.length(expression))(value);
-      const descriptiveClause = A.head(A.fromIterable(Str.matchAll(transitionPattern)(remainder)));
+      const descriptiveClause = Str.search(transitionPattern)(remainder);
       const beforeClause = O.match(descriptiveClause, {
         onNone: () => remainder,
-        onSome: (match) => Str.slice(0, O.getOrElse(O.fromUndefinedOr(match.index), constant(0)))(remainder),
+        onSome: (index) => Str.slice(0, index)(remainder),
       });
       // A subject/purpose boundary cannot hide another explicit parent
       // before the descriptive clause: "and the above claim 24" is a list.
@@ -465,16 +465,14 @@ const parentClaimNumbers = (preamble: string, currentClaimNumber: PosInt): O.Opt
         if (O.isNone(expression)) return O.none();
         let expanded: ReadonlyArray<PosInt> = A.empty();
         let expandedCount = 0;
-        let matched = false;
         for (const match of Str.matchAll(claimReferencePattern)(expression.value)) {
-          matched = true;
           const references = claimReferencesFromMatch(match, currentClaimNumber);
           if (O.isNone(references)) return O.none();
           expandedCount = Num.sum(expandedCount, A.length(references.value));
           if (expandedCount > MAX_PARENT_CLAIM_RANGE_CARDINALITY) return O.none();
           expanded = A.appendAll(expanded, references.value);
         }
-        return matched ? O.some(A.dedupe(expanded)) : O.none();
+        return O.some(A.dedupe(expanded));
       },
     })
   );
