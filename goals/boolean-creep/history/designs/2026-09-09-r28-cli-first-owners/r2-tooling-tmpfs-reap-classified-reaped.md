@@ -1,7 +1,7 @@
 # Instance
 
 - id: `r2-tooling-tmpfs-reap-classified-reaped`
-- file:line: `packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts:61`
+- file:line: `packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts:61`
 - symbol: `DiscoveredCandidate` / `ApplyOutcome`
 - members: `classified`, `reaped`
 - evidence classes:

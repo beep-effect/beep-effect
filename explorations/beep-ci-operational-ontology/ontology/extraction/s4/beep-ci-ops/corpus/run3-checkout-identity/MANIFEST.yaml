@@ -1342,7 +1342,7 @@ source_facts:
   turbo_local_cache_default:
     value: .turbo/cache
     source:
-      file: packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts
+      file: packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts
       line: 567
       sha256: 693383ab275abc92beb8c676a6fbf674cf33b70c25c28715367628f45c0c8a7f
   turbo_configuration:

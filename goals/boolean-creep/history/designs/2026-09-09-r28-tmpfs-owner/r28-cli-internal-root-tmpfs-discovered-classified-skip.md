@@ -10,7 +10,7 @@ design remains a coordinated implementation companion.
 
 ## Current shape
 
-`packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts:61-69` declares a
+`packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts:61-69` declares a
 private `DiscoveredCandidate` with required `root`, `path`, `reapClass`,
 `idleSinceMillis`, `classified: boolean`, `shapeSkipReason:
 Option<TmpfsReapSkipReason>`, and `parentRepo: Option<string>`. It is a real

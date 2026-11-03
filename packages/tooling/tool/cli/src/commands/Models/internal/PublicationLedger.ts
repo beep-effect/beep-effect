@@ -29,7 +29,7 @@ import type * as PlatformError from "effect/PlatformError";
 import type * as Scope from "effect/Scope";
 import type { ModelsPublicationStep, ModelsRecoveryResult } from "../Models.exchange.schemas.ts";
 
-const $I = $RepoCliId.create("internal/publication/PublicationLedger");
+const $I = $RepoCliId.create("commands/Models/internal/PublicationLedger");
 const encodeOwner = S.encodeEffect(S.fromJsonString(ModelsPublicationOwner));
 const decodeOwner = S.decodeEffect(S.fromJsonString(ModelsPublicationOwner));
 const textEncoder = new TextEncoder();

@@ -6,7 +6,7 @@ Native P2 design refresh before R29, bound to merged source HEAD
 and cardinality 312/13. Tier 1: ordered Tier1E tooling batches with serial shared-file edits.
 Independent P3 review and implementation acceptance remain pending.
 
-Owner `DiscoveredCandidate` at `packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts:65`,
+Owner `DiscoveredCandidate` at `packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts:65`,
 with members `reapClass`, `classified`, `shapeSkipReason`, `parentRepo`.
 Storage/exposure: stored/internal; target: tagged-union.
 
@@ -21,7 +21,7 @@ as specified below. Paths beginning `src/` or `test/` are relative to
 
 ## Current shape
 
-`packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts:61-69` declares
+`packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts:61-69` declares
 the actual private `DiscoveredCandidate` type. Its connected members are
 `reapClass: TmpfsReapClass`, `classified: boolean`, `shapeSkipReason:
 Option<TmpfsReapSkipReason>` and `parentRepo: Option<string>`. Root, path and

@@ -44,10 +44,10 @@ The seven library-to-tool edges and their fixes:
 
 | Edge | Fix |
 | --- | --- |
-| `internal/repo-run/TmpfsReap.ts` to `Worktree/Worktree.constants.ts` | The tmpfs and residue janitors (`TmpfsReap`, `ResidueReap`, their schemas, `ResidueTerminalLane` and its live probe) move to `commands/Worktree/internal/`; the `tmpfs-reap` and `residue-reap` commands move to `commands/Worktree/Janitor.command.ts`. Both stay registered under `beep quality`. |
-| `internal/repo-run/ResidueReap.ts` to `Yeet/internal/Reply.schemas.ts` | Same move: the janitor is worktree tooling, so it reads the Yeet reply drafts from inside the yeet tool. |
-| `internal/cli/RegistrationGeometry/*.probes.ts` to three `DeletePackage/internal/` files (3 edges) | `RegistrationGeometry` has one consumer, `delete-package`, so it moves to `commands/DeletePackage/internal/RegistrationGeometry/`. |
-| `internal/publication/PublicationLedger.ts` to `Models/Models.exchange.schemas.ts` (2 edges) | The ledger serves `models apply` and `skills` publication, both in beep-harness, so it moves to `commands/Models/internal/`. |
+| The tmpfs janitor (then in `internal/repo-run/`) to `Worktree/Worktree.constants.ts` | The tmpfs and residue janitors (`TmpfsReap`, `ResidueReap`, their schemas, `ResidueTerminalLane` and its live probe) move to `commands/Worktree/internal/`; the `tmpfs-reap` and `residue-reap` commands move to `commands/Worktree/Janitor.command.ts`. Both stay registered under `beep quality`. |
+| The residue janitor (then in `internal/repo-run/`) to `Yeet/internal/Reply.schemas.ts` | Same move: the janitor is worktree tooling, so it reads the Yeet reply drafts from inside the yeet tool. |
+| The registration-geometry probes (then in `internal/cli/`) to three `DeletePackage/internal/` files (3 edges) | `RegistrationGeometry` has one consumer, `delete-package`, so it moves to `commands/DeletePackage/internal/RegistrationGeometry/`. |
+| The publication ledger (then in `internal/publication/`) to `Models/Models.exchange.schemas.ts` (2 edges) | The ledger serves `models apply` and `skills` publication, both in beep-harness, so it moves to `commands/Models/internal/`. |
 
 W1a also moves `quality cache-policy` into `commands/Cache/CachePolicy.command.ts`
 (the command path is unchanged) and gives the CLI's own entry module one

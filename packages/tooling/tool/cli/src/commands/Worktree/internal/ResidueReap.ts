@@ -85,7 +85,7 @@ import type { QualitySchedulerError } from "../../../internal/repo-run/QualitySc
 import type { ResidueReapSkipReason, ResidueTerminalLaneAuthority } from "./ResidueReap.schemas.ts";
 import type { ResidueTerminalLaneProbeShape } from "./ResidueTerminalLane.ts";
 
-const $I = $RepoCliId.create("internal/repo-run/ResidueReap");
+const $I = $RepoCliId.create("commands/Worktree/internal/ResidueReap");
 
 const decodeResidueReapAgeDays = S.decodeEffect(ResidueReapAgeDays);
 const decodeResidueReapHomeRoot = S.decodeEffect(ResidueReapHomeRoot);

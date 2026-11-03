@@ -193,7 +193,7 @@ constructor calls.** Compilation of the incomplete sketch was not claimed.
 
 | API | Verdict and reference |
 | --- | --- |
-| `S.Class<Self>(id)(fields, annotations)` | **ACCEPT**, E/Schema.ts:13973–13982. Matches local `internal/repo-run/TmpfsReap.schemas.ts:147,159`. |
+| `S.Class<Self>(id)(fields, annotations)` | **ACCEPT**, E/Schema.ts:13973–13982. Matches local `commands/Worktree/internal/TmpfsReap.schemas.ts:147,159`. |
 | `S.Record(S.String, S.String)` | **ACCEPT**, two arguments in E/Schema.ts:3794. Do not replace with v3-style `{key,value}`. |
 | `S.HashMap(key,value)` | **ACCEPT** as an Effect HashMap on both Type and Encoded sides, E/Schema.ts:12569,12597. It does **not** encode to a flat JSON object. |
 | `S.HashSet(value)` | **ACCEPT** Effect HashSet on both sides, E/Schema.ts:12664,12689; not a JSON array codec. |

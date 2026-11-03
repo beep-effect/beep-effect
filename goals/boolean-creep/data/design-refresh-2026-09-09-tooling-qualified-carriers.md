@@ -52,7 +52,7 @@ is a separate producer path and does not add a Boolean member.
 
 The pending-changeset file loop declares both
 `hasDeletionNoteBasename` and `isCanonicalDeletionNote` at
-`packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts:189-196`.
+`packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.probes.ts:189-196`.
 The second is explicitly gated by the first. The two bound values are then read
 at lines 197-199 to skip the canonical note or record a named residue. These
 are real co-carried locals with exact inventory member names. Canonical without

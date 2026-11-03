@@ -484,7 +484,7 @@ runCapturedStreams`: `merge-base --is-ancestor <cited> <tree>` exit 0 -> true, 1
 --is-shallow-repository` and either `KnowledgeOperationalError` (shallow) or false. Also `rev-parse
 --is-shallow-repository` x3 (1551, 1568, 1736), GX `resolveGitCommit`/`resolveGitMergeBase`/`readGitRenames`/
 `readGitTree`/`runGitPathList(["diff", "--name-only", "-z", <mb>, <head>])` (1745-1891). The same probe appears in
-`Quality/internal/ResidueTerminalLaneLive.ts:131` and `Ci/RouteCensus.ts:684`. Replacement: `Git.isAncestor` (G9),
+`Worktree/internal/ResidueTerminalLaneLive.ts:131` and `Ci/RouteCensus.ts:684`. Replacement: `Git.isAncestor` (G9),
 `Git.isShallow`, `revParse`, `mergeBase`, `nameStatus` (G5), `lsTree`, `changedFiles`. GAP: G9 first (the tri-state:
 `Effect<boolean, GitCommandError | UnknownRefError>` where exit 1 is `false` and a missing object is the typed error, so
 the shallow branch stays at the call site). Difficulty M. Recommendation: migrate after G9 (`isAncestor`) + G5 (renames);
@@ -512,12 +512,12 @@ origin/main HEAD`, the `--diff-filter=ACMR` pathspec diff, `ls-files` 992-3277),
 `rev-parse HEAD` 264-309), `Ci/CiLane` (`SE`: `diff --name-only <base>...<head>` 1908, `branch --show-current` 2627),
 `Ci/RouteCensus` (`RRC`/`RRCraw`: `merge-base origin/main <head>`, `merge-base --is-ancestor`, `fetch --quiet
 --no-write-fetch-head origin <sha>`, `fetch --quiet origin +refs/pull/*/head:refs/remotes/pull/*`, and `sh -c "git
-cat-file --batch-check"` 656-705), `internal/repo-run/ResidueReap` (`RRC`: `--no-optional-locks status --porcelain
+cat-file --batch-check"` 656-705), `commands/Worktree/internal/ResidueReap` (`RRC`: `--no-optional-locks status --porcelain
 --untracked-files=all --ignore-submodules=none` 577, `--no-optional-locks grep --quiet --perl-regexp -e <pat> --
 ...roots` 1872-1884, `--literal-pathspecs ls-files --error-unmatch -- <path>` 2119, `--no-optional-locks worktree list
---porcelain` 2142), `internal/repo-run/TmpfsReap` (`RRC`: `-C <path> status --porcelain --no-renames` 812, `-C <repo>
+--porcelain` 2142), `commands/Worktree/internal/TmpfsReap` (`RRC`: `-C <path> status --porcelain --no-renames` 812, `-C <repo>
 worktree remove --force <path>` 1053, `-C <repo> worktree prune` 1061), `internal/repo-run/GitWorktree` (`worktree
-prune` 111, the R10 leftover), `Quality/internal/ResidueTerminalLaneLive` (`merge-base --is-ancestor` 131),
+prune` 111, the R10 leftover), `Worktree/internal/ResidueTerminalLaneLive` (`merge-base --is-ancestor` 131),
 `Codex/Security.command.gitOutput` (`spawner.string(ChildProcess.make("git", ...))`, unbounded, 113-115: `remote
 get-url origin`, `rev-parse HEAD`, `status --porcelain`), `Session/SessionLedger.service` (GX `runGitOutput`: `rev-parse
 --show-toplevel`, `rev-parse --path-format=absolute --git-common-dir`, `rev-parse --abbrev-ref HEAD` 281-283).
@@ -567,8 +567,8 @@ Via `runRepoCommandCapture` (`RRC`, 512 KiB bound, `{exitCode, output, truncated
   `Ci/LaneTimings`, `Ci/CiGovernance` (listed).
 - git: `Yeet/internal/{Status.runGitPaths, Retire.gitOutput, Sweep.captureGit, MergedPreview.gitCapture,
   HeadInstallPreflight, PublishScope}` (115-163, 845-909), `Yeet/Yeet.command.ts:763-772` (detached job git
-  coordinates with a PATH env), `internal/repo-run/ResidueReap.ts:577,1872,2119,2142`, `internal/repo-run/TmpfsReap.ts:
-  812,1053,1061`, `internal/repo-run/GitWorktree.ts:111` (prune), `Quality/internal/ResidueTerminalLaneLive.ts:131`,
+  coordinates with a PATH env), `commands/Worktree/internal/ResidueReap.ts:577,1872,2119,2142`, `commands/Worktree/internal/TmpfsReap.ts:
+  812,1053,1061`, `internal/repo-run/GitWorktree.ts:111` (prune), `Worktree/internal/ResidueTerminalLaneLive.ts:131`,
   `Ci/RouteCensus.ts:656-705`, `internal/github/GithubIdentity.ts:405` (`git remote get-url origin` via `RRCraw`) and
   `:347` (`gh auth token` via `RRCraw`).
 Via `StepExec.runCaptured` / `runCapturedStreams` (`SE`, caller-chosen bound):
@@ -657,11 +657,11 @@ Waves (one owner switch per PR; kit feature PRs land with tests before the site 
 | Wave | PR | Files touched | Kit features | Size | Parity evidence to record |
 | --- | --- | --- | --- | --- | --- |
 | W0 | K-isAncestor + K-small | `packages/drivers/git/src/{Git.ts, GitCommand.ts, internal/classification.ts}`, `test/Git.test.ts`, integration test | G9, G10 (`worktreePrune`, `revParse` peel/quiet) | S | Integration scenarios: ancestor, non-ancestor, unknown object, shallow clone |
-| W0 | S-isAncestor | `R/commands/Knowledge/KnowledgeDoctor.service.ts:1535-1575`, `R/commands/Quality/internal/ResidueTerminalLaneLive.ts:131`, `R/commands/Ci/RouteCensus.ts:684`, `R/internal/repo-run/GitWorktree.ts:111`, `R/commands/Yeet/internal/HeadInstallPreflight.ts`, `R/internal/repo-run/TmpfsReap.ts:1061` | uses G9/G10 | S | Differential over scratch repos for the tri-state; `KnowledgeOperationalError` message unchanged on shallow |
+| W0 | S-isAncestor | `R/commands/Knowledge/KnowledgeDoctor.service.ts:1535-1575`, `R/commands/Worktree/internal/ResidueTerminalLaneLive.ts:131`, `R/commands/Ci/RouteCensus.ts:684`, `R/internal/repo-run/GitWorktree.ts:111`, `R/commands/Yeet/internal/HeadInstallPreflight.ts`, `R/commands/Worktree/internal/TmpfsReap.ts:1061` | uses G9/G10 | S | Differential over scratch repos for the tri-state; `KnowledgeOperationalError` message unchanged on shallow |
 | W1 | K-parsers + K-renames + K-bounds | `packages/drivers/git/src/internal/{parsers.ts, run.ts}`, `Git.models.ts`, `Git.errors.ts`, `GitCommand.ts`; adds `@beep/commands` dependency to `@beep/git` | G4, G5, G6 | M | Property tests from `GitExec.ts` fixtures (malformed NUL tables -> typed failure); bound witness (output > limit fails typed, no deadlock: keep the G5 pipe test in `Git.int.test.ts`) |
 | W1 | S-GitExec-core | `R/internal/repo-run/GitExec.ts` (`readGitTree`, `readGitRenames`, `resolveGitCommit`, `resolveGitMergeBase`, `collect*Paths`, `currentBranch`), `R/commands/Yeet/internal/GitExec.ts`, `R/commands/Yeet/internal/ExpectationRewrite.ts:549`, Knowledge x2 | uses G4-G6, G10 | L | Frozen old bodies vs `Git` over scratch repos (renames at 50%, path with spaces/newlines, truncation); `yeet-*`, `knowledge-*` suites green |
 | W2 | K-dirty-axes + K-log | `GitCommand.ts`, `Git.ts`, `parsers.ts`, `Git.models.ts` | G7, G8 | M | Flag matrix tests (`--diff-filter`, `--no-renames`, `-uall`, pathspec) |
-| W2 | S-dirty-axes | `R/internal/repo-run/ChangedFiles.ts`, `R/commands/Quality/Quality.command.ts:992-1425,3276`, `R/commands/Yeet/internal/{Status.ts:690-720, Settle.ts:512, ProofShadow.ts:557}`, `R/internal/repo-run/ResidueReap.ts:577`, `R/internal/repo-run/TmpfsReap.ts:812`, `R/commands/Worktree/Worktree.service.ts:1578`, `R/commands/Knowledge/KnowledgeDoctor.grouping.ts` + service `pathRemovalsLive` | uses G7, G8 | M | Differential path lists; grouping parser vs `Git.log` name-status on a fixture history |
+| W2 | S-dirty-axes | `R/internal/repo-run/ChangedFiles.ts`, `R/commands/Quality/Quality.command.ts:992-1425,3276`, `R/commands/Yeet/internal/{Status.ts:690-720, Settle.ts:512, ProofShadow.ts:557}`, `R/commands/Worktree/internal/ResidueReap.ts:577`, `R/commands/Worktree/internal/TmpfsReap.ts:812`, `R/commands/Worktree/Worktree.service.ts:1578`, `R/commands/Knowledge/KnowledgeDoctor.grouping.ts` + service `pathRemovalsLive` | uses G7, G8 | M | Differential path lists; grouping parser vs `Git.log` name-status on a fixture history |
 | W2 | S-one-liners | `R/commands/Yeet/internal/{Retire.ts, Sweep.ts, MergedPreview.ts, ReadyGate.ts (git half), PullRequest.ts (git half), PublishScope.ts, Yeet.command.ts}`, `R/commands/Session/SessionLedger.service.ts`, `R/commands/Codex/Security.command.ts`, `R/commands/Runners/Runners.service.ts`, `R/commands/Refs/Refs.service.ts`, `R/commands/Research/{Library/Library.inventory.ts, internal/Daily.ts}`, `R/commands/Quality/{internal/PackageVerify.ts, ChangesetStatus.ts, ChangesetGraph.ts, internal/CoverageRegression.ts, internal/CoverageArtifacts.ts, CatalogUsage.ts}`, `R/commands/Ci/CiLane.ts`, `R/commands/Worktree/{Worktree.schemas.ts, Fleet.service.ts (reads)}` | existing members + G10 | M (many files, each S); split by command group if review size demands | Per-wrapper old/new differential (exit code, trimmed stdout, error message text); suites green |
 | W2 | S-ai-metrics | `A/config-snapshot.ts:630-770`, `packages/tooling/library/ai-metrics/package.json` (+`@beep/git`) | existing (`lsFiles`, `repoRoot`) + G6 | S | `config-snapshot-bounds.test.ts`, `config-snapshot-failures.test.ts` unchanged; record `git-root-evidence.ts` KEEP |
 | W3 | K-gh-token + K-scoped-token | `packages/drivers/github/src/{GitHubClient.ts, GitHubApp.ts}` (+`@beep/commands` dep), tests with `ScriptedSpawner` | G1, G2 | M | `gh auth token` present/absent/logged-out scripts; `access_tokens` body and granted-permission assertion |

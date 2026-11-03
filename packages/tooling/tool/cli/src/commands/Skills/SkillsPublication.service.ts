@@ -7,7 +7,7 @@
  * writer. It reuses the `beep models` protocol rather than a copy of it: the
  * {@link ModelsAtomicExchange} capability (qualified per target filesystem),
  * the {@link ModelsPublicationState} state machine, the shared ledger
- * primitives in `internal/publication/PublicationLedger.ts`, and the same
+ * primitives in `commands/Models/internal/PublicationLedger.ts`, and the same
  * bytes-decide recovery rule. Backups and journals live under
  * `<root>/.beep/skills-backups`.
  *

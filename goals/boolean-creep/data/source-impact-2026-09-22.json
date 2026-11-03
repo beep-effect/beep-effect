@@ -2854,7 +2854,7 @@
       "sha256": "535387a2fda8ae6fe252144fc8f7930605416ea4a5ff4a4331f4480807034c39"
     },
     {
-      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts",
+      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.probes.ts",
       "sha256": "7d118605464a37620fe0fa59bc53f508b480a93566ce92720b17073845904ce5"
     },
     {
@@ -2886,7 +2886,7 @@
       "sha256": "7d928f0ea39eece5f7ecdffe7e0b00e2b86d55ba3c16c4f3b236da6b56e53930"
     },
     {
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
       "sha256": "11fde46ed957f8d4a1dd59020028e3d40da53a9009017bb4278c2ac709a5dfa8"
     },
     {

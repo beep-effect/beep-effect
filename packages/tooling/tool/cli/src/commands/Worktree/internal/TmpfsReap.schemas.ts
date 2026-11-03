@@ -9,7 +9,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 
-const $I = $RepoCliId.create("internal/repo-run/TmpfsReap.schemas");
+const $I = $RepoCliId.create("commands/Worktree/internal/TmpfsReap.schemas");
 
 const TmpfsSystemRoot = S.String.pipe(
   $I.annoteSchema("TmpfsSystemRoot", {

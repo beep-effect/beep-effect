@@ -6108,7 +6108,7 @@
           "record": {
             "schemaVersion": "boolean-creep-inventory/v1",
             "id": "r28-cli-internal-root-tmpfs-discovered-classified-skip",
-            "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+            "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
             "line": 65,
             "symbol": "DiscoveredCandidate",
             "kind": "type-literal",
@@ -6123,7 +6123,7 @@
               {
                 "class": "E3",
                 "cite": {
-                  "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+                  "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
                   "line": 293
                 },
                 "note": "Git-worktree constructor makes classified exactly parentRepo presence, always with no shape reason; recognized/unrecognized parent are separate supported states."
@@ -6131,7 +6131,7 @@
               {
                 "class": "E4",
                 "cite": {
-                  "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+                  "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
                   "line": 373
                 },
                 "note": "Complete dangling producer emits seven class/reason/parent-presence states: classified with parent, existing Git target with/without recognized parent, parent-present with parent, wrong-shape with/without parent, and contents-present with parent. Stat errors preserve unknown observations and retained known parent paths."
@@ -6167,7 +6167,7 @@
           "record": {
             "schemaVersion": "boolean-creep-inventory/v1",
             "id": "r28-cli-internal-root-tmpfs-discovered-classified-skip",
-            "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+            "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
             "line": 66,
             "symbol": "DiscoveredCandidate",
             "kind": "type-literal",
@@ -6177,7 +6177,7 @@
               {
                 "class": "E1",
                 "cite": {
-                  "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+                  "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
                   "line": 245
                 },
                 "note": "danglingStubShape writes shapeSkipReason none exactly when classified is true and a skip reason otherwise; classified-true with a skip payload is never constructed there."
@@ -6185,7 +6185,7 @@
               {
                 "class": "E4",
                 "cite": {
-                  "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+                  "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
                   "line": 293
                 },
                 "note": "git-worktree discovery writes classified from parentRepo presence with shapeSkipReason always none, so unclassified-with-none is legal and skip presence is not a restatement of !classified. Every classified-true producer (head-install/fallow/scoped-temp/vitest and exact dangling stubs) still writes skip none."
@@ -6214,7 +6214,7 @@
           "record": {
             "schemaVersion": "boolean-creep-inventory/v1",
             "id": "r28-cli-internal-root-tmpfs-discovered-classified-skip",
-            "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+            "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
             "line": 66,
             "symbol": "DiscoveredCandidate",
             "kind": "type-literal",
@@ -6224,7 +6224,7 @@
               {
                 "class": "E4",
                 "cite": {
-                  "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+                  "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
                   "line": 239
                 },
                 "note": "danglingStubShape writes classified true only with None, else Some(gitdir-target-exists), Some(parent-repo-present), or Some(wrong-shape). discoverDanglingWorktreeStub at 393-394 then adds false/Some(contents-present) when a classified shape fails the exact-.git contents probe."
@@ -6232,7 +6232,7 @@
               {
                 "class": "E4",
                 "cite": {
-                  "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+                  "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
                   "line": 293
                 },
                 "note": "Git-worktree discovery writes classified from parentRepo presence with shapeSkipReason always None, so false/None is a supported sixth state. Head-install, fallow, scoped-temp and vitest constructors at 367/512/523/534 write only true/None. No producer writes true/Some or false/Some of the other eight public reasons."
@@ -6322,7 +6322,7 @@
         "record": {
           "schemaVersion": "boolean-creep-inventory/v1",
           "id": "r28-cli-internal-root-tmpfs-discovered-classified-skip",
-          "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+          "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
           "line": 65,
           "symbol": "DiscoveredCandidate",
           "kind": "type-literal",
@@ -6337,7 +6337,7 @@
             {
               "class": "E3",
               "cite": {
-                "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+                "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
                 "line": 293
               },
               "note": "Git-worktree constructor makes classified exactly parentRepo presence, always with no shape reason; recognized/unrecognized parent are separate supported states."
@@ -6345,7 +6345,7 @@
             {
               "class": "E4",
               "cite": {
-                "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+                "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
                 "line": 373
               },
               "note": "Complete dangling producer emits seven class/reason/parent-presence states: classified with parent, existing Git target with/without recognized parent, parent-present with parent, wrong-shape with/without parent, and contents-present with parent. Stat errors preserve unknown observations and retained known parent paths."
@@ -6370,7 +6370,7 @@
         {
           "class": "E3",
           "cite": {
-            "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+            "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
             "line": 293
           },
           "note": "Git-worktree constructor makes classified exactly parentRepo presence, always with no shape reason; recognized/unrecognized parent are separate supported states."
@@ -6378,7 +6378,7 @@
         {
           "class": "E4",
           "cite": {
-            "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+            "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
             "line": 373
           },
           "note": "Complete dangling producer emits seven class/reason/parent-presence states: classified with parent, existing Git target with/without recognized parent, parent-present with parent, wrong-shape with/without parent, and contents-present with parent. Stat errors preserve unknown observations and retained known parent paths."
@@ -6390,7 +6390,7 @@
           "path": "data/design-refresh-2026-09-09-r28-cli-first-owners.md",
           "line": 202,
           "sha256": "611d6d0bc3ad5dd378b7680a79cf4622d60d45cbbfb7eef0b6b72c5d2e9b8f02",
-          "excerpt": "{\"schemaVersion\":\"boolean-creep-inventory/v1\",\"id\":\"r28-cli-internal-root-tmpfs-discovered-classified-skip\",\"file\":\"packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts\",\"line\":66,\"symbol\":\"DiscoveredCandidate\",\"kind\":\"type-literal\",\"members\":[\"classified\",\"shapeSkipReason\"],\"status\":\"confirmed\",\"evidence\":[{\"class\":\"E4\",\"cite\":{\"file\":\"packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts\",\"line\":239},\"note\":\"Shape classification emits true/None or false/Some of three shape reasons; contents rejection at387-394 adds false/Some(contents-present). Every other classified producer writes None.\"},{\"class\":\"E4\",\"cite\":{\"file\":\"packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts\",\"line\":293},\"note\":\"Git-worktree discovery admits false/None when parentRepo is None, so that sixth state cannot be erased. Declared Option reason payload has twelve values at TmpfsReap.schemas.ts97-109.\"}],\"cardinality\":{\"representable\":26,\"legal\":6},\"storage\":\"stored\",\"exposure\":\"internal\",\"targetShape\":\"tagged-union\",\"tier\":1,\"notes\":\"Actual named DiscoveredCandidate owner. shapeSkipReason is Option of twelve declared reasons (TmpfsReap.schemas.ts97-109), not a presence bit. Six supported states: true/None; false/None; false/Some(gitdir-target-exists,parent-repo-present,wrong-shape,contents-present). No true/Some producer. Preserve all other fields and later full reason family; separate from withdrawn cross-type classified/reaped seed and local dangling disposition. Native P2 proposal; provisional design under data/.\"}"
+          "excerpt": "{\"schemaVersion\":\"boolean-creep-inventory/v1\",\"id\":\"r28-cli-internal-root-tmpfs-discovered-classified-skip\",\"file\":\"packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts\",\"line\":66,\"symbol\":\"DiscoveredCandidate\",\"kind\":\"type-literal\",\"members\":[\"classified\",\"shapeSkipReason\"],\"status\":\"confirmed\",\"evidence\":[{\"class\":\"E4\",\"cite\":{\"file\":\"packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts\",\"line\":239},\"note\":\"Shape classification emits true/None or false/Some of three shape reasons; contents rejection at387-394 adds false/Some(contents-present). Every other classified producer writes None.\"},{\"class\":\"E4\",\"cite\":{\"file\":\"packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts\",\"line\":293},\"note\":\"Git-worktree discovery admits false/None when parentRepo is None, so that sixth state cannot be erased. Declared Option reason payload has twelve values at TmpfsReap.schemas.ts97-109.\"}],\"cardinality\":{\"representable\":26,\"legal\":6},\"storage\":\"stored\",\"exposure\":\"internal\",\"targetShape\":\"tagged-union\",\"tier\":1,\"notes\":\"Actual named DiscoveredCandidate owner. shapeSkipReason is Option of twelve declared reasons (TmpfsReap.schemas.ts97-109), not a presence bit. Six supported states: true/None; false/None; false/Some(gitdir-target-exists,parent-repo-present,wrong-shape,contents-present). No true/Some producer. Preserve all other fields and later full reason family; separate from withdrawn cross-type classified/reaped seed and local dangling disposition. Native P2 proposal; provisional design under data/.\"}"
         },
         {
           "path": "data/design-refresh-2026-09-09-r28-cli-first-owners.md",
@@ -6414,13 +6414,13 @@
           "path": "data/design-refresh-2026-09-09-r28-tmpfs-observation-owner.md",
           "line": 256,
           "sha256": "0e5beff69f0a3e1db2283127132fb999b0e6ccb0d7a95f4264b007487745c23b",
-          "excerpt": "{\"schemaVersion\":\"boolean-creep-inventory/v1\",\"id\":\"r28-cli-internal-root-tmpfs-stub-observations\",\"file\":\"packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts\",\"line\":379,\"symbol\":\"discoverDanglingWorktreeStub\",\"kind\":\"sibling-state\",\"members\":[\"gitDir\",\"parentRepo\",\"gitDirMissing\",\"parentRepoMissing\",\"contentsAreExact\"],\"status\":\"confirmed\",\"evidence\":[{\"class\":\"E4\",\"cite\":{\"file\":\"packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts\",\"line\":226},\"note\":\"Each actual Option path owns a matching Option<boolean> observation: absent path forces None; present path can yield None on non-NotFound errors, Some(false) on success or Some(true) on NotFound. The converse absence inference is invalid.\"},{\"class\":\"E4\",\"cite\":{\"file\":\"packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts\",\"line\":380},\"note\":\"parentRepo is flatMapped from gitDir, so present parent implies present Git target path. Both path/status calls remain ordered at384-385.\"},{\"class\":\"E4\",\"cite\":{\"file\":\"packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts\",\"line\":387},\"note\":\"Contents are probed only after both actual stat observations are Some(true), through classifier239. Full five-local product is72/14, including all nine independent sequential known-path stat pairs and both contents outcomes only for missing/missing.\"}],\"cardinality\":{\"representable\":72,\"legal\":14},\"storage\":\"derived\",\"exposure\":\"internal\",\"targetShape\":\"tagged-union\",\"tier\":1,\"notes\":\"New actual local owner; no dotted shape field or required-payload axis. Preserve full normalized paths, unknown stat versus absent path, call order, lazy contents inspection, initial/rediscovery behavior and all error/safety contracts. Private source-extraction proof executes all14 legal local tuples and eleven non-NotFound error categories; it is not P3. Coordinate atomically with the full DiscoveredCandidate312/13 design; count helper/final classification guard deletion only there. Audit: data/design-refresh-2026-09-09-r28-tmpfs-observation-owner.md.\"}"
+          "excerpt": "{\"schemaVersion\":\"boolean-creep-inventory/v1\",\"id\":\"r28-cli-internal-root-tmpfs-stub-observations\",\"file\":\"packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts\",\"line\":379,\"symbol\":\"discoverDanglingWorktreeStub\",\"kind\":\"sibling-state\",\"members\":[\"gitDir\",\"parentRepo\",\"gitDirMissing\",\"parentRepoMissing\",\"contentsAreExact\"],\"status\":\"confirmed\",\"evidence\":[{\"class\":\"E4\",\"cite\":{\"file\":\"packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts\",\"line\":226},\"note\":\"Each actual Option path owns a matching Option<boolean> observation: absent path forces None; present path can yield None on non-NotFound errors, Some(false) on success or Some(true) on NotFound. The converse absence inference is invalid.\"},{\"class\":\"E4\",\"cite\":{\"file\":\"packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts\",\"line\":380},\"note\":\"parentRepo is flatMapped from gitDir, so present parent implies present Git target path. Both path/status calls remain ordered at384-385.\"},{\"class\":\"E4\",\"cite\":{\"file\":\"packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts\",\"line\":387},\"note\":\"Contents are probed only after both actual stat observations are Some(true), through classifier239. Full five-local product is72/14, including all nine independent sequential known-path stat pairs and both contents outcomes only for missing/missing.\"}],\"cardinality\":{\"representable\":72,\"legal\":14},\"storage\":\"derived\",\"exposure\":\"internal\",\"targetShape\":\"tagged-union\",\"tier\":1,\"notes\":\"New actual local owner; no dotted shape field or required-payload axis. Preserve full normalized paths, unknown stat versus absent path, call order, lazy contents inspection, initial/rediscovery behavior and all error/safety contracts. Private source-extraction proof executes all14 legal local tuples and eleven non-NotFound error categories; it is not P3. Coordinate atomically with the full DiscoveredCandidate312/13 design; count helper/final classification guard deletion only there. Audit: data/design-refresh-2026-09-09-r28-tmpfs-observation-owner.md.\"}"
         },
         {
           "path": "data/design-refresh-2026-09-09-r28-tmpfs-observation-owner.md",
           "line": 257,
           "sha256": "0e5beff69f0a3e1db2283127132fb999b0e6ccb0d7a95f4264b007487745c23b",
-          "excerpt": "{\"schemaVersion\":\"boolean-creep-inventory/v1\",\"id\":\"r28-cli-internal-root-tmpfs-discovered-classified-skip\",\"file\":\"packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts\",\"line\":65,\"symbol\":\"DiscoveredCandidate\",\"kind\":\"type-literal\",\"members\":[\"reapClass\",\"classified\",\"shapeSkipReason\",\"parentRepo\"],\"status\":\"designed\",\"evidence\":[{\"class\":\"E3\",\"cite\":{\"file\":\"packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts\",\"line\":293},\"note\":\"Git-worktree constructor makes classified exactly parentRepo presence, always with no shape reason; recognized/unrecognized parent are separate supported states.\"},{\"class\":\"E4\",\"cite\":{\"file\":\"packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts\",\"line\":373},\"note\":\"Complete dangling producer emits seven class/reason/parent-presence states: classified with parent, existing Git target with/without recognized parent, parent-present with parent, wrong-shape with/without parent, and contents-present with parent. Stat errors preserve unknown observations and retained known parent paths.\"}],\"cardinality\":{\"representable\":312,\"legal\":13},\"storage\":\"stored\",\"exposure\":\"internal\",\"targetShape\":\"tagged-union\",\"tier\":1,\"notes\":\"Expand the existing selected-pair26/6 row to its complete connected class/Boolean/reason/parent owner312/13. Preserve prior correction and current design history; this is native P2 full-owner repair, not another independent correction. All13 exact source tuples preserve root/path/idle payloads and public report omission. New local72/14 observation owner is separate; helpers239-245/final pair393-394/classification739-745 are candidate-only guard credit. No changes to public six classes, twelve reasons, JSON, liveness, revalidation or destructive safety behavior. Audit: data/design-refresh-2026-09-09-r28-tmpfs-observation-owner.md.\"}"
+          "excerpt": "{\"schemaVersion\":\"boolean-creep-inventory/v1\",\"id\":\"r28-cli-internal-root-tmpfs-discovered-classified-skip\",\"file\":\"packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts\",\"line\":65,\"symbol\":\"DiscoveredCandidate\",\"kind\":\"type-literal\",\"members\":[\"reapClass\",\"classified\",\"shapeSkipReason\",\"parentRepo\"],\"status\":\"designed\",\"evidence\":[{\"class\":\"E3\",\"cite\":{\"file\":\"packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts\",\"line\":293},\"note\":\"Git-worktree constructor makes classified exactly parentRepo presence, always with no shape reason; recognized/unrecognized parent are separate supported states.\"},{\"class\":\"E4\",\"cite\":{\"file\":\"packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts\",\"line\":373},\"note\":\"Complete dangling producer emits seven class/reason/parent-presence states: classified with parent, existing Git target with/without recognized parent, parent-present with parent, wrong-shape with/without parent, and contents-present with parent. Stat errors preserve unknown observations and retained known parent paths.\"}],\"cardinality\":{\"representable\":312,\"legal\":13},\"storage\":\"stored\",\"exposure\":\"internal\",\"targetShape\":\"tagged-union\",\"tier\":1,\"notes\":\"Expand the existing selected-pair26/6 row to its complete connected class/Boolean/reason/parent owner312/13. Preserve prior correction and current design history; this is native P2 full-owner repair, not another independent correction. All13 exact source tuples preserve root/path/idle payloads and public report omission. New local72/14 observation owner is separate; helpers239-245/final pair393-394/classification739-745 are candidate-only guard credit. No changes to public six classes, twelve reasons, JSON, liveness, revalidation or destructive safety behavior. Audit: data/design-refresh-2026-09-09-r28-tmpfs-observation-owner.md.\"}"
         },
         {
           "path": "data/design-refresh-2026-09-09-r28-tmpfs-observation-owner.md",
@@ -6513,7 +6513,7 @@
           "record": {
             "schemaVersion": "boolean-creep-inventory/v1",
             "id": "r28-cli-internal-root-tmpfs-gitfile-remove-options",
-            "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+            "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
             "line": 855,
             "symbol": "removeDanglingWorktreeStub: fs.remove(gitFile) options",
             "kind": "object-literal",
@@ -6540,7 +6540,7 @@
           "record": {
             "schemaVersion": "boolean-creep-inventory/v1",
             "id": "r28-cli-internal-root-tmpfs-gitfile-remove-options",
-            "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+            "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
             "line": 855,
             "symbol": "removeDanglingWorktreeStub.gitFile.removeOptions",
             "kind": "object-literal",
@@ -6564,7 +6564,7 @@
           "record": {
             "schemaVersion": "boolean-creep-inventory/v1",
             "id": "r28-cli-internal-root-tmpfs-gitfile-remove-options",
-            "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+            "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
             "line": 855,
             "symbol": "removeDanglingWorktreeStub: fs.remove(gitFile) options",
             "kind": "object-literal",
@@ -6606,7 +6606,7 @@
         "record": {
           "schemaVersion": "boolean-creep-inventory/v1",
           "id": "r28-cli-internal-root-tmpfs-gitfile-remove-options",
-          "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+          "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
           "line": 855,
           "symbol": "removeDanglingWorktreeStub: fs.remove(gitFile) options",
           "kind": "object-literal",
@@ -6629,7 +6629,7 @@
           "path": "data/design-refresh-2026-09-09-r28-cli-first-owners.md",
           "line": 203,
           "sha256": "611d6d0bc3ad5dd378b7680a79cf4622d60d45cbbfb7eef0b6b72c5d2e9b8f02",
-          "excerpt": "{\"schemaVersion\":\"boolean-creep-inventory/v1\",\"id\":\"r28-cli-internal-root-tmpfs-gitfile-remove-options\",\"file\":\"packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts\",\"line\":855,\"symbol\":\"removeDanglingWorktreeStub: fs.remove(gitFile) options\",\"kind\":\"object-literal\",\"members\":[\"force\",\"recursive\"],\"status\":\"disqualified\",\"disqualifier\":{\"class\":\"D2\",\"note\":\"Inline Effect FileSystem.remove options for the dangling-stub .git file. force and recursive are independent platform-fs SDK knobs; this call sets recursive false while sibling directory removals set it true. Exact SDK contract: .repos/effect/packages/effect/src/FileSystem.ts271-283; these are the complete two own fields. Symbol is a human enclosing-call locator, not an invented object property. No encoded state migration.\"}}"
+          "excerpt": "{\"schemaVersion\":\"boolean-creep-inventory/v1\",\"id\":\"r28-cli-internal-root-tmpfs-gitfile-remove-options\",\"file\":\"packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts\",\"line\":855,\"symbol\":\"removeDanglingWorktreeStub: fs.remove(gitFile) options\",\"kind\":\"object-literal\",\"members\":[\"force\",\"recursive\"],\"status\":\"disqualified\",\"disqualifier\":{\"class\":\"D2\",\"note\":\"Inline Effect FileSystem.remove options for the dangling-stub .git file. force and recursive are independent platform-fs SDK knobs; this call sets recursive false while sibling directory removals set it true. Exact SDK contract: .repos/effect/packages/effect/src/FileSystem.ts271-283; these are the complete two own fields. Symbol is a human enclosing-call locator, not an invented object property. No encoded state migration.\"}}"
         }
       ],
       "integrationEvidence": [
@@ -6690,7 +6690,7 @@
           "record": {
             "schemaVersion": "boolean-creep-inventory/v1",
             "id": "r28-cli-internal-root-tmpfs-directory-remove-options",
-            "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+            "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
             "line": 910,
             "symbol": "removeDirectoryCandidate: fs.remove(candidate.path) options",
             "kind": "object-literal",
@@ -6717,7 +6717,7 @@
           "record": {
             "schemaVersion": "boolean-creep-inventory/v1",
             "id": "r28-cli-internal-root-tmpfs-directory-remove-options",
-            "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+            "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
             "line": 910,
             "symbol": "removeDirectoryCandidate.removeOptions",
             "kind": "object-literal",
@@ -6741,7 +6741,7 @@
           "record": {
             "schemaVersion": "boolean-creep-inventory/v1",
             "id": "r28-cli-internal-root-tmpfs-directory-remove-options",
-            "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+            "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
             "line": 910,
             "symbol": "removeDirectoryCandidate: fs.remove(candidate.path) options",
             "kind": "object-literal",
@@ -6783,7 +6783,7 @@
         "record": {
           "schemaVersion": "boolean-creep-inventory/v1",
           "id": "r28-cli-internal-root-tmpfs-directory-remove-options",
-          "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+          "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
           "line": 910,
           "symbol": "removeDirectoryCandidate: fs.remove(candidate.path) options",
           "kind": "object-literal",
@@ -6806,7 +6806,7 @@
           "path": "data/design-refresh-2026-09-09-r28-cli-first-owners.md",
           "line": 204,
           "sha256": "611d6d0bc3ad5dd378b7680a79cf4622d60d45cbbfb7eef0b6b72c5d2e9b8f02",
-          "excerpt": "{\"schemaVersion\":\"boolean-creep-inventory/v1\",\"id\":\"r28-cli-internal-root-tmpfs-directory-remove-options\",\"file\":\"packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts\",\"line\":910,\"symbol\":\"removeDirectoryCandidate: fs.remove(candidate.path) options\",\"kind\":\"object-literal\",\"members\":[\"force\",\"recursive\"],\"status\":\"disqualified\",\"disqualifier\":{\"class\":\"D2\",\"note\":\"Inline Effect FileSystem.remove options for a classified directory candidate. force and recursive are independent platform-fs SDK knobs set together at this call. Exact SDK contract: .repos/effect/packages/effect/src/FileSystem.ts271-283; these are the complete two own fields. Symbol is a human enclosing-call locator, not an invented object property. No encoded state migration.\"}}"
+          "excerpt": "{\"schemaVersion\":\"boolean-creep-inventory/v1\",\"id\":\"r28-cli-internal-root-tmpfs-directory-remove-options\",\"file\":\"packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts\",\"line\":910,\"symbol\":\"removeDirectoryCandidate: fs.remove(candidate.path) options\",\"kind\":\"object-literal\",\"members\":[\"force\",\"recursive\"],\"status\":\"disqualified\",\"disqualifier\":{\"class\":\"D2\",\"note\":\"Inline Effect FileSystem.remove options for a classified directory candidate. force and recursive are independent platform-fs SDK knobs set together at this call. Exact SDK contract: .repos/effect/packages/effect/src/FileSystem.ts271-283; these are the complete two own fields. Symbol is a human enclosing-call locator, not an invented object property. No encoded state migration.\"}}"
         }
       ],
       "integrationEvidence": [
@@ -6867,7 +6867,7 @@
           "record": {
             "schemaVersion": "boolean-creep-inventory/v1",
             "id": "r28-cli-internal-root-tmpfs-fallow-extras-remove-options",
-            "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+            "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
             "line": 917,
             "symbol": "removeDirectoryCandidate: fs.remove(extra) options",
             "kind": "object-literal",
@@ -6894,7 +6894,7 @@
           "record": {
             "schemaVersion": "boolean-creep-inventory/v1",
             "id": "r28-cli-internal-root-tmpfs-fallow-extras-remove-options",
-            "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+            "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
             "line": 917,
             "symbol": "removeDirectoryCandidate.extras.removeOptions",
             "kind": "object-literal",
@@ -6918,7 +6918,7 @@
           "record": {
             "schemaVersion": "boolean-creep-inventory/v1",
             "id": "r28-cli-internal-root-tmpfs-fallow-extras-remove-options",
-            "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+            "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
             "line": 917,
             "symbol": "removeDirectoryCandidate: fs.remove(extra) options",
             "kind": "object-literal",
@@ -6960,7 +6960,7 @@
         "record": {
           "schemaVersion": "boolean-creep-inventory/v1",
           "id": "r28-cli-internal-root-tmpfs-fallow-extras-remove-options",
-          "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+          "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
           "line": 917,
           "symbol": "removeDirectoryCandidate: fs.remove(extra) options",
           "kind": "object-literal",
@@ -6983,7 +6983,7 @@
           "path": "data/design-refresh-2026-09-09-r28-cli-first-owners.md",
           "line": 205,
           "sha256": "611d6d0bc3ad5dd378b7680a79cf4622d60d45cbbfb7eef0b6b72c5d2e9b8f02",
-          "excerpt": "{\"schemaVersion\":\"boolean-creep-inventory/v1\",\"id\":\"r28-cli-internal-root-tmpfs-fallow-extras-remove-options\",\"file\":\"packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts\",\"line\":917,\"symbol\":\"removeDirectoryCandidate: fs.remove(extra) options\",\"kind\":\"object-literal\",\"members\":[\"force\",\"recursive\"],\"status\":\"disqualified\",\"disqualifier\":{\"class\":\"D2\",\"note\":\"Inline Effect FileSystem.remove options for fallow sibling extras after the candidate directory is gone. Distinct owner from removeDirectoryCandidate.removeOptions; force and recursive are independent platform-fs SDK knobs. Exact SDK contract: .repos/effect/packages/effect/src/FileSystem.ts271-283; these are the complete two own fields. Symbol is a human enclosing-call locator, not an invented object property. No encoded state migration.\"}}"
+          "excerpt": "{\"schemaVersion\":\"boolean-creep-inventory/v1\",\"id\":\"r28-cli-internal-root-tmpfs-fallow-extras-remove-options\",\"file\":\"packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts\",\"line\":917,\"symbol\":\"removeDirectoryCandidate: fs.remove(extra) options\",\"kind\":\"object-literal\",\"members\":[\"force\",\"recursive\"],\"status\":\"disqualified\",\"disqualifier\":{\"class\":\"D2\",\"note\":\"Inline Effect FileSystem.remove options for fallow sibling extras after the candidate directory is gone. Distinct owner from removeDirectoryCandidate.removeOptions; force and recursive are independent platform-fs SDK knobs. Exact SDK contract: .repos/effect/packages/effect/src/FileSystem.ts271-283; these are the complete two own fields. Symbol is a human enclosing-call locator, not an invented object property. No encoded state migration.\"}}"
         }
       ],
       "integrationEvidence": [
@@ -16810,7 +16810,7 @@
       "record": {
         "schemaVersion": "boolean-creep-inventory/v1",
         "id": "r28-cli-internal-root-tmpfs-stub-observations",
-        "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+        "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
         "line": 379,
         "symbol": "discoverDanglingWorktreeStub",
         "kind": "sibling-state",
@@ -16826,7 +16826,7 @@
           {
             "class": "E4",
             "cite": {
-              "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+              "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
               "line": 226
             },
             "note": "Each actual Option path owns a matching Option<boolean> observation: absent path forces None; present path can yield None on non-NotFound errors, Some(false) on success or Some(true) on NotFound. The converse absence inference is invalid."
@@ -16834,7 +16834,7 @@
           {
             "class": "E4",
             "cite": {
-              "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+              "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
               "line": 380
             },
             "note": "parentRepo is flatMapped from gitDir, so present parent implies present Git target path. Both path/status calls remain ordered at384-385."
@@ -16842,7 +16842,7 @@
           {
             "class": "E4",
             "cite": {
-              "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+              "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
               "line": 387
             },
             "note": "Contents are probed only after both actual stat observations are Some(true), through classifier239. Full five-local product is72/14, including all nine independent sequential known-path stat pairs and both contents outcomes only for missing/missing."

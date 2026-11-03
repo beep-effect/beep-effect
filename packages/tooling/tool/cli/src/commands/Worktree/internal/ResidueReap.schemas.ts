@@ -11,7 +11,7 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
 import { PosInt } from "../../../internal/schema/PosInt.ts";
 
-const $I = $RepoCliId.create("internal/repo-run/ResidueReap.schemas");
+const $I = $RepoCliId.create("commands/Worktree/internal/ResidueReap.schemas");
 const ResidueTerminalState = LiteralKit([
   "completed",
   "failed",

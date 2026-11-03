@@ -4,9 +4,9 @@
  * W0 of `goals/repo-cli-gh-git-consolidation` moves five repo-cli sites onto two new `@beep/git` members:
  *
  * - `merge-base --is-ancestor` probes in `Knowledge/KnowledgeDoctor.service.ts`,
- *   `Quality/internal/ResidueTerminalLaneLive.ts` and `Ci/RouteCensus.ts` onto `Git.isAncestor`;
+ *   `Worktree/internal/ResidueTerminalLaneLive.ts` and `Ci/RouteCensus.ts` onto `Git.isAncestor`;
  * - `worktree prune` (and the `-C <repo> worktree remove --force` beside it) in `internal/repo-run/GitWorktree.ts`
- *   and `internal/repo-run/TmpfsReap.ts` onto `Git.worktreePrune` and `Git.worktreeRemove`.
+ *   and `commands/Worktree/internal/TmpfsReap.ts` onto `Git.worktreePrune` and `Git.worktreeRemove`.
  *
  * Each pre-W0 body is frozen below as `old*` (from origin/main 186214ce22), running the same git argv through the
  * repo-run capture it used. Every scenario builds a real scratch repository, runs the old body and the kit member on

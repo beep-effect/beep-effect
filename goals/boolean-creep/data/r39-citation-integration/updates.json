@@ -624,7 +624,7 @@
     "before": {
       "schemaVersion": "boolean-creep-inventory/v1",
       "id": "r28-cli-internal-root-tmpfs-fallow-extras-remove-options",
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
       "line": 930,
       "symbol": "removeDirectoryCandidate: fs.remove(extra) options",
       "kind": "object-literal",
@@ -638,7 +638,7 @@
     "after": {
       "schemaVersion": "boolean-creep-inventory/v1",
       "id": "r28-cli-internal-root-tmpfs-fallow-extras-remove-options",
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
       "line": 930,
       "symbol": "removeDirectoryCandidate: fs.remove(extra) options",
       "kind": "object-literal",

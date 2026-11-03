@@ -275,7 +275,7 @@
       "disposition": "retain-existing-qualified-status-and-design-with-locator-correction",
       "evidence": [
         {
-          "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+          "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
           "line": 66,
           "sha256": "2a0253141d3ebdadfbe6b8d715012b83cb75c36876ec50969e330e2f03a5da01",
           "note": "DiscoveredCandidate type61-69 puts classified at66, with idleSinceMillis at65. This is an existing designed312/13 qualification, not a new confirmed row; preserve current evidence, status and full-owner cardinality. The existing E4 citation373 is the discoverDanglingWorktreeStub function header; the returned constructor begins388. Source bytes equal the original P2 source f03850b762e41217b5a0c26f26041daee490a070."
