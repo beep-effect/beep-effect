@@ -910,3 +910,17 @@ observed schema difference changed the matrix and next qualification work.
   lane. Restrict containment to pin manifests, preserve other captured-byte
   checks, and include a shared external-doc symlink in the208-case fixture.
   No native execution was needed to expose or correct that layout mismatch.
+
+
+### 2026-11-03 — validate fresh captures without repeating experiments
+
+- The existing admitted runner completed all thirteen repaired native drivers.
+  Keep case counts, invocations, task-result observations and fixture task
+  executions distinct; summing heterogeneous report rows would misstate scope.
+- A raw-file validator initially assumed numbering restarted per client. The
+  signature driver actually uses its global observation index. Inspect that
+  source and correct the join; preserve all native reports and do not rerun a
+  successful experiment merely to repair a metadata check.
+- Validate admission release against the actual launched process, current
+  source/client digests and retained raw captures before publication. The
+ 13.690-second experiment runtime is not a measurement of cache time saved.

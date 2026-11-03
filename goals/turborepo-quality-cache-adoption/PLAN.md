@@ -825,3 +825,26 @@ not current-driver proof. All affected-driver native replays remain pending.
 Feature dispositions stay eleven scoped decisions and 25 pending. No task
 qualification, signing, cache configuration, rollout or local repository quality
 suite changes; hosted CI is the PR quality authority.
+
+
+### Repaired native drivers replayed, 2026-11-03
+
+[The current replay checkpoint](research/native-source-family-replay-2026-11-03.json)
+records thirteen successful sequential experiments in 13.690 seconds under one
+existing token, with 27 ms admission wait and a 301,891,584-byte recorded peak.
+All thirteen drivers still match their pushed source at 0fa82e5, all 53 reported
+source bindings match, and 800 retained signature/permission/selection raw
+capture digests and bounds match. The future-availability raw JSON digest also
+matches. Compact reports remain below the 16 MiB publication cap.
+
+The signature matrix has 168 cases (162 actual fixture task executions and six
+early refusals), selection has 44 asserted cases/88 dry-and-execution invocations,
+permission modes have 132 dry runs, and the checkpoint preserves each other
+experiment's distinct observation unit. Other fixtures also execute tiny task
+bodies; this is not a zero-task dry-run batch. No real repository quality task,
+production cache traffic, key, epoch, cohort or cache setting changes.
+
+This completes the repaired-driver native replay gap, not any feature/tuple or
+whole-goal acceptance. Missing-key role policy, actual signed transport and
+protected producer evidence, real consumer reviews, portability/concurrency
+qualification and representative observation windows remain open.

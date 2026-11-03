@@ -825,3 +825,16 @@ actual dependency schema/docs resolve outside this worktree. Include that
 shared-doc symlink in the metadata fixture alongside all pin replacement
 negatives. Reversal preserves the pin fence and restores only the overbroad
 dependency read restriction.
+
+
+### Bounded repaired-driver native replay, 2026-11-03
+
+Replay all thirteen affected native experiment drivers after the source repair
+is pushed. Use one existing admission token and sequential execution, at most
+ten minutes total and one minute per experiment, retaining each driver's
+existing per-case/stream limits. Use fresh private output paths, isolated
+synthetic fixtures and credentials, no repository quality suite and no real
+cache traffic. Retain at most 16 MiB of compact publication evidence; preserve
+raw captures privately under their existing bounds. Stop on the first failure
+and retain partial evidence rather than repeating or overwriting it. This is
+native semantic evidence only; feature and tuple qualification remain separate.
