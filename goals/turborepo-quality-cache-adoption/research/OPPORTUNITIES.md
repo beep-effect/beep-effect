@@ -760,3 +760,11 @@ dropped before the run-builder guard; CLI/environment settings are guarded. The
 revised controls assert both paths on stable and current canary. Keep the initial
 failed receipt and source separately; generated schema omission is also not an
 availability test because this experimental block is intentionally hidden.
+
+
+### Keep feature counters aligned with accepted evidence, 2026-11-02
+
+The manifest status note still counted eight scoped feature decisions while its
+accepted matrix counted nine. This no-change prune review updates both to ten
+with 25 pending rows. Matrix counts must be derived from row dispositions before
+publishing; an accepted optional absence is not computation or goal completion.
