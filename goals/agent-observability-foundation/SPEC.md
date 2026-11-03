@@ -685,11 +685,11 @@ that verdict and must not enter this sequence. Native merge preserves it.
 Reversal is a reviewed source change with the archived records retained. None
 of this releases the recovery hold or changes real-harness coverage claims.
 
-### Owner closeout recovery after PR2612 (2026-11-03 UTC)
+### Owner closeout recovery after PR2612 (2026-11-03 UTC; historical PR2644 checkpoint)
 
 Preserve the actual unsatisfied canonical result and immutable pre/post-merge
-records of PR2612. PR2644 is the sole corrective final declaration; its draft
-publication does not release merge authority. The accepted shared repairs #2635
+records of PR2612. PR2644 was the sole corrective final declaration at that
+checkpoint; its draft publication did not release merge authority. The accepted shared repairs #2635
 and #2641 are integrated normally. The new selected-input comparison preserves
 all original scopes, false current-root admission and seven Unknown populations.
 Original acceptance gates are unchanged: strict current-head hosted readiness,
@@ -697,3 +697,16 @@ resolved reviews, ordinary window, successful observer finalization and an
 archived positive classic verdict before owner merge, then actual verified
 canonical completion. Do not infer exclusive technical ownership from a body
 reservation or rewrite historical readiness after merge.
+
+### Final readiness checkpoint after PR2644 (2026-11-03 UTC)
+
+PR2649 is the sole final checkpoint, reserved to the owning chat. Preserve
+PR2644's unknown receipt and all later passing checks without creating past
+readiness. The operator explicitly retained the original pre-merge rule. Update
+the live README, PLAN, manifest and qualification report together. Retained
+selected source sets remain 234/249, 82/84, 86/90 and 85/89; baseline identity moves
+preserve values but are not byte-identical source moves. Current exact-root
+admission remains false and all seven real-harness populations remain Unknown.
+The owner must retain actual terminal ready, successful job finalization and a
+positive exact-head classic verdict before strict merge, then obtain actual
+verified canonical completion. No S11, forced window or retrospective evidence.

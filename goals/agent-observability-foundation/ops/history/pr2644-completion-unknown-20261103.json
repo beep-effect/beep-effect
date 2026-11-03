@@ -114,7 +114,9 @@
     "endedAt": "2026-11-03T04:42:41.418Z",
     "serviceResult": "success",
     "exitStatus": "0",
-    "finalizedBeforeMerge": false
+    "finalizedBeforeMerge": false,
+    "positivePremergeReadiness": false,
+    "terminalInterpretation": "Successful observation of merged state after merge, not terminal-ready before merge."
   },
   "premergeVerdict": {
     "mode": "closeout",

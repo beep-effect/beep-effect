@@ -21,7 +21,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Achieved only after final PR2644 is merged with final-head hosted checks and review/window requirements satisfied, a positive exact-head readiness verdict preserved before merge, and a canonical completion receipt actually verified for the accepted head.",
+    "statement": "Achieved only after final PR2649 is merged with final-head hosted checks and review/window requirements satisfied, a positive exact-head readiness verdict preserved before merge, and a canonical completion receipt actually verified for the accepted head.",
     "grandfathered": false,
     "pullRequests": [
       {
@@ -82,13 +82,17 @@
       },
       {
         "number": 2644,
+        "role": "supporting"
+      },
+      {
+        "number": 2649,
         "role": "final"
       }
     ],
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/fix_observability-owner-closeout-54404d5528fb/verdict.json",
+        "ref": ".beep/yeet/runs/fix_observability-final-checkpoint-080fb0fc60c7/verdict.json",
         "gating": true
       },
       {
@@ -158,13 +162,13 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "Routine CI queues, failing checks, local admission refusals and publish/verify sequencing are autonomous repair or routing work. Keep the authoritative observer; do not pause merely because a blocker repeats. Escalate concrete missing authority or required operator input after authorized paths are exhausted."
   ],
-  "statusNote": "PR2612 merged without its declared pre-merge proof; the original canonical result is unsatisfied and remains preserved. PR2644 is the sole corrective final, reserved to this chat for normal verification and merge. The operator subsequently confirmed personally merging PR2612; the earlier unknown-caller observation remains historical, and its unsatisfied completion result is unchanged. Completion remains unverified until final-head hosted checks, actual resolved review, the normal window, successfully finalized readiness, an archived positive exact-head verdict before strict owner merge, and actual verified canonical completion are observed. The new source comparison retains 234/249,82/84,86/90,85/89 selected matches; source equality is not complete transitive proof or fresh execution. All V3 baseline values remain exact with one measured PolicyRootFiles identity added. Current exact-root admission remains false. Historical2364/2508/2578/2612 results are unchanged. Recovery service and timer remain masked/inactive. All seven real-harness populations remain Unknown.",
+  "statusNote": "PR2649 is the sole final checkpoint. The operator explicitly retained the pre-merge rule and reserved this final merge to this chat. PR2644 retains its unknown canonical result despite forty eventually successful check runs; its positive readiness field was absent and its observer finalized after merge. Completion remains pending actual final-head checks, resolved review, normal window, successfully finalized readiness, an archived positive exact-head verdict before strict owner merge, then actual verified canonical completion. Selected source sets remain 234/249, 82/84, 86/90 and 85/89. Eleven baseline identities relocate with all values preserved; two identities are added. This is not full dependency closure or fresh execution transfer. Historical2364/2508/2578/2612/2644 results are unchanged. Current exact-root admission remains false. Recovery service and timer remain masked/inactive. All seven real-harness populations remain Unknown.",
   "resumeConditions": [
     "Explicit launch of this packet after dependency proof; refresh live state before changes."
   ],
   "dependencies": [],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2644
+    "finalPullRequest": 2649
   }
 }
