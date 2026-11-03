@@ -5,14 +5,14 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { OpaqueDefect } from "@beep/repo-cli-kit/schema/OpaqueDefect";
 import { LiteralKit } from "@beep/schema";
 import { Err } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 
 const $I = $RepoCliId.create("commands/Ci/Ci.errors");
 

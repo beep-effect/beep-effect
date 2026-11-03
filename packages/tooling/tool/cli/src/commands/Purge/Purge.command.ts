@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { workspaceDirectories } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { DomainError, findRepoRoot } from "@beep/repo-utils";
 import { normalizePath } from "@beep/schema";
 import { A, Str } from "@beep/utils";
@@ -19,7 +20,6 @@ import * as MutableHashSet from "effect/MutableHashSet";
 import * as Num from "effect/Number";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { workspaceDirectories } from "../../internal/RepoWorkspaces.ts";
 
 const $I = $RepoCliId.create("purge");
 /**

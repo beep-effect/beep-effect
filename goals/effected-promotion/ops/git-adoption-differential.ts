@@ -22,6 +22,7 @@
 
 import * as NodeURL from "node:url";
 import { Git } from "@beep/git/Git";
+import { runCapturedStreams } from "@beep/repo-cli-kit/process/StepExec";
 import { NodeCrypto, NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -36,7 +37,6 @@ import {
   detectPrRepository,
   readProvenanceLabels,
 } from "../../../packages/tooling/tool/cli/src/commands/Yeet/internal/ProvenanceFooter.ts";
-import { runCapturedStreams } from "../../../packages/tooling/tool/cli/src/internal/process/StepExec.ts";
 import {
   isRegisteredWorktree,
   removeGitWorktree,

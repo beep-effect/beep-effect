@@ -43,8 +43,9 @@ Optional roles are earned by complexity. Prefer semantic names such as
 non-trivial layer variants.
 
 Command-owned private roles belong under `commands/<Group>/internal/`.
-Package-wide shared CLI support belongs under `src/internal/cli/`, not a
-package-local `foundation/` directory. Keep command services free of final
+Package-wide shared CLI support belongs in `@beep/repo-cli-kit`
+(`packages/tooling/library/repo-cli-kit`), not a package-local `foundation/`
+directory. Keep command services free of final
 terminal rendering: services return typed results/reports, command adapters
 render output and choose process-visible failure semantics.
 

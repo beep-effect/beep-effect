@@ -168,7 +168,9 @@ const carveOuts: Record<string, string> = {
   "commands/Knowledge/Knowledge.errors.ts": "lib:repo-packets",
 };
 
-// `src/internal/<dir>` to its library (design-record "New libraries").
+// `src/internal/<dir>` to its library (design-record "New libraries"). W3 moved
+// the kit directories into `packages/tooling/library/repo-cli-kit`, outside `src`,
+// so the census no longer reads them; the default only catches a new directory.
 const internalHome = (path: string): string => {
   const [, directory] = path.split("/");
   switch (directory) {

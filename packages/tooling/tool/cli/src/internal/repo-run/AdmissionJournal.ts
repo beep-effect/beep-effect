@@ -14,6 +14,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { UUID } from "@beep/repo-cli-kit/schema/Uuid";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
@@ -36,7 +37,6 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
-import { UUID } from "../schema/Uuid.ts";
 import { publishJournalTextAtomically } from "./JournalFile.ts";
 import {
   isProcessPidAlive,

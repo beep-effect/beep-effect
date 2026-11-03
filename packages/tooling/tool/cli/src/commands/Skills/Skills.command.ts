@@ -7,6 +7,10 @@
 
 import { decodeSkillsLockDocumentJson, SkillsLockDocument } from "@beep/ai-sync/SkillsLock.schemas";
 import { $RepoCliId } from "@beep/identity/packages";
+import { asArrayBufferView, concatBytes } from "@beep/repo-cli-kit/cli/Bytes";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { formatJsonValue } from "@beep/repo-cli-kit/cli/Json";
+import { decodeTomlTextWith } from "@beep/repo-cli-kit/schema/TextCodec";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
@@ -28,10 +32,6 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { asArrayBufferView, concatBytes } from "../../internal/cli/Bytes.ts";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { formatJsonValue } from "../../internal/cli/Json.ts";
-import { decodeTomlTextWith } from "../../internal/schema/TextCodec.ts";
 import { expectPlanDigestFlag } from "./internal/PlanFlags.ts";
 import { checkInstalledSkills } from "./internal/SkillFrontmatterCheck.ts";
 import {

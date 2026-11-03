@@ -14,6 +14,7 @@
 import { writeFileWithinRootAtomically } from "@beep/file-processing/PathSafety";
 import { SessionStore } from "@beep/qa-capture";
 import { encodeQaInventory } from "@beep/qa-capture/QaInventory.schemas";
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import { Sha256HexFromBytes } from "@beep/schema/Sha256";
 import {
   applyGateCertificatePlan,
@@ -30,7 +31,6 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
-import { printLines } from "../../internal/cli/Printer.ts";
 import {
   evidenceCrossCheckVerdictToCrossCheck,
   extractLastJsonBlock,

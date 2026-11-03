@@ -6,10 +6,10 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { OutputBound, runCapturedStreams } from "@beep/repo-cli-kit/process/StepExec";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { OutputBound, runCapturedStreams } from "../../../internal/process/StepExec.ts";
 import { LibraryError } from "./Library.errors.ts";
 import { LibraryArtifact } from "./Library.schemas.ts";
 import { saveImmutable } from "./Library.store.ts";

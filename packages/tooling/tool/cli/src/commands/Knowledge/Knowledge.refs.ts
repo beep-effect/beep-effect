@@ -1279,6 +1279,20 @@ const isGoalPacketDataPath = (segments: ReadonlyArray<string>): boolean =>
   O.exists(A.get(segments, 1), Str.isNonEmpty) &&
   O.exists(A.get(segments, 2), (segment) => Str.Equivalence(segment, "data"));
 
+// A packet's `goals/<packet>/ops/inventory/digests/` are dated scan receipts; the generated
+// inventory rows beside them stay live, source-bound evidence.
+const isGoalPacketInventoryDigestPath = (segments: ReadonlyArray<string>): boolean =>
+  O.exists(A.get(segments, 0), (segment) => Str.Equivalence(segment, "goals")) &&
+  O.exists(A.get(segments, 1), Str.isNonEmpty) &&
+  O.exists(A.get(segments, 2), (segment) => Str.Equivalence(segment, "ops")) &&
+  O.exists(A.get(segments, 3), (segment) => Str.Equivalence(segment, "inventory")) &&
+  O.exists(A.get(segments, 4), (segment) => Str.Equivalence(segment, "digests"));
+
+// `docs/reports/` holds dated point-in-time reports, many bound by digest to a cache-baseline request.
+const isDocsReportPath = (segments: ReadonlyArray<string>): boolean =>
+  O.exists(A.get(segments, 0), (segment) => Str.Equivalence(segment, "docs")) &&
+  O.exists(A.get(segments, 1), (segment) => Str.Equivalence(segment, "reports"));
+
 /**
  * Whether a repository path sits inside the scanned knowledge surface.
  *
@@ -1320,7 +1334,9 @@ export const isKnowledgeScopedPath = (repoPath: string): boolean => {
  * The explicit archival directory names are matched as exact path segments, so a file merely named
  * `research-notes.md` is live. The generic name `data` is archival only at the packet-owned root
  * `goals/<packet>/data/`: those directories hold hash-pinned pipeline captures. A nested `data/`
- * directory anywhere else remains live guidance.
+ * directory anywhere else remains live guidance. The dated reports under `docs/reports/` and a packet's
+ * `goals/<packet>/ops/inventory/digests/` receipts are captured evidence too; the generated
+ * inventory rows beside those digests stay live.
  *
  * **Example** (Separate archival evidence from live guidance)
  *
@@ -1330,6 +1346,7 @@ export const isKnowledgeScopedPath = (repoPath: string): boolean => {
  * console.log(isKnowledgeArchivalPath("goals/example/research/notes.md")) // true
  * console.log(isKnowledgeArchivalPath(".claude/skills/data/SKILL.md")) // false
  * console.log(isKnowledgeArchivalPath("goals/example/PLAN.md")) // false
+ * console.log(isKnowledgeArchivalPath("docs/reports/example-review-2026-11-02.md")) // true
  * ```
  *
  * @param repoPath - Repository-relative path of a tracked entry.
@@ -1340,7 +1357,10 @@ export const isKnowledgeScopedPath = (repoPath: string): boolean => {
 export const isKnowledgeArchivalPath = (repoPath: string): boolean => {
   const segments = Str.split("/")(repoPath);
   return (
-    A.some(segments, (segment) => HashSet.has(ARCHIVAL_DIRECTORY_SEGMENTS, segment)) || isGoalPacketDataPath(segments)
+    A.some(segments, (segment) => HashSet.has(ARCHIVAL_DIRECTORY_SEGMENTS, segment)) ||
+    isGoalPacketDataPath(segments) ||
+    isGoalPacketInventoryDigestPath(segments) ||
+    isDocsReportPath(segments)
   );
 };
 

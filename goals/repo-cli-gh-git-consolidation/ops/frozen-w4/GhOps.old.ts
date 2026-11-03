@@ -5,6 +5,7 @@
 
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { $RepoCliId } from "@beep/identity/packages";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -27,7 +28,6 @@ import {
   yeetReviewThreadStateOutstanding,
 } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewThreadState.ts";
 import { YeetCommandError } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/Yeet.errors.ts";
-import { failWithReportedExit } from "../../../../packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts";
 import {
   GithubCheckRunRecord,
   GithubClientRequest,
@@ -46,10 +46,10 @@ import {
 import { readGithubReviewThreads } from "./GithubGraphql.old.ts";
 import type { GitHubError } from "@beep/github/GitHubError";
 import type { Repo } from "@beep/github/Repo";
+import type { CliReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { YeetReadyInheritedRed } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/ReadyGate.ts";
-import type { CliReportedExit } from "../../../../packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts";
 import type {
   GithubIdentityError,
   GithubRestShape,

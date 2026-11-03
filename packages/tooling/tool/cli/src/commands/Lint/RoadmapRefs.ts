@@ -17,6 +17,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { makePolicyFindingLogger } from "@beep/repo-cli-kit/cli/PolicyFindingLogger";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { LiteralKit } from "@beep/schema";
 import { A, thunkEmptyStr } from "@beep/utils";
@@ -33,8 +35,6 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { makePolicyFindingLogger } from "../../internal/cli/PolicyFindingLogger.ts";
 import { EXPLORATION_ATLAS_PATH } from "../Explore/Atlas.ts";
 import { decodeGoalManifest, GoalPhaseStatus } from "../Goals/Goals.schemas.ts";
 import { goalManifestPhases, parseGoalManifestText } from "../Goals/Inventory.ts";

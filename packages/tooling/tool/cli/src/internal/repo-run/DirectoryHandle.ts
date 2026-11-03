@@ -7,6 +7,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { OpaqueDefect } from "@beep/repo-cli-kit/schema/OpaqueDefect";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
@@ -15,7 +16,6 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { OpaqueDefect } from "../schema/OpaqueDefect.ts";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Scope from "effect/Scope";
 

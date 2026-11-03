@@ -578,6 +578,8 @@
     "packages/drivers/github",
     "packages/drivers/github-actions",
     "apps/beep-effect-web",
-    "packages/party/domain"
+    "packages/party/domain",
+    "packages/party/use-cases",
+    "packages/party/server"
   ]
 }

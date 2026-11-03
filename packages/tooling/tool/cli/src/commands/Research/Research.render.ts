@@ -5,9 +5,9 @@
  * @since 0.0.0
  */
 
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import { dual } from "effect/Function";
 import * as Str from "effect/String";
-import { printLines } from "../../internal/cli/Printer.ts";
 
 /**
  * Render an Obsidian wikilink for a catalog card path.

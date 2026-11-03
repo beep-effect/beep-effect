@@ -1,7 +1,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
+import { OpaqueDefect } from "@beep/repo-cli-kit/schema/OpaqueDefect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { OpaqueDefect } from "../../../../internal/schema/OpaqueDefect.ts";
 
 const $I = $RepoCliId.create("commands/DeletePackage/internal/RegistrationGeometry/errors");
 

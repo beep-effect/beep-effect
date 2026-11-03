@@ -1598,6 +1598,14 @@
       "reason": "Live collector handle scoped to one recording round: awaitStop, eventsWritten, and rejectedCount are Effects reading server-local Refs and a Deferred. The persisted part is already modeled by CollectorHandle, which this interface carries; the running server itself never crosses a decode boundary."
     },
     {
+      "file": "packages/tooling/library/repo-cli-kit/src/cli/Progress.ts",
+      "symbol": "ProgressBarOptions",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli-kit",
+      "reason": "One-call formatting contract intentionally couples runtime colorizer functions with their glyph and fraction operands; it has no decode or persistence boundary."
+    },
+    {
       "file": "packages/tooling/library/repo-utils/src/JSDoc/models/JSDocTagDefinition.model.ts",
       "symbol": "JSDocTagDefinition",
       "kind": "plain-data-schema-class",
@@ -2128,14 +2136,6 @@
       "status": "exception",
       "owner": "@beep/repo-cli",
       "reason": "Plain data whose fields come from a checked inline struct (S.Struct({...}).pipe(S.check(...))), which the schema-opaque-default codemod could not classify (keep reason fields-expression-unknown), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over that struct."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/cli/Progress.ts",
-      "symbol": "ProgressBarOptions",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "One-call formatting contract intentionally couples runtime colorizer functions with their glyph and fraction operands; it has no decode or persistence boundary."
     },
     {
       "file": "packages/tooling/tool/cli/src/internal/repo-run/ProcessTable.ts",

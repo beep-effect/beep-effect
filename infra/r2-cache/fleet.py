@@ -38,8 +38,12 @@ for clone in clones:
 
 rows = []
 for checkout in sorted(checkouts):
-    policy = checkout / 'packages/tooling/tool/cli/src/internal/cli/TurboCache.ts'
-    text = policy.read_text() if policy.is_file() else ''
+    # The policy moved to @beep/repo-cli-kit in beep-cli-composition W3; older checkouts keep it in repo-cli.
+    policy = next((candidate for candidate in (
+        checkout / 'packages/tooling/library/repo-cli-kit/src/cli/TurboCache.ts',
+        checkout / 'packages/tooling/tool/cli/src/internal/cli/TurboCache.ts',
+    ) if candidate.is_file()), None)
+    text = policy.read_text() if policy is not None else ''
     mode = 'local:rw,remote:rw' if 'BEEP_TURBO_TRUSTED_WRITER' in text else 'local:rw,remote:r'
     supported = 'local:rw,remote:r' in text
     row = {'checkout': str(checkout), 'head': git(checkout, 'rev-parse', 'HEAD'), 'mode': mode,

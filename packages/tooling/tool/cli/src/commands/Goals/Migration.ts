@@ -15,13 +15,13 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { applyJsoncModification, JsoncModification } from "@beep/repo-cli-kit/cli/Jsonc";
+import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
 import { A, O, pipe, Str } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { applyJsoncModification, JsoncModification } from "../../internal/cli/Jsonc.ts";
-import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import { GoalStatus, isGoalPhaseStatus, isGoalStatus } from "./Goals.schemas.ts";
 import {
   isJsonRecord,

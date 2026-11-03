@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
 import * as O from "@beep/utils/Option";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
@@ -13,7 +14,6 @@ import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import { CorpusCommandError } from "./Corpus.errors.ts";
 import {
   CorpusArchiveMoveOptions,

@@ -664,3 +664,45 @@ A named native watcher reopens the decision with complete input, file-event,
 persistence, output-loop and portability controls on both exact clients. Watch
 cache writes require their own qualification. Reverse this evidence/decision
 registration without changing runtime configuration.
+
+
+### Source inventory after T3 and root-task changes, 2026-11-03
+
+Refresh the native static census at accepted source `fae5b2098c`: 191 workspaces,
+115 root scripts, 4,459 graph nodes and 2,400 executable computations. Account
+for 47 removed and 13 added computations from source, retaining all historical
+reviews. Whole-workspace script-map digest changes alone do not establish
+literal operation changes. Revalidate 197 surviving keep-fresh decisions by
+exact command/implementation and disabled-cache checks; explicitly review the
+new Party fixer, yielding 186 source-mutating fixers and twelve persistent
+services. Their pure counterparts remain unqualified.
+
+Keep the five original qualification exclusions and all other native reviews
+pending (2,202). Retired entries are source removals, not a scope waiver. The
+two unresolved entrypoint obligations and non-Turbo/nested execution coverage
+still require review. Census, review and archived bytes grant no runtime,
+qualification, adoption or whole-goal acceptance. Reverse publication by
+restoring the byte-identical prior snapshot as historical evidence; preserve
+that archive and rerun source-bound inventory before treating it as current.
+
+
+### Current feature pair and canary-only permission hashing, 2026-11-03
+
+Refresh published metadata, native binary identities and documentation for
+stable 2.11.10 and current canary 2.11.11-canary.1. Preserve the earlier pin file
+byte for byte and keep every historical semantic report bound to its actual
+client/source envelope. Configuration parsing alone grants no feature or task
+qualification. The installed repository client remains stable 2.11.10.
+
+The current canary declares `hashFilePermissions`, absent from stable. Include
+this canary-only feature in the matrix rather than assuming stable/canary flag
+parity. Native dry runs must accept both settings on canary, refuse both on
+stable and execute no task. Keep it disabled: executable-bit, other-mode-bit,
+symlink, Unix/Windows, cross-worktree and epoch/hash invalidation evidence is
+required before any profile-specific adoption. Adding this unfinished decision
+raises the complete matrix to 36 entries with 25 pending, retaining 11 prior
+scoped reviews. No prior result is transplanted to a different binary.
+
+Reverse this metadata refresh by restoring the preserved pin file and prior
+matrix while retaining the discovery/observations. No credential, runtime,
+configuration flag, dependency version, cache epoch or cohort changes here.

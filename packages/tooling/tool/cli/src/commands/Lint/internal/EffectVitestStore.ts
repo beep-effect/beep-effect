@@ -1,5 +1,6 @@
 /** Effect Vitest inventory, census, and JSONL persistence. @packageDocumentation @since 0.0.0 */
 
+import { formatJsonc, readArtifact, writeArtifact } from "@beep/repo-cli-kit/artifacts/index";
 import { A, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -8,7 +9,6 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
-import { formatJsonc, readArtifact, writeArtifact } from "../../../internal/artifacts/index.ts";
 import { repoRunSafeArtifactName } from "../../../internal/repo-run/RepoRunArtifacts.ts";
 import { EffectVitestLintError } from "../Lint.errors.ts";
 import {

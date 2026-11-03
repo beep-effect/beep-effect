@@ -8,11 +8,11 @@
  * @since 0.0.0
  */
 
+import { configStringOptionSync } from "@beep/repo-cli-kit/cli/EnvConfig";
 import { O, pipe } from "@beep/utils";
 import { XdgBase } from "@beep/xdg/XdgBase";
 import * as Effect from "effect/Effect";
 import * as Path from "effect/Path";
-import { configStringOptionSync } from "../../../internal/cli/EnvConfig.ts";
 
 /**
  * The cache root the fleet scanner clone lives beneath (`beep/fleet-scanner` under it).
