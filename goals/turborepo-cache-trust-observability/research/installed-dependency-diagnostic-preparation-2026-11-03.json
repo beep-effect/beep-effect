@@ -16,7 +16,17 @@
         "bytes": 4130937152
       },
       "links": 400,
-      "sourceEntries": 15153
+      "sourceEntries": 15153,
+      "preservedCopy": {
+        "location": "~/.local/state/beep/r2-pilot/completion-2026-10-29/continuation-20261102/protected-source-successor-41625676572.json",
+        "storage": "Private local filesystem; independent of the GitHub artifact lifecycle.",
+        "sha256": "45ad2689c578a36954fb00a05979ddf307246cace9c9e3ce3433a168c238929d",
+        "bytes": 2674106,
+        "mode": "0600",
+        "verifiedAt": "2026-11-03T12:24:12.100953+00:00",
+        "retention": "Retained for the active goal with no configured expiry; preserve through closeout.",
+        "offsiteBackupClaimed": false
+      }
     },
     {
       "runId": 41628708153,
@@ -32,7 +42,17 @@
         "bytes": 4130937152
       },
       "links": 400,
-      "sourceEntries": 15153
+      "sourceEntries": 15153,
+      "preservedCopy": {
+        "location": "~/.local/state/beep/r2-pilot/completion-2026-10-29/continuation-20261102/protected-source-successor-41628708153.json",
+        "storage": "Private local filesystem; independent of the GitHub artifact lifecycle.",
+        "sha256": "5c75a856316e76ec754b7f4e18011a1d6b5686711308439c6e9209899499b19d",
+        "bytes": 2674106,
+        "mode": "0600",
+        "verifiedAt": "2026-11-03T12:24:12.100953+00:00",
+        "retention": "Retained for the active goal with no configured expiry; preserve through closeout.",
+        "offsiteBackupClaimed": false
+      }
     }
   ],
   "finding": "Two authenticated source inspections have equal dependency counts, byte totals and link records but different canonical dependency digests. The cause is unknown.",
@@ -68,5 +88,6 @@
     "trustCriteriaProven": 0,
     "adoptionCriteriaProven": 0,
     "completed": false
-  }
+  },
+  "retentionNote": "Both exact source reports are already retained at the private local locations listed per observation. GitHub artifact expiry does not remove these files. This records local preservation, not offsite backup or producer approval."
 }

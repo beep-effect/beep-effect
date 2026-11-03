@@ -2286,3 +2286,13 @@ compiled-artifact proof.
   unchanged Rust inputs.
 - These timings describe two owned operational gates only. They are not a
   competing CI economics baseline, a p95 estimate or evidence of cache savings.
+
+
+### Record retained evidence independently of hosted expiry, 2026-11-03
+
+Review on #2680 found that the preparation receipt bound the two source reports
+but omitted their existing private filesystem locations. Verify both copies'
+exact bytes, revision, owner and 0600 mode, then record their locations and
+no-expiry retention separately from GitHub's one-day artifacts. The correction
+claims local preservation only, without inventing an offsite backup or approval.
+Future compact receipts should name the retained copy when remote evidence expires.
