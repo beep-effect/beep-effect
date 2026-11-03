@@ -23,6 +23,8 @@ import * as S from "effect/Schema";
 
 const materializationJson = S.fromJsonString(CacheDependencyMaterialization);
 const encodeMaterialization = S.encodeEffect(materializationJson);
+const inspectionReportJson = S.fromJsonString(S.Unknown);
+const encodeInspectionReport = S.encodeEffect(inspectionReportJson);
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 
 const fixture = Effect.fn("CacheDependenciesTest.fixture")(function* () {
@@ -43,7 +45,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("installed cache 
       const root = yield* findRepoRoot();
       const dependencies = yield* inspectCacheDependencyTree(f.root, []);
       const source = f.path.join(f.root, "source.json");
-      const report = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+      const report = yield* encodeInspectionReport({
         schemaVersion: "cache-producer-workflow/v2",
         revision: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         toolchain: { installedDependencies: dependencies },

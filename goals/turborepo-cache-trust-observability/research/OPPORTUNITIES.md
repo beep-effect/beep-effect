@@ -2296,3 +2296,12 @@ exact bytes, revision, owner and 0600 mode, then record their locations and
 no-expiry retention separately from GitHub's one-day artifacts. The correction
 claims local preservation only, without inventing an offsite backup or approval.
 Future compact receipts should name the retained copy when remote evidence expires.
+
+### Hoist fixture codecs before hosted policy checks, 2026-11-03
+
+Lint Policy on #2680 rejected the new dependency fixture's inline schema codec
+with `beep(no-inline-schema-compile)`. This was introduced by this PR; the other
+five state-policy tasks passed. Hoist the schema and its encoder to module scope
+to reuse the parser cache while preserving the fixture bytes and assertions.
+Keep the failed job receipt and require fresh hosted proof after the repair.
+No local verify, publish or repository test suite was run.
