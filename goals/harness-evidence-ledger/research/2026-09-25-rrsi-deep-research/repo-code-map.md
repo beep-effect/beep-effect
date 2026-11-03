@@ -78,7 +78,7 @@ No schedule, anneal, cosine or decay logic exists anywhere in `packages/tooling`
 - Closeness: **only superficially related**. It catches "inert" proofs, not inert harness machinery.
 
 **D3. QA judge evidence cross-check** (a critic screens judge output before it is accepted)
-- `CLI/commands/Qa/JudgeCheck.ts:57` `EvidenceCrossCheck`; `:182` `crossCheckEvidence`; `:360` `crossCheckAgainstRound`; `CLI/commands/Qa/Inventory.schemas.ts:474` `QaInventory` (`qa-inventory/v1`), `:347` `QaFinding` (evidence is a NonEmptyArray)
+- `CLI/commands/Qa/JudgeCheck.ts:57` `EvidenceCrossCheck`; `:182` `crossCheckEvidence`; `:360` `crossCheckAgainstRound`; `packages/tooling/library/qa-capture/src/QaInventory.schemas.ts:474` `QaInventory` (`qa-inventory/v1`), `:347` `QaFinding` (evidence is a NonEmptyArray)
 - Rule: every cited artifact must exist in the round, and every cited event id must appear in that round's witness log. Otherwise the inventory is rejected at ingest and again at lint.
 - Closeness: **only superficially related**. It screens the judge for hallucinated citations, not the diff for leakage.
 
@@ -166,7 +166,7 @@ No evolve/held-out/OOD split exists anywhere. `SkillOptTaskManifest` (`AgentEffe
 | `ProofShadowReport` / `ProofShadowDisagreement` | `CLI/commands/Yeet/internal/ProofShadow.ts:211` / `:133` | disagreement counts | — | enforcement bar | laneId, stage |
 | `YeetRemediationWave` (`yeet-dispatch/v1`) | `CLI/commands/Yeet/internal/Remediation.ts:109` | repair-session wave per head | — | start/queue/duplicate | head SHA |
 | `FlakeQuarantineIncident` / `FlakeQuarantineArtifact` | `CLI/commands/Quality/internal/FlakeQuarantine.ts:176` / `:211` | quarantined failure | — | quarantined | task |
-| `QaInventory` / `QaFinding` (`qa-inventory/v1`) | `CLI/commands/Qa/Inventory.schemas.ts:474` / `:347` | findings, requiredCount per round | — | loop exits at requiredCount = 0 | round number, fix suggestion |
+| `QaInventory` / `QaFinding` (`qa-inventory/v1`) | `packages/tooling/library/qa-capture/src/QaInventory.schemas.ts:474` / `:347` | findings, requiredCount per round | — | loop exits at requiredCount = 0 | round number, fix suggestion |
 | `CiLaneTimingWindowReport` / `CiLaneTimingAttributionStat` | `CLI/commands/Ci/LaneTimings.ts:1463` / `:1353` | failures, cancellations, later-attempt outcomes | p50/p95 seconds | charter Pass/Breach | lane |
 | `AdmissionJournalEvent` (union) | `CLI/internal/repo-run/AdmissionJournal.ts:569` | admitted/released/evicted | — | admitted | lease/ticket |
 | `CoverageBaselineChangeSet` / `CoverageBaselineWritePlan` | `CLI/commands/Quality/internal/CoverageRegression.ts:568` / `:614` | row dispositions | — | replaced/held/added/pruned | package |

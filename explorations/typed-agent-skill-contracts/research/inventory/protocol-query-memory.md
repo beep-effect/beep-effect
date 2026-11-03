@@ -170,7 +170,7 @@ no intent-to-context routing manifest or transcript-order gate. The closest prot
   (`@beep/repo-cli`, `packages/tooling/tool/cli/src/commands/Qa/Extract.ts:83`, `:503`, `:616`, `:822`).
   The judge output is not free-form acceptance: `QaInventory` fixes
   `schemaVersion: "qa-inventory/v1"` and checks required-count consistency
-  (`packages/tooling/tool/cli/src/commands/Qa/Inventory.schemas.ts:474`, `:503`), while judge checks
+  (`packages/tooling/library/qa-capture/src/QaInventory.schemas.ts:474`, `:503`), while judge checks
   cross-reference cited artifact paths and witness sequence numbers
   (`packages/tooling/tool/cli/src/commands/Qa/JudgeCheck.ts:105`, `:137`).
 - Portless is an executable input contract, not merely documentation: `PORTLESS_PORT` is 1355 and

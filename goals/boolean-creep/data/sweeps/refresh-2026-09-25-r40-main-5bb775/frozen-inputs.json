@@ -13971,7 +13971,7 @@
       "sha256": "aa38531b467dc245b4f83515dcf7985f39e4f5fa0055c2ca6d536f4512e7ba7c"
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
+      "file": "packages/tooling/library/ai-sync/src/ModelCatalog.schemas.ts",
       "sha256": "6eaa37b0bc6a9bdc6bbe68962aa935be6b4c00e868921227f0680b879f293fb7"
     },
     {
@@ -14055,7 +14055,7 @@
       "sha256": "9ce92156d3af4a19fab12cd6ac6aca1ddddfb442b5f04b86c64120cb52e01c91"
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Qa/Inventory.schemas.ts",
+      "file": "packages/tooling/library/qa-capture/src/QaInventory.schemas.ts",
       "sha256": "591bbfe0b1e07047eb72c530dae971f4e71d5b8372756d4ff3535b24f655fa7c"
     },
     {
@@ -14383,7 +14383,7 @@
       "sha256": "dd808c313367c8b46259a8578bbb7b876f569f7e12f994fb58dba5ef394b5edf"
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Skills/Skills.schemas.ts",
+      "file": "packages/tooling/library/ai-sync/src/Skills.schemas.ts",
       "sha256": "6cfa634fcd34a6fc445c56935f4ee7bc825857e89b304ca8ed3ef0cdc7268998"
     },
     {

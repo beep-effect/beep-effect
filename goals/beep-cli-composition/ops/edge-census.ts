@@ -163,9 +163,6 @@ const carveOuts: Record<string, string> = {
   "commands/Knowledge/Knowledge.refs.ts": "lib:repo-packets",
   "commands/Knowledge/Knowledge.schemas.ts": "lib:repo-packets",
   "commands/Knowledge/Knowledge.errors.ts": "lib:repo-packets",
-  // @beep/ai-sync: the skills-lock schema closure (D9).
-  "commands/Skills/SkillsLock.schemas.ts": "lib:ai-sync",
-  "commands/Skills/Skills.schemas.ts": "lib:ai-sync",
 };
 
 // `src/internal/<dir>` to its library (design-record "New libraries").

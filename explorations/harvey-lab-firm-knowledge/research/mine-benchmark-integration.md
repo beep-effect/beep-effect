@@ -91,7 +91,7 @@ Checked with `ls`/`rg` against live source. "Reuse" = exists and applies as-is;
 | Span-grounded extraction with verified offsets | `packages/foundation/capability/langextract/src/VerifiedSpan/index.ts:146,204,571,717`; `packages/foundation/capability/file-processing/src/SourceText/index.ts:213,335,374` | Every index row can carry a char-span back to source text — the provenance LAB's rubric asks for and its `sources` field never delivered. |
 | Epistemic claim/evidence/bitemporal substrate | `packages/epistemic/domain/src/entities/{CandidateClaim,Evidence,EdgeVersion}`; `packages/epistemic/use-cases/src/{ClaimGate,ClaimLifecycle,ClaimProjection}`; goals `epistemic-bitemporal-edge-core`, `epistemic-claim-lifecycle-gate` both `completed-retained` | Derived facts ("this matter settled") enter as *claims with evidence*, not as untyped index rows. |
 | `LanguageModel` (effect/ai) already wired in-repo | `packages/agents/server/src/AssistantTurn/AnthropicTurnKernel.ts`; `retired:xai/src/*LanguageModel*`, `retired:venice-ai/src/*LanguageModel*`; `packages/foundation/capability/langextract/src/Service/index.ts` | An Effect-native judge is a composition, not new plumbing. |
-| QA judge lane with **mandatory** evidence and anti-fabrication cross-check | `packages/tooling/tool/cli/src/commands/Qa/Inventory.schemas.ts:314-320` (`QaFinding.evidence: S.NonEmptyArray(...)`, "a finding without evidence is not a finding"), `:435` (`QaInventory`), `commands/Qa/JudgeCheck.ts:42,167,258` (`EvidenceCrossCheck`, `crossCheckEvidence`, `crossCheckAgainstRound`) | **beep is ahead of LAB here.** LAB's `sources` field is vestigial and read by nothing (`map-evaluation.md` §12.7); beep already refuses evidence-free findings and cross-checks cited artefacts against the round. |
+| QA judge lane with **mandatory** evidence and anti-fabrication cross-check | `packages/tooling/library/qa-capture/src/QaInventory.schemas.ts:314-320` (`QaFinding.evidence: S.NonEmptyArray(...)`, "a finding without evidence is not a finding"), `:435` (`QaInventory`), `commands/Qa/JudgeCheck.ts:42,167,258` (`EvidenceCrossCheck`, `crossCheckEvidence`, `crossCheckAgainstRound`) | **beep is ahead of LAB here.** LAB's `sources` field is vestigial and read by nothing (`map-evaluation.md` §12.7); beep already refuses evidence-free findings and cross-checks cited artefacts against the round. |
 | `beep qa judge-lint / judge-check / judge-ingest / judge-pack` | `packages/tooling/tool/cli/src/commands/Qa/` | The operator shape an eval harness would extend. |
 
 ### 2.2 Extend — exists, bounded change needed
@@ -391,7 +391,7 @@ Judge as a `Context.Service` over `LanguageModel`, criterion fan-out as a bounde
 rather than a try/except ladder.
 
 **Composes:** `QaInventory`/`QaFinding` mandatory-evidence discipline
-(`commands/Qa/Inventory.schemas.ts:314-320,435`) · `EvidenceCrossCheck` / `crossCheckEvidence`
+(`packages/tooling/library/qa-capture/src/QaInventory.schemas.ts:314-320,435`) · `EvidenceCrossCheck` / `crossCheckEvidence`
 anti-fabrication (`commands/Qa/JudgeCheck.ts:42,167`) · `beep qa judge-lint` as the
 rubric-as-source-under-test precedent · existing `LanguageModel` driver layers ·
 `beep lint` for the rubric integrity gate.

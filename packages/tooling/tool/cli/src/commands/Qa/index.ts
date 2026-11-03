@@ -6,6 +6,13 @@
  */
 
 /**
+ * Structured vision-judge inventory schemas.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * from "@beep/qa-capture/QaInventory.schemas";
+/**
  * Typed fail-closed gate for cited QA artifacts.
  *
  * @category use-cases
@@ -33,13 +40,6 @@ export * from "./Doctor.ts";
  * @since 0.0.0
  */
 export * from "./Extract.ts";
-/**
- * Structured vision-judge inventory schemas.
- *
- * @category schemas
- * @since 0.0.0
- */
-export * from "./Inventory.schemas.ts";
 /**
  * Evidence cross-checking shared by the judge commands.
  *

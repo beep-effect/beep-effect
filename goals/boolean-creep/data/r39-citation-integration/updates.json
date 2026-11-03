@@ -983,7 +983,7 @@
     "before": {
       "schemaVersion": "boolean-creep-inventory/v1",
       "id": "models-catalog-availability",
-      "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
+      "file": "packages/tooling/library/ai-sync/src/ModelCatalog.schemas.ts",
       "line": 868,
       "symbol": "CatalogAvailability",
       "kind": "schema-struct",
@@ -997,7 +997,7 @@
     "after": {
       "schemaVersion": "boolean-creep-inventory/v1",
       "id": "models-catalog-availability",
-      "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
+      "file": "packages/tooling/library/ai-sync/src/ModelCatalog.schemas.ts",
       "line": 921,
       "symbol": "CatalogAvailability",
       "kind": "schema-struct",
@@ -1014,7 +1014,7 @@
     "before": {
       "schemaVersion": "boolean-creep-inventory/v1",
       "id": "grok-model-info-flags",
-      "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
+      "file": "packages/tooling/library/ai-sync/src/ModelCatalog.schemas.ts",
       "line": 706,
       "symbol": "GrokModelInfo",
       "kind": "schema-struct",
@@ -1028,7 +1028,7 @@
     "after": {
       "schemaVersion": "boolean-creep-inventory/v1",
       "id": "grok-model-info-flags",
-      "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
+      "file": "packages/tooling/library/ai-sync/src/ModelCatalog.schemas.ts",
       "line": 753,
       "symbol": "GrokModelInfo",
       "kind": "schema-struct",

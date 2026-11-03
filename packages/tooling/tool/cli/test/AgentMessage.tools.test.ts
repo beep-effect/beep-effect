@@ -1,4 +1,4 @@
-import { ModelId } from "@beep/repo-cli/commands/Models/Models.catalog.schemas";
+import { ModelId } from "@beep/ai-sync/ModelCatalog.schemas";
 import {
   AgentMessageStore,
   AgentMessageToolkit,

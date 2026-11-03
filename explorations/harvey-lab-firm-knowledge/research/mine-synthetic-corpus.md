@@ -167,7 +167,7 @@ committed, screenshotted, or shown to a reviewer.
 |---|---|---|
 | String-literal domains (bands, doc types, feature kinds, task shapes) | **reuse** | `packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:747` |
 | Tagged unions from a literal domain (the `Feature` union) | **reuse** | `LiteralKit([...]).toTaggedUnion("kind")({...})` — live use at `packages/epistemic/use-cases/src/ContradictionTriage/ContradictionTriage.rpc.ts:73` and `…/ContradictionTriage.commands.ts:376` |
-| Structured ids (`1001-00001`) | **reuse** | `S.TemplateLiteral` — live use at `packages/tooling/tool/cli/src/commands/Qa/Inventory.schemas.ts:186` |
+| Structured ids (`1001-00001`) | **reuse** | `S.TemplateLiteral` — live use at `packages/tooling/library/qa-capture/src/QaInventory.schemas.ts:186` |
 | Persisted domain models with identity composers | **reuse** | `packages/foundation/modeling/schema/src/DomainModel.ts:65`, `…/EntitySchema`, `BaseEntity.Class` (`packages/law-practice/domain/src/entities/Matter/Matter.model.ts:48`) |
 | Patent-prosecution entity vocabulary | **reuse** | `packages/law-practice/domain/src/entities/{OfficeAction,Rejection,Claim,PriorArtReference,IdsSubmissionFact,PatentAsset,Matter,LegalClient}` |
 | Schema-derived generation (arbitraries) | **reuse** | `S.toArbitrary` + `toArbitrary` annotations on constrained leaves across `packages/foundation/modeling/schema/src/` (≈30 files, e.g. `Cuid.ts:69`, `KebabStr.ts:36`, `FileName.ts:122`, `Glob/Glob.schema.ts:115`); helper `packages/tooling/test-kit/test-utils/src/Schema.ts` (`assertSchemaArbitraryDecodesToSelf`) |
@@ -183,7 +183,7 @@ committed, screenshotted, or shown to a reviewer.
 | Document ingest / extraction (for the round-trip proof) | **reuse** | `packages/foundation/capability/file-processing/src/{Extraction,Artifact,Operation,Service}/`, `packages/drivers/{doc-text,tika}` |
 | Span-verified structured extraction (feature recovery) | **reuse** | `packages/foundation/capability/langextract/src/{Extraction,Alignment,VerifiedSpan,Target}` |
 | LLM content authoring | **reuse** | `packages/drivers/{anthropic,openai-compat}`, `retired:venice-ai`, `retired:xai`; `goals/unified-ai-toolchain` |
-| Rubric / criterion / judge modeling | **extend** | `packages/tooling/tool/cli/src/commands/Qa/Inventory.schemas.ts` (`QaFinding`, `QaInventory`, `QaEvidenceRef`, severity/lens LiteralKits) is the nearest existing shape; `packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.rubric.ts` is a second precedent |
+| Rubric / criterion / judge modeling | **extend** | `packages/tooling/library/qa-capture/src/QaInventory.schemas.ts` (`QaFinding`, `QaInventory`, `QaEvidenceRef`, severity/lens LiteralKits) is the nearest existing shape; `packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.rubric.ts` is a second precedent |
 | Prior synthetic **legal corpus** generator | **NET-NEW** | none — no `packages/**/src` module generates document corpora (§8) |
 
 **Net:** the schema kernel is ~90% composition of existing bricks. The genuinely new
@@ -211,7 +211,7 @@ a `packages/tooling/…` fixture-generation library (the consumer is evals and C
 const $I = $SynthCorpusDomainId.create("values/MatterSpec/MatterSpec.model");
 
 // ── identity ────────────────────────────────────────────────────────────────
-// check idiom verified against packages/tooling/tool/cli/src/commands/Qa/Inventory.schemas.ts:159
+// check idiom verified against packages/tooling/library/qa-capture/src/QaInventory.schemas.ts:159
 export const ClientSeq  = S.String.check(S.isPattern(/^1[0-9]{3}$/,  { identifier: $I`ClientSeqCheck`, /* … */ }));
 export const MatterSeq  = S.String.check(S.isPattern(/^[0-9]{5}$/,   { identifier: $I`MatterSeqCheck`, /* … */ }));
 export const MatterId   = S.TemplateLiteral([ClientSeq, "-", MatterSeq]).pipe(

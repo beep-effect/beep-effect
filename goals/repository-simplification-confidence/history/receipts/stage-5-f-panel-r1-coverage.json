@@ -4,7 +4,7 @@
   "allFloorsPassed": true,
   "rows": [
     {
-      "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
+      "file": "packages/tooling/library/ai-sync/src/ModelCatalog.schemas.ts",
       "baseline": {
         "lines": 100,
         "statements": 100,

@@ -1166,7 +1166,7 @@
       "beepStatus": "already-have",
       "proof": [
         "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.model.ts — bitemporal immutable versions over half-open [validFrom,validTo) / [recordedAt,expiredAt) BIGINT-millis intervals with a supersedes_id self-FK lineage; there is no destructive clear-then-reinsert window to crash inside, so the paper's 'hollow' failure mode is structurally impossible rather than repaired on read",
-        "packages/tooling/tool/cli/src/commands/Skills/Skills.schemas.ts — skills-lock/v2 independently carries a pristine SkillSnapshot (ordered mode-aware manifest, fileCount must equal manifest length) plus an ordered patch series and a reconstructed effective tree; skills-lock.json exists at repo root",
+        "packages/tooling/library/ai-sync/src/Skills.schemas.ts — skills-lock/v2 independently carries a pristine SkillSnapshot (ordered mode-aware manifest, fileCount must equal manifest length) plus an ordered patch series and a reconstructed effective tree; skills-lock.json exists at repo root",
         "Paper §6 p17: the paper is documenting its own recovery from two shipped defects — 'red island' orphans from minting a fresh source per retrain, and a crash window fixed by reordering the rename after inserts succeed"
       ],
       "landingPacket": "NONE",
@@ -1388,7 +1388,7 @@
       "title": "Untrusted ingress — an imported procedure lands quarantined and is not dispatch-eligible until the owner promotes it",
       "beepStatus": "partial",
       "proof": [
-        "The EPISTEMIC half exists: packages/tooling/tool/cli/src/commands/Skills/Skills.schemas.ts grades every vendored skill with SkillProvenanceStatus = LiteralKit([exact, inferred, unresolved]) and SkillProvenanceConfidence = LiteralKit([high, medium, low, unresolved]), explicitly 'so an unproven claim can never be read as a proven one'",
+        "The EPISTEMIC half exists: packages/tooling/library/ai-sync/src/Skills.schemas.ts grades every vendored skill with SkillProvenanceStatus = LiteralKit([exact, inferred, unresolved]) and SkillProvenanceConfidence = LiteralKit([high, medium, low, unresolved]), explicitly 'so an unproven claim can never be read as a proven one'",
         "The AUTHORITY half does not: rg -n 'quarantine|promoted|dispatchEligible' packages/tooling/tool/cli/src/commands/Skills/*.ts → zero rows; a vendored skill under .claude/skills/ is fully invocable the moment it lands",
         "goals/knowledge-surface-automation/GOAL.md workstream B already owns this surface — 'vendored-skill warehouse: pristine snapshot + ordered patch series + reconstructed installs (beep skills provenance|materialize), one effective tree feeding both skill dirs, Renovate-driven bump PRs, hunk-decision ledger'",
         "Paper §11: 'treat an imported skill as not dispatch-safe until the owner promotes it', alongside the admission that pack encryption uses a fixed obfuscation-grade key so 'a license check on pack import or export is a product boundary, not a security control'"

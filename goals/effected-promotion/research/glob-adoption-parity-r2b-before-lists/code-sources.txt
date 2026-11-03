@@ -6933,7 +6933,7 @@ packages/tooling/tool/cli/src/commands/Lint/internal/SchemaParityCodemodImports.
 packages/tooling/tool/cli/src/commands/Lint/internal/SchemaParityCodemodLiteralKitMatchRule.ts
 packages/tooling/tool/cli/src/commands/Lint/internal/SchemaParityCodemodLiteralKitRule.ts
 packages/tooling/tool/cli/src/commands/Models/Models.apply.service.ts
-packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts
+packages/tooling/library/ai-sync/src/ModelCatalog.schemas.ts
 packages/tooling/tool/cli/src/commands/Models/Models.catalog.service.ts
 packages/tooling/tool/cli/src/commands/Models/Models.command.ts
 packages/tooling/tool/cli/src/commands/Models/Models.diff.ts
@@ -6970,7 +6970,7 @@ packages/tooling/tool/cli/src/commands/Qa/CitedArtifactExistsGate.ts
 packages/tooling/tool/cli/src/commands/Qa/Control.ts
 packages/tooling/tool/cli/src/commands/Qa/Doctor.ts
 packages/tooling/tool/cli/src/commands/Qa/Extract.ts
-packages/tooling/tool/cli/src/commands/Qa/Inventory.schemas.ts
+packages/tooling/library/qa-capture/src/QaInventory.schemas.ts
 packages/tooling/tool/cli/src/commands/Qa/JudgeCheck.ts
 packages/tooling/tool/cli/src/commands/Qa/JudgeContract.ts
 packages/tooling/tool/cli/src/commands/Qa/JudgeIngest.ts
@@ -7110,10 +7110,10 @@ packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts
 packages/tooling/tool/cli/src/commands/Skills/Skills.errors.ts
 packages/tooling/tool/cli/src/commands/Skills/Skills.patches.ts
 packages/tooling/tool/cli/src/commands/Skills/Skills.render.ts
-packages/tooling/tool/cli/src/commands/Skills/Skills.schemas.ts
+packages/tooling/library/ai-sync/src/Skills.schemas.ts
 packages/tooling/tool/cli/src/commands/Skills/Skills.seeds.ts
 packages/tooling/tool/cli/src/commands/Skills/Skills.service.ts
-packages/tooling/tool/cli/src/commands/Skills/SkillsLock.schemas.ts
+packages/tooling/library/ai-sync/src/SkillsLock.schemas.ts
 packages/tooling/tool/cli/src/commands/Skills/SkillsLock.write.ts
 packages/tooling/tool/cli/src/commands/Skills/SkillsMaterialize.schemas.ts
 packages/tooling/tool/cli/src/commands/Skills/SkillsMaterialize.service.ts

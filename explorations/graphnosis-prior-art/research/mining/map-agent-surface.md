@@ -369,7 +369,7 @@ Missing — and it is exactly the half Graphnosis proposes:
 
 - **No authority field on a portable artifact.** beep *does* borrow executable
   procedures from third parties: `skills-lock.json` at repo root, governed by
-  `packages/tooling/tool/cli/src/commands/Skills/Skills.schemas.ts` (1,675 lines,
+  `packages/tooling/library/ai-sync/src/Skills.schemas.ts` (1,675 lines,
   `skills-lock/v2`) — pinned upstream revision, per-file content digests,
   aggregate pristine/effective hashes, provenance confidence
   (byte-exact / inferred / unresolved), patch review labels, SPDX license bytes.

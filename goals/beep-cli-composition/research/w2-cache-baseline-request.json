@@ -1,0 +1,20 @@
+{
+  "previous": "7764d29895830e5b137866f452335147feb836f8cc401fc3db084b1119c546ab",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (W2 lane, refactor/beep-cli-w2-leaf)",
+    "reason": "Re-record the root subject after W2: three policy-fingerprint seals name the skills, model-catalog and QA-inventory schemas at their library paths; no qualification is granted.",
+    "basis": {
+      "path": "goals/beep-cli-composition/research/w2-cache-baseline-review.md",
+      "sha256": "99d35106ac0a53a7f0d68082b494e5d30c509ae628496726cbaf182252a58371"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//"]
+}

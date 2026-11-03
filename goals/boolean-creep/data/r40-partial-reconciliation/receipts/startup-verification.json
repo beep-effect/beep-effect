@@ -11359,7 +11359,7 @@
       "passed": true
     },
     {
-      "check": "overlapping binding packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
+      "check": "overlapping binding packages/tooling/library/ai-sync/src/ModelCatalog.schemas.ts",
       "passed": true
     },
     {
@@ -11443,7 +11443,7 @@
       "passed": true
     },
     {
-      "check": "overlapping binding packages/tooling/tool/cli/src/commands/Qa/Inventory.schemas.ts",
+      "check": "overlapping binding packages/tooling/library/qa-capture/src/QaInventory.schemas.ts",
       "passed": true
     },
     {
@@ -11771,7 +11771,7 @@
       "passed": true
     },
     {
-      "check": "overlapping binding packages/tooling/tool/cli/src/commands/Skills/Skills.schemas.ts",
+      "check": "overlapping binding packages/tooling/library/ai-sync/src/Skills.schemas.ts",
       "passed": true
     },
     {

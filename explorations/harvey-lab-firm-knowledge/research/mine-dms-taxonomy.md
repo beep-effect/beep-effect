@@ -117,7 +117,7 @@ agenda; it is the least relevant one.
 | Deterministic extraction | `@beep/file-processing`, `FileFormatFamily` at `packages/foundation/capability/file-processing/src/Strategy/index.ts:99-113` |
 | Span-grounded LLM extraction | `@beep/langextract` at `packages/foundation/capability/langextract` (goal `completed-retained`) |
 | Claim/evidence substrate | `packages/epistemic/domain/src/entities/`: `CandidateClaim`, `ClaimDisposition`, `Contradiction`, `EdgeVersion`, `Evidence`, `EvidenceVerification`, `Activity`, `UsageRecord` |
-| Schema-validated judge inventory with cross-field invariants | `packages/tooling/tool/cli/src/commands/Qa/Inventory.schemas.ts:1-11` — `qa-inventory/v1` carries "a schema-level filter asserting `requiredCount` equals the number of P0 and P1 findings, so a miscounted verdict fails decoding instead of shipping" |
+| Schema-validated judge inventory with cross-field invariants | `packages/tooling/library/qa-capture/src/QaInventory.schemas.ts:1-11` — `qa-inventory/v1` carries "a schema-level filter asserting `requiredCount` equals the number of P0 and P1 findings, so a miscounted verdict fails decoding instead of shipping" |
 
 ### 3.2 Verified gaps (zero hits — these are NET-NEW)
 
@@ -255,7 +255,7 @@ rather than a rhetorical flourish. Then a judge criterion kind that fails when
 the answer asserts anything outside the ground-truth set.
 
 **Capability cite vs NET-NEW.**
-- **Cite:** `packages/tooling/tool/cli/src/commands/Qa/Inventory.schemas.ts` already does exactly this class of thing — a schema-level cross-field filter that makes a miscounted verdict a *decode failure*. `QaSeverity = LiteralKit(["P0","P1","P2"])` with `requiredCount` invariant. The pattern is proven in-repo; only the domain changes.
+- **Cite:** `packages/tooling/library/qa-capture/src/QaInventory.schemas.ts` already does exactly this class of thing — a schema-level cross-field filter that makes a miscounted verdict a *decode failure*. `QaSeverity = LiteralKit(["P0","P1","P2"])` with `requiredCount` invariant. The pattern is proven in-repo; only the domain changes.
 - **Cite:** `packages/epistemic/domain/src/entities/{Evidence,EvidenceVerification,ClaimDisposition}` give the per-member provenance the closure claim must rest on.
 - **NET-NEW:** the closure concept itself. Verified absent.
 

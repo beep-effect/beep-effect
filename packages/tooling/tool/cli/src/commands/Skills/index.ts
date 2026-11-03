@@ -6,6 +6,20 @@
  */
 
 /**
+ * Schema models for skills-lock/v2 provenance entries.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * from "@beep/ai-sync/Skills.schemas";
+/**
+ * skills-lock/v2 document and migration-plan schemas.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * from "@beep/ai-sync/SkillsLock.schemas";
+/**
  * Report models for the Agent Skills frontmatter check.
  *
  * @category schemas
@@ -48,13 +62,6 @@ export * from "./Skills.patches.ts";
  */
 export * from "./Skills.render.ts";
 /**
- * Schema models for skills-lock/v2 provenance entries.
- *
- * @category schemas
- * @since 0.0.0
- */
-export * from "./Skills.schemas.ts";
-/**
  * Ratified first-wave provenance resolution seeds.
  *
  * @category constants
@@ -68,13 +75,6 @@ export * from "./Skills.seeds.ts";
  * @since 0.0.0
  */
 export * from "./Skills.service.ts";
-/**
- * skills-lock/v2 document and migration-plan schemas.
- *
- * @category schemas
- * @since 0.0.0
- */
-export * from "./SkillsLock.schemas.ts";
 /**
  * Reviewed, atomic skills-lock/v2 write.
  *

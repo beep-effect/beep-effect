@@ -17,7 +17,7 @@ Approved change: add exactly five entries to
 
 Every entry has:
 
-- `file`: `packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts`
+- `file`: `packages/tooling/library/ai-sync/src/ModelCatalog.schemas.ts`
 - `kind`: `object-struct-schema`
 - `status`: `exception`
 - `owner`: `@beep/repo-cli`

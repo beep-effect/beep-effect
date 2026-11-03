@@ -30,7 +30,7 @@ Note: `.codex/**`, `.cursor/**`, `.agents/**`, `.github/workflows/**`, `scripts/
 | `packages/tooling/library/ai-metrics/test/hook-pulse-writer.test.ts` | `composer-2.5` | fixture for Cursor transcript parsing |
 
 Open-typed (no enumeration — nothing to sync): `XAiModelName` = `S.NonEmptyString` (`retired:xai/src/XAiLanguageModel.service.ts:53`);
-`QaJudgeRef.model`/`.effort` = `S.String` (`.../Qa/Inventory.schemas.ts:295-306`);
+`QaJudgeRef.model`/`.effort` = `S.String` (`packages/tooling/library/qa-capture/src/QaInventory.schemas.ts:295-306`);
 `GraftDeepRefreshOptions.model` / `GraftDeepStatus.model` = `S.optional(S.String)` / `S.String`
 (`.../Graft/Graft.schemas.ts:401,480`, default sentinel `"(env default)"`).
 `packages/tooling/library/ai-sync/src/models.ts` enumerates **agents/domains**, not model ids —
@@ -40,7 +40,7 @@ No `LiteralKit` anywhere enumerates AI model ids.
 ### (c) JSDoc examples — mechanically rewritable, but cosmetic
 | File | matches | id |
 | --- | --- | --- |
-| `.../Qa/Inventory.schemas.ts` (3), `.../Qa/JudgeCheck.ts` (5), `.../Qa/Qa.render.ts` (1) | 9 | `gpt-daybreak-blue-latest` (QaJudgeRef examples) |
+| `packages/tooling/library/qa-capture/src/QaInventory.schemas.ts` (3), `.../Qa/JudgeCheck.ts` (5), `.../Qa/Qa.render.ts` (1) | 9 | `gpt-daybreak-blue-latest` (QaJudgeRef examples) |
 | `.../Yeet/internal/Provenance.ts` (6), `.../Yeet/internal/Resume.ts` (1) | 7 | `gpt-5.4`, `claude-sonnet-4.5` (PR provenance examples) |
 | `.../Docgen/internal/QualityWorkerEval.ts` | 3 | `gpt-5.4` |
 

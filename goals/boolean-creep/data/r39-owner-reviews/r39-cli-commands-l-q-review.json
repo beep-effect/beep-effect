@@ -235,7 +235,7 @@
       "bytes": 5449
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
+      "file": "packages/tooling/library/ai-sync/src/ModelCatalog.schemas.ts",
       "sha256": "6eaa37b0bc6a9bdc6bbe68962aa935be6b4c00e868921227f0680b879f293fb7",
       "bytes": 36006
     },
@@ -340,7 +340,7 @@
       "bytes": 33749
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Qa/Inventory.schemas.ts",
+      "file": "packages/tooling/library/qa-capture/src/QaInventory.schemas.ts",
       "sha256": "591bbfe0b1e07047eb72c530dae971f4e71d5b8372756d4ff3535b24f655fa7c",
       "bytes": 16343
     },

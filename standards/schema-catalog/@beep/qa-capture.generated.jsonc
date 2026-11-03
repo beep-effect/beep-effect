@@ -72,6 +72,14 @@
     {"file":"packages/tooling/library/qa-capture/src/QaCapture.models.ts","symbol":"decodeSessionManifestJson","kind":"codec","owner":"@beep/qa-capture"},
     {"file":"packages/tooling/library/qa-capture/src/QaCapture.models.ts","symbol":"encodeCollectorHandleJson","kind":"codec","owner":"@beep/qa-capture"},
     {"file":"packages/tooling/library/qa-capture/src/QaCapture.models.ts","symbol":"encodeSessionManifestJson","kind":"codec","owner":"@beep/qa-capture"},
+    {"file":"packages/tooling/library/qa-capture/src/QaInventory.schemas.ts","symbol":"QaEvidenceKind","kind":"literal-kit","owner":"@beep/qa-capture","identity":"QaEvidenceKind","description":"Artifact kinds a vision-judge finding can cite as evidence."},
+    {"file":"packages/tooling/library/qa-capture/src/QaInventory.schemas.ts","symbol":"QaEvidenceRef","kind":"struct-const","owner":"@beep/qa-capture","identity":"QaEvidenceRef","description":"One artifact a vision-judge finding points at, with correlated witness events."},
+    {"file":"packages/tooling/library/qa-capture/src/QaInventory.schemas.ts","symbol":"QaFinding","kind":"struct-const","owner":"@beep/qa-capture","identity":"QaFinding","description":"One vision-judge finding with its evidence, reproduction, and fix."},
+    {"file":"packages/tooling/library/qa-capture/src/QaInventory.schemas.ts","symbol":"QaFindingId","kind":"brand","owner":"@beep/qa-capture","identity":"QaFindingId","description":"Branded R<round>-<nn> identifier of one vision-judge finding."},
+    {"file":"packages/tooling/library/qa-capture/src/QaInventory.schemas.ts","symbol":"QaInventory","kind":"struct-const","owner":"@beep/qa-capture","identity":"QaInventory","description":"Schema-validated vision-judge inventory for one QA round."},
+    {"file":"packages/tooling/library/qa-capture/src/QaInventory.schemas.ts","symbol":"QaJudgeRef","kind":"struct-const","owner":"@beep/qa-capture","identity":"QaJudgeRef","description":"The judge run that produced a QA inventory."},
+    {"file":"packages/tooling/library/qa-capture/src/QaInventory.schemas.ts","symbol":"QaLens","kind":"literal-kit","owner":"@beep/qa-capture","identity":"QaLens","description":"Static and motion review lenses a vision-judge finding can be attributed to."},
+    {"file":"packages/tooling/library/qa-capture/src/QaInventory.schemas.ts","symbol":"QaSeverity","kind":"literal-kit","owner":"@beep/qa-capture","identity":"QaSeverity","description":"Severity domain of a vision-judge finding."},
     {"file":"packages/tooling/library/qa-capture/src/SessionStore.service.ts","symbol":"RoundLayout","kind":"struct-const","owner":"@beep/qa-capture","identity":"RoundLayout","description":"Resolved file-system layout of one QA round directory."}
   ]
 }

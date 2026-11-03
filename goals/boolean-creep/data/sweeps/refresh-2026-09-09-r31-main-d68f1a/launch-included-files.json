@@ -13447,7 +13447,7 @@
       "bytes": 33690
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Qa/Inventory.schemas.ts",
+      "file": "packages/tooling/library/qa-capture/src/QaInventory.schemas.ts",
       "sha256": "591bbfe0b1e07047eb72c530dae971f4e71d5b8372756d4ff3535b24f655fa7c",
       "bytes": 16343
     },
@@ -13847,7 +13847,7 @@
       "bytes": 7312
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Skills/Skills.schemas.ts",
+      "file": "packages/tooling/library/ai-sync/src/Skills.schemas.ts",
       "sha256": "6cfa634fcd34a6fc445c56935f4ee7bc825857e89b304ca8ed3ef0cdc7268998",
       "bytes": 57039
     },

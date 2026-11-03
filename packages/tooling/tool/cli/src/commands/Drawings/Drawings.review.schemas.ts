@@ -19,11 +19,11 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { Dpi, InkCoverage, PageNumber, PdfRect } from "@beep/pdf-tools";
 import { RoundNumber } from "@beep/qa-capture";
+import { DrawingQaLens, QaFindingOrdinal, QaSeverity } from "@beep/qa-capture/QaInventory.schemas";
 import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { DrawingQaLens, QaFindingOrdinal, QaSeverity } from "../Qa/Inventory.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Drawings/Drawings.review.schemas");
 

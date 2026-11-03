@@ -171,7 +171,7 @@ execute must carry its own termination bound, because the borrower cannot infer 
   hit, a Next.js config field (`packages/tooling/policy-pack/repo-configs/src/next/models/ExperimentalConfig.schema.ts:198`).
 - `rg -rn "maxIterations|loop bound|unbounded loop|termination bound" packages/` → nothing.
 - Borrowed executable procedures already ship with no bound: `skills-lock.json` at repo root,
-  governed by `packages/tooling/tool/cli/src/commands/Skills/Skills.schemas.ts` (skills-lock/v2 —
+  governed by `packages/tooling/library/ai-sync/src/Skills.schemas.ts` (skills-lock/v2 —
   pinned revisions, per-file digests, provenance confidence, SPDX bytes) — exhaustive provenance,
   **zero authority**.
 

@@ -333,7 +333,7 @@ packages/foundation/modeling/rdf/src/SemanticSchemaConformance.ts
 packages/tooling/tool/cli/src/commands/Qa/JudgeCheck.ts
 packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.schemas.ts
 packages/foundation/modeling/rdf/src/JsonLd.ts
-packages/tooling/tool/cli/src/commands/Qa/Inventory.schemas.ts
+packages/tooling/library/qa-capture/src/QaInventory.schemas.ts
 packages/foundation/modeling/rdf/src/Evidence.ts
 packages/tooling/tool/cli/src/commands/Goals/Bootstrap.schemas.ts
 packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.contracts.ts
@@ -623,7 +623,7 @@ packages/tooling/tool/cli/src/commands/Codex/Findings.schemas.ts
 packages/epistemic/use-cases/src/ClaimDisposition/ClaimDisposition.service.ts
 packages/tooling/tool/cli/src/commands/Codex/Findings.scan.ts
 packages/foundation/modeling/nlp/src/Core/Similarity.ts
-packages/tooling/tool/cli/src/commands/Skills/Skills.schemas.ts
+packages/tooling/library/ai-sync/src/Skills.schemas.ts
 packages/epistemic/use-cases/src/ClaimProjection/ClaimProjection.ts
 packages/tooling/tool/cli/src/commands/Codex/Findings.capture.schemas.ts
 packages/tooling/tool/cli/src/commands/Skills/Skills.service.ts

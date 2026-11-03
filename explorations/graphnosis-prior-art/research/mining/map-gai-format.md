@@ -223,7 +223,7 @@ revision, caller identity), **never from tool output**. That is what makes the f
 The ceiling is therefore a property of the **session**, not of the **artifact**. Consequences:
 - A skill/procedure moved between hosts arrives with its steps and without its limit — precisely
   Graphnosis's motivating case. beep already moves such artifacts:
-  `packages/tooling/tool/cli/src/commands/Skills/Skills.schemas.ts` ships a skill lockfile with
+  `packages/tooling/library/ai-sync/src/Skills.schemas.ts` ships a skill lockfile with
   `SkillSnapshotAlgorithm` content hashes and GitHub source provenance
   (`schema-catalog.generated.jsonc:28269-28285`), and `infra/src/OpenClawArtifacts.ts:35,69-94`
   ships an instruction-only proof skill with a SHA-256 integrity value. **Neither carries an

@@ -532,7 +532,7 @@ end-to-end suite in `test/ci-runner-security.test.ts` reads the new blocks uncha
 | repo-cli HarnessLedger/internal/LedgerFiles.ts | #21 | partial | excluded | Needs a schema-typed JSONL row reader/appender in `@beep/jsonl` (kit gap). |
 | repo-cli internal/schema/TextCodec.ts | #25 | partial | excluded | Already on `effect/encoding/Toml` and `effect/encoding/Yaml` (D-12 upstream-first); no npm dependency to drop. |
 | docgen Core.ts | #38 | partial | excluded | docgen writes two `_config.yml` scalars with no YAML dependency; outside R4's repo-cli and ai-metrics scope. |
-| repo-cli Skills/Skills.schemas.ts | #48 | partial | excluded | Optional tightening; needs a string-preserving SPDX schema in `@beep/spdx` (kit gap). |
+| repo-cli packages/tooling/library/ai-sync/src/Skills.schemas.ts | #48 | partial | excluded | Optional tightening; needs a string-preserving SPDX schema in `@beep/spdx` (kit gap). |
 | mcpb-kit McpbKit.models.ts | #49 | partial | excluded | Optional tightening; needs a string-preserving SPDX schema in `@beep/spdx` (kit gap). |
 | apps oip-web content/OipSeo.ts | #50 | partial | excluded | Needs LegalService, WebSite and Place node classes in `@beep/schema-org` (kit gap). |
 | apps oip-web app/page.tsx | #51 | partial | excluded | Needs LegalService, WebSite and Place node classes in `@beep/schema-org` (kit gap). |
