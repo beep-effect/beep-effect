@@ -37,7 +37,7 @@ export class PolicyFingerprintError extends S.TaggedError<PolicyFingerprintError
 ) {}
 
 /**
- * The name of one generated seal task: `//#lint:policy-fingerprint:<key>`.
+ * The key of one generated seal task, `@beep/repo-cli#lint:policy-fingerprint:<key>`.
  *
  * **Example** (Accept a key)
  *
@@ -205,6 +205,48 @@ export class PolicyWorkspace extends S.Opaque<PolicyWorkspace, { readonly brand:
   }).pipe(
     $I.annoteSchema("PolicyWorkspace", {
       description: "A workspace package's directory and its raw exports and imports maps.",
+    })
+  )
+) {}
+
+/**
+ * One family of repository-root files a policy command reads instead of
+ * importing, and the code-level string literals that mark a module as its
+ * reader.
+ *
+ * **Details**
+ *
+ * A literal containing one of `names` names a family file; a literal equal to
+ * one of `tools` runs a tool that discovers a family file without being told.
+ *
+ * **Example** (Route the Biome configuration)
+ *
+ * ```ts
+ * import { PolicyRootFileRoute } from "@beep/repo-cli/commands/Lint"
+ *
+ * const route = PolicyRootFileRoute.make({ files: ["biome.jsonc"], names: ["biome.json"], tools: ["biome"] })
+ * console.log(route.files) // ["biome.jsonc"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PolicyRootFileRoute extends S.Opaque<PolicyRootFileRoute, { readonly brand: unique symbol }>()(
+  S.Struct({
+    files: S.Array(S.String).pipe(
+      $I.annoteKey("PolicyRootFileRoute.files", { description: "Root-relative files a reader may open." })
+    ),
+    names: S.Array(S.String).pipe(
+      $I.annoteKey("PolicyRootFileRoute.names", { description: "Substrings whose literal names a family file." })
+    ),
+    tools: S.Array(S.String).pipe(
+      $I.annoteKey("PolicyRootFileRoute.tools", {
+        description: "Exact tool names whose process discovers a family file on its own.",
+      })
+    ),
+  }).pipe(
+    $I.annoteSchema("PolicyRootFileRoute", {
+      description: "A root file family routed to the seals whose command closure reads it.",
     })
   )
 ) {}
