@@ -1,0 +1,20 @@
+{
+  "previous": "e74ef2eeed6436421c686ecca34729b5d50c4f6896e001604f046b2bc7c9af89",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (Yeet proof-tier dedupe, claude/perf-yeet-tier-dedupe-9fd6b5)",
+    "reason": "Record Yeet/internal/HeadInstallReceipt.ts added to the goals-doctor, knowledge and quality seal inputs; commands, outputs and cache settings are unchanged and no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/perf-yeet-tier-dedupe-cache-review-2026-11-02.md",
+      "sha256": "6d7f7fa83510f7752c1975f5890a092808febf73c57dcf91d26f01256b584e0b"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//"]
+}
