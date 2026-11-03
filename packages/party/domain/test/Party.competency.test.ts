@@ -27,8 +27,10 @@ import {
 import { logicalKey, Proposition, partiesOf } from "@beep/party-domain/Proposition";
 import { EvidenceAnchor } from "@beep/party-domain/Provenance";
 import { describe, expect, it } from "@effect/vitest";
+import * as TestUtils from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as Graph from "effect/Graph";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
@@ -42,61 +44,68 @@ const scope = (asOf = 20, validAt = 100) =>
   ProjectionScope.make({ asOf: at(asOf), validAt: at(validAt), states: ["Accepted"] });
 
 describe("party model competency questions", () => {
+  it.prop(
+    "rejects self-reporting across generated valid reporting lines",
+    [Proposition.cases.ReportsTo],
+    ([line]) => Result.isFailure(S.decodeUnknownResult(Proposition)({ ...line, superior: line.subordinate })),
+    { arbitrary: { runs: 100, seed: "party-reporting-endpoints" } }
+  );
+
   it("rejects identity/category mistakes and invalid evidence spans", () => {
-    expect(
-      Result.isFailure(
-        S.decodeUnknownResult(Proposition)({ _tag: "AccountControl", account: 1, controller: 1, relation: "used-by" })
-      )
-    ).toBe(true);
-    expect(
-      Result.isFailure(
-        S.decodeResult(EvidenceAnchor)({
-          _tag: "TextSpan",
-          occurrence: "party-occ:synthetic",
-          textDigest: "feedface",
-          start: 8,
-          end: 3,
-          quote: "synthetic",
-        })
-      )
-    ).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(CommunicationEvent)({ participants: [] }))).toBe(true);
+    pipe(
+      S.decodeUnknownResult(Proposition)({ _tag: "AccountControl", account: 1, controller: 1, relation: "used-by" }),
+      Result.isFailure,
+      TestUtils.assertTrue
+    );
+    pipe(
+      S.decodeResult(EvidenceAnchor)({
+        _tag: "TextSpan",
+        occurrence: "party-occ:synthetic",
+        textDigest: "feedface",
+        start: 8,
+        end: 3,
+        quote: "synthetic",
+      }),
+      Result.isFailure,
+      TestUtils.assertTrue
+    );
+    pipe(S.decodeUnknownResult(CommunicationEvent)({ participants: [] }), Result.isFailure, TestUtils.assertTrue);
   });
 
   it("distinguishes structural gates from reviewer acceptance and rejects self-reporting", () => {
-    expect(Result.isSuccess(S.decodeResult(StructuralVerdict)({ _tag: "Admitted" }))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(ReviewState)({ _tag: "Admitted" }))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(ReviewState)({ _tag: "Accepted" }))).toBe(true);
-    expect(
-      Result.isFailure(
-        S.decodeResult(Proposition)({ _tag: "ReportsTo", subordinate: 1, superior: 1, organization: null })
-      )
-    ).toBe(true);
+    pipe(S.decodeResult(StructuralVerdict)({ _tag: "Admitted" }), Result.isSuccess, TestUtils.assertTrue);
+    pipe(S.decodeUnknownResult(ReviewState)({ _tag: "Admitted" }), Result.isFailure, TestUtils.assertTrue);
+    pipe(S.decodeUnknownResult(ReviewState)({ _tag: "Accepted" }), Result.isFailure, TestUtils.assertTrue);
+    pipe(
+      S.decodeResult(Proposition)({ _tag: "ReportsTo", subordinate: 1, superior: 1, organization: null }),
+      Result.isFailure,
+      TestUtils.assertTrue
+    );
     expect(
       partiesOf(Proposition.cases.MailboxKind.make({ account: AccountId.make("party-acct:shared"), kind: "shared" }))
     ).toEqual([]);
   });
 
   it("rejects two From participants in an otherwise valid message", () => {
-    expect(
-      Result.isFailure(
-        S.decodeResult(CommunicationEvent)({
-          id: "party-evt:double-from",
-          occurrence: "party-occ:message",
-          channel: "email",
-          sentAt: null,
-          messageId: null,
-          conversationKey: null,
-          participants: [
-            { role: "from", identifier: "party-ident:a", observation: "party-obs:a" },
-            { role: "from", identifier: "party-ident:b", observation: "party-obs:b" },
-          ],
-        })
-      )
-    ).toBe(true);
+    pipe(
+      S.decodeResult(CommunicationEvent)({
+        id: "party-evt:double-from",
+        occurrence: "party-occ:message",
+        channel: "email",
+        sentAt: null,
+        messageId: null,
+        conversationKey: null,
+        participants: [
+          { role: "from", identifier: "party-ident:a", observation: "party-obs:a" },
+          { role: "from", identifier: "party-ident:b", observation: "party-obs:b" },
+        ],
+      }),
+      Result.isFailure,
+      TestUtils.assertTrue
+    );
   });
 
-  it.layer(AcmeFixtureLive)("synthetic Acme evidence", (it) => {
+  it.layer(AcmeFixtureLive, { timeout: "30 seconds" })("synthetic Acme evidence", (it) => {
     it.effect("separates delegated authorship from the displayed from address", () =>
       Effect.gen(function* () {
         const fx = yield* AcmeFixture;
@@ -115,9 +124,9 @@ describe("party model competency questions", () => {
         const before = identityView({ ledger: fx.ledger, scope: scope(18) });
         const after = identityView({ ledger: fx.ledger, scope: scope(19) });
         expect(O.getOrThrow(HashMap.get(before.partyOfIdentifier, email("finance")))).toBe(ids.maya);
-        expect(O.isNone(HashMap.get(after.partyOfIdentifier, email("finance")))).toBe(true);
+        TestUtils.assertNone(HashMap.get(after.partyOfIdentifier, email("finance")));
         const attributed = attributeEvents({ events: [fx.eventNo(1)], observations: fx.observations, view: after });
-        expect(O.flatMap(A.head(attributed), (event) => event.author)).toEqual(O.none());
+        TestUtils.assertNone(O.flatMap(A.head(attributed), (event) => event.author));
       })
     );
 
@@ -127,8 +136,8 @@ describe("party model competency questions", () => {
         const owner = (validAt: number) =>
           HashMap.get(identityView({ ledger: fx.ledger, scope: scope(20, validAt) }).partyOfIdentifier, fx.phone);
         expect(O.getOrThrow(owner(39))).toBe(ids.jordan);
-        expect(O.isNone(owner(40))).toBe(true);
-        expect(O.isNone(owner(59))).toBe(true);
+        TestUtils.assertNone(owner(40));
+        TestUtils.assertNone(owner(59));
         expect(O.getOrThrow(owner(60))).toBe(ids.riley);
       })
     );
@@ -158,7 +167,7 @@ describe("party model competency questions", () => {
           logicalKey: logicalKey(replacement),
         });
         const view = identityView({ ledger: [fx.financeV1, alternative], scope: scope(18) });
-        expect(O.isNone(HashMap.get(view.partyOfIdentifier, email("finance")))).toBe(true);
+        TestUtils.assertNone(HashMap.get(view.partyOfIdentifier, email("finance")));
       })
     );
 
@@ -189,21 +198,23 @@ describe("party model competency questions", () => {
           "PhantomManager",
           "ShadowGate",
         ]);
-        expect(
+        TestUtils.assertSome(
           O.map(
             A.findFirst(leads, (row) => row._tag === "ShadowGate"),
             (row) => row.party
-          )
-        ).toEqual(O.some(ids.sam));
-        expect(
+          ),
+          ids.sam
+        );
+        TestUtils.assertSome(
           O.map(
             A.findFirst(leads, (row) => row._tag === "CoverageGap"),
             (row) => row.party
-          )
-        ).toEqual(O.some(ids.pat));
+          ),
+          ids.pat
+        );
         const org = orgGraph({ ledger: fx.ledger, scope: scope(), view });
         expect(chainOfCommand({ org, party: ids.sam })).toEqual([ids.dana, ids.pat]);
-        expect(O.isNone(declaredHierarchyCycle(org))).toBe(true);
+        TestUtils.assertNone(declaredHierarchyCycle(org));
         expect(
           HashMap.size(selectorReach({ selectors: selectorGraph(fx.events), seed: email("riley"), hops: 2 }))
         ).toBeGreaterThan(0);
@@ -217,11 +228,11 @@ describe("party model competency questions", () => {
         expect(Graph.nodeCount(selectors.graph)).toBe(7);
         expect(Graph.edgeCount(selectors.graph)).toBe(10);
         const reach = selectorReach({ selectors, seed: email("riley"), hops: 2 });
-        expect(HashMap.get(reach, email("sam"))).toEqual(O.some(1));
-        expect(HashMap.get(reach, email("dana"))).toEqual(O.some(1));
-        expect(HashMap.get(reach, email("quinn"))).toEqual(O.some(2));
-        expect(HashMap.get(reach, email("pat"))).toEqual(O.some(2));
-        expect(HashMap.get(reach, email("riley"))).toEqual(O.none());
+        TestUtils.assertSome(HashMap.get(reach, email("sam")), 1);
+        TestUtils.assertSome(HashMap.get(reach, email("dana")), 1);
+        TestUtils.assertSome(HashMap.get(reach, email("quinn")), 2);
+        TestUtils.assertSome(HashMap.get(reach, email("pat")), 2);
+        TestUtils.assertNone(HashMap.get(reach, email("riley")));
       })
     );
 
@@ -245,7 +256,10 @@ describe("party model competency questions", () => {
           logicalKey: logicalKey(proposition),
         });
         const cycle = declaredHierarchyCycle(orgGraph({ ledger: [...fx.ledger, contradiction], scope: scope(), view }));
-        expect(O.map(cycle, (parties) => A.contains(parties, ids.sam))).toEqual(O.some(true));
+        TestUtils.assertSome(
+          O.map(cycle, (parties) => A.contains(parties, ids.sam)),
+          true
+        );
       })
     );
 
@@ -273,7 +287,7 @@ describe("party model competency questions", () => {
           dependence: [],
         });
         const accepted = admit({ policy, evidence, knowledgeTime: at(20) });
-        expect(Result.isSuccess(accepted)).toBe(true);
+        pipe(accepted, Result.isSuccess, TestUtils.assertTrue);
         if (Result.isSuccess(accepted))
           expect(depositionOutlineEntry({ admitted: accepted.success, note: "Synthetic evidence" }).claimVersion).toBe(
             fx.averyAuthorship.id
@@ -282,8 +296,8 @@ describe("party model competency questions", () => {
           ...evidence,
           supports: [SupportFacts.make({ assertion: fx.assertion.id, side: "client-file", kind: "shared-template" })],
         });
-        expect(Result.isFailure(admit({ policy, evidence: weak, knowledgeTime: at(20) }))).toBe(true);
-        expect(Result.isFailure(admit({ policy, evidence, knowledgeTime: at(9) }))).toBe(true);
+        pipe(admit({ policy, evidence: weak, knowledgeTime: at(20) }), Result.isFailure, TestUtils.assertTrue);
+        pipe(admit({ policy, evidence, knowledgeTime: at(9) }), Result.isFailure, TestUtils.assertTrue);
         const foreign = AdmissionEvidence.make({
           ...evidence,
           supports: [
@@ -294,7 +308,7 @@ describe("party model competency questions", () => {
             }),
           ],
         });
-        expect(Result.isFailure(admit({ policy, evidence: foreign, knowledgeTime: at(20) }))).toBe(true);
+        pipe(admit({ policy, evidence: foreign, knowledgeTime: at(20) }), Result.isFailure, TestUtils.assertTrue);
       })
     );
   });

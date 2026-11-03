@@ -6,8 +6,8 @@
 
 import { ValidTime } from "@beep/epistemics/Claim";
 import { holdsAt } from "@beep/epistemics/ValidInterval";
-import { ClaimVersion, EvidenceSignals, ReviewerDisposition, SourceAssertion } from "@beep/party-domain/Claim";
-import { AssertionId, ClaimVersionId, Digest } from "@beep/party-domain/Ids";
+import { EvidenceSignals, ReviewerDisposition, SourceAssertion } from "@beep/party-domain/Claim";
+import { AssertionId, Digest } from "@beep/party-domain/Ids";
 import { SourceRecordInput, sourceRecordPartyKey } from "@beep/party-domain/PartyKey";
 import { logicalKey, Proposition } from "@beep/party-domain/Proposition";
 import { resolveParties } from "@beep/party-domain/Resolution";
@@ -22,6 +22,7 @@ import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { claimFromAssertion } from "../../internal/claimFromAssertion.ts";
 import {
   CaseEvidence,
   CaseMailbox,
@@ -154,18 +155,11 @@ export const decisionClaims = Effect.fn("PartyReview.decisionClaims")(function* 
     })
   );
   const versions = A.map(assertions, (assertion) =>
-    ClaimVersion.make({
-      id: ClaimVersionId.make(`party-cv:${assertion.id}`),
-      proposition: assertion.proposition,
-      logicalKey: logicalKey(assertion.proposition),
-      supportedBy: [assertion.id],
-      challengedBy: [],
-      supersedes: O.none(),
-      knowledge: { recordedAt: decision.reviewedAt, expiredAt: O.none() },
-      validTime,
-      review: { _tag: "Accepted", disposition: { ...disposition, disposition: "accepted" } },
-      signals,
-    })
+    claimFromAssertion(
+      assertion,
+      { _tag: "Accepted", disposition: { ...disposition, disposition: "accepted" } },
+      signals
+    )
   );
   return ReviewEvidence.make({ assertions, versions });
 });
@@ -182,6 +176,11 @@ export const decisionClaims = Effect.fn("PartyReview.decisionClaims")(function* 
  */
 export const isSettled = (status: ReviewStatus): boolean =>
   status === "reviewed-same" || status === "reviewed-distinct" || status === "reviewed-grouped";
+
+const groupedStatus = (groups: ReadonlyArray<ReadonlyArray<PartyId>>): ReviewStatus => {
+  if (A.length(groups) === 1) return "reviewed-same";
+  return A.every(groups, (group) => A.length(group) === 1) ? "reviewed-distinct" : "reviewed-grouped";
+};
 
 /**
  * Apply current decisions, retaining stale, invalid and conflicting cases in the queue.
@@ -233,13 +232,7 @@ export const applyReviews = Effect.fn("PartyReview.applyReviews")(function* (inp
       if (Result.isFailure(candidate)) return row("invalid-decision", O.some(latest));
       if (ReviewVerdict.guards.Skip(latest.verdict)) return row("skipped", O.some(latest));
       if (!holdsAt(latest.validity, input.scope.validAt)) return row("out-of-scope", O.some(latest));
-      const status =
-        A.length(latest.verdict.groups) === 1
-          ? "reviewed-same"
-          : A.every(latest.verdict.groups, (group) => A.length(group) === 1)
-            ? "reviewed-distinct"
-            : "reviewed-grouped";
-      return row(status, O.some(latest), candidate.success);
+      return row(groupedStatus(latest.verdict.groups), O.some(latest), candidate.success);
     })
   );
   let changed = true;

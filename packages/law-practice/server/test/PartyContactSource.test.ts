@@ -83,7 +83,7 @@ describe("practice contact translation", () => {
     })
   );
 });
-it.layer(sourceLayer)("contact port implementation", (it) => {
+it.layer(sourceLayer, { timeout: "30 seconds" })("contact port implementation", (it) => {
   it.effect("exposes current and legacy records through the public party port and replays", () =>
     Effect.gen(function* () {
       const source = yield* ContactSource;

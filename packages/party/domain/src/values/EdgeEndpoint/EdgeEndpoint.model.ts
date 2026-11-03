@@ -4,6 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+// fallow-ignore-file code-duplication -- Nominal party bindings instantiate shared epistemics factories with party ids and brands; importing another product slice would violate the boundary. No copied algorithms. Review by 2026-12-03 or on factory/API changes.
 import { encodeEdgeEndpointKey as encodeKey, makeEdgeEndpoint } from "@beep/epistemics/EdgeEndpoint";
 import { $PartyDomainId } from "@beep/identity/packages";
 import * as PartyIds from "../../Ids.ts";

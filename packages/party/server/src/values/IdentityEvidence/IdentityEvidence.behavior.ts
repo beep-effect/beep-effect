@@ -97,6 +97,15 @@ export const mailboxesOf = (input: MailboxGroupInput): ReadonlyArray<A.NonEmptyR
     )
   );
 
+const contactOutcome = (contacts: ReadonlyArray<HashSet.HashSet<PartyId>>): CollisionOutcome => {
+  const sizes = A.map(contacts, HashSet.size);
+  if (A.some(sizes, (size) => size > 1)) return CollisionOutcome.Enum["conflicting-contacts"];
+  if (A.every(sizes, (size) => size === 0)) return CollisionOutcome.Enum.unresolved;
+  if (A.some(sizes, (size) => size === 0)) return CollisionOutcome.Enum["partially-resolved"];
+  const parties = A.dedupe(A.flatMap(contacts, A.fromIterable));
+  return A.length(parties) === 1 ? CollisionOutcome.Enum["same-person"] : CollisionOutcome.Enum["distinct-people"];
+};
+
 /**
  * Classify name collisions against source-card evidence without emitting identity claims.
  * **Example** (Build a collision review queue)
@@ -116,18 +125,7 @@ export const resolveCollisions = (input: CollisionInput): ReadonlyArray<Collisio
         HashSet.union(acc, O.getOrElse(HashMap.get(input.contactsOf, identifier), HashSet.empty<PartyId>))
       )
     );
-    const sizes = A.map(contacts, HashSet.size);
-    const parties = A.dedupe(A.flatMap(contacts, A.fromIterable));
-    const outcome = A.some(sizes, (size) => size > 1)
-      ? CollisionOutcome.Enum["conflicting-contacts"]
-      : A.every(sizes, (size) => size === 0)
-        ? CollisionOutcome.Enum.unresolved
-        : A.some(sizes, (size) => size === 0)
-          ? CollisionOutcome.Enum["partially-resolved"]
-          : A.length(parties) === 1
-            ? CollisionOutcome.Enum["same-person"]
-            : CollisionOutcome.Enum["distinct-people"];
-    return [Collision.make({ name: named.name, mailboxes, outcome })];
+    return [Collision.make({ name: named.name, mailboxes, outcome: contactOutcome(contacts) })];
   });
 
 /**

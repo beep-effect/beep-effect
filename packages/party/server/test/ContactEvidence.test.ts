@@ -10,6 +10,7 @@ import { PartyLedgerMemory } from "@beep/party-server/Ledger";
 import { ContactCard, ContactEmailInput, ContactSource, PhoneNumberInput } from "@beep/party-use-cases/ContactSource";
 import { PartyLedger } from "@beep/party-use-cases/Ledger";
 import { expect, it } from "@effect/vitest";
+import * as TestUtils from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -71,7 +72,7 @@ it.layer(PartyLedgerMemory)("contact data quality", (it) => {
       const rejected = yield* ingestContact(
         request(ContactCard.make({ ...card("", []), sourceNamespace: "" }), "missing")
       );
-      expect(O.isNone(rejected.party)).toBe(true);
+      TestUtils.assertNone(rejected.party);
       expect(rejected.issues[0]?.reason).toBe("missing-source-record-identity");
       expect(yield* ledger.snapshot).toEqual(before);
     })

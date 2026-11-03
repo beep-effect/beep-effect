@@ -25,13 +25,11 @@ import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { voiceOf } from "../../Communication.ts";
 import { AttributedEvent, DeclaredLine } from "../../Hierarchy.ts";
-import { ClaimVersionId, EventId, IdentifierId } from "../../Ids.ts";
+import { ClaimVersionId, EventId, IdentifierId, VoiceId } from "../../Ids.ts";
 import { Proposition } from "../../Proposition.ts";
-import { ResolutionScope, resolveParties } from "../../Resolution.ts";
+import { ConflictingReview, ResolutionScope, resolveParties } from "../../Resolution.ts";
 import type { ClaimVersion } from "../../Claim.ts";
 import type { CommunicationEvent, Observation } from "../../Communication.ts";
-import type { VoiceId } from "../../Ids.ts";
-import type { ResolutionView } from "../../Resolution.ts";
 
 const $I = $PartyDomainId.create("values/Projection/Projection.behavior");
 
@@ -53,19 +51,34 @@ export class ProjectionScope extends S.Opaque<ProjectionScope, { readonly brand:
   )
 ) {}
 
+const RepresentativeLookup = S.declare<(party: PartyId) => PartyId>(
+  (value): value is (party: PartyId) => PartyId => typeof value === "function"
+).pipe(
+  $I.annoteSchema("RepresentativeLookup", { description: "In-memory representative lookup; not a persisted codec." })
+);
+
 /**
- * Identity view at a scope: representative resolution plus identifier→party
- * and voice→author maps built only from in-scope claim versions.
+ * In-memory identity projection with validated maps and an attached lookup operation.
  *
- * @category queries
+ * **Details**
+ * The callable is supplied by identityView and is not a persisted representation.
+ *
+ * **Example** (Inspect identifier lookup schema)
+ * ```ts
+ * import { IdentityView } from "@beep/party-domain/Projection"
+ * const identifiers = IdentityView.fields.partyOfIdentifier
+ * ```
+ * @category models
  * @since 0.0.0
  */
-export interface IdentityView {
-  readonly authorOfVoice: HashMap.HashMap<VoiceId, PartyId>;
-  readonly partyOfIdentifier: HashMap.HashMap<IdentifierId, PartyId>;
-  readonly representative: (p: PartyId) => PartyId;
-  readonly reviewCases: ResolutionView["reviewCases"];
-}
+export class IdentityView extends S.Opaque<IdentityView, { readonly brand: unique symbol }>()(
+  S.Struct({
+    authorOfVoice: S.HashMap(VoiceId, PartyId),
+    partyOfIdentifier: S.HashMap(IdentifierId, PartyId),
+    representative: RepresentativeLookup,
+    reviewCases: S.Array(ConflictingReview),
+  }).pipe($I.annoteSchema("IdentityView", { description: "Scoped identity maps and representative lookup." }))
+) {}
 
 /**
  * Build the identity view. An identifier attributed to more than one party in
@@ -107,7 +120,7 @@ export const identityView = ({
       })
     );
   };
-  return {
+  return IdentityView.make({
     representative,
     reviewCases: resolved.reviewCases,
     partyOfIdentifier: unique(
@@ -122,7 +135,7 @@ export const identityView = ({
         Proposition.guards.VoiceAuthor(v.proposition) ? [Tuple.make(v.proposition.voice, v.proposition.author)] : []
       )
     ),
-  };
+  });
 };
 
 /**

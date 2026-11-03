@@ -23,7 +23,7 @@ import * as Tuple from "effect/Tuple";
 import { IngestIdentifier } from "../ContactEvidence/ContactEvidence.model.ts";
 import { AliasPairing, MailIngest, MailIssue, ParsedMailbox } from "./MailIndex.model.ts";
 import type { Identifier, IdentifierIssue } from "@beep/party-domain/Identifier";
-import type { MailIndexInput } from "./MailIndex.model.ts";
+import type { MailIndexInput, MailRecipient } from "./MailIndex.model.ts";
 
 /**
  * Graduate SMTP or Exchange DN input through the shared identifier normalizers.
@@ -111,36 +111,66 @@ class HeaderSlot extends S.Opaque<HeaderSlot, { readonly brand: unique symbol }>
   )
 ) {}
 
-/**
- * Adapt indexed mail headers into immutable observations and mailbox-alias proposals.
- * **Details**
- * RFC From, MAPI sender and represented mailbox remain separate roles. Matching
- * display names only propose DN/SMTP mailbox aliases within the same message;
- * they never merge people. The known swapped recipient export fields produce
- * an explicit issue. A malformed From does not become a guessed event.
- * **Example** (Use the index adapter)
- * ```ts
- * import { adaptMailRecord } from "@beep/party-server/MailIndex"
- * const adapt = adaptMailRecord
- * ```
- * @category constructors
- * @since 0.0.0
- */
-export const adaptMailRecord = Effect.fn("PartyMail.adaptMailRecord")(function* (input: MailIndexInput) {
-  const { record, producedBy, observedAt, side } = input;
+const mailIdentity = (input: MailIndexInput) => {
+  const { record } = input;
   const key = encodeURIComponent(
     `${Str.length(input.content)}:${input.content}${Str.length(record.tree)}:${record.tree}${Str.length(record.messagePath)}:${record.messagePath}`
   );
-  const occurrenceId = OccurrenceId.make(`party-occ:mail:${key}`);
-  const eventId = EventId.make(`party-evt:mail:${key}`);
+  return Tuple.make(key, OccurrenceId.make(`party-occ:mail:${key}`), EventId.make(`party-evt:mail:${key}`));
+};
+
+const withName = Effect.fn("PartyMail.withName")(function* (address: string | undefined, name: string | undefined) {
+  if (address === undefined || !Str.isNonEmpty(Str.trim(address))) return O.none<ParsedMailbox>();
+  const parsed = yield* parseMailbox(address);
+  const displayName = O.orElse(parsed.displayName, () => O.filter(O.fromNullishOr(name), Str.isNonEmpty));
+  return O.some(ParsedMailbox.make({ ...parsed, displayName }));
+});
+
+const selectFrom = (
+  from: O.Option<ParsedMailbox>,
+  representing: O.Option<ParsedMailbox>,
+  sender: O.Option<ParsedMailbox>
+) => {
+  if (O.isSome(from))
+    return O.some(HeaderSlot.make({ role: "from", field: "From", namespace: "rfc5322", parsed: from.value }));
+  if (O.isSome(representing))
+    return O.some(
+      HeaderSlot.make({
+        role: "from",
+        field: "PR_SENT_REPRESENTING_EMAIL_ADDRESS",
+        namespace: "mapi",
+        parsed: representing.value,
+      })
+    );
+  return O.map(sender, (parsed) =>
+    HeaderSlot.make({ role: "from", field: "PR_SENDER_EMAIL_ADDRESS", namespace: "mapi", parsed })
+  );
+};
+const recipientSlot = Effect.fn("PartyMail.recipientSlot")(function* (recipient: MailRecipient) {
+  const issues: Array<MailIssue> = [];
+  if (recipient.kind === "unknown") return Tuple.make(O.none<HeaderSlot>(), issues);
+  const role = recipient.kind;
+  const addressTypeHoldsAddress = Str.includes("@")(recipient.addressType ?? "");
+  const swapped = addressTypeHoldsAddress && /^[A-Z]{2,8}$/u.test(Str.trim(recipient.emailAddress ?? ""));
+  if (addressTypeHoldsAddress) issues.push(MailIssue.cases.AddressTypeHoldsAddress.make({}));
+  const parsed = yield* withName(swapped ? recipient.addressType : recipient.emailAddress, recipient.displayName);
+  return Tuple.make(
+    O.map(parsed, (parsed) => HeaderSlot.make({ role, field: "Recipients", namespace: "mapi", parsed })),
+    issues
+  );
+});
+const internetRecipients = Effect.fn("PartyMail.internetRecipients")(function* (record: MailIndexInput["record"]) {
+  const slots: Array<HeaderSlot> = [];
+  for (const raw of record.internet?.to ?? [])
+    slots.push(HeaderSlot.make({ role: "to", field: "To", namespace: "rfc5322", parsed: yield* parseMailbox(raw) }));
+  for (const raw of record.internet?.cc ?? [])
+    slots.push(HeaderSlot.make({ role: "cc", field: "Cc", namespace: "rfc5322", parsed: yield* parseMailbox(raw) }));
+  return slots;
+});
+const collectHeaders = Effect.fn("PartyMail.collectHeaders")(function* (input: MailIndexInput) {
+  const { record } = input;
   const slots: Array<HeaderSlot> = [];
   const issues: Array<MailIssue> = [];
-  const withName = Effect.fn("PartyMail.withName")(function* (address: string | undefined, name: string | undefined) {
-    if (address === undefined || !Str.isNonEmpty(Str.trim(address))) return O.none<ParsedMailbox>();
-    const parsed = yield* parseMailbox(address);
-    const displayName = O.orElse(parsed.displayName, () => O.filter(O.fromNullishOr(name), Str.isNonEmpty));
-    return O.some(ParsedMailbox.make({ ...parsed, displayName }));
-  });
   const sender = yield* withName(record.outlook.senderEmailAddress, record.outlook.senderName);
   const representing = yield* withName(
     record.outlook.sentRepresentingEmailAddress,
@@ -149,24 +179,24 @@ export const adaptMailRecord = Effect.fn("PartyMail.adaptMailRecord")(function* 
   const from = yield* withName(record.internet?.from, undefined);
   const add = (role: ParticipantRole, field: string, namespace: HeaderNamespace, parsed: ParsedMailbox) =>
     slots.push(HeaderSlot.make({ role, field, namespace, parsed }));
-  if (O.isSome(from)) add("from", "From", "rfc5322", from.value);
-  else if (O.isSome(representing)) add("from", "PR_SENT_REPRESENTING_EMAIL_ADDRESS", "mapi", representing.value);
-  else if (O.isSome(sender)) add("from", "PR_SENDER_EMAIL_ADDRESS", "mapi", sender.value);
-  if (O.isSome(sender)) add("sender", "PR_SENDER_EMAIL_ADDRESS", "mapi", sender.value);
-  if (O.isSome(representing))
-    add("sent-representing", "PR_SENT_REPRESENTING_EMAIL_ADDRESS", "mapi", representing.value);
+  const fromSlot = selectFrom(from, representing, sender);
+  slots.push(...O.toArray(fromSlot));
+  for (const parsed of O.toArray(sender)) add("sender", "PR_SENDER_EMAIL_ADDRESS", "mapi", parsed);
+  for (const parsed of O.toArray(representing))
+    add("sent-representing", "PR_SENT_REPRESENTING_EMAIL_ADDRESS", "mapi", parsed);
   for (const recipient of record.recipients) {
-    if (recipient.kind === "unknown") continue;
-    const swapped =
-      Str.includes("@")(recipient.addressType ?? "") && /^[A-Z]{2,8}$/u.test(Str.trim(recipient.emailAddress ?? ""));
-    if (Str.includes("@")(recipient.addressType ?? "")) issues.push(MailIssue.cases.AddressTypeHoldsAddress.make({}));
-    const raw = swapped ? recipient.addressType : recipient.emailAddress;
-    const parsed = yield* withName(raw, recipient.displayName);
-    if (O.isSome(parsed)) add(recipient.kind, "Recipients", "mapi", parsed.value);
+    const parsed = yield* recipientSlot(recipient);
+    issues.push(...parsed[1]);
+    slots.push(...O.toArray(parsed[0]));
   }
-  for (const raw of record.internet?.to ?? []) add("to", "To", "rfc5322", yield* parseMailbox(raw));
-  for (const raw of record.internet?.cc ?? []) add("cc", "Cc", "rfc5322", yield* parseMailbox(raw));
+  slots.push(...(yield* internetRecipients(record)));
 
+  return Tuple.make(slots, issues);
+});
+const observeHeaders = (input: MailIndexInput, slots: ReadonlyArray<HeaderSlot>) => {
+  const { producedBy, observedAt } = input;
+  const [key, occurrenceId, eventId] = mailIdentity(input);
+  const issues: Array<MailIssue> = [];
   const observations: Array<HeaderParticipant> = [];
   for (const [index, slot] of A.map(slots, (slot, index) => Tuple.make(index, slot))) {
     if (O.isNone(slot.parsed.identifier)) {
@@ -186,6 +216,100 @@ export const adaptMailRecord = Effect.fn("PartyMail.adaptMailRecord")(function* 
       })
     );
   }
+
+  return Tuple.make(observations, issues);
+};
+class PairedHeaders extends S.Opaque<PairedHeaders, { readonly brand: unique symbol }>()(
+  S.Struct({
+    left: HeaderSlot,
+    right: HeaderSlot,
+    dn: IngestIdentifier,
+    smtp: IngestIdentifier,
+    displayName: S.NonEmptyString,
+  }).pipe(
+    $I.annoteSchema("PairedHeaders", { description: "Matching directory and SMTP headers with both source locations." })
+  )
+) {}
+const matchHeaders = (left: HeaderSlot, right: HeaderSlot): O.Option<PairedHeaders> => {
+  if (O.isNone(left.parsed.identifier) || O.isNone(left.parsed.displayName)) return O.none();
+  if (O.isNone(right.parsed.identifier) || O.isNone(right.parsed.displayName)) return O.none();
+  const dn = left.parsed.identifier.value;
+  const smtp = right.parsed.identifier.value;
+  if (!S.is(ExchangeDn)(dn.value) || !S.is(EmailAddress)(smtp.value)) return O.none();
+  if (left.parsed.displayName.value !== right.parsed.displayName.value) return O.none();
+  if (!compatibleRoles(left.role, right.role)) return O.none();
+  return O.some(PairedHeaders.make({ left, right, dn, smtp, displayName: left.parsed.displayName.value }));
+};
+const compatibleRoles = (left: ParticipantRole, right: ParticipantRole) =>
+  left === right || (right === "from" && (left === "sender" || left === "sent-representing"));
+const pairingEvidence = (input: MailIndexInput, match: PairedHeaders) => {
+  const { left, right, dn, smtp, displayName } = match;
+  const { producedBy, observedAt } = input;
+  const [, occurrenceId, eventId] = mailIdentity(input);
+  const mailbox = AccountId.make(`party-acct:exchange:${dn.key}`);
+  const assertion = AssertionId.make(
+    `party-asrt:pairing:${encodeURIComponent(
+      `${producedBy.length}:${producedBy}${eventId.length}:${eventId}${dn.id.length}:${dn.id}${smtp.id.length}:${smtp.id}`
+    )}`
+  );
+  const sourceAssertion = SourceAssertion.make({
+    id: assertion,
+    proposition: Proposition.cases.AccountIdentifier.make({ account: mailbox, identifier: smtp.id }),
+    stance: "asserts",
+    anchors: [
+      HeaderField.make({ occurrence: occurrenceId, namespace: left.namespace, field: left.field }),
+      HeaderField.make({ occurrence: occurrenceId, namespace: right.namespace, field: right.field }),
+    ],
+    producedBy,
+    validTime: ValidTime.cases.Unknown.make({}),
+    recordedAt: observedAt,
+  });
+  const pairing = AliasPairing.make({
+    assertion,
+    mailbox,
+    exchangeDn: dn.id,
+    smtp: smtp.id,
+    displayName: displayName,
+    event: eventId,
+    role: left.role,
+  });
+  return Tuple.make(sourceAssertion, pairing);
+};
+const collectPairings = (input: MailIndexInput, slots: ReadonlyArray<HeaderSlot>) => {
+  const pairings: Array<AliasPairing> = [];
+  const assertions: Array<SourceAssertion> = [];
+  const matches = A.flatMap(slots, (left) => A.flatMap(slots, (right) => O.toArray(matchHeaders(left, right))));
+  for (const match of matches) {
+    const [assertion, pairing] = pairingEvidence(input, match);
+    if (A.some(pairings, (existing) => existing.exchangeDn === pairing.exchangeDn && existing.smtp === pairing.smtp))
+      continue;
+    assertions.push(assertion);
+    pairings.push(pairing);
+  }
+  return Tuple.make(assertions, pairings);
+};
+
+/**
+ * Adapt indexed mail headers into immutable observations and mailbox-alias proposals.
+ * **Details**
+ * RFC From, MAPI sender and represented mailbox remain separate roles. Matching
+ * display names only propose DN/SMTP mailbox aliases within the same message;
+ * they never merge people. The known swapped recipient export fields produce
+ * an explicit issue. A malformed From does not become a guessed event.
+ * **Example** (Use the index adapter)
+ * ```ts
+ * import { adaptMailRecord } from "@beep/party-server/MailIndex"
+ * const adapt = adaptMailRecord
+ * ```
+ * @category constructors
+ * @since 0.0.0
+ */
+export const adaptMailRecord = Effect.fn("PartyMail.adaptMailRecord")(function* (input: MailIndexInput) {
+  const { record, producedBy, side } = input;
+  const [, occurrenceId, eventId] = mailIdentity(input);
+  const [slots, headerIssues] = yield* collectHeaders(input);
+  const [observations, observationIssues] = observeHeaders(input, slots);
+  const issues = [...headerIssues, ...observationIssues];
   const participants = A.dedupeWith(
     A.map(observations, (observation) =>
       Participant.make({ role: observation.role, identifier: observation.identifier, observation: observation.id })
@@ -198,55 +322,7 @@ export const adaptMailRecord = Effect.fn("PartyMail.adaptMailRecord")(function* 
     A.flatMap(slots, (slot) => O.toArray(slot.parsed.identifier)),
     (left: IngestIdentifier, right: IngestIdentifier) => left.id === right.id
   );
-  const pairings: Array<AliasPairing> = [];
-  const assertions: Array<SourceAssertion> = [];
-  for (const left of slots) {
-    if (O.isNone(left.parsed.identifier) || O.isNone(left.parsed.displayName)) continue;
-    const dn = left.parsed.identifier.value;
-    if (!S.is(ExchangeDn)(dn.value)) continue;
-    for (const right of slots) {
-      if (O.isNone(right.parsed.identifier) || O.isNone(right.parsed.displayName)) continue;
-      const smtp = right.parsed.identifier.value;
-      if (!S.is(EmailAddress)(smtp.value) || left.parsed.displayName.value !== right.parsed.displayName.value) continue;
-      if (
-        left.role !== right.role &&
-        !(right.role === "from" && (left.role === "sender" || left.role === "sent-representing"))
-      )
-        continue;
-      if (A.some(pairings, (pairing) => pairing.exchangeDn === dn.id && pairing.smtp === smtp.id)) continue;
-      const mailbox = AccountId.make(`party-acct:exchange:${dn.key}`);
-      const assertion = AssertionId.make(
-        `party-asrt:pairing:${encodeURIComponent(
-          `${producedBy.length}:${producedBy}${eventId.length}:${eventId}${dn.id.length}:${dn.id}${smtp.id.length}:${smtp.id}`
-        )}`
-      );
-      assertions.push(
-        SourceAssertion.make({
-          id: assertion,
-          proposition: Proposition.cases.AccountIdentifier.make({ account: mailbox, identifier: smtp.id }),
-          stance: "asserts",
-          anchors: [
-            HeaderField.make({ occurrence: occurrenceId, namespace: left.namespace, field: left.field }),
-            HeaderField.make({ occurrence: occurrenceId, namespace: right.namespace, field: right.field }),
-          ],
-          producedBy,
-          validTime: ValidTime.cases.Unknown.make({}),
-          recordedAt: observedAt,
-        })
-      );
-      pairings.push(
-        AliasPairing.make({
-          assertion,
-          mailbox,
-          exchangeDn: dn.id,
-          smtp: smtp.id,
-          displayName: left.parsed.displayName.value,
-          event: eventId,
-          role: left.role,
-        })
-      );
-    }
-  }
+  const [assertions, pairings] = collectPairings(input, slots);
   const sentAt = O.flatMap(
     O.fromNullishOr(record.outlook.clientSubmitTime ?? record.outlook.deliveryTime),
     parseExportTime

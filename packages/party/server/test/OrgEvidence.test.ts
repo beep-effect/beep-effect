@@ -6,8 +6,10 @@ import {
   organizationDomain,
 } from "@beep/party-server/OrgEvidence";
 import { describe, expect, it } from "@effect/vitest";
+import * as TestUtils from "@effect/vitest/utils";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -20,12 +22,12 @@ const box = (domains: ReadonlyArray<string>, span: O.Option<ObservedSpan>) =>
 describe("organization-domain leads", () => {
   it.effect("normalizes mailbox domains while excluding free mail and malformed input", () =>
     Effect.gen(function* () {
-      expect(yield* organizationDomain("riley@mail.acme.example")).toEqual(O.some("acme.example"));
-      expect(yield* organizationDomain("pat@firm.co.uk")).toEqual(O.some("firm.co.uk"));
-      expect(yield* organizationDomain("someone@gmail.com")).toEqual(O.none());
-      expect(yield* organizationDomain("not-an-address")).toEqual(O.none());
-      expect(yield* organizationDomain("bare.example")).toEqual(O.none());
-      expect(yield* organizationDomain("Dana <Dana@BÜCHER.example>")).toEqual(O.some("xn--bcher-kva.example"));
+      TestUtils.assertSome(yield* organizationDomain("riley@mail.acme.example"), "acme.example");
+      TestUtils.assertSome(yield* organizationDomain("pat@firm.co.uk"), "firm.co.uk");
+      TestUtils.assertNone(yield* organizationDomain("someone@gmail.com"));
+      TestUtils.assertNone(yield* organizationDomain("not-an-address"));
+      TestUtils.assertNone(yield* organizationDomain("bare.example"));
+      TestUtils.assertSome(yield* organizationDomain("Dana <Dana@BÜCHER.example>"), "xn--bcher-kva.example");
     })
   );
   it("reads a shared domain as an alias lead", () => {
@@ -59,8 +61,8 @@ describe("organization-domain leads", () => {
     ).toBe("different-orgs-concurrent");
   });
   it("rejects reversed observation spans but permits a single instant", () => {
-    expect(Result.isFailure(S.decodeResult(ObservedSpan)({ first: 5, last: 4 }))).toBe(true);
-    expect(Result.isSuccess(S.decodeResult(ObservedSpan)({ first: 5, last: 5 }))).toBe(true);
+    pipe(S.decodeResult(ObservedSpan)({ first: 5, last: 4 }), Result.isFailure, TestUtils.assertTrue);
+    pipe(S.decodeResult(ObservedSpan)({ first: 5, last: 5 }), Result.isSuccess, TestUtils.assertTrue);
   });
   it("treats single-token names as low-information aliases", () => {
     expect(nameShape("chris morgan")).toBe("full-name");

@@ -2,7 +2,9 @@ import { ClaimVersion } from "@beep/party-domain/Claim";
 import { logicalKey, Proposition } from "@beep/party-domain/Proposition";
 import { PartyId } from "@beep/shared-domain/identity/Party";
 import { describe, expect, it } from "@effect/vitest";
+import * as TestUtils from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
@@ -29,6 +31,20 @@ const row = {
 };
 
 describe("party claim binding", () => {
+  it.effect.prop(
+    "preserves claim envelopes and symmetric keys for generated party endpoints",
+    [Proposition.cases.SameParty],
+    ([proposition]) =>
+      Effect.gen(function* () {
+        const reverse = Proposition.cases.SameParty.make({ left: proposition.right, right: proposition.left });
+        const input = { ...row, proposition, logicalKey: logicalKey(proposition) };
+        const decoded = yield* S.decodeUnknownEffect(ClaimVersion)(input);
+        const encoded = yield* S.encodeEffect(ClaimVersion)(decoded);
+        return logicalKey(reverse) === logicalKey(proposition) && encoded.logicalKey === input.logicalKey;
+      }),
+    { arbitrary: { runs: 100, seed: "party-claim-endpoints" } }
+  );
+
   it.effect("round-trips the shared envelope with party-owned ids", () =>
     Effect.gen(function* () {
       const decoded = yield* S.decodeUnknownEffect(ClaimVersion)(row);
@@ -39,15 +55,15 @@ describe("party claim binding", () => {
 
   it("rejects inconsistent logical keys and foreign version identifiers", () => {
     const decode = S.decodeUnknownResult(ClaimVersion);
-    expect(Result.isFailure(decode({ ...row, logicalKey: "unrelated" }))).toBe(true);
-    expect(Result.isFailure(decode({ ...row, id: "cv:1" }))).toBe(true);
+    pipe(decode({ ...row, logicalKey: "unrelated" }), Result.isFailure, TestUtils.assertTrue);
+    pipe(decode({ ...row, id: "cv:1" }), Result.isFailure, TestUtils.assertTrue);
   });
 
   it("orders symmetric endpoints numerically and rejects self-relations", () => {
     const a = Proposition.cases.SameParty.make({ left: PartyId.make(2), right: PartyId.make(10) });
     const b = Proposition.cases.SameParty.make({ left: PartyId.make(10), right: PartyId.make(2) });
     expect(logicalKey(a)).toEqual(logicalKey(b));
-    expect(Result.isFailure(S.decodeResult(Proposition)({ _tag: "SameParty", left: 1, right: 1 }))).toBe(true);
+    pipe(S.decodeResult(Proposition)({ _tag: "SameParty", left: 1, right: 1 }), Result.isFailure, TestUtils.assertTrue);
   });
 
   it("keeps delimiter-bearing name payloads unambiguous", () => {

@@ -29,6 +29,7 @@ const $I = $PartyServerId.create("values/MailIndex/MailIndex.model");
  * @category models
  * @since 0.0.0
  */
+// fallow-ignore-next-line code-duplication -- Header-only wire boundary deliberately repeats recipient fields without importing corpus tooling; review when a neutral driver owns this contract.
 export class MailRecipient extends S.Opaque<MailRecipient, { readonly brand: unique symbol }>()(
   S.Struct({
     addressType: S.optionalKey(S.String),

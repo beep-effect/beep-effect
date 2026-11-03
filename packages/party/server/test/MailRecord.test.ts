@@ -11,8 +11,10 @@ import { PartyLedgerMemory } from "@beep/party-server/Ledger";
 import { adaptMailRecord, ingestMailRecord, MailIndexInput } from "@beep/party-server/MailIndex";
 import { PartyLedger } from "@beep/party-use-cases/Ledger";
 import { describe, expect, it } from "@effect/vitest";
+import * as TestUtils from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
@@ -77,7 +79,7 @@ describe("mail record adaptation", () => {
           Order.String
         )
       ).toEqual(["AddressTypeHoldsAddress", "UnparsedAddress"]);
-      expect(O.isSome(result.event)).toBe(true);
+      pipe(result.event, O.isSome, TestUtils.assertTrue);
     })
   );
   it.effect("recovers the explicit swapped export fields", () =>
@@ -100,11 +102,12 @@ describe("mail record adaptation", () => {
     Effect.gen(function* () {
       const result = yield* adapt({ ...base, outlook: { senderEmailAddress: "jordan@acme.example" }, recipients: [] });
       const from = A.findFirst(result.observations, (row) => row._tag === "HeaderParticipant" && row.role === "from");
-      expect(
+      TestUtils.assertSome(
         O.map(from, (row) =>
           row._tag === "HeaderParticipant" && row.anchor._tag === "HeaderField" ? row.anchor.field : ""
-        )
-      ).toEqual(O.some("PR_SENDER_EMAIL_ADDRESS"));
+        ),
+        "PR_SENDER_EMAIL_ADDRESS"
+      );
     })
   );
   it.effect("does not manufacture an event from absent or malformed From evidence", () =>
@@ -114,7 +117,7 @@ describe("mail record adaptation", () => {
         outlook: {},
         recipients: [{ kind: "to", emailAddress: "riley@acme.example" }],
       });
-      expect(O.isNone(missing.event)).toBe(true);
+      TestUtils.assertNone(missing.event);
       expect(A.map(missing.issues, (issue) => issue._tag)).toEqual(["NoFromParticipant"]);
       const malformed = yield* adapt({
         ...base,
@@ -122,7 +125,7 @@ describe("mail record adaptation", () => {
         internet: { from: "malformed", to: [], cc: [] },
         recipients: [],
       });
-      expect(O.isNone(malformed.event)).toBe(true);
+      TestUtils.assertNone(malformed.event);
       expect(A.map(malformed.issues, (issue) => issue._tag)).toEqual(["UnparsedAddress", "NoFromParticipant"]);
     })
   );

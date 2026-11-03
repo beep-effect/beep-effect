@@ -155,16 +155,6 @@ export const adaptPracticeContact = (input: PracticeContactInput): ContactCard =
 };
 
 /**
- * The practice owner supplies a lazy stream from its current or legacy store.
- * @category ports
- * @since 0.0.0
- */
-export interface PracticeContactRecordsShape {
-  readonly records: Stream.Stream<PracticeContactRecord, IdentificationError>;
-  readonly sourceNamespace: string;
-}
-
-/**
  * Source-owned contact records; the party implementation never reads practice stores.
  * **Example** (Supply synthetic records)
  * ```ts
@@ -176,9 +166,13 @@ export interface PracticeContactRecordsShape {
  * @category services
  * @since 0.0.0
  */
-export class PracticeContactRecords extends Context.Service<PracticeContactRecords, PracticeContactRecordsShape>()(
-  $I`PracticeContactRecords`
-) {}
+export class PracticeContactRecords extends Context.Service<
+  PracticeContactRecords,
+  {
+    readonly records: Stream.Stream<PracticeContactRecord, IdentificationError>;
+    readonly sourceNamespace: string;
+  }
+>()($I`PracticeContactRecords`) {}
 
 const decodePracticeContactInput = S.decodeUnknownEffect(S.toType(PracticeContactInput));
 

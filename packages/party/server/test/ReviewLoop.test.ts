@@ -20,9 +20,11 @@ import {
 import { PartyLedger } from "@beep/party-use-cases/Ledger";
 import { PartyId } from "@beep/shared-domain/identity/Party";
 import { describe, expect, it } from "@effect/vitest";
+import * as TestUtils from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -74,7 +76,11 @@ const apply = (
 
 describe("review schemas and evidence sealing", () => {
   it("rejects a repeated party in review groups", () => {
-    expect(Result.isFailure(S.decodeResult(ReviewVerdict)({ _tag: "Grouped", groups: [[1], [1]] }))).toBe(true);
+    pipe(
+      S.decodeResult(ReviewVerdict)({ _tag: "Grouped", groups: [[1], [1]] }),
+      Result.isFailure,
+      TestUtils.assertTrue
+    );
   });
   it.effect("seals canonical sets with numeric party order and detects evidence changes", () =>
     Effect.gen(function* () {

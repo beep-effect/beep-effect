@@ -3,14 +3,15 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import { ValidTime } from "@beep/epistemics/Claim";
-import { ClaimVersion, EvidenceSignals, SourceAssertion } from "@beep/party-domain/Claim";
+import { EvidenceSignals, SourceAssertion } from "@beep/party-domain/Claim";
 import { DirectoryRow } from "@beep/party-domain/Communication";
 import { emailAddress, phoneNumber } from "@beep/party-domain/Identifier";
-import { AssertionId, ClaimVersionId, IdentifierId, ObservationId, OccurrenceId } from "@beep/party-domain/Ids";
+import { AssertionId, IdentifierId, ObservationId, OccurrenceId } from "@beep/party-domain/Ids";
 import { Organization, Person } from "@beep/party-domain/Party";
 import { partyKeyOf, SourceRecordInput, sourceRecordPartyKey } from "@beep/party-domain/PartyKey";
-import { logicalKey, Proposition } from "@beep/party-domain/Proposition";
+import { Proposition } from "@beep/party-domain/Proposition";
 import { RecordRow } from "@beep/party-domain/Provenance";
 import { ContactCard, ContactEmailInput, ContactSource, PhoneNumberInput } from "@beep/party-use-cases/ContactSource";
 import { LedgerSnapshot, PartyLedger } from "@beep/party-use-cases/Ledger";
@@ -20,6 +21,7 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { claimFromAssertion } from "../../internal/claimFromAssertion.ts";
 import { ContactIngest, ContactIngestInput, IngestIdentifier, IngestIssue } from "./ContactEvidence.model.ts";
 import type { Identifier, IdentifierIssue } from "@beep/party-domain/Identifier";
 import type { ContactSourceIngestInput, GraphContactInput } from "./ContactEvidence.model.ts";
@@ -135,20 +137,7 @@ export const ingestContact = Effect.fn("PartyContact.ingestContact")(function* (
       RecordRow.make({ occurrence, rowKey: role.anchor })
     )
   );
-  const versions = A.map(assertions, (assertion) =>
-    ClaimVersion.make({
-      id: ClaimVersionId.make(`party-cv:${assertion.id}`),
-      proposition: assertion.proposition,
-      logicalKey: logicalKey(assertion.proposition),
-      supportedBy: [assertion.id],
-      challengedBy: [],
-      supersedes: O.none(),
-      knowledge: { recordedAt: input.recordedAt, expiredAt: O.none() },
-      validTime: assertion.validTime,
-      review: { _tag: "Proposed" },
-      signals,
-    })
-  );
+  const versions = A.map(assertions, (assertion) => claimFromAssertion(assertion, { _tag: "Proposed" }, signals));
   yield* ledger.appendEvidence(LedgerSnapshot.make({ observations: [observation], assertions, versions }));
   return ContactIngest.make({
     party: O.some(party),

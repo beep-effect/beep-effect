@@ -50,3 +50,69 @@ schema catalog regeneration reports no additional shard drift.
 
 No private corpus was read. `scratchpad/party/scripts/ReviewPage.ts` is unchanged.
 No persistent party tables, clients, UI or cross-slice edge projection were added.
+
+## First publication gate — remediation in progress
+
+Yeet created local commit `183945bd50`, then refused publication. Nothing was
+pushed. Its committed-head cheap-gates verdict found four failing lanes:
+
+- Fallow health: five complexity findings in mail adaptation, ledger batch
+  validation, review application, contact collision classification and the
+  law-practice boundary test's AST visitor.
+- Fallow audit: those five findings plus twelve duplicate blocks. Ten clone
+  groups concern slice-specific foundation factory bindings; two concern source
+  assertion construction and the intentionally narrowed mail-recipient boundary.
+  These need semantic review and remediation, not a broad threshold increase.
+- Schema-first: two exported interface candidates and five codec-test property
+  coverage advisories. The source service shape is now inline in its service
+  contract, and IdentityView is an annotated opaque model with an explicitly
+  in-memory callable. Property-coverage findings remain to be addressed.
+- Effect Vitest: 68 assertion/helper and layer-timeout findings. The assertion
+  changes preserve the original Boolean polarity and expected Option payloads;
+  the exact detector rerun is still required.
+
+The regenerated JSDoc ratchet, schema catalog, cache policy, root oxlint,
+configuration, goal checks, and the other cheap lanes passed at that committed
+head. Further source changes invalidate any claim that this is final-head proof.
+
+The first complexity refactor extracts batch validation, contact classification,
+review grouping status and static/dynamic module-specifier recognition. Party
+server and law-practice server package verification passed after that first
+refactor. Subsequent assertion and IdentityView changes are being verified.
+The large mail adapter and duplication findings remain open. Publication, hosted
+readiness and completion remain unproven.
+
+### Publish-gate remediation follow-up
+
+- The six nominal factory facades and header recipient wire projection now carry
+  reasoned duplication annotations, with review triggers and reversal recorded
+  in SPEC. The repeated claim-envelope algorithm is extracted into the internal
+  `claimFromAssertion` helper instead. Fallow audit confirms no duplication
+  findings; its second run retained one mail-header complexity finding, now
+  split into internet-recipient collection and awaiting the final rerun.
+- Schema-first passes with zero findings, including zero arbitrary-test
+  advisories. The five flagged tests now use schema-derived `it.prop` / `it.effect.prop`
+  properties whose harness reports falsification and exhaustion.
+- Domain package verification passed (audit and docgen). Direct suites pass:
+  domain 62 tests / 7 files, server 76 tests / 11 files. Server verification is
+  rerunning after moving per-property ledger construction into a scoped layer
+  build to preserve independent state without nested Layer provision.
+- Full Effect Vitest lint is still pending. No publication or hosted readiness
+  is claimed by these local results.
+
+The final Fallow audit rerun reports zero findings. Server package verification
+passes after the property harness migration; the final domain rerun follows the
+removal of an unused import. Both direct suites still pass (62 / 76). Effect
+Vitest's row scan found only a redundant whole-property scope; the canonical
+property harness already supplies that scope, so it was removed. Main's
+owner-readiness merge fix (#2655) was merged without conflicts; no party source
+behavior changed in that sync. The publish gates will revalidate the resulting
+committed head.
+
+Before the second publish attempt, domain package verification passed again
+(audit 14.3s, docgen 3.9s) and server verification passed after the final scope
+cleanup (audit 16.0s, docgen 3.4s). The server's 76 tests pass on that source.
+Root oxlint passes. Schema catalog regeneration updates the party-domain shard
+for IdentityView; no unrelated shard changed. All remaining gate proof is
+provided by the second publish's committed-head cheap-gates run, not inferred
+from these scoped checks.

@@ -20,6 +20,55 @@ import type { SourceAssertion } from "@beep/party-domain/Claim";
 import type { Observation } from "@beep/party-domain/Communication";
 import type { PartyKey } from "@beep/party-domain/PartyKey";
 
+const conflict = (recordId: string, reason: string) => Effect.fail(LedgerConflict.make({ recordId, reason }));
+const appendUnique = Effect.fn("PartyLedgerMemory.appendUnique")(function* <Row extends { readonly id: string }>(
+  current: ReadonlyArray<Row>,
+  incoming: ReadonlyArray<Row>,
+  reason: string
+) {
+  let rows = current;
+  for (const row of incoming) {
+    if (A.some(rows, (existing) => existing.id === row.id)) return yield* conflict(row.id, reason);
+    rows = A.append(rows, row);
+  }
+  return rows;
+});
+const validateSuccessor = Effect.fn("PartyLedgerMemory.validateSuccessor")(function* (
+  versions: ReadonlyArray<ClaimVersion>,
+  version: ClaimVersion
+) {
+  if (O.isNone(version.supersedes)) return;
+  const predecessorId = version.supersedes.value;
+  const previous = A.findFirst(versions, (row) => row.id === predecessorId);
+  if (O.isNone(previous)) return yield* conflict(version.id, "unknown-predecessor");
+  if (A.some(versions, (row) => O.contains(row.supersedes, predecessorId)))
+    return yield* conflict(version.id, "predecessor-already-superseded");
+  if (!DateTime.isGreaterThan(version.knowledge.recordedAt, previous.value.knowledge.recordedAt))
+    return yield* conflict(version.id, "non-increasing-knowledge-time");
+});
+const appendVersions = Effect.fn("PartyLedgerMemory.appendVersions")(function* (
+  current: ReadonlyArray<ClaimVersion>,
+  incoming: ReadonlyArray<ClaimVersion>
+) {
+  let versions = current;
+  for (const version of incoming) {
+    if (A.some(versions, (row) => row.id === version.id)) return yield* conflict(version.id, "duplicate-version");
+    if (O.isSome(version.knowledge.expiredAt)) return yield* conflict(version.id, "new-version-already-expired");
+    yield* validateSuccessor(versions, version);
+    versions = A.append(versions, version);
+  }
+  return versions;
+});
+const applyBatch = Effect.fn("PartyLedgerMemory.applyBatch")(function* (
+  current: LedgerSnapshot,
+  batch: LedgerSnapshot
+) {
+  const observations = yield* appendUnique(current.observations, batch.observations, "duplicate-observation");
+  const assertions = yield* appendUnique(current.assertions, batch.assertions, "duplicate-assertion");
+  const versions = yield* appendVersions(current.versions, batch.versions);
+  return LedgerSnapshot.make({ observations, assertions, versions });
+});
+
 /**
  * Isolated in-memory ledger with atomic writes and derived expiration bounds.
  *
@@ -56,39 +105,7 @@ export const PartyLedgerMemory = Layer.effect(
       )
     );
     const appendEvidence = Effect.fn("PartyLedgerMemory.appendEvidence")(function* (batch: LedgerSnapshot) {
-      yield* SynchronizedRef.updateEffect(rows, (current) =>
-        Effect.gen(function* () {
-          let observations = current.observations;
-          let assertions = current.assertions;
-          let versions = current.versions;
-          const fail = (recordId: string, reason: string) => Effect.fail(LedgerConflict.make({ recordId, reason }));
-          for (const observation of batch.observations) {
-            if (A.some(observations, (row) => row.id === observation.id))
-              return yield* fail(observation.id, "duplicate-observation");
-            observations = A.append(observations, observation);
-          }
-          for (const assertion of batch.assertions) {
-            if (A.some(assertions, (row) => row.id === assertion.id))
-              return yield* fail(assertion.id, "duplicate-assertion");
-            assertions = A.append(assertions, assertion);
-          }
-          for (const version of batch.versions) {
-            if (A.some(versions, (row) => row.id === version.id)) return yield* fail(version.id, "duplicate-version");
-            if (O.isSome(version.knowledge.expiredAt)) return yield* fail(version.id, "new-version-already-expired");
-            if (O.isSome(version.supersedes)) {
-              const predecessorId = version.supersedes.value;
-              const previous = A.findFirst(versions, (row) => row.id === predecessorId);
-              if (O.isNone(previous)) return yield* fail(version.id, "unknown-predecessor");
-              if (A.some(versions, (row) => O.contains(row.supersedes, predecessorId)))
-                return yield* fail(version.id, "predecessor-already-superseded");
-              if (!DateTime.isGreaterThan(version.knowledge.recordedAt, previous.value.knowledge.recordedAt))
-                return yield* fail(version.id, "non-increasing-knowledge-time");
-            }
-            versions = A.append(versions, version);
-          }
-          return LedgerSnapshot.make({ observations, assertions, versions });
-        })
-      );
+      yield* SynchronizedRef.updateEffect(rows, (current) => applyBatch(current, batch));
     });
     return PartyLedger.of({
       allocatePartyId,

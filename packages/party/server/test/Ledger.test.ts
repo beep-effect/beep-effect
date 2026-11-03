@@ -8,9 +8,12 @@ import { PartyLedgerMemory } from "@beep/party-server/Ledger";
 import { LedgerSnapshot, PartyLedger } from "@beep/party-use-cases/Ledger";
 import { PartyId } from "@beep/shared-domain/identity/Party";
 import { describe, expect, it } from "@effect/vitest";
+import * as TestUtils from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
@@ -49,6 +52,22 @@ const scope = (asOf: number) =>
   ResolutionScope.make({ asOf: DateTime.makeUnsafe(asOf), validAt: DateTime.makeUnsafe(0) });
 
 describe("PartyLedgerMemory", () => {
+  it.effect.prop(
+    "keeps generated claim identities intact through append and snapshot",
+    [Proposition.cases.SameParty],
+    ([proposition]) =>
+      Effect.gen(function* () {
+        const context = yield* Layer.build(PartyLedgerMemory);
+        const ledger = Context.get(context, PartyLedger);
+        const original = yield* first;
+        const claim = ClaimVersion.make({ ...original, proposition, logicalKey: logicalKey(proposition) });
+        yield* ledger.append(claim);
+        const snapshot = yield* ledger.snapshot;
+        return snapshot.versions.length === 1 && snapshot.versions[0]?.logicalKey === logicalKey(proposition);
+      }),
+    { arbitrary: { runs: 100, seed: "party-ledger-endpoints" } }
+  );
+
   it.layer(PartyLedgerMemory)("allocation", (it) => {
     it.effect("allocates stable unique integer ids under concurrent requests", () =>
       Effect.gen(function* () {
@@ -76,7 +95,7 @@ describe("PartyLedgerMemory", () => {
         });
         yield* ledger.append(retraction);
         const after = yield* ledger.snapshot;
-        expect(O.isNone(original.knowledge.expiredAt)).toBe(true);
+        TestUtils.assertNone(original.knowledge.expiredAt);
         expect(before.versions).toEqual([original]);
         expect(resolveParties(after.versions, scope(4)).representatives).toHaveLength(2);
         expect(resolveParties(after.versions, scope(5)).reviewCases).toEqual([]);

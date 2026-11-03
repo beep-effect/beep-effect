@@ -31,34 +31,27 @@ const Manifest = S.Struct({ dependencies: S.optionalKey(dependencies), devDepend
 const forbiddenManifest = (manifest: typeof Manifest.Type) =>
   A.filter([...R.keys(manifest.dependencies ?? {}), ...R.keys(manifest.devDependencies ?? {})], forbiddenPackage);
 
+const stringLiteral = (node: Node | undefined): string | undefined =>
+  node !== undefined && isStringLiteralLikeNode(node) ? node.text : undefined;
+const staticSpecifier = (node: Node): string | undefined => {
+  if (isImportDeclaration(node) || isExportDeclaration(node)) return stringLiteral(node.moduleSpecifier);
+  if (!isImportEqualsDeclaration(node)) return undefined;
+  return isExternalModuleReference(node.moduleReference) ? stringLiteral(node.moduleReference.expression) : undefined;
+};
+const callSpecifier = (node: Node): string | undefined => {
+  if (!isCallExpression(node)) return undefined;
+  if (node.expression.kind === SyntaxKind.ImportKeyword) return stringLiteral(node.arguments[0]);
+  if (isIdentifier(node.expression) && node.expression.text === "require") return stringLiteral(node.arguments[0]);
+  return undefined;
+};
+
 const moduleSpecifiers = Effect.fn("PartyBoundary.moduleSpecifiers")(function* (source: string) {
   const api = yield* TsNativeApi;
   const parsed = yield* api.parseSource("party-boundary.ts", source);
   const specifiers: Array<string> = [];
   const visit = (node: Node): void => {
-    if (
-      (isImportDeclaration(node) || isExportDeclaration(node)) &&
-      node.moduleSpecifier !== undefined &&
-      isStringLiteralLikeNode(node.moduleSpecifier)
-    )
-      specifiers.push(node.moduleSpecifier.text);
-    if (
-      isImportEqualsDeclaration(node) &&
-      isExternalModuleReference(node.moduleReference) &&
-      node.moduleReference.expression !== undefined &&
-      isStringLiteralLikeNode(node.moduleReference.expression)
-    )
-      specifiers.push(node.moduleReference.expression.text);
-    if (isCallExpression(node)) {
-      const argument = node.arguments[0];
-      if (
-        (node.expression.kind === SyntaxKind.ImportKeyword ||
-          (isIdentifier(node.expression) && node.expression.text === "require")) &&
-        argument !== undefined &&
-        isStringLiteralLikeNode(argument)
-      )
-        specifiers.push(argument.text);
-    }
+    const specifier = staticSpecifier(node) ?? callSpecifier(node);
+    if (specifier !== undefined) specifiers.push(specifier);
     node.forEachChild(visit);
   };
   visit(parsed);

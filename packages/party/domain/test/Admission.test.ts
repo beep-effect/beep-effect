@@ -11,8 +11,10 @@ import {
 import { ClaimVersion, DependenceAssessment } from "@beep/party-domain/Claim";
 import { ActivityId, AssertionId } from "@beep/party-domain/Ids";
 import { describe, expect, expectTypeOf, it } from "@effect/vitest";
+import * as TestUtils from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as Result from "effect/Result";
 import { AcmeFixture, AcmeFixtureLive, at } from "./fixtures/acme.ts";
 import type { Admitted } from "@beep/party-domain/Admission";
@@ -54,7 +56,7 @@ describe("independent evidence and admission tiers", () => {
   it("does not type a client-facing proof as deposition-ready", () => {
     expectTypeOf<Admitted<"client-facing">>().not.toExtend<Admitted<"deposition-ready">>();
   });
-  it.layer(AcmeFixtureLive)("adversarial-source corroboration", (it) => {
+  it.layer(AcmeFixtureLive, { timeout: "30 seconds" })("adversarial-source corroboration", (it) => {
     it.effect("requires independent testimony outside one interested production", () =>
       Effect.gen(function* () {
         const fx = yield* AcmeFixture;
@@ -80,7 +82,7 @@ describe("independent evidence and admission tiers", () => {
           dependence: [],
         });
         const refused = admit({ policy, evidence, knowledgeTime: at(20) });
-        expect(Result.isFailure(refused)).toBe(true);
+        pipe(refused, Result.isFailure, TestUtils.assertTrue);
         if (Result.isFailure(refused))
           expect(A.map(refused.failure.unmet, (row) => row.clause._tag)).toEqual([
             "MinIndependentSupport",
@@ -94,7 +96,7 @@ describe("independent evidence and admission tiers", () => {
           ],
           dependence: [independent(a, c), independent(b, c)],
         });
-        expect(Result.isSuccess(admit({ policy, evidence: corroborated, knowledgeTime: at(20) }))).toBe(true);
+        pipe(admit({ policy, evidence: corroborated, knowledgeTime: at(20) }), Result.isSuccess, TestUtils.assertTrue);
       })
     );
   });

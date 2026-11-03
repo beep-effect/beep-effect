@@ -21,8 +21,10 @@ import {
 import { AliasPairing } from "@beep/party-server/MailIndex";
 import { PartyId } from "@beep/shared-domain/identity/Party";
 import { describe, expect, it } from "@effect/vitest";
+import * as TestUtils from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
+import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -156,9 +158,21 @@ describe("observed mailbox drift", () => {
       sample: [],
       assertions: [],
     };
-    expect(Result.isFailure(S.decodeResult(PairingSupport)({ ...base, firstSeen: 4, lastSeen: 3 }))).toBe(true);
-    expect(Result.isFailure(S.decodeResult(PairingSupport)({ ...base, firstSeen: 4, lastSeen: null }))).toBe(true);
-    expect(Result.isSuccess(S.decodeResult(PairingSupport)({ ...base, firstSeen: 4, lastSeen: 4 }))).toBe(true);
+    pipe(
+      S.decodeResult(PairingSupport)({ ...base, firstSeen: 4, lastSeen: 3 }),
+      Result.isFailure,
+      TestUtils.assertTrue
+    );
+    pipe(
+      S.decodeResult(PairingSupport)({ ...base, firstSeen: 4, lastSeen: null }),
+      Result.isFailure,
+      TestUtils.assertTrue
+    );
+    pipe(
+      S.decodeResult(PairingSupport)({ ...base, firstSeen: 4, lastSeen: 4 }),
+      Result.isSuccess,
+      TestUtils.assertTrue
+    );
   });
 });
 
@@ -190,8 +204,8 @@ describe("pairing support aggregation", () => {
     expect(value.messages).toBe(2);
     expect(value.sample).toEqual([EventId.make("party-evt:a")]);
     expect(value.assertions).toEqual([AssertionId.make("party-asrt:a"), AssertionId.make("party-asrt:reextract")]);
-    expect(O.map(value.firstSeen, DateTime.toEpochMillis)).toEqual(O.some(2));
-    expect(O.map(value.lastSeen, DateTime.toEpochMillis)).toEqual(O.some(10));
+    TestUtils.assertSome(O.map(value.firstSeen, DateTime.toEpochMillis), 2);
+    TestUtils.assertSome(O.map(value.lastSeen, DateTime.toEpochMillis), 10);
     expect(aggregatePairings(PairingAggregationInput.make({ observations: A.reverse(rows), sampleSize: 1 }))).toEqual(
       result
     );
@@ -204,8 +218,8 @@ describe("pairing support aggregation", () => {
     expect(value.messages).toBe(1);
     expect(value.sample).toEqual([]);
     expect(value.assertions).toEqual([]);
-    expect(value.firstSeen).toEqual(O.none());
-    expect(value.lastSeen).toEqual(O.none());
+    TestUtils.assertNone(value.firstSeen);
+    TestUtils.assertNone(value.lastSeen);
   });
   it("keeps different pairs separate and stable across input order", () => {
     const rows = [pairingObservation("a", "a", O.none()), pairingObservation("a", "b", O.none(), other)];
@@ -218,24 +232,44 @@ describe("pairing support aggregation", () => {
 });
 
 describe("pairing claim proposals", () => {
+  it.prop(
+    "preserves inclusive observation endpoints across generated millisecond spans",
+    [
+      S.Tuple([
+        S.Int.check(S.isBetween({ minimum: 0, maximum: 1000000 })),
+        S.Int.check(S.isBetween({ minimum: 0, maximum: 1000000 })),
+      ]),
+    ],
+    ([[a, b]]) => {
+      const first = Math.min(a, b);
+      const last = Math.max(a, b);
+      const interval = observedSpan(timedSupport("generated", first, last));
+      return (
+        interval._tag === "Interval" &&
+        DateTime.toEpochMillis(interval.validFrom) === first &&
+        O.getOrElse(O.map(interval.validTo, DateTime.toEpochMillis), () => -1) === last + 1
+      );
+    },
+    { arbitrary: { runs: 100, seed: "party-observation-spans" } }
+  );
   it("includes the last observed millisecond and preserves single-instant evidence", () => {
     const interval = observedSpan(timedSupport("a", 2, 9));
     expect(interval._tag).toBe("Interval");
     if (interval._tag === "Interval") {
       expect(DateTime.toEpochMillis(interval.validFrom)).toBe(2);
-      expect(O.map(interval.validTo, DateTime.toEpochMillis)).toEqual(O.some(10));
+      TestUtils.assertSome(O.map(interval.validTo, DateTime.toEpochMillis), 10);
     }
     const instant = observedSpan(timedSupport("a", 9, 9));
     if (instant._tag === "Interval") {
       expect(DateTime.toEpochMillis(instant.validFrom)).toBe(9);
-      expect(O.map(instant.validTo, DateTime.toEpochMillis)).toEqual(O.some(10));
+      TestUtils.assertSome(O.map(instant.validTo, DateTime.toEpochMillis), 10);
     } else throw new Error("Expected a one-millisecond interval");
     expect(observedSpan(support)._tag).toBe("Unknown");
   });
   it("handles the maximum representable observation without a throwing date conversion", () => {
     const interval = observedSpan(timedSupport("a", 8640000000000000, 8640000000000000));
     expect(interval._tag).toBe("Interval");
-    if (interval._tag === "Interval") expect(interval.validTo).toEqual(O.none());
+    if (interval._tag === "Interval") TestUtils.assertNone(interval.validTo);
   });
   it("emits no claim without sampled assertions and keeps supported claims proposed", () => {
     const recordedAt = DateTime.makeUnsafe(100);

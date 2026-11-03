@@ -28,10 +28,10 @@ import {
 import { AssertionId, PrincipalId } from "@beep/party-domain/Ids";
 import { LogicalEdgeIdentity, logicalEdgeKey } from "@beep/party-domain/LogicalEdgeIdentity";
 import { describe, expect, it } from "@effect/vitest";
-import * as Arbitrary from "effect/Arbitrary";
+import * as TestUtils from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
-import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -66,7 +66,11 @@ describe("party P1b bindings", () => {
     expect(SchemaAST.resolveIdentifier(EdgeEndpoint.ast)).not.toEqual(
       SchemaAST.resolveIdentifier(other.EdgeEndpoint.ast)
     );
-    expect(Result.isFailure(S.decodeUnknownResult(EdgeEndpoint)({ kind: "evidence", evidenceId: 1 }))).toBe(true);
+    pipe(
+      S.decodeUnknownResult(EdgeEndpoint)({ kind: "evidence", evidenceId: 1 }),
+      Result.isFailure,
+      TestUtils.assertTrue
+    );
     const endpoint = Result.getOrThrow(S.decodeResult(EdgeEndpoint)({ kind: "claim", claimId: "party-asrt:1" }));
     expect(encodeEdgeEndpointKey(endpoint)).toBe("claim:party-asrt:1");
   });
@@ -138,7 +142,11 @@ describe("party P1b bindings", () => {
       admittedKeys: ["party-cv:1"],
     };
     expect(Result.getOrThrow(S.decodeResult(ClaimProjectionView)(row)).admittedKeys).toEqual(row.admittedKeys);
-    expect(Result.isFailure(S.decodeResult(ClaimProjectionView)({ ...row, admittedKeys: ["other:1"] }))).toBe(true);
+    pipe(
+      S.decodeResult(ClaimProjectionView)({ ...row, admittedKeys: ["other:1"] }),
+      Result.isFailure,
+      TestUtils.assertTrue
+    );
   });
   it("canonicalizes contradictions while retaining side-bound evidence", () => {
     const left = ref("a");
@@ -166,14 +174,12 @@ describe("party P1b bindings", () => {
       contradictionCandidateKey({ left: right, right: left }, reversed)
     );
   });
-  it.effect("generates and seals candidate content using party evidence identifiers", () =>
-    Effect.gen(function* () {
-      const samples = yield* Arbitrary.sampleEffect(ContradictionCandidateContentArbitrary, { count: 10 });
-      A.forEach(samples, (content) => {
-        expect(S.is(ContradictionCandidateContent)(content)).toBe(true);
-        expect(Result.isSuccess(contradictionCandidateDigest(content))).toBe(true);
-      });
-    })
+  it.prop(
+    "generates and seals candidate content using party evidence identifiers",
+    [ContradictionCandidateContentArbitrary],
+    ([content]) =>
+      S.is(ContradictionCandidateContent)(content) && Result.isSuccess(contradictionCandidateDigest(content)),
+    { arbitrary: { runs: 100, seed: "party-candidate-content" } }
   );
   it("rejects duplicate detection beliefs and reversed valid intervals", () => {
     const belief = {
@@ -187,13 +193,15 @@ describe("party P1b bindings", () => {
       validTo: null,
     };
     expect(Result.getOrThrow(S.decodeUnknownResult(DetectionBelief)(belief)).ref.edgeVersionId).toBe("party-cv:1");
-    expect(Result.isFailure(S.decodeUnknownResult(DetectionBelief)({ ...belief, validFrom: 10, validTo: 5 }))).toBe(
-      true
+    pipe(
+      S.decodeUnknownResult(DetectionBelief)({ ...belief, validFrom: 10, validTo: 5 }),
+      Result.isFailure,
+      TestUtils.assertTrue
     );
-    expect(
-      Result.isFailure(
-        S.decodeUnknownResult(ContradictionDetectionSnapshot)({ beliefs: [belief, belief], singleValuedPredicates: [] })
-      )
-    ).toBe(true);
+    pipe(
+      S.decodeUnknownResult(ContradictionDetectionSnapshot)({ beliefs: [belief, belief], singleValuedPredicates: [] }),
+      Result.isFailure,
+      TestUtils.assertTrue
+    );
   });
 });

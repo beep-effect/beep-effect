@@ -33,7 +33,9 @@ Use this command for execution-capable sessions:
 
 P3 Yeet: PR to mergeable — in progress (2026-11-03). The package implementation, law-practice
 adapter and rename, migrated scripts and scratch mirror removal are complete.
-Local package verification, synthetic workflow checks and boundary scans pass.
+Package verification, synthetic workflow checks and boundary scans passed before
+the first publish attempt. Yeet held that attempt on Fallow, schema-first and
+Effect Vitest findings; remediation and its verification are in progress.
 Repository-wide documentation verification passed. Publication, exact-head hosted
 readiness, merge and closeout remain to be completed. The initiative stays active.
 
