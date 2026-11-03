@@ -33,7 +33,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P4 Close — the implementation merged in [#2594](https://github.com/beep-effect/beep-effect/pull/2594) (`6fad8f6d0f`); closeout PR [#2664](https://github.com/beep-effect/beep-effect/pull/2664) recorded the local-state cleanup but merged before its readiness job reported, and [#2671](https://github.com/beep-effect/beep-effect/pull/2671) was merged the same way, so a further closeout PR rebinds the `completed-retained` proposal to its own readiness verdict.
+P4 Close — the implementation merged in [#2594](https://github.com/beep-effect/beep-effect/pull/2594) (`6fad8f6d0f`); closeout PR [#2664](https://github.com/beep-effect/beep-effect/pull/2664) recorded the local-state cleanup but merged before its readiness job reported, and [#2671](https://github.com/beep-effect/beep-effect/pull/2671) was merged the same way, so closeout PR [#2675](https://github.com/beep-effect/beep-effect/pull/2675) rebinds the `completed-retained` proposal to its own readiness verdict and is held until that verdict records merge-ready.
 
 ## Latest Evidence
 
