@@ -1,6 +1,7 @@
+import * as NodeModule from "node:module";
 import * as NodeURL from "node:url";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
-import { renderBiomeJson } from "@beep/repo-utils/schemas/BiomeJson";
+import { renderBiomeJson, renderBiomeJsonAt } from "@beep/repo-utils/schemas/BiomeJson";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
@@ -21,6 +22,7 @@ import * as Str from "effect/String";
 import type * as CommandLine from "effect/process/CommandLine";
 
 const encoder = new TextEncoder();
+const biomeExecutable = NodeModule.createRequire(import.meta.url).resolve("@biomejs/biome/bin/biome");
 const largeStdout = Str.repeat(1024 * 1024)("x");
 const largeStderr = Str.repeat(1024 * 1024)("e");
 
@@ -127,6 +129,45 @@ describe("renderBiomeJson", () => {
         });
 
         yield* Effect.logInfo("repo-utils.biome.native.render.complete");
+        expect(rendered).toBe('{ "name": "@beep/example" }\n');
+      })
+    );
+  });
+
+  // Time-to-certainty ruling 83, must-fail fixture: on 2026-11-03 a shared clone's
+  // `.git/info/exclude` gained `/beep-biome-json-*/`, Biome reported the staged file as
+  // "provided but ignored", and `repo-sanity:tsconfig-sync` failed under a proof key
+  // that had just passed. The render must not read ambient VCS ignore state.
+  it.layer(NodeServices.layer, {
+    timeout: "20 seconds",
+    excludeTestServices: true,
+  })((it) => {
+    it.effect(
+      "renders when a clone-local exclude rule matches the staging directory",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "biome-json-vcs-" });
+        yield* fs.writeFileString(
+          path.join(root, "biome.jsonc"),
+          '{ "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true } }\n'
+        );
+        yield* fs.makeDirectory(path.join(root, ".git", "info"), { recursive: true });
+        yield* fs.writeFileString(path.join(root, ".git", "info", "exclude"), "/beep-biome-json-*/\n");
+
+        // The control: the same exclude really does hide a staged file from a Biome run
+        // that honours VCS ignores, so the fixture would catch the flag being dropped.
+        const staged = path.join(root, "beep-biome-json-control", "docgen.json");
+        yield* fs.makeDirectory(path.dirname(staged), { recursive: true });
+        yield* fs.writeFileString(staged, '{"name":"@beep/example"}');
+        const honoured = yield* ChildProcess.make(
+          biomeExecutable,
+          ["format", "--write", `--config-path=${path.join(root, "biome.jsonc")}`, staged],
+          { stdin: "ignore", stdout: "pipe", stderr: "pipe" }
+        ).pipe(Effect.flatMap((handle) => handle.exitCode));
+        expect(honoured).not.toBe(0);
+
+        const rendered = yield* renderBiomeJsonAt(root, "docgen.json", { name: "@beep/example" });
         expect(rendered).toBe('{ "name": "@beep/example" }\n');
       })
     );

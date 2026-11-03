@@ -32468,6 +32468,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Cache/CachePolicy.command.ts": {
+          "lines": 50,
+          "statements": 33.33,
+          "branches": 100,
+          "functions": 0,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Cache/index.ts": {
           "lines": 100,
           "statements": 100,
@@ -36212,6 +36224,18 @@
             "functions": 3
           }
         },
+        "packages/tooling/tool/cli/src/commands/Lint/internal/PolicyRootFiles.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 95.23,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 1,
+            "functions": 0
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstArbitraryCoverage.ts": {
           "lines": 100,
           "statements": 100,
@@ -39234,6 +39258,18 @@
             "statements": 42,
             "branches": 22,
             "functions": 21
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Worktree/Janitor.command.ts": {
+          "lines": 78.78,
+          "statements": 78.94,
+          "branches": 62.5,
+          "functions": 86.11,
+          "uncovered": {
+            "lines": 14,
+            "statements": 16,
+            "branches": 6,
+            "functions": 5
           }
         },
         "packages/tooling/tool/cli/src/commands/Worktree/Reap.command.ts": {

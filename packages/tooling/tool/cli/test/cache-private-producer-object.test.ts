@@ -3,11 +3,13 @@ import { GitHubClient } from "@beep/github/GitHubClient";
 import { GitHubContent } from "@beep/github/GitHubContent";
 import {
   CacheConformanceTarget,
+  CachePilotRun,
   CacheProducerBinding,
   CacheProducerBundle,
   CacheProducerEnvelope,
   CacheQualificationLive,
   CacheSignedPilotCaptureControl,
+  CacheSignedPilotFreshPair,
   CacheSignedPilotReceipt,
 } from "@beep/repo-cli/commands/Cache";
 import {
@@ -273,6 +275,54 @@ it.layer(
       expect((yield* readCacheProducerPrivateObservation(alias).pipe(Effect.flip)).message).toBe(
         "Cannot read the bounded private producer observation."
       );
+    })
+  );
+
+  it.effect.each(["", "{}"])("rejects an empty or malformed private observation %j", (contents) =>
+    Effect.gen(function* () {
+      const fixture = yield* issuedFixture();
+      const file = fixture.path.join(fixture.directory, "invalid-observation.json");
+      yield* fixture.fs.writeFileString(file, contents, { mode: 0o600 });
+      const error = yield* readCacheProducerPrivateObservation(file).pipe(Effect.flip);
+      expect(error.message).toBe("Private producer object GET failed (payload-rejected).");
+      expect(yield* fixture.fs.readFileString(file)).toBe(contents);
+    })
+  );
+
+  it.effect("rejects an oversized observation before issuer or storage authentication", () =>
+    Effect.gen(function* () {
+      const fixture = yield* issuedFixture();
+      const pilot = fixture.observation.observation.pilot;
+      const observation = CacheProducerObservation.make({
+        ...fixture.observation,
+        observation: CacheProducerBundle.make({
+          ...fixture.observation.observation,
+          pilot: CacheSignedPilotReceipt.make({
+            ...pilot,
+            freshPairs: A.map(pilot.freshPairs, (pair, index) =>
+              index === 0
+                ? CacheSignedPilotFreshPair.make({
+                    ...pair,
+                    left: CachePilotRun.make({ ...pair.left, id: Str.repeat(8 * 1024 * 1024)("x") }),
+                  })
+                : pair
+            ),
+          }),
+        }),
+      });
+      let requests = 0;
+      const fetch = controlledFetch(() => {
+        requests += 1;
+        return Promise.resolve(new Response(null, { status: 200 }));
+      });
+      const denied = ConfigProvider.make(() => Effect.die("Oversized observations must not load credentials."));
+      const error = yield* uploadCacheProducerPrivateObservation(fixture.directory, fixture.run, observation).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, denied),
+        Effect.provideService(FetchHttpClient.Fetch, fetch),
+        Effect.flip
+      );
+      expect(error.message).toBe("Private producer object GET failed (payload-rejected).");
+      expect(requests).toBe(0);
     })
   );
 
@@ -651,6 +701,38 @@ it.layer(
       );
       expect(error.message).toContain("truncated-body");
       expect(cancelled).toBe(true);
+    })
+  );
+
+  it.effect("classifies a broken response body as transport failure without leaking its cause", () =>
+    Effect.gen(function* () {
+      const fixture = yield* publishedFixture();
+      let requests = 0;
+      const fetch = controlledFetch(() => {
+        requests += 1;
+        return Promise.resolve(
+          new Response(
+            new ReadableStream({
+              start(controller) {
+                controller.error(new Error("synthetic-private-body-detail"));
+              },
+            })
+          )
+        );
+      });
+      const error = yield* downloadCacheProducerPrivateObservation(
+        fixture.directory,
+        fixture.published.reference,
+        fixture.published.publication.archive
+      ).pipe(
+        Effect.provideContext(fixture.metadata),
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnvRecord(fixture.storageEnvironment)),
+        Effect.provideService(FetchHttpClient.Fetch, fetch),
+        Effect.flip
+      );
+      expect(error.message).toBe("Private producer object GET failed (transport-error).");
+      expect(error.cause).toBe("transport-error");
+      expect(requests).toBe(1);
     })
   );
 

@@ -1642,6 +1642,34 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
       })
     );
 
+    it.effect("keeps a reviewed untrack staged when the file stays on disk", () =>
+      Effect.gen(function* () {
+        const { filePath, tempContext, tmpDir } = yield* trackedFileRepository;
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const regularPath = path.join(tmpDir, "regular.txt");
+
+        yield* fs.writeFileString(regularPath, "original\n");
+        yield* runGit(tmpDir, ["add", "regular.txt"]);
+        yield* runGit(tmpDir, ["commit", "-m", "add regular file"]);
+        yield* fs.writeFileString(regularPath, "updated\n");
+        yield* runGit(tmpDir, ["add", "regular.txt"]);
+        yield* runGit(tmpDir, ["rm", "--cached", "--quiet", "tracked.txt"]);
+
+        yield* stageReviewedPublishIntent(
+          tempContext,
+          YeetStagedPublishIntent.make({ paths: ["regular.txt", "tracked.txt"] }),
+          true
+        );
+
+        expect(yield* fs.exists(filePath)).toBe(true);
+        expect(yield* runGitOutputLines(tmpDir, ["diff", "--cached", "--name-status"])).toEqual([
+          "M\tregular.txt",
+          "D\ttracked.txt",
+        ]);
+      })
+    );
+
     it.effect("decodes Turbo affected query JSON into plan task metadata", () =>
       Effect.gen(function* () {
         const tasks = yield* decodeTurboPlanTasksFromQueryJsonForTesting(

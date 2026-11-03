@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -35,11 +35,13 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 to P3 shipped in PR #1946, merged on 2026-10-21. P4 is in progress.
-The 2026-10-28 completion refresh returned `unsatisfied`; merge-time required
-checks and readiness evidence do not prove completion. Fresh closeout PR #2319
-rechecks the implementation and binds its retained final-head verdict.
-The operative lifecycle stays `active` until completion refresh verifies that PR.
+P0 to P3 shipped in PR #1946, merged on 2026-10-21. P4 closed with closeout
+PR #2319. The 2026-10-28 completion refresh had returned `unsatisfied`; #2319
+rechecked the implementation and bound its retained final-head verdict, and its
+completion receipt verifies (`goals doctor`: `completed-retained (verified via
+#2319)`). The committed `closeout` record in
+[`ops/manifest.json`](./ops/manifest.json) carries that status: `goals
+set-status` adopted the verified proposal on 2026-11-02 (#2629).
 
 ## Latest Evidence
 

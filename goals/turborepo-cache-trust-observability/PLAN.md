@@ -1146,6 +1146,87 @@ and accepted-main integration remain required; this is no rollout or qualificati
 The [configuration review](research/private-object-a88d-baseline-review-2026-11-02.md) and [canonical CAS request](research/private-object-a88d-baseline-request-2026-11-02.json) retain the accepted main package expansion and the owned storage quality-seal input. The canonical census has 2,448 executable nodes: twelve new party-domain commands, with eight existing inherited cache settings. Only the two named root fingerprint input lists change among previous nodes; every other existing configuration and non-root review is preserved. Scope, profile, epoch and qualification ledger bytes are unchanged. No runtime setting, task eligibility, tuple qualification or whole-goal acceptance is granted. The earlier hosted new-file coverage identity failure remains open for a separate source-bound repair.
 
 
+### Live signed-supervisor phase feedback, 2026-11-02
+
+The [phase checkpoint](research/supervisor-phase-checkpoint-2026-11-02.json)
+retains the subsequent ordinary twenty-minute timeout without assigning a
+historical phase. Current worker orchestration emits eleven fixed schema-owned
+markers. Its parent reuses folded stdout and the existing 64-KiB accumulator to
+retain the last complete exact marker for timeout diagnostics. Unknown, decorated,
+partial and truncated lines cannot supply a phase; no private output or raw cause
+is emitted. Marker order follows observation order, including repeated phases.
+
+All 60 focused runner/protocol/evidence tests pass, including two real short child
+process controls. Package quick lint/type checking and scoped runner complexity
+pass. Scoped Docgen compiles all 3,670 CLI examples. The initial assertion,
+layer-placement and complexity failures remain in the private receipt set and
+are described in OPPORTUNITIES. Canonical schema and JSDoc writers completed;
+finding totals are unchanged. The inventory adds the schema/type and refreshes
+ten inherited completion-store exports whose source is identical to accepted
+main. All 52 owned-file export positions are verified. This component
+retains deadlines, selected-task overlap, report/issuer validation and existing
+cache configuration. Hosted review, an ordinary frozen-source stable/canary run,
+actual protected publication and all whole-goal gates remain required.
+
+
+### Ordinary stable and current-canary matrices, 2026-11-02
+
+The [ordinary matrix checkpoint](research/ordinary-native-matrix-checkpoint-2026-11-02.json)
+binds complete stable and current-canary receipts to supervisor/worker source
+`976ca2a943` and frozen task fixtures `68834a997e`. Stable completed in 1,113.197
+seconds and canary in 1,070.584 seconds, each inside the unchanged twenty-minute
+limit. Each passes four capture controls, four non-execution controls, seven
+mutations, ten shadows, three fresh pairs and three signed producer/replay pairs.
+Actual selected-task overlap is positive in one fresh pair per channel: 543 ms
+and 754 ms. All three signed remote replays per channel match the fresh logs.
+
+These are ordinary CLI executions, without preload/spy instrumentation, task
+padding, clock manipulation, admission bypass or a weaker overlap rule. Earlier
+failed ordinary receipts and the separately instrumented diagnostic remain. The
+public views reconstruct the complete decoded private receipts through an
+explicit runtime-toolchain fingerprint field mapping; raw-artifact byte digests
+are separate. No private home paths, secret
+references or raw secret/header/payload/signature fields are published.
+
+The persistent issuer-material argument was absent. This is local private-loopback
+evidence for the frozen tuple; it does not prove protected issuer denial, current
+main adoption, actual R2 publication or production signing. The later adoption
+census has changed manifests/lock/entrypoint bindings and cannot inherit this
+execution by rehashing it. Obtain current protected source inspection, independent
+approval and bounded owned publication next; all whole-goal gates remain open.
+
+
+### Signed-worker Git startup repair, 2026-11-02
+
+The [startup checkpoint](research/worker-git-startup-checkpoint-2026-11-02.json)
+records the first full-matrix attempt at accepted task source `930758e06b`.
+It stopped during setup, before producing a complete observation. The accepted
+worktree refactor requires the Git service, which the generated child omitted.
+The existing Git layer now joins the worker platform services. A real generated
+Bun child reproduces the missing-service failure before the fix and reaches its
+read-only Git query plus deliberate private refusal afterward; all 33 supervisor
+tests pass. The parent still exposes no raw private failure cause. Repeat the
+full ordinary stable/canary matrices with the same limits and acceptance guards;
+this startup control grants no qualification, deployment or whole-goal acceptance.
+
+
+The hosted-working-directory follow-up is recorded in the startup checkpoint.
+All 33 supervisor tests pass from the CLI workspace after canonical root discovery.
+The current-source ordinary retry stops at the existing signed mutation seed
+verdict guard; its complete matrix is still unproven. Retain that failure and the
+separate source-literal-only diagnostic without weakening the assertion.
+
+
+### Frozen accepted-input ordinary matrices, 2026-11-02
+
+The [new source-bound checkpoint](research/accepted-input-ordinary-native-checkpoint-2026-11-02.json) retains complete ordinary stable and canary runs from supervisor `6fc0a6cf62` and frozen task source `930758e06b`. Both pass all four capture controls, four non-execution controls, seven mutations, ten shadows, three fresh pairs and three signed producer/replay pairs, including positive actual selected-task overlap. Whole-command wall times are 121.598 and 190.190 seconds, including admission and orchestration. The changed package-lint seed follows the accepted root deprecation ownership; no deadline, overlap, signature, source or wire guard was weakened.
+
+All earlier failures remain, including the short generic exit whose cause remains unattributed. The diagnostic-only pass is separate from these ordinary runs. Earlier `68834` receipts retain their original bytes and validator source. The new source and lint workload differ from that older experiment, so the elapsed-time reduction is not a matched R2/cache-savings result. No live protected producer/R2 execution, production signing, current-main adoption, qualification or whole-goal acceptance is established.
+
+### Producer-object file identity follow-through, 2026-11-02
+
+The [named review](research/producer-object-coverage-identity-review-2026-11-02.md) and [checkpoint](research/producer-object-coverage-identity-checkpoint-2026-11-02.json) propose only the exact new-file row printed by the actual hosted comparison. Every existing floor and metadata field is unchanged. Four new failure-boundary cases bring the affected suites to 94 passing tests on both Bun and Node 24; all production storage bytes and defensive guards are retained. Separate failed diagnostics are preserved and do not count as hosted acceptance. Fresh exact-head CI, the review window and primary review remain required. No whole-goal criterion is completed.
+
 ### Resolve the admitted reusable producer workflow, 2026-11-02
 
 The [resolved Heavy approval checkpoint](research/resolved-heavy-approval-checkpoint-2026-11-02.json)

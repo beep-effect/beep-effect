@@ -18,7 +18,12 @@ const $I = $RepoCliId.create("commands/Ci/CiOperational.schemas");
  *
  * ```ts
  * import { CiOperationalPatterns } from "@beep/repo-cli/commands/Ci"
- * const patterns = CiOperationalPatterns.make({ goals: "^goals/", desktop: "^apps/", docs: "^docs/" })
+ * const patterns = CiOperationalPatterns.make({
+ *   goals: "^goals/",
+ *   desktop: "^apps/",
+ *   docs: "^docs/",
+ *   codeRoots: "^(packages|apps)/"
+ * })
  * console.log(patterns.docs) // "^docs/"
  * ```
  *
@@ -30,6 +35,7 @@ export class CiOperationalPatterns extends S.Opaque<CiOperationalPatterns, { rea
     goals: S.NonEmptyString.annotateKey({ description: "Convention-owned goal prose pattern." }),
     desktop: S.NonEmptyString.annotateKey({ description: "Desktop Cargo and gate-owner pattern." }),
     docs: S.NonEmptyString.annotateKey({ description: "Additional Heavy docs-only paths." }),
+    codeRoots: S.NonEmptyString.annotateKey({ description: "Roots whose paths are never docs-only." }),
   }).pipe(
     $I.annoteSchema("CiOperationalPatterns", {
       description: "Canonical pattern data for hosted and bootstrap CI profiles.",
@@ -56,6 +62,7 @@ export const ciOperationalPatterns = CiOperationalPatterns.make({
   desktop:
     "^(apps/professional-desktop/src-tauri/|\\.github/workflows/check\\.yml$|scripts/ci-change-profile\\.sh$|packages/tooling/tool/cli/src/commands/Ci/CiOperational)",
   docs: "^docs/|^explorations/|^research/|^\\.changeset/[^/]+\\.md$|\\.md$",
+  codeRoots: "^(packages|apps|infra)/",
 });
 
 /**
@@ -164,15 +171,15 @@ export type CiResourceLane = typeof CiResourceLane.Type;
  *
  * ```ts
  * import { CiChangeProfile } from "@beep/repo-cli/commands/Ci"
- * console.log(CiChangeProfile.make({ goalsOnly: false, desktopRustRelevant: true }).goalsOnly)
+ * console.log(CiChangeProfile.make({ goalsOnly: false, docsOnly: false, desktopRustRelevant: true }).goalsOnly)
  * ```
  *
  * @category models
  * @since 0.0.0
  */
 export class CiChangeProfile extends S.Opaque<CiChangeProfile, { readonly brand: unique symbol }>()(
-  S.Struct({ goalsOnly: S.Boolean, desktopRustRelevant: S.Boolean }).pipe(
-    $I.annoteSchema("CiChangeProfile", { description: "Hosted goals and Rust lane execution profile." })
+  S.Struct({ goalsOnly: S.Boolean, docsOnly: S.Boolean, desktopRustRelevant: S.Boolean }).pipe(
+    $I.annoteSchema("CiChangeProfile", { description: "Hosted goals, docs-only and Rust lane execution profile." })
   )
 ) {}
 

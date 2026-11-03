@@ -57,9 +57,6 @@ jobs:
 
       - name: Setup pinned toolchain
         uses: ./.github/actions/setup-monorepo-ci
-        with:
-          cache-turbo: "false"
-          cache-write: "false"
 
       - name: Start optional R2 cache adapter
         if: vars.TURBO_R2_ENABLED == 'true' || inputs.r2_probe
