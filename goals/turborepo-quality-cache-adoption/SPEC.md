@@ -651,3 +651,16 @@ original immutable whole-driver source, and bind new observations separately.
   pruning/deployment rows and every whole-goal acceptance criterion pending.
 - Reverse through a reviewed Git revert of this decision and registration,
   retaining the observations. No runtime setting or deployment changes.
+
+
+### Native watch applicability, 2026-11-03
+
+Retain the absent `watchUsingTaskInputs` flag for the reviewed tracked callers.
+The root development command runs `turbo run dev`; four manifest scripts name
+Bun's watcher, while the other matching source lines are prose or declared
+Yeet input paths. No configured native Turbo watch consumer was found. This is
+a scoped feature disposition, not execution, hot-reload or qualification proof.
+A named native watcher reopens the decision with complete input, file-event,
+persistence, output-loop and portability controls on both exact clients. Watch
+cache writes require their own qualification. Reverse this evidence/decision
+registration without changing runtime configuration.

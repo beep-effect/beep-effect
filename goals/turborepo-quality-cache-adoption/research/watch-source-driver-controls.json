@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "cache-watch-source-driver-controls/v1",
+  "recordedAt": "2026-11-03T07:51:37.573061+00:00",
+  "driverSha256": "276d4474b4f7ff9e7470ac4ca53cb1c78ca47704d7575ff4015c1c8c6bf42f2f",
+  "rows": [
+    {
+      "case": "optimized-python",
+      "exit": 1,
+      "expectedReasonObserved": true,
+      "stderrSha256": "2a50ccc9270fc9d5a23e1297be87f01c077d6884783be00c34acb677756e6756",
+      "newOutputAbsent": true
+    },
+    {
+      "case": "existing-output",
+      "exit": 1,
+      "expectedReasonObserved": true,
+      "stderrSha256": "ec210ca7a211864aeb53648c624837bacd239e73f634a1f567dce5f4a9cd7bb3",
+      "newOutputAbsent": true
+    },
+    {
+      "case": "checkout-output",
+      "exit": 1,
+      "expectedReasonObserved": true,
+      "stderrSha256": "8dc06f05e6f69a92b06786f3b2f962f28780071b2fda9b98283a549815060262",
+      "newOutputAbsent": true
+    }
+  ],
+  "passingObservationUnchanged": true,
+  "nativeTasksOrWatchersExecuted": 0,
+  "scope": "Three early collector refusals only; no repository quality proof or native watch semantics."
+}
