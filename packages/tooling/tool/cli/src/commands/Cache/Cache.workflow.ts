@@ -6,6 +6,8 @@
  */
 import { isResolvedPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
+import { OutputBound, runCapturedStreams } from "@beep/repo-cli-kit/process/index";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { CacheClientPin } from "@beep/repo-configs/cache";
 import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
@@ -22,11 +24,9 @@ import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { OutputBound, runCapturedStreams } from "../../internal/process/index.ts";
 import { gitPathListFromNulOutput } from "../../internal/repo-run/GitExec.ts";
 import { AdmissionRequest } from "../../internal/repo-run/QualityScheduler.schemas.ts";
 import { noAdmissionOriginGate, withQualityAdmission } from "../../internal/repo-run/QualityScheduler.ts";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { CacheProducerAdapterLaunch } from "./Cache.adapter.schemas.ts";
 import { CacheConformanceBearers, CacheConformanceTarget } from "./Cache.conformance.schemas.ts";
 import { loadCacheConformanceBearers } from "./Cache.conformance.ts";

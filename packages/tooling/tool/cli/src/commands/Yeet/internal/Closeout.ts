@@ -5,12 +5,12 @@
  * @since 0.0.0
  */
 
+import { normalizedTokens } from "@beep/repo-cli-kit/cli/Flags";
 import { O } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Str from "effect/String";
-import { normalizedTokens } from "../../../internal/cli/Flags.ts";
 import { GhComment, GithubRest } from "../../../internal/github/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext, writeTextFile } from "./ArtifactPaths.ts";

@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "harness-enrollment-admission-evidence/v1",
+  "recordedAt": "2026-11-03T07:54:51.800484+00:00",
+  "sourceHead": "470d609298c518814930fdbd84be16aa54e96e5a",
+  "freshSyntheticDeclaredRootAdmission": true,
+  "currentSelectedPreparationInputs": 84,
+  "disposableStageSourceBindings": 90,
+  "liveStageSourceBindings": 89,
+  "stageBindingDifference": "disposable_canary_support.py is conditionally selected only for disposable proof.",
+  "expectedEventsPerStage": 2,
+  "actualIntakeDeliveryVisibilitySetsExact": true,
+  "sameReviewedQualificationAndProbeBothStages": true,
+  "qualificationSha256": "f3e3002492e83d73610fb055eb47a2a5f460d3bd1eb000e3b0772f1aec7a427f",
+  "probeSha256": "4f1f662e448d582a8c1cdcf4d088c79d71da53703f0c63d40132cc28bdff69d2",
+  "actualRootIdentityObservation": {
+    "rootCount": 2,
+    "repositoryAndOwningCloneShared": true,
+    "worktreeIdentitiesDistinct": true,
+    "stableApprovedNamespace": true,
+    "runtimeLaunchPopulation": "Unknown"
+  },
+  "reviewReceiptHashes": {
+    "fresh-root-review.json": "c5469417493cabb67b4238cc6f2a65e437595a295e66f070fb95b843295216d7",
+    "disposable-v1-review.json": "e3e25ed2ef1243ea0ca8f7c3944e86ac41bae8099a99aa2ad5ae20283fe1b35e",
+    "live-v1-review.json": "217ac18824d739fdb64147b3c79201ed25125b256e0ad3e1d220f314f21478b6",
+    "real-root-review.json": "f1e6212c860ab6450c44cdc1be50001c957d899634b0f5b0e09a0ac1f321c786",
+    "cli-canary-independent-review.json": "a40b0ffe7305e2a0baab4a12349b8e0188e5bca722c896f25c4af73aef2caa5a"
+  },
+  "liveEndpointDnsAndTlsVerified": true,
+  "ownedCanaryRollbackVerified": true,
+  "heldServiceAndTimer": "masked/inactive",
+  "allSevenRealHarnessPopulations": "Unknown",
+  "sourceClosureLimit": "Selected canonical inputs plus separately recorded runtime/source bindings; not complete transitive dependency closure.",
+  "qualificationScope": "Fresh synthetic current-source root and backend route proof; separate actual-root identity observation. No real harness inference/event collection or fleet enrollment established yet."
+}

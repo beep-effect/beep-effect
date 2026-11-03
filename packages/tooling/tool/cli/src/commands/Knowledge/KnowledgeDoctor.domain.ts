@@ -10,6 +10,7 @@
 import { SkillsLockDocument } from "@beep/ai-sync/SkillsLock.schemas";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
+import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
 import { Str } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -23,7 +24,6 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { ts } from "ts-morph";
-import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import { capabilityPacketFindings, GoalExplorationPathState, goalPacketFindings } from "../Goals/Doctor.ts";
 import { decodeGoalManifest } from "../Goals/Goals.schemas.ts";
 import {

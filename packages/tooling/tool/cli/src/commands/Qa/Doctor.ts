@@ -11,6 +11,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { configStringOption } from "@beep/repo-cli-kit/cli/EnvConfig";
+import { runCaptured } from "@beep/repo-cli-kit/process/index";
 import { LiteralKit } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
@@ -18,8 +20,6 @@ import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { configStringOption } from "../../internal/cli/EnvConfig.ts";
-import { runCaptured } from "../../internal/process/index.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 

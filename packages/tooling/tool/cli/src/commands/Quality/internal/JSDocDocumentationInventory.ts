@@ -1,5 +1,8 @@
 import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { $RepoCliId } from "@beep/identity/packages";
+import { formatJsonc } from "@beep/repo-cli-kit/artifacts/index";
+import { isLabsWorkspacePath } from "@beep/repo-cli-kit/cli/Labs/index";
+import { createInMemoryTsMorphProject, leadingJsDocText, topFileoverview } from "@beep/repo-cli-kit/tsmorph/index";
 import { extractFencedCodeBlocks } from "@beep/repo-docgen/Core";
 import {
   jsDocSectionBodyText,
@@ -22,9 +25,6 @@ import * as Regex from "effect/RegExp";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Node, SyntaxKind, ts } from "ts-morph";
-import { formatJsonc } from "../../../internal/artifacts/index.ts";
-import { isLabsWorkspacePath } from "../../../internal/cli/Labs/index.ts";
-import { createInMemoryTsMorphProject, leadingJsDocText, topFileoverview } from "../../../internal/tsmorph/index.ts";
 import {
   declarationKind,
   defaultRepoRoot,

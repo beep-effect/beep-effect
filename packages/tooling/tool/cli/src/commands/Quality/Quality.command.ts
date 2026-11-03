@@ -9,6 +9,11 @@ import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc, JsoncParseOptions } from "@beep/jsonc/Jsonc";
+import { configStringOption } from "@beep/repo-cli-kit/cli/EnvConfig";
+import { isLabsWorkspacePath } from "@beep/repo-cli-kit/cli/Labs/index";
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
+import { unknownRecordKeys, unknownRecordProperty } from "@beep/repo-cli-kit/cli/UnknownProbe";
+import { formatCommandLine, QualityTaskStep, runCaptured, runToExit } from "@beep/repo-cli-kit/process/index";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkFalse, thunkTrue } from "@beep/utils";
@@ -35,11 +40,6 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { XMLParser } from "fast-xml-parser";
-import { configStringOption } from "../../internal/cli/EnvConfig.ts";
-import { isLabsWorkspacePath } from "../../internal/cli/Labs/index.ts";
-import { printLines } from "../../internal/cli/Printer.ts";
-import { unknownRecordKeys, unknownRecordProperty } from "../../internal/cli/UnknownProbe.ts";
-import { formatCommandLine, QualityTaskStep, runCaptured, runToExit } from "../../internal/process/index.ts";
 import { checkScriptTestTypecheckCoverage } from "../../internal/quality/TestTypecheckCoverage.ts";
 import {
   AdmissionConfig,

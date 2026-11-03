@@ -13,6 +13,7 @@
 import { Git } from "@beep/git/Git";
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { $RepoCliId } from "@beep/identity/packages";
+import { runCaptured } from "@beep/repo-cli-kit/process/StepExec";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";

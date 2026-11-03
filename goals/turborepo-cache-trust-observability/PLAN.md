@@ -1369,3 +1369,58 @@ Heavy, and inspect environment values, action inputs and script bodies. Preserve
 producer. The earlier d256 hosted unit and official coverage passes remain
 bound to that source; this source requires fresh hosted proof. No protected
 execution, credential activation or whole-goal acceptance is claimed.
+
+
+### Actual preparation startup failure, 2026-11-03
+
+The fresh accepted-main preparation run
+[41604614900](https://github.com/beep-effect/beep-effect/actions/runs/41604614900)
+resolved Heavy at `7438cf69c6` but failed before scheduling a job. GitHub rejected
+the execution leaf's `actions: read` request against the caller's `actions: none`
+ceiling. No compilation, artifact or credential delivery occurred.
+
+Repair all four affected caller jobs' read-only ceilings while retaining the
+workflow/Heavy defaults at `contents: read`, then use exact-head hosted
+regressions and one fresh accepted-source preparation dispatch. Do not retry the
+unchanged failed source or treat conditional job guards as permission validation.
+The source-inspection caller has the same source defect but has not been
+dispatched in this round. Protected execution, signed trials, deployed trust,
+qualification, real observation windows and full-goal closeout remain open.
+
+The same cause also prevented the new repair PR's ordinary
+[Check run 41605514358](https://github.com/beep-effect/beep-effect/actions/runs/41605514358)
+from scheduling any job. Extend this same repair to `check.yml` and
+`heavy-admit.yml`; all five current Heavy callers now receive an explicit
+regression assertion against the actual leaf ceiling, including the already
+correct protected-execution caller. This is one shared main unblocker, not
+separate copied repairs. Preserve the first repair head and its failed run.
+
+
+### Consolidation after accepted shared unblocker, 2026-11-03
+
+#2666 merged the same four caller permission maps as `fae5b2098c`, causing a
+comment-only conflict with this component's ordinary callers. Preserve both
+index-stage versions privately and retain all four accepted workflow files
+exactly. Consolidate the duplicate five-caller fixture into the accepted case,
+adding actual-leaf and narrower-default assertions. This component now carries
+regression strengthening and the operational failure record. Prior 715-head
+unit/policy/187-package coverage successes remain bound to 715; obtain fresh
+hosted proof after integration.
+
+
+### Candidate OpenSSL prerequisite repair, 2026-11-03
+
+Accepted-source preparation run 41610315729 passed workflow startup and native
+host compiler setup, then failed during vendored OpenSSL Configure because
+`FindBin.pm` was absent. Its build job lasted 74 seconds; upload was skipped and
+owned scratch cleanup succeeded. Preserve the exact job-log digest and source
+in `research/candidate-openssl-prerequisite-failure-2026-11-03.json`.
+
+Extend the existing native prerequisite step to check Make and Perl core modules
+even if GCC/linker/readelf already exist, following OpenSSL's distro guidance.
+The existing security regression pins both package-manager branches and the
+new probes. This source repair is sent straight to hosted CI under the
+operator's no-local-verify/publish instruction. After acceptance, refresh source
+control bindings and dispatch one new bounded preparation; never reuse or
+relabel the failed intent. Independent artifact inspection, protected execution,
+signed trials and all nine whole-goal criteria remain open.

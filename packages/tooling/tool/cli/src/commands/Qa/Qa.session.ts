@@ -13,6 +13,8 @@
 import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import { ActionEvent, decodeActionEventJson, RoundNumber, SessionId, SessionStore } from "@beep/qa-capture";
+import { LABS_WORKSPACE_ROOT } from "@beep/repo-cli-kit/cli/Labs/index";
+import { runCaptured } from "@beep/repo-cli-kit/process/index";
 import { LiteralKit } from "@beep/schema";
 import { A, O, Str, thunkEmptyReadonlyRecord } from "@beep/utils";
 import * as Effect from "effect/Effect";
@@ -20,8 +22,6 @@ import * as FileSystem from "effect/FileSystem";
 import { dual, flow, pipe } from "effect/Function";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { LABS_WORKSPACE_ROOT } from "../../internal/cli/Labs/index.ts";
-import { runCaptured } from "../../internal/process/index.ts";
 import { QaCommandError } from "./Qa.errors.ts";
 import type { RoundLayout } from "@beep/qa-capture";
 import type { R } from "@beep/utils";

@@ -12,6 +12,8 @@
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { Lockfile } from "@beep/lockfiles/Lockfile";
+import { manifestParser } from "@beep/repo-cli-kit/ManifestRead";
+import { runCaptured } from "@beep/repo-cli-kit/process/index";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Console from "effect/Console";
@@ -25,7 +27,6 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { manifestParser } from "../../internal/ManifestRead.ts";
 import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
 import {
   CatalogUsageFinding,

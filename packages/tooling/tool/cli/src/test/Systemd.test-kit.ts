@@ -5,4 +5,4 @@
  * @since 0.0.0
  */
 
-export * from "../internal/systemd/index.ts";
+export * from "@beep/repo-cli-kit/systemd/index";

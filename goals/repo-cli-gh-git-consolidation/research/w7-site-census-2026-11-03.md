@@ -65,7 +65,9 @@ Consequences that recur below:
 
 ## Key findings
 
-1. **Latent defect, `R/commands/Yeet/internal/FinalCheckRefresh.ts:397` (`statusCounts`).** It reads
+1. **Latent defect, now fixed: `R/commands/Yeet/internal/FinalCheckRefresh.ts:397` (`statusCounts`).** Fixed by
+   #2659 before W7a, which moved the read onto `Git.show` and keeps absence apart from a failed read; Y34 is therefore
+   migrated and W7a leaves it unchanged. This finding records the pre-fix state. It read
    `standards/effect-vitest.inventory.jsonc` at each revision through `YGX.out`, whose bound is 512 KiB
    (`R/internal/process/StepExec.ts:295`). The Yeet adapter fails on truncation (`GitErrorAdapter.ts:98`). The
    inventory is 687,609 bytes at this head. The read therefore fails, `Effect.option` turns the failure into
@@ -143,7 +145,7 @@ Consequences that recur below:
 | Y31 | `FinalCheckRefresh.ts:544` (`gitLine`) | `rev-list --count <head>..<finalHead>` | `YGX.out` | count | B | `revListCount` (N1) | — |
 | Y32 | `FinalCheckRefresh.ts:217` (`changedPaths`, callers `:468`, `:469`) | `diff --name-only --no-renames -z <from> <to>` | `YGX.paths` | NUL paths into a `HashSet` | A | `changedFiles({ base: from, head: to, twoDot: true, noRenames: true })` | — |
 | Y33 | `FinalCheckRefresh.ts:384` (`filePatch`, callers `:474`, `:475`) | `diff --no-color --no-renames --no-ext-diff --binary --full-index <from> <to> -- <path>` | `YGX.fold` | stdout bytes folded into a patch-identity digest | C | streamed byte fold; comment at `:223`: content lines "keep every byte, whitespace and invalid UTF-8 included". The kit buffers decoded text. This is the last `runGitFoldedStdout` caller | — |
-| Y34 | `FinalCheckRefresh.ts:397` (`statusCounts`) | `show <rev>:standards/effect-vitest.inventory.jsonc` | `YGX.out` | text; any failure read as absent | A | `show(cwd, rev, path)`: `None` is absent; a failure must surface as unreadable. Fixes key finding 1 | — |
+| Y34 | `FinalCheckRefresh.ts:397` (`statusCounts`) | `show <rev>:standards/effect-vitest.inventory.jsonc` | `YGX.out` | text; any failure read as absent | A | `show(cwd, rev, path)`: `None` is absent; a failure must surface as unreadable. Fixes key finding 1. Migrated by #2659 before W7a | — |
 | Y35 | `internal/ProofState.ts:217` | `config --get remote.origin.url` | `YGX.out` | trimmed; a missing key fails | A | `configGet(cwd, "remote.origin.url")`, `None` fails as today | — |
 | Y36 | `ProofState.ts:292` | `diff --binary --output=<path> HEAD` and `... --cached` | `YGX.out` | exit; the patch bytes are read back from the file | C | git writes a byte-exact patch into a path fenced inside the artifact tree (`:284`, "Fail closed if the fingerprint target (or a symlink...) resolves outside"); the kit only returns decoded stdout. Moves to `RRC` at retirement | — |
 | Y37 | `ProofState.ts:336` | `status --short` | `YGX.out` | text into the proof fingerprint | A | `StatusEntry.format(yield* git.status(cwd), { renames: "arrow" })`; fingerprint bytes change once (porcelain v1 lines; `--short` also honours `status.branch`), so pre-switch proof-reuse records miss once | — |

@@ -66,3 +66,21 @@
   typecheck and 24 initial tests passed; after the review correction, 28 tests
   and separate lint/typecheck passed. These are scoped results, not an audit
   pass or a complete repository receipt.
+
+## 2026-11-02 — scratchpad graduation is not a mechanical copy
+
+The scratchpad uses documentation categories rejected by current docgen and
+structural data shapes that need opaque schemas for package publication.
+`quality package-verify @beep/party-domain` caught invalid `ids` categories,
+missing type-alias documentation and inaccessible opaque variant brands.
+The current Effect Array.filterMap consumes Result, whereas the older graph
+code used Option. All observed failures were corrected in the isolated lane.
+A generator-backed graduation checklist covering exports, opaque variants,
+current Effect helpers and docgen would prevent repeated repair passes.
+
+## Native boundary-test runtime
+
+- Task: validate law-practice module specifiers through TsNativeApi.
+- Evidence: the Bun-run fixture failed with `The TypeScript sync transport requires Node stdio handles`; the same four tests passed under Node.
+- Resolution: use the existing effect-drizzle split-runner precedent for the package-owned `beep:test` implementation, then regenerate/check task-facing scripts.
+- Prevention: architecture boundary-test examples should state the Node runner requirement beside the parser setup.

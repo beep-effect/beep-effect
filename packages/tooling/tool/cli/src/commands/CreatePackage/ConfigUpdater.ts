@@ -11,6 +11,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
+import { applyJsoncModification, JsoncModification } from "@beep/repo-cli-kit/cli/Jsonc";
 import { DomainError } from "@beep/repo-utils";
 import { buildCanonicalAliasTargets } from "@beep/repo-utils/schemas/TsconfigAliasTargets";
 import { SchemaUtils } from "@beep/schema";
@@ -24,7 +25,6 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { applyJsoncModification, JsoncModification } from "../../internal/cli/Jsonc.ts";
 
 const $I = $RepoCliId.create("commands/CreatePackage/ConfigUpdater");
 

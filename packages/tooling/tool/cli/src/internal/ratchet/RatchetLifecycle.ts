@@ -13,7 +13,7 @@
  * caller, so migrated commands stay byte-identical.
  *
  * The regression stderr blocks and tighten nudges are assembled from
- * {@link @beep/repo-cli/internal/artifacts/ArtifactIo!renderTruncatedLines};
+ * {@link @beep/repo-cli-kit/artifacts/ArtifactIo!renderTruncatedLines};
  * baseline regeneration is `formatJsonc` + `writeArtifact` from the same
  * module, applied to each command's own `schema_version`-carrying baseline
  * schema. The schema-first inventory ratchet keeps

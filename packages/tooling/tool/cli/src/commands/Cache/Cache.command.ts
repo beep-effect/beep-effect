@@ -7,6 +7,10 @@
 
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { readContainedFileBytesNoFollow } from "@beep/repo-cli-kit/cli/FsGuards";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
+import { nearestRank } from "@beep/repo-cli-kit/stats/NearestRank";
 import { CacheClientChannel, CachePolicyAuditReport } from "@beep/repo-configs/cache";
 import { A, Str, thunk0 } from "@beep/utils";
 import * as Clock from "effect/Clock";
@@ -31,12 +35,8 @@ import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
 import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
 import { MemoryStatsLive } from "../../internal/repo-run/QualityScheduler.ts";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
-import { nearestRank } from "../../internal/stats/NearestRank.ts";
 import { CacheProducerAcceptanceReference, CacheProducerImportRequest } from "./Cache.acceptance.schemas.ts";
 import {
   cacheProducerImportMaxBytes,

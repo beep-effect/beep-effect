@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { boundedText } from "@beep/repo-cli-kit/cli/Timing";
 import { A, Str } from "@beep/utils";
 import { pipe } from "effect/Function";
 import * as Match from "effect/Match";
@@ -12,7 +13,6 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Regex from "effect/RegExp";
-import { boundedText } from "../../../../internal/cli/Timing.ts";
 import { DocgenQualityFinding, DocgenQualityReview } from "./Quality.schemas.ts";
 import type { DocgenQualityFindingCode, DocgenQualitySubject, DocgenQualityTier } from "./Quality.schemas.ts";
 

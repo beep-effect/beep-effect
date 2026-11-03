@@ -23,6 +23,8 @@ import {
   UpstreamCatalog,
 } from "@beep/ai-sync/ModelCatalog.schemas";
 import { $RepoCliId } from "@beep/identity/packages";
+import { formatJsonValue } from "@beep/repo-cli-kit/cli/Json";
+import { runCaptured } from "@beep/repo-cli-kit/process/StepExec";
 import { A, O, pipe, Str } from "@beep/utils";
 import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
@@ -37,8 +39,6 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
-import { formatJsonValue } from "../../internal/cli/Json.ts";
-import { runCaptured } from "../../internal/process/StepExec.ts";
 import { mergeLayers } from "./Models.diff.ts";
 import { ModelsCatalogError, ModelsLedgerError } from "./Models.errors.ts";
 import { defaultProxyBaseUrl, parseJsonText, upstreamCatalogUrls } from "./Models.paths.ts";

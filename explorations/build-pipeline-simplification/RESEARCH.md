@@ -97,8 +97,8 @@ Census figures come from [pipeline Q1][pipe-q1] to [pipeline Q8][pipe-q8].
 
 | Brick | Package / owner | Path (verified) | Today | Build-kit relation |
 | --- | --- | --- | --- | --- |
-| Package-scripts policy | `@beep/repo-cli` | `packages/tooling/tool/cli/src/internal/package-scripts/PackageScriptsPolicy.ts` (360 lines) | Owns every generated scripts block; `beep lint package-scripts --write`. | Extend: emit one `beep:build` call. |
-| `beep:build` defaults | `@beep/repo-cli` | `packages/tooling/tool/cli/src/internal/package-scripts/PackageScripts.schemas.ts:1169,1199,1225,1297` | `tsc -p tsconfig.json && bun run babel` for library, tool, ecosystem, infra kinds. | Replace the value. |
+| Package-scripts policy | `@beep/repo-cli` | `packages/tooling/library/repo-cli-kit/src/package-scripts/PackageScriptsPolicy.ts` (360 lines) | Owns every generated scripts block; `beep lint package-scripts --write`. | Extend: emit one `beep:build` call. |
+| `beep:build` defaults | `@beep/repo-cli` | `packages/tooling/library/repo-cli-kit/src/package-scripts/PackageScripts.schemas.ts:1169,1199,1225,1297` | `tsc -p tsconfig.json && bun run babel` for library, tool, ecosystem, infra kinds. | Replace the value. |
 | Task binding | `@beep/repo-cli` | `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:276` | `build` task maps to script `beep:build`. | Reuse. |
 | Babel script template | `@beep/repo-cli` | `CreatePackage/CreatePackage.command.ts:1950`, `Architecture/OperationPlanPackageJson.ts:109` (under `.../cli/src/commands/`) | Scaffolds `babel dist --plugins annotate-pure-calls ...`. | Extend: conditional on publishability. |
 | Emit settings | repo root | `tsconfig.base.json:5-25` | `outDir` dist, tsbuildinfo under `node_modules/.tmp`, `composite`, `incremental`, `declaration`, `declarationMap`, `sourceMap`. No `isolatedDeclarations`. | Reuse. |

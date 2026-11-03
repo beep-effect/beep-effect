@@ -5,13 +5,13 @@
  * @since 0.0.0
  */
 
+import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
-import { optionalProp } from "../../../internal/cli/OptionRecord.ts";
 import { PackageQualityReport, QualityIssue, QualityIssueIndex, QualityIssueRouting } from "../Yeet.schemas.ts";
 
 export {

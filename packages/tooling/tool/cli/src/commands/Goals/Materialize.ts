@@ -27,6 +27,7 @@
  * @since 0.0.0
  */
 
+import { createContainedFileString } from "@beep/repo-cli-kit/cli/FsGuards";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Flag from "effect/cli/Flag";
@@ -37,7 +38,6 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { createContainedFileString } from "../../internal/cli/FsGuards.ts";
 import { assertJournalFileLockOwned, withJournalFileLock } from "../../internal/repo-run/AdmissionJournal.ts";
 import { removeEmptyDirectory } from "../../internal/repo-run/DirectoryHandle.ts";
 import { MaterializationReceipt, MaterializedFile } from "./Bootstrap.schemas.ts";

@@ -17,6 +17,7 @@
  * @since 0.0.0
  */
 
+import { LINT_POLICY_SUBCOMMANDS } from "@beep/repo-cli-kit/cli/LintRouting";
 import * as A from "effect/Array";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
@@ -25,7 +26,6 @@ import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
-import { LINT_POLICY_SUBCOMMANDS } from "../cli/LintRouting.ts";
 import { commandGroupRoutes, QUALITY_TASK_NAMES } from "./Dispatch.manifest.ts";
 import { DispatchTarget } from "./Dispatch.schemas.ts";
 import type { CommandGroupHelp, RuntimeService } from "./Dispatch.schemas.ts";

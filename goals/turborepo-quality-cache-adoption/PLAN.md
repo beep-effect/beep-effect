@@ -679,3 +679,64 @@ Retain the absent optional flag. Ten scoped decisions and 25 pending feature
 rows remain out of 35. Broad pruning/deployment, real computations, qualification,
 value and observation windows remain open. Hosted CI provides PR proof; no local
 verify, publish, package gate or test suite was run for this evidence-only wave.
+
+
+### Native watch caller applicability, 2026-11-03
+
+Review 213 tracked manifests (fixtures included), 27 Turbo configurations and
+the tracked runtime roots under recorded source bindings. Those roots remain
+identical to accepted source 8fe07d3eed. The four watch-named
+scripts invoke Bun; root development uses `turbo run dev`. Three textual
+search hits are package prose or Yeet policy-input filenames. Retain the
+absent optional watch-input flag for this current caller set. The source-only
+collector executed no tasks or watchers; its three early refusal controls
+preserve the passing observation. Both published stable/current-canary source
+modules declare the option, but no native watch behavior is claimed.
+
+Eleven of 35 feature decisions now have scoped final reviews; 24 remain
+pending. The computation census, broader persistence/watch review, qualification,
+measured value, real observation windows and all whole-goal criteria remain open.
+
+
+### Current native population after accepted retirements, 2026-11-03
+
+A fresh five-second, read-only Cache census at `fae5b2098c` reports 191
+workspaces, 4,459 graph nodes, 2,400 executable computations and 1,646 configured
+cache-enabled computations. No task ran and no cache flag changed. The net
+reduction of 34 comprises 47 removed and 13 added entries: 35 root fingerprint
+commands and twelve T3 tasks disappear; twelve Party domain tasks and one root
+schema-catalog task enter. All historical reviews are retained byte-identically.
+
+Source review renews 197 surviving whole-task freshness decisions and explicitly
+classifies the new Party fixer: 186 mutating fixers plus twelve persistent
+services. Keep 2,202 other native reviews pending and retain all five original
+qualification exclusions. Four existing fixer variants use manifest-specific
+write scopes; their exact implementations are preserved individually.
+
+The graph-only population is 2,059. Native graph inventory does not close the
+two unresolved entrypoint obligations or prove non-Turbo/nested execution
+coverage. Feature decisions remain eleven scoped reviews and 24 pending;
+qualification, supported adoption, owner-measured value, real observation
+windows and every whole-goal criterion remain incomplete.
+
+
+### Published current-pair inventory correction, 2026-11-03
+
+The aggregate pin manifest still named canary 2.11.9-canary.1 while later
+feature-local observations used 2.11.11-canary.1. Fresh npm metadata confirms
+stable 2.11.10/current canary 2.11.11-canary.1. Verify canary package/native
+archive integrity, cached executable identity and both reported versions.
+Keep the former aggregate pin bytes and older availability report unchanged.
+
+The published canary schema contains 15 future flags, versus 14 on stable:
+`hashFilePermissions` is new to this matrix. The unchanged bounded availability
+collector passed 60 current-pair dry runs; a small collector reusing its bounded
+process capture passed four flag-specific cases. Stable rejected both boolean
+settings; canary accepted both. All sentinel/task bodies stayed unexecuted.
+Three driver refusal controls preserved pins and the passing report.
+
+The matrix now contains 36 entries and 25 pending decisions. Existing 11 scoped
+applicability reviews remain at their recorded scope; no semantic qualification,
+permission-hash behavior, repository upgrade or rollout is inferred. Actual
+permission-sensitive invalidation/portability and every whole-goal criterion
+remain open. Hosted CI is authoritative; no local verify/publish/package suite.

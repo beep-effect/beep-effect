@@ -7,6 +7,8 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { Md } from "@beep/md";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { resolveRunMode as resolveSharedRunMode, runModeFlagsConflict } from "@beep/repo-cli-kit/cli/RunMode";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, Str, Struct, thunkEffectVoid, thunkTrue } from "@beep/utils";
 import * as Console from "effect/Console";
@@ -21,8 +23,6 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { resolveRunMode as resolveSharedRunMode, runModeFlagsConflict } from "../../internal/cli/RunMode.ts";
 import { formatJson } from "./internal/Source.ts";
 import {
   SyncDataFileResult,

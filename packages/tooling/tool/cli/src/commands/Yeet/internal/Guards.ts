@@ -5,10 +5,10 @@
  * @since 0.0.0
  */
 
+import { configStringOption } from "@beep/repo-cli-kit/cli/EnvConfig";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import { configStringOption } from "../../../internal/cli/EnvConfig.ts";
 import { resolveLocalRepoBinary, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { writeTextFile } from "./ArtifactPaths.ts";

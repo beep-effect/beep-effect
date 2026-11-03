@@ -29,6 +29,14 @@
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
+import {
+  formatCommandLine,
+  OutputBound,
+  repoRunOutputBound,
+  runCaptured,
+  runCapturedStreams,
+  runFoldedStdout,
+} from "@beep/repo-cli-kit/process/StepExec";
 import { isOptionLike } from "@beep/repo-utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -40,14 +48,6 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import {
-  formatCommandLine,
-  OutputBound,
-  repoRunOutputBound,
-  runCaptured,
-  runCapturedStreams,
-  runFoldedStdout,
-} from "../process/StepExec.ts";
 import type {
   GitCommandError,
   LsTreeEntry,
@@ -56,10 +56,14 @@ import type {
   UnknownRefError,
 } from "@beep/git/Git";
 import type { GitInvocation } from "@beep/git/GitCommand";
+import type {
+  RunCapturedOptions,
+  RunCapturedStreamsOptions,
+  RunFoldedStdoutOptions,
+} from "@beep/repo-cli-kit/process/StepExec";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as PlatformError from "effect/PlatformError";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { RunCapturedOptions, RunCapturedStreamsOptions, RunFoldedStdoutOptions } from "../process/StepExec.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/GitExec");
 

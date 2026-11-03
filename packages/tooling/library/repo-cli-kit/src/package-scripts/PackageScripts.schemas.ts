@@ -1,0 +1,1577 @@
+/**
+ * Canonical task bindings and lossless package scripts codecs.
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+import { $RepoCliKitId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
+import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as R from "effect/Record";
+import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
+
+const $I = $RepoCliKitId.create("package-scripts/PackageScripts.schemas");
+/**
+ * Version selecting the canonical task binding contract.
+ *
+ * **Example** (Inspect PackageScriptsRuleVersion)
+ *
+ * ```ts
+ * import { PackageScriptsRuleVersion } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(PackageScriptsRuleVersion)(undefined)) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PackageScriptsRuleVersion = S.Literal("package-scripts-rules/v1").pipe(
+  $I.annoteSchema("PackageScriptsRuleVersion", {
+    description: "Version selecting the canonical task binding contract.",
+  })
+);
+/**
+ * Decoded PackageScriptsRuleVersion value.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PackageScriptsRuleVersion = typeof PackageScriptsRuleVersion.Type;
+
+/**
+ * Workspace classifications selecting task presence.
+ *
+ * **Example** (Inspect PackageKind)
+ *
+ * ```ts
+ * import { PackageKind } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(PackageKind)(undefined)) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PackageKind = LiteralKit(["library", "tool", "ecosystem", "app", "lab", "infra", "exempt"]).pipe(
+  $I.annoteSchema("PackageKind", { description: "Workspace classifications selecting task presence." })
+);
+/**
+ * Decoded PackageKind value.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PackageKind = typeof PackageKind.Type;
+
+/**
+ * Task-facing keys governed by strict bindings.
+ *
+ * **Example** (Inspect TaskScriptName)
+ *
+ * ```ts
+ * import { TaskScriptName } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(TaskScriptName)(undefined)) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TaskScriptName = LiteralKit([
+  "build",
+  "check",
+  "lint",
+  "lint:fix",
+  "test",
+  "test:property",
+  "test:integration",
+  "test:integration:parallel",
+  "coverage",
+  "docgen",
+  "package-test-typecheck",
+  "codegen",
+  "lint:deprecated-apis",
+  "lint:jsdoc",
+  "lint:laws",
+  "doctest",
+]).pipe($I.annoteSchema("TaskScriptName", { description: "Task-facing keys governed by strict bindings." }));
+/**
+ * Decoded TaskScriptName value.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TaskScriptName = typeof TaskScriptName.Type;
+
+/**
+ * Package-owned implementation keys whose values remain free.
+ *
+ * **Example** (Inspect ImplScriptName)
+ *
+ * ```ts
+ * import { ImplScriptName } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(ImplScriptName)(undefined)) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ImplScriptName = LiteralKit([
+  "beep:build",
+  "beep:check",
+  "beep:lint",
+  "beep:lint:fix",
+  "beep:test",
+  "beep:test:integration",
+  "beep:coverage",
+  "beep:docgen",
+  "beep:doctest",
+]).pipe(
+  $I.annoteSchema("ImplScriptName", { description: "Package-owned implementation keys whose values remain free." })
+);
+/**
+ * Decoded ImplScriptName value.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ImplScriptName = typeof ImplScriptName.Type;
+
+/**
+ * Binding from a task to an implementation, CLI command, or package-owned text.
+ *
+ * **Example** (Inspect TaskScriptBinding)
+ *
+ * ```ts
+ * import { TaskScriptBinding } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(TaskScriptBinding)(undefined)) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TaskScriptBinding = S.TaggedUnion({
+  indirection: { impl: ImplScriptName, ifPresent: S.Boolean },
+  cli: { command: S.String },
+  owned: {},
+}).pipe(
+  $I.annoteSchema("TaskScriptBinding", {
+    description: "Binding from a task to an implementation, CLI command, or package-owned text.",
+  })
+);
+/**
+ * Decoded TaskScriptBinding value.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TaskScriptBinding = typeof TaskScriptBinding.Type;
+
+/**
+ * Required, optional, forbidden, or evidence-derived task presence.
+ *
+ * **Example** (Inspect TaskScriptPresence)
+ *
+ * ```ts
+ * import { TaskScriptPresence } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(TaskScriptPresence)(undefined)) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TaskScriptPresence = S.TaggedUnion({
+  required: {},
+  optional: {},
+  absent: {},
+  derived: { rule: LiteralKit(["doctest-sources", "codegen-generator"]) },
+}).pipe(
+  $I.annoteSchema("TaskScriptPresence", {
+    description: "Required, optional, forbidden, or evidence-derived task presence.",
+  })
+);
+/**
+ * Decoded TaskScriptPresence value.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TaskScriptPresence = typeof TaskScriptPresence.Type;
+
+/**
+ * One task binding and presence rule for one workspace kind.
+ *
+ * **Example** (Inspect TaskScriptRule)
+ *
+ * ```ts
+ * import { TaskScriptRule } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * console.log(TaskScriptRule.make({ kind: "app", name: "coverage", presence: { _tag: "optional" }, binding: { _tag: "owned" } }).name) // coverage
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class TaskScriptRule extends S.Opaque<TaskScriptRule, { readonly brand: unique symbol }>()(
+  S.Struct({ kind: PackageKind, name: TaskScriptName, presence: TaskScriptPresence, binding: TaskScriptBinding }).pipe(
+    $I.annoteSchema("TaskScriptRule", { description: "One task binding and presence rule for one workspace kind." })
+  )
+) {}
+
+/**
+ * Implementation text stamped only when the key is missing.
+ *
+ * **Example** (Inspect ImplScriptDefault)
+ *
+ * ```ts
+ * import { ImplScriptDefault } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * console.log(ImplScriptDefault.make({ kind: "app", name: "beep:lint", value: "biome check ." }).value)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ImplScriptDefault extends S.Opaque<ImplScriptDefault, { readonly brand: unique symbol }>()(
+  S.Struct({ kind: PackageKind, name: ImplScriptName, value: S.String }).pipe(
+    $I.annoteSchema("ImplScriptDefault", { description: "Implementation text stamped only when the key is missing." })
+  )
+) {}
+
+const isTaskScriptName = S.is(TaskScriptName);
+const isImplScriptName = S.is(ImplScriptName);
+
+const ExtraScriptName = S.String.check(
+  S.makeFilter(
+    (key) => !isTaskScriptName(key) && !isImplScriptName(key),
+    $I.annote("ExtraScriptName", {
+      title: "Extra script name",
+      description: "A script key outside the task and implementation tiers.",
+      message: "Extra scripts cannot overlap task or implementation keys.",
+    })
+  )
+);
+/**
+ * Disjoint task, implementation, and extra tiers of a manifest scripts record.
+ *
+ * **Example** (Inspect ScriptsBlock)
+ *
+ * ```ts
+ * import { ScriptsBlock } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * import * as HashMap from "effect/HashMap"
+ * console.log(ScriptsBlock.make({ kind: "app", tasks: HashMap.empty(), impls: HashMap.empty(), extras: HashMap.empty() }).kind) // app
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ScriptsBlock extends S.Opaque<ScriptsBlock, { readonly brand: unique symbol }>()(
+  S.Struct({
+    kind: PackageKind,
+    tasks: S.HashMap(TaskScriptName, S.String),
+    impls: S.HashMap(ImplScriptName, S.String),
+    extras: S.HashMap(ExtraScriptName, S.String),
+  }).pipe(
+    $I.annoteSchema("ScriptsBlock", {
+      description: "Disjoint task, implementation, and extra tiers of a manifest scripts record.",
+    })
+  )
+) {}
+
+/**
+ * Provides type-level companions for the encoded representation of a scripts block.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ScriptsBlock {
+  /**
+   * Encoded task, implementation, and extra script tiers accepted before schema decoding.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ScriptsBlock.Encoded;
+}
+
+/**
+ * Flat JSON scripts record at the manifest boundary.
+ *
+ * **Example** (Inspect ScriptsRecord)
+ *
+ * ```ts
+ * import { ScriptsRecord } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(ScriptsRecord)(undefined)) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ScriptsRecord = S.Record(S.String, S.String).pipe(
+  $I.annoteSchema("ScriptsRecord", { description: "Flat JSON scripts record at the manifest boundary." })
+);
+/**
+ * Decoded ScriptsRecord value.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ScriptsRecord = typeof ScriptsRecord.Type;
+
+/**
+ * Losslessly partitions a flat scripts record and encodes tiers in stable key order.
+ *
+ * **Example** (Inspect scriptsBlockFromRecord)
+ *
+ * ```ts
+ * import { scriptsBlockFromRecord } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
+ * const block = Effect.runSync(S.decodeUnknownEffect(scriptsBlockFromRecord("app"))({ dev: "vite" }))
+ * console.log(block.kind) // app
+ * ```
+ *
+ * @param kind - The workspace kind the record belongs to.
+ * @returns A codec from a flat scripts record to its `ScriptsBlock`.
+ * @category codecs
+ * @since 0.0.0
+ */
+export const scriptsBlockFromRecord = (kind: PackageKind) =>
+  ScriptsRecord.pipe(
+    S.decodeTo(
+      ScriptsBlock,
+      SchemaTransformation.transform({
+        decode: (record) => {
+          let tasks = HashMap.empty<TaskScriptName, string>();
+          let impls = HashMap.empty<ImplScriptName, string>();
+          let extras = HashMap.empty<string, string>();
+          for (const [key, value] of R.toEntries(record)) {
+            if (isTaskScriptName(key)) tasks = HashMap.set(tasks, key, value);
+            else if (isImplScriptName(key)) impls = HashMap.set(impls, key, value);
+            else extras = HashMap.set(extras, key, value);
+          }
+          return { kind, tasks, impls, extras };
+        },
+        encode: (block) =>
+          R.fromEntries([
+            ...A.sortWith(HashMap.toEntries(block.tasks), ([key]) => key, Order.String),
+            ...A.sortWith(HashMap.toEntries(block.impls), ([key]) => key, Order.String),
+            ...A.sortWith(HashMap.toEntries(block.extras), ([key]) => key, Order.String),
+          ]),
+      })
+    )
+  );
+
+/**
+ * TypeScript checkers a type-check or build script may invoke; `tsrs` is canonical.
+ *
+ * **Example** (Inspect TypeScriptChecker)
+ *
+ * ```ts
+ * import { TypeScriptChecker } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * console.log(TypeScriptChecker.is["tsrs"]("tsrs")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TypeScriptChecker = LiteralKit(["tsrs", "tsgo", "tsc"]).pipe(
+  $I.annoteSchema("TypeScriptChecker", {
+    description: "TypeScript checkers a type-check or build script may invoke; tsrs is canonical.",
+  })
+);
+/**
+ * Decoded TypeScriptChecker value.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TypeScriptChecker = typeof TypeScriptChecker.Type;
+
+/**
+ * TypeScript checkers that fail the gate unless a manifest script carries an exemption.
+ *
+ * **Example** (Inspect NonCanonicalChecker)
+ *
+ * ```ts
+ * import { NonCanonicalChecker } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(NonCanonicalChecker)("tsrs")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const NonCanonicalChecker = TypeScriptChecker.omit(["tsrs"]).pipe(
+  $I.annoteSchema("NonCanonicalChecker", {
+    description: "TypeScript checkers that fail the gate unless a manifest script carries an exemption.",
+  })
+);
+/**
+ * Decoded NonCanonicalChecker value.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type NonCanonicalChecker = typeof NonCanonicalChecker.Type;
+
+/**
+ * Script keys whose commands must type-check with `tsrs`: `beep:build`, `beep:check`, `beep:check:*`.
+ *
+ * **Example** (Inspect CheckerScriptName)
+ *
+ * ```ts
+ * import { CheckerScriptName } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(CheckerScriptName)("beep:check:tests")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CheckerScriptName = S.String.check(S.isPattern(/^beep:(?:build|check(?::[\w:-]+)?)$/u)).pipe(
+  $I.annoteSchema("CheckerScriptName", {
+    description: "Script keys whose commands must type-check with tsrs: beep:build, beep:check, beep:check:*.",
+  })
+);
+/**
+ * Decoded CheckerScriptName value.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CheckerScriptName = typeof CheckerScriptName.Type;
+
+/**
+ * Seven actionable deviations from the canonical scripts contract.
+ *
+ * **Example** (Inspect PackageScriptsDrift)
+ *
+ * ```ts
+ * import { PackageScriptsDrift } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(PackageScriptsDrift)(undefined)) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PackageScriptsDrift = S.TaggedUnion({
+  "missing-task": { name: TaskScriptName },
+  "unexpected-task": { name: TaskScriptName },
+  "wrong-binding": { name: TaskScriptName, expected: S.String, actual: S.String },
+  "missing-impl": { name: ImplScriptName },
+  placeholder: { name: S.tag("codegen"), actual: S.String },
+  "derivation-conflict": { name: S.Literals(["doctest", "build"]), reason: S.String },
+  "checker-engine": { name: CheckerScriptName, engine: NonCanonicalChecker, actual: S.String },
+}).pipe(
+  $I.annoteSchema("PackageScriptsDrift", {
+    description: "Seven actionable deviations from the canonical scripts contract.",
+  })
+);
+/**
+ * Decoded PackageScriptsDrift value.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PackageScriptsDrift = typeof PackageScriptsDrift.Type;
+
+/**
+ * Advisory difference between a package-owned implementation and its scaffold default.
+ *
+ * **Example** (Review a type-check command change)
+ * ```ts
+ * import { ImplScriptDrift } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * const drift = ImplScriptDrift.make({ name: "beep:check", expected: "tsrs -p tsconfig.check.json", actual: "tsrs -b tsconfig.json" })
+ * console.log(drift.name) // beep:check
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ImplScriptDrift extends S.Opaque<ImplScriptDrift, { readonly brand: unique symbol }>()(
+  S.Struct({ name: ImplScriptName, expected: S.String, actual: S.String }).pipe(
+    $I.annoteSchema("ImplScriptDrift", {
+      description:
+        "Advisory impl-script difference; package-owned values are preserved and fail the gate only through checker-engine drift.",
+    })
+  )
+) {}
+
+/**
+ * Reviewed permission for one manifest script to run a non-canonical TypeScript checker.
+ *
+ * **Details**
+ *
+ * The package-scripts gate fails a `beep:build`, `beep:check`, or `beep:check:*` script that runs
+ * a checker other than `tsrs`. An exemption names the manifest, the script, the checker, and why
+ * `tsrs` cannot serve that package (for example a reproduced `tsrs` defect or a plugin that only
+ * `tsgo` loads). Remove the row when the reason no longer holds.
+ *
+ * **Example** (Exempt one script)
+ * ```ts
+ * import { CheckerEngineExemption } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * const exemption = CheckerEngineExemption.make({
+ *   manifest: "packages/drivers/example/package.json",
+ *   script: "beep:check",
+ *   engine: "tsgo",
+ *   reason: "tsrs rejects a valid program; upstream issue linked in the package README",
+ * })
+ * console.log(exemption.engine) // tsgo
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CheckerEngineExemption extends S.Opaque<CheckerEngineExemption, { readonly brand: unique symbol }>()(
+  S.Struct({
+    manifest: S.String,
+    script: CheckerScriptName,
+    engine: NonCanonicalChecker,
+    reason: S.NonEmptyString,
+  }).pipe(
+    $I.annoteSchema("CheckerEngineExemption", {
+      description: "Reviewed permission for one manifest script to run a non-canonical TypeScript checker.",
+    })
+  )
+) {}
+
+/**
+ * Reviewed checker-engine exemptions; empty while every workspace type-checks with `tsrs`.
+ *
+ * **Example** (Inspect checkerEngineExemptions)
+ *
+ * ```ts
+ * import { checkerEngineExemptions } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * console.log(checkerEngineExemptions.length) // 0
+ * ```
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export const checkerEngineExemptions: ReadonlyArray<CheckerEngineExemption> = [];
+
+/**
+ * Non-negative number of workspace manifests examined.
+ *
+ * **Example** (Inspect ManifestCount)
+ *
+ * ```ts
+ * import { ManifestCount } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(ManifestCount)(undefined)) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ManifestCount = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
+  $I.annoteSchema("ManifestCount", { description: "Non-negative number of workspace manifests examined." })
+);
+/**
+ * Decoded ManifestCount value.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ManifestCount = typeof ManifestCount.Type;
+
+/**
+ * JSON report of checked manifests, drift, and written paths.
+ *
+ * **Example** (Inspect PackageScriptsReportWire)
+ *
+ * ```ts
+ * import { PackageScriptsReportWire } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * console.log(PackageScriptsReportWire.make({ schemaVersion: "package-scripts-report/v1", rules: "package-scripts-rules/v1", manifests: 0, drift: {}, implDrift: {}, written: [] }).manifests) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PackageScriptsReportWire extends S.Opaque<PackageScriptsReportWire, { readonly brand: unique symbol }>()(
+  S.Struct({
+    schemaVersion: S.tag("package-scripts-report/v1"),
+    rules: PackageScriptsRuleVersion,
+    manifests: ManifestCount,
+    drift: S.Record(S.String, S.Array(PackageScriptsDrift)),
+    // Added after v1 shipped: absent in earlier v1 payloads, decoded as empty.
+    implDrift: S.Record(S.String, S.Array(ImplScriptDrift)).pipe(S.withDecodingDefaultKey(Effect.succeed({}))),
+    written: S.Array(S.String),
+  }).pipe(
+    $I.annoteSchema("PackageScriptsReportWire", {
+      description: "JSON report of checked manifests, drift, and written paths.",
+    })
+  )
+) {}
+
+/**
+ * Collection view of a scripts policy report.
+ *
+ * **Example** (Inspect PackageScriptsReport)
+ *
+ * ```ts
+ * import { PackageScriptsReport } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * import * as HashMap from "effect/HashMap"
+ * import * as HashSet from "effect/HashSet"
+ * console.log(PackageScriptsReport.make({ schemaVersion: "package-scripts-report/v1", rules: "package-scripts-rules/v1", manifests: 0, drift: HashMap.empty(), implDrift: HashMap.empty(), written: HashSet.empty() }).manifests) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PackageScriptsReport extends S.Opaque<PackageScriptsReport, { readonly brand: unique symbol }>()(
+  S.Struct({
+    schemaVersion: S.tag("package-scripts-report/v1"),
+    rules: PackageScriptsRuleVersion,
+    manifests: ManifestCount,
+    drift: S.HashMap(S.String, S.Array(PackageScriptsDrift)),
+    implDrift: S.HashMap(S.String, S.Array(ImplScriptDrift)),
+    written: S.HashSet(S.String),
+  }).pipe($I.annoteSchema("PackageScriptsReport", { description: "Collection view of a scripts policy report." }))
+) {}
+
+/**
+ * Bidirectional codec between JSON-compatible reports and Effect collections.
+ *
+ * **Example** (Inspect PackageScriptsReportFromWire)
+ *
+ * ```ts
+ * import { PackageScriptsReportFromWire } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(PackageScriptsReportFromWire)(undefined)) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PackageScriptsReportFromWire = PackageScriptsReportWire.pipe(
+  S.decodeTo(
+    PackageScriptsReport,
+    SchemaTransformation.transform({
+      decode: ({
+        schemaVersion,
+        rules,
+        manifests,
+        drift,
+        implDrift,
+        written,
+      }): typeof PackageScriptsReport.Encoded => ({
+        schemaVersion,
+        rules,
+        manifests,
+        drift: HashMap.fromIterable(R.toEntries(drift)),
+        implDrift: HashMap.fromIterable(R.toEntries(implDrift)),
+        written: HashSet.fromIterable(written),
+      }),
+      encode: (report) =>
+        PackageScriptsReportWire.make({
+          ...report,
+          drift: R.fromEntries(A.sortWith(HashMap.toEntries(report.drift), ([key]) => key, Order.String)),
+          implDrift: R.fromEntries(
+            A.map(
+              A.sortWith(HashMap.toEntries(report.implDrift), ([key]) => key, Order.String),
+              ([key, rows]) => [key, A.map(rows, (row) => ImplScriptDrift.make(row))]
+            )
+          ),
+          written: A.sort(A.fromIterable(report.written), Order.String),
+        }),
+    })
+  ),
+  $I.annoteSchema("PackageScriptsReportFromWire", {
+    description: "Bidirectional codec between JSON-compatible reports and Effect collections.",
+  })
+);
+/**
+ * Decoded PackageScriptsReportFromWire value.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PackageScriptsReportFromWire = typeof PackageScriptsReportFromWire.Type;
+
+/**
+ * Explicit generator registry independent of current manifest script presence.
+ *
+ * **Example** (Inspect CodegenGeneratorPackage)
+ *
+ * ```ts
+ * import { CodegenGeneratorPackage } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(CodegenGeneratorPackage)(undefined)) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CodegenGeneratorPackage = LiteralKit([
+  "packages/tooling/policy-pack/repo-configs",
+  "packages/foundation/modeling/identity",
+  "apps/professional-desktop",
+  "packages/drivers/runpod",
+  "packages/drivers/govinfo",
+  "packages/drivers/gov-legal-mcp",
+  "packages/drivers/ecfr",
+  "packages/drivers/box",
+  "packages/drivers/acp",
+]).pipe(
+  $I.annoteSchema("CodegenGeneratorPackage", {
+    description: "Explicit generator registry independent of current manifest script presence.",
+  })
+);
+/**
+ * Decoded CodegenGeneratorPackage value.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CodegenGeneratorPackage = typeof CodegenGeneratorPackage.Type;
+
+/**
+ * Canonical presence table in library, tool, ecosystem, app, lab, infra, and exempt order.
+ *
+ * **Example** (Inspect taskScriptRules)
+ *
+ * ```ts
+ * import { taskScriptRules } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * console.log(taskScriptRules.length) // 119
+ * ```
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export const taskScriptRules: ReadonlyArray<TaskScriptRule> = [
+  TaskScriptRule.make({
+    kind: "library",
+    name: "build",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:build", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "tool",
+    name: "build",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:build", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "ecosystem",
+    name: "build",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:build", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "app",
+    name: "build",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:build", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "lab",
+    name: "build",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:build", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "infra",
+    name: "build",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:build", ifPresent: false },
+  }),
+  TaskScriptRule.make({ kind: "exempt", name: "build", presence: { _tag: "optional" }, binding: { _tag: "owned" } }),
+  TaskScriptRule.make({
+    kind: "library",
+    name: "check",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:check", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "tool",
+    name: "check",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:check", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "ecosystem",
+    name: "check",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:check", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "app",
+    name: "check",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:check", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "lab",
+    name: "check",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:check", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "infra",
+    name: "check",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:check", ifPresent: false },
+  }),
+  TaskScriptRule.make({ kind: "exempt", name: "check", presence: { _tag: "optional" }, binding: { _tag: "owned" } }),
+  TaskScriptRule.make({
+    kind: "library",
+    name: "lint",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:lint", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "tool",
+    name: "lint",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:lint", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "ecosystem",
+    name: "lint",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:lint", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "app",
+    name: "lint",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:lint", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "lab",
+    name: "lint",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:lint", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "infra",
+    name: "lint",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:lint", ifPresent: false },
+  }),
+  TaskScriptRule.make({ kind: "exempt", name: "lint", presence: { _tag: "optional" }, binding: { _tag: "owned" } }),
+  TaskScriptRule.make({
+    kind: "library",
+    name: "test",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:test", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "tool",
+    name: "test",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:test", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "ecosystem",
+    name: "test",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:test", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "app",
+    name: "test",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:test", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "lab",
+    name: "test",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:test", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "infra",
+    name: "test",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:test", ifPresent: false },
+  }),
+  TaskScriptRule.make({ kind: "exempt", name: "test", presence: { _tag: "optional" }, binding: { _tag: "owned" } }),
+  TaskScriptRule.make({
+    kind: "library",
+    name: "lint:fix",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:lint:fix", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "tool",
+    name: "lint:fix",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:lint:fix", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "ecosystem",
+    name: "lint:fix",
+    presence: { _tag: "optional" },
+    binding: { _tag: "indirection", impl: "beep:lint:fix", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "app",
+    name: "lint:fix",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:lint:fix", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "lab",
+    name: "lint:fix",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:lint:fix", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "infra",
+    name: "lint:fix",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:lint:fix", ifPresent: false },
+  }),
+  TaskScriptRule.make({ kind: "exempt", name: "lint:fix", presence: { _tag: "optional" }, binding: { _tag: "owned" } }),
+  TaskScriptRule.make({
+    kind: "library",
+    name: "test:property",
+    presence: { _tag: "optional" },
+    binding: { _tag: "indirection", impl: "beep:test", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "tool",
+    name: "test:property",
+    presence: { _tag: "optional" },
+    binding: { _tag: "indirection", impl: "beep:test", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "ecosystem",
+    name: "test:property",
+    presence: { _tag: "absent" },
+    binding: { _tag: "indirection", impl: "beep:test", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "app",
+    name: "test:property",
+    presence: { _tag: "optional" },
+    binding: { _tag: "indirection", impl: "beep:test", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "lab",
+    name: "test:property",
+    presence: { _tag: "absent" },
+    binding: { _tag: "indirection", impl: "beep:test", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "infra",
+    name: "test:property",
+    presence: { _tag: "absent" },
+    binding: { _tag: "indirection", impl: "beep:test", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "exempt",
+    name: "test:property",
+    presence: { _tag: "optional" },
+    binding: { _tag: "owned" },
+  }),
+  TaskScriptRule.make({
+    kind: "library",
+    name: "test:integration",
+    presence: { _tag: "optional" },
+    binding: { _tag: "indirection", impl: "beep:test:integration", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "tool",
+    name: "test:integration",
+    presence: { _tag: "absent" },
+    binding: { _tag: "indirection", impl: "beep:test:integration", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "ecosystem",
+    name: "test:integration",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:test:integration", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "app",
+    name: "test:integration",
+    presence: { _tag: "optional" },
+    binding: { _tag: "indirection", impl: "beep:test:integration", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "lab",
+    name: "test:integration",
+    presence: { _tag: "absent" },
+    binding: { _tag: "indirection", impl: "beep:test:integration", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "infra",
+    name: "test:integration",
+    presence: { _tag: "absent" },
+    binding: { _tag: "indirection", impl: "beep:test:integration", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "exempt",
+    name: "test:integration",
+    presence: { _tag: "optional" },
+    binding: { _tag: "owned" },
+  }),
+  TaskScriptRule.make({
+    kind: "library",
+    name: "test:integration:parallel",
+    presence: { _tag: "optional" },
+    binding: { _tag: "indirection", impl: "beep:test:integration", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "tool",
+    name: "test:integration:parallel",
+    presence: { _tag: "absent" },
+    binding: { _tag: "indirection", impl: "beep:test:integration", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "ecosystem",
+    name: "test:integration:parallel",
+    presence: { _tag: "optional" },
+    binding: { _tag: "indirection", impl: "beep:test:integration", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "app",
+    name: "test:integration:parallel",
+    presence: { _tag: "optional" },
+    binding: { _tag: "indirection", impl: "beep:test:integration", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "lab",
+    name: "test:integration:parallel",
+    presence: { _tag: "absent" },
+    binding: { _tag: "indirection", impl: "beep:test:integration", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "infra",
+    name: "test:integration:parallel",
+    presence: { _tag: "absent" },
+    binding: { _tag: "indirection", impl: "beep:test:integration", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "exempt",
+    name: "test:integration:parallel",
+    presence: { _tag: "optional" },
+    binding: { _tag: "owned" },
+  }),
+  TaskScriptRule.make({
+    kind: "library",
+    name: "coverage",
+    presence: { _tag: "required" },
+    binding: { _tag: "owned" },
+  }),
+  TaskScriptRule.make({ kind: "tool", name: "coverage", presence: { _tag: "required" }, binding: { _tag: "owned" } }),
+  TaskScriptRule.make({
+    kind: "ecosystem",
+    name: "coverage",
+    presence: { _tag: "required" },
+    binding: { _tag: "owned" },
+  }),
+  TaskScriptRule.make({ kind: "app", name: "coverage", presence: { _tag: "optional" }, binding: { _tag: "owned" } }),
+  TaskScriptRule.make({
+    kind: "lab",
+    name: "coverage",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:coverage", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "infra",
+    name: "coverage",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:coverage", ifPresent: false },
+  }),
+  TaskScriptRule.make({ kind: "exempt", name: "coverage", presence: { _tag: "optional" }, binding: { _tag: "owned" } }),
+  TaskScriptRule.make({
+    kind: "library",
+    name: "docgen",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:docgen", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "tool",
+    name: "docgen",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:docgen", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "ecosystem",
+    name: "docgen",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:docgen", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "app",
+    name: "docgen",
+    presence: { _tag: "optional" },
+    binding: { _tag: "indirection", impl: "beep:docgen", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "lab",
+    name: "docgen",
+    presence: { _tag: "absent" },
+    binding: { _tag: "indirection", impl: "beep:docgen", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "infra",
+    name: "docgen",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:docgen", ifPresent: false },
+  }),
+  TaskScriptRule.make({ kind: "exempt", name: "docgen", presence: { _tag: "optional" }, binding: { _tag: "owned" } }),
+  TaskScriptRule.make({
+    kind: "library",
+    name: "package-test-typecheck",
+    presence: { _tag: "required" },
+    binding: { _tag: "cli", command: "beep-cli quality test-tsgo-package" },
+  }),
+  TaskScriptRule.make({
+    kind: "tool",
+    name: "package-test-typecheck",
+    presence: { _tag: "required" },
+    binding: { _tag: "cli", command: "beep-cli quality test-tsgo-package" },
+  }),
+  TaskScriptRule.make({
+    kind: "ecosystem",
+    name: "package-test-typecheck",
+    presence: { _tag: "required" },
+    binding: { _tag: "cli", command: "beep-cli quality test-tsgo-package" },
+  }),
+  TaskScriptRule.make({
+    kind: "app",
+    name: "package-test-typecheck",
+    presence: { _tag: "required" },
+    binding: { _tag: "cli", command: "beep-cli quality test-tsgo-package" },
+  }),
+  TaskScriptRule.make({
+    kind: "lab",
+    name: "package-test-typecheck",
+    presence: { _tag: "required" },
+    binding: { _tag: "cli", command: "beep-cli quality test-tsgo-package" },
+  }),
+  TaskScriptRule.make({
+    kind: "infra",
+    name: "package-test-typecheck",
+    presence: { _tag: "required" },
+    binding: { _tag: "cli", command: "beep-cli quality test-tsgo-package" },
+  }),
+  TaskScriptRule.make({
+    kind: "exempt",
+    name: "package-test-typecheck",
+    presence: { _tag: "optional" },
+    binding: { _tag: "owned" },
+  }),
+  TaskScriptRule.make({
+    kind: "library",
+    name: "codegen",
+    presence: { _tag: "derived", rule: "codegen-generator" },
+    binding: { _tag: "owned" },
+  }),
+  TaskScriptRule.make({
+    kind: "tool",
+    name: "codegen",
+    presence: { _tag: "derived", rule: "codegen-generator" },
+    binding: { _tag: "owned" },
+  }),
+  TaskScriptRule.make({
+    kind: "ecosystem",
+    name: "codegen",
+    presence: { _tag: "derived", rule: "codegen-generator" },
+    binding: { _tag: "owned" },
+  }),
+  TaskScriptRule.make({
+    kind: "app",
+    name: "codegen",
+    presence: { _tag: "derived", rule: "codegen-generator" },
+    binding: { _tag: "owned" },
+  }),
+  TaskScriptRule.make({
+    kind: "lab",
+    name: "codegen",
+    presence: { _tag: "derived", rule: "codegen-generator" },
+    binding: { _tag: "owned" },
+  }),
+  TaskScriptRule.make({
+    kind: "infra",
+    name: "codegen",
+    presence: { _tag: "derived", rule: "codegen-generator" },
+    binding: { _tag: "owned" },
+  }),
+  TaskScriptRule.make({ kind: "exempt", name: "codegen", presence: { _tag: "optional" }, binding: { _tag: "owned" } }),
+  TaskScriptRule.make({
+    kind: "library",
+    name: "lint:deprecated-apis",
+    presence: { _tag: "required" },
+    binding: { _tag: "cli", command: "beep-cli lint deprecated-apis --package ." },
+  }),
+  TaskScriptRule.make({
+    kind: "tool",
+    name: "lint:deprecated-apis",
+    presence: { _tag: "required" },
+    binding: { _tag: "cli", command: "beep-cli lint deprecated-apis --package ." },
+  }),
+  TaskScriptRule.make({
+    kind: "ecosystem",
+    name: "lint:deprecated-apis",
+    presence: { _tag: "required" },
+    binding: { _tag: "cli", command: "beep-cli lint deprecated-apis --package ." },
+  }),
+  TaskScriptRule.make({
+    kind: "app",
+    name: "lint:deprecated-apis",
+    presence: { _tag: "required" },
+    binding: { _tag: "cli", command: "beep-cli lint deprecated-apis --package ." },
+  }),
+  TaskScriptRule.make({
+    kind: "lab",
+    name: "lint:deprecated-apis",
+    presence: { _tag: "required" },
+    binding: { _tag: "cli", command: "beep-cli lint deprecated-apis --package ." },
+  }),
+  TaskScriptRule.make({
+    kind: "infra",
+    name: "lint:deprecated-apis",
+    presence: { _tag: "required" },
+    binding: { _tag: "cli", command: "beep-cli lint deprecated-apis --package ." },
+  }),
+  TaskScriptRule.make({
+    kind: "exempt",
+    name: "lint:deprecated-apis",
+    presence: { _tag: "absent" },
+    binding: { _tag: "owned" },
+  }),
+  TaskScriptRule.make({
+    kind: "library",
+    name: "lint:jsdoc",
+    presence: { _tag: "required" },
+    binding: { _tag: "cli", command: "beep-cli lint jsdoc --package ." },
+  }),
+  TaskScriptRule.make({
+    kind: "tool",
+    name: "lint:jsdoc",
+    presence: { _tag: "required" },
+    binding: { _tag: "cli", command: "beep-cli lint jsdoc --package ." },
+  }),
+  TaskScriptRule.make({
+    kind: "ecosystem",
+    name: "lint:jsdoc",
+    presence: { _tag: "required" },
+    binding: { _tag: "cli", command: "beep-cli lint jsdoc --package ." },
+  }),
+  TaskScriptRule.make({
+    kind: "app",
+    name: "lint:jsdoc",
+    presence: { _tag: "required" },
+    binding: { _tag: "cli", command: "beep-cli lint jsdoc --package ." },
+  }),
+  TaskScriptRule.make({
+    kind: "lab",
+    name: "lint:jsdoc",
+    presence: { _tag: "absent" },
+    binding: { _tag: "cli", command: "beep-cli lint jsdoc --package ." },
+  }),
+  TaskScriptRule.make({
+    kind: "infra",
+    name: "lint:jsdoc",
+    presence: { _tag: "required" },
+    binding: { _tag: "cli", command: "beep-cli lint jsdoc --package ." },
+  }),
+  TaskScriptRule.make({ kind: "exempt", name: "lint:jsdoc", presence: { _tag: "absent" }, binding: { _tag: "owned" } }),
+  TaskScriptRule.make({
+    kind: "library",
+    name: "lint:laws",
+    presence: { _tag: "required" },
+    binding: { _tag: "cli", command: "beep-cli lint laws --package ." },
+  }),
+  TaskScriptRule.make({
+    kind: "tool",
+    name: "lint:laws",
+    presence: { _tag: "required" },
+    binding: { _tag: "cli", command: "beep-cli lint laws --package ." },
+  }),
+  TaskScriptRule.make({
+    kind: "ecosystem",
+    name: "lint:laws",
+    presence: { _tag: "required" },
+    binding: { _tag: "cli", command: "beep-cli lint laws --package ." },
+  }),
+  TaskScriptRule.make({
+    kind: "app",
+    name: "lint:laws",
+    presence: { _tag: "required" },
+    binding: { _tag: "cli", command: "beep-cli lint laws --package ." },
+  }),
+  TaskScriptRule.make({
+    kind: "lab",
+    name: "lint:laws",
+    presence: { _tag: "required" },
+    binding: { _tag: "cli", command: "beep-cli lint laws --package ." },
+  }),
+  TaskScriptRule.make({
+    kind: "infra",
+    name: "lint:laws",
+    presence: { _tag: "required" },
+    binding: { _tag: "cli", command: "beep-cli lint laws --package ." },
+  }),
+  TaskScriptRule.make({ kind: "exempt", name: "lint:laws", presence: { _tag: "absent" }, binding: { _tag: "owned" } }),
+  TaskScriptRule.make({
+    kind: "library",
+    name: "doctest",
+    presence: { _tag: "derived", rule: "doctest-sources" },
+    binding: { _tag: "indirection", impl: "beep:doctest", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "tool",
+    name: "doctest",
+    presence: { _tag: "derived", rule: "doctest-sources" },
+    binding: { _tag: "indirection", impl: "beep:doctest", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "ecosystem",
+    name: "doctest",
+    presence: { _tag: "derived", rule: "doctest-sources" },
+    binding: { _tag: "indirection", impl: "beep:doctest", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "app",
+    name: "doctest",
+    presence: { _tag: "derived", rule: "doctest-sources" },
+    binding: { _tag: "indirection", impl: "beep:doctest", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "lab",
+    name: "doctest",
+    presence: { _tag: "derived", rule: "doctest-sources" },
+    binding: { _tag: "indirection", impl: "beep:doctest", ifPresent: false },
+  }),
+  TaskScriptRule.make({
+    kind: "infra",
+    name: "doctest",
+    presence: { _tag: "absent" },
+    binding: { _tag: "indirection", impl: "beep:doctest", ifPresent: false },
+  }),
+  TaskScriptRule.make({ kind: "exempt", name: "doctest", presence: { _tag: "absent" }, binding: { _tag: "owned" } }),
+];
+/**
+ * Generator defaults used only for missing implementation keys; existing values are package-owned.
+ *
+ * **Example** (Inspect implScriptDefaults)
+ *
+ * ```ts
+ * import { implScriptDefaults } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * console.log(implScriptDefaults.length) // 54
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
+  ImplScriptDefault.make({ kind: "library", name: "beep:build", value: "tsrs -p tsconfig.json && bun run babel" }),
+  ImplScriptDefault.make({
+    kind: "library",
+    name: "beep:check",
+    value: "tsrs -p tsconfig.check.json && bun run beep:check:tests",
+  }),
+  ImplScriptDefault.make({ kind: "library", name: "beep:lint", value: "biome check ." }),
+  ImplScriptDefault.make({ kind: "library", name: "beep:lint:fix", value: "biome check . --write" }),
+  ImplScriptDefault.make({
+    kind: "library",
+    name: "beep:test",
+    value: "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
+  }),
+  ImplScriptDefault.make({
+    kind: "library",
+    name: "beep:test:integration",
+    value: "bunx --bun vitest run test/integration --passWithNoTests",
+  }),
+  ImplScriptDefault.make({ kind: "library", name: "beep:docgen", value: "bunx --bun --no-install docgen" }),
+  ImplScriptDefault.make({
+    kind: "library",
+    name: "beep:doctest",
+    value: "BEEP_VITEST_DOCTEST=1 bunx vitest run",
+  }),
+  ImplScriptDefault.make({ kind: "tool", name: "beep:build", value: "tsrs -p tsconfig.json && bun run babel" }),
+  ImplScriptDefault.make({
+    kind: "tool",
+    name: "beep:check",
+    value: "tsrs -p tsconfig.check.json && bun run beep:check:tests",
+  }),
+  ImplScriptDefault.make({ kind: "tool", name: "beep:lint", value: "biome check ." }),
+  ImplScriptDefault.make({ kind: "tool", name: "beep:lint:fix", value: "biome check . --write" }),
+  ImplScriptDefault.make({
+    kind: "tool",
+    name: "beep:test",
+    value: "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
+  }),
+  ImplScriptDefault.make({
+    kind: "tool",
+    name: "beep:test:integration",
+    value: "bunx --bun vitest run test/integration --passWithNoTests",
+  }),
+  ImplScriptDefault.make({ kind: "tool", name: "beep:docgen", value: "bunx --bun --no-install docgen" }),
+  ImplScriptDefault.make({ kind: "tool", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx vitest run" }),
+  ImplScriptDefault.make({ kind: "ecosystem", name: "beep:build", value: "tsrs -p tsconfig.json && bun run babel" }),
+  ImplScriptDefault.make({
+    kind: "ecosystem",
+    name: "beep:check",
+    value: "tsrs -p tsconfig.check.json && bun run beep:check:tests",
+  }),
+  ImplScriptDefault.make({ kind: "ecosystem", name: "beep:lint", value: "biome check ." }),
+  ImplScriptDefault.make({ kind: "ecosystem", name: "beep:lint:fix", value: "biome check . --write" }),
+  ImplScriptDefault.make({
+    kind: "ecosystem",
+    name: "beep:test",
+    value: "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
+  }),
+  ImplScriptDefault.make({
+    kind: "ecosystem",
+    name: "beep:test:integration",
+    value: "bunx --bun vitest run test/integration --passWithNoTests",
+  }),
+  ImplScriptDefault.make({ kind: "ecosystem", name: "beep:docgen", value: "bunx --bun --no-install docgen" }),
+  ImplScriptDefault.make({
+    kind: "ecosystem",
+    name: "beep:doctest",
+    value: "BEEP_VITEST_DOCTEST=1 bunx vitest run",
+  }),
+  ImplScriptDefault.make({ kind: "app", name: "beep:build", value: "tsrs -p tsconfig.check.json" }),
+  ImplScriptDefault.make({
+    kind: "app",
+    name: "beep:check",
+    value: "tsrs -p tsconfig.check.json",
+  }),
+  ImplScriptDefault.make({ kind: "app", name: "beep:lint", value: "biome check ." }),
+  ImplScriptDefault.make({ kind: "app", name: "beep:lint:fix", value: "biome check . --write" }),
+  ImplScriptDefault.make({ kind: "app", name: "beep:test", value: "bunx --bun vitest run" }),
+  ImplScriptDefault.make({
+    kind: "app",
+    name: "beep:test:integration",
+    value: "bunx --bun vitest run test/integration --passWithNoTests",
+  }),
+  ImplScriptDefault.make({ kind: "app", name: "beep:docgen", value: "bunx --bun --no-install docgen" }),
+  ImplScriptDefault.make({ kind: "app", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx vitest run" }),
+  ImplScriptDefault.make({ kind: "lab", name: "beep:build", value: "tsrs -p tsconfig.check.json" }),
+  ImplScriptDefault.make({
+    kind: "lab",
+    name: "beep:check",
+    value: "tsrs -p tsconfig.check.json",
+  }),
+  ImplScriptDefault.make({ kind: "lab", name: "beep:lint", value: "biome check ." }),
+  ImplScriptDefault.make({ kind: "lab", name: "beep:lint:fix", value: "biome check . --write" }),
+  ImplScriptDefault.make({ kind: "lab", name: "beep:test", value: "bunx --bun vitest run" }),
+  ImplScriptDefault.make({
+    kind: "lab",
+    name: "beep:coverage",
+    value: "bunx vitest run --coverage --exclude=test/integration/**",
+  }),
+  ImplScriptDefault.make({
+    kind: "lab",
+    name: "beep:test:integration",
+    value: "bunx --bun vitest run test/integration --passWithNoTests",
+  }),
+  ImplScriptDefault.make({ kind: "lab", name: "beep:docgen", value: "bunx --bun --no-install docgen" }),
+  ImplScriptDefault.make({ kind: "lab", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx vitest run" }),
+  ImplScriptDefault.make({ kind: "infra", name: "beep:build", value: "tsrs -p tsconfig.json && bun run babel" }),
+  ImplScriptDefault.make({
+    kind: "infra",
+    name: "beep:check",
+    value: "tsrs -p tsconfig.check.json && bun run beep:check:tests",
+  }),
+  ImplScriptDefault.make({ kind: "infra", name: "beep:lint", value: "biome check ." }),
+  ImplScriptDefault.make({ kind: "infra", name: "beep:lint:fix", value: "biome check . --write" }),
+  ImplScriptDefault.make({
+    kind: "infra",
+    name: "beep:test",
+    value: "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
+  }),
+  ImplScriptDefault.make({
+    kind: "infra",
+    name: "beep:test:integration",
+    value: "bunx --bun vitest run test/integration --passWithNoTests",
+  }),
+  ImplScriptDefault.make({
+    kind: "infra",
+    name: "beep:coverage",
+    value:
+      "bun run --cwd node_modules/@pulumi/gharunners build && bunx vitest run --coverage --exclude=test/integration/**",
+  }),
+  ImplScriptDefault.make({ kind: "infra", name: "beep:docgen", value: "bunx --bun --no-install docgen" }),
+  ImplScriptDefault.make({ kind: "infra", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx vitest run" }),
+];
+
+const scaffoldRule = (scripts: HashMap.HashMap<string, string>, rule: TaskScriptRule) => {
+  const binding = rule.binding;
+  if (binding._tag === "owned") return scripts;
+  if (binding._tag === "cli") return HashMap.set(scripts, rule.name, binding.command);
+  const tasks = HashMap.set(scripts, rule.name, `bun run ${binding.ifPresent ? "--if-present " : ""}${binding.impl}`);
+  const implementation = A.findFirst(implScriptDefaults, (row) => row.kind === rule.kind && row.name === binding.impl);
+  return O.isSome(implementation) ? HashMap.set(tasks, binding.impl, implementation.value.value) : tasks;
+};
+
+/**
+ * Exercise one decoded scaffold binding with caller-owned seed scripts in tests.
+ *
+ * **Example** (Keep an optional implementation call)
+ *
+ * ```ts
+ * import { applyScaffoldRuleForTesting, TaskScriptBinding, TaskScriptPresence, TaskScriptRule } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * import * as HashMap from "effect/HashMap"
+ * const rule = TaskScriptRule.make({
+ *   kind: "library",
+ *   name: "build",
+ *   presence: TaskScriptPresence.cases.optional.make({}),
+ *   binding: TaskScriptBinding.cases.indirection.make({ impl: "beep:build", ifPresent: true }),
+ * })
+ * console.log(HashMap.size(applyScaffoldRuleForTesting(HashMap.empty(), rule))) // 2
+ * console.log(HashMap.size(applyScaffoldRuleForTesting(rule)(HashMap.empty()))) // 2
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const applyScaffoldRuleForTesting: {
+  (scripts: HashMap.HashMap<string, string>, rule: TaskScriptRule): HashMap.HashMap<string, string>;
+  (rule: TaskScriptRule): (scripts: HashMap.HashMap<string, string>) => HashMap.HashMap<string, string>;
+} = dual(2, scaffoldRule);
+
+const scaffoldRuleEnabled =
+  (kind: PackageKind, optionalTasks: ReadonlyArray<TaskScriptName>) => (rule: TaskScriptRule) =>
+    rule.kind === kind &&
+    (rule.presence._tag === "required" || (rule.presence._tag === "optional" && A.contains(optionalTasks, rule.name)));
+
+/**
+ * Construct required scaffold bindings and explicitly selected optional tasks from the rule table.
+ *
+ * **Details**
+ * Includes defaults behind enabled indirections.
+ * Package-owned tasks and extra scripts remain the caller's responsibility. Derived tasks
+ * require filesystem evidence and are left to the policy writer.
+ *
+ * **Example** (Construct a library scaffold block)
+ *
+ * ```ts
+ * import { scaffoldPackageScripts } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * const scripts = scaffoldPackageScripts("library", ["test:integration"])
+ * console.log(scripts.docgen) // "bun run beep:docgen"
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const scaffoldPackageScripts: {
+  (kind: PackageKind, optionalTasks: ReadonlyArray<TaskScriptName>): ScriptsRecord;
+  (optionalTasks: ReadonlyArray<TaskScriptName>): (kind: PackageKind) => ScriptsRecord;
+} = dual(2, (kind: PackageKind, optionalTasks: ReadonlyArray<TaskScriptName>): ScriptsRecord => {
+  const scripts = A.reduce(
+    A.filter(taskScriptRules, scaffoldRuleEnabled(kind, optionalTasks)),
+    HashMap.empty<string, string>(),
+    scaffoldRule
+  );
+  return R.fromEntries(A.sortWith(HashMap.toEntries(scripts), ([key]) => key, Order.String));
+});

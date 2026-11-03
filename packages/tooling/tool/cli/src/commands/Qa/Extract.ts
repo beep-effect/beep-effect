@@ -46,6 +46,7 @@ import {
   SessionStore,
   videoSecondsToEpochMs,
 } from "@beep/qa-capture";
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import { A, O, Str } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -56,7 +57,6 @@ import * as N from "effect/Number";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { printLines } from "../../internal/cli/Printer.ts";
 import { QaCommandError } from "./Qa.errors.ts";
 import { renderExtractionPlanTable, renderRoundReport } from "./Qa.render.ts";
 import {

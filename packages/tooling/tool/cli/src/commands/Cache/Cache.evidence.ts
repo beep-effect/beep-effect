@@ -6,6 +6,8 @@
  */
 import { isResolvedPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
+import { readContainedFileBytesNoFollow } from "@beep/repo-cli-kit/cli/FsGuards";
+import { ensureZeroExit } from "@beep/repo-cli-kit/process/index";
 import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
 import { HostProcessArchitecture, HostProcessPlatform } from "@beep/utils";
 import * as A from "effect/Array";
@@ -16,11 +18,9 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
-import { ensureZeroExit } from "../../internal/process/index.ts";
 import { CacheCommandError } from "./Cache.errors.ts";
+import type { CapturedStreams } from "@beep/repo-cli-kit/process/index";
 import type { CacheEvidenceReference } from "@beep/repo-configs/cache";
-import type { CapturedStreams } from "../../internal/process/index.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.evidence");
 const CacheSupervisorFailureHint = LiteralKit([

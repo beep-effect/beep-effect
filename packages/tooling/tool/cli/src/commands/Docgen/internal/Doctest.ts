@@ -1,5 +1,7 @@
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
+import { workspaceDirectories } from "@beep/repo-cli-kit/RepoWorkspaces";
+import { createInMemoryTsMorphProject } from "@beep/repo-cli-kit/tsmorph/index";
 import { extractFencedCodeBlockDetails } from "@beep/repo-docgen/Core";
 import { FsUtils, findRepoRoot, GlobOptions } from "@beep/repo-utils";
 import { doctestSourceMarker, isDoctestSourcePath } from "@beep/repo-utils/JSDoc/DoctestSource";
@@ -24,9 +26,7 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import { Node, SyntaxKind } from "ts-morph";
-import { workspaceDirectories } from "../../../internal/RepoWorkspaces.ts";
 import { adaptGitKitError } from "../../../internal/repo-run/index.ts";
-import { createInMemoryTsMorphProject } from "../../../internal/tsmorph/index.ts";
 import { DoctestAnalysisError, DoctestRewriteError } from "../Doctest.errors.ts";
 import {
   ConsoleRewrite,

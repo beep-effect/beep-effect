@@ -9,6 +9,8 @@ import { Git, GitOptions } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc, JsoncParseOptions } from "@beep/jsonc/Jsonc";
+import { messageWithCause } from "@beep/repo-cli-kit/cli/CommandErrorFields";
+import { runCapturedStreams } from "@beep/repo-cli-kit/process/index";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { Fn } from "@beep/schema";
 import * as A from "effect/Array";
@@ -29,8 +31,6 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ts } from "ts-morph";
-import { messageWithCause } from "../../internal/cli/CommandErrorFields.ts";
-import { formatCommandLine, runCapturedStreams } from "../../internal/process/index.ts";
 import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
 import {
   ensureFallowAuditCacheRoot,

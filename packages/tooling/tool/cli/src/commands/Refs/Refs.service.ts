@@ -5,6 +5,14 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { OutputBound, runCaptured, runCapturedStreams } from "@beep/repo-cli-kit/process/StepExec";
+import {
+  readInstalledSystemdUnit,
+  resolveOperatorPath,
+  resolveUnitBunPath,
+  systemdUnitDirective,
+  systemdUserUnitDir,
+} from "@beep/repo-cli-kit/systemd/index";
 import { findRepoRoot } from "@beep/repo-utils";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
@@ -18,14 +26,6 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { OutputBound, runCaptured, runCapturedStreams } from "../../internal/process/StepExec.ts";
-import {
-  readInstalledSystemdUnit,
-  resolveOperatorPath,
-  resolveUnitBunPath,
-  systemdUnitDirective,
-  systemdUserUnitDir,
-} from "../../internal/systemd/index.ts";
 import { ReferenceWorkspaceError } from "./Refs.errors.ts";
 import {
   MEMBER_REFRESH_DETAIL_MAX_CHARS,

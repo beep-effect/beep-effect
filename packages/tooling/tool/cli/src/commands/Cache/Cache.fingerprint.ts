@@ -7,6 +7,10 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
+import { configStringOption } from "@beep/repo-cli-kit/cli/EnvConfig";
+import { hashFileSha256, readContainedFileBytesNoFollow } from "@beep/repo-cli-kit/cli/FsGuards";
+import { OutputBound, runCaptured } from "@beep/repo-cli-kit/process/index";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { CacheTaskConfiguration } from "@beep/repo-configs/cache";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { HostProcessArchitecture, HostProcessPlatform } from "@beep/utils";
@@ -20,10 +24,6 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { configStringOption } from "../../internal/cli/EnvConfig.ts";
-import { hashFileSha256, readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
-import { OutputBound, runCaptured } from "../../internal/process/index.ts";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { collectCacheCensus, resolveCacheTurboBinary } from "./Cache.census.ts";
 import { inspectCacheDependencyTree } from "./Cache.dependencies.ts";
 import { CacheCommandError } from "./Cache.errors.ts";
