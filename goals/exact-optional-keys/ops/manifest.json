@@ -4,13 +4,13 @@
     "id": "exact-optional-keys",
     "packetId": "goal-packet/v1:ef76cd22e91ccdcda74337bb3239157f3a05ddc269a4cc9cc13aa1c70c29002d",
     "title": "Exact optional schema keys",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-10-23",
     "updated": "2026-11-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/exact-optional-keys",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Migrate S.optional, S.withDecodingDefault and S.OptionFromOptional fields to their exact *Key siblings with a tested codemod, and guard it with an EF-40 GritQL law",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -113,7 +113,7 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "proposedCloseout": {
+  "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2326
   }

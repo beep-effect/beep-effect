@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "observation-hosted-test-evidence/v1",
+  "head": "e2213fedece9211801a17db607f4c4a3e95d5f94",
+  "pullRequest": 2612,
+  "workflowRun": 41494645039,
+  "jobId": 125450950519,
+  "jobName": "Test Unit (repo-cli-5)",
+  "jobConclusion": "success",
+  "startedAt": "2026-11-02T18:03:12Z",
+  "completedAt": "2026-11-02T18:13:43Z",
+  "jobUrl": "https://github.com/beep-effect/beep-effect/actions/runs/41494645039/job/125450950519",
+  "testFile": "packages/tooling/tool/cli/test/harness-ledger.test.ts",
+  "testFileSha256": "cf72c19891b9e02ba93d3bded09b2ae2ac1d9973c1b13165f5fd80483aafc075",
+  "passed": 51,
+  "executionLine": "2026-11-02T18:13:23.7172259Z  \u2713  shared  test/harness-ledger.test.ts (51 tests) 2769ms",
+  "retainedLogBytes": 181133,
+  "retainedLogSha256": "b9ac16927606f42dcaf72016016fd8b551444fec318c92599212391d3e385d84",
+  "unexecutedPackagePartitions": [
+    {
+      "jobId": 125450950105,
+      "partition": "unit-b",
+      "conclusion": "success",
+      "execution": "No selected tasks; skipped.",
+      "retainedLogBytes": 82331,
+      "retainedLogSha256": "9c145a09378f0815ff4344bb4c7d919b7c3eda52be662a7c593bf5eb56488eb3",
+      "executionLine": "2026-11-02T18:00:47.0713329Z [ci] test-unit unit-b: partition has no selected tasks (skipped)."
+    },
+    {
+      "jobId": 125450950207,
+      "partition": "unit-c",
+      "conclusion": "success",
+      "execution": "No selected tasks; skipped.",
+      "retainedLogBytes": 82331,
+      "retainedLogSha256": "33409eadfecc2bd3eed75b60d16a428b03e64aeaa9a37bf11a29777bc34b6139",
+      "executionLine": "2026-11-02T18:01:41.2862257Z [ci] test-unit unit-c: partition has no selected tasks (skipped)."
+    },
+    {
+      "jobId": 125450950215,
+      "partition": "unit-d",
+      "conclusion": "success",
+      "execution": "No selected tasks; skipped.",
+      "retainedLogBytes": 82332,
+      "retainedLogSha256": "a4a7c9e1ff7c3fbadfbc417d1eb53a7d659516ba8ce4ee0c87757eadd44fbf10",
+      "executionLine": "2026-11-02T18:04:40.3449939Z [ci] test-unit unit-d: partition has no selected tasks (skipped)."
+    }
+  ],
+  "scope": "Actual 51-case hosted HarnessLedger execution at the recorded e2213fed head. The other three green partitions did not execute AI-metrics, provider or Phoenix package tests. This receipt does not establish later-head readiness, backend execution, full transitive dependency closure or goal completion.",
+  "mergeReady": false,
+  "goalComplete": false
+}

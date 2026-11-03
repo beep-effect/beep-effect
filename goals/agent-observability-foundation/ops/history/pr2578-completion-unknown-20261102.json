@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "sanitized-completion-observation/v1",
+  "recordedAt": "2026-11-02T16:55:43.482993+00:00",
+  "packet": "agent-observability-foundation",
+  "finalPullRequest": 2578,
+  "acceptedHead": "7f91b189980ec022ea3dfa09a100218054247bb5",
+  "merge": {
+    "mergeCommit": "7740135bc1c945e02f5bea6994e7fef649ab72be",
+    "tree": "7d6dc17e327b800efd0319913745d30ad5350e81",
+    "mergedAt": "2026-11-02T16:47:28.000Z",
+    "method": null,
+    "baseRef": "main"
+  },
+  "outcome": "unknown",
+  "requiredChecks": {
+    "contexts": [
+      "Codegen Drift",
+      "Commitlint",
+      "Heavy / Check",
+      "Heavy / Docgen",
+      "Heavy / Doctest",
+      "Heavy / Test Integration",
+      "JSDoc Ratchet",
+      "Lint",
+      "Nix Shell",
+      "Professional Desktop IPC Stdio",
+      "Repo Sanity",
+      "SAST",
+      "Secret Scanning",
+      "Security",
+      "Test Unit"
+    ],
+    "inventoryComplete": true,
+    "effectiveAt": "2026-11-02T16:47:28.000Z"
+  },
+  "evidence": [
+    {
+      "kind": "hosted-required-checks",
+      "outcome": "verified",
+      "observedHead": "7f91b189980ec022ea3dfa09a100218054247bb5",
+      "detail": "Required contexts observed at accepted head before merge; 15 contexts. Merge-time evidence verified: complete rule-suite inventory and 15 green required contexts at the accepted head. The merge-push rule suite supplies the merge-time ruleset inventory, including rulesets deleted since then; GitHub lists rule suites for one month."
+    },
+    {
+      "kind": "yeet-verdict",
+      "outcome": "unknown",
+      "observedHead": "7f91b189980ec022ea3dfa09a100218054247bb5",
+      "detail": "Yeet verdict checked against resolvedHeadSha and mergeReady.ready."
+    },
+    {
+      "kind": "hosted-required-checks",
+      "outcome": "verified",
+      "observedHead": "7f91b189980ec022ea3dfa09a100218054247bb5",
+      "detail": "Hosted required checks at accepted head."
+    }
+  ],
+  "boundary": "Sanitized derivative of the original canonical receipt. Fifteen merge-time required contexts are verified; the required current-head readiness verdict is unknown. This does not certify completion or retroactive readiness."
+}
