@@ -2135,3 +2135,24 @@ unit summary and coverage prerequisite failed downstream; comparison did not
 run and no floor is lowered. Retain actual failed logs and artifact digests;
 exact-head hosted repair proof remains required. No local verify/publish or
 repository test suite ran.
+
+### Producer capability test CRAP finding, 2026-11-03
+
+Run 41583610462 confirms cognitive complexity 7 is within floor 8, but the
+remaining combined capability/publication test has cyclomatic complexity 13
+and estimated-coverage CRAP 49.5. Its same finding also blocks health. Separate
+approved delivery from unprivileged-step/public artifact/cleanup checks; retain
+every assertion and reject bracket as well as dot secret lookups. No threshold,
+coverage estimate or baseline changes. Fresh hosted proof remains required.
+
+### Current Cloudflare token-policy read denied, 2026-11-03
+
+The saved provisioning-reference wrapper resolves through the approved agent
+lane. A bounded read-only account-token metadata request returned HTTP 403
+before policy data was returned. This proves neither current policy nor
+revocation; retain the separate passing object-role observations. One metadata
+request, no storage/grant/credential mutation. The first attempt also refused
+a non-private output parent before any request; an exclusive mode-0700 folder
+resolved that local preflight without changing the containing state directory.
+Stop this credential path; a separately authorized existing management route
+must establish the current policy before that acceptance gate can pass.

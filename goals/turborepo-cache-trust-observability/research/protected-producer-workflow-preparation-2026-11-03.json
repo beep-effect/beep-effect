@@ -15,7 +15,7 @@
     },
     {
       "path": "packages/tooling/tool/cli/test/ci-runner-security.test.ts",
-      "sha256": "e2593822be0d6d3d1c67274ad88c2a83b9c8b79e594d8577012ccc5d26c46148"
+      "sha256": "c20cb923a8ac8a0daa488eaf0b6e43440463aab8d36ab992a1fd87d8fecd2cbc"
     }
   ],
   "route": {
@@ -159,5 +159,24 @@
     "downstream": "Test Unit summary failed because its shard failed; Coverage Regression refused UNIT_RESULT=failure before comparison. No coverage floor changed or claimed passed.",
     "localProofExecuted": false,
     "hostedRepairProof": "pending"
+  },
+  "secondFallowRepair": {
+    "recordedAt": "2026-11-03T05:31:09.116846+00:00",
+    "failedHead": "9c4ac1dbcdd9c0a008d9a92eef4d9b66dfbfe4e4",
+    "runId": 41583610462,
+    "jobId": 125744245787,
+    "artifactId": 13207141393,
+    "artifactSha256": "c42ebcb2094c99603786dbc1bbb9ba0a5f5fc3e80c30bf8c113dab209e51994d",
+    "diagnostic": {
+      "cognitive": 7,
+      "cyclomatic": 13,
+      "crap": 49.5,
+      "coverageSource": "estimated"
+    },
+    "repair": "Separate approved capability delivery from unprivileged-step/public-artifact cleanup assertions. Retain every check; reject both dot and bracket secret lookups on unprivileged environment values.",
+    "healthFinding": "The same complexity finding also blocks the health envelope.",
+    "thresholdsOrBaselinesChanged": false,
+    "localTestsExecuted": false,
+    "hostedProof": "pending"
   }
 }

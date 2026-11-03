@@ -526,7 +526,7 @@
   "priorSpecSha256AtProtectedWorkflowPreparation": "e5157183e7007be1ceb7f4312b91d9d0a9a46c38cac501a5e7732b9a9556ac7e",
   "protectedProducerWorkflowPreparation": {
     "path": "research/protected-producer-workflow-preparation-2026-11-03.json",
-    "sha256": "ba170b8706770149120b6eed40e2bfd4fa670f683e50e6330a4ae8f8ead6e8b6",
+    "sha256": "3ce7b7d726ffe342cf56fe0dc2982b7c3a3a8753f8d995649d92661f52841032",
     "authority": "Closed workflow wiring only. No installed issuer, runtime credential delivery, protected execution, published observation, qualification or whole-goal acceptance."
   },
   "acceptedMainSpecSha256AtSavedStorageIntegration": "2c028c5adce1ad31f59feb958ef90386fe13f2409bb5611c757f2aafdca17c77",

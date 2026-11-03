@@ -1914,7 +1914,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     })
   );
 
-  it.effect("confines protected producer capabilities to their approved execution steps", () =>
+  it.effect("binds producer installation and publication to their approved capabilities", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* findRepoRoot();
@@ -1961,6 +1961,18 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         R2_ACCESS_KEY_ID: "${{ secrets.BEEP_CACHE_TRIAL_R2_ACCESS_KEY_ID }}",
         R2_SECRET_ACCESS_KEY: "${{ secrets.BEEP_CACHE_TRIAL_R2_SECRET_ACCESS_KEY }}",
       });
+    })
+  );
+
+  it.effect("keeps other producer steps unprivileged and bounds public artifacts and cleanup", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const heavy = parseWorkflowYaml(yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`));
+      const steps = jobSteps(yield* workflowJobs(heavy), "producer-execute");
+      const installName = "Install independently approved issuer only";
+      const runName = "Execute closed signed trial and retain private observation";
+      const publishName = "Publish issued observation using storage capabilities only";
       for (const step of A.filter(steps, (step) => step.name !== installName)) {
         expect(step.run ?? "").not.toContain("producer-install");
       }
@@ -1970,7 +1982,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         A.flatMap((step) => R.values(step.env ?? {})),
         A.filter(S.is(S.String))
       );
-      for (const value of unprivilegedValues) expect(value).not.toContain("secrets.");
+      for (const value of unprivilegedValues) expect(value).not.toMatch(/\bsecrets(?:\.|\[)/u);
       for (const step of steps) {
         expect(step.uses ?? "").not.toContain("actions/cache");
         expect(step.run ?? "").not.toContain("op read");
