@@ -740,3 +740,18 @@ applicability reviews remain at their recorded scope; no semantic qualification,
 permission-hash behavior, repository upgrade or rollout is inferred. Actual
 permission-sensitive invalidation/portability and every whole-goal criterion
 remain open. Hosted CI is authoritative; no local verify/publish/package suite.
+
+
+### Measured Linux permission hashes, 2026-11-03
+
+[The source-bound checkpoint](research/permission-mode-hash-checkpoint-2026-11-03.json)
+records 132 sequential native dry runs and four early driver refusals. No task
+body executed. The regular-file controls pass across three Git shapes; alias
+behavior remains observational and differs by client/index state. Earlier
+configuration reports and private calibration captures remain unchanged.
+
+Keep the permission feature pending and disabled. Windows, symlink-own-mode,
+portable restoration, real-task and epoch qualification remain open, as do all
+nine adoption acceptance criteria. This wave adds reproducible evidence only;
+hosted checks remain authoritative for PR quality. No local verify, publish,
+package gate or repository test suite ran.

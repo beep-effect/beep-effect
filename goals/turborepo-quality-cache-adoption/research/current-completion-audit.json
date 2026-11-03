@@ -3,7 +3,7 @@
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "365bd154b05b4d425cecaf6ce5cb966cf00b9cb3",
-  "specSha256": "45b036fe83f2cf98a86fc66442883f2ae0f1675f2962d4118caa576d575ef76e",
+  "specSha256": "dfc0b76b82359d3e9ed5fc4892fd78128ef91b82b50d64f31a21d4a88bb1e248",
   "acceptance": [
     {
       "id": "AC-01",
@@ -388,5 +388,11 @@
     "path": "research/current-feature-client-refresh-2026-11-03.json",
     "sha256": "35620c69fce97204477088a643515e83754f479f2f6a6f5017b69412e1d236d4",
     "authority": "Fresh native identities, documentation/schema inventory and configuration parsing only. No semantic feature or computation qualification, dependency upgrade or rollout."
+  },
+  "priorSpecSha256AtPermissionModeObservation": "45b036fe83f2cf98a86fc66442883f2ae0f1675f2962d4118caa576d575ef76e",
+  "permissionModeHashCheckpoint": {
+    "path": "research/permission-mode-hash-checkpoint-2026-11-03.json",
+    "sha256": "10037a14edc7a05e1044e6d29e374809fa78f5707e13406657cd1cbe7dcb2c78",
+    "authority": "Synthetic Linux regular-file hash invariants only; aliases are observations. No Windows, output restoration, real computation qualification, activation or performance proof."
   }
 }

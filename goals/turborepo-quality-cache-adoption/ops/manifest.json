@@ -140,7 +140,11 @@
     "research/native-future-flag-current-pair-availability-2026-11-03.json",
     "research/native-permission-flag-availability-2026-11-03.json",
     "research/permission-availability-driver-controls-2026-11-03.json",
-    "research/native-permission-flag-availability.py"
+    "research/native-permission-flag-availability.py",
+    "research/native-permission-mode-controls.py",
+    "research/native-permission-mode-controls-2026-11-03.json",
+    "research/permission-mode-driver-controls-2026-11-03.json",
+    "research/permission-mode-hash-checkpoint-2026-11-03.json"
   ],
   "agentLaunchers": [
     {
@@ -203,5 +207,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Active. The source-bound native census at fae5b2098c has 191 workspaces, 4,459 graph nodes, 2,400 executable computations and 1,646 configured cache-enabled computations; those flags grant no qualification. Current literal-source reviews keep 198 whole-task boundaries fresh, with 2,202 native reviews pending and five original qualification exclusions unchanged. Retired entries remain in preserved history. Two entrypoint obligations and non-Turbo/nested coverage remain open. Eleven of 36 feature decisions have scoped reviews and 25 remain pending. Qualification, supported adoption, measured value, real observation windows and every whole-goal criterion remain incomplete. The published current canary adds the canary-only permission-hash flag; 64 configuration dry runs executed no task bodies."
+  "statusNote": "Active. The source-bound native census at fae5b2098c has 191 workspaces, 4,459 graph nodes, 2,400 executable computations and 1,646 configured cache-enabled computations; those flags grant no qualification. Current literal-source reviews keep 198 whole-task boundaries fresh, with 2,202 native reviews pending and five original qualification exclusions unchanged. Retired entries remain in preserved history. Two entrypoint obligations and non-Turbo/nested coverage remain open. Eleven of 36 feature decisions have scoped reviews and 25 remain pending. Qualification, supported adoption, measured value, real observation windows and every whole-goal criterion remain incomplete. The published current canary adds the canary-only permission-hash flag; 64 configuration dry runs executed no task bodies. A separate 132-case Linux hash observation asserts regular-file mode/content controls and records alias differences; it executes no tasks and leaves the permission feature pending."
 }

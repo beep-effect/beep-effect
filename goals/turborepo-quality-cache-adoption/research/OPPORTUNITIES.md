@@ -811,3 +811,16 @@ observed schema difference changed the matrix and next qualification work.
   manifest-specific write scopes refused that assumption. Inspect and preserve
   each exact implementation; no broader command substitution or runtime proof
   was used. The corrected join revalidates 198 keep-fresh boundaries only.
+
+
+### 2026-11-03 — distinguish regular modes from alias behavior
+
+- During permission-hash qualification, private calibration caught an omitted
+  stable non-Git symlink input, the unsupported stable flag even when false,
+  and alias expectations that varied with native version and index state.
+  Failed captures remain retained; none is labeled a passing product test.
+- The source-bound driver asserts only regular-file invariants and records
+  alias inclusion/relationships separately. All 132 dry runs execute no tasks.
+  Its report includes the three omitted stable non-Git alias cases.
+- Before activation, require supported-platform and real-profile alias/output
+  controls. A schema description and a successful plan cannot supply that proof.
