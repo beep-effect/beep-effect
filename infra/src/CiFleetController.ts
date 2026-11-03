@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 /**
  * Pulumi terraform-module bridge for the beep CI ephemeral runner controller.
  *
@@ -104,6 +103,7 @@ const imdsJobHookPostInstall = `(
   logger -t beep-imds-hook "verified iptables-nft with OWNER match support"
   install -d -m 0755 /opt/beep
   cat > /opt/beep/imds-job-started.sh <<'BEEP_IMDS_DROP'
+#!/usr/bin/env bash
 set -eu
 runner_uid="$(id -u ${runnerRunAs})"
 iptables -C OUTPUT -d 169.254.169.254/32 -m owner --uid-owner "\${runner_uid}" -j DROP 2>/dev/null \\

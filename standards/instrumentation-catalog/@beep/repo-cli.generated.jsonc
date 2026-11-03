@@ -1838,7 +1838,6 @@
     {"name":"IdentityRegistry.applyRegistryFixes","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"IdentityRegistry.collectLocalRootViolations","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"IdentityRegistry.collectSourceFiles","owner":"@beep/repo-cli","family":"tooling","conforms":true},
-    {"name":"IdentityRegistry.collectSourceFiles.walk","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"IdentityRegistry.reportViolations","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"IdentityRegistry.runIdentityRegistryLint","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Image.extractFrames","owner":"@beep/repo-cli","family":"tooling","conforms":true},

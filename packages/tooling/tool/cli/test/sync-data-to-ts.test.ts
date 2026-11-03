@@ -909,7 +909,7 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })((it) => {
       });
 
       expect(rendered).toContain('import * as S from "effect/Schema"');
-      expect(rendered).toContain("S.decodeResult(S.fromJsonString(S.Unknown))");
+      expect(rendered).toContain("const decodeJson = S.decodeUnknownResult(S.fromJsonString(S.Unknown))");
       expect(rendered).toContain("Result.getOrThrow");
       expect(rendered).toContain("export const FixtureData: unknown");
       expect(rendered).not.toContain("JSON.parse");

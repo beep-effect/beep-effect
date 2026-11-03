@@ -1,13 +1,11 @@
+import { JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint";
 import { Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
-import { dual, identity, pipe } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as Order from "effect/Order";
-import * as P from "effect/Predicate";
-import * as R from "effect/Record";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { BoxContentMigrationMap } from "../BoxContentMigrationMap.ts";
@@ -18,37 +16,11 @@ import { BoxProvisioningPlan } from "../BoxProvisioningPlan.ts";
 import type * as SchemaIssue from "effect/SchemaIssue";
 import type { BoxLogicalKey } from "../BoxProvisioningIntent.ts";
 
-const UnknownJson = S.fromJsonString(S.Unknown);
-
 const decodeUnknownJson = S.decodeUnknownEffect(S.Json);
 
-type CanonicalEntry = readonly [key: string, value: unknown];
-
-const byKeyAscending = Order.mapInput(Order.String, ([key]: CanonicalEntry) => key);
 const zeroDigest = Sha256Hex.make(pipe("0", Str.repeat(64)));
 const sha256Equivalence = S.toEquivalence(Sha256Hex);
 const utf8 = new TextEncoder();
-
-const canonicalJson = (value: unknown): string => {
-  if (P.isNull(value) || P.isString(value) || P.isNumber(value) || P.isBoolean(value)) {
-    return Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity);
-  }
-  if (A.isArray(value)) {
-    return `[${A.join(A.map(value, canonicalJson), ",")}]`;
-  }
-  if (P.isObject(value)) {
-    const entries = A.sort(R.toEntries(value), byKeyAscending);
-    return `{${A.join(
-      A.map(
-        entries,
-        ([key, entry]) =>
-          `${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(key), identity)}:${canonicalJson(entry)}`
-      ),
-      ","
-    )}}`;
-  }
-  return "null";
-};
 
 /**
  * Schema failures raised while hashing canonical Box payloads; the digest itself cannot fail.
@@ -78,7 +50,8 @@ export const digestText = Effect.fnUntraced(function* (value: string) {
  */
 export const digestEncoded = Effect.fnUntraced(function* (value: unknown) {
   const json = yield* decodeUnknownJson(value);
-  return yield* digestText(canonicalJson(json));
+  const canonical = yield* JsoncFingerprint.canonicalize(json).pipe(Effect.orDie);
+  return yield* digestText(canonical);
 });
 
 type EncodedDigest = {

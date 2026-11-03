@@ -1522,42 +1522,50 @@ const runSastScan = Effect.fn("QualityScriptCommands.runSastScan")(function* (
   }
 
   yield* Console.log("[github-checks] sast: semgrep");
-  yield* runFixedStep(repoRoot, "sast:semgrep", "docker", [
-    "run",
-    "--rm",
-    "-e",
-    "SEMGREP_SEND_METRICS=off",
-    "-v",
-    `${repoRoot}:/src`,
-    "-w",
-    "/src",
-    "semgrep/semgrep",
-    "semgrep",
-    "scan",
-    // Fail the lane on findings. Without this, `semgrep scan` exits 0 even on
-    // blocking findings, so every rule below is advisory-only.
-    "--error",
-    "--config",
-    "p/typescript",
-    "--config",
-    "p/javascript",
-    "--config",
-    "p/security-audit",
-    "--config",
-    "p/secrets",
-    // Vendored, offline first-party rules — keep CI and the local replay
-    // verdict-identical without registry auth. See .semgrep/first-party.yml.
-    "--config",
-    "/src/.semgrep/first-party.yml",
-    "--disable-version-check",
-    "--timeout",
-    "20",
-    // Explicit targets bypass .semgrepignore. Traverse the root so Semgrep
-    // applies its ignore rules, then restrict that traversal to literal, root-anchored
-    // changed paths rather than interpreting filenames as gitignore patterns.
-    ...A.flatMap(semgrepFiles, (file) => ["--include", `/${Str.replace(/[\\[\]*?!#]/g, "\\$&")(file)}`]),
-    ".",
-  ]);
+  // Semgrep combines include patterns into a core-process argument. A broad
+  // codemod can overflow Linux's per-argument limit even before ARG_MAX.
+  // Keep each invocation bounded while preserving root discovery and ignores.
+  yield* Effect.forEach(
+    A.chunksOf(semgrepFiles, 128),
+    (files, index) =>
+      runFixedStep(repoRoot, `sast:semgrep:${index + 1}`, "docker", [
+        "run",
+        "--rm",
+        "-e",
+        "SEMGREP_SEND_METRICS=off",
+        "-v",
+        `${repoRoot}:/src`,
+        "-w",
+        "/src",
+        "semgrep/semgrep",
+        "semgrep",
+        "scan",
+        // Fail the lane on findings. Without this, `semgrep scan` exits 0 even on
+        // blocking findings, so every rule below is advisory-only.
+        "--error",
+        "--config",
+        "p/typescript",
+        "--config",
+        "p/javascript",
+        "--config",
+        "p/security-audit",
+        "--config",
+        "p/secrets",
+        // Vendored, offline first-party rules — keep CI and the local replay
+        // verdict-identical without registry auth. See .semgrep/first-party.yml.
+        "--config",
+        "/src/.semgrep/first-party.yml",
+        "--disable-version-check",
+        "--timeout",
+        "20",
+        // Explicit targets bypass .semgrepignore. Traverse the root so Semgrep
+        // applies its ignore rules, then restrict that traversal to literal, root-anchored
+        // changed paths rather than interpreting filenames as gitignore patterns.
+        ...A.flatMap(files, (file) => ["--include", `/${Str.replace(/[\\[\]*?!#]/g, "\\$&")(file)}`]),
+        ".",
+      ]),
+    { concurrency: 1, discard: true }
+  );
 });
 
 const runNixChecks = Effect.fn("QualityScriptCommands.runNixChecks")(function* (

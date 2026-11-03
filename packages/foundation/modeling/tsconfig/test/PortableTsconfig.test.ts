@@ -6,6 +6,7 @@ import { assert, describe, it } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import { identity } from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
@@ -394,7 +395,7 @@ describe("PortableTsconfig.make — the includeTypes opt-in", () => {
       const { compilerOptions } = PortableTsconfig.make(fullOptionZoo, options);
       assert.isFalse(
         "types" in compilerOptions,
-        `expected "types" dropped for ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(options), identity)}`
+        `expected "types" dropped for ${Inspectable.toStringUnknown(options)}`
       );
     }
   });

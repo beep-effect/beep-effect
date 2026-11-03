@@ -64,6 +64,7 @@
   "dependencies": {
     "@beep/box": "workspace:^",
     "@beep/identity": "workspace:^",
+    "@beep/jsonc": "workspace:^",
     "@beep/schema": "workspace:^",
     "@effect/platform-node-shared": "catalog:",
     "@noble/hashes": "catalog:",

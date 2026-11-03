@@ -48,7 +48,8 @@ describe("party claim binding", () => {
   it.effect("round-trips the shared envelope with party-owned ids", () =>
     Effect.gen(function* () {
       const decoded = yield* S.decodeUnknownEffect(ClaimVersion)(row);
-      expect(yield* S.encodeEffect(ClaimVersion)(decoded)).toEqual(row);
+      const encoded = yield* S.encodeEffect(ClaimVersion)(decoded);
+      expect(encoded).toEqual(row);
       expect(SchemaAST.resolveIdentifier(ClaimVersion.ast)).toContain("party-domain");
     })
   );

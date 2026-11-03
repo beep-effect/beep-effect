@@ -7,7 +7,6 @@
 
 import { $GithubActionsId } from "@beep/identity/packages";
 import { unstubbed } from "@beep/utils/TestDouble";
-import * as Bool from "effect/Boolean";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -18,6 +17,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ActionEnvironment } from "./ActionEnvironment.ts";
 import { ActionOutputs } from "./ActionOutputs.ts";
+import { isWindowsRunner } from "./internal/runner.ts";
 import { heredocBlock, isUsableName } from "./internal/runnerFile.ts";
 
 const $I = $GithubActionsId.create("ActionState");
@@ -195,12 +195,7 @@ const make = Effect.gen(function* () {
   const env = yield* ActionEnvironment;
   const fs = yield* FileSystem.FileSystem;
   const outputs = yield* ActionOutputs;
-  const argument = O.contains("Windows");
-  const gotOptional = yield* env.getOptional("RUNNER_OS");
-  const lineEnding = Bool.match(argument(gotOptional), {
-    onTrue: () => "\r\n" as const,
-    onFalse: () => "\n" as const,
-  });
+  const lineEnding = (yield* isWindowsRunner(env)) ? "\r\n" : "\n";
 
   const write: {
     (key: string, serialized: string): Effect.Effect<void, ActionStateError>;

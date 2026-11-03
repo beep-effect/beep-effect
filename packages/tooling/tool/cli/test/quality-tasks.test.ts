@@ -1011,6 +1011,41 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       })
     );
 
+    it.effect("bounds Semgrep include batches and propagates a later batch failure", () =>
+      Effect.gen(function* () {
+        const changed = A.makeBy(129, (index) => `packages/example/src/file-${index}.ts`);
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        let scanCount = 0;
+        const spawner = ScriptedSpawner.make((_command, args) => {
+          if (A.contains(args, "scan")) {
+            scanCount++;
+            return { exit: scanCount === 2 ? 2 : 0 };
+          }
+          return { stdout: A.contains(args, "--name-only") ? `${A.join(changed, "\0")}\0` : "" };
+        });
+        const failure = yield* runGithubChecks("sast").pipe(
+          Effect.provideServiceEffect(Git, Git.make),
+          provideSpawner(spawner),
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            exists: () => Effect.succeed(true),
+            realPath: (file) => Effect.succeed(path.resolve(file)),
+          }),
+          Effect.provideServiceEffect(Console.Console, TestConsole.make),
+          TestClock.withLive,
+          Effect.flip
+        );
+        expect(failure.message).toContain("exit code 2");
+        const scans = A.filter(spawnedArgv(spawner), (args) => A.contains(args, "scan"));
+        expect(A.map(scans, (args) => A.length(A.filter(args, (arg) => arg === "--include")))).toEqual([128, 1]);
+        expect(A.flatMap(scans, (args) => A.filter(args, Str.startsWith("/packages/example/")))).toEqual(
+          A.map(changed, (file) => `/${file}`)
+        );
+        expect(A.every(scans, (args) => A.last(args).pipe(O.contains(".")))).toBe(true);
+      })
+    );
+
     it.effect("runs the first-party Semgrep rule tests before the changed-file filter", () =>
       Effect.gen(function* () {
         const spawner = sastSpawner("");
