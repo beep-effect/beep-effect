@@ -250,13 +250,17 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
       expect((yield* Effect.flip(dictionary.read)).reason).toBe("invalid-input");
       expect((yield* Effect.flip(run)).reason).toBe("invalid-input");
       expect(calls).toBe(1);
-      for (const observed of [aliasFailure, writeFailure]) {
-        const failure = Exit.match(O.getOrThrow(observed), {
-          onFailure: (cause) => cause.pipe(Cause.findErrorOption, O.getOrThrow),
-          onSuccess: () => expect.fail("Expected the aliased mutation to fail"),
-        });
-        expect(failure.reason).toBe("limit-exceeded");
-      }
+      yield* Effect.forEach(
+        [aliasFailure, writeFailure],
+        Effect.fnUntraced(function* (observed) {
+          const failure = Exit.match(O.getOrThrow(observed), {
+            onFailure: (cause) => cause.pipe(Cause.findErrorOption, O.getOrThrow),
+            onSuccess: () => expect.fail("Expected the aliased mutation to fail"),
+          });
+          expect(failure.reason).toBe("limit-exceeded");
+        }),
+        { concurrency: 1, discard: true }
+      );
       expect(afterAlias).toBe(1);
       expect(afterWrite).toEqual([first, first]);
     })

@@ -12,11 +12,14 @@ import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as MutableList from "effect/MutableList";
-import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { CitationPythonUnicodeStorage, measureCitationPythonText } from "./PythonHash.ts";
+import {
+  CitationPythonUnicodeStorage,
+  measureCitationPythonText,
+  validateCitationPythonStorage,
+} from "./PythonHash.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/PythonUnicode");
 const Limits = S.toType(CitationEngineLimits);
@@ -94,20 +97,6 @@ const encodeText = Effect.fnUntraced(function* (text: string, width: 1 | 2 | 4, 
   }
   return bytes;
 });
-const validateStorage = Effect.fnUntraced(function* (bytes: Uint8Array, width: 1 | 2 | 4, maximum: number) {
-  let largest = 0;
-  let units = 0;
-  for (let index = 0; index < bytes.length; index += width) {
-    if (index % (width * 4096) === 0) yield* Effect.yieldNow;
-    const point = readPoint(bytes, index, width);
-    if (point > 0x10ffff) return yield* fail("invalid-input");
-    largest = Num.max(largest, point);
-    units += pointUnits(point);
-    if (units > maximum) return yield* fail("limit-exceeded");
-  }
-  if (width !== widthOf(largest)) return yield* fail("invalid-input");
-  return units;
-});
 const projectStorage = Effect.fnUntraced(function* (bytes: Uint8Array, width: 1 | 2 | 4) {
   const chunks = MutableList.make<string>();
   let chunk = "";
@@ -148,7 +137,13 @@ export const makeCitationPythonUnicode = Effect.fn("Citation.makePythonUnicode")
     if (decoded.bytes.length % width !== 0) return yield* fail("invalid-input");
     if (decoded.bytes.length / width > maximum) return yield* fail("limit-exceeded");
     const bytes = new Uint8Array(decoded.bytes);
-    const units = yield* validateStorage(bytes, width, maximum);
+    const units = yield* validateCitationPythonStorage(
+      bytes,
+      width,
+      maximum,
+      () => fail("invalid-input"),
+      () => fail("limit-exceeded")
+    );
     const text = yield* projectStorage(bytes, width);
     return CitationPythonUnicodeValue.make({
       storage: CitationPythonUnicodeStorage.make({ width, bytes }),

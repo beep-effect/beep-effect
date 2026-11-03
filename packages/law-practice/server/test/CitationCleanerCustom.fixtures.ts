@@ -11,6 +11,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -177,168 +178,350 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
     asText(value).pipe(Effect.flatMap((text) => emitText(`${text}!`, work)))
   );
   let steps = A.empty<CitationCleanerObject>();
-  if (scene === "repeated-callback") steps = [suffix, suffix];
-  else if (scene === "callback-raises") steps = [yield* callback("raise", () => Effect.fail(fail())), suffix];
-  else if (Str.startsWith("return-none")(scene) || Str.startsWith("none-to")(scene)) {
-    const value = yield* retain(null, () => ({ kind: "none" }));
-    steps = [yield* callback("none", (_input, work) => emit(value, work))];
-    if (scene === "none-to-text") steps.push(yield* callback("restore", (_input, work) => emitText("RESTORED", work)));
-    if (scene === "none-to-builtin") steps.push(yield* h.values.text("inline_whitespace"));
-  } else if (Str.startsWith("return-int")(scene) || Str.startsWith("int-to")(scene)) {
-    const value = yield* retain(7, () => ({ kind: "int", value: "7" }));
-    steps = [yield* callback("int", (_input, work) => emit(value, work))];
-    if (scene === "int-to-text") steps.push(yield* callback("restore", (_input, work) => emitText("RESTORED", work)));
-    if (scene === "int-to-builtin") steps.push(yield* h.values.text("underscores"));
-  } else if (Str.startsWith("return-bytes")(scene) || Str.startsWith("bytes-to")(scene)) {
-    const value = yield* h.values.bytes(new TextEncoder().encode("A__B"));
-    steps = [yield* callback("bytes", (_input, work) => emit(value, work))];
-    if (scene === "bytes-to-text")
-      steps.push(
-        yield* callback(
-          "decode",
-          Effect.fn("CleanerCustomTest.decodeBytes")(function* (input, work) {
-            const bytes = yield* Effect.fromOption(yield* h.values.getBytes(input), fail);
-            const text = yield* Effect.try({
-              try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
-              catch: fail,
-            });
-            return yield* emitText(text, work);
+  yield* Match.value(scene)
+    .pipe(
+      Match.when(
+        (candidate: string) => candidate === "repeated-callback",
+        () =>
+          Effect.gen(function* () {
+            steps = [suffix, suffix];
           })
-        )
-      );
-    if (scene === "bytes-to-builtin") steps.push(yield* h.values.text("all_whitespace"));
-  } else if (scene === "return-host" || scene === "host-to-text") {
-    const value = yield* retain({ sourceHost: true }, (ref) => ({ kind: "host", slot: slot(ref) }));
-    steps = [yield* callback("host", (_input, work) => emit(value, work))];
-    if (scene === "host-to-text")
-      steps.push(
-        yield* callback("consume", (input, work) =>
-          input === value ? emitText("SAME-HOST", work) : Effect.fail(fail())
-        )
-      );
-  } else if (scene === "live-list-value") {
-    const items = ["A"];
-    const value = yield* retain(items, (ref) => ({
-      kind: "list",
-      slot: slot(ref),
-      items: A.map(items, (text) => ({ kind: "text", text, subtype: "plain" })),
-    }));
-    steps = [
-      yield* callback("list", (_input, work) => emit(value, work)),
-      yield* callback("mutate", (input, work) => {
-        if (input !== value) return Effect.fail(fail());
-        // This source callback mutates the retained host list in place.
-        items.push("B");
-        return emit(input, work);
-      }),
-      yield* callback(
-        "join",
-        Effect.fn("CleanerCustomTest.joinList")(function* (input, work) {
-          const host = yield* Effect.fromOption(yield* h.values.getHost(input), fail);
-          const contents = yield* S.decodeUnknownEffect(HostStrings)(host).pipe(Effect.mapError(fail));
-          return yield* emitText(A.join(contents, ""), work);
-        })
       ),
-    ];
-  } else if (scene === "return-text-subclass")
-    steps = [
-      yield* callback(
-        "marked",
-        Effect.fn("CleanerCustomTest.marked")(function* (_input, work) {
-          const charge = yield* work.reserveText(6);
-          return CitationCleanerProduced.make({
-            value: yield* h.values.subclass("MARKED", "marked-source-text"),
-            charges: [charge],
-          });
-        })
+      Match.when(
+        (candidate: string) => candidate === "callback-raises",
+        () =>
+          Effect.gen(function* () {
+            steps = [yield* callback("raise", () => Effect.fail(fail())), suffix];
+          })
       ),
-    ];
-  else if (scene === "subclass-to-builtin") steps = [yield* h.values.text("underscores")];
-  else if (scene === "unknown-stops") steps = [yield* h.values.text("invalid"), suffix];
-  else if (scene === "state-across-runs") {
-    steps = [
-      yield* callback("suffix", (value, work) =>
-        asText(value).pipe(
-          Effect.flatMap((text) =>
-            emitText(`${text}${O.getOrElse(HashMap.get(counts, A.getUnsafe(steps, 0).slot), () => 0)}`, work)
-          )
-        )
+      Match.when(
+        (candidate: string) => Str.startsWith("return-none")(candidate) || Str.startsWith("none-to")(candidate),
+        () =>
+          Effect.gen(function* () {
+            const value = yield* retain(null, () => ({ kind: "none" }));
+            steps = [yield* callback("none", (_input, work) => emit(value, work))];
+            if (scene === "none-to-text")
+              steps.push(yield* callback("restore", (_input, work) => emitText("RESTORED", work)));
+            if (scene === "none-to-builtin") steps.push(yield* h.values.text("inline_whitespace"));
+          })
       ),
-    ];
-  } else if (scene === "unhashable-stops" || scene === "unhashable-callable") {
-    const value = yield* scene === "unhashable-stops"
-      ? retain([], () => ({ kind: "list", slot: 0, items: [] }))
-      : callback("uncalled", (_input, work) => emitText("WRONG", work));
-    unhashable = HashSet.add(unhashable, value.slot);
-    steps = scene === "unhashable-stops" ? [value, suffix] : [value];
-  } else if (scene === "integer-step") {
-    const value = yield* retain(1, () => ({ kind: "int", value: "1" }));
-    integer = O.some(value.slot);
-    steps = [value, suffix];
-  } else if (scene === "bytes-step") steps = [yield* h.values.bytes(new TextEncoder().encode("html")), suffix];
-  else if (scene === "steps-string") steps = yield* Effect.forEach(["h", "t", "m", "l"], h.values.text);
-  else if (scene === "steps-none") steps = [];
-  else if (scene === "iterator-raises" || scene === "iterator-raises-first")
-    steps = [suffix, yield* h.values.text("html"), suffix];
-  else if (scene === "live-step-append") {
-    steps = [
-      yield* callback("append-step", (value, work) => {
-        steps.push(suffix);
-        return emit(value, work);
-      }),
-    ];
-  } else if (scene === "builtin-function-step" || scene === "registry-function-key") {
-    // The real builtin handle is captured under the first operation's work.
-    steps = [];
-  } else if (scene === "callable-text-key") {
-    const key = yield* h.values.subclass("html", "callable-source-key");
-    callableText = O.some(key);
-    steps = [key];
-  } else if (scene === "lazy-sequence" || scene === "generator-sequence" || scene === "reused-generator") {
-    steps = [suffix, yield* h.values.text("html"), suffix];
-  } else if (scene === "live-step-remove") {
-    const remove = yield* callback("remove-step", (value, work) => {
-      steps.splice(1, 1);
-      return emit(value, work);
-    });
-    steps = [remove, suffix, yield* h.values.text("html")];
-  } else if (scene === "reentrant") {
-    steps = [
-      yield* callback(
-        "nested",
-        Effect.fn("CleanerCustomTest.nested")(function* (value, work) {
-          return yield* emit(yield* work.nested("nested-source", value), work);
-        })
+      Match.when(
+        (candidate: string) => Str.startsWith("return-int")(candidate) || Str.startsWith("int-to")(candidate),
+        () =>
+          Effect.gen(function* () {
+            const value = yield* retain(7, () => ({ kind: "int", value: "7" }));
+            steps = [yield* callback("int", (_input, work) => emit(value, work))];
+            if (scene === "int-to-text")
+              steps.push(yield* callback("restore", (_input, work) => emitText("RESTORED", work)));
+            if (scene === "int-to-builtin") steps.push(yield* h.values.text("underscores"));
+          })
       ),
-      suffix,
-    ];
-  } else if (scene === "resource-before-callback") steps = [yield* h.values.text("html"), suffix];
-  else if (Str.startsWith("dispatch:")(scene)) {
-    const value = yield* retain({ controlledStep: mode }, () => ({ kind: "step", mode }));
-    dispatch = O.some(value);
-    steps = [value];
-  } else if (Str.startsWith("registry-")(scene)) {
-    const html = yield* h.values.text("html");
-    const added = yield* h.values.text("added");
-    const replacement = yield* callback("registered", (value, work) =>
-      asText(value).pipe(Effect.flatMap((text) => emitText(`${text}:REGISTERED`, work)))
+      Match.when(
+        (candidate: string) => Str.startsWith("return-bytes")(candidate) || Str.startsWith("bytes-to")(candidate),
+        () =>
+          Effect.gen(function* () {
+            const value = yield* h.values.bytes(new TextEncoder().encode("A__B"));
+            steps = [yield* callback("bytes", (_input, work) => emit(value, work))];
+            if (scene === "bytes-to-text")
+              steps.push(
+                yield* callback(
+                  "decode",
+                  Effect.fn("CleanerCustomTest.decodeBytes")(function* (input, work) {
+                    const bytes = yield* Effect.fromOption(yield* h.values.getBytes(input), fail);
+                    const text = yield* Effect.try({
+                      try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
+                      catch: fail,
+                    });
+                    return yield* emitText(text, work);
+                  })
+                )
+              );
+            if (scene === "bytes-to-builtin") steps.push(yield* h.values.text("all_whitespace"));
+          })
+      ),
+      Match.when(
+        (candidate: string) => candidate === "return-host" || candidate === "host-to-text",
+        () =>
+          Effect.gen(function* () {
+            const value = yield* retain({ sourceHost: true }, (ref) => ({ kind: "host", slot: slot(ref) }));
+            steps = [yield* callback("host", (_input, work) => emit(value, work))];
+            if (scene === "host-to-text")
+              steps.push(
+                yield* callback("consume", (input, work) =>
+                  input === value ? emitText("SAME-HOST", work) : Effect.fail(fail())
+                )
+              );
+          })
+      ),
+      Match.when(
+        (candidate: string) => candidate === "live-list-value",
+        () =>
+          Effect.gen(function* () {
+            const items = ["A"];
+            const value = yield* retain(items, (ref) => ({
+              kind: "list",
+              slot: slot(ref),
+              items: A.map(items, (text) => ({ kind: "text", text, subtype: "plain" })),
+            }));
+            steps = [
+              yield* callback("list", (_input, work) => emit(value, work)),
+              yield* callback("mutate", (input, work) => {
+                if (input !== value) return Effect.fail(fail());
+                // This source callback mutates the retained host list in place.
+                items.push("B");
+                return emit(input, work);
+              }),
+              yield* callback(
+                "join",
+                Effect.fn("CleanerCustomTest.joinList")(function* (input, work) {
+                  const host = yield* Effect.fromOption(yield* h.values.getHost(input), fail);
+                  const contents = yield* S.decodeUnknownEffect(HostStrings)(host).pipe(Effect.mapError(fail));
+                  return yield* emitText(A.join(contents, ""), work);
+                })
+              ),
+            ];
+          })
+      ),
+      Match.when(
+        (candidate: string) => candidate === "return-text-subclass",
+        () =>
+          Effect.gen(function* () {
+            steps = [
+              yield* callback(
+                "marked",
+                Effect.fn("CleanerCustomTest.marked")(function* (_input, work) {
+                  const charge = yield* work.reserveText(6);
+                  return CitationCleanerProduced.make({
+                    value: yield* h.values.subclass("MARKED", "marked-source-text"),
+                    charges: [charge],
+                  });
+                })
+              ),
+            ];
+          })
+      ),
+      Match.when(
+        (candidate: string) => candidate === "subclass-to-builtin",
+        () =>
+          Effect.gen(function* () {
+            steps = [yield* h.values.text("underscores")];
+          })
+      ),
+      Match.when(
+        (candidate: string) => candidate === "unknown-stops",
+        () =>
+          Effect.gen(function* () {
+            steps = [yield* h.values.text("invalid"), suffix];
+          })
+      ),
+      Match.when(
+        (candidate: string) => candidate === "state-across-runs",
+        () =>
+          Effect.gen(function* () {
+            steps = [
+              yield* callback("suffix", (value, work) =>
+                asText(value).pipe(
+                  Effect.flatMap((text) =>
+                    emitText(`${text}${O.getOrElse(HashMap.get(counts, A.getUnsafe(steps, 0).slot), () => 0)}`, work)
+                  )
+                )
+              ),
+            ];
+          })
+      ),
+      Match.when(
+        (candidate: string) => candidate === "unhashable-stops" || candidate === "unhashable-callable",
+        () =>
+          Effect.gen(function* () {
+            const value = yield* scene === "unhashable-stops"
+              ? retain([], () => ({ kind: "list", slot: 0, items: [] }))
+              : callback("uncalled", (_input, work) => emitText("WRONG", work));
+            unhashable = HashSet.add(unhashable, value.slot);
+            steps = scene === "unhashable-stops" ? [value, suffix] : [value];
+          })
+      ),
+      Match.when(
+        (candidate: string) => candidate === "integer-step",
+        () =>
+          Effect.gen(function* () {
+            const value = yield* retain(1, () => ({ kind: "int", value: "1" }));
+            integer = O.some(value.slot);
+            steps = [value, suffix];
+          })
+      ),
+      Match.when(
+        (candidate: string) => candidate === "bytes-step",
+        () =>
+          Effect.gen(function* () {
+            steps = [yield* h.values.bytes(new TextEncoder().encode("html")), suffix];
+          })
+      )
+    )
+    .pipe(
+      Match.when(
+        (candidate: string) => candidate === "steps-string",
+        () =>
+          Effect.gen(function* () {
+            steps = yield* Effect.forEach(["h", "t", "m", "l"], h.values.text);
+          })
+      ),
+      Match.when(
+        (candidate: string) => candidate === "steps-none",
+        () =>
+          Effect.gen(function* () {
+            steps = [];
+          })
+      ),
+      Match.when(
+        (candidate: string) => candidate === "iterator-raises" || candidate === "iterator-raises-first",
+        () =>
+          Effect.gen(function* () {
+            steps = [suffix, yield* h.values.text("html"), suffix];
+          })
+      ),
+      Match.when(
+        (candidate: string) => candidate === "live-step-append",
+        () =>
+          Effect.gen(function* () {
+            steps = [
+              yield* callback("append-step", (value, work) => {
+                steps.push(suffix);
+                return emit(value, work);
+              }),
+            ];
+          })
+      ),
+      Match.when(
+        (candidate: string) => candidate === "builtin-function-step" || candidate === "registry-function-key",
+        () =>
+          Effect.gen(function* () {
+            // The real builtin handle is captured under the first operation's work.
+            steps = [];
+          })
+      ),
+      Match.when(
+        (candidate: string) => candidate === "callable-text-key",
+        () =>
+          Effect.gen(function* () {
+            const key = yield* h.values.subclass("html", "callable-source-key");
+            callableText = O.some(key);
+            steps = [key];
+          })
+      ),
+      Match.when(
+        (candidate: string) =>
+          candidate === "lazy-sequence" || candidate === "generator-sequence" || candidate === "reused-generator",
+        () =>
+          Effect.gen(function* () {
+            steps = [suffix, yield* h.values.text("html"), suffix];
+          })
+      ),
+      Match.when(
+        (candidate: string) => candidate === "live-step-remove",
+        () =>
+          Effect.gen(function* () {
+            const remove = yield* callback("remove-step", (value, work) => {
+              steps.splice(1, 1);
+              return emit(value, work);
+            });
+            steps = [remove, suffix, yield* h.values.text("html")];
+          })
+      ),
+      Match.when(
+        (candidate: string) => candidate === "reentrant",
+        () =>
+          Effect.gen(function* () {
+            steps = [
+              yield* callback(
+                "nested",
+                Effect.fn("CleanerCustomTest.nested")(function* (value, work) {
+                  return yield* emit(yield* work.nested("nested-source", value), work);
+                })
+              ),
+              suffix,
+            ];
+          })
+      ),
+      Match.when(
+        (candidate: string) => candidate === "resource-before-callback",
+        () =>
+          Effect.gen(function* () {
+            steps = [yield* h.values.text("html"), suffix];
+          })
+      ),
+      Match.when(
+        (candidate: string) => Str.startsWith("dispatch:")(candidate),
+        () =>
+          Effect.gen(function* () {
+            const value = yield* retain({ controlledStep: mode }, () => ({ kind: "step", mode }));
+            dispatch = O.some(value);
+            steps = [value];
+          })
+      ),
+      Match.when(
+        (candidate: string) => Str.startsWith("registry-")(candidate),
+        () =>
+          Effect.gen(function* () {
+            const html = yield* h.values.text("html");
+            const added = yield* h.values.text("added");
+            const replacement = yield* callback("registered", (value, work) =>
+              asText(value).pipe(Effect.flatMap((text) => emitText(`${text}:REGISTERED`, work)))
+            );
+            const noncallable = yield* retain(7, () => ({ kind: "int", value: "7" }));
+            const update = yield* callback(
+              "update-registry",
+              Effect.fn("CleanerCustomTest.updateRegistry")(function* (value, work) {
+                if (scene === "registry-delete") yield* h.registry.remove(html);
+                else
+                  yield* h.registry.set(
+                    scene === "registry-add" ? added : html,
+                    scene === "registry-noncallable" ? noncallable : replacement
+                  );
+                return yield* emit(value, work);
+              })
+            );
+            steps = [update, scene === "registry-add" ? added : html];
+          })
+      ),
+      Match.when(
+        (candidate: string) => candidate !== "empty-text-subclass" && candidate !== "steps-empty-string",
+        () => Effect.fail(fail())
+      ),
+      Match.orElse(() => Effect.void)
     );
-    const noncallable = yield* retain(7, () => ({ kind: "int", value: "7" }));
-    const update = yield* callback(
-      "update-registry",
-      Effect.fn("CleanerCustomTest.updateRegistry")(function* (value, work) {
-        if (scene === "registry-delete") yield* h.registry.remove(html);
-        else
-          yield* h.registry.set(
-            scene === "registry-add" ? added : html,
-            scene === "registry-noncallable" ? noncallable : replacement
-          );
-        return yield* emit(value, work);
-      })
-    );
-    steps = [update, scene === "registry-add" ? added : html];
-  } else if (scene !== "empty-text-subclass" && scene !== "steps-empty-string") return yield* fail();
   h.select(steps);
+  const eitherContains = (
+    value: O.Option<CitationCleanerObject>,
+    left: CitationCleanerObject,
+    right: CitationCleanerObject
+  ) => O.contains(value, left) || O.contains(value, right);
+  const dispatchHashKey = () =>
+    mode === "switch-hash" && hashCalls > 1 ? "underscores" : mode === "miss" ? "missing" : "html";
+  const deleteOnThisHash = () => mode === "delete-second-hash" && hashCalls === 2;
+  const iteratorFails = (index: number) =>
+    (scene === "iterator-raises-first" && index === 0) || (scene === "iterator-raises" && index === 1);
+  const configureBuiltin = Effect.fnUntraced(function* (work: CitationCleanerWork) {
+    if ((scene === "builtin-function-step" || scene === "registry-function-key") && O.isNone(actualBuiltin)) {
+      const key = yield* h.values.text("html");
+      const fn = yield* h.registry.runtime.get(key, work);
+      actualBuiltin = O.some(fn);
+      views = HashMap.set(views, fn.slot, () => ({ kind: "builtin-function", name: "html" }));
+      if (scene === "builtin-function-step") steps = [fn, suffix];
+      else {
+        const replacement = yield* callback("registered", (value, current) =>
+          asText(value).pipe(Effect.flatMap((text) => emitText(`${text}:REGISTERED`, current)))
+        );
+        const update = yield* callback(
+          "update-registry",
+          Effect.fn("CleanerCustomTest.registerFunction")(function* (value, current) {
+            yield* h.registry.set(fn, replacement);
+            return yield* emit(value, current);
+          })
+        );
+        steps = [update, fn];
+      }
+    }
+  });
   h.hooks({
     callable: (value) =>
       Effect.succeed(
@@ -351,69 +534,62 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
       hashCalls++;
       events = A.append(events, { kind: "step-hash", mode, call: hashCalls });
       if (mode === "hash-raises") return yield* fail();
-      if (mode === "delete-second-hash" && hashCalls === 2) yield* h.registry.remove(yield* h.values.text("html"));
-      const key = mode === "switch-hash" && hashCalls > 1 ? "underscores" : mode === "miss" ? "missing" : "html";
+      if (deleteOnThisHash()) yield* h.registry.remove(yield* h.values.text("html"));
+      const key = dispatchHashKey();
       const result = yield* h.hashes.text(key).pipe(Effect.mapError(fail));
       events = A.append(events, { kind: "step-hash-return", raw: result.toString() });
       return result;
     }),
     open: Effect.fn("CleanerCustomTest.open")(function* (plan, _initial, work) {
-      if ((scene === "builtin-function-step" || scene === "registry-function-key") && O.isNone(actualBuiltin)) {
-        const key = yield* h.values.text("html");
-        const fn = yield* h.registry.runtime.get(key, work);
-        actualBuiltin = O.some(fn);
-        views = HashMap.set(views, fn.slot, () => ({ kind: "builtin-function", name: "html" }));
-        if (scene === "builtin-function-step") steps = [fn, suffix];
-        else {
-          const replacement = yield* callback("registered", (value, current) =>
-            asText(value).pipe(Effect.flatMap((text) => emitText(`${text}:REGISTERED`, current)))
-          );
-          const update = yield* callback(
-            "update-registry",
-            Effect.fn("CleanerCustomTest.registerFunction")(function* (value, current) {
-              yield* h.registry.set(fn, replacement);
-              return yield* emit(value, current);
-            })
-          );
-          steps = [update, fn];
-        }
-      }
+      yield* configureBuiltin(work);
       if (scene === "reused-generator" && O.isSome(reusedCursor)) return reusedCursor.value;
       const sequence = plan === "nested-source" ? [yield* h.values.text("html"), suffix] : steps;
       if (scene === "steps-none") return yield* CitationCleanerFailure.make({ reason: "iteration-failed" });
-      const traced =
-        scene === "iterator-raises" ||
-        scene === "iterator-raises-first" ||
-        scene === "live-step-append" ||
-        scene === "live-step-remove" ||
-        scene === "lazy-sequence" ||
-        scene === "generator-sequence" ||
-        scene === "reused-generator";
+      const traced = A.contains(
+        [
+          "iterator-raises",
+          "iterator-raises-first",
+          "live-step-append",
+          "live-step-remove",
+          "lazy-sequence",
+          "generator-sequence",
+          "reused-generator",
+        ],
+        scene
+      );
       let begun = false;
       let complete = false;
       let index = 0;
+      const enter = () => {
+        if (traced && !begun) {
+          events = A.append(events, { kind: "iterator-enter" });
+          begun = true;
+        }
+      };
+      const finish = () => {
+        if (traced && !complete) events = A.append(events, { kind: "iterator-complete" });
+        complete = true;
+      };
+      const yielded = Effect.fnUntraced(function* (value: CitationCleanerObject) {
+        if (!traced) return;
+        const name = HashMap.get(names, value.slot);
+        const descriptor = O.isSome(name) ? { kind: "callback", name: name.value } : yield* present(value);
+        events = A.append(events, { kind: "iterator-yield", index, value: descriptor });
+      });
       const cursor: CitationCleanerCursor = {
         next: Effect.suspend(() =>
           Effect.gen(function* () {
-            if (traced && !begun) {
-              events = A.append(events, { kind: "iterator-enter" });
-              begun = true;
-            }
-            if ((scene === "iterator-raises-first" && index === 0) || (scene === "iterator-raises" && index === 1)) {
+            enter();
+            if (iteratorFails(index)) {
               events = A.append(events, { kind: "iterator-raise", index });
               return yield* CitationCleanerFailure.make({ reason: "iteration-failed" });
             }
             const value = A.get(sequence, index);
             if (O.isNone(value)) {
-              if (traced && !complete) events = A.append(events, { kind: "iterator-complete" });
-              complete = true;
+              finish();
               return O.none<CitationCleanerObject>();
             }
-            if (traced) {
-              const name = HashMap.get(names, value.value.slot);
-              const descriptor = O.isSome(name) ? { kind: "callback", name: name.value } : yield* present(value.value);
-              events = A.append(events, { kind: "iterator-yield", index, value: descriptor });
-            }
+            yield* yielded(value.value);
             index++;
             return value;
           })
@@ -423,9 +599,8 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
       return cursor;
     }),
     equal: Effect.fn("CleanerCustomTest.equal")(function* (left, right) {
-      if (O.contains(callableText, left) || O.contains(callableText, right))
-        return (yield* asText(left)) === (yield* asText(right));
-      if (!O.contains(dispatch, left) && !O.contains(dispatch, right)) return yield* h.values.same(left, right);
+      if (eitherContains(callableText, left, right)) return (yield* asText(left)) === (yield* asText(right));
+      if (!eitherContains(dispatch, left, right)) return yield* h.values.same(left, right);
       events = A.append(events, {
         kind: "step-equality",
         mode,

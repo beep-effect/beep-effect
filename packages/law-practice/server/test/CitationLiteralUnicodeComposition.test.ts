@@ -86,44 +86,48 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("lossless literal comp
       let histories = 0;
       let snapshots = 0;
       let transitions = 0;
-      for (const row of corpus.cases) {
-        if (A.contains(row.steps, "html")) continue;
-        const first = A.getUnsafe(row.events, 0).value;
-        owned.select(
-          CitationPythonUnicodeStorage.make({
-            width: first.width,
-            bytes: yield* S.decodeEffect(S.Uint8ArrayFromHex)(first.nativeHex),
-          }),
-          row.steps
-        );
-        const result = yield* owned.pipeline.run({ text: "", plan: "source-native-history" });
-        const refs = yield* owned.references;
-        expect(refs, row.name).toHaveLength(row.events.length);
-        for (let index = 0; index < refs.length; index++) {
-          const ref = A.getUnsafe(refs, index);
-          const expected = A.getUnsafe(row.events, index);
-          const value = yield* Effect.fromOption(yield* owned.values.getUnicode(ref));
-          expect(value.storage.width, row.name).toBe(expected.value.width);
-          expect(value.storage.bytes, row.name).toEqual(
-            yield* S.decodeEffect(S.Uint8ArrayFromHex)(expected.value.nativeHex)
+      yield* Effect.forEach(
+        corpus.cases,
+        Effect.fnUntraced(function* (row) {
+          if (A.contains(row.steps, "html")) return;
+          const first = A.getUnsafe(row.events, 0).value;
+          owned.select(
+            CitationPythonUnicodeStorage.make({
+              width: first.width,
+              bytes: yield* S.decodeEffect(S.Uint8ArrayFromHex)(first.nativeHex),
+            }),
+            row.steps
           );
-          expect(value.pythonLength, row.name).toBe(expected.value.pythonLength);
-          expect(value.utf16Units, row.name).toBe(expected.value.utf16Units);
-          expect(yield* hash.unicode(value.storage), row.name).toBe(expected.value.hash);
-          let sameAs = A.empty<number>();
-          for (let prior = 0; prior < index; prior++)
-            if (yield* owned.values.same(A.getUnsafe(refs, prior), ref)) sameAs = A.append(sameAs, prior);
-          expect(sameAs, row.name).toEqual(expected.sameAs);
-          snapshots++;
-        }
-        expect(result.producedTextUtf16, row.name).toBe(
-          row.steps.length === 0
-            ? first.utf16Units
-            : A.reduce(A.drop(row.events, 1), 0, (sum, event) => sum + event.value.utf16Units)
-        );
-        histories++;
-        transitions += row.steps.length;
-      }
+          const result = yield* owned.pipeline.run({ text: "", plan: "source-native-history" });
+          const refs = yield* owned.references;
+          expect(refs, row.name).toHaveLength(row.events.length);
+          for (let index = 0; index < refs.length; index++) {
+            const ref = A.getUnsafe(refs, index);
+            const expected = A.getUnsafe(row.events, index);
+            const value = yield* Effect.fromOption(yield* owned.values.getUnicode(ref));
+            expect(value.storage.width, row.name).toBe(expected.value.width);
+            expect(value.storage.bytes, row.name).toEqual(
+              yield* S.decodeEffect(S.Uint8ArrayFromHex)(expected.value.nativeHex)
+            );
+            expect(value.pythonLength, row.name).toBe(expected.value.pythonLength);
+            expect(value.utf16Units, row.name).toBe(expected.value.utf16Units);
+            expect(yield* hash.unicode(value.storage), row.name).toBe(expected.value.hash);
+            let sameAs = A.empty<number>();
+            for (let prior = 0; prior < index; prior++)
+              if (yield* owned.values.same(A.getUnsafe(refs, prior), ref)) sameAs = A.append(sameAs, prior);
+            expect(sameAs, row.name).toEqual(expected.sameAs);
+            snapshots++;
+          }
+          expect(result.producedTextUtf16, row.name).toBe(
+            row.steps.length === 0
+              ? first.utf16Units
+              : A.reduce(A.drop(row.events, 1), 0, (sum, event) => sum + event.value.utf16Units)
+          );
+          histories++;
+          transitions += row.steps.length;
+        }),
+        { concurrency: 1, discard: true }
+      );
       expect(histories).toBe(1068);
       expect(snapshots).toBe(3852);
       expect(transitions).toBe(2784);

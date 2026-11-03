@@ -32,45 +32,54 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("native HTML preparati
       const limits = (yield* defaultCitationEnginePolicy).limits;
       const preparation = yield* makeCitationHtmlInput(limits);
       let snapshots = 0;
-      for (const row of corpus.cases)
-        for (const event of row.events) {
-          const value = event.value;
-          const bytes = yield* S.decodeEffect(S.Uint8ArrayFromHex)(value.nativeHex);
-          const expected =
-            value.width === 1
-              ? A.some(value.codepoints, (point) => point > 127)
-                ? "ISO-8859-1"
-                : "UTF-8"
-              : value.width === 2
-                ? "UTF-16LE"
-                : "UTF-32LE";
-          let preflights = 0;
-          const prepared = yield* preparation.prepareUnicode({ width: value.width, bytes }, (layout) =>
-            preflightCitationHtmlJob(layout, 100, limits.processMessageBytes).pipe(
-              Effect.tap(() =>
-                Effect.sync(() => {
-                  expect(layout.encoding, row.name).toBe(expected);
-                  expect(layout.byteLength, row.name).toBe(bytes.length);
-                  preflights++;
-                })
-              ),
-              Effect.asVoid
-            )
+      yield* Effect.forEach(
+        corpus.cases,
+        Effect.fnUntraced(function* (row) {
+          yield* Effect.forEach(
+            row.events,
+            Effect.fnUntraced(function* (event) {
+              const value = event.value;
+              const bytes = yield* S.decodeEffect(S.Uint8ArrayFromHex)(value.nativeHex);
+              const expected =
+                value.width === 1
+                  ? A.some(value.codepoints, (point) => point > 127)
+                    ? "ISO-8859-1"
+                    : "UTF-8"
+                  : value.width === 2
+                    ? "UTF-16LE"
+                    : "UTF-32LE";
+              let preflights = 0;
+              const prepared = yield* preparation.prepareUnicode({ width: value.width, bytes }, (layout) =>
+                preflightCitationHtmlJob(layout, 100, limits.processMessageBytes).pipe(
+                  Effect.tap(() =>
+                    Effect.sync(() => {
+                      expect(layout.encoding, row.name).toBe(expected);
+                      expect(layout.byteLength, row.name).toBe(bytes.length);
+                      preflights++;
+                    })
+                  ),
+                  Effect.asVoid
+                )
+              );
+              expect(preflights).toBe(1);
+              expect(prepared.encoding, row.name).toBe(expected);
+              expect(prepared.bytes, row.name).toEqual(bytes);
+              expect(prepared.bytes).not.toBe(bytes);
+              const frame = yield* encodeCitationHtmlJob(
+                CitationHtmlWorkerJob.make({ ...prepared, outputUtf16: 100 }),
+                limits.processMessageBytes
+              );
+              const restored = yield* decodeCitationHtmlJob(frame.subarray(0, frame.length - 1));
+              expect(restored.encoding, row.name).toBe(expected);
+              expect(restored.bytes, row.name).toEqual(bytes);
+              expect(restored.fullHtml).toBe(prepared.fullHtml);
+              snapshots++;
+            }),
+            { concurrency: 1, discard: true }
           );
-          expect(preflights).toBe(1);
-          expect(prepared.encoding, row.name).toBe(expected);
-          expect(prepared.bytes, row.name).toEqual(bytes);
-          expect(prepared.bytes).not.toBe(bytes);
-          const frame = yield* encodeCitationHtmlJob(
-            CitationHtmlWorkerJob.make({ ...prepared, outputUtf16: 100 }),
-            limits.processMessageBytes
-          );
-          const restored = yield* decodeCitationHtmlJob(frame.subarray(0, frame.length - 1));
-          expect(restored.encoding, row.name).toBe(expected);
-          expect(restored.bytes, row.name).toEqual(bytes);
-          expect(restored.fullHtml).toBe(prepared.fullHtml);
-          snapshots++;
-        }
+        }),
+        { concurrency: 1, discard: true }
+      );
       expect(snapshots).toBe(6412);
     })
   );
@@ -80,10 +89,14 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("native HTML preparati
       const limits = (yield* defaultCitationEnginePolicy).limits;
       const unicode = yield* makeCitationPythonUnicode(limits);
       const preparation = yield* makeCitationHtmlInput(limits);
-      for (const text of ["\u0085<HTML><body>A</body></HTML>", "\u3000<!DOCTYPE html><html></html>"]) {
-        const value = yield* unicode.fromText(text);
-        expect((yield* preparation.prepareUnicode(value.storage, () => Effect.void)).fullHtml).toBe(true);
-      }
+      yield* Effect.forEach(
+        ["\u0085<HTML><body>A</body></HTML>", "\u3000<!DOCTYPE html><html></html>"],
+        Effect.fnUntraced(function* (text) {
+          const value = yield* unicode.fromText(text);
+          expect((yield* preparation.prepareUnicode(value.storage, () => Effect.void)).fullHtml).toBe(true);
+        }),
+        { concurrency: 1, discard: true }
+      );
       const declaration = yield* unicode.fromText("<?xml version='1.0' encoding='UTF-8'?><p>A</p>");
       let preflighted = false;
       expect(
@@ -102,15 +115,19 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("native HTML preparati
       expect(prepared.encoding).toBe("UTF-16LE");
       expect(prepared.bytes).toEqual(new Uint8Array([0x3d, 0xd8, 0, 0xde]));
       expect((yield* preparation.prepareStage("😀", () => Effect.void)).encoding).toBe("UTF-32LE");
-      for (const input of [
-        { width: 2, bytes: new Uint8Array([65]) },
-        { width: 2, bytes: new Uint8Array([65, 0]) },
-        { width: 4, bytes: new Uint8Array([0, 0, 17, 0]) },
-      ]) {
-        expect(yield* Effect.flip(preparation.prepareUnicode(input, () => Effect.void))).toMatchObject({
-          reason: "invalid-input",
-        });
-      }
+      yield* Effect.forEach(
+        [
+          { width: 2, bytes: new Uint8Array([65]) },
+          { width: 2, bytes: new Uint8Array([65, 0]) },
+          { width: 4, bytes: new Uint8Array([0, 0, 17, 0]) },
+        ],
+        Effect.fnUntraced(function* (input) {
+          expect(yield* Effect.flip(preparation.prepareUnicode(input, () => Effect.void))).toMatchObject({
+            reason: "invalid-input",
+          });
+        }),
+        { concurrency: 1, discard: true }
+      );
     })
   );
 

@@ -10,7 +10,6 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -18,6 +17,7 @@ import { readCitationByteFrames } from "./ByteFrames.ts";
 import { CitationHtmlCompletionFailure } from "./HtmlCompletion.ts";
 import { CitationHtmlInput, CitationHtmlInputLayout } from "./HtmlInput.ts";
 import { CitationHtmlKernelFailure } from "./HtmlKernel.ts";
+import { visitCitationTextPoints } from "./TextPoints.ts";
 import type * as PlatformError from "effect/PlatformError";
 import type * as Stream from "effect/Stream";
 
@@ -182,18 +182,13 @@ export const citationHtmlJsonBodyBytes = Effect.fn("Citation.htmlJsonBodyBytes")
   available: number
 ) {
   let bytes = 0;
-  let nextYield = 0;
-  for (let index = 0; index < Str.length(text); ) {
-    if (index >= nextYield) {
-      yield* Effect.yieldNow;
-      nextYield = index + 4096;
-    }
-    const point = O.getOrElse(Str.codePointAt(text, index), () => 0);
+  const complete = yield* visitCitationTextPoints(text, (point) => {
     const size = jsonPointBytes(point);
-    if (size > available - bytes) return yield* exceeded();
+    if (size > available - bytes) return false;
     bytes += size;
-    index += point > 0xffff ? 2 : 1;
-  }
+    return true;
+  });
+  if (!complete) return yield* exceeded();
   return bytes;
 });
 /**

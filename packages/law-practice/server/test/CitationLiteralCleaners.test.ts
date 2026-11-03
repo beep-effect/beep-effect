@@ -62,26 +62,35 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("literal citation cl
         expect(corpus.classifiers.underscores).toEqual([]);
         expect(corpus.classifiers.xml).toEqual([]);
         expect(corpus.artifacts).toHaveLength(135);
-        for (const artifact of corpus.artifacts)
-          expect(
-            yield* S.decodeEffect(Sha256HexFromBytes)(
-              new TextEncoder().encode(yield* encodeCitationRuntimeString(artifact.value))
-            )
-          ).toBe(artifact.sha256);
+        yield* Effect.forEach(
+          corpus.artifacts,
+          Effect.fnUntraced(function* (artifact) {
+            expect(
+              yield* S.decodeEffect(Sha256HexFromBytes)(
+                new TextEncoder().encode(yield* encodeCitationRuntimeString(artifact.value))
+              )
+            ).toBe(artifact.sha256);
+          }),
+          { concurrency: 1, discard: true }
+        );
         const texts = HashMap.fromIterable(
           A.map(corpus.artifacts, (artifact) => [artifact.sha256, artifact.value] as const)
         );
         expect(corpus.cases).toHaveLength(440);
         const cleaners = yield* makeCitationLiteralCleaners((yield* defaultCitationEnginePolicy).limits);
-        for (const row of corpus.cases) {
-          const text = yield* Effect.fromOption(HashMap.get(texts, row.text));
-          const expected = yield* Effect.fromOption(HashMap.get(texts, row.expected));
-          const evaluated = cleaners.apply({ cleaner: row.cleaner, text }) satisfies Effect.Effect<
-            string,
-            CitationLiteralCleanerFailure
-          >;
-          expect(yield* evaluated, row.name).toBe(expected);
-        }
+        yield* Effect.forEach(
+          corpus.cases,
+          Effect.fnUntraced(function* (row) {
+            const text = yield* Effect.fromOption(HashMap.get(texts, row.text));
+            const expected = yield* Effect.fromOption(HashMap.get(texts, row.expected));
+            const evaluated = cleaners.apply({ cleaner: row.cleaner, text }) satisfies Effect.Effect<
+              string,
+              CitationLiteralCleanerFailure
+            >;
+            expect(yield* evaluated, row.name).toBe(expected);
+          }),
+          { concurrency: 1, discard: true }
+        );
       }),
     { timeout: 30_000 }
   );
@@ -127,7 +136,13 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("literal citation cl
           if (!A.every(payload.input.steps, S.is(CitationLiteralCleaner))) continue;
           if (payload.outcome.kind !== "success") return yield* Effect.die("unexpected literal source failure");
           let text = payload.input.text;
-          for (const cleaner of payload.input.steps) text = yield* cleaners.apply({ cleaner, text });
+          yield* Effect.forEach(
+            payload.input.steps,
+            Effect.fnUntraced(function* (cleaner) {
+              text = yield* cleaners.apply({ cleaner, text });
+            }),
+            { concurrency: 1, discard: true }
+          );
           expect(text).toBe(payload.outcome.value);
           checked++;
         }

@@ -72,6 +72,7 @@ export const callbackNoneResource = () => CitationCallbackResource.cases.None.ma
  */
 export const callbackResourcePresentation = (resource: CitationCallbackResource): S.Json =>
   resource._tag === "None" ? { kind: "NoneType", value: null } : resource.value;
+const nonEmptyFixtureList = (value: S.Json) => A.isArray(value) && A.isReadonlyArrayNonEmpty(value);
 // Focused fixture adapter, not a production Python hashable implementation.
 /**
  * Normalize only the finite primitive values used in these source fixtures.
@@ -83,7 +84,7 @@ export const normalizeCallbackFixtureResource = Effect.fn("CallbackTest.resource
   raw: S.Json
 ): Effect.fn.Return<CitationCallbackResource, S.SchemaError, Digest.Digest> {
   if (raw === null) return callbackNoneResource();
-  if (A.isArray(raw) && A.length(raw) > 0)
+  if (nonEmptyFixtureList(raw))
     return CitationCallbackResource.cases.Unhashable.make({ truthy: true, value: { kind: "list", value: raw } });
   let token: S.Json;
   let value: S.Json;
@@ -146,29 +147,33 @@ export const prepareCallbackObservation = Effect.fn("CallbackTest.context")(func
   const models = yield* templates;
   let text = "";
   let mentions = A.empty<CitationResolutionContext["mentions"][number]>();
-  for (const [index, kind] of A.map(row.kinds, (kind, index) => Tuple.make(index, kind))) {
-    const tag = yield* Effect.fromOption(R.get(kinds, kind));
-    const template = yield* Effect.fromOption(HashMap.get(models, tag));
-    const wire = yield* S.encodeEffect(Citation)(template);
-    const indexKey = yield* S.encodeEffect(S.FiniteFromString)(index);
-    const page = yield* S.encodeEffect(S.FiniteFromString)(O.getOrElse(R.get(row.pages, indexKey), () => 1));
-    let metadata: S.JsonObject = wire.metadata;
-    if (wire.type === "case") metadata = { ...metadata, plaintiff: "Smith", defendant: null };
-    if (wire.type === "supra" || wire.type === "shortFormCase") metadata = { ...metadata, antecedentGuess: "Smith" };
-    if (wire.type === "id") metadata = { ...metadata, pinCite: "2" };
-    const publication =
-      "publication" in wire ? { ...wire.publication, editions: [], selectedEdition: null } : undefined;
-    const citation = yield* S.decodeUnknownEffect(Citation)({
-      ...wire,
-      components: { volume: "1", reporter: "U.S.", page },
-      metadata,
-      ...(publication === undefined ? {} : { publication }),
-    });
-    const quote = `witness-${index}`;
-    const start = Str.length(text);
-    text += `${quote}; `;
-    mentions = A.append(mentions, { citation, start, end: start + Str.length(quote), quote });
-  }
+  yield* Effect.forEach(
+    A.map(row.kinds, (kind, index) => Tuple.make(index, kind)),
+    Effect.fnUntraced(function* ([index, kind]) {
+      const tag = yield* Effect.fromOption(R.get(kinds, kind));
+      const template = yield* Effect.fromOption(HashMap.get(models, tag));
+      const wire = yield* S.encodeEffect(Citation)(template);
+      const indexKey = yield* S.encodeEffect(S.FiniteFromString)(index);
+      const page = yield* S.encodeEffect(S.FiniteFromString)(O.getOrElse(R.get(row.pages, indexKey), () => 1));
+      let metadata: S.JsonObject = wire.metadata;
+      if (wire.type === "case") metadata = { ...metadata, plaintiff: "Smith", defendant: null };
+      if (wire.type === "supra" || wire.type === "shortFormCase") metadata = { ...metadata, antecedentGuess: "Smith" };
+      if (wire.type === "id") metadata = { ...metadata, pinCite: "2" };
+      const publication =
+        "publication" in wire ? { ...wire.publication, editions: [], selectedEdition: null } : undefined;
+      const citation = yield* S.decodeUnknownEffect(Citation)({
+        ...wire,
+        components: { volume: "1", reporter: "U.S.", page },
+        metadata,
+        ...(publication === undefined ? {} : { publication }),
+      });
+      const quote = `witness-${index}`;
+      const start = Str.length(text);
+      text += `${quote}; `;
+      mentions = A.append(mentions, { citation, start, end: start + Str.length(quote), quote });
+    }),
+    { concurrency: 1, discard: true }
+  );
   return yield* prepare(
     CitationResolutionContext.make({
       name: row.name,

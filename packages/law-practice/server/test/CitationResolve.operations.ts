@@ -7,6 +7,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -70,6 +71,31 @@ export const loadResolutionOperationContexts = Effect.gen(function* () {
   );
   const observations = A.filter(corpus.cases, (row) => row.operation === "resolve_citations");
   const artifacts = corpus.artifacts;
+  const selectedDescriptor = Effect.fnUntraced(function* (selected: Sha256Hex) {
+    const artifact = yield* Effect.fromOption(R.get(artifacts, selected));
+    if (artifact.kind !== "model-value") return yield* Effect.die("Expected model edition artifact");
+    const digest = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(artifact.payload.raw));
+    if (digest !== selected) return yield* Effect.die("Edition artifact hash mismatch");
+    const edition = yield* S.decodeUnknownEffect(Edition)(artifact.payload.value);
+    return yield* S.decodeEffect(CitationAuthorityEdition)({ edition: selected, shortName: edition.fields.short_name });
+  });
+  const partyFields = {
+    plaintiff: "plaintiff",
+    defendant: "defendant",
+    shortCaseName: "resolved_case_name_short",
+    caseName: "resolved_case_name",
+  };
+  const metadataFields = (kind: OracleCitation["citationType"]) =>
+    Match.value(kind).pipe(
+      Match.when("FullCaseCitation", () =>
+        R.toEntries({ ...partyFields, additionalText: "extra", antecedentGuess: "antecedent_guess" })
+      ),
+      Match.when("ReferenceCitation", () => R.toEntries(partyFields)),
+      Match.when("ShortCaseCitation", () => R.toEntries({ antecedentGuess: "antecedent_guess" })),
+      Match.when("SupraCitation", () => R.toEntries({ antecedentGuess: "antecedent_guess", volume: "volume" })),
+      Match.when("FullLawCitation", () => R.toEntries({ publisher: "publisher" })),
+      Match.orElse(() => [])
+    );
   const project = Effect.fn("ResolveTest.projectOracleCitation")(function* (source: OracleCitation) {
     const meta = yield* S.decodeUnknownEffect(Metadata)(source.fields.metadata);
     const read = Effect.fn("ResolveTest.readMetadata")(function* (key: string) {
@@ -82,17 +108,12 @@ export const loadResolutionOperationContexts = Effect.gen(function* () {
     let publication: S.Json = null;
     let selectedEdition: O.Option<CitationAuthorityEdition> = O.none();
     const kind = source.citationType;
-    if (
-      kind === "FullCaseCitation" ||
-      kind === "ShortCaseCitation" ||
-      kind === "FullLawCitation" ||
-      kind === "FullJournalCitation"
-    ) {
+    if (A.contains(["FullCaseCitation", "ShortCaseCitation", "FullLawCitation", "FullJournalCitation"], kind)) {
       const resource = yield* S.decodeUnknownEffect(ResourceFields)(source.fields);
       const refs = A.map(resource.all_editions, (ref) => ref.artifactSha256);
       const selected = resource.edition_guess?.artifactSha256 ?? null;
       publication = { editions: refs, selectedEdition: selected };
-      if (kind === "FullCaseCitation" || kind === "ShortCaseCitation") {
+      if (A.contains(["FullCaseCitation", "ShortCaseCitation"], kind)) {
         const values = yield* Effect.forEach(refs, (ref) =>
           Effect.gen(function* () {
             const entry = yield* Effect.fromOption(HashMap.get(editions, ref));
@@ -112,36 +133,22 @@ export const loadResolutionOperationContexts = Effect.gen(function* () {
           court === null ? null : { status: "unmapped", value: court }
         );
       }
-      for (const key of ["year", "month", "day"])
-        metadata = R.set<string, S.Json, string, S.Json>(metadata, key, yield* read(key));
-      if (selected !== null) {
-        const artifact = yield* Effect.fromOption(R.get(artifacts, selected));
-        if (artifact.kind !== "model-value") return yield* Effect.die("Expected model edition artifact");
-        const digest = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(artifact.payload.raw));
-        if (digest !== selected) return yield* Effect.die("Edition artifact hash mismatch");
-        const edition = yield* S.decodeUnknownEffect(Edition)(artifact.payload.value);
-        selectedEdition = O.some(
-          yield* S.decodeEffect(CitationAuthorityEdition)({ edition: selected, shortName: edition.fields.short_name })
-        );
-      }
+      yield* Effect.forEach(
+        ["year", "month", "day"],
+        Effect.fnUntraced(function* (key) {
+          metadata = R.set<string, S.Json, string, S.Json>(metadata, key, yield* read(key));
+        }),
+        { concurrency: 1, discard: true }
+      );
+      if (selected !== null) selectedEdition = O.some(yield* selectedDescriptor(selected));
     }
-    if (kind === "FullCaseCitation" || kind === "ReferenceCitation") {
-      for (const [from, to] of R.toEntries({
-        plaintiff: "plaintiff",
-        defendant: "defendant",
-        resolved_case_name_short: "shortCaseName",
-        resolved_case_name: "caseName",
-      }))
+    yield* Effect.forEach(
+      metadataFields(kind),
+      Effect.fnUntraced(function* ([to, from]) {
         metadata = R.set<string, S.Json, string, S.Json>(metadata, to, yield* read(from));
-    }
-    if (kind === "FullCaseCitation")
-      metadata = R.set<string, S.Json, string, S.Json>(metadata, "additionalText", yield* read("extra"));
-    if (kind === "FullCaseCitation" || kind === "ShortCaseCitation" || kind === "SupraCitation")
-      metadata = R.set<string, S.Json, string, S.Json>(metadata, "antecedentGuess", yield* read("antecedent_guess"));
-    if (kind === "FullLawCitation")
-      metadata = R.set<string, S.Json, string, S.Json>(metadata, "publisher", yield* read("publisher"));
-    if (kind === "SupraCitation")
-      metadata = R.set<string, S.Json, string, S.Json>(metadata, "volume", yield* read("volume"));
+      }),
+      { concurrency: 1, discard: true }
+    );
     const citation = yield* S.decodeUnknownEffect(Citation)({
       type: kinds[kind],
       components: source.fields.groups,

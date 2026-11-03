@@ -155,17 +155,21 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("default registered 
       const descriptors = yield* makeCitationRegisteredSessionDescriptors(state).pipe(
         Effect.provideService(CitationFrozenEditions, frozen)
       );
-      for (const [decision, i] of A.map(state.decisions, (decision, i) => [decision, i] as const)) {
-        const descriptor = yield* descriptors.describe(decision.resource);
-        if (descriptor._tag !== "External") return yield* Effect.die("expected canonical descriptor");
-        expect(descriptor.key).toBe(
-          yield* S.decodeEffect(Sha256HexFromBytes)(
-            new TextEncoder().encode(
-              `["eyecite-resource-current-hash/v1","${A.getUnsafe(rows, i).expected.resourceHash}"]`
+      yield* Effect.forEach(
+        A.map(state.decisions, (decision, i) => [decision, i] as const),
+        Effect.fnUntraced(function* ([decision, i]) {
+          const descriptor = yield* descriptors.describe(decision.resource);
+          if (descriptor._tag !== "External") return yield* Effect.die("expected canonical descriptor");
+          expect(descriptor.key).toBe(
+            yield* S.decodeEffect(Sha256HexFromBytes)(
+              new TextEncoder().encode(
+                `["eyecite-resource-current-hash/v1","${A.getUnsafe(rows, i).expected.resourceHash}"]`
+              )
             )
-          )
-        );
-      }
+          );
+        }),
+        { concurrency: 1, discard: true }
+      );
       const projector = yield* makeCitationSessionDocumentProjector().pipe(
         Effect.provideService(CitationSessionResourceDescriptors, descriptors)
       );
@@ -197,81 +201,87 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("default registered 
           '["citation-canonical-resource-descriptor/v1","eyecite/2.7.6","04d82c032ad5fd0f9ab72a61c87110c46ee8f52e"]'
         )
       );
-      for (const row of rows) {
-        if (row.expected.resourceHash === undefined) return yield* Effect.die("selected source row has no hash");
-        const kind = row.input.citation.type;
-        if (kind !== "case" && kind !== "law" && kind !== "journal")
-          return yield* Effect.die("unexpected source family");
-        const input = yield* prepareCallbackObservation(
-          CitationCallbackObservation.make({
-            name: row.name,
-            kinds: [kind],
-            pages: {},
-            bindings: {},
-            events: [],
-            outcome: { status: "value", groups: [] },
-          })
-        );
-        const prepared = yield* prepareCitationResolution({
-          ...input,
-          mentions: A.map(input.mentions, (mention) =>
-            CitationMention.make({ ...mention, citation: row.input.citation })
-          ),
-        });
-        const work = yield* makeCitationResolutionWork(prepared.limits);
-        const owner = yield* makeCitationCallbackDictionary(prepared).pipe(
-          Effect.provideService(CitationResolutionWork, work),
-          Effect.provideService(CitationCallbackRuntimeIndexFactory, factory)
-        );
-        const defaults = yield* makeDefaultCitationResolutionCallbacks(prepared).pipe(
-          Effect.provideService(CitationResolutionWork, work),
-          Effect.provideService(CitationCallbackDictionary, owner)
-        );
-        let alias: CitationCallbackResource = CitationCallbackResource.cases.None.make({});
-        let unusedNull: CitationCallbackResource = CitationCallbackResource.cases.None.make({});
-        const callbacks = CitationResolutionCallbacks.of({
-          ...defaults,
-          full: Effect.fn("CanonicalDescriptorsTest.full")(
-            function* (mention: CitationMention) {
-              const result = yield* defaults.full(mention);
-              alias = yield* owner.canonicalResource(CitationGroupMember.cases.Mention.make({ mentionId: mention.id }));
-              if (row.name === "page-1") {
-                const wire = yield* S.encodeEffect(Citation)(mention.citation);
-                const citation = yield* S.decodeEffect(Citation)({
-                  ...wire,
-                  components: { ...wire.components, page: null },
-                });
-                unusedNull = yield* owner.canonicalResource(yield* owner.registerDetached(citation));
-              }
-              return result;
-            },
-            Effect.mapError(() => CitationCallbackFailure.make({ reason: "invalid-input" }))
-          ),
-        });
-        const state = yield* runPreparedCitationCallbackSession(prepared).pipe(
-          Effect.provideService(CitationResolutionWork, work),
-          Effect.provideService(CitationCallbackDictionary, owner),
-          Effect.provideService(CitationResolutionCallbacks, callbacks)
-        );
-        const descriptors = yield* makeCitationRegisteredSessionDescriptors(state).pipe(
-          Effect.provideService(CitationFrozenEditions, frozen)
-        );
-        const descriptor = yield* descriptors.describe(A.getUnsafe(state.groups, 0).resource);
-        expect(descriptor._tag).toBe("External");
-        if (descriptor._tag !== "External") return yield* Effect.die("unexpected descriptor family");
-        const expectedKey = yield* S.decodeEffect(Sha256HexFromBytes)(
-          new TextEncoder().encode(`["eyecite-resource-current-hash/v1","${row.expected.resourceHash}"]`)
-        );
-        expect(descriptor.scope, row.name).toBe(scope);
-        expect(descriptor.key, row.name).toBe(expectedKey);
-        expect(yield* descriptors.describe(alias), row.name).toEqual(descriptor);
-        if (row.name === "page-1")
-          expect((yield* Effect.flip(descriptors.describe(unusedNull))).reason).toBe("identity-failed");
-        const projector = yield* makeCitationSessionDocumentProjector().pipe(
-          Effect.provideService(CitationSessionResourceDescriptors, descriptors)
-        );
-        expect((yield* projector.project(state)).document.groups).toHaveLength(1);
-      }
+      yield* Effect.forEach(
+        rows,
+        Effect.fnUntraced(function* (row) {
+          if (row.expected.resourceHash === undefined) return yield* Effect.die("selected source row has no hash");
+          const kind = row.input.citation.type;
+          if (kind !== "case" && kind !== "law" && kind !== "journal")
+            return yield* Effect.die("unexpected source family");
+          const input = yield* prepareCallbackObservation(
+            CitationCallbackObservation.make({
+              name: row.name,
+              kinds: [kind],
+              pages: {},
+              bindings: {},
+              events: [],
+              outcome: { status: "value", groups: [] },
+            })
+          );
+          const prepared = yield* prepareCitationResolution({
+            ...input,
+            mentions: A.map(input.mentions, (mention) =>
+              CitationMention.make({ ...mention, citation: row.input.citation })
+            ),
+          });
+          const work = yield* makeCitationResolutionWork(prepared.limits);
+          const owner = yield* makeCitationCallbackDictionary(prepared).pipe(
+            Effect.provideService(CitationResolutionWork, work),
+            Effect.provideService(CitationCallbackRuntimeIndexFactory, factory)
+          );
+          const defaults = yield* makeDefaultCitationResolutionCallbacks(prepared).pipe(
+            Effect.provideService(CitationResolutionWork, work),
+            Effect.provideService(CitationCallbackDictionary, owner)
+          );
+          let alias: CitationCallbackResource = CitationCallbackResource.cases.None.make({});
+          let unusedNull: CitationCallbackResource = CitationCallbackResource.cases.None.make({});
+          const callbacks = CitationResolutionCallbacks.of({
+            ...defaults,
+            full: Effect.fn("CanonicalDescriptorsTest.full")(
+              function* (mention: CitationMention) {
+                const result = yield* defaults.full(mention);
+                alias = yield* owner.canonicalResource(
+                  CitationGroupMember.cases.Mention.make({ mentionId: mention.id })
+                );
+                if (row.name === "page-1") {
+                  const wire = yield* S.encodeEffect(Citation)(mention.citation);
+                  const citation = yield* S.decodeEffect(Citation)({
+                    ...wire,
+                    components: { ...wire.components, page: null },
+                  });
+                  unusedNull = yield* owner.canonicalResource(yield* owner.registerDetached(citation));
+                }
+                return result;
+              },
+              Effect.mapError(() => CitationCallbackFailure.make({ reason: "invalid-input" }))
+            ),
+          });
+          const state = yield* runPreparedCitationCallbackSession(prepared).pipe(
+            Effect.provideService(CitationResolutionWork, work),
+            Effect.provideService(CitationCallbackDictionary, owner),
+            Effect.provideService(CitationResolutionCallbacks, callbacks)
+          );
+          const descriptors = yield* makeCitationRegisteredSessionDescriptors(state).pipe(
+            Effect.provideService(CitationFrozenEditions, frozen)
+          );
+          const descriptor = yield* descriptors.describe(A.getUnsafe(state.groups, 0).resource);
+          expect(descriptor._tag).toBe("External");
+          if (descriptor._tag !== "External") return yield* Effect.die("unexpected descriptor family");
+          const expectedKey = yield* S.decodeEffect(Sha256HexFromBytes)(
+            new TextEncoder().encode(`["eyecite-resource-current-hash/v1","${row.expected.resourceHash}"]`)
+          );
+          expect(descriptor.scope, row.name).toBe(scope);
+          expect(descriptor.key, row.name).toBe(expectedKey);
+          expect(yield* descriptors.describe(alias), row.name).toEqual(descriptor);
+          if (row.name === "page-1")
+            expect((yield* Effect.flip(descriptors.describe(unusedNull))).reason).toBe("identity-failed");
+          const projector = yield* makeCitationSessionDocumentProjector().pipe(
+            Effect.provideService(CitationSessionResourceDescriptors, descriptors)
+          );
+          expect((yield* projector.project(state)).document.groups).toHaveLength(1);
+        }),
+        { concurrency: 1, discard: true }
+      );
     })
   );
 });

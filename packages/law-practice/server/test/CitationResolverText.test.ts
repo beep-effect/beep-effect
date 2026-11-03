@@ -65,27 +65,31 @@ it.effect("matches 38 pin checks including Unicode decimals, big integers and ca
   Effect.gen(function* () {
     const data = yield* fixture;
     expect(A.length(data.pins)).toBe(38);
-    for (const row of data.pins) {
-      const index = row.kind === "case" ? 0 : row.kind === "law" ? 8 : 11;
-      const base = yield* S.encodeEffect(FullCitation)(
-        yield* S.decodeUnknownEffect(FullCitation)(A.getUnsafe(authorities.cases, index).input.citation)
-      );
-      const components =
-        row.page === "missing" ? R.remove(base.components, "page") : { ...base.components, page: row.page };
-      const fullCitation = yield* S.decodeEffect(FullCitation)({ ...base, components });
-      const idCitation = yield* S.decodeEffect(IdCitation)({
-        type: "id",
-        components: {},
-        metadata: { pinCite: row.pin, parenthetical: null },
-      });
-      const effect = hasInvalidCitationPinCite({ fullCitation, idCitation });
-      if (row.outcome.status === "value") expect(yield* effect).toBe(row.outcome.invalid);
-      else {
-        const failure = yield* Effect.flip(effect);
-        expect(failure.reason).toBe(row.outcome.kind === "ValueError" ? "integer-conversion" : "canonical-page-type");
-        expect("cause" in failure).toBe(false);
-      }
-    }
+    yield* Effect.forEach(
+      data.pins,
+      Effect.fnUntraced(function* (row) {
+        const index = row.kind === "case" ? 0 : row.kind === "law" ? 8 : 11;
+        const base = yield* S.encodeEffect(FullCitation)(
+          yield* S.decodeUnknownEffect(FullCitation)(A.getUnsafe(authorities.cases, index).input.citation)
+        );
+        const components =
+          row.page === "missing" ? R.remove(base.components, "page") : { ...base.components, page: row.page };
+        const fullCitation = yield* S.decodeEffect(FullCitation)({ ...base, components });
+        const idCitation = yield* S.decodeEffect(IdCitation)({
+          type: "id",
+          components: {},
+          metadata: { pinCite: row.pin, parenthetical: null },
+        });
+        const effect = hasInvalidCitationPinCite({ fullCitation, idCitation });
+        if (row.outcome.status === "value") expect(yield* effect).toBe(row.outcome.invalid);
+        else {
+          const failure = yield* Effect.flip(effect);
+          expect(failure.reason).toBe(row.outcome.kind === "ValueError" ? "integer-conversion" : "canonical-page-type");
+          expect("cause" in failure).toBe(false);
+        }
+      }),
+      { concurrency: 1, discard: true }
+    );
   })
 );
 

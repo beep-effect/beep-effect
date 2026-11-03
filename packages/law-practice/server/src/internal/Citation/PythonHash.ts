@@ -107,6 +107,30 @@ export const measureCitationPythonText = Effect.fn("Citation.measurePythonText")
   }
   return TextMeasure.make([largest, points]);
 });
+/** Validate original native words with the caller's exact two failure mappings.
+ * No copy or display-string conversion occurs during this bounded scan.
+ * @internal @category operations @since 0.0.0
+ */
+export const validateCitationPythonStorage = Effect.fn("Citation.validatePythonStorage")(function* <E>(
+  bytes: Uint8Array,
+  width: (typeof CitationPythonUnicodeStorage.Type)["width"],
+  maximum: number,
+  invalid: () => E,
+  overflow: () => E
+) {
+  let largest = 0;
+  let units = 0;
+  for (let index = 0; index < bytes.length; index += width) {
+    if (index % (width * 4096) === 0) yield* Effect.yieldNow;
+    const point = readNativePoint(bytes, index, width);
+    if (point > 0x10ffff) return yield* Effect.fail(invalid());
+    largest = Num.max(largest, point);
+    units += pointUnits(point);
+    if (units > maximum) return yield* Effect.fail(overflow());
+  }
+  if (width !== widthOf(largest)) return yield* Effect.fail(invalid());
+  return units;
+});
 /**
  * Capture limits/Clock once. Unicode preparation scans code points without
  * coercion, and hashing streams native bytes without allocating an encoded
@@ -173,19 +197,6 @@ export const makeCitationPythonHash = Effect.fn("Citation.makePythonHash")(funct
     let index = 0;
     return yield* hash(bytes.length, () => readByte(bytes, index++));
   });
-  const validateNative = Effect.fnUntraced(function* (width: number, bytes: Uint8Array) {
-    let largest = 0;
-    let units = 0;
-    for (let index = 0; index < bytes.length; index += width) {
-      if (index % (width * 4096) === 0) yield* Effect.yieldNow;
-      const point = readNativePoint(bytes, index, width);
-      if (point > 0x10ffff) return yield* fail("invalid-input");
-      largest = Num.max(largest, point);
-      units += pointUnits(point);
-      if (units > maximum) return yield* fail("invalid-input");
-    }
-    if (width !== widthOf(largest)) return yield* fail("invalid-input");
-  });
   return CitationPythonHash.of({
     bytes: Effect.fn("Citation.hashOwnedBytes")((value) => bounded(byteHash(value))),
     unicode: Effect.fn("Citation.hashUnicodeStorage")((input) =>
@@ -195,7 +206,13 @@ export const makeCitationPythonHash = Effect.fn("Citation.makePythonHash")(funct
             Effect.mapError(() => fail("invalid-input"))
           );
           if (bytes.length % width !== 0) return yield* fail("invalid-input");
-          yield* validateNative(width, bytes);
+          yield* validateCitationPythonStorage(
+            bytes,
+            width,
+            maximum,
+            () => fail("invalid-input"),
+            () => fail("invalid-input")
+          );
           return yield* byteHash(bytes);
         })
       )

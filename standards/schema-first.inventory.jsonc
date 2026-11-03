@@ -1463,7 +1463,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 309,
+      "line": 313,
       "owner": "@beep/law-practice-server",
       "reason": "Exercises verified-evidence admission, real callback invocation, dispatch budgets and frozen custom-resolution observations. Random schema data cannot mint trusted evidence or reproduce the source callback trace; all fixed controls are retained. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
     },

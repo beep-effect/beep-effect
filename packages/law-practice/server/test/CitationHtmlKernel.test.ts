@@ -81,7 +81,13 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("private HTML kernel
         host.imports.path_filestat_get,
         host.imports.path_open,
       ];
-      for (const call of denials) expect(call(0, 1, 2, 3)).toBe(8);
+      yield* Effect.forEach(
+        denials,
+        Effect.fnUntraced(function* (call) {
+          expect(call(0, 1, 2, 3)).toBe(8);
+        }),
+        { concurrency: 1, discard: true }
+      );
       expect(A.fromIterable(bytes)).toEqual(A.replicate(7, 32));
       expect(host.imports.environ_get()).toBe(0);
       expect(host.imports.environ_sizes_get(0, 4)).toBe(0);
@@ -109,38 +115,42 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("private HTML kernel
         let declarations = 0;
         let parseErrors = 0;
         let resourceErrors = 0;
-        for (const row of corpus.cases) {
-          const text = yield* Effect.fromOption(HashMap.get(texts, row.text));
-          if (row.outcome.kind === "error" && row.outcome.type === "builtins.ValueError") {
-            const failed = yield* Effect.flip(preparation.prepare(text));
-            expect(failed._tag, row.name).toBe("CitationHtmlInputFailure");
-            if (failed._tag === "CitationHtmlInputFailure")
-              expect(failed.reason, row.name).toBe("unicode-encoding-declaration");
-            declarations++;
-            continue;
-          }
-          const input = yield* preparation.prepare(text);
-          const run = kernel.run({ input, outputUtf16: limits.producedTextUtf16 }) satisfies Effect.Effect<
-            string,
-            CitationSafetyLimitExceeded | CitationHtmlKernelFailure | CitationHtmlCompletionFailure
-          >;
-          if (A.some(row.diagnostics, (d) => d.resourceLimit)) {
-            const failed = yield* Effect.flip(run);
-            expect(failed._tag, row.name).toBe("CitationSafetyLimitExceeded");
-            if (failed._tag === "CitationSafetyLimitExceeded")
-              expect(failed.limit, row.name).toBe("nativeHtmlParserResource");
-            resourceErrors++;
-          } else if (row.outcome.kind === "error") {
-            expect(row.outcome.type, row.name).toBe("lxml.etree.ParserError");
-            const failed = yield* Effect.flip(run);
-            expect(failed._tag, row.name).toBe("CitationHtmlKernelFailure");
-            if (failed._tag === "CitationHtmlKernelFailure") expect(failed.reason, row.name).toBe("parse-error");
-            parseErrors++;
-          } else {
-            expect(yield* run, row.name).toBe(yield* Effect.fromOption(HashMap.get(texts, row.outcome.value)));
-            successes++;
-          }
-        }
+        yield* Effect.forEach(
+          corpus.cases,
+          Effect.fnUntraced(function* (row) {
+            const text = yield* Effect.fromOption(HashMap.get(texts, row.text));
+            if (row.outcome.kind === "error" && row.outcome.type === "builtins.ValueError") {
+              const failed = yield* Effect.flip(preparation.prepare(text));
+              expect(failed._tag, row.name).toBe("CitationHtmlInputFailure");
+              if (failed._tag === "CitationHtmlInputFailure")
+                expect(failed.reason, row.name).toBe("unicode-encoding-declaration");
+              declarations++;
+              return;
+            }
+            const input = yield* preparation.prepare(text);
+            const run = kernel.run({ input, outputUtf16: limits.producedTextUtf16 }) satisfies Effect.Effect<
+              string,
+              CitationSafetyLimitExceeded | CitationHtmlKernelFailure | CitationHtmlCompletionFailure
+            >;
+            if (A.some(row.diagnostics, (d) => d.resourceLimit)) {
+              const failed = yield* Effect.flip(run);
+              expect(failed._tag, row.name).toBe("CitationSafetyLimitExceeded");
+              if (failed._tag === "CitationSafetyLimitExceeded")
+                expect(failed.limit, row.name).toBe("nativeHtmlParserResource");
+              resourceErrors++;
+            } else if (row.outcome.kind === "error") {
+              expect(row.outcome.type, row.name).toBe("lxml.etree.ParserError");
+              const failed = yield* Effect.flip(run);
+              expect(failed._tag, row.name).toBe("CitationHtmlKernelFailure");
+              if (failed._tag === "CitationHtmlKernelFailure") expect(failed.reason, row.name).toBe("parse-error");
+              parseErrors++;
+            } else {
+              expect(yield* run, row.name).toBe(yield* Effect.fromOption(HashMap.get(texts, row.outcome.value)));
+              successes++;
+            }
+          }),
+          { concurrency: 1, discard: true }
+        );
         expect([successes, declarations, parseErrors, resourceErrors]).toEqual([840, 238, 16, 3]);
       }),
     { timeout: 30_000 }

@@ -145,29 +145,33 @@ export const replayNamedCleanerScenes = Effect.fn("NamedCorpusTest.replay")(func
   const verify = Effect.fn("NamedCorpusTest.verify")(function* (row: typeof NamedCase.Type) {
     observed = [];
     h.select(yield* Effect.forEach(row.steps.names, h.values.text));
-    for (const expected of row.runs) {
-      const input = { text: text(row.input.text), plan: row.name };
-      if (expected.kind === "failure") {
-        const failure = yield* Effect.flip(operation.run(input));
-        if (expected.pythonType === "lxml.etree.ParserError") {
-          expect(failure, row.name).toMatchObject({ reason: "html-parse-error" });
-          parseFailures++;
-        } else if (mode === "html") {
-          expect(expected.pythonType).toBe("builtins.ValueError");
-          expect(failure, row.name).toMatchObject({ reason: "html-unicode-encoding-declaration" });
-          declarationFailures++;
+    yield* Effect.forEach(
+      row.runs,
+      Effect.fnUntraced(function* (expected) {
+        const input = { text: text(row.input.text), plan: row.name };
+        if (expected.kind === "failure") {
+          const failure = yield* Effect.flip(operation.run(input));
+          if (expected.pythonType === "lxml.etree.ParserError") {
+            expect(failure, row.name).toMatchObject({ reason: "html-parse-error" });
+            parseFailures++;
+          } else if (mode === "html") {
+            expect(expected.pythonType).toBe("builtins.ValueError");
+            expect(failure, row.name).toMatchObject({ reason: "html-unicode-encoding-declaration" });
+            declarationFailures++;
+          } else {
+            expect(expected.pythonType).toBe("builtins.ValueError");
+            expect(failure, row.name).toMatchObject({ reason: "unknown-step" });
+            unknownSteps++;
+          }
         } else {
-          expect(expected.pythonType).toBe("builtins.ValueError");
-          expect(failure, row.name).toMatchObject({ reason: "unknown-step" });
-          unknownSteps++;
+          const result = yield* operation.run(input);
+          expect(O.getOrThrow(yield* h.values.getText(result.value)).text, row.name).toBe(text(expected.value.text));
+          expect(yield* h.values.same(O.getOrThrow(initial), result.value), row.name).toBe(expected.sameAsInput);
+          successes++;
         }
-      } else {
-        const result = yield* operation.run(input);
-        expect(O.getOrThrow(yield* h.values.getText(result.value)).text, row.name).toBe(text(expected.value.text));
-        expect(yield* h.values.same(O.getOrThrow(initial), result.value), row.name).toBe(expected.sameAsInput);
-        successes++;
-      }
-    }
+      }),
+      { concurrency: 1, discard: true }
+    );
     const expectedEvents = yield* Effect.forEach(A.filter(row.events, S.is(BuiltinEvent)), (value) =>
       S.decodeEffect(BuiltinEvent)(value).pipe(Effect.map(normalize))
     );

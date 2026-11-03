@@ -29,6 +29,8 @@ import type { CitationSafetyBudget } from "@beep/law-practice-use-cases/server";
 const CitationEngineLimitsType = S.toType(CitationEngineLimits);
 const NativeStorage = S.toType(CitationPythonUnicodeStorage);
 
+import { visitCitationTextPoints } from "./TextPoints.ts";
+
 const $I = $LawPracticeServerId.create("internal/Citation/HtmlInput");
 const Encoding = LiteralKit(["UTF-8", "ISO-8859-1", "UTF-16LE", "UTF-32LE", "AUTO"]).pipe(
   $I.annoteSchema("Encoding", {
@@ -160,17 +162,11 @@ const nativeReader =
 const textLayout = Effect.fnUntraced(function* (text: string) {
   let maximum = 0;
   let points = 0;
-  let nextYield = 0;
-  for (let index = 0; index < Str.length(text); ) {
-    if (index >= nextYield) {
-      yield* Effect.yieldNow;
-      nextYield = index + 4096;
-    }
-    const point = O.getOrElse(Str.codePointAt(text, index), () => 0);
+  yield* visitCitationTextPoints(text, (point) => {
     maximum = Num.max(maximum, point);
     points++;
-    index += pointUnits(point);
-  }
+    return true;
+  });
   const width = nativeWidth(maximum);
   return { width, encoding: nativeEncoding(maximum), size: width === 4 ? points * 4 : Str.length(text) * width };
 });
@@ -178,19 +174,13 @@ const encodeText = Effect.fnUntraced(function* (text: string, size: number, widt
   const bytes = new Uint8Array(size);
   const view = new DataView(bytes.buffer);
   let offset = 0;
-  let nextYield = 0;
-  for (let index = 0; index < Str.length(text); ) {
-    if (index >= nextYield) {
-      yield* Effect.yieldNow;
-      nextYield = index + 4096;
-    }
-    const point = O.getOrElse(Str.codePointAt(text, index), () => 0);
+  yield* visitCitationTextPoints(text, (point) => {
     if (width === 1) view.setUint8(offset, point);
     else if (width === 2) view.setUint16(offset, point, true);
     else view.setUint32(offset, point, true);
     offset += width;
-    index += pointUnits(point);
-  }
+    return true;
+  });
   return bytes;
 });
 const byteSpace = (byte: number | undefined) => byte === 32 || (byte !== undefined && byte >= 9 && byte <= 13);

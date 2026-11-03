@@ -17,6 +17,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 import * as Tuple from "effect/Tuple";
+import { prepareCitationCallbackInput } from "./CallbackInput.ts";
 import { CitationDefaultObservation, issueCitationDefaultNone } from "./CallbackObservations.ts";
 import { CitationCallbackResult } from "./CallbackResource.ts";
 import {
@@ -29,7 +30,6 @@ import {
   runPreparedCitationCallbackSession,
 } from "./CallbackSession.ts";
 import { citationMetadataValues } from "./MetadataValues.ts";
-import { prepareCitationResolution } from "./ResolutionInput.ts";
 import { hasInvalidCitationPinCite, stripCitationAntecedentPunctuation } from "./ResolverText.ts";
 import type { Citation, CitationMention, CitationMentionId } from "@beep/law-practice-domain/values";
 import type { CitationCallbackFull, CitationFullsCallbackInput, CitationIdCallbackInput } from "./CallbackSession.ts";
@@ -261,9 +261,7 @@ export const runPreparedDefaultCitationCallbackSession = Effect.fn("Citation.run
 export const runDefaultCitationCallbackSession = Effect.fn("Citation.runDefaultCallbackSession")(function* (
   input: unknown
 ) {
-  const prepared = yield* prepareCitationResolution(input).pipe(
-    Effect.mapError((error) => CitationCallbackFailure.make({ reason: error.reason }))
-  );
+  const prepared = yield* prepareCitationCallbackInput(input);
   const work = yield* makeCitationResolutionWork(prepared.limits);
   return yield* runPreparedDefaultCitationCallbackSession(prepared).pipe(
     Effect.provideService(CitationResolutionWork, work)

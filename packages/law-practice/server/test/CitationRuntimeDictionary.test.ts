@@ -103,58 +103,66 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("source runtime d
         "signed-wide-hashes",
       ]);
       expect(A.reduce(data.cases, 0, (count, row) => count + A.length(row.events))).toBe(62);
-      for (const row of data.cases) {
-        let keys = HashMap.empty<number, typeof KeyState.Type>();
-        let comparisons = A.empty<readonly [number, number]>();
-        const comparison = CitationRuntimeDictionaryComparison.of({
-          step: Effect.void,
-          equal: Effect.fn("RuntimeDictionaryTest.equal")(function* (leftId: number, rightId: number) {
-            comparisons = A.append(comparisons, Tuple.make(leftId, rightId));
-            const left = yield* Effect.fromOption(HashMap.get(keys, leftId), invalid);
-            const right = yield* Effect.fromOption(HashMap.get(keys, rightId), invalid);
-            if (left.error) return yield* CitationRuntimeDictionaryFailure.make({ reason: "comparison-failed" });
-            return left.mode === "hash" ? left.hash === right.hash : left.token === right.token;
-          }),
-        });
-        const table = yield* makeCitationRuntimeDictionary(
-          CitationRuntimeDictionaryLimits.make({ entries: 64, iterations: 20_000 })
-        ).pipe(Effect.provideService(CitationRuntimeDictionaryComparison, comparison));
-        for (const event of row.events) {
-          keys = HashMap.fromIterable(A.map(event.keys, (key) => Tuple.make(key.objectId, key)));
-          comparisons = [];
-          const operation = event.operation;
-          let run: Effect.Effect<O.Option<CitationRuntimeDictionaryEntry>, CitationRuntimeDictionaryFailure>;
-          if (operation.kind === "get" || operation.kind === "remove" || operation.kind === "set") {
-            const state = yield* Effect.fromOption(HashMap.get(keys, operation.key), invalid);
-            const key = CitationRuntimeDictionaryKey.make({ objectId: state.objectId, hash: state.hash });
-            run =
-              operation.kind === "get"
-                ? table.get(key)
-                : operation.kind === "remove"
-                  ? table.remove(key)
-                  : table.set(key, operation.value).pipe(Effect.as(O.none<CitationRuntimeDictionaryEntry>()));
-          } else
-            run =
-              operation.kind === "clear"
-                ? table.clear.pipe(Effect.as(O.none<CitationRuntimeDictionaryEntry>()))
-                : Effect.succeedNone;
-          let actual: typeof Outcome.Type;
-          if (event.outcome.status === "error") {
-            const failure = yield* Effect.flip(run);
-            expect(failure.reason, row.name).toBe("comparison-failed");
-            actual = Outcome.cases.error.make({ kind: "ValueError" });
-          } else {
-            const value = yield* run;
-            actual = Outcome.cases.value.make({ result: O.getOrNull(O.map(value, (entry) => entry.value)) });
-          }
-          expect(actual, row.name).toEqual(event.outcome);
-          expect(comparisons, row.name).toEqual(event.comparisons);
-          expect(
-            A.map(yield* table.read, (entry) => ({ objectId: entry.objectId, value: entry.value })),
-            row.name
-          ).toEqual(event.entries);
-        }
-      }
+      yield* Effect.forEach(
+        data.cases,
+        Effect.fnUntraced(function* (row) {
+          let keys = HashMap.empty<number, typeof KeyState.Type>();
+          let comparisons = A.empty<readonly [number, number]>();
+          const comparison = CitationRuntimeDictionaryComparison.of({
+            step: Effect.void,
+            equal: Effect.fn("RuntimeDictionaryTest.equal")(function* (leftId: number, rightId: number) {
+              comparisons = A.append(comparisons, Tuple.make(leftId, rightId));
+              const left = yield* Effect.fromOption(HashMap.get(keys, leftId), invalid);
+              const right = yield* Effect.fromOption(HashMap.get(keys, rightId), invalid);
+              if (left.error) return yield* CitationRuntimeDictionaryFailure.make({ reason: "comparison-failed" });
+              return left.mode === "hash" ? left.hash === right.hash : left.token === right.token;
+            }),
+          });
+          const table = yield* makeCitationRuntimeDictionary(
+            CitationRuntimeDictionaryLimits.make({ entries: 64, iterations: 20_000 })
+          ).pipe(Effect.provideService(CitationRuntimeDictionaryComparison, comparison));
+          yield* Effect.forEach(
+            row.events,
+            Effect.fnUntraced(function* (event) {
+              keys = HashMap.fromIterable(A.map(event.keys, (key) => Tuple.make(key.objectId, key)));
+              comparisons = [];
+              const operation = event.operation;
+              let run: Effect.Effect<O.Option<CitationRuntimeDictionaryEntry>, CitationRuntimeDictionaryFailure>;
+              if (operation.kind === "get" || operation.kind === "remove" || operation.kind === "set") {
+                const state = yield* Effect.fromOption(HashMap.get(keys, operation.key), invalid);
+                const key = CitationRuntimeDictionaryKey.make({ objectId: state.objectId, hash: state.hash });
+                run =
+                  operation.kind === "get"
+                    ? table.get(key)
+                    : operation.kind === "remove"
+                      ? table.remove(key)
+                      : table.set(key, operation.value).pipe(Effect.as(O.none<CitationRuntimeDictionaryEntry>()));
+              } else
+                run =
+                  operation.kind === "clear"
+                    ? table.clear.pipe(Effect.as(O.none<CitationRuntimeDictionaryEntry>()))
+                    : Effect.succeedNone;
+              let actual: typeof Outcome.Type;
+              if (event.outcome.status === "error") {
+                const failure = yield* Effect.flip(run);
+                expect(failure.reason, row.name).toBe("comparison-failed");
+                actual = Outcome.cases.error.make({ kind: "ValueError" });
+              } else {
+                const value = yield* run;
+                actual = Outcome.cases.value.make({ result: O.getOrNull(O.map(value, (entry) => entry.value)) });
+              }
+              expect(actual, row.name).toEqual(event.outcome);
+              expect(comparisons, row.name).toEqual(event.comparisons);
+              expect(
+                A.map(yield* table.read, (entry) => ({ objectId: entry.objectId, value: entry.value })),
+                row.name
+              ).toEqual(event.entries);
+            }),
+            { concurrency: 1, discard: true }
+          );
+        }),
+        { concurrency: 1, discard: true }
+      );
     })
   );
   it.effect("enforces entry/work ceilings, isolates snapshots and serializes concurrent inserts", () =>

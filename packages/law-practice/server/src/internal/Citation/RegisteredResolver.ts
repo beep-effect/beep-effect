@@ -6,14 +6,14 @@
  */
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
+import { prepareCitationCallbackInput } from "./CallbackInput.ts";
 import {
   CitationCallbackRuntimeIndexFactory,
   makeCitationCallbackRuntimeIndexFactory,
 } from "./CallbackRuntimeIndex.ts";
-import { CitationCallbackFailure, CitationResolutionWork, makeCitationResolutionWork } from "./CallbackSession.ts";
+import { CitationResolutionWork, makeCitationResolutionWork } from "./CallbackSession.ts";
 import { runPreparedDefaultCitationCallbackSession } from "./DefaultCallbacks.ts";
 import { CitationFrozenEditions } from "./FrozenEditions.ts";
-import { prepareCitationResolution } from "./ResolutionInput.ts";
 import { makeCitationRegisteredSessionDescriptors } from "./SessionDescriptors.ts";
 import { CitationSessionResourceDescriptors, makeCitationSessionDocumentProjector } from "./SessionDocument.ts";
 
@@ -34,9 +34,7 @@ export const makeCitationRegisteredResolver = Effect.fn("Citation.makeRegistered
   return {
     resolve: Effect.fn("Citation.resolveRegistered")(
       function* (input: unknown) {
-        const prepared = yield* prepareCitationResolution(input).pipe(
-          Effect.mapError((error) => CitationCallbackFailure.make({ reason: error.reason }))
-        );
+        const prepared = yield* prepareCitationCallbackInput(input);
         const work = yield* makeCitationResolutionWork(prepared.limits);
         const session = yield* runPreparedDefaultCitationCallbackSession(prepared).pipe(
           Effect.provideService(CitationCallbackRuntimeIndexFactory, factory),

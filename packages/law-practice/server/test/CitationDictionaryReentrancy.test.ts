@@ -74,97 +74,113 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("direct comparison r
       const data = yield* S.decodeEffect(CorpusJson)(raw);
       expect(data.cases).toHaveLength(13);
       expect(A.reduce(data.cases, 0, (total, row) => total + row.events.length)).toBe(26);
-      for (const row of data.cases) {
-        let table = O.none<ReturnType<typeof CitationRuntimeDictionary.of>>();
-        let mutations = 0;
-        let trace: ReadonlyArray<S.Json> = [];
-        const state = Effect.fn("ReentrantTest.state")((id: number) => Effect.fromOption(A.get(row.keys, id), invalid));
-        const capturedKey = Effect.fn("ReentrantTest.key")(function* (id: number) {
-          const value = yield* state(id);
-          return CitationRuntimeDictionaryKey.make({ objectId: id, hash: value.hash });
-        });
-        const project = Effect.gen(function* () {
-          const current = yield* Effect.fromOption(table, invalid);
-          return A.map(yield* current.read, (entry) => ({ objectId: entry.objectId, value: entry.value }));
-        });
-        const action = Effect.fn("ReentrantTest.action")(function* () {
-          const current = yield* Effect.fromOption(table, invalid);
-          mutations++;
-          if (A.contains(["clear-in-get", "clear-in-remove", "mutate-raise", "clear-refill"], row.name)) {
-            yield* current.clear;
-            trace = A.append(trace, { kind: "clear" });
-            if (row.name === "clear-refill") {
+      yield* Effect.forEach(
+        data.cases,
+        Effect.fnUntraced(function* (row) {
+          let table = O.none<ReturnType<typeof CitationRuntimeDictionary.of>>();
+          let mutations = 0;
+          let trace: ReadonlyArray<S.Json> = [];
+          const state = Effect.fn("ReentrantTest.state")((id: number) =>
+            Effect.fromOption(A.get(row.keys, id), invalid)
+          );
+          const capturedKey = Effect.fn("ReentrantTest.key")(function* (id: number) {
+            const value = yield* state(id);
+            return CitationRuntimeDictionaryKey.make({ objectId: id, hash: value.hash });
+          });
+          const project = Effect.gen(function* () {
+            const current = yield* Effect.fromOption(table, invalid);
+            return A.map(yield* current.read, (entry) => ({ objectId: entry.objectId, value: entry.value }));
+          });
+          const action = Effect.fn("ReentrantTest.action")(function* () {
+            const current = yield* Effect.fromOption(table, invalid);
+            mutations++;
+            if (A.contains(["clear-in-get", "clear-in-remove", "mutate-raise", "clear-refill"], row.name)) {
+              yield* current.clear;
+              trace = A.append(trace, { kind: "clear" });
+              if (row.name === "clear-refill") {
+                yield* current.set(yield* capturedKey(0), 99);
+                trace = A.append(trace, { kind: "set", key: 0, value: 99 });
+              }
+              if (row.name === "mutate-raise")
+                return yield* CitationRuntimeDictionaryFailure.make({ reason: "comparison-failed" });
+            } else if (A.contains(["remove-in-get", "replace-in-get", "resize-in-set", "replace-five"], row.name)) {
+              const result = yield* current.remove(yield* capturedKey(0));
+              trace = A.append(trace, {
+                kind: "remove",
+                key: 0,
+                result: O.getOrNull(O.map(result, (entry) => entry.value)),
+              });
+              if (row.name === "replace-in-get" || row.name === "replace-five") {
+                yield* current.set(yield* capturedKey(0), 99 + mutations);
+                trace = A.append(trace, { kind: "set", key: 0, value: 99 + mutations });
+              } else if (row.name === "resize-in-set") {
+                yield* current.set(yield* capturedKey(6), 106);
+                trace = A.append(trace, { kind: "set", key: 6, value: 106 });
+              }
+            } else if (row.name === "update-in-get") {
               yield* current.set(yield* capturedKey(0), 99);
               trace = A.append(trace, { kind: "set", key: 0, value: 99 });
-            }
-            if (row.name === "mutate-raise")
-              return yield* CitationRuntimeDictionaryFailure.make({ reason: "comparison-failed" });
-          } else if (A.contains(["remove-in-get", "replace-in-get", "resize-in-set", "replace-five"], row.name)) {
-            const result = yield* current.remove(yield* capturedKey(0));
-            trace = A.append(trace, {
-              kind: "remove",
-              key: 0,
-              result: O.getOrNull(O.map(result, (entry) => entry.value)),
-            });
-            if (row.name === "replace-in-get" || row.name === "replace-five") {
-              yield* current.set(yield* capturedKey(0), 99 + mutations);
-              trace = A.append(trace, { kind: "set", key: 0, value: 99 + mutations });
-            } else if (row.name === "resize-in-set") {
-              yield* current.set(yield* capturedKey(6), 106);
-              trace = A.append(trace, { kind: "set", key: 6, value: 106 });
-            }
-          } else if (row.name === "update-in-get") {
-            yield* current.set(yield* capturedKey(0), 99);
-            trace = A.append(trace, { kind: "set", key: 0, value: 99 });
-          } else if (A.contains(["insert-no-resize", "resize-in-get", "false-after-resize"], row.name)) {
-            const id = row.name === "insert-no-resize" ? 2 : 6;
-            yield* current.set(yield* capturedKey(id), 100 + id);
-            trace = A.append(trace, { kind: "set", key: id, value: 100 + id });
-          } else if (row.name === "read-get") {
-            trace = A.append(trace, { kind: "read", entries: yield* project });
-            const result = yield* current.get(yield* capturedKey(0));
-            trace = A.append(trace, {
-              kind: "get",
-              key: 0,
-              result: O.getOrNull(O.map(result, (entry) => entry.value)),
-            });
-          } else return yield* invalid();
-        });
-        const comparison = CitationRuntimeDictionaryComparison.of({
-          step: Effect.void,
-          equal: Effect.fn("ReentrantTest.equal")(function* (left: number, right: number) {
-            trace = A.append(trace, { kind: "compare", left, right });
-            if (left === 0 && right === 1 && mutations < (row.name === "replace-five" ? 5 : 1)) yield* action();
-            return (yield* state(left)).token === (yield* state(right)).token;
-          }),
-        });
-        const current = yield* makeCitationRuntimeDictionary({ entries: 64, iterations: 20_000 }).pipe(
-          Effect.provideService(CitationRuntimeDictionaryComparison, comparison)
-        );
-        table = O.some(current);
-        for (const id of row.initial) yield* current.set(yield* capturedKey(id), 100 + id);
-        expect(trace).toEqual([]);
-        for (const event of row.events) {
-          trace = [];
-          const inputKey = yield* capturedKey(event.operation.key);
-          const operation = event.operation;
-          const run =
-            operation.kind === "get"
-              ? current.get(inputKey)
-              : operation.kind === "remove"
-                ? current.remove(inputKey)
-                : current.set(inputKey, operation.value).pipe(Effect.as(O.none()));
-          if (event.outcome.status === "error") {
-            const failure = yield* Effect.flip(run);
-            expect(failure.reason, row.name).toBe("comparison-failed");
-          } else {
-            const value = yield* run;
-            expect(O.getOrNull(O.map(value, (entry) => entry.value)), row.name).toBe(event.outcome.result);
-          }
-          expect(trace, row.name).toEqual(event.trace);
-          expect(yield* project, row.name).toEqual(event.entries);
-        }
-      }
+            } else if (A.contains(["insert-no-resize", "resize-in-get", "false-after-resize"], row.name)) {
+              const id = row.name === "insert-no-resize" ? 2 : 6;
+              yield* current.set(yield* capturedKey(id), 100 + id);
+              trace = A.append(trace, { kind: "set", key: id, value: 100 + id });
+            } else if (row.name === "read-get") {
+              trace = A.append(trace, { kind: "read", entries: yield* project });
+              const result = yield* current.get(yield* capturedKey(0));
+              trace = A.append(trace, {
+                kind: "get",
+                key: 0,
+                result: O.getOrNull(O.map(result, (entry) => entry.value)),
+              });
+            } else return yield* invalid();
+          });
+          const comparison = CitationRuntimeDictionaryComparison.of({
+            step: Effect.void,
+            equal: Effect.fn("ReentrantTest.equal")(function* (left: number, right: number) {
+              trace = A.append(trace, { kind: "compare", left, right });
+              if (left === 0 && right === 1 && mutations < (row.name === "replace-five" ? 5 : 1)) yield* action();
+              return (yield* state(left)).token === (yield* state(right)).token;
+            }),
+          });
+          const current = yield* makeCitationRuntimeDictionary({ entries: 64, iterations: 20_000 }).pipe(
+            Effect.provideService(CitationRuntimeDictionaryComparison, comparison)
+          );
+          table = O.some(current);
+          yield* Effect.forEach(
+            row.initial,
+            Effect.fnUntraced(function* (id) {
+              yield* current.set(yield* capturedKey(id), 100 + id);
+            }),
+            { concurrency: 1, discard: true }
+          );
+          expect(trace).toEqual([]);
+          yield* Effect.forEach(
+            row.events,
+            Effect.fnUntraced(function* (event) {
+              trace = [];
+              const inputKey = yield* capturedKey(event.operation.key);
+              const operation = event.operation;
+              const run =
+                operation.kind === "get"
+                  ? current.get(inputKey)
+                  : operation.kind === "remove"
+                    ? current.remove(inputKey)
+                    : current.set(inputKey, operation.value).pipe(Effect.as(O.none()));
+              if (event.outcome.status === "error") {
+                const failure = yield* Effect.flip(run);
+                expect(failure.reason, row.name).toBe("comparison-failed");
+              } else {
+                const value = yield* run;
+                expect(O.getOrNull(O.map(value, (entry) => entry.value)), row.name).toBe(event.outcome.result);
+              }
+              expect(trace, row.name).toEqual(event.trace);
+              expect(yield* project, row.name).toEqual(event.entries);
+            }),
+            { concurrency: 1, discard: true }
+          );
+        }),
+        { concurrency: 1, discard: true }
+      );
     })
   );
   it.effect("charges repeated restarts and releases ownership after failure and interruption", () =>

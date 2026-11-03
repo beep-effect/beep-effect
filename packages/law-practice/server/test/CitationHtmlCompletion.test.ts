@@ -51,29 +51,33 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("approved HTML safet
       let changed = 0;
       let preserved = 0;
       let parsingFailures = 0;
-      for (const row of corpus.cases) {
-        if (row.outcome.kind === "error") {
-          parsingFailures++;
-          continue;
-        }
-        const text = yield* Effect.fromOption(HashMap.get(values, row.outcome.value));
-        const result = completeCitationHtml({ text, diagnostics: row.diagnostics }) satisfies Effect.Effect<
-          string,
-          CitationSafetyLimitExceeded | CitationHtmlCompletionFailure
-        >;
-        if (A.some(row.diagnostics, (diagnostic) => diagnostic.depthLimit)) {
-          const failed = yield* Effect.flip(result);
-          expect(failed._tag, row.name).toBe("CitationSafetyLimitExceeded");
-          if (failed._tag === "CitationSafetyLimitExceeded") {
-            expect(failed.operation).toBe("clean");
-            expect(failed.limit).toBe("nativeHtmlParserResource");
+      yield* Effect.forEach(
+        corpus.cases,
+        Effect.fnUntraced(function* (row) {
+          if (row.outcome.kind === "error") {
+            parsingFailures++;
+            return;
           }
-          changed++;
-        } else {
-          expect(yield* result, row.name).toBe(text);
-          preserved++;
-        }
-      }
+          const text = yield* Effect.fromOption(HashMap.get(values, row.outcome.value));
+          const result = completeCitationHtml({ text, diagnostics: row.diagnostics }) satisfies Effect.Effect<
+            string,
+            CitationSafetyLimitExceeded | CitationHtmlCompletionFailure
+          >;
+          if (A.some(row.diagnostics, (diagnostic) => diagnostic.depthLimit)) {
+            const failed = yield* Effect.flip(result);
+            expect(failed._tag, row.name).toBe("CitationSafetyLimitExceeded");
+            if (failed._tag === "CitationSafetyLimitExceeded") {
+              expect(failed.operation).toBe("clean");
+              expect(failed.limit).toBe("nativeHtmlParserResource");
+            }
+            changed++;
+          } else {
+            expect(yield* result, row.name).toBe(text);
+            preserved++;
+          }
+        }),
+        { concurrency: 1, discard: true }
+      );
       expect([changed, preserved, parsingFailures]).toEqual([3, 60, 6]);
     })
   );

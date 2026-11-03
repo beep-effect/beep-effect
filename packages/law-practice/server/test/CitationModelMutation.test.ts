@@ -114,235 +114,248 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback semanti
         "retained-metadata-from-full",
         "detached-alias-metadata",
       ]);
-      for (const row of rows) {
-        const input = yield* prepareCallbackObservation(
-          CitationCallbackObservation.make({
-            name: `model-mutation-${row.name}`,
-            kinds: row.kinds,
-            pages: {},
-            bindings: {},
-            events: [],
-            outcome: { status: "value", groups: [] },
-          })
-        );
-        const mentions = yield* Effect.forEach(input.mentions, (mention, index) =>
-          Effect.gen(function* () {
-            const source = A.getUnsafe(row.initialObjects, index);
-            const wire = yield* S.encodeEffect(Citation)(mention.citation);
-            const patched: S.Json = {
-              ...wire,
-              components: source.groups,
-              metadata: {
-                ...wire.metadata,
-                ...(wire.type === "case" ? { plaintiff: source.metadata.plaintiff } : {}),
-                ...(wire.type === "supra" || wire.type === "shortFormCase"
-                  ? { antecedentGuess: source.metadata.antecedent_guess }
-                  : {}),
-                pinCite: source.metadata.pin_cite,
-              },
-            };
-            const citation = yield* S.decodeUnknownEffect(Citation)(patched);
-            return CitationMention.make({ ...mention, citation });
-          })
-        );
-        const prepared = yield* prepareCitationResolution({ ...input, mentions });
-        const work = yield* makeCitationResolutionWork(prepared.limits);
-        const owner = yield* makeCitationCallbackDictionary(prepared).pipe(
-          Effect.provideService(CitationResolutionWork, work)
-        );
-        const defaults = yield* makeDefaultCitationResolutionCallbacks(prepared).pipe(
-          Effect.provideService(CitationResolutionWork, work),
-          Effect.provideService(CitationCallbackDictionary, owner)
-        );
-        const base = yield* normalizeCallbackFixtureResource("base");
-        const foreign = yield* normalizeCallbackFixtureResource("foreign");
-        const indexOf = (id: (typeof prepared.mentions)[number]["id"]) =>
-          O.getOrElse(
-            A.findFirstIndex(prepared.mentions, (mention) => mention.id === id),
-            () => -1
+      yield* Effect.forEach(
+        rows,
+        Effect.fnUntraced(function* (row) {
+          const input = yield* prepareCallbackObservation(
+            CitationCallbackObservation.make({
+              name: `model-mutation-${row.name}`,
+              kinds: row.kinds,
+              pages: {},
+              bindings: {},
+              events: [],
+              outcome: { status: "value", groups: [] },
+            })
           );
-        const mentionRef = (mention: CitationMention) =>
-          CitationGroupMember.cases.Mention.make({ mentionId: mention.id });
-        let detachedRef: O.Option<CitationGroupMember> = O.none();
-        const referenceView = (reference: CitationGroupMember): typeof Reference.Type =>
-          reference._tag === "Mention"
-            ? Reference.cases.input.make({ index: indexOf(reference.mentionId) })
-            : Reference.cases.detached.make({ slot: 0 });
-        const view = Effect.fn("ModelMutationTest.view")(function* (reference: CitationGroupMember) {
-          const wire = yield* S.encodeEffect(Citation)(yield* owner.citationOf(reference));
-          const metadata = yield* S.decodeEffect(JsonMetadata)(wire.metadata);
-          return {
-            reference: referenceView(reference),
-            groups: wire.components,
-            metadata: {
-              plaintiff: O.getOrElse(R.get(metadata, "plaintiff"), () => null),
-              antecedent_guess: O.getOrElse(R.get(metadata, "antecedentGuess"), () => null),
-              pin_cite: O.getOrElse(R.get(metadata, "pinCite"), () => null),
-            },
-          };
-        }, Effect.mapError(invalid));
-        const objects = Effect.fn("ModelMutationTest.objects")(() =>
-          Effect.forEach(prepared.mentions, (mention) => view(mentionRef(mention)), { concurrency: 1 })
-        );
-        const change = Effect.fn("ModelMutationTest.change")(function* (
-          reference: CitationGroupMember,
-          field: "plaintiff" | "page" | "volume" | "pin" | "antecedent",
-          value: string
-        ) {
-          const wire = yield* S.encodeEffect(Citation)(yield* owner.citationOf(reference)).pipe(
-            Effect.mapError(invalid)
+          const mentions = yield* Effect.forEach(input.mentions, (mention, index) =>
+            Effect.gen(function* () {
+              const source = A.getUnsafe(row.initialObjects, index);
+              const wire = yield* S.encodeEffect(Citation)(mention.citation);
+              const patched: S.Json = {
+                ...wire,
+                components: source.groups,
+                metadata: {
+                  ...wire.metadata,
+                  ...(wire.type === "case" ? { plaintiff: source.metadata.plaintiff } : {}),
+                  ...(wire.type === "supra" || wire.type === "shortFormCase"
+                    ? { antecedentGuess: source.metadata.antecedent_guess }
+                    : {}),
+                  pinCite: source.metadata.pin_cite,
+                },
+              };
+              const citation = yield* S.decodeUnknownEffect(Citation)(patched);
+              return CitationMention.make({ ...mention, citation });
+            })
           );
-          let patched: S.Json;
-          if (field === "page" || field === "volume")
-            patched = { ...wire, components: { ...wire.components, [field]: value } };
-          else
-            patched = {
-              ...wire,
-              metadata: {
-                ...wire.metadata,
-                [field === "pin" ? "pinCite" : field === "antecedent" ? "antecedentGuess" : "plaintiff"]: value,
-              },
-            };
-          const citation = yield* S.decodeUnknownEffect(Citation)(patched).pipe(Effect.mapError(invalid));
-          yield* owner.writeCitation(reference, citation);
-        });
-        let retained: O.Option<CitationGroupMember> = O.none();
-        let events = A.empty<S.Json>();
-        const callbacks = CitationResolutionCallbacks.of({
-          ...defaults,
-          full: Effect.fn("ModelMutationTest.full")(function* (mention: CitationMention) {
-            const before = yield* objects();
-            if (row.name === "full-rename-current") yield* change(mentionRef(mention), "plaintiff", "Changed");
-            if (row.name === "retained-metadata-from-full" && O.isSome(retained))
-              yield* change(retained.value, "plaintiff", "Changed");
-            events = A.append(events, {
-              slot: "full",
-              mention: indexOf(mention.id),
-              before,
-              after: yield* objects(),
-              result: callbackResourcePresentation(base),
-            });
-            return base;
-          }),
-          supra: Effect.fn("ModelMutationTest.supra")(function* (arg: CitationFullsCallbackInput) {
-            const before = yield* Effect.forEach(arg.fulls, (entry) => view(entry.citation), { concurrency: 1 });
-            if (O.isNone(retained)) retained = O.some(A.getUnsafe(arg.fulls, 0).citation);
-            if (row.name === "rename-prior-in-supra")
-              yield* change(A.getUnsafe(arg.fulls, 0).citation, "plaintiff", "Changed");
-            if (row.name === "current-supra-antecedent")
-              yield* change(mentionRef(arg.mention), "antecedent", "Missing");
-            if (row.name === "detached-alias-metadata") {
-              if (O.isNone(detachedRef)) {
-                const wire = yield* S.encodeEffect(Citation)(
-                  yield* owner.citationOf(A.getUnsafe(arg.fulls, 0).citation)
-                ).pipe(Effect.mapError(invalid));
-                if (wire.type !== "case") return yield* invalid();
-                const model = yield* S.decodeEffect(Citation)({
-                  ...wire,
-                  metadata: { ...wire.metadata, plaintiff: "Detached" },
-                }).pipe(Effect.mapError(invalid));
-                const reference = yield* owner.registerDetached(model);
-                detachedRef = O.some(reference);
-                yield* owner.writeFulls(A.append(arg.fulls, yield* owner.createFullPair(reference, foreign)));
-              } else yield* change(detachedRef.value, "plaintiff", "Changed");
-            }
-            const output = yield* defaults.supra({ ...arg, fulls: yield* owner.readFulls });
-            events = A.append(events, {
-              slot: "supra",
-              mention: indexOf(arg.mention.id),
-              before,
-              after: yield* Effect.forEach(yield* owner.readFulls, (entry) => view(entry.citation), { concurrency: 1 }),
-              current: yield* view(mentionRef(arg.mention)),
-              result: callbackResourcePresentation(output.resource),
-            });
-            return output;
-          }),
-          shortCase: Effect.fn("ModelMutationTest.short")(function* (arg: CitationFullsCallbackInput) {
-            const before = yield* Effect.forEach(arg.fulls, (entry) => view(entry.citation), { concurrency: 1 });
-            yield* change(A.getUnsafe(arg.fulls, 0).citation, "volume", "2");
-            const output = yield* defaults.shortCase(arg);
-            events = A.append(events, {
-              slot: "short",
-              mention: indexOf(arg.mention.id),
-              before,
-              after: yield* Effect.forEach(yield* owner.readFulls, (entry) => view(entry.citation), { concurrency: 1 }),
-              current: yield* view(mentionRef(arg.mention)),
-              result: callbackResourcePresentation(output.resource),
-            });
-            return output;
-          }),
-          id: Effect.fn("ModelMutationTest.id")(function* (arg: CitationIdCallbackInput) {
-            const before = yield* Effect.forEach(
-              A.flatMap(arg.groups, (group) => group.members),
-              view,
-              { concurrency: 1 }
+          const prepared = yield* prepareCitationResolution({ ...input, mentions });
+          const work = yield* makeCitationResolutionWork(prepared.limits);
+          const owner = yield* makeCitationCallbackDictionary(prepared).pipe(
+            Effect.provideService(CitationResolutionWork, work)
+          );
+          const defaults = yield* makeDefaultCitationResolutionCallbacks(prepared).pipe(
+            Effect.provideService(CitationResolutionWork, work),
+            Effect.provideService(CitationCallbackDictionary, owner)
+          );
+          const base = yield* normalizeCallbackFixtureResource("base");
+          const foreign = yield* normalizeCallbackFixtureResource("foreign");
+          const indexOf = (id: (typeof prepared.mentions)[number]["id"]) =>
+            O.getOrElse(
+              A.findFirstIndex(prepared.mentions, (mention) => mention.id === id),
+              () => -1
             );
-            if (row.name === "page-prior-in-id")
-              yield* change(A.getUnsafe(A.getUnsafe(arg.groups, 0).members, 0), "page", "20");
-            if (row.name === "current-id-pin") yield* change(mentionRef(arg.mention), "pin", "200");
-            const output = yield* defaults.id(arg);
-            events = A.append(events, {
-              slot: "id",
-              mention: indexOf(arg.mention.id),
-              before,
-              after: yield* Effect.forEach(
-                A.flatMap(yield* owner.read, (group) => group.members),
+          const mentionRef = (mention: CitationMention) =>
+            CitationGroupMember.cases.Mention.make({ mentionId: mention.id });
+          let detachedRef: O.Option<CitationGroupMember> = O.none();
+          const referenceView = (reference: CitationGroupMember): typeof Reference.Type =>
+            reference._tag === "Mention"
+              ? Reference.cases.input.make({ index: indexOf(reference.mentionId) })
+              : Reference.cases.detached.make({ slot: 0 });
+          const view = Effect.fn("ModelMutationTest.view")(function* (reference: CitationGroupMember) {
+            const wire = yield* S.encodeEffect(Citation)(yield* owner.citationOf(reference));
+            const metadata = yield* S.decodeEffect(JsonMetadata)(wire.metadata);
+            return {
+              reference: referenceView(reference),
+              groups: wire.components,
+              metadata: {
+                plaintiff: O.getOrElse(R.get(metadata, "plaintiff"), () => null),
+                antecedent_guess: O.getOrElse(R.get(metadata, "antecedentGuess"), () => null),
+                pin_cite: O.getOrElse(R.get(metadata, "pinCite"), () => null),
+              },
+            };
+          }, Effect.mapError(invalid));
+          const objects = Effect.fn("ModelMutationTest.objects")(() =>
+            Effect.forEach(prepared.mentions, (mention) => view(mentionRef(mention)), { concurrency: 1 })
+          );
+          const change = Effect.fn("ModelMutationTest.change")(function* (
+            reference: CitationGroupMember,
+            field: "plaintiff" | "page" | "volume" | "pin" | "antecedent",
+            value: string
+          ) {
+            const wire = yield* S.encodeEffect(Citation)(yield* owner.citationOf(reference)).pipe(
+              Effect.mapError(invalid)
+            );
+            let patched: S.Json;
+            if (field === "page" || field === "volume")
+              patched = { ...wire, components: { ...wire.components, [field]: value } };
+            else
+              patched = {
+                ...wire,
+                metadata: {
+                  ...wire.metadata,
+                  [field === "pin" ? "pinCite" : field === "antecedent" ? "antecedentGuess" : "plaintiff"]: value,
+                },
+              };
+            const citation = yield* S.decodeUnknownEffect(Citation)(patched).pipe(Effect.mapError(invalid));
+            yield* owner.writeCitation(reference, citation);
+          });
+          let retained: O.Option<CitationGroupMember> = O.none();
+          let events = A.empty<S.Json>();
+          const changeDetached = Effect.fnUntraced(function* (arg: CitationFullsCallbackInput) {
+            if (O.isNone(detachedRef)) {
+              const wire = yield* S.encodeEffect(Citation)(
+                yield* owner.citationOf(A.getUnsafe(arg.fulls, 0).citation)
+              ).pipe(Effect.mapError(invalid));
+              if (wire.type !== "case") return yield* invalid();
+              const model = yield* S.decodeEffect(Citation)({
+                ...wire,
+                metadata: { ...wire.metadata, plaintiff: "Detached" },
+              }).pipe(Effect.mapError(invalid));
+              const reference = yield* owner.registerDetached(model);
+              detachedRef = O.some(reference);
+              yield* owner.writeFulls(A.append(arg.fulls, yield* owner.createFullPair(reference, foreign)));
+            } else yield* change(detachedRef.value, "plaintiff", "Changed");
+          });
+          const callbacks = CitationResolutionCallbacks.of({
+            ...defaults,
+            full: Effect.fn("ModelMutationTest.full")(function* (mention: CitationMention) {
+              const before = yield* objects();
+              if (row.name === "full-rename-current") yield* change(mentionRef(mention), "plaintiff", "Changed");
+              if (row.name === "retained-metadata-from-full" && O.isSome(retained))
+                yield* change(retained.value, "plaintiff", "Changed");
+              events = A.append(events, {
+                slot: "full",
+                mention: indexOf(mention.id),
+                before,
+                after: yield* objects(),
+                result: callbackResourcePresentation(base),
+              });
+              return base;
+            }),
+            supra: Effect.fn("ModelMutationTest.supra")(function* (arg: CitationFullsCallbackInput) {
+              const before = yield* Effect.forEach(arg.fulls, (entry) => view(entry.citation), { concurrency: 1 });
+              if (O.isNone(retained)) retained = O.some(A.getUnsafe(arg.fulls, 0).citation);
+              if (row.name === "rename-prior-in-supra")
+                yield* change(A.getUnsafe(arg.fulls, 0).citation, "plaintiff", "Changed");
+              if (row.name === "current-supra-antecedent")
+                yield* change(mentionRef(arg.mention), "antecedent", "Missing");
+              if (row.name === "detached-alias-metadata") yield* changeDetached(arg);
+              const output = yield* defaults.supra({ ...arg, fulls: yield* owner.readFulls });
+              events = A.append(events, {
+                slot: "supra",
+                mention: indexOf(arg.mention.id),
+                before,
+                after: yield* Effect.forEach(yield* owner.readFulls, (entry) => view(entry.citation), {
+                  concurrency: 1,
+                }),
+                current: yield* view(mentionRef(arg.mention)),
+                result: callbackResourcePresentation(output.resource),
+              });
+              return output;
+            }),
+            shortCase: Effect.fn("ModelMutationTest.short")(function* (arg: CitationFullsCallbackInput) {
+              const before = yield* Effect.forEach(arg.fulls, (entry) => view(entry.citation), { concurrency: 1 });
+              yield* change(A.getUnsafe(arg.fulls, 0).citation, "volume", "2");
+              const output = yield* defaults.shortCase(arg);
+              events = A.append(events, {
+                slot: "short",
+                mention: indexOf(arg.mention.id),
+                before,
+                after: yield* Effect.forEach(yield* owner.readFulls, (entry) => view(entry.citation), {
+                  concurrency: 1,
+                }),
+                current: yield* view(mentionRef(arg.mention)),
+                result: callbackResourcePresentation(output.resource),
+              });
+              return output;
+            }),
+            id: Effect.fn("ModelMutationTest.id")(function* (arg: CitationIdCallbackInput) {
+              const before = yield* Effect.forEach(
+                A.flatMap(arg.groups, (group) => group.members),
                 view,
                 { concurrency: 1 }
-              ),
-              current: yield* view(mentionRef(arg.mention)),
-              result: callbackResourcePresentation(output.resource),
-            });
-            return output;
-          }),
-        });
-        const result = yield* runPreparedCitationCallbackSession(prepared).pipe(
-          Effect.provideService(CitationResolutionWork, work),
-          Effect.provideService(CitationCallbackDictionary, owner),
-          Effect.provideService(CitationResolutionCallbacks, callbacks)
-        );
-        expect(events, row.name).toEqual(row.events);
-        expect(
-          {
-            status: "value",
-            groups: A.map(result.groups, (group) => ({
-              resource: callbackResourcePresentation(group.resource),
-              members: A.map(group.members, referenceView),
-            })),
-          },
-          row.name
-        ).toEqual(row.outcome);
-        const finalView = Effect.fn("ModelMutationTest.finalView")(function* (
-          reference: CitationGroupMember,
-          citation: Citation
-        ) {
-          const wire = yield* S.encodeEffect(Citation)(citation);
-          const metadata = yield* S.decodeEffect(JsonMetadata)(wire.metadata);
-          return {
-            reference: referenceView(reference),
-            groups: wire.components,
-            metadata: {
-              plaintiff: O.getOrElse(R.get(metadata, "plaintiff"), () => null),
-              antecedent_guess: O.getOrElse(R.get(metadata, "antecedentGuess"), () => null),
-              pin_cite: O.getOrElse(R.get(metadata, "pinCite"), () => null),
+              );
+              if (row.name === "page-prior-in-id")
+                yield* change(A.getUnsafe(A.getUnsafe(arg.groups, 0).members, 0), "page", "20");
+              if (row.name === "current-id-pin") yield* change(mentionRef(arg.mention), "pin", "200");
+              const output = yield* defaults.id(arg);
+              events = A.append(events, {
+                slot: "id",
+                mention: indexOf(arg.mention.id),
+                before,
+                after: yield* Effect.forEach(
+                  A.flatMap(yield* owner.read, (group) => group.members),
+                  view,
+                  { concurrency: 1 }
+                ),
+                current: yield* view(mentionRef(arg.mention)),
+                result: callbackResourcePresentation(output.resource),
+              });
+              return output;
+            }),
+          });
+          const result = yield* runPreparedCitationCallbackSession(prepared).pipe(
+            Effect.provideService(CitationResolutionWork, work),
+            Effect.provideService(CitationCallbackDictionary, owner),
+            Effect.provideService(CitationResolutionCallbacks, callbacks)
+          );
+          expect(events, row.name).toEqual(row.events);
+          expect(
+            {
+              status: "value",
+              groups: A.map(result.groups, (group) => ({
+                resource: callbackResourcePresentation(group.resource),
+                members: A.map(group.members, referenceView),
+              })),
             },
-          };
-        });
-        expect(
-          yield* Effect.forEach(result.mentions, (mention) => finalView(mentionRef(mention), mention.citation)),
-          row.name
-        ).toEqual(row.objects);
-        expect(
-          yield* Effect.forEach(result.detachedCitations, (object) =>
-            finalView(CitationGroupMember.cases.Detached.make({ detachedId: object.id }), object.citation)
-          ),
-          row.name
-        ).toEqual(row.detachedObjects);
-        for (const [index, mention] of A.map(result.mentions, (mention, index) => Tuple.make(index, mention))) {
-          expect(mention.anchor).toBe(A.getUnsafe(prepared.mentions, index).anchor);
-          expect(mention.id).toBe(A.getUnsafe(prepared.mentions, index).id);
-        }
-      }
+            row.name
+          ).toEqual(row.outcome);
+          const finalView = Effect.fn("ModelMutationTest.finalView")(function* (
+            reference: CitationGroupMember,
+            citation: Citation
+          ) {
+            const wire = yield* S.encodeEffect(Citation)(citation);
+            const metadata = yield* S.decodeEffect(JsonMetadata)(wire.metadata);
+            return {
+              reference: referenceView(reference),
+              groups: wire.components,
+              metadata: {
+                plaintiff: O.getOrElse(R.get(metadata, "plaintiff"), () => null),
+                antecedent_guess: O.getOrElse(R.get(metadata, "antecedentGuess"), () => null),
+                pin_cite: O.getOrElse(R.get(metadata, "pinCite"), () => null),
+              },
+            };
+          });
+          expect(
+            yield* Effect.forEach(result.mentions, (mention) => finalView(mentionRef(mention), mention.citation)),
+            row.name
+          ).toEqual(row.objects);
+          expect(
+            yield* Effect.forEach(result.detachedCitations, (object) =>
+              finalView(CitationGroupMember.cases.Detached.make({ detachedId: object.id }), object.citation)
+            ),
+            row.name
+          ).toEqual(row.detachedObjects);
+          yield* Effect.forEach(
+            A.map(result.mentions, (mention, index) => Tuple.make(index, mention)),
+            Effect.fnUntraced(function* ([index, mention]) {
+              expect(mention.anchor).toBe(A.getUnsafe(prepared.mentions, index).anchor);
+              expect(mention.id).toBe(A.getUnsafe(prepared.mentions, index).id);
+            }),
+            { concurrency: 1, discard: true }
+          );
+        }),
+        { concurrency: 1, discard: true }
+      );
     })
   );
   it.effect(

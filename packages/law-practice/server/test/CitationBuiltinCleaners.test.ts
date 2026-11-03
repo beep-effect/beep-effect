@@ -22,6 +22,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
@@ -168,46 +169,46 @@ it.layer(TestRuntime, { excludeTestServices: true })("captured builtin cleaner i
           );
         let successes = 0;
         let failures = 0;
-        for (const row of corpus.nonTextCases) {
-          const bytes = new TextEncoder().encode("<div>A</div>");
-          const value = yield* row.valueKind === "bytes"
-            ? values.bytes(bytes)
-            : row.valueKind === "text-subclass"
-              ? values.subclass("<div>A</div>", poison)
-              : values.retainHost(
-                  row.valueKind === "none"
-                    ? null
-                    : row.valueKind === "zero"
-                      ? 0
-                      : row.valueKind === "integer"
-                        ? 42
-                        : row.valueKind === "list"
-                          ? ["A"]
-                          : row.valueKind === "host"
-                            ? poison
-                            : bytes
-                );
-          const pipeline = yield* makePipeline(value, row.cleaner);
-          expect(row.hooks).toEqual([]);
-          if (row.outcome.kind === "error") {
-            expect(
-              yield* Effect.flip(pipeline.run({ text: "x", plan: "captured-input-kind" })),
-              row.name
-            ).toMatchObject({ _tag: "CitationCleanerFailure", reason: "builtin-input-type" });
-            failures++;
-          } else {
-            const result = yield* pipeline.run({ text: "x", plan: "captured-input-kind" });
-            const text = yield* values.getText(result.value).pipe(Effect.flatMap(Effect.fromOption));
-            expect(text, row.name).toEqual({
-              text: yield* Effect.fromOption(HashMap.get(strings, row.outcome.text)),
-              subtype: "plain",
-            });
-            expect(result.producedTextUtf16, row.name).toBe(
-              Str.length(text.text) + (row.valueKind === "text-subclass" ? 12 : 0)
+        yield* Effect.forEach(
+          corpus.nonTextCases,
+          Effect.fnUntraced(function* (row) {
+            const bytes = new TextEncoder().encode("<div>A</div>");
+            const hostValue = Match.value(row.valueKind).pipe(
+              Match.when("none", () => null),
+              Match.when("zero", () => 0),
+              Match.when("integer", () => 42),
+              Match.when("list", () => ["A"]),
+              Match.when("host", () => poison),
+              Match.orElse(() => bytes)
             );
-            successes++;
-          }
-        }
+            const value = yield* Match.value(row.valueKind).pipe(
+              Match.when("bytes", () => values.bytes(bytes)),
+              Match.when("text-subclass", () => values.subclass("<div>A</div>", poison)),
+              Match.orElse(() => values.retainHost(hostValue))
+            );
+            const pipeline = yield* makePipeline(value, row.cleaner);
+            expect(row.hooks).toEqual([]);
+            if (row.outcome.kind === "error") {
+              expect(
+                yield* Effect.flip(pipeline.run({ text: "x", plan: "captured-input-kind" })),
+                row.name
+              ).toMatchObject({ _tag: "CitationCleanerFailure", reason: "builtin-input-type" });
+              failures++;
+            } else {
+              const result = yield* pipeline.run({ text: "x", plan: "captured-input-kind" });
+              const text = yield* values.getText(result.value).pipe(Effect.flatMap(Effect.fromOption));
+              expect(text, row.name).toEqual({
+                text: yield* Effect.fromOption(HashMap.get(strings, row.outcome.text)),
+                subtype: "plain",
+              });
+              expect(result.producedTextUtf16, row.name).toBe(
+                Str.length(text.text) + (row.valueKind === "text-subclass" ? 12 : 0)
+              );
+              successes++;
+            }
+          }),
+          { concurrency: 1, discard: true }
+        );
         expect({ successes, failures, hooks, spawned, retired }).toEqual({
           successes: 6,
           failures: 39,

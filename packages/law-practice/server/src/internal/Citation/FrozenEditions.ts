@@ -18,6 +18,7 @@ import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CitationRuntimeEdition } from "./PublicationResourceHash.ts";
+import { snapshotCitationValue } from "./Snapshot.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/FrozenEditions");
 const Row = S.Struct({ ref: Sha256Hex, payload: S.String.check(S.isMaxLength(1024)) });
@@ -181,9 +182,7 @@ export const makeCitationFrozenEditions = Effect.fn("Citation.makeFrozenEditions
       (kind === "journal" && source !== "journals")
     )
       return yield* failure("kind-mismatch");
-    return yield* S.decodeEffect(RuntimeJson)(
-      yield* S.encodeEffect(RuntimeJson)(edition).pipe(Effect.mapError(() => failure("corrupt-artifact")))
-    ).pipe(Effect.mapError(() => failure("corrupt-artifact")));
+    return yield* snapshotCitationValue(RuntimeJson, edition, () => failure("corrupt-artifact"));
   });
   return CitationFrozenEditions.of({
     lookup,

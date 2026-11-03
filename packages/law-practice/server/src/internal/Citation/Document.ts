@@ -35,6 +35,7 @@ import { CitationAuthorityEdition, makeCitationAuthorityId } from "./AuthorityId
 import { restoreCitationMentionAgainstVerifiedSource } from "./Mention.ts";
 import { makeCitationMentionId } from "./MentionIdentity.ts";
 import { CitationResourceBinding, makeCitationResourceAuthorityId } from "./ResourceIdentity.ts";
+import { snapshotCitationValue } from "./Snapshot.ts";
 import type { CitationAuthorityId, CitationMentionId, CitationResourceGroup } from "@beep/law-practice-domain/values";
 import type * as Digest from "effect/crypto/Digest";
 
@@ -395,8 +396,7 @@ export const restoreCitationDocument = Effect.fn("Citation.restoreDocument")(fun
   input: unknown
 ): Effect.fn.Return<CitationDocument, CitationDocumentFailure, Digest.Digest> {
   const decoded = yield* S.decodeUnknownEffect(RestoreBoundary)(input).pipe(Effect.mapError(invalid));
-  const json = yield* S.encodeEffect(RestoreJson)(decoded).pipe(Effect.mapError(invalid));
-  const snapshot = yield* S.decodeEffect(RestoreJson)(json).pipe(Effect.mapError(invalid));
+  const snapshot = yield* snapshotCitationValue(RestoreJson, decoded, invalid);
   const receipt = snapshot.receipt;
   if (receipt.engineArtifact !== snapshot.expectedEngineArtifact)
     return yield* CitationDocumentFailure.make({ reason: "stale-engine" });

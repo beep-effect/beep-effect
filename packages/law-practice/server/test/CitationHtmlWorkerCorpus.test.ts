@@ -116,23 +116,24 @@ it.layer(TestRuntime, { excludeTestServices: true })("HTML worker qualification"
               const run = worker.clean(text);
               if (row.outcome.kind === "error" && row.outcome.type === "builtins.ValueError") {
                 const failed = yield* Effect.flip(run);
-                expect(failed._tag, row.name).toBe("CitationHtmlInputFailure");
-                if (failed._tag === "CitationHtmlInputFailure")
-                  expect(failed.reason, row.name).toBe("unicode-encoding-declaration");
+                expect(failed, row.name).toMatchObject({
+                  _tag: "CitationHtmlInputFailure",
+                  reason: "unicode-encoding-declaration",
+                });
                 return "declaration";
               }
               if (A.some(row.diagnostics, (d) => d.resourceLimit)) {
                 const failed = yield* Effect.flip(run);
-                expect(failed._tag, row.name).toBe("CitationSafetyLimitExceeded");
-                if (failed._tag === "CitationSafetyLimitExceeded")
-                  expect(failed.limit, row.name).toBe("nativeHtmlParserResource");
+                expect(failed, row.name).toMatchObject({
+                  _tag: "CitationSafetyLimitExceeded",
+                  limit: "nativeHtmlParserResource",
+                });
                 return "resource";
               }
               if (row.outcome.kind === "error") {
                 expect(row.outcome.type, row.name).toBe("lxml.etree.ParserError");
                 const failed = yield* Effect.flip(run);
-                expect(failed._tag, row.name).toBe("CitationHtmlKernelFailure");
-                if (failed._tag === "CitationHtmlKernelFailure") expect(failed.reason, row.name).toBe("parse-error");
+                expect(failed, row.name).toMatchObject({ _tag: "CitationHtmlKernelFailure", reason: "parse-error" });
                 return "parse";
               }
               expect(yield* run, row.name).toBe(yield* Effect.fromOption(HashMap.get(texts, row.outcome.value)));
@@ -232,24 +233,19 @@ it.layer(TestRuntime, { excludeTestServices: true })("HTML worker qualification"
         if (oversizedOutput._tag === "CitationSafetyLimitExceeded")
           expect(oversizedOutput.limit).toBe("producedTextUtf16");
         expect(yield* shortOutput.clean("B")).toBe("B");
-        for (const supervisor of [
-          worker,
-          small,
-          exactRequest,
-          shortRequest,
-          exactReply,
-          shortReply,
-          exactOutput,
-          shortOutput,
-        ]) {
-          expect(yield* supervisor.snapshot).toEqual({
-            active: 0,
-            queued: 0,
-            processes: 0,
-            quarantined: 0,
-            closed: false,
-          });
-        }
+        yield* Effect.forEach(
+          [worker, small, exactRequest, shortRequest, exactReply, shortReply, exactOutput, shortOutput],
+          Effect.fnUntraced(function* (supervisor) {
+            expect(yield* supervisor.snapshot).toEqual({
+              active: 0,
+              queued: 0,
+              processes: 0,
+              quarantined: 0,
+              closed: false,
+            });
+          }),
+          { concurrency: 1, discard: true }
+        );
       }),
     { timeout: 120_000 }
   );

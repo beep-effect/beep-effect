@@ -76,93 +76,111 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("combined Unicode di
       const corpus = yield* S.decodeEffect(CorpusJson)(raw);
       expect(corpus.cases).toHaveLength(13);
       expect(A.reduce(corpus.cases, 0, (n, row) => n + row.events.length)).toBe(40);
-      for (const row of corpus.cases) {
-        let table = O.none<ReturnType<typeof CitationRuntimeDictionary.of>>();
-        let changed = false;
-        let trace: ReadonlyArray<S.Json> = [];
-        const state = Effect.fn("UnicodeDictionaryTest.state")((id: number) =>
-          Effect.fromOption(A.get(row.keys, id), invalid)
-        );
-        const key = Effect.fn("UnicodeDictionaryTest.key")(function* (id: number) {
-          const value = yield* state(id);
-          if (value.kind !== "text") trace = A.append(trace, { kind: "hash", key: id });
-          return CitationRuntimeDictionaryKey.make({ objectId: id, hash: value.hash });
-        });
-        const action = Effect.fn("UnicodeDictionaryTest.action")(function* () {
-          if (changed) return;
-          changed = true;
-          const current = yield* Effect.fromOption(table, invalid);
-          if (row.name === "delete-in-equality" || row.name === "delete-raise") {
-            const removed = yield* current.remove(yield* key(0));
-            trace = A.append(trace, {
-              kind: "remove",
-              key: 0,
-              result: O.getOrNull(O.map(removed, (entry) => entry.value)),
-            });
-            if (row.name === "delete-raise")
-              return yield* CitationRuntimeDictionaryFailure.make({ reason: "comparison-failed" });
-          } else if (row.name === "update-in-equality") {
-            yield* current.set(yield* key(0), 99);
-            trace = A.append(trace, { kind: "set", key: 0, value: 99 });
-          } else if (row.name === "clear-refill") {
-            yield* current.clear;
-            trace = A.append(trace, { kind: "clear" });
-            for (const id of row.initial) {
-              yield* current.set(yield* key(id), 200 + id);
-              trace = A.append(trace, { kind: "set", key: id, value: 200 + id });
+      yield* Effect.forEach(
+        corpus.cases,
+        Effect.fnUntraced(function* (row) {
+          let table = O.none<ReturnType<typeof CitationRuntimeDictionary.of>>();
+          let changed = false;
+          let trace: ReadonlyArray<S.Json> = [];
+          const state = Effect.fn("UnicodeDictionaryTest.state")((id: number) =>
+            Effect.fromOption(A.get(row.keys, id), invalid)
+          );
+          const key = Effect.fn("UnicodeDictionaryTest.key")(function* (id: number) {
+            const value = yield* state(id);
+            if (value.kind !== "text") trace = A.append(trace, { kind: "hash", key: id });
+            return CitationRuntimeDictionaryKey.make({ objectId: id, hash: value.hash });
+          });
+          const action = Effect.fn("UnicodeDictionaryTest.action")(function* () {
+            if (changed) return;
+            changed = true;
+            const current = yield* Effect.fromOption(table, invalid);
+            if (row.name === "delete-in-equality" || row.name === "delete-raise") {
+              const removed = yield* current.remove(yield* key(0));
+              trace = A.append(trace, {
+                kind: "remove",
+                key: 0,
+                result: O.getOrNull(O.map(removed, (entry) => entry.value)),
+              });
+              if (row.name === "delete-raise")
+                return yield* CitationRuntimeDictionaryFailure.make({ reason: "comparison-failed" });
+            } else if (row.name === "update-in-equality") {
+              yield* current.set(yield* key(0), 99);
+              trace = A.append(trace, { kind: "set", key: 0, value: 99 });
+            } else if (row.name === "clear-refill") {
+              yield* current.clear;
+              trace = A.append(trace, { kind: "clear" });
+              yield* Effect.forEach(
+                row.initial,
+                Effect.fnUntraced(function* (id) {
+                  yield* current.set(yield* key(id), 200 + id);
+                  trace = A.append(trace, { kind: "set", key: id, value: 200 + id });
+                }),
+                { concurrency: 1, discard: true }
+              );
+            } else if (row.name === "convert-in-equality") {
+              yield* current.set(yield* key(6), 106);
+              trace = A.append(trace, { kind: "set", key: 6, value: 106 });
             }
-          } else if (row.name === "convert-in-equality") {
-            yield* current.set(yield* key(6), 106);
-            trace = A.append(trace, { kind: "set", key: 6, value: 106 });
-          }
-        });
-        const comparison = CitationRuntimeDictionaryComparison.of({
-          step: Effect.void,
-          exactUnicode: Effect.fn("UnicodeDictionaryTest.exact")((id) =>
-            state(id).pipe(Effect.map((value) => (value.kind === "text" ? O.some(value.text) : O.none())))
-          ),
-          equal: Effect.fn("UnicodeDictionaryTest.equal")(function* (left, right) {
-            const l = yield* state(left);
-            const r = yield* state(right);
-            // This controlled rich-compare adapter models Python's reflected
-            // host/subclass dispatch. The table supplies stored/query order.
-            if (l.kind === "text" && r.kind === "text") return l.text === r.text;
-            const first = l.kind === "text" ? right : left;
-            const second = l.kind === "text" ? left : right;
-            trace = A.append(trace, { kind: "compare", left: first, right: second });
-            if (first === 5) yield* action();
-            return l.token === r.token;
-          }),
-        });
-        const current = yield* makeCitationRuntimeDictionary({ entries: 64, iterations: 20_000 }).pipe(
-          Effect.provideService(CitationRuntimeDictionaryComparison, comparison)
-        );
-        table = O.some(current);
-        for (const id of row.initial) yield* current.set(yield* key(id), 100 + id);
-        expect(trace).toEqual([]);
-        for (const event of row.events) {
-          trace = [];
-          const op = event.operation;
-          const run =
-            op.kind === "clear"
-              ? current.clear.pipe(Effect.as(O.none()))
-              : op.kind === "set"
-                ? current.set(yield* key(op.key), op.value).pipe(Effect.as(O.none()))
-                : current.get(yield* key(op.key));
-          if (event.outcome.status === "error") {
-            const failure = yield* Effect.flip(run);
-            expect(failure.reason, row.name).toBe("comparison-failed");
-          } else {
-            const value = yield* run;
-            expect(O.getOrNull(O.map(value, (entry) => entry.value)), row.name).toBe(event.outcome.result);
-          }
-          expect(trace, row.name).toEqual(event.trace);
-          expect(
-            A.map(yield* current.read, (entry) => ({ objectId: entry.objectId, value: entry.value })),
-            row.name
-          ).toEqual(event.entries);
-        }
-      }
+          });
+          const comparison = CitationRuntimeDictionaryComparison.of({
+            step: Effect.void,
+            exactUnicode: Effect.fn("UnicodeDictionaryTest.exact")((id) =>
+              state(id).pipe(Effect.map((value) => (value.kind === "text" ? O.some(value.text) : O.none())))
+            ),
+            equal: Effect.fn("UnicodeDictionaryTest.equal")(function* (left, right) {
+              const l = yield* state(left);
+              const r = yield* state(right);
+              // This controlled rich-compare adapter models Python's reflected
+              // host/subclass dispatch. The table supplies stored/query order.
+              if (l.kind === "text" && r.kind === "text") return l.text === r.text;
+              const first = l.kind === "text" ? right : left;
+              const second = l.kind === "text" ? left : right;
+              trace = A.append(trace, { kind: "compare", left: first, right: second });
+              if (first === 5) yield* action();
+              return l.token === r.token;
+            }),
+          });
+          const current = yield* makeCitationRuntimeDictionary({ entries: 64, iterations: 20_000 }).pipe(
+            Effect.provideService(CitationRuntimeDictionaryComparison, comparison)
+          );
+          table = O.some(current);
+          yield* Effect.forEach(
+            row.initial,
+            Effect.fnUntraced(function* (id) {
+              yield* current.set(yield* key(id), 100 + id);
+            }),
+            { concurrency: 1, discard: true }
+          );
+          expect(trace).toEqual([]);
+          yield* Effect.forEach(
+            row.events,
+            Effect.fnUntraced(function* (event) {
+              trace = [];
+              const op = event.operation;
+              const run =
+                op.kind === "clear"
+                  ? current.clear.pipe(Effect.as(O.none()))
+                  : op.kind === "set"
+                    ? current.set(yield* key(op.key), op.value).pipe(Effect.as(O.none()))
+                    : current.get(yield* key(op.key));
+              if (event.outcome.status === "error") {
+                const failure = yield* Effect.flip(run);
+                expect(failure.reason, row.name).toBe("comparison-failed");
+              } else {
+                const value = yield* run;
+                expect(O.getOrNull(O.map(value, (entry) => entry.value)), row.name).toBe(event.outcome.result);
+              }
+              expect(trace, row.name).toEqual(event.trace);
+              expect(
+                A.map(yield* current.read, (entry) => ({ objectId: entry.objectId, value: entry.value })),
+                row.name
+              ).toEqual(event.entries);
+            }),
+            { concurrency: 1, discard: true }
+          );
+        }),
+        { concurrency: 1, discard: true }
+      );
     })
   );
   it.effect("bypasses rich comparison for exact Unicode queries and preserves it after conversion", () =>

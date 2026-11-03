@@ -136,96 +136,100 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("production defau
         const observed = yield* S.decodeEffect(DefaultCallbackObservationsJson)(observationsText);
         const branches = HashMap.fromIterable(A.map(observed.cases, (row) => [row.name, row.decisions] as const));
         let checked = 0;
-        for (const row of contexts) {
-          const input = yield* prepare(row);
-          if (row.outcome.status === "error") {
-            const failure = yield* Effect.flip(resolver.resolve(input));
-            expect(["invalid-input", "identity-failed", "callback-failed"], row.name).toContain(failure.reason);
-          } else {
-            const captured = resolver.resolve(input) satisfies Effect.Effect<unknown, CitationCallbackFailure>;
-            const result = yield* captured;
-            const indices = HashMap.fromIterable(
-              A.map(input.mentions, (mention, index) => [mention.id, index] as const)
-            );
-            const members = A.map(result.document.groups, (group) =>
-              A.map(citationGroupMembers(result.document, group.id), (reference) =>
-                reference._tag === "Mention" ? O.getOrElse(HashMap.get(indices, reference.mentionId), () => -1) : -1
-              )
-            );
-            expect(members, row.name).toEqual(row.outcome.groups);
-            const expectations = HashMap.get(branches, row.name);
-            if (O.isSome(expectations)) {
-              expect(result.document.resolutions, row.name).toHaveLength(A.length(expectations.value));
-              for (const expected of expectations.value) {
-                checked++;
-                const resolution = A.getUnsafe(result.document.resolutions, expected.index);
-                expect(resolution.status, row.name).toBe(expected.status);
-                if (resolution.status === "Unresolved") expect(resolution.reason, row.name).toBe(expected.reason);
-                if (resolution.status === "Ambiguous") {
-                  expect(resolution.candidateAuthorityIds, row.name).toHaveLength(
-                    O.getOrElse(O.fromUndefinedOr(expected.distinctCount), () => 0)
-                  );
-                  const indices = expected.candidateIndices;
-                  if (indices === undefined) return yield* Effect.die("source candidate indices missing");
-                  const authorities = yield* Effect.forEach(indices, (index) =>
-                    Effect.gen(function* () {
-                      const prior = A.getUnsafe(result.document.resolutions, index);
-                      if (prior.status !== "Resolved")
-                        return yield* Effect.die("source candidate is not a resolved full");
-                      return prior.authorityId;
-                    })
-                  );
-                  expect(resolution.candidateAuthorityIds, row.name).toEqual(expect.arrayContaining(authorities));
+        yield* Effect.forEach(
+          contexts,
+          Effect.fnUntraced(function* (row) {
+            const input = yield* prepare(row);
+            if (row.outcome.status === "error") {
+              const failure = yield* Effect.flip(resolver.resolve(input));
+              expect(["invalid-input", "identity-failed", "callback-failed"], row.name).toContain(failure.reason);
+            } else {
+              const captured = resolver.resolve(input) satisfies Effect.Effect<unknown, CitationCallbackFailure>;
+              const result = yield* captured;
+              const indices = HashMap.fromIterable(
+                A.map(input.mentions, (mention, index) => [mention.id, index] as const)
+              );
+              const members = A.map(result.document.groups, (group) =>
+                A.map(citationGroupMembers(result.document, group.id), (reference) =>
+                  reference._tag === "Mention" ? O.getOrElse(HashMap.get(indices, reference.mentionId), () => -1) : -1
+                )
+              );
+              expect(members, row.name).toEqual(row.outcome.groups);
+              const expectations = HashMap.get(branches, row.name);
+              if (O.isSome(expectations)) {
+                expect(result.document.resolutions, row.name).toHaveLength(A.length(expectations.value));
+                for (const expected of expectations.value) {
+                  checked++;
+                  const resolution = A.getUnsafe(result.document.resolutions, expected.index);
+                  expect(resolution.status, row.name).toBe(expected.status);
+                  if (resolution.status === "Unresolved") expect(resolution.reason, row.name).toBe(expected.reason);
+                  if (resolution.status === "Ambiguous") {
+                    expect(resolution.candidateAuthorityIds, row.name).toHaveLength(
+                      O.getOrElse(O.fromUndefinedOr(expected.distinctCount), () => 0)
+                    );
+                    const indices = expected.candidateIndices;
+                    if (indices === undefined) return yield* Effect.die("source candidate indices missing");
+                    const authorities = yield* Effect.forEach(indices, (index) =>
+                      Effect.gen(function* () {
+                        const prior = A.getUnsafe(result.document.resolutions, index);
+                        if (prior.status !== "Resolved")
+                          return yield* Effect.die("source candidate is not a resolved full");
+                        return prior.authorityId;
+                      })
+                    );
+                    expect(resolution.candidateAuthorityIds, row.name).toEqual(expect.arrayContaining(authorities));
+                  }
                 }
               }
+              const restored = yield* restoreCitationDocument({
+                receipt: result.receipt,
+                editions: [],
+                resourceBindings: result.resourceBindings,
+                expectedSource: input.verifiedSource.source,
+                expectedEngineArtifact: input.engineArtifact,
+                sourceText: row.text,
+              });
+              expect(restored.groups, row.name).toEqual(result.document.groups);
+              expect(restored.memberLists, row.name).toEqual(result.document.memberLists);
+              if (row.name === "short-ambiguous") {
+                const tampered = {
+                  ...result.receipt,
+                  resolutions: A.map(result.receipt.resolutions, (resolution) =>
+                    resolution.status === "Ambiguous"
+                      ? { ...resolution, candidateAuthorityIds: A.reverse(resolution.candidateAuthorityIds) }
+                      : resolution
+                  ),
+                };
+                expect(
+                  (yield* Effect.flip(
+                    restoreCitationDocument({
+                      receipt: tampered,
+                      editions: [],
+                      resourceBindings: result.resourceBindings,
+                      expectedSource: input.verifiedSource.source,
+                      expectedEngineArtifact: input.engineArtifact,
+                      sourceText: row.text,
+                    })
+                  )).reason
+                ).toBe("stale-authority");
+                const missing = A.map(result.resourceBindings, (binding) => ({ ...binding, candidates: [] }));
+                expect(
+                  (yield* Effect.flip(
+                    restoreCitationDocument({
+                      receipt: result.receipt,
+                      editions: [],
+                      resourceBindings: missing,
+                      expectedSource: input.verifiedSource.source,
+                      expectedEngineArtifact: input.engineArtifact,
+                      sourceText: row.text,
+                    })
+                  )).reason
+                ).toBe("stale-authority");
+              }
             }
-            const restored = yield* restoreCitationDocument({
-              receipt: result.receipt,
-              editions: [],
-              resourceBindings: result.resourceBindings,
-              expectedSource: input.verifiedSource.source,
-              expectedEngineArtifact: input.engineArtifact,
-              sourceText: row.text,
-            });
-            expect(restored.groups, row.name).toEqual(result.document.groups);
-            expect(restored.memberLists, row.name).toEqual(result.document.memberLists);
-            if (row.name === "short-ambiguous") {
-              const tampered = {
-                ...result.receipt,
-                resolutions: A.map(result.receipt.resolutions, (resolution) =>
-                  resolution.status === "Ambiguous"
-                    ? { ...resolution, candidateAuthorityIds: A.reverse(resolution.candidateAuthorityIds) }
-                    : resolution
-                ),
-              };
-              expect(
-                (yield* Effect.flip(
-                  restoreCitationDocument({
-                    receipt: tampered,
-                    editions: [],
-                    resourceBindings: result.resourceBindings,
-                    expectedSource: input.verifiedSource.source,
-                    expectedEngineArtifact: input.engineArtifact,
-                    sourceText: row.text,
-                  })
-                )).reason
-              ).toBe("stale-authority");
-              const missing = A.map(result.resourceBindings, (binding) => ({ ...binding, candidates: [] }));
-              expect(
-                (yield* Effect.flip(
-                  restoreCitationDocument({
-                    receipt: result.receipt,
-                    editions: [],
-                    resourceBindings: missing,
-                    expectedSource: input.verifiedSource.source,
-                    expectedEngineArtifact: input.engineArtifact,
-                    sourceText: row.text,
-                  })
-                )).reason
-              ).toBe("stale-authority");
-            }
-          }
-        }
+          }),
+          { concurrency: 1, discard: true }
+        );
         expect(checked).toBe(108);
         expect(builds).toBe(76);
         const input = yield* prepare(yield* selected);
@@ -358,34 +362,38 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("production defau
     Effect.gen(function* () {
       const data = yield* cases;
       expect(A.length(data.cases)).toBe(46);
-      for (const row of data.cases) {
-        const input = yield* prepare(row);
-        if (row.outcome.status === "error") {
-          const failed = yield* Effect.flip(runDefaultCitationCallbackSession(input));
-          expect(["invalid-input", "identity-failed", "callback-failed"]).toContain(failed.reason);
-          expect("cause" in failed).toBe(false);
-        } else {
-          const result = yield* runDefaultCitationCallbackSession(input);
-          const indices = HashMap.fromIterable(
-            A.map(result.mentions, (mention, index) => Tuple.make(mention.id, index))
-          );
-          const groups = A.map(result.groups, (group) =>
-            A.map(group.members, (reference) =>
-              reference._tag === "Mention" ? O.getOrElse(HashMap.get(indices, reference.mentionId), () => -1) : -1
-            )
-          );
-          expect(groups, row.name).toEqual(row.outcome.groups);
-          const document = yield* resolveCitationMentions(input);
-          expect(
-            A.map(document.authorities, (authority) =>
-              A.map(citationAuthorityMentionIds(document, authority.id), (id) =>
-                O.getOrElse(HashMap.get(indices, id), () => -1)
+      yield* Effect.forEach(
+        data.cases,
+        Effect.fnUntraced(function* (row) {
+          const input = yield* prepare(row);
+          if (row.outcome.status === "error") {
+            const failed = yield* Effect.flip(runDefaultCitationCallbackSession(input));
+            expect(["invalid-input", "identity-failed", "callback-failed"]).toContain(failed.reason);
+            expect("cause" in failed).toBe(false);
+          } else {
+            const result = yield* runDefaultCitationCallbackSession(input);
+            const indices = HashMap.fromIterable(
+              A.map(result.mentions, (mention, index) => Tuple.make(mention.id, index))
+            );
+            const groups = A.map(result.groups, (group) =>
+              A.map(group.members, (reference) =>
+                reference._tag === "Mention" ? O.getOrElse(HashMap.get(indices, reference.mentionId), () => -1) : -1
               )
-            ),
-            row.name
-          ).toEqual(groups);
-        }
-      }
+            );
+            expect(groups, row.name).toEqual(row.outcome.groups);
+            const document = yield* resolveCitationMentions(input);
+            expect(
+              A.map(document.authorities, (authority) =>
+                A.map(citationAuthorityMentionIds(document, authority.id), (id) =>
+                  O.getOrElse(HashMap.get(indices, id), () => -1)
+                )
+              ),
+              row.name
+            ).toEqual(groups);
+          }
+        }),
+        { concurrency: 1, discard: true }
+      );
     })
   );
 
@@ -397,19 +405,23 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("production defau
         expect(data.corpusSha256).toBe("ae441000ddc90537864e3fdd4a9dfc4aa81af37a65818b48ce9bf37d95d1eeb1");
         expect(A.length(data.contexts)).toBe(30);
         expect(A.reduce(data.contexts, 0, (count, row) => count + A.length(row.context.mentions))).toBe(94);
-        for (const row of data.contexts) {
-          const result = yield* runDefaultCitationCallbackSession(yield* prepare(row.context));
-          const indices = HashMap.fromIterable(
-            A.map(result.mentions, (mention, index) => Tuple.make(mention.id, index))
-          );
-          const groups = A.map(result.groups, (group) =>
-            A.map(group.members, (reference) =>
-              reference._tag === "Mention" ? O.getOrElse(HashMap.get(indices, reference.mentionId), () => -1) : -1
-            )
-          );
-          if (row.context.outcome.status !== "value") return yield* Effect.die("Expected source groups");
-          expect(groups, row.context.name).toEqual(row.context.outcome.groups);
-        }
+        yield* Effect.forEach(
+          data.contexts,
+          Effect.fnUntraced(function* (row) {
+            const result = yield* runDefaultCitationCallbackSession(yield* prepare(row.context));
+            const indices = HashMap.fromIterable(
+              A.map(result.mentions, (mention, index) => Tuple.make(mention.id, index))
+            );
+            const groups = A.map(result.groups, (group) =>
+              A.map(group.members, (reference) =>
+                reference._tag === "Mention" ? O.getOrElse(HashMap.get(indices, reference.mentionId), () => -1) : -1
+              )
+            );
+            if (row.context.outcome.status !== "value") return yield* Effect.die("Expected source groups");
+            expect(groups, row.context.name).toEqual(row.context.outcome.groups);
+          }),
+          { concurrency: 1, discard: true }
+        );
       }),
     { timeout: 30_000 }
   );

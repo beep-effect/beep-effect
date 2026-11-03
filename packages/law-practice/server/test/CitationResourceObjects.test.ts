@@ -107,132 +107,142 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
       const data = yield* S.decodeEffect(CorpusJson)(raw);
       expect(data.cases).toHaveLength(5);
       let events = 0;
-      for (const row of data.cases) {
-        const input = yield* prepareCallbackObservation(
-          CitationCallbackObservation.make({
-            name: row.name,
-            kinds: A.map(row.initial, () => "case"),
-            pages: {},
-            bindings: {},
-            events: [],
-            outcome: { status: "value", groups: [] },
-          })
-        );
-        const mentions = yield* Effect.forEach(input.mentions, (mention, index) =>
-          Effect.gen(function* () {
-            const wire = yield* S.encodeEffect(Citation)(mention.citation);
-            if (wire.type !== "case") return yield* modelFailure();
-            const citation = yield* S.decodeEffect(FullCaseCitation)({
-              ...wire,
-              components: A.getUnsafe(row.initial, index),
-              publication: { ...wire.publication, selectedEdition: null },
-            });
-            return CitationMention.make({ ...mention, citation });
-          })
-        );
-        const prepared = yield* prepareCitationResolution({ ...input, mentions });
-        const work = yield* makeCitationResolutionWork(prepared.limits);
-        const owner = yield* makeCitationCallbackDictionary(prepared).pipe(
-          Effect.provideService(CitationResolutionWork, work)
-        );
-        const reference = (index: number) =>
-          CitationGroupMember.cases.Mention.make({ mentionId: A.getUnsafe(prepared.mentions, index).id });
-        const models = CitationResourceModels.of({
-          read: Effect.fn("LiveCaseTest.read")(function* (ref: CitationGroupMember) {
-            const citation = yield* owner.citationOf(ref).pipe(Effect.mapError(modelFailure));
-            if (citation.type !== "case") return yield* modelFailure();
-            return CitationResourceModelInput.make({
-              citation,
-              missingPageIdentityHash: O.none(),
-            });
-          }),
-          step: work.step.pipe(Effect.mapError(() => CitationResourceObjectFailure.make({ reason: "limit-exceeded" }))),
-        });
-        const objects = yield* makeCitationResourceObjects(prepared.limits).pipe(
-          Effect.provideService(CitationResourceModels, models),
-          Effect.provideService(CitationFrozenEditions, unusedEditions)
-        );
-        let comparisons = A.empty<readonly [number, number]>();
-        const comparison = CitationRuntimeDictionaryComparison.of({
-          ...objects.comparison,
-          equal: Effect.fn("LiveCaseTest.equal")((left: number, right: number) =>
-            Effect.sync(() => {
-              comparisons = A.append(comparisons, [left, right]);
-            }).pipe(Effect.andThen(objects.comparison.equal(left, right)))
-          ),
-        });
-        const table = yield* makeCitationRuntimeDictionary({
-          entries: prepared.limits.authorities,
-          iterations: prepared.limits.resolutionIterations,
-        }).pipe(Effect.provideService(CitationRuntimeDictionaryComparison, comparison));
-        let resources = A.empty<CitationResourceObject>();
-        yield* Effect.acquireUseRelease(
-          owner.start,
-          () =>
+      yield* Effect.forEach(
+        data.cases,
+        Effect.fnUntraced(function* (row) {
+          const input = yield* prepareCallbackObservation(
+            CitationCallbackObservation.make({
+              name: row.name,
+              kinds: A.map(row.initial, () => "case"),
+              pages: {},
+              bindings: {},
+              events: [],
+              outcome: { status: "value", groups: [] },
+            })
+          );
+          const mentions = yield* Effect.forEach(input.mentions, (mention, index) =>
             Effect.gen(function* () {
-              for (const event of row.events) {
-                comparisons = [];
-                const operation = event.operation;
-                let result: S.Json = null;
-                let outcome: S.Json;
-                if (operation.kind === "create") {
-                  const resource = yield* objects.create(reference(operation.reference));
-                  resources = A.append(resources, resource);
-                  result = resource.slot;
-                } else if (operation.kind === "change") {
-                  const ref = reference(operation.reference);
-                  const wire = yield* S.encodeEffect(Citation)(yield* owner.citationOf(ref));
-                  const citation = yield* S.decodeEffect(Citation)({
-                    ...wire,
-                    components: { ...wire.components, [operation.field]: operation.value },
-                  });
-                  yield* owner.writeCitation(ref, citation);
-                } else if (operation.kind === "equal")
-                  result = yield* comparison.equal(operation.left, operation.right);
-                else if (operation.kind === "clear") yield* table.clear;
-                else {
-                  const resource = A.getUnsafe(resources, operation.resource);
-                  if (S.is(MissingReporterOutcome)(event.outcome)) {
-                    const failure = yield* Effect.flip(objects.key(resource));
-                    expect(operation.kind).toBe("hash");
-                    expect(failure.reason).toBe("missing-reporter");
-                    outcome = { status: "error", field: "reporter" };
+              const wire = yield* S.encodeEffect(Citation)(mention.citation);
+              if (wire.type !== "case") return yield* modelFailure();
+              const citation = yield* S.decodeEffect(FullCaseCitation)({
+                ...wire,
+                components: A.getUnsafe(row.initial, index),
+                publication: { ...wire.publication, selectedEdition: null },
+              });
+              return CitationMention.make({ ...mention, citation });
+            })
+          );
+          const prepared = yield* prepareCitationResolution({ ...input, mentions });
+          const work = yield* makeCitationResolutionWork(prepared.limits);
+          const owner = yield* makeCitationCallbackDictionary(prepared).pipe(
+            Effect.provideService(CitationResolutionWork, work)
+          );
+          const reference = (index: number) =>
+            CitationGroupMember.cases.Mention.make({ mentionId: A.getUnsafe(prepared.mentions, index).id });
+          const models = CitationResourceModels.of({
+            read: Effect.fn("LiveCaseTest.read")(function* (ref: CitationGroupMember) {
+              const citation = yield* owner.citationOf(ref).pipe(Effect.mapError(modelFailure));
+              if (citation.type !== "case") return yield* modelFailure();
+              return CitationResourceModelInput.make({
+                citation,
+                missingPageIdentityHash: O.none(),
+              });
+            }),
+            step: work.step.pipe(
+              Effect.mapError(() => CitationResourceObjectFailure.make({ reason: "limit-exceeded" }))
+            ),
+          });
+          const objects = yield* makeCitationResourceObjects(prepared.limits).pipe(
+            Effect.provideService(CitationResourceModels, models),
+            Effect.provideService(CitationFrozenEditions, unusedEditions)
+          );
+          let comparisons = A.empty<readonly [number, number]>();
+          const comparison = CitationRuntimeDictionaryComparison.of({
+            ...objects.comparison,
+            equal: Effect.fn("LiveCaseTest.equal")((left: number, right: number) =>
+              Effect.sync(() => {
+                comparisons = A.append(comparisons, [left, right]);
+              }).pipe(Effect.andThen(objects.comparison.equal(left, right)))
+            ),
+          });
+          const table = yield* makeCitationRuntimeDictionary({
+            entries: prepared.limits.authorities,
+            iterations: prepared.limits.resolutionIterations,
+          }).pipe(Effect.provideService(CitationRuntimeDictionaryComparison, comparison));
+          let resources = A.empty<CitationResourceObject>();
+          yield* Effect.acquireUseRelease(
+            owner.start,
+            () =>
+              Effect.gen(function* () {
+                yield* Effect.forEach(
+                  row.events,
+                  Effect.fnUntraced(function* (event) {
+                    comparisons = [];
+                    const operation = event.operation;
+                    let result: S.Json = null;
+                    let outcome: S.Json;
+                    if (operation.kind === "create") {
+                      const resource = yield* objects.create(reference(operation.reference));
+                      resources = A.append(resources, resource);
+                      result = resource.slot;
+                    } else if (operation.kind === "change") {
+                      const ref = reference(operation.reference);
+                      const wire = yield* S.encodeEffect(Citation)(yield* owner.citationOf(ref));
+                      const citation = yield* S.decodeEffect(Citation)({
+                        ...wire,
+                        components: { ...wire.components, [operation.field]: operation.value },
+                      });
+                      yield* owner.writeCitation(ref, citation);
+                    } else if (operation.kind === "equal")
+                      result = yield* comparison.equal(operation.left, operation.right);
+                    else if (operation.kind === "clear") yield* table.clear;
+                    else {
+                      const resource = A.getUnsafe(resources, operation.resource);
+                      if (S.is(MissingReporterOutcome)(event.outcome)) {
+                        const failure = yield* Effect.flip(objects.key(resource));
+                        expect(operation.kind).toBe("hash");
+                        expect(failure.reason).toBe("missing-reporter");
+                        outcome = { status: "error", field: "reporter" };
+                        expect(outcome, row.name).toEqual(event.outcome);
+                        expect(
+                          A.map(yield* table.read, (entry) => ({ objectId: entry.objectId, value: entry.value }))
+                        ).toEqual(event.entries);
+                        expect(comparisons).toEqual(event.comparisons);
+                        events += 1;
+                        return;
+                      }
+                      const key = yield* objects.key(resource);
+                      if (operation.kind === "hash") result = yield* S.encodeEffect(S.BigIntFromString)(key.hash);
+                      else if (operation.kind === "set") yield* table.set(key, operation.value);
+                      else {
+                        const hit = yield* operation.kind === "get" ? table.get(key) : table.remove(key);
+                        result = O.getOrElse(
+                          O.map(hit, (entry) => entry.value),
+                          () => null
+                        );
+                      }
+                    }
+                    outcome = { status: "value", result };
                     expect(outcome, row.name).toEqual(event.outcome);
                     expect(
-                      A.map(yield* table.read, (entry) => ({ objectId: entry.objectId, value: entry.value }))
+                      A.map(yield* table.read, (entry) => ({ objectId: entry.objectId, value: entry.value })),
+                      row.name
                     ).toEqual(event.entries);
-                    expect(comparisons).toEqual(event.comparisons);
+                    expect(comparisons, row.name).toEqual(event.comparisons);
                     events += 1;
-                    continue;
-                  }
-                  const key = yield* objects.key(resource);
-                  if (operation.kind === "hash") result = yield* S.encodeEffect(S.BigIntFromString)(key.hash);
-                  else if (operation.kind === "set") yield* table.set(key, operation.value);
-                  else {
-                    const hit = yield* operation.kind === "get" ? table.get(key) : table.remove(key);
-                    result = O.getOrElse(
-                      O.map(hit, (entry) => entry.value),
-                      () => null
-                    );
-                  }
-                }
-                outcome = { status: "value", result };
-                expect(outcome, row.name).toEqual(event.outcome);
-                expect(
-                  A.map(yield* table.read, (entry) => ({ objectId: entry.objectId, value: entry.value })),
-                  row.name
-                ).toEqual(event.entries);
-                expect(comparisons, row.name).toEqual(event.comparisons);
-                events += 1;
-              }
-              expect((yield* Effect.flip(objects.key(CitationResourceObject.make({ slot: 0 })))).reason).toBe(
-                "unknown-object"
-              );
-            }),
-          () => objects.close.pipe(Effect.andThen(owner.close))
-        );
-        expect((yield* Effect.flip(objects.key(A.getUnsafe(resources, 0)))).reason).toBe("closed");
-      }
+                  }),
+                  { concurrency: 1, discard: true }
+                );
+                expect((yield* Effect.flip(objects.key(CitationResourceObject.make({ slot: 0 })))).reason).toBe(
+                  "unknown-object"
+                );
+              }),
+            () => objects.close.pipe(Effect.andThen(owner.close))
+          );
+          expect((yield* Effect.flip(objects.key(A.getUnsafe(resources, 0)))).reason).toBe("closed");
+        }),
+        { concurrency: 1, discard: true }
+      );
       expect(events).toBe(38);
     })
   );

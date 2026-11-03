@@ -78,12 +78,17 @@ it.effect("rejects incoherent layout and projection data through their own codec
   Effect.gen(function* () {
     const input = yield* makeCitationRegexInput((yield* defaultCitationEnginePolicy).limits);
     const { layout } = yield* input.prepareText("x", preflight);
-    for (const forged of [
-      { ...layout, mapBytes: layout.mapBytes + 4 },
-      { ...layout, width: 4, byteLength: 4 },
-      { ...layout, projectionAmbiguous: true },
-    ])
-      expect(S.is(CitationRegexInputLayout)(forged)).toBe(false);
+    yield* Effect.forEach(
+      [
+        { ...layout, mapBytes: layout.mapBytes + 4 },
+        { ...layout, width: 4, byteLength: 4 },
+        { ...layout, projectionAmbiguous: true },
+      ],
+      Effect.fnUntraced(function* (forged) {
+        expect(S.is(CitationRegexInputLayout)(forged)).toBe(false);
+      }),
+      { concurrency: 1, discard: true }
+    );
     expect(S.is(CitationRegexProjection)({ _tag: "Range", startChar: 1, endChar: 1 })).toBe(false);
     expect(S.is(CitationRegexProjection)({ _tag: "Split", startChar: 2, endChar: 1 })).toBe(false);
     expect(S.is(CitationRegexProjection)({ _tag: "Point", offset: 0 })).toBe(true);
@@ -116,41 +121,46 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("native regex input so
       const input = yield* makeCitationRegexInput((yield* defaultCitationEnginePolicy).limits);
       let projections = 0;
       let ambiguous = 0;
-      for (const row of corpus.cases) {
-        const bytes = yield* S.decodeEffect(S.Uint8ArrayFromHex)(row.storage.nativeHex);
-        const prepared = yield* input.prepareUnicode({ width: row.storage.width, bytes }, preflight);
-        expect(prepared.layout).toEqual({
-          width: row.storage.width,
-          byteLength: bytes.length,
-          pythonLength: row.pythonLength,
-          utf16Units: row.utf16Units,
-          mapBytes: 4 * (row.pythonLength + 1),
-          projectionAmbiguous: row.projectionAmbiguous,
-        });
-        expect(prepared.value.text).toBe(row.text);
-        expect(prepared.value.storage.bytes).toEqual(bytes);
-        expect(prepared.value.storage.bytes).not.toBe(bytes);
-        if (row.projectionAmbiguous) ambiguous++;
-        for (let start = 0; start <= row.pythonLength; start++)
-          for (let end = start; end <= row.pythonLength; end++) {
+      yield* Effect.forEach(
+        corpus.cases,
+        Effect.fnUntraced(function* (row) {
+          const bytes = yield* S.decodeEffect(S.Uint8ArrayFromHex)(row.storage.nativeHex);
+          const prepared = yield* input.prepareUnicode({ width: row.storage.width, bytes }, preflight);
+          expect(prepared.layout).toEqual({
+            width: row.storage.width,
+            byteLength: bytes.length,
+            pythonLength: row.pythonLength,
+            utf16Units: row.utf16Units,
+            mapBytes: 4 * (row.pythonLength + 1),
+            projectionAmbiguous: row.projectionAmbiguous,
+          });
+          expect(prepared.value.text).toBe(row.text);
+          expect(prepared.value.storage.bytes).toEqual(bytes);
+          expect(prepared.value.storage.bytes).not.toBe(bytes);
+          if (row.projectionAmbiguous) ambiguous++;
+          const expectedProjection = (start: number, end: number) => {
             const startChar = A.getUnsafe(row.prefix, start);
             const endChar = A.getUnsafe(row.prefix, end);
-            const projected = yield* prepared.project({ start, end });
-            expect(projected).toEqual(
-              !A.getUnsafe(row.boundaries, start) || !A.getUnsafe(row.boundaries, end)
-                ? { _tag: "Split", startChar, endChar }
-                : start === end
-                  ? { _tag: "Point", offset: startChar }
-                  : { _tag: "Range", startChar, endChar }
-            );
-            projections++;
-          }
-        const raw = yield* input.prepareText(row.text, preflight);
-        expect(raw.value.storage.width).toBe(row.rawStorage.width);
-        expect(raw.value.storage.bytes).toEqual(yield* S.decodeEffect(S.Uint8ArrayFromHex)(row.rawStorage.nativeHex));
-        expect(raw.value.pythonLength).toBe(row.rawPythonLength);
-        expect(raw.layout.projectionAmbiguous).toBe(false);
-      }
+            return !A.getUnsafe(row.boundaries, start) || !A.getUnsafe(row.boundaries, end)
+              ? { _tag: "Split", startChar, endChar }
+              : start === end
+                ? { _tag: "Point", offset: startChar }
+                : { _tag: "Range", startChar, endChar };
+          };
+          for (let start = 0; start <= row.pythonLength; start++)
+            for (let end = start; end <= row.pythonLength; end++) {
+              const projected = yield* prepared.project({ start, end });
+              expect(projected).toEqual(expectedProjection(start, end));
+              projections++;
+            }
+          const raw = yield* input.prepareText(row.text, preflight);
+          expect(raw.value.storage.width).toBe(row.rawStorage.width);
+          expect(raw.value.storage.bytes).toEqual(yield* S.decodeEffect(S.Uint8ArrayFromHex)(row.rawStorage.nativeHex));
+          expect(raw.value.pythonLength).toBe(row.rawPythonLength);
+          expect(raw.layout.projectionAmbiguous).toBe(false);
+        }),
+        { concurrency: 1, discard: true }
+      );
       expect(corpus.cases).toHaveLength(259);
       expect(projections).toBe(2395);
       expect(projections).toBe(corpus.projectionCases);
@@ -188,57 +198,69 @@ it.effect("retains empty and split projections without manufacturing a verified 
 it.effect("rejects malformed native layouts and invalid point ranges with closed failures", () =>
   Effect.gen(function* () {
     const input = yield* makeCitationRegexInput((yield* defaultCitationEnginePolicy).limits);
-    for (const storage of [
-      { width: 2, bytes: new Uint8Array([65, 0]) },
-      { width: 2, bytes: new Uint8Array([1]) },
-      { width: 4, bytes: new Uint8Array([0, 0, 17, 0]) },
-      { width: 4, bytes: new Uint8Array() },
-    ]) {
-      let called = false;
-      expect(
-        yield* input
-          .prepareUnicode(storage, () =>
-            Effect.sync(() => {
-              called = true;
-            })
-          )
-          .pipe(Effect.flip)
-      ).toMatchObject({ reason: "invalid-input" });
-      expect(called).toBe(false);
-    }
+    yield* Effect.forEach(
+      [
+        { width: 2, bytes: new Uint8Array([65, 0]) },
+        { width: 2, bytes: new Uint8Array([1]) },
+        { width: 4, bytes: new Uint8Array([0, 0, 17, 0]) },
+        { width: 4, bytes: new Uint8Array() },
+      ],
+      Effect.fnUntraced(function* (storage) {
+        let called = false;
+        expect(
+          yield* input
+            .prepareUnicode(storage, () =>
+              Effect.sync(() => {
+                called = true;
+              })
+            )
+            .pipe(Effect.flip)
+        ).toMatchObject({ reason: "invalid-input" });
+        expect(called).toBe(false);
+      }),
+      { concurrency: 1, discard: true }
+    );
     const prepared = yield* input.prepareText("x", preflight);
-    for (const range of [
-      { start: 2, end: 2 },
-      { start: 1, end: 0 },
-      { start: -1, end: 0 },
-      { start: 0, end: 1.5 },
-    ]) {
-      expect(yield* prepared.project(range).pipe(Effect.flip)).toMatchObject({ reason: "invalid-range" });
-    }
+    yield* Effect.forEach(
+      [
+        { start: 2, end: 2 },
+        { start: 1, end: 0 },
+        { start: -1, end: 0 },
+        { start: 0, end: 1.5 },
+      ],
+      Effect.fnUntraced(function* (range) {
+        expect(yield* prepared.project(range).pipe(Effect.flip)).toMatchObject({ reason: "invalid-range" });
+      }),
+      { concurrency: 1, discard: true }
+    );
   })
 );
 
 it.effect("checks source, intermediate and byte ceilings before trusted transport preflight", () =>
   Effect.gen(function* () {
     const base = (yield* defaultCitationEnginePolicy).limits;
-    for (const [policy, value, limit] of [
-      [{ ...base, sourceUtf16: 1 }, "xx", "sourceUtf16"],
-      [{ ...base, producedTextUtf16: 1 }, "xx", "producedTextUtf16"],
-      [{ ...base, processMessageBytes: 1 }, "Ā", "processMessageBytes"],
-    ] as const) {
-      const input = yield* makeCitationRegexInput(policy);
-      let called = false;
-      expect(
-        yield* input
-          .prepareText(value, () =>
-            Effect.sync(() => {
-              called = true;
-            })
-          )
-          .pipe(Effect.flip)
-      ).toMatchObject({ operation: "extract", limit });
-      expect(called).toBe(false);
-    }
+    yield* Effect.forEach(
+      [
+        [{ ...base, sourceUtf16: 1 }, "xx", "sourceUtf16"],
+        [{ ...base, producedTextUtf16: 1 }, "xx", "producedTextUtf16"],
+        [{ ...base, processMessageBytes: 1 }, "Ā", "processMessageBytes"],
+      ] as const,
+      Effect.fnUntraced(function* ([policy, value, limit]) {
+        const input = yield* makeCitationRegexInput(policy);
+        let called = false;
+        expect(
+          yield* input
+            .prepareText(value, () =>
+              Effect.sync(() => {
+                called = true;
+              })
+            )
+            .pipe(Effect.flip)
+        ).toMatchObject({ operation: "extract", limit });
+        expect(called).toBe(false);
+      }),
+      { concurrency: 1, discard: true }
+    );
     const exact = yield* makeCitationRegexInput({
       ...base,
       sourceUtf16: 2,

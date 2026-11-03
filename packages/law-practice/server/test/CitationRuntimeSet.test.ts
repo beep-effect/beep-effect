@@ -58,42 +58,46 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("source runtime cand
         const corpus = yield* S.decodeEffect(Corpus)(raw);
         expect(corpus.cases).toHaveLength(8);
         let events = 0;
-        for (const row of corpus.cases) {
-          let current = A.getUnsafe(row.events, 0).keys;
-          let comparisons = A.empty<readonly [number, number]>();
-          const comparison = CitationRuntimeDictionaryComparison.of({
-            step: Effect.void,
-            equal: Effect.fn("RuntimeSetTest.equal")(function* (left: number, right: number) {
-              comparisons = A.append(comparisons, [left, right]);
-              const a = A.getUnsafe(current, left);
-              const b = A.getUnsafe(current, right);
-              if (a.error) return yield* CitationRuntimeDictionaryFailure.make({ reason: "comparison-failed" });
-              return a.mode === "false" ? false : a.mode === "hash" ? a.hash === b.hash : a.token === b.token;
-            }),
-          });
-          const set = yield* makeCitationRuntimeSet({ entries: 100, iterations: 100000 }).pipe(
-            Effect.provideService(CitationRuntimeDictionaryComparison, comparison)
-          );
-          for (const [index, event] of A.map(row.events, (event, index) => [index, event] as const)) {
-            events += 1;
-            current = event.keys;
-            comparisons = A.empty();
-            const label = `${row.name}:${index}`;
-            if (event.operation.kind === "add") {
-              const key = A.getUnsafe(current, event.operation.key);
-              const run = set.add(CitationRuntimeDictionaryKey.make({ objectId: key.objectId, hash: key.hash }));
-              if (event.outcome.status === "error") {
-                const failure = yield* Effect.flip(run);
-                expect(failure.reason, label).toBe("comparison-failed");
-              } else yield* run;
+        yield* Effect.forEach(
+          corpus.cases,
+          Effect.fnUntraced(function* (row) {
+            let current = A.getUnsafe(row.events, 0).keys;
+            let comparisons = A.empty<readonly [number, number]>();
+            const comparison = CitationRuntimeDictionaryComparison.of({
+              step: Effect.void,
+              equal: Effect.fn("RuntimeSetTest.equal")(function* (left: number, right: number) {
+                comparisons = A.append(comparisons, [left, right]);
+                const a = A.getUnsafe(current, left);
+                const b = A.getUnsafe(current, right);
+                if (a.error) return yield* CitationRuntimeDictionaryFailure.make({ reason: "comparison-failed" });
+                return a.mode === "false" ? false : a.mode === "hash" ? a.hash === b.hash : a.token === b.token;
+              }),
+            });
+            const set = yield* makeCitationRuntimeSet({ entries: 100, iterations: 100000 }).pipe(
+              Effect.provideService(CitationRuntimeDictionaryComparison, comparison)
+            );
+            for (const [index, event] of A.map(row.events, (event, index) => [index, event] as const)) {
+              events += 1;
+              current = event.keys;
+              comparisons = A.empty();
+              const label = `${row.name}:${index}`;
+              if (event.operation.kind === "add") {
+                const key = A.getUnsafe(current, event.operation.key);
+                const run = set.add(CitationRuntimeDictionaryKey.make({ objectId: key.objectId, hash: key.hash }));
+                if (event.outcome.status === "error") {
+                  const failure = yield* Effect.flip(run);
+                  expect(failure.reason, label).toBe("comparison-failed");
+                } else yield* run;
+              }
+              expect(comparisons, label).toEqual(event.comparisons);
+              expect(
+                A.map(yield* set.read, (key) => key.objectId),
+                label
+              ).toEqual(event.objects);
             }
-            expect(comparisons, label).toEqual(event.comparisons);
-            expect(
-              A.map(yield* set.read, (key) => key.objectId),
-              label
-            ).toEqual(event.objects);
-          }
-        }
+          }),
+          { concurrency: 1, discard: true }
+        );
         expect(events).toBe(71);
       })
   );

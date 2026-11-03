@@ -32,6 +32,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Tuple from "effect/Tuple";
+import { prepareCitationCallbackInput } from "./CallbackInput.ts";
 import {
   CitationCallbackFailure,
   CitationCallbackResource,
@@ -45,7 +46,7 @@ import { CitationAuthorityIdentityInput } from "./AuthorityIdentity.ts";
 import { CitationDefaultObservation, readCitationDefaultObservation } from "./CallbackObservations.ts";
 import { CitationCallbackRuntimeIndexFactory } from "./CallbackRuntimeIndex.ts";
 import { captureCitationMentionReceiptData } from "./Mention.ts";
-import { PreparedCitationResolution, prepareCitationResolution } from "./ResolutionInput.ts";
+import { PreparedCitationResolution } from "./ResolutionInput.ts";
 import { CitationResourceIdentity, makeCitationResourceAuthorityId } from "./ResourceIdentity.ts";
 import type { CitationCallbackRuntimeIndex } from "./CallbackRuntimeIndex.ts";
 
@@ -1350,8 +1351,6 @@ export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPrepare
  * @since 0.0.0
  */
 export const runCitationCallbackSession = Effect.fn("Citation.runCallbackSession")(function* (input: unknown) {
-  const prepared = yield* prepareCitationResolution(input).pipe(
-    Effect.mapError((error) => CitationCallbackFailure.make({ reason: error.reason }))
-  );
+  const prepared = yield* prepareCitationCallbackInput(input);
   return yield* runPreparedCitationCallbackSession(prepared);
 });
