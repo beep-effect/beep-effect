@@ -1355,6 +1355,12 @@
         "stableVersion": "2.11.10",
         "canaryVersion": "2.11.11-canary.1",
         "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
+      },
+      "sourceBindingRepair": {
+        "checkpoint": "signature-key-source-binding-repair.json",
+        "metadataControls": "signature-key-source-binding-controls.json",
+        "nativeSemanticReplayForCurrentDriver": "pending",
+        "historical168CaseObservationRetainsOriginalDriverBinding": true
       }
     },
     {

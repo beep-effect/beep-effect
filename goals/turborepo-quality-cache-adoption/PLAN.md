@@ -767,3 +767,19 @@ pin/collector/schema mutations refuse before client selection, while the retaine
 legacy prefixes do not. Original reports and the prior checkpoint remain retained
 under their exact published source head. No local quality suite or qualification
 ran; the feature stays disabled and pending.
+
+
+### Signature-key observation source-binding repair
+
+The signature driver had the same split read: pins and the shared collector
+were parsed before later reads supplied their reported hashes. Thirteen
+metadata-only prefix controls reproduce four legacy false bindings, prove six
+early source-movement refusals plus external-pin confinement, and retain two
+unchanged-input controls. Bun version probes are stubbed; no native client,
+task or local quality suite executes. The driver now hashes its captured inputs
+and rechecks them before native selection and after the experiment.
+
+The registered checkpoint is `research/signature-key-source-binding-repair.json`.
+Its new source/control digests do not rebind the original 168-case observation.
+Current-harness semantic replay, production signing and tuple qualification
+remain pending; every whole-goal acceptance criterion stays unfinished.

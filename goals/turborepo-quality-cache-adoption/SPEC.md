@@ -741,3 +741,20 @@ results. Six controlled source changes must refuse before client selection; the
 legacy prefixes lack that refusal. No task body executes, feature/tuple is
 qualified or runtime setting changes. Reverse the driver/registration wave
 through Git while retaining both source envelopes and their observations.
+
+### Bind signature-key observations to captured inputs, 2026-11-03
+
+Extend the existing selection/permission source-binding rule to the signature-key
+driver. Parse the captured pins and bounded-collector bytes, hash those same
+bytes, include the captured Bun version pin, and refuse source movement before
+native client selection. Reject an external pin manifest before reading it.
+Keep the final source guard and existing native experiment budgets unchanged.
+
+Thirteen metadata-only prefix controls reproduce four legacy false bindings,
+prove six current source-movement refusals and the external-pin refusal, and
+preserve two unchanged-input controls. Version probes are stubs; no real child
+process, native client or task body runs. The original 168 native cases retain
+their original source binding; current-driver semantic replay stays pending.
+The feature and all qualification/rollout gates remain pending. Reversal is a
+reviewed Git revert of the driver and registrations, retaining both evidence
+envelopes. See `research/signature-key-source-binding-repair.json`.

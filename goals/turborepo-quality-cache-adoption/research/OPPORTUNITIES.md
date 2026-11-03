@@ -838,3 +838,19 @@ observed schema difference changed the matrix and next qualification work.
 - Keep the unchanged bounded collector AST and immutable original evidence.
   Fresh observations record the repaired driver bytes rather than re-hashing
   an older observation onto them. A new source binding requires its own replay.
+
+
+### 2026-11-03 — extend captured-byte joins to signature observations
+
+- While hosted CI was queued, source review found the signature-key driver
+  parsed pins and the shared collector before later reads supplied their
+  hashes. Four metadata-only legacy controls reproduce a false source binding.
+- Reuse the existing captured-byte pattern, include the Bun version pin, reject
+  external pin files before reading, and refuse movement before selecting a
+  native client. Six source-movement and one external-path refusal controls
+  pass; two unchanged controls still complete their metadata prefix.
+- All version probes are stubs and every real subprocess is refused. The
+  initial ten-case source/report pair is retained privately before extending
+  the controls to thirteen. The original 168 native cases remain unchanged and
+  retain their original source digest. A new driver digest needs a new actual
+  semantic replay; this repair grants no feature, tuple or rollout acceptance.
