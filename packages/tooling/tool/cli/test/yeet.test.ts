@@ -173,6 +173,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 import * as TestClock from "effect/testing/TestClock";
+import { recordedGithub } from "./support/YeetGithub.ts";
 
 const decodePrCloseoutReport = S.decodeEffect(PrCloseoutReport);
 const decodeRepoStepRunResult = S.decodeEffect(RepoStepRunResult);
@@ -558,6 +559,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
   );
 
   describe("yeet pull request lifecycle", () => {
+    const offlineGithub = recordedGithub(() => undefined);
     it.effect("reads, finds, and validates the current branch pull request", () =>
       Effect.gen(function* () {
         const { tempContext, tmpDir } = yield* trackedFileRepository;
@@ -588,7 +590,9 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
               O.map(found, (view) => view.number),
               874
             );
-          })
+            // The fixture has no pushed origin, so the REST lookup stops before GitHub.
+            expect(offlineGithub.calls).toEqual([]);
+          }).pipe(offlineGithub.provide)
         );
       })
     );

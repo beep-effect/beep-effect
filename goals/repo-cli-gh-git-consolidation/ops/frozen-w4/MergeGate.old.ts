@@ -1,6 +1,8 @@
 /**
  * Frozen pre-W4 body for `ops/review-thread-differential-w4.ts`: `packages/tooling/tool/cli/src/commands/Yeet/internal/MergeGate.ts`, verbatim from
  * main 930758e06b except for import paths and the identity namespace. The reviewer gate is wrapped in `withReviewerOperatorClient` as W3 (#2614) did on main, so the copy builds after that merge.
+ * W6 (SPEC D-15) moved the review-window read onto `GithubRest`; this body takes it through
+ * `readYeetReviewWindowAsGhLogin`, the gh-login wrapper the live surfaces without services use.
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
@@ -30,7 +32,7 @@ import {
   yeetReviewThreadStateOutstanding,
 } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewThreadState.ts";
 import {
-  readYeetReviewWindow,
+  readYeetReviewWindowAsGhLogin,
   renderYeetReviewWindow,
   YeetReviewWindow,
 } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewWindow.ts";
@@ -1324,7 +1326,7 @@ export const readMergeGate = Effect.fn("Yeet.readMergeGate")(function* (
     requiredContexts: O.map(ruleset, (rules) => rules.contexts),
     checkRuns: A.map(checkRuns, toMergeGateCheckRun),
     baseRuns,
-    window: yield* readYeetReviewWindow(context, { prNumber: pull.number, headSha: pull.head.sha }),
+    window: yield* readYeetReviewWindowAsGhLogin(context, { prNumber: pull.number, headSha: pull.head.sha }),
     unresolvedThreads,
     squashCommitlint,
     readAt: yield* DateTime.now,

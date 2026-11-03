@@ -26,6 +26,7 @@
 
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { GitHubRepository } from "@beep/github/GitHubRepository";
+import { PullRequest } from "@beep/github/PullRequest";
 import { outstanding, ReviewThread } from "@beep/github/ReviewThread";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
@@ -43,6 +44,7 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as SynchronizedRef from "effect/SynchronizedRef";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import {
   GithubCheckRunRecord,
@@ -479,7 +481,14 @@ export class YeetGhCommonOptions extends S.Opaque<YeetGhCommonOptions, { readonl
  * @category models
  * @since 0.0.0
  */
-export type YeetGithubServices = GithubRest | GraphqlBudget | GitHubClient | Repo | ReviewThread | GitHubRepository;
+export type YeetGithubServices =
+  | GithubRest
+  | GraphqlBudget
+  | GitHubClient
+  | Repo
+  | ReviewThread
+  | GitHubRepository
+  | PullRequest;
 
 /**
  * The identity the Yeet GitHub reads used when they ran the `gh` CLI: the
@@ -530,7 +539,13 @@ export const layerYeetGhFor = ({
   GithubIdentityError,
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > =>
-  Layer.mergeAll(layerGithubRest, layerGraphqlBudget, ReviewThread.layer, GitHubRepository.layer).pipe(
+  Layer.mergeAll(
+    layerGithubRest,
+    layerGraphqlBudget,
+    ReviewThread.layer,
+    GitHubRepository.layer,
+    PullRequest.layer
+  ).pipe(
     Layer.provideMerge(
       Layer.mergeAll(layerGithubClientFor(GithubClientRequest.make({ identity, cwd })), layerGithubRepoFor(cwd))
     )
@@ -711,6 +726,118 @@ export const provideYeetGhLogin =
     Effect.scoped(Effect.flatMap(buildYeetGhLogin(cwd), (context) => Effect.provideContext(program, context)));
 
 /**
+ * The gh-login services of a long-running Yeet surface, built on first use and
+ * kept for the surface's scope.
+ *
+ * **Details**
+ *
+ * A polling surface (the monitor loop, the comment stream) reads GitHub on
+ * every poll; building the client per poll would run `gh auth token` each
+ * time. This builds it once, through {@link buildYeetGhLogin} (so a suite's
+ * {@link YeetGithubLayer} still replaces it), on the first poll that asks, and
+ * hands every later poll the same services. A build that fails is not kept:
+ * that poll sees the `GitHub access failed (<why>).` error and the next poll
+ * builds again, as a `gh` call the poll ran would have failed and been retried.
+ *
+ * **Example** (Read a pull request on each poll with one client)
+ *
+ * ```ts
+ * import { GithubRest } from "@beep/repo-cli/test/SharedInternals"
+ * import { makeYeetGhLoginOnce, withYeetGhLogin } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = Effect.gen(function* () {
+ *   const login = yield* makeYeetGhLoginOnce(".")
+ *   return yield* GithubRest.use((rest) => rest.pullRequest(1)).pipe(withYeetGhLogin(login))
+ * })
+ * console.log(Effect.isEffect(Effect.scoped(program))) // true
+ * ```
+ *
+ * @param cwd - Where the token read runs and the repository is resolved.
+ * @returns The services, built at most once per success and alive for the enclosing scope.
+ * @category layers
+ * @since 0.0.0
+ */
+export const makeYeetGhLoginOnce = (
+  cwd: string
+): Effect.Effect<
+  Effect.Effect<Context.Context<YeetGithubServices>, YeetCommandError>,
+  never,
+  Scope.Scope | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> =>
+  Effect.zipWith(
+    Effect.context<Scope.Scope | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>(),
+    SynchronizedRef.make(O.none<Context.Context<YeetGithubServices>>()),
+    (ambient, built) =>
+      SynchronizedRef.modifyEffect(built, (current) =>
+        O.match(current, {
+          onSome: (services) => Effect.succeed([services, current] as const),
+          onNone: () =>
+            buildYeetGhLogin(cwd).pipe(
+              Effect.provideContext(ambient),
+              Effect.map((services) => [services, O.some(services)] as const)
+            ),
+        })
+      )
+  ).pipe(Effect.withSpan("Yeet.makeGhLoginOnce"));
+
+/**
+ * Run a Yeet GitHub program with the services a {@link makeYeetGhLoginOnce}
+ * login holds (building them first when it has none yet).
+ *
+ * **Example** (Provide a held login)
+ *
+ * ```ts
+ * import { withYeetGhLogin } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof withYeetGhLogin) // "function"
+ * ```
+ *
+ * @param login - The held login.
+ * @returns A function that provides every {@link YeetGithubServices} member.
+ * @category layers
+ * @since 0.0.0
+ */
+export const withYeetGhLogin =
+  (login: Effect.Effect<Context.Context<YeetGithubServices>, YeetCommandError>) =>
+  <A, E, R>(program: Effect.Effect<A, E, R>): Effect.Effect<A, E | YeetCommandError, Exclude<R, YeetGithubServices>> =>
+    Effect.flatMap(login, (services) => Effect.provideContext(program, services));
+
+// GitHub refuses a merge whose diff touches `.github/workflows/` when the token is a GitHub
+// App installation token without the `workflows` permission.
+const workflowPermissionRefusal = /refusing to allow a GitHub App to create or update workflow/u;
+
+/**
+ * Name the credential a GitHub refusal actually needs, when GitHub's message alone hides it.
+ *
+ * **Details**
+ *
+ * A merge of a pull request that changes `.github/workflows/` is refused for a GitHub App
+ * installation token without the `workflows` permission. GitHub reports it as an ordinary
+ * 4xx, so the message is extended with the missing permission and the remedy: merge with a
+ * user token carrying the `workflow` scope, or grant the App `workflows: write`. Any other
+ * message is returned unchanged.
+ *
+ * **Example** (Explain a workflow-permission merge refusal)
+ *
+ * ```ts
+ * import { withYeetGithubCredentialHint } from "@beep/repo-cli/test/Yeet"
+ *
+ * const reason = "refusing to allow a GitHub App to create or update workflow `.github/workflows/heavy.yml` without `workflows` permission"
+ * console.log(withYeetGithubCredentialHint(reason).includes("`workflow` scope")) // true
+ * ```
+ *
+ * @param message - GitHub's failure message as the kit reports it.
+ * @returns The message, extended with the credential remedy when GitHub refused a workflow change.
+ * @category execution
+ * @since 0.0.0
+ */
+export const withYeetGithubCredentialHint = (message: string): string =>
+  workflowPermissionRefusal.test(message)
+    ? `${message}\nThe credential is a GitHub App token without the \`workflows\` permission, and this pull request changes \`.github/workflows/\`. Merge it with a user token that has the \`workflow\` scope (\`gh auth refresh -s workflow\`), or grant the App \`workflows: write\`.`
+    : message;
+
+/**
  * Name a failed GitHub read or write the way the `gh` capture it replaced did:
  * `<label> failed (<why>).`, exit 1, where `<why>` is the kit's own message
  * (operation, HTTP status and reason) instead of `gh`'s exit and stderr.
@@ -733,7 +860,11 @@ export const provideYeetGhLogin =
 export const yeetGithubFailure =
   (label: string) =>
   (error: { readonly message: string }): YeetCommandError =>
-    YeetCommandError.make({ message: `${label} failed (${error.message}).`, exitCode: 1, cause: error });
+    YeetCommandError.make({
+      message: `${label} failed (${withYeetGithubCredentialHint(error.message)}).`,
+      exitCode: 1,
+      cause: error,
+    });
 
 /**
  * Flip a draft pull request on its confirmed head after the GraphQL budget wait.
@@ -1081,7 +1212,10 @@ const runGh = <A>(
   withYeetGh(options.tokenRef)(program).pipe(
     Effect.catchTags({
       GithubIdentityError: (error) => report(1)(`[gh] ${error.message}`),
-      GitHubError: (error) => report(error.kind === "rateLimited" ? YEET_GH_EXIT_HOLD : 1)(`[gh] ${error.message}`),
+      GitHubError: (error) =>
+        report(error.kind === "rateLimited" ? YEET_GH_EXIT_HOLD : 1)(
+          `[gh] ${withYeetGithubCredentialHint(error.message)}`
+        ),
       GraphqlBudgetExhausted: (error) => report(YEET_GH_EXIT_HOLD)(`[gh] ${error.message}`),
     })
   );

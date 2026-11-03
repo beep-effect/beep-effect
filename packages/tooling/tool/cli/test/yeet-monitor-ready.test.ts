@@ -60,6 +60,7 @@ import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
+import { monitorGithubLayer, provideMonitorGh } from "./support/YeetGithub.ts";
 import type { ScriptResult } from "@beep/commands/ScriptedSpawner";
 import type { YeetPrCommentWindow, YeetReviewWindow } from "@beep/repo-cli/test/Yeet";
 
@@ -166,7 +167,6 @@ const rules = (contexts = ["Lint"]) =>
     })
   );
 const options = {
-  capture: () => Effect.succeed({ exitCode: 0, output: at, truncated: false }),
   rulesetRead: () => rules(),
   policy: YeetUntilReadyPolicy.make({}),
   pollInterval: Duration.zero,
@@ -182,7 +182,7 @@ const options = {
 // The loop's once-per-head merge-base diff runs through `Git.changedFiles` (W2b); a code-bearing
 // answer keeps the heavy-admission verdict these fixtures were written against.
 const mergeBaseDiffGit = Git.layerTest({ changedFiles: () => Effect.succeed(["packages/a/src/index.ts"]) });
-const platform = Layer.mergeAll(
+const basePlatform = Layer.mergeAll(
   mergeBaseDiffGit,
   NodeFileSystem.layer,
   NodePath.layer,
@@ -190,6 +190,11 @@ const platform = Layer.mergeAll(
   ScriptedSpawner.make((_command, args) =>
     args[0] === "run" && args[1] === "list" ? { stdout: "[]" } : { exit: 1, stderr: "unexpected process" }
   ).layer
+);
+// The merge loop reads the head commit and the acting login as its gh login (W6); both answer `at`.
+const platform = Layer.provideMerge(
+  monitorGithubLayer(() => Effect.succeed({ exitCode: 0, output: at })),
+  basePlatform
 );
 const fixture = Effect.fn("readyTest.fixture")(function* <V, E, R>(use: (root: string) => Effect.Effect<V, E, R>) {
   const fs = yield* FileSystem.FileSystem;
@@ -719,31 +724,36 @@ interface TriageScript {
   readonly run?: { readonly status: string; readonly conclusion: string };
 }
 
+// The REST job rerun, as the `gh api -X POST` argv the kit's call reaches the spawner as (W6).
+const isRerun = (args: ReadonlyArray<string>) => A.some(args, Str.endsWith("/rerun"));
 // The red triage's gh reads: `run list` lists run 7 on the head, `--log-failed`
-// serves the job log and any other read the one failed job; a rerun succeeds
-// silently and is counted from `spawns`.
+// serves the job log and any other read the one failed job (the REST job list
+// the kit reads); a rerun succeeds silently and is counted from `spawns`.
 const triageSpawner = ({ job, log, run = { status: "completed", conclusion: "failure" } }: TriageScript) =>
   ScriptedSpawner.make((_command, args) => {
     if (args[0] === "run" && args[1] === "list") {
       return { stdout: encodeJson([{ databaseId: 7, headSha: head, ...run, name: "CI" }]) };
     }
-    if (args[1] === "rerun") return {};
+    if (isRerun(args)) return {};
     if (A.contains(args, "--log-failed")) return log;
     return {
       stdout: encodeJson({
+        total_count: 1,
         jobs: [
           {
-            databaseId: 991,
+            id: 991,
             name: job,
             status: "completed",
             conclusion: "failure",
-            steps: [{ name: "Test", conclusion: "failure" }],
+            steps: [{ name: "Test", status: "completed", conclusion: "failure", number: 1 }],
           },
         ],
       }),
     };
   });
-const rerunsOf = (spawner: ScriptedSpawner) => A.countBy(spawner.spawns, (spawn) => spawn.args[1] === "rerun");
+const rerunsOf = (spawner: ScriptedSpawner) => A.countBy(spawner.spawns, (spawn) => isRerun(spawn.args));
+// The loop's gh login answered by the test's own spawner (the platform's answers `at` too).
+const atGithub = provideMonitorGh(() => Effect.succeed({ exitCode: 0, output: at }));
 describe("required red decisions", () => {
   for (const name of ["Lint", "Test Unit (unit-a)", "Outside", "Vercel"]) {
     for (const flake of [false, true])
@@ -774,7 +784,7 @@ describe("required red decisions", () => {
                       )
                     )
                   ),
-              }).pipe(provideSpawner(runner));
+              }).pipe(atGithub, provideSpawner(runner));
               // A required red no longer ends --until-ready (pr-event-awareness D16):
               // the loop keeps polling until the PR closes on poll 2, and the red
               // is a converged check-failed row instead of a terminal.
@@ -815,7 +825,7 @@ it.layer(platform, { timeout: "30 seconds" })((it) =>
             Ref.getAndUpdate(polls, (n) => n + 1).pipe(
               Effect.map((n) => snapshot(root, [red(n >= 3 ? 992 : 991)], true, head, n === 4 ? "CLOSED" : "OPEN"))
             ),
-        }).pipe(provideSpawner(runner));
+        }).pipe(atGithub, provideSpawner(runner));
         expect(terminal).toBe("closed");
         expect(yield* Ref.get(polls)).toBe(5);
         // A needs-code-fix red is never rerun.
@@ -845,7 +855,7 @@ for (const attachment of YeetMonitorAttachment.literals)
               Ref.getAndUpdate(polls, (n) => n + 1).pipe(
                 Effect.map((n) => snapshot(root, [check("Lint", "fail")], true, head, n === 1 ? "CLOSED" : "OPEN"))
               ),
-          }).pipe(provideSpawner(runner));
+          }).pipe(atGithub, provideSpawner(runner));
           // A needs-code-fix red is never rerun.
           expect(rerunsOf(runner)).toBe(0);
           const printed = yield* lines;
@@ -1229,7 +1239,7 @@ for (const waiting of ["awaiting-log", "awaiting-run"])
               Ref.getAndUpdate(polls, (n) => n + 1).pipe(
                 Effect.map((n) => snapshot(root, [check("Lint", "fail")], true, head, n === 1 ? "CLOSED" : "OPEN"))
               ),
-          }).pipe(provideSpawner(runner));
+          }).pipe(atGithub, provideSpawner(runner));
           expect(terminal).toBe("closed");
           expect(yield* Ref.get(polls)).toBe(2);
           // An active parent run is never rerun.
@@ -1332,16 +1342,17 @@ const commentRowFor = (window: YeetPrCommentWindow, observedAt: string) =>
     severity: "P1",
     ts: observedAt,
   });
-const loginCapture = (answers: Ref.Ref<ReadonlyArray<number>>) => (_command: string, args: ReadonlyArray<string>) =>
-  args[1] === "user"
-    ? Ref.getAndUpdate(answers, A.drop(1)).pipe(
-        Effect.map((remaining) => ({
-          exitCode: O.getOrElse(A.head(remaining), () => 0),
-          output: "operator\n",
-          truncated: false,
-        }))
-      )
-    : Effect.succeed({ exitCode: 0, output: at, truncated: false });
+const loginCapture =
+  (answers: Ref.Ref<ReadonlyArray<number>>) => (_command: string, args: ReadonlyArray<string>, _cwd: string) =>
+    args[1] === "user"
+      ? Ref.getAndUpdate(answers, A.drop(1)).pipe(
+          Effect.map((remaining) => ({
+            exitCode: O.getOrElse(A.head(remaining), () => 0),
+            output: "operator\n",
+            truncated: false,
+          }))
+        )
+      : Effect.succeed({ exitCode: 0, output: at, truncated: false });
 it.layer(platform, { timeout: "30 seconds" })("W4 until-ready comment rows", (test) => {
   test.effect("replays nothing and turns comments into rows on every poll, inside the job's window", () =>
     fixture((root) =>
@@ -1354,7 +1365,6 @@ it.layer(platform, { timeout: "30 seconds" })("W4 until-ready comment rows", (te
 
         const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
           ...options,
-          capture: loginCapture(logins),
           collectStatus: () =>
             Ref.getAndUpdate(polls, (n) => n + 1).pipe(Effect.map((n) => snapshot(root, [check("Lint")], n >= 2))),
           closeout: () => Effect.succeed(report()),
@@ -1364,7 +1374,7 @@ it.layer(platform, { timeout: "30 seconds" })("W4 until-ready comment rows", (te
             Ref.getAndUpdate(windows, A.append(window)).pipe(
               Effect.map((seen) => (A.isReadonlyArrayEmpty(seen) ? [commentRowFor(window, observedAt)] : []))
             ),
-        });
+        }).pipe(provideMonitorGh(loginCapture(logins)));
 
         expect(terminal).toBe("ready");
         expect(yield* Ref.get(replayed)).toBe(0);
@@ -1396,15 +1406,17 @@ it.layer(platform, { timeout: "30 seconds" })("W4 until-ready comment rows", (te
 
         const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
           ...options,
-          capture: (command, args) =>
-            (args[1] === "user" ? Ref.update(captures, (n) => n + 1) : Effect.void).pipe(
-              Effect.andThen(capture(command, args))
-            ),
           collectStatus: () =>
             Ref.getAndUpdate(polls, (n) => n + 1).pipe(Effect.map((n) => snapshot(root, [check("Lint")], n >= 3))),
           closeout: () => Effect.succeed(report()),
           commentRows: (_context, window) => Ref.update(windows, A.append(window)).pipe(Effect.as(A.empty())),
-        });
+        }).pipe(
+          provideMonitorGh((command, args, cwd) =>
+            (args[1] === "user" ? Ref.update(captures, (n) => n + 1) : Effect.void).pipe(
+              Effect.andThen(capture(command, args, cwd))
+            )
+          )
+        );
 
         expect(terminal).toBe("ready");
         // The loop's start is the fixture's clock. The first poll had no login and

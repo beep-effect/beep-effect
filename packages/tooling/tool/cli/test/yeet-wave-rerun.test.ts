@@ -78,6 +78,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { waitTimesOut } from "./support/ProofJobWait.ts";
+import { monitorGithubLayer } from "./support/YeetGithub.ts";
 import type {
   ProofJobLauncherShape,
   ProofJobWaitResult,
@@ -204,7 +205,6 @@ const runUntilReady = Effect.fn("waveRerunTest.runUntilReady")(function* (
   return yield* runYeetMonitorUntilMerged(contextFor(root), {
     attachment,
     bindPullRequest,
-    capture: () => Effect.succeed({ exitCode: 0, output: at, truncated: false }),
     closeout: () => Effect.succeed(closeoutReport),
     collectStatus: () =>
       Ref.getAndUpdate(polls, (n) => n + 1).pipe(
@@ -229,7 +229,7 @@ const runUntilReady = Effect.fn("waveRerunTest.runUntilReady")(function* (
 // The loop's once-per-head merge-base diff runs through `Git.changedFiles` (W2b); a code-bearing
 // answer keeps the heavy-admission verdict these fixtures were written against.
 const mergeBaseDiffGit = Git.layerTest({ changedFiles: () => Effect.succeed(["packages/a/src/index.ts"]) });
-const platform = Layer.mergeAll(
+const basePlatform = Layer.mergeAll(
   mergeBaseDiffGit,
   NodeFileSystem.layer,
   NodePath.layer,
@@ -262,6 +262,11 @@ const platform = Layer.mergeAll(
     }
     return { exit: 1, stderr: `unexpected process: ${command} ${A.join(args, " ")}` };
   }).layer
+);
+// The merge loop reads the head commit and the acting login as its gh login (W6); both answer `at`.
+const platform = Layer.provideMerge(
+  monitorGithubLayer(() => Effect.succeed({ exitCode: 0, output: at })),
+  basePlatform
 );
 
 const checkout = Effect.gen(function* () {

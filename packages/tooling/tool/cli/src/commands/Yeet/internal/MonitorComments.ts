@@ -20,6 +20,8 @@
  */
 
 import { Fmt } from "@beep/cli-kit/Fmt";
+import { GitHubClient } from "@beep/github/GitHubClient";
+import { Repo } from "@beep/github/Repo";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
@@ -37,20 +39,23 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GhActor } from "../../../internal/github/index.ts";
-import { repoRunOutputBound } from "../../../internal/process/StepExec.ts";
-import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
+import { makeYeetGhLoginOnce, provideYeetGhLogin, withYeetGhLogin } from "./GhOps.ts";
 import { writeTextFile } from "./IssueArtifacts.ts";
 import { parseYeetReviewBodySignal, YeetReviewBodySignal, YeetReviewBodySignalInput } from "./ReviewBodySignal.ts";
 import { ReviewLaneReviewRow, YEET_REVIEW_LANE_SCHEMA_VERSION } from "./ReviewLane.schemas.ts";
 import { recordYeetReviewLaneRows, yeetReviewerIdentity } from "./ReviewLane.ts";
+import type { GitHubError } from "@beep/github/GitHubError";
+import type * as Context from "effect/Context";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type * as Scope from "effect/Scope";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
+import type { YeetGithubServices } from "./GhOps.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/MonitorComments");
 const monitorPollInterval = Duration.seconds(10);
@@ -1013,111 +1018,18 @@ export const renderYeetMonitorComment = (comment: YeetMonitorComment): string =>
     Match.exhaustive
   );
 
-const decodeReviewCommentPages = S.decodeUnknownEffect(S.fromJsonString(S.Array(S.Array(GhRestReviewComment))));
-const decodeIssueCommentPages = S.decodeUnknownEffect(S.fromJsonString(S.Array(S.Array(GhRestIssueComment))));
-const decodeReviewPages = S.decodeUnknownEffect(S.fromJsonString(S.Array(S.Array(GhRestReview))));
-
-const decodePages =
-  <Payload>(decode: (text: string) => Effect.Effect<ReadonlyArray<ReadonlyArray<Payload>>, S.SchemaError>) =>
-  (text: string): Effect.Effect<ReadonlyArray<Payload>, S.SchemaError> =>
-    Effect.map(decode(text), A.flatten);
-
-/**
- * Warn that a comment page was cut off before it could be read in full.
- *
- * **Example** (Render the truncation warning)
- *
- * ```ts
- * import { renderYeetMonitorCommentTruncation } from "@beep/repo-cli/test/Yeet"
- *
- * console.log(renderYeetMonitorCommentTruncation("repos/{owner}/{repo}/issues/1/comments"))
- * ```
- *
- * @param endpoint - The REST endpoint whose capture was clipped.
- * @returns The operator warning naming what was kept and what repeats.
- * @category formatting
- * @since 0.0.0
- */
-export const renderYeetMonitorCommentTruncation = (endpoint: string): string =>
-  `[yeet] the PR comment read of ${endpoint} was clipped by the capture bound; the rows that were read in full are streamed and the cursor stops at the last of them, so the rest repeat on the next read.`;
-
-// Recover the complete elements of a clipped top-level JSON array. `gh api
-// --paginate --slurp` emits one array of pages, so a capture cut mid-object is
-// invalid JSON as a whole while every element before the cut is intact: this
-// scanner keeps those and closes the containers they were in, and the cursor
-// then advances only as far as they reach. The capture's own truncation notice
-// is removed first — it carries brackets of its own, and a scanner that read
-// them would balance the document against text GitHub never sent.
-class ClipScan extends S.Opaque<ClipScan, { readonly brand: unique symbol }>()(
-  S.Struct({
-    depth: S.Finite,
-    inString: S.Boolean,
-    escaped: S.Boolean,
-    // Offset just past the last container that closed, and the depth it left.
-    lastComplete: S.Finite,
-    closeDepth: S.Finite,
-  }).pipe(
-    $I.annoteSchema("ClipScan", { description: "The scanner state after one character of a clipped JSON capture." })
-  )
-) {}
-
-const clipScanStart = ClipScan.make({ depth: 0, inString: false, escaped: false, lastComplete: 0, closeDepth: 0 });
-
-const scanStringChar = (scan: ClipScan, char: string): ClipScan =>
-  ClipScan.make({ ...scan, inString: scan.escaped || char !== '"', escaped: !scan.escaped && char === "\\" });
-
-const scanStructuralChar = (scan: ClipScan, char: string, index: number): ClipScan => {
-  if (char === '"') return ClipScan.make({ ...scan, inString: true });
-  if (char === "[" || char === "{") return ClipScan.make({ ...scan, depth: scan.depth + 1 });
-  if (char === "]" || char === "}") {
-    const depth = scan.depth - 1;
-    return ClipScan.make({ ...scan, depth, lastComplete: index + 1, closeDepth: depth });
-  }
-  return scan;
-};
-
-const salvageClippedJsonArray = (text: string): string => {
-  const scanned = pipe(text, Str.replace(repoRunOutputBound.truncatedNotice, Str.empty));
-  let scan = clipScanStart;
-  for (let index = 0; index < scanned.length; index = index + 1) {
-    const char = scanned[index] ?? Str.empty;
-    scan = scan.inString ? scanStringChar(scan, char) : scanStructuralChar(scan, char, index);
-    // The outermost array closed: the document is whole up to here.
-    if (scan.depth === 0 && scan.lastComplete === index + 1) return Str.slice(0, index + 1)(scanned);
-  }
-  return scan.lastComplete === 0
-    ? "[]"
-    : `${Str.slice(0, scan.lastComplete)(scanned)}${Str.repeat(scan.closeDepth)("]")}`;
-};
-
-/**
- * Salvage the intact prefix of a clipped `gh api --paginate --slurp` capture.
- *
- * **Example** (Keep the page that was read in full)
- *
- * ```ts
- * import { salvageYeetMonitorClippedJson } from "@beep/repo-cli/test/Yeet"
- *
- * console.log(salvageYeetMonitorClippedJson('[[{"id":1}],[{"id":2'))
- * ```
- *
- * @param text - The captured, possibly clipped, JSON text.
- * @returns JSON text holding every element that was read in full.
- * @category utilities
- * @since 0.0.0
- */
-export const salvageYeetMonitorClippedJson = salvageClippedJsonArray;
+const ActingUser = S.Struct({ login: S.String });
 
 /**
  * Read the GitHub login this process acts as.
  *
  * **Details**
  *
- * One `gh api user` read. The merge loop compares comment authors against it
- * so the monitor's own comments (a Greptile retrigger, a `yeet reply`) never
- * become inbox rows. Every failure, a non-zero exit, clipped output or a value
- * that is not a single login, reads as `None`; the caller waits for a later
- * read rather than guessing.
+ * One REST `GET /user` read (what `gh api user` asked). The merge loop compares
+ * comment authors against it so the monitor's own comments (a Greptile
+ * retrigger, a `yeet reply`) never become inbox rows. Every failure, and a
+ * value that is not a single login, reads as `None`; the caller waits for a
+ * later read rather than guessing.
  *
  * **Example** (Build the read)
  *
@@ -1125,78 +1037,53 @@ export const salvageYeetMonitorClippedJson = salvageClippedJsonArray;
  * import { readYeetMonitorActingLogin } from "@beep/repo-cli/test/Yeet"
  * import * as Effect from "effect/Effect"
  *
- * console.log(Effect.isEffect(readYeetMonitorActingLogin({ repoRoot: "/repo" }))) // true
+ * console.log(Effect.isEffect(readYeetMonitorActingLogin)) // true
  * ```
  *
- * @param context - The checkout gh runs in.
- * @param capture - The command capture boundary; the live runner by default.
- * @returns The acting login, or `None` when gh cannot name it; never fails.
  * @category processes
  * @since 0.0.0
  */
-export const readYeetMonitorActingLogin = Effect.fn("YeetMonitor.readActingLogin")(function* (
-  context: Pick<RepoRunContext, "repoRoot">,
-  capture: typeof runRepoCommandCapture = runRepoCommandCapture
-): Effect.fn.Return<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
-  return yield* capture("gh", ["api", "user", "--jq", ".login"], context.repoRoot).pipe(
-    Effect.map((result) =>
-      result.exitCode === 0 && !result.truncated
-        ? pipe(
-            Str.trim(result.output),
-            O.liftPredicate((login) => Str.isNonEmpty(login) && !/\s/u.test(login))
-          )
-        : O.none<string>()
-    ),
-    Effect.orElseSucceed(O.none<string>)
-  );
-});
+export const readYeetMonitorActingLogin: Effect.Effect<O.Option<string>, never, GitHubClient> = GitHubClient.use(
+  (client) => client.requestDecoded("GET /user", {}, ActingUser)
+).pipe(
+  Effect.map((user) =>
+    pipe(
+      Str.trim(user.login),
+      O.liftPredicate((login) => Str.isNonEmpty(login) && !/\s/u.test(login))
+    )
+  ),
+  Effect.orElseSucceed(O.none<string>),
+  Effect.withSpan("YeetMonitor.readActingLogin")
+);
 
-const fetchComments = Effect.fn("YeetMonitor.fetchComments")(function* <Comment>(
-  context: RepoRunContext,
+// One comment collection, every page (per_page 100). A failed read keeps its
+// reason: a degraded poll is reported to the operator by message alone, and
+// "the poll failed" without GitHub's own words cannot distinguish a rate limit
+// from a revoked token.
+const fetchComments = <Comment>(
   endpoint: string,
-  since: O.Option<string>,
-  decode: (text: string) => Effect.Effect<ReadonlyArray<Comment>, S.SchemaError>
-): Effect.fn.Return<
-  ReadonlyArray<Comment>,
-  YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
-> {
-  const result = yield* runRepoCommandCapture(
-    "gh",
-    [
-      "api",
-      "--method",
-      "GET",
-      endpoint,
-      "--paginate",
-      "--slurp",
-      "-f",
-      "per_page=100",
-      ...O.match(since, { onNone: A.empty<string>, onSome: (at) => ["-f", `since=${at}`] }),
-    ],
-    context.repoRoot
-  ).pipe(Effect.mapError(YeetCommandError.new("Failed to poll pull request comments during yeet monitor.")));
-  if (result.exitCode !== 0) {
-    return yield* YeetCommandError.make({
-      command: `gh api --method GET ${endpoint}`,
-      exitCode: result.exitCode,
-      // The reason travels with the failure: a degraded poll is reported to the
-      // operator by message alone, and "the poll failed" without gh's own words
-      // cannot distinguish a rate limit from a revoked token.
-      message: `Failed to poll pull request comments during yeet monitor: ${excerpt(result.output)}`,
-    });
-  }
-  // A clipped read is no longer a failed read. Losing the whole poll over a
-  // loud pull request means the operator sees nothing at all, while keeping the
-  // intact prefix shows what was read and leaves the rest behind the cursor.
-  if (result.truncated) {
-    yield* Console.error(renderYeetMonitorCommentTruncation(endpoint));
-    return yield* decode(salvageClippedJsonArray(result.output)).pipe(Effect.orElseSucceed(A.empty<Comment>));
-  }
-  return yield* decode(result.output).pipe(
-    Effect.mapError(YeetCommandError.new("Failed to decode pull request comments during yeet monitor."))
+  read: Effect.Effect<ReadonlyArray<unknown>, GitHubError>,
+  decode: (items: ReadonlyArray<unknown>) => Effect.Effect<ReadonlyArray<Comment>, S.SchemaError>
+): Effect.Effect<ReadonlyArray<Comment>, YeetCommandError> =>
+  read.pipe(
+    Effect.mapError((error) =>
+      YeetCommandError.make({
+        command: `gh api --method GET ${endpoint}`,
+        exitCode: 1,
+        message: `Failed to poll pull request comments during yeet monitor: ${excerpt(error.message)}`,
+        cause: error,
+      })
+    ),
+    Effect.flatMap((items) =>
+      decode(items).pipe(
+        Effect.mapError(YeetCommandError.new("Failed to decode pull request comments during yeet monitor."))
+      )
+    )
   );
-});
+
+const decodeReviewComments = S.decodeUnknownEffect(S.Array(GhRestReviewComment));
+const decodeIssueComments = S.decodeUnknownEffect(S.Array(GhRestIssueComment));
+const decodeReviews = S.decodeUnknownEffect(S.Array(GhRestReview));
 
 const nextCursor = (cursor: YeetMonitorCommentCursor, comments: ReadonlyArray<YeetMonitorComment>) =>
   A.reduce(comments, cursor, (latest, comment) =>
@@ -1360,31 +1247,44 @@ export const collectNewYeetMonitorComments = Effect.fn("YeetMonitor.collectNewCo
 ): Effect.fn.Return<
   ReadonlyArray<YeetMonitorComment>,
   YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom
+  GitHubClient | Repo | FileSystem.FileSystem | Path.Path
 > {
   const watermark = yield* Ref.get(watermarkRef);
+  const client = yield* GitHubClient;
+  const { owner, repo } = yield* Repo;
   const [reviewPayload, issuePayload, reviewBodyPayload] = yield* Effect.all(
     [
       fetchComments(
-        context,
         `repos/{owner}/{repo}/pulls/${pullRequestNumber}/comments`,
-        O.some(watermark.review.createdAt),
-        decodePages(decodeReviewCommentPages)
+        client.paginate("GET /repos/{owner}/{repo}/pulls/{pull_number}/comments", {
+          owner,
+          repo,
+          pull_number: pullRequestNumber,
+          since: watermark.review.createdAt,
+        }),
+        decodeReviewComments
       ),
       fetchComments(
-        context,
         `repos/{owner}/{repo}/issues/${pullRequestNumber}/comments`,
-        O.some(watermark.issue.createdAt),
-        decodePages(decodeIssueCommentPages)
+        client.paginate("GET /repos/{owner}/{repo}/issues/{issue_number}/comments", {
+          owner,
+          repo,
+          issue_number: pullRequestNumber,
+          since: watermark.issue.createdAt,
+        }),
+        decodeIssueComments
       ),
       // The reviews endpoint takes no `since`, so the whole list comes back and
       // the cursor filter below is the only thing standing between the operator
       // and every review the pull request ever received.
       fetchComments(
-        context,
         `repos/{owner}/{repo}/pulls/${pullRequestNumber}/reviews`,
-        O.none(),
-        decodePages(decodeReviewPages)
+        client.paginate("GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews", {
+          owner,
+          repo,
+          pull_number: pullRequestNumber,
+        }),
+        decodeReviews
       ),
     ],
     { concurrency: 3 }
@@ -1453,15 +1353,7 @@ const pollComments = Effect.fn("YeetMonitor.pollComments")(function* (
   context: RepoRunContext,
   pullRequestNumber: number,
   watermarkRef: Ref.Ref<YeetMonitorCommentWatermark>
-): Effect.fn.Return<
-  void,
-  YeetCommandError,
-  | ChildProcessSpawner.ChildProcessSpawner
-  | FileSystem.FileSystem
-  | Path.Path
-  | SecureRandom.SecureRandom
-  | Digest.Digest
-> {
+): Effect.fn.Return<void, YeetCommandError, YeetGithubServices | FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const newComments = yield* collectNewYeetMonitorComments(context, pullRequestNumber, watermarkRef);
   yield* Effect.forEach(newComments, (comment) => Console.log(renderYeetMonitorComment(comment)), {
     concurrency: 1,
@@ -1519,22 +1411,19 @@ const renderCommentPollFailure = (reason: string, failures: number, budget: numb
 export const renderYeetMonitorCommentStreamStopped = (budget: number): string =>
   `[yeet] PR comment streaming stopped after ${budget} consecutive failed polls; this session keeps watching checks. Read comments with \`bun run beep yeet status --remote\` or on the pull request.`;
 
+// A login that does not build is a failed poll, counted against the budget and
+// built again on the next poll, as the `gh` reads it replaced were.
 const pollTick = Effect.fn("YeetMonitor.pollTick")(function* (
   context: RepoRunContext,
   pullRequestNumber: number,
   watermarkRef: Ref.Ref<YeetMonitorCommentWatermark>,
   failuresRef: Ref.Ref<number>,
-  budget: number
-): Effect.fn.Return<
-  void,
-  never,
-  | ChildProcessSpawner.ChildProcessSpawner
-  | FileSystem.FileSystem
-  | Path.Path
-  | SecureRandom.SecureRandom
-  | Digest.Digest
-> {
-  const polled = yield* Effect.result(pollComments(context, pullRequestNumber, watermarkRef));
+  budget: number,
+  login: Effect.Effect<Context.Context<YeetGithubServices>, YeetCommandError>
+): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path | Digest.Digest> {
+  const polled = yield* Effect.result(
+    pollComments(context, pullRequestNumber, watermarkRef).pipe(withYeetGhLogin(login))
+  );
   if (Result.isSuccess(polled)) {
     return yield* Ref.set(failuresRef, 0);
   }
@@ -1711,6 +1600,7 @@ export const runYeetPullRequestCommentMonitor = Effect.fn("Yeet.runPullRequestCo
   | Path.Path
   | SecureRandom.SecureRandom
   | Digest.Digest
+  | Scope.Scope
 > {
   // The earlier of the two persisted cursors is where the stream genuinely
   // resumes: the collections advance independently, so quoting one of them
@@ -1719,12 +1609,13 @@ export const runYeetPullRequestCommentMonitor = Effect.fn("Yeet.runPullRequestCo
   yield* persisted.pipe(O.map(earliestWatermarkAt), renderYeetMonitorCommentStreamStart, Console.log);
   const watermarkRef = yield* openYeetMonitorCommentStream(context, pullRequestNumber);
   const failuresRef = yield* Ref.make(0);
+  const login = yield* makeYeetGhLoginOnce(context.repoRoot);
   return yield* Effect.forever(
-    pollTick(context, pullRequestNumber, watermarkRef, failuresRef, budget).pipe(
+    pollTick(context, pullRequestNumber, watermarkRef, failuresRef, budget, login).pipe(
       Effect.andThen(Effect.sleep(monitorPollInterval))
     )
   );
-});
+}, Effect.scoped);
 
 /**
  * Report how much of the comment stream one replay is about to print.
@@ -1847,15 +1738,7 @@ export const replayYeetMonitorComments = Effect.fn("Yeet.replayMonitorComments")
   context: RepoRunContext,
   pullRequestNumber: number,
   consumer: YeetMonitorCommentConsumer = YeetMonitorCommentConsumer.Enum.shared
-): Effect.fn.Return<
-  void,
-  never,
-  | ChildProcessSpawner.ChildProcessSpawner
-  | FileSystem.FileSystem
-  | Path.Path
-  | SecureRandom.SecureRandom
-  | Digest.Digest
-> {
+): Effect.fn.Return<void, never, YeetGithubServices | FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const persisted = yield* loadYeetMonitorCommentWatermark(context, pullRequestNumber, consumer);
   const watermarkRef = yield* openYeetMonitorCommentStream(context, pullRequestNumber, consumer);
   const since = earliestWatermarkAt(yield* Ref.get(watermarkRef));
@@ -1872,4 +1755,38 @@ export const replayYeetMonitorComments = Effect.fn("Yeet.replayMonitorComments")
     discard: true,
   });
   yield* acknowledgeYeetMonitorComments(context, pullRequestNumber, watermarkRef, collected.success, consumer);
+});
+
+/**
+ * {@link replayYeetMonitorComments} as the operator's gh login, for a
+ * read-first surface that has no GitHub services of its own.
+ *
+ * **Details**
+ *
+ * A login that does not resolve is reported as an unavailable replay, the way a
+ * failed comment read is: the saved position is unchanged, so nothing is
+ * skipped.
+ *
+ * **Example** (Build the replay)
+ *
+ * ```ts
+ * import { replayYeetMonitorCommentsAsGhLogin } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof replayYeetMonitorCommentsAsGhLogin) // "function"
+ * ```
+ *
+ * @param context - Repo run context carrying the repo root and artifact directory.
+ * @param pullRequestNumber - The pull request whose stream is replayed.
+ * @returns Nothing once the missed rows have been printed and acknowledged.
+ * @category processes
+ * @since 0.0.0
+ */
+export const replayYeetMonitorCommentsAsGhLogin = Effect.fn("Yeet.replayMonitorCommentsAsGhLogin")(function* (
+  context: RepoRunContext,
+  pullRequestNumber: number
+) {
+  return yield* replayYeetMonitorComments(context, pullRequestNumber).pipe(
+    provideYeetGhLogin(context.repoRoot),
+    Effect.catchTag("YeetCommandError", (error) => Console.error(renderYeetMonitorCommentReplayFailure(error.message)))
+  );
 });

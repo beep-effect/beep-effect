@@ -25,6 +25,7 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { provideLegacyGh } from "./support/YeetGithub.ts";
 
 // A GitHub App can post under a login without the `[bot]` suffix: Copilot's
 // pull request reviewer posts as `Copilot`, and only the REST `user.type`
@@ -142,7 +143,7 @@ it.layer(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer, NodeCrypto.layer, 
           turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] },
         });
 
-        const appended = yield* pollYeetPrCommentRows(context, window, POLLED_AT);
+        const appended = yield* pollYeetPrCommentRows(context, window, POLLED_AT).pipe(provideLegacyGh);
 
         deepStrictEqual(
           A.map(appended, (row) => [row.capsule.commentId, row.capsule.author, row.severity]),

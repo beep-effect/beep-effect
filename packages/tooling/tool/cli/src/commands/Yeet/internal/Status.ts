@@ -57,7 +57,7 @@ import {
   yeetReviewThreadStateInput,
 } from "./ReviewThreadState.ts";
 import {
-  readYeetReviewWindow,
+  readYeetReviewWindowAsGhLogin,
   renderYeetReviewWindowHold,
   YeetReviewWindow,
   yeetReviewWindowDue,
@@ -1349,7 +1349,7 @@ const readRemotePullRequest = Effect.fn("YeetStatus.readRemotePullRequest")(func
   );
   if (Result.isSuccess(primary)) return O.some(primary.success);
   return yield* Effect.gen(function* () {
-    const found = yield* findOpenPullRequestViaRest(context);
+    const found = yield* findOpenPullRequestViaRest(context).pipe(provideYeetGhLogin(context.repoRoot));
     if (O.isNone(found)) return O.none<GhStatusPullRequest>();
     const output = yield* ghOutput({
       args: [
@@ -1544,7 +1544,7 @@ const withReviewWindow = Effect.fn("YeetStatus.withReviewWindow")(function* (
     O.flatMap(() => O.all({ prNumber: O.fromUndefinedOr(remote.number), headSha: remote.headSha }))
   );
   if (O.isNone(target)) return remote;
-  const reviewWindow = yield* readYeetReviewWindow(context, target.value);
+  const reviewWindow = yield* readYeetReviewWindowAsGhLogin(context, target.value);
   return YeetStatusRemote.make({ ...remote, reviewWindow: O.some(reviewWindow) });
 });
 

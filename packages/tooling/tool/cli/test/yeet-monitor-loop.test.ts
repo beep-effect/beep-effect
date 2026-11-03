@@ -36,6 +36,7 @@ import * as PlatformError from "effect/PlatformError";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
+import { provideLegacyGh } from "./support/YeetGithub.ts";
 import type { ScriptResult } from "@beep/commands/ScriptedSpawner";
 
 // `gh run view --job <id> --log-failed` emits `<job>\t<step>\t<timestamp> <line>`
@@ -474,11 +475,13 @@ interface MonitorGhScript {
   readonly runList: string;
 }
 
-// Routes the merge loop's gh reads: `run list` for the branch, `run view 7
-// --json jobs` for the one candidate run, `--log-failed` for a red job's log
-// (the per-job endpoint fallback never has one), and `run rerun` for an
-// executed rerun. Anything else — notably a job fetch
-// for a run the selection should have excluded — exits 1 as an unexpected invocation.
+// Routes the merge loop's gh reads: `run list` for the branch, the REST job
+// list of the one candidate run (`actions/runs/7/jobs`, which the kit reads as
+// `gh run view 7 --json jobs` did), `--log-failed` for a red job's log (the
+// per-job endpoint fallback never has one), and the REST job rerun
+// (`actions/jobs/<id>/rerun`) for an executed rerun. Anything else — notably a
+// job fetch for a run the selection should have excluded — exits 1 as an
+// unexpected invocation.
 const monitorSpawner = (script: MonitorGhScript) =>
   ScriptedSpawner.make((command, args) => {
     const line = A.join([command, ...args], " ");
@@ -493,11 +496,11 @@ const monitorSpawner = (script: MonitorGhScript) =>
       // so a refused primary read keeps its pending/conservative reading.
       return served(1, "gh: Not Found (HTTP 404)");
     }
-    if (Str.includes("run rerun")(line)) {
+    if (Str.includes("actions/jobs/991/rerun")(line)) {
       const rerun = script.rerun ?? { exitCode: 0, output: "" };
       return served(rerun.exitCode, rerun.output);
     }
-    if (Str.includes("run view 7")(line)) {
+    if (Str.includes("actions/runs/7/jobs")(line)) {
       return served(0, script.runJobs);
     }
     return { exit: 1, stderr: `unexpected gh invocation: ${line}` };
@@ -521,11 +524,13 @@ const runJobsJson = (
   }>
 ) =>
   JSON.stringify({
-    jobs: A.map(jobs, (job) => ({
+    total_count: A.length(jobs),
+    jobs: A.map(jobs, ({ databaseId, ...job }) => ({
       ...job,
+      id: databaseId,
       steps: [
-        { name: "Set up job", conclusion: "success" },
-        { name: "Run lane", conclusion: job.conclusion },
+        { name: "Set up job", status: "completed", conclusion: "success", number: 1 },
+        { name: "Run lane", status: job.status, conclusion: job.conclusion, number: 2 },
       ],
     })),
   });
@@ -636,6 +641,7 @@ it.layer(BunCrypto.layer)("collectYeetMonitorFailedJobs", (it) => {
       const plan = planYeetMonitorReruns(emptyYeetMonitorRerunBudget, "abc123", jobs);
       expect(plan.decisions[0]?.status).toBe("awaiting-log");
     }).pipe(
+      provideLegacyGh,
       provideSpawner(
         monitorSpawner({
           jobLog: { exitCode: 1, output: "job 991 log not found" },
@@ -656,6 +662,7 @@ it.layer(BunCrypto.layer)("collectYeetMonitorFailedJobs", (it) => {
       const plan = planYeetMonitorReruns(emptyYeetMonitorRerunBudget, "abc123", jobs);
       expect(plan.decisions[0]?.status).toBe("needs-code-fix");
     }).pipe(
+      provideLegacyGh,
       provideSpawner(
         monitorSpawner({
           jobLog: { exitCode: 0, output: genuineTypeErrorLog },
@@ -677,6 +684,7 @@ it.layer(BunCrypto.layer)("collectYeetMonitorFailedJobs", (it) => {
       expect(plan.decisions[0]?.status).toBe("awaiting-run");
       expect(plan.budget).toStrictEqual(emptyYeetMonitorRerunBudget);
     }).pipe(
+      provideLegacyGh,
       provideSpawner(
         monitorSpawner({
           jobLog: { exitCode: 0, output: ts2589FlakeLog },
@@ -695,6 +703,7 @@ it.layer(BunCrypto.layer)("collectYeetMonitorFailedJobs", (it) => {
       const plan = planYeetMonitorReruns(emptyYeetMonitorRerunBudget, "abc123", jobs);
       expect(plan.decisions[0]?.status).toBe("needs-code-fix");
     }).pipe(
+      provideLegacyGh,
       provideSpawner(
         monitorSpawner({
           jobLog: { exitCode: 1, output: "gh: log expired" },
@@ -811,7 +820,7 @@ const jobLogFallbackSpawner = ScriptedSpawner.make((command, args) => {
   if (Str.includes("run list")(line)) {
     return served(0, runListJson([{ conclusion: null, databaseId: 7, headSha: "abc123", status: "in_progress" }]));
   }
-  if (Str.includes("run view 7")(line)) {
+  if (Str.includes("actions/runs/7/jobs")(line)) {
     return served(
       0,
       runJobsJson(
@@ -879,7 +888,7 @@ it.layer(jobLogFallbackSpawnerLayer, { timeout: "30 seconds" })("per-job log end
         ]
       );
       expect(A.filter(spawnLines(jobLogFallbackSpawner), readsUnreachableEndpoint)).toStrictEqual([]);
-    })
+    }).pipe(provideLegacyGh)
   );
 });
 
@@ -901,23 +910,23 @@ describe("applyYeetMonitorJobDecision", () => {
   it.layer(BunCrypto.layer)((it) => {
     it.effect("keeps the allowance spent when GitHub rejects the rerun", () =>
       Effect.gen(function* () {
-        const result = yield* applyYeetMonitorJobDecision(monitorContext, rerunDecision());
+        const result = yield* applyYeetMonitorJobDecision(rerunDecision());
 
         expect(result).toBeUndefined();
         const lines = A.map(yield* TestConsole.logLines, String);
         expect(A.some(lines, (line) => Str.includes("allowance spent")(line))).toBe(true);
         expect(A.some(lines, (line) => Str.includes("unbounded retry loop")(line))).toBe(true);
-      }).pipe(provideSpawner(spawner(1)))
+      }).pipe(provideLegacyGh, provideSpawner(spawner(1)))
     );
   });
 
   it.layer(BunCrypto.layer)((it) => {
     it.effect("completes without a refund when the rerun is accepted", () =>
       Effect.gen(function* () {
-        const result = yield* applyYeetMonitorJobDecision(monitorContext, rerunDecision());
+        const result = yield* applyYeetMonitorJobDecision(rerunDecision());
 
         expect(result).toBeUndefined();
-      }).pipe(provideSpawner(spawner(0)))
+      }).pipe(provideLegacyGh, provideSpawner(spawner(0)))
     );
   });
 
@@ -933,13 +942,13 @@ describe("applyYeetMonitorJobDecision", () => {
         const plan = planYeetMonitorReruns(emptyYeetMonitorRerunBudget, "abc123", [
           YeetMonitorFailedJob.make({ databaseId: 991, logPending: true, name: "Check" }),
         ]);
-        const result = yield* applyYeetMonitorJobDecision(monitorContext, plan.decisions[0]!);
+        const result = yield* applyYeetMonitorJobDecision(plan.decisions[0]!);
 
         expect(result).toBeUndefined();
         const lines = A.map(yield* TestConsole.logLines, String);
         expect(A.some(lines, (line) => Str.includes("reclassifying next poll")(line))).toBe(true);
         expect(spawner.spawns).toEqual([]);
-      }).pipe(provideSpawner(spawner));
+      }).pipe(provideLegacyGh, provideSpawner(spawner));
     });
   });
 });

@@ -67,6 +67,7 @@ import {
 } from "./AttemptJournal.ts";
 import { PrCloseoutOptions, runPrCloseout, writePrCloseoutReport } from "./Closeout.ts";
 import { printYeetEconomicsCloseoutSummary, YeetEconomicsSource, YeetReviewLaneSource } from "./Economics.ts";
+import { provideYeetGhLogin } from "./GhOps.ts";
 import {
   collectStagedPublishPaths,
   collectUnstagedTrackedPaths,
@@ -97,7 +98,7 @@ import {
   renderYeetCheckRegistrationExhausted,
   YEET_CHECK_REGISTRATION_BACKOFF,
 } from "./MonitorChecks.ts";
-import { replayYeetMonitorComments, runYeetPullRequestCommentMonitor } from "./MonitorComments.ts";
+import { replayYeetMonitorCommentsAsGhLogin, runYeetPullRequestCommentMonitor } from "./MonitorComments.ts";
 import { YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS } from "./MonitorPolicy.ts";
 import {
   buildYeetRunPlanWithMode,
@@ -129,7 +130,7 @@ import {
   retireFullProofLockOrObserveAtPath,
   writeVerifiedState,
 } from "./ProofState.ts";
-import { recordMonitoredPrSession } from "./ProvenanceFooter.ts";
+import { recordMonitoredPrSessionAsGhLogin } from "./ProvenanceFooter.ts";
 import {
   collectPublishIntent,
   enforceBaseFreshness,
@@ -1056,18 +1057,23 @@ const finishPublishWithPullRequest = Effect.fn("Yeet.finishPublishWithPullReques
   if (!options.pr) {
     return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
   }
-  const pullRequest = yield* (dependencies.ensurePullRequest ?? ensureRequestedPullRequest)(
-    plan.context,
-    plan.steps,
-    recorder,
-    yield* validateRequiredMessage(options)
-  );
-  yield* applyHeavyAdmissionLabel(
-    plan.context,
-    recorder,
-    A.findFirst(plan.steps, (step) => step.id === PR_HEAVY_ADMISSION_LABEL_STEP_ID),
-    pullRequest
-  );
+  const message = yield* validateRequiredMessage(options);
+  // One gh login for the pull request create (or reuse), its provenance stamp and its label.
+  const pullRequest = yield* Effect.gen(function* () {
+    const ensured = yield* (dependencies.ensurePullRequest ?? ensureRequestedPullRequest)(
+      plan.context,
+      plan.steps,
+      recorder,
+      message
+    );
+    yield* applyHeavyAdmissionLabel(
+      plan.context,
+      recorder,
+      A.findFirst(plan.steps, (step) => step.id === PR_HEAVY_ADMISSION_LABEL_STEP_ID),
+      ensured
+    );
+    return ensured;
+  }).pipe(provideYeetGhLogin(plan.context.repoRoot));
   const submitSteps = A.filter(monitorSteps, (step) => step.id === MONITOR_READY_SUBMIT_STEP_ID);
   if (A.isReadonlyArrayEmpty(submitSteps)) {
     return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
@@ -1736,7 +1742,7 @@ const runMonitorPhase = Effect.fn("Yeet.runMonitorPhase")(function* (
       onSuccess: (pullRequest) => pullRequest.number,
     })
   );
-  yield* recordMonitoredPrSession(context, pullRequestNumber);
+  yield* recordMonitoredPrSessionAsGhLogin(context, pullRequestNumber);
   yield* Effect.raceFirst(
     runMonitorCheckWatch(context, checkSteps, recorder, failureMessage),
     runYeetPullRequestCommentMonitor(context, pullRequestNumber)
@@ -1806,7 +1812,7 @@ const runStatusMode = Effect.fn("Yeet.runStatusMode")(function* (
   // under `--json`, where a comment printed to stdout would corrupt the
   // document the caller is parsing.
   if (!options.json && snapshot.remote.number !== undefined) {
-    yield* replayYeetMonitorComments(context, snapshot.remote.number);
+    yield* replayYeetMonitorCommentsAsGhLogin(context, snapshot.remote.number);
   }
   if (options.json) {
     yield* printCommandJson(snapshot).pipe(Effect.mapError(YeetCommandError.new("Failed to print yeet status JSON.")));
@@ -1892,7 +1898,7 @@ const runCloseoutMode = Effect.fn("Yeet.runCloseoutMode")(function* (
   );
   // The closeout is the read-first surface an agent runs after a gap, so it is
   // where a comment posted while nothing was attached has to surface.
-  yield* replayYeetMonitorComments(context, report.prNumber);
+  yield* replayYeetMonitorCommentsAsGhLogin(context, report.prNumber);
   if (options.summary) {
     yield* printOperatorStatusSummary(context, true);
   }
