@@ -1698,6 +1698,51 @@ never a captured substring or raw cause. Hints remain untrusted observations;
 exit status and truncation still decide failure, and no qualification gate is
 relaxed. Test private-prefix/suffix and unknown-output controls before reuse.
 
+### Preserve bounded progress when a supervisor times out, 2026-11-02
+
+The next ordinary signed comparison reached its twenty-minute execution limit
+after 1,221.589 seconds without a report or an exposed phase. Completed capture
+alone cannot explain an interrupted child. Reuse the existing streaming fold
+and bounded accumulator; retain only complete fixed phase lines, outside native
+task intervals. Preserve the failed ordinary receipt and the original deadline.
+Do not repeat an unchanged expensive matrix or promote instrumented diagnostics
+to qualification.
+
+The first focused replay passed 31 of 32 runner cases; its overflow expectation
+used the wrong existing error text. Correct the assertion to the capture-bound
+contract. Two real-child cases initially provided their platform layer inside
+the test body, triggering strictEffectProvide; move that layer to their isolated
+test group. An introduced runner callback exceeded the cognitive limit by one;
+use the existing Effect Boolean helper. The subsequent 60-case replay, package
+quick lint/type check and scoped complexity check all pass. Retain the failed
+receipts; no floor, rule, timeout or production setting was changed.
+
+
+### Separate selected-task speed from the qualification command, 2026-11-02
+
+The ordinary stable matrix completed in 1,113.197 seconds. Its 73 recorded
+selected-task intervals occupy 37.962 seconds of wall time after overlap is
+unioned. Baseline selected fresh runs took 610–746 ms, while their signed
+remote replays took 0–1 ms. The remaining command time includes prerequisites,
+process/mount setup, hashing and controls; it is not measured agent idle time or
+a CI saving. Preserve this distinction when prioritizing broader adoption and
+consume the CI-economics owner's whole-command baseline. Do not extrapolate the
+near-zero selected replay interval into a whole-workflow speedup.
+
+
+### Attribute a toolchain fingerprint false positive before publication, 2026-11-02
+
+The first evidence commit was refused by the generic API-key scanner on the
+`runtimeKeyDigest` fields. Source assigns this fingerprint from the sandbox
+runtime identity toolchain. A reconstruction assertion rejected an incorrect
+assumption that it equals the separate host toolchain digest, before changing
+the reports. Preserve both values. The public view labels the sandbox fingerprint
+`runtimeToolchainSha256` and records its native-field mapping; reconstruct and
+compare the complete decoded private receipt. The original reports remain
+unchanged. No scanner rule, exception or proof requirement is changed, and the
+public view cannot substitute for a native validator input. Retain the failed
+publication-hook receipt and the rejected projection attempt.
+- 2026-11-02: Two current hosted cache branches failed inherited `yeet-merged-preview.test.ts:285` because separately minted synthetic commits were compared by SHA. Git commit metadata includes time, so crossing a clock second changes identity without changing the proved merge tree. A deterministic identity-only metadata change reproduces the failure; the repaired test verifies tree, parents, detached checkout and removal of a stale preview sentinel. Runtime code and proof gates are unchanged.
 The subsequent ordinary stable attempt, using the published diagnostic parent
 and unchanged task/worker fixtures, ended at the existing twenty-minute limit
 without an observation. Its fixed error was `Signed pilot comparison exceeded
@@ -1859,6 +1904,46 @@ projection. Review caught the omitted regeneration before current-head validatio
 passes. Both configuration files remain a projection, without a cache qualification
 or runtime activation. Keep the generated profile in the same config-edit wave.
 
+### 2026-11-02 — generated signed worker omitted the Git service
+
+The ordinary current-source `beep cache pilot-signed` stopped during setup with
+`Service not found`. The accepted worktree refactor in PR #2593 makes
+`resolveWorktreeContext` require `@beep/git`; the generated private worker still
+provided only platform, crypto and filesystem utility services. Add the existing
+Git layer at that entrypoint. A real generated Bun child must perform a read-only
+repository query before reaching a deliberate private refusal; the control fails
+with the missing-service error before the repair. This would have caught the
+string-generated entrypoint dependency drift before a full qualification run.
+Retain the failed ordinary receipt and repeat the original full matrix without
+changing its limits, workload, isolation or acceptance conditions.
+
+
+### 2026-11-02 — generated-worker regression depended on the working directory
+
+The hosted Unit shard runs from the CLI workspace, exposing the new startup
+control's assumption that `process.cwd()` was the repository root. Reuse the
+existing source-relative `repoRoot` effect and resolve it canonically. The full
+33-test supervisor replay passes from the hosted working directory. Hoist the
+string encoder as required by the root policy scanner. The ordinary current-source
+comparison now passes startup but still fails its existing signed mutation seed
+verdict guard. A bounded diagnostic retains only matched source literals; it is
+not ordinary comparison or qualification proof. Keep that guard and failed receipts.
+
+
+### 2026-11-02 — the dependency seed assumed an obsolete local verdict
+
+The ordinary current-source comparison failed its signed mutation seed guard.
+Accepted #2526 had moved deprecated-import analysis to a root task, while the
+package-lint fixture and validator still expected its import to fail locally.
+Review the exact task ownership, update the independent case expectations and
+retain every invalidation/replay guard. The added control fails before repair;
+68 focused tests pass after it. Require new ordinary full-matrix observations.
+
+A separate conflict triage initially compared a head to the PR's older base
+snapshot rather than the live branch ref. Correct that attribution, fetch the
+live main ref and resolve its actual generated-inventory conflicts. A clean
+merge against the old snapshot is not current merge readiness; the primary
+merge hold stays in force.
 ### 2026-11-02 — hosted isolation census and generated quality closure
 
 Hosted unit shard 2 classified `typeof globalThis.fetch =>` in the new pure
@@ -1895,7 +1980,18 @@ scanner on touched test files: package lint alone does not include that rule.
 
 - 2026-11-02: The accepted party-domain expansion added twelve executable nodes without recording its cache baseline. Merging main produced a baseline conflict and eight expansion blockers plus root policy drift. A generator-integrated configuration review would prevent this; the touched baseline is reconciled once through the named CAS review, preserving qualification bytes.
 
+- 2026-11-02: New-file identity, rather than the numeric tier, kept the private storage module red after its first coverage repair. The actual hosted reporter supplies the reviewable row. Broad package regeneration would move unrelated floors; a narrow schema-encoded pin with before/after equivalence preserves them. A private helper's wrong record adapter was caught before commit, restored from the exact backup, and replaced with a pre-write equivalence guard. Incompatible instrumentation unions and a refused Labs collector replay are retained as diagnostics, never passing proof.
 
+### 2026-11-02 — process double retained a root-policy verdict
+
+PR #2569 job 125603695913 failed four orchestration cases because the process
+double still rejected a deprecated dependency import after the native package
+lint correction established that this verdict belongs to root policy. A local
+Node 24 replay reproduced the same four failures. Model the package verdict in
+the double, retain dependency-byte/hash invalidation, and assert the successful
+seed and changed key explicitly. A process-boundary replay alongside the native
+correction would have caught the mismatch before the first push. Preserve the
+failed hosted/local receipts; this fixture repair grants no qualification.
 ### 2026-11-02 — source bindings after accepted-main integration
 
 PR #2603 review found that the accepted producer test-kit exports changed the
@@ -1910,3 +2006,14 @@ or production acceptance.
 ### Generated inventory conflict cost, 2026-11-02
 
 Resolving the independent accepted-main inventory changes required the canonical `bun --no-env-file run beep quality jsdoc-inventory` writer. The sibling phase-progress merge took 515.916 seconds to regenerate the pair across 185 packages; its open totals remained 15 packages, 94 exports and 115 modules. This was a concurrent workstation observation, not an isolated benchmark or evidence of cache savings. A source-scoped canonical regeneration path that retains the complete inventory integrity checks would avoid repeating this full census for each small merge. The generated files were retained; no check, finding or acceptance requirement was waived.
+
+### 2026-11-02 — committed inventory after a base-conflict repair
+
+PR #2569 review found that merge `943d927b` retained the accepted-main JSDoc
+inventory and omitted this branch's two `CacheSignedPilotPhase` export rows.
+Fresh CI inventory generation does not update the committed standards pair.
+Regenerate both files with the canonical inventory writer and preserve the
+existing findings and baseline floors. Check the generated export-set delta
+when resolving this conflict; accepting main's snapshot alone is insufficient
+when a branch adds exports. Local verify, publish and test runs remain skipped
+under the operator's direct-push instruction.

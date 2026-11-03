@@ -42,9 +42,6 @@ jobs:
 
       - name: Setup monorepo CI
         uses: ./.github/actions/setup-monorepo-ci
-        with:
-          cache-turbo: "false"
-          cache-write: "false"
 
       # The reserved-slug guard test reads the committed route tree; regenerate
       # it first and fail if the commit is stale, so the deployed routes are the

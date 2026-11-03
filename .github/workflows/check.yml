@@ -37,9 +37,6 @@ jobs:
           persist-credentials: false
       - name: Setup monorepo CI
         uses: ./.github/actions/setup-monorepo-ci
-        with:
-          cache-turbo: "false"
-          cache-write: "false"
       - name: Replace PR size label
         env:
           GH_TOKEN: ${{ github.token }}
@@ -85,8 +82,6 @@ jobs:
       - name: Setup monorepo CI
         uses: ./.github/actions/setup-monorepo-ci
         with:
-          cache-turbo: "false"
-          cache-write: "false"
           free-disk: "false"
 
       - name: Decide heavy admission
@@ -161,7 +156,6 @@ jobs:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: ${{ matrix.timeout_minutes }}
-    environment: ${{ github.event_name == 'push' && matrix.uses_turbo == 'true' && 'turbo-cache-write' || null }}
     permissions:
       contents: read
     strategy:
@@ -172,12 +166,10 @@ jobs:
             name: Repo Sanity
             runner: ubuntu-24.04
             timeout_minutes: 30
-            uses_turbo: "false"
           - id: ecosystem
             name: Ecosystem Contracts
             runner: ubuntu-24.04
             timeout_minutes: 30
-            uses_turbo: "false"
           # Strict @shadcn/lint design-system lane (.oxlintrc.shadcn.json,
           # docs/runbooks/design-system-lint.md). Visible and non-required
           # until a branch-ruleset action promotes it.
@@ -185,20 +177,10 @@ jobs:
             name: Shadcn Lint
             runner: ubuntu-24.04
             timeout_minutes: 20
-            uses_turbo: "false"
           - id: codegen
             name: Codegen Drift
             runner: ubuntu-24.04
             timeout_minutes: 30
-            uses_turbo: "false"
-          # lab-apps-lifecycle P2 (ratified row 10): visible, permanently
-          # NON-required labs proof lane. Never add "Labs" to the required
-          # ruleset (10240248).
-          - id: labs
-            name: Labs
-            runner: ubuntu-24.04
-            timeout_minutes: 40
-            uses_turbo: "true"
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -220,7 +202,14 @@ jobs:
           set -euo pipefail
           should_run=true
           eval "$(scripts/ci-change-profile.sh "$BEEP_COVERAGE_BASE_SHA")"
-          if [[ "$goals_only" == "true" ]]; then
+          # Docs-only diffs (Heavy admission's path rule) give these lanes
+          # nothing to prove. Repo Sanity validates `.changeset/*.md`, which that
+          # rule counts as documentation, so only packet prose suppresses it.
+          skip_profile="$docs_only"
+          if [[ "${{ matrix.id }}" == "repo-sanity" ]]; then
+            skip_profile="$goals_only"
+          fi
+          if [[ "$skip_profile" == "true" ]]; then
             should_run=false
           fi
           if [[ "${{ matrix.id }}" == "codegen" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
@@ -234,18 +223,15 @@ jobs:
               should_run=false
             fi
           fi
-
-          # Labs build/check retain their direct-path gate. Coverage selection
-          # still runs for transitive lab dependents and emits an empty manifest
-          # when no lab test owners are selected.
-          labs_checks=true
-          if [[ "${{ matrix.id }}" == "labs" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+          # Ecosystem Contracts type-tests and bundle-probes the family against
+          # effect and drizzle-orm only (src imports no workspace package), so
+          # its inputs are the family, the resolved toolchain and the lane body.
+          if [[ "${{ matrix.id }}" == "ecosystem" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
             changed_files="$(git diff --name-only "origin/${GITHUB_BASE_REF:-main}...HEAD")"
-            if ! grep -Eq '(^apps/labs/|^\.github/workflows/check\.yml$|^(bun\.lock|package\.json|turbo\.json)$)' <<< "$changed_files"; then
-              labs_checks=false
+            if ! grep -Eq '(^packages/ecosystem/|^packages/tooling/tool/cli/src/commands/Ci/CiLane\.ts$|^\.github/workflows/check\.yml$|^(package\.json|bun\.lock|tsconfig\.base\.json|\.bun-version)$)' <<< "$changed_files"; then
+              should_run=false
             fi
           fi
-          echo "labs_checks=$labs_checks" >> "$GITHUB_OUTPUT"
 
           echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
 
@@ -253,23 +239,9 @@ jobs:
         if: steps.lane-gate.outputs.should_run == 'true'
         uses: ./.github/actions/setup-monorepo-ci
         with:
-          node-version: ${{ matrix.id == 'labs' && '22.23.4' || '' }}
-          cache-turbo: ${{ matrix.uses_turbo }}
-          cache-write: "false"
-          turbo-cache-key-suffix: -${{ matrix.id }}
           free-disk: "true"
           free-disk-min-gib: "64"
-          turbo-remote-cache: ${{ matrix.uses_turbo }}
           app-secrets: "true"
-          turbo-api: ${{ vars.TURBO_API }}
-          turbo-team: ${{ vars.TURBO_TEAM }}
-          turbo-token: ${{ github.event_name == 'push' && matrix.uses_turbo == 'true' && secrets.TURBO_TOKEN || '' }}
-          turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
-          r2-enabled: ${{ vars.TURBO_R2_ENABLED }}
-          r2-endpoint: ${{ vars.TURBO_R2_ENDPOINT }}
-          r2-bucket: ${{ vars.TURBO_R2_BUCKET }}
-          r2-access-key-id: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_ACCESS_KEY_ID || (github.event_name != 'push' && secrets.TURBO_R2_READ_ACCESS_KEY_ID || '') }}
-          r2-secret-access-key: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_SECRET_ACCESS_KEY || (github.event_name != 'push' && secrets.TURBO_R2_READ_SECRET_ACCESS_KEY || '') }}
           database-url: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
           database-url-unpooled: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
           email-resend-api-key: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
@@ -321,14 +293,6 @@ jobs:
             return "$status"
           }
 
-          shape_args=(--base "$BEEP_COVERAGE_BASE_SHA")
-
-          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            shape_args+=(--affected)
-          fi
-
-          shape_args+=(--summarize)
-
           # Only the ids declared in this job's matrix have arms; the heavy
           # lanes (check, test-integration, lint-policy) dispatch
           # from heavy.yml.
@@ -346,29 +310,7 @@ jobs:
                 run_lane ci lane repo-sanity
               fi
               ;;
-            labs)
-              labs_args=()
-              if [[ "${{ steps.lane-gate.outputs.labs_checks }}" != "true" ]]; then
-                labs_args+=(--coverage-only)
-              fi
-              run_lane ci lane labs --coverage-output .beep/ci-coverage/labs "${labs_args[@]}" "${shape_args[@]}"
-              ;;
           esac
-
-      - name: Upload Labs coverage evidence
-        if: matrix.id == 'labs' && steps.lane-gate.outputs.should_run == 'true' && always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: unit-coverage-${{ github.run_id }}-${{ github.run_attempt }}-labs
-          path: .beep/ci-coverage/labs/
-          include-hidden-files: true
-          retention-days: 7
-          if-no-files-found: error
-
-      - name: Append Turbo summary
-        if: matrix.uses_turbo == 'true' && steps.lane-gate.outputs.should_run == 'true' && always()
-        run: |
-          bun run beep ci append-turbo-summary
 
       - name: Upload trusted Turbo summaries
         if: github.event_name == 'push' && hashFiles('.turbo/runs/*.json') != ''
@@ -378,14 +320,6 @@ jobs:
           path: .turbo/runs/*.json
           retention-days: 7
           if-no-files-found: warn
-
-      - name: Save post-lane Turbo fallback
-        if: github.event_name == 'push' && matrix.uses_turbo == 'true' && steps.lane-gate.outputs.should_run == 'true' && success()
-        continue-on-error: true
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: .turbo/cache
-          key: turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}-${{ matrix.id }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}-${{ github.sha }}
 
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'
@@ -397,6 +331,139 @@ jobs:
           if ! bun run beep runners bake --check --manifest infra/ci-runners/runner-image.json; then
             echo "::warning::Runner image provenance is stale or invalid. See docs/runbooks/aws-cost-operations.md before the next attended image refresh."
           fi
+
+  # lab-apps-lifecycle P2 (ratified row 10): visible, permanently NON-required
+  # labs proof lane. Never add "Labs" to the required ruleset (10240248). It is
+  # a job of its own, not a verify matrix leg, because Coverage Regression
+  # consumes its artifact and `needs` can name a job but never one matrix leg.
+  labs:
+    name: Labs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Fetch pull request base
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
+
+      - name: Determine lane execution
+        id: lane-gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          should_run=true
+          eval "$(scripts/ci-change-profile.sh "$BEEP_COVERAGE_BASE_SHA")"
+          if [[ "$docs_only" == "true" ]]; then
+            should_run=false
+          fi
+
+          # Labs build/check retain their direct-path gate. Coverage selection
+          # still runs for transitive lab dependents and emits an empty manifest
+          # when no lab test owners are selected.
+          labs_checks=true
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            changed_files="$(git diff --name-only "origin/${GITHUB_BASE_REF:-main}...HEAD")"
+            if ! grep -Eq '(^apps/labs/|^\.github/workflows/check\.yml$|^(bun\.lock|package\.json|turbo\.json)$)' <<< "$changed_files"; then
+              labs_checks=false
+            fi
+          fi
+          echo "labs_checks=$labs_checks" >> "$GITHUB_OUTPUT"
+
+          echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
+
+      - name: Setup monorepo CI
+        if: steps.lane-gate.outputs.should_run == 'true'
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          node-version: "22.23.4"
+          free-disk: "true"
+          free-disk-min-gib: "64"
+          turbo-remote-cache: "true"
+          app-secrets: "true"
+          turbo-api: ${{ vars.TURBO_API }}
+          turbo-team: ${{ vars.TURBO_TEAM }}
+          turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
+          turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
+          r2-enabled: ${{ vars.TURBO_R2_ENABLED }}
+          r2-endpoint: ${{ vars.TURBO_R2_ENDPOINT }}
+          r2-bucket: ${{ vars.TURBO_R2_BUCKET }}
+          r2-access-key-id: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_ACCESS_KEY_ID || (github.event_name != 'push' && secrets.TURBO_R2_READ_ACCESS_KEY_ID || '') }}
+          r2-secret-access-key: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_SECRET_ACCESS_KEY || (github.event_name != 'push' && secrets.TURBO_R2_READ_SECRET_ACCESS_KEY || '') }}
+          database-url: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
+          database-url-unpooled: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
+          email-resend-api-key: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
+          auth-secret: ${{ github.event_name == 'push' && secrets.AUTH_SECRET || '' }}
+          better-auth-secret: ${{ github.event_name == 'push' && secrets.BETTER_AUTH_SECRET || '' }}
+          better-auth-url: ${{ github.event_name == 'push' && secrets.BETTER_AUTH_URL || '' }}
+          security-trusted-origins: ${{ github.event_name == 'push' && secrets.SECURITY_TRUSTED_ORIGINS || '' }}
+          liveblocks-secret-key: ${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}
+
+      - name: Run Labs lane
+        if: steps.lane-gate.outputs.should_run == 'true'
+        run: |
+          set -euo pipefail
+          # Same process-group reaping as the verify matrix: orphaned lane
+          # grandchildren must not wedge the job after the lane exits.
+          run_lane() {
+            setsid bun run beep "$@" < /dev/null &
+            local pgid=$!
+            local status=0
+            wait "$pgid" || status=$?
+            kill -TERM -- "-$pgid" 2>/dev/null || true
+            sleep 2
+            kill -KILL -- "-$pgid" 2>/dev/null || true
+            return "$status"
+          }
+
+          shape_args=(--base "$BEEP_COVERAGE_BASE_SHA")
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            shape_args+=(--affected)
+          fi
+          shape_args+=(--summarize)
+
+          labs_args=()
+          if [[ "${{ steps.lane-gate.outputs.labs_checks }}" != "true" ]]; then
+            labs_args+=(--coverage-only)
+          fi
+          run_lane ci lane labs --coverage-output .beep/ci-coverage/labs "${labs_args[@]}" "${shape_args[@]}"
+
+      - name: Upload Labs coverage evidence
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: unit-coverage-${{ github.run_id }}-${{ github.run_attempt }}-labs
+          path: .beep/ci-coverage/labs/
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: Append Turbo summary
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        run: bun run beep ci append-turbo-summary
+
+      - name: Upload trusted Turbo summaries
+        if: github.event_name == 'push' && hashFiles('.turbo/runs/*.json') != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: turbo-summary-${{ github.job }}-${{ matrix.id || matrix.partition || 'single' }}
+          path: .turbo/runs/*.json
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Skip lane
+        if: steps.lane-gate.outputs.should_run != 'true'
+        run: echo "Skipping Labs for this change set."
 
       - name: Stop R2 cache adapter
         if: always()
@@ -438,7 +505,7 @@ jobs:
           set -euo pipefail
           should_run=true
           eval "$(scripts/ci-change-profile.sh "origin/${GITHUB_BASE_REF:-main}")"
-          if [[ "$goals_only" == "true" ]]; then
+          if [[ "$docs_only" == "true" ]]; then
             should_run=false
           fi
           echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
@@ -447,9 +514,6 @@ jobs:
         if: steps.lane-gate.outputs.should_run == 'true'
         uses: ./.github/actions/setup-monorepo-ci
         with:
-          cache-turbo: "true"
-          cache-write: "false"
-          turbo-cache-key-suffix: -${{ matrix.partition }}
           free-disk: "true"
           free-disk-min-gib: "64"
           turbo-remote-cache: "true"
@@ -507,14 +571,6 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
 
-      - name: Save post-lane Turbo fallback
-        if: github.event_name == 'push' && steps.lane-gate.outputs.should_run == 'true' && success()
-        continue-on-error: true
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: .turbo/cache
-          key: turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}-${{ matrix.partition }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}-${{ github.sha }}
-
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'
         run: echo "Skipping Lint (${{ matrix.partition }}) for this change set."
@@ -531,7 +587,7 @@ jobs:
     name: Lint
     timeout-minutes: 5
     needs: [lint-shard]
-    if: ${{ always() }}
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     steps:
       - name: Require every Lint shard
@@ -574,7 +630,7 @@ jobs:
           set -euo pipefail
           should_run=true
           eval "$(scripts/ci-change-profile.sh "$BEEP_COVERAGE_BASE_SHA")"
-          if [[ "$goals_only" == "true" ]]; then
+          if [[ "$docs_only" == "true" ]]; then
             should_run=false
           fi
           echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
@@ -584,9 +640,6 @@ jobs:
         uses: ./.github/actions/setup-monorepo-ci
         with:
           node-version: "22.23.4"
-          cache-turbo: "true"
-          cache-write: "false"
-          turbo-cache-key-suffix: -${{ matrix.partition }}
           native-pdf-tools: ${{ startsWith(matrix.partition, 'repo-cli') }}
           free-disk: "true"
           free-disk-min-gib: "64"
@@ -665,14 +718,6 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
 
-      - name: Save post-lane Turbo fallback
-        if: github.event_name == 'push' && steps.lane-gate.outputs.should_run == 'true' && success()
-        continue-on-error: true
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: .turbo/cache
-          key: turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}-${{ matrix.partition }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}-${{ github.sha }}
-
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'
         run: echo "Skipping Test Unit (${{ matrix.partition }}) for this change set."
@@ -689,7 +734,7 @@ jobs:
     name: Test Unit
     timeout-minutes: 5
     needs: [test-unit-shard]
-    if: ${{ always() }}
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     steps:
       - name: Require every Test Unit shard
@@ -705,8 +750,8 @@ jobs:
     # legacy producer. After main retires that producer this becomes the exact
     # existing coverage context, without a ruleset edit or duplicate check name.
     name: ${{ needs.admission.outputs.legacy_coverage == 'true' && 'Coverage Artifact Migration' || 'Heavy / Coverage Regression' }}
-    needs: [admission, test-unit, verify]
-    if: ${{ always() }}
+    needs: [admission, test-unit, labs]
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
@@ -739,21 +784,32 @@ jobs:
           [[ "$LEGACY_COVERAGE" == "true" || "$LEGACY_COVERAGE" == "false" ]]
           [[ "$UNIT_RESULT" == "success" ]]
           eval "$(scripts/ci-change-profile.sh "$BEEP_COVERAGE_BASE_SHA")"
-          echo "should_run=$([[ "$goals_only" == "true" ]] && echo false || echo true)" >> "$GITHUB_OUTPUT"
+          echo "should_run=$([[ "$docs_only" == "true" ]] && echo false || echo true)" >> "$GITHUB_OUTPUT"
 
-      - name: Setup comparison toolchain
+      # The comparison only reads artifacts through the repo CLI: no Turbo,
+      # cache, secrets or lifecycle scripts. Node stays pinned to the
+      # producers' runtime because coverage discovery spawns a package's own
+      # test runtime.
+      - name: Setup Bun for coverage comparison
         if: steps.lane-gate.outputs.should_run == 'true'
-        uses: ./.github/actions/setup-monorepo-ci
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: .bun-version
+          no-cache: "true"
+
+      - name: Setup Node.js for coverage comparison
+        if: steps.lane-gate.outputs.should_run == 'true'
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "22.23.4"
-          cache-turbo: "false"
-          cache-write: "false"
-          free-disk: "true"
-          free-disk-min-gib: "64"
 
-      # An unrelated verification matrix failure is advisory here, but the
-      # latest Labs execution must succeed even when a partial rerun leaves an
-      # older successful artifact available.
+      - name: Install dependencies for coverage comparison
+        if: steps.lane-gate.outputs.should_run == 'true'
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      # The job waits for the Labs job, but its result is not trusted alone:
+      # the latest Labs execution must succeed even when a partial rerun leaves
+      # an older successful artifact available.
       - name: Authenticate latest Labs execution
         id: labs-producer
         if: steps.lane-gate.outputs.should_run == 'true'
@@ -903,25 +959,23 @@ jobs:
       # The IPC proof needs rustc on every run: build-sidecar.ts and
       # sidecar-ipc-stdio.test.ts read the host target triple from `rustc -vV`,
       # and the Rust that happens to ship on the hosted image is not a
-      # contract. The toolchain is therefore provisioned on should_run alone
-      # (rust-cache keeps it to seconds); only the apt packages and the cargo
-      # steps wait on the crate gate.
+      # contract. The toolchain is therefore provisioned on should_run alone;
+      # the apt packages, the cargo steps and the build cache they use wait on
+      # the crate gate.
       - name: Setup Rust toolchain
         if: steps.lane-gate.outputs.should_run == 'true'
         uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
         with:
           toolchain: stable
           components: clippy
-          # Caches ~/.cargo and src-tauri/target keyed on Cargo.lock.
-          cache: true
+          # Restores and saves ~/.cargo and src-tauri/target (~500 MB, keyed on
+          # Cargo.lock) only when the cargo steps run; `rustc -vV` needs none.
+          cache: ${{ steps.lane-gate.outputs.rust_should_run }}
           cache-workspaces: apps/professional-desktop/src-tauri
 
       - name: Setup monorepo CI
         if: steps.lane-gate.outputs.should_run == 'true'
         uses: ./.github/actions/setup-monorepo-ci
-        with:
-          cache-turbo: "false"
-          cache-write: "false"
 
       # Builds the Bun sidecar first; tauri-build's build.rs requires the
       # externalBin binary to exist, so the cargo steps run after this proof.
@@ -970,11 +1024,22 @@ jobs:
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
+      - name: Determine lane execution
+        id: lane-gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          should_run=true
+          eval "$(scripts/ci-change-profile.sh "origin/${GITHUB_BASE_REF:-main}")"
+          if [[ "$docs_only" == "true" ]]; then
+            should_run=false
+          fi
+          echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
+
       - name: Setup monorepo CI
+        if: steps.lane-gate.outputs.should_run == 'true'
         uses: ./.github/actions/setup-monorepo-ci
         with:
-          cache-turbo: "true"
-          cache-write: "false"
           native-pdf-tools: "true"
           turbo-remote-cache: "true"
           app-secrets: "true"
@@ -997,6 +1062,7 @@ jobs:
           liveblocks-secret-key: ${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}
 
       - name: Run property laws lane
+        if: steps.lane-gate.outputs.should_run == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -1011,7 +1077,7 @@ jobs:
           bun run beep ci lane property "${shape_args[@]}"
 
       - name: Append Turbo summary
-        if: always()
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
         run: bun run beep ci append-turbo-summary
 
       - name: Upload trusted Turbo summaries
@@ -1022,6 +1088,10 @@ jobs:
           path: .turbo/runs/*.json
           retention-days: 7
           if-no-files-found: warn
+
+      - name: Skip lane
+        if: steps.lane-gate.outputs.should_run != 'true'
+        run: echo "Skipping Property Laws for this change set."
 
       - name: Stop R2 cache adapter
         if: always()
@@ -1067,14 +1137,32 @@ jobs:
           echo "base_ref=$base_ref" >> "$GITHUB_OUTPUT"
           echo "base_fetch_status=$fetch_status" >> "$GITHUB_OUTPUT"
 
+      # Fallow reads code only, so a docs-only diff skips the envelopes. A
+      # diff this depth-100 checkout cannot classify (failed base fetch, no
+      # merge base) keeps the full run.
+      - name: Determine lane execution
+        id: lane-gate
+        shell: bash
+        env:
+          BASE_FETCH_STATUS: ${{ steps.base.outputs.base_fetch_status }}
+        run: |
+          set -euo pipefail
+          should_run=true
+          if [[ "$BASE_FETCH_STATUS" == "0" ]]; then
+            eval "$(scripts/ci-change-profile.sh "origin/${GITHUB_BASE_REF:-main}" || true)"
+            if [[ "${docs_only:-false}" == "true" ]]; then
+              should_run=false
+            fi
+          fi
+          echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
+
       # This job only needs the monorepo toolchain plus Fallow, but the shared
       # setup can still exhaust the default runner image, so the composite
       # action clears the large preinstalled stacks before installing.
       - name: Setup monorepo CI
+        if: steps.lane-gate.outputs.should_run == 'true'
         uses: ./.github/actions/setup-monorepo-ci
         with:
-          cache-turbo: "false"
-          cache-write: "false"
           free-disk: "true"
           free-disk-min-gib: "64"
           turbo-remote-cache: "true"
@@ -1090,6 +1178,7 @@ jobs:
 
       - name: Run Fallow envelopes
         id: fallow
+        if: steps.lane-gate.outputs.should_run == 'true'
         shell: bash
         run: |
           # Lane body (blocking audit/dead-code/health, advisory sweep, status.md
@@ -1098,7 +1187,7 @@ jobs:
           bun run beep ci lane fallow --base "${{ steps.base.outputs.base_ref }}"
 
       - name: Validate Fallow envelopes
-        if: always()
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
         shell: bash
         run: |
           set -euo pipefail
@@ -1124,7 +1213,7 @@ jobs:
           done
 
       - name: Append Fallow summary
-        if: always()
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
         shell: bash
         run: |
           {
@@ -1139,13 +1228,17 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload Fallow envelopes
-        if: always()
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           retention-days: 7
           name: fallow-envelopes-${{ github.event_name }}-${{ github.run_attempt }}
           path: .beep/fallow/**
           if-no-files-found: error
+
+      - name: Skip lane
+        if: steps.lane-gate.outputs.should_run != 'true'
+        run: echo "Skipping Fallow Advisory Envelopes for this change set."
 
       - name: Stop R2 cache adapter
         if: always()
@@ -1169,14 +1262,32 @@ jobs:
           filter: blob:none
           persist-credentials: false
 
+      - name: Fetch pull request base
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
+
+      - name: Determine lane execution
+        id: lane-gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          should_run=true
+          eval "$(scripts/ci-change-profile.sh "origin/${GITHUB_BASE_REF:-main}")"
+          if [[ "$docs_only" == "true" ]]; then
+            should_run=false
+          fi
+          echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
+
       - name: Setup monorepo CI
+        if: steps.lane-gate.outputs.should_run == 'true'
         uses: ./.github/actions/setup-monorepo-ci
         with:
-          cache-turbo: "false"
-          cache-write: "false"
           use-node: "false"
 
       - name: Run JSDoc inventory ratchet
+        if: steps.lane-gate.outputs.should_run == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -1189,6 +1300,10 @@ jobs:
             echo "- command: \`bun run beep ci lane jsdoc-ratchet\` (inventory + ratchet)"
             echo "- total wall time: \`${total_seconds}s\`"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Skip lane
+        if: steps.lane-gate.outputs.should_run != 'true'
+        run: echo "Skipping JSDoc Ratchet for this change set."
 
   commitlint:
     name: Commitlint
@@ -1252,7 +1367,7 @@ jobs:
       # Fallback to the repo CLI if the tool-only path ever misbehaves:
       # replace the three steps below with
       #   - uses: ./.github/actions/setup-monorepo-ci
-      #     with: { cache-turbo: "false", cache-write: "false", use-node: "false" }
+      #     with: { use-node: "false" }
       #   - run: bun run beep ci lane commitlint --from <from_ref> --to <to_ref>
       #     (or `--last` when mode=last)
       - name: Setup Node.js
@@ -1503,27 +1618,57 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          fetch-depth: 0
+          filter: blob:none
           persist-credentials: false
 
+      - name: Fetch pull request base
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
+
+      # `nix flake check` and `nix develop` evaluate the flake alone (flake.nix
+      # reads no repository file), so a pull request proves them only when the
+      # flake, this workflow or the lane body changes. Every main push runs.
+      - name: Determine lane execution
+        id: lane-gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          should_run=true
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            changed_files="$(git diff --name-only "origin/${GITHUB_BASE_REF:-main}...HEAD")"
+            if ! grep -Eq '(^flake\.(nix|lock)$|^\.github/workflows/check\.yml$|^packages/tooling/tool/cli/src/commands/Ci/CiLane\.ts$)' <<< "$changed_files"; then
+              should_run=false
+            fi
+          fi
+          echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
+
       - name: Setup monorepo CI
+        if: steps.lane-gate.outputs.should_run == 'true'
         uses: ./.github/actions/setup-monorepo-ci
-        with:
-          cache-turbo: "false"
-          cache-write: "false"
 
       - name: Install Nix
+        if: steps.lane-gate.outputs.should_run == 'true'
         uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31
         with:
           nix_path: nixpkgs=channel:nixos-unstable
 
       - name: Setup Cachix (read-only)
+        if: steps.lane-gate.outputs.should_run == 'true'
         uses: cachix/cachix-action@38b082610b782e7e93e209c35fd730d399dee866 # v17
         with:
           name: beep-effect
         continue-on-error: true
 
       - name: Run Nix checks
+        if: steps.lane-gate.outputs.should_run == 'true'
         run: bun run beep ci lane nix
+
+      - name: Skip lane
+        if: steps.lane-gate.outputs.should_run != 'true'
+        run: echo "Skipping Nix Shell for this change set."
 
   sast:
     name: SAST
@@ -1545,11 +1690,16 @@ jobs:
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
-      - name: Setup monorepo CI
-        uses: ./.github/actions/setup-monorepo-ci
+      # The repo CLI only dispatches Docker Semgrep, so it needs Bun and a
+      # script-free install: no Node, lifecycle scripts, Turbo or secrets.
+      - name: Setup Bun for SAST dispatch
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          cache-turbo: "false"
-          cache-write: "false"
+          bun-version-file: .bun-version
+          no-cache: "true"
+
+      - name: Install dependencies for SAST dispatch
+        run: bun install --frozen-lockfile --ignore-scripts
 
       - name: Authenticate Docker Hub when configured
         shell: bash

@@ -1006,6 +1006,53 @@ the prior closure, never by overwriting a newer baseline or the ledger.
 - 2026-11-02: Resolve the accepted a88d baseline conflict using the canonical CAS writer and the [named configuration review](research/private-object-a88d-baseline-review-2026-11-02.md). Preserve main's party-domain expansion and all unrelated reviews, add only the owned storage policy input, and leave scope/profile/epoch/qualification unchanged. This is configuration provenance, not computation qualification or production activation. Reverse only with the corresponding owned input removal; never discard accepted package definitions.
 
 
+### Bounded signed-supervisor phase feedback, 2026-11-02
+
+The next ordinary comparison also reached its existing twenty-minute limit,
+without a completed observation or an exposed phase. Reuse the existing folded
+stdout runner and bounded accumulator to retain progress while the child is
+alive. Emit only eleven schema-owned literal markers at orchestration boundaries,
+outside selected native task intervals and paired dispatch. A timeout may name
+the last complete exact marker line only when stdout has not overflowed.
+Unknown, decorated, partial and truncated observations supply no phase hint;
+never quote a private substring or attach a raw cause.
+
+Keep the existing twenty-minute comparison and ten-minute upload bounds,
+successful-exit and capture-bound guards, report validation, actual selected-task
+overlap requirement, isolation and issuer policy. Markers are untrusted diagnostic
+observations: they grant no success, provenance, qualification or rollout
+authority. Reversal restores the previous capture call and removes markers;
+the existing failure gates and ordinary cache service remain unchanged.
+
+### Provide Git at the generated signed-worker entrypoint, 2026-11-02
+
+Consume the accepted worktree service boundary by providing the existing Git
+layer alongside filesystem utilities, using the same platform process layer.
+The isolated worker needs this service for its read-only worktree enumeration;
+the outer CLI's service context does not cross the process boundary. Prove the
+generated entrypoint in a real Bun child with a read-only repository query and
+an intentional private refusal. Keep that startup control separate from full
+matrix and qualification evidence. Reversal removes the entrypoint wiring and
+regression together; it does not authorize a fallback to an incomplete matrix.
+Admission, mounts, limits, task selection, issuer policy and rollout stay intact.
+
+
+### Align current package-lint seeds with task ownership, 2026-11-02
+
+The [source review](research/current-package-lint-seed-review-2026-11-02.md)
+binds this correction to accepted #2526: deprecated-import checking belongs to
+the root task, outside the four-task package-lint pilot. The dependency-source
+seed must succeed; the invalid-syntax seed must still fail. Keep strict
+case-derived expectations in both runners and the validator, fresh-only seed
+origin, changed hashes, same-backend misses, signed replay, source integrity,
+actual selected-task overlap and the original full matrix/bounds. A successful
+dependency seed must upload before the change, strengthening the stored-artifact
+invalidation control. Preserve old source-bound observations and excluded ledger
+rows; this is no qualification or production activation. Revert all three
+expectation sites and the current fixture together if reversing the repair.
+
+- 2026-11-02: Propose the [source-bound hosted identity](research/producer-object-coverage-identity-review-2026-11-02.md) for the newly introduced private storage file. Retain all previous coverage floors and safeguards, add real negative controls, and require primary review plus fresh CI. Use the canonical reporter's exact measured row, not an invented threshold or a broad baseline regeneration. Reversal removes only the newly added file identity.
+
 ### Independently approve the resolved main Heavy leaf, 2026-11-02
 
 - The admitted runner path executes the same-repository `heavy.yml@main`
@@ -1050,3 +1097,6 @@ the prior closure, never by overwriting a newer baseline or the ledger.
   ordinary R2 service change is included.
 - Reverse by reverting this collector change and retaining inspection refusal;
   preserve prior observations, private credentials and the existing cache.
+
+
+- 2026-11-02: Consume accepted #2632 without changing any accepted coverage baseline byte. Preserve its stronger storage-file row and both test sets; retain the earlier lower proposal as historical evidence in the [reconciliation](research/producer-object-coverage-identity-review-2026-11-02.md). This adds no floor exception or qualification authority. Reversal must retain the accepted main baseline.

@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "2fe59728708a3026a9d1b4037f6970d173f7ec6401ae7d32f94d6896f2f84ede",
+  "specSha256": "8417ce9c74b2588578ed90de5d18e417a71721a8ab8d82b21cabcc440bed031c",
   "acceptance": [
     {
       "id": "AC-01",
@@ -482,5 +482,28 @@
   "resolvedHeavyWorkflowApproval": "research/resolved-heavy-approval-checkpoint-2026-11-02.json",
   "priorSpecSha256Before9adaConflictResolution": "2f1e6e90d99265abd4362a54524ec18d574f5d96cd5ba1bc889eb7084aceb3b1",
   "priorSpecSha256Before1dd2ConflictResolution": "1acf203b579426293dc829a222777b00112a2dff2f327aaec20e3f5f13031783",
-  "acceptedMainSpecSha256At1dd2Integration": "2ce7cdef99c0e34d307601d6cd7286b70ef11daf85d770c72ae882d1669c3349"
+  "acceptedMainSpecSha256At1dd2Integration": "2ce7cdef99c0e34d307601d6cd7286b70ef11daf85d770c72ae882d1669c3349",
+  "priorSpecSha256BeforeAfeaIntegration": "bfd2194a791198f281edc78bbd628b801513cf8004cc436200cfbf416fc9d842",
+  "acceptedMainSpecSha256AtAfeaIntegration": "2fe59728708a3026a9d1b4037f6970d173f7ec6401ae7d32f94d6896f2f84ede",
+  "priorSpecSha256MergeHistory": [
+    {
+      "field": "priorSpecSha256Before1dd2ConflictResolution",
+      "recordedAtHead": "eae3212bed5d508b03086251e91e2117f85a4eb9",
+      "sha256": "4fb70ebb96714803c49b9aea25b1f0b80fc2bfb6faf95b901af229a2a486af03"
+    },
+    {
+      "field": "priorSpecSha256Before1dd2ConflictResolution",
+      "sha256": "7f5f6d99d4053eba6760eee05f21edc05b63b4f9a7342c4f4d3d5d1301b5bd0c",
+      "recordedAtHead": "97dfca278201269d3d6606750e90ed656060569e"
+    },
+    {
+      "field": "priorSpecSha256BeforeAfeaIntegration",
+      "recordedAtHead": "b5e0ee54072d5683121dafb7807f16cad37ad51e",
+      "sha256": "69cf3a2c1e53c9a41b34ead7420db9ca1e281dbb23e63ce6cd6ebe3ec32e8040"
+    }
+  ],
+  "priorSpecSha256BeforeCoverageIdentityReview": "2f1e6e90d99265abd4362a54524ec18d574f5d96cd5ba1bc889eb7084aceb3b1",
+  "priorSpecSha256Before71bcCoverageReconciliation": "6201731b74ad6586aae4cf46d2e3c792c9d73303a7b889fd89fb34fc2d33720c",
+  "priorSpecSha256Before0beIntegration": "7f974dfb420c11334379c39dbc8eb6c90e54e8d8ab575d64d9a2e4259202f367",
+  "acceptedMainSpecSha256At0beIntegration": "bb7a0efbaef84cbbe1ea4f1a3e48847b917a791ff2075237cf4c0a2fada42715"
 }
