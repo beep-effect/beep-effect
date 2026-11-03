@@ -1,4 +1,3 @@
-import * as S from "effect/Schema";
 /** Live PostgreSQL execution proofs for @beep/effect-drizzle round four. */
 
 import { makeNativeRepository, VersionConflictError } from "@beep/effect-drizzle";
@@ -20,6 +19,7 @@ import { identity } from "effect/Function";
 import { effect as effectLayer, merge, provideMerge, unwrap } from "effect/Layer";
 import { getOrThrow, getOrUndefined, none, some } from "effect/Option";
 import { hasProperty, isFunction } from "effect/Predicate";
+import * as S from "effect/Schema";
 import {
   Array as ArraySchema,
   decodeUnknownEffect,

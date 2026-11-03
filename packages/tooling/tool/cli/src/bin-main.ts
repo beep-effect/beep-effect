@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-
 /**
  * CLI entry point for the repo command suite.
  *

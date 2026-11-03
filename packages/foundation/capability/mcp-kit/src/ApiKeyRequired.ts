@@ -1,4 +1,3 @@
-import { identity } from "effect/Function";
 /**
  * The `api_key_required` envelope and its protocol translation.
  *
@@ -26,6 +25,7 @@ import { identity } from "effect/Function";
 
 import { $McpKitId } from "@beep/identity/packages";
 import { CallToolResult } from "effect/ai/McpSchema";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";

@@ -1,4 +1,3 @@
-import { identity } from "effect/Function";
 /**
  * Fixture proofs for the USPTO MCP proving host, mirroring
  * `packages/foundation/capability/mcp-kit/test/ApiKeyRequired.test.ts`'s
@@ -50,6 +49,7 @@ import * as McpServer from "effect/ai/McpServer";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
+import { identity } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";

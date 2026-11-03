@@ -1,4 +1,3 @@
-import { identity } from "effect/Function";
 /**
  * Test data loader for the official yaml-test-suite.
  *
@@ -9,6 +8,7 @@ import { identity } from "effect/Function";
  */
 
 import * as A from "effect/Array";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";

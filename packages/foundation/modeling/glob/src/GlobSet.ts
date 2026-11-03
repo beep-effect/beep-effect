@@ -1,4 +1,3 @@
-import { identity } from "effect/Function";
 /**
  * The GlobSet facade: multi-pattern include/exclude sets with glob-core's set
  * semantics, where a leading bang marks an exclusion filter applied after
@@ -21,6 +20,7 @@ import { identity } from "effect/Function";
 import { $GlobId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";

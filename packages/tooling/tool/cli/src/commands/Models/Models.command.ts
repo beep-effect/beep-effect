@@ -1,4 +1,3 @@
-import { identity } from "effect/Function";
 /**
  * `beep models` — check every routing surface against one operator manifest.
  *
@@ -22,6 +21,7 @@ import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as Match from "effect/Match";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";

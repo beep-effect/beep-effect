@@ -1,6 +1,4 @@
 #!/usr/bin/env bun
-import { identity } from "effect/Function";
-
 /**
  * Builds the practice plugin into `dist/`: a directory marketplace
  * (`dist/.claude-plugin/marketplace.json`) whose one plugin lives at
@@ -16,6 +14,7 @@ import * as BunServices from "@effect/platform-bun/BunServices";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";

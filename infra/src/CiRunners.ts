@@ -1,4 +1,3 @@
-import { identity } from "effect/Function";
 /**
  * Pulumi orchestration surface for the beep CI ephemeral runner fleet groundwork.
  *
@@ -58,6 +57,7 @@ import { A, Bool, O, Str } from "@beep/utils";
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { optionalPulumiConfigFields } from "./internal/PulumiConfigSchema.ts";

@@ -1,4 +1,3 @@
-import { identity } from "effect/Function";
 /**
  * Renders a resolved capture plan into the complete set of packet documents.
  *
@@ -20,6 +19,7 @@ import { escapeMarkdownText } from "@beep/md/Md.escape";
 import { A, O } from "@beep/utils";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";

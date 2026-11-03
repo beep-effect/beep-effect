@@ -1,4 +1,3 @@
-import { identity } from "effect/Function";
 /**
  * JSON edits for the policy fingerprint writer, laid out the way the
  * repository's Biome JSON formatter prints them.
@@ -12,6 +11,7 @@ import { Jsonc } from "@beep/jsonc/Jsonc";
 import { JsoncEdit } from "@beep/jsonc/JsoncEdit";
 import { JsoncModifier } from "@beep/jsonc/JsoncModifier";
 import { A, O, Str } from "@beep/utils";
+import { identity } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";

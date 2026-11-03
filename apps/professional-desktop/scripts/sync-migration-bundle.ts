@@ -1,4 +1,3 @@
-import { identity } from "effect/Function";
 /**
  * Syncs the Professional Desktop runtime migration bundle from the repo's
  * db-admin drizzle folder into the data-only generated module
@@ -14,6 +13,7 @@ import * as BunPath from "@effect/platform-bun/BunPath";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";

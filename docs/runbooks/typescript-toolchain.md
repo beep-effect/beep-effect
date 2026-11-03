@@ -68,35 +68,43 @@ compiler (3.7× faster at half the RSS) is in `goals/tsc-rs-gates`. Rules of the
   tsrs version; a stock `Version 7.1.0-beta (tsrs …)` means the patcher found no
   Effect build for that tsrs version. The `.bin/tsc` ↔ `.bin/tsgo` version
   equality test covers the Go binary; `EffectTsgoEffectFnPolicy.test.ts`
-  verifies that the tsrs identity matches both catalog pins, that an Effect-only
-  finding leaves tsrs at exit 0 (the standalone diagnostics lane gates Effect
-  rules), and that type errors still fail Check.
+  verifies that the tsrs identity matches both catalog pins, that both an Effect-only
+  finding and a TypeScript error fail tsrs.
 
 ### Updating tsrs and @effect/tsgo
 
-Both pins sit in syncpack's held-back group, so `bun run deps:update` leaves
-them alone and a bump is one reviewed PR. `@effect/tsgo` ships the Effect build
-of exactly one tsrs version per release (`node_modules/@effect/tsgo-<platform>/lib/upstream.json`,
-`tags.tsrs.latest` and `components.tsrs`), and `effect-tsgo patch --tsrs` only
-patches an installed `tsrs` of that version, so:
+`bun run deps:update` considers both catalog entries for their published npm
+`latest` versions. Syncpack's existing default `minimumReleaseAge` is 1440
+minutes (24 hours), so a just-published compiler release waits for that window
+like other dependencies. Neither `@effect/tsgo` nor `tsrs` is excluded by the hold
+ledger. The former `effect-tsgo-tsrs-lockstep` hold was retired at the
+operator's request on 2026-11-03.
 
-1. Read the `@effect/tsgo` release notes for the tsrs version it bumps to, set
-   the catalog `@effect/tsgo` and `tsrs` entries together, and run
-   `bun install`; `prepare` patches both binaries. `node_modules/.bin/tsrs --version`
-   must print `+effect-tsgo.<new version> (tsrs <new tsrs version>, …)`.
-2. Update the table row above: both versions and the TypeScript the tsrs tag
-   names. Recheck these rules of the road and the known problems.
-3. Run `bun run check` and `bun run check:configs` across the repo, and fix new
-   TypeScript errors at their source. Effect-rule (377xxx) findings do not fail
-   these gates while the three ignore flags are true.
-4. Run the `@beep/repo-configs` tests (`bunx vitest run` in
-   `packages/tooling/policy-pack/repo-configs`). `bun run check` does not run
-   them. `EffectTsgoEffectFnPolicy.test.ts` pins the exact `@effect/tsgo`
-   version and the tsrs identity line, the root-map unknown-rule canary and the
-   exit-code policy.
-5. A bump that adds rules follows the rule-map procedure under "Effect rules
-   gate through Check": the root severity map and copied profiles, the
-   declared-off ledger and the full check graph as the census.
+`@effect/tsgo` ships patched tsrs builds listed in
+`node_modules/@effect/tsgo-<platform>/lib/upstream.json` (`tags.tsrs.latest`
+and `components.tsrs`). The installed tsrs version must have a matching build;
+`effect-tsgo patch --tsrs` only patches versions that the release ships.
+
+After updating:
+
+1. Run `bun install`; `prepare` patches both binaries. Check
+   `node_modules/.bin/tsrs --version`: it must include
+   `+effect-tsgo.<installed version> (tsrs <installed tsrs version>, …)`.
+   If npm's latest tsrs is ahead of the builds shipped by `@effect/tsgo`, use
+   the tsrs version in that release's upstream metadata before proceeding.
+2. Update the table above when either compiler version changes. Recheck the
+   rules of the road and known problems.
+3. Run `bun run check` and `bun run check:configs`, fixing new TypeScript and
+   Effect findings at their source. The three `ignoreEffect*InTscExitCode`
+   flags are false, so Effect errors fail these gates.
+4. Run `bunx vitest run test/EffectTsgoEffectFnPolicy.test.ts` from
+   `packages/tooling/policy-pack/repo-configs`. The tests compare the actual
+   compiler identity with the catalog, reject an unpatched or mismatched tsrs,
+   check update eligibility, and exercise the root rule map and exit-code policy.
+   They do not freeze the catalog to one historical release.
+5. A bump that adds rules follows the procedure under "Effect rules gate
+   through Check": update the root severity map and copied profiles, keep
+   the declared-off ledger explicit, and use the full check graph as the census.
 
 ## Binary paths (Linux x64)
 

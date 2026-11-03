@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-
 /**
  * Builds `practice-setup.exe`: a bun-compiled Windows executable that embeds
  * the practice gateway `.mcpb` it hands to Claude.

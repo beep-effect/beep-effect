@@ -1,4 +1,3 @@
-import { identity } from "effect/Function";
 /**
  * `@beep/mcp-kit/client`: wire helpers, the event-stream unwrap, and the two
  * protocol layers driven against the fixture host over HTTP and stdio.
@@ -41,6 +40,7 @@ import * as A from "effect/Array";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
+import { identity } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";

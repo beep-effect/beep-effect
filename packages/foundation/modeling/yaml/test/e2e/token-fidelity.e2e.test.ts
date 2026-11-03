@@ -1,4 +1,3 @@
-import { identity } from "effect/Function";
 /**
  * Token position-fidelity conformance (#129).
  *
@@ -19,6 +18,7 @@ import { parseCSTAll } from "@beep/yaml/internal/cst-parser";
 import { assert, describe, it } from "@effect/vitest";
 import { assertSuccess } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import { identity } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

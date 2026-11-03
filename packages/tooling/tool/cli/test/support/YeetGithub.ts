@@ -1,4 +1,3 @@
-import { identity } from "effect/Function";
 /**
  * A recorded GitHub transport for the Yeet suites: the real `@beep/github`
  * client (route interpolation, pagination, error classification, GraphQL
@@ -17,6 +16,7 @@ import { layerGithubRest, layerGraphqlBudget } from "@beep/repo-cli/test/SharedI
 import { runRepoCommandCapture, YeetGithubLayer } from "@beep/repo-cli/test/Yeet";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";

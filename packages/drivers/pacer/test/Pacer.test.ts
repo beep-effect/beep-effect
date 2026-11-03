@@ -1,4 +1,3 @@
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 /**
  * Tests for the PACER driver.
  *
@@ -14,6 +13,7 @@ import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 
 import * as Pacer from "@beep/pacer";
 import { it } from "@beep/test-runner";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertExitFailure } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";

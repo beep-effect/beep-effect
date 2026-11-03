@@ -1,4 +1,3 @@
-import * as S from "effect/Schema";
 /** Real-file SQLite execution proofs for the round-seven dialect. */
 
 import { Database } from "bun:sqlite";
@@ -37,6 +36,7 @@ import { FileSystem } from "effect/FileSystem";
 import { effect as effectLayer, provide, provideMerge, unwrap, withSpan as withLayerSpan } from "effect/Layer";
 import { getOrElse, getOrThrow, getOrUndefined, none, some } from "effect/Option";
 import { hasProperty, isFunction } from "effect/Predicate";
+import * as S from "effect/Schema";
 import {
   Array as ArraySchema,
   Date as DateSchema,

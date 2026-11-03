@@ -193,14 +193,23 @@ it.layer(TestLayer, { timeout: "10 seconds" })((it) => {
         // `effect-tsgo patch --tsrs` replaces its binary with the Effect build of that exact tsrs
         // version, so the reported build carries the @effect/tsgo suffix and the installed tsrs version.
         expect(catalog.tsrs).toMatch(/^\d+\.\d+\.\d+-ts7\.\d+\.\d+(?:-[0-9A-Za-z.]+)?$/u);
-        expect(catalog["@effect/tsgo"]).toBe("0.64.1");
-        expect(tscRs.stdout, context).toMatch(
-          /^Version 7\.1\.0-beta\+effect-tsgo\.0\.64\.1 \(tsrs 0\.20\.1-ts7\.1\.0-beta,/u
-        );
+        expect(tscRs.stdout, context).toMatch(/^Version 7\..*\+effect-tsgo\./u);
         expect(tscRs.stdout, context).toContain(`+effect-tsgo.${catalog["@effect/tsgo"]} (tsrs ${catalog.tsrs},`);
       })
     );
   });
+  it.effect("keeps the Effect compiler and tsrs eligible for dependency updates", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const heldListPath = NodeURL.fileURLToPath(
+        new URL("../../../../../hold-ledger/syncpack-held.generated.json", import.meta.url)
+      );
+      const content = yield* fs.readFileString(heldListPath);
+      const held = yield* S.String.pipe(S.Array, S.fromJsonString, S.decodeEffect)(content);
+      expect(held).not.toContain("@effect/tsgo");
+      expect(held).not.toContain("tsrs");
+    })
+  );
   describe("Effect tsgo effectFn policy", () => {
     it.effect(
       "fails reusable Effect.gen wrappers with a named Effect.fn suggestion",
