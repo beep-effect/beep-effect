@@ -794,3 +794,18 @@ The embedded SipHash implementation also carries the following MIT notice.
      THE SOFTWARE.
 
 <!-- citation-siphash-mit:end -->
+
+
+## regex 2023.12.25 verbose parsing
+
+The private citation compiler adapts verbose lexical behavior from CPython
+3.11.15 re and the pinned regex 2023.12.25 V0 Python front end
+(`regex/_regex_core.py`). CPython attribution and the complete PSF license
+appear above. The regex package identifies its additions and alterations as
+Apache-2.0, retaining the Secret Labs AB 1998–2001 CNRI Python 1.6 legacy notice.
+Its provided [complete license](goals/citation-extraction-engine/history/evidence/regex-2023.12.25-LICENSE.txt)
+is retained byte-for-byte, SHA-256
+`bff55ef4cdcc8c14ce259f8e8ab60e264418440d6335f4dc138273fbd506144d`.
+The affected parser is `RegexProgram.ts`; source-engine flags and framing use
+`RegexEngine.ts` and the existing typed worker. The source observation corpus
+copies no regex implementation. No regex runtime binary is distributed here.

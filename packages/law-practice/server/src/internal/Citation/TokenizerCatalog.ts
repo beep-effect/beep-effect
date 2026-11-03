@@ -28,7 +28,7 @@ const Source = S.fromJsonString(
       pythonType: S.tag("eyecite.models.TokenExtractor"),
       fields: S.Struct({
         regex: S.String.check(S.isMaxLength(CitationEngineAbsoluteMaxima.patternUtf16)),
-        flags: CitationRegexPatternDescriptor.fields.flags,
+        flags: CitationExtractorOrderingBinding.fields.flags,
         strings: S.Array(S.String.check(S.isMaxLength(CitationEngineAbsoluteMaxima.patternUtf16))).check(
           S.isMaxLength(CitationEngineAbsoluteMaxima.patterns)
         ),

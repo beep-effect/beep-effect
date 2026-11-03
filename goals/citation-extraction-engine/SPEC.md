@@ -548,6 +548,16 @@ instead of silently splitting delivery or weakening scope.
 
 ## Decision Log
 
+- **2026-11-03 verbose grammar:** parse original native words with contextual
+  source-engine skipping, keeping fingerprints and raw-pattern limits intact.
+  Share the closed 0/2/64/66 flag schema with the worker. Preserve the canonical
+  artifact's narrower observed flags and reject unfinished V0 fuzzy prefixes
+  instead of silently interpreting them as literals. Retain source errors,
+  profiles and matching observations plus the complete upstream license.
+  Reversal is an ordinary revert of this private parser/profile change; no
+  public completion contract or semantic waiver changes. See
+  `history/evidence/2026-11-03-verbose-regex-grammar.md`.
+
 - **2026-11-03 source regex identity:** capture the exact source engine at
   server construction and require it explicitly in child startup. Preserve
   existing CPython defaults; freeze regex V0 character, lexer whitespace and

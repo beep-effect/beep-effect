@@ -46,6 +46,17 @@ Existing callers keep CPython behavior. Verbose parsing and full compiled V0
 qualification remain required; source facts alone do not prove full matching.
 See [source engine evidence](history/evidence/2026-11-03-source-regex-engine-identity.md).
 
+Verbose grammar checkpoint (2026-11-03): the compiler/worker share explicit
+flags 0/2/64/66 and preserve engine-specific whitespace, comments, names,
+quantifiers and hexadecimal escapes. All 94 source parse/profile/error
+outcomes compare; the corpus retains 450 matching observations across 47
+patterns. Twenty-nine focused tests pass, with 38 verbose child exits under
+each runtime. Hosted full replay requires 406 exits per runtime. V0 fuzzy
+prefixes now reject rather than masquerading as literal braces; those profiles
+remain unfinished. The law and year helper patterns compile; remaining helper
+grammar and full-case raw-pattern admission remain open. See
+[verbose grammar evidence](history/evidence/2026-11-03-verbose-regex-grammar.md).
+
 ## Status
 
 Status: `in-progress`

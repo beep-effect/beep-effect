@@ -13,6 +13,7 @@ import * as Str from "effect/String";
 import { readCitationByteFrames } from "./ByteFrames.ts";
 import { CitationNativeProcessFailureReason } from "./NativeProcess.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
+import { CitationRegexSourceFlags } from "./RegexEngine.ts";
 import { CitationRegexInputLayout, makeCitationRegexInput } from "./RegexInput.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import type * as PlatformError from "effect/PlatformError";
@@ -51,9 +52,7 @@ const bytesCodec = (name: string, maximum: number) =>
     .pipe($I.annoteSchema(name, { description: "Bounded padded base64/native bytes with a post-decode byte check." }));
 const PatternBytes = bytesCodec("PatternBytes", 4 * CitationEngineAbsoluteMaxima.patternUtf16);
 const SourceBytes = bytesCodec("SourceBytes", 4 * CitationEngineAbsoluteMaxima.producedTextUtf16);
-const Flags = LiteralKit([0, 2]).pipe(
-  $I.annoteSchema("Flags", { description: "Captured tokenizer Python re flags; Unicode is implicit." })
-);
+const Flags = CitationRegexSourceFlags;
 /** Source operation selection is closed data, independent of regex flags.
  * @internal @category models @since 0.0.0
  */

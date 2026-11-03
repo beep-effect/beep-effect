@@ -1,4 +1,6 @@
 /** Data-only lowering of the pinned tokenizer's Python regex grammar.
+ * Verbose lexical behavior follows CPython re and regex V0 _regex_core;
+ * PSF/Apache-2.0 and legacy CNRI notices are retained in THIRD_PARTY_NOTICES.md.
  * Native compilation and execution remain inside the owned worker.
  * @internal @packageDocumentation @since 0.0.0
  */
@@ -7,6 +9,7 @@ import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { constVoid } from "effect/Function";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as Num from "effect/Number";
@@ -15,6 +18,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CitationRegexAlphabetText, CitationRegexAtomInterval, CitationRegexAtomSets } from "./RegexAlphabet.ts";
+import { CitationRegexSourceFlags } from "./RegexEngine.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
 import {
   CitationRegexPointRange,
@@ -29,9 +33,7 @@ import { CitationRegexTranslationFailure } from "./RegexTranslator.ts";
 const $I = $LawPracticeServerId.create("internal/Citation/RegexProgram");
 const max = CitationEngineAbsoluteMaxima;
 const sameSets = S.toEquivalence(CitationRegexAtomSets);
-const Flags = LiteralKit([0, 2]).pipe(
-  $I.annoteSchema("Flags", { description: "Captured source flag domain; Unicode is implicit." })
-);
+const Flags = CitationRegexSourceFlags;
 const Kind = LiteralKit(["atom", "open", "close", "alternative", "begin", "end", "end-strict", "repeat"]).pipe(
   $I.annoteSchema("Kind", { description: "Closed structural program tokens; no raw executable regex fragment." })
 );
@@ -340,6 +342,26 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
           ? view.getUint16(byte, true)
           : view.getUint32(byte, true);
     };
+    const verbose = (flags & 64) !== 0;
+    const whitespace = () => A.some(categories.verboseSpace, (row) => row.start <= peek() && peek() <= row.end);
+    const commentStep = () => (categories.engine === "python-re" && peek() === 92 && peek(1) >= 0 ? 2 : 1);
+    const skipComment = Effect.fn("Citation.skipVerboseComment")(function* () {
+      while (peek() >= 0 && peek() !== 10) {
+        if (index % 256 === 0) yield* Effect.yieldNow;
+        index += commentStep();
+      }
+    });
+    const skipSpace = Effect.fnUntraced(function* () {
+      index++;
+      if (index % 256 === 0) yield* Effect.yieldNow;
+    });
+    const skipIgnored = () =>
+      Effect.whileLoop({
+        while: () => verbose && (whitespace() || peek() === 35),
+        body: () => (peek() === 35 ? skipComment() : skipSpace()),
+        step: constVoid,
+      });
+    const skipNested = () => (categories.engine === "python-regex-v0" ? skipIgnored() : Effect.void);
     const tokens = A.empty<CitationRegexProgramToken>();
     const intervals = A.empty<CitationRegexAtomInterval>();
     const atoms = MutableHashMap.empty<string, number>();
@@ -373,7 +395,7 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       return id;
     });
     const literal = Effect.fnUntraced(function* (start: number, end = start) {
-      return yield* categories.literal(start, end, flags === 2);
+      return yield* categories.literal(start, end, (flags & 2) !== 0);
     });
     let escapedPoint = -1;
     const escapedLiteral = Effect.fnUntraced(function* (point: number) {
@@ -389,7 +411,7 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
         Match.when(119, () => categories.word),
         Match.orElse(() => complementCitationRegexRanges(categories.word))
       );
-    const hexEscape = Effect.fn("Citation.readRegexHexEscape")(function* (point: number) {
+    const hexEscape = Effect.fn("Citation.readRegexHexEscape")(function* (point: number, inside: boolean) {
       const digits = Match.value(point).pipe(
         Match.when(120, () => 2),
         Match.when(117, () => 4),
@@ -397,6 +419,7 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       );
       let value = 0;
       for (let count = 0; count < digits; count++) {
+        if (!inside) yield* skipNested();
         const nibble = citationRegexHexDigit(peek());
         index++;
         if (nibble < 0) return yield* unsupported();
@@ -405,7 +428,7 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       return yield* escapedLiteral(value);
     });
     const punctuationEscape = Effect.fnUntraced(function* (point: number) {
-      if (point < 128 && !asciiLetter(point) && !digit(point)) return yield* escapedLiteral(point);
+      if (point >= 128 || (!asciiLetter(point) && !digit(point))) return yield* escapedLiteral(point);
       return yield* unsupported();
     });
     const escape = Effect.fn("Citation.readRegexEscape")(function* (inside: boolean) {
@@ -423,7 +446,7 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
         Match.when(102, () => escapedLiteral(12)),
         Match.when(97, () => escapedLiteral(7)),
         Match.when(98, () => (inside ? escapedLiteral(8) : Effect.fail(unsupported()))),
-        Match.whenOr(120, 117, 85, () => hexEscape(point)),
+        Match.whenOr(120, 117, 85, () => hexEscape(point, inside)),
         Match.orElse(() => punctuationEscape(point))
       );
     });
@@ -467,23 +490,25 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       index++;
       return negated ? complementCitationRegexRanges(values) : values;
     });
-    const readNumber = () => {
+    const readNumber = Effect.fn("Citation.readRegexRepeatNumber")(function* () {
+      yield* skipNested();
       let value = 0;
       let digits = 0;
       while (digit(peek())) {
         value = Num.min(0xffffffff, value * 10 + peek() - 48);
         index++;
         digits++;
+        yield* skipNested();
       }
       return { value, digits };
-    };
+    });
     const bracedRepeat = Effect.fn("Citation.readRegexRepeatBounds")(function* () {
       index++;
-      const left = readNumber();
+      const left = yield* readNumber();
       let maximum: typeof Maximum.Type | number = left.value;
       if (peek() === 44) {
         index++;
-        const right = readNumber();
+        const right = yield* readNumber();
         maximum = right.digits === 0 ? "unbounded" : right.value;
       } else if (left.digits === 0) return O.none<RepeatBounds>();
       if (peek() !== 125) return O.none<RepeatBounds>();
@@ -494,6 +519,13 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       index++;
       return O.some(RepeatBounds.make({ minimum, maximum }));
     };
+    const rejectUnqualifiedFuzzy = Effect.fn("Citation.rejectUnqualifiedFuzzy")(function* () {
+      if (categories.engine !== "python-regex-v0" || peek() !== 123) return;
+      index++;
+      const prefix = yield* readNumber();
+      const reserved = prefix.digits === 0 ? [100, 101, 105, 115] : [100, 105, 115, 60];
+      if (A.contains(reserved, peek())) return yield* unsupported();
+    });
     const repeatBounds = Effect.fn("Citation.readRegexQuantifier")(function* () {
       const saved = index;
       const bounds = yield* Match.value(peek()).pipe(
@@ -503,7 +535,11 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
         Match.when(123, () => bracedRepeat()),
         Match.orElse(() => Effect.succeed(O.none<RepeatBounds>()))
       );
-      if (O.isNone(bounds)) index = saved;
+      if (O.isNone(bounds)) {
+        index = saved;
+        yield* rejectUnqualifiedFuzzy();
+        index = saved;
+      }
       return bounds;
     });
     const repeat = Effect.fn("Citation.parseRegexRepeat")(function* (body: Summary) {
@@ -511,6 +547,7 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       if (O.isNone(parsed)) return body;
       const bounds = parsed.value;
       if (!validRepeat(body, bounds)) return yield* unsupported();
+      yield* skipNested();
       const lazy = peek() === 63;
       if (lazy) index++;
       if (peek() === 43) return yield* unsupported();
@@ -519,14 +556,16 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       return repeatedSummary(body, bounds);
     });
     const captureName = Effect.fn("Citation.readRegexCaptureName")(function* () {
-      index += 2;
+      index++;
       let name = "";
+      yield* skipNested();
       while (peek() !== 62) {
         const point = peek();
         const valid = Str.isEmpty(name) ? nameStart(point) : nameRest(String.fromCodePoint(Num.max(point, 0)));
         if (!valid) return yield* unsupported();
         name += String.fromCodePoint(point);
         index++;
+        yield* skipNested();
       }
       if (Str.isEmpty(name) || R.has(names, name)) return yield* unsupported();
       index++;
@@ -539,7 +578,15 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
         index++;
         return { group: 0, name: "" };
       }
-      if (peek() !== 80 || peek(1) !== 60) return yield* unsupported();
+      if (peek() !== 80) {
+        yield* skipNested();
+        if (peek() !== 58) return yield* unsupported();
+        index++;
+        return { group: 0, name: "" };
+      }
+      index++;
+      yield* skipNested();
+      if (peek() !== 60) return yield* unsupported();
       const name = yield* captureName();
       const group = ++groups;
       names = R.set(names, name, group);
@@ -606,11 +653,14 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
     });
     const sequence = Effect.fn("Citation.parseRegexSequence")(function* (): Effect.fn.Return<Summary, ParseFailure> {
       let result = summary(0);
+      yield* skipIgnored();
       while (peek() >= 0 && peek() !== 41 && peek() !== 124) {
         if (index % 64 === 0) yield* Effect.yieldNow;
         const citationResult5 = yield* parseAtom();
+        yield* skipIgnored();
         const citationResult6 = yield* repeat(citationResult5);
         result = combine(result, citationResult6, false);
+        yield* skipIgnored();
       }
       return result;
     });

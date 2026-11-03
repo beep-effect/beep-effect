@@ -48,7 +48,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexWorkerProtocol.ts",
-          "sha256": "d9ac7ca72e94f5505679c5ed96cd8aabc971d10737ab03bdfafa6a1ac234e775"
+          "sha256": "815a0795f33d655967b2090ba0a2aa8441e08a0f87ef601477aaa08154a3d2d0"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/ByteFrames.ts",
@@ -92,7 +92,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexProgram.ts",
-          "sha256": "83c4fdd3c819da76a0a6f1163b4f2487dd720ad403d735d0ff5b28a2fe04c4d7"
+          "sha256": "aae9d8aa1c86cff1638ca0e370516a14a57bec10c803ab4967700ea1f668655e"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexDescriptors.ts",
