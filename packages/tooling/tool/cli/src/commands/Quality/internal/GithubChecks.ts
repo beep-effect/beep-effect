@@ -769,7 +769,7 @@ export const githubCheckFallowLanes = (repoRoot: string): ReadonlyArray<GithubCh
     "pre-push",
     "repo-quality",
     "preflight",
-    repoCliLane(repoRoot, "fallow:health", ["fallow", "health", "--check", "--quiet"])
+    rootTaskLane(repoRoot, "fallow:health", "fallow:health:check", PRE_PUSH_CI_LANE_PLAN.base)
   ),
 ];
 
