@@ -23,8 +23,9 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 
-const json = (value: unknown): string =>
-  `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity)}\n`;
+const encodeJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
+
+const json = (value: unknown): string => `${Result.getOrThrowWith(encodeJson(value), identity)}\n`;
 
 // A scratch repository with two workspace members; `files` maps repo-relative paths to contents.
 const repository = Effect.fnUntraced(function* (files: Readonly<Record<string, string>>) {

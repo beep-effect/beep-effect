@@ -24,8 +24,9 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
-const json = (value: unknown): string =>
-  Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity);
+const encodeJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
+
+const json = (value: unknown): string => Result.getOrThrowWith(encodeJson(value), identity);
 const decodeJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const manifestJson = (fields: Readonly<Record<string, unknown>>): string =>

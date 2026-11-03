@@ -18,8 +18,9 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
-const json = (value: unknown): string =>
-  `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity)}\n`;
+const encodeJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
+
+const json = (value: unknown): string => `${Result.getOrThrowWith(encodeJson(value), identity)}\n`;
 
 // A scratch repository: `files` maps repo-relative paths to contents.
 const repository = Effect.fnUntraced(function* (files: Readonly<Record<string, string>>) {
