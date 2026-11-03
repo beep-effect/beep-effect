@@ -1,6 +1,8 @@
 /**
  * Schema-agnostic scoped DuckDB provider for the repo CLI.
  *
+ * **Details**
+ *
  * The command groups that read non-metrics DuckDB catalogs (Corpus, Research)
  * each open a connection with the same idiom: build {@link DuckDb.makeNodeLayer}
  * for a set of connection options, provide the resulting {@link DuckDb} service

@@ -1,6 +1,8 @@
 /**
  * JSON-string schema codec helpers for the repo CLI.
  *
+ * **Details**
+ *
  * Command groups repeatedly pair `S.decodeUnknownEffect(S.fromJsonString(X))`
  * with `S.encodeUnknownEffect(S.fromJsonString(X))` (13 such pairs in the Corpus
  * schemas alone). {@link JsonStringCodec} collapses that pair into one bundle so

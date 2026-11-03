@@ -1,6 +1,8 @@
 /**
  * Shared path-containment check for the repo CLI.
  *
+ * **Details**
+ *
  * The Drawings intake and review lanes and the worktree command each carried a
  * copy of the same predicate: a candidate path lies strictly inside a root when
  * the relative path from the root is non-empty, does not climb out with `..`,

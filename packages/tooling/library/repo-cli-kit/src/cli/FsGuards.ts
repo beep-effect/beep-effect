@@ -54,6 +54,15 @@ const FsGuardFailureReason = LiteralKit([
 /**
  * Resolved root, parent, and target paths for one contained filesystem operation.
  *
+ * **Example** (Describe a contained target)
+ *
+ * ```ts
+ * import { ContainedTarget } from "@beep/repo-cli-kit/cli/FsGuards"
+ *
+ * const target = ContainedTarget.make({ root: "/repo", parent: "/repo/docs", target: "/repo/docs/readme.md" })
+ * console.log(target.target) // /repo/docs/readme.md
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

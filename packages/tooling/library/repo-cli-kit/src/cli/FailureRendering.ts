@@ -2,6 +2,8 @@
  * The repo CLI's failure report: the `render` hook it hands `@beep/cli-kit`
  * `CliRuntime.main`, and the argv-only verbosity switch that hook reads.
  *
+ * **Details**
+ *
  * The hook runs in `CliRuntime.main`'s failure reporting, outside `Command.run`,
  * where neither the parsed CLI config nor a `Config` provider is reachable, so
  * verbosity is decided from raw argv. Keeping both pure functions makes them

@@ -1,3 +1,10 @@
+/**
+ * Shared rendering and logging of policy findings.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { thunkEmptyStr } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";

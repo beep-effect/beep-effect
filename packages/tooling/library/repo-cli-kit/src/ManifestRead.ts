@@ -1,6 +1,8 @@
 /**
  * Shared package.json projection reader for the repo CLI.
  *
+ * **Details**
+ *
  * The Quality, VersionSync and Lint commands each carried a local
  * `package.json` schema (a few optional fields over `S.fromJsonString`) and
  * their own decode. They now read through `@beep/package-json`'s

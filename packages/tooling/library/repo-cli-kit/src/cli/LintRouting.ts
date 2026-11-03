@@ -15,6 +15,20 @@
  */
 const subcommands = <const T extends ReadonlyArray<string>>(...values: T): T => values;
 
+/**
+ * Lint subcommand names routed through the shared policy domain.
+ *
+ * **Example** (Recognize a policy subcommand)
+ *
+ * ```ts
+ * import { LINT_POLICY_SUBCOMMANDS } from "@beep/repo-cli-kit/cli/LintRouting"
+ *
+ * console.log(LINT_POLICY_SUBCOMMANDS.includes("jsdoc")) // true
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
 const LINT_POLICY_SUBCOMMANDS = subcommands(
   "circular",
   "deprecated-apis",

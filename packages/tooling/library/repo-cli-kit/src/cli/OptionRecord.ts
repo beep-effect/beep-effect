@@ -1,3 +1,10 @@
+/**
+ * Optional object properties derived from Effect options.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 

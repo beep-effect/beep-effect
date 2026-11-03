@@ -1,6 +1,8 @@
 /**
  * Repository workspace members and their dependency graph for the repo CLI.
  *
+ * **Details**
+ *
  * Every command that needs the monorepo's workspace packages reads them
  * through `@beep/repo-workspaces` here: members from `WorkspaceDiscovery`
  * and edges and order from `DependencyGraph`. The repository root is pinned
@@ -53,6 +55,15 @@ const $I = $RepoCliKitId.create("RepoWorkspaces");
 
 /**
  * Why a root workspace pattern is refused before any directory is read.
+ *
+ * **Example** (Recognize an unsafe pattern reason)
+ *
+ * ```ts
+ * import { UnsafeWorkspacePatternReason } from "@beep/repo-cli-kit/RepoWorkspaces"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(UnsafeWorkspacePatternReason)("parentSegment")) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -214,9 +225,19 @@ const guardRoot = Effect.fn("RepoWorkspaces.guardRoot")(function* (
  * skipped before its manifest is read, so it is neither a member nor a
  * discovery failure.
  *
+ * **Example** (Compose workspace discovery without reading files)
+ *
+ * ```ts
+ * import { workspacePackages } from "@beep/repo-cli-kit/RepoWorkspaces"
+ * import * as Effect from "effect/Effect"
+ *
+ * const discovery = workspacePackages("/repo")
+ * console.log(Effect.isEffect(discovery)) // true
+ * ```
+ *
  * @param repoRoot - Absolute repository root.
  * @returns The root package and every member.
- * @category workspaces
+ * @category utilities
  * @since 0.0.0
  */
 export const workspacePackages = Effect.fn("RepoWorkspaces.workspacePackages")(function* (
@@ -241,9 +262,19 @@ export const workspacePackages = Effect.fn("RepoWorkspaces.workspacePackages")(f
  * The workspace members beneath `repoRoot`: {@link workspacePackages} without
  * the root package.
  *
+ * **Example** (Compose workspace discovery without reading files)
+ *
+ * ```ts
+ * import { workspaceMembers } from "@beep/repo-cli-kit/RepoWorkspaces"
+ * import * as Effect from "effect/Effect"
+ *
+ * const discovery = workspaceMembers("/repo")
+ * console.log(Effect.isEffect(discovery)) // true
+ * ```
+ *
  * @param repoRoot - Absolute repository root.
  * @returns The non-root workspace packages.
- * @category workspaces
+ * @category utilities
  * @since 0.0.0
  */
 export const workspaceMembers = Effect.fn("RepoWorkspaces.workspaceMembers")(function* (
@@ -260,9 +291,19 @@ export const workspaceMembers = Effect.fn("RepoWorkspaces.workspaceMembers")(fun
  *
  * A later member with an earlier member's name replaces it.
  *
+ * **Example** (Compose workspace discovery without reading files)
+ *
+ * ```ts
+ * import { workspaceDirectories } from "@beep/repo-cli-kit/RepoWorkspaces"
+ * import * as Effect from "effect/Effect"
+ *
+ * const discovery = workspaceDirectories("/repo")
+ * console.log(Effect.isEffect(discovery)) // true
+ * ```
+ *
  * @param repoRoot - Absolute repository root.
  * @returns The member real paths by package name.
- * @category workspaces
+ * @category utilities
  * @since 0.0.0
  */
 export const workspaceDirectories = Effect.fn("RepoWorkspaces.workspaceDirectories")(function* (
@@ -288,6 +329,15 @@ export const workspaceDirectories = Effect.fn("RepoWorkspaces.workspaceDirectori
  * The manifest's `scripts` field is a `HashMap` that defaults to empty, so
  * callers read `manifest.scripts` directly.
  *
+ * **Example** (Validate a decoded member shape)
+ *
+ * ```ts
+ * import { DecodedWorkspaceMember } from "@beep/repo-cli-kit/RepoWorkspaces"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(DecodedWorkspaceMember)({ dir: "/repo/app" })) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -312,9 +362,19 @@ export class DecodedWorkspaceMember extends S.Opaque<DecodedWorkspaceMember, { r
  * strict repo-utils `package.json` model; no file is read twice. A malformed
  * manifest fails with `S.SchemaError`.
  *
+ * **Example** (Compose workspace discovery without reading files)
+ *
+ * ```ts
+ * import { workspaceManifests } from "@beep/repo-cli-kit/RepoWorkspaces"
+ * import * as Effect from "effect/Effect"
+ *
+ * const discovery = workspaceManifests("/repo")
+ * console.log(Effect.isEffect(discovery)) // true
+ * ```
+ *
  * @param repoRoot - Absolute repository root.
  * @returns The decoded members by package name.
- * @category workspaces
+ * @category utilities
  * @since 0.0.0
  */
 export const workspaceManifests = Effect.fn("RepoWorkspaces.workspaceManifests")(function* (
@@ -346,9 +406,19 @@ export const workspaceManifests = Effect.fn("RepoWorkspaces.workspaceManifests")
  * root package are not nodes. A member that lists itself gets no edge (the
  * kit drops self-edges), so a self-dependency does not read as a cycle.
  *
+ * **Example** (Compose workspace discovery without reading files)
+ *
+ * ```ts
+ * import { workspaceDependencyGraph } from "@beep/repo-cli-kit/RepoWorkspaces"
+ * import * as Effect from "effect/Effect"
+ *
+ * const discovery = workspaceDependencyGraph("/repo")
+ * console.log(Effect.isEffect(discovery)) // true
+ * ```
+ *
  * @param repoRoot - Absolute repository root.
  * @returns The members' dependency graph.
- * @category workspaces
+ * @category utilities
  * @since 0.0.0
  */
 export const workspaceDependencyGraph = Effect.fn("RepoWorkspaces.workspaceDependencyGraph")(function* (

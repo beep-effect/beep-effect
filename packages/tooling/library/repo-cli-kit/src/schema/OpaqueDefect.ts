@@ -27,6 +27,16 @@ import * as S from "effect/Schema";
  * `@beep/repo-cli` check-census row rejects (effect-schema-parity decision
  * log, 2026-09-29).
  *
+ * **Example** (Compare diagnostic causes)
+ *
+ * ```ts
+ * import { OpaqueDefect } from "@beep/repo-cli-kit/schema/OpaqueDefect"
+ * import * as S from "effect/Schema"
+ *
+ * const equivalent = S.toEquivalence(OpaqueDefect)
+ * console.log(equivalent(new Error("first"), new Error("second"))) // true
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */

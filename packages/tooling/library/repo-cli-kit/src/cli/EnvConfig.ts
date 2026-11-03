@@ -1,6 +1,8 @@
 /**
  * Shared environment and config-provider readers for the repo CLI.
  *
+ * **Details**
+ *
  * Several command groups read optional configuration through Effect's
  * `Config`/`ConfigProvider` and fall back to defaults, and more than one of them
  * carried verbatim copies of the same synchronous readers. This module owns
@@ -54,6 +56,14 @@ import type { TurboCacheValueSource } from "./TurboCache.ts";
 /**
  * Synchronously read an optional string config value from the ambient provider.
  *
+ * **Gotchas**
+ *
+ * The default `ConfigProvider` reference builds its environment key trie once,
+ * on first use, and never re-reads `process.env` afterwards. This reader
+ * therefore parses through a fresh `ConfigProvider.fromEnv()` on every call so
+ * that a variable set or deleted between two calls (as tests that toggle `CI`
+ * do) is observed by the next read.
+ *
  * **Example** (Check HOME is Option)
  *
  * ```ts
@@ -62,14 +72,6 @@ import type { TurboCacheValueSource } from "./TurboCache.ts";
  *
  * console.log(O.isOption(configStringOptionSync("HOME")))
  * ```
- *
- * **Gotchas**
- *
- * The default `ConfigProvider` reference builds its environment key trie once,
- * on first use, and never re-reads `process.env` afterwards. This reader
- * therefore parses through a fresh `ConfigProvider.fromEnv()` on every call so
- * that a variable set or deleted between two calls (as tests that toggle `CI`
- * do) is observed by the next read.
  *
  * @param name - Config key to read.
  * @returns The configured value when present, evaluated at call time.
@@ -390,6 +392,10 @@ const isOpRunTurbo = (command: string, args: ReadonlyArray<string>): boolean =>
 /**
  * Identify the direct and secret-session Turbo commands emitted by task planners.
  *
+ * **Details**
+ *
+ * Recognizes native Turbo binaries, `bunx turbo` and their `op run --` wrappers. This is not a shell parser.
+ *
  * **Example** (Recognize a planned Turbo command)
  *
  * ```ts
@@ -397,9 +403,6 @@ const isOpRunTurbo = (command: string, args: ReadonlyArray<string>): boolean =>
  *
  * console.log(isPlannedTurboCommand("bunx", ["turbo", "run", "check"])) // true
  * ```
- *
- * **Details**
- * Recognizes native Turbo binaries, `bunx turbo` and their `op run --` wrappers. This is not a shell parser.
  *
  * @category configuration
  * @since 0.0.0

@@ -1,6 +1,8 @@
 /**
  * One consolidated `ChildProcess` runner for the repo CLI.
  *
+ * **Details**
+ *
  * Every command group previously hand-rolled its own subprocess capture loop
  * (bounded and unbounded stdout/stderr folds, must-succeed vs best-effort exit
  * handling, inherited-stdio steps). This module is the single sanctioned home
@@ -506,6 +508,15 @@ const AdmissionWorkloadJson = JsonStringCodec(AdmissionWorkloadState);
 /**
  * Fiber-local admission generation inherited by every subprocess spawn in one governed operation.
  *
+ * **Example** (Describe an admission lease)
+ *
+ * ```ts
+ * import { AdmissionWorkloadBinding } from "@beep/repo-cli-kit/process/StepExec"
+ *
+ * const binding = AdmissionWorkloadBinding.make({ workloadPath: "/repo/workload.json", leaseId: "lease-1" })
+ * console.log(binding.leaseId) // lease-1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -524,6 +535,15 @@ const AdmissionWorkloadOwnership = LiteralKit(["owned", "inherited"]);
 
 /**
  * Admission workload binding plus whether this process owns its detached process-group registration.
+ *
+ * **Example** (Describe an admission lease)
+ *
+ * ```ts
+ * import { ResolvedAdmissionWorkload } from "@beep/repo-cli-kit/process/StepExec"
+ *
+ * const binding = ResolvedAdmissionWorkload.make({ workloadPath: "/repo/workload.json", leaseId: "lease-1", ownership: "owned" })
+ * console.log(binding.leaseId) // lease-1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -552,6 +572,16 @@ const CurrentAdmissionWorkload = Context.Reference<O.Option<AdmissionWorkloadBin
  *
  * Explicit workload fields on an individual spawn take precedence, allowing a
  * narrower nested lease to replace the surrounding publication generation.
+ *
+ * **Example** (Scope a pure effect to a lease)
+ *
+ * ```ts
+ * import { withAdmissionWorkloadBinding } from "@beep/repo-cli-kit/process/StepExec"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = withAdmissionWorkloadBinding(Effect.succeed("done"), "/repo/workload.json", "lease-1")
+ * console.log(Effect.runSync(program)) // done
+ * ```
  *
  * @category resource-management
  * @since 0.0.0
@@ -776,6 +806,15 @@ const captureTextStream = (
  * Defect raised when a capture pipe stays open after the child exited and its process group was
  * reaped — an escaped descendant (double-fork or `setsid` daemon) still holds the write end.
  *
+ * **Example** (Inspect a capture failure)
+ *
+ * ```ts
+ * import { CapturePipeWedgedError } from "@beep/repo-cli-kit/process/StepExec"
+ *
+ * const error = CapturePipeWedgedError.make({ commandLine: "example", message: "Capture failed" })
+ * console.log(error._tag) // CapturePipeWedgedError
+ * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -795,6 +834,15 @@ export class CapturePipeWedgedError extends S.TaggedError<CapturePipeWedgedError
 
 /**
  * Error raised when a captured command does not exit within its caller's budget.
+ *
+ * **Example** (Inspect a capture failure)
+ *
+ * ```ts
+ * import { CaptureCommandTimedOutError } from "@beep/repo-cli-kit/process/StepExec"
+ *
+ * const error = CaptureCommandTimedOutError.make({ commandLine: "example", message: "Capture failed" })
+ * console.log(error._tag) // CaptureCommandTimedOutError
+ * ```
  *
  * @category errors
  * @since 0.0.0
@@ -880,16 +928,17 @@ const interruptTimedOutCapture = (
  * **Example** (Classify an under-deadline capture)
  *
  * ```ts
- * import { settleCapturedStepForTesting } from "@beep/repo-cli-kit/process/StepExec"
+ * import { BoundedOutput, settleCapturedStepForTesting } from "@beep/repo-cli-kit/process/StepExec"
+ * import * as Duration from "effect/Duration"
  * import * as Effect from "effect/Effect";
  * const settled = settleCapturedStepForTesting({
- *   captured: { text: "", truncated: false },
+ *   captured: BoundedOutput.make({ text: "", truncated: false }),
  *   commandLine: "echo ok",
- *   elapsed: "10 millis",
+ *   elapsed: Duration.millis(10),
  *   exitCode: 0,
  *   timeout: "1 second",
  *   trim: undefined,
- * } as never)
+ * })
  * console.log(Effect.isEffect(settled)) // true
  * ```
  *

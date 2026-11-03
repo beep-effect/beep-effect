@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-03T07:58:24.709Z
+Generated: 2026-11-03T08:13:35.366Z
 
 ## Scope
 
@@ -11,30 +11,30 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | Metric | Count |
 |---|---:|
 | packages | 186 |
-| cleanPackages | 168 |
+| cleanPackages | 169 |
 | packagesWithoutPublicSrcSurface | 2 |
-| packagesNeedingRemediation | 16 |
+| packagesNeedingRemediation | 15 |
 | publicModules | 3661 |
 | publicExports | 25943 |
-| openModules | 133 |
-| openExports | 129 |
-| missingExportExamples | 35 |
-| missingExportCategories | 1 |
-| missingExportSince | 1 |
+| openModules | 114 |
+| openExports | 88 |
+| missingExportExamples | 0 |
+| missingExportCategories | 0 |
+| missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
 | exampleImportFindings | 44 |
-| unsafeExampleFindings | 1 |
+| unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 1 |
-| multiple-description-paragraphs | 181 |
-| leading-blank | 1 |
-| trailing-blank | 1 |
+| multiple-description-paragraphs | 157 |
+| leading-blank | 0 |
+| trailing-blank | 0 |
 | invalid-heading | 1 |
 | section-out-of-order | 0 |
 | duplicate-section | 0 |
 | empty-section | 0 |
-| section-after-example | 2 |
+| section-after-example | 0 |
 | invalid-when-to-use-prefix | 0 |
 | malformed-example | 0 |
 | duplicate-example | 0 |
@@ -181,7 +181,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 123 | `@beep/ontology-domain` | `packages/ontology/domain` | clean | 6 | 40 | 0 | 0 |
 | 124 | `@beep/qa-capture` | `packages/tooling/library/qa-capture` | needs-remediation | 12 | 174 | 10 | 0 |
 | 125 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | clean | 66 | 822 | 0 | 0 |
-| 126 | `@beep/repo-cli-kit` | `packages/tooling/library/repo-cli-kit` | needs-remediation | 54 | 347 | 19 | 41 |
+| 126 | `@beep/repo-cli-kit` | `packages/tooling/library/repo-cli-kit` | clean | 54 | 347 | 0 | 0 |
 | 127 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 10 | 98 | 0 | 3 |
 | 128 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | clean | 8 | 56 | 0 | 0 |
 | 129 | `@beep/infra` | `infra` | needs-remediation | 11 | 109 | 3 | 19 |
@@ -378,74 +378,6 @@ Module findings:
 - `src/SessionStore.service.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Witness.service.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/index.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-
-### @beep/repo-cli-kit
-
-Path: `packages/tooling/library/repo-cli-kit`
-
-Module findings:
-- `src/Codeowners.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/ManifestRead.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/PathContainment.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/RepoWorkspaces.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/WholeToken.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/cli/EnvConfig.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/cli/FailureRendering.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/cli/Jsonc.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/cli/Labs/LabManifest.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/cli/Labs/LabsWorkspace.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/cli/Labs/RetiredPackages.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/cli/OptionRecord.ts:1` (none) - missing summary; missing @since
-- `src/cli/PolicyFindingLogger.ts:1` (none) - missing summary; missing @since
-- `src/duckdb/WithDuckDb.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/process/StepExec.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/schema/JsonCodec.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/schema/TextCodec.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/schema/Uuid.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/systemd/SystemdUnit.schemas.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-
-Export findings:
-- `src/RepoWorkspaces.ts:60` `UnsafeWorkspacePatternReason` (const) - missing @example
-- `src/RepoWorkspaces.ts:222` `workspacePackages` (const) - missing @example
-- `src/RepoWorkspaces.ts:249` `workspaceMembers` (const) - missing @example
-- `src/RepoWorkspaces.ts:268` `workspaceDirectories` (const) - missing @example
-- `src/RepoWorkspaces.ts:294` `DecodedWorkspaceMember` (class) - missing @example
-- `src/RepoWorkspaces.ts:320` `workspaceManifests` (const) - missing @example
-- `src/RepoWorkspaces.ts:354` `workspaceDependencyGraph` (const) - missing @example
-- `src/cli/EnvConfig.ts:79` `configStringOptionSync` (const) - 1 documentation section/link violation(s)
-- `src/cli/EnvConfig.ts:407` `isPlannedTurboCommand` (const) - 1 documentation section/link violation(s)
-- `src/cli/FsGuards.ts:60` `ContainedTarget` (class) - missing @example
-- `src/cli/Json.ts:99` `DEFAULT_JSON_PRETTY_MAX_LENGTH` (const) - 1 documentation section/link violation(s)
-- `src/cli/Json.ts:193` `encodeCommandJson` (const) - 1 documentation section/link violation(s)
-- `src/cli/Json.ts:239` `renderPrettyCommandJson` (const) - 1 documentation section/link violation(s)
-- `src/cli/Labs/LabManifest.ts:27` `LAB_MANIFEST_FILENAME` (const) - missing @example
-- `src/cli/Labs/LabManifest.ts:36` `LabDisposition` (const) - missing @example
-- `src/cli/Labs/LabManifest.ts:57` `LabPostgresSchemaName` (const) - missing @example
-- `src/cli/Labs/LabManifest.ts:78` `isLabPostgresSchemaName` (const) - missing @example
-- `src/cli/Labs/LabManifest.ts:87` `LabManifest` (class) - missing @example
-- `src/cli/Labs/LabManifest.ts:108` `LabManifestFromJsonString` (const) - missing @example
-- `src/cli/Labs/LabManifest.ts:119` `decodeLabManifestJson` (const) - missing @example; 1 documentation section/link violation(s)
-- `src/cli/Labs/LabManifest.ts:131` `encodeLabManifestJson` (const) - missing @example; 1 documentation section/link violation(s)
-- `src/cli/Labs/LabsWorkspace.ts:27` `LABS_WORKSPACE_ROOT` (const) - missing @example
-- `src/cli/Labs/LabsWorkspace.ts:35` `LABS_WORKSPACE_GLOB` (const) - missing @example
-- `src/cli/Labs/LabsWorkspace.ts:43` `LABS_PATH_IGNORE_GLOB` (const) - missing @example
-- `src/cli/Labs/LabsWorkspace.ts:55` `LABS_TURBO_EXCLUDE_FILTER` (const) - missing @example; 1 documentation section/link violation(s)
-- `src/cli/Labs/LabsWorkspace.ts:64` `LABS_TURBO_SELECT_FILTER` (const) - missing @example
-- `src/cli/Labs/LabsWorkspace.ts:72` `LabsWorkspaceDir` (const) - missing @example
-- `src/cli/Labs/LabsWorkspace.ts:93` `isLabsWorkspaceDir` (const) - missing @example
-- `src/cli/Labs/LabsWorkspace.ts:106` `isLabsWorkspacePath` (const) - missing @example; 1 documentation section/link violation(s)
-- `src/cli/Labs/RetiredPackages.ts:26` `RETIRED_REGISTRY_PATH` (const) - missing @example
-- `src/cli/Labs/RetiredPackages.ts:34` `RetiredPackageRecord` (class) - missing @example
-- `src/cli/Labs/RetiredPackages.ts:51` `RetiredPackagesRegistry` (class) - missing @example
-- `src/cli/Labs/RetiredPackages.ts:70` `readRetiredPackageNames` (const) - missing @example
-- `src/cli/LintRouting.ts:18` `LINT_POLICY_SUBCOMMANDS` (const) - missing summary; missing @example, @category, @since; 2 documentation section/link violation(s)
-- `src/process/StepExec.ts:512` `AdmissionWorkloadBinding` (class) - missing @example
-- `src/process/StepExec.ts:531` `ResolvedAdmissionWorkload` (class) - missing @example
-- `src/process/StepExec.ts:559` `withAdmissionWorkloadBinding` (const) - missing @example
-- `src/process/StepExec.ts:782` `CapturePipeWedgedError` (class) - missing @example
-- `src/process/StepExec.ts:802` `CaptureCommandTimedOutError` (class) - missing @example
-- `src/process/StepExec.ts:899` `settleCapturedStepForTesting` (const) - 1 unsafe example violation(s)
-- `src/schema/OpaqueDefect.ts:33` `OpaqueDefect` (const) - missing @example
 
 ### @beep/repo-docgen
 

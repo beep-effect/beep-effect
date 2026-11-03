@@ -79,6 +79,8 @@ export const DEFAULT_JSON_FORMATTING_OPTIONS: JsoncFormattingOptionsLike = {
 /**
  * Default byte cap above which pretty JSON rendering is skipped.
  *
+ * **Details**
+ *
  * Encoded payloads longer than this are returned single-line with a trailing
  * newline instead of being handed to the formatter, which degrades badly on
  * very large documents.
@@ -166,6 +168,8 @@ export class CliJsonError extends S.TaggedError<CliJsonError, { readonly brand: 
 /**
  * Encode an arbitrary JSON-compatible command payload for terminal output.
  *
+ * **Details**
+ *
  * The encode failure is left on the error channel unmapped so each caller can
  * attach its own tagged error (for example `Effect.mapError(...)` or
  * `DomainError.newCause(...)`) without this module picking a winner.
@@ -204,6 +208,8 @@ type RenderPrettyCommandJsonOptions = {
 
 /**
  * Pretty-render an already-encoded JSON string with a size guard.
+ *
+ * **Details**
  *
  * The one owner of the format-and-apply renderer the Skills renderers and the
  * other command adapters once copied: when `maxLength` is supplied and the

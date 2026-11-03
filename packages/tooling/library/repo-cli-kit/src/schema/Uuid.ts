@@ -1,6 +1,8 @@
 /**
  * UUID text carried by the Yeet and repo-run journals.
  *
+ * **Details**
+ *
  * Attempt ids, proof-job ids, and admission journal rows all persist the same
  * RFC 4122 string, so the repo CLI declares that string once here as an
  * upstream composition (`S.Trim`, `S.isNonEmpty`, `S.isUUID`) instead of each

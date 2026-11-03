@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-03T07:58:24.709Z",
+  "generatedAt": "2026-11-03T08:13:35.366Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -62,30 +62,30 @@
   },
   "totals": {
     "packages": 186,
-    "cleanPackages": 168,
+    "cleanPackages": 169,
     "packagesWithoutPublicSrcSurface": 2,
-    "packagesNeedingRemediation": 16,
+    "packagesNeedingRemediation": 15,
     "publicModules": 3661,
     "publicExports": 25943,
-    "openModules": 133,
-    "openExports": 129,
-    "missingExportExamples": 35,
-    "missingExportCategories": 1,
-    "missingExportSince": 1,
+    "openModules": 114,
+    "openExports": 88,
+    "missingExportExamples": 0,
+    "missingExportCategories": 0,
+    "missingExportSince": 0,
     "forbiddenTagFindings": 0,
     "malformedConditionalTagFindings": 0,
     "exampleImportFindings": 44,
-    "unsafeExampleFindings": 1,
+    "unsafeExampleFindings": 0,
     "schemaAnnotationFindings": 0,
     "undescribed-see": 1,
-    "multiple-description-paragraphs": 181,
-    "leading-blank": 1,
-    "trailing-blank": 1,
+    "multiple-description-paragraphs": 157,
+    "leading-blank": 0,
+    "trailing-blank": 0,
     "invalid-heading": 1,
     "section-out-of-order": 0,
     "duplicate-section": 0,
     "empty-section": 0,
-    "section-after-example": 2,
+    "section-after-example": 0,
     "invalid-when-to-use-prefix": 0,
     "malformed-example": 0,
     "duplicate-example": 0,
@@ -382714,7 +382714,7 @@
       "packageName": "@beep/repo-cli-kit",
       "packagePath": "packages/tooling/library/repo-cli-kit",
       "topoOrder": 126,
-      "status": "needs-remediation",
+      "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
         "sourceFileCount": 55,
@@ -382728,27 +382728,27 @@
         "enforceVersion": true
       },
       "counts": {
-        "openModules": 19,
-        "openExports": 41,
-        "missingExportExamples": 35,
-        "missingExportCategories": 1,
-        "missingExportSince": 1,
-        "missingExportSummaries": 1,
+        "openModules": 0,
+        "openExports": 0,
+        "missingExportExamples": 0,
+        "missingExportCategories": 0,
+        "missingExportSince": 0,
+        "missingExportSummaries": 0,
         "forbiddenTagFindings": 0,
         "malformedConditionalTagFindings": 0,
         "exampleImportFindings": 0,
-        "unsafeExampleFindings": 1,
+        "unsafeExampleFindings": 0,
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
           "undescribed-see": 0,
-          "multiple-description-paragraphs": 24,
-          "leading-blank": 1,
-          "trailing-blank": 1,
+          "multiple-description-paragraphs": 0,
+          "leading-blank": 0,
+          "trailing-blank": 0,
           "invalid-heading": 0,
           "section-out-of-order": 0,
           "duplicate-section": 0,
           "empty-section": 0,
-          "section-after-example": 2,
+          "section-after-example": 0,
           "invalid-when-to-use-prefix": 0,
           "malformed-example": 0,
           "duplicate-example": 0,
@@ -382777,13 +382777,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 2,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -382804,13 +382800,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 4,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -382831,13 +382823,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 1,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -382858,13 +382846,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 10,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -382885,13 +382869,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 2,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -383045,13 +383025,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 24,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -383095,13 +383071,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 2,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -383187,13 +383159,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 3,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -383213,13 +383181,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 10,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -383239,13 +383203,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 9,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -383265,13 +383225,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 4,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -383341,17 +383297,18 @@
           "remediationStatus": "resolved"
         },
         {
-          "docKind": "none",
+          "docKind": "packageDocumentation",
           "filePath": "src/cli/OptionRecord.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/OptionRecord.ts",
           "line": 1,
           "anchor": "packages-tooling-library-repo-cli-kit-src-cli-optionrecord-ts-1-module",
-          "currentTags": [],
-          "missingRequiredTags": [
+          "currentTags": [
+            "@packageDocumentation",
             "@since"
           ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
-          "missingSummary": true,
+          "missingSummary": false,
           "malformedConditionalTags": [],
           "exampleImportViolations": [],
           "unsafeExampleViolations": [],
@@ -383359,20 +383316,21 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 1,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
-          "docKind": "none",
+          "docKind": "packageDocumentation",
           "filePath": "src/cli/PolicyFindingLogger.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/PolicyFindingLogger.ts",
           "line": 1,
           "anchor": "packages-tooling-library-repo-cli-kit-src-cli-policyfindinglogger-ts-1-module",
-          "currentTags": [],
-          "missingRequiredTags": [
+          "currentTags": [
+            "@packageDocumentation",
             "@since"
           ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
-          "missingSummary": true,
+          "missingSummary": false,
           "malformedConditionalTags": [],
           "exampleImportViolations": [],
           "unsafeExampleViolations": [],
@@ -383380,7 +383338,7 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 1,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -383599,13 +383557,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 1,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -383691,13 +383645,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 35,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -383740,13 +383690,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 3,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -383813,13 +383759,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 2,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -383840,13 +383782,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 2,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -383888,13 +383826,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 7,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -384035,8 +383969,8 @@
           "exportKind": "const",
           "filePath": "src/Codeowners.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/Codeowners.ts",
-          "line": 65,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-codeowners-ts-65-codeownerspatterntoregexp",
+          "line": 67,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-codeowners-ts-67-codeownerspatterntoregexp",
           "currentTags": [
             "@param",
             "@returns",
@@ -384059,8 +383993,8 @@
           "exportKind": "const",
           "filePath": "src/Codeowners.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/Codeowners.ts",
-          "line": 111,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-codeowners-ts-111-matchcodeownersowners",
+          "line": 113,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-codeowners-ts-113-matchcodeownersowners",
           "currentTags": [
             "@param",
             "@returns",
@@ -384083,8 +384017,8 @@
           "exportKind": "type",
           "filePath": "src/ManifestRead.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/ManifestRead.ts",
-          "line": 34,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-manifestread-ts-34-manifestfield",
+          "line": 36,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-manifestread-ts-36-manifestfield",
           "currentTags": [
             "@category",
             "@since"
@@ -384105,8 +384039,8 @@
           "exportKind": "class",
           "filePath": "src/ManifestRead.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/ManifestRead.ts",
-          "line": 54,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-manifestread-ts-54-degradedmanifestfielderror",
+          "line": 56,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-manifestread-ts-56-degradedmanifestfielderror",
           "currentTags": [
             "@category",
             "@since"
@@ -384127,8 +384061,8 @@
           "exportKind": "const",
           "filePath": "src/ManifestRead.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/ManifestRead.ts",
-          "line": 116,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-manifestread-ts-116-manifestparser",
+          "line": 118,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-manifestread-ts-118-manifestparser",
           "currentTags": [
             "@param",
             "@returns",
@@ -384151,8 +384085,8 @@
           "exportKind": "const",
           "filePath": "src/ManifestRead.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/ManifestRead.ts",
-          "line": 152,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-manifestread-ts-152-manifestdecoder",
+          "line": 154,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-manifestread-ts-154-manifestdecoder",
           "currentTags": [
             "@param",
             "@returns",
@@ -384175,8 +384109,8 @@
           "exportKind": "const",
           "filePath": "src/PathContainment.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/PathContainment.ts",
-          "line": 49,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-pathcontainment-ts-49-iswithinroot",
+          "line": 51,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-pathcontainment-ts-51-iswithinroot",
           "currentTags": [
             "@param",
             "@returns",
@@ -384199,15 +384133,13 @@
           "exportKind": "const",
           "filePath": "src/RepoWorkspaces.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/RepoWorkspaces.ts",
-          "line": 60,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-repoworkspaces-ts-60-unsafeworkspacepatternreason",
+          "line": 71,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-repoworkspaces-ts-71-unsafeworkspacepatternreason",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -384216,15 +384148,15 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "UnsafeWorkspacePatternReason",
           "exportKind": "type",
           "filePath": "src/RepoWorkspaces.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/RepoWorkspaces.ts",
-          "line": 72,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-repoworkspaces-ts-72-unsafeworkspacepatternreason",
+          "line": 83,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-repoworkspaces-ts-83-unsafeworkspacepatternreason",
           "currentTags": [
             "@category",
             "@since"
@@ -384245,8 +384177,8 @@
           "exportKind": "class",
           "filePath": "src/RepoWorkspaces.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/RepoWorkspaces.ts",
-          "line": 97,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-repoworkspaces-ts-97-unsafeworkspacepatternerror",
+          "line": 108,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-repoworkspaces-ts-108-unsafeworkspacepatternerror",
           "currentTags": [
             "@category",
             "@since"
@@ -384267,8 +384199,8 @@
           "exportKind": "type",
           "filePath": "src/RepoWorkspaces.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/RepoWorkspaces.ts",
-          "line": 143,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-repoworkspaces-ts-143-repoworkspaceserror",
+          "line": 154,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-repoworkspaces-ts-154-repoworkspaceserror",
           "currentTags": [
             "@category",
             "@since"
@@ -384289,17 +384221,15 @@
           "exportKind": "const",
           "filePath": "src/RepoWorkspaces.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/RepoWorkspaces.ts",
-          "line": 222,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-repoworkspaces-ts-222-workspacepackages",
+          "line": 243,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-repoworkspaces-ts-243-workspacepackages",
           "currentTags": [
             "@param",
             "@returns",
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -384308,24 +384238,22 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "workspaceMembers",
           "exportKind": "const",
           "filePath": "src/RepoWorkspaces.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/RepoWorkspaces.ts",
-          "line": 249,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-repoworkspaces-ts-249-workspacemembers",
+          "line": 280,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-repoworkspaces-ts-280-workspacemembers",
           "currentTags": [
             "@param",
             "@returns",
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -384334,24 +384262,22 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "workspaceDirectories",
           "exportKind": "const",
           "filePath": "src/RepoWorkspaces.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/RepoWorkspaces.ts",
-          "line": 268,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-repoworkspaces-ts-268-workspacedirectories",
+          "line": 309,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-repoworkspaces-ts-309-workspacedirectories",
           "currentTags": [
             "@param",
             "@returns",
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -384360,22 +384286,20 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "DecodedWorkspaceMember",
           "exportKind": "class",
           "filePath": "src/RepoWorkspaces.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/RepoWorkspaces.ts",
-          "line": 294,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-repoworkspaces-ts-294-decodedworkspacemember",
+          "line": 344,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-repoworkspaces-ts-344-decodedworkspacemember",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -384384,24 +384308,22 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "workspaceManifests",
           "exportKind": "const",
           "filePath": "src/RepoWorkspaces.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/RepoWorkspaces.ts",
-          "line": 320,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-repoworkspaces-ts-320-workspacemanifests",
+          "line": 380,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-repoworkspaces-ts-380-workspacemanifests",
           "currentTags": [
             "@param",
             "@returns",
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -384410,24 +384332,22 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "workspaceDependencyGraph",
           "exportKind": "const",
           "filePath": "src/RepoWorkspaces.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/RepoWorkspaces.ts",
-          "line": 354,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-repoworkspaces-ts-354-workspacedependencygraph",
+          "line": 424,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-repoworkspaces-ts-424-workspacedependencygraph",
           "currentTags": [
             "@param",
             "@returns",
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -384436,15 +384356,15 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "mentionsToken",
           "exportKind": "const",
           "filePath": "src/WholeToken.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/WholeToken.ts",
-          "line": 46,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-wholetoken-ts-46-mentionstoken",
+          "line": 48,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-wholetoken-ts-48-mentionstoken",
           "currentTags": [
             "@internal",
             "@param",
@@ -384468,8 +384388,8 @@
           "exportKind": "const",
           "filePath": "src/WholeToken.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/WholeToken.ts",
-          "line": 70,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-wholetoken-ts-70-mentionsanytoken",
+          "line": 72,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-wholetoken-ts-72-mentionsanytoken",
           "currentTags": [
             "@internal",
             "@param",
@@ -384888,8 +384808,8 @@
           "exportKind": "const",
           "filePath": "src/cli/EnvConfig.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/EnvConfig.ts",
-          "line": 79,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-79-configstringoptionsync",
+          "line": 81,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-81-configstringoptionsync",
           "currentTags": [
             "@param",
             "@returns",
@@ -384904,22 +384824,16 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "section-after-example",
-              "lineOffset": 12,
-              "detail": "Gotchas"
-            }
-          ],
-          "remediationStatus": "open"
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "configStringEqualsSync",
           "exportKind": "const",
           "filePath": "src/cli/EnvConfig.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/EnvConfig.ts",
-          "line": 99,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-99-configstringequalssync",
+          "line": 101,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-101-configstringequalssync",
           "currentTags": [
             "@param",
             "@returns",
@@ -384942,8 +384856,8 @@
           "exportKind": "const",
           "filePath": "src/cli/EnvConfig.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/EnvConfig.ts",
-          "line": 128,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-128-configstringoption",
+          "line": 130,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-130-configstringoption",
           "currentTags": [
             "@param",
             "@returns",
@@ -384966,8 +384880,8 @@
           "exportKind": "const",
           "filePath": "src/cli/EnvConfig.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/EnvConfig.ts",
-          "line": 178,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-178-isci",
+          "line": 180,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-180-isci",
           "currentTags": [
             "@category",
             "@since"
@@ -384988,8 +384902,8 @@
           "exportKind": "const",
           "filePath": "src/cli/EnvConfig.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/EnvConfig.ts",
-          "line": 208,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-208-iscisync",
+          "line": 210,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-210-iscisync",
           "currentTags": [
             "@param",
             "@returns",
@@ -385012,8 +384926,8 @@
           "exportKind": "const",
           "filePath": "src/cli/EnvConfig.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/EnvConfig.ts",
-          "line": 232,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-232-readoptionalconfigstring",
+          "line": 234,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-234-readoptionalconfigstring",
           "currentTags": [
             "@param",
             "@returns",
@@ -385036,8 +384950,8 @@
           "exportKind": "const",
           "filePath": "src/cli/EnvConfig.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/EnvConfig.ts",
-          "line": 252,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-252-readoptionalredactedconfigstring",
+          "line": 254,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-254-readoptionalredactedconfigstring",
           "currentTags": [
             "@param",
             "@returns",
@@ -385060,8 +384974,8 @@
           "exportKind": "const",
           "filePath": "src/cli/EnvConfig.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/EnvConfig.ts",
-          "line": 272,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-272-envvalue",
+          "line": 274,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-274-envvalue",
           "currentTags": [
             "@param",
             "@returns",
@@ -385084,8 +384998,8 @@
           "exportKind": "const",
           "filePath": "src/cli/EnvConfig.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/EnvConfig.ts",
-          "line": 300,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-300-intenvvalue",
+          "line": 302,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-302-intenvvalue",
           "currentTags": [
             "@param",
             "@returns",
@@ -385108,8 +385022,8 @@
           "exportKind": "const",
           "filePath": "src/cli/EnvConfig.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/EnvConfig.ts",
-          "line": 326,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-326-booleanenvvalue",
+          "line": 328,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-328-booleanenvvalue",
           "currentTags": [
             "@param",
             "@returns",
@@ -385132,8 +385046,8 @@
           "exportKind": "const",
           "filePath": "src/cli/EnvConfig.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/EnvConfig.ts",
-          "line": 359,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-359-isunresolvedsecretreference",
+          "line": 361,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-361-isunresolvedsecretreference",
           "currentTags": [
             "@param",
             "@returns",
@@ -385156,8 +385070,8 @@
           "exportKind": "const",
           "filePath": "src/cli/EnvConfig.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/EnvConfig.ts",
-          "line": 407,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-407-isplannedturbocommand",
+          "line": 410,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-410-isplannedturbocommand",
           "currentTags": [
             "@category",
             "@since"
@@ -385170,22 +385084,16 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "section-after-example",
-              "lineOffset": 11,
-              "detail": "Details"
-            }
-          ],
-          "remediationStatus": "open"
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "turboCacheSecretSessionEnvironment",
           "exportKind": "const",
           "filePath": "src/cli/EnvConfig.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/EnvConfig.ts",
-          "line": 477,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-477-turbocachesecretsessionenvironment",
+          "line": 480,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-480-turbocachesecretsessionenvironment",
           "currentTags": [
             "@param",
             "@returns",
@@ -385208,8 +385116,8 @@
           "exportKind": "const",
           "filePath": "src/cli/EnvConfig.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/EnvConfig.ts",
-          "line": 508,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-508-turbosecretsessionstep",
+          "line": 511,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-511-turbosecretsessionstep",
           "currentTags": [
             "@category",
             "@since"
@@ -385230,8 +385138,8 @@
           "exportKind": "const",
           "filePath": "src/cli/EnvConfig.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/EnvConfig.ts",
-          "line": 582,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-582-turboenvironmenthealthwarnings",
+          "line": 585,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-585-turboenvironmenthealthwarnings",
           "currentTags": [
             "@param",
             "@returns",
@@ -385254,8 +385162,8 @@
           "exportKind": "const",
           "filePath": "src/cli/EnvConfig.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/EnvConfig.ts",
-          "line": 672,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-672-renderturboenvironmenthealthwarnings",
+          "line": 675,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-675-renderturboenvironmenthealthwarnings",
           "currentTags": [
             "@param",
             "@returns",
@@ -385278,8 +385186,8 @@
           "exportKind": "const",
           "filePath": "src/cli/EnvConfig.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/EnvConfig.ts",
-          "line": 716,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-716-turboenvextendsambient",
+          "line": 719,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-719-turboenvextendsambient",
           "currentTags": [
             "@param",
             "@returns",
@@ -385302,8 +385210,8 @@
           "exportKind": "const",
           "filePath": "src/cli/EnvConfig.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/EnvConfig.ts",
-          "line": 764,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-764-turboenvoverrides",
+          "line": 767,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-767-turboenvoverrides",
           "currentTags": [
             "@param",
             "@returns",
@@ -385326,8 +385234,8 @@
           "exportKind": "const",
           "filePath": "src/cli/EnvConfig.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/EnvConfig.ts",
-          "line": 847,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-847-loadhostturbocachedefaults",
+          "line": 850,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-850-loadhostturbocachedefaults",
           "currentTags": [
             "@param",
             "@returns",
@@ -385350,8 +385258,8 @@
           "exportKind": "const",
           "filePath": "src/cli/EnvConfig.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/EnvConfig.ts",
-          "line": 929,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-929-readturbocacheenvironment",
+          "line": 932,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-932-readturbocacheenvironment",
           "currentTags": [
             "@param",
             "@returns",
@@ -385374,8 +385282,8 @@
           "exportKind": "const",
           "filePath": "src/cli/EnvConfig.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/EnvConfig.ts",
-          "line": 968,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-968-readturbocacheenvironmentsync",
+          "line": 971,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-971-readturbocacheenvironmentsync",
           "currentTags": [
             "@returns",
             "@category",
@@ -385397,8 +385305,8 @@
           "exportKind": "const",
           "filePath": "src/cli/EnvConfig.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/EnvConfig.ts",
-          "line": 993,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-993-clearturbocachesecretsessionverdictsfortesting",
+          "line": 996,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-996-clearturbocachesecretsessionverdictsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -385419,8 +385327,8 @@
           "exportKind": "const",
           "filePath": "src/cli/EnvConfig.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/EnvConfig.ts",
-          "line": 1023,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-1023-canuseturbocachesecretsession",
+          "line": 1026,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-1026-canuseturbocachesecretsession",
           "currentTags": [
             "@param",
             "@returns",
@@ -385443,8 +385351,8 @@
           "exportKind": "const",
           "filePath": "src/cli/EnvConfig.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/EnvConfig.ts",
-          "line": 1052,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-1052-resolveturbocachestep",
+          "line": 1055,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-envconfig-ts-1055-resolveturbocachestep",
           "currentTags": [
             "@category",
             "@since"
@@ -385509,8 +385417,8 @@
           "exportKind": "const",
           "filePath": "src/cli/FailureRendering.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/FailureRendering.ts",
-          "line": 75,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-failurerendering-ts-75-shouldrenderfailurecause",
+          "line": 77,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-failurerendering-ts-77-shouldrenderfailurecause",
           "currentTags": [
             "@param",
             "@returns",
@@ -385533,8 +385441,8 @@
           "exportKind": "const",
           "filePath": "src/cli/FailureRendering.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/FailureRendering.ts",
-          "line": 116,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-failurerendering-ts-116-renderclifailure",
+          "line": 118,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-failurerendering-ts-118-renderclifailure",
           "currentTags": [
             "@param",
             "@returns",
@@ -385882,15 +385790,13 @@
           "exportKind": "class",
           "filePath": "src/cli/FsGuards.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/FsGuards.ts",
-          "line": 60,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-60-containedtarget",
+          "line": 69,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-69-containedtarget",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -385899,15 +385805,15 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "FsGuardError",
           "exportKind": "class",
           "filePath": "src/cli/FsGuards.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/FsGuards.ts",
-          "line": 101,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-101-fsguarderror",
+          "line": 110,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-110-fsguarderror",
           "currentTags": [
             "@category",
             "@since"
@@ -385928,8 +385834,8 @@
           "exportKind": "class",
           "filePath": "src/cli/FsGuards.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/FsGuards.ts",
-          "line": 137,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-137-containedfileread",
+          "line": 146,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-146-containedfileread",
           "currentTags": [
             "@category",
             "@since"
@@ -385950,8 +385856,8 @@
           "exportKind": "class",
           "filePath": "src/cli/FsGuards.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/FsGuards.ts",
-          "line": 163,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-163-containedbytesread",
+          "line": 172,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-172-containedbytesread",
           "currentTags": [
             "@category",
             "@since"
@@ -385972,8 +385878,8 @@
           "exportKind": "const",
           "filePath": "src/cli/FsGuards.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/FsGuards.ts",
-          "line": 552,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-552-writecontainedfilestring",
+          "line": 561,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-561-writecontainedfilestring",
           "currentTags": [
             "@param",
             "@returns",
@@ -385996,8 +385902,8 @@
           "exportKind": "const",
           "filePath": "src/cli/FsGuards.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/FsGuards.ts",
-          "line": 579,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-579-createcontainedfilestring",
+          "line": 588,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-588-createcontainedfilestring",
           "currentTags": [
             "@category",
             "@since"
@@ -386018,8 +385924,8 @@
           "exportKind": "const",
           "filePath": "src/cli/FsGuards.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/FsGuards.ts",
-          "line": 741,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-741-appendcontainedfilestring",
+          "line": 750,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-750-appendcontainedfilestring",
           "currentTags": [
             "@param",
             "@returns",
@@ -386042,8 +385948,8 @@
           "exportKind": "const",
           "filePath": "src/cli/FsGuards.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/FsGuards.ts",
-          "line": 769,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-769-readcontainedfilestringnofollow",
+          "line": 778,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-778-readcontainedfilestringnofollow",
           "currentTags": [
             "@param",
             "@returns",
@@ -386066,8 +385972,8 @@
           "exportKind": "const",
           "filePath": "src/cli/FsGuards.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/FsGuards.ts",
-          "line": 825,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-825-readcontainedfilebytesnofollow",
+          "line": 834,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-834-readcontainedfilebytesnofollow",
           "currentTags": [
             "@param",
             "@returns",
@@ -386090,8 +385996,8 @@
           "exportKind": "interface",
           "filePath": "src/cli/FsGuards.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/FsGuards.ts",
-          "line": 903,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-903-validatedirectoryerrors",
+          "line": 912,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-912-validatedirectoryerrors",
           "currentTags": [
             "@category",
             "@since"
@@ -386112,8 +386018,8 @@
           "exportKind": "interface",
           "filePath": "src/cli/FsGuards.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/FsGuards.ts",
-          "line": 915,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-915-preflightoverwritablefileoptions",
+          "line": 924,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-924-preflightoverwritablefileoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -386134,8 +386040,8 @@
           "exportKind": "interface",
           "filePath": "src/cli/FsGuards.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/FsGuards.ts",
-          "line": 930,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-930-validatepathsegmentoptions",
+          "line": 939,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-939-validatepathsegmentoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -386156,8 +386062,8 @@
           "exportKind": "interface",
           "filePath": "src/cli/FsGuards.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/FsGuards.ts",
-          "line": 940,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-940-renameorfailoptions",
+          "line": 949,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-949-renameorfailoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -386178,8 +386084,8 @@
           "exportKind": "const",
           "filePath": "src/cli/FsGuards.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/FsGuards.ts",
-          "line": 962,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-962-bytesequal",
+          "line": 971,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-971-bytesequal",
           "currentTags": [
             "@param",
             "@returns",
@@ -386202,8 +386108,8 @@
           "exportKind": "const",
           "filePath": "src/cli/FsGuards.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/FsGuards.ts",
-          "line": 996,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-996-dedupebysha256",
+          "line": 1005,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-1005-dedupebysha256",
           "currentTags": [
             "@param",
             "@returns",
@@ -386226,8 +386132,8 @@
           "exportKind": "const",
           "filePath": "src/cli/FsGuards.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/FsGuards.ts",
-          "line": 1031,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-1031-allocateuniquename",
+          "line": 1040,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-1040-allocateuniquename",
           "currentTags": [
             "@param",
             "@returns",
@@ -386250,8 +386156,8 @@
           "exportKind": "const",
           "filePath": "src/cli/FsGuards.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/FsGuards.ts",
-          "line": 1065,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-1065-hashfilechunkbytes",
+          "line": 1074,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-1074-hashfilechunkbytes",
           "currentTags": [
             "@category",
             "@since"
@@ -386272,8 +386178,8 @@
           "exportKind": "const",
           "filePath": "src/cli/FsGuards.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/FsGuards.ts",
-          "line": 1096,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-1096-hashfilesha256",
+          "line": 1105,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-1105-hashfilesha256",
           "currentTags": [
             "@param",
             "@returns",
@@ -386296,8 +386202,8 @@
           "exportKind": "const",
           "filePath": "src/cli/FsGuards.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/FsGuards.ts",
-          "line": 1145,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-1145-validatepathsegment",
+          "line": 1154,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-1154-validatepathsegment",
           "currentTags": [
             "@param",
             "@returns",
@@ -386320,8 +386226,8 @@
           "exportKind": "const",
           "filePath": "src/cli/FsGuards.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/FsGuards.ts",
-          "line": 1179,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-1179-validatedirectory",
+          "line": 1188,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-1188-validatedirectory",
           "currentTags": [
             "@param",
             "@returns",
@@ -386344,8 +386250,8 @@
           "exportKind": "const",
           "filePath": "src/cli/FsGuards.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/FsGuards.ts",
-          "line": 1250,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-1250-preflightoverwritablefile",
+          "line": 1259,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-1259-preflightoverwritablefile",
           "currentTags": [
             "@param",
             "@returns",
@@ -386368,8 +386274,8 @@
           "exportKind": "const",
           "filePath": "src/cli/FsGuards.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/FsGuards.ts",
-          "line": 1303,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-1303-renameorfail",
+          "line": 1312,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-fsguards-ts-1312-renameorfail",
           "currentTags": [
             "@param",
             "@returns",
@@ -386414,8 +386320,8 @@
           "exportKind": "const",
           "filePath": "src/cli/Json.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Json.ts",
-          "line": 99,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-json-ts-99-default-json-pretty-max-length",
+          "line": 101,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-json-ts-101-default-json-pretty-max-length",
           "currentTags": [
             "@category",
             "@since"
@@ -386428,20 +386334,16 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
-          "remediationStatus": "open"
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "CommandJsonOutput",
           "exportKind": "const",
           "filePath": "src/cli/Json.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Json.ts",
-          "line": 132,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-json-ts-132-commandjsonoutput",
+          "line": 134,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-json-ts-134-commandjsonoutput",
           "currentTags": [
             "@category",
             "@since"
@@ -386462,8 +386364,8 @@
           "exportKind": "class",
           "filePath": "src/cli/Json.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Json.ts",
-          "line": 155,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-json-ts-155-clijsonerror",
+          "line": 157,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-json-ts-157-clijsonerror",
           "currentTags": [
             "@category",
             "@since"
@@ -386484,8 +386386,8 @@
           "exportKind": "const",
           "filePath": "src/cli/Json.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Json.ts",
-          "line": 193,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-json-ts-193-encodecommandjson",
+          "line": 197,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-json-ts-197-encodecommandjson",
           "currentTags": [
             "@category",
             "@since"
@@ -386498,20 +386400,16 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
-          "remediationStatus": "open"
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "renderPrettyCommandJson",
           "exportKind": "const",
           "filePath": "src/cli/Json.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Json.ts",
-          "line": 239,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-json-ts-239-renderprettycommandjson",
+          "line": 245,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-json-ts-245-renderprettycommandjson",
           "currentTags": [
             "@category",
             "@since"
@@ -386524,20 +386422,16 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
-          "remediationStatus": "open"
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "formatJsonValue",
           "exportKind": "const",
           "filePath": "src/cli/Json.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Json.ts",
-          "line": 293,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-json-ts-293-formatjsonvalue",
+          "line": 299,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-json-ts-299-formatjsonvalue",
           "currentTags": [
             "@param",
             "@returns",
@@ -386560,8 +386454,8 @@
           "exportKind": "const",
           "filePath": "src/cli/Json.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Json.ts",
-          "line": 319,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-json-ts-319-printcommandjson",
+          "line": 325,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-json-ts-325-printcommandjson",
           "currentTags": [
             "@category",
             "@since"
@@ -386582,8 +386476,8 @@
           "exportKind": "const",
           "filePath": "src/cli/Jsonc.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Jsonc.ts",
-          "line": 41,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-jsonc-ts-41-jsonc-formatting-options",
+          "line": 43,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-jsonc-ts-43-jsonc-formatting-options",
           "currentTags": [
             "@category",
             "@since"
@@ -386604,8 +386498,8 @@
           "exportKind": "class",
           "filePath": "src/cli/Jsonc.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Jsonc.ts",
-          "line": 69,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-jsonc-ts-69-jsoncmodification",
+          "line": 71,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-jsonc-ts-71-jsoncmodification",
           "currentTags": [
             "@category",
             "@since"
@@ -386626,8 +386520,8 @@
           "exportKind": "const",
           "filePath": "src/cli/Jsonc.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Jsonc.ts",
-          "line": 102,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-jsonc-ts-102-applyjsoncmodification",
+          "line": 104,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-jsonc-ts-104-applyjsoncmodification",
           "currentTags": [
             "@param",
             "@returns",
@@ -386651,15 +386545,13 @@
           "exportKind": "const",
           "filePath": "src/cli/Labs/LabManifest.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Labs/LabManifest.ts",
-          "line": 27,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labmanifest-ts-27-lab-manifest-filename",
+          "line": 37,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labmanifest-ts-37-lab-manifest-filename",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -386668,22 +386560,20 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "LabDisposition",
           "exportKind": "const",
           "filePath": "src/cli/Labs/LabManifest.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Labs/LabManifest.ts",
-          "line": 36,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labmanifest-ts-36-labdisposition",
+          "line": 55,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labmanifest-ts-55-labdisposition",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -386692,15 +386582,15 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "LabDisposition",
           "exportKind": "type",
           "filePath": "src/cli/Labs/LabManifest.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Labs/LabManifest.ts",
-          "line": 48,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labmanifest-ts-48-labdisposition",
+          "line": 67,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labmanifest-ts-67-labdisposition",
           "currentTags": [
             "@category",
             "@since"
@@ -386721,15 +386611,13 @@
           "exportKind": "const",
           "filePath": "src/cli/Labs/LabManifest.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Labs/LabManifest.ts",
-          "line": 57,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labmanifest-ts-57-labpostgresschemaname",
+          "line": 85,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labmanifest-ts-85-labpostgresschemaname",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -386738,15 +386626,15 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "LabPostgresSchemaName",
           "exportKind": "type",
           "filePath": "src/cli/Labs/LabManifest.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Labs/LabManifest.ts",
-          "line": 70,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labmanifest-ts-70-labpostgresschemaname",
+          "line": 98,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labmanifest-ts-98-labpostgresschemaname",
           "currentTags": [
             "@category",
             "@since"
@@ -386767,15 +386655,13 @@
           "exportKind": "const",
           "filePath": "src/cli/Labs/LabManifest.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Labs/LabManifest.ts",
-          "line": 78,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labmanifest-ts-78-islabpostgresschemaname",
+          "line": 115,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labmanifest-ts-115-islabpostgresschemaname",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -386784,22 +386670,20 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "LabManifest",
           "exportKind": "class",
           "filePath": "src/cli/Labs/LabManifest.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Labs/LabManifest.ts",
-          "line": 87,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labmanifest-ts-87-labmanifest",
+          "line": 133,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labmanifest-ts-133-labmanifest",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -386808,22 +386692,20 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "LabManifestFromJsonString",
           "exportKind": "const",
           "filePath": "src/cli/Labs/LabManifest.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Labs/LabManifest.ts",
-          "line": 108,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labmanifest-ts-108-labmanifestfromjsonstring",
+          "line": 164,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labmanifest-ts-164-labmanifestfromjsonstring",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -386832,22 +386714,20 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "decodeLabManifestJson",
           "exportKind": "const",
           "filePath": "src/cli/Labs/LabManifest.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Labs/LabManifest.ts",
-          "line": 119,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labmanifest-ts-119-decodelabmanifestjson",
+          "line": 187,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labmanifest-ts-187-decodelabmanifestjson",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -386855,27 +386735,21 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
-          "remediationStatus": "open"
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "encodeLabManifestJson",
           "exportKind": "const",
           "filePath": "src/cli/Labs/LabManifest.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Labs/LabManifest.ts",
-          "line": 131,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labmanifest-ts-131-encodelabmanifestjson",
+          "line": 212,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labmanifest-ts-212-encodelabmanifestjson",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -386883,27 +386757,21 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
-          "remediationStatus": "open"
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "LABS_WORKSPACE_ROOT",
           "exportKind": "const",
           "filePath": "src/cli/Labs/LabsWorkspace.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Labs/LabsWorkspace.ts",
-          "line": 27,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labsworkspace-ts-27-labs-workspace-root",
+          "line": 37,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labsworkspace-ts-37-labs-workspace-root",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -386912,22 +386780,20 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "LABS_WORKSPACE_GLOB",
           "exportKind": "const",
           "filePath": "src/cli/Labs/LabsWorkspace.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Labs/LabsWorkspace.ts",
-          "line": 35,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labsworkspace-ts-35-labs-workspace-glob",
+          "line": 53,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labsworkspace-ts-53-labs-workspace-glob",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -386936,22 +386802,20 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "LABS_PATH_IGNORE_GLOB",
           "exportKind": "const",
           "filePath": "src/cli/Labs/LabsWorkspace.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Labs/LabsWorkspace.ts",
-          "line": 43,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labsworkspace-ts-43-labs-path-ignore-glob",
+          "line": 69,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labsworkspace-ts-69-labs-path-ignore-glob",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -386960,22 +386824,20 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "LABS_TURBO_EXCLUDE_FILTER",
           "exportKind": "const",
           "filePath": "src/cli/Labs/LabsWorkspace.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Labs/LabsWorkspace.ts",
-          "line": 55,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labsworkspace-ts-55-labs-turbo-exclude-filter",
+          "line": 91,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labsworkspace-ts-91-labs-turbo-exclude-filter",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -386983,27 +386845,21 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
-          "remediationStatus": "open"
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "LABS_TURBO_SELECT_FILTER",
           "exportKind": "const",
           "filePath": "src/cli/Labs/LabsWorkspace.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Labs/LabsWorkspace.ts",
-          "line": 64,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labsworkspace-ts-64-labs-turbo-select-filter",
+          "line": 108,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labsworkspace-ts-108-labs-turbo-select-filter",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -387012,22 +386868,20 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "LabsWorkspaceDir",
           "exportKind": "const",
           "filePath": "src/cli/Labs/LabsWorkspace.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Labs/LabsWorkspace.ts",
-          "line": 72,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labsworkspace-ts-72-labsworkspacedir",
+          "line": 125,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labsworkspace-ts-125-labsworkspacedir",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -387036,15 +386890,15 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "LabsWorkspaceDir",
           "exportKind": "type",
           "filePath": "src/cli/Labs/LabsWorkspace.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Labs/LabsWorkspace.ts",
-          "line": 85,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labsworkspace-ts-85-labsworkspacedir",
+          "line": 138,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labsworkspace-ts-138-labsworkspacedir",
           "currentTags": [
             "@category",
             "@since"
@@ -387065,15 +386919,13 @@
           "exportKind": "const",
           "filePath": "src/cli/Labs/LabsWorkspace.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Labs/LabsWorkspace.ts",
-          "line": 93,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labsworkspace-ts-93-islabsworkspacedir",
+          "line": 155,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labsworkspace-ts-155-islabsworkspacedir",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -387082,24 +386934,22 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "isLabsWorkspacePath",
           "exportKind": "const",
           "filePath": "src/cli/Labs/LabsWorkspace.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Labs/LabsWorkspace.ts",
-          "line": 106,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labsworkspace-ts-106-islabsworkspacepath",
+          "line": 179,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-labsworkspace-ts-179-islabsworkspacepath",
           "currentTags": [
             "@param",
             "@returns",
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -387107,27 +386957,21 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
-          "remediationStatus": "open"
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "RETIRED_REGISTRY_PATH",
           "exportKind": "const",
           "filePath": "src/cli/Labs/RetiredPackages.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Labs/RetiredPackages.ts",
-          "line": 26,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-retiredpackages-ts-26-retired-registry-path",
+          "line": 36,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-retiredpackages-ts-36-retired-registry-path",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -387136,22 +386980,20 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "RetiredPackageRecord",
           "exportKind": "class",
           "filePath": "src/cli/Labs/RetiredPackages.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Labs/RetiredPackages.ts",
-          "line": 34,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-retiredpackages-ts-34-retiredpackagerecord",
+          "line": 53,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-retiredpackages-ts-53-retiredpackagerecord",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -387160,22 +387002,20 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "RetiredPackagesRegistry",
           "exportKind": "class",
           "filePath": "src/cli/Labs/RetiredPackages.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Labs/RetiredPackages.ts",
-          "line": 51,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-retiredpackages-ts-51-retiredpackagesregistry",
+          "line": 79,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-retiredpackages-ts-79-retiredpackagesregistry",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -387184,22 +387024,20 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "readRetiredPackageNames",
           "exportKind": "const",
           "filePath": "src/cli/Labs/RetiredPackages.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/Labs/RetiredPackages.ts",
-          "line": 70,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-retiredpackages-ts-70-readretiredpackagenames",
+          "line": 108,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-labs-retiredpackages-ts-108-readretiredpackagenames",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -387208,7 +387046,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./LabManifest.ts\";",
@@ -387275,30 +387113,22 @@
           "exportKind": "const",
           "filePath": "src/cli/LintRouting.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/LintRouting.ts",
-          "line": 18,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-lintrouting-ts-18-lint-policy-subcommands",
-          "currentTags": [],
-          "missingRequiredTags": [
-            "@example",
+          "line": 32,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-lintrouting-ts-32-lint-policy-subcommands",
+          "currentTags": [
             "@category",
             "@since"
           ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
-          "missingSummary": true,
+          "missingSummary": false,
           "malformedConditionalTags": [],
           "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "leading-blank"
-            },
-            {
-              "rule": "trailing-blank"
-            }
-          ],
-          "remediationStatus": "open"
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "jsonObjectTextFromMixedOutput",
@@ -387329,8 +387159,8 @@
           "exportKind": "const",
           "filePath": "src/cli/OptionRecord.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/OptionRecord.ts",
-          "line": 22,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-optionrecord-ts-22-optionalprop",
+          "line": 29,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-optionrecord-ts-29-optionalprop",
           "currentTags": [
             "@category",
             "@since"
@@ -387351,8 +387181,8 @@
           "exportKind": "const",
           "filePath": "src/cli/PolicyFindingLogger.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/cli/PolicyFindingLogger.ts",
-          "line": 31,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-policyfindinglogger-ts-31-makepolicyfindinglogger",
+          "line": 38,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-cli-policyfindinglogger-ts-38-makepolicyfindinglogger",
           "currentTags": [
             "@param",
             "@returns",
@@ -389281,8 +389111,8 @@
           "exportKind": "const",
           "filePath": "src/duckdb/WithDuckDb.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/duckdb/WithDuckDb.ts",
-          "line": 52,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-duckdb-withduckdb-ts-52-withduckdb",
+          "line": 54,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-duckdb-withduckdb-ts-54-withduckdb",
           "currentTags": [
             "@category",
             "@since"
@@ -390358,8 +390188,8 @@
           "exportKind": "type",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 55,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-55-stepstdio",
+          "line": 57,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-57-stepstdio",
           "currentTags": [
             "@category",
             "@since"
@@ -390380,8 +390210,8 @@
           "exportKind": "type",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 72,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-72-capturesource",
+          "line": 74,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-74-capturesource",
           "currentTags": [
             "@category",
             "@since"
@@ -390402,8 +390232,8 @@
           "exportKind": "class",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 89,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-89-outputbound",
+          "line": 91,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-91-outputbound",
           "currentTags": [
             "@category",
             "@since"
@@ -390424,8 +390254,8 @@
           "exportKind": "class",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 115,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-115-boundedoutput",
+          "line": 117,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-117-boundedoutput",
           "currentTags": [
             "@category",
             "@since"
@@ -390446,8 +390276,8 @@
           "exportKind": "class",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 141,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-141-capturedstep",
+          "line": 143,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-143-capturedstep",
           "currentTags": [
             "@category",
             "@since"
@@ -390468,8 +390298,8 @@
           "exportKind": "class",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 168,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-168-capturedstreams",
+          "line": 170,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-170-capturedstreams",
           "currentTags": [
             "@category",
             "@since"
@@ -390490,8 +390320,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 203,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-203-stepflakequarantinepolicy",
+          "line": 205,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-205-stepflakequarantinepolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -390512,8 +390342,8 @@
           "exportKind": "type",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 215,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-215-stepflakequarantinepolicy",
+          "line": 217,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-217-stepflakequarantinepolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -390534,8 +390364,8 @@
           "exportKind": "class",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 244,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-244-qualitytaskstep",
+          "line": 246,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-246-qualitytaskstep",
           "currentTags": [
             "@category",
             "@since"
@@ -390556,8 +390386,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 275,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-275-emptyboundedoutput",
+          "line": 277,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-277-emptyboundedoutput",
           "currentTags": [
             "@category",
             "@since"
@@ -390578,8 +390408,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 294,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-294-reporunoutputbound",
+          "line": 296,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-296-reporunoutputbound",
           "currentTags": [
             "@category",
             "@since"
@@ -390600,8 +390430,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 319,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-319-qualitystepoutputbound",
+          "line": 321,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-321-qualitystepoutputbound",
           "currentTags": [
             "@category",
             "@since"
@@ -390622,8 +390452,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 347,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-347-boundedchunkreducer",
+          "line": 349,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-349-boundedchunkreducer",
           "currentTags": [
             "@param",
             "@returns",
@@ -390646,8 +390476,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 392,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-392-collectboundedtext",
+          "line": 394,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-394-collectboundedtext",
           "currentTags": [
             "@param",
             "@returns",
@@ -390670,8 +390500,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 423,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-423-collecttext",
+          "line": 425,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-425-collecttext",
           "currentTags": [
             "@param",
             "@returns",
@@ -390694,8 +390524,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 446,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-446-formatcommandline",
+          "line": 448,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-448-formatcommandline",
           "currentTags": [
             "@param",
             "@returns",
@@ -390718,8 +390548,8 @@
           "exportKind": "class",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 478,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-478-admissionworkloadregistrationerror",
+          "line": 480,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-480-admissionworkloadregistrationerror",
           "currentTags": [
             "@category",
             "@since"
@@ -390740,128 +390570,8 @@
           "exportKind": "class",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 512,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-512-admissionworkloadbinding",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [
-            "@example"
-          ],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "open"
-        },
-        {
-          "symbolName": "ResolvedAdmissionWorkload",
-          "exportKind": "class",
-          "filePath": "src/process/StepExec.ts",
-          "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 531,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-531-resolvedadmissionworkload",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [
-            "@example"
-          ],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "open"
-        },
-        {
-          "symbolName": "withAdmissionWorkloadBinding",
-          "exportKind": "const",
-          "filePath": "src/process/StepExec.ts",
-          "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 559,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-559-withadmissionworkloadbinding",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [
-            "@example"
-          ],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "open"
-        },
-        {
-          "symbolName": "CapturePipeWedgedError",
-          "exportKind": "class",
-          "filePath": "src/process/StepExec.ts",
-          "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 782,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-782-capturepipewedgederror",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [
-            "@example"
-          ],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "open"
-        },
-        {
-          "symbolName": "CaptureCommandTimedOutError",
-          "exportKind": "class",
-          "filePath": "src/process/StepExec.ts",
-          "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 802,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-802-capturecommandtimedouterror",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [
-            "@example"
-          ],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "open"
-        },
-        {
-          "symbolName": "settleCapturedStepForTesting",
-          "exportKind": "const",
-          "filePath": "src/process/StepExec.ts",
-          "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 899,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-899-settlecapturedstepfortesting",
+          "line": 523,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-523-admissionworkloadbinding",
           "currentTags": [
             "@category",
             "@since"
@@ -390871,25 +390581,129 @@
           "missingSummary": false,
           "malformedConditionalTags": [],
           "exampleImportViolations": [],
-          "unsafeExampleViolations": [
-            {
-              "example": 1,
-              "rule": "no-type-assertions-in-examples",
-              "detail": "Examples must construct values through public APIs instead of type assertions."
-            }
-          ],
+          "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ResolvedAdmissionWorkload",
+          "exportKind": "class",
+          "filePath": "src/process/StepExec.ts",
+          "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
+          "line": 551,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-551-resolvedadmissionworkload",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "withAdmissionWorkloadBinding",
+          "exportKind": "const",
+          "filePath": "src/process/StepExec.ts",
+          "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
+          "line": 589,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-589-withadmissionworkloadbinding",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CapturePipeWedgedError",
+          "exportKind": "class",
+          "filePath": "src/process/StepExec.ts",
+          "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
+          "line": 821,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-821-capturepipewedgederror",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CaptureCommandTimedOutError",
+          "exportKind": "class",
+          "filePath": "src/process/StepExec.ts",
+          "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
+          "line": 850,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-850-capturecommandtimedouterror",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "settleCapturedStepForTesting",
+          "exportKind": "const",
+          "filePath": "src/process/StepExec.ts",
+          "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
+          "line": 948,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-948-settlecapturedstepfortesting",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "RunCapturedOptions",
           "exportKind": "type",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 977,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-977-runcapturedoptions",
+          "line": 1026,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1026-runcapturedoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -390910,8 +390724,8 @@
           "exportKind": "type",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 993,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-993-runcapturedwatchedoptions",
+          "line": 1042,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1042-runcapturedwatchedoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -390932,8 +390746,8 @@
           "exportKind": "interface",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 1035,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1035-runcaptured",
+          "line": 1084,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1084-runcaptured",
           "currentTags": [
             "@param",
             "@returns",
@@ -390956,8 +390770,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 1072,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1072-runcaptured",
+          "line": 1121,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1121-runcaptured",
           "currentTags": [
             "@category",
             "@since"
@@ -390978,8 +390792,8 @@
           "exportKind": "type",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 1150,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1150-runcapturedstreamsoptions",
+          "line": 1199,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1199-runcapturedstreamsoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -391000,8 +390814,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 1219,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1219-runcapturedstreams",
+          "line": 1268,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1268-runcapturedstreams",
           "currentTags": [
             "@param",
             "@returns",
@@ -391024,8 +390838,8 @@
           "exportKind": "class",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 1254,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1254-foldedstdout",
+          "line": 1303,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1303-foldedstdout",
           "currentTags": [
             "@category",
             "@since"
@@ -391046,8 +390860,8 @@
           "exportKind": "type",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 1274,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1274-runfoldedstdoutoptions",
+          "line": 1323,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1323-runfoldedstdoutoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -391068,8 +390882,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 1320,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1320-runfoldedstdout",
+          "line": 1369,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1369-runfoldedstdout",
           "currentTags": [
             "@param",
             "@returns",
@@ -391092,8 +390906,8 @@
           "exportKind": "type",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 1341,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1341-runtoexitoptions",
+          "line": 1390,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1390-runtoexitoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -391114,8 +390928,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 1385,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1385-runtoexit",
+          "line": 1434,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1434-runtoexit",
           "currentTags": [
             "@param",
             "@returns",
@@ -391138,8 +390952,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 1427,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1427-ensurezeroexit",
+          "line": 1476,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1476-ensurezeroexit",
           "currentTags": [
             "@category",
             "@since"
@@ -391182,8 +390996,8 @@
           "exportKind": "interface",
           "filePath": "src/schema/JsonCodec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/schema/JsonCodec.ts",
-          "line": 30,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-schema-jsoncodec-ts-30-jsonstringcodec",
+          "line": 32,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-schema-jsoncodec-ts-32-jsonstringcodec",
           "currentTags": [
             "@typeParam",
             "@category",
@@ -391205,8 +391019,8 @@
           "exportKind": "const",
           "filePath": "src/schema/JsonCodec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/schema/JsonCodec.ts",
-          "line": 75,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-schema-jsoncodec-ts-75-jsonstringcodec",
+          "line": 77,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-schema-jsoncodec-ts-77-jsonstringcodec",
           "currentTags": [
             "@param",
             "@returns",
@@ -391229,8 +391043,8 @@
           "exportKind": "const",
           "filePath": "src/schema/JsonCodec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/schema/JsonCodec.ts",
-          "line": 118,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-schema-jsoncodec-ts-118-decodeorfail",
+          "line": 120,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-schema-jsoncodec-ts-120-decodeorfail",
           "currentTags": [
             "@param",
             "@returns",
@@ -391253,15 +391067,13 @@
           "exportKind": "const",
           "filePath": "src/schema/OpaqueDefect.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/schema/OpaqueDefect.ts",
-          "line": 33,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-schema-opaquedefect-ts-33-opaquedefect",
+          "line": 43,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-schema-opaquedefect-ts-43-opaquedefect",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -391270,7 +391082,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "PosInt",
@@ -391323,8 +391135,8 @@
           "exportKind": "const",
           "filePath": "src/schema/TextCodec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/schema/TextCodec.ts",
-          "line": 61,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-schema-textcodec-ts-61-decodeyamltextwith",
+          "line": 63,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-schema-textcodec-ts-63-decodeyamltextwith",
           "currentTags": [
             "@param",
             "@returns",
@@ -391347,8 +391159,8 @@
           "exportKind": "const",
           "filePath": "src/schema/TextCodec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/schema/TextCodec.ts",
-          "line": 91,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-schema-textcodec-ts-91-decodetomltextwith",
+          "line": 93,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-schema-textcodec-ts-93-decodetomltextwith",
           "currentTags": [
             "@param",
             "@returns",
@@ -391371,8 +391183,8 @@
           "exportKind": "const",
           "filePath": "src/schema/Uuid.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/schema/Uuid.ts",
-          "line": 43,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-schema-uuid-ts-43-uuid",
+          "line": 45,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-schema-uuid-ts-45-uuid",
           "currentTags": [
             "@category",
             "@since"
@@ -391393,8 +391205,8 @@
           "exportKind": "type",
           "filePath": "src/schema/Uuid.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/schema/Uuid.ts",
-          "line": 55,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-schema-uuid-ts-55-uuid",
+          "line": 57,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-schema-uuid-ts-57-uuid",
           "currentTags": [
             "@category",
             "@since"
@@ -391439,8 +391251,8 @@
           "exportKind": "const",
           "filePath": "src/systemd/SystemdUnit.schemas.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/systemd/SystemdUnit.schemas.ts",
-          "line": 41,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-systemd-systemdunit-schemas-ts-41-systemdbuncandidate",
+          "line": 43,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-systemd-systemdunit-schemas-ts-43-systemdbuncandidate",
           "currentTags": [
             "@category",
             "@since"
@@ -391461,8 +391273,8 @@
           "exportKind": "type",
           "filePath": "src/systemd/SystemdUnit.schemas.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/systemd/SystemdUnit.schemas.ts",
-          "line": 53,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-systemd-systemdunit-schemas-ts-53-systemdbuncandidate",
+          "line": 55,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-systemd-systemdunit-schemas-ts-55-systemdbuncandidate",
           "currentTags": [
             "@category",
             "@since"
@@ -391483,8 +391295,8 @@
           "exportKind": "const",
           "filePath": "src/systemd/SystemdUnit.schemas.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/systemd/SystemdUnit.schemas.ts",
-          "line": 75,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-systemd-systemdunit-schemas-ts-75-systemdunitpathrule",
+          "line": 77,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-systemd-systemdunit-schemas-ts-77-systemdunitpathrule",
           "currentTags": [
             "@category",
             "@since"
@@ -391505,8 +391317,8 @@
           "exportKind": "const",
           "filePath": "src/systemd/SystemdUnit.schemas.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/systemd/SystemdUnit.schemas.ts",
-          "line": 101,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-systemd-systemdunit-schemas-ts-101-systemdunitpath",
+          "line": 103,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-systemd-systemdunit-schemas-ts-103-systemdunitpath",
           "currentTags": [
             "@category",
             "@since"
@@ -391527,8 +391339,8 @@
           "exportKind": "type",
           "filePath": "src/systemd/SystemdUnit.schemas.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/systemd/SystemdUnit.schemas.ts",
-          "line": 114,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-systemd-systemdunit-schemas-ts-114-systemdunitpath",
+          "line": 116,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-systemd-systemdunit-schemas-ts-116-systemdunitpath",
           "currentTags": [
             "@category",
             "@since"
@@ -391549,8 +391361,8 @@
           "exportKind": "class",
           "filePath": "src/systemd/SystemdUnit.schemas.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/systemd/SystemdUnit.schemas.ts",
-          "line": 130,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-systemd-systemdunit-schemas-ts-130-systemdunitdirective",
+          "line": 132,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-systemd-systemdunit-schemas-ts-132-systemdunitdirective",
           "currentTags": [
             "@category",
             "@since"
@@ -391571,8 +391383,8 @@
           "exportKind": "class",
           "filePath": "src/systemd/SystemdUnit.schemas.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/systemd/SystemdUnit.schemas.ts",
-          "line": 161,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-systemd-systemdunit-schemas-ts-161-systemdinstalledunit",
+          "line": 163,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-systemd-systemdunit-schemas-ts-163-systemdinstalledunit",
           "currentTags": [
             "@category",
             "@since"

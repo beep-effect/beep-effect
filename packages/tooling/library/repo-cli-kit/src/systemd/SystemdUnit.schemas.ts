@@ -1,6 +1,8 @@
 /**
  * Schemas for what a rendered systemd user unit may carry.
  *
+ * **Details**
+ *
  * Both timer installers in the repo CLI (`beep research install-timers` and
  * `beep refs install-timer`) write `Exec*` lines into
  * `~/.config/systemd/user/`. The Bun candidates and the path rule live here so

@@ -1,6 +1,8 @@
 /**
  * Shared JSONC editing helpers for the repo CLI.
  *
+ * **Details**
+ *
  * Config-sync command groups (TsconfigSync, CreatePackage, VersionSync) each
  * carried a verbatim modify-and-apply helper and the same 2-space
  * {@link JSONC_FORMATTING_OPTIONS}. This module owns that formatting policy and

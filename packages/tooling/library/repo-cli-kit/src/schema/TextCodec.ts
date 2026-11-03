@@ -1,6 +1,8 @@
 /**
  * YAML and TOML text decoders for the repo CLI.
  *
+ * **Details**
+ *
  * `effect/encoding/Yaml` and `effect/encoding/Toml` ship parsers but no schema
  * codec. The `decode*TextWith` helpers parse text with those modules and decode
  * the parsed value into a target schema; a parse failure surfaces as the same

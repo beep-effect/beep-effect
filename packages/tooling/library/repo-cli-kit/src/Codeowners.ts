@@ -1,6 +1,8 @@
 /**
  * CODEOWNERS pattern compilation and last-match owner lookup for the repo CLI.
  *
+ * **Details**
+ *
  * The knowledge-doctor lease binding and the skills patch series each carried a
  * byte-identical copy of the CODEOWNERS glob compiler and line parser. This
  * module owns them once. Each caller keeps its own projection of the winning

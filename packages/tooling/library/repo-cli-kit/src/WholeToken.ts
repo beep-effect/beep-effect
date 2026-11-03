@@ -2,6 +2,8 @@
  * Whole-token text matching for package names, workspace paths and identity
  * accessors.
  *
+ * **Details**
+ *
  * The delete-package path, its registration-geometry probes and the identity
  * registry rewrite all search source text for one package. A plain substring
  * search lets `@beep/schema` match `@beep/schema-org` and `$SchemaId` match
