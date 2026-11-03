@@ -50,6 +50,8 @@
  * @since 0.0.0
  */
 
+import { GitHubClient } from "@beep/github/GitHubClient";
+import { Repo } from "@beep/github/Repo";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
@@ -70,10 +72,11 @@ import {
   detectGithubJobShapeClass,
   GithubJobRecord,
   GithubJobShapeClass,
+  GithubJobStepRecord,
   githubConclusion,
   githubJobShapeEvidence,
 } from "../../../internal/github/index.ts";
-import { OutputBound, repoRunOutputBound, runCaptured } from "../../../internal/process/StepExec.ts";
+import { repoRunOutputBound } from "../../../internal/process/StepExec.ts";
 import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { UUID } from "../../../internal/schema/Uuid.ts";
 import { decideHeavyAdmission, HeavyAdmission, HeavyAdmissionEvent } from "../../Ci/HeavyAdmission.ts";
@@ -88,6 +91,7 @@ import {
 } from "./Ack.ts";
 import { runYeetAutomaticCloseout } from "./Closeout.ts";
 import { convergeYeetInbox, pollYeetPrCommentRows, YeetConvergeObservation, YeetPrCommentWindow } from "./Converge.ts";
+import { makeYeetGhLoginOnce } from "./GhOps.ts";
 import {
   appendYeetInboxRowOnce,
   YeetBaseConflictCapsule,
@@ -138,6 +142,7 @@ import {
 import { ReviewLaneHeadRow, ReviewLaneMergeReadyRow, YEET_REVIEW_LANE_SCHEMA_VERSION } from "./ReviewLane.schemas.ts";
 import { recordYeetReviewLaneRows } from "./ReviewLane.ts";
 import { renderYeetReviewWindowHold } from "./ReviewWindow.ts";
+import { YeetSettleVerdict, yeetSettleCensusRequires } from "./Settle.schemas.ts";
 import {
   deriveSettleVerdict,
   readYeetChangedPaths,
@@ -148,11 +153,9 @@ import {
   YeetRulesetRequiredContexts,
   YeetSettleCheck,
   YeetSettleInput,
-  YeetSettleVerdict,
   yeetBaseConflictFor,
   yeetBaseMergeableFor,
   yeetGatedFamiliesFor,
-  yeetSettleCensusRequires,
   yeetSettleClockReset,
 } from "./Settle.ts";
 import {
@@ -173,17 +176,20 @@ import {
 import { YeetWatchThread, yeetFirstRed } from "./WatchStream.ts";
 import { escalateYeetPrWave } from "./WaveNotifier.ts";
 import type { Git } from "@beep/git/Git";
+import type * as Context from "effect/Context";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type * as Scope from "effect/Scope";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
+import type { YeetGithubServices } from "./GhOps.ts";
 import type { YeetPrCommentRow } from "./Inbox.ts";
 import type { YeetMonitorLoopPolicy } from "./MonitorPolicy.ts";
 import type { YeetBaseConflictWalk } from "./Remediation.ts";
 import type { YeetReviewWindow } from "./ReviewWindow.ts";
-import type { YeetStatusReviewThread } from "./Status.ts";
+import type { YeetStatusReviewThread } from "./Status.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/MonitorLoop");
 
@@ -942,48 +948,62 @@ export const yeetMonitorTerminalState: (state: O.Option<string>) => O.Option<Yee
   )
 );
 
-class GhMonitorRunJobs extends S.Opaque<GhMonitorRunJobs, { readonly brand: unique symbol }>()(
-  S.Struct({ jobs: S.Array(GithubJobRecord) }).pipe(
-    $I.annoteSchema("GhMonitorRunJobs", { description: "Job list of one workflow run used by the yeet merge loop." })
+// One job of `GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs`, the REST
+// list `gh run view --json jobs` projected; `id` is gh's `databaseId`.
+class GhMonitorRunJob extends S.Opaque<GhMonitorRunJob, { readonly brand: unique symbol }>()(
+  S.Struct({
+    id: S.Finite,
+    name: S.String,
+    status: S.String,
+    conclusion: S.NullOr(S.String),
+    steps: S.Array(GithubJobStepRecord).pipe(
+      S.withConstructorDefault(Effect.succeed(A.empty<GithubJobStepRecord>())),
+      S.withDecodingDefaultTypeKey(Effect.succeed(A.empty<GithubJobStepRecord>()))
+    ),
+  }).pipe(
+    $I.annoteSchema("GhMonitorRunJob", {
+      description: "One job of a workflow run's REST job list, as the yeet merge loop reads it.",
+    })
   )
 ) {}
 
-const decodeGhMonitorRunJobs = S.decodeUnknownEffect(S.fromJsonString(GhMonitorRunJobs));
+const decodeGhMonitorRunJobs = S.decodeUnknownEffect(S.Array(GhMonitorRunJob));
+
+const monitorJobRecord = (job: GhMonitorRunJob): GithubJobRecord =>
+  GithubJobRecord.make({
+    conclusion: job.conclusion,
+    databaseId: job.id,
+    name: job.name,
+    status: job.status,
+    steps: job.steps,
+  });
+
+type MonitorGithub = GitHubClient | Repo;
 
 const jobIsRed = (job: GithubJobRecord): boolean =>
   O.exists(githubConclusion(job.conclusion), (conclusion) =>
     A.contains(["failure", "timed_out", "cancelled"], conclusion)
   );
 
+// Every job of one run, every page; a failed or undecodable read is no jobs.
 const runJobs = Effect.fn("YeetMonitorLoop.runJobs")(function* (
-  context: RepoRunContext,
   runDatabaseId: number
-): Effect.fn.Return<
-  ReadonlyArray<GithubJobRecord>,
-  never,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-> {
-  const result = yield* runRepoCommandCapture(
-    "gh",
-    ["run", "view", `${runDatabaseId}`, "--json", "jobs"],
-    context.repoRoot
-  ).pipe(Effect.orElseSucceed(() => ({ exitCode: 1, output: Str.empty, truncated: false })));
-  if (result.exitCode !== 0 || result.truncated) {
-    return A.empty();
-  }
-  return yield* decodeGhMonitorRunJobs(result.output).pipe(
-    Effect.map((payload) => payload.jobs),
-    Effect.orElseSucceed(A.empty<GithubJobRecord>)
-  );
+): Effect.fn.Return<ReadonlyArray<GithubJobRecord>, never, MonitorGithub> {
+  const client = yield* GitHubClient;
+  const { owner, repo } = yield* Repo;
+  return yield* client
+    .paginate("GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs", { owner, repo, run_id: runDatabaseId })
+    .pipe(
+      Effect.flatMap(decodeGhMonitorRunJobs),
+      Effect.map(A.map(monitorJobRecord)),
+      Effect.orElseSucceed(A.empty<GithubJobRecord>)
+    );
 });
 
-// A whole-job log routinely runs to megabytes; the bound only guards memory.
-// The failing-step region is cut out of the complete text afterwards, so this
-// capture must not truncate where the repo-run bound would.
-const jobEndpointLogBound = OutputBound.make({
-  maxChars: 64 * 1024 * 1024,
-  truncatedNotice: `\n[yeet] job log truncated after ${64 * 1024 * 1024} characters`,
-});
+// A whole-job log routinely runs to megabytes. The failing-step region is cut
+// out of the complete text afterwards, so the read must not stop where the
+// repo-run bound would; a log past this bound reads as unreadable.
+const jobEndpointLogMaxChars = 64 * 1024 * 1024;
 
 const unreadableJobLog = { exitCode: 1, output: Str.empty, truncated: false };
 
@@ -991,16 +1011,16 @@ const unreadableJobLog = { exitCode: 1, output: Str.empty, truncated: false };
  * Read a failed job's failing-step log, normalized for the flake classifier.
  *
  * `gh run view --job <id> --log-failed` is asked first and keeps its existing
- * reading. It refuses (non-zero exit) while the parent run is still in
- * progress ("run … is still in progress; logs will be available when it is
- * complete") — a `gh` restriction, not a GitHub one — so any failure falls
- * back to the per-job
- * endpoint, which serves a completed job's log mid-run. `--allow-escape-sequences`
- * is load-bearing: without it `gh api` refuses a log containing terminal escapes
- * and prints nothing on stdout. A failed fallback, or a log whose failing step
- * cannot be bounded, reads as an unreadable log,
- * so a job whose log has not materialized yet still reads as pending mid-run
- * and as "needs code fix" once the run has concluded.
+ * reading (KEEP: gh slices the failing steps out of the run's log archive, a
+ * reading no kit member has). It refuses (non-zero exit) while the parent run
+ * is still in progress ("run … is still in progress; logs will be available
+ * when it is complete") — a `gh` restriction, not a GitHub one — so any
+ * failure falls back to the per-job endpoint
+ * (`GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs`), which serves a
+ * completed job's log mid-run. A failed fallback, or a log whose failing step
+ * cannot be bounded, reads as an unreadable log, so a job whose log has not
+ * materialized yet still reads as pending mid-run and as "needs code fix" once
+ * the run has concluded.
  */
 const readFailedJobLog = Effect.fn("YeetMonitorLoop.readFailedJobLog")(function* (
   context: RepoRunContext,
@@ -1008,7 +1028,7 @@ const readFailedJobLog = Effect.fn("YeetMonitorLoop.readFailedJobLog")(function*
 ): Effect.fn.Return<
   { readonly exitCode: number; readonly output: string; readonly truncated: boolean },
   never,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | MonitorGithub
 > {
   const primary = yield* runRepoCommandCapture(
     "gh",
@@ -1020,21 +1040,22 @@ const readFailedJobLog = Effect.fn("YeetMonitorLoop.readFailedJobLog")(function*
   if (primary.exitCode === 0 || primary.truncated) {
     return { ...primary, output: stripYeetMonitorLogDecoration(primary.output) };
   }
-  const fallback = yield* runCaptured({
-    command: "gh",
-    args: ["api", "--allow-escape-sequences", `repos/{owner}/{repo}/actions/jobs/${jobDatabaseId}/logs`],
-    cwd: context.repoRoot,
-    source: "stdout",
-    bound: jobEndpointLogBound,
-    trim: false,
-  }).pipe(Effect.orElseSucceed(() => unreadableJobLog));
-  if (fallback.exitCode !== 0 || fallback.truncated) {
+  const client = yield* GitHubClient;
+  const { owner, repo } = yield* Repo;
+  const fallback = yield* client
+    .requestDecoded(
+      "GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs",
+      { owner, repo, job_id: jobDatabaseId },
+      S.String
+    )
+    .pipe(Effect.option);
+  if (O.isNone(fallback) || fallback.value.length > jobEndpointLogMaxChars) {
     return unreadableJobLog;
   }
   // An unbounded failing step reads as unreadable, so it stays pending until
   // `--log-failed` answers after the run. The bounded step is held to the
   // primary read's bound, so a job reads the same mid-run as it will then.
-  return O.match(isolateYeetMonitorJobLogFailure(fallback.output), {
+  return O.match(isolateYeetMonitorJobLogFailure(fallback.value), {
     onNone: () => unreadableJobLog,
     onSome: (region) => ({ exitCode: 0, output: region, truncated: region.length > repoRunOutputBound.maxChars }),
   });
@@ -1061,7 +1082,11 @@ const classifyJob = Effect.fn("YeetMonitorLoop.classifyJob")(function* (
   context: RepoRunContext,
   job: GithubJobRecord,
   runCompleted: boolean
-): Effect.fn.Return<YeetMonitorFailedJob, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  YeetMonitorFailedJob,
+  never,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | MonitorGithub
+> {
   const shapeClass = detectGithubJobShapeClass(job);
   if (O.isSome(shapeClass)) {
     return YeetMonitorFailedJob.make({
@@ -1119,7 +1144,7 @@ export const collectYeetMonitorFailedJobs = Effect.fn("YeetMonitorLoop.collectFa
 ): Effect.fn.Return<
   ReadonlyArray<YeetMonitorFailedJob>,
   never,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | MonitorGithub
 > {
   const runs = yield* collectRemoteWorkflowRuns(context);
   const candidateRuns = A.filter(
@@ -1129,9 +1154,7 @@ export const collectYeetMonitorFailedJobs = Effect.fn("YeetMonitorLoop.collectFa
   const jobs = yield* Effect.forEach(
     candidateRuns,
     (run) =>
-      runJobs(context, run.databaseId).pipe(
-        Effect.map(A.map((job) => ({ job, runCompleted: run.status === "completed" })))
-      ),
+      runJobs(run.databaseId).pipe(Effect.map(A.map((job) => ({ job, runCompleted: run.status === "completed" })))),
     { concurrency: 2 }
   );
   return yield* Effect.forEach(
@@ -1145,14 +1168,21 @@ export const collectYeetMonitorFailedJobs = Effect.fn("YeetMonitorLoop.collectFa
   );
 });
 
+// `gh run rerun --job <id>`'s REST twin: the job and the jobs that depend on it
+// run again. One POST, never retried.
 const rerunJob = Effect.fn("YeetMonitorLoop.rerunJob")(function* (
-  context: RepoRunContext,
   databaseId: number
-): Effect.fn.Return<void, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  const result = yield* runRepoCommandCapture("gh", ["run", "rerun", "--job", `${databaseId}`], context.repoRoot).pipe(
-    Effect.orElseSucceed(() => ({ exitCode: 1, output: Str.empty, truncated: false }))
-  );
-  if (result.exitCode !== 0) {
+): Effect.fn.Return<void, never, MonitorGithub> {
+  const client = yield* GitHubClient;
+  const { owner, repo } = yield* Repo;
+  const result = yield* client
+    .requestDecoded(
+      "POST /repos/{owner}/{repo}/actions/jobs/{job_id}/rerun",
+      { owner, repo, job_id: databaseId },
+      S.Unknown
+    )
+    .pipe(Effect.result);
+  if (Result.isFailure(result)) {
     yield* Console.log(
       `[yeet] rerun of job ${databaseId} was rejected; leaving it red with its allowance spent to avoid an unbounded retry loop`
     );
@@ -1184,14 +1214,13 @@ const rerunJob = Effect.fn("YeetMonitorLoop.rerunJob")(function* (
  * @since 0.0.0
  */
 export const applyYeetMonitorJobDecision = Effect.fn("YeetMonitorLoop.applyDecision")(function* (
-  context: RepoRunContext,
   decision: YeetMonitorJobDecision
-): Effect.fn.Return<void, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, never, MonitorGithub> {
   yield* Console.log(renderYeetMonitorJobDecision(decision));
   if (decision.status !== "rerun") {
     return;
   }
-  yield* rerunJob(context, decision.databaseId);
+  yield* rerunJob(decision.databaseId);
 });
 
 /**
@@ -1229,7 +1258,6 @@ interface YeetMonitorUntilMergedOptions {
         | ChildProcessSpawner.ChildProcessSpawner
       >)
     | undefined;
-  readonly capture?: typeof runRepoCommandCapture | undefined;
   readonly closeout?: typeof runYeetAutomaticCloseout | undefined;
   readonly collectStatus?: typeof collectYeetStatus | undefined;
   // Under until-ready every poll turns new pull request comments into inbox rows
@@ -1383,23 +1411,53 @@ const decideMonitorAdmission = (snapshot: YeetStatusSnapshot, changedPaths: Read
     })
   );
 
-const readPushedAt = Effect.fn("YeetMonitorLoop.readPushedAt")(function* (
-  context: RepoRunContext,
-  headSha: string,
-  capture: typeof runRepoCommandCapture
-) {
-  return yield* capture(
-    "gh",
-    ["api", `repos/{owner}/{repo}/commits/${headSha}`, "--jq", ".commit.committer.date"],
-    context.repoRoot
-  ).pipe(
-    Effect.map((result) =>
-      result.exitCode === 0 && !result.truncated
-        ? DateTime.make(Str.trim(result.output)).pipe(O.map(DateTime.formatIso))
-        : O.none<string>()
-    ),
-    Effect.orElseSucceed(O.none<string>)
-  );
+// The committer date of one commit (`GitHubCommit.get` projects it away).
+const CommitCommitterDate = S.Struct({
+  commit: S.Struct({ committer: S.NullOr(S.Struct({ date: S.String.pipe(S.NullOr, S.optionalKey) })) }),
+});
+
+/**
+ * Read when a head was committed, the stand-in for its push instant in the
+ * loop's head timeline.
+ *
+ * **Details**
+ *
+ * One REST commit read (`GET /repos/{owner}/{repo}/commits/{ref}`, what
+ * `gh api ... --jq .commit.committer.date` asked); `GitHubCommit.get` projects
+ * the committer date away, so the read decodes its own schema. A failed read, or
+ * a date that is not an instant, is `None`.
+ *
+ * **Example** (Build the read)
+ *
+ * ```ts
+ * import { readYeetMonitorPushedAt } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(readYeetMonitorPushedAt("abc1234def"))) // true
+ * ```
+ *
+ * @param headSha - The head commit.
+ * @returns The committer date as an ISO instant, or `None`; never fails.
+ * @category services
+ * @since 0.0.0
+ */
+export const readYeetMonitorPushedAt = Effect.fn("YeetMonitorLoop.readPushedAt")(function* (
+  headSha: string
+): Effect.fn.Return<O.Option<string>, never, MonitorGithub> {
+  const client = yield* GitHubClient;
+  const { owner, repo } = yield* Repo;
+  return yield* client
+    .requestDecoded("GET /repos/{owner}/{repo}/commits/{ref}", { owner, repo, ref: headSha }, CommitCommitterDate)
+    .pipe(
+      Effect.map((commit) =>
+        pipe(
+          O.fromNullishOr(commit.commit.committer?.date),
+          O.flatMap((date) => DateTime.make(Str.trim(date))),
+          O.map(DateTime.formatIso)
+        )
+      ),
+      Effect.orElseSucceed(O.none<string>)
+    );
 });
 
 class MonitorPoll extends S.Opaque<MonitorPoll, { readonly brand: unique symbol }>()(
@@ -1510,13 +1568,12 @@ const observeMonitorHead = Effect.fn("YeetMonitorLoop.observeHead")(function* (
       })
     );
   }
-  const capture = options.capture ?? runRepoCommandCapture;
   const expected = yield* (options.rulesetRead ?? readYeetRulesetRequiredContexts)(context);
   const head = MonitorHeadState.make({
     timeline: YeetHeadTimeline.make({
       headSha: headSha.value,
       firstObservedAt: at,
-      pushedAt: yield* readPushedAt(context, headSha.value, capture),
+      pushedAt: yield* readYeetMonitorPushedAt(headSha.value),
     }),
     firstObservedMs: millis,
     settleClockMs: millis,
@@ -1780,14 +1837,10 @@ interface MonitorCommentConsumer {
   readonly since: string;
 }
 
-const monitorActingLogin = Effect.fn("YeetMonitorLoop.actingLogin")(function* (
-  context: RepoRunContext,
-  options: YeetMonitorUntilMergedOptions,
-  consumer: MonitorCommentConsumer
-) {
+const monitorActingLogin = Effect.fn("YeetMonitorLoop.actingLogin")(function* (consumer: MonitorCommentConsumer) {
   const known = yield* Ref.get(consumer.actingLogin);
   if (O.isSome(known)) return known;
-  const read = yield* readYeetMonitorActingLogin(context, options.capture ?? runRepoCommandCapture);
+  const read = yield* readYeetMonitorActingLogin;
   yield* Ref.set(consumer.actingLogin, read);
   return read;
 });
@@ -1804,7 +1857,7 @@ const convergeMonitorComments = Effect.fn("YeetMonitorLoop.convergeComments")(fu
   consumer: MonitorCommentConsumer,
   at: string
 ) {
-  const actingLogin = yield* monitorActingLogin(context, options, consumer);
+  const actingLogin = yield* monitorActingLogin(consumer);
   if (O.isNone(actingLogin)) {
     return yield* Console.error(
       "[yeet] comment rows wait: gh could not name the acting login; the comment watermark holds and the next poll retries"
@@ -2200,7 +2253,7 @@ const triageMonitorReds = Effect.fn("YeetMonitorLoop.triageReds")(function* (
   }
   const failedJobs = yield* collectYeetMonitorFailedJobs(context, headSha.value);
   const plan = planYeetMonitorReruns(budget, headSha.value, failedJobs);
-  yield* Effect.forEach(plan.decisions, (decision) => applyYeetMonitorJobDecision(context, decision), {
+  yield* Effect.forEach(plan.decisions, (decision) => applyYeetMonitorJobDecision(decision), {
     concurrency: 1,
   });
   const requiredReds = A.filter(
@@ -2274,6 +2327,8 @@ const returnOnMonitorWave = Effect.fn("YeetMonitorLoop.returnOnWave")(function* 
 interface MonitorLoopScope {
   readonly comments: MonitorCommentConsumer;
   readonly escalation: O.Option<MonitorWaveEscalation>;
+  // The loop's one gh login, built on the first poll that reads GitHub.
+  readonly github: Effect.Effect<Context.Context<YeetGithubServices>, YeetCommandError>;
   readonly waveBaseline: O.Option<HashSet.HashSet<string>>;
 }
 
@@ -2358,28 +2413,59 @@ const pollUntilMerged = Effect.fn("YeetMonitorLoop.poll")(function* (
   if (Result.isFailure(collected)) {
     return MonitorPoll.make({ budget, head: previous, failure: O.some(collected.failure) });
   }
-  // The first poll is the first time this session knows the pull request
-  // number, and the last moment before it starts reporting state the operator
-  // will act on, so under until-merged the comments they missed are printed
-  // here. Under until-ready the comment consumer turns them into inbox rows on
-  // every poll instead (convergeMonitorInbox), so there is nothing to replay.
-  let replayed = false;
-  if (firstCycle && collected.success.remote.number !== undefined) {
-    if (!yeetMonitorPolicyConverges(options.policy ?? YeetUntilMergedPolicy.make({}))) {
-      yield* (options.replayComments ?? replayYeetMonitorComments)(
-        context,
-        collected.success.remote.number,
-        YeetMonitorCommentConsumer.Enum["until-merged"]
-      );
-    }
-    replayed = true;
+  // The rest of the poll reads GitHub as the loop's gh login. A login that does
+  // not build fails this poll as a failed status read does, and the next poll
+  // builds it again.
+  const github = yield* Effect.result(scope.github);
+  if (Result.isFailure(github)) {
+    return MonitorPoll.make({ budget, head: previous, failure: O.some(github.failure) });
   }
+  return yield* Effect.provideContext(
+    pollObservedHead(context, options, budget, previous, firstCycle, scope, collected.success),
+    github.success
+  );
+});
+
+// The first poll is the first time this session knows the pull request
+// number, and the last moment before it starts reporting state the operator
+// will act on, so under until-merged the comments they missed are printed
+// here. Under until-ready the comment consumer turns them into inbox rows on
+// every poll instead (convergeMonitorInbox), so there is nothing to replay.
+// Whether this poll spent the one replay.
+const replayFirstCycleComments = Effect.fn("YeetMonitorLoop.replayFirstCycleComments")(function* (
+  context: RepoRunContext,
+  options: YeetMonitorUntilMergedOptions,
+  snapshot: YeetStatusSnapshot,
+  firstCycle: boolean
+) {
+  const prNumber = snapshot.remote.number;
+  if (!firstCycle || prNumber === undefined) return false;
+  if (!yeetMonitorPolicyConverges(options.policy ?? YeetUntilMergedPolicy.make({}))) {
+    yield* (options.replayComments ?? replayYeetMonitorComments)(
+      context,
+      prNumber,
+      YeetMonitorCommentConsumer.Enum["until-merged"]
+    );
+  }
+  return true;
+});
+
+const pollObservedHead = Effect.fn("YeetMonitorLoop.pollObservedHead")(function* (
+  context: RepoRunContext,
+  options: YeetMonitorUntilMergedOptions,
+  budget: YeetMonitorRerunBudget,
+  previous: O.Option<MonitorHeadState>,
+  firstCycle: boolean,
+  scope: MonitorLoopScope,
+  snapshot: YeetStatusSnapshot
+) {
+  const replayed = yield* replayFirstCycleComments(context, options, snapshot, firstCycle);
   const now = yield* options.now ?? DateTime.now;
   const observed = yield* observeMonitorHead(
     context,
     options,
     MonitorObservation.make({
-      snapshot: collected.success,
+      snapshot,
       poll: MonitorPoll.make({ budget, head: previous, replayed }),
       at: DateTime.formatIso(now),
       millis: DateTime.toEpochMillis(now),
@@ -2515,6 +2601,7 @@ export const runYeetMonitorUntilMerged: {
     | ChildProcessSpawner.ChildProcessSpawner
     | Digest.Digest
     | Git
+    | Scope.Scope
   > {
     const interval = O.getOrElse(O.fromNullishOr(options.pollInterval), () => mergeLoopPollInterval);
     let budget = emptyYeetMonitorRerunBudget;
@@ -2538,6 +2625,7 @@ export const runYeetMonitorUntilMerged: {
         ? O.some(yield* loadYeetInboxRowIds(context.repoRoot))
         : O.none(),
       escalation: yield* monitorWaveEscalation(options),
+      github: yield* makeYeetGhLoginOnce(context.repoRoot),
     };
     while (true) {
       const next: MonitorPoll = yield* pollUntilMerged(context, options, budget, head, firstCycle, scope);
@@ -2549,7 +2637,7 @@ export const runYeetMonitorUntilMerged: {
       if (failures === 0 && O.isSome(next.terminal)) return next.terminal.value;
       yield* Effect.sleep(nextMonitorSleep(next, interval));
     }
-  })
+  }, Effect.scoped)
 );
 
 const collectMonitorStatus = Effect.fn("YeetMonitorLoop.collectStatus")(function* (

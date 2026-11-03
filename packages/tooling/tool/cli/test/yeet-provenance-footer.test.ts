@@ -19,6 +19,7 @@ import {
   RepoStepRunResult,
   recordCurrentPrSession,
   recordMonitoredPrSession,
+  recordMonitoredPrSessionAsGhLogin,
   recordPrCreateLane,
   recordPrProvenanceStampLane,
   renderPrProvenance,
@@ -47,11 +48,13 @@ import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { captureGithub, recordedGithub, restPullRequest } from "./support/YeetGithub.ts";
 import { makeRecord, PlatformLayer, repository } from "./yeet-pr-fixtures.ts";
 
 const MemoryLayer = Layer.provideMerge(
@@ -68,7 +71,6 @@ const MemoryLayer = Layer.provideMerge(
 );
 
 const footer = renderPrProvenance(toPublicPrProvenance([makeRecord()], O.some(42), true));
-const GhBody = S.Struct({ body: S.String, updatedAt: S.String });
 const GhBodyEdit = S.Struct({ editedAt: S.String, editor: S.NullOr(S.Struct({ login: S.String })), diff: S.String });
 const GhBodyEditsDocument = S.Struct({
   data: S.Struct({
@@ -77,7 +79,7 @@ const GhBodyEditsDocument = S.Struct({
 });
 type GhBodyEdit = typeof GhBodyEdit.Type;
 const editedAt = "2026-09-03T12:01:00Z";
-const encodeGhBodyJsonResult = S.encodeUnknownResult(S.fromJsonString(GhBody));
+const encodeJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 const encodeGhBodyEditsDocumentJsonResult = S.encodeUnknownResult(S.fromJsonString(GhBodyEditsDocument));
 // The REST pull-request fields the stamp may project with `--jq`. A field
 // outside this set (a camelCase `gh pr view` name such as `lastEditedAt`) is
@@ -96,10 +98,19 @@ const unsupportedRestPullField = (args: ReadonlyArray<string>): O.Option<string>
   );
 const isRestPullRead = (args: ReadonlyArray<string>): boolean =>
   args[0] === "api" && /^repos\/\{owner\}\/\{repo\}\/pulls\/\d+$/.test(args[1] ?? "");
+// The kit reads the repository itself for its default branch (`GET repos/{owner}/{repo}`).
 const isDefaultBranchRead = (args: ReadonlyArray<string>): boolean =>
-  args[0] === "api" && args[1] === "repos/{owner}/{repo}" && A.contains(args, ".default_branch");
-const bodyFileOf = (args: ReadonlyArray<string>): string =>
-  Str.replace(/^body=@/, "")(O.getOrElse(A.last(args), () => ""));
+  args[0] === "api" && args[1] === "repos/{owner}/{repo}";
+// The kit's `pulls` create, as the argv `gh api -X POST` would have carried it.
+const isPullCreate = (args: ReadonlyArray<string>): boolean =>
+  args[0] === "api" && args[1] === "-X" && args[2] === "POST" && args[3] === "repos/{owner}/{repo}/pulls";
+// The `<field>=<value>` the kit's REST body carried for `field`.
+const fieldOf = (args: ReadonlyArray<string>, field: string): string =>
+  pipe(
+    A.findFirst(args, Str.startsWith(`${field}=`)),
+    O.map(Str.slice(field.length + 1)),
+    O.getOrElse(() => "")
+  );
 interface GhCaptureResult {
   readonly exitCode: number;
   readonly output: string;
@@ -120,8 +131,9 @@ const restPullRead = <E, R>(
     onNone: () => snapshot,
     onSome: (field) => Effect.succeed(restUnknownField(field)),
   });
+// The REST pull request GitHub answers a read or the body PATCH with.
 const encodeGhBody = (body: string, updatedAt: string = editedAt): string =>
-  Result.getOrThrow(encodeGhBodyJsonResult({ body, updatedAt }));
+  Result.getOrThrow(encodeJsonResult(restPullRequest({ number: 42, body, updated_at: updatedAt })));
 const encodeGhBodyEdits = (nodes: ReadonlyArray<GhBodyEdit>): string =>
   Result.getOrThrow(
     encodeGhBodyEditsDocumentJsonResult({
@@ -176,7 +188,6 @@ const prCreateStep = prStep("publish:02-pr-create", "publish:pr-create");
 const provenanceStampStep = prStep("publish:03-pr-provenance-stamp", "publish:pr-provenance-stamp");
 
 const makeGhRunner = Effect.fn("test.makeGhRunner")(function* (
-  fs: FileSystem.FileSystem,
   initialBody: string,
   freshBody: string,
   afterWrite: (body: string) => string = (body) => body,
@@ -218,14 +229,13 @@ const makeGhRunner = Effect.fn("test.makeGhRunner")(function* (
         truncated: false,
       };
     }
-    const bodyPath = bodyFileOf(args);
-    const body = yield* fs.readFileString(bodyPath).pipe(Effect.orDie);
+    const body = fieldOf(args, "body");
     yield* Ref.set(written, body);
     yield* Ref.update(writtenBodies, A.append(body));
     yield* Ref.update(writes, (count) => count + 1);
-    return { exitCode: 0, output: "", truncated: false };
+    return { exitCode: 0, output: encodeGhBody(body), truncated: false };
   });
-  return { capture, historyReads, views, writes, written, writtenBodies };
+  return { capture, github: captureGithub(capture), historyReads, views, writes, written, writtenBodies };
 });
 
 const runStamp = Effect.fn("test.runStamp")(function* (
@@ -243,8 +253,9 @@ const runStamp = Effect.fn("test.runStamp")(function* (
     Effect.provideService(ConfigProvider.ConfigProvider, provider)
   );
   yield* registry.append(makeRecord());
-  const runner = yield* makeGhRunner(fs, initialBody, freshBody, afterWrite, editHistory, freshUpdatedAt);
-  const outcome = yield* ensureProvenanceFooter(context(root), repository, 42, runner.capture).pipe(
+  const runner = yield* makeGhRunner(initialBody, freshBody, afterWrite, editHistory, freshUpdatedAt);
+  const outcome = yield* ensureProvenanceFooter(context(root), repository, 42).pipe(
+    runner.github.provide,
     Effect.provideService(ConfigProvider.ConfigProvider, provider)
   );
   return {
@@ -257,7 +268,15 @@ const runStamp = Effect.fn("test.runStamp")(function* (
   };
 });
 
-const makePublishGhRunner = Effect.fn("test.makePublishGhRunner")(function* (fs: FileSystem.FileSystem) {
+const defaultBranchJson = Result.getOrThrow(encodeJsonResult({ default_branch: "main" }));
+const createdPullJson = (draft: boolean) =>
+  Result.getOrThrow(
+    encodeJsonResult(
+      restPullRequest({ number: 42, draft, html_url: "https://github.com/beep-effect/beep-effect/pull/42" })
+    )
+  );
+
+const makePublishGhRunner = Effect.fn("test.makePublishGhRunner")(function* () {
   const body = yield* Ref.make("Pull request summary");
   const createBody = yield* Ref.make("");
   const capture = Effect.fn("test.fakePublishGhRunner")(function* (
@@ -266,11 +285,10 @@ const makePublishGhRunner = Effect.fn("test.makePublishGhRunner")(function* (fs:
     _cwd: string,
     _env: Record<string, string | undefined> | undefined = undefined
   ) {
-    if (isDefaultBranchRead(args)) return { exitCode: 0, output: "main\n", truncated: false };
-    if (args[1] === "create") {
-      const bodyPath = O.getOrElse(A.last(args), () => "");
-      yield* Ref.set(createBody, yield* fs.readFileString(bodyPath).pipe(Effect.orDie));
-      return { exitCode: 0, output: "https://github.com/beep-effect/beep-effect/pull/42", truncated: false };
+    if (isDefaultBranchRead(args)) return { exitCode: 0, output: defaultBranchJson, truncated: false };
+    if (isPullCreate(args)) {
+      yield* Ref.set(createBody, fieldOf(args, "body"));
+      return { exitCode: 0, output: createdPullJson(false), truncated: false };
     }
     if (isRestPullRead(args)) {
       return yield* restPullRead(
@@ -291,11 +309,11 @@ const makePublishGhRunner = Effect.fn("test.makePublishGhRunner")(function* (fs:
         truncated: false,
       };
     }
-    const bodyPath = bodyFileOf(args);
-    yield* Ref.set(body, yield* fs.readFileString(bodyPath).pipe(Effect.orDie));
-    return { exitCode: 0, output: "", truncated: false };
+    const written = fieldOf(args, "body");
+    yield* Ref.set(body, written);
+    return { exitCode: 0, output: encodeGhBody(written), truncated: false };
   });
-  return { body, capture, createBody };
+  return { body, capture, createBody, github: captureGithub(capture) };
 });
 
 describe("Yeet provenance footer splice", () => {
@@ -743,15 +761,13 @@ describe("Yeet provenance footer splice", () => {
         const root = yield* fs.makeTempDirectoryScoped();
         yield* configureRepo(root);
         const registry = yield* PrSessionRegistry;
-        const runner = yield* makePublishGhRunner(fs);
+        const runner = yield* makePublishGhRunner();
         const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
         const provider = ConfigProvider.fromEnv({ env: { HOME: root, PWD: root } });
         yield* ensurePullRequest(context(root), recorder, O.some(prCreateStep), O.some(provenanceStampStep), {
-          capture: runner.capture,
           findOpen: () => Effect.succeedNone,
           registry,
-          view: () => Effect.succeed(GhPrView.make({ headRefName: context(root).branch, number: 42, state: "OPEN" })),
-        }).pipe(Effect.provideService(ConfigProvider.ConfigProvider, provider));
+        }).pipe(runner.github.provide, Effect.provideService(ConfigProvider.ConfigProvider, provider));
         const createBody = yield* Ref.get(runner.createBody);
         expect(createBody).not.toContain("yeet-provenance");
         const rows = yield* registry.lookup(repository, 42);
@@ -787,15 +803,14 @@ describe("Yeet provenance footer splice", () => {
         const root = yield* fs.makeTempDirectoryScoped();
         yield* configureRepo(root);
         const registry = yield* PrSessionRegistry;
-        const runner = yield* makePublishGhRunner(fs);
+        const runner = yield* makePublishGhRunner();
         const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
         const existing = GhPrView.make({ headRefName: context(root).branch, number: 42, state: "OPEN" });
         const provider = ConfigProvider.fromEnv({ env: { HOME: root, PWD: root } });
         yield* ensurePullRequest(context(root), recorder, O.some(prCreateStep), O.some(provenanceStampStep), {
-          capture: runner.capture,
           findOpen: () => Effect.succeedSome(existing),
           registry,
-        }).pipe(Effect.provideService(ConfigProvider.ConfigProvider, provider));
+        }).pipe(runner.github.provide, Effect.provideService(ConfigProvider.ConfigProvider, provider));
         const rows = yield* registry.lookup(repository, 42);
         expect(rows[0]?.role).toBe("pushed");
         expect(yield* Ref.get(runner.body)).toContain("yeet-provenance:start");
@@ -830,52 +845,47 @@ describe("Yeet provenance footer splice", () => {
           ProvenanceStampOutcome.make({ status: "current", message: "current" })
         );
         expect(yield* Ref.get(recorder)).toHaveLength(2);
+        const denied = captureGithub((_command, args) =>
+          Effect.succeed(
+            isDefaultBranchRead(args)
+              ? { exitCode: 0, output: defaultBranchJson }
+              : { exitCode: 1, output: "creation denied" }
+          )
+        );
         const failure = yield* ensurePullRequest(context(root), recorder, O.some(prCreateStep), O.none(), {
           findOpen: () => Effect.succeedNone,
-          capture: (_command, args) =>
-            Effect.succeed(
-              isDefaultBranchRead(args)
-                ? { exitCode: 0, output: "main\n", truncated: false }
-                : { exitCode: 1, output: "creation denied", truncated: false }
-            ),
-        }).pipe(Effect.flip);
-        expect(failure).toMatchObject({ exitCode: 1, message: "gh pr create failed:\ncreation denied" });
+        }).pipe(denied.provide, Effect.flip);
+        expect(failure.exitCode).toBe(1);
+        expect(failure.message).toContain("GitHub REST pull request creation failed:\n");
+        expect(failure.message).toContain("creation denied");
       })
     );
 
-    it.effect("creates a draft when requested and falls back to the URL in the decoded view", () =>
+    it.effect("creates a draft on the default branch when requested and keeps the URL GitHub returns", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const root = yield* fs.makeTempDirectoryScoped();
         yield* configureRepo(root);
         const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
         const argsSeen = yield* Ref.make<ReadonlyArray<string>>([]);
+        const github = captureGithub((_command, args) =>
+          (isPullCreate(args) ? Ref.set(argsSeen, args) : Effect.void).pipe(
+            Effect.as({ exitCode: 0, output: isDefaultBranchRead(args) ? defaultBranchJson : createdPullJson(true) })
+          )
+        );
         const result = yield* ensurePullRequest(
           context(root),
           recorder,
           O.some(RepoPlanStep.make({ ...prCreateStep, args: ["pr", "create", "--draft"] })),
           O.none(),
-          {
-            findOpen: () => Effect.succeedNone,
-            capture: (_command, args) =>
-              (args[1] === "create" ? Ref.set(argsSeen, args) : Effect.void).pipe(
-                Effect.as({ exitCode: 0, output: isDefaultBranchRead(args) ? "main\n" : "", truncated: false })
-              ),
-            view: () =>
-              Effect.succeed(
-                GhPrView.make({
-                  number: 42,
-                  headRefName: context(root).branch,
-                  state: "OPEN",
-                  url: "https://github.com/beep-effect/beep-effect/pull/42",
-                })
-              ),
-          }
+          { findOpen: () => Effect.succeedNone }
         ).pipe(
+          github.provide,
           Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ HOME: root, PWD: root }))
         );
-        expect(yield* Ref.get(argsSeen)).toContain("--draft");
-        expect(yield* Ref.get(argsSeen)).toContain("--base");
+        expect(yield* Ref.get(argsSeen)).toContain("draft=true");
+        expect(yield* Ref.get(argsSeen)).toContain("base=main");
+        expect(yield* Ref.get(argsSeen)).toContain("head=beep-effect:feat/yeet-pr-resume-footer");
         expect(result.created).toBe(true);
         assertSome(result.url, "https://github.com/beep-effect/beep-effect/pull/42");
       })
@@ -926,13 +936,39 @@ describe("Yeet provenance footer splice", () => {
         const root = yield* fs.makeTempDirectoryScoped();
         yield* configureRepo(root);
         const registry = yield* PrSessionRegistry;
-        const runner = yield* makeGhRunner(fs, "Body", "Body");
+        const runner = yield* makeGhRunner("Body", "Body");
         const provider = ConfigProvider.fromEnv({ env: { HOME: root, PWD: root } });
-        yield* recordMonitoredPrSession(context(root), 42, runner.capture, registry).pipe(
+        yield* recordMonitoredPrSession(context(root), 42, registry).pipe(
+          runner.github.provide,
           Effect.provideService(ConfigProvider.ConfigProvider, provider)
         );
         expect(yield* registry.lookup(repository, 42)).toHaveLength(1);
         expect(yield* Ref.get(runner.writes)).toBe(1);
+      })
+    );
+  });
+
+  it.layer(Layer.mergeAll(PlatformLayer, layerPrSessionRegistryMemory), { timeout: "10 seconds" })((it) => {
+    it.effect("records the monitored session even when the gh login cannot be built", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped();
+        yield* configureRepo(root);
+        const registry = yield* PrSessionRegistry;
+        const real = yield* ChildProcessSpawner.ChildProcessSpawner;
+        // Own double: git reaches the real repository; every credential source (gh, op, ssh) exits 1.
+        const noLogin = ChildProcessSpawner.make((command) =>
+          ChildProcess.isStandardCommand(command) && command.command !== "git"
+            ? real.spawn(ChildProcess.make("false", [], command.options))
+            : real.spawn(command)
+        );
+        const provider = ConfigProvider.fromEnv({ env: { HOME: root, PWD: root } });
+        const outcome = yield* recordMonitoredPrSessionAsGhLogin(context(root), 42, registry).pipe(
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, noLogin),
+          Effect.provideService(ConfigProvider.ConfigProvider, provider)
+        );
+        expect(yield* registry.lookup(repository, 42)).toHaveLength(1);
+        expect(outcome.status).toBe("skipped");
       })
     );
   });
@@ -976,11 +1012,10 @@ describe("Yeet provenance footer splice", () => {
         const root = yield* fs.makeTempDirectoryScoped();
         yield* configureRepo(root);
         const registry = yield* PrSessionRegistry;
-        const runner = yield* makeGhRunner(fs, "Body", "Body");
+        const runner = yield* makeGhRunner("Body", "Body");
         const routeContext = context(root);
         const provider = ConfigProvider.fromEnv({ env: { HOME: root, PWD: root } });
         yield* runYeetWatchLoop({ base: "origin/main", head: "HEAD", packetDir: ".beep/yeet" }, false, {
-          capture: runner.capture,
           hydrate: () => Effect.succeed(routeContext),
           registry,
           view: () => Effect.succeed(GhPrView.make({ headRefName: routeContext.branch, number: 42, state: "OPEN" })),
@@ -993,7 +1028,7 @@ describe("Yeet provenance footer splice", () => {
                 reason: "all-terminal",
               })
             ),
-        }).pipe(Effect.provideService(ConfigProvider.ConfigProvider, provider));
+        }).pipe(runner.github.provide, Effect.provideService(ConfigProvider.ConfigProvider, provider));
         expect(yield* registry.lookup(repository, 42)).toHaveLength(1);
         expect(yield* Ref.get(runner.writes)).toBe(1);
       })
@@ -1008,7 +1043,7 @@ describe("Yeet provenance footer splice", () => {
           const root = yield* fs.makeTempDirectoryScoped();
           yield* configureRepo(root);
           const registry = yield* PrSessionRegistry;
-          const runner = yield* makeGhRunner(fs, "Body", "Body");
+          const runner = yield* makeGhRunner("Body", "Body");
           const routeContext = context(root);
           const provider = ConfigProvider.fromEnv({ env: { HOME: root, PWD: root } });
           const policy = YeetUntilReadyPolicy.make({ settleTimeoutMs: 42 });
@@ -1016,7 +1051,6 @@ describe("Yeet provenance footer splice", () => {
           const terminal = yield* runYeetMergeLoop(
             { base: "origin/main", head: "HEAD", packetDir: ".beep/yeet" },
             {
-              capture: runner.capture,
               hydrate: () => Effect.succeed(routeContext),
               mergeLoop: (_context, options) => {
                 expect(options.policy).toEqual(policy);
@@ -1029,7 +1063,7 @@ describe("Yeet provenance footer splice", () => {
               view: () =>
                 Effect.succeed(GhPrView.make({ headRefName: routeContext.branch, number: 42, state: "OPEN" })),
             }
-          ).pipe(Effect.provideService(ConfigProvider.ConfigProvider, provider), Effect.result);
+          ).pipe(runner.github.provide, Effect.provideService(ConfigProvider.ConfigProvider, provider), Effect.result);
           if (exit.exitCode === 0) expect(terminal).toMatchObject({ _tag: "Success", success: exit.terminal });
           else
             expect(terminal).toMatchObject({
@@ -1068,15 +1102,11 @@ describe("Yeet provenance footer splice", () => {
         const fs = yield* FileSystem.FileSystem;
         const root = yield* fs.makeTempDirectoryScoped();
         const registry = yield* PrSessionRegistry;
-        const calls = yield* Ref.make(0);
-        const capture = Effect.fn("test.unexpectedGhRunner")(function* () {
-          yield* Ref.update(calls, (count) => count + 1);
-          return { exitCode: 0, output: "", truncated: false };
-        });
-        const outcome = yield* ensureProvenanceFooter(context(root), repository, 42, capture, registry);
+        const github = recordedGithub(() => ({ body: {} }));
+        const outcome = yield* ensureProvenanceFooter(context(root), repository, 42, registry).pipe(github.provide);
         expect(outcome.status).toBe("skipped");
         expect(isProvenanceStampFailure(outcome)).toBe(true);
-        expect(yield* Ref.get(calls)).toBe(0);
+        expect(github.calls).toHaveLength(0);
       })
     );
   });
@@ -1088,21 +1118,26 @@ describe("Yeet provenance footer splice", () => {
         const root = yield* fs.makeTempDirectoryScoped();
         const registry = yield* PrSessionRegistry;
         yield* registry.append(makeRecord());
-        const initialFailure = Effect.fn("test.initialReadFailure")(function* () {
-          return { exitCode: 1, output: "initial read denied", truncated: false };
-        });
-        const initialOutcome = yield* ensureProvenanceFooter(context(root), repository, 42, initialFailure, registry);
+        const initialFailure = captureGithub(() => Effect.succeed({ exitCode: 1, output: "initial read denied" }));
+        const initialOutcome = yield* ensureProvenanceFooter(context(root), repository, 42, registry).pipe(
+          initialFailure.provide
+        );
         expect(initialOutcome.status).toBe("skipped");
         expect(initialOutcome.message).toContain("initial read denied");
 
         const calls = yield* Ref.make(0);
-        const snapshotFailure = Effect.fn("test.snapshotReadFailure")(function* () {
-          const call = yield* Ref.getAndUpdate(calls, (count) => count + 1);
-          return call === 0
-            ? { exitCode: 0, output: encodeGhBody("Body"), truncated: false }
-            : { exitCode: 1, output: "snapshot read denied", truncated: false };
-        });
-        const snapshotOutcome = yield* ensureProvenanceFooter(context(root), repository, 42, snapshotFailure, registry);
+        const snapshotFailure = captureGithub(() =>
+          Ref.getAndUpdate(calls, (count) => count + 1).pipe(
+            Effect.map((call) =>
+              call === 0
+                ? { exitCode: 0, output: encodeGhBody("Body") }
+                : { exitCode: 1, output: "snapshot read denied" }
+            )
+          )
+        );
+        const snapshotOutcome = yield* ensureProvenanceFooter(context(root), repository, 42, registry).pipe(
+          snapshotFailure.provide
+        );
         expect(snapshotOutcome.status).toBe("skipped");
         expect(snapshotOutcome.message).toContain("snapshot read denied");
       })

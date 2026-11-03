@@ -1234,7 +1234,7 @@ export const readMergeGate = Effect.fn("Yeet.readMergeGate")(function* (
     requiredContexts: O.map(ruleset, (rules) => rules.contexts),
     checkRuns: A.map(checkRuns, toMergeGateCheckRun),
     baseRuns,
-    window: yield* readYeetReviewWindow(context, { prNumber: pull.number, headSha: pull.headSha }),
+    window: yield* readYeetReviewWindow({ prNumber: pull.number, headSha: pull.headSha }),
     unresolvedThreads,
     squashCommitlint,
     readAt: yield* DateTime.now,

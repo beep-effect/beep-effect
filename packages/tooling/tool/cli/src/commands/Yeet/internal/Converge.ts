@@ -65,13 +65,13 @@ import {
   yeetPrCommentRowId,
   yeetReviewThreadRowId,
 } from "./Inbox.ts";
+import { yeetCommentExcerpt } from "./MonitorComments.schemas.ts";
 import {
   acknowledgeYeetMonitorComments,
   collectNewYeetMonitorComments,
   openYeetMonitorCommentStream,
   YEET_MONITOR_COMMENT_EXCERPT_LENGTH,
   YeetMonitorCommentConsumer,
-  yeetCommentExcerpt,
   yeetMonitorCommentFromBot,
 } from "./MonitorComments.ts";
 import { dispatchYeetCheckFailure } from "./Remediation.ts";
@@ -83,6 +83,7 @@ import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetCommandError } from "../Yeet.errors.ts";
+import type { YeetGithubServices } from "./GhOps.ts";
 import type { YeetMonitorComment } from "./MonitorComments.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Converge");
@@ -495,6 +496,7 @@ export const pollYeetPrCommentRows = Effect.fn("Yeet.pollPrCommentRows")(functio
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | YeetGithubServices
 > {
   const consumer = YeetMonitorCommentConsumer.Enum["until-ready"];
   const watermarkRef = yield* openYeetMonitorCommentStream(context, window.prNumber, consumer, O.some(window.since));

@@ -1,5 +1,5 @@
 {
-  "previous": "7f691e501eb7797df9dd3309247eceea3fcdda6717ee09bbddfe18d1ebe2354f",
+  "previous": "9e5641866b964bbd17327ec83dc19085a442f1366c00f3622b50239fc8b16db7",
   "review": {
     "reviewer": "Codex (party-slice completion owner)",
     "reason": "Record audit-named manifest/reference changes and new generated party package tasks; retain existing qualification scope, outputs and cache flags.",

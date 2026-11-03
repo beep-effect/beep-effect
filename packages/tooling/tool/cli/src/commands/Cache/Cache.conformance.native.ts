@@ -39,6 +39,7 @@ import {
   skippedCacheConformanceCase,
 } from "./Cache.conformance.ts";
 import { CacheConformanceWireCheck } from "./Cache.conformance.wire.ts";
+import { CacheCommandError } from "./Cache.errors.ts";
 import {
   decodeCacheExperimentText,
   hashCacheExperimentExecutable,
@@ -46,7 +47,6 @@ import {
   requireCacheLinuxX64,
 } from "./Cache.evidence.ts";
 import { CacheProtocolNativeSummary, cacheProtocolSandboxMounts } from "./Cache.protocol.runner.ts";
-import { CacheCommandError } from "./Cache.schemas.ts";
 import type {
   CacheConformanceBearers,
   CacheConformanceCase,

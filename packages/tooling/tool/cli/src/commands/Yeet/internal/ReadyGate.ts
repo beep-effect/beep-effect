@@ -65,7 +65,8 @@ import { ReviewLaneFlipRow, YEET_REVIEW_LANE_SCHEMA_VERSION } from "./ReviewLane
 import { recordYeetReviewLaneRows } from "./ReviewLane.ts";
 import { YEET_REVIEW_WINDOW_DEFAULT } from "./ReviewWindow.ts";
 import { readSquashCommitlintForPullRequest, renderSquashCommitlintVerdict } from "./SquashCommitlint.ts";
-import { collectYeetStatus, YeetStatusRemote } from "./Status.ts";
+import { YeetStatusRemote } from "./Status.schemas.ts";
+import { collectYeetStatus } from "./Status.ts";
 import { mergeReadyCriterionHolds, YeetMergeReady } from "./Verdict.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";

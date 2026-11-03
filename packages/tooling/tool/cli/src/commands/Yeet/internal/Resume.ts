@@ -11,7 +11,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { shellQuote } from "@beep/repo-ai-metrics";
+import { shellQuote } from "@beep/repo-utils/Shell";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";

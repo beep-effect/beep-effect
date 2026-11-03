@@ -34,6 +34,7 @@ import { configStringOption } from "../../../internal/cli/EnvConfig.ts";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
+import { provideYeetGhLogin } from "./GhOps.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
 import { mergePr } from "./Merge.ts";
 import { runYeetMonitorUntilMerged } from "./MonitorLoop.ts";
@@ -79,7 +80,6 @@ import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CliReportedExit } from "../../../internal/cli/ExitCodeError.ts";
-import type { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import type { WorktreeRemovalReceipt } from "../../Worktree/Worktree.schemas.ts";
 import type { WorktreeRemovalService } from "../../Worktree/Worktree.service.ts";
 import type { runYeetAutomaticCloseout } from "./Closeout.ts";
@@ -115,7 +115,6 @@ interface YeetPorcelainOptions {
  * artifact. Each defaults to the live implementation.
  */
 interface YeetMonitorRouteDependencies {
-  readonly capture?: typeof runRepoCommandCapture;
   readonly closeout?: typeof runYeetAutomaticCloseout;
   readonly collectStatus?: typeof collectYeetStatus;
   readonly hydrate?: typeof hydrateYeetReadOnlyContext;
@@ -138,8 +137,12 @@ const hydrateMonitoredContext = Effect.fn("Yeet.hydrateMonitoredContext")(functi
   bindPullRequest: boolean
 ) {
   const context = yield* (dependencies.hydrate ?? hydrateYeetReadOnlyContext)(options);
-  const pullRequest = yield* (dependencies.view ?? runGhPullRequestView)(context);
-  yield* recordMonitoredPrSession(context, pullRequest.number, dependencies.capture, dependencies.registry);
+  // One gh login for the pull request read and the provenance stamp.
+  const pullRequest = yield* Effect.gen(function* () {
+    const viewed = yield* (dependencies.view ?? runGhPullRequestView)(context);
+    yield* recordMonitoredPrSession(context, viewed.number, dependencies.registry);
+    return viewed;
+  }).pipe(provideYeetGhLogin(context.repoRoot));
   // Inside a detached job, bind the pull request to the job record so
   // `yeet job wait` returns only on waves for this pull request. Outside a job
   // this is a no-op, and a failed bind is reported, never fatal. An
@@ -619,7 +622,6 @@ export const runYeetMergeLoop: {
       commentsSince: O.getOrUndefined(O.map(job, (record) => record.submittedAt)),
       rulesetRead: dependencies.rulesetRead,
       closeout: dependencies.closeout,
-      capture: dependencies.capture,
       policy,
       pollInterval: dependencies.pollInterval,
       waveRerunCommand: O.getOrUndefined(yeetAttachedMonitorRerunCommand(process.argv)),

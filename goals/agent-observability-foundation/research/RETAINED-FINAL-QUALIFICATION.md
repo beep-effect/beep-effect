@@ -1,9 +1,9 @@
 # Retained final qualification
 
-[PR2612](https://github.com/beep-effect/beep-effect/pull/2612) was merged without
-establishing the proposed completed-retained delivery checkpoint. The base lifecycle remains active until
-the canonical accepted-head receipt verifies the declared completion evidence.
-Review readiness alone does not establish completion or real-harness enrollment.
+[PR2649](https://github.com/beep-effect/beep-effect/pull/2649) is the operator-reserved
+final readiness checkpoint. The base lifecycle remains active until its actual
+canonical accepted-head receipt verifies the declared completion evidence.
+Readiness and source qualification remain distinct from real-harness enrollment.
 The final delivery role is selected by the [manifest](../ops/manifest.json).
 
 ## Preserve the actual merge result
@@ -222,9 +222,9 @@ state and a body reservation are coordination controls; shared unrestricted
 GitHub credentials can bypass them. Do not claim exclusive technical ownership
 without an enforced credential or server-side release boundary.
 
-## Corrective PR2644 source comparison
+## Historical PR2644 source comparison
 
-[PR2644](https://github.com/beep-effect/beep-effect/pull/2644) is the held corrective
+[PR2644](https://github.com/beep-effect/beep-effect/pull/2644) was the held corrective
 final declaration. Its [comparison](../ops/history/owner-closeout-source-applicability-20261103.json)
 consumes accepted main `453364b0` through a normal merge. All selected bytes and
 membership match V3: 234/249, 82/84, 86/90 and 85/89. All V3 baseline values remain
@@ -244,6 +244,42 @@ is unsatisfied. PR2644 has no completion claim until actual acceptance occurs.
 The operator subsequently confirmed personally merging PR2612. The
 [clarification](../ops/history/pr2612-merge-attribution-clarified-20261102.json)
 supplements the earlier unknown-caller observation without rewriting it. Its
-canonical completion result remains unsatisfied. There is no outstanding need
-to identify a competing agent before PR2644 proceeds through normal verification.
-The existing reservation of PR2644's final merge to this chat remains in force.
+canonical completion result remains unsatisfied. At that earlier checkpoint,
+the clarification resolved the identity question while PR2644 was still open,
+and its merge reservation applied to PR2644. The current sole final is PR2649,
+whose merge remains reserved to the owning chat.
+
+## Preserve PR2644's unknown completion result
+
+[PR2644](https://github.com/beep-effect/beep-effect/pull/2644) merged at
+2026-11-03T04:40:27Z, accepted head
+`2f97d4734edc4e1cc59da8943eadc0f766e7192e`, as
+`f9654ae19315316a1cf66aa89b4f0f7bd022f7d0`. Its
+[canonical observation](../ops/history/pr2644-completion-unknown-20261103.json)
+remains **unknown**. The exact-head closeout verdict created before merge had no
+positive readiness field. The observer finalized after merge, and Lint Policy
+passed at 04:44:16Z. Forty check runs eventually reported success; that later quality
+proof does not establish the missing pre-merge readiness.
+
+The operator elected to retain the pre-merge rule and prepare one further final
+whose merge remains with the owning chat. Preserve the original verdict,
+chronology and receipt. Do not grandfather the packet or supply retrospective
+readiness. Lifecycle remains active until the next actual accepted checkpoint.
+
+## Current PR2649 source comparison
+
+The [new comparison](../ops/history/final-checkpoint-source-applicability-20261103.json)
+consumes accepted main `f9654ae19315316a1cf66aa89b4f0f7bd022f7d0`. Every selected
+source set and membership matches V4: 234/249, 82/84, 86/90 and 85/89. Eleven baseline
+identities move to accepted module paths with every percentage and uncovered
+count retained; two distinct identities are added. Reversing those mappings and
+removing the two additions reproduces the prior parsed baseline, including
+totals, settings and epsilon. This is not unchanged source bytes or a fresh
+whole-baseline measurement. CLI namespace, callback and proof-environment changes
+outside the selected footprint require final-head hosted verification.
+
+The original root/stage proof and PR2644 hosted executions retain their own
+source and runtime boundaries. Current exact-root admission remains false; all
+seven real-harness populations remain Unknown. Canonical completion is pending
+actual final-head readiness, positive evidence archived before this chat's
+strict merge, and actual post-merge verification. The recovery hold stays intact.

@@ -17,8 +17,8 @@ import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { hashFileSha256 } from "../../internal/cli/FsGuards.ts";
 import { OutputBound, runCapturedStreams } from "../../internal/process/index.ts";
+import { CacheCommandError } from "./Cache.errors.ts";
 import {
-  CacheCommandError,
   CacheLinkedFile,
   CacheLinkerResolution,
   CacheRuntimeExecutable,

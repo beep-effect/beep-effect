@@ -20,7 +20,7 @@
  * **Gotchas**
  *
  * The `MERGED` confirmation is a bounded poll rather than a single read, because
- * `gh pr merge` returns as soon as GitHub accepts the request while the pull
+ * the merge returns as soon as GitHub accepts the request while the pull
  * request's own state settles a moment later. Exhausting the budget is an error,
  * not a silent pass — an unconfirmed merge must never be followed by branch
  * deletion.
@@ -37,10 +37,10 @@ import * as O from "effect/Option";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { GhPrView, ghOutput } from "../../../internal/github/index.ts";
-import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import { GhPrView, GithubRest, ghOutput } from "../../../internal/github/index.ts";
 import { enforceReviewerGate, withReviewerOperatorClient } from "../../Reviewer/ReviewerRuleset.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
+import { provideYeetGhLogin, withYeetGithubCredentialHint } from "./GhOps.ts";
 import { SweepReport } from "./Sweep.schemas.ts";
 import { executeSweep } from "./Sweep.ts";
 import type { Git } from "@beep/git/Git";
@@ -48,7 +48,9 @@ import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type { GithubPullRequestRecord } from "../../../internal/github/index.ts";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
+import type { YeetGithubServices } from "./GhOps.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Merge");
 
@@ -128,6 +130,8 @@ export class MergeOutcome extends S.Opaque<MergeOutcome, { readonly brand: uniqu
 
 const decodePullRequestView = S.decodeUnknownEffect(S.fromJsonString(GhPrView));
 
+// KEEP (W6): `gh pr view <branch>` resolves the branch's pull request in any
+// state, which no kit member does (the kit reads a pull request by number).
 const readPullRequest = Effect.fn("Yeet.readMergePullRequest")(function* (
   context: RepoRunContext,
   selector: string
@@ -148,11 +152,31 @@ const readPullRequest = Effect.fn("Yeet.readMergePullRequest")(function* (
   );
 });
 
+// A REST pull request in the `gh pr view --json number,headRefName,state,headRefOid`
+// shape: `MERGED` once merged, else the upper-cased REST state.
+const restPullRequestView = (pull: GithubPullRequestRecord): GhPrView =>
+  GhPrView.make({
+    number: pull.number,
+    headRefName: pull.headRef,
+    state: pull.merged ? mergedState : Str.toUpperCase(pull.state),
+    headRefOid: pull.headSha,
+  });
+
 const confirmMerged = Effect.fn("Yeet.confirmPullRequestMerged")(function* (
-  context: RepoRunContext,
   pullRequestNumber: number
-): Effect.fn.Return<GhPrView, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
-  const view = yield* readPullRequest(context, `${pullRequestNumber}`);
+): Effect.fn.Return<GhPrView, YeetCommandError, YeetGithubServices> {
+  const view = yield* GithubRest.use((rest) => rest.pullRequest(pullRequestNumber)).pipe(
+    Effect.mapBoth({
+      onFailure: (error) =>
+        YeetCommandError.make({
+          message: `Failed to read pull request "${pullRequestNumber}" (${error.message}).`,
+          command: `gh pr view ${pullRequestNumber}`,
+          exitCode: 1,
+          cause: error,
+        }),
+      onSuccess: restPullRequestView,
+    })
+  );
   if (view.state !== mergedState) {
     return yield* YeetCommandError.make({
       message: `pull request #${pullRequestNumber} reports state ${view.state}, not ${mergedState}.`,
@@ -164,12 +188,65 @@ const confirmMerged = Effect.fn("Yeet.confirmPullRequestMerged")(function* (
 });
 
 /**
+ * Squash-merge one pull request pinned to its viewed head, then confirm it merged.
+ *
+ * **Details**
+ *
+ * The merge phase of {@link mergePr}, below its reviewer gate: one REST squash
+ * merge (`gh pr merge <number> --squash --match-head-commit <sha>`'s twin,
+ * `GithubRest.mergePullRequest`) sent once, with no commit subject or body so
+ * GitHub writes its defaults, then a bounded poll of the REST pull request read
+ * until it reports `MERGED`. A refused merge (a head that moved, a pull request
+ * that is not mergeable) fails with the merge command's wording and is never
+ * confirmed; a merge the poll cannot confirm fails too.
+ *
+ * **Example** (Build the merge step)
+ *
+ * ```ts
+ * import { mergeYeetPullRequestAtHead } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(mergeYeetPullRequestAtHead(7, "a".repeat(40)))) // true
+ * ```
+ *
+ * @param pullRequestNumber - The pull request to merge.
+ * @param pinnedHead - The head the merge is pinned to; GitHub refuses it if the head moved.
+ * @param options - Confirmation poll budget; defaults to {@link defaultMergePrOptions}.
+ * @returns The confirmed pull request view.
+ * @category workflows
+ * @since 0.0.0
+ */
+export const mergeYeetPullRequestAtHead = Effect.fn("Yeet.mergePullRequestAtHead")(function* (
+  pullRequestNumber: number,
+  pinnedHead: string,
+  options: MergePrOptions = defaultMergePrOptions
+): Effect.fn.Return<GhPrView, YeetCommandError, YeetGithubServices> {
+  const mergeCommand = `gh pr merge ${pullRequestNumber} --squash --match-head-commit ${pinnedHead}`;
+  // One squash PUT, never retried here; the poll below reads, it does not merge again.
+  yield* GithubRest.use((rest) => rest.mergePullRequest(pullRequestNumber, { sha: pinnedHead, method: "squash" })).pipe(
+    Effect.mapError((error) =>
+      YeetCommandError.make({
+        message: `${mergeCommand} failed:\n${withYeetGithubCredentialHint(error.message)}`,
+        command: mergeCommand,
+        exitCode: 1,
+        cause: error,
+      })
+    )
+  );
+  return yield* confirmMerged(pullRequestNumber).pipe(
+    Effect.retry({ times: options.pollAttempts, schedule: Schedule.spaced(options.pollInterval) })
+  );
+});
+
+/**
  * Squash-merge the current branch's pull request, confirm it, then sweep the clone.
  *
  * **Details**
  *
- * Three phases, in order and never reordered: `gh pr merge <number> --squash`
- * without `--delete-branch`; a bounded poll until the API reports `MERGED`; then
+ * Three phases, in order and never reordered: the REST squash merge pinned to
+ * the viewed head (`gh pr merge <number> --squash --match-head-commit <sha>`'s
+ * twin, `GithubRest.mergePullRequest`), which deletes no branch; a bounded poll
+ * until the REST pull request read reports it merged; then
  * {@link executeSweep}, which owns every ref update and deletion under its own
  * worktree-aware safety rails. A merge that cannot be confirmed fails here, so no
  * deletion is ever attempted against an unconfirmed merge.
@@ -245,22 +322,8 @@ export const mergePr = Effect.fn("Yeet.mergePr")(function* (
       YeetCommandError.make({ message: "beep-reviewer gate held on the current head.", exitCode: 1 })
     )
   );
-  const mergeCommand = `gh pr merge ${view.number} --squash --match-head-commit ${pinnedHead.value}`;
-  const merge = yield* runRepoCommandCapture(
-    "gh",
-    ["pr", "merge", `${view.number}`, "--squash", "--match-head-commit", pinnedHead.value],
-    context.repoRoot
-  ).pipe(Effect.mapError(YeetCommandError.new(`Failed to run ${mergeCommand}.`)));
-  if (merge.exitCode !== 0) {
-    return yield* YeetCommandError.make({
-      message: `${mergeCommand} failed:\n${Str.trim(merge.output)}`,
-      command: mergeCommand,
-      exitCode: merge.exitCode,
-    });
-  }
-
-  const confirmed = yield* confirmMerged(context, view.number).pipe(
-    Effect.retry({ times: options.pollAttempts, schedule: Schedule.spaced(options.pollInterval) })
+  const confirmed = yield* mergeYeetPullRequestAtHead(view.number, pinnedHead.value, options).pipe(
+    provideYeetGhLogin(context.repoRoot)
   );
 
   return MergeOutcome.make({

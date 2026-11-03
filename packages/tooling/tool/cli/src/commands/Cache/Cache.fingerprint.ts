@@ -26,6 +26,7 @@ import { OutputBound, runCaptured } from "../../internal/process/index.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { collectCacheCensus, resolveCacheTurboBinary } from "./Cache.census.ts";
 import { inspectCacheDependencyTree } from "./Cache.dependencies.ts";
+import { CacheCommandError } from "./Cache.errors.ts";
 import { decodeCacheExperimentText } from "./Cache.evidence.ts";
 import { collectCacheRuntimeLinker } from "./Cache.linker.ts";
 import {
@@ -33,7 +34,6 @@ import {
   CacheCensusNode,
   CacheCensusReport,
   CacheCensusSource,
-  CacheCommandError,
   CacheComputationConfiguration,
   CacheExecutablePin,
   CacheLiveIdentity,

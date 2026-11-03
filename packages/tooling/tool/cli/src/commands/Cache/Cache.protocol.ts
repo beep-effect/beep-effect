@@ -12,10 +12,10 @@ import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
+import { CacheCommandError } from "./Cache.errors.ts";
 import { CacheFixtureEvent } from "./Cache.protocol.fixture.schemas.ts";
 import { CacheProtocolReadFailure } from "./Cache.protocol.runner.schemas.ts";
 import { CacheProtocolObservation } from "./Cache.protocol.schemas.ts";
-import { CacheCommandError } from "./Cache.schemas.ts";
 import type { CacheProtocolExecution } from "./Cache.protocol.runner.schemas.ts";
 
 const sameClient = S.toEquivalence(CacheClientPin);

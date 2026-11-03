@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "cache-saved-storage-driver-controls/v1",
+  "observedAt": "2026-11-03T04:01:56.422879+00:00",
+  "driverSha256": "9895f3f8d99f49ea56caa12cfdc1ae04968da7933b62e63847eb742a95055f58",
+  "cases": [
+    {
+      "case": "optimized-python",
+      "refused": true,
+      "exit": 1,
+      "storageIntentCreated": false,
+      "privateMarkerDisclosed": false
+    },
+    {
+      "case": "report-overwrite",
+      "refused": true,
+      "exit": 1,
+      "storageIntentCreated": false,
+      "privateMarkerDisclosed": false
+    },
+    {
+      "case": "unsafe-parent",
+      "refused": true,
+      "exit": 1,
+      "storageIntentCreated": false,
+      "privateMarkerDisclosed": false
+    },
+    {
+      "case": "wrong-source",
+      "refused": true,
+      "exit": 1,
+      "storageIntentCreated": false,
+      "privateMarkerDisclosed": false
+    },
+    {
+      "case": "wrong-endpoint",
+      "refused": true,
+      "exit": 1,
+      "storageIntentCreated": false,
+      "privateMarkerDisclosed": false
+    }
+  ],
+  "passingObservationUnchanged": true,
+  "actualNetworkProbeRepeated": false
+}
