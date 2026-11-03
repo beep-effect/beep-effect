@@ -91,6 +91,7 @@
       "!packages/law-practice/use-cases/test/fixtures/eyecite/regex-match-witnesses.json",
       // Keep one authenticated source dispatch vector per line for review.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/token-dispatch.json",
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/token-context.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/typescript-extensions.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/vocabulary-mapping.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/regex-adversarial-corpus.json",

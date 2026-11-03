@@ -20,6 +20,14 @@ pending replay statements for that head only. New dispatch code still requires
 new-head hosted proof. See
 [hosted composition evidence](history/evidence/2026-11-03-hosted-tokenizer-composition.md).
 
+Native context checkpoint (2026-11-03): the private word-context planner matches
+all 2,976 source preparations (2,364 texts and 612 index failures), including
+Python negative indices, all built-in stop kinds, oversized-prefix behavior,
+300-point truncation and native surrogate distinctions. Nine focused context,
+text and assembly tests pass. Source capture intercepts final regex.search;
+matching, tokenizer composition, metadata and public extraction remain open.
+See [native context evidence](history/evidence/2026-11-03-native-token-context.md).
+
 ## Status
 
 Status: `in-progress`

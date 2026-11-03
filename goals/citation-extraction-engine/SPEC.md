@@ -548,6 +548,15 @@ instead of silently splitting delivery or weakening scope.
 
 ## Decision Log
 
+- **2026-11-03 native context preparation:** preserve source word scanning and
+  post-append 300-Python-point truncation through Effect control flow and the
+  existing native Unicode owner. Intercepting the source search proves context
+  preparation only; third-party regex execution remains required. Preserve
+  exact generated corpus bytes with a narrow formatter exclusion and refresh
+  the identity profile through its canonical writer. Reverse by reverting the
+  private planner, its fixture and exact exclusion, then regenerating the
+  profile. See `history/evidence/2026-11-03-native-token-context.md`.
+
 - **2026-11-03 built-in extraction dispatch:** reuse the authenticated frozen
   edition owner for source labels and Effect collections for source-class
   priority. Preserve actual source lookup order, token indices and explicit

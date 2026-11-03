@@ -52,6 +52,8 @@ native pattern fingerprints to the independently observed constructor, compiler,
 ordering and parameterized edition metadata. `TokenDispatch.ts` adapts the
 built-in extraction branch loop and full-citation class priority from `find.py`,
 using the existing authenticated frozen edition owner for source labels.
+`TokenContext.ts` adapts built-in word scanning, paragraph/string stops,
+Python-point truncation and directional anchoring from `helpers.match_on_tokens`.
 Fresh-process hash production, general custom protocols
 and complete public tokenizer integration remain open.
 

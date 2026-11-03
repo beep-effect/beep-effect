@@ -187,6 +187,53 @@ export const sliceCitationPythonStorage = Effect.fn("Citation.slicePythonStorage
   return yield* materializeSlice(source, start, end, layout);
 });
 
+const copyNativeRange = Effect.fn("Citation.copyNativeRange")(function* (
+  source: CitationPythonUnicodeStorage,
+  start: number,
+  end: number,
+  bytes: Uint8Array,
+  width: 1 | 2 | 4,
+  offset: number
+) {
+  let cursor = offset;
+  for (let index = start; index < end; index++) {
+    if (index % 4096 === 0) yield* Effect.yieldNow;
+    let point = readPoint(source.bytes, index * source.width, source.width);
+    for (let part = 0; part < width; part++) {
+      bytes[cursor++] = point & 255;
+      point >>>= 8;
+    }
+  }
+  return cursor;
+});
+
+/** Concatenate validated native ranges without projecting surrogate words.
+ * The caller validates ranges and reserves exact receiving sizes before allocation.
+ * @internal @category operations @since 0.0.0
+ */
+export const concatCitationPythonRanges = Effect.fn("Citation.concatNativeRanges")(function* <E>(
+  ranges: ReadonlyArray<{
+    readonly source: CitationPythonUnicodeStorage;
+    readonly start: number;
+    readonly end: number;
+  }>,
+  beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E>
+) {
+  const sizes = yield* Effect.forEach(ranges, (range) =>
+    measureCitationPythonSlice(range.source, range.start, range.end)
+  );
+  const width = A.reduce(sizes, 1 as 1 | 2 | 4, (a, size) => (a > size.width ? a : size.width));
+  const pythonLength = A.reduce(sizes, 0, (a, size) => a + size.pythonLength);
+  const utf16Units = A.reduce(sizes, 0, (a, size) => a + size.utf16Units);
+  const layout = CitationPythonSliceLayout.make({ width, pythonLength, utf16Units, byteLength: pythonLength * width });
+  yield* beforeAllocate(layout);
+  const bytes = new Uint8Array(layout.byteLength);
+  let cursor = 0;
+  for (const range of ranges)
+    cursor = yield* copyNativeRange(range.source, range.start, range.end, bytes, width, cursor);
+  return CitationPythonUnicodeStorage.make({ width, bytes });
+});
+
 /**
  * Capture the intermediate ceiling and minimum operation/clean deadline.
  * Storage input is copied before the first scan yield; output bytes belong to
