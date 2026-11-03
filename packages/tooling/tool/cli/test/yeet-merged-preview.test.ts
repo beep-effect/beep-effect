@@ -282,7 +282,10 @@ it.layer(Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCr
       const first = yield* createYeetMergePreview(repoContext);
       // A second run removes the first run's preview before adding its own.
       const preview = yield* createYeetMergePreview(repoContext);
-      expect(preview.commitSha).toBe(first.commitSha);
+      // Each run writes a fresh merge commit whose timestamp can cross a second
+      // boundary, so compare the merge results (trees), not the commit ids.
+      const treeOf = (commitSha: string) => scratchGit(repoContext.repoRoot, ["rev-parse", `${commitSha}^{tree}`]);
+      expect(yield* treeOf(preview.commitSha)).toBe(yield* treeOf(first.commitSha));
       expect(yield* fs.exists(path.join(preview.worktreePath, "feature.md"))).toBe(true);
       expect(yield* fs.exists(path.join(preview.worktreePath, "main.md"))).toBe(true);
       expect(yield* scratchGit(preview.worktreePath, ["rev-parse", "HEAD"])).toBe(preview.commitSha);
