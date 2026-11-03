@@ -255,6 +255,17 @@ rebuild. Existing 71 add/growth events remain required. Eleven focused set,
 selector and lowercase tests pass. Extractor repr/hash binding and source key
 event order remain open. See [set copy evidence](history/evidence/2026-11-03-runtime-set-copy.md).
 
+Latest static extractor-order checkpoint (2026-11-03): the Effect Trie selector
+now records bounded first-introduction events in source automaton order. The
+private ordering stage copies the existing source-compatible unfiltered set
+and inserts selected extractors with frozen source hashes/equality classes.
+All 25 independent synthetic order cases and 22 recomputed repr hashes pass;
+repeat generation is byte-identical. Hosted integration requires all 6,805
+canonical extractor bindings and twelve exact membership/introduction/iteration
+vectors. Full canonical replay is pending. Dynamic host mutation, full repr
+construction, token construction/merge, family/scaling and public integration
+remain open. See [ordering evidence](history/evidence/2026-11-03-extractor-ordering.md).
+
 Latest worker evidence (2026-10-31): private process ownership now covers bounded
 schema frames, captured Clock timers, queue/active limits, forced stop,
 acknowledged cleanup and quarantine without permit reuse. Real-process tests

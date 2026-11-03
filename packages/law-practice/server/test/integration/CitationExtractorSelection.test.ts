@@ -1,6 +1,10 @@
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
+  CitationExtractorOrderingBinding,
+  makeCitationExtractorOrdering,
+} from "@beep/law-practice-server/internal/Citation/ExtractorOrdering";
+import {
   CitationExtractorSelectionBinding,
   makeCitationExtractorSelection,
 } from "@beep/law-practice-server/internal/Citation/ExtractorSelection";
@@ -10,6 +14,7 @@ import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { expect } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -81,8 +86,16 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestSer
           );
           const selector = yield* makeCitationExtractorSelection(limits, bindings);
           expect(bindings).toHaveLength(6805);
+          const orderingBindings = A.map(bindings, (binding, index) => {
+            const [hash, equalityClass] = A.getUnsafe(controls.canonical.hashes, index);
+            return CitationExtractorOrderingBinding.make({ ...binding, hash, equalityClass });
+          });
+          const ordering = yield* makeCitationExtractorOrdering(limits, orderingBindings);
           for (const row of controls.canonical.cases) {
-            expect((yield* selector.select(row.source)).indices, `case ${row.id}`).toEqual(row.selected);
+            const selected = yield* selector.select(row.source);
+            expect(selected.indices, `case ${row.id}`).toEqual(row.selected);
+            expect(selected.insertions, `case ${row.id}`).toEqual(row.insertions);
+            expect((yield* ordering.ordered(row.source)).indices, `case ${row.id}`).toEqual(row.ordered);
           }
         }),
       { timeout: 120_000 }

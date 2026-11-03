@@ -30,7 +30,11 @@ The private citation `ExtractorSelection.ts` adapts required-string selection
 behavior from the pinned eyecite `tokenizers.py`. It uses Effect Trie and
 HashSet rather than copying an Aho-Corasick implementation. Independent source
 observations and the complete default configuration binding are recorded in
-the citation-engine packet; Python set order remains separate integration work.
+the citation-engine packet. `ExtractorOrdering.ts` connects those source match
+introductions to the existing PSF-attributed CPython set adapter. Effect
+HashMap and ordering combinators retain bounded first-event metadata; source
+repr hashes and equality classes are frozen oracle facts for this private
+profile. Dynamic extractor mutation and full tokenizer integration remain open.
 
 The citation oracle fixture baseline also incorporates normalized output and
 regex/extractor data from the official eyecite lock's `reporters-db 3.2.53` and

@@ -21,6 +21,35 @@ def native(text):
     return {"width": width, "bytes": b"".join(ord(c).to_bytes(width, "little") for c in text).hex()}
 
 
+def order_bindings(extractors):
+    groups = {}
+    result = []
+    for index, extractor in enumerate(extractors):
+        value = hash(extractor)
+        candidates = groups.setdefault(value, [])
+        group = next((prior for prior, other in candidates if other == extractor), index)
+        if group == index:
+            candidates.append((index, extractor))
+        result.append({"id": index, "flags": extractor.flags, "strings": [native(text) for text in extractor.strings],
+                       "hash": str(value), "equalityClass": group, "representation": native(repr(extractor))})
+    return result
+
+
+def observe(selector, extractors, text):
+    identities = {id(e): i for i, e in enumerate(extractors)}
+    seen = {i for i, e in enumerate(extractors) if not e.strings}
+    insertions = []
+    for automaton, value in ((selector.case_sensitive_filter, text), (selector.case_insensitive_filter, text.lower())):
+        for _, matches in automaton.iter(value):
+            for extractor in matches:
+                index = identities[id(extractor)]
+                if index not in seen:
+                    seen.add(index)
+                    insertions.append(index)
+    selected = [identities[id(e)] for e in selector.get_extractors(text)]
+    return {"source": native(text), "selected": sorted(selected), "ordered": selected, "insertions": insertions}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--oracle-root", required=True, type=Path)
@@ -30,7 +59,7 @@ def main():
     git = lambda *v: subprocess.check_output(["git", "-C", str(root), *v], text=True).strip()
     if (git("rev-parse", "HEAD"), git("rev-parse", "HEAD^{tree}"), git("status", "--porcelain")) != (PIN, TREE, ""):
         raise SystemExit("oracle source mismatch")
-    if sys.version_info[:3] != (3, 11, 15) or unicodedata.unidata_version != "14.0.0":
+    if sys.version_info[:3] != (3, 11, 15) or unicodedata.unidata_version != "14.0.0" or sys.hash_info.width != 64 or sys.hash_info.algorithm != "siphash13":
         raise SystemExit("Python/Unicode pin mismatch")
     if os.environ.get("PYTHONHASHSEED") != "0" or sys.flags.hash_randomization:
         raise SystemExit("hash seed pin mismatch")
@@ -52,8 +81,20 @@ def main():
                  "\u03a3", "A\u03a3", "A\u03a3A", "A\u03a3\u0301", "A\u03a3\u0301A", "\ud835\udfce", "\U0001d7ce",
                  "\ud835\udfce\U0001d7ce", "\U00010428", "\u1c89\u1c8a", "\U00010d50\U00010d70", "aaaaa",
                  "A\ud800", "\x00", "see" * 2048]
-        cases = [{"id": i, "source": native(text), "selected": sorted(identities[id(e)] for e in selector.get_extractors(text))}
-                 for i, text in enumerate(texts)]
+        cases = [{"id": i, **observe(selector, extractors, text)} for i, text in enumerate(texts)]
+        ordered_extractors = list(extractors) + [
+            TokenExtractor("selection_1", IdToken.from_match, strings=["see"]),
+            TokenExtractor("selection_0", IdToken.from_match),
+            TokenExtractor("same", IdToken.from_match, extra={"a": 1, "b": 2}, strings=["dict"]),
+            TokenExtractor("same", IdToken.from_match, extra={"b": 2, "a": 1}, strings=["dict"]),
+            TokenExtractor("long", IdToken.from_match, strings=["abcdef"]),
+            TokenExtractor("short", IdToken.from_match, strings=["bc"]),
+        ]
+        module.EXTRACTORS = ordered_extractors
+        ordered_selector = module.AhocorasickTokenizer()
+        ordering = {"bindings": order_bindings(ordered_extractors),
+                    "cases": [{"id": i, **observe(ordered_selector, ordered_extractors, text)}
+                              for i, text in enumerate(texts + ["see dict", "abcdef dict"])]}
     finally:
         module.EXTRACTORS = prior
     bindings = [{"id": i, "flags": flags, "strings": [native(s) for s in strings]} for i, (flags, strings) in enumerate(definitions)]
@@ -78,12 +119,14 @@ def main():
     canonical_texts = ["", "nothing", "1 U.S. 1", "1 u.s. 1", "35 U.S.C. § 112", "37 C.F.R. § 1.56", "See also id. at 2, supra", "123 F.3d 456", "Mass. Gen. Laws ch. 1, §§ 2-3", "<p>1 U.S. 1</p>", "\u0130 ID. \u03a3", "see" * 2048]
     canonical = {"extractorsSha256": config, "extractorCount": len(module.EXTRACTORS),
                  "uniqueExtractorCount": len(set(module.EXTRACTORS)),
-                 "cases": [{"id": i, "source": native(text), "selected": sorted(canonical_ids[id(e)] for e in canonical_selector.get_extractors(text))} for i, text in enumerate(canonical_texts)]}
-    out = {"schemaVersion": "citation-extractor-selection-controls/v1", "scope": "Source synthetic selection membership only; no source set-order or family approval.",
-           "oracleCommit": PIN, "oracleTree": TREE, "python": "3.11.15", "unicode": "14.0.0", "hashSeed": "0",
+                 "cases": [{"id": i, **observe(canonical_selector, module.EXTRACTORS, text)} for i, text in enumerate(canonical_texts)],
+                 "hashes": [[row["hash"], row["equalityClass"]] for row in order_bindings(module.EXTRACTORS)],
+                 "representationVectorSha256": hashlib.sha256(operations.encoded([repr(e) for e in module.EXTRACTORS]).encode()).hexdigest()}
+    out = {"schemaVersion": "citation-extractor-selection-controls/v2", "scope": "Source selection and static extractor ordering observations; no family approval.",
+           "oracleCommit": PIN, "oracleTree": TREE, "python": "3.11.15", "unicode": "14.0.0", "hashSeed": "0", "hashWidth": 64, "hashAlgorithm": "siphash13",
            "producerSha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
            "tokenizerSourceSha256": hashlib.sha256((root / "eyecite/tokenizers.py").read_bytes()).hexdigest(),
-           "dependencies": dependencies, "bindings": bindings, "cases": cases, "canonical": canonical}
+           "dependencies": dependencies, "bindings": bindings, "cases": cases, "canonical": canonical, "ordering": ordering}
     args.output.write_text(json.dumps(out, ensure_ascii=True, sort_keys=True, indent=2) + "\n")
     print(json.dumps({"bindings": len(bindings), "cases": len(cases), "canonical": canonical["extractorCount"], "unique": canonical["uniqueExtractorCount"]}))
 

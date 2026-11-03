@@ -27,6 +27,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestSer
         for (const row of corpus.cases) {
           const result = yield* selector.select(row.source);
           expect(result.indices, `case ${row.id}`).toEqual(row.selected);
+          expect(result.insertions, `case ${row.id}`).toEqual(row.insertions);
           expect(result.matchedKeys).toBeLessThanOrEqual(20);
           // Two source scans, at most one extra prefix lookup per newly seen key;
           // lowercase may expand dotted I but these controls stay below 2x points.
@@ -44,7 +45,12 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestSer
           reason: "invalid-bindings",
         });
         const selector = yield* makeCitationExtractorSelection(limits, [binding]);
-        expect(yield* selector.select(native(""))).toEqual({ indices: [0], prefixQueries: 0, matchedKeys: 0 });
+        expect(yield* selector.select(native(""))).toEqual({
+          indices: [0],
+          insertions: [],
+          prefixQueries: 0,
+          matchedKeys: 0,
+        });
       })
     );
     it.effect("snapshots installed native strings and checks metadata before copying", () =>

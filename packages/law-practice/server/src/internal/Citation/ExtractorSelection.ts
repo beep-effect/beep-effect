@@ -7,6 +7,7 @@ import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
@@ -70,6 +71,7 @@ export class CitationExtractorSelection extends S.Opaque<
 >()(
   S.Struct({
     indices: S.Array(Index).check(S.isMaxLength(maximum.patterns)),
+    insertions: S.Array(Index).check(S.isMaxLength(maximum.patterns)),
     prefixQueries: S.Natural,
     matchedKeys: S.Natural,
   }).pipe(
@@ -78,6 +80,21 @@ export class CitationExtractorSelection extends S.Opaque<
     })
   )
 ) {}
+const FirstEvent = S.Struct({
+  phase: S.Literals([0, 1]),
+  end: S.Natural,
+  length: S.Int.check(S.isGreaterThan(0)),
+  rank: S.Natural,
+  index: Index,
+}).pipe(
+  $I.annoteSchema("FirstEvent", { description: "Earliest immutable extractor introduction in source automaton order." })
+);
+const eventOrder = Order.Struct({
+  phase: Order.Number,
+  end: Order.Number,
+  length: Order.flip(Order.Number),
+  rank: Order.Number,
+});
 const fail = (reason: typeof Reason.Type) => CitationExtractorSelectionFailure.make({ reason });
 const snapshotBindings = Effect.fn("Citation.snapshotSelectionBindings")(function* (
   bindings: ReadonlyArray<CitationExtractorSelectionBinding>,
@@ -179,16 +196,32 @@ export const makeCitationExtractorSelection = Effect.fn("Citation.makeExtractorS
     function* (source: unknown) {
       const original = yield* unicode.fromStorage(source);
       let selected = unfiltered;
+      let firstEvents = HashMap.empty<number, typeof FirstEvent.Type>();
       let prefixQueries = 0;
       let matchedKeys = 0;
       const scan = Effect.fn("Citation.scanSelectionTrie")(function* (
         tree: Trie.Trie<ReadonlyArray<number>>,
-        storage: CitationPythonUnicodeStorage
+        storage: CitationPythonUnicodeStorage,
+        phase: 0 | 1
       ) {
         if (Trie.isEmpty(tree)) return;
         const text = yield* encode(storage);
         let seen = HashSet.empty<string>();
-        const visitPrefixes = Effect.fn("Citation.visitSelectionPrefixes")(function* (initial: string) {
+        const recordFirst = Effect.fn("Citation.recordExtractorIntroduction")(function* (
+          offset: number,
+          length: number,
+          members: ReadonlyArray<number>
+        ) {
+          for (let rank = 0; rank < members.length; rank++) {
+            if (rank % 4096 === 0) yield* Effect.yieldNow;
+            const index = A.getUnsafe(members, rank);
+            const event = FirstEvent.make({ phase, end: (offset + length) / 2 - 1, length: length / 2, rank, index });
+            const previous = HashMap.get(firstEvents, index);
+            if (O.isNone(previous) || eventOrder(event, previous.value) < 0)
+              firstEvents = HashMap.set(firstEvents, index, event);
+          }
+        });
+        const visitPrefixes = Effect.fn("Citation.visitSelectionPrefixes")(function* (initial: string, offset: number) {
           let query = initial;
           while (Str.length(query) > 0) {
             prefixQueries++;
@@ -199,19 +232,26 @@ export const makeCitationExtractorSelection = Effect.fn("Citation.makeExtractorS
             if (HashSet.has(seen, key)) break;
             seen = HashSet.add(seen, key);
             matchedKeys++;
+            yield* recordFirst(offset, Str.length(key), members);
             selected = HashSet.union(selected, HashSet.fromIterable(members));
             query = Str.slice(0, Str.length(key) - 1)(key);
           }
         });
         for (let offset = 0; offset < Str.length(text); offset += 2) {
           if (offset % 8192 === 0) yield* Effect.yieldNow;
-          yield* visitPrefixes(Str.slice(offset, offset + longest)(text));
+          yield* visitPrefixes(Str.slice(offset, offset + longest)(text), offset);
         }
       });
-      yield* scan(exact, original.storage);
-      if (!Trie.isEmpty(insensitive)) yield* scan(insensitive, yield* lowercase.lower(original.storage));
+      yield* scan(exact, original.storage, 0);
+      if (!Trie.isEmpty(insensitive)) yield* scan(insensitive, yield* lowercase.lower(original.storage), 1);
       return CitationExtractorSelection.make({
         indices: A.sort(A.fromIterable(selected), Order.Number),
+        insertions: firstEvents.pipe(
+          HashMap.values,
+          A.fromIterable,
+          A.sort(eventOrder),
+          A.map((event) => event.index)
+        ),
         prefixQueries,
         matchedKeys,
       });
