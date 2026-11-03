@@ -1,5 +1,11 @@
 # Node regex worker adapter
 
+**Evidence correction:** the initial Node discovery could select Bun’s Node-named
+test-runner shim. The initial 212eaf6275 observations did not prove Node execution.
+Verified discovery and repeated actual-Node checks are documented in
+[the source-corpus qualification correction](2026-11-03-node-source-corpus-qualification.md).
+The runtime claims below must be read with that correction.
+
 The private regex worker can now run under an explicitly injected Bun or Node
 runtime. `CitationNativeProcessRuntime.kind` is a required closed schema value;
 there is no ambient runtime detection or raw-request runtime selection. Existing

@@ -2,9 +2,10 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
+import { versions } from "node:process";
 import { fileURLToPath } from "node:url";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
-import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { makeCitationRegexAlphabet } from "../../../packages/law-practice/server/src/internal/Citation/RegexAlphabet.ts";
@@ -26,16 +27,22 @@ const programShard = option?.startsWith("--program-shard=")
   : undefined;
 assert.ok(
   process.argv.length === 2 ||
-    (process.argv.length === 3 &&
+    ((process.argv.length === 3 || process.argv.length === 4) &&
       (translateOnly ||
         baselineOnly ||
         witnessSmoke ||
         (Number.isInteger(programShard) && programShard >= 0 && programShard < 16)))
 );
 
+// The bundled Node subject receives the original trusted source location so
+// digest-bound fixtures and producer files resolve identically under both runtimes.
+const sourceLocation = new URL(process.argv[3] ?? import.meta.url);
+assert.equal(sourceLocation.protocol, "file:");
+const runtime = versions.bun ? "bun" : "node";
+const runtimeVersion = versions.bun ?? versions.node;
 const fixture = (name, digest) => {
   const raw = readFileSync(
-    fileURLToPath(new URL(`../../../packages/law-practice/use-cases/test/fixtures/eyecite/${name}`, import.meta.url))
+    fileURLToPath(new URL(`../../../packages/law-practice/use-cases/test/fixtures/eyecite/${name}`, sourceLocation))
   );
   assert.equal(createHash("sha256").update(raw).digest("hex"), digest);
   return JSON.parse(raw.toString("utf8"));
@@ -65,13 +72,13 @@ assert.deepEqual(
 assert.equal(createHash("sha256").update(JSON.stringify(witnesses.cases)).digest("hex"), witnesses.vectorSha256);
 assert.equal(
   createHash("sha256")
-    .update(readFileSync(new URL("./probe-regex-match-witnesses.py", import.meta.url)))
+    .update(readFileSync(new URL("./probe-regex-match-witnesses.py", sourceLocation)))
     .digest("hex"),
   witnesses.producerSha256
 );
 assert.equal(
   createHash("sha256")
-    .update(readFileSync(new URL("./probe-regex-compatibility.py", import.meta.url)))
+    .update(readFileSync(new URL("./probe-regex-compatibility.py", sourceLocation)))
     .digest("hex"),
   witnesses.sourceReaderSha256
 );
@@ -101,7 +108,7 @@ await Effect.runPromise(
       assert.equal(instances, 13610);
     }
     if (translateOnly) {
-      process.stdout.write(`${JSON.stringify({ instances, maxUtf16, translateOnly })}\n`);
+      process.stdout.write(`${JSON.stringify({ runtime, runtimeVersion, instances, maxUtf16, translateOnly })}\n`);
       return;
     }
     phase = "program";
@@ -246,7 +253,7 @@ await Effect.runPromise(
     }
     if (programShard !== undefined || witnessSmoke) {
       process.stdout.write(
-        `${JSON.stringify({ instances: 0, maxUtf16: 0, codePointChecks: 0, alphabetPointChecks: 0, alphabetCaptureMatches: 0, programInstances, programMaxUtf16, programCaptureMatches: 0, witnessInstances, witnessMatches, witnessEmptyInstances, cases: 0, captureMatches: 0 })}\n`
+        `${JSON.stringify({ runtime, runtimeVersion, instances: 0, maxUtf16: 0, codePointChecks: 0, alphabetPointChecks: 0, alphabetCaptureMatches: 0, programInstances, programMaxUtf16, programCaptureMatches: 0, witnessInstances, witnessMatches, witnessEmptyInstances, cases: 0, captureMatches: 0 })}\n`
       );
       return;
     }
@@ -412,9 +419,9 @@ await Effect.runPromise(
       captureMatches += matches.length;
     }
     process.stdout.write(
-      `${JSON.stringify({ instances, maxUtf16, codePointChecks, alphabetPointChecks, alphabetCaptureMatches, programInstances, programMaxUtf16, programCaptureMatches, witnessInstances, witnessMatches, witnessEmptyInstances, cases: facts.cases.length, captureMatches })}\n`
+      `${JSON.stringify({ runtime, runtimeVersion, instances, maxUtf16, codePointChecks, alphabetPointChecks, alphabetCaptureMatches, programInstances, programMaxUtf16, programCaptureMatches, witnessInstances, witnessMatches, witnessEmptyInstances, cases: facts.cases.length, captureMatches })}\n`
     );
-  }).pipe(Effect.provide(BunCrypto.layer))
+  }).pipe(Effect.provide(NodeCrypto.layerDigest))
 ).catch(() => {
   process.stdout.write(`${JSON.stringify({ outcome: "failure", phase, instance })}\n`);
   process.exitCode = 1;

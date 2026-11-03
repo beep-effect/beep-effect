@@ -22,15 +22,13 @@ import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
-import * as Path from "effect/Path";
-import * as ChildProcess from "effect/process/ChildProcess";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import {
   makeCitationNativeManualClock,
   makeCitationNativeSleepClock,
   makeCitationNativeWorkerFixture,
+  makeCitationNodeTestRuntime,
   makeCitationObservedSpawner,
   waitForCitationNativeTest,
 } from "./CitationNativeSpawner.fixtures.ts";
@@ -78,28 +76,6 @@ const descriptor = {
     nullableMultiRepeat: false,
   },
 };
-const nodeRuntime = Effect.fn("RegexWorkerTest.nodeRuntime")(function* (cwd: string) {
-  const path = yield* Path.Path;
-  const spawner = yield* ChildProcessSpawner;
-  // Resolve the installed runtime through a fixed probe; the actual worker
-  // receives the same empty environment and explicit executable as Bun.
-  const executable = Str.trim(yield* spawner.string(ChildProcess.make("node", ["-p", "process.execPath"])));
-  const entrypoint = NodeURL.fileURLToPath(
-    new URL("../src/internal/Citation/RegexWorker.node.entry.ts", import.meta.url)
-  );
-  const bundle = yield* Effect.tryPromise(() =>
-    Bun.build({
-      entrypoints: [entrypoint],
-      target: "node",
-      format: "esm",
-      packages: "bundle",
-      outdir: cwd,
-      naming: "worker.mjs",
-    })
-  ).pipe(Effect.orDie);
-  expect(bundle.success).toBe(true);
-  return { kind: "node", executable, cwd, workerFile: path.join(cwd, "worker.mjs") };
-});
 const setup = Effect.fn("RegexWorkerTest.setup")(function* (
   bindings: unknown,
   kind: CitationNativeRuntimeKind = "bun"
@@ -115,7 +91,10 @@ const setup = Effect.fn("RegexWorkerTest.setup")(function* (
   const cwd = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped({ prefix: "citation-regex-worker-" });
   const runtime =
     kind === "node"
-      ? yield* nodeRuntime(cwd)
+      ? yield* makeCitationNodeTestRuntime(
+          NodeURL.fileURLToPath(new URL("../src/internal/Citation/RegexWorker.node.entry.ts", import.meta.url)),
+          cwd
+        )
       : {
           kind: "bun",
           executable: process.execPath,

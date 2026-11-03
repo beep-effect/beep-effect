@@ -4,12 +4,14 @@
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+import { expect } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
 import * as Clock from "effect/Clock";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
@@ -29,6 +31,61 @@ export const citationHtmlWorkerTestRuntime = () =>
     cwd: process.cwd(),
     workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
   });
+
+/** Reject Bun's test-runner node shim and resolve an actual installed Node
+ * executable through fixed probes. Effect owns probe processes and timeouts.
+ * @internal @category testing @since 0.0.0
+ */
+export const citationNodeTestExecutable = Effect.gen(function* () {
+  const spawner = yield* ChildProcessSpawner;
+  const candidates = yield* spawner.lines(ChildProcess.make("which", ["-a", "node"]));
+  const executable = yield* Effect.findFirstFilter(candidates, (candidate) =>
+    spawner
+      .string(
+        ChildProcess.make(candidate, ["-p", 'process.versions.bun ? "" : process.execPath'], {
+          env: {},
+          extendEnv: false,
+          stderr: "ignore",
+          killSignal: "SIGKILL",
+          forceKillAfter: Duration.zero,
+        })
+      )
+      .pipe(
+        Effect.timeout(Duration.seconds(5)),
+        Effect.map(Str.trim),
+        Effect.result,
+        Effect.map(Result.flatMap(S.decodeUnknownResult(S.NonEmptyString)))
+      )
+  );
+  return yield* O.match(executable, {
+    onNone: () => Effect.die("Citation qualification requires an actual installed Node executable"),
+    onSome: Effect.succeed,
+  });
+});
+
+/** Bundle a trusted test subject for the installed Node executable. The caller
+ * owns the scoped output directory; actual worker launches receive empty env.
+ * @internal @category testing @since 0.0.0
+ */
+export const makeCitationNodeTestRuntime = Effect.fn("NativeSourceTest.nodeRuntime")(function* (
+  entrypoint: string,
+  cwd: string
+) {
+  const path = yield* Path.Path;
+  const executable = yield* citationNodeTestExecutable;
+  const bundle = yield* Effect.tryPromise(() =>
+    Bun.build({
+      entrypoints: [entrypoint],
+      target: "node",
+      format: "esm",
+      packages: "bundle",
+      outdir: cwd,
+      naming: "worker.mjs",
+    })
+  ).pipe(Effect.orDie);
+  expect(bundle.success).toBe(true);
+  return CitationNativeProcessRuntime.make({ kind: "node", executable, cwd, workerFile: path.join(cwd, "worker.mjs") });
+});
 
 const $I = $LawPracticeServerId.create("test/CitationNativeSpawner");
 const MissingProcess = S.Struct({ code: S.tag("ESRCH") }).pipe(
@@ -153,9 +210,6 @@ export const makeCitationNativeWorkerFixture = Effect.fn("WorkerTest.fixture")(f
     workerFile,
     `import {writeFileSync,existsSync} from 'node:fs';process.stdout.write('${ready}');process.stdin.resume();process.stdin.on('end',()=>process.stdout.write('${started}',()=>{writeFileSync(${markerLiteral},'entered');${action}}));`
   );
-  const executable =
-    runtimeKind === "node"
-      ? Str.trim(yield* (yield* ChildProcessSpawner).string(ChildProcess.make("node", ["-p", "process.execPath"])))
-      : process.execPath;
+  const executable = runtimeKind === "node" ? yield* citationNodeTestExecutable : process.execPath;
   return { fs, cwd, workerFile, marker, release, kind: runtimeKind, executable };
 });

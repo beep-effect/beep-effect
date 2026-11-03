@@ -222,6 +222,14 @@ quarantine and late-acknowledgement controls; 25 focused tests pass. Full Node
 source-corpus replay, family/scaling proof and public engine integration remain
 open. See [Node worker adapter](history/evidence/2026-11-03-node-regex-worker.md).
 
+Latest source-runtime checkpoint (2026-11-03): hosted integration now requires
+all original source/compiler/Unicode/capture aggregates separately on Bun and
+Node, with exact runtime/version receipts and 17 confirmed child exits each.
+Those receipts exposed a Bun Node-named test-runner shim in the initial Node
+adapter proof. Verified executable discovery fixes that gap; 12 worker tests and
+two bounded source smoke tests pass on the actual runtimes. Full replay remains
+hosted and pending. See [runtime proof correction and qualification](history/evidence/2026-11-03-node-source-corpus-qualification.md).
+
 Latest worker evidence (2026-10-31): private process ownership now covers bounded
 schema frames, captured Clock timers, queue/active limits, forced stop,
 acknowledged cleanup and quarantine without permit reuse. Real-process tests

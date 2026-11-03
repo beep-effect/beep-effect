@@ -144,7 +144,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationRegexWorker.test.ts",
-          "sha256": "d5698e245d0744fd81ac3022b3965109e25eada2a8a3d9a6870f9476535c4581"
+          "sha256": "a3ce57f4ccbec30dc5d5dff92603b37d7178144b7ab9bb0457929bfadb313151"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-03-native-regex-worker.md",
@@ -946,7 +946,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationNativeSpawner.fixtures.ts",
-          "sha256": "3d81de03ee96525675724153c84e925d9728221d990bf0a65f03dc10863ffc7e"
+          "sha256": "36a959bc71f72bb8293681ab84144a2eac4eeb7a79e16cb58dd5cf4e93acbc39"
         },
         {
           "path": "packages/law-practice/server/test/integration/CitationCleanerNamedHtml.test.ts",

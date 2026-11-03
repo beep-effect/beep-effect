@@ -139,3 +139,16 @@
 - Prevention: inspect test bodies and select individual smoke-test names before local
   replay; filenames alone do not bound compute. No partial run is accepted as
   corpus proof.
+
+## 2026-11-03 — Bun test runner can disguise a runtime probe
+
+- Work: qualify the regex worker and complete source corpus under Node.
+- Evidence: inside `bunx --bun vitest`, a Node-named Bun shim made the original
+  `node -p process.execPath` discovery return Bun. Child-reported runtime identity
+  failed the new Node corpus smoke assertion.
+- Resolution: reject shim candidates using fixed actual-runtime probes; share
+  verified executable discovery between bundled and native-busy fixtures; repeat
+  all 12 worker tests and both source smoke tests successfully; correct the
+  previous Node proof claim explicitly.
+- Prevention: actual child replies must identify runtime and pinned version;
+  executable names and parent-shell version observations alone are insufficient.
