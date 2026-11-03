@@ -1,0 +1,26 @@
+{
+  "previous": "ef390b78722a13417e2a0566601c65d3d7c13c33534286814bbd1ab23d927435",
+  "review": {
+    "reviewer": "Codex (party-slice completion owner)",
+    "reason": "Record audit-named manifest/reference changes and new generated party package tasks; retain existing qualification scope, outputs and cache flags.",
+    "basis": {
+      "path": "goals/party-slice/research/cache-baseline-review-2026-11-03.md",
+      "sha256": "4a0d2cb90bb55ca51ff283e69ac7ebea53e0e768e9169e03adb51098c6f89596"
+    }
+  },
+  "subjects": [
+    "//",
+    "@beep/law-practice-server",
+    "@beep/party-domain",
+    "@beep/party-server",
+    "@beep/party-use-cases"
+  ],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

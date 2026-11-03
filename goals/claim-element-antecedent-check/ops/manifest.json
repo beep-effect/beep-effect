@@ -4,13 +4,13 @@
     "id": "claim-element-antecedent-check",
     "packetId": "goal-packet/v1:9fe9e77b7dd3034d3481d4847f740d689cd6fb1d49eefb41ab47958b09127263",
     "title": "Claim Element Antecedent Check",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-10-14",
     "updated": "2026-11-03",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/claim-element-antecedent-check",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Give patent claims a span-anchored element tree and an advisory, deterministic \u00a7112(b) antecedent-basis and dependency self-check whose findings reach the attorney as claim-finding review items, measured on public USPTO claims with strict structural equality.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -88,12 +88,12 @@
     {
       "id": "P4",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P5",
       "name": "Close",
-      "status": "in-progress"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -112,8 +112,8 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Owner-controlled final PR #2656 after #2626 merged before final Policy success and positive exact-head readiness. Its terminal Check and Storybook succeeded, but completion remains unsatisfied due to the older verdict head. Retain that incident and every prior result. This fresh branch binds #2656 and its own evidence, explicitly reruns closeout after the final push, archives positive readiness before the goal-chat owner performs strict merge, then verifies canonical completion. Raw lifecycle remains active pending verification. v27 stays 37/538 with all 34 protected/all 37 prior matches; labels, old results, scope and uncertainty remain intact. No fresh benchmark, attorney authority, S11 or verifier change is claimed.",
-  "proposedCloseout": {
+  "statusNote": "Completed-retained, canonically verified via final PR #2656 at accepted head 3788988864abaeb2d0b19fa04e27c45949e7ef65 and strict merge 470d609298c518814930fdbd84be16aa54e96e5a. Positive exact-head readiness was archived before merge; required hosted contexts and the declared Yeet verdict are verified. The guarded status writer adopts the verified proposal without changing its declaration digest. v27 remains 37/538 with all 34 protected/all 37 prior matches, original labels, previous results and uncertainty retained. Accuracy and alert noise remain poor; findings are advisory and no fresh benchmark or actual attorney review is claimed. Earlier failed/unknown/unsatisfied closeouts remain historical evidence.",
+  "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2656
   }

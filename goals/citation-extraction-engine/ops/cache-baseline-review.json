@@ -1,14 +1,14 @@
 {
-  "previous": "77cb1eb02dd336548346446f8b616ab65689ce320a5f41ddb5f866a96dc7e816",
+  "previous": "ad901be2454fd84847fbbe993e24c63d8ddf4c13460294ac230dcae2ce9195b2",
   "review": {
-    "reviewer": "GPT-6.1-Sol medium (citation-extraction-engine)",
-    "reason": "Record intentional citation test/integration commands, test configuration and runtime adapter dependency classifications for the server and use-cases subjects. Preserve existing cache settings and qualification scope; grant no qualification.",
+    "reviewer": "GPT-6.1-Sol medium (citation/main conflict resolution)",
+    "reason": "Record the combined Party Node boundary-test route and citation Bun/integration routing, tsconfig and runtime dependencies; retain all existing cache flags and qualification scope.",
     "basis": {
-      "path": "goals/citation-extraction-engine/history/evidence/2026-11-03-citation-cache-posture-review.md",
-      "sha256": "b5b0aa5b0026651522777c7bc6711fe2fb40fb77b75bb721d33e23bcfd1ddf07"
+      "path": "goals/citation-extraction-engine/history/evidence/2026-11-03-main-party-merge-cache-review.md",
+      "sha256": "efabcb10973885ae4a42f9c7235d7796e89b7f043bfa13fa82f6a6407bc1010b"
     }
   },
-  "subjects": ["@beep/law-practice-server", "@beep/law-practice-use-cases"],
+  "subjects": ["@beep/law-practice-server"],
   "scope": [
     "@beep/identity#lint",
     "@beep/types#lint",
