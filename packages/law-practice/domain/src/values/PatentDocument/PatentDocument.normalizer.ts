@@ -37,6 +37,10 @@ const transitionPattern =
   /\b(consisting essentially of|consisting of|comprising|comprises|comprised of|including|includes|having|wherein|where|(?:(?:is|being)\s+)?characteri[sz]ed (?:in that|by(?: the fact that| the steps of)?)|in which(?: method)?)\b/giu;
 const claimReferenceMarkerPattern = /\bclaims?\b/iu;
 const claimReferencePattern = /(\d+)(?:\s*(?:-|–|—|through|thru|to)\s*(\d+))?/giu;
+// Only the contiguous claim-number expression belongs to the dependency list.
+// Later component identifiers in a defining clause are source text, not parents.
+const parentClaimExpressionPattern =
+  /^\s*\d+(?:\s*(?:-|–|—|through|thru|to)\s*\d+)?(?:\s*(?:,\s*(?:(?:and|or)\s+)?|(?:and|or|claims?)\s+)(?:claims?\s+)?\d+(?:\s*(?:-|–|—|through|thru|to)\s*\d+)?)*\b/iu;
 const ambiguousLexicalTransition = LiteralKit(["including", "having"]);
 const isAmbiguousLexicalTransition = S.is(ambiguousLexicalTransition);
 const isOrderedList = S.is(Ol);
@@ -433,10 +437,12 @@ const parentClaimNumbers = (preamble: string, currentClaimNumber: PosInt): O.Opt
       onSome: (marker) => {
         const markerIndex = pipe(O.fromUndefinedOr(marker.index), O.getOrThrow);
         const value = Str.slice(Num.sum(markerIndex, Str.length(marker[0])))(preamble);
+        const expression = Str.match(parentClaimExpressionPattern)(value);
+        if (O.isNone(expression)) return O.none();
         let expanded: ReadonlyArray<PosInt> = A.empty();
         let expandedCount = 0;
         let matched = false;
-        for (const match of Str.matchAll(claimReferencePattern)(value)) {
+        for (const match of Str.matchAll(claimReferencePattern)(expression.value[0])) {
           matched = true;
           const references = claimReferencesFromMatch(match, currentClaimNumber);
           if (O.isNone(references)) return O.none();
