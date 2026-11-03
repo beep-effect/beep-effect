@@ -284,7 +284,6 @@
         "packages/drivers/runpod/package.json",
         "packages/drivers/sanity/package.json",
         "packages/drivers/shacl/package.json",
-        "packages/drivers/t3-code/package.json",
         "packages/drivers/tailscale/package.json",
         "packages/drivers/tesseract/package.json",
         "packages/drivers/tika/package.json",

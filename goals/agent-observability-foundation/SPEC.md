@@ -88,6 +88,7 @@ Missing source access remains an explicit coverage gap; do independent synthetic
 
 | Date | Decision | Reason | Reversal |
 | --- | --- | --- | --- |
+| 2026-11-02 | The managed-owner enrollment route is retired: `beep agent-message observation`, `AiProviderCliSession.lifecycle` and the orphaned ai-metrics `observation-launch-{claims,client}` and `observation-claim-population` modules are deleted; the `ops/*.json` proofs that cite them stay as frozen evidence. `observation-launch`, `-facts` and `-http` remain under `ObservationWorker`. | `goals/t3-native-orchestration` made T3 Code the only cross-session route, so no managed owner launches agents through beep. | Restore the modules from git at the permalink in that packet's Decision Log and re-enroll a T3-launched owner. |
 | 2026-10-28 | Bind export and query origins in target v2 and require exact request-metadata reconciliation before visibility | A collector acknowledgment can precede queryability; an unrelated backend or partial metadata match must not satisfy delivery evidence | Keep earlier synthetic stores intact and refuse configuration drift; remove un-enrolled APIs or migrate explicitly before any later target change |
 | 2026-10-28 | Qualify the single-attempt native sender against an isolated exact-image Phoenix before production composition | Durable send receipts and actual read-back must be separate; preserve incomplete usage and document UI subtotal/zero-cost hazards | Remove the new opt-in sender; retain local evidence and the masked recovery hold; dispose only of synthetic test resources |
 | 2026-10-27 | Prepare paused implementation packet | Operator adopted exploration direction and asked for packets, not execution | Revise packet before launch |
@@ -376,7 +377,7 @@ full acceptance remain open.
 ### Existing managed-owner enrollment decision (2026-10-28)
 
 Add explicit private observation enrollment to the existing agent-message serve
-owner. Bind its salted attempt to endpoint, owner, generation, repository scope,
+owner (retired 2026-11-02; see the Decision Log). Bind its salted attempt to endpoint, owner, generation, repository scope,
 canonical workspace and provider. Persist lifecycle callbacks locally; reconcile
 only after binding, stop reconciliation before close, and retain unknown outcomes
 when numeric exit evidence is unavailable. Reject insecure salt fallbacks in both
@@ -389,7 +390,7 @@ Synthetic qualification is not production coverage or full packet completion.
 ### Managed-owner recovery command decision (2026-10-28)
 
 Expose bounded status/reconcile under the existing agent-message observation
-command. Read only existing explicit enrollment, match its entire Prepared claim,
+command (retired 2026-11-02; see the Decision Log). Read only existing explicit enrollment, match its entire Prepared claim,
 and replay original facts without process-launch authority, epoch retargeting or
 store repair. Report current liveness/backend visibility as unknown even when
 historical Finished/receipt evidence exists. Scope each periodic HTTP client to

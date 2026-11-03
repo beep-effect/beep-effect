@@ -31,7 +31,7 @@
         ".claude/skills/closeout",
         ".agents/skills/closeout"
       ],
-      "installedTreeHash": "8c5c3f17365d89bf85f4924e71ab0501c68ceb5d4b772c6de264e1f2410d3429"
+      "installedTreeHash": "7bbe874befe6d991ffd49e6816ce98493d19642bbeeb99874a1b1f4c8cedbf31"
     },
     "codex-findings": {
       "_tag": "local",
@@ -235,7 +235,7 @@
         ".claude/skills/operator-handoff",
         ".agents/skills/operator-handoff"
       ],
-      "installedTreeHash": "376aae5dd0d9b74f1b4fe6c152a5bf973d8c30b90968eb0f81ca6e477474a29b"
+      "installedTreeHash": "f99dd4748cdf65de9fa9cd59070c9d903dbddc55c6a162f7255db776a69438b3"
     },
     "oracle": {
       "_tag": "vendored",
@@ -320,7 +320,7 @@
         ".claude/skills/orchestrate",
         ".agents/skills/orchestrate"
       ],
-      "installedTreeHash": "703b2f45bc17148150f5ef029e62995cea5cd1980e92878c21874b6f4a8be3f0"
+      "installedTreeHash": "26fc4a49936ea911d97a8fe56dcf5dcc2769d52f1de9264c5921bcd065747f4c"
     },
     "plasma-sensitive-entry": {
       "_tag": "local",
@@ -415,7 +415,7 @@
         ".claude/skills/remote-development-agents",
         ".agents/skills/remote-development-agents"
       ],
-      "installedTreeHash": "a7b5c5c12544ce5c473c3466602254bbe6d3e996f0f4feadabcd60d7ce2b50f2"
+      "installedTreeHash": "41427ae0906c78ea008f7a3e50bbeea14c2087c2bad727e70da6b8b74f7e1584"
     },
     "schema-first-development": {
       "_tag": "local",
@@ -745,7 +745,7 @@
         ".claude/skills/yeet",
         ".agents/skills/yeet"
       ],
-      "installedTreeHash": "4f0ca0f38e5cf26eca08d41e02158bffe8d8a0856c88a8a9ac69437db2328ddc"
+      "installedTreeHash": "957f78f00b4297c19eb3d1f862e7f320e9856f7dab2d71c0a47cddbfcd0d6b87"
     }
   }
 }
