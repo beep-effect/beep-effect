@@ -4,7 +4,6 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import * as NodeURL from "node:url";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
@@ -17,15 +16,16 @@ import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { isPlannedTurboCommand, isUnresolvedSecretReference } from "../../internal/cli/EnvConfig.ts";
+import { isUnresolvedSecretReference } from "../../internal/cli/EnvConfig.ts";
 import { hashFileSha256 } from "../../internal/cli/FsGuards.ts";
 import { forceLocalTurboCacheArgs } from "../../internal/cli/TurboCache.ts";
-import { QualityTaskStep } from "../../internal/process/index.ts";
 import { runToExit } from "../../internal/process/StepExec.ts";
-import { collectCacheTaskSelection, isCacheTaskInspectionArg, resolveCacheTurboBinary } from "./Cache.census.ts";
+import { collectCacheTaskSelection, resolveCacheTurboBinary } from "./Cache.census.ts";
+import { CacheCommandError } from "./Cache.errors.ts";
 import { collectCacheToolchain, hashCacheToolchain, readCacheSignatureRequired } from "./Cache.fingerprint.ts";
 import { verifyCacheIdentityLintProfile } from "./Cache.profile.ts";
-import { CacheCommandError, CacheSigningPosture, CacheSigningRequest } from "./Cache.schemas.ts";
+import { assertCacheRuntimeKeyUnspecified } from "./Cache.runtime.step.ts";
+import { CacheSigningPosture, CacheSigningRequest } from "./Cache.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.runtime");
 const CacheAccessMode = LiteralKit(["remote:w", "remote:rw", "remote:r", "local:r", "local:w", "local:rw"]).pipe(
@@ -69,42 +69,6 @@ export const resolveCacheSigningPosture = Effect.fn("Cache.resolveSigningPosture
         : CacheCommandError.new(`Signed cache ${request.role} requires a resolved artifact signing key (${reason}).`)
     )
   );
-});
-
-/**
- * Reject caller-provided cache identity before ordinary Turbo task execution.
- *
- * **Details**
- * Checks ambient and step environments separately so one cannot hide the other.
- * Empty values are supplied values. Successful validation does not calculate an
- * identity or authorize cache reuse; the runtime must compute its own identity.
- *
- * **Example** (Accept an environment without an identity override)
- *
- * ```ts
- * import { assertCacheRuntimeKeyUnspecified } from "@beep/repo-cli/commands/Cache"
- * import * as Effect from "effect/Effect"
- *
- * Effect.runSync(assertCacheRuntimeKeyUnspecified("bunx", ["turbo", "run", "lint"], {}, {}))
- * ```
- *
- * @category validation
- * @since 0.0.0
- */
-export const assertCacheRuntimeKeyUnspecified = Effect.fn("Cache.assertCacheRuntimeKeyUnspecified")(function* (
-  command: string,
-  args: ReadonlyArray<string>,
-  ambient: Readonly<Record<string, string | undefined>>,
-  step: Readonly<Record<string, string | undefined>>
-) {
-  if (
-    isPlannedTurboCommand(command, args) &&
-    (ambient.BEEP_CACHE_TOOLCHAIN_DIGEST !== undefined || step.BEEP_CACHE_TOOLCHAIN_DIGEST !== undefined)
-  ) {
-    return yield* CacheCommandError.new(
-      "BEEP_CACHE_TOOLCHAIN_DIGEST must be computed by the cache runtime; caller overrides are not accepted."
-    );
-  }
 });
 
 const runtimeToolchainDigest = Effect.fn("Cache.runtimeToolchainDigest")(function* (root: string, turbo: string) {
@@ -262,57 +226,3 @@ export const runCacheRuntimeTasks = Effect.fn("Cache.runRuntimeTasks")(function*
     stdio: "inherit",
   });
 }, CacheCommandError.mapError("Cache runtime execution failed."));
-
-/**
- * Route a planned Turbo execution through Cache inside its existing wrapper.
- *
- * **Details**
- * Derive environment overrides and ambient-extension policy from the original
- * step before applying this rewrite. The child invokes this checkout's CLI
- * directly without reloading environment files. Inspection commands are unchanged.
- *
- * **Example** (Rewrite an ordinary repository task)
- *
- * ```ts
- * import { cacheRuntimeStep } from "@beep/repo-cli/commands/Cache"
- * import { QualityTaskStep } from "@beep/repo-cli/test/Quality"
- *
- * const step = QualityTaskStep.make({ label: "lint", command: "bunx", args: ["turbo", "run", "lint"], cwd: "." })
- * console.log(cacheRuntimeStep(step).command) // bun
- * ```
- *
- * @param step - The original planned invocation whose environment policy is retained.
- * @returns The routed execution step, or the original inspection or non-Turbo step.
- * @category commands
- * @since 0.0.0
- */
-export const cacheRuntimeStep = (step: QualityTaskStep): QualityTaskStep => {
-  if (!isPlannedTurboCommand(step.command, step.args)) return step;
-  const prefix =
-    step.command === "op"
-      ? O.match(
-          A.findFirstIndex(step.args, (arg) => arg === "--"),
-          {
-            onNone: A.empty<string>,
-            onSome: (index) => A.take(step.args, index + 1),
-          }
-        )
-      : A.empty<string>();
-  const unwrapped = prefix.length > 0 ? A.drop(step.args, prefix.length) : [step.command, ...step.args];
-  const args = A.drop(unwrapped, unwrapped[0] === "bunx" ? 2 : 1);
-  if (
-    !O.exists(A.head(args), (arg) => arg === "run") ||
-    A.some(
-      A.takeWhile(args, (arg) => arg !== "--"),
-      isCacheTaskInspectionArg
-    )
-  )
-    return step;
-  const entrypoint = NodeURL.fileURLToPath(
-    new URL(Str.endsWith(".ts")(import.meta.url) ? "../../bin.ts" : "../../bin.js", import.meta.url)
-  );
-  const child = ["--no-env-file", entrypoint, "cache", "execute", "--", ...args];
-  const [command, routedArgs] =
-    prefix.length > 0 ? Tuple.make("op", [...prefix, "bun", ...child]) : Tuple.make("bun", child);
-  return QualityTaskStep.make({ ...step, command, args: routedArgs });
-};

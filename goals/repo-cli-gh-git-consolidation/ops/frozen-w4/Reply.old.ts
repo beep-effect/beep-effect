@@ -17,10 +17,12 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { artifactDirForContext } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/ArtifactPaths.ts";
+import {
+  artifactDirForContext,
+  writeTextFile,
+} from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/ArtifactPaths.ts";
 import { decodeGhRepoView } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts";
 import { RESOLVE_THREAD_MUTATION } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/WritePlan.ts";
-import { writeTextFile } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/IssueArtifacts.ts";
 import {
   failedReplyOutcomes,
   ReplyDraft,

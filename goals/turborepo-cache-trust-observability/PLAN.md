@@ -1312,3 +1312,24 @@ failure at the approval boundary with a fixed diagnostic; preserve the policy
 refusal and validate before material lookup. A fourteenth authored control
 exercises a private-marker schema failure without issuer material or store IO.
 The controls remain unrun locally; the repair needs fresh hosted proof.
+
+
+### Saved storage-role capabilities, 2026-11-03
+
+The [current checkpoint](research/saved-storage-grants-checkpoint-2026-11-03.json)
+retains real R2 observations using the saved Alchemy roles. Writer PUT and exact
+reader GET passed; reader PUT and DELETE returned 403. Cleanup deleted both owned
+probe keys and both HEAD checks returned 404. Two tiny passing probes used at most
+16 storage requests and 104 possible payload bytes across both runs. No grant,
+consumer, signing or ordinary cache settings changed.
+
+The retained driver reuses the original harness's exact storage operation block;
+it leaves current management-policy inspection as a separate requirement. Five
+refusals cover optimized Python, report overwrite, unsafe output parent, wrong
+source and an invalid endpoint without creating storage intents or disclosing the
+private marker. The initial private-directory refusal is preserved.
+
+Accepted #2643 passed full hosted code checks, real coverage comparison and the
+strict merge gate before merging. Its credential-free candidate build is now a
+separate actual hosted run, pending artifact/source verification. Protected
+producer execution and all nine trust-goal criteria remain unproven.

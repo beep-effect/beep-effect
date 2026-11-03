@@ -3694,6 +3694,7 @@
         "@beep/jsonl": "workspace:^",
         "@beep/observability": "workspace:^",
         "@beep/phoenix": "workspace:^",
+        "@beep/repo-utils": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
         "@beep/xdg": "workspace:^",

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "cache-prune-driver-controls/v1",
+  "observedAt": "2026-11-03T03:41:17.477830+00:00",
+  "driverSha256": "a61dc3bface802f0704e935050dc6aeb9689027f7ea8060390a3196323f95767",
+  "cases": [
+    {
+      "case": "optimized-python",
+      "exit": 1,
+      "diagnostic": "Assertion checks are required",
+      "refused": true
+    },
+    {
+      "case": "report-overwrite",
+      "exit": 1,
+      "diagnostic": "Existing reports are refused",
+      "refused": true
+    },
+    {
+      "case": "wrong-pin",
+      "exit": 1,
+      "diagnostic": "Native client pin changed",
+      "refused": true
+    }
+  ],
+  "originalReportUnchanged": true,
+  "noNewNativeCaptureDirectories": true,
+  "qualified": false
+}

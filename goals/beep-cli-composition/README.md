@@ -33,7 +33,8 @@ Use this command for execution-capable sessions:
 
 P1 Implement: G1 to G4 and W0 are done; W1 is running in two PRs (D25).
 W1a clears every library-to-tool edge in `src/internal/**` and adds the
-full-edge census; W1b works the verifier's must-fix list.
+full-edge census; W1b carves the whole library map and holds the census at
+zero library-to-tool edges (D27). W2 starts next.
 
 ## Latest Evidence
 

@@ -2066,3 +2066,15 @@ Record the published Linux x86_64 wheel hashes, enforce `--require-hashes`,
 and retain installed executable digests in the build manifest. Future pinned
 tool installs should review the complete dependency list and content hashes
 alongside their version checks before a protected runner consumes them.
+
+
+### Decouple capability checks from a short-lived management login, 2026-11-03
+
+The existing grant harness combines current management-policy inspection with
+actual storage operations. The saved storage roles can remain usable after an
+attended management login needs renewal. Reuse its exact source-pinned storage
+block with saved storage references, preserving the original policy checks and
+explicitly withholding a current-policy claim. The first retained-driver call
+refused the shared evidence directory's mode before storage work; a dedicated
+mode-0700 output directory then passed. Keep that refusal and require explicit
+private output preparation, rather than weakening the guard.

@@ -3,14 +3,14 @@
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "365bd154b05b4d425cecaf6ce5cb966cf00b9cb3",
-  "specSha256": "b5b3484ad4bd54132dff3520f56837b1d79647c55446c18c8d63d5b9847b5c1c",
+  "specSha256": "2cf3f45742fe3dc150c6f80cbde4c070e969c21aadf7ef356086bb0fbac9edb1",
   "acceptance": [
     {
       "id": "AC-01",
       "source": "SPEC.md:165",
       "requirement": "Current executable/lane population and applicable stable/canary feature matrix are complete, source-backed and assigned to owners.",
       "status": "unproven",
-      "nextProof": "Reconcile the source-bound 2,434-computation census (2,236 remaining reviews) to current source, finish every in-scope computation review and the 26 pending feature decisions, and consume the economics owner baseline. Completed feature reviews do not qualify actual computations."
+      "nextProof": "Reconcile the source-bound 2,434-computation census (2,236 remaining reviews) to current source, finish every in-scope computation review and the 25 pending feature decisions, and consume the economics owner baseline. Completed feature reviews do not qualify actual computations."
     },
     {
       "id": "AC-02",
@@ -364,5 +364,11 @@
   "filterCompositionSourceReview": "research/filter-composition-source-review.json",
   "priorSpecSha256BeforeF7d2SelectionConflictResolution": "3da1a83e8dd41f336942429035e30fa2f68d30a9d5b5ccfbae19046a905233a8",
   "priorSpecSha256Before1dd2ConflictResolution": "5763e795d653f81c2e14f9953afb3c8e3cf11c3cd40312167ee53c597e663af1",
-  "acceptedMainSpecSha256At1dd2Integration": "61414f7929dfa6ebb6484498bca7256d9533ffae97e76dc0031830a8ec9df2a8"
+  "acceptedMainSpecSha256At1dd2Integration": "61414f7929dfa6ebb6484498bca7256d9533ffae97e76dc0031830a8ec9df2a8",
+  "priorSpecSha256AtPruneGlobalReview": "b5b3484ad4bd54132dff3520f56837b1d79647c55446c18c8d63d5b9847b5c1c",
+  "pruneGlobalFeatureReview": {
+    "path": "research/prune-global-feature-review.json",
+    "sha256": "c1b55c24c7241e42860505af7b932cd03b8481d2d46ccef0719b636bbf22bfb9",
+    "authority": "One tracked-repository applicability decision and pinned synthetic Linux file-presence controls. No real deployment, build portability, sensitive/ignored-file safety, computation qualification or measured performance acceptance."
+  }
 }

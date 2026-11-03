@@ -11,11 +11,11 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
+import { CacheCommandError } from "./Cache.errors.ts";
 import { cacheSignedCaptureDiagnostic } from "./Cache.pilot.capture.ts";
 import { CachePilotOutcome } from "./Cache.pilot.schemas.ts";
 import { CacheSignedPilotMutation, CacheSignedPilotRun, CacheSignedPilotShadow } from "./Cache.pilot.signed.schemas.ts";
 import { CacheFixtureEvent } from "./Cache.protocol.fixture.schemas.ts";
-import { CacheCommandError } from "./Cache.schemas.ts";
 import type { CachePilotRun } from "./Cache.pilot.schemas.ts";
 import type {
   CacheSignedPilotFreshPair,

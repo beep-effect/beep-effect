@@ -17,6 +17,7 @@ import * as Effect from "effect/Effect";
 import { dual, identity, pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+import { YeetProofTier } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 import { commandTextForStep, RepoPlanStep, RepoStepRunResult } from "../../../internal/repo-run/RepoRun.models.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { UUID } from "../../../internal/schema/Uuid.ts";
@@ -27,7 +28,7 @@ import {
   QualityTaskLaneRunReport,
 } from "../../Quality/Quality.schemas.ts";
 import { laneRunLabels, laneRunsForWrapper } from "./InnerLaneReports.ts";
-import { GIT_PUSH_STEP_ID, YeetProofTier } from "./Planner.ts";
+import { GIT_PUSH_STEP_ID } from "./Planner.schemas.ts";
 import { knownSubLaneHintForLaneRun, knownSubLaneRemediationFromOutput } from "./QualityIssueIndex.ts";
 import type * as HashSet from "effect/HashSet";
 import type { QualityTaskLaneRun } from "../../Quality/Quality.schemas.ts";

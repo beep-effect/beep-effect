@@ -17,9 +17,9 @@ import {
   CacheProducerStoreConfiguration,
 } from "./Cache.acceptance.schemas.ts";
 import { validateCacheProducerImport } from "./Cache.acceptance.ts";
+import { CacheCommandError } from "./Cache.errors.ts";
 import { decodeCacheExperimentText } from "./Cache.evidence.ts";
 import { inspectCacheProducerDirectory, inspectCacheProducerFile } from "./Cache.producer.ts";
-import { CacheCommandError } from "./Cache.schemas.ts";
 import type { CacheProducerTrustLocations } from "./Cache.acceptance.schemas.ts";
 
 /**
