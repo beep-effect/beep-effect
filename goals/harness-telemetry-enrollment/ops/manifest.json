@@ -21,7 +21,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Complete only after all declared route acceptance is demonstrated at its actual scope, a designated final delivery retains positive exact-head pre-merge readiness and successful terminal observer finalization, strict owner merge and genuinely verified canonical completion. Supporting PR2663 proves current-source admission and bounded tooling only; it does not complete real enrollment.",
+    "statement": "Complete only after all declared route acceptance is demonstrated at its actual scope, a designated final delivery retains positive exact-head pre-merge readiness and successful terminal observer finalization, strict owner merge and genuinely verified canonical completion. Supporting PR2663 proves source-bound synthetic root/backend admission and separate actual-root identity only. It does not complete real harness enrollment.",
     "grandfathered": false,
     "pullRequests": [
       {
@@ -40,14 +40,24 @@
     "goals/harness-telemetry-enrollment/research/SOURCES.md",
     "explorations/agent-observability-rebuild/BRIEF.md",
     "explorations/agent-observability-rebuild/DECISIONS.md",
-    "goals/harness-telemetry-enrollment/ops/cli-enrollment-canary.ts",
-    "goals/harness-telemetry-enrollment/ops/test-cli-enrollment-canary.ts"
+    "goals/harness-telemetry-enrollment/ops/codex-exec-wire.ts",
+    "goals/harness-telemetry-enrollment/ops/codex-native-canary.ts",
+    "goals/harness-telemetry-enrollment/ops/native-canary-config.ts",
+    "goals/harness-telemetry-enrollment/ops/test-codex-exec-wire.ts",
+    "goals/harness-telemetry-enrollment/ops/test-codex-native-canary.ts",
+    "goals/harness-telemetry-enrollment/ops/test-codex-native-config.ts",
+    "goals/harness-telemetry-enrollment/ops/vitest.config.ts"
   ],
   "researchReports": [
     "research/SOURCES.md",
     "research/CURRENT-SOURCE-ADMISSION.md",
     "research/HARNESS-ROUTES.md",
-    "ops/history/current-source-admission-20261103.json"
+    "ops/history/current-source-admission-20261103.json",
+    "research/COVERAGE.md",
+    "research/OPPORTUNITIES.md",
+    "ops/history/post-t3-source-admission-20261103.json",
+    "research/NATIVE-ONE-SHOT.md",
+    "ops/history/native-one-shot-source-preparation-20261103.json"
   ],
   "agentLaunchers": [
     {
@@ -62,7 +72,7 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "complete"
+      "status": "in-progress"
     },
     {
       "id": "P1",
@@ -91,14 +101,16 @@
     "rg -n \"harness-telemetry-enrollment|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/harness-telemetry-enrollment",
     "git diff --check -- goals/harness-telemetry-enrollment",
     "bun run beep lint reflection-artifacts",
-    "bun --no-env-file goals/harness-telemetry-enrollment/ops/test-cli-enrollment-canary.ts"
+    "bun node_modules/vitest/vitest.mjs run --config goals/harness-telemetry-enrollment/ops/vitest.config.ts",
+    "bun node_modules/.bin/tsrs -p goals/tsconfig.ops.json --noEmit --pretty false",
+    "bun run beep quality package-verify @beep/repo-ai-metrics --quick"
   ],
   "stopConditions": [
     "Only stop dependent work for an actual unresolved access/authentication/privacy/integrity/resource boundary; continue independent proof and handle routine fixes autonomously.",
     "New spend, plan changes or purchases require the operator.",
     "Never release the historical forwarder recovery hold as part of this packet."
   ],
-  "statusNote": "Explicit operator launch2026-11-03 after foundation PR2655 canonical verified/completed-retained. Start with fresh current-source root admission, then actual per-route collection for all seven requested harness families with desktop subroutes separate. Metadata plus curated examples only. Recovery forwarder service and timer remain masked/inactive. No coverage claim until actual runtime and backend receipts verify.",
+  "statusNote": "Enrollment remains active. Supporting PR2663 retains source-bound historical admission only:81 preparation inputs,87 disposable and86 live selected bindings, with two synthetic events per stage and independent backend readback. A new retained-core extension and fixed native Codex producer/config generator have local synthetic, compiler and independent review proof; their fresh source admission and real runtime/backend proof remain pending. No historical source map transfers to this extension. All seven real harness populations remain Unknown; the historical forwarder recovery hold remains intact.",
   "resumeConditions": [],
   "dependencies": ["goals/agent-observability-foundation"]
 }

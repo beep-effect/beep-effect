@@ -93,6 +93,12 @@ const wire = S.Struct({
 // Include optional managed keys even when absent in the encoded request, so
 // unexpected totals/provider/session metadata cannot pass a subset comparison.
 const optionalKeys = [
+  "ai_metrics.producer_origin",
+  "ai_metrics.launch_id",
+  "ai_metrics.launch_route_id",
+  "ai_metrics.process_instance_id",
+  "ai_metrics.evidence_id",
+  "ai_metrics.controller_elapsed_nanos",
   "ai_metrics.route_id",
   "ai_metrics.synthetic",
   "ai_metrics.fixture.surface",

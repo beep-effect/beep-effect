@@ -26,7 +26,10 @@ import {
 import { makeNativeIntakeJournal } from "./native-intake.ts";
 import { NativeTraceRequest, projectNativeTraceRequest } from "./native-trace.ts";
 import { makeObservationControl, ObservationControlPolicy } from "./observation-control.ts";
+import { makeObservationLaunchFacts, ObservationLaunchFact } from "./observation-launch-facts.ts";
+import type { NativeTraceMetadata } from "./native-trace.ts";
 import type { ObservationControl } from "./observation-control.ts";
+import type { ObservationLaunchHttpPolicy } from "./observation-launch-http.ts";
 import type { TranscriptIntakeConfig } from "./transcript-intake.ts";
 
 const $I = $RepoAiMetricsId.create("native-http");
@@ -133,6 +136,7 @@ const byteLimit = 262144;
 export class NativeHttpPolicy extends S.Opaque<NativeHttpPolicy, { readonly brand: unique symbol }>()(
   S.Struct({
     routeId: NativeTraceRequest.fields.routeId,
+    producer: NativeTraceRequest.fields.producer,
     hashSalt: NativeTraceRequest.fields.hashSalt,
     approvedModels: NativeTraceRequest.fields.approvedModels,
     usageConvention: NativeTraceRequest.fields.usageConvention,
@@ -230,9 +234,11 @@ const response = (
 export const makeNativeHttpIntake = Effect.fn("AiMetrics.makeNativeHttpIntake")(function* (
   config: TranscriptIntakeConfig,
   policy: NativeHttpPolicy,
-  sharedControl?: ObservationControl
+  sharedControl?: ObservationControl,
+  launchPolicy?: ObservationLaunchHttpPolicy
 ) {
   const journal = yield* makeNativeIntakeJournal(config);
+  const launchFacts = yield* makeObservationLaunchFacts(config);
   const startedAt = yield* Clock.currentTimeMillis;
   const counts = yield* Ref.make(
     ResponseCounts.make({
@@ -293,6 +299,50 @@ export const makeNativeHttpIntake = Effect.fn("AiMetrics.makeNativeHttpIntake")(
       })
     );
   });
+  const managedSpansCorrelate = Effect.fnUntraced(function* (spans: ReadonlyArray<NativeTraceMetadata>) {
+    for (const span of spans) {
+      if (O.isNone(span.managedController)) continue;
+      const observed = span.managedController.value;
+      const facts = yield* launchFacts.read(observed.launchId, (yield* journal.evidenceWindow).epoch);
+      const correlated = A.every(
+        [
+          A.some(
+            facts,
+            ({ fact }) =>
+              ObservationLaunchFact.guards.Prepared(fact) &&
+              fact.identity.routeId === observed.launchRouteId &&
+              fact.identity.surface === "cli" &&
+              A.some(
+                launchPolicy?.routes ?? [],
+                (route) =>
+                  route.routeId === fact.identity.routeId &&
+                  route.harness === fact.identity.harness &&
+                  route.surface === fact.identity.surface
+              )
+          ),
+          A.some(
+            facts,
+            ({ fact }) =>
+              ObservationLaunchFact.guards.Started(fact) && fact.processInstanceId === observed.processInstanceId
+          ),
+          A.some(
+            facts,
+            ({ fact }) =>
+              ObservationLaunchFact.guards.SessionBound(fact) && fact.sourceSessionId === observed.sourceSessionId
+          ),
+          A.some(
+            facts,
+            ({ fact }) =>
+              ObservationLaunchFact.guards.Finished(fact) &&
+              (fact.outcome === "succeeded" || fact.outcome === "cancelled")
+          ),
+        ],
+        (matched) => matched
+      );
+      if (!correlated) return false;
+    }
+    return true;
+  });
   const accept = Effect.fnUntraced(function* (
     request: HttpServerRequest.HttpServerRequest,
     contentType: NativeTraceRequest["contentType"],
@@ -303,6 +353,7 @@ export const makeNativeHttpIntake = Effect.fn("AiMetrics.makeNativeHttpIntake")(
       const batch = yield* projectNativeTraceRequest(NativeTraceRequest.make({ ...policy, contentType, body }));
       if (batch.spans.length === 0 && batch.rejections.length === 0)
         return yield* count("accepted").pipe(Effect.andThen(response(contentType, 200)));
+      if (!(yield* managedSpansCorrelate(batch.spans))) return yield* refused(contentType, 400, "malformed");
       const receipt = yield* journal.acceptBatch(batch);
       yield* count(receipt.rejected > 0 ? "partial" : "accepted");
       return yield* response(contentType, 200, receipt.rejected, receipt.page.receiptId, receipt.expiredIndices.length);

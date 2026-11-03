@@ -101,7 +101,12 @@ export const makeObservationWorker = Effect.fn("AiMetrics.makeObservationWorker"
 ) {
   const sql = yield* SqlClient.SqlClient;
   const control = yield* makeObservationControl(config.control);
-  const intake = yield* makeNativeHttpIntake(config.intake, config.nativeHttp, control);
+  const intake = yield* makeNativeHttpIntake(
+    config.intake,
+    config.nativeHttp,
+    control,
+    O.getOrUndefined(config.launchHttp)
+  );
   const delivery = yield* makeNativeDelivery(config.intake, config.ledger, config.delivery);
   const readback = yield* makeNativeReadback(config.intake, config.ledger, config.delivery, config.backend);
   const scheduler = yield* makeNativeDeliveryScheduler(

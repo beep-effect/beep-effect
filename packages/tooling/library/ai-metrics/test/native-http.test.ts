@@ -1,6 +1,16 @@
 import * as Zlib from "node:zlib";
 import { DeliveryLedgerConfig } from "@beep/repo-ai-metrics/delivery-ledger";
+import {
+  encodeManagedControllerObservation,
+  ManagedControllerObservation,
+} from "@beep/repo-ai-metrics/managed-controller";
 import { makeNativeHttpIntake, NativeHttpPolicy, renderNativeHttpMetrics } from "@beep/repo-ai-metrics/native-http";
+import {
+  makeObservationLaunchFacts,
+  ObservationLaunchFact,
+  ObservationLaunchIdentity,
+} from "@beep/repo-ai-metrics/observation-launch-facts";
+import { ObservationLaunchHttpPolicy } from "@beep/repo-ai-metrics/observation-launch-http";
 import { makePayloadReclaimer, PayloadRetentionPolicy } from "@beep/repo-ai-metrics/payload-reclamation";
 import { hashPrivateIdentifier } from "@beep/repo-ai-metrics/privacy";
 import { TranscriptIntakeConfig } from "@beep/repo-ai-metrics/transcript-intake";
@@ -30,7 +40,11 @@ import * as SqlClient from "effect/sql/SqlClient";
 import * as Protobuf from "protobufjs";
 
 const sqlLayer = makeSqlTestLayer({ config: undefined, driver: NodeSqliteTestDriver });
-const fixture = Effect.fn("NativeHttpTest.fixture")(function* (maxPages = 16, bodyTimeoutMillis = 2000) {
+const fixture = Effect.fn("NativeHttpTest.fixture")(function* (
+  maxPages = 16,
+  bodyTimeoutMillis = 2000,
+  managed = false
+) {
   const salt = "synthetic-native-http-salt";
   const config = TranscriptIntakeConfig.make({
     hostId: Sha256Hex.make(Str.repeat(64)("a")),
@@ -45,9 +59,17 @@ const fixture = Effect.fn("NativeHttpTest.fixture")(function* (maxPages = 16, bo
       routeId: Sha256Hex.make(Str.repeat(64)("b")),
       hashSalt: Redacted.make(salt),
       approvedModels: [],
-      usageConvention: "claude-code",
+      usageConvention: managed === true ? "unknown" : "claude-code",
+      producer: managed === true ? O.some("managed-controller") : O.none(),
       bodyTimeoutMillis,
-    })
+    }),
+    undefined,
+    managed === true
+      ? ObservationLaunchHttpPolicy.make({
+          routes: [{ routeId: Sha256Hex.make(Str.repeat(64)("c")), harness: "grok", surface: "cli" }],
+          bodyTimeoutMillis: 1000,
+        })
+      : undefined
   );
   const context = yield* Layer.build(NodeHttpServer.layerTest.pipe(Layer.fresh));
   const server = Context.get(context, HttpServer.HttpServer);
@@ -355,3 +377,121 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
     })
   )
 );
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.effect("requires actual matching local launch/process/session/finish facts before controller intake", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture(16, 2000, true);
+      const id = (c: string) => Sha256Hex.make(Str.repeat(64)(c));
+      const observed = ManagedControllerObservation.make({
+        launchId: id("1"),
+        launchRouteId: id("c"),
+        processInstanceId: id("2"),
+        sourceSessionId: id("3"),
+        evidenceId: id("4"),
+        startTimeUnixNano: "1793000000000000000",
+        endTimeUnixNano: "1793000000100000000",
+        elapsedNanos: "100000000",
+      });
+      const bytes = yield* encodeManagedControllerObservation(observed);
+      expect((yield* f.post(bytes, "application/x-protobuf")).status).toBe(400);
+      const launches = yield* makeObservationLaunchFacts(f.config);
+      const unknown = ObservationLaunchIdentity.fields.repository.cases.Unknown.make({});
+      yield* launches.record(
+        ObservationLaunchFact.cases.Prepared.make({
+          launchId: observed.launchId,
+          identity: ObservationLaunchIdentity.make({
+            routeId: id("c"),
+            harness: "grok",
+            surface: "cli",
+            root: unknown,
+            repository: unknown,
+            clone: unknown,
+            worktree: unknown,
+            task: unknown,
+            attempt: unknown,
+            evidenceId: id("5"),
+          }),
+        }),
+        0
+      );
+      yield* launches.record(
+        ObservationLaunchFact.cases.Started.make({
+          launchId: observed.launchId,
+          processInstanceId: observed.processInstanceId,
+        }),
+        0
+      );
+      yield* launches.record(
+        ObservationLaunchFact.cases.SessionBound.make({
+          launchId: observed.launchId,
+          sourceSessionId: observed.sourceSessionId,
+        }),
+        0
+      );
+      expect((yield* f.post(bytes, "application/x-protobuf")).status).toBe(400);
+      yield* launches.record(
+        ObservationLaunchFact.cases.Finished.make({ launchId: observed.launchId, outcome: "cancelled" }),
+        0
+      );
+      for (const changed of [
+        { ...observed, processInstanceId: id("9") },
+        { ...observed, sourceSessionId: id("9") },
+        { ...observed, launchRouteId: id("9") },
+        { ...observed, launchId: id("9") },
+      ]) {
+        const wrong = yield* encodeManagedControllerObservation(ManagedControllerObservation.make(changed));
+        expect((yield* f.post(wrong, "application/x-protobuf")).status).toBe(400);
+      }
+      const foreign = ManagedControllerObservation.make({ ...observed, launchId: id("6"), launchRouteId: id("9") });
+      yield* launches.record(
+        ObservationLaunchFact.cases.Prepared.make({
+          launchId: foreign.launchId,
+          identity: ObservationLaunchIdentity.make({
+            routeId: foreign.launchRouteId,
+            harness: "grok",
+            surface: "cli",
+            root: unknown,
+            repository: unknown,
+            clone: unknown,
+            worktree: unknown,
+            task: unknown,
+            attempt: unknown,
+            evidenceId: id("5"),
+          }),
+        }),
+        0
+      );
+      yield* launches.record(
+        ObservationLaunchFact.cases.Started.make({
+          launchId: foreign.launchId,
+          processInstanceId: foreign.processInstanceId,
+        }),
+        0
+      );
+      yield* launches.record(
+        ObservationLaunchFact.cases.SessionBound.make({
+          launchId: foreign.launchId,
+          sourceSessionId: foreign.sourceSessionId,
+        }),
+        0
+      );
+      yield* launches.record(
+        ObservationLaunchFact.cases.Finished.make({ launchId: foreign.launchId, outcome: "succeeded" }),
+        0
+      );
+      expect((yield* f.post(yield* encodeManagedControllerObservation(foreign), "application/x-protobuf")).status).toBe(
+        400
+      );
+      const accepted = yield* f.post(bytes, "application/x-protobuf");
+      expect(accepted.status).toBe(200);
+      expect(accepted.bytes).toHaveLength(0);
+      const duplicate = yield* f.post(bytes, "application/x-protobuf");
+      expect(duplicate.headers.get("x-observation-receipt")).toBe(accepted.headers.get("x-observation-receipt"));
+      const changed = yield* encodeManagedControllerObservation(
+        ManagedControllerObservation.make({ ...observed, evidenceId: id("8") })
+      );
+      expect((yield* f.post(changed, "application/x-protobuf")).bytes.length).toBeGreaterThan(0);
+    })
+  );
+});
