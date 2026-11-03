@@ -26,7 +26,15 @@ describe("bounded parent-claim reference expressions", () => {
 
   it.effect("retains lists, repeated claim markers and ranges before descriptive numbers", () =>
     Effect.gen(function* () {
-      for (const reference of ["claims 1 and 2", "claims 1, and 2", "claims 1 through 2", "claim 1 or claim 2"]) {
+      for (const reference of [
+        "claims 1 and 2",
+        "claims 1, and 2",
+        "claims 1 through 2",
+        "claim 1 or claim 2",
+        "claims 1 and/or 2",
+        "claims 1 & 2",
+        "claims 1 as well as claim 2",
+      ]) {
         const claims = yield* normalizePatentClaims([
           ["1", "A machining method comprising rotating a workpiece."],
           ["2", "The method of claim 1 wherein a tool cuts the workpiece."],
@@ -46,7 +54,26 @@ describe("bounded parent-claim reference expressions", () => {
 
   it.effect("still rejects self, forward and reversed dependencies in the reference expression", () =>
     Effect.gen(function* () {
-      for (const reference of ["claim 2", "claim 24", "claims 1 and 24", "claims 2 through 1", "claims none"]) {
+      for (const reference of [
+        "claim 2",
+        "claim 24",
+        "claims 1 and 24",
+        "claims 2 through 1",
+        "claims none",
+        "claims 1 and/or 2",
+        "claims 1 and/or 24",
+        "claims 1 & 24",
+        "claims 1.24",
+        "claims 1; claim 24",
+        "claims 1, or any of claims 2 through 24",
+        "claims 1 plus 24",
+        "claims 1 as well as claim 24",
+        "claims 1 as well as 2",
+        "claims 1 with claim 24",
+        "claims 1 and the above claim 24",
+        "claims 1 and the aforementioned claim 2",
+        "claims 1 and in particular claim 24",
+      ]) {
         const result = yield* Effect.exit(
           normalizePatentClaims([
             ["1", "A machining method comprising rotating a workpiece."],
@@ -54,6 +81,31 @@ describe("bounded parent-claim reference expressions", () => {
           ])
         );
         assert.isTrue(Exit.isFailure(result));
+      }
+    })
+  );
+
+  it.effect("preserves descriptive subject and purpose clauses after a complete parent expression", () =>
+    Effect.gen(function* () {
+      for (const continuation of [
+        "for joining workpieces, includes a tool (24)",
+        ", and for assembling workpieces, said workpieces having a tool (24)",
+        "said method includes a tool (24)",
+        "in an enclosure (24), wherein a tool is movable",
+        "above in an enclosure (24), wherein a tool is movable",
+        ", said tool further comprising a head (24)",
+        ", the preprocessing comprising filtering measurements (24)",
+        ", and having a tool (24)",
+      ]) {
+        const claims = yield* normalizePatentClaims([
+          ["1", "A machining method comprising rotating a workpiece."],
+          ["2", `The method of claim 1 ${continuation}.`],
+        ]);
+        const claim = O.getOrThrow(A.last(claims));
+        assert.deepStrictEqual(
+          PatentClaim.match(claim, { independent: () => [], dependent: ({ claimReferences }) => claimReferences }),
+          [1]
+        );
       }
     })
   );

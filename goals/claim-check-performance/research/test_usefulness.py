@@ -63,6 +63,23 @@ class UsefulnessTests(unittest.TestCase):
         for name in ["alert-precision", "defect-recall", "erroneous-alert-claims"]:
             self.assertFalse(report["checks"][name]["passed"])
 
+    def test_unknown_truth_cannot_fill_supported_defect_sample_minimum(self):
+        for row in self.evidence["defects"][:20]:
+            row["truth"] = "unknown"
+            row["detected"] = False
+        report = self.run_gate()
+        self.assertFalse(report["numericalGatesPassed"])
+        self.assertFalse(report["checks"]["defect-recall"]["passed"])
+        self.assertEqual(report["checks"]["defect-recall"]["observed"]["supported"], 80)
+
+    def test_unknown_truth_stays_in_denominator_after_supported_minimum_met(self):
+        self.evidence["defects"].extend({"id": f"unknown-{i}", "truth": "unknown", "detected": True}
+                                        for i in range(20))
+        observed = self.run_gate()["checks"]["defect-recall"]["observed"]
+        self.assertEqual(observed["supported"], 100)
+        self.assertEqual(observed["detected"], 100)
+        self.assertEqual(observed["selected"], 120)
+
     def test_dropping_inputs_or_losing_one_original_pass_fails(self):
         self.evidence["legacyClaims"].pop()
         self.evidence["legacyClaims"][0]["strict"] = False

@@ -90,11 +90,13 @@ def evaluate(evidence, gates, protected):
           {"right": true_alerts, "emitted": len(substantive), "wilson95": [lower, upper]})
     # Unknown truth/detection never contributes a true positive.
     detected = sum(row.get("truth") == "supported" and row.get("detected") is True for row in defects)
+    supported = sum(row.get("truth") == "supported" for row in defects)
     lower, upper = wilson(detected, len(defects))
     d = gates["defects"]
-    check("defect-recall", len(defects) >= d["minimumIndependentlySupportedDefects"]
+    check("defect-recall", supported >= d["minimumIndependentlySupportedDefects"]
           and detected >= d["minimumRecall"] * len(defects) and lower >= d["minimumWilson95Lower"],
-          {"detected": detected, "selected": len(defects), "wilson95": [lower, upper]})
+          {"detected": detected, "supported": supported, "unknownTruth": len(defects) - supported,
+           "selected": len(defects), "wilson95": [lower, upper]})
     kinds = collections.Counter(row.get("kind") for row in defects if row.get("truth") == "supported")
     check("defect-kind-coverage", all(kinds[kind] >= d["minimumEachFindingKind"] for kind in
           ["missing-antecedent", "ambiguous-antecedent", "antecedent-outside-chain", "number-mismatch"]), dict(kinds))
