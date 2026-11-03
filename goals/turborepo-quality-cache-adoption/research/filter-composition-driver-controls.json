@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "cache-filter-composition-driver-controls/v1",
+  "driverSha256": "d96d2bbb423b9227e1f9be624d64af7004592b22bd85a0c5d16c464461bc8f5c",
+  "controls": [
+    {
+      "control": "optimized",
+      "exit": 1,
+      "expectedDiagnosticMatched": true,
+      "outputPreserved": true,
+      "diagnosticSha256": "c3ca2e0b8e1ba6787ec44d5995597345958fc64f58710f1e246513c902e11b89"
+    },
+    {
+      "control": "existing-report",
+      "exit": 1,
+      "expectedDiagnosticMatched": true,
+      "outputPreserved": true,
+      "diagnosticSha256": "577a7402a33606e0c088a23cd8fe68572ff24737804cd3cc63d1a45bf9cf9c4d"
+    },
+    {
+      "control": "wrong-native-pin",
+      "exit": 1,
+      "expectedDiagnosticMatched": true,
+      "outputPreserved": true,
+      "diagnosticSha256": "d9d48fca0f1b33bcaa206da041b6efb4bb191f67d916f40a7811338d27ac8c75"
+    },
+    {
+      "control": "stale-union-oracle",
+      "exit": 1,
+      "expectedDiagnosticMatched": true,
+      "outputPreserved": true,
+      "diagnosticSha256": "7d1f7f84c60936d0c20bd25e7de5fecac0cc18fcdb60b071f57e7199e74ceed9"
+    },
+    {
+      "control": "omitted-task-prerequisite",
+      "exit": 1,
+      "expectedDiagnosticMatched": true,
+      "outputPreserved": true,
+      "diagnosticSha256": "347e9a244fb05ccd1be40ad0cfba596f7d39b0d0b4d89771c2a11bf088ae085f"
+    }
+  ],
+  "passingReportUnchanged": true,
+  "temporaryCounterfactualDriversRemoved": true,
+  "recordedAt": "2026-11-02T19:54:24.587290+00:00",
+  "rawPassingReportSha256": "b4fc67e4e0707271c9664c3237f2e8321f084378ae27b6274a4490ad853c9e4b",
+  "passingReportProjection": "The public native report has the same decoded payload; only JSON formatting differs from the private raw report hash."
+}
