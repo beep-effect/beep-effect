@@ -13,7 +13,7 @@ import * as Str from "effect/String";
 import { normalizedTokens } from "../../../internal/cli/Flags.ts";
 import { GhComment, GithubRest } from "../../../internal/github/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import { runArtifactPathForContext } from "./ArtifactPaths.ts";
+import { runArtifactPathForContext, writeTextFile } from "./ArtifactPaths.ts";
 import { PrCloseoutOptions, PrCloseoutReport, PrCloseoutReportJson } from "./closeout/Closeout.schemas.ts";
 import {
   closeoutGateStates,
@@ -32,7 +32,6 @@ import {
 } from "./closeout/GreptileSignal.ts";
 import { closeoutWritePlan } from "./closeout/WritePlan.ts";
 import { provideYeetGhLogin } from "./GhOps.ts";
-import { writeTextFile } from "./IssueArtifacts.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";

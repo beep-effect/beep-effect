@@ -48,6 +48,9 @@
       "path": "../../../foundation/modeling/yaml/tsconfig.json"
     },
     {
+      "path": "../repo-utils/tsconfig.json"
+    },
+    {
       "path": "../../test-kit/fc-runs/tsconfig.json"
     },
     {
