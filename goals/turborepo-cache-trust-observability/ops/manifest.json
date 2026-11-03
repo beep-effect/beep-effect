@@ -46,7 +46,9 @@
     "goals/turborepo-cache-trust-observability/research/accepted-930758-ordinary-stable-signed-observation-2026-11-02.json",
     "goals/turborepo-cache-trust-observability/research/accepted-930758-ordinary-canary-signed-observation-2026-11-02.json",
     "goals/turborepo-cache-trust-observability/research/producer-object-coverage-identity-review-2026-11-02.md",
-    "goals/turborepo-cache-trust-observability/research/producer-object-coverage-identity-checkpoint-2026-11-02.json"
+    "goals/turborepo-cache-trust-observability/research/producer-object-coverage-identity-checkpoint-2026-11-02.json",
+    ".github/workflows/cache-producer-prepare.yml",
+    ".github/workflows/heavy.yml"
   ],
   "researchReports": [
     "research/SOURCES.md",

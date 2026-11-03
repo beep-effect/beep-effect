@@ -25,6 +25,14 @@ on:
         type: boolean
         default: false
 
+      producer_preparation:
+        description: >-
+          Build only the credential-free candidate adapter for the exact main
+          manual dispatcher. This grants no producer or cache-write authority.
+        required: false
+        type: boolean
+        default: false
+
 permissions:
   contents: read
 
@@ -36,9 +44,9 @@ jobs:
     # `should_run=false`), so each context reports success without touching
     # the heavy pool. Every ordinary quality call must still expand the
     # matrix: skipping it leaves required contexts "Expected". Only the
-    # dedicated manual inspection selects the separate operational job below;
+    # dedicated manual inspection or preparation selects an operational job below;
     # it does not publish quality verdicts.
-    if: ${{ !inputs.producer_inspection }}
+    if: ${{ !inputs.producer_inspection && !inputs.producer_preparation }}
     runs-on: ${{ inputs.admitted && 'beep-ec2-heavy' || 'ubuntu-24.04' }}
     timeout-minutes: ${{ matrix.timeout_minutes }}
     environment: ${{ github.event_name == 'push' && inputs.admitted && matrix.uses_turbo == 'true' && 'turbo-cache-write' || null }}
@@ -289,7 +297,7 @@ jobs:
   producer-inspect:
     name: Inspect producer sources and tools
     if: >-
-      inputs.producer_inspection &&
+      inputs.producer_inspection && !inputs.producer_preparation &&
       github.repository == 'beep-effect/beep-effect' &&
       github.event_name == 'workflow_dispatch' &&
       github.ref == 'refs/heads/main' &&
@@ -357,3 +365,149 @@ jobs:
           if-no-files-found: error
           retention-days: 1
           compression-level: 0
+
+  producer-prepare:
+    name: Build candidate producer adapter
+    if: >-
+      inputs.producer_preparation && !inputs.producer_inspection &&
+      github.repository == 'beep-effect/beep-effect' &&
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/main' &&
+      github.workflow_ref == 'beep-effect/beep-effect/.github/workflows/cache-producer-prepare.yml@refs/heads/main'
+    runs-on: beep-ec2-heavy
+    timeout-minutes: 20
+    # No protected environment or secrets: this only builds a candidate.
+    env:
+      BEEP_TURBO_HOST_CACHE_DISABLED: "true"
+      RUSTUP_TOOLCHAIN: "1.96.0"
+      CARGO_BUILD_JOBS: "2"
+    steps:
+      - name: Checkout exact main source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Allocate isolated build scratch
+        id: scratch
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          build_parent="${XDG_CACHE_HOME:-$HOME/.cache}/beep"
+          mkdir -p "$build_parent"
+          build_root="$(mktemp -d "$build_parent/cache-producer-build.XXXXXX")"
+          printf 'BEEP_CACHE_PRODUCER_BUILD_ROOT=%s\n' "$build_root" >> "$GITHUB_ENV"
+          printf 'root=%s\nartifact=%s/artifact\n' "$build_root" "$build_root" >> "$GITHUB_OUTPUT"
+          mkdir "$build_root/artifact" "$build_root/cache" "$build_root/target"
+          printf 'CARGO_HOME=%s/cargo\n' "$build_root" >> "$GITHUB_ENV"
+          printf 'RUSTUP_HOME=%s/rustup\n' "$build_root" >> "$GITHUB_ENV"
+          printf 'XDG_CACHE_HOME=%s/cache\n' "$build_root" >> "$GITHUB_ENV"
+          printf 'CARGO_TARGET_DIR=%s/target\n' "$build_root" >> "$GITHUB_ENV"
+
+      - name: Setup pinned Rust without shared caches
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
+        with:
+          toolchain: "1.96.0"
+          target: x86_64-unknown-linux-musl
+          cache: "false"
+          override: "false"
+          matcher: "false"
+
+      - name: Install pinned portable build tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m venv "$BEEP_CACHE_PRODUCER_BUILD_ROOT/tools"
+          "$BEEP_CACHE_PRODUCER_BUILD_ROOT/tools/bin/python" -m pip install \
+            --disable-pip-version-check --no-cache-dir --only-binary=:all: \
+            -r infra/r2-cache/policy-build-requirements.txt
+          # ziglang distributes the binary inside its module, without a PATH entry.
+          zig_binary="$("$BEEP_CACHE_PRODUCER_BUILD_ROOT/tools/bin/python" -c \
+            'import pathlib,ziglang; print(pathlib.Path(ziglang.__file__).parent/"zig")')"
+          ln -s "$zig_binary" "$BEEP_CACHE_PRODUCER_BUILD_ROOT/tools/bin/zig"
+          test "$("$BEEP_CACHE_PRODUCER_BUILD_ROOT/tools/bin/zig" version)" = "0.14.1"
+          test "$("$BEEP_CACHE_PRODUCER_BUILD_ROOT/tools/bin/cargo-zigbuild" --version)" = "cargo-zigbuild 0.20.1"
+          printf '%s/tools/bin\n' "$BEEP_CACHE_PRODUCER_BUILD_ROOT" >> "$GITHUB_PATH"
+
+      - name: Build pinned portable candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git diff --quiet HEAD
+          infra/r2-cache/policy.sh cargo-build-musl
+          # Recheck the entire reviewed upstream patch after compilation too.
+          infra/r2-cache/policy.sh prepare
+          candidate="$CARGO_TARGET_DIR/x86_64-unknown-linux-musl/release/decay"
+          test -x "$candidate"
+          readelf -lW "$candidate" > "$BEEP_CACHE_PRODUCER_BUILD_ROOT/program-headers.txt"
+          if grep -Eq '^[[:space:]]*INTERP[[:space:]]' "$BEEP_CACHE_PRODUCER_BUILD_ROOT/program-headers.txt"; then
+            echo "::error::Candidate still needs a host ELF interpreter."
+            exit 1
+          fi
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,shutil,struct,subprocess
+          root=pathlib.Path(os.environ['BEEP_CACHE_PRODUCER_BUILD_ROOT'])
+          candidate=pathlib.Path(os.environ['CARGO_TARGET_DIR'])/'x86_64-unknown-linux-musl/release/decay'
+          size=candidate.stat().st_size
+          if not 0<size<=16*1024*1024:
+              raise SystemExit('Candidate exceeds the sixteen-MiB artifact bound.')
+          with candidate.open('rb') as handle:
+              header=handle.read(64)
+          if len(header)!=64 or header[:6]!=b'\x7fELF\x02\x01' or struct.unpack_from('<H',header,18)[0]!=62:
+              raise SystemExit('Candidate is not a little-endian ELF64 x86-64 executable.')
+          artifact=root/'artifact'
+          binary=artifact/'decay'
+          shutil.copyfile(candidate,binary)
+          binary.chmod(0o500)
+          pins=json.loads(pathlib.Path('infra/r2-cache/patches/4.0.20-signed-policy.json').read_text())
+          inputs=['infra/r2-cache/policy.sh','infra/r2-cache/policy-build-requirements.txt',
+                  'infra/r2-cache/patches/4.0.20-signed-policy.patch',
+                  'infra/r2-cache/patches/4.0.20-signed-policy.json']
+          report={
+              'schemaVersion':'cache-producer-adapter-build/v1',
+              'authority':'Candidate build only; independent approval and runtime qualification are required.',
+              'repository':os.environ['GITHUB_REPOSITORY'],
+              'sourceCommit':os.environ['GITHUB_SHA'],
+              'workflowRef':os.environ['GITHUB_WORKFLOW_REF'],
+              'workflowCommit':os.environ['GITHUB_WORKFLOW_SHA'],
+              'runId':os.environ['GITHUB_RUN_ID'],'runAttempt':os.environ['GITHUB_RUN_ATTEMPT'],
+              'upstreamCommit':pins['upstreamCommit'],'patchSha256':pins['patchSha256'],
+              'target':'x86_64-unknown-linux-musl',
+              'binary':{'file':'decay','bytes':size,'sha256':hashlib.sha256(binary.read_bytes()).hexdigest()},
+              'sourceInputs':{p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in inputs},
+              'tools':{name:subprocess.check_output(args,text=True).strip() for name,args in [
+                  ('rustc',['rustc','-vV']),('cargoZigbuild',['cargo-zigbuild','--version']),('zig',['zig','version'])]}
+          }
+          encoded=(json.dumps(report,indent=2)+'\n').encode()
+          if len(encoded)>64*1024 or size+len(encoded)>16*1024*1024:
+              raise SystemExit('Candidate manifest or complete artifact exceeds its bound.')
+          (artifact/'build.json').write_bytes(encoded)
+          PY
+          git diff --quiet HEAD
+
+      - name: Retain candidate for at most one day
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cache-producer-adapter-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ steps.scratch.outputs.artifact }}
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+
+      - name: Remove only this job's build scratch
+        if: always() && steps.scratch.outputs.root != ''
+        shell: bash
+        env:
+          BUILD_SCRATCH_ROOT: ${{ steps.scratch.outputs.root }}
+        run: |
+          set -euo pipefail
+          build_root="$BUILD_SCRATCH_ROOT"
+          case "$build_root" in
+            */beep/cache-producer-build.??????) rm -rf -- "$build_root" ;;
+            *) echo "::error::Refusing unexpected build scratch path."; exit 1 ;;
+          esac

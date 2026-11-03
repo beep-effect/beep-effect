@@ -90,6 +90,24 @@ closeout to an unrelated state-only PR.
 5. Regenerate/check the goal index and preserve exploration links. Completion
    of this goal alone does not establish the whole cache program's completion.
 
+## Credential-free adapter preparation checkpoint, 2026-11-02
+
+The protected environment installation component also prepares a main-only
+candidate build through the admitted Heavy leaf. The new optional mode has
+no cache or issuer credentials and no protected environment. It reuses the
+reviewed upstream patch and pinned portable toolchain; one existing runner,
+twenty minutes, two Cargo jobs, sixteen-MiB artifact and one-day retention
+bound the preparation. Ordinary quality callers keep their matrix contexts.
+
+The fourteen environment dispatch controls and the workflow isolation controls
+are authored for hosted CI; no local proof competes with the operator's
+push-first instruction. Hosted Check, Build, Integration, Docgen and Repo Sanity
+passed the error repair at `f13ffb0610`; that historical source still had the
+separately owned coverage episode. The merged source and new preparation job
+need fresh hosted proof. No candidate has been built by this workflow, approved
+or executed. Protected signed production, independent publication acceptance,
+capability/epoch/rollback proof and the real observation windows remain open.
+
 ## Rollback and resume
 
 Use SPEC's rollback at the affected boundary. Record the failed gate, remaining

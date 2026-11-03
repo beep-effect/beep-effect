@@ -2045,3 +2045,15 @@ existing findings and baseline floors. Check the generated export-set delta
 when resolving this conflict; accepting main's snapshot alone is insufficient
 when a branch adds exports. Local verify, publish and test runs remain skipped
 under the operator's direct-push instruction.
+
+### 2026-11-02 — protected CI has no candidate adapter binary
+
+The actual source inspection supplied tool and workflow identities, but the
+historical workstation musl build is not an authenticated current CI artifact.
+Prepare the candidate through the admitted Heavy leaf before provisioning a
+producer. Reuse the pinned policy builder instead of compiling during adapter
+startup. A local packaging inspection also found that ziglang 0.14.1 has no
+console entry point; the existing successful environment uses an explicit
+link to its module's `zig` binary. Preserve that setup in the isolated CI tools
+and check both tool versions before compilation. Source preparation does not
+prove build success, approval or signed execution.

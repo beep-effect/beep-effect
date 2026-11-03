@@ -11,6 +11,18 @@
     {
       "path": "packages/tooling/tool/cli/test/cache-dispatch.test.ts",
       "sha256": "c8198c1d847455b0d9639e064d71e1b80634a80ff7cf322b36dd7305b81bface"
+    },
+    {
+      "path": ".github/workflows/cache-producer-prepare.yml",
+      "sha256": "494b65ee582d2e0826838b6f99d3640feeb58940987852b3af1cd21982f9d1b1"
+    },
+    {
+      "path": ".github/workflows/heavy.yml",
+      "sha256": "0cd3bb56322229d2001fd63863e72186fe0def07ae61c4f709ad0fd195cdc7a9"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/ci-runner-security.test.ts",
+      "sha256": "7675754a1cb62f397a3d73705afa305f1b797f3d77b31609b41e73f3975ea284"
     }
   ],
   "environmentRecords": {
@@ -114,10 +126,67 @@
     "repair": "Map only SchemaError to the fixed redacted approval diagnostic, preserve typed policy refusal, and pipe the redacted material into its decoder.",
     "newControl": "A schema error containing a private marker is refused before missing material lookup and initialization; its input is absent from both captured outputs.",
     "newControlExecuted": false,
-    "hostedRepairProof": "pending",
+    "hostedRepairProof": {
+      "head": "f13ffb0610dece2a4c4acbf5499acd0c9e759978",
+      "runId": 41565878998,
+      "result": "Check, Build, Test Integration, Docgen and Repo Sanity succeeded; coverage failed for the separately owned episode26. Current changed head requires fresh proof."
+    },
     "boundedInventoryRefresh": "Canonical existing per-file analyzer refreshed only current Cache.command.ts locations; all semantic entries, totals, findings and original full-scan timestamp are preserved.",
     "failedJobIds": [
       125680220625, 125680220610, 125680220605, 125680220768, 125679616334
     ]
+  },
+  "priorSourceBindingsBeforeCandidatePreparation": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "sha256": "44e6842fb3b73a66d8a0a707f67bb0a04401b9ca601daacc666617e733ad38e3"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-dispatch.test.ts",
+      "sha256": "c8198c1d847455b0d9639e064d71e1b80634a80ff7cf322b36dd7305b81bface"
+    }
+  ],
+  "candidateBuildPreparation": {
+    "status": "source-prepared-unexecuted",
+    "caller": ".github/workflows/cache-producer-prepare.yml",
+    "admittedLeaf": ".github/workflows/heavy.yml@main",
+    "sourceCheckout": "github.sha",
+    "repository": "beep-effect/beep-effect",
+    "ref": "refs/heads/main",
+    "event": "workflow_dispatch",
+    "modeDefault": false,
+    "ordinaryQualityMatrixPreserved": true,
+    "inspectionMutuallyExclusive": true,
+    "environment": null,
+    "cacheIssuerApplicationCredentials": false,
+    "sharedActionsCache": false,
+    "bounds": {
+      "concurrentJobs": 1,
+      "totalMinutes": 20,
+      "cargoJobs": 2,
+      "artifactBytes": 16777216,
+      "manifestBytes": 65536,
+      "artifactRetentionDays": 1
+    },
+    "toolchain": {
+      "rust": "1.96.0",
+      "cargoZigbuild": "0.20.1",
+      "zig": "0.14.1",
+      "target": "x86_64-unknown-linux-musl"
+    },
+    "builder": "infra/r2-cache/policy.sh cargo-build-musl",
+    "postBuildSourcePatchRecheck": true,
+    "refuseElfInterpreter": true,
+    "scratchCleanup": "Only frozen scratch output from this job, always on success/failure.",
+    "controls": "Workflow policy/isolation assertions authored; not run locally.",
+    "qualifyingAuthority": false,
+    "workflowExecuted": false
+  },
+  "currentAcceptedMainIntegration": {
+    "revision": "070ac7bf111648e6d9779a56243ae733856efc9a",
+    "mergeCommit": "5c869fdef6431361823a8384e45f90cd9678ef8a",
+    "priorProducerImplementationUnchangedByMerge": true,
+    "allParentEvidenceRegistrationsRetained": true,
+    "wholeGoalAcceptanceGranted": false
   }
 }
