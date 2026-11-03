@@ -17,6 +17,7 @@ import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -39,6 +40,23 @@ const withProcStat = Effect.fnUntraced(function* <Value, Error, Requirements>(
 });
 
 it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })("ProcessIdentity", (it) => {
+  it.effect("keeps process identity unknown when the system inspector cannot spawn", () =>
+    Effect.gen(function* () {
+      const failure = PlatformError.systemError({ _tag: "NotFound", module: "ChildProcess", method: "spawn" });
+      const spawn = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          vi.spyOn(Bun, "spawnSync").mockImplementation(() => {
+            throw failure;
+          })
+        ),
+        (spy) => Effect.sync(() => spy.mockRestore())
+      );
+      const identity = yield* processStartIdentityForPid(process.pid, O.some("ps:recorded-start"));
+      identity.pipe(assertNone);
+      expect(spawn).toHaveBeenCalledTimes(1);
+    })
+  );
+
   it("models every supported source-prefixed identity", () => {
     expect(ProcessIdentitySource.literals).toStrictEqual(["proc", "ps", "win"]);
     expect(ProcessIdentityStatus.literals).toStrictEqual(["alive", "dead", "unknown"]);

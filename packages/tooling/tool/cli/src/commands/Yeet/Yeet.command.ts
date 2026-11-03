@@ -740,9 +740,8 @@ const durationMillis = Effect.fn("Yeet.jobDuration")(function* (text: string) {
     Effect.mapError(YeetCommandError.new("Expected a duration such as '30 seconds'."))
   );
   const millis = Duration.toMillis(duration);
-  if (!isPositiveFiniteDuration(millis)) {
+  if (!isPositiveFiniteDuration(millis))
     return yield* YeetCommandError.make({ message: "Job duration must be positive and finite." });
-  }
   return millis;
 });
 const jobRoot = () => findRepoRoot().pipe(Effect.mapError(YeetCommandError.new("Failed to locate job checkout.")));
@@ -769,21 +768,16 @@ const submitDetachedProofJob = Effect.fn("Yeet.submitDetached")(function* (mode:
       root,
       O.getSomesStruct({ PATH: yield* configStringOption("PATH") })
     ).pipe(Effect.mapError(YeetCommandError.new("Failed to read detached job git coordinates.")));
-    if (result.exitCode !== 0) {
-      return yield* YeetCommandError.make({ message: result.output });
-    }
+    if (result.exitCode !== 0) return yield* YeetCommandError.make({ message: result.output });
     return Str.trim(result.output);
   });
   const branch = yield* git(["rev-parse", "--abbrev-ref", "HEAD"]);
   const head = yield* git(["rev-parse", "--verify", options.head]);
   const entrypoint = O.fromUndefinedOr(process.argv[1]);
-  if (O.isNone(entrypoint)) {
-    return yield* YeetCommandError.make({ message: "Cannot detach without a CLI entrypoint." });
-  }
+  if (O.isNone(entrypoint)) return yield* YeetCommandError.make({ message: "Cannot detach without a CLI entrypoint." });
   const words = A.dropWhile(A.drop(process.argv, 2), (word) => word === "--");
-  if (A.head(words).pipe(O.getOrElse(() => "")) !== "yeet") {
+  if (A.head(words).pipe(O.getOrElse(() => "")) !== "yeet")
     return yield* YeetCommandError.make({ message: "Cannot detach: original argv must begin with yeet." });
-  }
   const maxRuntimeSeconds = Str.isEmpty(options.jobMaxRuntime)
     ? O.none<number>()
     : O.some(Math.ceil((yield* durationMillis(options.jobMaxRuntime)) / 1000));
@@ -813,9 +807,7 @@ const submitDetachedProofJob = Effect.fn("Yeet.submitDetached")(function* (mode:
 });
 const requireJob = Effect.fn("Yeet.requireJob")(function* (launcher: ProofJobLauncherShape, id: UUID) {
   const result = yield* launcher.read(id);
-  if (O.isNone(result)) {
-    return yield* YeetCommandError.make({ message: `Unknown proof job ${id}.` });
-  }
+  if (O.isNone(result)) return yield* YeetCommandError.make({ message: `Unknown proof job ${id}.` });
   return result.value;
 });
 const jobListCommand = Command.make(
@@ -831,9 +823,7 @@ const jobListCommand = Command.make(
       );
       yield* Console.log(pipe3);
     } else {
-      for (const record of records) {
-        yield* renderJob(record, false);
-      }
+      for (const record of records) yield* renderJob(record, false);
     }
   })
 );
@@ -864,9 +854,7 @@ const jobStatusCommand = Command.make(
       yield* Console.log(pipe4);
     } else {
       yield* renderJob(record, false);
-      if (!isTerminalProofJobPhase(record.phase)) {
-        yield* Console.log(O.getOrElse(live, () => "unit not loaded"));
-      }
+      if (!isTerminalProofJobPhase(record.phase)) yield* Console.log(O.getOrElse(live, () => "unit not loaded"));
     }
     if (options.ack && isSettledProofJob(record)) {
       yield* writeYeetAckReceipt(
@@ -902,21 +890,18 @@ const jobWaitCommand = Command.make(
     });
     const outcome6 = yield* outcome;
     const exit = proofJobWaitExitFor(outcome6);
-    if (exit.exitCode !== 0) {
+    if (exit.exitCode !== 0)
       return yield* YeetCommandError.make({
         message: `Proof job ${result.record.jobId}: ${exit.summary}.`,
         exitCode: exit.exitCode,
       });
-    }
   })
 );
 const jobLogsCommand = Command.make(
   "logs",
   { jobId: jobIdArgument, tail: Flag.Int("tail").pipe(Flag.withDefault(100)) },
   Effect.fn("Yeet.jobLogs")(function* (options) {
-    if (options.tail < 0) {
-      return yield* YeetCommandError.make({ message: "--tail must be nonnegative." });
-    }
+    if (options.tail < 0) return yield* YeetCommandError.make({ message: "--tail must be nonnegative." });
     const root = yield* jobRoot();
     const made = yield* ProofJobLauncher.make(root);
     const record = yield* requireJob(made, options.jobId);
@@ -936,9 +921,8 @@ const jobCancelCommand = Command.make(
     const launcher = yield* ProofJobLauncher.make(jobRoot7);
     const outcome = yield* launcher.cancel(options.jobId);
     yield* Console.log(outcome);
-    if (outcome === "stop-failed") {
+    if (outcome === "stop-failed")
       return yield* YeetCommandError.make({ message: "systemctl could not stop the job." });
-    }
   })
 );
 /**
@@ -966,9 +950,8 @@ const jobFinalizeCommand = Command.make(
       O.isSome(record.unit.invocationId) &&
       O.isSome(invocationId) &&
       record.unit.invocationId.value !== invocationId.value
-    ) {
+    )
       return yield* YeetCommandError.make({ message: "INVOCATION_ID does not match the proof job." });
-    }
     const serviceResult = yield* configStringOption("SERVICE_RESULT");
     const exitCode = yield* configStringOption("EXIT_CODE");
     const result = ProofJobSystemdResult.make({
@@ -1109,9 +1092,8 @@ const yeetMonitorCommand = Command.make(
     watch,
     ...options
   }) {
-    if (Str.isNonEmpty(pollInterval) && !untilMerged && !untilReady) {
+    if (Str.isNonEmpty(pollInterval) && !untilMerged && !untilReady)
       return yield* YeetCommandError.make({ message: "--poll-interval requires --until-ready or --until-merged." });
-    }
     const interval = Str.isEmpty(pollInterval)
       ? undefined
       : yield* durationMillis(pollInterval).pipe(
@@ -1120,9 +1102,7 @@ const yeetMonitorCommand = Command.make(
             onSuccess: Duration.millis,
           })
         );
-    if (options.detach) {
-      return yield* provideYeetStateRoot(runYeetMode("monitor", options), stateRoot);
-    }
+    if (options.detach) return yield* provideYeetStateRoot(runYeetMode("monitor", options), stateRoot);
     const route = yeetMonitorCommandRoute({
       plan: options.plan,
       settleTimeout,

@@ -267,6 +267,49 @@ describe("contact seeding", () => {
         })
       )
     );
+    it.effect("preserves normalized business phone numbers in the created contact", () =>
+      withFiles(
+        Effect.fnUntraced(function* (root) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const input = path.join(root, "phone.csv");
+          yield* fs.writeFileString(
+            input,
+            "First Name,Last Name,Company,E-mail Address,Business Phone\nFixture,Person,Fixture company,person@example.test,+12025550123\n"
+          );
+          const run = yield* overJob(
+            root,
+            empty,
+            ContactSeeding.use((job) => job.apply(ContactInputs.make({ csv: [input], vcf: [] }), true))
+          );
+          expect(run.created).toBe(1);
+          const created = O.getOrThrow(A.head(run.inventory.contacts));
+          assertSome(created.contact.rawJson, expect.objectContaining({ businessPhones: ["+12025550123"] }));
+        })
+      )
+    );
+
+    it.effect("rejects invalid undo selection and missing confirmation before changing the mailbox", () =>
+      withFiles(
+        Effect.fnUntraced(function* (root) {
+          const run = yield* overJob(
+            root,
+            empty,
+            ContactSeeding.use((job) =>
+              Effect.all([
+                job.undo(O.none(), false, false, true).pipe(Effect.flip),
+                job.undo(O.some("synthetic-run"), false, false, false).pipe(Effect.flip),
+              ])
+            )
+          );
+          expect(run.result).toMatchObject([{ reason: "input" }, { reason: "confirmation" }]);
+          expect(run.created).toBe(0);
+          expect(run.deleted).toEqual([]);
+          expect(run.journals).toEqual([]);
+        })
+      )
+    );
+
     it.effect("applies once, records marker/version, plans zero creates and supports both undo dry runs", () =>
       withFiles(
         Effect.fnUntraced(function* (root) {
