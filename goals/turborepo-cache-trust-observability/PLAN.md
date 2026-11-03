@@ -1174,3 +1174,18 @@ lint/type checks, Fallow audit and health with no findings, and the complete
 effect-vitest ratchet. The canonical inventory retains the same finding totals.
 These remain component checks; protected R2 execution and whole-goal acceptance
 are still outstanding.
+
+### Contained source directory aliases, 2026-11-02
+
+Protected inspection run `41413340460`, job `125171205116`, reached its admitted
+runner and failed in source collection. The declared YAML fixture alias
+`tags/alias/V55R` resolves to a directory, and other declared fixture aliases
+cover nested trees. Bind those complete contained trees with a bounded,
+domain-separated structure/mode manifest while keeping every leaf in the
+independent declared inventory. Keep absolute/outside aliases, ignored entries,
+unsupported filesystem objects and changed inventories refused.
+
+The [collector checkpoint](research/source-directory-alias-checkpoint-2026-11-02.json)
+records focused controls and real-tree replay separately from actual protected
+inspection. A new main inspection and independent approval remain required; no
+whole-goal criterion or production configuration is changed.
