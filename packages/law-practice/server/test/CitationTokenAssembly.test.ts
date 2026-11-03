@@ -6,6 +6,8 @@ import {
   CitationTokenAssemblyHost,
   makeCitationTokenAssembly,
 } from "@beep/law-practice-server/internal/Citation/TokenAssembly";
+import { CitationTokenEditionBinding } from "@beep/law-practice-server/internal/Citation/TokenEditions";
+import { makeCitationTokenObjects } from "@beep/law-practice-server/internal/Citation/TokenObjects";
 import { makeCitationTokenText } from "@beep/law-practice-server/internal/Citation/TokenText";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { LiteralKit } from "@beep/schema";
@@ -21,6 +23,7 @@ import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
+import { CitationTokenSeedHex } from "./CitationTokenSeed.fixtures.ts";
 
 const $I = $LawPracticeServerId.create("test/CitationTokenAssembly");
 const Decision = LiteralKit(["merge", "nominative", "text"]);
@@ -33,11 +36,16 @@ const Trace = S.Struct({
 });
 const Corpus = S.fromJsonString(
   S.Struct({
-    schemaVersion: S.tag("citation-token-assembly/v1"),
+    schemaVersion: S.tag("citation-token-assembly/v2"),
     oracleCommit: S.tag("04d82c032ad5fd0f9ab72a61c87110c46ee8f52e"),
     oracleTree: S.tag("a35a58fac03400f71a93a93485b77f1d56f2b02f"),
     python: S.tag("3.11.15"),
-    producerSha256: S.tag("a88faec194b28e73cdf7d89e671b34a3a46852d3adb12e894d396c6a1239dc58"),
+    producerSha256: S.tag("2efe2dc607f1e038a4412ff4bf28df49a2fe0a90ba57e0938ca3e0f261535a54"),
+    tokenSeeds: S.Array(CitationTokenSeedHex).check(S.isBetweenLength(8, 8)),
+    editionBindings: S.Array(S.Struct({ ...CitationTokenEditionBinding.fields, hash: S.BigIntFromString })).check(
+      S.isBetweenLength(14, 14)
+    ),
+    editionProfileSha256: S.tag("b42419aa8c06a5ccb3a15ea6e46650219e1f50445dbd827224b4d771e9f2932c"),
     cases: S.Array(
       S.Struct({
         id: S.Natural,
@@ -61,7 +69,7 @@ const failure = () => CitationTokenAssemblyFailure.make({ reason: "host-failed" 
 it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestServices: true })(
   "token assembly",
   (it) => {
-    it.effect("matches all source mixed outputs, indices and ordered host decisions", () =>
+    it.effect("matches source mixed outputs and decisions using actual target token/edition merging", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const digest = yield* Digest.Digest;
@@ -69,12 +77,15 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestSer
           NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/token-assembly.json", import.meta.url))
         );
         expect(yield* digest.digestHex(Digest.sha256, bytes)).toBe(
-          "b6d461dc31b470402b509dba81c39e471ecfcbb4cd1f7b236b201b875ecc5391"
+          "654a826469d27b64ba6530a763f85a5f7926029f386e25511825472c74d01cd1"
         );
         const corpus = yield* S.decodeEffect(Corpus)(new TextDecoder().decode(bytes));
         const limits = (yield* defaultCitationEnginePolicy).limits;
         const text = yield* makeCitationTokenText(limits);
         for (const row of corpus.cases) {
+          const objects = yield* makeCitationTokenObjects(limits, corpus.editionBindings);
+          const created = yield* Effect.forEach(corpus.tokenSeeds, objects.create, { concurrency: 1 });
+          expect(created).toEqual(A.range(0, 7));
           let cursor = 0;
           const next = (kind: typeof Decision.Type) => {
             const event = A.getUnsafe(row.trace, cursor++);
@@ -82,21 +93,23 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestSer
             return event;
           };
           const host = CitationTokenAssemblyHost.of({
-            read: Effect.fn("AssemblyTest.read")((id: number) =>
-              Effect.succeed(CitationAssemblyView.make(A.getUnsafe(row.views, id)))
-            ),
+            read: objects.read,
             merge: Effect.fn("AssemblyTest.merge")((left: number, right: number) =>
-              Effect.sync(() => {
+              Effect.gen(function* () {
+                const actual = yield* objects.mergeTruthy(left, right);
                 const event = next("merge");
                 expect([left, right]).toEqual([event.left, event.right]);
-                return event.result === true;
+                expect(actual).toBe(event.result);
+                return actual;
               })
             ),
             nominative: Effect.fn("AssemblyTest.nominative")((id: number) =>
-              Effect.sync(() => {
+              Effect.gen(function* () {
+                const actual = yield* objects.nominative(id);
                 const event = next("nominative");
                 expect(id).toBe(event.left);
-                return event.result === true;
+                expect(actual).toBe(event.result);
+                return actual;
               })
             ),
             text: Effect.fn("AssemblyTest.text")((start: number, end: number) =>

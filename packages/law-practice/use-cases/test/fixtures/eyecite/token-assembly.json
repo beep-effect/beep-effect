@@ -44872,10 +44872,210 @@
       ]
     }
   ],
+  "editionBindings": [
+    {
+      "equalityClass": 0,
+      "hash": "159712784060567930",
+      "id": 0,
+      "reporterShortName": "Thompson"
+    },
+    {
+      "equalityClass": 1,
+      "hash": "-8018291692121657794",
+      "id": 1,
+      "reporterShortName": "Cooke"
+    },
+    {
+      "equalityClass": 2,
+      "hash": "7424656591207912960",
+      "id": 2,
+      "reporterShortName": "Holmes"
+    },
+    {
+      "equalityClass": 3,
+      "hash": "-6272719061085101217",
+      "id": 3,
+      "reporterShortName": "Olcott"
+    },
+    {
+      "equalityClass": 4,
+      "hash": "8632186582480077969",
+      "id": 4,
+      "reporterShortName": "Chase"
+    },
+    {
+      "equalityClass": 5,
+      "hash": "2886739885411439365",
+      "id": 5,
+      "reporterShortName": "Gilmer"
+    },
+    {
+      "equalityClass": 6,
+      "hash": "-5800694919075508483",
+      "id": 6,
+      "reporterShortName": "Bee"
+    },
+    {
+      "equalityClass": 7,
+      "hash": "-6323183600379357124",
+      "id": 7,
+      "reporterShortName": "Deady"
+    },
+    {
+      "equalityClass": 8,
+      "hash": "-4785510870714926042",
+      "id": 8,
+      "reporterShortName": "Taney"
+    },
+    {
+      "equalityClass": 9,
+      "hash": "-4350389628979636572",
+      "id": 9,
+      "reporterShortName": "U.S."
+    },
+    {
+      "equalityClass": 10,
+      "hash": "16831852342013836",
+      "id": 10,
+      "reporterShortName": "thompson"
+    },
+    {
+      "equalityClass": 11,
+      "hash": "-4202554268142619485",
+      "id": 11,
+      "reporterShortName": "Thompson\u0301"
+    },
+    {
+      "equalityClass": 0,
+      "hash": "159712784060567930",
+      "id": 12,
+      "reporterShortName": "Thompson"
+    },
+    {
+      "equalityClass": 13,
+      "hash": "2445228229542550031",
+      "id": 13,
+      "reporterShortName": "Thompson"
+    }
+  ],
+  "editionProfileSha256": "b42419aa8c06a5ccb3a15ea6e46650219e1f50445dbd827224b4d771e9f2932c",
   "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
   "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
-  "producerSha256": "a88faec194b28e73cdf7d89e671b34a3a46852d3adb12e894d396c6a1239dc58",
+  "producerSha256": "2efe2dc607f1e038a4412ff4bf28df49a2fe0a90ba57e0938ca3e0f261535a54",
   "python": "3.11.15",
-  "schemaVersion": "citation-token-assembly/v1",
-  "scope": "Assembly control flow with actual source host decisions; not a target token-merge implementation."
+  "schemaVersion": "citation-token-assembly/v2",
+  "scope": "Assembly control flow with actual source host decisions; not a target token-merge implementation.",
+  "tokenSeeds": [
+    {
+      "data": {
+        "bytes": "6161206262",
+        "width": 1
+      },
+      "end": 5,
+      "exact": [],
+      "groups": {
+        "a": {
+          "bytes": "78",
+          "width": 1
+        }
+      },
+      "kind": "Token",
+      "short": false,
+      "start": 0,
+      "variation": []
+    },
+    {
+      "data": {
+        "bytes": "646966666572656e74",
+        "width": 1
+      },
+      "end": 5,
+      "exact": [],
+      "groups": {
+        "a": {
+          "bytes": "78",
+          "width": 1
+        }
+      },
+      "kind": "Token",
+      "short": false,
+      "start": 0,
+      "variation": []
+    },
+    {
+      "data": {
+        "bytes": "4964",
+        "width": 1
+      },
+      "end": 5,
+      "exact": [],
+      "groups": {},
+      "kind": "IdToken",
+      "short": false,
+      "start": 0,
+      "variation": []
+    },
+    {
+      "data": {
+        "bytes": "6e6f6d",
+        "width": 1
+      },
+      "end": 8,
+      "exact": [0],
+      "groups": {},
+      "kind": "CitationToken",
+      "short": false,
+      "start": 0,
+      "variation": []
+    },
+    {
+      "data": {
+        "bytes": "63697465",
+        "width": 1
+      },
+      "end": 4,
+      "exact": [9],
+      "groups": {},
+      "kind": "CitationToken",
+      "short": false,
+      "start": 2,
+      "variation": []
+    },
+    {
+      "data": {
+        "bytes": "",
+        "width": 1
+      },
+      "end": 3,
+      "exact": [],
+      "groups": {},
+      "kind": "Token",
+      "short": false,
+      "start": 0,
+      "variation": []
+    },
+    {
+      "data": null,
+      "end": 4,
+      "exact": [],
+      "groups": {},
+      "kind": "Token",
+      "short": false,
+      "start": 0,
+      "variation": []
+    },
+    {
+      "data": {
+        "bytes": "6c617465",
+        "width": 1
+      },
+      "end": 11,
+      "exact": [],
+      "groups": {},
+      "kind": "Token",
+      "short": false,
+      "start": 9,
+      "variation": []
+    }
+  ]
 }

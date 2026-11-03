@@ -279,9 +279,9 @@ stage preserves stable start/descending-end sorting, merge-before-overlap,
 nominative replacement, exact text gaps and special-token indices. It captures
 a typed host service with R = never methods. All 407 independently executed
 source cases and 1,247 ordered host decisions match, with the real target text
-planner producing gap spans. The target source-token host, edition merge and
-general custom span/data mutation remain open; replayed source merge decisions
-are control-flow proof only. See [assembly evidence](history/evidence/2026-11-03-token-assembly.md).
+planner producing gap spans. The original checkpoint replayed source merge decisions. The native-object
+checkpoint below supersedes that limitation for covered built-ins; general
+custom span/data mutation and complete tokenizer integration remain open. See [assembly evidence](history/evidence/2026-11-03-token-assembly.md).
 
 Latest edition-merge checkpoint (2026-11-03): the target now deduplicates exact
 and variation edition occurrences with the existing CPython set adapter and
@@ -290,9 +290,21 @@ cases and 42 independent classification/preference controls pass under the
 captured source hash profile. A separate source replay with those explicit
 hash parameters is byte-identical. This is not fresh-process hash production;
 None-dependent hashes vary between processes. The existing normalized public
-candidate-bag rule is preserved. Token construction, concrete host state and
-full tokenizer integration remain open. See
+candidate-bag rule is preserved. The native-object checkpoint below consumes this adapter. Raw regex/extra
+binding, general custom host protocols and full tokenizer integration remain open. See
 [edition merge evidence](history/evidence/2026-11-03-token-editions.md).
+
+Latest native token-object checkpoint (2026-11-03): all 297 normalized
+first-capture constructor cases and 216 identity/truth/group merge controls
+match across nine source token classes. Effect HashMap, Semaphore, Bytes and
+schema-derived equivalence own state, serialized merges and native equality;
+the existing edition adapter handles citation edition sets. All 407 mixed
+assembly cases now run actual target token/edition methods and compare source
+decisions, replacing the earlier replay host. Ten focused tests pass, including
+all text/edition controls and ownership, cumulative ceilings and captured Clock.
+Raw regex-result/extra binding, native full-source gap ownership, general custom
+class/mutation protocols and public tokenizer integration remain open. See
+[native token evidence](history/evidence/2026-11-03-token-objects.md).
 
 Latest worker evidence (2026-10-31): private process ownership now covers bounded
 schema frames, captured Clock timers, queue/active limits, forced stop,

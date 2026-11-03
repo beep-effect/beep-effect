@@ -33,7 +33,7 @@ export class CitationTokenAssemblyFailure extends S.TaggedError<
 ) {}
 /** @internal @category models @since 0.0.0 */
 export class CitationAssemblyView extends S.Opaque<CitationAssemblyView, { readonly brand: unique symbol }>()(
-  S.Struct({ start: Position, end: Position, hasData: S.Boolean, truthy: S.Boolean, citation: S.Boolean }).pipe(
+  S.Struct({ start: S.Int, end: S.Int, hasData: S.Boolean, truthy: S.Boolean, citation: S.Boolean }).pipe(
     $I.annoteSchema("CitationAssemblyView", {
       description: "Trusted current token state, distinct from its stable sorting key.",
     })
@@ -68,9 +68,16 @@ export class CitationAssemblyResult extends S.Opaque<CitationAssemblyResult, { r
 export class CitationTokenAssemblyHost extends Context.Service<
   CitationTokenAssemblyHost,
   {
-    readonly read: (id: number) => Effect.Effect<CitationAssemblyView, CitationTokenAssemblyFailure>;
-    readonly merge: (left: number, right: number) => Effect.Effect<boolean, CitationTokenAssemblyFailure>;
-    readonly nominative: (id: number) => Effect.Effect<boolean, CitationTokenAssemblyFailure>;
+    readonly read: (
+      id: number
+    ) => Effect.Effect<CitationAssemblyView, CitationTokenAssemblyFailure | CitationSafetyLimitExceeded>;
+    readonly merge: (
+      left: number,
+      right: number
+    ) => Effect.Effect<boolean, CitationTokenAssemblyFailure | CitationSafetyLimitExceeded>;
+    readonly nominative: (
+      id: number
+    ) => Effect.Effect<boolean, CitationTokenAssemblyFailure | CitationSafetyLimitExceeded>;
     readonly text: (
       start: number,
       end: number

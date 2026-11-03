@@ -27,25 +27,20 @@ Upstream repositories:
     expressions and regular expressions, and attribution-safe parity fixtures.
 
 The private citation `ExtractorSelection.ts` adapts required-string selection
-behavior from the pinned eyecite `tokenizers.py`. It uses Effect Trie and
-HashSet rather than copying an Aho-Corasick implementation. Independent source
-observations and the complete default configuration binding are recorded in
-the citation-engine packet. `ExtractorOrdering.ts` connects those source match
-introductions to the existing PSF-attributed CPython set adapter. Effect
-HashMap and ordering combinators retain bounded first-event metadata; source
-repr hashes and equality classes are frozen oracle facts for this private
-profile. Dynamic extractor mutation and full tokenizer integration remain open.
-`TokenText.ts` adapts the same pinned module's literal-space `append_text`
-behavior as native source-point spans, retaining all source words without
-projecting literal surrogate pairs into Unicode scalars. `TokenAssembly.ts`
-adapts mixed-token sorting, merge/overlap dispatch and output indexing from
-that module. Its captured host service retains source-object responsibilities;
-the assembly oracle replays actual source host decisions without claiming a
-complete target implementation of token construction or edition merging.
-`TokenEditions.ts` now supplies the edition set/deduplication and nominative
-selection primitive using the existing PSF-attributed set adapter and captured
-source runtime hash facts. Fresh-process hash production and the concrete token
-object host remain separate integration work.
+from the pinned eyecite `tokenizers.py`, using Effect Trie and HashSet.
+`ExtractorOrdering.ts` connects source match introductions to the existing
+PSF-attributed CPython set adapter using frozen source hash/equality facts.
+`TokenText.ts` adapts literal-space append_text as native source-point spans,
+retaining literal surrogate words separately from Unicode scalars.
+`TokenAssembly.ts` adapts stable match sorting, merge/overlap dispatch and
+special-token indexing. `TokenObjects.ts` adapts the nine built-in token classes'
+normalized first-capture fields, group equality, merge identity/truth and
+edition-list mutation, using Effect Bytes and schema-derived record equivalence.
+`TokenEditions.ts` provides source set deduplication and nominative selection
+through the existing set adapter and captured edition hash/equality facts.
+Independent source observations and their proof limits are recorded in the
+citation-engine packet. Fresh-process hash production, raw regex/extra binding,
+custom protocols and complete public tokenizer integration remain open.
 
 The citation oracle fixture baseline also incorporates normalized output and
 regex/extractor data from the official eyecite lock's `reporters-db 3.2.53` and
