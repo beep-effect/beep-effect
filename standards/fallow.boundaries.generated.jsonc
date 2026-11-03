@@ -726,6 +726,18 @@
         ]
       },
       {
+        "name": "@beep/party-server",
+        "patterns": [
+          "packages/party/server/src/**"
+        ]
+      },
+      {
+        "name": "@beep/party-use-cases",
+        "patterns": [
+          "packages/party/use-cases/src/**"
+        ]
+      },
+      {
         "name": "@beep/pdf-tools",
         "patterns": [
           "packages/drivers/pdf-tools/src/**"
@@ -2873,9 +2885,11 @@
           "@beep/md",
           "@beep/memfs",
           "@beep/nlp",
+          "@beep/party-use-cases",
           "@beep/pglite",
           "@beep/postgres",
           "@beep/provenance",
+          "@beep/repo-utils",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/shared-use-cases",
@@ -2905,9 +2919,11 @@
           "@beep/md",
           "@beep/memfs",
           "@beep/nlp",
+          "@beep/party-use-cases",
           "@beep/pglite",
           "@beep/postgres",
           "@beep/provenance",
+          "@beep/repo-utils",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/shared-use-cases",
@@ -3833,14 +3849,58 @@
       {
         "from": "@beep/party-domain",
         "allow": [
+          "@beep/epistemics",
           "@beep/identity",
           "@beep/party-domain",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/shared-domain",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/epistemics",
+          "@beep/identity",
+          "@beep/party-domain",
+          "@beep/schema",
+          "@beep/shared-domain",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/party-server",
+        "allow": [
+          "@beep/epistemics",
+          "@beep/identity",
+          "@beep/m365",
+          "@beep/party-domain",
+          "@beep/party-server",
+          "@beep/party-use-cases",
+          "@beep/schema",
+          "@beep/shared-domain"
+        ],
+        "allowTypeOnly": [
+          "@beep/epistemics",
+          "@beep/identity",
+          "@beep/m365",
+          "@beep/party-domain",
+          "@beep/party-server",
+          "@beep/party-use-cases",
+          "@beep/schema",
+          "@beep/shared-domain"
+        ]
+      },
+      {
+        "from": "@beep/party-use-cases",
+        "allow": [
+          "@beep/identity",
+          "@beep/party-domain",
+          "@beep/party-use-cases",
+          "@beep/shared-domain"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/party-domain",
-          "@beep/schema"
+          "@beep/party-use-cases",
+          "@beep/shared-domain"
         ]
       },
       {

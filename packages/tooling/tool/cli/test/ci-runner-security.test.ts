@@ -347,6 +347,35 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     })
   );
   it.effect(
+    "gives every Heavy caller the read-only permission ceiling required by its nested producer",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const heavyYaml = yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`);
+      const heavy = parseWorkflowYaml(heavyYaml);
+      const requested = yamlAt(heavy, ["jobs", "producer-execute", "permissions"]);
+      expect(requested).toEqual({ contents: "read", actions: "read" });
+      expect(yamlAt(heavy, ["permissions"])).toEqual({ contents: "read" });
+      for (const { file, job } of [
+        { file: "check.yml", job: "heavy" },
+        { file: "heavy-admit.yml", job: "heavy" },
+        { file: "cache-producer-inspect.yml", job: "inspect" },
+        { file: "cache-producer-prepare.yml", job: "prepare" },
+        { file: "cache-producer.yml", job: "produce" },
+      ]) {
+        const workflowYaml = yield* fs.readFileString(`${root}/.github/workflows/${file}`);
+        const workflow = parseWorkflowYaml(workflowYaml);
+        expect(yamlAt(workflow, ["jobs", job, "uses"])).toBe(
+          "beep-effect/beep-effect/.github/workflows/heavy.yml@main"
+        );
+        const permissions = O.fromUndefinedOr(yamlAt(workflow, ["jobs", job, "permissions"])).pipe(
+          O.getOrElse(() => yamlAt(workflow, ["permissions"]))
+        );
+        assert.deepEqual(permissions, requested, file);
+      }
+    })
+  );
+  it.effect(
     "scopes hosted governance reads to Security and exercises its job token on pull requests",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -1671,6 +1700,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const heavyText = yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`);
       const heavy = parseWorkflowYaml(heavyText);
       expect(yamlAt(heavy, ["permissions"])).toEqual({ contents: "read" });
+      expect(yamlAt(workflow, ["jobs", "inspect", "permissions"])).toEqual(
+        yamlAt(heavy, ["jobs", "producer-execute", "permissions"])
+      );
+      expect(yamlAt(heavy, ["jobs", "producer-inspect", "permissions"])).toBeUndefined();
       expect(yamlAt(heavy, ["on", "workflow_call", "inputs", "producer_inspection"])).toEqual({
         description:
           "Run only the credential-free protected source inspection for the exact main manual dispatcher. Ordinary quality callers leave this off.",
@@ -1756,6 +1789,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(yamlAt(workflow, ["jobs", "prepare", "secrets"])).toBeUndefined();
       const heavyText = yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`);
       const heavy = parseWorkflowYaml(heavyText);
+      expect(yamlAt(workflow, ["jobs", "prepare", "permissions"])).toEqual(
+        yamlAt(heavy, ["jobs", "producer-execute", "permissions"])
+      );
+      expect(yamlAt(heavy, ["permissions"])).toEqual({ contents: "read" });
+      expect(yamlAt(heavy, ["jobs", "producer-prepare", "permissions"])).toBeUndefined();
       expect(yamlAt(heavy, ["on", "workflow_call", "inputs", "producer_preparation"])).toEqual({
         description:
           "Build only the credential-free candidate adapter for the exact main manual dispatcher. This grants no producer or cache-write authority.",

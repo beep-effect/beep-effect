@@ -39,6 +39,7 @@ import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { flow, identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as MutableRef from "effect/MutableRef";
@@ -1164,6 +1165,20 @@ const scriptedGithub = (script: GhScript, calls: Ref.Ref<ReadonlyArray<string>>)
       : reply(404)({ message: scripted.output });
   });
 
+// The merge gate consults a workstation merge-reservation helper whenever the host has activated
+// reservations (`~/.local/state/beep/merge-reservations/active`). The scripted runs prove the gate's
+// own decisions, so the sentinel always reads as absent here and a developer machine with active
+// reservations sees the same argv as CI.
+const withoutHostMergeReservation = Effect.map(FileSystem.FileSystem, (fs) =>
+  FileSystem.FileSystem.of({
+    ...fs,
+    exists: Effect.fn("withoutHostMergeReservation.exists")(function* (path: string) {
+      const found = yield* fs.exists(path);
+      return found && !Str.endsWith("/merge-reservations/active")(path);
+    }),
+  })
+);
+
 // Every scripted run records the argv it was asked for (and each GitHub call in
 // that form), so a test can prove the merge was or was not sent.
 const withScriptedGh = <A, E, R>(
@@ -1185,6 +1200,7 @@ const withScriptedGh = <A, E, R>(
         github.provide,
         Effect.provideService(GithubTransportFetch, O.some(scriptedGithub(script, calls).fetch)),
         Effect.provideServiceEffect(Git, Git.make),
+        Effect.provideServiceEffect(FileSystem.FileSystem, withoutHostMergeReservation),
         provideSpawner(scriptedGh(script, calls))
       );
     })

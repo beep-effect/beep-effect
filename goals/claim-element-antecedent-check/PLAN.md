@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active` (P0–P3 measured; merged implementation; final readiness and closeout receipt pending)
+Status: `completed-retained` (P0–P5 complete; final #2656 strictly merged with verified canonical completion)
 
 ## Binding Sequencing
 
@@ -19,8 +19,8 @@ are fixed, never before.
 | P1 Service contract | complete | Declare the `ClaimSelfCheck` `Context.Service` in `@beep/law-practice-use-cases` with typed errors; the decomposer (`ClaimElement.behavior.ts`) and antecedent (`Antecedent.policy.ts`) signatures in domain; the USPTO claims port. | P0 exit met. | Contracts type-check against P0 schemas; no implementation bodies; candidate mapping target (`CandidateClaim` + `Evidence`) named. |
 | P2 Deterministic implementation + USPTO adapter + labelled set | complete under autonomous acceptance v1 | Implement the pure decomposer and checker, one rule and fixture per determiner edge case; the server-side USPTO adapter over `@beep/uspto`; the `ClaimSelfCheck` Layer; the first vertical slice; the labelled set (~60 families via the extractor/critic loop with ~10% independent automated spot-check; ~200 allowed sets). | P1 exit met. | Vertical slice passes strict equality and emits the expected `missing-antecedent`; all rule fixtures pass; labelled fixtures committed (public USPTO only); `package-verify` green for domain, use-cases, server. |
 | P3 Review items + evaluation | complete under autonomous acceptance v1 | Add the practice MCP read tool that returns findings as `claim-finding` `ReviewItem`s; run the evaluation and write the report. | P2 exit met **and** `review-verdict-envelope` P1 schema (`ReviewItem` / `VerdictRow`) merged. | `ReviewItem` fixture round-trips; the `VerdictRow` → `ClaimDisposition` projection test passes once `review-verdict-envelope` P2 (`VerdictProjector`) has merged, and is recorded as pending in Current Blockers until then; report in `history/` gives strict-equality floor, automated erroneous-alert estimate or identification bounds with conditional interval/envelope, IPRally smoke result; findings advisory. |
-| P4 Yeet: PR to mergeable | in-progress | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | P3 exit met. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P5 Close | in-progress | Write the closeout reflection and flip packet state. | P4 exit met. | Packet status and evidence are updated; a closeout reflection exists. |
+| P4 Yeet: PR to mergeable | complete | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | P3 exit met. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P5 Close | complete | Write the closeout reflection and flip packet state. | P4 exit met. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## Dependencies
 
@@ -40,11 +40,9 @@ are fixed, never before.
 
 ## Current Blockers
 
-The implementation and CI repairs are merged. [#2626](https://github.com/beep-effect/beep-effect/pull/2626) merged before final Policy success and positive exact-head readiness were retained; its canonical verdict also referenced an older head. [The incident](history/2026-11-03-2626-closeout-gap.md) preserves the successful terminal runs and unsatisfied completion receipt without rewriting prior evidence.
+None for this bounded goal. Final [#2656](https://github.com/beep-effect/beep-effect/pull/2656) passed all required hosted checks; two optional producer jobs were skipped and CodeRabbit was neutral. Review was clear and the ordinary window had elapsed. The owner archived positive exact-head monitor readiness before strict merge, then refreshed and inspected the actual verified canonical completion receipt. The guarded status writer adopted completed-retained without changing the declaration digest; P4/P5 are complete.
 
-Current [owner-controlled final #2656](https://github.com/beep-effect/beep-effect/pull/2656) must earn all current-head non-Vercel hosted checks, resolved review threads, the ordinary review window, and a positive exact-head monitor verdict archived before strict merge. The goal-chat owner performs that merge, refreshes the actual completion receipt, and verifies completed-retained. Explicitly rebind closeout after the final content/review-request push and after any repair push. No generic merger, S11 exception, forced window, or verifier change is authorized by a passing process exit.
-
-P4/P5 remain in progress. The retained v27 replay stays 37/538, with all 34 protected and all 37 prior passes. Labels, earlier results, fixtures and source freezes remain unchanged. The frozen environment is historical. No new benchmark or actual attorney review is claimed. Attorney attendance and local full-proof queues are not dependencies.
+[The closeout evidence](history/2026-11-03-completed-retained.json) retains the accepted head, merge and readiness identities. Earlier incidents and unsatisfied receipts remain historical. The measured prototype still scores 37/538 with poor alert quality; those limitations and unresolved automated-review outcomes are retained research results, not new performance claims. Labels, source fixtures, previous results, all 37 prior passing claims, PatentClaim and scope exclusions remain intact. No mandatory attorney dependency is introduced.
 
 ## Historical checkpoints and superseded holds
 

@@ -16,6 +16,12 @@ export * from "./Layer.ts";
 /** Atomic office-action evidence exports. @category services @since 0.0.0 */
 export * as OfficeActionStructure from "./OfficeActionStructure/index.ts";
 /**
+ * Practice contact adapter for the party use-case port.
+ * @category re-exports
+ * @since 0.0.0
+ */
+export * as PartyContactSource from "./PartyContactSource/index.ts";
+/**
  * @category use-cases
  * @since 0.0.0
  */
