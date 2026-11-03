@@ -21,6 +21,8 @@ import {
   FinalCheckReceipt,
   findOpenPullRequest,
   isMergeCommitSubject,
+  mergePr,
+  mergeYeetPullRequestAtHead,
   ProofJobRecord,
   ProofJobRequest,
   ProofJobSubmitter,
@@ -44,6 +46,7 @@ import {
   validateOpenPullRequest,
   validateProofJobDetach,
   validateRequiredMessage,
+  withYeetGithubCredentialHint,
   YeetEnsuredPullRequest,
   YeetExecutedStep,
   YeetPullRequestTitle,
@@ -58,6 +61,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow, pipe } from "effect/Function";
@@ -65,13 +69,15 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
+import * as P from "effect/Predicate";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
-import { provideLegacyGh } from "./support/YeetGithub.ts";
+import { githubCallLine, provideLegacyGh, recordedGithub, restPullRequest } from "./support/YeetGithub.ts";
 import type { YeetRunOptions } from "@beep/repo-cli/test/Yeet";
+import type { GithubAnswer } from "./support/YeetGithub.ts";
 
 // `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
 const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
@@ -137,6 +143,25 @@ const prView = (
 ) => encodeJson({ number: 7, headRefName: BRANCH, state: "OPEN", ...overrides });
 
 const MERGE_TITLE = `Merge remote-tracking branch 'origin/main' into ${BRANCH}`;
+
+// The REST pull request GitHub answers a create, a title PATCH or a branch lookup with.
+const restPull = (overrides: { readonly headRefName?: string; readonly draft?: boolean } = {}) =>
+  restPullRequest({
+    number: 7,
+    html_url: PR_URL,
+    draft: overrides.draft ?? false,
+    head: { ref: overrides.headRefName ?? BRANCH, sha: "abc1234def" },
+  });
+const restPullJson = (overrides: { readonly headRefName?: string; readonly draft?: boolean } = {}) =>
+  encodeJson(restPull(overrides));
+const restPullListJson = (overrides: { readonly headRefName?: string } = {}) => encodeJson([restPull(overrides)]);
+
+// The kit's REST reads and writes, as the `gh api` argv the scripted spawner sees.
+const DEFAULT_BRANCH_READ = "gh api repos/{owner}/{repo}";
+const defaultBranchJson = (branch: string) => encodeJson({ default_branch: branch });
+const PULL_CREATE = "gh api -X POST repos/{owner}/{repo}/pulls";
+const ORIGIN = "git remote get-url --push origin";
+const ORIGIN_URL = "git@github.com:beep-effect/beep-effect.git";
 
 // One scripted process response, matched by a substring of the whole command
 // line. The first matching reply wins; an unscripted command exits 1. A
@@ -267,7 +292,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet guards", (it) 
         withProcesses(
           [
             ["remote get-url --push origin", 0, "https://github.com/beep-effect/beep-effect.git"],
-            ["gh api repos/{owner}/{repo}/pulls?head=", 0, `[${prView()}]`],
+            ["gh api repos/{owner}/{repo}/pulls?per_page=100&head=", 0, restPullListJson()],
           ],
           commands
         )
@@ -416,9 +441,9 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           ["gh pr view", 1, "GraphQL: API rate limit exceeded"],
           ["git remote get-url --push origin", 0, "git@github.com:beep-effect/beep-effect.git"],
           [
-            "gh api repos/{owner}/{repo}/pulls?head=beep-effect%3Afeat%2Fcoverage-restore&state=open",
+            "gh api repos/{owner}/{repo}/pulls?per_page=100&head=beep-effect%3Afeat%2Fcoverage-restore&state=open",
             0,
-            `[${prView()}]`,
+            restPullListJson(),
           ],
         ];
         const view = yield* runGhPullRequestView(context).pipe(withProcesses(replies, commands));
@@ -442,9 +467,9 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
               ["gh pr view", 1, "GraphQL: API rate limit exceeded"],
               ["git remote get-url --push origin", 0, "https://github.com/fork-owner/beep-effect.git"],
               [
-                "gh api repos/{owner}/{repo}/pulls?head=fork-owner%3Arepo-cli%2Ffix&state=open",
+                "gh api repos/{owner}/{repo}/pulls?per_page=100&head=fork-owner%3Arepo-cli%2Ffix&state=open",
                 0,
-                `[${prView({ headRefName: branch })}]`,
+                restPullListJson({ headRefName: branch }),
               ],
             ],
             commands
@@ -465,16 +490,15 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
               [
                 ["gh pr view", 1, "GraphQL: API rate limit already exceeded"],
                 ["git remote get-url --push origin", 0, "git@github.com:beep-effect/beep-effect.git"],
-                ["gh api repos/{owner}/{repo}/pulls?head=", restExit, restOutput],
+                ["gh api repos/{owner}/{repo}/pulls?per_page=100&head=", restExit, restOutput],
               ],
               commands
             )
           );
         assertNone(yield* absent(0, "[]"));
         const failed = yield* Effect.flip(absent(1, "GitHub REST unavailable"));
-        expect(failed.message).toBe(
-          "Failed to inspect current branch pull request through GitHub REST: GitHub REST unavailable"
-        );
+        expect(failed.message).toContain("Failed to inspect current branch pull request through GitHub REST: ");
+        expect(failed.message).toContain("GitHub REST unavailable");
       })
     );
 
@@ -546,7 +570,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
   });
 
   describe("ensurePullRequest", () => {
-    it.effect("creates a ready pull request through gh and keeps going when provenance is unavailable", () =>
+    it.effect("creates a ready pull request through REST and keeps going when provenance is unavailable", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-pr-create-" });
@@ -559,9 +583,9 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
             [
               ["log --no-merges", 0, "feat(repo-cli): ship\n"],
               ["log --reverse", 0, "## feat(repo-cli): ship\n"],
-              ["gh api repos/{owner}/{repo} --jq .default_branch", 0, "main\n"],
-              ["gh pr create", 0, `${PR_URL}\n`],
-              ["gh pr view", 0, prView()],
+              [ORIGIN, 0, ORIGIN_URL],
+              [PULL_CREATE, 0, restPullJson()],
+              [DEFAULT_BRANCH_READ, 0, defaultBranchJson("main")],
             ],
             commands
           )
@@ -569,11 +593,16 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         expect(pullRequest.number).toBe(7);
         expect(pullRequest.created).toBe(true);
         assertSome(pullRequest.url, PR_URL);
-        const create = A.findFirst(commandLines(commands), Str.startsWith("gh pr create"));
+        const create = A.findFirst(commandLines(commands), Str.startsWith(PULL_CREATE));
         assertSome(
-          O.map(create, Str.startsWith("gh pr create --base main --title feat(repo-cli): ship --body-file ")),
+          O.map(
+            create,
+            Str.startsWith(`${PULL_CREATE} title=feat(repo-cli): ship head=beep-effect:${BRANCH} base=main body=`)
+          ),
           true
         );
+        expect(O.exists(create, Str.endsWith("draft=false"))).toBe(true);
+        expect(A.some(commandLines(commands), Str.startsWith("gh pr create"))).toBe(false);
         expect(laneRows(yield* Ref.get(recorder))).toEqual([
           [createStep.id, undefined, 0, PR_URL],
           [
@@ -586,7 +615,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
       })
     );
 
-    it.effect("opens a draft and falls back to the viewed URL when gh prints none", () =>
+    it.effect("opens a draft and keeps the URL the REST create returns", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-pr-draft-" });
@@ -599,19 +628,20 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
             [
               ["log --no-merges", 0, "feat(repo-cli): ship\n"],
               ["log --reverse", 0, "## feat(repo-cli): ship\n"],
-              ["gh api repos/{owner}/{repo} --jq .default_branch", 0, "main\n"],
-              ["gh pr create --draft", 0, ""],
-              ["gh pr view", 0, prView({ url: PR_URL })],
+              [ORIGIN, 0, ORIGIN_URL],
+              [PULL_CREATE, 0, restPullJson({ draft: true })],
+              [DEFAULT_BRANCH_READ, 0, defaultBranchJson("main")],
             ],
             commands
           )
         );
         assertSome(pullRequest.url, PR_URL);
-        expect(laneRows(yield* Ref.get(recorder))).toEqual([[draftCreateStep.id, undefined, 0, ""]]);
+        expect(A.some(commandLines(commands), Str.includes("draft=true"))).toBe(true);
+        expect(laneRows(yield* Ref.get(recorder))).toEqual([[draftCreateStep.id, undefined, 0, PR_URL]]);
       })
     );
 
-    it.effect("creates a fork-head draft through REST after GraphQL rate limiting and a confirmed absent PR", () =>
+    it.effect("creates a fork-head draft through REST from the pushed origin owner", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-pr-rest-" });
@@ -631,12 +661,9 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
             [
               ["log --no-merges", 0, "feat(repo-cli): ship\n"],
               ["log --reverse", 0, "## feat(repo-cli): ship\n"],
-              ["gh pr create", 1, "GraphQL: API rate limit exceeded"],
-              ["git remote get-url --push origin", 0, "git@github.com:fork-owner/beep-effect.git"],
-              ["gh api repos/{owner}/{repo}/pulls?head=", 0, "[]"],
-              ["gh api repos/{owner}/{repo} --jq .default_branch", 0, "main\n"],
-              ["gh api -X POST repos/{owner}/{repo}/pulls", 0, `${PR_URL}\n`],
-              ["gh pr view", 0, prView({ headRefName: branch })],
+              [ORIGIN, 0, "git@github.com:fork-owner/beep-effect.git"],
+              [PULL_CREATE, 0, restPullJson({ headRefName: branch, draft: true })],
+              [DEFAULT_BRANCH_READ, 0, defaultBranchJson("main")],
             ],
             commands
           )
@@ -646,13 +673,13 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         expect(A.some(commandLines(commands), Str.includes("draft=true"))).toBe(true);
         expect(A.some(commandLines(commands), Str.includes("base=main"))).toBe(true);
         expect(A.some(commandLines(commands), Str.includes("head=fork-owner:repo-cli/fix"))).toBe(true);
-        expect(A.some(commandLines(commands), Str.includes("body=@"))).toBe(true);
+        expect(A.some(commandLines(commands), Str.includes("body=## feat(repo-cli): ship"))).toBe(true);
         const recorded = yield* Ref.get(recorder);
         expect(recorded[0]?.result.commandText).toBe("gh api -X POST repos/{owner}/{repo}/pulls");
       })
     );
 
-    it.effect("opens both creation paths on the default branch, not the --base planning ref", () =>
+    it.effect("opens the pull request on the default branch, not the --base planning ref", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-pr-rest-default-" });
@@ -666,12 +693,9 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
             [
               ["log --no-merges", 0, "feat(repo-cli): ship\n"],
               ["log --reverse", 0, "## feat(repo-cli): ship\n"],
-              ["gh pr create", 1, "GraphQL: API rate limit exceeded"],
-              ["git remote get-url --push origin", 0, "git@github.com:beep-effect/beep-effect.git"],
-              ["gh api repos/{owner}/{repo}/pulls?head=", 0, "[]"],
-              ["gh api repos/{owner}/{repo} --jq .default_branch", 0, "trunk\n"],
-              ["gh api -X POST repos/{owner}/{repo}/pulls", 0, `${PR_URL}\n`],
-              ["gh pr view", 0, prView({ url: PR_URL })],
+              [ORIGIN, 0, ORIGIN_URL],
+              [PULL_CREATE, 0, restPullJson()],
+              [DEFAULT_BRANCH_READ, 0, defaultBranchJson("trunk")],
             ],
             commands
           )
@@ -679,12 +703,11 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         expect(pullRequest.created).toBe(true);
         const issued = commandLines(commands);
         expect(A.some(issued, Str.includes("base=trunk"))).toBe(true);
-        expect(A.some(issued, Str.includes("gh pr create --base trunk"))).toBe(true);
         expect(A.some(issued, Str.includes("base=goals/push-first-publish"))).toBe(false);
       })
     );
 
-    it.effect("fails PR creation before gh pr create when the default branch read fails", () =>
+    it.effect("fails PR creation before the REST create when the default branch read fails", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-pr-no-default-" });
@@ -698,12 +721,13 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
             [
               ["log --no-merges", 0, "feat(repo-cli): ship\n"],
               ["log --reverse", 0, "## feat(repo-cli): ship\n"],
-              ["gh api repos/{owner}/{repo} --jq .default_branch", 1, "HTTP 502: Bad Gateway"],
+              [DEFAULT_BRANCH_READ, 1, "HTTP 502: Bad Gateway"],
             ],
             commands
           )
         );
-        expect(error.message).toBe("GitHub REST default branch read failed:\nHTTP 502: Bad Gateway");
+        expect(error.message).toContain("GitHub REST default branch read failed:\n");
+        expect(error.message).toContain("HTTP 502: Bad Gateway");
         expect(error.exitCode).toBe(1);
         const issued = commandLines(commands);
         expect(A.some(issued, Str.startsWith("gh pr create"))).toBe(false);
@@ -711,7 +735,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
       })
     );
 
-    it.effect("fails PR creation with a nonzero exit when the default branch read prints nothing", () =>
+    it.effect("fails PR creation with a nonzero exit when the default branch read names no branch", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-pr-empty-default-" });
@@ -725,44 +749,45 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
             [
               ["log --no-merges", 0, "feat(repo-cli): ship\n"],
               ["log --reverse", 0, "## feat(repo-cli): ship\n"],
-              ["gh api repos/{owner}/{repo} --jq .default_branch", 0, "\n"],
+              [DEFAULT_BRANCH_READ, 0, defaultBranchJson(" ")],
             ],
             commands
           )
         );
         expect(error.message).toBe("GitHub REST default branch read returned no branch.");
         expect(error.exitCode).toBe(1);
-        expect(A.some(commandLines(commands), Str.startsWith("gh pr create"))).toBe(false);
-      })
-    );
-
-    it.effect("reuses the existing PR when REST finds one after a GraphQL creation failure", () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-pr-rest-existing-" });
-        const commands = yield* makeCommands;
-        const recorder = yield* makeRecorder;
-        const pullRequest = yield* ensurePullRequest(contextAt(root), recorder, O.some(createStep), O.none(), {
-          findOpen: () => Effect.succeedNone,
-        }).pipe(
-          withProcesses(
-            [
-              ["log --no-merges", 0, "feat(repo-cli): ship\n"],
-              ["log --reverse", 0, "## feat(repo-cli): ship\n"],
-              ["gh api repos/{owner}/{repo} --jq .default_branch", 0, "main\n"],
-              ["gh pr create", 1, "GraphQL: API rate limit already exceeded"],
-              ["git remote get-url --push origin", 0, "git@github.com:beep-effect/beep-effect.git"],
-              ["gh api repos/{owner}/{repo}/pulls?head=", 0, `[${prView({ url: PR_URL })}]`],
-            ],
-            commands
-          )
-        );
-        expect(pullRequest.created).toBe(false);
         expect(A.some(commandLines(commands), Str.includes("-X POST"))).toBe(false);
       })
     );
 
-    it.effect("fails the publish when gh pr create exits nonzero", () =>
+    it.effect("fails PR creation before the REST create without a pushed origin owner", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-pr-no-owner-" });
+        const commands = yield* makeCommands;
+        const recorder = yield* makeRecorder;
+        const error = yield* ensurePullRequest(contextAt(root), recorder, O.some(createStep), O.none(), {
+          findOpen: () => Effect.succeedNone,
+        }).pipe(
+          Effect.flip,
+          withProcesses(
+            [
+              ["log --no-merges", 0, "feat(repo-cli): ship\n"],
+              ["log --reverse", 0, "## feat(repo-cli): ship\n"],
+              [ORIGIN, 0, "/srv/git/beep-effect.git"],
+              [DEFAULT_BRANCH_READ, 0, defaultBranchJson("main")],
+            ],
+            commands
+          )
+        );
+        expect(error.message).toBe(
+          "Failed to identify the pushed origin repository owner for GitHub REST pull request lookup."
+        );
+        expect(A.some(commandLines(commands), Str.includes("-X POST"))).toBe(false);
+      })
+    );
+
+    it.effect("fails the publish when the REST create is refused", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-pr-refused-" });
@@ -776,13 +801,15 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
             [
               ["log --no-merges", 0, "feat(repo-cli): ship\n"],
               ["log --reverse", 0, "## feat(repo-cli): ship\n"],
-              ["gh api repos/{owner}/{repo} --jq .default_branch", 0, "main\n"],
-              ["gh pr create", 1, "a pull request for this branch already exists"],
+              [ORIGIN, 0, ORIGIN_URL],
+              [PULL_CREATE, 1, "a pull request for this branch already exists"],
+              [DEFAULT_BRANCH_READ, 0, defaultBranchJson("main")],
             ],
             commands
           )
         );
-        expect(error.message).toBe("gh pr create failed:\na pull request for this branch already exists");
+        expect(error.message).toContain("GitHub REST pull request creation failed:\n");
+        expect(error.message).toContain("a pull request for this branch already exists");
         expect(error.exitCode).toBe(1);
         expect(yield* Ref.get(recorder)).toEqual([]);
       })
@@ -821,21 +848,18 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           withProcesses(
             [
               ["log --reverse", 0, `## ${MERGE_TITLE}\n`],
-              ["gh api repos/{owner}/{repo} --jq .default_branch", 0, "main\n"],
-              ["gh pr create --draft", 0, `${PR_URL}\n`],
-              ["gh pr view", 0, prView()],
+              [ORIGIN, 0, ORIGIN_URL],
+              [PULL_CREATE, 0, restPullJson({ draft: true })],
+              [DEFAULT_BRANCH_READ, 0, defaultBranchJson("main")],
             ],
             commands
           )
         );
         expect(pullRequest.created).toBe(true);
         const lines = commandLines(commands);
-        const create = A.findFirst(lines, Str.startsWith("gh pr create"));
+        const create = A.findFirst(lines, Str.startsWith(PULL_CREATE));
         assertSome(
-          O.map(
-            create,
-            Str.startsWith("gh pr create --draft --base main --title feat(repo-cli): title from message --body-file ")
-          ),
+          O.map(create, Str.startsWith(`${PULL_CREATE} title=feat(repo-cli): title from message head=`)),
           true
         );
         expect(A.some(lines, Str.includes("--pretty=%s"))).toBe(false);
@@ -855,9 +879,9 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
             [
               ["log --no-merges", 0, "feat(repo-cli): first real change\nfix(repo-cli): follow-up\n"],
               ["log --reverse", 0, `## feat(repo-cli): first real change\n\n## ${MERGE_TITLE}\n`],
-              ["gh api repos/{owner}/{repo} --jq .default_branch", 0, "main\n"],
-              ["gh pr create", 0, `${PR_URL}\n`],
-              ["gh pr view", 0, prView()],
+              [ORIGIN, 0, ORIGIN_URL],
+              [PULL_CREATE, 0, restPullJson()],
+              [DEFAULT_BRANCH_READ, 0, defaultBranchJson("main")],
             ],
             commands
           )
@@ -865,14 +889,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         const lines = commandLines(commands);
         expect(A.some(lines, Str.includes("git log --no-merges --reverse --pretty=%s HEAD"))).toBe(true);
         expect(A.some(lines, Str.includes("log -1 --pretty=%s"))).toBe(false);
-        const create = A.findFirst(lines, Str.startsWith("gh pr create"));
-        assertSome(
-          O.map(
-            create,
-            Str.startsWith("gh pr create --base main --title feat(repo-cli): first real change --body-file ")
-          ),
-          true
-        );
+        const create = A.findFirst(lines, Str.startsWith(PULL_CREATE));
+        assertSome(O.map(create, Str.startsWith(`${PULL_CREATE} title=feat(repo-cli): first real change head=`)), true);
       })
     );
 
@@ -887,7 +905,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         }).pipe(Effect.flip, withProcesses([["log --no-merges", 0, "\n"]], commands));
         expect(error.message).toContain("no non-merge commit in HEAD");
         expect(error.message).toContain('pass --message "<conventional subject>"');
-        expect(A.some(commandLines(commands), Str.startsWith("gh pr create"))).toBe(false);
+        expect(A.some(commandLines(commands), Str.includes("-X POST"))).toBe(false);
         expect(yield* Ref.get(recorder)).toEqual([]);
       })
     );
@@ -907,13 +925,15 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           withProcesses(
             [
               ["gh pr view", 0, prView({ url: PR_URL, title: MERGE_TITLE })],
-              ["gh pr edit 7 --title", 0, ""],
+              ["gh api -X PATCH repos/{owner}/{repo}/pulls/7", 0, restPullJson()],
             ],
             commands
           )
         );
         expect(pullRequest.created).toBe(false);
-        expect(commandLines(commands)).toContain("gh pr edit 7 --title feat(repo-cli): ship");
+        expect(commandLines(commands)).toContain(
+          "gh api -X PATCH repos/{owner}/{repo}/pulls/7 title=feat(repo-cli): ship"
+        );
         expect(laneRows(yield* Ref.get(recorder))).toEqual([
           [
             createStep.id,
@@ -934,12 +954,14 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
             [
               ["gh pr view", 0, prView({ title: MERGE_TITLE })],
               ["log --no-merges", 0, "feat(repo-cli): from history\n"],
-              ["gh pr edit 7 --title", 0, ""],
+              ["gh api -X PATCH repos/{owner}/{repo}/pulls/7", 0, restPullJson()],
             ],
             commands
           )
         );
-        expect(commandLines(commands)).toContain("gh pr edit 7 --title feat(repo-cli): from history");
+        expect(commandLines(commands)).toContain(
+          "gh api -X PATCH repos/{owner}/{repo}/pulls/7 title=feat(repo-cli): from history"
+        );
       })
     );
 
@@ -962,7 +984,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
       })
     );
 
-    it.effect("patches the title through REST when the rename hits GraphQL rate limiting", () =>
+    it.effect("patches the title through REST and never through the GraphQL gh pr edit", () =>
       Effect.gen(function* () {
         const commands = yield* makeCommands;
         const recorder = yield* makeRecorder;
@@ -971,14 +993,13 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
             [
               ["gh pr view", 0, prView({ title: MERGE_TITLE })],
               ["gh pr edit 7 --title", 1, "GraphQL: API rate limit exceeded"],
-              ["gh api -X PATCH repos/{owner}/{repo}/pulls/7", 0, "fix: x\n"],
+              ["gh api -X PATCH repos/{owner}/{repo}/pulls/7", 0, restPullJson()],
             ],
             commands
           )
         );
-        expect(commandLines(commands)).toContain(
-          "gh api -X PATCH repos/{owner}/{repo}/pulls/7 -f title=fix: x --jq .title"
-        );
+        expect(commandLines(commands)).toContain("gh api -X PATCH repos/{owner}/{repo}/pulls/7 title=fix: x");
+        expect(A.some(commandLines(commands), Str.startsWith("gh pr edit"))).toBe(false);
         expect(laneRows(yield* Ref.get(recorder))).toEqual([
           [
             createStep.id,
@@ -1005,7 +1026,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           withProcesses(
             [
               ["gh pr view", 0, prView({ title: MERGE_TITLE })],
-              ["gh pr edit 7 --title", 1, "HTTP 403: Resource not accessible"],
+              ["gh api -X PATCH repos/{owner}/{repo}/pulls/7", 1, "HTTP 403: Resource not accessible"],
             ],
             commands
           )
@@ -1052,8 +1073,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
   describe("applyHeavyAdmissionLabel", () => {
     const created = YeetEnsuredPullRequest.make({ number: 7, url: O.some(PR_URL), created: true });
     const existing = YeetEnsuredPullRequest.make({ number: 7, url: O.some(PR_URL), created: false });
-    const labelCommand =
-      'gh api -X POST repos/{owner}/{repo}/issues/7/labels -f labels[]=ready-for-heavy --jq map(.name) | join(",")';
+    const labelCommand = 'gh api -X POST repos/{owner}/{repo}/issues/7/labels labels=["ready-for-heavy"]';
 
     it.effect("skips the edit without a planned step, for an existing pull request, and for a docs-only diff", () =>
       Effect.gen(function* () {
@@ -1090,13 +1110,15 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
                 0,
                 "docs/a.md\0packages/tooling/tool/cli/src/bin.ts\0",
               ],
-              [labelCommand, 0, `${PR_URL}\n`],
+              [labelCommand, 0, encodeJson([{ name: "ready-for-heavy" }, { name: "documentation" }])],
             ],
             commands
           )
         );
         assertSome(A.last(commandLines(commands)), labelCommand);
-        expect(laneRows(yield* Ref.get(recorder))).toEqual([[labelStep.id, "passed", 0, PR_URL]]);
+        expect(laneRows(yield* Ref.get(recorder))).toEqual([
+          [labelStep.id, "passed", 0, "ready-for-heavy,documentation"],
+        ]);
       })
     );
 
@@ -1104,19 +1126,137 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
       Effect.gen(function* () {
         const commands = yield* makeCommands;
         const recorder = yield* makeRecorder;
-        const captured = yield* Ref.make<ReadonlyArray<string>>([]);
         yield* applyHeavyAdmissionLabel(contextAt("/repo"), recorder, O.some(labelStep), created, {
-          capture: (command, args) =>
-            Ref.update(captured, A.append(A.join([command, ...args], " "))).pipe(
-              Effect.as({ exitCode: 1, output: "label not found", truncated: false })
-            ),
           changedPaths: () => Effect.succeed([]),
-        }).pipe(withProcesses([], commands));
-        expect(yield* Ref.get(captured)).toEqual([labelCommand]);
-        expect(laneRows(yield* Ref.get(recorder))).toEqual([[labelStep.id, "failed", 1, "label not found"]]);
+        }).pipe(withProcesses([[labelCommand, 1, "label not found"]], commands));
+        expect(commandLines(commands)).toEqual([labelCommand]);
+        const rows = laneRows(yield* Ref.get(recorder));
+        expect(A.map(rows, A.take(3))).toEqual([[labelStep.id, "failed", 1]]);
+        expect(rows[0]?.[3]).toContain("label not found");
       })
     );
   });
+});
+
+// `mergePr` reads the branch's pull request (`gh pr view <branch>`, KEEP) and refuses before the
+// reviewer gate, the squash merge and its REST confirmation.
+it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet merge refusals", (it) => {
+  const mergeView = (overrides: {
+    readonly headRefName?: string;
+    readonly state?: string;
+    readonly headRefOid?: string;
+  }) => encodeJson({ number: 7, headRefName: BRANCH, state: "OPEN", ...overrides });
+
+  it.effect("refuses an option-like branch before reading GitHub", () =>
+    Effect.gen(function* () {
+      const commands = yield* makeCommands;
+      const error = yield* mergePr(contextAt("/repo", "--delete")).pipe(Effect.flip, withProcesses([], commands));
+      expect(error.message).toBe('yeet merge refuses an option-like branch name "--delete".');
+      expect(commandLines(commands)).toEqual([]);
+    })
+  );
+
+  it.effect("refuses a foreign head, a pull request that is not open, and one without a head to pin", () =>
+    Effect.gen(function* () {
+      const commands = yield* makeCommands;
+      const refusal = (output: string) =>
+        mergePr(contextAt("/repo")).pipe(Effect.flip, withProcesses([["gh pr view", 0, output]], commands));
+      const foreign = yield* refusal(mergeView({ headRefName: "feat/other", headRefOid: "abc" }));
+      expect(foreign.message).toBe(`yeet merge expected PR head "${BRANCH}" but gh reported "feat/other".`);
+      const closed = yield* refusal(mergeView({ state: "CLOSED", headRefOid: "abc" }));
+      expect(closed.message).toBe("yeet merge requires an open pull request; #7 is CLOSED.");
+      const unpinned = yield* refusal(mergeView({}));
+      expect(unpinned.message).toBe("yeet merge refuses to merge #7 without a head oid to pin the merge to.");
+      const unreadable = yield* refusal("not json");
+      expect(unreadable.message).toBe(`Failed to decode gh pr view JSON for "${BRANCH}".`);
+      expect(A.some(commandLines(commands), Str.includes("-X PUT"))).toBe(false);
+    })
+  );
+});
+
+// The merge step below the reviewer gate: one REST squash PUT pinned to the head, then
+// the REST confirmation poll (W6). The sweep tail of `mergePr` is not part of it.
+it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet merge at the pinned head", (it) => {
+  const HEAD_SHA = Str.repeat(40)("a");
+  const MERGE_COMMAND = `gh pr merge 7 --squash --match-head-commit ${HEAD_SHA}`;
+  const noWait = { pollAttempts: 1, pollInterval: Duration.zero };
+  const mergedPull = restPullRequest({ number: 7, state: "closed", merged: true, merged_at: "2026-11-02T10:00:00Z" });
+  const mergeGithub = (merge: GithubAnswer, pulls: ReadonlyArray<GithubAnswer> = [{ body: mergedPull }]) => {
+    let reads = 0;
+    return recordedGithub((call) => {
+      if (call.method === "PUT") return merge;
+      reads = reads + 1;
+      return pulls[Math.min(reads, pulls.length) - 1];
+    });
+  };
+
+  it.effect("squash-merges once at the pinned head with GitHub's own subject and body, then confirms", () =>
+    Effect.gen(function* () {
+      const github = mergeGithub({
+        body: { merged: true, sha: Str.repeat(40)("b"), message: "Pull Request successfully merged" },
+      });
+      const confirmed = yield* mergeYeetPullRequestAtHead(7, HEAD_SHA, noWait).pipe(github.provide);
+      expect([confirmed.number, confirmed.state]).toEqual([7, "MERGED"]);
+      expect(A.map(github.calls, githubCallLine)).toEqual(["PUT {repo}/pulls/7/merge", "GET {repo}/pulls/7"]);
+      const put = github.calls[0];
+      expect(put?.body).toEqual({ sha: HEAD_SHA, merge_method: "squash" });
+      expect(P.hasProperty(put?.body, "commit_message")).toBe(false);
+      expect(P.hasProperty(put?.body, "commit_title")).toBe(false);
+    })
+  );
+
+  it.effect.each([
+    ["a head that moved (409)", 409, "Head branch was modified. Review and try the merge again."],
+    ["a pull request that is not mergeable (405)", 405, "Pull Request is not mergeable"],
+  ] as const)("fails %s with the merge command's wording and never confirms", ([, status, reason]) =>
+    Effect.gen(function* () {
+      const github = mergeGithub({ status, body: { message: reason } });
+      const error = yield* mergeYeetPullRequestAtHead(7, HEAD_SHA, noWait).pipe(Effect.flip, github.provide);
+      expect(error.message).toContain(`${MERGE_COMMAND} failed:\n`);
+      expect(error.message).toContain(`(${status})`);
+      expect(error.message).toContain(reason);
+      expect(error.command).toBe(MERGE_COMMAND);
+      expect(error.exitCode).toBe(1);
+      expect(A.map(github.calls, githubCallLine)).toEqual(["PUT {repo}/pulls/7/merge"]);
+    })
+  );
+
+  it.effect("names the missing workflows permission when GitHub refuses an App token's merge", () =>
+    Effect.gen(function* () {
+      const reason =
+        "refusing to allow a GitHub App to create or update workflow `.github/workflows/heavy.yml` without `workflows` permission";
+      const github = mergeGithub({ status: 403, body: { message: reason } });
+      const error = yield* mergeYeetPullRequestAtHead(7, HEAD_SHA, noWait).pipe(Effect.flip, github.provide);
+      expect(error.message).toContain(reason);
+      expect(error.message).toContain("without the `workflows` permission");
+      expect(error.message).toContain("`workflow` scope (`gh auth refresh -s workflow`)");
+      expect(error.exitCode).toBe(1);
+      expect(A.map(github.calls, githubCallLine)).toEqual(["PUT {repo}/pulls/7/merge"]);
+    })
+  );
+
+  it("leaves any other GitHub failure message unchanged", () => {
+    expect(withYeetGithubCredentialHint("Pull Request is not mergeable")).toBe("Pull Request is not mergeable");
+  });
+
+  it.effect("polls the confirmation within its budget and refuses a merge it cannot confirm", () =>
+    Effect.gen(function* () {
+      const merged = { body: { merged: true, sha: Str.repeat(40)("b"), message: "merged" } };
+      const open = { body: restPullRequest({ number: 7 }) };
+      const lagging = mergeGithub(merged, [open, { body: mergedPull }]);
+      const confirmed = yield* mergeYeetPullRequestAtHead(7, HEAD_SHA, noWait).pipe(lagging.provide);
+      expect(confirmed.state).toBe("MERGED");
+      expect(A.length(lagging.calls)).toBe(3);
+      const stuck = mergeGithub(merged, [open]);
+      const error = yield* mergeYeetPullRequestAtHead(7, HEAD_SHA, noWait).pipe(Effect.flip, stuck.provide);
+      expect(error.message).toBe("pull request #7 reports state OPEN, not MERGED.");
+      expect(A.length(stuck.calls)).toBe(3);
+      const unreadable = mergeGithub(merged, [{ status: 502, body: { message: "Bad Gateway" } }]);
+      const readError = yield* mergeYeetPullRequestAtHead(7, HEAD_SHA, noWait).pipe(Effect.flip, unreadable.provide);
+      expect(readError.message).toContain('Failed to read pull request "7" (');
+      expect(readError.message).toContain("Bad Gateway");
+    })
+  );
 });
 
 it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet retire packet advisories", (it) => {
