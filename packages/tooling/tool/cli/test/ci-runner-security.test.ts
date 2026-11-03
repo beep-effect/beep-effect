@@ -125,7 +125,7 @@ const stepRun = (steps: ReadonlyArray<WorkflowStep>, name: string): string =>
 // first, through the shared prune script.
 const PRUNE_APT_SOURCES = "scripts/ci-prune-apt-sources.sh";
 const assertPrunesAptSourcesBefore = (run: string, command: string): void => {
-  assert.include(run, `\n${PRUNE_APT_SOURCES}\n`);
+  assert.match(run, /^[\t ]*(?:bash[\t ]+)?scripts\/ci-prune-apt-sources\.sh[\t ]*$/mu);
   assert.include(run, command);
   assert.isBelow(
     O.getOrElse(Str.indexOf(PRUNE_APT_SOURCES)(run), constant(-1)),
@@ -296,6 +296,17 @@ const assertTurboJobSetup = (jobs: WorkflowJobs, jobId: string, appSecrets: bool
 };
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (it) => {
+  it.effect("requires a real apt-pruning command before refreshing package indexes", () =>
+    Effect.sync(() => {
+      const update = "sudo apt-get update";
+      assert.doesNotThrow(() => assertPrunesAptSourcesBefore(`${PRUNE_APT_SOURCES}\n${update}`, update));
+      assert.doesNotThrow(() => assertPrunesAptSourcesBefore(`  bash ${PRUNE_APT_SOURCES}\n${update}`, update));
+      assert.throws(() => assertPrunesAptSourcesBefore(`# ${PRUNE_APT_SOURCES}\n${update}`, update));
+      assert.throws(() => assertPrunesAptSourcesBefore(`echo ${PRUNE_APT_SOURCES}\n${update}`, update));
+      assert.throws(() => assertPrunesAptSourcesBefore(`${update}\n${PRUNE_APT_SOURCES}`, update));
+    })
+  );
+
   it.effect.prop(
     "preserves arbitrary workflow permissions and step inputs through their codec",
     [Arbitrary.schema(WorkflowJobs)],
@@ -1829,7 +1840,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     })
   );
 
-  it.effect("confines protected producer capabilities to the closed main-only trial", () =>
+  it.effect("restricts the protected producer caller to the closed main-only trial", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* findRepoRoot();
@@ -1898,6 +1909,16 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         BEEP_TURBO_HOST_CACHE_DISABLED: "true",
         BEEP_CACHE_PRODUCER_CHANNEL: "${{ inputs.producer_channel }}",
       });
+      expect(yield* workflowPolicyDiagnostics("cache-producer.yml", text)).toEqual([]);
+      expect(yield* workflowPolicyDiagnostics("heavy.yml", heavyText)).toEqual([]);
+    })
+  );
+
+  it.effect("confines protected producer capabilities to their approved execution steps", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const heavy = parseWorkflowYaml(yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`));
       const steps = jobSteps(yield* workflowJobs(heavy), "producer-execute");
       expect(stepByName(steps, "Setup pinned toolchain without trial capabilities").with).toEqual({
         "turbo-remote-cache": "false",
@@ -1940,13 +1961,17 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         R2_ACCESS_KEY_ID: "${{ secrets.BEEP_CACHE_TRIAL_R2_ACCESS_KEY_ID }}",
         R2_SECRET_ACCESS_KEY: "${{ secrets.BEEP_CACHE_TRIAL_R2_SECRET_ACCESS_KEY }}",
       });
+      for (const step of A.filter(steps, (step) => step.name !== installName)) {
+        expect(step.run ?? "").not.toContain("producer-install");
+      }
+      const unprivilegedValues = pipe(
+        steps,
+        A.filter((step) => !A.contains([installName, runName, publishName], step.name ?? "")),
+        A.flatMap((step) => R.values(step.env ?? {})),
+        A.filter(S.is(S.String))
+      );
+      for (const value of unprivilegedValues) expect(value).not.toContain("secrets.");
       for (const step of steps) {
-        if (step.name !== installName) expect(step.run ?? "").not.toContain("producer-install");
-        if (!A.contains([installName, runName, publishName], step.name ?? "")) {
-          for (const value of R.values(step.env ?? {})) {
-            if (S.is(S.String)(value)) expect(value).not.toContain("secrets.");
-          }
-        }
         expect(step.uses ?? "").not.toContain("actions/cache");
         expect(step.run ?? "").not.toContain("op read");
       }
@@ -1961,8 +1986,6 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(stepByName(steps, "Remove only this trial's private files and worktrees").if).toBe(
         "always() && steps.private.outputs.root != ''"
       );
-      expect(yield* workflowPolicyDiagnostics("cache-producer.yml", text)).toEqual([]);
-      expect(yield* workflowPolicyDiagnostics("heavy.yml", heavyText)).toEqual([]);
     })
   );
 

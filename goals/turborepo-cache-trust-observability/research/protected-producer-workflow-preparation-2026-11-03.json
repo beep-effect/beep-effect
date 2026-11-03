@@ -15,7 +15,7 @@
     },
     {
       "path": "packages/tooling/tool/cli/test/ci-runner-security.test.ts",
-      "sha256": "be8ae394f9d4323003088ac5590a75e28ff78d60cb3e784a52087545e429910f"
+      "sha256": "e2593822be0d6d3d1c67274ad88c2a83b9c8b79e594d8577012ccc5d26c46148"
     }
   ],
   "route": {
@@ -145,5 +145,19 @@
   "reviewRepair": {
     "scope": "Source inspection found a duplicate execution guard and conflicting exact-text expectations across the three authored policy tests. Remove the redundant guard and make all three expectations identical; no execution policy or acceptance requirement weakened.",
     "localTestsExecuted": false
+  },
+  "ciRepair": {
+    "recordedAt": "2026-11-03T05:21:54.021919+00:00",
+    "failedHead": "4dc02e6431e0461b5a14d9c3e34c94cae0fd98e7",
+    "runId": 41581616480,
+    "unitJob": 125737739513,
+    "unitFailure": "Pruning command assertion rejected the valid indented bash invocation. Match only an actual standalone bare or bash command and preserve order; authored comment, echo and reversed-order refusals.",
+    "fallowJob": 125737739562,
+    "fallowArtifactId": 13205803344,
+    "fallowArtifactSha256": "924de6a0748fa61178aba03e6ffdf7fdcdf487d514d7f99344b09d8540740f90",
+    "fallowFailure": "New producer-capability test cognitive complexity 19 exceeds unchanged threshold 8. Separate route metadata from capability boundaries and flatten env checks, retaining every assertion.",
+    "downstream": "Test Unit summary failed because its shard failed; Coverage Regression refused UNIT_RESULT=failure before comparison. No coverage floor changed or claimed passed.",
+    "localProofExecuted": false,
+    "hostedRepairProof": "pending"
   }
 }

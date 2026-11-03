@@ -2121,3 +2121,17 @@ keep the three assertions aligned. This fixes a deterministic authored-test
 mismatch without changing the mode policy. Exact-head hosted proof remains
 required; no repository test suite ran locally. A shared expected operational
 predicate would prevent this three-site text drift.
+
+### Protected producer first hosted gate failures, 2026-11-03
+
+PR #2650 run 41581616480 found an introduced compiler-setup test mismatch:
+the shared pruning assertion only accepted an unindented bare command, while
+the existing shell branch invokes it through Bash. Match the actual standalone
+command with whitespace/Bash support and retain order; authored negative cases
+reject comments, echo and late pruning. The same run found cognitive complexity
+19 above the unchanged floor 8 in the new capability test. Split caller and step
+assertions and flatten the environment traversal without dropping checks. The
+unit summary and coverage prerequisite failed downstream; comparison did not
+run and no floor is lowered. Retain actual failed logs and artifact digests;
+exact-head hosted repair proof remains required. No local verify/publish or
+repository test suite ran.
