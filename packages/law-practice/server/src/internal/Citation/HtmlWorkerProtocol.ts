@@ -8,7 +8,6 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
-import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -17,24 +16,12 @@ import { readCitationByteFrames } from "./ByteFrames.ts";
 import { CitationHtmlCompletionFailure } from "./HtmlCompletion.ts";
 import { CitationHtmlInput, CitationHtmlInputLayout } from "./HtmlInput.ts";
 import { CitationHtmlKernelFailure } from "./HtmlKernel.ts";
+import { CitationNativeProcessFailureReason } from "./NativeProcess.ts";
 import { visitCitationTextPoints } from "./TextPoints.ts";
 import type * as PlatformError from "effect/PlatformError";
 import type * as Stream from "effect/Stream";
 
 const $I = $LawPracticeServerId.create("internal/Citation/HtmlWorkerProtocol");
-const Reason = LiteralKit([
-  "invalid-runtime",
-  "invalid-frame",
-  "channel-failed",
-  "spawn-failed",
-  "cleanup-unconfirmed",
-  "quarantined",
-  "closed",
-]).pipe(
-  $I.annoteSchema("Reason", {
-    description: "Closed HTML process/transport/ownership failures without source-bearing causes.",
-  })
-);
 /**
  * Private process-boundary failure; full engine translation remains separate.
  * @internal
@@ -46,7 +33,7 @@ export class CitationHtmlWorkerFailure extends S.TaggedError<
   { readonly brand: unique symbol }
 >($I`CitationHtmlWorkerFailure`)(
   "CitationHtmlWorkerFailure",
-  { reason: Reason },
+  { reason: CitationNativeProcessFailureReason },
   $I.annoteError<CitationHtmlWorkerFailure>("CitationHtmlWorkerFailure", {
     description: "Closed HTML worker boundary failure; no source, frame content, command or native cause is retained.",
   })

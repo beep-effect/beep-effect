@@ -144,6 +144,14 @@ qualifier now uses collection/decoding for its controlled capture observations;
 that full branch remains hosted proof. See
 [capture collection](history/evidence/2026-11-03-regex-capture-collection.md).
 
+Latest physical ownership checkpoint (2026-11-03): the actual HTML supervisor
+uses a shared captured native process owner. Direct regex-reservation controls
+confirm exact-once release across concurrent retirement, failed-spawn retention
+and independent PID exit before owner-closure release. Twenty-nine focused
+controls and the actual HTML smoke pass. See
+[shared native ownership](history/evidence/2026-11-03-shared-native-process-owner.md).
+Regex supervisor integration and reviewed descriptor admission remain required.
+
 Latest worker evidence (2026-10-31): private process ownership now covers bounded
 schema frames, captured Clock timers, queue/active limits, forced stop,
 acknowledged cleanup and quarantine without permit reuse. Real-process tests

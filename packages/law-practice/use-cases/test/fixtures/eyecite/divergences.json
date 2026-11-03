@@ -48,7 +48,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexWorkerProtocol.ts",
-          "sha256": "2372be9e77755e51909d948d956fd07d8996a52b184bd3237b875983340a50a0"
+          "sha256": "c5fe5e93b9e89810e8f4844496fe7aba7345bfe46837f555fde3c6bfd2aba7a8"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/ByteFrames.ts",
@@ -497,7 +497,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlWorkerProtocol.ts",
-          "sha256": "304c7a1a5b8e91aa43c1ffc84083f91865d2cd496bc2b857e2477a1a444105bd"
+          "sha256": "cca3ff8ab265de7d2234473a5ef9dd4606c183f28489553bb0a0e013126130a8"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlWorkerProgram.ts",
@@ -509,7 +509,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlWorker.ts",
-          "sha256": "f924ce584f527bbf0c85185539cea2ac3b0e3e95ca88636c94b0476a5dae7b57"
+          "sha256": "99b7f376a75a47a88772edfe8518863e8673d846699424744d794b855f6fdac4"
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlWorkerProtocol.test.ts",

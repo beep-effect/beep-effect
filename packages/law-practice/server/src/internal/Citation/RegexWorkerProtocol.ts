@@ -11,6 +11,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { readCitationByteFrames } from "./ByteFrames.ts";
+import { CitationNativeProcessFailureReason } from "./NativeProcess.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { CitationRegexInputLayout, makeCitationRegexInput } from "./RegexInput.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
@@ -19,26 +20,13 @@ import type * as Stream from "effect/Stream";
 import type { CitationPreparedRegexInput } from "./RegexInput.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/RegexWorkerProtocol");
-const Reason = LiteralKit([
-  "invalid-runtime",
-  "invalid-frame",
-  "channel-failed",
-  "spawn-failed",
-  "cleanup-unconfirmed",
-  "quarantined",
-  "closed",
-]).pipe(
-  $I.annoteSchema("Reason", {
-    description: "Closed native regex transport/ownership failures without source or native causes.",
-  })
-);
 /** @internal @category errors @since 0.0.0 */
 export class CitationRegexWorkerFailure extends S.TaggedError<
   CitationRegexWorkerFailure,
   { readonly brand: unique symbol }
 >($I`CitationRegexWorkerFailure`)(
   "CitationRegexWorkerFailure",
-  { reason: Reason },
+  { reason: CitationNativeProcessFailureReason },
   $I.annoteError<CitationRegexWorkerFailure>("CitationRegexWorkerFailure", {
     description: "Native regex boundary failed without retaining a pattern, text, frame or process error.",
   })
