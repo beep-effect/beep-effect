@@ -860,3 +860,11 @@ pending qualification. The existing 204 configured keep-fresh dispositions and
 2,232 pending configured reviews are unchanged; entrypoint rows are not added
 to them as distinct semantic computations. No task body, cache setting or
 qualification transition ran. All whole-goal criteria remain incomplete.
+
+
+The query inventory now includes explicit before/after census digests, source
+binding manifest digests and counts for each client, with a digest-bound private
+collector receipt. A fresh metadata replay records all four phases at 458
+bindings and zero mismatches. Its raw catalogue digests equal the original
+captures. Historical observations retain their original source envelope; this
+is no task execution or qualification grant.

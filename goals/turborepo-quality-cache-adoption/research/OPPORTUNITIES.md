@@ -901,3 +901,14 @@ equivalence. Use the manifest/query join during future census refreshes, and
 retain the remaining role and dynamic-caller reviews as unfinished work.
 The first query selected unnecessary fields and reached its one-MiB bound;
 reducing fields preserved the budget and captured the complete needed catalogue.
+
+
+### 2026-11-03 — Record capture guard phases explicitly
+
+Review [#2683](https://github.com/beep-effect/beep-effect/pull/2683#discussion_r4457136459)
+found that the committed catalogue reported aggregate binding checks without
+separate pre/post receipts. A bounded metadata replay now emits each census
+digest, observed binding digest, count and timestamp, plus the private receipt's
+digest and retention reference. Successful assertions should emit their phase
+identity and observed values when they are part of an auditable capture contract.
+The original captures and refusal remain retained; no historical phase was invented.

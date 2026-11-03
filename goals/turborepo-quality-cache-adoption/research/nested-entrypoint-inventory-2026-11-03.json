@@ -11065,5 +11065,92 @@
     "reviewedCurrentSourceKeepFresh": 190,
     "pending": 1609
   },
-  "sourceReviewReports": ["research/nested-source-fixer-review-2026-11-03.json"]
+  "sourceReviewReports": [
+    "research/nested-source-fixer-review-2026-11-03.json"
+  ],
+  "sourceBindingChecks": {
+    "authority": "Fresh explicitly recorded pre/post metadata replay on the named source; not reconstructed historical phase values. Original native observations retain their original capture envelope.",
+    "recordedAt": "2026-11-03T16:01:44.546319+00:00",
+    "observedPacketRevision": "78d9bacae55e19a1499d2a277e0437f3a1663f37",
+    "canonicalization": "SHA-256 of UTF-8 JSON for the ordered source binding array, sorted object keys and compact separators.",
+    "phases": [
+      {
+        "channel": "stable",
+        "phase": "before-capture",
+        "recordedAt": "2026-11-03T16:01:44.278984+00:00",
+        "censusSha256": "1ace258b07a1fa04216a40ed9730d9ab8163055b9444b8ff2e5ad3724380c77c",
+        "expectedSourceBindingsSha256": "01b0775632e81d17399f0dea583beb8572e424589d2b69a86c6c8313607b0357",
+        "observedSourceBindingsSha256": "01b0775632e81d17399f0dea583beb8572e424589d2b69a86c6c8313607b0357",
+        "bindingCount": 458,
+        "mismatches": 0
+      },
+      {
+        "channel": "stable",
+        "phase": "after-capture",
+        "recordedAt": "2026-11-03T16:01:44.397160+00:00",
+        "censusSha256": "1ace258b07a1fa04216a40ed9730d9ab8163055b9444b8ff2e5ad3724380c77c",
+        "expectedSourceBindingsSha256": "01b0775632e81d17399f0dea583beb8572e424589d2b69a86c6c8313607b0357",
+        "observedSourceBindingsSha256": "01b0775632e81d17399f0dea583beb8572e424589d2b69a86c6c8313607b0357",
+        "bindingCount": 458,
+        "mismatches": 0
+      },
+      {
+        "channel": "canary",
+        "phase": "before-capture",
+        "recordedAt": "2026-11-03T16:01:44.406138+00:00",
+        "censusSha256": "1ace258b07a1fa04216a40ed9730d9ab8163055b9444b8ff2e5ad3724380c77c",
+        "expectedSourceBindingsSha256": "01b0775632e81d17399f0dea583beb8572e424589d2b69a86c6c8313607b0357",
+        "observedSourceBindingsSha256": "01b0775632e81d17399f0dea583beb8572e424589d2b69a86c6c8313607b0357",
+        "bindingCount": 458,
+        "mismatches": 0
+      },
+      {
+        "channel": "canary",
+        "phase": "after-capture",
+        "recordedAt": "2026-11-03T16:01:44.544284+00:00",
+        "censusSha256": "1ace258b07a1fa04216a40ed9730d9ab8163055b9444b8ff2e5ad3724380c77c",
+        "expectedSourceBindingsSha256": "01b0775632e81d17399f0dea583beb8572e424589d2b69a86c6c8313607b0357",
+        "observedSourceBindingsSha256": "01b0775632e81d17399f0dea583beb8572e424589d2b69a86c6c8313607b0357",
+        "bindingCount": 458,
+        "mismatches": 0
+      }
+    ],
+    "nativeObservations": [
+      {
+        "channel": "stable",
+        "clientVersion": "2.11.10",
+        "clientSha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6",
+        "elapsedSeconds": 0.085,
+        "stdoutBytes": 956180,
+        "stdoutSha256": "c294c3f21a44bc9a76850a95289292675a0b03a3f7a38fd7a8051005b451fe0a",
+        "stderrBytes": 0,
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "packages": 194,
+        "tasks": 6327,
+        "executableTasks": 4235
+      },
+      {
+        "channel": "canary",
+        "clientVersion": "2.11.11-canary.1",
+        "clientSha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2",
+        "elapsedSeconds": 0.092,
+        "stdoutBytes": 956189,
+        "stdoutSha256": "d7d395c88ad708f76d43376623016135b1a323989702aba320b256a309763614",
+        "stderrBytes": 0,
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "packages": 194,
+        "tasks": 6327,
+        "executableTasks": 4235
+      }
+    ],
+    "rawCatalogueDigestsMatchOriginalObservations": true,
+    "privateCollectorReceipt": {
+      "location": "~/.local/state/beep/r2-pilot/completion-2026-10-29/continuation-20261102/current-native-query-catalogue-phase-observation-20261103.json",
+      "sha256": "7c45c2a786ca351e718ed8a2d8e3da1edcab36c7a911d156e72df6360d7de63e",
+      "collectorSourceSha256": "5853faf010ca5adf99caa77a68bfc6782f95f81b6b6338b51d4bbcded8543d3a",
+      "retention": "Owner-only receipt, collector and bounded raw captures retained through both goal closeouts; no configured expiry or offsite backup claim."
+    },
+    "taskBodiesExecuted": 0,
+    "fullGoalAcceptanceChanged": false
+  }
 }
