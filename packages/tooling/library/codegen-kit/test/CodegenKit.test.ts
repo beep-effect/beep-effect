@@ -20,6 +20,8 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import type { NamedTransform, SpecSource } from "@beep/codegen-kit";
@@ -1823,10 +1825,23 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit ACP 
       const target = path.join(directory, "Invalid.ts");
       const current = "export const retained = true;\n";
       yield* fs.writeFileString(target, current);
+      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      // The repository allows formatting syntax errors. Use an actual failing
+      // process with nonempty stdout to test exit-status rejection directly.
+      const rejectedFormatter = ChildProcessSpawner.make(() =>
+        spawner.spawn(
+          ChildProcess.make(
+            process.execPath,
+            ["--eval", 'process.stdout.write("export const generated = true;\\n"); process.exitCode = 7;'],
+            { stdin: "ignore", stdout: "pipe", stderr: "ignore" }
+          )
+        )
+      );
       const failure = yield* checkWithoutWrites([
-        GeneratedModule.make({ path: target, content: "export const = ;\n" }),
-      ]).pipe(Effect.flip);
+        GeneratedModule.make({ path: target, content: "export const generated = true;\n" }),
+      ]).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, rejectedFormatter), Effect.flip);
       expect(failure._tag).toBe("CodegenFormatError");
+      expect(failure.message).toContain("exit code 7");
       expect(yield* fs.readFileString(target)).toBe(current);
     })
   );

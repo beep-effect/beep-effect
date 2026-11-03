@@ -862,6 +862,14 @@ import. Restore that script to dependency analysis while retaining its existing
 clone and complexity scoring exclusions. Do not globally suppress CodegenKit's
 dependency findings. Hosted checks remain the proof for all three repairs.
 
+The next hosted unit shard passed 45 of 46 CodegenKit cases, including both
+new nonwriting comparisons, but disproved the negative fixture's assumption:
+the repository permits formatting syntax errors, so invalid TypeScript need
+not make Biome exit nonzero. Exercise the actual contract with an owned child
+that emits nonempty stdout and exits seven. Keep the expected format error,
+assert its exit status, and retain the original file. Do not alter the
+repository formatter policy or accept stdout from a failed formatter.
+
 ### 2026-11-03 — Two generator checks rewrote source before comparing it
 
 The entrypoint census found `@beep/html#generate:check` and
@@ -871,6 +879,6 @@ silently create an untracked output. Their scripts now select an explicit check 
 before any target write, reusing CodegenKit drift reports and stdin formatting
 with the repository's Biome configuration. The formatter also checks its child
 exit status before accepting output. Regression cases for current, dirty,
-missing and invalid generated content are authored for hosted CI; no local
+missing generated content and formatter failures are authored for hosted CI; no local
 quality suite or generator execution is claimed. The writing commands and
 generated source bytes are unchanged. Qualification remains a separate gate.
