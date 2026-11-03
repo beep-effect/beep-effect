@@ -20,4 +20,25 @@ Execution: **active**, explicitly launched 2026-10-27. Preserve the recovery hol
 
 ## P4 closeout
 
-PR2364 and PR2508 have retained unsatisfied canonical completion receipts. Preserve both as supporting historical delivery. Ship the current-source qualification, reflection and coherent prospective declaration in final follow-up PR2578 while retaining operative active status. Archive positive current-head readiness and the canonical Yeet verdict before merge; later observations must not retroactively qualify either historical merge. After exact-head hosted readiness and merge evidence exist, run `bun run beep goals completion refresh --slug agent-observability-foundation` in the clone retaining the final-head Yeet verdict. Completion must revalidate the accepted head and merge-time required-check inventory; a proposal, local pass or unknown API result is insufficient. Record runtime rollout separately from source merge. Preserve raw archives and credentials.
+PR2364 and PR2508 retain unsatisfied historical completion receipts. PR2578
+retains canonical **unknown** after external merge without positive readiness.
+Preserve those results as supporting delivery. PR2595 has separate post-merge
+source qualification; its observer did not establish pre-merge readiness.
+
+The operator reserved final PR2612 for this chat and directed other merge
+activity for it to stop. Ship current source applicability, the new reflection
+and a coherent prospective declaration while lifecycle remains active. Publish
+a reviewable draft; only this owner may make it ready and merge it. A draft
+monitor's `ready-pending-flip` result does not replace final readiness.
+
+Require all non-Vercel checks to pass, resolved review threads and the normal
+review window. Attribute Vercel failures only with actual build-rate-limit
+evidence. Archive terminal readiness and a positive exact-head canonical Yeet
+verdict **before** strict merge; no S11, admin or forced-window exception.
+
+After qualified merge, run `bun run beep goals completion refresh --slug
+agent-observability-foundation` from the clone retaining that verdict. Inspect
+an actually verified accepted-head result and complete merge-time required-check
+inventory before completion. Later observations cannot establish missing
+historical readiness. Preserve historical originals, the recovery hold and
+unrelated work. Source delivery remains separate from production enrollment.
