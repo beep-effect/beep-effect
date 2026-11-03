@@ -16,6 +16,7 @@ import {
   CacheHostedProducerCompleteReport,
   CacheHostedProducerReference,
   CacheHostedProducerReport,
+  CacheHostedProducerReusableWorkflowApproval,
   CacheHostedProducerRunReference,
   CacheProducerObservation,
   CacheRuntimeProcess,
@@ -27,6 +28,7 @@ import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it, vi } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
@@ -49,6 +51,27 @@ const encodeObservation = S.encodeEffect(S.fromJsonString(CacheProducerObservati
 const encodeUnknown = S.encodeEffect(S.fromJsonString(S.Unknown));
 const revision = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const workflow = "name: Producer\non: workflow_dispatch\n";
+const heavyRevision = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+const heavyPath = ".github/workflows/heavy.yml";
+const heavyWorkflow = "name: Heavy\non: workflow_call\n";
+const resolvedHeavy = {
+  path: `beep-effect/beep-effect/${heavyPath}@main`,
+  ref: "refs/heads/main",
+  sha: heavyRevision,
+};
+const approveHeavy = Effect.fn("HostedProducerTest.approveHeavy")(function* (approval: CacheHostedProducerApproval) {
+  const encoded = yield* S.encodeEffect(CacheHostedProducerApproval)(approval);
+  return yield* S.decodeEffect(CacheHostedProducerApproval)({
+    ...encoded,
+    reusableWorkflows: [
+      {
+        workflowPath: heavyPath,
+        revision: heavyRevision,
+        workflowSha256: yield* hashBytes(new TextEncoder().encode(heavyWorkflow)),
+      },
+    ],
+  });
+});
 const reference = CacheHostedProducerReference.make({ runId: 11, attempt: 2, artifactId: 22 });
 const runRoute = "GET /repos/{owner}/{repo}/actions/runs/{run_id}";
 const artifactRoute = "GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}";
@@ -137,6 +160,8 @@ const fixture = Effect.fn("HostedProducerTest.fixture")(function* (selectedRefer
         readonly run?: unknown;
         readonly artifact?: unknown;
         readonly workflow?: string;
+        readonly heavyWorkflow?: string;
+        readonly onContentRead?: (file: string) => void;
         readonly afterRun?: unknown;
         readonly afterArtifact?: unknown;
         readonly runFailure?: GitHubError;
@@ -167,6 +192,11 @@ const fixture = Effect.fn("HostedProducerTest.fixture")(function* (selectedRefer
       });
       const content = GitHubContent.makeTest({
         getFile: dual(2, (file: string, options?: { readonly ref?: string | undefined }) => {
+          responses.onContentRead?.(file);
+          if (file === heavyPath) {
+            expect(options?.ref).toBe(heavyRevision);
+            return Effect.succeed(responses.heavyWorkflow ?? heavyWorkflow);
+          }
           expect(file).toBe(approval.workflowPath);
           expect(options?.ref).toBe(revision);
           return Effect.succeed(responses.workflow ?? workflow);
@@ -197,6 +227,238 @@ const fixture = Effect.fn("HostedProducerTest.fixture")(function* (selectedRefer
 it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
   "immutable hosted producer evidence",
   (it) => {
+    it.effect("accepts an independently approved resolved main Heavy workflow at its own revision", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const approval = yield* approveHeavy(f.approval);
+        const reads = vi.fn();
+        const observed = yield* f.verify(
+          { run: { ...f.run, referenced_workflows: [resolvedHeavy] }, onContentRead: reads },
+          f.archive,
+          approval
+        );
+        expect(observed.report).toEqual(f.report);
+        expect(reads.mock.calls).toEqual([[f.approval.workflowPath], [heavyPath]]);
+      })
+    );
+
+    it.effect("joins complete private observation publication through the approved Heavy workflow", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const approval = yield* approveHeavy(f.approval);
+        const packed = yield* f.complete();
+        const observed = yield* f.verify(
+          {
+            run: { ...f.run, referenced_workflows: [resolvedHeavy] },
+            artifact: packed.metadata,
+            observation: f.observation,
+          },
+          packed.bytes,
+          approval
+        );
+        expect(observed.report).toEqual(packed.report);
+      })
+    );
+
+    it.effect("keeps legacy approvals default-deny and refuses an approved callee absent from the run", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        expect(f.approval.reusableWorkflows).toEqual([]);
+        const { reusableWorkflows: _omitted, ...legacy } = yield* S.encodeEffect(CacheHostedProducerApproval)(
+          f.approval
+        );
+        expect((yield* S.decodeEffect(CacheHostedProducerApproval)(legacy)).reusableWorkflows).toEqual([]);
+        const approval = yield* approveHeavy(f.approval);
+        for (const { run, approved } of [
+          { run: { ...f.run, referenced_workflows: [resolvedHeavy] }, approved: f.approval },
+          { run: f.run, approved: approval },
+        ]) {
+          const reads = vi.fn();
+          const error = yield* f.verify({ run, onContentRead: reads }, f.archive, approved).pipe(Effect.flip);
+          expect(error.message).toContain("reusable workflow");
+          expect(reads).not.toHaveBeenCalled();
+        }
+      })
+    );
+
+    for (const { name, references } of [
+      { name: "another repository", references: [{ ...resolvedHeavy, path: `attacker/repo/${heavyPath}@main` }] },
+      {
+        name: "another workflow",
+        references: [{ ...resolvedHeavy, path: "beep-effect/beep-effect/.github/workflows/other.yml@main" }],
+      },
+      { name: "another resolved commit", references: [{ ...resolvedHeavy, sha: revision }] },
+      { name: "another ref", references: [{ ...resolvedHeavy, ref: "refs/heads/feature" }] },
+      { name: "a tag named main", references: [{ ...resolvedHeavy, ref: "refs/tags/main" }] },
+      {
+        name: "a SHA path instead of the approved main path",
+        references: [{ ...resolvedHeavy, path: `beep-effect/beep-effect/${heavyPath}@${heavyRevision}` }],
+      },
+      { name: "an absent resolved SHA", references: [{ path: resolvedHeavy.path, ref: resolvedHeavy.ref }] },
+      { name: "a duplicate reference", references: [resolvedHeavy, resolvedHeavy] },
+      {
+        name: "an additional delegated workflow",
+        references: [
+          resolvedHeavy,
+          { ...resolvedHeavy, path: "beep-effect/beep-effect/.github/workflows/nested.yml@main" },
+        ],
+      },
+    ]) {
+      it.effect(`refuses approved Heavy metadata with ${name} before reading source`, () =>
+        Effect.gen(function* () {
+          const f = yield* fixture();
+          const approval = yield* approveHeavy(f.approval);
+          const reads = vi.fn();
+          (yield* f
+            .verify({ run: { ...f.run, referenced_workflows: references }, onContentRead: reads }, f.archive, approval)
+            .pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+          expect(reads).not.toHaveBeenCalled();
+        })
+      );
+    }
+
+    it.effect("rejects duplicate approvals and approvals outside the protected Heavy leaf", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const approval = yield* approveHeavy(f.approval);
+        const encoded = yield* S.encodeEffect(CacheHostedProducerApproval)(approval);
+        const reusable = yield* A.head(approval.reusableWorkflows).pipe(
+          O.getOrThrow,
+          S.encodeEffect(CacheHostedProducerReusableWorkflowApproval)
+        );
+        for (const reusableWorkflows of [
+          [reusable, reusable],
+          [{ ...reusable, workflowPath: ".github/workflows/other.yml" }],
+          [{ ...reusable, revision: "main" }],
+        ]) {
+          const malformed: unknown = { ...encoded, reusableWorkflows };
+          (yield* S.decodeUnknownEffect(CacheHostedProducerApproval)(malformed).pipe(Effect.result)).pipe(
+            Result.isFailure,
+            assertTrue
+          );
+        }
+      })
+    );
+
+    it.effect("checks the approved callee's exact bounded ASCII bytes independently of the caller", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const approval = yield* approveHeavy(f.approval);
+        for (const text of [
+          `${heavyWorkflow}# changed\n`,
+          Str.repeat(64 * 1024 + 1)("x"),
+          `${heavyWorkflow}# \uFFFD\n`,
+        ]) {
+          const error = yield* f
+            .verify(
+              { run: { ...f.run, referenced_workflows: [resolvedHeavy] }, heavyWorkflow: text },
+              f.archive,
+              approval
+            )
+            .pipe(Effect.flip);
+          expect(error.message).toContain("workflow bytes");
+        }
+      })
+    );
+
+    it.effect("refuses lossy or oversized callee bytes even when independently approved by their digest", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const approved = yield* approveHeavy(f.approval);
+        const reusable = A.head(approved.reusableWorkflows).pipe(O.getOrThrow);
+        for (const text of [Str.repeat(64 * 1024 + 1)("x"), `${heavyWorkflow}# \uFFFD\n`]) {
+          const approval = CacheHostedProducerApproval.make({
+            ...approved,
+            reusableWorkflows: [
+              CacheHostedProducerReusableWorkflowApproval.make({
+                ...reusable,
+                workflowSha256: yield* hashBytes(new TextEncoder().encode(text)),
+              }),
+            ],
+          });
+          const error = yield* f
+            .verify(
+              { run: { ...f.run, referenced_workflows: [resolvedHeavy] }, heavyWorkflow: text },
+              f.archive,
+              approval
+            )
+            .pipe(Effect.flip);
+          expect(error.message).toContain("workflow bytes");
+        }
+      })
+    );
+
+    it.effect("detects resolved callee changes in the second authenticated metadata read", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const approval = yield* approveHeavy(f.approval);
+        const run = { ...f.run, referenced_workflows: [resolvedHeavy] };
+        for (const referenced_workflows of [[], [{ ...resolvedHeavy, sha: revision }]]) {
+          const error = yield* f
+            .verify({ run, afterRun: { ...run, referenced_workflows } }, f.archive, approval)
+            .pipe(Effect.flip);
+          expect(error.message).toContain("changed during verification");
+        }
+      })
+    );
+
+    it.effect("retains the original aggregate 64 KiB workflow byte budget across caller and callee", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const approved = yield* approveHeavy(f.approval);
+        const reusable = A.head(approved.reusableWorkflows).pipe(O.getOrThrow);
+        const heavyWorkflow = Str.repeat(32 * 1024)("x");
+        for (const extra of [0, 1]) {
+          const workflow = Str.repeat(32 * 1024 + extra)("x");
+          const approval = CacheHostedProducerApproval.make({
+            ...approved,
+            workflowSha256: yield* hashBytes(new TextEncoder().encode(workflow)),
+            reusableWorkflows: [
+              CacheHostedProducerReusableWorkflowApproval.make({
+                ...reusable,
+                workflowSha256: yield* hashBytes(new TextEncoder().encode(heavyWorkflow)),
+              }),
+            ],
+          });
+          const result = yield* f
+            .verify(
+              {
+                run: { ...f.run, referenced_workflows: [resolvedHeavy] },
+                workflow,
+                heavyWorkflow,
+              },
+              f.archive,
+              approval
+            )
+            .pipe(Effect.result);
+          result.pipe(
+            Result.match({
+              onFailure: () => expect(extra).toBe(1),
+              onSuccess: () => expect(extra).toBe(0),
+            })
+          );
+        }
+      })
+    );
+
+    it.effect("snapshots independent reusable approval before any authenticated metadata reads", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const approval = yield* approveHeavy(f.approval);
+        const reusable = A.head(approval.reusableWorkflows).pipe(O.getOrThrow);
+        const observed = yield* f.verify(
+          {
+            run: { ...f.run, referenced_workflows: [resolvedHeavy] },
+            onRead: () => expect(Reflect.set(reusable, "revision", revision)).toBe(true),
+          },
+          f.archive,
+          approval
+        );
+        expect(approval.reusableWorkflows[0]?.revision).toBe(revision);
+        expect(observed.report).toEqual(f.report);
+      })
+    );
+
     it.effect("retains typed GitHub failure causes without adding them to producer observations", () =>
       Effect.gen(function* () {
         const f = yield* fixture();

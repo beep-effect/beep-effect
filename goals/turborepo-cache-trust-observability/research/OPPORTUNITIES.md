@@ -1662,6 +1662,30 @@ passed inspection nor a signed-cache result. No runner-group permission or
 capacity was changed.
 
 
+### 2026-11-02 — protected inspection misreads a directory alias
+
+Actual inspection job `125171205116` reached the intended Heavy runner but
+reported a missing bounded artifact for YAML fixture directory `V55R`. The
+source collector resolved a declared relative alias and unconditionally read
+its target as a file. The fixture population also contains nested-directory
+aliases, so a leaf-only workaround would preserve the next failure. Add
+contained recursive manifests and positive nested/cycle controls, with explicit
+refusals for escaping aliases, ignored members and undeclared directories.
+Every leaf remains independently inventoried; no fixture exclusion is added.
+
+The initial edit used an outdated Array predicate and underconstrained tuple
+projection; package checking and focused runtime controls rejected it. Use the
+installed `Array.isArrayNonEmpty` and tuple order directly. A subsequent check
+caught nested Option assertion calls; use the canonical pipe form. Preserve
+these failed receipts and require the corrected package result before handoff.
+The first real-tree summary also matched a fixture ID against the alias name
+rather than its relative target; retain that receipt and correct only the
+summary predicate before replay.
+
+The scoped native complexity review then reported cognitive complexity 23 in
+`hashDirectoryAlias`. Replace its nested entry-type branch chain with the
+existing Match handlers, retain all containment/inventory failures, and add an
+actual named-pipe refusal. Do not relax a complexity rule or baseline.
 ### Preserve private supervisor output while diagnosing qualification failures, 2026-11-02
 
 An ordinary stable signed pilot ended after 967 seconds with only
@@ -1674,7 +1698,113 @@ never a captured substring or raw cause. Hints remain untrusted observations;
 exit status and truncation still decide failure, and no qualification gate is
 relaxed. Test private-prefix/suffix and unknown-output controls before reuse.
 
+The subsequent ordinary stable attempt, using the published diagnostic parent
+and unchanged task/worker fixtures, ended at the existing twenty-minute limit
+without an observation. Its fixed error was `Signed pilot comparison exceeded
+its twenty-minute execution limit.` Capture interruption still discards phase
+attribution. Stop automatic retries; inspect the existing streaming-fold capture
+route for bounded fixed phase observations without raw output, injected hooks,
+a new capture subsystem or a weaker execution deadline.
 
+Canonical repository-wide JSDoc inventory refreshes took 437.135, 411.720 and
+400.697 seconds across this edit/integration loop. The last refresh followed
+accepted-main generated-file conflicts; both prior versions were preserved.
+A package-scoped canonical refresh that reuses proven unchanged package analysis,
+with one owner for final global serialization, would avoid reanalyzing unrelated
+packages. Preserve the fresh mutating aggregate and every semantic input; do not
+cache the whole writer or relax its finding totals. These are command elapsed
+times, not a measured production cache saving.
+
+A later accepted-main merge caused two more generated inventory conflicts and
+a 308.841-second canonical refresh. The scan also binds ten inherited completion
+store exports and one public module missing from the accepted inventory; all
+those source files match main exactly. Fresh cache workflow controls pass, but
+package checking now exposes an inherited missing pipeable signature on
+`applyScaffoldRuleForTesting` from PR #2553. Route one main repair through its
+owner; retain the failing receipt and do not lower a baseline or duplicate its
+patch in consumer lanes. The cleared verification lane also observed HTTP401
+from its local cache endpoint; use explicit local-only caching in that lane,
+without changing durable credentials based on that observation.
+
+The consolidated PR #2567 main repair supplies the scaffold helper overloads.
+Consuming accepted `560195af60` changes only that upstream file; the owned Cache
+source and generated artifacts remain byte-identical. The fresh quick package
+check passes with explicit local-only caching for this verification lane. Keep
+the earlier source failure and unauthenticated-request receipt as history.
+
+
+### Consume the consolidated shared-health repair, 2026-11-02
+
+Accepted main PR2564 repairs the inherited Fallow/effect-vitest findings in two
+unrelated test files. Integrate that accepted repair once; do not copy its patch
+into Cache. All six collector source/generated hashes remain unchanged, and
+fresh package quick lint/type checking passes. Retain the original focused and
+real-tree execution scopes, earlier inherited failures and subsequent main-fix
+receipts; this integration does not create protected inspection evidence.
+
+
+### Directory-mode test portability, 2026-11-02
+
+PR2562's mode-change assertion assumed a newly created directory was not already
+0700. Under a restrictive 077 umask it compared identical manifests and failed.
+The review was reproduced before repair (one failed case, 44 skipped). Set an
+explicit 0755 initial mode, collect the baseline, then change to 0700. All 45
+workflow tests pass under 077 after the repair. Preserve the original failure;
+the collector implementation and its earlier real-tree evidence are unchanged.
+
+### 2026-11-02 — directory alias refusal coverage
+
+The completed hosted Coverage Regression job 125427032277 reported three uncovered
+lines, two branches and one function in `Cache.workflow.ts`, below its existing
+100% floors. The missing controls cover canonical directory replacement after stat,
+the independent 20,000-entry directory bound, and a tracked file replaced by a
+directory without an alias. The repair adds real filesystem controls and keeps the
+runtime implementation and coverage floors unchanged. Earlier race-fixture attempts
+are retained: another collected path won the concurrent failure, then native Git
+removal also removed empty parent directories. Those setup failures are separate
+from the final refusal evidence. A narrow coverage replay before publishing would
+have exposed these missing controls earlier.
+
+### Resolve the admitted workflow before transporting producer evidence, 2026-11-02
+
+The actual inspection run reported `heavy.yml@main` and its resolved commit,
+while the hosted verifier accepted only an empty `referenced_workflows` list.
+A test with an independently approved Heavy leaf reproduced that refusal before
+implementation. Preserve default denial and add explicit same-repository main
+leaf approval, exact source reads and resolution-race controls. Keep the original
+aggregate 64 KiB workflow-text limit across both files. An earlier test-helper
+setup failure was retained separately and does not count as this regression.
+The working completion audit also carried an older SPEC digest. All nine
+acceptance requirements and eight implementation requirements still match SPEC
+verbatim after whitespace normalization; refresh only that working source
+binding and preserve both prior hashes. No requirement or acceptance status is
+relaxed. This removes a verification blocker, not the remaining private
+transport or real protected R2 acceptance gates.
+
+
+### Attribute introduced gates before consolidating main repairs, 2026-11-02
+
+PR2603's completed hosted audit identifies the new verifier's cognitive
+complexity as twelve above eight. Its policy job reports an introduced EV006
+boolean assertion alongside the inherited GitHubApp SFV4 test defect. Reading
+the exact audit artifact and job log prevents incorrectly classifying the
+entire failure as inherited. Keep one coherent source-inspection helper, use
+the existing Result assertion vocabulary, and consume the shared test repair
+from accepted main. Preserve original failed receipts and all policy floors.
+The final focused replay passes 146 cases; both Fallow views and the full
+effect-vitest ratchet pass after the owned repairs.
+
+
+### Snapshot historical receipt bindings by value, 2026-11-02
+
+Review of PR2603 found that a metadata writer retained the previous binding
+array by reference and then updated its members for current source. The two
+changed historical digests therefore repeated the current values. Restore all
+four historical entries from immutable commit `3afde77309`, then independently
+compare every current entry to disk and every historical entry to that commit.
+Keep the original 136-case receipts bound to their original source; no native
+receipt, requirement or acceptance status is changed. Deep-copy retained arrays
+or reconstruct them from immutable blobs before changing current bindings.
 ### Preserve issued observations and minimize private-transfer authority, 2026-11-02
 
 The protected digest report alone cannot transport the complete private matrices.
@@ -1764,3 +1894,19 @@ Keep the original red receipts and all baseline floors. Run the root policy
 scanner on touched test files: package lint alone does not include that rule.
 
 - 2026-11-02: The accepted party-domain expansion added twelve executable nodes without recording its cache baseline. Merging main produced a baseline conflict and eight expansion blockers plus root policy drift. A generator-integrated configuration review would prevent this; the touched baseline is reconciled once through the named CAS review, preserving qualification bytes.
+
+
+### 2026-11-02 — source bindings after accepted-main integration
+
+PR #2603 review found that the accepted producer test-kit exports changed the
+shared helper digest while its checkpoint retained the earlier value. The three
+other bindings still matched. Preserve the entire prior binding set, record the
+current helper bytes and replay all 136 focused component cases on Node 24.
+A post-merge comparison of every declared binding would have caught this before
+push. Historical receipts remain source-bound; the new replay grants no native
+or production acceptance.
+
+
+### Generated inventory conflict cost, 2026-11-02
+
+Resolving the independent accepted-main inventory changes required the canonical `bun --no-env-file run beep quality jsdoc-inventory` writer. The sibling phase-progress merge took 515.916 seconds to regenerate the pair across 185 packages; its open totals remained 15 packages, 94 exports and 115 modules. This was a concurrent workstation observation, not an isolated benchmark or evidence of cache savings. A source-scoped canonical regeneration path that retains the complete inventory integrity checks would avoid repeating this full census for each small merge. The generated files were retained; no check, finding or acceptance requirement was waived.
