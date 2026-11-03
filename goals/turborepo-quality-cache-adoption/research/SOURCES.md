@@ -582,3 +582,17 @@ production qualification.
 - [Three refusal controls](prune-driver-controls.json) reject optimized Python,
   wrong native pins and report overwrite before additional native capture.
   The passing report is unchanged. No production configuration is enabled.
+
+
+### Native watch caller review, 2026-11-03
+
+- [Official watch reference](https://turborepo.dev/docs/reference/watch), also
+  read from the installed stable bundle under its recorded digest: native
+  watch input filtering and application-owned watchers have separate callers.
+- Exact stable/current-canary `future_flags.rs` commits and byte digests are
+  recorded in `watch-source-observation.json`; the registry still reports
+  stable 2.11.10 and canary 2.11.11-canary.1. Declaration presence is not
+  native behavior proof. The older canary availability report is unchanged.
+- `watch-source-review.py` inspects tracked source and public references only.
+  `watch-source-driver-controls.json` records three early refusals;
+  `watch-feature-review.json` classifies every hit and bounds the decision.
