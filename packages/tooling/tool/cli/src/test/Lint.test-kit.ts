@@ -28,6 +28,19 @@ export {
  */
 export { renderJsonDocument } from "../commands/Lint/internal/PolicyFingerprintJson.ts";
 /**
+ * Policy fingerprint root-file routing, for focused and live completeness tests.
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export {
+  codeStringLiterals,
+  moduleRootFileReads,
+  POLICY_ROOT_FILE_ROUTES,
+  POLICY_SHARED_ROOT_FILES,
+} from "../commands/Lint/internal/PolicyRootFiles.ts";
+/**
  * Schema-first inventory merge, exposed so tests can drive `--write` regeneration on fixture documents.
  *
  * @category testing
