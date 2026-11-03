@@ -660,3 +660,22 @@ the real full-labs contract; executable argv and local/hosted parity stay unchan
 The source review remains partial: applicable real callers and computations
 still need their complete review and qualification. No feature disposition,
 production setting, measured savings or whole-goal acceptance changes.
+
+
+### Prune global-file applicability, 2026-11-02
+
+The [feature review](research/prune-global-feature-review.json) binds accepted
+source `74a4bebb7303775ab9ad5773305413858aabbda1`. All 20 selected files that
+mention pruning and Turbo refer to other cleanup, permission or walker behavior;
+no named production Turbo prune caller was found within this text-audit scope.
+
+The pinned stable 2.11.10 and canary 2.11.11-canary.1 pass 16 offline cases:
+legacy/global layouts, flag off/on and normal/Docker output. Selected dependency
+source and a frozen install are preserved; the direct fixture read requires its
+global file and fails after deletion. Three driver refusals preserve the report.
+This is synthetic input-presence evidence, not a real pruned build or speed test.
+
+Retain the absent optional flag. Ten scoped decisions and 25 pending feature
+rows remain out of 35. Broad pruning/deployment, real computations, qualification,
+value and observation windows remain open. Hosted CI provides PR proof; no local
+verify, publish, package gate or test suite was run for this evidence-only wave.

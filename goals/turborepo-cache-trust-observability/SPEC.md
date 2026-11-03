@@ -1145,3 +1145,23 @@ wheels fail closed. Record actual Rust compiler, cargo-zigbuild and Zig
 executable digests and byte sizes alongside versions in the bounded build
 manifest; resolve the compiler through Rustup rather than hashing its launcher.
 This repairs preparation, not its unexecuted build or independent approval.
+
+
+### Recheck saved trial storage roles without management authority, 2026-11-03
+
+- Reuse the exact disposable-object operation block from the existing Alchemy
+  trial harness under an immutable source hash and AST-shape guard. The optional
+  research entrypoint loads only the four saved storage references, checks their
+  identities against owner-only Alchemy state and requires private exclusive
+  output and intent paths outside the checkout. It changes no grant or consumer.
+- Preserve the original management-token policy checks. This separate route
+  proves only actual object capabilities: writer upload, exact reader read, reader
+  upload/deletion denial and deletion/404 checks for both owned probe keys. It
+  does not claim current management API policy or backend/tenant isolation.
+- Keep pinned boto3, zero SDK retries, bounded requests, a 90-second alarm before
+  cleanup and exact private probe intents for interrupted recovery. Load no
+  artifact key or adapter bearer. Retain failure/output guards separately from
+  passing storage evidence.
+- Reverse by reverting this research entrypoint and registration while preserving
+  the observations. Existing token management, credentials, services and every
+  signed production and qualification gate remain unchanged.

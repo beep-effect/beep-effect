@@ -1,0 +1,201 @@
+{
+  "schemaVersion": "cache-prune-global-feature-review/v1",
+  "recordedAt": "2026-11-03T03:45:38.263129+00:00",
+  "feature": "futureFlag:pruneIncludesGlobalFiles",
+  "decision": "retain-current-absence",
+  "disposition": "accepted-retain-current-absence",
+  "authority": "One tracked-repository applicability decision and pinned synthetic Linux file-presence controls. No real deployment, build portability, sensitive/ignored-file safety, computation qualification or measured performance acceptance.",
+  "sourceBaseRevision": "74a4bebb7303775ab9ad5773305413858aabbda1",
+  "sourceReview": {
+    "trackedFiles": 46021,
+    "selectedFiles": 13065,
+    "corpusSha256": "0ae487be44b418e594ebdf7a594fa5bad9a5b79a1a7dfd2706f8443adf7b654d",
+    "selection": {
+      "excludePrefixes": [
+        "goals/",
+        "explorations/",
+        "research/",
+        "docs/",
+        ".repos/"
+      ],
+      "suffixes": [
+        ".ts",
+        ".tsx",
+        ".mts",
+        ".cts",
+        ".mjs",
+        ".cjs",
+        ".js",
+        ".sh",
+        ".py",
+        ".json",
+        ".jsonc",
+        ".yml",
+        ".yaml",
+        ".toml",
+        ".nix"
+      ],
+      "orFilenameContains": "dockerfile",
+      "encoding": "UTF-8; files that cannot decode are excluded.",
+      "fingerprint": "SHA-256 of git ls-files ordered path + NUL + file SHA-256 + newline for each selected file."
+    },
+    "callerSearch": "Case-insensitive prune and Turbo mentions in each selected file, followed by manual classification of all 20 co-mention files. This text audit cannot resolve arbitrary dynamically constructed commands or untracked/host-only scripts.",
+    "namedProductionTurboPruneCallerFound": false,
+    "coMentionFiles": [
+      {
+        "path": ".claude/hooks/hook-pulse.sh",
+        "sha256": "8fbafb98b242fffd57b1491a7f49a46fe1e14f348c424f6b3a5762d8d15f54a9",
+        "classification": "Filesystem and Git worktree cleanup."
+      },
+      {
+        "path": ".claude/settings.json",
+        "sha256": "8434f1bace5dd82ef48c78f7c80db6dd5d3e27dd4e8a66e57064a6a65e0aaeaa",
+        "classification": "Git cleanup command permission allowlist."
+      },
+      {
+        "path": ".github/actions/setup-monorepo-ci/action.yml",
+        "sha256": "ff3171a19120ab9c8670fba8e8326106f6b232b33d0a1b7122e15680840bdb93",
+        "classification": "Docker image/system cleanup."
+      },
+      {
+        "path": ".github/workflows/check.yml",
+        "sha256": "0df7008895e1762abae28fbfc025e99f754c261edd55c6ae09d8ad8b970834b1",
+        "classification": "APT source-list cleanup."
+      },
+      {
+        "path": ".github/workflows/heavy.yml",
+        "sha256": "447d97cf76dfdba870237dc4511f008569acc2ced56ff80f59e208cabcc057aa",
+        "classification": "APT source-list cleanup."
+      },
+      {
+        "path": ".github/workflows/storybook.yml",
+        "sha256": "eabccc5a4a25a63094b8603b737512b2ef642273f1922cd6ed62e4921e7e6a39",
+        "classification": "Git worktree cleanup."
+      },
+      {
+        "path": "package.json",
+        "sha256": "4586f8438261d891334286381ab967abb91851923f59dce5c6c6f813e618dcbf",
+        "classification": "Docker cleanup and TypeScript backup cleanup scripts."
+      },
+      {
+        "path": "packages/tooling/library/ai-sync/src/validation.ts",
+        "sha256": "ea5d277f534a4d182ed1f667b42246dfd4d77aa3fcc4601fc01a728670937b47",
+        "classification": "Git worktree cleanup permission allowlist."
+      },
+      {
+        "path": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
+        "sha256": "713f1efb599c6a4c12577e09db958db91933968512ed83221e4d409c647e11ec",
+        "classification": "Permission allowlist fixture."
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts",
+        "sha256": "57eabda4481f1f19eddaf1a023e9ff397a34e64c59b7aafcdb667ef7074a12d9",
+        "classification": "Changeset/catalog retirement."
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
+        "sha256": "ccc6475cd3fc228bedf781f4bf536b590497a949f2fe7de46ec0b85ca2dd0cb2",
+        "classification": "Directory walker pruning."
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+        "sha256": "8f784eed1ce2a80a987cd707e618883b4ea2661166f53f4cb5c765231c40d2c6",
+        "classification": "Git worktree cleanup."
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofJob.ts",
+        "sha256": "21423f726a6a215e0a53db1ee067a2f8db89438f57d8fd06a30a338e1a1ea385",
+        "classification": "Proof-job retention cleanup."
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/internal/dispatch/Dispatch.manifest.ts",
+        "sha256": "ed751df4347fc42ff156fdf3811a47f6bc7269d6ba9ae87a7cae41d5ac7fa0d0",
+        "classification": "Harness ledger proposal pruning."
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/internal/quality/TestTypecheckCoverage.ts",
+        "sha256": "0012d4ca93538731b31315677c2f4d72d1b07a94cd457fe7bd16dd2f53b11cac",
+        "classification": "Directory walker pruning."
+      },
+      {
+        "path": "packages/tooling/tool/cli/test/ci-runner-security.test.ts",
+        "sha256": "c85a63928dc6ab783617998174f699e65b34055300af4a19aef84d1c75759fd9",
+        "classification": "CI cleanup source assertions."
+      },
+      {
+        "path": "packages/tooling/tool/cli/test/proof-job.test.ts",
+        "sha256": "1ba3b3523af5a067aac6ca6a2fc6a4226d06b0a6bc25e23bc687cdba2e3f4889",
+        "classification": "Proof-job retention fixture."
+      },
+      {
+        "path": "packages/tooling/tool/cli/test/test-typecheck-coverage.test.ts",
+        "sha256": "7579baca69ee02ded35e10b1b1e7189dc53ab1e8c44bc412705f8860d9c06bef",
+        "classification": "Directory walker fixture."
+      },
+      {
+        "path": "packages/tooling/tool/cli/test/yeet-sweep-plan.test.ts",
+        "sha256": "d554d38c815d8f9e1e22002ecb0f655c82687ccae7c58c5f935fc60da35fda3b",
+        "classification": "Git worktree cleanup fixtures."
+      },
+      {
+        "path": "standards/instrumentation-catalog/@beep/repo-cli.generated.jsonc",
+        "sha256": "672c0e2c98718a20dc5e1c0de9afac05fcb7b68ad5335fc3ba1e86c82929f742",
+        "classification": "Generated instrumentation entry for proposal pruning."
+      }
+    ],
+    "rootConfiguration": {
+      "path": "turbo.json",
+      "sha256": "f88966bbe887fd47442a92bc74152c4d4eab537989db1c56fefff4a2143fbc63",
+      "globalConfigurationEnabled": true,
+      "pruneIncludesGlobalFilesConfigured": false
+    }
+  },
+  "documentation": [
+    {
+      "path": "node_modules/turbo/docs/reference/prune.mdx",
+      "sha256": "759b4abb61a90cfe5b6d542fe2f6a7f163ca7936f495d1720231b0cbaabd805a",
+      "packageVersion": "2.11.10"
+    },
+    {
+      "path": "node_modules/turbo/docs/reference/configuration.mdx",
+      "sha256": "f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074",
+      "packageVersion": "2.11.10"
+    }
+  ],
+  "nativeEvidence": {
+    "path": "research/native-prune-global-controls.json",
+    "sha256": "55cfe329cfa08708c9fb1e1a0376facb79e82d49e6a8985c6e1982c648f238e2",
+    "driver": "research/native-prune-global-controls.py",
+    "driverSha256": "a61dc3bface802f0704e935050dc6aeb9689027f7ea8060390a3196323f95767",
+    "cases": 16,
+    "clients": {
+      "stable": {
+        "reportedVersion": "2.11.10",
+        "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+      },
+      "canary": {
+        "reportedVersion": "2.11.11-canary.1",
+        "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
+      }
+    },
+    "observed": "Both clients retain selected dependency source, exclude the unrelated workspace and produce a frozen-offline-installable lock. With the flag true, the declared global file appears in normal output and both Docker trees for legacy and global layouts. A direct fixture read succeeds only when the file is present; deleting it produces ENOENT. With the flag false, it is absent.",
+    "boundaries": "No Turbo task or lifecycle script ran. The direct Bun read is an input-presence control, not a pruned build. The network is isolated and the real repository is not mounted."
+  },
+  "driverRefusals": {
+    "path": "research/prune-driver-controls.json",
+    "sha256": "dc6f6657fc312560b95535a3c8941030895d5914bfd9262b853a11647f3335c1",
+    "cases": 3,
+    "originalReportUnchanged": true,
+    "noNewNativeCaptureDirectories": true
+  },
+  "reopenWhen": [
+    "A named tracked Turbo prune consumer is proposed.",
+    "Review every real global input, ignore/sensitive glob rule, output portability and downstream build requirements before copying files.",
+    "Run the real pruned install/build and missing-input cases on supported profiles and both exact clients before enabling the flag."
+  ],
+  "remaining": [
+    "The broad pruning and deployment feature families remain pending.",
+    "All real computation reviews, qualification, warming/value, actual observation windows and all nine whole-goal adoption criteria remain unproven."
+  ],
+  "reversal": "Revert this decision and evidence registration through Git while preserving reports. Runtime configuration is unchanged."
+}

@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-03T04:42:23.008Z
+Generated: 2026-11-03T05:10:38.349Z
 
 ## Scope
 
@@ -11,11 +11,11 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | Metric | Count |
 |---|---:|
 | packages | 185 |
-| cleanPackages | 168 |
+| cleanPackages | 167 |
 | packagesWithoutPublicSrcSurface | 2 |
-| packagesNeedingRemediation | 15 |
-| publicModules | 3605 |
-| publicExports | 25583 |
+| packagesNeedingRemediation | 16 |
+| publicModules | 3607 |
+| publicExports | 25595 |
 | openModules | 115 |
 | openExports | 94 |
 | missingExportExamples | 0 |
@@ -92,7 +92,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 34 | `@beep/xstate` | `packages/drivers/xstate` | clean | 6 | 26 | 0 | 0 |
 | 35 | `@beep/yaml` | `packages/foundation/modeling/yaml` | clean | 11 | 95 | 0 | 0 |
 | 36 | `@beep/acp` | `packages/drivers/acp` | clean | 15 | 1047 | 0 | 0 |
-| 37 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 103 | 0 | 0 |
+| 37 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | needs-remediation | 13 | 232 | 0 | 6 |
 | 38 | `@beep/anthropic` | `packages/drivers/anthropic` | clean | 6 | 31 | 0 | 0 |
 | 39 | `@beep/api-transport` | `packages/foundation/capability/api-transport` | clean | 3 | 9 | 0 | 0 |
 | 40 | `@beep/architecture-lab-config` | `packages/architecture-lab/config` | clean | 9 | 20 | 0 | 0 |
@@ -164,7 +164,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 106 | `@beep/pandoc-ast` | `packages/foundation/modeling/pandoc-ast` | clean | 6 | 202 | 0 | 0 |
 | 107 | `@beep/poppler` | `packages/drivers/poppler` | clean | 3 | 9 | 0 | 0 |
 | 108 | `@beep/rdf` | `packages/foundation/modeling/rdf` | clean | 38 | 303 | 0 | 0 |
-| 109 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 73 | 625 | 12 | 0 |
+| 109 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 75 | 642 | 12 | 0 |
 | 110 | `@beep/repo-workspaces` | `packages/tooling/library/repo-workspaces` | clean | 28 | 250 | 0 | 0 |
 | 111 | `@beep/sbom` | `packages/foundation/modeling/sbom` | clean | 9 | 75 | 0 | 0 |
 | 112 | `@beep/skill-contract` | `packages/foundation/modeling/skill-contract` | clean | 10 | 132 | 0 | 0 |
@@ -179,7 +179,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 121 | `@beep/oip-web` | `apps/oip-web` | clean | 31 | 87 | 0 | 0 |
 | 122 | `@beep/ontology` | `packages/foundation/modeling/ontology` | clean | 15 | 157 | 0 | 0 |
 | 123 | `@beep/ontology-domain` | `packages/ontology/domain` | clean | 6 | 40 | 0 | 0 |
-| 124 | `@beep/qa-capture` | `packages/tooling/library/qa-capture` | needs-remediation | 11 | 155 | 10 | 0 |
+| 124 | `@beep/qa-capture` | `packages/tooling/library/qa-capture` | needs-remediation | 12 | 174 | 11 | 0 |
 | 125 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | clean | 66 | 822 | 0 | 0 |
 | 126 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 10 | 98 | 0 | 3 |
 | 127 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | clean | 8 | 56 | 0 | 0 |
@@ -198,7 +198,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 140 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | clean | 9 | 123 | 0 | 0 |
 | 141 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | clean | 4 | 16 | 0 | 0 |
 | 142 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | clean | 23 | 217 | 0 | 0 |
-| 143 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 503 | 4722 | 46 | 35 |
+| 143 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 499 | 4569 | 45 | 29 |
 | 144 | `@beep/shared-tables` | `packages/shared/tables` | clean | 9 | 12 | 0 | 0 |
 | 145 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 30 | 58 | 0 | 0 |
 | 146 | `@beep/agents-tables` | `packages/agents/tables` | clean | 7 | 15 | 0 | 0 |
@@ -313,6 +313,18 @@ Path: `packages/tooling/test-kit/test-utils`
 Module findings:
 - `src/FastCheckRuns.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
+### @beep/ai-sync
+
+Path: `packages/tooling/library/ai-sync`
+
+Export findings:
+- `src/SkillsLock.schemas.ts:96` `LocalSkillLockEntry` (class) - 1 example import violation(s)
+- `src/SkillsLock.schemas.ts:579` `LocalMigrationRow` (class) - 1 example import violation(s)
+- `src/SkillsLock.schemas.ts:745` `SkillsLockMigrationPlan` (class) - 1 example import violation(s)
+- `src/SkillsLock.schemas.ts:813` `SkillsLockMigrationArtifacts` (class) - 1 example import violation(s)
+- `src/SkillsLock.schemas.ts:886` `SkillsLockWrittenFile` (class) - 1 example import violation(s)
+- `src/SkillsLock.schemas.ts:921` `SkillsLockWriteReceipt` (class) - 1 example import violation(s)
+
 ### @beep/duckdb
 
 Path: `packages/drivers/duckdb`
@@ -374,6 +386,7 @@ Module findings:
 - `src/ExtractionPlan.models.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/ExtractionPlanner.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/QaCapture.models.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/QaInventory.schemas.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/SessionStore.service.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Witness.service.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/index.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
@@ -451,7 +464,6 @@ Module findings:
 - `src/commands/Qa/Control.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/commands/Qa/Doctor.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/commands/Qa/Extract.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/commands/Qa/Inventory.schemas.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgeCheck.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgeIngest.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgeLint.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
@@ -498,12 +510,6 @@ Export findings:
 - `src/commands/Skills/Skills.render.ts:218` `renderSkillsLockMigrationPlanJson` (const) - 1 example import violation(s)
 - `src/commands/Skills/Skills.render.ts:291` `renderSkillsLockMigrationPlanSummary` (const) - 1 example import violation(s)
 - `src/commands/Skills/Skills.render.ts:344` `renderSkillsLockWriteReceiptJson` (const) - 1 example import violation(s)
-- `src/commands/Skills/SkillsLock.schemas.ts:96` `LocalSkillLockEntry` (class) - 1 example import violation(s)
-- `src/commands/Skills/SkillsLock.schemas.ts:579` `LocalMigrationRow` (class) - 1 example import violation(s)
-- `src/commands/Skills/SkillsLock.schemas.ts:745` `SkillsLockMigrationPlan` (class) - 1 example import violation(s)
-- `src/commands/Skills/SkillsLock.schemas.ts:813` `SkillsLockMigrationArtifacts` (class) - 1 example import violation(s)
-- `src/commands/Skills/SkillsLock.schemas.ts:886` `SkillsLockWrittenFile` (class) - 1 example import violation(s)
-- `src/commands/Skills/SkillsLock.schemas.ts:921` `SkillsLockWriteReceipt` (class) - 1 example import violation(s)
 - `src/commands/Worktree/Fleet.service.ts:259` `parseProcStatStartTime` (const) - 1 example import violation(s)
 
 ### @beep/db-admin

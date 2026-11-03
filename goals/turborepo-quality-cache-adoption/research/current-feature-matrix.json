@@ -535,7 +535,12 @@
       "correctnessCase": "Pruned install/build with global files and a deliberately missing input control.",
       "disposition": "review existing use and qualify applicable changes",
       "acceptanceStatus": "pending",
-      "availabilityTerm": "prune"
+      "availabilityTerm": "prune",
+      "partialPruneGlobalEvidence": {
+        "review": "prune-global-feature-review.json",
+        "native": "native-prune-global-controls.json",
+        "authority": "Synthetic dependency source/install/input-presence only. No real pruned build or broad feature acceptance; this row stays pending."
+      }
     },
     {
       "feature": "boundaries",
@@ -1041,14 +1046,15 @@
       "enabledInObservedRoot": false,
       "canaryDocumentationObserved": true,
       "prerequisites": [
-        "Exact-client regression evidence",
-        "Change only one experimental flag at a time"
+        "A named tracked Turbo prune consumer is proposed.",
+        "Review every real global input, ignore/sensitive glob rule, output portability and downstream build requirements before copying files.",
+        "Run the real pruned install/build and missing-input cases on supported profiles and both exact clients before enabling the flag."
       ],
-      "beepUseCase": "Review against the declared Bun workspace, trust controls and current root settings.",
+      "beepUseCase": "Only a named smaller deployment-input consumer justifies copying global files; none was found in the reviewed tracked source.",
       "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
-      "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
-      "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending",
+      "correctnessCase": "16 exact-client offline prune/install/input-presence cases and three driver refusals. Real pruned builds and sensitive/ignored-file rules remain unproven.",
+      "disposition": "Retain absent flag until a named consumer passes the real install/build and file-safety gates.",
+      "acceptanceStatus": "accepted-retain-current-absence",
       "nativeConfigurationObservation": {
         "report": "native-future-flag-availability.json",
         "stable": {
@@ -1060,7 +1066,13 @@
           "true": "dry-run-accepted"
         },
         "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
-      }
+      },
+      "review": {
+        "path": "research/prune-global-feature-review.json",
+        "sha256": "c1b55c24c7241e42860505af7b932cd03b8481d2d46ccef0719b636bbf22bfb9",
+        "scope": "One tracked-repository applicability decision and pinned synthetic Linux file-presence controls. No real deployment, build portability, sensitive/ignored-file safety, computation qualification or measured performance acceptance."
+      },
+      "nativePruneEvidence": "native-prune-global-controls.json"
     },
     {
       "feature": "futureFlag:strictTaskEntrypointSelection",
@@ -1155,8 +1167,8 @@
     "Feature rows carry current dispositions; reviewCounts records their totals. Native fixture evidence alone grants no real computation qualification."
   ],
   "reviewCounts": {
-    "pending": 26,
-    "acceptedRetainCurrentAbsence": 6,
+    "pending": 25,
+    "acceptedRetainCurrentAbsence": 7,
     "acceptedRetainCurrentDefault": 1,
     "acceptedNotApplicable": 1,
     "acceptedRetainCurrentSetting": 1
