@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "924e4b957da60f24febd53ca82a406dc3297935609bcae93f9efe4533604518a",
+  "planSha256": "a82f4f7a4dd56f4dfe33e522e7825825aab1c141c6ed71cdc5f22c5796353394",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -32,7 +32,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexInput.ts",
-          "sha256": "4c903c86616f41dcce43790b4b3787bd127aed6efd7d207de28e55d96bbec0ae"
+          "sha256": "10d3b1fca77f4b0571201fd291109f3d2024a98bd8f547ce76c5a5490f1e0f93"
         },
         {
           "path": "packages/law-practice/server/test/CitationRegexInput.test.ts",
@@ -41,6 +41,22 @@
         {
           "path": "packages/law-practice/use-cases/test/fixtures/eyecite/regex-input.json",
           "sha256": "dab2793dc0edefee741b317a2558da9c01d58021a53bcb29b4e18b87d34bf51d"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-02-regex-job-transport.md",
+          "sha256": "9cdb3e6c3545a3ff843fd16a2490f71c98ade3a298b749405db4b053aa4cdde9"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/RegexWorkerProtocol.ts",
+          "sha256": "275d31f34b0227837c101de25dfd88cea56cc061090a4fe80f781f405911d0f6"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/ByteFrames.ts",
+          "sha256": "18fefc4ad8be6f46efa5a7a51bbcd8ec1e9c10ef0aac0fa462d03f6574cd1fe6"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationRegexWorkerProtocol.test.ts",
+          "sha256": "a383dbd744b08656af05b6ecad430c381d2d9b8549612c69d846f469b9273883"
         }
       ],
       "workflowState": "audit",
@@ -433,7 +449,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlWorkerProtocol.ts",
-          "sha256": "c7b5a2821df7477446d2a378e64f110d2018981e7c1660e8b7baf93d7d4a2c2d"
+          "sha256": "a2a40e8f52f28fd6dcd7d9c181dead0df24f219e8e00e32eaabab466d4142a09"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlWorkerProgram.ts",

@@ -270,6 +270,15 @@ checked against the canonical public converter. All 54 focused component tests
 pass. Native matching encoding, complete-frame transport and the owned regex
 worker remain open; the preparer does not claim to solve those obligations.
 
+The [native regex job transport](./history/evidence/2026-11-02-regex-job-transport.md)
+now preserves both pattern/source carriers in a closed frame and composes their
+preparation behind one complete-frame preflight before payload allocation.
+Separate pattern/source budgets and captured whole-job timing are retained.
+The bounded LF reader is shared with the existing HTML transport; all 67 focused
+tests pass, including its protocol/supervisor regressions. Result/capture frames,
+the actual regex child/supervisor, matching encoding and native evaluation proof
+remain open.
+
 The [admitted named-cleaner replay](./history/evidence/2026-11-02-admitted-named-cleaners.md)
 now matches all 600 non-HTML named/official outcomes in the original 1,155-case
 cleaner corpus, including 599 result/identity observations and the invalid-name

@@ -11,7 +11,11 @@
         "goals/citation-extraction-engine/ops/probe-regex-input.py",
         "packages/law-practice/server/src/internal/Citation/RegexInput.ts",
         "packages/law-practice/server/test/CitationRegexInput.test.ts",
-        "packages/law-practice/use-cases/test/fixtures/eyecite/regex-input.json"
+        "packages/law-practice/use-cases/test/fixtures/eyecite/regex-input.json",
+        "goals/citation-extraction-engine/history/evidence/2026-11-02-regex-job-transport.md",
+        "packages/law-practice/server/src/internal/Citation/RegexWorkerProtocol.ts",
+        "packages/law-practice/server/src/internal/Citation/ByteFrames.ts",
+        "packages/law-practice/server/test/CitationRegexWorkerProtocol.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

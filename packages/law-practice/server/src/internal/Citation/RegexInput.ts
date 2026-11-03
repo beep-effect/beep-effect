@@ -23,6 +23,11 @@ import type { CitationPythonUnicodeFailure, CitationPythonUnicodeValue } from ".
 
 const $I = $LawPracticeServerId.create("internal/Citation/RegexInput");
 const Limits = S.toType(CitationEngineLimits);
+const Role = LiteralKit(["source", "pattern"]).pipe(
+  $I.annoteSchema("Role", {
+    description: "Captured server preparation purpose selecting the schema-owned text budget.",
+  })
+);
 // Existing adapter-owned input is measured before copying. Effective policy
 // produces the safety error even when the caller's existing value is too large.
 const NativeInput = S.Struct({ width: CitationPythonUnicodeStorage.fields.width, bytes: S.Uint8Array }).pipe(
@@ -183,8 +188,16 @@ const boundary = (text: string, offset: number) =>
  * no callable is request data. Returned operations have R = never.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(function* (policy: unknown) {
+export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(function* (
+  policy: unknown,
+  roleInput: unknown = "source"
+) {
   const limits = yield* S.decodeUnknownEffect(Limits)(policy).pipe(Effect.mapError(() => fail("invalid-policy")));
+  const role = yield* S.decodeUnknownEffect(Role)(roleInput).pipe(Effect.mapError(() => fail("invalid-policy")));
+  const sourceMaximum = role === "pattern" ? limits.patternUtf16 : limits.sourceUtf16;
+  const producedMaximum = role === "pattern" ? limits.patternUtf16 : limits.producedTextUtf16;
+  const sourceLimit = role === "pattern" ? "patternUtf16" : "sourceUtf16";
+  const producedLimit = role === "pattern" ? "patternUtf16" : "producedTextUtf16";
   const clock = yield* Clock.Clock;
   const deadline = Duration.min(limits.extractDeadline, limits.operationDeadline).pipe(
     Duration.toMillis,
@@ -194,9 +207,11 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
     ? "operationDeadline"
     : "extractDeadline";
   // The shared Unicode helper's timer is parameterized for this extract stage.
-  const unicode = yield* makeCitationPythonUnicode({ ...limits, cleanDeadline: deadline }).pipe(
-    Effect.mapError(() => fail("invalid-policy"))
-  );
+  const unicode = yield* makeCitationPythonUnicode({
+    ...limits,
+    producedTextUtf16: producedMaximum,
+    cleanDeadline: deadline,
+  }).pipe(Effect.mapError(() => fail("invalid-policy")));
   const finish = Effect.fn("Citation.finishRegexInput")(function* (
     value: CitationPythonUnicodeValue,
     expected: CitationRegexInputLayout
@@ -239,7 +254,7 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
         error.reason === "deadline-exceeded"
           ? safety(deadlineLimit)
           : error.reason === "limit-exceeded"
-            ? safety("producedTextUtf16")
+            ? safety(producedLimit)
             : fail("invalid-input")
       )
     );
@@ -248,8 +263,8 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
     beforeAllocate: (layout: CitationRegexInputLayout) => Effect.Effect<void, E>
   ) {
     const text = yield* S.decodeUnknownEffect(S.String)(input).pipe(Effect.mapError(() => fail("invalid-input")));
-    if (Str.length(text) > limits.sourceUtf16) return yield* safety("sourceUtf16");
-    if (Str.length(text) > limits.producedTextUtf16) return yield* safety("producedTextUtf16");
+    if (Str.length(text) > sourceMaximum) return yield* safety(sourceLimit);
+    if (Str.length(text) > producedMaximum) return yield* safety(producedLimit);
     let largest = 0;
     let length = 0;
     for (let index = 0; index < Str.length(text); ) {
@@ -282,7 +297,7 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
     if (byteLength % source.width !== 0) return yield* fail("invalid-input");
     if (byteLength > limits.processMessageBytes) return yield* safety("processMessageBytes");
     const length = byteLength / source.width;
-    if (length > limits.producedTextUtf16) return yield* safety("producedTextUtf16");
+    if (length > producedMaximum) return yield* safety(producedLimit);
     let largest = 0;
     let units = 0;
     let previous = -1;
@@ -294,7 +309,7 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
       if (high(previous) && low(point)) ambiguous = true;
       largest = Num.max(largest, point);
       units += unitsOf(point);
-      if (units > limits.producedTextUtf16) return yield* safety("producedTextUtf16");
+      if (units > producedMaximum) return yield* safety(producedLimit);
       previous = point;
     }
     if (source.width !== widthOf(largest)) return yield* fail("invalid-input");

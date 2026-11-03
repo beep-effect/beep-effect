@@ -10,16 +10,16 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
-import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { readCitationByteFrames } from "./ByteFrames.ts";
 import { CitationHtmlCompletionFailure } from "./HtmlCompletion.ts";
 import { CitationHtmlInput, CitationHtmlInputLayout } from "./HtmlInput.ts";
 import { CitationHtmlKernelFailure } from "./HtmlKernel.ts";
 import type * as PlatformError from "effect/PlatformError";
+import type * as Stream from "effect/Stream";
 
 const $I = $LawPracticeServerId.create("internal/Citation/HtmlWorkerProtocol");
 const Reason = LiteralKit([
@@ -332,38 +332,7 @@ export const readCitationHtmlFrames = Effect.fn("Citation.readHtmlFrames")(funct
   expected: 1 | 3,
   onFrame: (bytes: Uint8Array) => Effect.Effect<void, CitationHtmlWorkerFailure | CitationSafetyLimitExceeded>
 ) {
-  const limit = yield* S.decodeEffect(Limit)(maximum).pipe(Effect.mapError(invalid));
-  let buffer = new Uint8Array(0);
-  let used = 0;
-  let frames = 0;
-  const consumeByte = Effect.fnUntraced(function* (byte: number | undefined) {
-    if (frames >= expected) return yield* invalid();
-    if (byte !== 10) {
-      if (used + 1 >= limit) return yield* exceeded();
-      if (used === buffer.byteLength) {
-        const next = new Uint8Array(Num.min(limit - 1, Num.max(1, buffer.byteLength * 2)));
-        next.set(buffer);
-        buffer = next;
-      }
-      buffer[used] = byte ?? 0;
-      used++;
-      return;
-    }
-    const complete = buffer.slice(0, used);
-    yield* onFrame(complete);
-    frames++;
-    used = 0;
-    buffer = new Uint8Array(0);
-  });
-  yield* Stream.runForEach(
-    source.pipe(Stream.mapError(() => CitationHtmlWorkerFailure.make({ reason: "channel-failed" }))),
-    (chunk) =>
-      Effect.gen(function* () {
-        for (let index = 0; index < chunk.byteLength; index++) {
-          if (index % 4096 === 0) yield* Effect.yieldNow;
-          yield* consumeByte(chunk[index]);
-        }
-      })
+  yield* readCitationByteFrames(source, maximum, expected, onFrame, invalid, exceeded, () =>
+    CitationHtmlWorkerFailure.make({ reason: "channel-failed" })
   );
-  if (frames !== expected || used !== 0) return yield* invalid();
 });
