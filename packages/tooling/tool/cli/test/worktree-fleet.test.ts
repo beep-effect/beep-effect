@@ -416,8 +416,8 @@ it.effect(
       `#!/bin/sh
 case "$1 $2" in
   "worktree list") printf 'worktree %s\\0HEAD 0000000000000000000000000000000000000000\\0branch refs/heads/main\\0\\0' "$PWD" ;;
-  "worktree add") mkdir -p "$3/scripts"; cp "$PWD/scripts/regenerate-merge-driver.sh" "$3/scripts/" ;;
-  "fetch --quiet"|"submodule update"|"config --local") exit 0 ;;
+  "worktree add") mkdir -p "$5/scripts"; cp "$PWD/scripts/regenerate-merge-driver.sh" "$5/scripts/" ;;
+  "fetch origin"|"submodule update"|"config merge.regenerate."*) exit 0 ;;
   "rev-parse --verify") printf '0000000000000000000000000000000000000000\\n' ;;
   *) exit 91 ;;
 esac

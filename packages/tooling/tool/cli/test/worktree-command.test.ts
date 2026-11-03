@@ -1,15 +1,15 @@
 import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
-import { Git, WorktreeEntry } from "@beep/git/Git";
+import { Git, GitCommandError, WorktreeEntry } from "@beep/git/Git";
 import {
   addWorktree,
   branchDeleteCommand,
   CLAUDE_WORKTREES_RELATIVE_ROOT,
   copyLocalFiles,
   defaultWorktreeBranch,
+  mergedPullRequestsForBranch,
   renderWorktreeRemovalReceipt,
   resolveWorktreeContext,
   restoreBeepMaterial,
-  runWorktreeGitCapture,
   WORKTREE_LOCAL_FILE_ENTRIES,
   WorktreeArchivePlan,
   WorktreeCommandError,
@@ -29,15 +29,11 @@ import {
   WorktreeResidueManifest,
   WorktreeSessionMarker,
   WorktreeUnpushedInspection,
-  worktreeAddArgs,
   worktreeArchivePlan,
-  worktreeArchiveRefArgs,
-  worktreeBranchDeleteArgs,
   worktreeCommand,
   worktreeDoctorEntryLines,
   worktreeDoctorReportForContext,
   worktreeListEntriesFromGit,
-  worktreeRemoveArgs,
   worktreeResidueReason,
 } from "@beep/repo-cli/commands/Worktree";
 import {
@@ -46,6 +42,7 @@ import {
   processTableWithLineage,
   procProcessTable,
 } from "@beep/repo-cli/test/RepoRun";
+import { GithubTransportFetch } from "@beep/repo-cli/test/SharedInternals";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { it } from "@beep/test-runner";
 import { A, O, P, Str } from "@beep/utils";
@@ -72,8 +69,11 @@ import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as TestConsole from "effect/testing/TestConsole";
+import { githubFetch, reply } from "./support/GithubFetch.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
+import { restPullRequest } from "./support/YeetGithub.ts";
 import type { WorktreeUpstreamState, WorktreeUpstreamVerdict } from "@beep/repo-cli/commands/Worktree";
+import type { GithubFetchCall } from "./support/GithubFetch.ts";
 
 // `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
 const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
@@ -230,19 +230,44 @@ const withScratchRepo = <A, E, R>(use: (repoRoot: string) => Effect.Effect<A, E,
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
-it.layer(Layer.mergeAll(WorktreeMergedPullRequestProbeLive, NodeCrypto.layer), { timeout: "1 second" })(
+// The probe builds its own client from `gh auth token` and `GH_REPO`; the transport fetch answers the REST reads.
+const ghAuthToken = ScriptedSpawner.make((command, args) =>
+  A.join([command, ...args], " ") === "gh auth token"
+    ? { stdout: "ghs_fixture\n" }
+    : { exit: 1, stderr: "the merged pull-request probe spawns only gh auth token" }
+);
+const withFakeGithub =
+  (respond: (call: GithubFetchCall) => unknown) =>
+  <A, E, R>(program: Effect.Effect<A, E, R>) =>
+    program.pipe(
+      Effect.provideService(GithubTransportFetch, O.some(githubFetch(respond).fetch)),
+      provideSpawner(ghAuthToken),
+      Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ GH_REPO: "beep/repo" }))
+    );
+
+const closedPullRequest = (number: number, sha: string, merged: boolean) =>
+  restPullRequest({
+    number,
+    state: "closed",
+    merged,
+    merged_at: merged ? "2026-10-06T11:00:00Z" : null,
+    head: { ref: "reused-branch", sha },
+  });
+
+it.layer(Layer.mergeAll(WorktreeMergedPullRequestProbeLive, NodeCrypto.layer), { timeout: "5 seconds" })(
   "merged pull-request probe",
   (it) => {
     it.effect("finds an older exact head when a branch name was reused", () => {
       const head = GitObjectId.make("1111111111111111111111111111111111111111");
-      const output =
-        '[{"number":1100,"headRefOid":"2222222222222222222222222222222222222222"},{"number":1098,"headRefOid":"1111111111111111111111111111111111111111"}]';
-      // ScriptedSpawner scripts standard commands only, so every spawn reaching the script is one.
-      const spawner = ScriptedSpawner.make((_command, args) => {
-        expect(args).toContain("100");
-        expect(args).toContain("reused-branch");
-        return { stdout: output };
-      });
+      const paths: Array<string> = [];
+      const respond = (call: GithubFetchCall) => {
+        paths.push(call.path);
+        return [
+          closedPullRequest(1101, "4444444444444444444444444444444444444444", false),
+          closedPullRequest(1100, "2222222222222222222222222222222222222222", true),
+          closedPullRequest(1098, "1111111111111111111111111111111111111111", true),
+        ];
+      };
       return Effect.gen(function* () {
         const probe = yield* WorktreeMergedPullRequestProbe;
         expect(yield* probe.mergedAtHead("/repo", "reused-branch", head)).toEqual(O.some(PosInt.make(1098)));
@@ -250,55 +275,37 @@ it.layer(Layer.mergeAll(WorktreeMergedPullRequestProbeLive, NodeCrypto.layer), {
           yield* probe.mergedAtHead(
             "/repo",
             "reused-branch",
-            GitObjectId.make("3333333333333333333333333333333333333333")
+            GitObjectId.make("4444444444444444444444444444444444444444")
           )
         ).toEqual(O.none());
-      }).pipe(provideSpawner(spawner));
+        expect(paths[0]).toContain("/repos/beep/repo/pulls?");
+        expect(paths[0]).toContain("head=beep%3Areused-branch");
+        expect(paths[0]).toContain("state=closed");
+      }).pipe(withFakeGithub(respond));
     });
+
+    it.effect("answers none when GitHub refuses the listing or a row does not decode", () =>
+      Effect.gen(function* () {
+        const refused = yield* mergedPullRequestsForBranch("/repo", "reused-branch").pipe(
+          withFakeGithub(() => reply(404)({ message: "Not Found" }))
+        );
+        expect(refused).toEqual(O.none());
+        const undecodable = yield* mergedPullRequestsForBranch("/repo", "reused-branch").pipe(
+          withFakeGithub(() => [closedPullRequest(0, "1111111111111111111111111111111111111111", true)])
+        );
+        expect(undecodable).toEqual(O.none());
+        const unknownRepository = yield* mergedPullRequestsForBranch("/repo", "reused-branch").pipe(
+          Effect.provideService(GithubTransportFetch, O.some(githubFetch(() => []).fetch)),
+          provideSpawner(ghAuthToken),
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ GH_REPO: "not a slug" }))
+        );
+        expect(unknownRepository).toEqual(O.none());
+      })
+    );
   }
 );
 
 describe("worktree argument builders", () => {
-  it("builds a worktree add argv with a new branch", () => {
-    expect(worktreeAddArgs("/repo-worktrees/feature-x", "feat/feature-x")).toEqual([
-      "worktree",
-      "add",
-      "/repo-worktrees/feature-x",
-      "-b",
-      "feat/feature-x",
-    ]);
-  });
-
-  it("builds git removal argv for plain and preservation-complete removal", () => {
-    expect(worktreeRemoveArgs("/repo-worktrees/feature-x", false)).toEqual([
-      "worktree",
-      "remove",
-      "/repo-worktrees/feature-x",
-    ]);
-    expect(worktreeRemoveArgs("/repo-worktrees/feature-x", true)).toEqual([
-      "worktree",
-      "remove",
-      "--force",
-      "/repo-worktrees/feature-x",
-    ]);
-  });
-
-  it("builds create-only archive-ref and branch-delete argv", () => {
-    const head = GitObjectId.make("1ed08f66df016a18c6d7d56bd97aa778912cb37b");
-    expect(worktreeArchiveRefArgs("refs/archive/worktrees/feature-x/20260902-123456", head)).toEqual([
-      "update-ref",
-      "refs/archive/worktrees/feature-x/20260902-123456",
-      head,
-      "0000000000000000000000000000000000000000",
-    ]);
-    expect(worktreeBranchDeleteArgs("feat/feature-x", head)).toEqual([
-      "update-ref",
-      "-d",
-      "refs/heads/feat/feature-x",
-      head,
-    ]);
-  });
-
   it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect("builds deterministic residue paths and reasons", () =>
       Effect.gen(function* () {
@@ -1014,22 +1021,23 @@ describe("worktree git operations", () => {
     it.effect("adapts Git spawn failures and non-zero exits", () =>
       withScratchRepo((repoRoot) =>
         Effect.gen(function* () {
-          const nonZero = yield* runWorktreeGitCapture(
-            repoRoot,
-            ["rev-parse", "--verify", "refs/heads/does-not-exist"],
-            "Failed to resolve the branch."
-          ).pipe(Effect.flip);
-          const spawnFailure = yield* runWorktreeGitCapture(
-            `${repoRoot}/does-not-exist`,
-            ["status", "--short"],
-            "Failed to inspect the worktree."
-          ).pipe(Effect.flip);
+          const context = yield* resolveWorktreeContext(repoRoot);
+          const nonZero = yield* addWorktree(context, "no-base", "feat/no-base", "refs/heads/does-not-exist").pipe(
+            Effect.flip
+          );
+          const spawnFailure = yield* worktreeDoctorReportForContext({
+            ...context,
+            currentRoot: `${repoRoot}/does-not-exist`,
+          }).pipe(Effect.flip);
 
-          expect(nonZero.message).toContain("Failed to resolve the branch. (exit ");
-          expect(nonZero.command).toBe("git rev-parse --verify refs/heads/does-not-exist");
-          expect(nonZero.exitCode).toBeGreaterThan(0);
-          expect(spawnFailure.message).toBe("Failed to inspect the worktree.");
-          expect(spawnFailure.command).toBe("git status --short");
+          expect(nonZero).toMatchObject({
+            _tag: "WorktreeCommandError",
+            message: "Failed to resolve the worktree base. (exit 128).",
+            command: expect.stringContaining("rev-parse --verify --end-of-options refs/heads/does-not-exist"),
+            exitCode: 128,
+          });
+          expect(spawnFailure.message).toBe("Failed to compute prunable worktrees.");
+          expect(spawnFailure.command).toBe("git worktree prune --dry-run");
           expect(spawnFailure.exitCode).toBeUndefined();
         })
       )
@@ -1582,6 +1590,80 @@ describe("worktree git operations", () => {
   });
 
   it.layer(testLayer, { timeout: "60 seconds" })((it) => {
+    // One kit member fails; every other member is the real `Git`, so the archive flow runs as built.
+    const kitFailures = [
+      {
+        name: "archive-ref-refused",
+        member: "updateRef",
+        error: GitCommandError.make({ kind: "refused", args: [], cwd: "/", stderr: "", detail: "bad refname" }),
+        step: "create-archive-ref",
+        message: "was not accepted by git check-ref-format",
+      },
+      {
+        name: "archive-ref-lost",
+        member: "updateRef",
+        error: GitCommandError.make({
+          kind: "failed",
+          args: [],
+          cwd: "/",
+          exitCode: 128,
+          stderr: "reference already exists",
+        }),
+        step: "create-archive-ref",
+        message: "Could not create archive ref",
+      },
+      {
+        name: "count-unparseable",
+        member: "revListCount",
+        error: GitCommandError.make({
+          kind: "failed",
+          args: [],
+          cwd: "/",
+          stderr: "",
+          detail: "unparseable rev-list count output: x",
+        }),
+        step: "inspect-origin-main",
+        message: "Git returned an invalid commit count.",
+      },
+    ] as const;
+    for (const failure of kitFailures) {
+      it.effect(
+        `folds a kit ${failure.member} failure onto the ${failure.step} preservation error (${failure.name})`,
+        () =>
+          withScratchRepo((repoRoot) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const context = yield* resolveWorktreeContext(repoRoot);
+              const targetPath = yield* addWorktree(context, failure.name, defaultWorktreeBranch(failure.name));
+              yield* fs.writeFileString(path.join(targetPath, "dirty.txt"), "dirty\n");
+              const real = yield* Git;
+              const failing = Git.makeTest({ ...real, [failure.member]: () => Effect.fail(failure.error) });
+              const failed = yield* removeArchivedLane(context, failure.name, targetPath).pipe(
+                Effect.provideServiceEffect(
+                  WorktreeRemovalService,
+                  WorktreeRemovalServiceLive.pipe(
+                    Layer.fresh,
+                    Layer.provide(
+                      Layer.merge(Layer.succeed(Git, failing), Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))
+                    ),
+                    Layer.build,
+                    Effect.map(Context.get(WorktreeRemovalService))
+                  )
+                ),
+                Effect.flip
+              );
+              expect(failed).toMatchObject({ _tag: "WorktreePreservationError", step: failure.step });
+              expect(failed.message).toContain(failure.message);
+              // The fenced checkout is renamed back, so nothing was lost.
+              expect(yield* fs.readFileString(path.join(targetPath, "dirty.txt"))).toBe("dirty\n");
+            })
+          )
+      );
+    }
+  });
+
+  it.layer(testLayer, { timeout: "60 seconds" })((it) => {
     for (const failure of ["second-entry", "manifest"]) {
       it.effect(`restores every material entry after a ${failure} failure without a manifest`, () =>
         withScratchRepo((repoRoot) =>
@@ -1644,9 +1726,7 @@ describe("worktree git operations", () => {
             expect(failed.message).toContain(failure === "manifest" ? "Could not write" : "Could not move");
             expect(yield* fs.readLink(path.join(targetPath, ".beep", "cache"))).toBe("../missing-cache");
             expect(yield* fs.readFileString(path.join(targetPath, ".beep", "notes.txt"))).toBe("notes\n");
-            expect(yield* runWorktreeGitCapture(targetPath, ["rev-parse", "--show-toplevel"], "restored")).toContain(
-              targetPath
-            );
+            expect(yield* runGitText(targetPath, ["rev-parse", "--show-toplevel"])).toContain(targetPath);
             const residue = yield* fs.readDirectory(path.join(context.worktreesRoot, "test-residue"), {
               recursive: true,
             });

@@ -42,7 +42,8 @@
     "research/reviewer-ci-github-differential-w3.json",
     "research/review-thread-differential-w4.json",
     "research/yeet-gh-seams-differential-w6.json",
-    "research/w7-site-census-2026-11-03.md"
+    "research/w7-site-census-2026-11-03.md",
+    "research/worktree-differential-w7.json"
   ],
   "agentLaunchers": [
     {
@@ -226,6 +227,30 @@
     {
       "path": "ops/frozen-w6/Merge.old.ts",
       "purpose": "Frozen pre-W6 merge phase of mergePr (the gh pr merge --squash --match-head-commit call and its bounded MERGED confirmation, lane base 641180ade6), lifted below the reviewer gate and replayed by ops/yeet-gh-seams-differential-w6.ts."
+    },
+    {
+      "path": "ops/worktree-differential-w7.ts",
+      "purpose": "W7c differential: the frozen pre-W7 Worktree bodies (ops/frozen-w7c: the removal service's preservation probes, archive-ref create, common-dir, status, submodule and residue-patch reads, worktree remove and prune, the branch compare-and-swap delete and merge-driver config writes; the worktree new and doctor steps; the reap head, idle and status probes; the terminal-lane layout and branch facts; the gh pr list reads) compared with their @beep/git and @beep/github replacements over scratch repositories (a bare origin, linked, dirty, detached, pruned-upstream and submodule worktrees, a dangling and a missing origin/HEAD, a non-repository) and one fixture pull-request table served to a scripted gh and a REST fetch."
+    },
+    {
+      "path": "ops/frozen-w7c/GitRunners.old.ts",
+      "purpose": "Frozen pre-W7 runGitOutput and runGitRawOutput with their private capture helpers (lane base 8602b24203), inlined because the runner retirement deletes them; used by the other frozen-w7c bodies."
+    },
+    {
+      "path": "ops/frozen-w7c/WorktreeService.old.ts",
+      "purpose": "Frozen pre-W7 Worktree.service git and gh bodies (lane base 8602b24203), replayed by ops/worktree-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7c/WorktreeCommand.old.ts",
+      "purpose": "Frozen pre-W7 Worktree.command git steps (lane base 8602b24203), replayed by ops/worktree-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7c/Reap.old.ts",
+      "purpose": "Frozen pre-W7 Reap.service probe and gh pr list bodies (lane base 8602b24203), replayed by ops/worktree-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7c/ResidueTerminalLaneLive.old.ts",
+      "purpose": "Frozen pre-W7 ResidueTerminalLaneLive git facts (lane base 8602b24203), replayed by ops/worktree-differential-w7.ts."
     }
   ]
 }

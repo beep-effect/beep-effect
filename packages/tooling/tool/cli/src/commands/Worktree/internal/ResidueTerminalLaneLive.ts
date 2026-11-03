@@ -1,5 +1,5 @@
 /**
- * Live terminal-lane probe for residue reap: git, `gh`, `/proc` and the session ledger.
+ * Live terminal-lane probe for residue reap: git, GitHub, `/proc` and the session ledger.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -20,12 +20,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import {
-  invokerAncestryPids,
-  isRegisteredWorktree,
-  runRepoCommandCapture,
-  scanProcessAttachments,
-} from "../../../internal/repo-run/index.ts";
+import { invokerAncestryPids, isRegisteredWorktree, scanProcessAttachments } from "../../../internal/repo-run/index.ts";
 import { openSessionRows } from "../../Session/Session.schemas.ts";
 import { layerSessionLedgerLive, SessionLedger } from "../../Session/SessionLedger.service.ts";
 import { detectPrRepository } from "../../Yeet/internal/ProvenanceFooter.ts";
@@ -75,33 +70,17 @@ type ProbeRequirements =
   | Git
   | SessionLedger;
 
-// Trimmed stdout of a clean, untruncated zero-exit git run; a NoSuchElementError otherwise.
-const gitOutput = Effect.fnUntraced(function* (cwd: string, args: ReadonlyArray<string>) {
-  const capture = yield* runRepoCommandCapture("git", args, cwd);
-  return yield* Effect.fromOption(
-    O.liftPredicate(capture, (result) => N.Equivalence(result.exitCode, 0) && !result.truncated)
-  ).pipe(Effect.map((result) => Str.trim(result.output)));
-});
-
 // A failed check ends the proof the way a missing fact does.
 const holds = (condition: boolean) => (condition ? Effect.void : Effect.fromOption(O.none()));
 
 // The checkout's toplevel, git dir and common dir; only a registered linked worktree passes.
 const linkedLayout = Effect.fnUntraced(function* (checkout: string) {
   const fs = yield* FileSystem.FileSystem;
-  const lines = Str.split(
-    yield* gitOutput(checkout, [
-      "rev-parse",
-      "--path-format=absolute",
-      "--show-toplevel",
-      "--git-dir",
-      "--git-common-dir",
-    ]),
-    "\n"
-  );
-  const toplevel = yield* fs.realPath(yield* Effect.fromOption(A.get(lines, 0)));
-  const gitDir = yield* fs.realPath(yield* Effect.fromOption(A.get(lines, 1)));
-  const commonDir = yield* fs.realPath(yield* Effect.fromOption(A.get(lines, 2)));
+  const git = yield* Git;
+  // Any git failure ends the proof, as a missing fact does.
+  const toplevel = yield* fs.realPath(yield* git.repoRoot(checkout));
+  const gitDir = yield* fs.realPath(yield* git.gitDir(checkout));
+  const commonDir = yield* fs.realPath(yield* git.commonDir(checkout));
   yield* holds(Str.Equivalence(toplevel, checkout) && !Str.Equivalence(gitDir, commonDir));
   yield* holds(O.getOrElse(yield* isRegisteredWorktree(checkout, checkout), thunkFalse));
   return commonDir;
@@ -141,17 +120,13 @@ const proveTerminalLane = Effect.fnUntraced(function* (
   const fs = yield* FileSystem.FileSystem;
   const checkout = yield* fs.realPath(checkoutRoot);
   const commonDir = yield* linkedLayout(checkout);
-  const branch = yield* gitOutput(checkout, ["symbolic-ref", "--quiet", "--short", "HEAD"]);
-  const head = yield* decodeGitObjectId(yield* gitOutput(checkout, ["rev-parse", "--verify", "HEAD"]));
+  // A detached HEAD has no branch: `None` ends the proof as symbolic-ref's failure did.
+  const git = yield* Git;
+  const branch = yield* Effect.fromOption(yield* git.currentBranch(checkout));
+  const head = yield* decodeGitObjectId(yield* git.revParse(checkout, "HEAD"));
   yield* holds(
-    Str.isEmpty(
-      yield* gitOutput(checkout, [
-        "--no-optional-locks",
-        "status",
-        "--porcelain",
-        "--untracked-files=all",
-        "--ignore-submodules=none",
-      ])
+    A.isReadonlyArrayEmpty(
+      yield* git.status(checkout, { noOptionalLocks: true, untrackedFiles: "all", ignoreSubmodules: "none" })
     )
   );
   yield* holds(N.Equivalence(yield* liveProcessCount(checkout), 0));
@@ -186,9 +161,10 @@ const proveTerminalLane = Effect.fnUntraced(function* (
  * the primary clone) on a branch, its tree is clean, no process outside the
  * invoking CLI's ancestry has its cwd inside it, no open session-ledger row
  * names it, and its branch has a merged pull request whose head equals HEAD
- * or descends from it. Every git, `/proc`, ledger or `gh` failure answers
- * `None`. `pullRequests` defaults to
- * `gh pr list --head <branch> --state merged`; tests substitute a fixture source.
+ * or descends from it. Every git, `/proc`, ledger or GitHub failure answers
+ * `None`. `pullRequests` defaults to {@link mergedPullRequestsForBranch} (the
+ * branch's merged pull requests through the GitHub REST API); tests substitute
+ * a fixture source.
  *
  * **Example** (Build the probe effect)
  *
@@ -216,7 +192,7 @@ export const makeResidueTerminalLaneProbe = Effect.fnUntraced(function* (
 });
 
 /**
- * Live terminal-lane probe layer over git, `gh`, `/proc` and the live session ledger.
+ * Live terminal-lane probe layer over git, GitHub, `/proc` and the live session ledger.
  *
  * **Details**
  *

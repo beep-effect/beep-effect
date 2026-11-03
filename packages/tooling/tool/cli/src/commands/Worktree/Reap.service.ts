@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import { GitObjectId } from "@beep/schema/Conformance";
 import * as A from "@beep/utils/Array";
@@ -26,8 +27,8 @@ import { classifyFleetLiveness } from "./Fleet.service.ts";
 import { WorktreeReapCandidate, WorktreeReapClass, WorktreeReapReport } from "./Reap.schemas.ts";
 import { WorktreeCommandError } from "./Worktree.errors.ts";
 import { FleetLivenessReadings, WorktreeRemovalRequest } from "./Worktree.schemas.ts";
-import { listRepositoryWorktrees, WorktreeRemovalService } from "./Worktree.service.ts";
-import type { Git } from "@beep/git/Git";
+import { branchPullRequests, listRepositoryWorktrees, WorktreeRemovalService } from "./Worktree.service.ts";
+import type { GitShape } from "@beep/git/Git";
 import type { DomainError } from "@beep/repo-utils";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -50,6 +51,14 @@ type ReapCommandRunner = (
   cwd: string
 ) => Effect.Effect<ProbeCapture, DomainError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>;
 
+type ReapPullRequestState = "merged" | "open";
+
+type ReapPullRequestLister = (
+  cwd: string,
+  branch: string,
+  state: ReapPullRequestState
+) => Effect.Effect<O.Option<ReadonlyArray<GhPr>>, never, ChildProcessSpawner.ChildProcessSpawner>;
+
 type ReapLivenessRequest = {
   readonly targetPath: string;
   readonly idleHours: O.Option<number>;
@@ -64,16 +73,19 @@ type WorktreeReapRunOptions = {
   readonly idleHours?: number;
   readonly nowMillis?: number;
   readonly probeLiveness?: ReapLivenessProber;
+  readonly listPullRequests?: ReapPullRequestLister;
   readonly runCommand?: ReapCommandRunner;
   readonly startFrom?: string;
 };
 
 type AssessContext = {
   readonly fs: FileSystem.FileSystem;
+  readonly git: GitShape;
   readonly idleThreshold: Duration.Duration;
   readonly nowMillis: number;
   readonly path: Path.Path;
   readonly prober: ReapLivenessProber;
+  readonly pullRequests: ReapPullRequestLister;
   readonly runner: ReapCommandRunner;
 };
 
@@ -110,15 +122,53 @@ type CandidateAssessment = {
   readonly authorizedHead: O.Option<GitObjectId>;
 };
 
-class GhPr extends S.Opaque<GhPr, { readonly brand: unique symbol }>()(
+/**
+ * The pull-request fields reap reads: the number and the head sha GitHub recorded.
+ *
+ * **Example** (Describe a merged pull request at a head)
+ *
+ * ```ts
+ * import { WorktreeReapPullRequest } from "@beep/repo-cli/commands/Worktree"
+ * import { GitObjectId } from "@beep/schema/Conformance"
+ *
+ * const row = WorktreeReapPullRequest.make({
+ *   number: 101,
+ *   headRefOid: GitObjectId.make("1ed08f66df016a18c6d7d56bd97aa778912cb37b"),
+ * })
+ * console.log(row.number) // 101
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class WorktreeReapPullRequest extends S.Opaque<WorktreeReapPullRequest, { readonly brand: unique symbol }>()(
   S.Struct({ number: S.Int, headRefOid: GitObjectId }).pipe(
-    $I.annoteSchema("GhPr", {
-      description: "Minimal pull-request row decoded from gh pr list JSON output.",
+    $I.annoteSchema("WorktreeReapPullRequest", {
+      description: "The pull-request number and recorded head sha a worktree reap classification reads.",
     })
   )
 ) {}
 
-const decodeGhPrList = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhPr)));
+type GhPr = WorktreeReapPullRequest;
+
+const decodeGhPr = S.decodeUnknownEffect(WorktreeReapPullRequest);
+
+// `gh pr list --state <s> --limit 1` read the newest row only; GitHub lists newest first and
+// has no `merged` state, so merged rows are the closed ones that merged.
+const githubPullRequests: ReapPullRequestLister = Effect.fnUntraced(function* (cwd, branch, state) {
+  const listed = yield* branchPullRequests(cwd, branch, state === "open" ? "open" : "closed");
+  return yield* O.match(listed, {
+    onNone: () => Effect.succeedNone,
+    onSome: (rows) =>
+      Effect.forEach(
+        A.take(
+          A.filter(rows, (row) => state === "open" || row.merged),
+          1
+        ),
+        (row) => decodeGhPr({ number: row.number, headRefOid: row.headSha })
+      ).pipe(Effect.option),
+  });
+});
 
 const successfulOutput = Effect.fn("WorktreeReap.successfulOutput")(function* (
   runner: ReapCommandRunner,
@@ -132,36 +182,14 @@ const successfulOutput = Effect.fn("WorktreeReap.successfulOutput")(function* (
   );
 });
 
-const ghPrList = Effect.fn("WorktreeReap.ghPrList")(function* (
-  runner: ReapCommandRunner,
-  cwd: string,
-  branch: string,
-  state: "merged" | "open"
-): Effect.fn.Return<
-  O.Option<ReadonlyArray<GhPr>>,
-  never,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-> {
-  const output = yield* successfulOutput(
-    runner,
-    "gh",
-    ["pr", "list", "--head", branch, "--state", state, "--json", "number,headRefOid", "--limit", "1"],
-    cwd
-  );
-  if (O.isNone(output)) {
-    return O.none();
-  }
-  return yield* decodeGhPrList(output.value).pipe(Effect.option);
-});
-
 const classifyPr = Effect.fn("WorktreeReap.classifyPr")(function* (
-  runner: ReapCommandRunner,
+  ctx: AssessContext,
   cwd: string,
   branch: string
-): Effect.fn.Return<PrClassification, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<PrClassification, never, ChildProcessSpawner.ChildProcessSpawner> {
   // Open must win over merged: a revived branch can carry an old merged PR AND a live
   // open PR, and retiring it would delete in-flight work along with its branch.
-  const open = yield* ghPrList(runner, cwd, branch, "open");
+  const open = yield* ctx.pullRequests(cwd, branch, "open");
   if (O.isNone(open)) {
     return { reapClass: "unknown", prNumber: O.none(), failed: true, reusedBranch: false, mergedHead: O.none() };
   }
@@ -175,7 +203,7 @@ const classifyPr = Effect.fn("WorktreeReap.classifyPr")(function* (
       mergedHead: O.none(),
     };
   }
-  const merged = yield* ghPrList(runner, cwd, branch, "merged");
+  const merged = yield* ctx.pullRequests(cwd, branch, "merged");
   if (O.isNone(merged)) {
     return { reapClass: "unknown", prNumber: O.none(), failed: true, reusedBranch: false, mergedHead: O.none() };
   }
@@ -190,7 +218,7 @@ const classifyPr = Effect.fn("WorktreeReap.classifyPr")(function* (
   // the residual instant after this probe is fenced inside the removal service, which
   // atomically renames the checkout aside before capturing its archive and deletes
   // the branch ref with an atomic compare-and-swap on the authorized object id.
-  const head = yield* successfulOutput(runner, "git", ["rev-parse", "HEAD"], cwd);
+  const head = yield* ctx.git.revParse(cwd, "HEAD").pipe(Effect.option);
   return {
     reapClass: "merged-pr",
     prNumber: O.some(mergedPr.value.number),
@@ -201,25 +229,20 @@ const classifyPr = Effect.fn("WorktreeReap.classifyPr")(function* (
 });
 
 const readIdleHours = Effect.fn("WorktreeReap.readIdleHours")(function* (
-  runner: ReapCommandRunner,
+  git: GitShape,
   fs: FileSystem.FileSystem,
   path: Path.Path,
   entry: WorktreeListEntry,
   nowMillis: number
-): Effect.fn.Return<IdleReading, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  const commitOutput = yield* successfulOutput(runner, "git", ["log", "-1", "--format=%ct", "HEAD"], entry.path);
-  const headPathOutput = yield* successfulOutput(
-    runner,
-    "git",
-    ["rev-parse", "--path-format=absolute", "--git-path", "HEAD"],
-    entry.path
-  );
-  if (O.isNone(commitOutput) || O.isNone(headPathOutput)) {
+): Effect.fn.Return<IdleReading, never, never> {
+  const commits = yield* git.log(entry.path, { limit: 1, omitPaths: true }).pipe(Effect.option);
+  const headPathOutput = yield* git.gitDir(entry.path, { path: "HEAD" }).pipe(Effect.option);
+  if (O.isNone(commits) || O.isNone(headPathOutput)) {
     return { hours: O.none(), failed: true };
   }
-  const commitSeconds = N.parse(Str.trim(commitOutput.value));
+  const commitMillis = O.map(A.head(commits.value), (commit) => DateTime.toEpochMillis(commit.committedAt));
   const headPath = Str.trim(headPathOutput.value);
-  if (O.isNone(commitSeconds) || Str.isEmpty(headPath)) {
+  if (O.isNone(commitMillis) || Str.isEmpty(headPath)) {
     return { hours: O.none(), failed: true };
   }
   const headInfo = yield* fs.stat(path.resolve(headPath)).pipe(Effect.option);
@@ -232,7 +255,7 @@ const readIdleHours = Effect.fn("WorktreeReap.readIdleHours")(function* (
   if (O.isNone(headMtime)) {
     return { hours: O.none(), failed: true };
   }
-  const newestMillis = N.max(commitSeconds.value * 1_000, headMtime.value);
+  const newestMillis = N.max(commitMillis.value, headMtime.value);
   const age = Duration.millis(N.max(0, nowMillis - newestMillis));
   return { hours: O.some(age.pipe(Duration.toHours)), failed: false };
 });
@@ -339,7 +362,7 @@ const probeEvidence = Effect.fnUntraced(function* (
   entry: WorktreeListEntry,
   branch: string
 ): Effect.fn.Return<EvidenceProbe, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  const pr = yield* classifyPr(ctx.runner, entry.path, branch);
+  const pr = yield* classifyPr(ctx, entry.path, branch);
   if (pr.failed) {
     return {
       _tag: "skipped",
@@ -350,12 +373,9 @@ const probeEvidence = Effect.fnUntraced(function* (
       pr: O.none(),
     };
   }
-  const status = yield* successfulOutput(
-    ctx.runner,
-    "git",
-    ["status", "--porcelain", "--untracked-files=all", "--ignore-submodules=none"],
-    entry.path
-  );
+  const status = yield* ctx.git
+    .status(entry.path, { untrackedFiles: "all", ignoreSubmodules: "none" })
+    .pipe(Effect.option);
   if (O.isNone(status)) {
     return {
       _tag: "skipped",
@@ -366,7 +386,7 @@ const probeEvidence = Effect.fnUntraced(function* (
       pr: O.some(pr),
     };
   }
-  const idle = yield* readIdleHours(ctx.runner, ctx.fs, ctx.path, entry, ctx.nowMillis);
+  const idle = yield* readIdleHours(ctx.git, ctx.fs, ctx.path, entry, ctx.nowMillis);
   if (idle.failed) {
     return {
       _tag: "skipped",
@@ -377,7 +397,7 @@ const probeEvidence = Effect.fnUntraced(function* (
       pr: O.some(pr),
     };
   }
-  return { _tag: "probed", pr, dirty: Str.isNonEmpty(Str.trim(status.value)), idleHours: idle.hours };
+  return { _tag: "probed", pr, dirty: A.isReadonlyArrayNonEmpty(status.value), idleHours: idle.hours };
 });
 
 const eligibilitySkipReason = (
@@ -597,6 +617,13 @@ const applyCandidate = Effect.fn("WorktreeReap.applyCandidate")(function* (
   return yield* retirementOutcome(ctx, entry, assessed, removal.failure);
 });
 
+// The injectable probes, each defaulting to its live implementation.
+const reapSeams = (options: WorktreeReapRunOptions): Pick<AssessContext, "prober" | "pullRequests" | "runner"> => ({
+  prober: options.probeLiveness ?? probeWorktreeLiveness,
+  pullRequests: options.listPullRequests ?? githubPullRequests,
+  runner: options.runCommand ?? runRepoCommandCapture,
+});
+
 /**
  * Classify registered worktrees and optionally retire fully evidenced merged-PR candidates.
  *
@@ -628,7 +655,7 @@ const applyCandidate = Effect.fn("WorktreeReap.applyCandidate")(function* (
  * console.log(Effect.isEffect(runWorktreeReap())) // true
  * ```
  *
- * @param options - Optional apply, idle threshold, clock, liveness prober, command runner, and repository-root seams.
+ * @param options - Optional apply, idle threshold, clock, liveness prober, pull-request lister, size-probe command runner, and repository-root seams.
  * @returns A versioned, auditable worktree-reap report.
  * @category workflows
  * @since 0.0.0
@@ -647,6 +674,7 @@ export const runWorktreeReap = Effect.fn("WorktreeReap.runWorktreeReap")(functio
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const git = yield* Git;
   const removalService = yield* WorktreeRemovalService;
   const { currentRoot, entries } = yield* listRepositoryWorktrees(
     options.startFrom,
@@ -664,14 +692,13 @@ export const runWorktreeReap = Effect.fn("WorktreeReap.runWorktreeReap")(functio
   if (!isFinite(idleThresholdHours) || idleThresholdHours < 0) {
     return yield* WorktreeCommandError.make({ message: "--idle-hours must be a non-negative finite number." });
   }
-  const clockNow = yield* Clock.currentTimeMillis;
   const ctx: AssessContext = {
     fs,
+    git,
     idleThreshold: Duration.hours(idleThresholdHours),
-    nowMillis: options.nowMillis ?? clockNow,
+    nowMillis: options.nowMillis ?? (yield* Clock.currentTimeMillis),
     path,
-    prober: options.probeLiveness ?? probeWorktreeLiveness,
-    runner: options.runCommand ?? runRepoCommandCapture,
+    ...reapSeams(options),
   };
   const assessed = yield* Effect.forEach(
     candidates,

@@ -40,6 +40,9 @@ parallel, then the runner retirement, then closeout C.
 
 ## Latest Evidence
 
+- 2026-11-03 W7c: `research/worktree-differential-w7.json` (107 scenarios, 106 same, 1 classified, 0 unclassified);
+  repo-cli `check` clean, the Worktree, reap, residue, fleet, tmpfs and merge-driver suites green on Node and Bun,
+  `goals/tsconfig.ops.json` clean for the W7c files; `lint effect-vitest`, Fallow audit and Fallow health introduce 0.
 - 2026-11-02 W6: `research/yeet-gh-seams-differential-w6.json` (51 scenarios, 40 same, 11 classified, 0 unclassified);
   repo-cli `check` clean, every `yeet-*`, `proof-job` and `shared-internals` suite green on Node and Bun (65 files,
   1885 tests), `goals/tsconfig.ops.json` clean; `lint effect-vitest`, Fallow audit and Fallow health introduce 0.

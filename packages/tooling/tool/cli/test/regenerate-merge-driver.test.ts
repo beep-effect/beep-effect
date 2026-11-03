@@ -1,4 +1,5 @@
 import * as NodeURL from "node:url";
+import { Git } from "@beep/git/Git";
 import { installRegenerateMergeDriver } from "@beep/repo-cli/commands/Worktree";
 import { it } from "@beep/test-runner";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
@@ -62,7 +63,10 @@ const mergeDriverScenario = Effect.fnUntraced(function* () {
   expect(configuredStdout).toContain("scripts/regenerate-merge-driver.sh");
 });
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "5 seconds" })(
+// `installRegenerateMergeDriver` writes its config through `Git.configSet` (W7c).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
+
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "5 seconds" })(
   "regenerate merge driver",
   (it) => {
     it.effect("leaves allowlisted projections conflicted until the merged tree is available", mergeDriverScenario);

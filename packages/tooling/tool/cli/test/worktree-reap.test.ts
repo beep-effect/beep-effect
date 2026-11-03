@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import {
   FleetLivenessVerdict,
@@ -6,17 +7,21 @@ import {
   runWorktreeReap,
   WorktreeCommandError,
   WorktreeReapCandidate,
+  WorktreeReapPullRequest,
   WorktreeReapReport,
   WorktreeRemovalRequest,
   WorktreeRemovalService,
   WorktreeRemovalServiceLive,
 } from "@beep/repo-cli/commands/Worktree";
 import { runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
+import { GithubTransportFetch } from "@beep/repo-cli/test/SharedInternals";
+import { GitObjectId } from "@beep/schema/Conformance";
 import { it } from "@beep/test-runner";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -24,6 +29,10 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { githubFetch, reply } from "./support/GithubFetch.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
+import { restPullRequest } from "./support/YeetGithub.ts";
+import type { GithubFetchCall } from "./support/GithubFetch.ts";
 
 // `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
 const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
@@ -89,30 +98,48 @@ const makeScratchRepo = Effect.gen(function* () {
 const candidateAt = (report: WorktreeReapReport, candidatePath: string) =>
   O.getOrThrow(A.findFirst(report.candidates, (candidate) => Str.Equivalence(candidate.path, candidatePath)));
 
-const ghResult = (number: number | undefined, headRefOid: string) => ({
-  exitCode: 0,
-  output: number === undefined ? "[]" : `[{"number":${number},"headRefOid":"${headRefOid}"}]`,
-  truncated: false,
-});
+// The newest pull request GitHub lists for one state, or none: the reap reads only the head row.
+const ghRows = (number: number | undefined, headRefOid: string) =>
+  Effect.succeedSome(
+    number === undefined ? [] : [WorktreeReapPullRequest.make({ number, headRefOid: GitObjectId.make(headRefOid) })]
+  );
 
 type GhAnswers = Readonly<Record<string, { readonly open: number | undefined; readonly merged: number | undefined }>>;
 
-const ghStubRunner = (mergedHead: string, answers: GhAnswers, onDu?: () => ProbeStub | undefined) =>
-  Effect.fn("WorktreeReapTest.ghStubRunner")(function* (command: string, args: ReadonlyArray<string>, cwd: string) {
-    if (Str.Equivalence(command, "du")) {
-      const stubbed = onDu?.();
-      if (stubbed !== undefined) {
-        return stubbed;
-      }
-    }
-    if (!Str.Equivalence(command, "gh")) {
-      return yield* runRepoCommandCapture(command, args, cwd);
-    }
-    const answer = answers[cwd] ?? { open: undefined, merged: undefined };
-    return ghResult(A.contains(args, "merged") ? answer.merged : answer.open, mergedHead);
-  });
-
 type ProbeStub = { readonly exitCode: number; readonly output: string; readonly truncated: boolean };
+
+// The two reap seams: the pull-request lister answers from `answers`, and the size probe
+// runs the real `du` unless `onDu` stubs it.
+const ghStub = (mergedHead: string, answers: GhAnswers, onDu?: () => ProbeStub | undefined) => ({
+  listPullRequests: (cwd: string, _branch: string, state: "merged" | "open") => {
+    const answer = answers[cwd] ?? { open: undefined, merged: undefined };
+    return ghRows(state === "merged" ? answer.merged : answer.open, mergedHead);
+  },
+  runCommand: Effect.fn("WorktreeReapTest.duRunner")(function* (
+    command: string,
+    args: ReadonlyArray<string>,
+    cwd: string
+  ) {
+    const stubbed = onDu?.();
+    return stubbed ?? (yield* runRepoCommandCapture(command, args, cwd));
+  }),
+});
+
+// The live lister builds its client from `gh auth token` and `GH_REPO`. `Git` captured the real
+// spawner when its layer was built; this one answers only `gh auth token`, so `du` fails (reporting-only).
+const ghAuthToken = ScriptedSpawner.make((command, args) =>
+  A.join([command, ...args], " ") === "gh auth token"
+    ? { stdout: "ghs_fixture\n" }
+    : { exit: 1, stderr: "the reap fixture spawns only gh auth token" }
+);
+const withFakeGithub =
+  (respond: (call: GithubFetchCall) => unknown) =>
+  <A, E, R>(program: Effect.Effect<A, E, R>) =>
+    program.pipe(
+      Effect.provideService(GithubTransportFetch, O.some(githubFetch(respond).fetch)),
+      provideSpawner(ghAuthToken),
+      Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ GH_REPO: "beep/repo" }))
+    );
 
 it.layer(testLayer, { timeout: "30 seconds" })("worktree reap", (it) => {
   it.effect("classifies registered worktrees and measures bytes only for clean, idle merged PRs", () =>
@@ -143,7 +170,7 @@ it.layer(testLayer, { timeout: "30 seconds" })("worktree reap", (it) => {
       yield* runCommand("touch", ["-d", `@${nowMillis / 1_000}`, youngHead], repoRoot);
 
       let duCalls = 0;
-      const runner = ghStubRunner(
+      const runner = ghStub(
         mainHead,
         {
           [merged]: { open: undefined, merged: 101 },
@@ -161,7 +188,7 @@ it.layer(testLayer, { timeout: "30 seconds" })("worktree reap", (it) => {
 
       // No injected liveness prober: the eligible candidate exercises the real
       // same-uid /proc scan, which must classify a quiet fixture dir as dormant.
-      const report = yield* runWorktreeReap({ nowMillis, runCommand: runner, startFrom: repoRoot });
+      const report = yield* runWorktreeReap({ nowMillis, ...runner, startFrom: repoRoot });
 
       expect(report.applied).toBe(false);
       expect(report.schemaVersion).toBe("worktree-reap/v1");
@@ -195,17 +222,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("worktree reap", (it) => {
       const ghFailure = yield* addWorktree(repoRoot, worktreesRoot, "gh-failure");
       const missing = yield* addWorktree(repoRoot, worktreesRoot, "missing");
       yield* fs.remove(missing, { force: true, recursive: true });
-      const runner = Effect.fn("WorktreeReapTest.failureRunner")(function* (
-        command: string,
-        args: ReadonlyArray<string>,
-        cwd: string
-      ) {
-        if (Str.Equivalence(command, "gh")) {
-          return { exitCode: 1, output: "fixture gh failure", truncated: false };
-        }
-        return yield* runRepoCommandCapture(command, args, cwd);
-      });
-      const report = yield* runWorktreeReap({ runCommand: runner, startFrom: repoRoot });
+      // A GitHub listing that cannot answer (no token, a refused read, an undecodable row) is none.
+      const report = yield* runWorktreeReap({ listPullRequests: () => Effect.succeedNone, startFrom: repoRoot });
 
       expect(candidateAt(report, ghFailure).reapClass).toBe("unknown");
       expect(O.getOrThrow(candidateAt(report, ghFailure).skipReason)).toBe("gh-probe-failed");
@@ -219,8 +237,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("worktree reap", (it) => {
       const { mainHead, repoRoot, worktreesRoot } = yield* makeScratchRepo;
       const invoking = yield* addWorktree(repoRoot, worktreesRoot, "invoking");
       const peer = yield* addWorktree(repoRoot, worktreesRoot, "peer");
-      const runner = ghStubRunner(mainHead, { [peer]: { open: undefined, merged: undefined } });
-      const report = yield* runWorktreeReap({ runCommand: runner, startFrom: invoking });
+      const runner = ghStub(mainHead, { [peer]: { open: undefined, merged: undefined } });
+      const report = yield* runWorktreeReap({ ...runner, startFrom: invoking });
 
       expect(report.mainCheckout).toBe(repoRoot);
       expect(report.invokingWorktree).toBe(invoking);
@@ -233,11 +251,11 @@ it.layer(testLayer, { timeout: "30 seconds" })("worktree reap", (it) => {
     Effect.gen(function* () {
       const { mainHead, repoRoot, worktreesRoot } = yield* makeScratchRepo;
       const occupied = yield* addWorktree(repoRoot, worktreesRoot, "occupied");
-      const runner = ghStubRunner(mainHead, { [occupied]: { open: undefined, merged: 401 } });
+      const runner = ghStub(mainHead, { [occupied]: { open: undefined, merged: 401 } });
       const report = yield* runWorktreeReap({
         nowMillis: FIXTURE_NOW_MILLIS,
         probeLiveness: verdictProber("live"),
-        runCommand: runner,
+        ...runner,
         startFrom: repoRoot,
       });
 
@@ -262,11 +280,11 @@ it.layer(testLayer, { timeout: "30 seconds" })("worktree reap", (it) => {
     Effect.gen(function* () {
       const { mainHead, repoRoot, worktreesRoot } = yield* makeScratchRepo;
       const merged = yield* addWorktree(repoRoot, worktreesRoot, "unknown-liveness");
-      const runner = ghStubRunner(mainHead, { [merged]: { open: undefined, merged: 402 } });
+      const runner = ghStub(mainHead, { [merged]: { open: undefined, merged: 402 } });
       const report = yield* runWorktreeReap({
         nowMillis: FIXTURE_NOW_MILLIS,
         probeLiveness: verdictProber("unknown"),
-        runCommand: runner,
+        ...runner,
         startFrom: repoRoot,
       });
 
@@ -280,12 +298,12 @@ it.layer(testLayer, { timeout: "30 seconds" })("worktree reap", (it) => {
       const { mainHead, repoRoot, worktreesRoot } = yield* makeScratchRepo;
       const fs = yield* FileSystem.FileSystem;
       const merged = yield* addWorktree(repoRoot, worktreesRoot, "apply-merged");
-      const runner = ghStubRunner(mainHead, { [merged]: { open: undefined, merged: 201 } });
+      const runner = ghStub(mainHead, { [merged]: { open: undefined, merged: 201 } });
       const report = yield* runWorktreeReap({
         apply: true,
         nowMillis: FIXTURE_NOW_MILLIS,
         probeLiveness: verdictProber("dormant"),
-        runCommand: runner,
+        ...runner,
         startFrom: repoRoot,
       });
 
@@ -309,7 +327,7 @@ it.layer(testLayer, { timeout: "30 seconds" })("worktree reap", (it) => {
       const { mainHead, repoRoot, worktreesRoot } = yield* makeScratchRepo;
       const fs = yield* FileSystem.FileSystem;
       const merged = yield* addWorktree(repoRoot, worktreesRoot, "unmeasured");
-      const runner = ghStubRunner(mainHead, { [merged]: { open: undefined, merged: 501 } }, () => ({
+      const runner = ghStub(mainHead, { [merged]: { open: undefined, merged: 501 } }, () => ({
         exitCode: 1,
         output: "fixture du failure",
         truncated: false,
@@ -318,7 +336,7 @@ it.layer(testLayer, { timeout: "30 seconds" })("worktree reap", (it) => {
         apply: true,
         nowMillis: FIXTURE_NOW_MILLIS,
         probeLiveness: verdictProber("dormant"),
-        runCommand: runner,
+        ...runner,
         startFrom: repoRoot,
       });
 
@@ -338,25 +356,20 @@ it.layer(testLayer, { timeout: "30 seconds" })("worktree reap", (it) => {
       const fs = yield* FileSystem.FileSystem;
       const merged = yield* addWorktree(repoRoot, worktreesRoot, "reclassified");
       let openCalls = 0;
-      const runner = Effect.fn("WorktreeReapTest.reclassifyRunner")(function* (
-        command: string,
-        args: ReadonlyArray<string>,
-        cwd: string
-      ) {
-        if (!Str.Equivalence(command, "gh")) {
-          return yield* runRepoCommandCapture(command, args, cwd);
-        }
-        if (A.contains(args, "merged")) {
-          return ghResult(301, mainHead);
-        }
-        openCalls += 1;
-        return ghResult(openCalls > 1 ? 305 : undefined, mainHead);
-      });
+      const runner = {
+        listPullRequests: (_cwd: string, _branch: string, state: "merged" | "open") => {
+          if (state === "merged") {
+            return ghRows(301, mainHead);
+          }
+          openCalls += 1;
+          return ghRows(openCalls > 1 ? 305 : undefined, mainHead);
+        },
+      };
       const report = yield* runWorktreeReap({
         apply: true,
         nowMillis: FIXTURE_NOW_MILLIS,
         probeLiveness: verdictProber("dormant"),
-        runCommand: runner,
+        ...runner,
         startFrom: repoRoot,
       });
 
@@ -376,12 +389,12 @@ it.layer(testLayer, { timeout: "30 seconds" })("worktree reap", (it) => {
       const { mainHead, repoRoot, worktreesRoot } = yield* makeScratchRepo;
       const fs = yield* FileSystem.FileSystem;
       const merged = yield* addWorktree(repoRoot, worktreesRoot, "half-retired");
-      const runner = ghStubRunner(mainHead, { [merged]: { open: undefined, merged: 601 } });
+      const runner = ghStub(mainHead, { [merged]: { open: undefined, merged: 601 } });
       const report = yield* runWorktreeReap({
         apply: true,
         nowMillis: FIXTURE_NOW_MILLIS,
         probeLiveness: verdictProber("dormant"),
-        runCommand: runner,
+        ...runner,
         startFrom: repoRoot,
       }).pipe(
         Effect.provideService(WorktreeRemovalService, {
@@ -408,12 +421,12 @@ it.layer(testLayer, { timeout: "30 seconds" })("worktree reap", (it) => {
       const { mainHead, repoRoot, worktreesRoot } = yield* makeScratchRepo;
       const fs = yield* FileSystem.FileSystem;
       const merged = yield* addWorktree(repoRoot, worktreesRoot, "unremovable");
-      const runner = ghStubRunner(mainHead, { [merged]: { open: undefined, merged: 602 } });
+      const runner = ghStub(mainHead, { [merged]: { open: undefined, merged: 602 } });
       const report = yield* runWorktreeReap({
         apply: true,
         nowMillis: FIXTURE_NOW_MILLIS,
         probeLiveness: verdictProber("dormant"),
-        runCommand: runner,
+        ...runner,
         startFrom: repoRoot,
       }).pipe(
         Effect.provideService(WorktreeRemovalService, {
@@ -438,13 +451,13 @@ it.layer(testLayer, { timeout: "30 seconds" })("worktree reap", (it) => {
     Effect.gen(function* () {
       const { mainHead, repoRoot, worktreesRoot } = yield* makeScratchRepo;
       const merged = yield* addWorktree(repoRoot, worktreesRoot, "pinned");
-      const runner = ghStubRunner(mainHead, { [merged]: { open: undefined, merged: 701 } });
+      const runner = ghStub(mainHead, { [merged]: { open: undefined, merged: 701 } });
       let captured = O.none<string>();
       const report = yield* runWorktreeReap({
         apply: true,
         nowMillis: FIXTURE_NOW_MILLIS,
         probeLiveness: verdictProber("dormant"),
-        runCommand: runner,
+        ...runner,
         startFrom: repoRoot,
       }).pipe(
         Effect.provideService(WorktreeRemovalService, {
@@ -490,6 +503,74 @@ it.layer(testLayer, { timeout: "30 seconds" })("worktree reap", (it) => {
         repoRoot
       );
       expect(branch.exitCode).toBe(0);
+    })
+  );
+
+  it.effect("classifies through the GitHub REST listing: newest open wins, then the newest merged closed row", () =>
+    Effect.gen(function* () {
+      const { mainHead, repoRoot, worktreesRoot } = yield* makeScratchRepo;
+      const merged = yield* addWorktree(repoRoot, worktreesRoot, "rest-merged");
+      const open = yield* addWorktree(repoRoot, worktreesRoot, "rest-open");
+      const paths: Array<string> = [];
+      const respond = (call: GithubFetchCall) => {
+        paths.push(call.path);
+        const state = call.url.searchParams.get("state");
+        const head = call.url.searchParams.get("head");
+        if (head === "beep:feat/rest-open") {
+          return state === "open"
+            ? [restPullRequest({ number: 9, head: { ref: "feat/rest-open", sha: mainHead } })]
+            : [];
+        }
+        return state === "open"
+          ? []
+          : [
+              restPullRequest({
+                number: 12,
+                state: "closed",
+                merged: false,
+                head: { ref: "feat/rest-merged", sha: mainHead },
+              }),
+              restPullRequest({
+                number: 11,
+                state: "closed",
+                merged: true,
+                merged_at: "2026-10-06T11:00:00Z",
+                head: { ref: "feat/rest-merged", sha: mainHead },
+              }),
+            ];
+      };
+      const report = yield* runWorktreeReap({
+        nowMillis: FIXTURE_NOW_MILLIS,
+        probeLiveness: verdictProber("dormant"),
+        startFrom: repoRoot,
+      }).pipe(withFakeGithub(respond));
+
+      expect(candidateAt(report, merged)).toMatchObject({ reapClass: "merged-pr", retired: false });
+      expect(O.getOrThrow(candidateAt(report, merged).prNumber)).toBe(11);
+      candidateAt(report, merged).skipReason.pipe(assertNone);
+      expect(candidateAt(report, open).reapClass).toBe("open-pr");
+      expect(O.getOrThrow(candidateAt(report, open).prNumber)).toBe(9);
+      expect(A.some(paths, Str.includes("state=closed"))).toBe(true);
+    })
+  );
+
+  it.effect("fails closed when the GitHub listing is refused or only the merged read cannot answer", () =>
+    Effect.gen(function* () {
+      const { mainHead, repoRoot, worktreesRoot } = yield* makeScratchRepo;
+      const refused = yield* addWorktree(repoRoot, worktreesRoot, "rest-refused");
+      const report = yield* runWorktreeReap({ startFrom: repoRoot }).pipe(
+        withFakeGithub(() => reply(403)({ message: "Resource not accessible" }))
+      );
+      expect(candidateAt(report, refused).reapClass).toBe("unknown");
+      expect(O.getOrThrow(candidateAt(report, refused).skipReason)).toBe("gh-probe-failed");
+
+      const mergedUnknown = yield* runWorktreeReap({
+        listPullRequests: (_cwd, _branch, state) =>
+          state === "open" ? ghRows(undefined, mainHead) : Effect.succeedNone,
+        startFrom: repoRoot,
+      });
+      expect(candidateAt(mergedUnknown, refused).reapClass).toBe("unknown");
+      expect(O.getOrThrow(candidateAt(mergedUnknown, refused).skipReason)).toBe("gh-probe-failed");
     })
   );
 
