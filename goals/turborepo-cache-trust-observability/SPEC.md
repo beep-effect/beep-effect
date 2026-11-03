@@ -1206,3 +1206,18 @@ bounds intact. Preserve the failed run and successful cleanup; a fresh accepted
 source build and independent artifact inspection are required before approval.
 Reverse with the preparation mode disabled and removal of this prerequisite;
 never relabel the failed run or increase limits to make it pass.
+
+
+### Static protected secret selection, 2026-11-03
+
+Name each approved stable/canary secret explicitly in the installer environment.
+Guard both branches by the selected channel and end with an empty value: missing
+stable material must never select canary material. Avoid computed access to the
+entire secrets context. The caller retains eleven named fields but supplies
+empty values for the unselected channel before invoking Heavy; only three
+channel records and five shared trial values are nonempty for a selected run.
+Keep the step-only installer boundary. Extend the unprivileged-step regression check to
+script bodies and action inputs as well as environment values, including dotted
+and indexed secret references with whitespace. No runtime or credential is
+activated by this repair. Reverse by disabling the optional producer route;
+retain explicit secret names and fail-closed channel separation.

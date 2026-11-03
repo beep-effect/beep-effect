@@ -814,9 +814,9 @@ jobs:
       - name: Install independently approved issuer only
         shell: bash
         env:
-          BEEP_CACHE_PRODUCER_APPROVAL_JSON: ${{ secrets[inputs.producer_channel == 'stable' && 'BEEP_CACHE_PRODUCER_STABLE_APPROVAL_JSON' || 'BEEP_CACHE_PRODUCER_CANARY_APPROVAL_JSON'] }}
-          BEEP_CACHE_PRODUCER_RUNTIME_JSON: ${{ secrets[inputs.producer_channel == 'stable' && 'BEEP_CACHE_PRODUCER_STABLE_RUNTIME_JSON' || 'BEEP_CACHE_PRODUCER_CANARY_RUNTIME_JSON'] }}
-          BEEP_CACHE_PRODUCER_ISSUER_MATERIAL_BASE64: ${{ secrets[inputs.producer_channel == 'stable' && 'BEEP_CACHE_PRODUCER_STABLE_ISSUER_MATERIAL_BASE64' || 'BEEP_CACHE_PRODUCER_CANARY_ISSUER_MATERIAL_BASE64'] }}
+          BEEP_CACHE_PRODUCER_APPROVAL_JSON: ${{ inputs.producer_channel == 'stable' && secrets.BEEP_CACHE_PRODUCER_STABLE_APPROVAL_JSON || inputs.producer_channel == 'canary' && secrets.BEEP_CACHE_PRODUCER_CANARY_APPROVAL_JSON || '' }}
+          BEEP_CACHE_PRODUCER_RUNTIME_JSON: ${{ inputs.producer_channel == 'stable' && secrets.BEEP_CACHE_PRODUCER_STABLE_RUNTIME_JSON || inputs.producer_channel == 'canary' && secrets.BEEP_CACHE_PRODUCER_CANARY_RUNTIME_JSON || '' }}
+          BEEP_CACHE_PRODUCER_ISSUER_MATERIAL_BASE64: ${{ inputs.producer_channel == 'stable' && secrets.BEEP_CACHE_PRODUCER_STABLE_ISSUER_MATERIAL_BASE64 || inputs.producer_channel == 'canary' && secrets.BEEP_CACHE_PRODUCER_CANARY_ISSUER_MATERIAL_BASE64 || '' }}
         run: |
           set -euo pipefail
           bun --no-env-file run beep cache producer-install --from-environment

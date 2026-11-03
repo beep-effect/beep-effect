@@ -12,7 +12,7 @@ import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { assert, expect } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
@@ -1866,23 +1866,28 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         producer_execution: true,
         producer_channel: "${{ inputs.channel }}",
       });
-      const secretNames = [
-        "BEEP_CACHE_PRODUCER_STABLE_APPROVAL_JSON",
-        "BEEP_CACHE_PRODUCER_CANARY_APPROVAL_JSON",
-        "BEEP_CACHE_PRODUCER_STABLE_RUNTIME_JSON",
-        "BEEP_CACHE_PRODUCER_CANARY_RUNTIME_JSON",
-        "BEEP_CACHE_PRODUCER_STABLE_ISSUER_MATERIAL_BASE64",
-        "BEEP_CACHE_PRODUCER_CANARY_ISSUER_MATERIAL_BASE64",
-        "BEEP_CACHE_TRIAL_R2_ACCESS_KEY_ID",
-        "BEEP_CACHE_TRIAL_R2_SECRET_ACCESS_KEY",
-        "BEEP_CACHE_TRIAL_ARTIFACT_KEY",
-        "BEEP_CACHE_TRIAL_READER_BEARER",
-        "BEEP_CACHE_TRIAL_WRITER_BEARER",
-      ];
+      const expectedSecrets = {
+        BEEP_CACHE_PRODUCER_STABLE_APPROVAL_JSON:
+          "${{ inputs.channel == 'stable' && secrets.BEEP_CACHE_PRODUCER_STABLE_APPROVAL_JSON || '' }}",
+        BEEP_CACHE_PRODUCER_CANARY_APPROVAL_JSON:
+          "${{ inputs.channel == 'canary' && secrets.BEEP_CACHE_PRODUCER_CANARY_APPROVAL_JSON || '' }}",
+        BEEP_CACHE_PRODUCER_STABLE_RUNTIME_JSON:
+          "${{ inputs.channel == 'stable' && secrets.BEEP_CACHE_PRODUCER_STABLE_RUNTIME_JSON || '' }}",
+        BEEP_CACHE_PRODUCER_CANARY_RUNTIME_JSON:
+          "${{ inputs.channel == 'canary' && secrets.BEEP_CACHE_PRODUCER_CANARY_RUNTIME_JSON || '' }}",
+        BEEP_CACHE_PRODUCER_STABLE_ISSUER_MATERIAL_BASE64:
+          "${{ inputs.channel == 'stable' && secrets.BEEP_CACHE_PRODUCER_STABLE_ISSUER_MATERIAL_BASE64 || '' }}",
+        BEEP_CACHE_PRODUCER_CANARY_ISSUER_MATERIAL_BASE64:
+          "${{ inputs.channel == 'canary' && secrets.BEEP_CACHE_PRODUCER_CANARY_ISSUER_MATERIAL_BASE64 || '' }}",
+        BEEP_CACHE_TRIAL_R2_ACCESS_KEY_ID: "${{ secrets.BEEP_CACHE_TRIAL_R2_ACCESS_KEY_ID }}",
+        BEEP_CACHE_TRIAL_R2_SECRET_ACCESS_KEY: "${{ secrets.BEEP_CACHE_TRIAL_R2_SECRET_ACCESS_KEY }}",
+        BEEP_CACHE_TRIAL_ARTIFACT_KEY: "${{ secrets.BEEP_CACHE_TRIAL_ARTIFACT_KEY }}",
+        BEEP_CACHE_TRIAL_READER_BEARER: "${{ secrets.BEEP_CACHE_TRIAL_READER_BEARER }}",
+        BEEP_CACHE_TRIAL_WRITER_BEARER: "${{ secrets.BEEP_CACHE_TRIAL_WRITER_BEARER }}",
+      };
       const forwarded = yield* decodeYamlRecord(yamlAt(caller, ["jobs", "produce", "secrets"]));
-      expect(A.sort(R.keys(forwarded), Order.String)).toEqual(A.sort(secretNames, Order.String));
-      for (const name of secretNames) {
-        assertSome(R.get(forwarded, name), `\${{ secrets.${name} }}`);
+      expect(forwarded).toEqual(expectedSecrets);
+      for (const name of R.keys(expectedSecrets)) {
         expect(yamlAt(heavy, ["on", "workflow_call", "secrets", name, "required"])).toBe(false);
       }
       expect(yamlAt(heavy, ["on", "workflow_call", "inputs", "producer_execution", "default"])).toBe(false);
@@ -1940,15 +1945,15 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "BEEP_CACHE_PRODUCER_ISSUER_MATERIAL_BASE64",
         "BEEP_CACHE_PRODUCER_RUNTIME_JSON",
       ]);
-      // Select the key before lookup: a missing stable value must not fall back to canary material.
+      // Name each secret statically; a missing stable value must not fall back to canary material.
       expect(install.env?.BEEP_CACHE_PRODUCER_APPROVAL_JSON).toBe(
-        "${{ secrets[inputs.producer_channel == 'stable' && 'BEEP_CACHE_PRODUCER_STABLE_APPROVAL_JSON' || 'BEEP_CACHE_PRODUCER_CANARY_APPROVAL_JSON'] }}"
+        "${{ inputs.producer_channel == 'stable' && secrets.BEEP_CACHE_PRODUCER_STABLE_APPROVAL_JSON || inputs.producer_channel == 'canary' && secrets.BEEP_CACHE_PRODUCER_CANARY_APPROVAL_JSON || '' }}"
       );
       expect(install.env?.BEEP_CACHE_PRODUCER_RUNTIME_JSON).toBe(
-        "${{ secrets[inputs.producer_channel == 'stable' && 'BEEP_CACHE_PRODUCER_STABLE_RUNTIME_JSON' || 'BEEP_CACHE_PRODUCER_CANARY_RUNTIME_JSON'] }}"
+        "${{ inputs.producer_channel == 'stable' && secrets.BEEP_CACHE_PRODUCER_STABLE_RUNTIME_JSON || inputs.producer_channel == 'canary' && secrets.BEEP_CACHE_PRODUCER_CANARY_RUNTIME_JSON || '' }}"
       );
       expect(install.env?.BEEP_CACHE_PRODUCER_ISSUER_MATERIAL_BASE64).toBe(
-        "${{ secrets[inputs.producer_channel == 'stable' && 'BEEP_CACHE_PRODUCER_STABLE_ISSUER_MATERIAL_BASE64' || 'BEEP_CACHE_PRODUCER_CANARY_ISSUER_MATERIAL_BASE64'] }}"
+        "${{ inputs.producer_channel == 'stable' && secrets.BEEP_CACHE_PRODUCER_STABLE_ISSUER_MATERIAL_BASE64 || inputs.producer_channel == 'canary' && secrets.BEEP_CACHE_PRODUCER_CANARY_ISSUER_MATERIAL_BASE64 || '' }}"
       );
       expect(install.run).toContain("producer-install --from-environment");
       expect(stepIndexByName(steps, "Verify selected candidate before issuer delivery")).toBeLessThan(
@@ -1982,10 +1987,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const unprivilegedValues = pipe(
         steps,
         A.filter((step) => !A.contains([installName, runName, publishName], step.name ?? "")),
-        A.flatMap((step) => R.values(step.env ?? {})),
+        A.flatMap((step) => [...R.values(step.env ?? {}), ...R.values(step.with ?? {}), step.run ?? ""]),
         A.filter(S.is(S.String))
       );
-      for (const value of unprivilegedValues) expect(value).not.toMatch(/\bsecrets(?:\.|\[)/u);
+      for (const value of unprivilegedValues) expect(value).not.toMatch(/\bsecrets\s*(?:\.|\[)/iu);
       for (const step of steps) {
         expect(step.uses ?? "").not.toContain("actions/cache");
         expect(step.run ?? "").not.toContain("op read");

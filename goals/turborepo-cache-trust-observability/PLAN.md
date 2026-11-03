@@ -1358,3 +1358,14 @@ checks/installs the native host compiler and binutils, then records all three
 additional tool identities. This operational queue sample is not a Turbo cache
 speed measurement. A new build waits for acceptance of the repair; do not retry
 the unchanged failed head.
+
+
+### Static secret boundary review, 2026-11-03
+
+PR #2650 review identified computed installer secret names and an incomplete
+unprivileged-step scan. Use explicit channel-guarded secret names without
+missing-value crossover, empty the unselected caller channel before invoking
+Heavy, and inspect environment values, action inputs and script bodies. Preserve named forwarding, setup isolation and the disabled
+producer. The earlier d256 hosted unit and official coverage passes remain
+bound to that source; this source requires fresh hosted proof. No protected
+execution, credential activation or whole-goal acceptance is claimed.

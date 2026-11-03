@@ -7,15 +7,15 @@
   "sourceBindings": [
     {
       "path": ".github/workflows/cache-producer.yml",
-      "sha256": "b5398badce6643d3f0cc031e79c3ba1fedd0e81cd5416313a8a8ac7aa3f2a448"
+      "sha256": "714fa8de27634764dc9ef5386ea09e9ee032928ad7c2763e859c340020e076cd"
     },
     {
       "path": ".github/workflows/heavy.yml",
-      "sha256": "7a1779aa085b20de78039ace40789b856f4d05578050ca2941bf20a7388946c6"
+      "sha256": "c3d569426d8aaad27f313338f11679d72c7ef9ef822b83dba36ed0b20b52f233"
     },
     {
       "path": "packages/tooling/tool/cli/test/ci-runner-security.test.ts",
-      "sha256": "e202fab41ce7e371834336a001c6f1a1e633c1cb202c90a98bb0aeebb351ebfe"
+      "sha256": "b660c164f1ced45cff1de93ff8f2ba1f7fbfbf8089adc3eb017dd29331f78d18"
     }
   ],
   "route": {
@@ -32,7 +32,10 @@
     "namedSecretsForwarded": 11,
     "inheritAllSecrets": false,
     "ordinaryQualityContextsPreserved": true,
-    "otherOperationalModesMutuallyExclusive": true
+    "otherOperationalModesMutuallyExclusive": true,
+    "channelSecretValuesForwarded": 3,
+    "sharedSecretValuesForwarded": 5,
+    "unselectedChannelValues": "Explicit empty strings before reusable workflow invocation"
   },
   "execution": {
     "independentSelection": "Explicit enable plus exact per-channel source SHA and independently selected candidate run/artifact/binary digest. Missing or malformed values refuse before private setup.",
@@ -46,7 +49,7 @@
     "privatePublication": "Existing producer-publish receives only its two storage credentials and the saved issued observation. Publication cannot rerun matrices.",
     "publicArtifact": "cache-producer-<run>-<attempt>, exactly one cache-producer.json, at most 64 KiB, one-day retention. Complete observation stays private in approved R2.",
     "cleanup": "Frozen private output and exact sibling worktree/input paths; no forced worktree removal, no wildcard retirement of unrelated data.",
-    "channelSelection": "Select the nonempty secret/variable key first, then look up its value. Missing stable records cannot fall back to canary material."
+    "channelSelection": "Use static individual secret references with both stable and canary channel guards plus an empty terminal value. Missing stable material cannot fall through to canary. Variable-key selection remains independent."
   },
   "bounds": {
     "concurrentJobs": 1,
@@ -61,7 +64,7 @@
     "artifactRetentionDays": 1,
     "nativeArchiveBytes": 67108864,
     "nativeExecutableBytes": 67108864,
-    "combinedHostedWorkflowTextBytes": 46020,
+    "combinedHostedWorkflowTextBytes": 46380,
     "hostedWorkflowTextLimitBytes": 65536,
     "existingTrialStorageAndOperationLimitsExpanded": false,
     "newRunnerCapacity": false
@@ -199,5 +202,16 @@
     "repair": "Keep assertSome and restore the independent exact direct reference as its payload expectation. Leave the existing push-only helper and workflow delivery policy intact.",
     "localTestsExecuted": false,
     "hostedProof": "pending"
+  },
+  "staticSecretReview": {
+    "recordedAt": "2026-11-03T06:56:10.092743+00:00",
+    "threads": [
+      "https://github.com/beep-effect/beep-effect/pull/2650#discussion_r4451691062",
+      "https://github.com/beep-effect/beep-effect/pull/2650#discussion_r4451691072"
+    ],
+    "repair": "Use static, independently channel-guarded installer references; caller empties the other channel before Heavy receives any values. Scan nonprivileged env/with/run strings for dotted/indexed secret references including whitespace.",
+    "localTestsExecuted": false,
+    "hostedProof": "pending",
+    "activationChanged": false
   }
 }

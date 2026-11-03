@@ -715,3 +715,15 @@ protected producer provenance, current-main qualification or production rollout.
   missing host linker. The build step failed, artifact retention skipped and
   scratch cleanup succeeded. The 2,503-second queue and 43-second execution are
   this operational job's timings only. No native comparison or savings claim.
+
+
+### Static producer secret selection, 2026-11-03
+
+- [zizmor overprovisioned-secrets](https://docs.zizmor.sh/audits/#overprovisioned-secrets):
+  access individual named secrets instead of the whole secrets context. This
+  source review motivates static installer references; no runtime delivery was observed.
+- [GitHub expression operators](https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#operators):
+  empty strings are false values. Guard both channel branches independently so
+  missing stable material cannot fall through to a canary value.
+- The source-bound preparation report records both review threads and the
+  expanded unprivileged environment/input/script regression boundary.
