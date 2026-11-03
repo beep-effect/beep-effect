@@ -334,6 +334,16 @@ This supersedes earlier pending hosted statements only for that exact head.
 Family review and adversarial scaling remain open. See
 [hosted qualification](history/evidence/2026-11-03-hosted-canonical-qualification.md).
 
+Latest canonical constructor checkpoint (2026-11-03): independent pinned-source
+observations restore the bound class omitted by inherited-method normalization.
+All 6,805 default extractor recipes (6,799 citation and six special classes) now
+bind pattern identity/flags and ordered references to all 2,533 frozen editions.
+The private registry maps existing edition-owner identities and returns fresh
+constructor extras; full metadata replay and negative controls pass. Canonical
+worker/capture/assembly composition, aggregate output reservation and general
+custom protocols remain open. See
+[recipe evidence](history/evidence/2026-11-03-extractor-recipes.md).
+
 Latest worker evidence (2026-10-31): private process ownership now covers bounded
 schema frames, captured Clock timers, queue/active limits, forced stop,
 acknowledged cleanup and quarantine without permit reuse. Real-process tests

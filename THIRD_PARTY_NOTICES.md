@@ -43,7 +43,9 @@ through the existing set adapter and captured edition hash/equality facts.
 Independent source observations and their proof limits are recorded in the
 citation-engine packet. `TokenCapture.ts` binds native source captures and named
 ordinals to these built-in constructors, preserving source failure order and
-frozen array/bool extras. Fresh-process hash production, general custom protocols
+frozen array/bool extras. `ExtractorRecipes.ts` preserves the actual bound built-in
+constructor class and ordered edition references of the canonical extractors.
+Fresh-process hash production, general custom protocols
 and complete public tokenizer integration remain open.
 
 The citation oracle fixture baseline also incorporates normalized output and

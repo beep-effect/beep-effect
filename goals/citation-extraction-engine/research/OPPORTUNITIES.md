@@ -189,3 +189,13 @@
   Effect Array/Order. Every constructor now asserts its output group-key order.
 - Prevention: preserve source-observable order separately before canonical JSON
   normalization; do not treat wire object order as a semantic iteration receipt.
+
+### Bound class methods need an explicit receiver identity
+
+Canonical integration exposed that the existing callable snapshot identifies an
+inherited function while losing its bound class. The same Token.from_match
+function constructs seven different built-in classes in the default extractors.
+Keep that original snapshot within its declared comparison scope; add independent
+receiver-class observations before using it as a constructor recipe. The new
+source probe checks all 6,805 default records and preserves ordered edition refs.
+See history/evidence/2026-11-03-extractor-recipes.md.

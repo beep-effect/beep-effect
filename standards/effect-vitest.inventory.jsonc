@@ -5885,6 +5885,28 @@
       "reason": "Per-test BunFileSystem layer reads and authenticates committed oracle artifact bytes through the real shared fixture loader. An independently seeded MemoryFileSystem would remove the repository-artifact proof. Owner: @beep/law-practice-server. Exit: retire when native artifact authentication is isolated and an already authenticated corpus is injected into this replay test. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-03-native-capture-binding.md."
     },
     {
+      "id": "EV010:packages/law-practice/server/test/CitationExtractorRecipes.test.ts:11:@effect/platform-bun/BunFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/CitationExtractorRecipes.test.ts",
+      "line": 11,
+      "endLine": 11,
+      "symbol": "@effect/platform-bun/BunFileSystem",
+      "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as BunFileSystem from \"@effect/platform-bun/BunFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Reads and authenticates committed canonical source recipe bytes through BunFileSystem.layer and Digest. Independently seeded memory files remove repository-artifact authentication. Owner: @beep/law-practice-server. Exit: retire when an independently authenticated corpus is injected. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-03-extractor-recipes.md."
+    },
+    {
       "id": "EV010:packages/law-practice/server/test/CitationExtractorSelection.test.ts:5:@effect/platform-bun/BunServices@0#1",
       "lens": "resource",
       "ruleId": "EV010",
