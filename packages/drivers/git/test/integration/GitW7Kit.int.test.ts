@@ -107,14 +107,16 @@ it.layer(TestLayer, { timeout: "60 seconds" })("Git W7 kit — real repository",
       yield* raw(["add", "a.txt", ".gitignore"]);
       yield* raw(["add", "--force", "keep.log"]);
       yield* raw(["commit", "-m", "base", "-m", "the base body"]);
-      baseSha = Str.trim(yield* raw(["rev-parse", "HEAD"]));
+      const gitResult1 = yield* raw(["rev-parse", "HEAD"]);
+      baseSha = Str.trim(gitResult1);
       yield* raw(["branch", "conflict"]);
       yield* raw(["branch", "clean"]);
       yield* fs.writeFileString(path.join(dir, "a.txt"), "main\n");
       yield* fs.writeFileString(path.join(dir, "b.txt"), "b\n");
       yield* raw(["add", "a.txt", "b.txt"]);
       yield* raw(["commit", "-m", "main change"]);
-      mainSha = Str.trim(yield* raw(["rev-parse", "HEAD"]));
+      const gitResult2 = yield* raw(["rev-parse", "HEAD"]);
+      mainSha = Str.trim(gitResult2);
       yield* raw(["checkout", "-q", "conflict"]);
       yield* fs.writeFileString(path.join(dir, "a.txt"), "conflict\n");
       yield* raw(["commit", "-am", "conflicting change"]);
@@ -137,8 +139,10 @@ it.layer(TestLayer, { timeout: "60 seconds" })("Git W7 kit — real repository",
     it.effect("revListCount counts a range and types an unknown one", () =>
       Effect.gen(function* () {
         const git = yield* Git;
-        assert.strictEqual(yield* git.revListCount(dir, `${baseSha}..main`), 1);
-        assert.strictEqual(yield* git.revListCount(dir, "main", { firstParent: true }), 2);
+        const gitResult3 = yield* git.revListCount(dir, `${baseSha}..main`);
+        assert.strictEqual(gitResult3, 1);
+        const gitResult4 = yield* git.revListCount(dir, "main", { firstParent: true });
+        assert.strictEqual(gitResult4, 2);
         const error = yield* Effect.flip(git.revListCount(dir, "nope..main"));
         assert.isTrue(S.is(UnknownRefError)(error));
       })
@@ -157,17 +161,22 @@ it.layer(TestLayer, { timeout: "60 seconds" })("Git W7 kit — real repository",
         }
         const error = yield* Effect.flip(git.mergeTree(dir, "main", "nope"));
         assert.isTrue(S.is(UnknownRefError)(error));
-        assert.strictEqual(Str.trim(yield* runFixtureGit(dir, ["rev-parse", "HEAD"])), mainSha);
+        const gitResult5 = yield* runFixtureGit(dir, ["rev-parse", "HEAD"]);
+        assert.strictEqual(Str.trim(gitResult5), mainSha);
       })
     );
 
     it.effect("upstream reads the exact branch, never a prefix match", () =>
       Effect.gen(function* () {
         const git = yield* Git;
-        assertSome(yield* git.upstream(dir, "main"), "refs/remotes/origin/main");
-        assertNone(yield* git.upstream(dir, "conflict"));
-        assertNone(yield* git.upstream(dir, "feat"));
-        assertNone(yield* git.upstream(dir, "missing"));
+        const gitResult6 = yield* git.upstream(dir, "main");
+        assertSome(gitResult6, "refs/remotes/origin/main");
+        const gitResult7 = yield* git.upstream(dir, "conflict");
+        assertNone(gitResult7);
+        const gitResult8 = yield* git.upstream(dir, "feat");
+        assertNone(gitResult8);
+        const gitResult9 = yield* git.upstream(dir, "missing");
+        assertNone(gitResult9);
       })
     );
 
@@ -175,16 +184,19 @@ it.layer(TestLayer, { timeout: "60 seconds" })("Git W7 kit — real repository",
       Effect.gen(function* () {
         const git = yield* Git;
         yield* git.updateRef(dir, "refs/archive/lane", { create: mainSha });
-        assert.isTrue(yield* git.refExists(dir, "refs/archive/lane"));
+        const gitResult10 = yield* git.refExists(dir, "refs/archive/lane");
+        assert.isTrue(gitResult10);
         const again = yield* Effect.flip(git.updateRef(dir, "refs/archive/lane", { create: baseSha }));
         assert.strictEqual(S.is(GitCommandError)(again) ? again.kind : "", "failed");
         const wrong = yield* Effect.flip(git.updateRef(dir, "refs/archive/lane", { delete: baseSha }));
         assert.strictEqual(S.is(GitCommandError)(wrong) ? wrong.kind : "", "failed");
-        assert.isTrue(yield* git.refExists(dir, "refs/archive/lane"));
+        const gitResult11 = yield* git.refExists(dir, "refs/archive/lane");
+        assert.isTrue(gitResult11);
         const invalid = yield* Effect.flip(git.updateRef(dir, "refs/archive/a b", { create: mainSha }));
         assert.strictEqual(S.is(GitCommandError)(invalid) ? invalid.kind : "", "refused");
         yield* git.updateRef(dir, "refs/archive/lane", { delete: mainSha });
-        assert.isFalse(yield* git.refExists(dir, "refs/archive/lane"));
+        const gitResult12 = yield* git.refExists(dir, "refs/archive/lane");
+        assert.isFalse(gitResult12);
       })
     );
 
@@ -195,10 +207,8 @@ it.layer(TestLayer, { timeout: "60 seconds" })("Git W7 kit — real repository",
         const gitDir = yield* git.gitDir(dir);
         assert.isTrue(path.isAbsolute(gitDir));
         assert.strictEqual(path.basename(gitDir), ".git");
-        assert.strictEqual(
-          yield* git.gitDir(dir, { path: "info/attributes" }),
-          path.join(gitDir, "info", "attributes")
-        );
+        const gitResult13 = yield* git.gitDir(dir, { path: "info/attributes" });
+        assert.strictEqual(gitResult13, path.join(gitDir, "info", "attributes"));
       })
     );
 
@@ -210,12 +220,14 @@ it.layer(TestLayer, { timeout: "60 seconds" })("Git W7 kit — real repository",
         const ranged = yield* git.diffPatch(dir, { base: baseSha, head: "main", unified: 0, pathspec: ["b.txt"] });
         assert.include(ranged, "+++ b/b.txt");
         assert.notInclude(ranged, "a.txt");
-        assert.strictEqual(yield* git.diffPatch(dir, { base: "HEAD" }), "");
+        const gitResult14 = yield* git.diffPatch(dir, { base: "HEAD" });
+        assert.strictEqual(gitResult14, "");
         const outside = path.join(root, "loose.txt");
         yield* fs.writeFileString(outside, "loose\n");
         const added = yield* git.diffPatch(root, { noIndex: ["/dev/null", outside], binary: true });
         assert.include(added, "new file mode");
-        assert.strictEqual(yield* git.diffPatch(root, { noIndex: [outside, outside] }), "");
+        const gitResult15 = yield* git.diffPatch(root, { noIndex: [outside, outside] });
+        assert.strictEqual(gitResult15, "");
         const missing = yield* Effect.flip(git.diffPatch(root, { noIndex: [path.join(root, "absent"), outside] }));
         assert.strictEqual(S.is(GitCommandError)(missing) ? missing.kind : "", "failed");
       })
@@ -246,20 +258,25 @@ it.layer(TestLayer, { timeout: "60 seconds" })("Git W7 kit — real repository",
         const git = yield* Git;
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        assert.deepStrictEqual(yield* git.checkIgnore(dir, ["keep.log"]), []);
-        assert.deepStrictEqual(yield* git.checkIgnore(dir, ["keep.log"], { noIndex: true }), ["keep.log"]);
+        const gitResult16 = yield* git.checkIgnore(dir, ["keep.log"]);
+        assert.deepStrictEqual(gitResult16, []);
+        const gitResult17 = yield* git.checkIgnore(dir, ["keep.log"], { noIndex: true });
+        assert.deepStrictEqual(gitResult17, ["keep.log"]);
         yield* fs.writeFileString(path.join(dir, "new.log"), "ignored\n");
         const refused = yield* Effect.flip(git.add(dir, ["new.log"]));
         assert.isTrue(S.is(GitCommandError)(refused));
         yield* git.add(dir, ["new.log"], { force: true });
         yield* fs.writeFileString(path.join(dir, "b.txt"), "unstaged\n");
         yield* git.stashPush(dir, { keepIndex: true, message: "w7" });
-        assert.deepStrictEqual(yield* git.stagedChanges(dir), ["new.log"]);
-        assert.deepStrictEqual(yield* git.unstagedChanges(dir), []);
+        const gitResult18 = yield* git.stagedChanges(dir);
+        assert.deepStrictEqual(gitResult18, ["new.log"]);
+        const gitResult19 = yield* git.unstagedChanges(dir);
+        assert.deepStrictEqual(gitResult19, []);
         yield* runFixtureGit(dir, ["config", "commit.gpgsign", "true"]);
         yield* git.commit(dir, "force-added log", { noGpgSign: true });
         yield* runFixtureGit(dir, ["config", "commit.gpgsign", "false"]);
-        assert.strictEqual((yield* git.commitInfo(dir)).signatureStatus, "N");
+        const gitResult20 = yield* git.commitInfo(dir);
+        assert.strictEqual(gitResult20.signatureStatus, "N");
       })
     );
 
@@ -274,8 +291,10 @@ it.layer(TestLayer, { timeout: "60 seconds" })("Git W7 kit — real repository",
         );
         const lane = path.join(root, "lane");
         yield* git.worktreeAdd(dir, lane, { ref: baseSha, newBranch: "feat/lane" });
-        assertSome(yield* git.currentBranch(lane), "feat/lane");
-        assert.strictEqual(yield* git.submoduleForeach(dir, "pwd", { quiet: true }), "");
+        const gitResult21 = yield* git.currentBranch(lane);
+        assertSome(gitResult21, "feat/lane");
+        const gitResult22 = yield* git.submoduleForeach(dir, "pwd", { quiet: true });
+        assert.strictEqual(gitResult22, "");
       })
     );
 
@@ -286,11 +305,13 @@ it.layer(TestLayer, { timeout: "60 seconds" })("Git W7 kit — real repository",
         const path = yield* Path.Path;
         yield* runFixtureGit(dir, ["branch", "late"]);
         yield* git.fetch(clone, { prune: true, noTags: true });
-        assert.isTrue(yield* git.refExists(clone, "refs/remotes/origin/late"));
+        const gitResult23 = yield* git.refExists(clone, "refs/remotes/origin/late");
+        assert.isTrue(gitResult23);
         const fetchHead = path.join(clone, ".git", "FETCH_HEAD");
         yield* fs.remove(fetchHead);
         yield* git.fetch(clone, { ref: baseSha, noWriteFetchHead: true });
-        assert.isFalse(yield* fs.exists(fetchHead));
+        const gitResult24 = yield* fs.exists(fetchHead);
+        assert.isFalse(gitResult24);
       })
     );
   });
