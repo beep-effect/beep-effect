@@ -354,6 +354,50 @@ layer(testLayer, { timeout: "60 seconds" })("lint policy change facts", (it) => 
     })
   );
 
+  it.effect("seals an uncompilable glob by its literal prefix", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped();
+      // Past the compile length guard, so the glob cannot be compiled.
+      const prefix = `packages/demo/${Str.repeat(70_000)("a")}`;
+      yield* fs.makeDirectory(path.join(root, "standards"), { recursive: true });
+      yield* fs.writeFileString(
+        path.join(root, "standards/policy-tools.fingerprint.json"),
+        yield* encodeJson({
+          schemaVersion: "policy-tools-fingerprint/v2",
+          shared: [`${prefix}*.json`],
+          sharedTasks: [],
+          check: [],
+          entries: [],
+        })
+      );
+      const seal = yield* readLintPolicySeal(root);
+      assertSome(
+        O.map(seal, (isSealed) => isSealed(`${prefix}/x.json`)),
+        true
+      );
+      assertSome(
+        O.map(seal, (isSealed) => isSealed("packages/demo/src/index.ts")),
+        false
+      );
+    })
+  );
+
+  it.effect("falls back to the source config when bun build rejects the plugin", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped();
+      const source = "packages/tooling/policy-pack/lint-rules/src/rules/docs.index.ts";
+      yield* fs.makeDirectory(path.join(root, path.dirname(source)), { recursive: true });
+      yield* fs.writeFileString(path.join(root, source), "export default {{{ not typescript\n");
+      yield* fs.writeFileString(path.join(root, DOCS_OXLINT_CONFIG), `{ "jsPlugins": ["./${source}"] }`);
+      expect(yield* prepareDocsOxlintConfig(root)).toBe(DOCS_OXLINT_CONFIG);
+      expect(yield* fs.exists(path.join(root, PREBUILT_DOCS_OXLINT_CONFIG))).toBe(false);
+    })
+  );
+
   it.effect("bundles the documentation plugin and derives a config that loads the bundle", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
