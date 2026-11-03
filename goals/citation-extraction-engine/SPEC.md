@@ -548,6 +548,15 @@ instead of silently splitting delivery or weakening scope.
 
 ## Decision Log
 
+- **2026-11-03 metadata strings:** preserve native comma/space-only pincite
+  cleanup and parenthetical balance scanning, including the source's early
+  return before year filtering. Reuse the existing Effect context matcher and
+  worker for exact YEAR_REGEX; preflight retained input and its additional
+  copies before native admission. The final Layer still owns source pattern
+  installation and whole-engine accounting. Reversal removes the private
+  adapter and corpus, reopening these required helper behaviors without a waiver.
+  See `history/evidence/2026-11-03-metadata-strings.md`.
+
 - **2026-11-03 metadata year:** preserve native Python integer grammar using
   existing frozen Unicode facts and shared Effect collections, with bounded
   accumulation above the largest source-valid date ceiling. Capture the source

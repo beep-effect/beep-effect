@@ -1,5 +1,14 @@
 # Citation Extraction Engine Plan
 
+Metadata string checkpoint (2026-11-03): clean_pin_cite and
+process_parenthetical preserve all native source distinctions and early-return
+order. Source capture retains 997 cases and 989 year-search routes. Seventeen
+focused tests pass; every pincite result compares locally and both runtime
+parenthetical smokes confirm 25 child exits. Full hosted parenthetical replay
+requires 989 exits per runtime. Law metadata assignment and whole-engine stage
+accounting remain open. See
+[metadata strings evidence](history/evidence/2026-11-03-metadata-strings.md).
+
 Metadata year checkpoint (2026-11-03): source get_year conversion matches all
 1,169 observations, including the complete Python decimal/digit sets, integer
 whitespace, separators and conversion limit. Effect Clock and CurrentTimeZone

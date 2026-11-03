@@ -231,3 +231,13 @@ intended ownership and avoids direct Effect.provide inside test bodies, which
 the repository's strict Effect diagnostic rejects. Thirteen focused tests now
 pass without deadline weakening or diagnostic suppression. See
 history/evidence/2026-11-03-metadata-year.md.
+
+
+### Keep native hex fields outside natural-language spelling checks
+
+The metadata string corpus preserved repeated native words as hexadecimal bytes.
+The commit hook misread ed0ded0ded0ded0d as a misspelled word. A spelling type
+limited to metadata-strings.json now ignores only its hexadecimal bytes fields;
+prose and every source/schema/hash/replay assertion remain checked. A reusable
+byte-field-aware spelling classifier would avoid repeating fixture exceptions.
+See history/evidence/2026-11-03-metadata-strings.md.

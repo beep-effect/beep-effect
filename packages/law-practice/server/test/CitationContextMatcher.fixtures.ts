@@ -4,17 +4,14 @@ import {
   CitationContextMatch,
   makeCitationContextMatcher,
 } from "@beep/law-practice-server/internal/Citation/ContextMatcher";
-import { CitationNativeProcessAdmission } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
 import { CitationRegexPatternDescriptor } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
 import { CitationRegexSourceFlags } from "@beep/law-practice-server/internal/Citation/RegexEngine";
 import { CitationTokenContextInput } from "@beep/law-practice-server/internal/Citation/TokenContext";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
-import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import { setupCitationRegexRuntime } from "./CitationRegexWorker.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
@@ -75,11 +72,7 @@ const install = Effect.fn("ContextMatcherTest.install")(function* (
     row.pattern,
     row.flags,
     row.bindings
-  ).pipe(
-    Effect.provideService(Clock.Clock, setup.timer.clock),
-    Effect.provideService(CitationNativeProcessAdmission, setup.admission),
-    Effect.provideService(ChildProcessSpawner, setup.observed.spawner)
-  );
+  ).pipe(Effect.provideContext(setup.context));
   return { ...setup, matcher };
 });
 const assertObservation = Effect.fn("ContextMatcherTest.observation")(function* (

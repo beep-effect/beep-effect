@@ -1,0 +1,115 @@
+/** Native clean_pin_cite and process_parenthetical from eyecite helpers.py.
+ * Free Law Project, BSD-2-Clause; see THIRD_PARTY_NOTICES.md.
+ * @internal @packageDocumentation @since 0.0.0
+ */
+import { $LawPracticeServerId } from "@beep/identity/packages";
+import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import { LiteralKit } from "@beep/schema";
+import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import { makeCitationContextMatcher } from "./ContextMatcher.ts";
+import { citationPythonPointAt } from "./PythonUnicode.ts";
+import { makeCitationRegexInput } from "./RegexInput.ts";
+import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import type { CitationPythonUnicodeValue } from "./PythonUnicode.ts";
+
+const $I = $LawPracticeServerId.create("internal/Citation/MetadataStrings");
+const Reason = LiteralKit(["invalid-policy"]).pipe(
+  $I.annoteSchema("Reason", { description: "Closed metadata helper installation failure." })
+);
+/** @internal @category errors @since 0.0.0 */
+export class CitationMetadataStringsFailure extends S.TaggedError<
+  CitationMetadataStringsFailure,
+  { readonly brand: unique symbol }
+>($I`CitationMetadataStringsFailure`)(
+  "CitationMetadataStringsFailure",
+  { reason: Reason },
+  $I.annoteError<CitationMetadataStringsFailure>("CitationMetadataStringsFailure", {
+    description: "Invalid metadata string policy without source payload.",
+  })
+) {}
+const exhausted = () => CitationSafetyLimitExceeded.make({ operation: "extract", limit: "producedTextUtf16" });
+const parenDelta = (point: number) =>
+  Match.value(point).pipe(
+    Match.when(40, () => 1),
+    Match.when(41, () => -1),
+    Match.orElse(() => 0)
+  );
+const closingParen = Effect.fn("Citation.findUnbalancedParentheticalEnd")(function* (
+  source: CitationPythonUnicodeValue
+) {
+  let balance = 0;
+  for (let index = 0; index < source.pythonLength; index++) {
+    if (index % 256 === 0) yield* Effect.yieldNow;
+    balance += parenDelta(citationPythonPointAt(source.storage, index));
+    if (balance < 0) return O.some(index);
+  }
+  return O.none<number>();
+});
+const trimPin = Effect.fn("Citation.trimPinCiteBoundary")(function* (
+  source: CitationPythonUnicodeValue,
+  start: number,
+  stop: number,
+  direction: number
+) {
+  let index = start;
+  while (index !== stop) {
+    if (index % 256 === 0) yield* Effect.yieldNow;
+    const point = citationPythonPointAt(source.storage, index);
+    if (point !== 44 && point !== 32) break;
+    index += direction;
+  }
+  return index;
+});
+/** Capture the independently source-bound YEAR_REGEX and existing worker.
+ * Raw requests contain only native text/null. Calls have R = never and preserve
+ * the source's early closing-parenthesis return before year-prefix filtering.
+ * Trusted pattern installation still belongs to the final engine Layer.
+ * @internal @category operations @since 0.0.0
+ */
+export const makeCitationMetadataStrings = Effect.fn("Citation.makeMetadataStrings")(function* (
+  policy: unknown,
+  runtime: unknown,
+  yearPattern: unknown,
+  bindings: unknown
+) {
+  const limits = yield* decodeCitationRegexPolicy(policy, () =>
+    CitationMetadataStringsFailure.make({ reason: "invalid-policy" })
+  );
+  const timing = yield* makeCitationRegexTiming(limits, true);
+  const input = yield* makeCitationRegexInput(limits, "source");
+  const year = yield* makeCitationContextMatcher(limits, runtime, yearPattern, 64, bindings);
+  const cleanPinCite = Effect.fn("Citation.cleanPinCite")(function* (raw: unknown) {
+    if (raw === null) return null;
+    const source = yield* input.prepareUnicode(raw, () => Effect.void);
+    const start = yield* trimPin(source.value, 0, source.value.pythonLength, 1);
+    const last = yield* trimPin(source.value, source.value.pythonLength - 1, start - 1, -1);
+    return yield* source.slice({ start, end: last + 1 }, (layout) =>
+      source.value.utf16Units + layout.utf16Units > limits.producedTextUtf16 ? Effect.fail(exhausted()) : Effect.void
+    );
+  }, timing.timed);
+  const parenthetical = Effect.fn("Citation.processParenthetical")(function* (raw: unknown) {
+    if (raw === null) return null;
+    const source = yield* input.prepareUnicode(raw, () => Effect.void);
+    const end = yield* closingParen(source.value);
+    if (O.isSome(end)) {
+      if (end.value === 0) return null;
+      return yield* source.slice({ start: 0, end: end.value }, (layout) =>
+        source.value.utf16Units + layout.utf16Units > limits.producedTextUtf16 ? Effect.fail(exhausted()) : Effect.void
+      );
+    }
+    // Existing owned input plus matcher's prefix/context/worker copies.
+    if (4 * source.value.utf16Units > limits.producedTextUtf16) return yield* exhausted();
+    const matched = yield* year.search({
+      words: [],
+      prefix: source.value.storage,
+      startIndex: 0,
+      forward: true,
+      stringsOnly: true,
+    });
+    return matched.match !== null || source.value.pythonLength === 0 ? null : source.value.storage;
+  }, timing.timed);
+  return { cleanPinCite, parenthetical, snapshot: year.snapshot };
+});

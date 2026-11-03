@@ -230,3 +230,8 @@ extend-glob = ["wasi-libc-libc-top-half-musl-COPYRIGHT"]
 Wich = "Wich"
 TRE = "TRE"
 contibutors = "contibutors"
+
+# Native source words are hex data, not prose. Keep the rest of the fixture checked.
+[type.citation-metadata-strings]
+extend-glob = ["metadata-strings.json"]
+extend-ignore-re = ['"bytes": "[0-9a-f]*"']
