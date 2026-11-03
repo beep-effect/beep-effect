@@ -5,22 +5,21 @@
  *
  * Inlined because the runner retirement step deletes them from `GitExec.ts`; the frozen copies import only
  * `StepExec` (which survives) and the adapter type, which the retirement keeps.
+ *
+ * Import repoint only: `StepExec` moved to `@beep/repo-cli-kit/process/StepExec` (#2669, beep-cli-composition W3).
  */
 
-import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
 import {
   formatCommandLine,
   repoRunOutputBound,
   runCaptured,
   runCapturedStreams,
-} from "../../../../packages/tooling/tool/cli/src/internal/process/StepExec.ts";
+} from "@beep/repo-cli-kit/process/StepExec";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import type { RunCapturedOptions, RunCapturedStreamsOptions } from "@beep/repo-cli-kit/process/StepExec";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type {
-  RunCapturedOptions,
-  RunCapturedStreamsOptions,
-} from "../../../../packages/tooling/tool/cli/src/internal/process/StepExec.ts";
 import type { GitCommandErrorAdapter } from "../../../../packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts";
 
 type GitCaptureOutcome = {

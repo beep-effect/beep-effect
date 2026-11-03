@@ -1,5 +1,5 @@
 {
-  "previous": "6b0fb58a97e723463766f5db1750a4f2a7f2294328894b27ff1c70535e900f31",
+  "previous": "a7db6a94bd0bb30934e7eae8e8f75dca93e50d39737f5f0bcdb519a35b8ad1f2",
   "review": {
     "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W7c, feat/gh-git-w7c-worktree)",
     "reason": "Record the W7c seal drift: Worktree.service.ts now imports @beep/github PullRequest and Rest, so PullRequest.ts, Rest.ts and GitHubCommit.ts join the quality-bun-audit, quality-changeset-graph, quality-jsdoc-inventory, quality-jsdoc-module-tags, quality-jsdoc-ratchet and quality-tsgo-rules policy seals; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
@@ -16,5 +16,8 @@
   ],
   "profile": "local-linux-x64-bun1.4.4",
   "epoch": "qualification-v3",
-  "subjects": ["//", "@beep/repo-cli"]
+  "subjects": [
+    "//",
+    "@beep/repo-cli"
+  ]
 }
