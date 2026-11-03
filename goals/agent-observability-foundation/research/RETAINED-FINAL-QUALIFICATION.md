@@ -247,3 +247,20 @@ supplements the earlier unknown-caller observation without rewriting it. Its
 canonical completion result remains unsatisfied. There is no outstanding need
 to identify a competing agent before PR2644 proceeds through normal verification.
 The existing reservation of PR2644's final merge to this chat remains in force.
+
+## Preserve PR2644's unknown completion result
+
+[PR2644](https://github.com/beep-effect/beep-effect/pull/2644) merged at
+2026-11-03T04:40:27Z, accepted head
+`2f97d4734edc4e1cc59da8943eadc0f766e7192e`, as
+`f9654ae19315316a1cf66aa89b4f0f7bd022f7d0`. Its
+[canonical observation](../ops/history/pr2644-completion-unknown-20261103.json)
+remains **unknown**. The exact-head closeout verdict created before merge had no
+positive readiness field. The observer finalized after merge, and Lint Policy
+passed at04:44:16Z. All40 code check runs eventually passed; that later quality
+proof does not establish the missing pre-merge readiness.
+
+The operator elected to retain the pre-merge rule and prepare one further final
+whose merge remains with the owning chat. Preserve the original verdict,
+chronology and receipt. Do not grandfather the packet or supply retrospective
+readiness. Lifecycle remains active until the next actual accepted checkpoint.

@@ -1,0 +1,147 @@
+{
+  "schemaVersion": "sanitized-completion-observation/v1",
+  "recordedAt": "2026-11-03T04:53:47.603131+00:00",
+  "packet": "agent-observability-foundation",
+  "finalPullRequest": 2644,
+  "acceptedHead": "2f97d4734edc4e1cc59da8943eadc0f766e7192e",
+  "merge": {
+    "mergeCommit": "f9654ae19315316a1cf66aa89b4f0f7bd022f7d0",
+    "tree": "bc47655183f5bb242aaa309be289c1156c99648f",
+    "mergedAt": "2026-11-03T04:40:27.000Z",
+    "method": null,
+    "baseRef": "main"
+  },
+  "outcome": "unknown",
+  "requiredChecks": {
+    "contexts": [
+      "Codegen Drift",
+      "Commitlint",
+      "Heavy / Check",
+      "Heavy / Docgen",
+      "Heavy / Doctest",
+      "Heavy / Test Integration",
+      "JSDoc Ratchet",
+      "Lint",
+      "Nix Shell",
+      "Professional Desktop IPC Stdio",
+      "Repo Sanity",
+      "SAST",
+      "Secret Scanning",
+      "Security",
+      "Test Unit"
+    ],
+    "inventoryComplete": true,
+    "effectiveAt": "2026-11-03T04:40:27.000Z"
+  },
+  "evidence": [
+    {
+      "ref": {
+        "kind": "hosted-required-checks",
+        "ref": "required",
+        "gating": true
+      },
+      "outcome": "verified",
+      "observedHead": "2f97d4734edc4e1cc59da8943eadc0f766e7192e",
+      "detail": "Required contexts observed at accepted head before merge; 15 contexts. Merge-time evidence verified: complete rule-suite inventory and 15 green required contexts at the accepted head. The merge-push rule suite supplies the merge-time ruleset inventory, including rulesets deleted since then; GitHub lists rule suites for one month."
+    },
+    {
+      "ref": {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/fix_observability-owner-closeout-54404d5528fb/verdict.json",
+        "gating": true
+      },
+      "outcome": "unknown",
+      "observedHead": "2f97d4734edc4e1cc59da8943eadc0f766e7192e",
+      "detail": "Yeet verdict checked against resolvedHeadSha and mergeReady.ready."
+    },
+    {
+      "ref": {
+        "kind": "hosted-required-checks",
+        "ref": "required",
+        "gating": true
+      },
+      "outcome": "verified",
+      "observedHead": "2f97d4734edc4e1cc59da8943eadc0f766e7192e",
+      "detail": "Hosted required checks at accepted head."
+    }
+  ],
+  "nonRequiredReds": [],
+  "subClaims": [
+    {
+      "ref": {
+        "kind": "packet-history",
+        "ref": "accepted-declaration",
+        "gating": false
+      },
+      "outcome": "verified",
+      "observedHead": "2f97d4734edc4e1cc59da8943eadc0f766e7192e",
+      "detail": "Accepted-head declaration compared with current identity and gate, excluding retrospective PR/evidence references. Changes are historical sub-claims and never reset lifecycle."
+    },
+    {
+      "ref": {
+        "kind": "packet-history",
+        "ref": "draft-to-ready",
+        "gating": false
+      },
+      "outcome": "verified",
+      "observedHead": "2f97d4734edc4e1cc59da8943eadc0f766e7192e",
+      "detail": "ready_for_review event proves transition from draft; caller identity does not prove yeet invocation."
+    },
+    {
+      "ref": {
+        "kind": "packet-history",
+        "ref": "review-window",
+        "gating": false
+      },
+      "outcome": "verified",
+      "observedHead": "2f97d4734edc4e1cc59da8943eadc0f766e7192e",
+      "detail": "Review window at merge: elapsed; anchor 2026-11-03T03:46:02.000Z. Check-suite first receipt plus force-push events use Yeet semantics."
+    },
+    {
+      "ref": {
+        "kind": "yeet-verdict",
+        "ref": "merge-ready",
+        "gating": false
+      },
+      "outcome": "unknown",
+      "observedHead": null,
+      "detail": "No head-bound Yeet verdict inferred from timeline or successful checks."
+    }
+  ],
+  "observer": {
+    "jobId": "839b2f12-a600-4b1a-a3dd-adc5779fe04e",
+    "finalizedAt": "2026-11-03T04:42:42.509Z",
+    "endedAt": "2026-11-03T04:42:41.418Z",
+    "serviceResult": "success",
+    "exitStatus": "0",
+    "finalizedBeforeMerge": false
+  },
+  "premergeVerdict": {
+    "mode": "closeout",
+    "resolvedHeadSha": "2f97d4734edc4e1cc59da8943eadc0f766e7192e",
+    "createdAt": "2026-11-03T04:39:18.040Z",
+    "mergeReadyPresent": false
+  },
+  "laterLintPolicy": {
+    "jobId": 125715576402,
+    "conclusion": "success",
+    "completedAt": "2026-11-03T04:44:16Z",
+    "completedBeforeMerge": false
+  },
+  "finalHostedCheckRunSuccesses": 40,
+  "operatorDecision": "Keep the pre-merge rule; prepare one further final whose merge remains with the owning chat.",
+  "accountAttribution": {
+    "login": "kriegcloud",
+    "initiatingPersonOrChat": "Not independently identified for PR2644; the separate operator clarification applies to PR2612."
+  },
+  "privateArchiveSha256": {
+    "github.json": "b0023b9842d72f6d416fb1b9146eced75e9948e524857fe1502656dfc541fa25",
+    "timeline.json": "0a8f6a14ff648a67787a9ed846d0cfb55061d5716a5403a248b8b7abf0d5702e",
+    "verdict.json": "142893f1ca195c0697e7e0592cb1159ce5d2e7933b51097c9bbd7d255697d1d3",
+    "job-terminal.json": "cc343c788e13b05643e0aaad45de5229e0052e04ea2be1a0c2931a67bf3c73ff",
+    "job-terminal.log": "78e36bc6431c0eaee6143c50d8292a011f382dbece7bd4ce6001cd7b689a0b14",
+    "canonical-receipt-final.json": "ebca79f6985581c9e64024a003d79bc6f6eab13e83dbb3f5bf905565db023c85",
+    "final-lint-policy-job.json": "8e97136ff8e608e97129bdd6fbdedfe3925afa5d85f7a3a5a5e2675f4cb733f4"
+  },
+  "boundary": "Unknown canonical verification is preserved. Later passing checks and successful merged-state observation do not establish the missing pre-merge readiness. Recovery hold and seven real-harness Unknown populations remain unchanged."
+}
