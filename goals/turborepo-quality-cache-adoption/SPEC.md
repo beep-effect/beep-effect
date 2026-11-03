@@ -753,7 +753,8 @@ all pure counterparts and other computations pending, preserve the original
 qualification records and leave every runtime flag unchanged.
 
 Consume the CI lane economics owner's preview with its source and measurement
-limits. Lint and unit-layout repairs confound a cache-only speed comparison;
-the missing final full-week verdict is not an implied pass. Reverse this
+limits. The window-4 preview used the old layout before the listed repairs and
+measures no speed-up from those repairs or Turbo. The missing final full-week
+verdict is not an implied pass. Reverse this
 registration through Git to the retained population and reports. Historical
 receipts and qualification evidence keep their original source and authority.

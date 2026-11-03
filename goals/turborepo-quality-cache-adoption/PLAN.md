@@ -781,8 +781,9 @@ two entrypoint obligations and all pure counterpart qualifications remain open.
 No task body executed or runtime setting changed.
 
 [The economics consumer receipt](research/ci-economics-consumer-checkpoint-2026-11-03.json)
-uses the existing CI lane owner. Its window-4 preview includes lint scan removal,
-test re-binning and two-wide package producers, so the observed speed gains
-cannot be credited solely to Turbo. The accepted source has no final full-week
+uses the existing CI lane owner. Its window-4 preview measured the old shard
+layout, before lint scan removal, test re-binning and two-wide package producers.
+It measures no speed-up from those repairs or from Turbo; the Test Unit gain
+from re-binning remains unobserved. The accepted source has no final full-week
 window-4 verdict. Consume that owner report and the real post-repair window
 before claiming measured value or warming benefits. No competing census ran.

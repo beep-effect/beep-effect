@@ -851,3 +851,14 @@ observed schema difference changed the matrix and next qualification work.
 - Consume the existing economics report rather than attributing its lint/test
   repairs to cache hits. Keep preview measurements separate from the absent
   final full-week verdict and from any new cache-specific before/after proof.
+
+
+### 2026-11-03 — distinguish the preview from later repair effects
+
+- Review #2683 found that the consumer incorrectly described the window-4
+  preview as including later lint and unit-layout repairs. The owning plan
+  states that the census used the old layout.
+- Bind attribution to the measurement window and repair timing before writing
+  a benefit claim. This preview measures no repair or Turbo speed-up; the
+  Test Unit re-bin gain remains unobserved. Correct the plan, receipt and PR
+  description together, retaining the owning source hashes and measurements.

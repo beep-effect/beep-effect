@@ -32,7 +32,7 @@
       "pickupP95Seconds": 678
     }
   },
-  "attribution": "Preview before/after includes both biome project-scan removal and Test Unit re-binning/two-wide package producers; raw speed-up cannot be attributed solely to Turbo. Cache-specific hit/replay evidence and real whole-command timings are separate required joins.",
+  "attribution": "Window-4 preview measured the old shard layout, before biome project-scan removal and Test Unit re-binning/two-wide package producers. It does not measure a speed-up from those repairs or from Turbo; the Test Unit gain from re-binning remains unobserved. Cache-specific hit/replay evidence and real whole-command timings are separate required joins.",
   "next": "Consume the owning final full-window report when available; then compare post-repair window5 under its recorded actual layout and population. No competing timing census started.",
   "schemaVersion": "cache-adoption-economics-owner-consumption/v1",
   "limits": [
