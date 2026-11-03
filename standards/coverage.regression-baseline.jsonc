@@ -36140,6 +36140,18 @@
             "functions": 3
           }
         },
+        "packages/tooling/tool/cli/src/commands/Lint/internal/PolicyRootFiles.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 95.23,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 1,
+            "functions": 0
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstArbitraryCoverage.ts": {
           "lines": 100,
           "statements": 100,
