@@ -767,3 +767,18 @@ pin/collector/schema mutations refuse before client selection, while the retaine
 legacy prefixes do not. Original reports and the prior checkpoint remain retained
 under their exact published source head. No local quality suite or qualification
 ran; the feature stays disabled and pending.
+
+### Individual selector controls, 2026-11-04
+
+The existing composition driver now supports an optional factorial mode. The
+current stable/canary pair passes all 320 native dry-run cases and 320 explicit
+one-flag comparisons, including matched/global inputs and an unmatched file
+inside a changed package. --affected uses task-level selection when either flag
+is enabled; a bare Git-range filter follows filterUsingTasks. The fixture
+executes no tasks and changes no root flag. The checkpoint retains the two
+failed harness hypotheses and the corrected explicit contract.
+
+Read `research/selector-flag-isolation-checkpoint-2026-11-04.json` before any
+flag change. Actual root/caller coverage and qualification remain next; the
+eleven accepted scoped reviews, 25 pending feature reviews and every whole-goal
+acceptance criterion stay unchanged.

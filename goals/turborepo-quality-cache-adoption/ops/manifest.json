@@ -149,7 +149,9 @@
     "research/source-capture-permission-availability-2026-11-03.json",
     "research/source-capture-permission-mode-2026-11-03.json",
     "research/source-capture-prefix-controls-2026-11-03.json",
-    "research/permission-mode-hash-before-source-capture-fix-2026-11-03.json"
+    "research/permission-mode-hash-before-source-capture-fix-2026-11-03.json",
+    "research/native-selector-flag-isolation-controls-2026-11-04.json",
+    "research/selector-flag-isolation-checkpoint-2026-11-04.json"
   ],
   "agentLaunchers": [
     {

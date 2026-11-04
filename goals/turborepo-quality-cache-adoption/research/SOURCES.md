@@ -653,3 +653,15 @@ production qualification.
   `permission-mode-hash-before-source-capture-fix-2026-11-03.json`. Its source
   bindings and earlier observation reports resolve against the recorded prior
   Git head, rather than the repaired files now occupying those paths.
+
+### Selector flag factorial control, 2026-11-04
+
+- `selector-flag-isolation-checkpoint-2026-11-04.json` binds the optional
+  existing driver mode to its actual captured source and native report.
+- `native-selector-flag-isolation-controls-2026-11-04.json` contains all 320
+  selection cases and 320 one-flag comparisons on the frozen stable/current
+  canary pair; source/tool digests are checked before and after execution.
+- Installed `turbo/docs/reference/run.mdx` and
+  `turbo/docs/reference/configuration.mdx` supply selector terminology. The
+  observed interaction is bounded native evidence, not an assumption that the
+  two flags are independent or a whole-repository qualification grant.

@@ -169,6 +169,13 @@
           "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
           "termObserved": true
         }
+      },
+      "currentFlagIsolationObservation": {
+        "checkpoint": "selector-flag-isolation-checkpoint-2026-11-04.json",
+        "report": "native-selector-flag-isolation-controls-2026-11-04.json",
+        "cases": 320,
+        "singleFlagComparisons": 320,
+        "scope": "All four selector flag combinations, one flag varied per comparison; synthetic native selection only. Full current-root/cohort review and task qualification remain pending."
       }
     },
     {
@@ -232,6 +239,13 @@
           "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
           "termObserved": true
         }
+      },
+      "currentFlagIsolationObservation": {
+        "checkpoint": "selector-flag-isolation-checkpoint-2026-11-04.json",
+        "report": "native-selector-flag-isolation-controls-2026-11-04.json",
+        "cases": 320,
+        "singleFlagComparisons": 320,
+        "scope": "All four selector flag combinations, one flag varied per comparison; synthetic native selection only. Full current-root/cohort review and task qualification remain pending."
       }
     },
     {
@@ -946,6 +960,13 @@
         "stableVersion": "2.11.10",
         "canaryVersion": "2.11.11-canary.1",
         "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
+      },
+      "currentFlagIsolationObservation": {
+        "checkpoint": "selector-flag-isolation-checkpoint-2026-11-04.json",
+        "report": "native-selector-flag-isolation-controls-2026-11-04.json",
+        "cases": 320,
+        "singleFlagComparisons": 320,
+        "scope": "All four selector flag combinations, one flag varied per comparison; synthetic native selection only. Full current-root/cohort review and task qualification remain pending."
       }
     },
     {
@@ -1225,6 +1246,13 @@
         "stableVersion": "2.11.10",
         "canaryVersion": "2.11.11-canary.1",
         "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
+      },
+      "currentFlagIsolationObservation": {
+        "checkpoint": "selector-flag-isolation-checkpoint-2026-11-04.json",
+        "report": "native-selector-flag-isolation-controls-2026-11-04.json",
+        "cases": 320,
+        "singleFlagComparisons": 320,
+        "scope": "All four selector flag combinations, one flag varied per comparison; synthetic native selection only. Full current-root/cohort review and task qualification remain pending."
       }
     },
     {

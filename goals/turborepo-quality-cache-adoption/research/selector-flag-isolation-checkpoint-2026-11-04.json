@@ -1,0 +1,129 @@
+{
+  "schemaVersion": "cache-selector-flag-isolation-checkpoint/v1",
+  "recordedAt": "2026-11-04T00:56:32.175189+00:00",
+  "authority": "Bounded synthetic native selector semantics only; no real task qualification, flag activation, hosted proof or performance claim.",
+  "acceptedBase": "31e2ac20f34a1c699a35be55f67881dbf0d8ffd0",
+  "sourceState": "working-tree-bound",
+  "nativeReport": {
+    "path": "research/native-selector-flag-isolation-controls-2026-11-04.json",
+    "sha256": "6c9a905b40c7f46c66f2d989278098044594994eb0ce900f23cb1d66039e18cd",
+    "byteCount": 328539,
+    "driver": "research/native-filter-composition-controls.py",
+    "driverSha256": "10f62d846101a7bcf82718ff3488f84e0e08e89fba5e32144a363eb01d7c4cdb",
+    "cases": 320,
+    "singleFlagComparisons": 320,
+    "clients": {
+      "stable": {
+        "reportedVersion": "2.11.10",
+        "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+      },
+      "canary": {
+        "reportedVersion": "2.11.11-canary.1",
+        "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
+      }
+    },
+    "allSelectionAssertionsPassed": true,
+    "noTasksExecuted": true,
+    "networkIsolated": true,
+    "repositoryNotMounted": true,
+    "sourceAndToolsUnchanged": true,
+    "rawCaptureSha256": "ca0a777bbf574bb7936a28b7c12c5f01e0e85496af940975cfd55f2ffb2a276f",
+    "rawCaptureByteCount": 342939,
+    "decodedContentEqualsRawCapture": true,
+    "serialization": "Ordinary pre-commit formatting changed JSON bytes only; raw and checked-in digests are separate."
+  },
+  "design": {
+    "configurations": [
+      {
+        "variant": "affected:false/filter:false",
+        "futureFlags": {
+          "globalConfiguration": true,
+          "filterUsingTasks": false,
+          "affectedUsingTaskInputs": false
+        }
+      },
+      {
+        "variant": "affected:false/filter:true",
+        "futureFlags": {
+          "globalConfiguration": true,
+          "filterUsingTasks": true,
+          "affectedUsingTaskInputs": false
+        }
+      },
+      {
+        "variant": "affected:true/filter:false",
+        "futureFlags": {
+          "globalConfiguration": true,
+          "filterUsingTasks": false,
+          "affectedUsingTaskInputs": true
+        }
+      },
+      {
+        "variant": "affected:true/filter:true",
+        "futureFlags": {
+          "globalConfiguration": true,
+          "filterUsingTasks": true,
+          "affectedUsingTaskInputs": true
+        }
+      }
+    ],
+    "variedFlags": ["affectedUsingTaskInputs", "filterUsingTasks"],
+    "fixedFlags": {
+      "globalConfiguration": true
+    },
+    "changes": [
+      "product input",
+      "labs input",
+      "unrelated input",
+      "global input",
+      "product file outside declared task inputs"
+    ],
+    "selectors": [
+      "affected",
+      "labs",
+      "labs-affected",
+      "storybook-affected",
+      "exclude-labs-affected",
+      "labs-affected-only",
+      "two-positive-affected",
+      "filter-range"
+    ],
+    "counterfactualRule": "Each comparison checks the actual two configurations differ in exactly its named flag; the other selector flag is fixed false and then true.",
+    "nativeCalls": {
+      "selectionDryRuns": 320,
+      "versionProbes": 8
+    },
+    "bounds": {
+      "wholeSeconds": 600,
+      "perProcessSeconds": 20,
+      "stdoutBytes": 1048576,
+      "stderrBytes": 65536
+    }
+  },
+  "observations": [
+    "With --affected, a package file outside the declared task inputs selects product and its dependent only when both flags are false; either enabled flag narrows that selection to none.",
+    "A bare Git-range filter selects the changed owner, without automatically adding dependents; filtering by task inputs for this selector follows filterUsingTasks regardless of affectedUsingTaskInputs.",
+    "Matched product, labs, unrelated and global inputs retain their explicit expected selections across every configuration and both clients.",
+    "The seven original scope/intersection selectors remain covered; no sentinel command was executed."
+  ],
+  "failedAttempts": [
+    {
+      "case": "bare Git-range dependent closure",
+      "cause": "The initial harness incorrectly expected dependent traversal without an ellipsis. The installed run reference establishes the correction.",
+      "retainedPrivately": true
+    },
+    {
+      "case": "affected false while filter true, unmatched package file",
+      "cause": "The initial independent-flag hypothesis was falsified by actual native selection. The full factorial control includes both flags false and proves the interaction instead.",
+      "retainedPrivately": true
+    }
+  ],
+  "limits": [
+    "The fixture has four synthetic workspace packages and one task; it is not the full current repository graph.",
+    "No task was executed; required hosted status, semantic inputs, output safety, portability, concurrency and qualification remain separate.",
+    "The broader graph/filter/affected/feature reviews remain pending; the current eleven scoped decisions and twenty-five pending decisions do not change.",
+    "No repository future flag, dependency pin, cache, producer, credential or rollout changes."
+  ],
+  "reproduce": "python3 goals/turborepo-quality-cache-adoption/research/native-filter-composition-controls.py --isolate-task-flags --output .beep/selector-flag-isolation-fresh.json",
+  "rollback": "Revert the optional driver mode and its new report, matrix evidence links and packet entries together. Preserve historical reports and current production settings."
+}
