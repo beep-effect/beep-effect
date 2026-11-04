@@ -1355,6 +1355,11 @@
         "stableVersion": "2.11.10",
         "canaryVersion": "2.11.11-canary.1",
         "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
+      },
+      "signedProjectionPreparation": {
+        "review": "../../turborepo-cache-trust-observability/research/signed-key-floor-review-2026-11-04.json",
+        "scope": "The shared pilot/verifier overlay is prepared to enforce the native 32-byte floor. Source preparation grants no activation; current hosted proof, signed remote behavior and rollout acceptance remain pending.",
+        "rootSettingChanged": false
       }
     },
     {

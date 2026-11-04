@@ -741,3 +741,15 @@ results. Six controlled source changes must refuse before client selection; the
 legacy prefixes lack that refusal. No task body executes, feature/tuple is
 qualified or runtime setting changes. Reverse the driver/registration wave
 through Git while retaining both source envelopes and their observations.
+
+### Prepare the signed native minimum-key safeguard, 2026-11-04 UTC
+
+The trust-owned signed overlay must include `longerSignatureKey: true` and
+its projected identity must bind that exact flag. Consume the source review at
+`../turborepo-cache-trust-observability/research/signed-key-floor-review-2026-11-04.json`.
+This prepares the named signed pilot consumer using the recorded native
+32-byte-boundary behavior; it changes no root flag or live cache setting.
+Keep the feature pending until current hosted, signed remote and rollout
+evidence satisfy its remaining gates. Missing-key roles and protected producer
+authority remain independent. Suspend affected candidate tuples before a
+reviewed revert; do not relabel historical qualification for the new overlay.

@@ -421,9 +421,10 @@ const decodeJsonObject = S.decodeUnknownEffect(S.JsonObject);
  * Project the exact signed-root overlay shared by the pilot and its verifier.
  *
  * **Details**
- * Preserves every setting except remote-cache enablement and signature
- * verification. Supports legacy root settings and the global-configuration
- * layout, rejecting malformed containers instead of guessing their shape.
+ * Preserves every setting except remote-cache enablement, signature verification
+ * and native enforcement of a minimum 32-byte signing key. Supports legacy root
+ * settings and the global-configuration layout, rejecting malformed containers
+ * instead of guessing their shape. Missing-key role policy remains separate.
  *
  * **Example** (Prepare a signed root)
  * ```ts
@@ -453,8 +454,9 @@ export const projectCacheSignedRoot = Effect.fn("CacheFingerprint.projectSignedR
     enabled: true,
     signature: true,
   });
+  const signedRoot = usesGlobal ? R.set(rootConfig, "global", signedConfiguration) : signedConfiguration;
   return yield* JsonStringCodec(S.JsonObject).encode(
-    usesGlobal ? R.set(rootConfig, "global", signedConfiguration) : signedConfiguration
+    R.set(signedRoot, "futureFlags", { ...flags, longerSignatureKey: true })
   );
 }, CacheCommandError.mapError("Cannot project the reviewed signed root configuration."));
 

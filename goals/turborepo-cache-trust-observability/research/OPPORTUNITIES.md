@@ -2253,3 +2253,14 @@ toolchain is already present. Follow upstream package guidance (`perl-core` on
 RPM systems, `perl` on Debian), keep the existing bounds and retain an actual
 accepted-source build as the gate. Do not convert a source regression check into
 compiled-artifact proof.
+
+## 2026-11-04 UTC: signed overlays omitted native key-length enforcement
+
+While reviewing the pending feature matrix, source inspection of
+`projectCacheSignedRoot` found signatures enabled without the native
+`longerSignatureKey` safeguard. The already recorded 168-case native experiment
+shows short supplied keys still execute in that default configuration.
+Prepare the safeguard in the existing shared projector rather than another
+key-policy helper. Preserve independent missing-key roles and exact overlay
+verification. Owner: trust goal; hosted regressions and signed rollout remain
+pending. No credential was read and no live setting was changed.
