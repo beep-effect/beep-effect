@@ -2264,3 +2264,10 @@ Prepare the safeguard in the existing shared projector rather than another
 key-policy helper. Preserve independent missing-key roles and exact overlay
 verification. Owner: trust goal; hosted regressions and signed rollout remain
 pending. No credential was read and no live setting was changed.
+
+The first hosted Fallow run on PR #2692 found one introduced cognitive-complexity
+finding in the new four-row key-floor test: two nested Boolean loops plus two
+layout branches scored 9. The retained audit and health raw reports name the
+same test. Enumerate the same four input pairs in one loop instead, preserving
+every assertion and avoiding helper extraction or a raised threshold. Owner:
+this PR; current hosted Fallow proof remains required after the repair.

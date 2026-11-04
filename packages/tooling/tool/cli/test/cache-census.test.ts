@@ -622,28 +622,31 @@ describe("signed root projection", () => {
   );
   it.effect("enforces the native key floor while preserving unrelated future flags", () =>
     Effect.gen(function* () {
-      for (const globalConfiguration of [false, true]) {
-        for (const longerSignatureKey of [false, true]) {
-          const remoteCache = { enabled: false, signature: false, timeout: 42 };
-          const configuration = globalConfiguration ? { global: { remoteCache } } : { remoteCache };
-          const source = yield* encodeJsonObjectJson({
-            ...configuration,
-            tasks: { lint: { cache: false } },
-            futureFlags: { globalConfiguration, longerSignatureKey, filterUsingTasks: false },
-          });
-          const projected = yield* projectCacheSignedRoot(source);
-          const decoded = yield* S.decodeEffect(CensusJsonObject)(projected);
-          const signedRemoteCache = { enabled: true, signature: true, timeout: 42 };
-          expect(decoded).toEqual({
-            ...(globalConfiguration
-              ? { global: { remoteCache: signedRemoteCache } }
-              : { remoteCache: signedRemoteCache }),
-            tasks: { lint: { cache: false } },
-            futureFlags: { globalConfiguration, longerSignatureKey: true, filterUsingTasks: false },
-          });
-          const repeated = yield* projectCacheSignedRoot(projected);
-          expect(repeated).toBe(projected);
-        }
+      for (const { globalConfiguration, longerSignatureKey } of [
+        { globalConfiguration: false, longerSignatureKey: false },
+        { globalConfiguration: false, longerSignatureKey: true },
+        { globalConfiguration: true, longerSignatureKey: false },
+        { globalConfiguration: true, longerSignatureKey: true },
+      ]) {
+        const remoteCache = { enabled: false, signature: false, timeout: 42 };
+        const configuration = globalConfiguration ? { global: { remoteCache } } : { remoteCache };
+        const source = yield* encodeJsonObjectJson({
+          ...configuration,
+          tasks: { lint: { cache: false } },
+          futureFlags: { globalConfiguration, longerSignatureKey, filterUsingTasks: false },
+        });
+        const projected = yield* projectCacheSignedRoot(source);
+        const decoded = yield* S.decodeEffect(CensusJsonObject)(projected);
+        const signedRemoteCache = { enabled: true, signature: true, timeout: 42 };
+        expect(decoded).toEqual({
+          ...(globalConfiguration
+            ? { global: { remoteCache: signedRemoteCache } }
+            : { remoteCache: signedRemoteCache }),
+          tasks: { lint: { cache: false } },
+          futureFlags: { globalConfiguration, longerSignatureKey: true, filterUsingTasks: false },
+        });
+        const repeated = yield* projectCacheSignedRoot(projected);
+        expect(repeated).toBe(projected);
       }
     })
   );
