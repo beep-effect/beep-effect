@@ -577,6 +577,63 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
     )
   );
 
+  it.effect("rejects absent or malformed affected-query task arrays", () =>
+    Effect.forEach(
+      [
+        "",
+        "{}",
+        '{"data":null}',
+        '{"data":{"affectedTasks":{"items":{}}}}',
+        '{"data":{"affectedTasks":{"items":[null]}}}',
+      ],
+      (output) =>
+        summarizeTurboQueryAffectedOutput(output).pipe(
+          Effect.flip,
+          Effect.map((error) => expect(error._tag).toBe("TurboConfigProofError"))
+        ),
+      { concurrency: 1 }
+    )
+  );
+
+  it.effect("rejects absent or malformed dry-run task arrays", () =>
+    Effect.forEach(
+      ["", "{}", '{"tasks":"missing"}', '{"tasks":[null]}', '{"tasks":[],"packages":{}}'],
+      (output) =>
+        summarizeTurboDryRunOutput(output).pipe(
+          Effect.flip,
+          Effect.map((error) => expect(error._tag).toBe("TurboConfigProofError"))
+        ),
+      { concurrency: 1 }
+    )
+  );
+
+  it.effect("does not retain synthetic native payload values in parser failures", () => {
+    const sentinel = "synthetic-native-payload-must-not-be-retained";
+    return Effect.forEach(
+      [
+        summarizeTurboDryRunOutput(`{"${sentinel}":`),
+        summarizeTurboDryRunOutput(encodeJson({ tasks: sentinel })),
+        summarizeTurboQueryAffectedOutput(encodeJson({ data: { affectedTasks: { items: sentinel } } })),
+      ],
+      (parse) =>
+        parse.pipe(
+          Effect.flip,
+          Effect.map((error) => expect(encodeJson(error)).not.toContain(sentinel))
+        ),
+      { concurrency: 1 }
+    );
+  });
+
+  it.effect("preserves explicitly empty native selections", () =>
+    Effect.gen(function* () {
+      const query = yield* summarizeTurboQueryAffectedOutput('{"data":{"affectedTasks":{"items":[]}}}');
+      const dry = yield* summarizeTurboDryRunOutput('{"tasks":[]}');
+      expect(query.total).toBe(0);
+      expect(dry.total).toBe(0);
+      expect(dry.packages).toBe(0);
+    })
+  );
+
   it.effect("summarizes Turbo dry-run output by task and cache status", () =>
     Effect.gen(function* () {
       const summary = yield* summarizeTurboDryRunOutput(`• turbo 2.9.16

@@ -150,7 +150,8 @@
     "research/source-capture-permission-mode-2026-11-03.json",
     "research/source-capture-prefix-controls-2026-11-03.json",
     "research/permission-mode-hash-before-source-capture-fix-2026-11-03.json",
-    "research/proof-scm-ref-binding-review-2026-11-04.json"
+    "research/proof-scm-ref-binding-review-2026-11-04.json",
+    "research/actual-current-law-check-selection-2026-11-04.json"
   ],
   "agentLaunchers": [
     {

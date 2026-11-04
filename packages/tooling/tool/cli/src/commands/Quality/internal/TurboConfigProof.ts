@@ -310,7 +310,30 @@ type CommandOutput = {
 };
 
 const UnknownStringRecord = S.Record(S.String, S.Unknown);
+/** Required query envelope; an absent task array is not an empty selection. */
+class TurboQuerySelection extends S.Opaque<TurboQuerySelection, { readonly brand: unique symbol }>()(
+  S.Struct({
+    data: S.Struct({ affectedTasks: S.Struct({ items: S.Array(UnknownStringRecord) }) }),
+  }).pipe(
+    $I.annoteSchema("TurboQuerySelection", {
+      description: "Native affected query envelope with an explicitly reported task array.",
+    })
+  )
+) {}
+/** Required dry-run envelope, retaining the optional package inventory. */
+class TurboDrySelection extends S.Opaque<TurboDrySelection, { readonly brand: unique symbol }>()(
+  S.Struct({
+    tasks: S.Array(UnknownStringRecord),
+    packages: S.OptionFromOptionalKey(S.Array(S.Unknown)),
+  }).pipe(
+    $I.annoteSchema("TurboDrySelection", {
+      description: "Native dry-run envelope with an explicit task array and optional package inventory.",
+    })
+  )
+) {}
 const decodeJsonText = S.decodeUnknownEffect(UnknownJson);
+const decodeQuerySelection = S.decodeUnknownEffect(TurboQuerySelection);
+const decodeDrySelection = S.decodeUnknownEffect(TurboDrySelection);
 const decodeUnknownRecordOption = S.decodeUnknownOption(UnknownStringRecord);
 const encodeReportJson = S.encodeUnknownEffect(UnknownJson);
 const isProofTaskName = S.is(TurboConfigProofTaskName);
@@ -332,18 +355,7 @@ const increment = (record: Record<string, number>, key: string): Record<string, 
 const getRecord = (value: unknown): O.Option<Record<string, unknown>> =>
   A.isArray(value) ? O.none() : decodeUnknownRecordOption(value);
 
-const getArray = (value: unknown): ReadonlyArray<unknown> => (A.isArray(value) ? value : A.empty<unknown>());
-
 const getString = (value: unknown): O.Option<string> => (P.isString(value) ? O.some(value) : O.none());
-
-const getPath = (value: unknown, path: ReadonlyArray<string>): O.Option<unknown> =>
-  A.reduce(path, O.some(value) as O.Option<unknown>, (current, key) =>
-    pipe(
-      current,
-      O.flatMap(getRecord),
-      O.flatMap((record) => O.fromUndefinedOr(record[key]))
-    )
-  );
 
 const jsonPayloadFromOutput = (output: string): O.Option<string> => {
   const start = Str.indexOf("{")(output);
@@ -399,14 +411,6 @@ const cacheStatusFromDryRunItem = (item: Record<string, unknown>): string =>
     O.getOrElse(() => "unknown")
   );
 
-const packageCountFromDocument = (document: unknown): number =>
-  pipe(
-    getPath(document, ["packages"]),
-    O.map(getArray),
-    O.map(A.length),
-    O.getOrElse(() => 0)
-  );
-
 const parseTurboJsonOutput = Effect.fn("TurboConfigProof.parseTurboJsonOutput")(function* (
   output: string
 ): Effect.fn.Return<unknown, TurboConfigProofError> {
@@ -415,12 +419,29 @@ const parseTurboJsonOutput = Effect.fn("TurboConfigProof.parseTurboJsonOutput")(
     O.getOrElse(() => "{}")
   );
   return yield* decodeJsonText(payload).pipe(
-    Effect.mapError(TurboConfigProofError.mapError("Turbo command output did not contain valid JSON."))
+    Effect.mapError(() => TurboConfigProofError.new("Turbo command output did not contain valid JSON."))
   );
 });
 
 /**
  * Convert `turbo query affected` JSON into package, task, and reason counts.
+ *
+ * **Details**
+ *
+ * A task array must be explicitly present. Invalid payloads fail without
+ * retaining their raw values in the error; a reported empty array yields zero.
+ *
+ * **Example** (Count an explicitly empty affected selection)
+ *
+ * ```ts
+ * import { summarizeTurboQueryAffectedOutput } from "@beep/repo-cli/commands/Quality";
+ * import * as Effect from "effect/Effect";
+ *
+ * const count = summarizeTurboQueryAffectedOutput('{"data":{"affectedTasks":{"items":[]}}}').pipe(
+ *   Effect.map((summary) => summary.total)
+ * );
+ * void count;
+ * ```
  *
  * @param output - Captured command output.
  * @returns Count summary for affected tasks.
@@ -429,32 +450,40 @@ const parseTurboJsonOutput = Effect.fn("TurboConfigProof.parseTurboJsonOutput")(
  */
 export const summarizeTurboQueryAffectedOutput = Effect.fn("TurboConfigProof.summarizeTurboQueryAffectedOutput")(
   function* (output: string): Effect.fn.Return<TurboConfigProofCountSummary, TurboConfigProofError> {
-    const document = yield* parseTurboJsonOutput(output);
-    const items = pipe(getPath(document, ["data", "affectedTasks", "items"]), O.map(getArray), O.getOrElse(A.empty));
-
-    return A.reduce(items, emptySummary(), (summary, item) =>
-      pipe(
-        getRecord(item),
-        O.match({
-          onNone: () => summary,
-          onSome: (record) => {
-            const task = taskNameFromQueryItem(record);
-            const reason = reasonNameFromQueryItem(record);
-            return TurboConfigProofCountSummary.make({
-              ...summary,
-              total: summary.total + 1,
-              byTask: increment(summary.byTask, task),
-              byReason: increment(summary.byReason, reason),
-            });
-          },
-        })
-      )
+    const parsed = yield* parseTurboJsonOutput(output);
+    const document = yield* decodeQuerySelection(parsed).pipe(
+      Effect.mapError(() => TurboConfigProofError.new("Invalid Turbo affected query task envelope."))
+    );
+    return A.reduce(document.data.affectedTasks.items, emptySummary(), (summary, item) =>
+      TurboConfigProofCountSummary.make({
+        ...summary,
+        total: summary.total + 1,
+        byTask: increment(summary.byTask, taskNameFromQueryItem(item)),
+        byReason: increment(summary.byReason, reasonNameFromQueryItem(item)),
+      })
     );
   }
 );
 
 /**
  * Summarize `turbo run --dry-run=json` output.
+ *
+ * **Details**
+ *
+ * Missing or malformed task arrays fail with a payload-safe typed error.
+ * An explicit empty array remains a valid zero-task selection.
+ *
+ * **Example** (Count a reported dry-run task)
+ *
+ * ```ts
+ * import { summarizeTurboDryRunOutput } from "@beep/repo-cli/commands/Quality";
+ * import * as Effect from "effect/Effect";
+ *
+ * const count = summarizeTurboDryRunOutput('{"tasks":[{"task":"check"}]}').pipe(
+ *   Effect.map((summary) => summary.total)
+ * );
+ * void count;
+ * ```
  *
  * @param output - Captured command output.
  * @returns Count summary for selected dry-run tasks.
@@ -464,27 +493,22 @@ export const summarizeTurboQueryAffectedOutput = Effect.fn("TurboConfigProof.sum
 export const summarizeTurboDryRunOutput = Effect.fn("TurboConfigProof.summarizeTurboDryRunOutput")(function* (
   output: string
 ): Effect.fn.Return<TurboConfigProofCountSummary, TurboConfigProofError> {
-  const document = yield* parseTurboJsonOutput(output);
-  const items = pipe(getPath(document, ["tasks"]), O.map(getArray), O.getOrElse(A.empty));
-  const packages = packageCountFromDocument(document);
-
-  return A.reduce(items, TurboConfigProofCountSummary.make({ ...emptySummary(), packages }), (summary, item) =>
-    pipe(
-      getRecord(item),
-      O.match({
-        onNone: () => summary,
-        onSome: (record) => {
-          const task = taskNameFromDryRunItem(record);
-          const status = cacheStatusFromDryRunItem(record);
-          return TurboConfigProofCountSummary.make({
-            ...summary,
-            total: summary.total + 1,
-            byTask: increment(summary.byTask, task),
-            byStatus: increment(summary.byStatus, status),
-          });
-        },
-      })
-    )
+  const parsed = yield* parseTurboJsonOutput(output);
+  const document = yield* decodeDrySelection(parsed).pipe(
+    Effect.mapError(() => TurboConfigProofError.new("Invalid Turbo dry-run task envelope."))
+  );
+  const packages = pipe(
+    document.packages,
+    O.map(A.length),
+    O.getOrElse(() => 0)
+  );
+  return A.reduce(document.tasks, TurboConfigProofCountSummary.make({ ...emptySummary(), packages }), (summary, item) =>
+    TurboConfigProofCountSummary.make({
+      ...summary,
+      total: summary.total + 1,
+      byTask: increment(summary.byTask, taskNameFromDryRunItem(item)),
+      byStatus: increment(summary.byStatus, cacheStatusFromDryRunItem(item)),
+    })
   );
 });
 

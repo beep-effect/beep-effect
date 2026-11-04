@@ -848,3 +848,12 @@ shell range could make one report compare two different changes. Bind refs at
 the shared child-command seam and assert that binding for every child in both
 selector modes. No failing runtime or test result is fabricated: this is a
 source finding, with a hosted regression prepared and no local suite run.
+
+### Invalid metadata reported as zero selected tasks, 2026-11-04
+
+The current scoped proof reader treated missing/wrong task-array paths and
+invalid rows as an empty selection. That can make an invalid native response
+look like useful zero-work evidence. Replace the fallback traversal with
+required schema-first envelopes, keep explicit empty arrays valid, and test
+malformed metadata plus synthetic payload redaction through typed failures.
+This belongs in the existing source-range repair PR, before acceptance.
