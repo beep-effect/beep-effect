@@ -684,13 +684,19 @@ describe("Git W7 extensions", () => {
         add: () => Effect.void,
         checkIgnore: (_cwd, paths) => Effect.succeed(paths),
       });
-      assert.strictEqual(yield* pipe(cwd, double.revListCount("a..b")), 2);
-      assertNone(yield* pipe(cwd, double.upstream("main")));
-      assert.strictEqual(yield* pipe(cwd, double.gitDir()), "/repo/.git");
-      assert.strictEqual(yield* pipe(cwd, double.diffPatch({ base: "a" })), "");
+      const observedRevListCount = yield* pipe(cwd, double.revListCount("a..b"));
+      assert.strictEqual(observedRevListCount, 2);
+      const observedUpstream = yield* pipe(cwd, double.upstream("main"));
+      assertNone(observedUpstream);
+      const observedGitDir = yield* pipe(cwd, double.gitDir());
+      assert.strictEqual(observedGitDir, "/repo/.git");
+      const observedDiffPatch = yield* pipe(cwd, double.diffPatch({ base: "a" }));
+      assert.strictEqual(observedDiffPatch, "");
       yield* pipe(cwd, double.add(["f"], { force: true }));
-      assert.deepStrictEqual(yield* pipe(cwd, double.checkIgnore(["f"], { noIndex: true })), ["f"]);
-      assert.isTrue(A.isArray(yield* double.checkIgnore(cwd, [])));
+      const observedCheckIgnore = yield* pipe(cwd, double.checkIgnore(["f"], { noIndex: true }));
+      assert.deepStrictEqual(observedCheckIgnore, ["f"]);
+      const observedCheckIgnore2 = yield* double.checkIgnore(cwd, []);
+      assert.isTrue(A.isArray(observedCheckIgnore2));
     })
   );
 });

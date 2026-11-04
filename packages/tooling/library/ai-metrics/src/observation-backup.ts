@@ -121,22 +121,16 @@ const digest = Effect.fn("ObservationBackup.digest")(function* (bytes: Uint8Arra
 const readBounded = Effect.fn("ObservationBackup.readBounded")(function* (file: string, limit: number) {
   const fs = yield* FileSystem.FileSystem;
   const info = yield* fs.lstat(file);
-  if (info.type !== "File" || ByteSize.toBigInt(info.size) > BigInt(limit)) {
-    return yield* failure("capacity");
-  }
+  if (info.type !== "File" || ByteSize.toBigInt(info.size) > BigInt(limit)) return yield* failure("capacity");
   const handle = yield* fs.open(file, { flag: "r" });
   const bytes = new Uint8Array(Number(ByteSize.toBigInt(info.size)));
   let offset = 0;
   while (offset < bytes.length) {
     const count = yield* handle.read(bytes.subarray(offset, Math.min(bytes.length, offset + 65536)));
-    if (count === 0) {
-      return yield* failure("integrity");
-    }
+    if (count === 0) return yield* failure("integrity");
     offset += count;
   }
-  if ((yield* handle.read(new Uint8Array(1))) !== 0) {
-    return yield* failure("capacity");
-  }
+  if ((yield* handle.read(new Uint8Array(1))) !== 0) return yield* failure("capacity");
   return bytes;
 });
 const syncDirectory = Effect.fn("ObservationBackup.syncDirectory")(function* (directory: string) {
@@ -147,14 +141,11 @@ const syncDirectory = Effect.fn("ObservationBackup.syncDirectory")(function* (di
 const newDestination = Effect.fn("ObservationBackup.newDestination")(function* (directory: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  if (!path.isAbsolute(directory) || path.normalize(directory) !== directory) {
-    return yield* failure("destination");
-  }
+  if (!path.isAbsolute(directory) || path.normalize(directory) !== directory) return yield* failure("destination");
   const parent = path.dirname(directory);
   const info = yield* fs.lstat(parent);
-  if (info.type !== "Directory" || (info.mode & 0o077) !== 0 || (yield* fs.realPath(parent)) !== parent) {
+  if (info.type !== "Directory" || (info.mode & 0o077) !== 0 || (yield* fs.realPath(parent)) !== parent)
     return yield* failure("destination");
-  }
   yield* fs.makeDirectory(directory, { mode: 0o700 }).pipe(Effect.mapError(() => failure("destination")));
   yield* syncDirectory(parent);
 });
@@ -180,9 +171,8 @@ const verifyJournalTables = Effect.fnUntraced(function* (
   if (
     tables.length > observationJournalTables.length ||
     A.some(tables, (row) => !A.contains(observationJournalTables, row.name))
-  ) {
+  )
     return yield* failure(reason);
-  }
 });
 
 const inspectSnapshot = Effect.fn("ObservationBackup.inspectSnapshot")(function* (
@@ -211,12 +201,9 @@ const inspectSnapshot = Effect.fn("ObservationBackup.inspectSnapshot")(function*
         )
         .pipe(Effect.flatMap(decodeArguments2));
       const config = yield* decodeTranscriptIntakeConfigJson(rows[0].payload);
-      if (config.hostId !== hostId || config.namespaceId !== namespaceId) {
+      if (config.hostId !== hostId || config.namespaceId !== namespaceId) return yield* failure("integrity");
+      if ((yield* digest(new TextEncoder().encode(rows[0].payload))) !== configDigest)
         return yield* failure("integrity");
-      }
-      if ((yield* digest(new TextEncoder().encode(rows[0].payload))) !== configDigest) {
-        return yield* failure("integrity");
-      }
     }),
     () => connection.executeUnprepared("DETACH DATABASE observation_snapshot", [], undefined).pipe(Effect.orDie)
   );
@@ -255,9 +242,7 @@ export const captureObservationBackup = Effect.fn("AiMetrics.captureObservationB
       const databases = yield* connection
         .executeUnprepared("PRAGMA database_list", [], undefined)
         .pipe(Effect.flatMap(decodeArguments3));
-      if (!Str.startsWith("/")(databases[0].file)) {
-        return yield* failure("configuration");
-      }
+      if (!Str.startsWith("/")(databases[0].file)) return yield* failure("configuration");
       const rows = yield* connection
         .executeUnprepared(
           "SELECT substr(payload,1,4097) AS payload FROM observation_intake_config WHERE singleton=1",
@@ -271,18 +256,14 @@ export const captureObservationBackup = Effect.fn("AiMetrics.captureObservationB
         "configuration"
       );
       const expected = yield* encodeTranscriptIntakeConfigJson(config);
-      if (rows[0].payload !== expected) {
-        return yield* failure("configuration");
-      }
+      if (rows[0].payload !== expected) return yield* failure("configuration");
       yield* connection.executeUnprepared("PRAGMA journal_mode", [], undefined).pipe(Effect.flatMap(decodeArguments4));
       yield* connection.executeUnprepared("PRAGMA synchronous", [], undefined).pipe(Effect.flatMap(decodeArguments5));
       const pages = yield* connection
         .executeUnprepared("PRAGMA page_count", [], undefined)
         .pipe(Effect.flatMap(decodeArguments6));
       yield* connection.executeUnprepared("PRAGMA page_size", [], undefined).pipe(Effect.flatMap(decodeArguments7));
-      if (pages[0].page_count * 4096 > policy.maxBytes) {
-        return yield* failure("capacity");
-      }
+      if (pages[0].page_count * 4096 > policy.maxBytes) return yield* failure("capacity");
       yield* newDestination(directory);
       const file = `${directory}/journal.sqlite`;
       yield* connection.executeUnprepared("VACUUM main INTO ?", [file], undefined);
@@ -337,22 +318,15 @@ export const restoreObservationBackup = Effect.fn("AiMetrics.restoreObservationB
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
       const fs = yield* FileSystem.FileSystem;
-      if (receipt.manifest.bytes > policy.maxBytes) {
-        return yield* failure("capacity");
-      }
+      if (receipt.manifest.bytes > policy.maxBytes) return yield* failure("capacity");
       const encoded = yield* readBounded(`${backupDirectory}/manifest.json`, 4096);
-      if ((yield* digest(encoded)) !== receipt.manifestDigest) {
-        return yield* failure("integrity");
-      }
+      if ((yield* digest(encoded)) !== receipt.manifestDigest) return yield* failure("integrity");
       const manifest = yield* decodeObservationBackupManifestJson(new TextDecoder().decode(encoded));
       const expected = yield* encodeObservationBackupManifestJson(receipt.manifest);
-      if ((yield* encodeObservationBackupManifestJson(manifest)) !== expected) {
-        return yield* failure("integrity");
-      }
+      if ((yield* encodeObservationBackupManifestJson(manifest)) !== expected) return yield* failure("integrity");
       const bytes = yield* readBounded(`${backupDirectory}/journal.sqlite`, policy.maxBytes);
-      if (bytes.length !== manifest.bytes || (yield* digest(bytes)) !== manifest.snapshotDigest) {
+      if (bytes.length !== manifest.bytes || (yield* digest(bytes)) !== manifest.snapshotDigest)
         return yield* failure("integrity");
-      }
       const connection = yield* sql.reserve;
       yield* connection.executeUnprepared("PRAGMA database_list", [], undefined).pipe(
         Effect.flatMap(decodeArguments8),

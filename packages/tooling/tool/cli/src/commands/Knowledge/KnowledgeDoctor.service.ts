@@ -1281,8 +1281,7 @@ const evaluateSpan = Effect.fn("KnowledgeDoctor.evaluateSpan")(function* (
 // Every goals-doctor finding the tree's bytes determine, listed as delegated: the goals doctor keeps
 // the gate, and each one is a causal root for the claims beneath it.
 const delegatedFindings = Effect.fn("KnowledgeDoctor.delegatedFindings")(function* (tree: KnowledgeDoctorTree) {
-  const goalsDoctorFindings1 = yield* tree.domain.goalsDoctorFindings;
-  const delegatedRows = A.map(goalsDoctorFindings1, knowledgeDelegatedRow);
+  const delegatedRows = yield* tree.domain.goalsDoctorFindings.pipe(Effect.map(A.map(knowledgeDelegatedRow)));
   const severities = HashMap.fromIterable(
     A.map(delegatedRows, (row) => [row.candidate.subject, row.severity] as const)
   );
@@ -1996,8 +1995,9 @@ const mintLive = Effect.fn("KnowledgeDoctor.mintLive")(function* (options: Knowl
   );
   const commit = yield* resolveGitCommit(repoRoot, options.at, doctorGitAdapter(options.at));
   if (options.write) {
-    const mintWriteContext2 = yield* mintWriteContext(repoRoot, commit, options.baseRef);
-    const reasons = knowledgeMintWriteRefusals(mintWriteContext2);
+    const reasons = yield* mintWriteContext(repoRoot, commit, options.baseRef).pipe(
+      Effect.map(knowledgeMintWriteRefusals)
+    );
     if (A.isReadonlyArrayNonEmpty(reasons)) {
       return yield* KnowledgeMintContextRefusal.make({
         message: `knowledge doctor mint --write: ${A.length(reasons)} condition(s) unmet at ${commit}.`,

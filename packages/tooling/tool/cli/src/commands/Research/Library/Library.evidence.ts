@@ -84,8 +84,7 @@ export const libraryArtifactsValid = Effect.fn("Library.artifactsValid")(functio
 ) {
   if (A.isReadonlyArrayEmpty(artifacts)) return false;
   for (const artifact of artifacts) {
-    const libraryArtifactIntegrity1 = yield* libraryArtifactIntegrity(root, artifact);
-    if (O.isSome(libraryArtifactIntegrity1)) return false;
+    if (yield* libraryArtifactIntegrity(root, artifact).pipe(Effect.map(O.isSome))) return false;
   }
   return true;
 });
@@ -617,15 +616,13 @@ const prepareGithubContext = Effect.fn("Library.prepareGithubContext")(function*
   if (path.isAbsolute(relative) || relative === ".." || Str.startsWith(`..${path.sep}`)(relative)) return O.none();
   const git = (args: ReadonlyArray<string>) =>
     runLibraryCommand(root, "git", ["-c", "core.hooksPath=/dev/null", "-C", clone, ...args]);
-  const git2 = yield* git(["remote", "get-url", "origin"]);
   if (
-    Str.trim(git2) !== pin.value.remote ||
+    (yield* git(["remote", "get-url", "origin"]).pipe(Effect.map(Str.trim))) !== pin.value.remote ||
     (yield* Effect.map(git(["cat-file", "-t", pin.value.revision]), Str.trim)) !== "commit"
   )
     return O.none();
   const tree = yield* git(["ls-tree", "-r", "--name-only", pin.value.revision]);
-  const texts3 = yield* texts("repository-tree");
-  if (!A.contains(texts3, tree)) return O.none();
+  if (!(yield* texts("repository-tree").pipe(Effect.map(A.contains(tree))))) return O.none();
   return O.some({
     ...context,
     pin: pin.value,
@@ -734,32 +731,26 @@ const githubListingValid = Effect.fn("Library.githubListingValid")(function* (
 const validateGithubCode = Effect.fn("Library.validateGithubCode")(function* (context: GithubEvidenceContext) {
   const { source, url, texts, pin, git } = context;
 
-  if (O.isSome(Str.match(/\/commits(?:\/[^?#]+)?(?:[?#]|$)/)(url))) {
+  if (O.isSome(Str.match(/\/commits(?:\/[^?#]+)?(?:[?#]|$)/)(url)))
     return yield* githubListingValid(
       context,
       "commits",
       `repos/${source.repository}/commits?sha=${pin.revision}&per_page=100`
     );
-  }
   const blob = Str.match(/\/blob\/[^/]+\/(.+?)(?:#|$)/)(url);
   if (O.isSome(blob)) {
-    const argument = yield* texts("raw-full-text");
-    const git1 = yield* git(["show", `${pin.revision}:${blob.value[1]}`]);
-    return A.contains(argument, git1);
+    return yield* Effect.zipWith(texts("raw-full-text"), git(["show", `${pin.revision}:${blob.value[1]}`]), A.contains);
   }
   const directory = Str.match(/\/tree\/[^/]+(?:\/(.+?))?(?:[?#]|$)/)(url);
   if (O.isSome(directory)) {
     const target = directory.value[1] ?? "";
-    const texts4 = yield* texts("cited-repository-tree");
-    const git7 = yield* git([
-      "ls-tree",
-      "-r",
-      "--name-only",
-      Str.isEmpty(target) ? pin.revision : `${pin.revision}:${target}`,
-    ]);
-    return A.contains(texts4, git7);
+    return yield* Effect.zipWith(
+      texts("cited-repository-tree"),
+      git(["ls-tree", "-r", "--name-only", Str.isEmpty(target) ? pin.revision : `${pin.revision}:${target}`]),
+      A.contains
+    );
   }
-  if (O.isSome(Str.match(/\/commit\/[0-9a-f]{40}(?:[?#]|$)/)(url))) {
+  if (O.isSome(Str.match(/\/commit\/[0-9a-f]{40}(?:[?#]|$)/)(url)))
     return yield* exactGithubPatch(context, [
       "show",
       "--no-ext-diff",
@@ -767,7 +758,6 @@ const validateGithubCode = Effect.fn("Library.validateGithubCode")(function* (co
       "--format=fuller",
       pin.revision,
     ]);
-  }
   return false;
 });
 const githubDiffPinsValid = (item: typeof DiffProvenance.Type) =>
@@ -780,9 +770,8 @@ const githubDiffMethodValid = Effect.fn("Library.githubDiffMethodValid")(functio
   context: GithubEvidenceContext,
   item: typeof DiffProvenance.Type
 ) {
-  if (item.method === "git-diff") {
+  if (item.method === "git-diff")
     return yield* exactGithubPatch(context, ["diff", "--no-ext-diff", "--no-textconv", `${item.base}...${item.head}`]);
-  }
   return githubDiffApiTargetValid(context, item);
 });
 const validateGithubDiffProvenance = Effect.fn("Library.validateGithubDiffProvenance")(function* (
@@ -895,9 +884,7 @@ const validateGithubDiscussion = Effect.fn("Library.validateGithubDiscussion")(f
   if (!nonempty(discussion)) return false;
   const targetPresent = githubDiscussionTargetPresent(context, discussion);
   let diffPresent = A.isReadonlyArrayNonEmpty(role("raw-diff"));
-  if (source.kind === "github-pr" && !diffPresent) {
-    diffPresent = yield* validateGithubEmptyDiff(context, discussion);
-  }
+  if (source.kind === "github-pr" && !diffPresent) diffPresent = yield* validateGithubEmptyDiff(context, discussion);
   return targetPresent && (source.kind !== "github-pr" || diffPresent);
 });
 const validateGithubEvidence = Effect.fn("Library.validateGithubEvidence")(function* (evidence: EvidenceContext) {
@@ -906,12 +893,9 @@ const validateGithubEvidence = Effect.fn("Library.validateGithubEvidence")(funct
   const context = prepared.value;
   const { source, url, role } = context;
   if (source.kind === "github-repository") return true;
-  if (source.kind === "github-code") {
-    return yield* validateGithubCode(context);
-  }
-  if (source.kind === "github-release" && !Str.includes("/releases/tag/")(url)) {
+  if (source.kind === "github-code") return yield* validateGithubCode(context);
+  if (source.kind === "github-release" && !Str.includes("/releases/tag/")(url))
     return yield* githubListingValid(context, "release", `repos/${source.repository}/releases?per_page=100`);
-  }
   if (
     source.kind === "github-pr" &&
     A.isReadonlyArrayNonEmpty(role("diff-provenance")) &&
@@ -1159,14 +1143,12 @@ const validateYoutubeEvidence = Effect.fn("Library.validateYoutubeEvidence")(fun
     )
   )
     return false;
-  if (capture.method === "youtube-transcript-api") {
+  if (capture.method === "youtube-transcript-api")
     return yield* validateYoutubeApi(context, metadata, provenance, transcript);
-  }
-  for (const records of provenance) {
+  for (const records of provenance)
     for (const record of records) {
       if (yield* validateNativeCaptionRecord(context, record, transcript)) return true;
     }
-  }
   return false;
 });
 const validateAlphaImport = Effect.fn("Library.validateAlphaImport")(function* (
@@ -1284,9 +1266,7 @@ const validateImportedPaper = Effect.fn("Library.validateImportedPaper")(functio
   imported: LibraryImportPayload,
   events: ReadonlyArray<unknown>
 ) {
-  if (imported.provider === "alphaxiv") {
-    return yield* validateAlphaImport(context, events);
-  }
+  if (imported.provider === "alphaxiv") return yield* validateAlphaImport(context, events);
   if (imported.provider === "publisher-http" && context.capture.method === "paper") {
     if (!(yield* validatePublisherImport(context))) return false;
     return undefined;
@@ -1300,15 +1280,10 @@ const validateImportedEvidence = Effect.fn("Library.validateImportedEvidence")(f
   const imported = A.findFirst(imports, (item) => importedCaptureBound(context, LibraryImportPayload.make(item)));
   if (O.isNone(imported)) return false;
   const events = yield* readLibraryProviderEvents(context.root, role("raw-provider-events"));
-  if (source.kind === "paper") {
+  if (source.kind === "paper")
     return yield* validateImportedPaper(context, LibraryImportPayload.make(imported.value), events);
-  }
-  if (source.kind === "x") {
-    return yield* validateXImport(context, LibraryImportPayload.make(imported.value), events);
-  }
-  if (importedFirecrawlMatches(context, LibraryImportPayload.make(imported.value))) {
-    return yield* webResponseValid();
-  }
+  if (source.kind === "x") return yield* validateXImport(context, LibraryImportPayload.make(imported.value), events);
+  if (importedFirecrawlMatches(context, LibraryImportPayload.make(imported.value))) return yield* webResponseValid();
   // A generic interpretation envelope is not independent source evidence.
   return false;
 });
@@ -1427,20 +1402,15 @@ export const librarySourceEvidenceValid = Effect.fn("Research.Library.verifySour
   if (!A.contains(revisions, capture.requestedRevision) || !sourceCapturedRevisionValid(source, capture)) return false;
   if (!(yield* libraryArtifactsValid(root, capture.artifacts))) return false;
   const context = yield* makeEvidenceContext(root, source, capture);
-  if (Str.startsWith("github-")(source.kind)) {
-    return yield* validateGithubEvidence(context);
-  }
-  if (source.kind === "youtube") {
-    return yield* validateYoutubeEvidence(context);
-  }
+  if (Str.startsWith("github-")(source.kind)) return yield* validateGithubEvidence(context);
+  if (source.kind === "youtube") return yield* validateYoutubeEvidence(context);
   const imported = yield* validateImportedEvidence(context);
   if (imported !== undefined) return imported;
   if (
     source.kind === "paper" &&
     A.some(context.role("raw-full-text"), (artifact) => artifact.mediaType === "application/pdf")
-  ) {
+  )
     return yield* validatePaperEvidence(context);
-  }
   return yield* context.webResponseValid();
 });
 
