@@ -838,3 +838,14 @@ observed schema difference changed the matrix and next qualification work.
 - Keep the unchanged bounded collector AST and immutable original evidence.
   Fresh observations record the repaired driver bytes rather than re-hashing
   an older observation onto them. A new source binding requires its own replay.
+
+## 2026-11-04 UTC: Storybook deployment did not freeze dependency installation
+
+Reviewing actual deployment callers found `apps/storybook/vercel.json` used
+`cd ../.. && bun install`, while the other two reviewed web deployments require
+the committed lockfile. Add `--frozen-lockfile` without changing build/output
+settings. Owner: this goal; actual Vercel runtime/deployment evidence remains
+open under the current deployment quota. The source audit also identifies real
+pruning candidates, so retain their app-specific comparison gates instead of
+calling pruning inapplicable from its current absence. No cloud call or deploy
+was made by this repair.

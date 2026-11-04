@@ -764,6 +764,11 @@
           "sha256": "759b4abb61a90cfe5b6d542fe2f6a7f163ca7936f495d1720231b0cbaabd805a",
           "termObserved": true
         }
+      },
+      "currentDeploymentBoundarySourceReview": {
+        "review": "deployment-boundary-source-review-2026-11-04.json",
+        "scope": "Pending: use the named Vercel/Alchemy/desktop build contracts for a real pruned install/build and missing-input comparison; absence of a current prune command does not establish no benefit.",
+        "authority": "Selected tracked source review only; original correctness and acceptance gates remain open."
       }
     },
     {
@@ -805,6 +810,11 @@
           "sha256": "2abbea2b157fef9e517cc1975a3cc68cab99a56730846ed2c0c033ab23dfb380",
           "termObserved": true
         }
+      },
+      "currentDeploymentBoundarySourceReview": {
+        "review": "deployment-boundary-source-review-2026-11-04.json",
+        "scope": "Pending: map native package-boundary semantics to the existing manifest/doctrine owner and current aliases; no equivalence or clean-repository assertion follows from a text scan.",
+        "authority": "Selected tracked source review only; original correctness and acceptance gates remain open."
       }
     },
     {
@@ -846,6 +856,11 @@
           "sha256": "759b4abb61a90cfe5b6d542fe2f6a7f163ca7936f495d1720231b0cbaabd805a",
           "termObserved": true
         }
+      },
+      "currentDeploymentBoundarySourceReview": {
+        "review": "deployment-boundary-source-review-2026-11-04.json",
+        "scope": "Pending: frozen installation is one prerequisite repair, not complete profile, output or deployment proof.",
+        "authority": "Selected tracked source review only; original correctness and acceptance gates remain open."
       }
     },
     {
