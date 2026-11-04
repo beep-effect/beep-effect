@@ -838,3 +838,13 @@ observed schema difference changed the matrix and next qualification work.
 - Keep the unchanged bounded collector AST and immutable original evidence.
   Fresh observations record the repaired driver bytes rather than re-hashing
   an older observation onto them. A new source binding requires its own replay.
+
+### Query and dry-run source divergence, 2026-11-04
+
+While preparing current-root selector evidence, source review found that
+`quality turbo-config-proof --base <ref> --head <ref>` passed those refs to
+`turbo query` but omitted them from its --affected dry-run environment. A stale
+shell range could make one report compare two different changes. Bind refs at
+the shared child-command seam and assert that binding for every child in both
+selector modes. No failing runtime or test result is fabricated: this is a
+source finding, with a hosted regression prepared and no local suite run.

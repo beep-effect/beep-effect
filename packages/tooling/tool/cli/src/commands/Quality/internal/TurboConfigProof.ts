@@ -493,7 +493,8 @@ const commandText = (command: string, args: ReadonlyArray<string>): string => A.
 const runCommandOutput = Effect.fn("TurboConfigProof.runCommandOutput")(function* (
   repoRoot: string,
   command: string,
-  args: ReadonlyArray<string>
+  args: ReadonlyArray<string>,
+  options: TurboConfigProofOptions
 ): Effect.fn.Return<
   CommandOutput,
   TurboConfigProofError,
@@ -504,6 +505,8 @@ const runCommandOutput = Effect.fn("TurboConfigProof.runCommandOutput")(function
     command,
     args,
     cwd: repoRoot,
+    env: { TURBO_SCM_BASE: options.base, TURBO_SCM_HEAD: options.head },
+    extendEnv: true,
   }).pipe(
     Effect.mapError(TurboConfigProofError.mapError(`Failed to spawn ${renderedCommand}.`, { command: renderedCommand }))
   );
@@ -533,6 +536,30 @@ const selectorArgs = (selector: TurboConfigProofSelectorMode, base: string, head
 /**
  * Collect a Turbo scoped-config proof report.
  *
+ * **Details**
+ *
+ * The query and every dry run receive the requested source range. Explicit
+ * child environment values override inherited Turbo SCM refs while preserving
+ * the surrounding tool environment. No task command executes.
+ *
+ * **Gotchas**
+ *
+ * Use immutable commit SHAs when branch refs may move during the comparison.
+ *
+ * **Example** (Plan a named source range)
+ *
+ * ```ts
+ * import { runTurboConfigProof, TurboConfigProofOptions } from "@beep/repo-cli/commands/Quality";
+ *
+ * const proof = runTurboConfigProof(".", TurboConfigProofOptions.make({
+ *   base: "origin/main",
+ *   head: "HEAD",
+ *   selector: "affected",
+ *   tasks: ["lint", "check"],
+ * }));
+ * void proof;
+ * ```
+ *
  * @param repoRoot - Repository root.
  * @param options - Base/head, task, and selector options.
  * @returns Structured proof report.
@@ -549,14 +576,14 @@ export const runTurboConfigProof = Effect.fn("TurboConfigProof.runTurboConfigPro
 > {
   const tasks = normalizeProofTasks(options.tasks);
   const queryArgs = ["turbo", "query", "affected", "--tasks", ...tasks, "--base", options.base, "--head", options.head];
-  const queryOutput = yield* runCommandOutput(repoRoot, "bunx", queryArgs);
+  const queryOutput = yield* runCommandOutput(repoRoot, "bunx", queryArgs, options);
   const query = yield* summarizeTurboQueryAffectedOutput(queryOutput.output);
   const dryRunSelectorArgs = selectorArgs(options.selector, options.base, options.head);
   const dryRuns = yield* Effect.forEach(
     tasks,
     Effect.fn(function* (task) {
       const args = ["turbo", "run", task, ...dryRunSelectorArgs, "--dry-run=json", "--ui=stream"];
-      const output = yield* runCommandOutput(repoRoot, "bunx", args);
+      const output = yield* runCommandOutput(repoRoot, "bunx", args, options);
       const summary = yield* summarizeTurboDryRunOutput(output.output);
       return TurboConfigProofDryRunSummary.make({
         task,

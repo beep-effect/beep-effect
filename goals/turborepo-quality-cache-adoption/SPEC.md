@@ -741,3 +741,17 @@ results. Six controlled source changes must refuse before client selection; the
 legacy prefixes lack that refusal. No task body executes, feature/tuple is
 qualified or runtime setting changes. Reverse the driver/registration wave
 through Git while retaining both source envelopes and their observations.
+
+### Align scoped proof comparisons, 2026-11-04
+
+The existing Turbo config proof query supplies the requested base/head, but its
+--affected dry runs inherited ambient/default SCM refs. Bind both query and dry
+children to TurboConfigProofOptions.base/head through the existing runCaptured
+environment, extending the tool environment. Reuse the existing schema/helper
+and retain both selector modes. Add one hosted regression covering both modes
+and all three captured commands per mode; do not run local quality suites.
+
+This source repair grants no qualification or feature acceptance. Immutable
+comparisons still require caller-supplied commit SHAs. Reverse the binding, test
+and packet entries together; prior affected reports need independent actual-ref
+evidence before reuse. Hosted proof remains pending.

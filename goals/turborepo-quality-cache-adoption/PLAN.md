@@ -767,3 +767,14 @@ pin/collector/schema mutations refuse before client selection, while the retaine
 legacy prefixes do not. Original reports and the prior checkpoint remain retained
 under their exact published source head. No local quality suite or qualification
 ran; the feature stays disabled and pending.
+
+### Requested proof ref binding, 2026-11-04
+
+Current-source review found the query/dry-run comparison mismatch in the
+existing scoped Turbo proof. The prepared repair uses the requested refs for
+every child, preserving the surrounding tool environment. One authored hosted
+regression covers affected/filter-range selectors and query plus two dry runs.
+No local suite or quality proof ran. Read
+`research/proof-scm-ref-binding-review-2026-11-04.json`; obtain current hosted
+proof and primary acceptance before relying on the repaired command. Actual
+current-root/caller comparison, qualification and all whole-goal gates remain.
