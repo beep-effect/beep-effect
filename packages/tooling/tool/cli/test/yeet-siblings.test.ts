@@ -9,6 +9,7 @@ import {
   renderPacketSiblingsReport,
   renderSiblingBroadcast,
   SiblingBroadcast,
+  SiblingsCommandOptions,
 } from "@beep/repo-cli/test/Yeet";
 import { NodeCrypto } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -252,5 +253,97 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, TestConsole.layer), { timeout: "30 sec
         );
       })
     );
+
+    it.effect("a clean merge-tree is a clean probe; a failed pull-ref fetch or an unknown exit is unavailable", () =>
+      Effect.gen(function* () {
+        // Two packet siblings this time: #8 probes clean, #9's pull ref cannot be fetched.
+        const twoSiblings = (call: GithubCall) =>
+          call.path === "{repo}/pulls/9/files" ? { body: files("goals/alpha/README.md") } : routes(call);
+        const github = recordedGithub(twoSiblings);
+        const gitCalls: Array<string> = [];
+        const git = ScriptedSpawner.make((command, args) => {
+          gitCalls.push(A.join([command, ...args], " "));
+          if (A.contains(args, "refs/pull/9/head")) return { stdout: "fatal: couldn't find remote ref", exit: 128 };
+          if (A.contains(args, "merge-tree")) return { stdout: "treetreetree\n", exit: 0 };
+          if (A.contains(args, "rev-parse")) return { stdout: "not a sha", exit: 128 };
+          return { stdout: "", exit: 0 };
+        });
+        const report = yield* readPacketSiblings(context, 7).pipe(github.provide, provideSpawner(git));
+        assertNone(report.baseSha);
+        expect(A.map(report.siblings, (s) => [s.prNumber, s.probe, s.conflicts])).toEqual([
+          [8, "clean", []],
+          [9, "unavailable", []],
+        ]);
+        // The unfetchable head is never probed.
+        expect(A.some(gitCalls, Str.includes(`merge-tree --write-tree --name-only origin/main ${OTHER_SHA}`))).toBe(
+          false
+        );
+        const rendered = renderPacketSiblingsReport(report);
+        expect(rendered).toContain("probed against origin/main\n");
+        expect(rendered).toContain("#8 lane/eight (0123456789) shares `alpha`; no conflicts predicted");
+        expect(rendered).toContain("#9 lane/nine (fedcba9876) shares `alpha`; probe unavailable");
+      })
+    );
+
+    it.effect("a merge-tree exit other than 0 or 1 is an unavailable probe, never clean", () =>
+      Effect.gen(function* () {
+        const github = recordedGithub(routes);
+        const git = ScriptedSpawner.make((_, args) =>
+          A.contains(args, "merge-tree")
+            ? { stdout: "fatal: not something we can merge", exit: 128 }
+            : { stdout: "", exit: 0 }
+        );
+        const report = yield* readPacketSiblings(context, 7).pipe(github.provide, provideSpawner(git));
+        expect(report.siblings[0]?.probe).toBe("unavailable");
+      })
+    );
+
+    it.effect("one refused comment is a warning; the broadcast still reports what it posted", () =>
+      Effect.gen(function* () {
+        const refusing = (call: GithubCall) =>
+          call.path === "{repo}/issues/8/comments" && call.method === "POST"
+            ? { status: 403, body: { message: "Resource not accessible by integration" } }
+            : routes(call);
+        const github = recordedGithub(refusing);
+        const report = yield* broadcastPacketSiblings(context, 7, MERGE_SHA).pipe(
+          github.provide,
+          provideSpawner(scriptedGit([]))
+        );
+        expect(A.map(report.siblings, (s) => s.prNumber)).toEqual([8]);
+        const errors = yield* TestConsole.errorLines;
+        expect(A.some(errors, (line) => Str.includes("a sibling broadcast failed")(String(line)))).toBe(true);
+        const logged = yield* TestConsole.logLines;
+        expect(A.some(logged, (line) => Str.includes("told 0 of 1 open sibling PR(s)")(String(line)))).toBe(true);
+      })
+    );
+
+    it.effect("a packet PR with no open sibling broadcasts nothing", () =>
+      Effect.gen(function* () {
+        const lonely = (call: GithubCall) =>
+          call.path === "{repo}/pulls"
+            ? { body: [pull(7, "lane/seven", "7777777777777777777777777777777777777777")] }
+            : routes(call);
+        const github = recordedGithub(lonely);
+        const report = yield* broadcastPacketSiblings(context, 7, MERGE_SHA).pipe(
+          github.provide,
+          provideSpawner(scriptedGit([]))
+        );
+        expect(report.siblings).toEqual([]);
+        expect(A.some(github.calls, (call) => call.method === "POST")).toBe(false);
+      })
+    );
   }
 );
+
+describe("SiblingsCommandOptions", () => {
+  it("carries the porcelain flags and the PR number", () => {
+    const options = SiblingsCommandOptions.make({
+      base: "origin/main",
+      head: "HEAD",
+      packetDir: ".beep/yeet",
+      pr: 2691,
+    });
+    expect(options.pr).toBe(2691);
+    expect(options.base).toBe("origin/main");
+  });
+});
