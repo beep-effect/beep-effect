@@ -67,9 +67,10 @@ const setupCitationMetadataRuntime = Effect.fn("RegexWorkerTest.metadataRuntime"
   kind: CitationNativeRuntimeKind,
   maximum?: number,
   enclosing = false,
-  controlled = false
+  controlled = false,
+  patternUtf16?: number
 ) {
-  const setup = yield* setupCitationRegexRuntime(kind, maximum);
+  const setup = yield* setupCitationRegexRuntime(kind, maximum, patternUtf16);
   const limits = controlled === true ? { ...setup.limits, extractDeadline: Duration.millis(997) } : setup.limits;
   const operation = yield* makeCitationOperationAdmission(limits).pipe(Effect.provideContext(setup.context));
   const budget = yield* makeCitationTextBudget(limits);
@@ -93,10 +94,11 @@ export const makeCitationMetadataFixtureInstaller =
       kind: CitationNativeRuntimeKind,
       maximum?: number,
       enclosing = false,
-      controlled = false
+      controlled = false,
+      patternUtf16?: number
     ) {
       const corpus = yield* load;
-      const setup = yield* setupCitationMetadataRuntime(kind, maximum, enclosing, controlled);
+      const setup = yield* setupCitationMetadataRuntime(kind, maximum, enclosing, controlled, patternUtf16);
       const configuration = { ...corpus.configuration };
       const stage = yield* factory(setup.limits, setup.runtime, configuration).pipe(
         Effect.provideContext(setup.provided)
@@ -228,7 +230,8 @@ export const assertCitationMetadataFixtureLifetime = Effect.fn("RegexWorkerTest.
     kind: CitationNativeRuntimeKind,
     maximum?: number,
     enclosing?: boolean,
-    controlled?: boolean
+    controlled?: boolean,
+    patternUtf16?: number
   ) => Effect.Effect<
     {
       readonly corpus: { readonly cases: ReadonlyArray<{ readonly request: Input }> };
@@ -240,13 +243,16 @@ export const assertCitationMetadataFixtureLifetime = Effect.fn("RegexWorkerTest.
     Env
   >,
   ordinal: number,
-  words: unknown
+  words: unknown,
+  patternUtf16?: number
 ) {
   const scope = yield* Scope.make();
-  const closed = yield* install("bun").pipe(Effect.provideService(Scope.Scope, scope));
+  const closed = yield* install("bun", undefined, false, false, patternUtf16).pipe(
+    Effect.provideService(Scope.Scope, scope)
+  );
   const row = yield* Effect.fromOption(A.get(closed.corpus.cases, ordinal));
   yield* assertCitationWorkerClosedLifetime(scope, closed.stage.apply(row.request), closed.observed.snapshot);
-  const timed = yield* install("bun", undefined, false, true);
+  const timed = yield* install("bun", undefined, false, true, patternUtf16);
   yield* assertCitationWorkerCapturedDeadline(timed.stage.apply({ ...row.request, words }), timed.timer.trigger);
   const observed = yield* timed.observed.snapshot;
   expect(observed).toEqual({ spawned: 0, confirmed: 0 });

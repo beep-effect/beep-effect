@@ -105,6 +105,18 @@ export const makeCitationMetadataOperation = Effect.fn("Citation.makeMetadataOpe
 });
 
 const $I = $LawPracticeServerId.create("internal/Citation/MetadataComposition");
+/** Decode one captured policy/configuration pair with a source-free boundary.
+ * @internal @category operations @since 0.0.0
+ */
+export const decodeCitationMetadataConfiguration = Effect.fn("Citation.decodeMetadataConfiguration")(function* <
+  A,
+  I,
+  E,
+>(policy: unknown, input: unknown, schema: S.Codec<A, I>, invalid: () => E) {
+  const limits = yield* decodeCitationRegexPolicy(policy, invalid);
+  const configuration = yield* S.decodeUnknownEffect(schema)(input).pipe(Effect.mapError(invalid));
+  return { limits, configuration };
+});
 /** Shared captured source year pattern and import-time calendar bound.
  * @internal @category models @since 0.0.0
  */

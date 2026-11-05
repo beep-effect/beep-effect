@@ -14,6 +14,7 @@ import {
   CitationMetadataStringConfiguration,
   CitationMetadataStringFields,
   citationMetadataContext,
+  decodeCitationMetadataConfiguration,
   makeCitationMetadataOperation,
   matchCitationMetadataContext,
   prepareCitationPublicationMetadata,
@@ -21,7 +22,6 @@ import {
 } from "./MetadataComposition.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
-import { decodeCitationRegexPolicy } from "./RegexPolicy.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationPublicationMetadataConfiguration } from "./MetadataComposition.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
@@ -154,9 +154,11 @@ export const makeCitationJournalMetadata = Effect.fn("Citation.makeJournalMetada
   runtimeInput: unknown,
   configurationInput: unknown
 ) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-configuration"));
-  const decoded = yield* S.decodeUnknownEffect(Config)(configurationInput).pipe(
-    Effect.mapError(() => fail("invalid-configuration"))
+  const { limits, configuration: decoded } = yield* decodeCitationMetadataConfiguration(
+    policy,
+    configurationInput,
+    Config,
+    () => fail("invalid-configuration")
   );
   const { runtime, config } = yield* prepareCitationPublicationMetadata(
     limits,

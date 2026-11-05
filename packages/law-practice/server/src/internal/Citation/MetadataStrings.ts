@@ -6,11 +6,13 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { makeCitationContextMatcher } from "./ContextMatcher.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
+import { citationPythonTextData } from "./PythonTextData.ts";
 import { citationPythonPointAt } from "./PythonUnicode.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
@@ -49,17 +51,21 @@ const closingParen = Effect.fn("Citation.findUnbalancedParentheticalEnd")(functi
   }
   return O.none<number>();
 });
-const trimPin = Effect.fn("Citation.trimPinCiteBoundary")(function* (
+const spaces = HashSet.fromIterable(citationPythonTextData.whitespace);
+const pinBoundary = (point: number) => point === 44 || point === 32;
+const whitespaceBoundary = (point: number) => HashSet.has(spaces, String.fromCodePoint(point));
+const trimBoundary = Effect.fn("Citation.trimMetadataBoundary")(function* (
   source: CitationPythonUnicodeValue,
   start: number,
   stop: number,
-  direction: number
+  direction: number,
+  strip: (point: number) => boolean
 ) {
   let index = start;
   while (index !== stop) {
     if (index % 256 === 0) yield* Effect.yieldNow;
     const point = citationPythonPointAt(source.storage, index);
-    if (point !== 44 && point !== 32) break;
+    if (!strip(point)) break;
     index += direction;
   }
   return index;
@@ -90,8 +96,8 @@ export const makeCitationPinCiteCleaner = Effect.fn("Citation.makePinCiteCleaner
   const inspectPinCite = Effect.fn("Citation.inspectPinCite")(function* (raw: unknown) {
     if (raw === null) return CitationPinCiteDetails.make({ pinCite: null, trailingEnd: 0 });
     const source = yield* input.prepareUnicode(raw, () => Effect.void);
-    const start = yield* trimPin(source.value, 0, source.value.pythonLength, 1);
-    const last = yield* trimPin(source.value, source.value.pythonLength - 1, start - 1, -1);
+    const start = yield* trimBoundary(source.value, 0, source.value.pythonLength, 1, pinBoundary);
+    const last = yield* trimBoundary(source.value, source.value.pythonLength - 1, start - 1, -1, pinBoundary);
     const pinCite = yield* source.slice({ start, end: last + 1 }, (layout) =>
       source.value.utf16Units + layout.utf16Units > limits.producedTextUtf16 ? Effect.fail(exhausted()) : Effect.void
     );
@@ -100,7 +106,17 @@ export const makeCitationPinCiteCleaner = Effect.fn("Citation.makePinCiteCleaner
   const cleanPinCite = Effect.fn("Citation.cleanPinCite")((raw: unknown) =>
     inspectPinCite(raw).pipe(Effect.map((value) => value.pinCite))
   );
-  return { cleanPinCite, inspectPinCite };
+  const stripWhitespace = Effect.fn("Citation.stripMetadataWhitespace")(function* (raw: unknown) {
+    if (raw === null) return null;
+    const source = yield* input.prepareUnicode(raw, () => Effect.void);
+    const start = yield* trimBoundary(source.value, 0, source.value.pythonLength, 1, whitespaceBoundary);
+    const last = yield* trimBoundary(source.value, source.value.pythonLength - 1, start - 1, -1, whitespaceBoundary);
+    if (start === source.value.pythonLength) return null;
+    return yield* source.slice({ start, end: last + 1 }, (layout) =>
+      source.value.utf16Units + layout.utf16Units > limits.producedTextUtf16 ? Effect.fail(exhausted()) : Effect.void
+    );
+  }, timing.timed);
+  return { cleanPinCite, inspectPinCite, stripWhitespace };
 });
 /** Capture the independently source-bound YEAR_REGEX and existing worker.
  * Raw requests contain only native text/null. Calls have R = never and preserve
@@ -116,7 +132,7 @@ export const makeCitationMetadataStrings = Effect.fn("Citation.makeMetadataStrin
 ) {
   const { limits, timing, input } = yield* installStrings(policy);
   const year = yield* makeCitationContextMatcher(limits, runtime, yearPattern, 64, bindings);
-  const { cleanPinCite, inspectPinCite } = yield* makeCitationPinCiteCleaner(limits);
+  const { cleanPinCite, inspectPinCite, stripWhitespace } = yield* makeCitationPinCiteCleaner(limits);
   const parenthetical = Effect.fn("Citation.processParenthetical")(function* (raw: unknown) {
     if (raw === null) return null;
     const source = yield* input.prepareUnicode(raw, () => Effect.void);
@@ -138,5 +154,5 @@ export const makeCitationMetadataStrings = Effect.fn("Citation.makeMetadataStrin
     });
     return matched.match !== null || source.value.pythonLength === 0 ? null : source.value.storage;
   }, timing.timed);
-  return { cleanPinCite, inspectPinCite, parenthetical, snapshot: year.snapshot };
+  return { cleanPinCite, inspectPinCite, stripWhitespace, parenthetical, snapshot: year.snapshot };
 });

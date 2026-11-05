@@ -51,7 +51,14 @@
         "packages/law-practice/use-cases/test/fixtures/eyecite/court-table.json",
         "packages/law-practice/use-cases/test/fixtures/eyecite/court-words.json",
         "packages/law-practice/use-cases/test/fixtures/eyecite/court-lookup.json",
-        "goals/citation-extraction-engine/history/evidence/2026-11-05-court-lookup.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-court-lookup.md",
+        "goals/citation-extraction-engine/ops/probe-post-case-metadata.py",
+        "packages/law-practice/server/src/internal/Citation/PostCaseMetadata.ts",
+        "packages/law-practice/server/test/CitationPostCaseMetadata.fixtures.ts",
+        "packages/law-practice/server/test/CitationPostCaseMetadata.test.ts",
+        "packages/law-practice/server/test/integration/CitationPostCaseMetadata.test.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/post-case-metadata.json",
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-post-case-metadata.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
@@ -375,7 +382,14 @@
         "packages/law-practice/use-cases/test/fixtures/eyecite/court-table.json",
         "packages/law-practice/use-cases/test/fixtures/eyecite/court-words.json",
         "packages/law-practice/use-cases/test/fixtures/eyecite/court-lookup.json",
-        "goals/citation-extraction-engine/history/evidence/2026-11-05-court-lookup.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-court-lookup.md",
+        "goals/citation-extraction-engine/ops/probe-post-case-metadata.py",
+        "packages/law-practice/server/src/internal/Citation/PostCaseMetadata.ts",
+        "packages/law-practice/server/test/CitationPostCaseMetadata.fixtures.ts",
+        "packages/law-practice/server/test/CitationPostCaseMetadata.test.ts",
+        "packages/law-practice/server/test/integration/CitationPostCaseMetadata.test.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/post-case-metadata.json",
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-post-case-metadata.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
