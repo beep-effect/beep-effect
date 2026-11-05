@@ -195,7 +195,7 @@
         ".claude/skills/ontology-foundational-auditor",
         ".agents/skills/ontology-foundational-auditor"
       ],
-      "installedTreeHash": "9d7de8e4de9ebc5c40cad269ff824f586cc8b37a99613f50c8cdac8bf284e26d"
+      "installedTreeHash": "5f2405d1e18a3f9abad93c3ceb7981ee70f7ef3f43caa944b3e6265fe9e2eaef"
     },
     "ontology-mapper": {
       "_tag": "local",
@@ -227,7 +227,7 @@
         ".claude/skills/ontology-validator",
         ".agents/skills/ontology-validator"
       ],
-      "installedTreeHash": "bc701d5593991b209978b2b814a230c1335d87915eb252e1937faa8e355e76f6"
+      "installedTreeHash": "17a30d27f9045645fce9c54ad11a9af0790cdf658a6fd1d6f6f6bc5bd95684f5"
     },
     "operator-handoff": {
       "_tag": "local",
