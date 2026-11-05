@@ -4399,7 +4399,7 @@
   },
   "catalog": {
     "@alchemy.run/cloudflare": "2.0.0-beta.85",
-    "@arizeai/phoenix-client": "7.18.0",
+    "@arizeai/phoenix-client": "7.18.1",
     "@azure/core-http-compat": "2.5.0",
     "@azure/core-rest-pipeline": "1.25.0",
     "@azure/msal-node": "^7.1.2",
@@ -4503,7 +4503,7 @@
     "@serwist/next": "^9.5.13",
     "@shadcn/lint": "0.2.5",
     "@standard-schema/spec": "^1.1.0",
-    "@statelyai/sdk": "0.45.0",
+    "@statelyai/sdk": "0.46.0",
     "@storybook/addon-a11y": "^10.6.5",
     "@storybook/addon-docs": "^10.6.5",
     "@storybook/addon-themes": "^10.6.5",
@@ -4622,7 +4622,7 @@
     "sigma": "4.0.4",
     "sonner": "^2.0.8",
     "sql-formatter": "^15.9.0",
-    "statelyai": "0.20.4",
+    "statelyai": "0.21.1",
     "storybook": "^10.6.5",
     "string-width": "8.3.0",
     "syncpack": "15.3.3",
@@ -4691,7 +4691,7 @@
 
     "@arizeai/openinference-vercel": ["@arizeai/openinference-vercel@3.3.0", "", { "dependencies": { "@arizeai/openinference-core": "2.8.0", "@arizeai/openinference-genai": "0.4.0", "@arizeai/openinference-semantic-conventions": "2.14.0", "@opentelemetry/core": "^2.8.0", "@opentelemetry/semantic-conventions": ">=1.41.1 <2.0.0" }, "peerDependencies": { "@ai-sdk/otel": "^1.0.0", "@opentelemetry/api": ">=1.7.0 <2.0.0", "ai": "^7.0.0" } }, "sha512-HLkVOR+MGnd5Gd+28/xYVhJmZgOHAFogkQua3wnoHMDm3WEnHC11Rco0zfiM03qELy2kdiRbPUTuDEBr5rjkpA=="],
 
-    "@arizeai/phoenix-client": ["@arizeai/phoenix-client@7.18.0", "", { "dependencies": { "@arizeai/openinference-semantic-conventions": "^2.15.0", "@arizeai/phoenix-config": "0.5.1", "@arizeai/phoenix-otel": "2.3.0", "async": "^3.2.6", "openapi-fetch": "^0.17.0", "tiny-invariant": "^1.3.3", "zod": "^4.6.7" }, "peerDependencies": { "@anthropic-ai/sdk": "^0.35.0", "ai": "^7.0.0", "jest": ">=27", "openai": "^6.10.0 || ^7.0.0", "vitest": ">=1" }, "optionalPeers": ["@anthropic-ai/sdk", "ai", "jest", "openai", "vitest"] }, "sha512-A/r4ATSUpdO42u53it0z47LJQX98rRA/YiiywaWynv5v5OAVO0TizRZB/GC2jPzW8tOwwIDX+jUjuLlJT+WeSQ=="],
+    "@arizeai/phoenix-client": ["@arizeai/phoenix-client@7.18.1", "", { "dependencies": { "@arizeai/openinference-semantic-conventions": "^2.15.0", "@arizeai/phoenix-config": "0.5.1", "@arizeai/phoenix-otel": "2.3.0", "async": "^3.2.6", "openapi-fetch": "^0.17.0", "tiny-invariant": "^1.3.3", "zod": "^4.6.7" }, "peerDependencies": { "@anthropic-ai/sdk": "^0.35.0", "ai": "^7.0.0", "jest": ">=27", "openai": "^6.10.0 || ^7.0.0", "vitest": ">=1" }, "optionalPeers": ["@anthropic-ai/sdk", "ai", "jest", "openai", "vitest"] }, "sha512-vDlTEAKLdECuAYaZn0b2eKBXzXUm7AeTIDdqsaG7SAJvdGrLywL5IegAquSNRY7cYGNUa+aMfcUh/dy4H7sMiQ=="],
 
     "@arizeai/phoenix-config": ["@arizeai/phoenix-config@0.5.1", "", {}, "sha512-h+suTkGdWLlHlcgx/Mz9dKMBP1y3dAAqbPTMGhqOIEuNz05v7UZtb8AYfrbBE5mUQKhmz103ni6Hc2GLG0G6xQ=="],
 
@@ -6731,9 +6731,9 @@
 
     "@statelyai/graph": ["@statelyai/graph@2.4.0", "", { "peerDependencies": { "@dagrejs/dagre": "^3.0.0 || ^4.0.0", "@hpcc-js/wasm-graphviz": "^1.0.0", "cytoscape": "^3.0.0", "d3-force": "^3.0.0", "d3-hierarchy": "^3.0.0", "dotparser": "^1.0.0", "elkjs": "^0.9.0 || ^0.10.0 || ^0.11.0", "fast-xml-parser": "^5.0.0", "graphology": "^0.26.0", "graphology-layout-forceatlas2": "^0.10.0", "webcola": "^3.4.0", "zod": "^4.0.0" }, "optionalPeers": ["@dagrejs/dagre", "@hpcc-js/wasm-graphviz", "cytoscape", "d3-force", "d3-hierarchy", "dotparser", "elkjs", "fast-xml-parser", "graphology", "graphology-layout-forceatlas2", "webcola", "zod"] }, "sha512-bJfR7s7q2s/0fyM17qJl3QBVBnYj38OzmWYkpXstkD8DVTuFNvwfpGXtkOAbHWqDmdLerRGmcRRS+mUsJYC7gQ=="],
 
-    "@statelyai/mcp": ["@statelyai/mcp@0.24.1", "", { "dependencies": { "@asteasolutions/zod-to-openapi": "8.5.0", "@modelcontextprotocol/client": "2.0.0", "@modelcontextprotocol/ext-apps": "2.0.0", "@modelcontextprotocol/server": "2.0.0", "zod": "^4.4.1" }, "bin": { "stately-mcp": "dist/index.mjs" } }, "sha512-QqYY8TU3AOiKyes2YPVx0uMd+GKZlH6HhPYWKtwYNKSUgoBEXKCDNP52JMzolDfspXkA7UG7tWyTeOplOf+cqg=="],
+    "@statelyai/mcp": ["@statelyai/mcp@0.26.0", "", { "dependencies": { "@asteasolutions/zod-to-openapi": "8.5.0", "@modelcontextprotocol/client": "2.0.0", "@modelcontextprotocol/ext-apps": "2.0.0", "@modelcontextprotocol/server": "2.0.0", "zod": "^4.4.1" }, "bin": { "stately-mcp": "dist/index.mjs" } }, "sha512-ZNFdu4sGOqZMeZ2/8dY8fJAgnQoPTrStdDxqUTkXW9Beo+mXmMIMIJmbFPDf+Gw+xB2kwfkJfdS9GSE7M2YSqQ=="],
 
-    "@statelyai/sdk": ["@statelyai/sdk@0.45.0", "", { "dependencies": { "@statelyai/graph": "^2.1.0", "xstate": "^5.0.0" }, "peerDependencies": { "ws": "^8.19.0" }, "optionalPeers": ["ws"], "bin": { "stately-sdk": "./dist/bin.mjs" } }, "sha512-qQ2iqxTctzsnNrjloBhukRYQS4q9foW0uLYb9wJDHU312EScR/30G2S3DW8lH8PBaJyGqRxhTBgYrGt+Vs5ABA=="],
+    "@statelyai/sdk": ["@statelyai/sdk@0.46.0", "", { "dependencies": { "@statelyai/graph": "^2.1.0", "xstate": "^5.0.0" }, "peerDependencies": { "ws": "^8.19.0" }, "optionalPeers": ["ws"], "bin": { "stately-sdk": "./dist/bin.mjs" } }, "sha512-mInjawO9ft6+Ra6L5F/0Lsh7ftlSQ/09DpNl92Qedwwh2qld3DwF9NTAENp5QZTQ4wAStHfegJixYcfQE6GBJg=="],
 
     "@storybook/addon-a11y": ["@storybook/addon-a11y@10.6.5", "", { "dependencies": { "@storybook/global": "^5.0.0", "axe-core": "^4.2.0" }, "peerDependencies": { "storybook": "^10.6.5" } }, "sha512-7dEH3OHKdE+0zakqEy50KtfhPORIm1xnhWeehyROO1Ct7Rx9s7cYcx6edUZvh0tCuX5VhDnDmkvQV+dbrPDmCA=="],
 
@@ -8981,7 +8981,7 @@
 
     "stack-trace": ["stack-trace@0.0.10", "", {}, "sha512-KGzahc7puUKkzyMt+IqAep+TVNbKP+k2Lmwhub39m1AsTSkaDutx56aDCo+HLDzf/D26BIHTJWNiTG1KAJiQCg=="],
 
-    "statelyai": ["statelyai@0.20.4", "", { "dependencies": { "@oclif/core": "^4.10.3", "@statelyai/mcp": "0.24.1", "@statelyai/sdk": "0.45.0", "tsx": "^4.23.13", "typescript": "^5.9.3", "ws": "^8.21.0", "zod": "^4.4.1" }, "bin": { "statelyai": "./dist/bin.mjs" } }, "sha512-awkjU/z1lb/vXOxuBr9zHNWORv3LcvLKDwhmX/kzTFT5hrX0a97MBPbrT8NaFaTwqpLwBqBDLEdX5M0GG+YQIQ=="],
+    "statelyai": ["statelyai@0.21.1", "", { "dependencies": { "@oclif/core": "^4.10.3", "@statelyai/mcp": "0.26.0", "@statelyai/sdk": "0.46.0", "tsx": "^4.23.13", "typescript": "^5.9.3", "ws": "^8.21.0", "zod": "^4.4.1" }, "bin": { "statelyai": "./dist/bin.mjs" } }, "sha512-ZFMGHpW8vMJP1LFcg3+6ZpiaFPTSVWiCIHnDGAqAbid17IqMGW3M4JTnTgXYwbQy2w+oKHcEu1Jg1KjaBznunQ=="],
 
     "stats-gl": ["stats-gl@2.4.2", "", { "dependencies": { "@types/three": "*", "three": "^0.170.0" } }, "sha512-g5O9B0hm9CvnM36+v7SFl39T7hmAlv541tU81ME8YeSb3i1CIP5/QdDeSB3A0la0bKNHpxpwxOVRo2wFTYEosQ=="],
 
