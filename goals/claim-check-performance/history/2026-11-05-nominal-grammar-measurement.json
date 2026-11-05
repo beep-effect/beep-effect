@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "claim-nominal-grammar-measurement/v1",
+  "strict": 41,
+  "selected": 538,
+  "parsed": 537,
+  "abstained": 455,
+  "priorStrict": 39,
+  "lostOriginal37": [],
+  "lostPrior39": [],
+  "newPasses": [
+    {
+      "familyId": "13070851-root-1",
+      "claimNumber": 4
+    },
+    {
+      "familyId": "13484431-root-19",
+      "claimNumber": 23
+    }
+  ],
+  "componentMatches": {
+    "elementsBefore": 724,
+    "elementsAfter": 734,
+    "edgesBefore": 2107,
+    "edgesAfter": 2124,
+    "claimsWithElementRegression": 0,
+    "claimsWithEdgeRegression": 0
+  },
+  "sourceFreeze": "research/implementation-nominal-002.json",
+  "implementationDigest": "de000cebc88d63fb6eb8d646ab2b08abc3fb2da9e0cefc81b3ac4b8439f505d1",
+  "previousCandidate": "product-nominal-001 retained at39 with2element/2edgeimprovements; prior snapshot unchanged",
+  "validation": {
+    "newFocusedGrammarTests": 20,
+    "originalRuleTestsUnchanged": 35,
+    "sourceAndTestTypechecks": true,
+    "packageAuditSeconds": 17.4,
+    "packageDocgenSeconds": 9.6,
+    "independentReviewRequiredFindings": 0,
+    "review": "nominal-review-005",
+    "scopedEVFindings": 0,
+    "FallowIncludingTestsFindings": 0
+  },
+  "numericalGatesPassed": false,
+  "goalCompletionClaimed": false,
+  "hashes": {
+    "results.json": "e1cfd983af2ec1164542a3e2960e2adeca0ef32b143657a6fe53bd813d845d57",
+    "gates.json": "63db05bbdc767bcde06222e4827e6305a2d9510d51a77f9c8c883c16cd7334e6",
+    "preservation.json": "c86000fc56e140dacacb6f23544aaaaa2994e1bcd273ec1a160194676adc7bb0",
+    "diagnostics.json": "c94a6615fb056edf9349fa179c5325a04bfcb25d6aaab1a7c56f67fe009339fd"
+  }
+}

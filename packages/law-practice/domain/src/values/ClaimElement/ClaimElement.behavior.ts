@@ -581,6 +581,250 @@ const headAt = (tokens: ReadonlyArray<Span>, index: number, quotations: Readonly
     );
   });
 
+// Inspection grammar plans a source interval and scanner continuation without
+// changing the historical strict extractor or the element's syntactic role.
+class NominalBoundaryPlan extends S.Opaque<NominalBoundaryPlan, { readonly brand: unique symbol }>()(
+  S.Struct({
+    headEnd: S.Int,
+    resumeAt: S.Int,
+    reason: S.Literals([
+      "legacy",
+      "copular-subject",
+      "shared-participle",
+      "coordinated-action",
+      "relational-complement",
+    ]),
+  }).pipe(
+    $I.annoteSchema("NominalBoundaryPlan", {
+      description: "Owned source token interval and continuation justified by an explicit nominal grammar frame.",
+    })
+  )
+) {}
+type NominalPlanner = (
+  tokens: ReadonlyArray<Span>,
+  index: number,
+  headStart: number,
+  quotations: ReadonlyArray<Span>
+) => NominalBoundaryPlan;
+const tokenWordAt = (tokens: ReadonlyArray<Span>, index: number): string =>
+  O.getOrElse(
+    O.map(A.get(tokens, index), ({ text }) => Str.toLowerCase(text)),
+    () => ""
+  );
+const quotedTokenAt = (tokens: ReadonlyArray<Span>, index: number, quotations: ReadonlyArray<Span>): boolean =>
+  O.exists(A.get(tokens, index), ({ start }) =>
+    A.some(quotations, (quote) => start >= quote.start && start < quote.start + Str.length(quote.text))
+  );
+const legacyNominalPlan: NominalPlanner = (tokens, _index, headStart, quotations) => {
+  const end = headStart + headAt(tokens, headStart, quotations).length;
+  return NominalBoundaryPlan.make({ headEnd: end, resumeAt: end, reason: "legacy" });
+};
+const copulas = HashSet.make("is", "are", "was", "were");
+const hardNominalBarrier = (tokens: ReadonlyArray<Span>, index: number, quotations: ReadonlyArray<Span>): boolean =>
+  !quotedTokenAt(tokens, index, quotations) && HashSet.has(boundaryWords, tokenWordAt(tokens, index));
+const finiteCompetes = (tokens: ReadonlyArray<Span>, index: number, headStart: number): boolean => {
+  const word = tokenWordAt(tokens, index);
+  const previous = tokenWordAt(tokens, index - 1);
+  const prefix = A.take(A.drop(tokens, headStart), index - headStart);
+  const plural = A.some(prefix, ({ text }) => Str.endsWith("s")(text) && !Str.endsWith("ss")(text));
+  const baseVerb = HashSet.has(predicateWords, word) && !Str.endsWith("ed")(word) && !Str.endsWith("ing")(word);
+  const singularVerb = Str.endsWith("s")(word) && HashSet.has(predicateWords, Str.slice(0, -1)(word));
+  return (baseVerb && (plural || Str.endsWith("ly")(previous))) || (!plural && singularVerb);
+};
+const copularNominalPlan = (
+  tokens: ReadonlyArray<Span>,
+  index: number,
+  headStart: number,
+  quotations: ReadonlyArray<Span>
+): O.Option<NominalBoundaryPlan> => {
+  if (index !== 0) return O.none();
+  const boundary = A.findFirstIndex(A.drop(tokens, headStart), (_, offset) => {
+    const at = headStart + offset;
+    return (
+      !quotedTokenAt(tokens, at, quotations) &&
+      (HashSet.has(copulas, tokenWordAt(tokens, at)) ||
+        hardNominalBarrier(tokens, at, quotations) ||
+        HashSet.has(punctuation, tokenWordAt(tokens, at)))
+    );
+  });
+  return O.flatMap(boundary, (offset) => {
+    const end = headStart + offset;
+    if (end <= headStart || !HashSet.has(copulas, tokenWordAt(tokens, end))) return O.none();
+    if (isPredicateToken(tokens, end - 1) || Str.endsWith("ly")(tokenWordAt(tokens, end - 1))) return O.none();
+    if (
+      A.some(A.take(A.drop(tokens, headStart + 1), end - headStart - 1), (_, offset) => {
+        const at = headStart + 1 + offset;
+        return !quotedTokenAt(tokens, at, quotations) && finiteCompetes(tokens, at, headStart);
+      })
+    )
+      return O.none();
+    return O.some(NominalBoundaryPlan.make({ headEnd: end, resumeAt: end, reason: "copular-subject" }));
+  });
+};
+const participleAt = (tokens: ReadonlyArray<Span>, at: number): boolean => {
+  const word = tokenWordAt(tokens, at);
+  return Str.length(word) > 4 && Str.endsWith("ing")(word);
+};
+const participialNominalPlan = (
+  tokens: ReadonlyArray<Span>,
+  headStart: number,
+  quotations: ReadonlyArray<Span>
+): O.Option<NominalBoundaryPlan> => {
+  const prefix = A.takeWhile(A.drop(tokens, headStart), (_, offset) => {
+    const at = headStart + offset;
+    const word = tokenWordAt(tokens, at);
+    return !HashSet.has(punctuation, word) && (!HashSet.has(boundaryWords, word) || word === "and" || word === "or");
+  });
+  const pair = A.findFirstIndex(prefix, (_, offset) => {
+    const at = headStart + offset;
+    return (
+      !quotedTokenAt(tokens, at, quotations) &&
+      participleAt(tokens, at) &&
+      HashSet.has(HashSet.make("and", "or"), tokenWordAt(tokens, at + 1)) &&
+      participleAt(tokens, at + 2)
+    );
+  });
+  return O.flatMap(pair, (offset) => {
+    const at = headStart + offset;
+    const prefix = A.take(A.drop(tokens, headStart), offset);
+    if (headAt(tokens, headStart, quotations).length < offset) return O.none();
+    if (
+      A.some(
+        prefix,
+        (_, before) =>
+          !quotedTokenAt(tokens, headStart + before, quotations) &&
+          HashSet.has(
+            HashSet.make("and", "or", "toward", "towards", "against", "among", "around"),
+            tokenWordAt(tokens, headStart + before)
+          )
+      )
+    )
+      return O.none();
+    const following = at + 3;
+    if (O.isSome(determinerAt(tokens, following))) {
+      if (at === headStart) return O.none();
+      return O.some(NominalBoundaryPlan.make({ headEnd: at, resumeAt: following, reason: "coordinated-action" }));
+    }
+    const noun = tokenWordAt(tokens, following);
+    if (!HashSet.has(nominalFollowers, noun) || Str.endsWith("s")(noun)) return O.none();
+    const end = following + headAt(tokens, following, quotations).length;
+    return end > following
+      ? O.some(NominalBoundaryPlan.make({ headEnd: end, resumeAt: end, reason: "shared-participle" }))
+      : O.none();
+  });
+};
+const inspectionNominalPlan: NominalPlanner = (tokens, index, headStart, quotations) =>
+  O.getOrElse(
+    O.orElse(participialNominalPlan(tokens, headStart, quotations), () =>
+      copularNominalPlan(tokens, index, headStart, quotations)
+    ),
+    () => legacyNominalPlan(tokens, index, headStart, quotations)
+  );
+
+class InspectionSourceRole extends S.Opaque<InspectionSourceRole, { readonly brand: unique symbol }>()(
+  S.Struct({ resumeAt: S.Int, reason: S.Literals(["reciprocal-argument", "relational-link"]) }).pipe(
+    $I.annoteSchema("InspectionSourceRole", {
+      description: "A complete grammatical source interval that is relation text, not an entity mention.",
+    })
+  )
+) {}
+const lexicalComplementAt = (tokens: ReadonlyArray<Span>, index: number, quotations: ReadonlyArray<Span>): boolean => {
+  const start = O.match(determinerAt(tokens, index), {
+    onNone: () => index,
+    onSome: ({ determiner, width }) =>
+      index + width + (isReferringDeterminer(determiner) ? quantifierWidthAt(tokens, index + width) : 0),
+  });
+  const head = headAt(tokens, start, quotations);
+  return (
+    A.isReadonlyArrayNonEmpty(head) &&
+    !isClaimReference(head) &&
+    A.some(head, ({ text }) => O.isSome(Str.match(/\p{L}/u)(text)))
+  );
+};
+const relationAt = (tokens: ReadonlyArray<Span>, index: number, quotations: ReadonlyArray<Span>): boolean =>
+  !quotedTokenAt(tokens, index, quotations) &&
+  surfaceAt(tokens, index + 1)(["to"]) &&
+  HashSet.has(HashSet.make("due", "opposite", "perpendicular", "relative"), tokenWordAt(tokens, index)) &&
+  lexicalComplementAt(tokens, index + 2, quotations);
+const reciprocalAt = (tokens: ReadonlyArray<Span>, index: number, quotations: ReadonlyArray<Span>): boolean => {
+  if (quotedTokenAt(tokens, index, quotations)) return false;
+  if (!surfaceAt(tokens, index)(["each", "other"]) && !surfaceAt(tokens, index)(["one", "another"])) return false;
+  const next = tokenWordAt(tokens, index + 2);
+  const complete =
+    next === "" ||
+    HashSet.has(
+      HashSet.make(
+        ".",
+        ",",
+        ";",
+        ":",
+        ")",
+        "]",
+        "in",
+        "on",
+        "at",
+        "by",
+        "with",
+        "from",
+        "to",
+        "than",
+        "when",
+        "wherein"
+      ),
+      next
+    );
+  return (
+    complete &&
+    HashSet.has(HashSet.make("to", "from", "with", "between", "against", "among", "of"), tokenWordAt(tokens, index - 1))
+  );
+};
+const inspectionRoleAt = (
+  tokens: ReadonlyArray<Span>,
+  index: number,
+  quotations: ReadonlyArray<Span>
+): O.Option<InspectionSourceRole> => {
+  if (reciprocalAt(tokens, index, quotations))
+    return O.some(InspectionSourceRole.make({ resumeAt: index + 2, reason: "reciprocal-argument" }));
+  const previous = tokenWordAt(tokens, index - 1);
+  if (relationAt(tokens, index, quotations) && (HashSet.has(copulas, previous) || isPredicateToken(tokens, index - 1)))
+    return O.some(InspectionSourceRole.make({ resumeAt: index + 2, reason: "relational-link" }));
+  return O.none();
+};
+const relationalNominalPlan = (
+  tokens: ReadonlyArray<Span>,
+  headStart: number,
+  quotations: ReadonlyArray<Span>
+): O.Option<NominalBoundaryPlan> => {
+  const legacy = headAt(tokens, headStart, quotations);
+  const found = A.findFirstIndex(
+    legacy,
+    (_, offset) => offset > 0 && relationAt(tokens, headStart + offset, quotations)
+  );
+  return O.map(found, (offset) =>
+    NominalBoundaryPlan.make({
+      headEnd: headStart + offset,
+      resumeAt: headStart + offset + 2,
+      reason: "relational-complement",
+    })
+  );
+};
+type LexicalGrammar = {
+  readonly plan: NominalPlanner;
+  readonly ignoreAt: (
+    tokens: ReadonlyArray<Span>,
+    index: number,
+    quotations: ReadonlyArray<Span>
+  ) => O.Option<InspectionSourceRole>;
+};
+const strictLexicalGrammar: LexicalGrammar = { plan: legacyNominalPlan, ignoreAt: () => O.none() };
+const inspectionLexicalGrammar: LexicalGrammar = {
+  plan: (tokens, index, headStart, quotations) =>
+    O.getOrElse(relationalNominalPlan(tokens, headStart, quotations), () =>
+      inspectionNominalPlan(tokens, index, headStart, quotations)
+    ),
+  ignoreAt: inspectionRoleAt,
+};
+
 // Rule `claim-reference`: "the claim 1" names a claim, not a claim term.
 const isClaimReference = (head: ReadonlyArray<Span>): boolean =>
   O.exists(A.get(head, 0), ({ text }) => Str.toLowerCase(text) === "claim") &&
@@ -612,8 +856,10 @@ const scanStepOf = (term: O.Option<EncodedTerm>, resumeAt: number): ScanStep => 
 
 // One scan step from `index`: the term found there, if any, and where the scan resumes.
 const scanStep =
-  (claimText: string, tokens: ReadonlyArray<Span>, quotations: ReadonlyArray<Span>) =>
+  (claimText: string, tokens: ReadonlyArray<Span>, quotations: ReadonlyArray<Span>, grammar: LexicalGrammar) =>
   (index: number): ScanStep => {
+    const role = grammar.ignoreAt(tokens, index, quotations);
+    if (O.isSome(role)) return scanStepOf(O.none(), role.value.resumeAt);
     const idiom = A.findFirst(
       [
         ["by", "means", "of"],
@@ -653,7 +899,8 @@ const scanStep =
         onSome: ({ determiner, start, width }) => {
           const headStart =
             index + width + (isReferringDeterminer(determiner) ? quantifierWidthAt(tokens, index + width) : 0);
-          const head = headAt(tokens, headStart, quotations);
+          const plan = grammar.plan(tokens, index, headStart, quotations);
+          const head = A.take(A.drop(tokens, headStart), plan.headEnd - headStart);
           if (!A.isReadonlyArrayNonEmpty(head) || isClaimReference(head)) return scanStepOf(O.none(), index + width);
           const term = termOf(claimText, start, determiner, head);
           const lexicalStart = O.getOrThrow(A.get(tokens, index + width)).start;
@@ -671,14 +918,14 @@ const scanStep =
                 ),
               }
             : term;
-          return scanStepOf(O.some(lexical), headStart + A.length(head));
+          return scanStepOf(O.some(lexical), plan.resumeAt);
         },
       })
     );
   };
 
 const termsIn =
-  (claimText: string) =>
+  (claimText: string, grammar: LexicalGrammar = strictLexicalGrammar) =>
   (span: Span): ReadonlyArray<EncodedTerm> => {
     const material = Str.match(
       /\b(?:is|are|was|were)\s+(?:formed|made|composed)\s+(?:of|from)\s+(?!a\b|an\b|the\b|said\b)([^,;]+)$/iu
@@ -692,12 +939,12 @@ const termsIn =
       onSome: (match) => sliceSpan(span, 0, O.getOrElse(O.fromUndefinedOr(match.index), constant(span.text.length))),
     });
     const tokens = matchesIn(tokenPattern)(entitySpan);
-    const step = scanStep(claimText, tokens, matchesIn(quotedPhrasePattern)(entitySpan));
+    const step = scanStep(claimText, tokens, matchesIn(quotedPhrasePattern)(entitySpan), grammar);
     return A.getSomes(A.unfold(0, (index) => (index < A.length(tokens) ? O.some(step(index)) : O.none())));
   };
 
 const elementOf =
-  (claimText: string, kind: ClaimElementKind) =>
+  (claimText: string, kind: ClaimElementKind, grammar: LexicalGrammar = strictLexicalGrammar) =>
   (path: string, span: Span): EncodedElement => {
     const tokens = matchesIn(tokenPattern)(span);
     return {
@@ -713,7 +960,10 @@ const elementOf =
           ))
           ? "functional-relation"
           : kind,
-      terms: termsIn(claimText)(
+      terms: termsIn(
+        claimText,
+        grammar
+      )(
         kind === "preamble-subject"
           ? O.match(
               Str.match(
@@ -1070,10 +1320,11 @@ const colonNodesOf = (root: string, segments: ReadonlyArray<Span>): ReadonlyArra
 const scopedElementOf =
   (claimText: string, root: string) =>
   (node: ColonScopeNode): EncodedElement => {
-    const element = elementOf(claimText, node.parent === root ? "limitation" : "sub-limitation")(
-      node.path,
-      node.header
-    );
+    const element = elementOf(
+      claimText,
+      node.parent === root ? "limitation" : "sub-limitation",
+      inspectionLexicalGrammar
+    )(node.path, node.header);
     return node.group
       ? {
           ...element,
@@ -1091,7 +1342,11 @@ const inspectionTreeInput: typeof treeInput = (claim, parts) => {
   const nodes = colonNodesOf(root, segments);
   const elements = A.prepend(
     A.map(nodes, scopedElementOf(claim.claimText, root)),
-    elementOf(claim.claimText, "preamble-subject")(root, pipe(parts.preamble, trimSpan, dropSuffix([","]), trimSpan))
+    elementOf(
+      claim.claimText,
+      "preamble-subject",
+      inspectionLexicalGrammar
+    )(root, pipe(parts.preamble, trimSpan, dropSuffix([","]), trimSpan))
   );
   return assembleTree(
     claim,

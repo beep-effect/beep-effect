@@ -1,6 +1,6 @@
 # Claim Checker Performance Plan
 
-Status: active. The current product candidate recovers39/538 and parses537/538;455/538claims remain abstained or unknown. PR2685 now carries the source adapter, qualified inspection policy, read-only service/tool and measured parser repairs. All60families now deliver through62bounded tool pages with no loss of the prior39passes. Independent development annotation round3 is sealed but has zero accepted metric references; usefulness remains unproved. Original references, previous results and all original37passes are retained.
+Status: active. The current inspection candidate recovers41/538 exact structures, parses537/538 and abstains on455/538. All original37 and all prior39passes are retained. Nominal/relation grammar improves matched elements724->734 and edges2107->2124 with no per-claim component regressions. Hierarchy PR2697 landed into the parent feature branch2685; accepted shared main repair2682 is being incorporated. Independent source audit provides24prospective families/567nodes and54clear source alternatives, while final references and metric truth remain unaccepted. All usefulness and final delivery gates remain required.
 
 ## P0 — Baseline and evaluation integrity
 
