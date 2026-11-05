@@ -1,0 +1,46 @@
+Using CPython 3.11.15
+Creating virtual environment at: .venv
+   Building eyecite @ file://~/.cache/beep/citation-extraction-engine/eyecite
+Downloading lxml (7.7MiB)
+Downloading mypy (11.8MiB)
+Downloading hyperscan (1.7MiB)
+ Downloaded hyperscan
+ Downloaded lxml
+ Downloaded mypy
+      Built eyecite @ file://~/.cache/beep/citation-extraction-engine/eyecite
+Installed 18 packages in 93ms
+...........Unknown overlap case. Last cite: ShortCaseCitation('105 Idaho at 667', groups={'volume': '105', 'reporter': 'Idaho', 'page': '667'}, metadata=ShortCaseCitation.Metadata(parenthetical=None, pin_cite='667', pin_cite_span_start=None, pin_cite_span_end=None, year=None, month=None, day=None, court=None, antecedent_guess='Newbold')). Current: ShortCaseCitation('672 P2d at 235', groups={'volume': '672', 'reporter': 'P2d', 'page': '235'}, metadata=ShortCaseCitation.Metadata(parenthetical=None, pin_cite='235', pin_cite_span_start=None, pin_cite_span_end=None, year=None, month=None, day=None, court=None, antecedent_guess='Newbold'))
+Unknown overlap case. Last cite: ShortCaseCitation('105 Idaho at 667', groups={'volume': '105', 'reporter': 'Idaho', 'page': '667'}, metadata=ShortCaseCitation.Metadata(parenthetical=None, pin_cite='667', pin_cite_span_start=None, pin_cite_span_end=None, year=None, month=None, day=None, court=None, antecedent_guess='Newbold')). Current: ShortCaseCitation('672 P2d at 235', groups={'volume': '672', 'reporter': 'P2d', 'page': '235'}, metadata=ShortCaseCitation.Metadata(parenthetical=None, pin_cite='235', pin_cite_span_start=None, pin_cite_span_end=None, year=None, month=None, day=None, court=None, antecedent_guess='Newbold'))
+Unknown overlap case. Last cite: ShortCaseCitation('105 Idaho at 667', groups={'volume': '105', 'reporter': 'Idaho', 'page': '667'}, metadata=ShortCaseCitation.Metadata(parenthetical=None, pin_cite='667', pin_cite_span_start=None, pin_cite_span_end=None, year=None, month=None, day=None, court=None, antecedent_guess='Newbold')). Current: ShortCaseCitation('672 P2d at 235', groups={'volume': '672', 'reporter': 'P2d', 'page': '235'}, metadata=ShortCaseCitation.Metadata(parenthetical=None, pin_cite='235', pin_cite_span_start=None, pin_cite_span_end=None, year=None, month=None, day=None, court=None, antecedent_guess='Newbold'))
+....Unknown overlap case. Last cite: ShortCaseCitation('533 U.S. at 201', groups={'volume': '533', 'reporter': 'U.S.', 'page': '201'}, metadata=ShortCaseCitation.Metadata(parenthetical=None, pin_cite='201', pin_cite_span_start=None, pin_cite_span_end=None, year=None, month=None, day=None, court='scotus', antecedent_guess='Saucier')). Current: FullCaseCitation('121 S.Ct. 2151', groups={'volume': '121', 'reporter': 'S.Ct.', 'page': '2151'}, metadata=FullCaseCitation.Metadata(parenthetical=None, pin_cite=None, pin_cite_span_start=None, pin_cite_span_end=None, year=None, month=None, day=None, court='scotus', plaintiff=None, defendant='Saucier', extra=None, antecedent_guess=None, resolved_case_name_short=None, resolved_case_name=None))
+Unknown overlap case. Last cite: ShortCaseCitation('533 U.S. at 201', groups={'volume': '533', 'reporter': 'U.S.', 'page': '201'}, metadata=ShortCaseCitation.Metadata(parenthetical=None, pin_cite='201', pin_cite_span_start=None, pin_cite_span_end=None, year=None, month=None, day=None, court='scotus', antecedent_guess='Saucier')). Current: FullCaseCitation('121 S.Ct. 2151', groups={'volume': '121', 'reporter': 'S.Ct.', 'page': '2151'}, metadata=FullCaseCitation.Metadata(parenthetical=None, pin_cite=None, pin_cite_span_start=None, pin_cite_span_end=None, year=None, month=None, day=None, court='scotus', plaintiff=None, defendant='Saucier', extra=None, antecedent_guess=None, resolved_case_name_short=None, resolved_case_name=None))
+Unknown overlap case. Last cite: ShortCaseCitation('533 U.S. at 201', groups={'volume': '533', 'reporter': 'U.S.', 'page': '201'}, metadata=ShortCaseCitation.Metadata(parenthetical=None, pin_cite='201', pin_cite_span_start=None, pin_cite_span_end=None, year=None, month=None, day=None, court='scotus', antecedent_guess='Saucier')). Current: FullCaseCitation('121 S.Ct. 2151', groups={'volume': '121', 'reporter': 'S.Ct.', 'page': '2151'}, metadata=FullCaseCitation.Metadata(parenthetical=None, pin_cite=None, pin_cite_span_start=None, pin_cite_span_end=None, year=None, month=None, day=None, court='scotus', plaintiff=None, defendant='Saucier', extra=None, antecedent_guess=None, resolved_case_name_short=None, resolved_case_name=None))
+.....................................
+----------------------------------------------------------------------
+Ran 52 tests in 16.840s
+
+OK
+Testing case_citation comparison... ✓
+Testing journal_citation comparison... ✓
+Testing law_citation comparison... ✓
+Testing citation comparison with corrected reporter... ✓
+Testing citation comparison with different reporters... ✓
+Testing citation comparison with different source text... ✓
+Testing citation comparison with missing pages... ✓
+Testing citation comparison with nominative reporter... ✓
+Testing hash function identity... ✓
+Testing id citation comparison... ✓
+Testing missing page conversion... ✓
+Testing persistent citation hash... ✓
+✓
+✓
+✓
+Testing resource comparison... ✓
+Testing resource comparison with missing pages... ✓
+Testing tax court citation comparison... ✓
+Testing unknown citation comparison... ✓
+Testing clean_text for   word 	    word   ✓
+Testing clean_text for   word 	    word   ✓
+Testing clean_text for __word__word_ ✓
+Testing clean_text for  <style>ignore</style> <i> word </i>  ✓
+Testing clean_text for  <style>ignore</style> __ <i> word  word </i> ✓
