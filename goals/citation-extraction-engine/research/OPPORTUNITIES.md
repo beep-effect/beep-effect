@@ -319,3 +319,11 @@ history/evidence/2026-11-03-edition-inference.md.
   replacement and composed-method replay removed both findings. Direct native
   tests must prepare branded owned Unicode before calling trusted low-level
   helpers; the package type check caught raw fixture carriers at that boundary.
+
+- 2026-11-05 built-in rendering: source inspection showed the inherited
+  corrected_citation_full returns matched text directly, rather than calling
+  resource correction. The corpus now observes all eight inheriting classes
+  separately from the four overrides and two formatted methods. Treat related
+  method names as independent dispatch contracts. Fallow also caught a replay
+  function containing several nested products; extracting one mode's replay
+  keeps the complete product while respecting the complexity ceiling.

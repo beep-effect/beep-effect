@@ -950,3 +950,9 @@ accounting checker.
   4117 source renderings, 2592 native replacement cases and 5858 prior method
   calls compare. Metadata formatting and other goal acceptance remain open.
   See history/evidence/2026-11-05-resource-citation-correction.md.
+
+- 2026-11-05: private built-in full rendering now preserves the four source
+  overrides, eight inheriting classes and separate Id./supra formatting. All
+  14934 original observations compare through existing correction, Unicode,
+  budget and Clock owners. Public transforms and engine acceptance remain open.
+  See history/evidence/2026-11-05-built-in-rendering.md.

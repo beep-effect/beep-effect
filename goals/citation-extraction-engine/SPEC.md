@@ -1470,3 +1470,13 @@ retains Python-point boundaries, empty-search insertion and replacement bytes.
 Two cooperative passes measure and reserve canonical receiving output before
 allocation. Existing captured owner, deadlines and fresh/enclosing invocation
 budgets remain authoritative. Full metadata formatting remains open.
+
+### Built-in full rendering (2026-11-05)
+
+Private schema variants distinguish full case, short case, law and journal
+overrides, inherited matched-only rendering and separate Id./supra formatted
+operations. Only the four overrides invoke resource correction. Native metadata
+truthiness, punctuation and ordering remain source-specific. Existing native
+receiving/concatenation, captured edition/Clock owners and one fresh/enclosing
+invocation budget cover complete assembly. This private source adapter does not
+replace public semantic schemas or their separate transform laws.

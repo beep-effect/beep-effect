@@ -856,3 +856,10 @@ ResourceCitation.corrected_citation at the pinned revision above (Free Law
 Project, BSD-2-Clause). Native Python replacement behavior is observed from
 CPython 3.11.15; the existing full PSF notice applies. Canonical edition strings
 retain the existing reporters-db attribution. No Python runtime is distributed.
+
+Rendering.ts, probe-citation-rendering.py and rendering.json derive from
+eyecite 2.7.6 models.py's built-in corrected_citation_full overrides, inherited
+base implementation and IdCitation/SupraCitation.formatted methods at the pinned
+revision above (Free Law Project, BSD-2-Clause). Canonical edition labels retain
+the existing reporters-db attribution. The native Unicode implementation and
+its existing full PSF notice remain unchanged by this assembly adapter.
