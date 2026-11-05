@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "claim-test-only-replay-equivalence/v1",
+  "previous": "product-tool-pages-002",
+  "current": "product-tool-pages-003",
+  "selected": 538,
+  "strict": 39,
+  "allFamilyRowsEqual": true,
+  "all60PredictionReportsByteIdentical": true,
+  "parsed": 537,
+  "abstained": 455,
+  "original37Lost": [],
+  "prior39Lost": [],
+  "changedSourceOnly": "packages/law-practice/use-cases/test/ClaimInspection.test.ts",
+  "testSuite": {
+    "passed": 14,
+    "fallowTestFileIncluded": true,
+    "fallowFindings": 0
+  },
+  "numericalGatesPassed": false,
+  "goalCompletionClaimed": false,
+  "hashes": {
+    "results.json": "8173e808b028cb65d7619313b3871d13dd5e5df94b214496ce410f0b5bc199bd",
+    "gates.json": "3e12c5959ba99083edb46048b0e4ab90396e6f473f597e654f0bbc2c35398664",
+    "preservation.json": "97739efe35ddbbb73887ba1559a0c1f15c501422672fd48c871feaf09c750347"
+  }
+}

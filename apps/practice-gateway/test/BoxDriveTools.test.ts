@@ -25,6 +25,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
@@ -69,6 +70,27 @@ const ToolsOnDisk = Layer.unwrap(
   userFolder.pipe(
     Effect.map((home) => BoxDriveToolkitHandlers.pipe(Layer.provide(fakeHost({ folders: [["USERPROFILE", home]] }))))
   )
+).pipe(Layer.provide(Platform));
+
+const UnreadableToolsOnDisk = Layer.unwrap(
+  Effect.gen(function* () {
+    const home = yield* userFolder;
+    const fs = yield* FileSystem.FileSystem;
+    const denied = PlatformError.systemError({
+      _tag: "PermissionDenied",
+      module: "FileSystem",
+      method: "readFile",
+    });
+    return BoxDriveToolkitHandlers.pipe(
+      Layer.provide(fakeHost({ folders: [["USERPROFILE", home]] })),
+      Layer.provide(
+        Layer.succeed(FileSystem.FileSystem, {
+          ...fs,
+          readFile: Effect.fn("BoxDriveTest.readFile")(() => Effect.fail(denied)),
+        })
+      )
+    );
+  })
 ).pipe(Layer.provide(Platform));
 
 const call = Effect.fnUntraced(function* (name: "box_list" | "box_read", params: { readonly path?: string }) {
@@ -150,6 +172,16 @@ describe("Box Drive tools", () => {
         expect((yield* refusal("box_read", "Clients/Jones/memo.txt")).reason).toBe("not-found");
         expect((yield* refusal("box_read", "Clients")).reason).toBe("not-a-file");
         expect((yield* refusal("box_list", "readme.txt")).reason).toBe("not-a-folder");
+      })
+    );
+  });
+
+  it.layer(UnreadableToolsOnDisk, { timeout: layerTimeout })("unreadable files", (it) => {
+    it.effect("returns a typed read failure when the file exists but cannot be opened", () =>
+      Effect.gen(function* () {
+        const error = yield* refusal("box_read", "Clients/Smith/notes.md");
+        expect(error.reason).toBe("read-failed");
+        expect(error.message).toContain("could not be read");
       })
     );
   });

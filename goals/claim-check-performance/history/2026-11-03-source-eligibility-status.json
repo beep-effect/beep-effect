@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "claim-performance-source-feasibility/v1",
+  "qualifiedReportedExtendedFamilies": 24,
+  "sourceXmlNodesReviewed": 542,
+  "explicitCanceledNodes": 3,
+  "noncanceledNodesPrescreened": 539,
+  "provisionalNestedWitnesses": 181,
+  "provisionalFunctionalWitnesses": 288,
+  "provisionalEarlierIncorporationWitnesses": 462,
+  "genuineAlternativeMultipleDependencyWitnesses": 0,
+  "judgmentsAreFinalReferences": false,
+  "referenceTreesCreated": false,
+  "defectOrControlTruthCreated": false,
+  "independentReviewerRuntimeOrPredictionExposure": false,
+  "newSourcePool004HttpStatus": 403,
+  "newSourcePool004RowsAcquired": 0,
+  "stoppedWithoutRetry": true,
+  "secretOperationSucceeded": true,
+  "inputReceiptHashes": {
+    "source-qualified24-semantic-prescreen-001.json": "309e2319cea77cfce5de5717589fb7bc2550cff3c3a2c2282d67cf1065faefe4",
+    "source-pool-004-acquisition-review-001.json": "d0a434470137f19f9769a2c0c7b11e3e63692d82912e4b06560aa2aa51bcbb9e",
+    "source-external-family-review-001.json": "294cc2eb9fc1cd291a17955b1356e2b90a6ff8c1b2d27153a551073dd342716b"
+  },
+  "remainingSourceGap": "Qualified alternative earlier-claim incorporation; external family proof remains unavailable for existing leads",
+  "goalComplete": false
+}
