@@ -24,6 +24,7 @@ import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
+  GrokNativeCanaryDiagnostic,
   GrokNativeCanaryEvidence,
   GrokNativeCanaryRequest,
   grokCanaryProfile,
@@ -59,6 +60,7 @@ int main(int argc,char **argv) {
  for(int i=1;i+1<argc;i++){if(!strcmp(argv[i],"-m")&&!strcmp(argv[i+1],"grok-4.7"))model=1;if(!strcmp(argv[i],"--effort")&&!strcmp(argv[i+1],"medium"))effort=1;if(!strcmp(argv[i],"--disallowed-tools")){int commas=0;for(char *c=argv[i+1];*c;c++)if(*c==',')commas++;deny=commas==22&&strstr(argv[i+1],"read_file")&&strstr(argv[i+1],"use_tool")&&strstr(argv[i+1],"image_gen");}}
  if(!model||!effort||!deny)return 86;
  usleep(200000);
+ fputs("PRIVATE_STDERR_SYNTHETIC_ONLY",stderr);
  if(!strcmp(mode,"source-fail"))return 7;
  puts("{\"type\":\"available_commands\",\"tools\":[],\"commands\":[]}");
  puts("{\"type\":\"thought\",\"data\":\"PRIVATE_REASONING_SYNTHETIC_ONLY\"}");
@@ -236,6 +238,27 @@ it.live("one real synthetic native process binds process/session and replays onl
       expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
       const raw = await Fs.readFile(Path.join(f.request.attemptDirectory, "source.json"), "utf8");
       const evidence = await Effect.runPromise(S.decodeEffect(S.fromJsonString(GrokNativeCanaryEvidence))(raw));
+      const diagnosticRaw = await Fs.readFile(
+        Path.join(f.request.attemptDirectory, "diagnostic-090-outcome.json"),
+        "utf8"
+      );
+      const diagnosticCodec = S.fromJsonString(GrokNativeCanaryDiagnostic);
+      const diagnostic = await Effect.runPromise(
+        S.decodeEffect(diagnosticCodec, { onExcessProperty: "error" })(diagnosticRaw)
+      );
+      expect(diagnostic.category).toBe("accepted");
+      expect(O.getOrThrow(diagnostic.protocolTags).end).toBe(1);
+      expect(O.getOrThrow(diagnostic.protocolTags).catalog).toBe(1);
+      expect(diagnosticRaw).not.toContain("PRIVATE_");
+      expect(
+        (
+          await Effect.runPromise(
+            S.decodeEffect(diagnosticCodec, { onExcessProperty: "error" })(
+              diagnosticRaw.replace('"stage":', '"rawMessage":"PRIVATE_FORBIDDEN","stage":')
+            ).pipe(Effect.result)
+          )
+        )._tag
+      ).toBe("Failure");
       expect(evidence.process.directOwnedNativeProcess).toBe(true);
       // The independent fixture records its actual native PID/startticks/exe identity.
       const nativeIdentity = await Fs.readFile(Path.join(f.request.nativeHome, "fixture-identity"), "utf8");
@@ -274,7 +297,20 @@ for (const mode of ["source-fail", "wrong-reply", "tool"]) {
       const f = await fixture({ mode });
       try {
         expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+        const filename = Path.join(f.request.attemptDirectory, "diagnostic-090-outcome.json");
+        const raw = await Fs.readFile(filename, "utf8");
+        const diagnostic = await Effect.runPromise(
+          S.decodeEffect(S.fromJsonString(GrokNativeCanaryDiagnostic), { onExcessProperty: "error" })(raw)
+        );
+        expect(diagnostic.category).toBe(mode === "source-fail" ? "native-exit-refused" : "wire-refused");
+        expect(O.getOrThrow(diagnostic.nativeExitStatus)).toBe(mode === "source-fail" ? 7 : 0);
+        expect(O.getOrThrow(diagnostic.stderrBytes)).toBeGreaterThan(0);
+        expect(diagnostic.producerDispatchAttempts).toBe(1);
+        expect(raw).not.toContain("PRIVATE_");
+        expect(raw).not.toContain(f.directory);
+        expect(raw).not.toContain("synthetic-salt");
         expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+        expect(await Fs.readFile(filename, "utf8")).toBe(raw);
         expect(await f.count("source-count")).toBe(1);
         expect(await f.count("inspect-count")).toBe(2);
         expect(f.traces()).toBe(0);

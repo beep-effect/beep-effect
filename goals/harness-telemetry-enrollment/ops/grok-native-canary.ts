@@ -33,6 +33,7 @@ import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Toml from "effect/encoding/Toml";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -170,6 +171,70 @@ export class GrokNativeCanaryError extends S.TaggedError<GrokNativeCanaryError, 
   { phase: S.Literals(["admission", "attempted-unknown", "source", "delivery"]) },
   $I.annote("GrokNativeCanaryError", { description: "Content-free failure; uncertainty never grants source replay." })
 ) {}
+const diagnosticCount = S.Natural.check(S.isLessThanOrEqualTo(Number.MAX_SAFE_INTEGER)).pipe(
+  $I.annoteSchema("GrokDiagnosticCount", { description: "Bounded safe integer metadata counter; no native content." })
+);
+const protocolTagCounts = S.Struct({
+  rowsObserved: diagnosticCount,
+  rowsClassified: diagnosticCount,
+  rowsOmitted: diagnosticCount,
+  catalog: diagnosticCount,
+  text: diagnosticCount,
+  thought: diagnosticCount,
+  usage: diagnosticCount,
+  end: diagnosticCount,
+  error: diagnosticCount,
+  toolCall: diagnosticCount,
+  toolUpdate: diagnosticCount,
+  plan: diagnosticCount,
+  other: diagnosticCount,
+  invalidJson: diagnosticCount,
+}).pipe(
+  $I.annoteSchema("GrokDiagnosticTagCounts", {
+    description: "Fixed tag counters only; unknown tag names and all native bodies are discarded.",
+  })
+);
+/** Atomic finite diagnostic checkpoint. No raw errors, text, argv, paths or auth values are admitted.
+ * **Example** (Inspect the diagnostic schema)
+ * ```ts
+ * console.log(typeof GrokNativeCanaryDiagnostic.make)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class GrokNativeCanaryDiagnostic extends S.Opaque<
+  GrokNativeCanaryDiagnostic,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    version: S.tag("grok-native-canary-diagnostic/v1"),
+    requestBinding: Sha256Hex,
+    stage: S.Literals(["attempt", "inventory-exit", "dispatch", "native-exit", "outcome"]),
+    operation: S.Literals(["preflight", "inspect-1", "inspect-2", "main"]),
+    category: S.Literals([
+      "not-run",
+      "accepted",
+      "admission-refused",
+      "inventory-refused",
+      "process-binding-refused",
+      "native-exit-refused",
+      "wire-refused",
+      "output-bound",
+      "post-policy-refused",
+      "retention-refused",
+      "timeout-or-operational",
+    ]),
+    producerDispatchAttempts: S.Natural.check(S.isLessThanOrEqualTo(1)),
+    nativeExitStatus: S.OptionFromOptionalKey(S.Int.check(S.isBetween({ minimum: -4096, maximum: 4096 }))),
+    stdoutBytes: S.OptionFromOptionalKey(diagnosticCount),
+    stderrBytes: S.OptionFromOptionalKey(diagnosticCount),
+    protocolTags: S.OptionFromOptionalKey(protocolTagCounts),
+  }).pipe(
+    $I.annoteSchema("GrokNativeCanaryDiagnostic", {
+      description: "Positive metadata schema; missing exit or stream measurements remain unknown, never zero-filled.",
+    })
+  )
+) {}
 const failed = (phase: GrokNativeCanaryError["phase"]) => GrokNativeCanaryError.make({ phase });
 const io = <A>(thunk: () => Promise<A>, phase: GrokNativeCanaryError["phase"] = "admission") =>
   Effect.tryPromise({ try: thunk, catch: () => failed(phase) });
@@ -266,6 +331,86 @@ const durableCreate = async (directory: string, name: string, text: string) => {
     await dir.close();
   }
 };
+// @effect-diagnostics-next-line asyncFunction:off -- Write+fsync temporary metadata, then atomically publish without replacement in the same pinned directory.
+const publishDiagnostic = async (directory: string, name: string, text: string) => {
+  const dir = await Fs.open(directory, constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
+  try {
+    const identity = await dir.stat();
+    if (identity.uid !== process.getuid?.() || (identity.mode & 0o777) !== 0o700) throw new Error("private-directory");
+    const prefix = `/proc/self/fd/${dir.fd}`;
+    const temporary = `${prefix}/.${name}.pending`;
+    const file = await Fs.open(
+      temporary,
+      constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW,
+      0o600
+    );
+    try {
+      await file.writeFile(text, "utf8");
+      await file.sync();
+    } finally {
+      await file.close();
+    }
+    await Fs.link(temporary, `${prefix}/${name}`);
+    await Fs.unlink(temporary);
+    await dir.sync();
+  } finally {
+    await dir.close();
+  }
+};
+const writeDiagnostic = Effect.fn("GrokCanary.writeDiagnostic")(function* (
+  directory: string,
+  name: string,
+  value: GrokNativeCanaryDiagnostic
+) {
+  const text = yield* S.encodeEffect(S.fromJsonString(GrokNativeCanaryDiagnostic))(value).pipe(
+    Effect.mapError(() => failed("source"))
+  );
+  yield* io(() => publishDiagnostic(directory, name, text), "source");
+});
+const countProtocolTags = Effect.fn("GrokCanary.countProtocolTags")(function* (stdout: string) {
+  const lines = A.filter(Str.split(stdout, "\n"), Str.isNonEmpty);
+  const selected = A.take(lines, 2048);
+  const counts = {
+    rowsObserved: lines.length,
+    rowsClassified: selected.length,
+    rowsOmitted: lines.length - selected.length,
+    catalog: 0,
+    text: 0,
+    thought: 0,
+    usage: 0,
+    end: 0,
+    error: 0,
+    toolCall: 0,
+    toolUpdate: 0,
+    plan: 0,
+    other: 0,
+    invalidJson: 0,
+  };
+  const tag = S.Struct({ type: S.String }).pipe(
+    $I.annoteSchema("GrokDiagnosticTransientTag", {
+      description: "Transient discriminator only; its value is never retained.",
+    })
+  );
+  for (const line of selected) {
+    const decoded = yield* S.decodeEffect(S.fromJsonString(tag))(line).pipe(Effect.option);
+    if (O.isNone(decoded)) {
+      counts.invalidJson += 1;
+      continue;
+    }
+    const kind = decoded.value.type;
+    if (kind === "available_commands") counts.catalog += 1;
+    else if (kind === "text") counts.text += 1;
+    else if (kind === "thought") counts.thought += 1;
+    else if (kind === "usage") counts.usage += 1;
+    else if (kind === "end") counts.end += 1;
+    else if (kind === "error") counts.error += 1;
+    else if (kind === "tool_call") counts.toolCall += 1;
+    else if (kind === "tool_call_update") counts.toolUpdate += 1;
+    else if (kind === "plan") counts.plan += 1;
+    else counts.other += 1;
+  }
+  return protocolTagCounts.make(counts);
+});
 // @effect-diagnostics-next-line asyncFunction:off -- Atomic filesystem mechanics are lifted by the typed io boundary; no source text is retained.
 const readEvidence = async (directory: string) => {
   const filename = `${directory}/source.json`;
@@ -342,19 +487,42 @@ const fixedTransport = Effect.fn("GrokCanary.privateTransport")(function* (socke
     );
 });
 const bytes = (text: string) => new TextEncoder().encode(text);
-const boundedText = <E>(stream: Stream.Stream<Uint8Array, E>, maximum: number) =>
-  stream.pipe(
+const captureNative = Effect.fn("GrokCanary.captureNative")(function* (
+  child: ChildProcessSpawner.ChildProcessHandle,
+  measure: (kind: "stdout" | "stderr", bytes: number) => void
+) {
+  let stdoutBytes = 0;
+  let stderrBytes = 0;
+  measure("stdout", 0);
+  measure("stderr", 0);
+  const stdout = child.stdout.pipe(
     Stream.mapError(() => failed("source")),
+    Stream.tap((chunk) =>
+      Effect.gen(function* () {
+        stdoutBytes += chunk.byteLength;
+        measure("stdout", stdoutBytes);
+        if (stdoutBytes > 1048576) return yield* failed("source");
+      })
+    ),
     Stream.decodeText(),
-    Stream.runFoldEffect(
+    Stream.runFold(
       () => "",
-      (text, chunk) =>
-        Buffer.byteLength(text) + Buffer.byteLength(chunk) <= maximum
-          ? Effect.succeed(`${text}${chunk}`)
-          : Effect.fail(failed("source"))
+      (text, chunk) => `${text}${chunk}`
     )
   );
-
+  const stderr = child.stderr.pipe(
+    Stream.mapError(() => failed("source")),
+    Stream.runForEach((chunk) =>
+      Effect.gen(function* () {
+        stderrBytes += chunk.byteLength;
+        measure("stderr", stderrBytes);
+        if (stderrBytes > 65536) return yield* failed("source");
+      })
+    )
+  );
+  const captured = yield* Effect.all({ stdout, stderr }, { concurrency: 2 });
+  return { stdout: captured.stdout, exitStatus: Number(yield* child.exitCode) };
+});
 // @effect-diagnostics-next-line asyncFunction:off -- Non-auth executable/config bytes are streamed solely into a digest at this fixed boundary.
 const fileDigest = async (filename: string) => {
   const hash = createHash("sha256");
@@ -539,7 +707,11 @@ const makeEnv = (request: GrokNativeCanaryRequest) => {
       env[`GROK_${vendor}_${surface}_ENABLED`] = "0";
   return env;
 };
-const inspectNative = Effect.fn("GrokCanary.inspectNative")(function* (request: GrokNativeCanaryRequest) {
+const inspectNative = Effect.fn("GrokCanary.inspectNative")(function* (
+  request: GrokNativeCanaryRequest,
+  measure: (kind: "stdout" | "stderr", bytes: number) => void,
+  recordExit: (code: number) => Effect.Effect<void, GrokNativeCanaryError>
+) {
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   const raw = yield* Effect.scoped(
     Effect.gen(function* () {
@@ -549,13 +721,14 @@ const inspectNative = Effect.fn("GrokCanary.inspectNative")(function* (request: 
           env: makeEnv(request),
           extendEnv: false,
           stdin: "ignore",
-          stderr: "ignore",
+          stderr: "pipe",
           forceKillAfter: "3 seconds",
         })
       );
-      const text = yield* boundedText(child.stdout, 1048576);
-      if (Number(yield* child.exitCode) !== 0) return yield* failed("admission");
-      return text;
+      const captured = yield* captureNative(child, measure);
+      yield* recordExit(captured.exitStatus);
+      if (captured.exitStatus !== 0) return yield* failed("admission");
+      return captured.stdout;
     })
   ).pipe(
     Effect.timeout("15 seconds"),
@@ -720,85 +893,164 @@ export const runGrokNativeCanary = Effect.fn("HarnessEnrollment.grokNativeCanary
     )
       return yield* failed("attempted-unknown");
   } else {
-    // Exclusive durable fence precedes all native processes. No failure removes it.
+    // A previous incomplete attempt refuses before any new checkpoint or native invocation.
     yield* io(() => durableCreate(request.attemptDirectory, "attempted", requestBinding), "attempted-unknown");
-    const first = yield* pinRuntime(request);
-    const firstPin = yield* encodePin(first);
-    const inspected = yield* inspectNative(request);
-    if (
-      (yield* encodePin(yield* pinRuntime(request))) !== firstPin ||
-      (yield* inspectNative(request)) !== inspected ||
-      (yield* encodePin(yield* pinRuntime(request))) !== firstPin
-    )
-      return yield* failed("admission");
-    const isolation = qualification.make({
-      ...first,
-      executableSha256: request.executableSha256,
-      inspectSha256: inspected,
-      argvSha256: yield* hashPublicTextSha256(yield* S.encodeEffect(S.fromJsonString(S.Array(S.String)))(args)),
-    });
-    const qualified = yield* S.encodeEffect(S.fromJsonString(qualification))(isolation);
-    yield* io(() => durableCreate(request.attemptDirectory, "preflight.json", qualified));
-    yield* postFact(prepared);
-    if ((yield* encodePin(yield* pinRuntime(request))) !== firstPin) return yield* failed("admission");
-    const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-    evidence = yield* Effect.scoped(
-      Effect.gen(function* () {
-        const start = yield* Clock.currentTimeMillis;
-        const mono = yield* Clock.monotonicTimeNanos;
-        const child = yield* spawner.spawn(
-          ChildProcess.make(request.executable, args, {
-            cwd: request.workspace,
-            env: makeEnv(request),
-            extendEnv: false,
-            stdin: "ignore",
-            stderr: "ignore",
-            forceKillAfter: "3 seconds",
-          })
-        );
-        const process = yield* observeProcess(request, Number(child.pid));
-        yield* postFact(
-          ObservationLaunchFact.cases.Started.make({
-            launchId: request.launchId,
-            processInstanceId: process.instanceId,
-          })
-        );
-        const stdout = yield* boundedText(child.stdout, 1048576);
-        if (Number(yield* child.exitCode) !== 0) return yield* failed("source");
-        const source = yield* decodeGrokCanaryOutput(stdout, request.hashSalt, request.workspace);
-        const end = yield* Clock.currentTimeMillis;
-        const elapsed = String((yield* Clock.monotonicTimeNanos) - mono);
-        const started = String(BigInt(start) * 1000000n);
-        const ended = String(BigInt(end) * 1000000n);
-        if ((yield* encodePin(yield* pinRuntime(request))) !== firstPin) return yield* failed("source");
-        const evidenceId = yield* sourceDigest(requestBinding, isolation, source, process, started, ended, elapsed);
-        const observation = yield* S.decodeEffect(ManagedControllerObservation)({
-          version: "managed-controller-observation/v1",
-          launchId: request.launchId,
-          launchRouteId: request.identity.routeId,
-          processInstanceId: process.instanceId,
-          sourceSessionId: source.sourceSessionId,
-          evidenceId,
-          startTimeUnixNano: started,
-          endTimeUnixNano: ended,
-          elapsedNanos: elapsed,
-          outcome: "completed",
-          response: "exact-constant-matched",
-        }).pipe(Effect.mapError(() => failed("source")));
-        return GrokNativeCanaryEvidence.make({
+    let operation: GrokNativeCanaryDiagnostic["operation"] = "preflight";
+    let category: GrokNativeCanaryDiagnostic["category"] = "admission-refused";
+    let dispatches = 0;
+    let nativeExitStatus = O.none<number>();
+    let stdoutBytes = O.none<number>();
+    let stderrBytes = O.none<number>();
+    let protocolTags = O.none<typeof protocolTagCounts.Type>();
+    const measure = (kind: "stdout" | "stderr", bytes: number) => {
+      if (kind === "stdout") stdoutBytes = O.some(bytes);
+      else stderrBytes = O.some(bytes);
+      if (bytes > (kind === "stdout" ? 1048576 : 65536)) category = "output-bound";
+    };
+    const checkpoint = (
+      name: string,
+      stage: GrokNativeCanaryDiagnostic["stage"],
+      result: GrokNativeCanaryDiagnostic["category"]
+    ) =>
+      writeDiagnostic(
+        request.attemptDirectory,
+        name,
+        GrokNativeCanaryDiagnostic.make({
           requestBinding,
-          observation,
-          source,
-          qualification: isolation,
-          process,
-        });
-      })
-    ).pipe(
-      Effect.timeout("110 seconds"),
+          stage,
+          operation,
+          category: result,
+          producerDispatchAttempts: dispatches,
+          nativeExitStatus,
+          stdoutBytes,
+          stderrBytes,
+          protocolTags,
+        })
+      );
+    evidence = yield* Effect.gen(function* () {
+      yield* checkpoint("diagnostic-000-attempt.json", "attempt", "not-run");
+      const first = yield* pinRuntime(request);
+      const firstPin = yield* encodePin(first);
+      operation = "inspect-1";
+      category = "inventory-refused";
+      const inspected = yield* inspectNative(request, measure, (code) => {
+        nativeExitStatus = O.some(code);
+        return checkpoint(
+          "diagnostic-010-inspect.json",
+          "inventory-exit",
+          code === 0 ? "not-run" : "native-exit-refused"
+        );
+      });
+      category = "post-policy-refused";
+      if ((yield* encodePin(yield* pinRuntime(request))) !== firstPin) return yield* failed("admission");
+      operation = "inspect-2";
+      category = "inventory-refused";
+      nativeExitStatus = O.none();
+      stdoutBytes = O.none();
+      stderrBytes = O.none();
+      const second = yield* inspectNative(request, measure, (code) => {
+        nativeExitStatus = O.some(code);
+        return checkpoint(
+          "diagnostic-020-inspect.json",
+          "inventory-exit",
+          code === 0 ? "not-run" : "native-exit-refused"
+        );
+      });
+      category = "post-policy-refused";
+      if (second !== inspected || (yield* encodePin(yield* pinRuntime(request))) !== firstPin)
+        return yield* failed("admission");
+      const isolation = qualification.make({
+        ...first,
+        executableSha256: request.executableSha256,
+        inspectSha256: inspected,
+        argvSha256: yield* hashPublicTextSha256(yield* S.encodeEffect(S.fromJsonString(S.Array(S.String)))(args)),
+      });
+      const qualified = yield* S.encodeEffect(S.fromJsonString(qualification))(isolation);
+      yield* io(() => durableCreate(request.attemptDirectory, "preflight.json", qualified));
+      yield* postFact(prepared);
+      if ((yield* encodePin(yield* pinRuntime(request))) !== firstPin) return yield* failed("admission");
+      operation = "main";
+      category = "timeout-or-operational";
+      dispatches = 1;
+      nativeExitStatus = O.none();
+      stdoutBytes = O.none();
+      stderrBytes = O.none();
+      yield* checkpoint("diagnostic-030-dispatch.json", "dispatch", "not-run");
+      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      const completed = yield* Effect.scoped(
+        Effect.gen(function* () {
+          const start = yield* Clock.currentTimeMillis;
+          const mono = yield* Clock.monotonicTimeNanos;
+          const child = yield* spawner.spawn(
+            ChildProcess.make(request.executable, args, {
+              cwd: request.workspace,
+              env: makeEnv(request),
+              extendEnv: false,
+              stdin: "ignore",
+              stderr: "pipe",
+              forceKillAfter: "3 seconds",
+            })
+          );
+          category = "process-binding-refused";
+          const process = yield* observeProcess(request, Number(child.pid));
+          category = "timeout-or-operational";
+          yield* postFact(
+            ObservationLaunchFact.cases.Started.make({
+              launchId: request.launchId,
+              processInstanceId: process.instanceId,
+            })
+          );
+          const captured = yield* captureNative(child, measure);
+          nativeExitStatus = O.some(captured.exitStatus);
+          protocolTags = O.some(yield* countProtocolTags(captured.stdout));
+          yield* checkpoint(
+            "diagnostic-040-native-exit.json",
+            "native-exit",
+            captured.exitStatus === 0 ? "not-run" : "native-exit-refused"
+          );
+          category = "native-exit-refused";
+          if (captured.exitStatus !== 0) return yield* failed("source");
+          category = "wire-refused";
+          const source = yield* decodeGrokCanaryOutput(captured.stdout, request.hashSalt, request.workspace);
+          const end = yield* Clock.currentTimeMillis;
+          const elapsed = String((yield* Clock.monotonicTimeNanos) - mono);
+          const started = String(BigInt(start) * 1000000n);
+          const ended = String(BigInt(end) * 1000000n);
+          category = "post-policy-refused";
+          if ((yield* encodePin(yield* pinRuntime(request))) !== firstPin) return yield* failed("source");
+          const evidenceId = yield* sourceDigest(requestBinding, isolation, source, process, started, ended, elapsed);
+          const observation = yield* S.decodeEffect(ManagedControllerObservation)({
+            version: "managed-controller-observation/v1",
+            launchId: request.launchId,
+            launchRouteId: request.identity.routeId,
+            processInstanceId: process.instanceId,
+            sourceSessionId: source.sourceSessionId,
+            evidenceId,
+            startTimeUnixNano: started,
+            endTimeUnixNano: ended,
+            elapsedNanos: elapsed,
+            outcome: "completed",
+            response: "exact-constant-matched",
+          }).pipe(Effect.mapError(() => failed("source")));
+          return GrokNativeCanaryEvidence.make({
+            requestBinding,
+            observation,
+            source,
+            qualification: isolation,
+            process,
+          });
+        })
+      ).pipe(Effect.timeout("110 seconds"));
+      category = "retention-refused";
+      const encoded = yield* encodeEvidence(completed);
+      yield* io(() => durableCreate(request.attemptDirectory, "source.json", encoded), "source");
+      return completed;
+    }).pipe(
+      Effect.onExit((exit) =>
+        checkpoint("diagnostic-090-outcome.json", "outcome", Exit.isSuccess(exit) ? "accepted" : category)
+      ),
       Effect.mapError(() => failed("source"))
     );
-    const encoded = yield* encodeEvidence(evidence);
-    yield* io(() => durableCreate(request.attemptDirectory, "source.json", encoded), "source");
   }
   yield* postFact(prepared);
   yield* postFact(

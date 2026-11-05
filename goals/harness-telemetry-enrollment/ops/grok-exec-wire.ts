@@ -169,7 +169,7 @@ export const decodeGrokCanaryOutput = Effect.fn("HarnessEnrollment.decodeGrokNat
     );
     if (wire.guards.available_commands(event)) {
       catalogs += 1;
-      if (catalogs > 4 || Str.length(text) !== 0) return yield* GrokCanaryWireError.make({});
+      if (catalogs > 4) return yield* GrokCanaryWireError.make({});
     } else if (wire.guards.text(event)) {
       text = `${text}${event.data}`;
       if (Str.length(text) > 128) return yield* GrokCanaryWireError.make({});

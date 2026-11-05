@@ -43,6 +43,47 @@ it.layer(NodeCrypto.layer)((it) => {
       expect(O.getOrThrow(source.nativeUsage).cache_read_input_tokens).toEqual(O.none());
     })
   );
+  it.effect("accepts exact installed native successful title/main event ordering with a trailing empty catalog", () =>
+    Effect.gen(function* () {
+      // Network-isolated 1.0.73 fixture: one synthetic session_title result and one
+      // synthetic main response; title metadata does not emit executable tool events.
+      const source = yield* decodeGrokCanaryOutput(
+        stream([
+          catalog,
+          catalog,
+          reply,
+          catalog,
+          {
+            type: "usage",
+            usage: {
+              input_tokens: 5,
+              output_tokens: 3,
+              reasoning_tokens: 0,
+              cache_read_input_tokens: 0,
+              cache_creation_input_tokens: 0,
+            },
+          },
+          {
+            ...terminal,
+            modelUsage: {
+              "grok-4.7": {
+                modelCalls: 1,
+                inputTokens: 5,
+                outputTokens: 3,
+                cacheReadInputTokens: 0,
+                cacheCreationInputTokens: 0,
+              },
+            },
+          },
+        ]),
+        salt,
+        workspace
+      );
+      expect(source.executableToolCount).toBe(0);
+      expect(source.nativeHttpRequests).toBe("Unknown");
+      expect(O.getOrThrow(source.nativeModelUsage)["grok-4.7"]?.modelCalls).toBe(1);
+    })
+  );
   it.effect("retains missing usage as unknown and incomplete usage as explicitly incomplete", () =>
     Effect.gen(function* () {
       const source = yield* decodeGrokCanaryOutput(
@@ -75,7 +116,7 @@ it.layer(NodeCrypto.layer)((it) => {
     ["tool result", [catalog, { type: "tool_call_update", rawOutput: "PRIVATE_OUTPUT" }, reply, terminal]],
     ["native error", [catalog, { type: "error", message: "PRIVATE_ERROR" }]],
     ["no catalog", [reply, terminal]],
-    ["catalog after reply", [catalog, reply, catalog, terminal]],
+    ["too many catalogs", [catalog, catalog, catalog, catalog, reply, catalog, terminal]],
     ["wrong reply", [catalog, { ...reply, data: "PRIVATE_WRONG_REPLY" }, terminal]],
     ["wrong native CWD", [catalog, reply, { ...terminal, cwd: "/wrong" }]],
     ["deprecated served model", [catalog, reply, { ...terminal, modelUsage: { "grok-4.6": { modelCalls: 1 } } }]],

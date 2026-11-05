@@ -92,3 +92,28 @@ redaction, metadata-only replay, immutable process/session tampering, stale epoc
 unsafe inventory, auth-metadata drift and failed-attempt replay refusal. These
 are local synthetic contract tests and do not establish native Grok inference or
 production/backend acceptance.
+
+
+Review corrections add atomic, no-replacement diagnostic checkpoints before
+inventory, before source dispatch, after native exit and after source retention.
+Each checkpoint uses a positive typed schema containing only a request digest,
+finite operation/stage/category, dispatch count, optional native exit status,
+stream byte counts and bounded known protocol-tag counts. Stderr is drained and
+counted without conversion to text. No arbitrary error, body, argv, environment
+or identifier enters a diagnostic. Failure retains the same invocation fence;
+metadata replay never overwrites checkpoints or retries a source invocation.
+
+A network-isolated installed 1.0.73 contract fixture returned a synthetic
+successful `session_title` result and one synthetic fixed main response. It
+observed two logical operations and two synthetic POST requests, with no live
+provider/auth. The stream order was catalog, catalog, text, catalog, usage, end;
+all three catalogs exposed zero executable tools and no title tool-call event
+was emitted. The decoder therefore permits at most four empty catalogs before
+terminal completion, including after text. Executable tool-call/update events
+remain refused. Live HTTP retries remain unknown.
+
+The data-only native configuration builder is ported from the current Claude
+lane and extends its finite harness union with `grok`. Private separate-runtime
+checks establish exact Codex/Claude output-byte parity with the prior builder
+and frozen8029 Grok configuration decoding/controller/projection/protobuf
+composition. These checks start no worker, service, provider or session.
