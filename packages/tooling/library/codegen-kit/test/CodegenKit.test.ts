@@ -9,6 +9,7 @@ import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
@@ -16,6 +17,7 @@ import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
@@ -59,19 +61,35 @@ const CodegenKitTestLayer = Layer.mergeAll(
   CodegenKit.layer().pipe(Layer.provide(readonlyFormatterPlatform))
 );
 
+// The only writes a generated-file check may perform are to the temporary files the
+// kit itself stages for its unified diff; every other write or directory creation dies.
+const readonlyCheckFileSystem = Layer.effect(
+  FileSystem.FileSystem,
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const staged = MutableHashSet.empty<string>();
+    return FileSystem.make({
+      ...fs,
+      makeTempFileScoped: (options) =>
+        fs
+          .makeTempFileScoped(options)
+          .pipe(Effect.tap((temporaryPath) => Effect.sync(() => MutableHashSet.add(staged, temporaryPath)))),
+      writeFile: (path, data, options) =>
+        MutableHashSet.has(staged, path)
+          ? fs.writeFile(path, data, options)
+          : Effect.die(`A generated-file check attempted to write bytes to ${path}`),
+      makeDirectory: (path) => Effect.die(`A generated-file check attempted to create the directory ${path}`),
+    });
+  })
+);
+const ReadonlyCheckKitLayer = CodegenKit.layer().pipe(Layer.provide(readonlyCheckFileSystem));
+
 const checkWithoutWrites = Effect.fn("CodegenKitTest.checkWithoutWrites")(function* (
   modules: ReadonlyArray<GeneratedModule>
 ) {
-  const fs = yield* FileSystem.FileSystem;
-  const readonlyFs = FileSystem.make({
-    ...fs,
-    writeFile: () => Effect.die("A generated-file check attempted to write bytes"),
-    writeFileString: () => Effect.die("A generated-file check attempted to write text"),
-    makeDirectory: () => Effect.die("A generated-file check attempted to create a directory"),
-  });
-  return yield* Effect.flatMap(CodegenKit, (kit) => kit.checkModules(modules)).pipe(
-    Effect.provide(CodegenKit.layer()),
-    Effect.provideService(FileSystem.FileSystem, readonlyFs)
+  return yield* Layer.build(ReadonlyCheckKitLayer).pipe(
+    Effect.flatMap((context) => Context.get(context, CodegenKit).checkModules(modules)),
+    Effect.scoped
   );
 });
 
@@ -1782,7 +1800,8 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit ACP 
       yield* fs.writeFileString(target, content);
       const reports = yield* checkWithoutWrites([GeneratedModule.make({ path: target, content })]);
       expect(A.map(reports, (report) => report.status)).toEqual(["clean"]);
-      expect(yield* fs.readFileString(target)).toBe(content);
+      const actual = yield* fs.readFileString(target);
+      expect(actual).toBe(content);
     })
   );
 
@@ -1809,8 +1828,15 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit ACP 
         [target, "changed"],
         [missing, "missing"],
       ]);
-      expect(yield* fs.readFileString(target)).toBe(dirty);
-      expect(yield* fs.exists(missingDirectory)).toBe(false);
+      const errorLines = yield* TestConsole.errorLines;
+      const printed = pipe(errorLines, A.filter(P.isString), A.join("\n"));
+      expect(printed).toContain(`--- ${target}`);
+      expect(printed).toContain(`--- ${missing}`);
+      expect(printed).toContain("+export const answer = 42;");
+      const actual = yield* fs.readFileString(target);
+      expect(actual).toBe(dirty);
+      const present = yield* fs.exists(missingDirectory);
+      expect(present).toBe(false);
     })
   );
 
@@ -1842,7 +1868,8 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit ACP 
       ]).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, rejectedFormatter), Effect.flip);
       expect(failure._tag).toBe("CodegenFormatError");
       expect(failure.message).toContain("exit code 7");
-      expect(yield* fs.readFileString(target)).toBe(current);
+      const actual = yield* fs.readFileString(target);
+      expect(actual).toBe(current);
     })
   );
 

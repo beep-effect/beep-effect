@@ -75,6 +75,38 @@ const serialize = (face: LabelFace): string => {
   return `{\n  unitsPerEm: ${face.unitsPerEm},\n  capHeight: ${face.capHeight},\n  glyphs: {\n${glyphs}\n  },\n}`;
 };
 
+/**
+ * Writes the rendered glyph module, or in check mode compares it against the
+ * committed file without writing anything.
+ *
+ * **Details**
+ *
+ * Check mode delegates to `CodegenKit.checkModules`, which formats the rendered
+ * content, prints the unified drift and fails with `CodegenDriftError` while
+ * leaving the target untouched. Write mode replaces the target; `bun run
+ * generate` then formats it.
+ *
+ * @since 0.0.0
+ */
+export const emitLabelGlyphs = Effect.fn("LabelGlyphGenerator.emit")(function* ({
+  check,
+  content,
+  target,
+}: {
+  readonly check: boolean;
+  readonly target: string;
+  readonly content: string;
+}) {
+  if (check) {
+    const kit = yield* CodegenKit;
+    yield* kit.checkModules([GeneratedModule.make({ path: target, content })]);
+    return yield* Effect.logInfo("Label glyph module is current; no files written.");
+  }
+  const fs = yield* FileSystem.FileSystem;
+  yield* fs.writeFileString(target, content);
+  yield* Effect.logInfo(`wrote ${target}`);
+});
+
 const program = Command.make(
   "generate-label-glyphs",
   {
@@ -83,7 +115,6 @@ const program = Command.make(
     serif: Argument.String("serif").pipe(Argument.optional),
   },
   Effect.fn("LabelGlyphGenerator.generate")(function* ({ check, sans: sansArgument, serif: serifArgument }) {
-    const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const sansPath = O.getOrElse(sansArgument, () => DEFAULT_SANS);
     const serifPath = O.getOrElse(serifArgument, () => DEFAULT_SERIF);
@@ -130,13 +161,7 @@ export const SANS_FACE = LabelFace.make(${serialize(sans.face)});
  */
 export const SERIF_FACE = LabelFace.make(${serialize(serif.face)});
 `;
-    if (check) {
-      const kit = yield* CodegenKit;
-      yield* kit.checkModules([GeneratedModule.make({ path: target, content })]);
-      return yield* Effect.logInfo("Label glyph module is current; no files written.");
-    }
-    yield* fs.writeFileString(target, content);
-    yield* Effect.logInfo(`wrote ${target}`);
+    yield* emitLabelGlyphs({ check, target, content });
   })
 );
 

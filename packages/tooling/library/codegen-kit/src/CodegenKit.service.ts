@@ -450,16 +450,32 @@ const makeService = Effect.fn("CodegenKit.make")(function* (extraRenderers: Extr
     return DriftReport.make({ path: module.path, status: diffLines === 0 ? "clean" : "changed", diffLines });
   });
 
+  const printDrift = Effect.fn("CodegenKit.printDrift")(function* (
+    modules: ReadonlyArray<GeneratedModule>,
+    reports: ReadonlyArray<DriftReport>
+  ) {
+    yield* Effect.forEach(
+      A.zip(modules, reports),
+      ([module, report]) =>
+        hasDrift(report)
+          ? formatter.unifiedDiff(module.path, module.content).pipe(Effect.flatMap(Console.error))
+          : Effect.void,
+      { concurrency: 1, discard: true }
+    );
+  });
+
   const checkModules = Effect.fn("CodegenKit.checkModules")(function* (modules: ReadonlyArray<GeneratedModule>) {
-    const reports = yield* Effect.forEach(
+    const formatted = yield* Effect.forEach(
       modules,
       Effect.fn("CodegenKit.checkModule")(function* (module) {
         const content = yield* projectFormatter.content(module.content, module.path);
-        return yield* drift(GeneratedModule.make({ path: module.path, content }));
+        return GeneratedModule.make({ path: module.path, content });
       }),
       { concurrency: 1 }
     );
+    const reports = yield* Effect.forEach(formatted, drift, { concurrency: 1 });
     if (A.some(reports, hasDrift)) {
+      yield* printDrift(formatted, reports);
       return yield* CodegenDriftError.make({
         message: "Generated output drift detected; run the writing generator.",
         reports,
@@ -481,20 +497,6 @@ const makeService = Effect.fn("CodegenKit.make")(function* (extraRenderers: Extr
         return yield* format(GeneratedModule.make({ path: extra.path, content }));
       }),
       { concurrency: 1 }
-    );
-  });
-
-  const printDrift = Effect.fn("CodegenKit.printDrift")(function* (
-    modules: ReadonlyArray<GeneratedModule>,
-    reports: ReadonlyArray<DriftReport>
-  ) {
-    yield* Effect.forEach(
-      A.zip(modules, reports),
-      ([module, report]) =>
-        hasDrift(report)
-          ? formatter.unifiedDiff(module.path, module.content).pipe(Effect.flatMap(Console.error))
-          : Effect.void,
-      { concurrency: 1, discard: true }
     );
   });
 
