@@ -1,0 +1,2448 @@
+{
+  "schemaVersion": "citation-html-cleaner-audit/v1",
+  "scope": "Source observations only; native depth exhaustion produces successful truncation. This artifact authorizes no target behavior or divergence.",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "producerSha256": "83d87cca2ed4bf7cd316f5ff1e70546accdfa526ec6575e40e8680a56bd94ccb",
+  "sources": {
+    "clean.py": "b2a1f8484c84f3d704d2e7fe5e0a1fdb36a8bb07d2e56880701a831d5e1a12db",
+    "lxml/html/__init__.py": "34e708f580638899be495891e5d4ee6dbd391e2af737bef53bc991eb10971748",
+    "lxml/parser.pxi": "f51dab773ab57fc2ce68a480cc09c5821077ac0b29cb8bdc31307aabcbb44520",
+    "lxml/apihelpers.pxi": "ce2a4251e717cf2e483628ffa9d104a99a0ba7d2d8077089414cc8cc5547d4ec"
+  },
+  "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
+  "lockSha256": "864cf7a1ef7ebafe8159b9691a42a2dfe980cf0e609b5fd1899bcc5703b91e9a",
+  "python": "3.11.15",
+  "pythonHashSeed": "0",
+  "unicodeVersion": "14.0.0",
+  "byteorder": "little",
+  "pointerBits": 64,
+  "versions": {
+    "eyecite": "2.7.6",
+    "reporters-db": "3.2.53",
+    "courts-db": "0.10.22",
+    "lxml": "5.1.0"
+  },
+  "libxmlRuntime": [2, 12, 3],
+  "libxmlCompiled": [2, 12, 3],
+  "xpath": "//text()[normalize-space() and not(\n            parent::style |\n            parent::link |\n            parent::head |\n            parent::page-number |\n            parent::script |\n            parent::*[@class=\"star-pagination\"]\n            )]",
+  "artifacts": [
+    {
+      "sha256": "00ffbe5a9ddaa466f93d6c322790244ff8d6e767800c85703e340eb3217fabaf",
+      "value": "\ufeff END"
+    },
+    {
+      "sha256": "038a83f0b7962e28b01ad40e3487bb05f911311d08925370ad9a99b0d278a2b7",
+      "value": "AFTEREND"
+    },
+    {
+      "sha256": "045a6e8a8bd52f6e15e9c57ab5898465003fb6b4e644d1549baa2134ddeba991",
+      "value": "<div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div>VISIBLE</div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div>"
+    },
+    {
+      "sha256": "04969be4248cc7fa43876ffb2e8b4ed6c6cbf70ac871d6dadcdacdca94bd6e99",
+      "value": "<textarea class=\"star-pagination other\">BEFORE<b>CHILD</b>AFTER</textarea>END"
+    },
+    {
+      "sha256": "06eea81493cab6373828f54e25ba2a8c63b4a7e7c8a8371327191cca0edaf2e2",
+      "value": "a&nbsp;&copy;&NotEqualTilde;b"
+    },
+    {
+      "sha256": "06f7107c4a3b5076812babb6282217682732e8479c47d29367994695b1fcc036",
+      "value": "BEFORE CHILD AFTER END"
+    },
+    {
+      "sha256": "0a3ef43075dd5731325d5629e8547c32de870c3c91591ea5088342a28fe03ccd",
+      "value": "<div class=\" star-pagination \">VISIBLE</div>"
+    },
+    {
+      "sha256": "0c54509a5c47dd8a81749d056d068cdda449fb6d5c53d24ad5d1b168302b4ab5",
+      "value": "\u00a0 END"
+    },
+    {
+      "sha256": "0fa857722eef06a51df06b37f01c556468c874a23b3eb57654f395134b3b6b94",
+      "value": "AB"
+    },
+    {
+      "sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+      "value": ""
+    },
+    {
+      "sha256": "17a611f0cd4985523d4f61efa548fc02485f3cca0c2f6ff53ea5d4121da35827",
+      "value": "A<![CDATA[B]]>C"
+    },
+    {
+      "sha256": "17ceff5efc85f85fa9a693ad709d4b65aa7c1ed8a41da1de2cd34f9c8f795b08",
+      "value": "<style class=\"star-pagination\">BEFORE<b>CHILD</b>AFTER</style>END"
+    },
+    {
+      "sha256": "19449d76ca4bacb1643c689bf2f9cb64a90bbb8f5f8acf89fe965a239079a7b3",
+      "value": "a\ud83d\ude00 b"
+    },
+    {
+      "sha256": "1ca0289befae9e7dab0724bb4d25b35a684119848bd7c9408336d3c804fd26b8",
+      "value": "\u0085 END"
+    },
+    {
+      "sha256": "1e953790644d35d1f4c26e83ea1e7d2e16c76e6bac463b5d2b6d18d1dcecd02d",
+      "value": "<noscript class=\"star-pagination other\">BEFORE<b>CHILD</b>AFTER</noscript>END"
+    },
+    {
+      "sha256": "1f1c2852f525f7479b519b6ea517e662dcaf8f6538a535b72e56fa89645bfc87",
+      "value": "TITLE"
+    },
+    {
+      "sha256": "20066e65cd7fe82406b51b30b228cb2d3dcfc4a0c7b0dbcd9a13c2b933f7e9d1",
+      "value": "<div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div>VISIBLE</div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div>"
+    },
+    {
+      "sha256": "2294647e6f28be9958fc86f995d0d5bd1d047d393324f3b29560f55fed26cdd8",
+      "value": "<div class=\"star-pagination\">HIDDEN<b>CHILD</b>TAIL</div>"
+    },
+    {
+      "sha256": "27432a872192a56508c32189524a5bd0968069cc88370a7e73c775b971a077df",
+      "value": "a\ud800b"
+    },
+    {
+      "sha256": "2a65b433ebc9c6c2679dfc4f627247e125a6e657c498ea18c717b3e6eceb0836",
+      "value": "a\u00e9 b"
+    },
+    {
+      "sha256": "2b2b281cb898be056882517444769d4a802c26b45a38d9c5659e6181317a740a",
+      "value": "<p>\u000b</p><b>END</b>"
+    },
+    {
+      "sha256": "39eff863117305cf50583351619b0a30af595af09373a7e8c9290c51cf9eabe5",
+      "value": "AB C"
+    },
+    {
+      "sha256": "3c0643cb5e5eea716288681da76bde3c7618a9f60a88e689c83fc923deddd4f2",
+      "value": "VISIBLE"
+    },
+    {
+      "sha256": "3d3c6d1f6ffbb076db5b8dd0414c307a702c7c0b51837a28c94ea1696f311917",
+      "value": "<head><title>A</title></head><head><title>B</title></head><body>C</body>"
+    },
+    {
+      "sha256": "3f05a2395c6a5c6671f014ee76d5579864881ada664511aa70d240118d088292",
+      "value": "A B C D E"
+    },
+    {
+      "sha256": "3f84583847644cf9cc5bc99590f45864f8619d8474c42682c08ec83415bd97ca",
+      "value": "\u0085"
+    },
+    {
+      "sha256": "420f09c5ad06927301d72d2b4f5264b4281b2a1522cd2ff80add4f37e11db113",
+      "value": "<style>BEFORE<b>CHILD</b>AFTER</style>END"
+    },
+    {
+      "sha256": "42b3a582e43bf01669e51bcf1617aefba29f25e5cf818e8326d967a04f0fe9f9",
+      "value": "<style>HIDDEN</style>TAIL"
+    },
+    {
+      "sha256": "43e6e2bebb3774311cf0c867d2fae5da733792224e8bac1d455eff172ff6af27",
+      "value": "E"
+    },
+    {
+      "sha256": "448581f730dc74eb1ae04e4658c83283d6a7919dcb6d03de195f10d81a351d92",
+      "value": "<page-number>HIDDEN<b>CHILD</b>TAIL</page-number>"
+    },
+    {
+      "sha256": "451f993db767af5852ffaf80989785e3f94a8c92f280de0aad8f7816a1a0e3bb",
+      "value": "<script>BEFORE<b>CHILD</b>AFTER</script>END"
+    },
+    {
+      "sha256": "472359c75dec28e8454b9722bfd92bcb1011b8d0af249eee2268656471c55bf7",
+      "value": "AFTER"
+    },
+    {
+      "sha256": "4c20e72d38d198dc3f81bed01868940e1140e76d164a3671b239bc636d1868de",
+      "value": "TITLE BODY"
+    },
+    {
+      "sha256": "4d8132ceeb22691bc3990d6f101850b338cf7f5d3b4689a3530bbe8a25acffa7",
+      "value": "<textarea>BEFORE<b>CHILD</b>AFTER</textarea>END"
+    },
+    {
+      "sha256": "516abce66c4e6a8b03cbc17e6dbd66f366b259ec6e69f8aa0cbf31f92367945e",
+      "value": "<noscript class=\"star-pagination\">BEFORE<b>CHILD</b>AFTER</noscript>END"
+    },
+    {
+      "sha256": "52109349dabf69106e04ec2f493fb8b6ade94ea100227cccce6559ab8b96553f",
+      "value": " "
+    },
+    {
+      "sha256": "55bafd0d66bf803ffa55c6fb596b94cfb493742dee559294ca8160be1913991c",
+      "value": "\ufeff"
+    },
+    {
+      "sha256": "5651bdb89f693db1cc7810d58333f9879d74e7b5d43da371b64aa424cdf6d2d1",
+      "value": "<div class=\"STAR-PAGINATION\">VISIBLE</div>"
+    },
+    {
+      "sha256": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+      "value": "END"
+    },
+    {
+      "sha256": "5b44a218d9d0b754163121a9a880e36244ef74eedf5eb05a107bd441ce46f318",
+      "value": "<div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div>VISIBLE</div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div>"
+    },
+    {
+      "sha256": "5e229e245c3e525283e65ec4998d643facf67e035ff89557216305bc9b5109f8",
+      "value": "a b"
+    },
+    {
+      "sha256": "6177b41a15e6e29b60ef4f129743c847e6f2e64060fd4f62ee61c2f856a050d3",
+      "value": "\u00a0"
+    },
+    {
+      "sha256": "630884bf40a0853e8c551cfffff355a04e13cf70320be98dad8cc48d0478ae4a",
+      "value": " \t\r\n"
+    },
+    {
+      "sha256": "64914894ccef760a1cb3062c6f387ae769ab17f61ab2780015a2a60fb0f3b0ab",
+      "value": "BEFORE<b>CHILD</b>AFTER"
+    },
+    {
+      "sha256": "64d1f141bafb437258cf58d528a99d884a0e6b6b0369c66f0c71d7fa0bae0930",
+      "value": "BODY"
+    },
+    {
+      "sha256": "6580671a0a51333634ab9e13f0b2b1d9e3d1300b85428d1c6cce582be234d4ee",
+      "value": "<page-number class=\"star-pagination other\">BEFORE<b>CHILD</b>AFTER</page-number>END"
+    },
+    {
+      "sha256": "6aeb799ebf3cecabcf234e3e5fd14040df4d1efd7daba9c0ecf246f8b9add33a",
+      "value": "LINKTAIL"
+    },
+    {
+      "sha256": "6c0704ee4f90e886da16be3a31299369c920fd055c5ce369e14bb4a671ed8a74",
+      "value": "<p>\u200b</p><b>END</b>"
+    },
+    {
+      "sha256": "700174b26850d224c7a156cb6a45cea08031eab640fcfc1eaf7f770ab9aeaa66",
+      "value": "\u0000"
+    },
+    {
+      "sha256": "71eb671a24897799e75fe18942614f17d59e08d97f2412bece19e7b55107e97a",
+      "value": "<title>BEFORE<b>CHILD</b>AFTER</title>END"
+    },
+    {
+      "sha256": "7852b9d00a896e7df82b617d70d38e296dbd9e39ee9f6732ff1a80cddf4d1af0",
+      "value": "<?xml version=\"1.0\"?><p>VISIBLE</p>"
+    },
+    {
+      "sha256": "798640599597df7a8daa32b1132f07850a68b5e71bd295650399a38074f52804",
+      "value": "A"
+    },
+    {
+      "sha256": "7cd23014888415b0482d0ddff9f053da004e654e2d8d26874f24fd3cca2a0c34",
+      "value": "a\u0100 b"
+    },
+    {
+      "sha256": "805f93adc94f1d6787e550363c1df0b211903126c9c9b78ddf401155f63ca740",
+      "value": "A B C"
+    },
+    {
+      "sha256": "807548ec4f7757920b4b33b01f6d4636fbe9a17fccf0d223394daa4e5bbd1697",
+      "value": "<b>A<i>B</b>C</i>D"
+    },
+    {
+      "sha256": "8218493f62ad85143823f574227b4fce3fd571d047e3acb6bdd3444af4ae4563",
+      "value": "<head class=\"star-pagination\">BEFORE<b>CHILD</b>AFTER</head>END"
+    },
+    {
+      "sha256": "863c891b6abc20fbc1e039ede01b7aeb8be2021fd06e8311f2f395926c7eab57",
+      "value": "a&#0;&#x80;&#x1F600;b"
+    },
+    {
+      "sha256": "86696ae0a7dd4789bb5a8256f0a58a13243fe65bafb37c44f3c73e2228fd78b7",
+      "value": "plain text"
+    },
+    {
+      "sha256": "8b8f1ed51f7caf883e7c30c7f63f0d81dfe29c6ae85e567ae4590a509dc5c4ba",
+      "value": "<p>\ufeff</p><b>END</b>"
+    },
+    {
+      "sha256": "8c80f58215bcd70d91dbbc92a02ca41828913a92c2e2dce12c8ab02f52d1370e",
+      "value": "<script class=\"star-pagination\">BEFORE<b>CHILD</b>AFTER</script>END"
+    },
+    {
+      "sha256": "8e371960849a19d911c8c31cc5cadf804ed3875945c2deae9d4cc2b4be91ae22",
+      "value": "<page-number class=\"star-pagination\">BEFORE<b>CHILD</b>AFTER</page-number>END"
+    },
+    {
+      "sha256": "8f097023401b3d58704c1f3abea8ec2eba57c387f09d10125cd66076afd13b1e",
+      "value": "D"
+    },
+    {
+      "sha256": "955cca1ceba45052d85984d3a2565f4ce25b7488602c60a165598bf80b26e472",
+      "value": "B"
+    },
+    {
+      "sha256": "95da7556b782ac190e8e840d03a367e9730a7741a193a99cef1aedd4fdf3c6f1",
+      "value": "<div>BEFORE<b>CHILD</b>AFTER</div>END"
+    },
+    {
+      "sha256": "9667db2669fc2aafafaacf6068cbcd6ee2df01de786df7df6af5fb8b9e9c871f",
+      "value": "CHILD END"
+    },
+    {
+      "sha256": "97a4898101f7ae6456d18bf93371c150e0eb4fccf190068a265c31865cc78b2a",
+      "value": "HIDDEN"
+    },
+    {
+      "sha256": "9912666185476a271f99b85598a15f89987b093c876c4194e475a15ebd7bcd99",
+      "value": "BEFORE CHILD AFTEREND"
+    },
+    {
+      "sha256": "9c792be6b07d9bce6fae24f7ee574af4f783f323423ad4e2c72752d8ef863c90",
+      "value": "<title class=\"star-pagination\">BEFORE<b>CHILD</b>AFTER</title>END"
+    },
+    {
+      "sha256": "9db18af7360cd5d03bddf6a34395bcbe2a9a0c79ef7c495e5bd149c3c490defe",
+      "value": "a\u0000b"
+    },
+    {
+      "sha256": "a46bdf76ae4902238c14a729bb4bf606e71ddd5548c986c9fe34fbcf7a9f5087",
+      "value": "<div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div>VISIBLE</div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div>"
+    },
+    {
+      "sha256": "a62ac478e305833042146878c9fddc1c6d80a877b05fe016af267bff1ff2caf9",
+      "value": "<p>\u00a0</p><b>END</b>"
+    },
+    {
+      "sha256": "a74771ec14d9650f080a6e3b449de29c32e72fd1796014365f2400fa6e5abe44",
+      "value": "<!--comment-->"
+    },
+    {
+      "sha256": "a757b92e949ea922007002accd3e2d927079a43e9e2caf087b03522549893b39",
+      "value": "a\u0080\ud83d\ude00b"
+    },
+    {
+      "sha256": "a85d1036c05cb5c82dd39a01b244f12e94a63c384aac7e825c6fa2e2af9db6dd",
+      "value": "\u200b END"
+    },
+    {
+      "sha256": "abc024d3bc060c55b965b30dff39b3b45d66292cfb6a4dd539f4d96aed34bc69",
+      "value": "CHILD"
+    },
+    {
+      "sha256": "ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c",
+      "value": "a"
+    },
+    {
+      "sha256": "adf698d86b2530a9af8383704b15de2f1f205a75cd9a9b104bff12ba1a3979a7",
+      "value": "<script>HIDDEN</script>TAIL"
+    },
+    {
+      "sha256": "ae3ea308098f2cd9af7eeef32fc38a5593a4581c60ed420952b9bf5f452f8373",
+      "value": "<head class=\"star-pagination other\">BEFORE<b>CHILD</b>AFTER</head>END"
+    },
+    {
+      "sha256": "b08ca4ff411aafd85815bf98e6583256cd1c842230e56e3123796a0905d44e11",
+      "value": "<body>A</body><body>B</body>C"
+    },
+    {
+      "sha256": "b193a1f4fba6116a8c4793082415ff9ecefb1d151000ed1f1dbb1954f65221b5",
+      "value": "HEAD TITLE BODY"
+    },
+    {
+      "sha256": "b21418e2d80311acd6e646a9057ef4bab21d60bf87af19fe476b452d343ed317",
+      "value": "<div class=\"star-pagination\">BEFORE<b>CHILD</b>AFTER</div>END"
+    },
+    {
+      "sha256": "b9cf7ba33ff409d0f2d752e77ed61fde176ec039f062df921783b8776b1380af",
+      "value": "A B CD"
+    },
+    {
+      "sha256": "bac53c8916f9ab3120980d41c27b85ba293642aba16406cc570abdd6c97f8c4e",
+      "value": "a\u00a0\u00a9&NotEqualTilde;b"
+    },
+    {
+      "sha256": "c0a0ccd92b15b5a971bc664e6eeef02136c4e22d5755506b0df236f10cbc74ae",
+      "value": "AC"
+    },
+    {
+      "sha256": "c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed",
+      "value": "b"
+    },
+    {
+      "sha256": "c2572ee23d1bcfd41223d7584390035e8ecbe99722b6bc691b8132567b2feee0",
+      "value": "<p> </p><b>END</b>"
+    },
+    {
+      "sha256": "c2e8c0cc2e73b9bd1ba9ef1979e73169b471e25b0e9909efe98fde462c0bf55f",
+      "value": "C"
+    },
+    {
+      "sha256": "c669e8d41296c2708cf95797adbb9bacad5ddea571198fb79597a7d5754fc5ed",
+      "value": "LINKTAIL CHILD TAIL"
+    },
+    {
+      "sha256": "caa36c5fcef49f580c41fe3517ca05b674b40d768e3db7db719d3c909a90b0c6",
+      "value": "CD"
+    },
+    {
+      "sha256": "ce72509a7183783837b774f3724aebbd2cf43d62af50c9c5de2a0bd084a64685",
+      "value": "<div class=\"star-pagination other\">BEFORE<b>CHILD</b>AFTER</div>END"
+    },
+    {
+      "sha256": "d014039a507e1e0c0fd5bd0200eb8564ef01ed14495b8a4901ae5a042f5e2b60",
+      "value": "<noscript>BEFORE<b>CHILD</b>AFTER</noscript>END"
+    },
+    {
+      "sha256": "d1f723112525271efd60843b2e3b2865a8bd896847fab7555a3631761fde0a90",
+      "value": "A<table>B<tr><td>C</td></tr>D</table>E"
+    },
+    {
+      "sha256": "d5356844e96e30e00f066a895e1b04914329485d8827d3446f78f870989ba6fb",
+      "value": "<title class=\"star-pagination other\">BEFORE<b>CHILD</b>AFTER</title>END"
+    },
+    {
+      "sha256": "d56a5ed4678be3b8ead41fdd0060afdec20224618cae9c99bec872476e2a46d3",
+      "value": "<p>\n</p><b>END</b>"
+    },
+    {
+      "sha256": "d614cffa78d189d98f11f45bc06ad97d8325c89d18ce18a1d20ee243834be5d2",
+      "value": "<div class=\"star-pagination other\">VISIBLE</div>"
+    },
+    {
+      "sha256": "d79f823a641be970fc652ce7dfb45aaf4eee51c2bb945be53f7b2b2e17b02545",
+      "value": "BEFORE"
+    },
+    {
+      "sha256": "d7a5e915306d21dc1937ad5616f1dc9682e759e75ef51dd05fd9ddc98a078ea1",
+      "value": "\n"
+    },
+    {
+      "sha256": "d891b54f3185d81db2363720bf0b8f448cbe34b000c8230658ddec8fb0036918",
+      "value": "a<!--comment-->b"
+    },
+    {
+      "sha256": "dbdaaf97ef74db64177a9b58e6e03493bbc526d7f804626a497e4d0b9a4b800f",
+      "value": "<head>BEFORE<b>CHILD</b>AFTER</head>END"
+    },
+    {
+      "sha256": "dd14ef0a5b36889f6754a8dad8dee0c273fc56db3a15e366034a523e67ce87a4",
+      "value": "<head><title>TITLE</title></head><body>BODY</body>"
+    },
+    {
+      "sha256": "dee4f10b8c56f2a7f5a3a530654173a59ead9804d622c441157360eaad589356",
+      "value": "HEAD"
+    },
+    {
+      "sha256": "e6090c7d19dcfa9e25780fadbff2e0466ebc4c7753e838a5fb30f16fdf791ab5",
+      "value": "a\u0100\u0000b"
+    },
+    {
+      "sha256": "e7404f03366915ef36bfe6711d5c043320dcca4603d5a60751dcaa2937c70213",
+      "value": "<style class=\"star-pagination other\">BEFORE<b>CHILD</b>AFTER</style>END"
+    },
+    {
+      "sha256": "ea268b8db28222937a2a317c6821144afab8a048ac0507df6e948c20879c1cf0",
+      "value": "<page-number>BEFORE<b>CHILD</b>AFTER</page-number>END"
+    },
+    {
+      "sha256": "eb9da053caf9257430fb0853f6e70f347baac9e1ff2c67caae2634ec93c36c50",
+      "value": " <?xml encoding=\"utf8\"?><p>VISIBLE</p>"
+    },
+    {
+      "sha256": "ecb29c4a0a782c5f3bb0ce34dba44993430531affc740e0c8a6db6dccc5631f9",
+      "value": "<script class=\"star-pagination other\">BEFORE<b>CHILD</b>AFTER</script>END"
+    },
+    {
+      "sha256": "edb0f3125f43013547bc0e33647578edde67aeced69c8f8c74832c4861bd0ec4",
+      "value": "TAIL"
+    },
+    {
+      "sha256": "ee8700dcb07eec5335c8cd13d642482b4ea618528b45a9e7e08db882844e04b5",
+      "value": "<p>\u0085</p><b>END</b>"
+    },
+    {
+      "sha256": "ee9a17f554a1d7125fca37b7ab1f02ffb65d2f1c2c0e3b65b260315e3f605f89",
+      "value": "<textarea class=\"star-pagination\">BEFORE<b>CHILD</b>AFTER</textarea>END"
+    },
+    {
+      "sha256": "f0c4cd92fbf0f997aae37981f7cfe46fec5f95e6b8b3f31de10c747a53e75f31",
+      "value": "<link>LINKTAIL<b>CHILD</b>TAIL"
+    },
+    {
+      "sha256": "f1c13d6f9c0dc9a69d88c8b1ce118deeddaee47de69af5143d188b13242e7076",
+      "value": "<div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div>VISIBLE</div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div>"
+    },
+    {
+      "sha256": "f1c3dd600ab85285b69400eb6171cd97224cc572276b888cfe457f16c122692f",
+      "value": "<!DOCTYPE html>"
+    },
+    {
+      "sha256": "f27287e266e614b2083cb91ec5e96bceb01fe7ef354ed10374bbb58a75626a68",
+      "value": "<head>HEAD<title>TITLE</title></head><body>BODY</body>"
+    },
+    {
+      "sha256": "f9190866e197037f6515854185acf46fca9b74d0c613775296c1b4878c52f20b",
+      "value": "<?xml version=\"1.0\" encoding=\"utf8\"?><p>VISIBLE</p>"
+    },
+    {
+      "sha256": "fc67ee1ea85ef92031193f545516f201bc44f1d9ce7b778bb9eb43e857b65543",
+      "value": "\u200b"
+    }
+  ],
+  "cases": [
+    {
+      "name": "empty",
+      "text": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+      "sourceUtf16": 0,
+      "outcome": {
+        "kind": "error",
+        "type": "lxml.etree.ParserError"
+      },
+      "nodes": [],
+      "selected": [],
+      "diagnostics": [
+        {
+          "domain": "HTML",
+          "type": "ERR_DOCUMENT_EMPTY",
+          "level": "ERROR",
+          "depthLimit": false
+        }
+      ]
+    },
+    {
+      "name": "space-only",
+      "text": "630884bf40a0853e8c551cfffff355a04e13cf70320be98dad8cc48d0478ae4a",
+      "sourceUtf16": 4,
+      "outcome": {
+        "kind": "error",
+        "type": "lxml.etree.ParserError"
+      },
+      "nodes": [],
+      "selected": [],
+      "diagnostics": [
+        {
+          "domain": "HTML",
+          "type": "ERR_DOCUMENT_EMPTY",
+          "level": "ERROR",
+          "depthLimit": false
+        }
+      ]
+    },
+    {
+      "name": "plain",
+      "text": "86696ae0a7dd4789bb5a8256f0a58a13243fe65bafb37c44f3c73e2228fd78b7",
+      "sourceUtf16": 10,
+      "outcome": {
+        "kind": "success",
+        "value": "86696ae0a7dd4789bb5a8256f0a58a13243fe65bafb37c44f3c73e2228fd78b7"
+      },
+      "nodes": [
+        {
+          "value": "86696ae0a7dd4789bb5a8256f0a58a13243fe65bafb37c44f3c73e2228fd78b7",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [0],
+      "diagnostics": []
+    },
+    {
+      "name": "comment-only",
+      "text": "a74771ec14d9650f080a6e3b449de29c32e72fd1796014365f2400fa6e5abe44",
+      "sourceUtf16": 14,
+      "outcome": {
+        "kind": "error",
+        "type": "lxml.etree.ParserError"
+      },
+      "nodes": [],
+      "selected": [],
+      "diagnostics": []
+    },
+    {
+      "name": "comment-split",
+      "text": "d891b54f3185d81db2363720bf0b8f448cbe34b000c8230658ddec8fb0036918",
+      "sourceUtf16": 16,
+      "outcome": {
+        "kind": "success",
+        "value": "5e229e245c3e525283e65ec4998d643facf67e035ff89557216305bc9b5109f8"
+      },
+      "nodes": [
+        {
+          "value": "ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": true
+        }
+      ],
+      "selected": [0, 1],
+      "diagnostics": []
+    },
+    {
+      "name": "head-title",
+      "text": "dd14ef0a5b36889f6754a8dad8dee0c273fc56db3a15e366034a523e67ce87a4",
+      "sourceUtf16": 50,
+      "outcome": {
+        "kind": "success",
+        "value": "4c20e72d38d198dc3f81bed01868940e1140e76d164a3671b239bc636d1868de"
+      },
+      "nodes": [
+        {
+          "value": "1f1c2852f525f7479b519b6ea517e662dcaf8f6538a535b72e56fa89645bfc87",
+          "parentTag": "title",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "64d1f141bafb437258cf58d528a99d884a0e6b6b0369c66f0c71d7fa0bae0930",
+          "parentTag": "body",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [0, 1],
+      "diagnostics": []
+    },
+    {
+      "name": "head-direct",
+      "text": "f27287e266e614b2083cb91ec5e96bceb01fe7ef354ed10374bbb58a75626a68",
+      "sourceUtf16": 54,
+      "outcome": {
+        "kind": "success",
+        "value": "b193a1f4fba6116a8c4793082415ff9ecefb1d151000ed1f1dbb1954f65221b5"
+      },
+      "nodes": [
+        {
+          "value": "dee4f10b8c56f2a7f5a3a530654173a59ead9804d622c441157360eaad589356",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "1f1c2852f525f7479b519b6ea517e662dcaf8f6538a535b72e56fa89645bfc87",
+          "parentTag": "title",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "64d1f141bafb437258cf58d528a99d884a0e6b6b0369c66f0c71d7fa0bae0930",
+          "parentTag": "body",
+          "parentClass": null,
+          "tail": true
+        }
+      ],
+      "selected": [0, 1, 2],
+      "diagnostics": [
+        {
+          "domain": "HTML",
+          "type": "ERR_TAG_NAME_MISMATCH",
+          "level": "ERROR",
+          "depthLimit": false
+        },
+        {
+          "domain": "HTML",
+          "type": "HTML_STRUCURE_ERROR",
+          "level": "ERROR",
+          "depthLimit": false
+        }
+      ]
+    },
+    {
+      "name": "nested-star",
+      "text": "2294647e6f28be9958fc86f995d0d5bd1d047d393324f3b29560f55fed26cdd8",
+      "sourceUtf16": 57,
+      "outcome": {
+        "kind": "success",
+        "value": "abc024d3bc060c55b965b30dff39b3b45d66292cfb6a4dd539f4d96aed34bc69"
+      },
+      "nodes": [
+        {
+          "value": "97a4898101f7ae6456d18bf93371c150e0eb4fccf190068a265c31865cc78b2a",
+          "parentTag": "div",
+          "parentClass": "star-pagination",
+          "tail": false
+        },
+        {
+          "value": "abc024d3bc060c55b965b30dff39b3b45d66292cfb6a4dd539f4d96aed34bc69",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "edb0f3125f43013547bc0e33647578edde67aeced69c8f8c74832c4861bd0ec4",
+          "parentTag": "div",
+          "parentClass": "star-pagination",
+          "tail": true
+        }
+      ],
+      "selected": [1],
+      "diagnostics": []
+    },
+    {
+      "name": "star-multi-class",
+      "text": "d614cffa78d189d98f11f45bc06ad97d8325c89d18ce18a1d20ee243834be5d2",
+      "sourceUtf16": 48,
+      "outcome": {
+        "kind": "success",
+        "value": "3c0643cb5e5eea716288681da76bde3c7618a9f60a88e689c83fc923deddd4f2"
+      },
+      "nodes": [
+        {
+          "value": "3c0643cb5e5eea716288681da76bde3c7618a9f60a88e689c83fc923deddd4f2",
+          "parentTag": "div",
+          "parentClass": "star-pagination other",
+          "tail": false
+        }
+      ],
+      "selected": [0],
+      "diagnostics": []
+    },
+    {
+      "name": "star-space-class",
+      "text": "0a3ef43075dd5731325d5629e8547c32de870c3c91591ea5088342a28fe03ccd",
+      "sourceUtf16": 44,
+      "outcome": {
+        "kind": "success",
+        "value": "3c0643cb5e5eea716288681da76bde3c7618a9f60a88e689c83fc923deddd4f2"
+      },
+      "nodes": [
+        {
+          "value": "3c0643cb5e5eea716288681da76bde3c7618a9f60a88e689c83fc923deddd4f2",
+          "parentTag": "div",
+          "parentClass": " star-pagination ",
+          "tail": false
+        }
+      ],
+      "selected": [0],
+      "diagnostics": []
+    },
+    {
+      "name": "star-case-class",
+      "text": "5651bdb89f693db1cc7810d58333f9879d74e7b5d43da371b64aa424cdf6d2d1",
+      "sourceUtf16": 42,
+      "outcome": {
+        "kind": "success",
+        "value": "3c0643cb5e5eea716288681da76bde3c7618a9f60a88e689c83fc923deddd4f2"
+      },
+      "nodes": [
+        {
+          "value": "3c0643cb5e5eea716288681da76bde3c7618a9f60a88e689c83fc923deddd4f2",
+          "parentTag": "div",
+          "parentClass": "STAR-PAGINATION",
+          "tail": false
+        }
+      ],
+      "selected": [0],
+      "diagnostics": []
+    },
+    {
+      "name": "style-direct",
+      "text": "42b3a582e43bf01669e51bcf1617aefba29f25e5cf818e8326d967a04f0fe9f9",
+      "sourceUtf16": 25,
+      "outcome": {
+        "kind": "success",
+        "value": "edb0f3125f43013547bc0e33647578edde67aeced69c8f8c74832c4861bd0ec4"
+      },
+      "nodes": [
+        {
+          "value": "97a4898101f7ae6456d18bf93371c150e0eb4fccf190068a265c31865cc78b2a",
+          "parentTag": "style",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "edb0f3125f43013547bc0e33647578edde67aeced69c8f8c74832c4861bd0ec4",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [1],
+      "diagnostics": []
+    },
+    {
+      "name": "script-direct",
+      "text": "adf698d86b2530a9af8383704b15de2f1f205a75cd9a9b104bff12ba1a3979a7",
+      "sourceUtf16": 27,
+      "outcome": {
+        "kind": "success",
+        "value": "edb0f3125f43013547bc0e33647578edde67aeced69c8f8c74832c4861bd0ec4"
+      },
+      "nodes": [
+        {
+          "value": "97a4898101f7ae6456d18bf93371c150e0eb4fccf190068a265c31865cc78b2a",
+          "parentTag": "script",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "edb0f3125f43013547bc0e33647578edde67aeced69c8f8c74832c4861bd0ec4",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [1],
+      "diagnostics": []
+    },
+    {
+      "name": "page-number-nested",
+      "text": "448581f730dc74eb1ae04e4658c83283d6a7919dcb6d03de195f10d81a351d92",
+      "sourceUtf16": 49,
+      "outcome": {
+        "kind": "success",
+        "value": "abc024d3bc060c55b965b30dff39b3b45d66292cfb6a4dd539f4d96aed34bc69"
+      },
+      "nodes": [
+        {
+          "value": "97a4898101f7ae6456d18bf93371c150e0eb4fccf190068a265c31865cc78b2a",
+          "parentTag": "page-number",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "abc024d3bc060c55b965b30dff39b3b45d66292cfb6a4dd539f4d96aed34bc69",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "edb0f3125f43013547bc0e33647578edde67aeced69c8f8c74832c4861bd0ec4",
+          "parentTag": "page-number",
+          "parentClass": null,
+          "tail": true
+        }
+      ],
+      "selected": [1],
+      "diagnostics": [
+        {
+          "domain": "HTML",
+          "type": "HTML_UNKNOWN_TAG",
+          "level": "ERROR",
+          "depthLimit": false
+        }
+      ]
+    },
+    {
+      "name": "link-tail",
+      "text": "f0c4cd92fbf0f997aae37981f7cfe46fec5f95e6b8b3f31de10c747a53e75f31",
+      "sourceUtf16": 30,
+      "outcome": {
+        "kind": "success",
+        "value": "c669e8d41296c2708cf95797adbb9bacad5ddea571198fb79597a7d5754fc5ed"
+      },
+      "nodes": [
+        {
+          "value": "6aeb799ebf3cecabcf234e3e5fd14040df4d1efd7daba9c0ecf246f8b9add33a",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "abc024d3bc060c55b965b30dff39b3b45d66292cfb6a4dd539f4d96aed34bc69",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "edb0f3125f43013547bc0e33647578edde67aeced69c8f8c74832c4861bd0ec4",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": true
+        }
+      ],
+      "selected": [0, 1, 2],
+      "diagnostics": []
+    },
+    {
+      "name": "xml-encoding-declaration",
+      "text": "f9190866e197037f6515854185acf46fca9b74d0c613775296c1b4878c52f20b",
+      "sourceUtf16": 51,
+      "outcome": {
+        "kind": "error",
+        "type": "builtins.ValueError"
+      },
+      "nodes": [],
+      "selected": [],
+      "diagnostics": []
+    },
+    {
+      "name": "xml-no-encoding",
+      "text": "7852b9d00a896e7df82b617d70d38e296dbd9e39ee9f6732ff1a80cddf4d1af0",
+      "sourceUtf16": 35,
+      "outcome": {
+        "kind": "success",
+        "value": "3c0643cb5e5eea716288681da76bde3c7618a9f60a88e689c83fc923deddd4f2"
+      },
+      "nodes": [
+        {
+          "value": "3c0643cb5e5eea716288681da76bde3c7618a9f60a88e689c83fc923deddd4f2",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [0],
+      "diagnostics": []
+    },
+    {
+      "name": "xml-leading-space",
+      "text": "eb9da053caf9257430fb0853f6e70f347baac9e1ff2c67caae2634ec93c36c50",
+      "sourceUtf16": 38,
+      "outcome": {
+        "kind": "success",
+        "value": "3c0643cb5e5eea716288681da76bde3c7618a9f60a88e689c83fc923deddd4f2"
+      },
+      "nodes": [
+        {
+          "value": "3c0643cb5e5eea716288681da76bde3c7618a9f60a88e689c83fc923deddd4f2",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [0],
+      "diagnostics": []
+    },
+    {
+      "name": "unicode-latin1",
+      "text": "2a65b433ebc9c6c2679dfc4f627247e125a6e657c498ea18c717b3e6eceb0836",
+      "sourceUtf16": 4,
+      "outcome": {
+        "kind": "success",
+        "value": "2a65b433ebc9c6c2679dfc4f627247e125a6e657c498ea18c717b3e6eceb0836"
+      },
+      "nodes": [
+        {
+          "value": "2a65b433ebc9c6c2679dfc4f627247e125a6e657c498ea18c717b3e6eceb0836",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [0],
+      "diagnostics": []
+    },
+    {
+      "name": "unicode-bmp",
+      "text": "7cd23014888415b0482d0ddff9f053da004e654e2d8d26874f24fd3cca2a0c34",
+      "sourceUtf16": 4,
+      "outcome": {
+        "kind": "success",
+        "value": "7cd23014888415b0482d0ddff9f053da004e654e2d8d26874f24fd3cca2a0c34"
+      },
+      "nodes": [
+        {
+          "value": "7cd23014888415b0482d0ddff9f053da004e654e2d8d26874f24fd3cca2a0c34",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [0],
+      "diagnostics": []
+    },
+    {
+      "name": "unicode-astral",
+      "text": "19449d76ca4bacb1643c689bf2f9cb64a90bbb8f5f8acf89fe965a239079a7b3",
+      "sourceUtf16": 5,
+      "outcome": {
+        "kind": "success",
+        "value": "19449d76ca4bacb1643c689bf2f9cb64a90bbb8f5f8acf89fe965a239079a7b3"
+      },
+      "nodes": [
+        {
+          "value": "19449d76ca4bacb1643c689bf2f9cb64a90bbb8f5f8acf89fe965a239079a7b3",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [0],
+      "diagnostics": []
+    },
+    {
+      "name": "unicode-isolated-surrogate",
+      "text": "27432a872192a56508c32189524a5bd0968069cc88370a7e73c775b971a077df",
+      "sourceUtf16": 3,
+      "outcome": {
+        "kind": "success",
+        "value": "ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c"
+      },
+      "nodes": [
+        {
+          "value": "ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [0],
+      "diagnostics": [
+        {
+          "domain": "PARSER",
+          "type": "ERR_INVALID_ENCODING",
+          "level": "FATAL",
+          "depthLimit": false
+        }
+      ]
+    },
+    {
+      "name": "nul-ascii",
+      "text": "9db18af7360cd5d03bddf6a34395bcbe2a9a0c79ef7c495e5bd149c3c490defe",
+      "sourceUtf16": 3,
+      "outcome": {
+        "kind": "success",
+        "value": "5e229e245c3e525283e65ec4998d643facf67e035ff89557216305bc9b5109f8"
+      },
+      "nodes": [
+        {
+          "value": "5e229e245c3e525283e65ec4998d643facf67e035ff89557216305bc9b5109f8",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [0],
+      "diagnostics": [
+        {
+          "domain": "HTML",
+          "type": "ERR_INVALID_CHAR",
+          "level": "ERROR",
+          "depthLimit": false
+        }
+      ]
+    },
+    {
+      "name": "nul-bmp",
+      "text": "e6090c7d19dcfa9e25780fadbff2e0466ebc4c7753e838a5fb30f16fdf791ab5",
+      "sourceUtf16": 4,
+      "outcome": {
+        "kind": "success",
+        "value": "7cd23014888415b0482d0ddff9f053da004e654e2d8d26874f24fd3cca2a0c34"
+      },
+      "nodes": [
+        {
+          "value": "7cd23014888415b0482d0ddff9f053da004e654e2d8d26874f24fd3cca2a0c34",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [0],
+      "diagnostics": [
+        {
+          "domain": "HTML",
+          "type": "ERR_INVALID_CHAR",
+          "level": "ERROR",
+          "depthLimit": false
+        }
+      ]
+    },
+    {
+      "name": "nul-only",
+      "text": "700174b26850d224c7a156cb6a45cea08031eab640fcfc1eaf7f770ab9aeaa66",
+      "sourceUtf16": 1,
+      "outcome": {
+        "kind": "error",
+        "type": "lxml.etree.ParserError"
+      },
+      "nodes": [],
+      "selected": [],
+      "diagnostics": [
+        {
+          "domain": "HTML",
+          "type": "ERR_DOCUMENT_EMPTY",
+          "level": "ERROR",
+          "depthLimit": false
+        }
+      ]
+    },
+    {
+      "name": "entity-html4",
+      "text": "06eea81493cab6373828f54e25ba2a8c63b4a7e7c8a8371327191cca0edaf2e2",
+      "sourceUtf16": 29,
+      "outcome": {
+        "kind": "success",
+        "value": "bac53c8916f9ab3120980d41c27b85ba293642aba16406cc570abdd6c97f8c4e"
+      },
+      "nodes": [
+        {
+          "value": "bac53c8916f9ab3120980d41c27b85ba293642aba16406cc570abdd6c97f8c4e",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [0],
+      "diagnostics": []
+    },
+    {
+      "name": "entity-numeric",
+      "text": "863c891b6abc20fbc1e039ede01b7aeb8be2021fd06e8311f2f395926c7eab57",
+      "sourceUtf16": 21,
+      "outcome": {
+        "kind": "success",
+        "value": "a757b92e949ea922007002accd3e2d927079a43e9e2caf087b03522549893b39"
+      },
+      "nodes": [
+        {
+          "value": "a757b92e949ea922007002accd3e2d927079a43e9e2caf087b03522549893b39",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [0],
+      "diagnostics": [
+        {
+          "domain": "HTML",
+          "type": "ERR_INVALID_CHAR",
+          "level": "ERROR",
+          "depthLimit": false
+        }
+      ]
+    },
+    {
+      "name": "malformed-close",
+      "text": "807548ec4f7757920b4b33b01f6d4636fbe9a17fccf0d223394daa4e5bbd1697",
+      "sourceUtf16": 18,
+      "outcome": {
+        "kind": "success",
+        "value": "b9cf7ba33ff409d0f2d752e77ed61fde176ec039f062df921783b8776b1380af"
+      },
+      "nodes": [
+        {
+          "value": "798640599597df7a8daa32b1132f07850a68b5e71bd295650399a38074f52804",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "955cca1ceba45052d85984d3a2565f4ce25b7488602c60a165598bf80b26e472",
+          "parentTag": "i",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "caa36c5fcef49f580c41fe3517ca05b674b40d768e3db7db719d3c909a90b0c6",
+          "parentTag": "span",
+          "parentClass": null,
+          "tail": true
+        }
+      ],
+      "selected": [0, 1, 2],
+      "diagnostics": [
+        {
+          "domain": "HTML",
+          "type": "ERR_TAG_NAME_MISMATCH",
+          "level": "ERROR",
+          "depthLimit": false
+        },
+        {
+          "domain": "HTML",
+          "type": "ERR_TAG_NAME_MISMATCH",
+          "level": "ERROR",
+          "depthLimit": false
+        }
+      ]
+    },
+    {
+      "name": "table-recovery",
+      "text": "d1f723112525271efd60843b2e3b2865a8bd896847fab7555a3631761fde0a90",
+      "sourceUtf16": 38,
+      "outcome": {
+        "kind": "success",
+        "value": "3f05a2395c6a5c6671f014ee76d5579864881ada664511aa70d240118d088292"
+      },
+      "nodes": [
+        {
+          "value": "798640599597df7a8daa32b1132f07850a68b5e71bd295650399a38074f52804",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "955cca1ceba45052d85984d3a2565f4ce25b7488602c60a165598bf80b26e472",
+          "parentTag": "table",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "c2e8c0cc2e73b9bd1ba9ef1979e73169b471e25b0e9909efe98fde462c0bf55f",
+          "parentTag": "td",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "8f097023401b3d58704c1f3abea8ec2eba57c387f09d10125cd66076afd13b1e",
+          "parentTag": "table",
+          "parentClass": null,
+          "tail": true
+        },
+        {
+          "value": "43e6e2bebb3774311cf0c867d2fae5da733792224e8bac1d455eff172ff6af27",
+          "parentTag": "div",
+          "parentClass": null,
+          "tail": true
+        }
+      ],
+      "selected": [0, 1, 2, 3, 4],
+      "diagnostics": []
+    },
+    {
+      "name": "multiple-body",
+      "text": "b08ca4ff411aafd85815bf98e6583256cd1c842230e56e3123796a0905d44e11",
+      "sourceUtf16": 29,
+      "outcome": {
+        "kind": "success",
+        "value": "39eff863117305cf50583351619b0a30af595af09373a7e8c9290c51cf9eabe5"
+      },
+      "nodes": [
+        {
+          "value": "0fa857722eef06a51df06b37f01c556468c874a23b3eb57654f395134b3b6b94",
+          "parentTag": "span",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "c2e8c0cc2e73b9bd1ba9ef1979e73169b471e25b0e9909efe98fde462c0bf55f",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [0, 1],
+      "diagnostics": []
+    },
+    {
+      "name": "multiple-head",
+      "text": "3d3c6d1f6ffbb076db5b8dd0414c307a702c7c0b51837a28c94ea1696f311917",
+      "sourceUtf16": 72,
+      "outcome": {
+        "kind": "success",
+        "value": "805f93adc94f1d6787e550363c1df0b211903126c9c9b78ddf401155f63ca740"
+      },
+      "nodes": [
+        {
+          "value": "798640599597df7a8daa32b1132f07850a68b5e71bd295650399a38074f52804",
+          "parentTag": "title",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "955cca1ceba45052d85984d3a2565f4ce25b7488602c60a165598bf80b26e472",
+          "parentTag": "title",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "c2e8c0cc2e73b9bd1ba9ef1979e73169b471e25b0e9909efe98fde462c0bf55f",
+          "parentTag": "body",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [0, 1, 2],
+      "diagnostics": []
+    },
+    {
+      "name": "doctype-only",
+      "text": "f1c3dd600ab85285b69400eb6171cd97224cc572276b888cfe457f16c122692f",
+      "sourceUtf16": 15,
+      "outcome": {
+        "kind": "error",
+        "type": "lxml.etree.ParserError"
+      },
+      "nodes": [],
+      "selected": [],
+      "diagnostics": []
+    },
+    {
+      "name": "cdata",
+      "text": "17a611f0cd4985523d4f61efa548fc02485f3cca0c2f6ff53ea5d4121da35827",
+      "sourceUtf16": 15,
+      "outcome": {
+        "kind": "success",
+        "value": "c0a0ccd92b15b5a971bc664e6eeef02136c4e22d5755506b0df236f10cbc74ae"
+      },
+      "nodes": [
+        {
+          "value": "c0a0ccd92b15b5a971bc664e6eeef02136c4e22d5755506b0df236f10cbc74ae",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [0],
+      "diagnostics": [
+        {
+          "domain": "HTML",
+          "type": "unknown",
+          "level": "ERROR",
+          "depthLimit": false
+        }
+      ]
+    },
+    {
+      "name": "text-node-nbsp",
+      "text": "a62ac478e305833042146878c9fddc1c6d80a877b05fe016af267bff1ff2caf9",
+      "sourceUtf16": 18,
+      "outcome": {
+        "kind": "success",
+        "value": "0c54509a5c47dd8a81749d056d068cdda449fb6d5c53d24ad5d1b168302b4ab5"
+      },
+      "nodes": [
+        {
+          "value": "6177b41a15e6e29b60ef4f129743c847e6f2e64060fd4f62ee61c2f856a050d3",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [0, 1],
+      "diagnostics": []
+    },
+    {
+      "name": "text-node-nel",
+      "text": "ee8700dcb07eec5335c8cd13d642482b4ea618528b45a9e7e08db882844e04b5",
+      "sourceUtf16": 18,
+      "outcome": {
+        "kind": "success",
+        "value": "1ca0289befae9e7dab0724bb4d25b35a684119848bd7c9408336d3c804fd26b8"
+      },
+      "nodes": [
+        {
+          "value": "3f84583847644cf9cc5bc99590f45864f8619d8474c42682c08ec83415bd97ca",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [0, 1],
+      "diagnostics": []
+    },
+    {
+      "name": "text-node-vertical-tab",
+      "text": "2b2b281cb898be056882517444769d4a802c26b45a38d9c5659e6181317a740a",
+      "sourceUtf16": 18,
+      "outcome": {
+        "kind": "success",
+        "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde"
+      },
+      "nodes": [
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [0],
+      "diagnostics": [
+        {
+          "domain": "HTML",
+          "type": "ERR_INVALID_CHAR",
+          "level": "ERROR",
+          "depthLimit": false
+        }
+      ]
+    },
+    {
+      "name": "text-node-zero-width",
+      "text": "6c0704ee4f90e886da16be3a31299369c920fd055c5ce369e14bb4a671ed8a74",
+      "sourceUtf16": 18,
+      "outcome": {
+        "kind": "success",
+        "value": "a85d1036c05cb5c82dd39a01b244f12e94a63c384aac7e825c6fa2e2af9db6dd"
+      },
+      "nodes": [
+        {
+          "value": "fc67ee1ea85ef92031193f545516f201bc44f1d9ce7b778bb9eb43e857b65543",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [0, 1],
+      "diagnostics": []
+    },
+    {
+      "name": "text-node-bom",
+      "text": "8b8f1ed51f7caf883e7c30c7f63f0d81dfe29c6ae85e567ae4590a509dc5c4ba",
+      "sourceUtf16": 18,
+      "outcome": {
+        "kind": "success",
+        "value": "00ffbe5a9ddaa466f93d6c322790244ff8d6e767800c85703e340eb3217fabaf"
+      },
+      "nodes": [
+        {
+          "value": "55bafd0d66bf803ffa55c6fb596b94cfb493742dee559294ca8160be1913991c",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [0, 1],
+      "diagnostics": []
+    },
+    {
+      "name": "text-node-ascii-space",
+      "text": "c2572ee23d1bcfd41223d7584390035e8ecbe99722b6bc691b8132567b2feee0",
+      "sourceUtf16": 18,
+      "outcome": {
+        "kind": "success",
+        "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde"
+      },
+      "nodes": [
+        {
+          "value": "52109349dabf69106e04ec2f493fb8b6ade94ea100227cccce6559ab8b96553f",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [1],
+      "diagnostics": []
+    },
+    {
+      "name": "text-node-lf",
+      "text": "d56a5ed4678be3b8ead41fdd0060afdec20224618cae9c99bec872476e2a46d3",
+      "sourceUtf16": 18,
+      "outcome": {
+        "kind": "success",
+        "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde"
+      },
+      "nodes": [
+        {
+          "value": "d7a5e915306d21dc1937ad5616f1dc9682e759e75ef51dd05fd9ddc98a078ea1",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [1],
+      "diagnostics": []
+    },
+    {
+      "name": "depth-254",
+      "text": "a46bdf76ae4902238c14a729bb4bf606e71ddd5548c986c9fe34fbcf7a9f5087",
+      "sourceUtf16": 2801,
+      "outcome": {
+        "kind": "success",
+        "value": "3c0643cb5e5eea716288681da76bde3c7618a9f60a88e689c83fc923deddd4f2"
+      },
+      "nodes": [
+        {
+          "value": "3c0643cb5e5eea716288681da76bde3c7618a9f60a88e689c83fc923deddd4f2",
+          "parentTag": "div",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [0],
+      "diagnostics": []
+    },
+    {
+      "name": "depth-255",
+      "text": "20066e65cd7fe82406b51b30b228cb2d3dcfc4a0c7b0dbcd9a13c2b933f7e9d1",
+      "sourceUtf16": 2812,
+      "outcome": {
+        "kind": "success",
+        "value": "3c0643cb5e5eea716288681da76bde3c7618a9f60a88e689c83fc923deddd4f2"
+      },
+      "nodes": [
+        {
+          "value": "3c0643cb5e5eea716288681da76bde3c7618a9f60a88e689c83fc923deddd4f2",
+          "parentTag": "div",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [0],
+      "diagnostics": []
+    },
+    {
+      "name": "depth-256",
+      "text": "045a6e8a8bd52f6e15e9c57ab5898465003fb6b4e644d1549baa2134ddeba991",
+      "sourceUtf16": 2823,
+      "outcome": {
+        "kind": "success",
+        "value": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126"
+      },
+      "nodes": [],
+      "selected": [],
+      "diagnostics": [
+        {
+          "domain": "PARSER",
+          "type": "ERR_INTERNAL_ERROR",
+          "level": "FATAL",
+          "depthLimit": true
+        }
+      ]
+    },
+    {
+      "name": "depth-257",
+      "text": "f1c13d6f9c0dc9a69d88c8b1ce118deeddaee47de69af5143d188b13242e7076",
+      "sourceUtf16": 2834,
+      "outcome": {
+        "kind": "success",
+        "value": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126"
+      },
+      "nodes": [],
+      "selected": [],
+      "diagnostics": [
+        {
+          "domain": "PARSER",
+          "type": "ERR_INTERNAL_ERROR",
+          "level": "FATAL",
+          "depthLimit": true
+        }
+      ]
+    },
+    {
+      "name": "depth-300",
+      "text": "5b44a218d9d0b754163121a9a880e36244ef74eedf5eb05a107bd441ce46f318",
+      "sourceUtf16": 3307,
+      "outcome": {
+        "kind": "success",
+        "value": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126"
+      },
+      "nodes": [],
+      "selected": [],
+      "diagnostics": [
+        {
+          "domain": "PARSER",
+          "type": "ERR_INTERNAL_ERROR",
+          "level": "FATAL",
+          "depthLimit": true
+        }
+      ]
+    },
+    {
+      "name": "parent:div:",
+      "text": "95da7556b782ac190e8e840d03a367e9730a7741a193a99cef1aedd4fdf3c6f1",
+      "sourceUtf16": 37,
+      "outcome": {
+        "kind": "success",
+        "value": "06f7107c4a3b5076812babb6282217682732e8479c47d29367994695b1fcc036"
+      },
+      "nodes": [
+        {
+          "value": "d79f823a641be970fc652ce7dfb45aaf4eee51c2bb945be53f7b2b2e17b02545",
+          "parentTag": "div",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "abc024d3bc060c55b965b30dff39b3b45d66292cfb6a4dd539f4d96aed34bc69",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "472359c75dec28e8454b9722bfd92bcb1011b8d0af249eee2268656471c55bf7",
+          "parentTag": "div",
+          "parentClass": null,
+          "tail": true
+        },
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "div",
+          "parentClass": null,
+          "tail": true
+        }
+      ],
+      "selected": [0, 1, 2, 3],
+      "diagnostics": []
+    },
+    {
+      "name": "parent:div: class=\"star-pagination\"",
+      "text": "b21418e2d80311acd6e646a9057ef4bab21d60bf87af19fe476b452d343ed317",
+      "sourceUtf16": 61,
+      "outcome": {
+        "kind": "success",
+        "value": "9667db2669fc2aafafaacf6068cbcd6ee2df01de786df7df6af5fb8b9e9c871f"
+      },
+      "nodes": [
+        {
+          "value": "d79f823a641be970fc652ce7dfb45aaf4eee51c2bb945be53f7b2b2e17b02545",
+          "parentTag": "div",
+          "parentClass": "star-pagination",
+          "tail": false
+        },
+        {
+          "value": "abc024d3bc060c55b965b30dff39b3b45d66292cfb6a4dd539f4d96aed34bc69",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "472359c75dec28e8454b9722bfd92bcb1011b8d0af249eee2268656471c55bf7",
+          "parentTag": "div",
+          "parentClass": "star-pagination",
+          "tail": true
+        },
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "div",
+          "parentClass": null,
+          "tail": true
+        }
+      ],
+      "selected": [1, 3],
+      "diagnostics": []
+    },
+    {
+      "name": "parent:div: class=\"star-pagination other\"",
+      "text": "ce72509a7183783837b774f3724aebbd2cf43d62af50c9c5de2a0bd084a64685",
+      "sourceUtf16": 67,
+      "outcome": {
+        "kind": "success",
+        "value": "06f7107c4a3b5076812babb6282217682732e8479c47d29367994695b1fcc036"
+      },
+      "nodes": [
+        {
+          "value": "d79f823a641be970fc652ce7dfb45aaf4eee51c2bb945be53f7b2b2e17b02545",
+          "parentTag": "div",
+          "parentClass": "star-pagination other",
+          "tail": false
+        },
+        {
+          "value": "abc024d3bc060c55b965b30dff39b3b45d66292cfb6a4dd539f4d96aed34bc69",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "472359c75dec28e8454b9722bfd92bcb1011b8d0af249eee2268656471c55bf7",
+          "parentTag": "div",
+          "parentClass": "star-pagination other",
+          "tail": true
+        },
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "div",
+          "parentClass": null,
+          "tail": true
+        }
+      ],
+      "selected": [0, 1, 2, 3],
+      "diagnostics": []
+    },
+    {
+      "name": "parent:head:",
+      "text": "dbdaaf97ef74db64177a9b58e6e03493bbc526d7f804626a497e4d0b9a4b800f",
+      "sourceUtf16": 39,
+      "outcome": {
+        "kind": "success",
+        "value": "9912666185476a271f99b85598a15f89987b093c876c4194e475a15ebd7bcd99"
+      },
+      "nodes": [
+        {
+          "value": "d79f823a641be970fc652ce7dfb45aaf4eee51c2bb945be53f7b2b2e17b02545",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "abc024d3bc060c55b965b30dff39b3b45d66292cfb6a4dd539f4d96aed34bc69",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "038a83f0b7962e28b01ad40e3487bb05f911311d08925370ad9a99b0d278a2b7",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": true
+        }
+      ],
+      "selected": [0, 1, 2],
+      "diagnostics": [
+        {
+          "domain": "HTML",
+          "type": "ERR_TAG_NAME_MISMATCH",
+          "level": "ERROR",
+          "depthLimit": false
+        }
+      ]
+    },
+    {
+      "name": "parent:head: class=\"star-pagination\"",
+      "text": "8218493f62ad85143823f574227b4fce3fd571d047e3acb6bdd3444af4ae4563",
+      "sourceUtf16": 63,
+      "outcome": {
+        "kind": "success",
+        "value": "9912666185476a271f99b85598a15f89987b093c876c4194e475a15ebd7bcd99"
+      },
+      "nodes": [
+        {
+          "value": "d79f823a641be970fc652ce7dfb45aaf4eee51c2bb945be53f7b2b2e17b02545",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "abc024d3bc060c55b965b30dff39b3b45d66292cfb6a4dd539f4d96aed34bc69",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "038a83f0b7962e28b01ad40e3487bb05f911311d08925370ad9a99b0d278a2b7",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": true
+        }
+      ],
+      "selected": [0, 1, 2],
+      "diagnostics": [
+        {
+          "domain": "HTML",
+          "type": "ERR_TAG_NAME_MISMATCH",
+          "level": "ERROR",
+          "depthLimit": false
+        }
+      ]
+    },
+    {
+      "name": "parent:head: class=\"star-pagination other\"",
+      "text": "ae3ea308098f2cd9af7eeef32fc38a5593a4581c60ed420952b9bf5f452f8373",
+      "sourceUtf16": 69,
+      "outcome": {
+        "kind": "success",
+        "value": "9912666185476a271f99b85598a15f89987b093c876c4194e475a15ebd7bcd99"
+      },
+      "nodes": [
+        {
+          "value": "d79f823a641be970fc652ce7dfb45aaf4eee51c2bb945be53f7b2b2e17b02545",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "abc024d3bc060c55b965b30dff39b3b45d66292cfb6a4dd539f4d96aed34bc69",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "038a83f0b7962e28b01ad40e3487bb05f911311d08925370ad9a99b0d278a2b7",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": true
+        }
+      ],
+      "selected": [0, 1, 2],
+      "diagnostics": [
+        {
+          "domain": "HTML",
+          "type": "ERR_TAG_NAME_MISMATCH",
+          "level": "ERROR",
+          "depthLimit": false
+        }
+      ]
+    },
+    {
+      "name": "parent:style:",
+      "text": "420f09c5ad06927301d72d2b4f5264b4281b2a1522cd2ff80add4f37e11db113",
+      "sourceUtf16": 41,
+      "outcome": {
+        "kind": "success",
+        "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde"
+      },
+      "nodes": [
+        {
+          "value": "64914894ccef760a1cb3062c6f387ae769ab17f61ab2780015a2a60fb0f3b0ab",
+          "parentTag": "style",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [1],
+      "diagnostics": [
+        {
+          "domain": "HTML",
+          "type": "ERR_TAG_NAME_MISMATCH",
+          "level": "ERROR",
+          "depthLimit": false
+        }
+      ]
+    },
+    {
+      "name": "parent:style: class=\"star-pagination\"",
+      "text": "17ceff5efc85f85fa9a693ad709d4b65aa7c1ed8a41da1de2cd34f9c8f795b08",
+      "sourceUtf16": 65,
+      "outcome": {
+        "kind": "success",
+        "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde"
+      },
+      "nodes": [
+        {
+          "value": "64914894ccef760a1cb3062c6f387ae769ab17f61ab2780015a2a60fb0f3b0ab",
+          "parentTag": "style",
+          "parentClass": "star-pagination",
+          "tail": false
+        },
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [1],
+      "diagnostics": [
+        {
+          "domain": "HTML",
+          "type": "ERR_TAG_NAME_MISMATCH",
+          "level": "ERROR",
+          "depthLimit": false
+        }
+      ]
+    },
+    {
+      "name": "parent:style: class=\"star-pagination other\"",
+      "text": "e7404f03366915ef36bfe6711d5c043320dcca4603d5a60751dcaa2937c70213",
+      "sourceUtf16": 71,
+      "outcome": {
+        "kind": "success",
+        "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde"
+      },
+      "nodes": [
+        {
+          "value": "64914894ccef760a1cb3062c6f387ae769ab17f61ab2780015a2a60fb0f3b0ab",
+          "parentTag": "style",
+          "parentClass": "star-pagination other",
+          "tail": false
+        },
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [1],
+      "diagnostics": [
+        {
+          "domain": "HTML",
+          "type": "ERR_TAG_NAME_MISMATCH",
+          "level": "ERROR",
+          "depthLimit": false
+        }
+      ]
+    },
+    {
+      "name": "parent:script:",
+      "text": "451f993db767af5852ffaf80989785e3f94a8c92f280de0aad8f7816a1a0e3bb",
+      "sourceUtf16": 43,
+      "outcome": {
+        "kind": "success",
+        "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde"
+      },
+      "nodes": [
+        {
+          "value": "64914894ccef760a1cb3062c6f387ae769ab17f61ab2780015a2a60fb0f3b0ab",
+          "parentTag": "script",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [1],
+      "diagnostics": [
+        {
+          "domain": "HTML",
+          "type": "ERR_TAG_NAME_MISMATCH",
+          "level": "ERROR",
+          "depthLimit": false
+        }
+      ]
+    },
+    {
+      "name": "parent:script: class=\"star-pagination\"",
+      "text": "8c80f58215bcd70d91dbbc92a02ca41828913a92c2e2dce12c8ab02f52d1370e",
+      "sourceUtf16": 67,
+      "outcome": {
+        "kind": "success",
+        "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde"
+      },
+      "nodes": [
+        {
+          "value": "64914894ccef760a1cb3062c6f387ae769ab17f61ab2780015a2a60fb0f3b0ab",
+          "parentTag": "script",
+          "parentClass": "star-pagination",
+          "tail": false
+        },
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [1],
+      "diagnostics": [
+        {
+          "domain": "HTML",
+          "type": "ERR_TAG_NAME_MISMATCH",
+          "level": "ERROR",
+          "depthLimit": false
+        }
+      ]
+    },
+    {
+      "name": "parent:script: class=\"star-pagination other\"",
+      "text": "ecb29c4a0a782c5f3bb0ce34dba44993430531affc740e0c8a6db6dccc5631f9",
+      "sourceUtf16": 73,
+      "outcome": {
+        "kind": "success",
+        "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde"
+      },
+      "nodes": [
+        {
+          "value": "64914894ccef760a1cb3062c6f387ae769ab17f61ab2780015a2a60fb0f3b0ab",
+          "parentTag": "script",
+          "parentClass": "star-pagination other",
+          "tail": false
+        },
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [1],
+      "diagnostics": [
+        {
+          "domain": "HTML",
+          "type": "ERR_TAG_NAME_MISMATCH",
+          "level": "ERROR",
+          "depthLimit": false
+        }
+      ]
+    },
+    {
+      "name": "parent:page-number:",
+      "text": "ea268b8db28222937a2a317c6821144afab8a048ac0507df6e948c20879c1cf0",
+      "sourceUtf16": 53,
+      "outcome": {
+        "kind": "success",
+        "value": "9667db2669fc2aafafaacf6068cbcd6ee2df01de786df7df6af5fb8b9e9c871f"
+      },
+      "nodes": [
+        {
+          "value": "d79f823a641be970fc652ce7dfb45aaf4eee51c2bb945be53f7b2b2e17b02545",
+          "parentTag": "page-number",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "abc024d3bc060c55b965b30dff39b3b45d66292cfb6a4dd539f4d96aed34bc69",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "472359c75dec28e8454b9722bfd92bcb1011b8d0af249eee2268656471c55bf7",
+          "parentTag": "page-number",
+          "parentClass": null,
+          "tail": true
+        },
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "span",
+          "parentClass": null,
+          "tail": true
+        }
+      ],
+      "selected": [1, 3],
+      "diagnostics": [
+        {
+          "domain": "HTML",
+          "type": "HTML_UNKNOWN_TAG",
+          "level": "ERROR",
+          "depthLimit": false
+        }
+      ]
+    },
+    {
+      "name": "parent:page-number: class=\"star-pagination\"",
+      "text": "8e371960849a19d911c8c31cc5cadf804ed3875945c2deae9d4cc2b4be91ae22",
+      "sourceUtf16": 77,
+      "outcome": {
+        "kind": "success",
+        "value": "9667db2669fc2aafafaacf6068cbcd6ee2df01de786df7df6af5fb8b9e9c871f"
+      },
+      "nodes": [
+        {
+          "value": "d79f823a641be970fc652ce7dfb45aaf4eee51c2bb945be53f7b2b2e17b02545",
+          "parentTag": "page-number",
+          "parentClass": "star-pagination",
+          "tail": false
+        },
+        {
+          "value": "abc024d3bc060c55b965b30dff39b3b45d66292cfb6a4dd539f4d96aed34bc69",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "472359c75dec28e8454b9722bfd92bcb1011b8d0af249eee2268656471c55bf7",
+          "parentTag": "page-number",
+          "parentClass": "star-pagination",
+          "tail": true
+        },
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "span",
+          "parentClass": null,
+          "tail": true
+        }
+      ],
+      "selected": [1, 3],
+      "diagnostics": [
+        {
+          "domain": "HTML",
+          "type": "HTML_UNKNOWN_TAG",
+          "level": "ERROR",
+          "depthLimit": false
+        }
+      ]
+    },
+    {
+      "name": "parent:page-number: class=\"star-pagination other\"",
+      "text": "6580671a0a51333634ab9e13f0b2b1d9e3d1300b85428d1c6cce582be234d4ee",
+      "sourceUtf16": 83,
+      "outcome": {
+        "kind": "success",
+        "value": "9667db2669fc2aafafaacf6068cbcd6ee2df01de786df7df6af5fb8b9e9c871f"
+      },
+      "nodes": [
+        {
+          "value": "d79f823a641be970fc652ce7dfb45aaf4eee51c2bb945be53f7b2b2e17b02545",
+          "parentTag": "page-number",
+          "parentClass": "star-pagination other",
+          "tail": false
+        },
+        {
+          "value": "abc024d3bc060c55b965b30dff39b3b45d66292cfb6a4dd539f4d96aed34bc69",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "472359c75dec28e8454b9722bfd92bcb1011b8d0af249eee2268656471c55bf7",
+          "parentTag": "page-number",
+          "parentClass": "star-pagination other",
+          "tail": true
+        },
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "span",
+          "parentClass": null,
+          "tail": true
+        }
+      ],
+      "selected": [1, 3],
+      "diagnostics": [
+        {
+          "domain": "HTML",
+          "type": "HTML_UNKNOWN_TAG",
+          "level": "ERROR",
+          "depthLimit": false
+        }
+      ]
+    },
+    {
+      "name": "parent:title:",
+      "text": "71eb671a24897799e75fe18942614f17d59e08d97f2412bece19e7b55107e97a",
+      "sourceUtf16": 41,
+      "outcome": {
+        "kind": "success",
+        "value": "06f7107c4a3b5076812babb6282217682732e8479c47d29367994695b1fcc036"
+      },
+      "nodes": [
+        {
+          "value": "d79f823a641be970fc652ce7dfb45aaf4eee51c2bb945be53f7b2b2e17b02545",
+          "parentTag": "title",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "abc024d3bc060c55b965b30dff39b3b45d66292cfb6a4dd539f4d96aed34bc69",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "472359c75dec28e8454b9722bfd92bcb1011b8d0af249eee2268656471c55bf7",
+          "parentTag": "title",
+          "parentClass": null,
+          "tail": true
+        },
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [0, 1, 2, 3],
+      "diagnostics": []
+    },
+    {
+      "name": "parent:title: class=\"star-pagination\"",
+      "text": "9c792be6b07d9bce6fae24f7ee574af4f783f323423ad4e2c72752d8ef863c90",
+      "sourceUtf16": 65,
+      "outcome": {
+        "kind": "success",
+        "value": "9667db2669fc2aafafaacf6068cbcd6ee2df01de786df7df6af5fb8b9e9c871f"
+      },
+      "nodes": [
+        {
+          "value": "d79f823a641be970fc652ce7dfb45aaf4eee51c2bb945be53f7b2b2e17b02545",
+          "parentTag": "title",
+          "parentClass": "star-pagination",
+          "tail": false
+        },
+        {
+          "value": "abc024d3bc060c55b965b30dff39b3b45d66292cfb6a4dd539f4d96aed34bc69",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "472359c75dec28e8454b9722bfd92bcb1011b8d0af249eee2268656471c55bf7",
+          "parentTag": "title",
+          "parentClass": "star-pagination",
+          "tail": true
+        },
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [1, 3],
+      "diagnostics": []
+    },
+    {
+      "name": "parent:title: class=\"star-pagination other\"",
+      "text": "d5356844e96e30e00f066a895e1b04914329485d8827d3446f78f870989ba6fb",
+      "sourceUtf16": 71,
+      "outcome": {
+        "kind": "success",
+        "value": "06f7107c4a3b5076812babb6282217682732e8479c47d29367994695b1fcc036"
+      },
+      "nodes": [
+        {
+          "value": "d79f823a641be970fc652ce7dfb45aaf4eee51c2bb945be53f7b2b2e17b02545",
+          "parentTag": "title",
+          "parentClass": "star-pagination other",
+          "tail": false
+        },
+        {
+          "value": "abc024d3bc060c55b965b30dff39b3b45d66292cfb6a4dd539f4d96aed34bc69",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "472359c75dec28e8454b9722bfd92bcb1011b8d0af249eee2268656471c55bf7",
+          "parentTag": "title",
+          "parentClass": "star-pagination other",
+          "tail": true
+        },
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "p",
+          "parentClass": null,
+          "tail": false
+        }
+      ],
+      "selected": [0, 1, 2, 3],
+      "diagnostics": []
+    },
+    {
+      "name": "parent:textarea:",
+      "text": "4d8132ceeb22691bc3990d6f101850b338cf7f5d3b4689a3530bbe8a25acffa7",
+      "sourceUtf16": 47,
+      "outcome": {
+        "kind": "success",
+        "value": "06f7107c4a3b5076812babb6282217682732e8479c47d29367994695b1fcc036"
+      },
+      "nodes": [
+        {
+          "value": "d79f823a641be970fc652ce7dfb45aaf4eee51c2bb945be53f7b2b2e17b02545",
+          "parentTag": "textarea",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "abc024d3bc060c55b965b30dff39b3b45d66292cfb6a4dd539f4d96aed34bc69",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "472359c75dec28e8454b9722bfd92bcb1011b8d0af249eee2268656471c55bf7",
+          "parentTag": "textarea",
+          "parentClass": null,
+          "tail": true
+        },
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "span",
+          "parentClass": null,
+          "tail": true
+        }
+      ],
+      "selected": [0, 1, 2, 3],
+      "diagnostics": []
+    },
+    {
+      "name": "parent:textarea: class=\"star-pagination\"",
+      "text": "ee9a17f554a1d7125fca37b7ab1f02ffb65d2f1c2c0e3b65b260315e3f605f89",
+      "sourceUtf16": 71,
+      "outcome": {
+        "kind": "success",
+        "value": "9667db2669fc2aafafaacf6068cbcd6ee2df01de786df7df6af5fb8b9e9c871f"
+      },
+      "nodes": [
+        {
+          "value": "d79f823a641be970fc652ce7dfb45aaf4eee51c2bb945be53f7b2b2e17b02545",
+          "parentTag": "textarea",
+          "parentClass": "star-pagination",
+          "tail": false
+        },
+        {
+          "value": "abc024d3bc060c55b965b30dff39b3b45d66292cfb6a4dd539f4d96aed34bc69",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "472359c75dec28e8454b9722bfd92bcb1011b8d0af249eee2268656471c55bf7",
+          "parentTag": "textarea",
+          "parentClass": "star-pagination",
+          "tail": true
+        },
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "span",
+          "parentClass": null,
+          "tail": true
+        }
+      ],
+      "selected": [1, 3],
+      "diagnostics": []
+    },
+    {
+      "name": "parent:textarea: class=\"star-pagination other\"",
+      "text": "04969be4248cc7fa43876ffb2e8b4ed6c6cbf70ac871d6dadcdacdca94bd6e99",
+      "sourceUtf16": 77,
+      "outcome": {
+        "kind": "success",
+        "value": "06f7107c4a3b5076812babb6282217682732e8479c47d29367994695b1fcc036"
+      },
+      "nodes": [
+        {
+          "value": "d79f823a641be970fc652ce7dfb45aaf4eee51c2bb945be53f7b2b2e17b02545",
+          "parentTag": "textarea",
+          "parentClass": "star-pagination other",
+          "tail": false
+        },
+        {
+          "value": "abc024d3bc060c55b965b30dff39b3b45d66292cfb6a4dd539f4d96aed34bc69",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "472359c75dec28e8454b9722bfd92bcb1011b8d0af249eee2268656471c55bf7",
+          "parentTag": "textarea",
+          "parentClass": "star-pagination other",
+          "tail": true
+        },
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "span",
+          "parentClass": null,
+          "tail": true
+        }
+      ],
+      "selected": [0, 1, 2, 3],
+      "diagnostics": []
+    },
+    {
+      "name": "parent:noscript:",
+      "text": "d014039a507e1e0c0fd5bd0200eb8564ef01ed14495b8a4901ae5a042f5e2b60",
+      "sourceUtf16": 47,
+      "outcome": {
+        "kind": "success",
+        "value": "06f7107c4a3b5076812babb6282217682732e8479c47d29367994695b1fcc036"
+      },
+      "nodes": [
+        {
+          "value": "d79f823a641be970fc652ce7dfb45aaf4eee51c2bb945be53f7b2b2e17b02545",
+          "parentTag": "noscript",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "abc024d3bc060c55b965b30dff39b3b45d66292cfb6a4dd539f4d96aed34bc69",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "472359c75dec28e8454b9722bfd92bcb1011b8d0af249eee2268656471c55bf7",
+          "parentTag": "noscript",
+          "parentClass": null,
+          "tail": true
+        },
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "div",
+          "parentClass": null,
+          "tail": true
+        }
+      ],
+      "selected": [0, 1, 2, 3],
+      "diagnostics": []
+    },
+    {
+      "name": "parent:noscript: class=\"star-pagination\"",
+      "text": "516abce66c4e6a8b03cbc17e6dbd66f366b259ec6e69f8aa0cbf31f92367945e",
+      "sourceUtf16": 71,
+      "outcome": {
+        "kind": "success",
+        "value": "9667db2669fc2aafafaacf6068cbcd6ee2df01de786df7df6af5fb8b9e9c871f"
+      },
+      "nodes": [
+        {
+          "value": "d79f823a641be970fc652ce7dfb45aaf4eee51c2bb945be53f7b2b2e17b02545",
+          "parentTag": "noscript",
+          "parentClass": "star-pagination",
+          "tail": false
+        },
+        {
+          "value": "abc024d3bc060c55b965b30dff39b3b45d66292cfb6a4dd539f4d96aed34bc69",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "472359c75dec28e8454b9722bfd92bcb1011b8d0af249eee2268656471c55bf7",
+          "parentTag": "noscript",
+          "parentClass": "star-pagination",
+          "tail": true
+        },
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "div",
+          "parentClass": null,
+          "tail": true
+        }
+      ],
+      "selected": [1, 3],
+      "diagnostics": []
+    },
+    {
+      "name": "parent:noscript: class=\"star-pagination other\"",
+      "text": "1e953790644d35d1f4c26e83ea1e7d2e16c76e6bac463b5d2b6d18d1dcecd02d",
+      "sourceUtf16": 77,
+      "outcome": {
+        "kind": "success",
+        "value": "06f7107c4a3b5076812babb6282217682732e8479c47d29367994695b1fcc036"
+      },
+      "nodes": [
+        {
+          "value": "d79f823a641be970fc652ce7dfb45aaf4eee51c2bb945be53f7b2b2e17b02545",
+          "parentTag": "noscript",
+          "parentClass": "star-pagination other",
+          "tail": false
+        },
+        {
+          "value": "abc024d3bc060c55b965b30dff39b3b45d66292cfb6a4dd539f4d96aed34bc69",
+          "parentTag": "b",
+          "parentClass": null,
+          "tail": false
+        },
+        {
+          "value": "472359c75dec28e8454b9722bfd92bcb1011b8d0af249eee2268656471c55bf7",
+          "parentTag": "noscript",
+          "parentClass": "star-pagination other",
+          "tail": true
+        },
+        {
+          "value": "5ab955df914a0dc6f687f23829d6fd80e1d63b780c930120b0aa0fc35c1eacde",
+          "parentTag": "div",
+          "parentClass": null,
+          "tail": true
+        }
+      ],
+      "selected": [0, 1, 2, 3],
+      "diagnostics": []
+    }
+  ],
+  "targetProof": null,
+  "divergenceApproval": null
+}

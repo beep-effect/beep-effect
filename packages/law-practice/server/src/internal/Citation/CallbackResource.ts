@@ -1,0 +1,106 @@
+/**
+ * Callback resource data and closed failures; runtime references are operation-local.
+ * @internal
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+import { $LawPracticeServerId } from "@beep/identity/packages";
+import { CitationGroupMember } from "@beep/law-practice-domain/values";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
+import * as S from "effect/Schema";
+import { CitationResourceIdentity } from "./ResourceIdentity.ts";
+
+const $I = $LawPracticeServerId.create("internal/Citation/CallbackResource");
+/**
+ * Normalized adapter resource. Identity, truthiness and presentation are
+ * independent. Unhashable falsy values may remain in prior-full state until
+ * an operation actually attempts to hash them, as in the source.
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export const CitationCallbackResource = S.TaggedUnion({
+  None: {},
+  Registered: { scope: Sha256Hex, slot: S.Natural, value: S.Json },
+  Hashable: { identity: CitationResourceIdentity, truthy: S.Boolean, value: S.Json },
+  Unhashable: { truthy: S.Boolean, value: S.Json },
+}).pipe(
+  $I.annoteSchema("CitationCallbackResource", {
+    description:
+      "Private adapter resource with explicit hashing and truth semantics; presentation is not an equality key.",
+  })
+);
+/**
+ * Schema-derived normalized resource.
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export type CitationCallbackResource = typeof CitationCallbackResource.Type;
+/**
+ * Registry-issued origin, captured before owner close. Presentation fields
+ * cannot establish whether an object is a canonical Resource or host object.
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export const CitationCallbackResourceOrigin = S.TaggedUnion({
+  Canonical: {
+    scope: Sha256Hex,
+    slot: S.Natural,
+    reference: CitationGroupMember,
+    missingPageIdentityHash: S.OptionFromNullOr(S.BigIntFromString),
+  },
+  Host: { scope: Sha256Hex, slot: S.Natural },
+}).pipe(
+  $I.annoteSchema("CitationCallbackResourceOrigin", {
+    description: "Authenticated operation registry classification, independent of resource presentation.",
+  })
+);
+/**
+ * Schema-derived registry origin.
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export type CitationCallbackResourceOrigin = typeof CitationCallbackResourceOrigin.Type;
+
+/**
+ * Resource returned by a contextual callback before dispatcher append.
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export class CitationCallbackResult extends S.Opaque<CitationCallbackResult, { readonly brand: unique symbol }>()(
+  S.Struct({ resource: CitationCallbackResource }).pipe(
+    $I.annoteSchema("CitationCallbackResult", {
+      description: "Shared contextual callback result; prior-full and Id. inputs retain separate contracts.",
+    })
+  )
+) {}
+const Reason = LiteralKit([
+  "invalid-input",
+  "evidence-failed",
+  "limit-exceeded",
+  "callback-failed",
+  "identity-failed",
+  "unhashable-resource",
+]).pipe(
+  $I.annoteSchema("Reason", { description: "Finite private callback-session failure reasons without caller values." })
+);
+/**
+ * Private redacted callback/session failure.
+ * @internal
+ * @category errors
+ * @since 0.0.0
+ */
+export class CitationCallbackFailure extends S.TaggedError<CitationCallbackFailure, { readonly brand: unique symbol }>(
+  $I`CitationCallbackFailure`
+)(
+  "CitationCallbackFailure",
+  { reason: Reason },
+  $I.annoteError<CitationCallbackFailure>("CitationCallbackFailure", {
+    description: "Callback resolution failed without resource presentation, source text or nested causes.",
+  })
+) {}
