@@ -9,6 +9,7 @@ import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
@@ -16,10 +17,13 @@ import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import type { NamedTransform, SpecSource } from "@beep/codegen-kit";
@@ -56,6 +60,38 @@ const CodegenKitTestLayer = Layer.mergeAll(
   TestConsole.layer,
   CodegenKit.layer().pipe(Layer.provide(readonlyFormatterPlatform))
 );
+
+// The only writes a generated-file check may perform are to the temporary files the
+// kit itself stages for its unified diff; every other write or directory creation dies.
+const readonlyCheckFileSystem = Layer.effect(
+  FileSystem.FileSystem,
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const staged = MutableHashSet.empty<string>();
+    return FileSystem.make({
+      ...fs,
+      makeTempFileScoped: (options) =>
+        fs
+          .makeTempFileScoped(options)
+          .pipe(Effect.tap((temporaryPath) => Effect.sync(() => MutableHashSet.add(staged, temporaryPath)))),
+      writeFile: (path, data, options) =>
+        MutableHashSet.has(staged, path)
+          ? fs.writeFile(path, data, options)
+          : Effect.die(`A generated-file check attempted to write bytes to ${path}`),
+      makeDirectory: (path) => Effect.die(`A generated-file check attempted to create the directory ${path}`),
+    });
+  })
+);
+const ReadonlyCheckKitLayer = CodegenKit.layer().pipe(Layer.provide(readonlyCheckFileSystem));
+
+const checkWithoutWrites = Effect.fn("CodegenKitTest.checkWithoutWrites")(function* (
+  modules: ReadonlyArray<GeneratedModule>
+) {
+  return yield* Layer.build(ReadonlyCheckKitLayer).pipe(
+    Effect.flatMap((context) => Context.get(context, CodegenKit).checkModules(modules)),
+    Effect.scoped
+  );
+});
 
 const config = (outputPath: string) =>
   GenerateConfig.make({
@@ -1746,6 +1782,94 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit ACP 
       expect(output).toContain('import { Example } from "@beep/codegen-kit-fixture/schema-v1"');
       expect(output).toContain('import type { Example } from "@beep/codegen-kit-fixture/schema-v1"');
       expect(output).not.toContain('from "@beep/codegen-kit-fixture/schema"');
+    })
+  );
+
+  it.effect("checks project-formatted modules without rewriting an existing target", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const directory = yield* fs.makeTempDirectoryScoped({
+        directory: import.meta.dirname,
+        prefix: "codegen-kit-test-",
+      });
+      const target = path.join(directory, "Current.ts");
+      // Fits the repository's 120-column policy, but not the OpenAPI 80-column policy.
+      const content =
+        'export const palette = { alpha: "aaaaaaaaaaaa", beta: "bbbbbbbbbbbb", gamma: "cccccccccccc" };\n';
+      yield* fs.writeFileString(target, content);
+      const reports = yield* checkWithoutWrites([GeneratedModule.make({ path: target, content })]);
+      expect(A.map(reports, (report) => report.status)).toEqual(["clean"]);
+      const actual = yield* fs.readFileString(target);
+      expect(actual).toBe(content);
+    })
+  );
+
+  it.effect("reports dirty and missing generated modules while preserving source and directories", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const directory = yield* fs.makeTempDirectoryScoped({
+        directory: import.meta.dirname,
+        prefix: "codegen-kit-test-",
+      });
+      const target = path.join(directory, "Dirty.ts");
+      const missingDirectory = path.join(directory, "absent");
+      const missing = path.join(missingDirectory, "Missing.ts");
+      const dirty = "unfinished user edits that are not valid TypeScript\n";
+      yield* fs.writeFileString(target, dirty);
+      const failure = yield* checkWithoutWrites([
+        GeneratedModule.make({ path: target, content: "export const answer = 42;\n" }),
+        GeneratedModule.make({ path: missing, content: "export const missing = true;\n" }),
+      ]).pipe(Effect.flip);
+      expect(failure._tag).toBe("CodegenDriftError");
+      const reports = failure._tag === "CodegenDriftError" ? failure.reports : [];
+      expect(A.map(reports, (report) => [report.path, report.status])).toEqual([
+        [target, "changed"],
+        [missing, "missing"],
+      ]);
+      const errorLines = yield* TestConsole.errorLines;
+      const printed = pipe(errorLines, A.filter(P.isString), A.join("\n"));
+      expect(printed).toContain(`--- ${target}`);
+      expect(printed).toContain(`--- ${missing}`);
+      expect(printed).toContain("+export const answer = 42;");
+      const actual = yield* fs.readFileString(target);
+      expect(actual).toBe(dirty);
+      const present = yield* fs.exists(missingDirectory);
+      expect(present).toBe(false);
+    })
+  );
+
+  it.effect("refuses formatter failures without replacing a generated target", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const directory = yield* fs.makeTempDirectoryScoped({
+        directory: import.meta.dirname,
+        prefix: "codegen-kit-test-",
+      });
+      const target = path.join(directory, "Invalid.ts");
+      const current = "export const retained = true;\n";
+      yield* fs.writeFileString(target, current);
+      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      // The repository allows formatting syntax errors. Use an actual failing
+      // process with nonempty stdout to test exit-status rejection directly.
+      const rejectedFormatter = ChildProcessSpawner.make(() =>
+        spawner.spawn(
+          ChildProcess.make(
+            process.execPath,
+            ["--eval", 'process.stdout.write("export const generated = true;\\n"); process.exitCode = 7;'],
+            { stdin: "ignore", stdout: "pipe", stderr: "ignore" }
+          )
+        )
+      );
+      const failure = yield* checkWithoutWrites([
+        GeneratedModule.make({ path: target, content: "export const generated = true;\n" }),
+      ]).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, rejectedFormatter), Effect.flip);
+      expect(failure._tag).toBe("CodegenFormatError");
+      expect(failure.message).toContain("exit code 7");
+      const actual = yield* fs.readFileString(target);
+      expect(actual).toBe(current);
     })
   );
 
