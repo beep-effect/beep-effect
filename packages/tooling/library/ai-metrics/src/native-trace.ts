@@ -552,7 +552,9 @@ const projectSpan = Effect.fnUntraced(function* (
     ? readManagedController(attributes, timing).pipe(Effect.asSome)
     : Effect.succeed(O.none<ManagedControllerObservation>());
   if (O.isSome(controller)) {
-    const expectedIdentity = yield* managedControllerTraceIdentity(controller.value.launchId);
+    const expectedIdentity = yield* managedControllerTraceIdentity(controller.value.launchId).pipe(
+      Effect.mapError(() => failure("hash-failure"))
+    );
     if (traceId !== expectedIdentity.traceId || spanId !== expectedIdentity.spanId || O.isSome(parentSpanId))
       return yield* failure("invalid-envelope");
   }

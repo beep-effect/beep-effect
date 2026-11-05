@@ -374,6 +374,30 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) => {
     })
   );
 
+  it.effect("retries the whole request when only the controller identity hash fails", () =>
+    Effect.gen(function* () {
+      const body = yield* encodeManagedControllerObservation(observation);
+      const subtle = globalThis.crypto.subtle;
+      const digest = subtle.digest.bind(subtle);
+      const isIdentityInput = (data: Parameters<SubtleCrypto["digest"]>[1]) => {
+        const bytes = data instanceof ArrayBuffer ? new Uint8Array(data) : new Uint8Array(data.buffer);
+        return Str.startsWith("managed-controller-trace/v1:")(new TextDecoder().decode(bytes));
+      };
+      const spy = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          vi.spyOn(subtle, "digest").mockImplementation((algorithm, data) => {
+            if (isIdentityInput(data)) throw new Error("PRIVATE_DIGEST_FAILURE");
+            return digest(algorithm, data);
+          })
+        ),
+        (mock) => Effect.sync(() => mock.mockRestore())
+      );
+      const error = yield* Effect.flip(projectNativeTraceRequest(request(body)));
+      expect(error).toEqual(NativeTraceError.make({ reason: "hash-failure" }));
+      expect(spy).toHaveBeenCalled();
+    })
+  );
+
   it.effect("returns a content-free encoding error when the protobuf writer fails", () =>
     Effect.gen(function* () {
       const writer = yield* Effect.acquireRelease(
