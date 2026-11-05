@@ -1,0 +1,2096 @@
+{
+  "schemaVersion": "citation-host-resources/v1",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "python": "3.11.15",
+  "pythonHashSeed": "0",
+  "versions": {
+    "eyecite": "2.7.6",
+    "reporters-db": "3.2.53",
+    "courts-db": "0.10.22"
+  },
+  "license": "BSD-2-Clause",
+  "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
+  "lockSha256": "864cf7a1ef7ebafe8159b9691a42a2dfe980cf0e609b5fd1899bcc5703b91e9a",
+  "producerSha256": "ecb9252eb35f21792cd18f18ff1457e40e9478e9c0a018acb53956181a75825c",
+  "sources": {
+    "models.py": "2297f2f3a036a5674346e952fd6b03c8d4906c1130ef43157b7e2d79d5bdf38a",
+    "resolve.py": "651ede8c2a2d5df9ec9c9f1145530a6de7fca15304d1816b7f620a81ab3f2044"
+  },
+  "scope": "Controlled custom-key protocol, one actual canonical Resource and default full/Id callbacks; no automatic native primitive normalization, set uniqueness or reentrant mutation proof.",
+  "normalizedHashes": {
+    "1465210507262904853": "1465210507262904853",
+    "1986750081022884797": "1986750081022884797",
+    "20": "20",
+    "20433494154732436405": "1986750081022884797",
+    "5": "5",
+    "7": "7"
+  },
+  "cases": [
+    {
+      "name": "canonical-first-reflection",
+      "hosts": [
+        {
+          "hashRaw": "1986750081022884797",
+          "mode": "not-implemented",
+          "token": "same",
+          "truth": true,
+          "truthAfterHash": null,
+          "failHash": false,
+          "failEq": false,
+          "failBool": false
+        }
+      ],
+      "keys": [
+        {
+          "kind": "canonical"
+        },
+        {
+          "kind": "host",
+          "host": 0
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "set",
+            "key": 0,
+            "value": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 0,
+              "presentation": {
+                "kind": "canonical",
+                "slot": 0
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 1,
+            "value": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 1,
+              "presentation": {
+                "kind": "canonical",
+                "slot": 0
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "1986750081022884797"
+            },
+            {
+              "kind": "resource-eq",
+              "slot": 0,
+              "other": {
+                "kind": "host",
+                "slot": 0
+              }
+            },
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "1986750081022884797"
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": 1
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 1,
+              "presentation": {
+                "kind": "canonical",
+                "slot": 0
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "1986750081022884797"
+            },
+            {
+              "kind": "resource-eq",
+              "slot": 0,
+              "other": {
+                "kind": "host",
+                "slot": 0
+              }
+            },
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "1986750081022884797"
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": 1
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 1,
+              "presentation": {
+                "kind": "canonical",
+                "slot": 0
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "host-first-reflection",
+      "hosts": [
+        {
+          "hashRaw": "1986750081022884797",
+          "mode": "not-implemented",
+          "token": "same",
+          "truth": true,
+          "truthAfterHash": null,
+          "failHash": false,
+          "failEq": false,
+          "failBool": false
+        }
+      ],
+      "keys": [
+        {
+          "kind": "host",
+          "host": 0
+        },
+        {
+          "kind": "canonical"
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "set",
+            "key": 0,
+            "value": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 0,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "1986750081022884797"
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 1,
+            "value": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 1,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [
+            {
+              "kind": "eq",
+              "slot": 0,
+              "other": {
+                "kind": "canonical",
+                "slot": 1
+              }
+            },
+            {
+              "kind": "resource-eq",
+              "slot": 1,
+              "other": {
+                "kind": "host",
+                "slot": 0
+              }
+            },
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "1986750081022884797"
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": 1
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 1,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [
+            {
+              "kind": "eq",
+              "slot": 0,
+              "other": {
+                "kind": "canonical",
+                "slot": 1
+              }
+            },
+            {
+              "kind": "resource-eq",
+              "slot": 1,
+              "other": {
+                "kind": "host",
+                "slot": 0
+              }
+            },
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "1986750081022884797"
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": 1
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 1,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "1986750081022884797"
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "canonical-first-wide-raw-hash",
+      "hosts": [
+        {
+          "hashRaw": "20433494154732436405",
+          "mode": "normalized",
+          "token": "same",
+          "truth": true,
+          "truthAfterHash": null,
+          "failHash": false,
+          "failEq": false,
+          "failBool": false
+        }
+      ],
+      "keys": [
+        {
+          "kind": "canonical"
+        },
+        {
+          "kind": "host",
+          "host": 0
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "set",
+            "key": 0,
+            "value": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 0,
+              "presentation": {
+                "kind": "canonical",
+                "slot": 0
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 1,
+            "value": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 0,
+              "presentation": {
+                "kind": "canonical",
+                "slot": 0
+              }
+            },
+            {
+              "objectId": 1,
+              "slot": 1,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "20433494154732436405"
+            },
+            {
+              "kind": "resource-eq",
+              "slot": 0,
+              "other": {
+                "kind": "host",
+                "slot": 0
+              }
+            },
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "20433494154732436405"
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": 1
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 0,
+              "presentation": {
+                "kind": "canonical",
+                "slot": 0
+              }
+            },
+            {
+              "objectId": 1,
+              "slot": 1,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "20433494154732436405"
+            },
+            {
+              "kind": "resource-eq",
+              "slot": 0,
+              "other": {
+                "kind": "host",
+                "slot": 0
+              }
+            },
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "20433494154732436405"
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": 0
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 0,
+              "presentation": {
+                "kind": "canonical",
+                "slot": 0
+              }
+            },
+            {
+              "objectId": 1,
+              "slot": 1,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "host-first-wide-raw-hash",
+      "hosts": [
+        {
+          "hashRaw": "20433494154732436405",
+          "mode": "normalized",
+          "token": "same",
+          "truth": true,
+          "truthAfterHash": null,
+          "failHash": false,
+          "failEq": false,
+          "failBool": false
+        }
+      ],
+      "keys": [
+        {
+          "kind": "host",
+          "host": 0
+        },
+        {
+          "kind": "canonical"
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "set",
+            "key": 0,
+            "value": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 0,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "20433494154732436405"
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 1,
+            "value": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 1,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [
+            {
+              "kind": "eq",
+              "slot": 0,
+              "other": {
+                "kind": "canonical",
+                "slot": 1
+              }
+            },
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "20433494154732436405"
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": 1
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 1,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [
+            {
+              "kind": "eq",
+              "slot": 0,
+              "other": {
+                "kind": "canonical",
+                "slot": 1
+              }
+            },
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "20433494154732436405"
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": 1
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 1,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "20433494154732436405"
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "false-equality-pointer-and-alias",
+      "hosts": [
+        {
+          "hashRaw": "7",
+          "mode": "false",
+          "token": "same",
+          "truth": true,
+          "truthAfterHash": null,
+          "failHash": false,
+          "failEq": false,
+          "failBool": false
+        },
+        {
+          "hashRaw": "7",
+          "mode": "false",
+          "token": "same",
+          "truth": true,
+          "truthAfterHash": null,
+          "failHash": false,
+          "failEq": false,
+          "failBool": false
+        }
+      ],
+      "keys": [
+        {
+          "kind": "host",
+          "host": 0
+        },
+        {
+          "kind": "host",
+          "host": 1
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "set",
+            "key": 0,
+            "value": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 0,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "7"
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": 0
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 0,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "7"
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 1,
+            "value": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 0,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            },
+            {
+              "objectId": 1,
+              "slot": 1,
+              "presentation": {
+                "kind": "host",
+                "slot": 1,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [
+            {
+              "kind": "hash",
+              "slot": 1,
+              "raw": "7"
+            },
+            {
+              "kind": "eq",
+              "slot": 0,
+              "other": {
+                "kind": "host",
+                "slot": 1
+              }
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": 1
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 0,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            },
+            {
+              "objectId": 1,
+              "slot": 1,
+              "presentation": {
+                "kind": "host",
+                "slot": 1,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [
+            {
+              "kind": "hash",
+              "slot": 1,
+              "raw": "7"
+            },
+            {
+              "kind": "eq",
+              "slot": 0,
+              "other": {
+                "kind": "host",
+                "slot": 1
+              }
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "alias",
+            "key": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": 0
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 0,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            },
+            {
+              "objectId": 1,
+              "slot": 1,
+              "presentation": {
+                "kind": "host",
+                "slot": 1,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 2
+          },
+          "outcome": {
+            "status": "value",
+            "result": 0
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 0,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            },
+            {
+              "objectId": 1,
+              "slot": 1,
+              "presentation": {
+                "kind": "host",
+                "slot": 1,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "7"
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "live-hash-and-truth",
+      "hosts": [
+        {
+          "hashRaw": "5",
+          "mode": "token",
+          "token": "same",
+          "truth": true,
+          "truthAfterHash": null,
+          "failHash": false,
+          "failEq": false,
+          "failBool": false
+        }
+      ],
+      "keys": [
+        {
+          "kind": "host",
+          "host": 0
+        },
+        {
+          "kind": "canonical"
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "append",
+            "key": 0,
+            "member": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 4,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], [], [0]],
+          "trace": [
+            {
+              "kind": "bool",
+              "slot": 0,
+              "result": true
+            },
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "5"
+            },
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "5"
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "truth",
+            "host": 0,
+            "value": false
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 4,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], [], [0]],
+          "trace": [],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "append",
+            "key": 0,
+            "member": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 4,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], [], [0]],
+          "trace": [
+            {
+              "kind": "bool",
+              "slot": 0,
+              "result": false
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "hashRaw",
+            "host": 0,
+            "value": "20"
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 4,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], [], [0]],
+          "trace": [],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 0,
+            "value": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 4,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            },
+            {
+              "objectId": 0,
+              "slot": 1,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], [], [0]],
+          "trace": [
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "20"
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "remove",
+            "key": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": 1
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 4,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], [], [0]],
+          "trace": [
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "20"
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "clear"
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [],
+          "lists": [[], [], [], [], [0]],
+          "trace": [],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "truth",
+            "host": 0,
+            "value": true
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [],
+          "lists": [[], [], [], [], [0]],
+          "trace": [],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "append",
+            "key": 0,
+            "member": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 5,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], [], [0], [1]],
+          "trace": [
+            {
+              "kind": "bool",
+              "slot": 0,
+              "result": true
+            },
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "20"
+            },
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "20"
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "live-canonical-access",
+      "hosts": [
+        {
+          "hashRaw": "1986750081022884797",
+          "mode": "citation",
+          "token": "1",
+          "truth": true,
+          "truthAfterHash": null,
+          "failHash": false,
+          "failEq": false,
+          "failBool": false
+        }
+      ],
+      "keys": [
+        {
+          "kind": "host",
+          "host": 0
+        },
+        {
+          "kind": "canonical"
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "set",
+            "key": 0,
+            "value": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 0,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "1"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "1986750081022884797"
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "1"
+          }
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": 0
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 0,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "1"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [
+            {
+              "kind": "eq",
+              "slot": 0,
+              "other": {
+                "kind": "canonical",
+                "slot": 1
+              }
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "1"
+          }
+        },
+        {
+          "operation": {
+            "kind": "page",
+            "value": "2"
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 0,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "1"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "1"
+          }
+        },
+        {
+          "operation": {
+            "kind": "clear"
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [],
+          "lists": [[], [], [], []],
+          "trace": [],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "1"
+          }
+        },
+        {
+          "operation": {
+            "kind": "hashRaw",
+            "host": 0,
+            "value": "1465210507262904853"
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [],
+          "lists": [[], [], [], []],
+          "trace": [],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "1"
+          }
+        },
+        {
+          "operation": {
+            "kind": "token",
+            "host": 0,
+            "value": "2"
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [],
+          "lists": [[], [], [], []],
+          "trace": [],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "2"
+          }
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 0,
+            "value": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 1,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "2"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "1465210507262904853"
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "2"
+          }
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": 1
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 1,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "2"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [
+            {
+              "kind": "eq",
+              "slot": 0,
+              "other": {
+                "kind": "canonical",
+                "slot": 1
+              }
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "2"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hash-equality-truth-errors",
+      "hosts": [
+        {
+          "hashRaw": "7",
+          "mode": "token",
+          "token": "same",
+          "truth": true,
+          "truthAfterHash": null,
+          "failHash": false,
+          "failEq": false,
+          "failBool": false
+        },
+        {
+          "hashRaw": "7",
+          "mode": "token",
+          "token": "same",
+          "truth": true,
+          "truthAfterHash": null,
+          "failHash": false,
+          "failEq": false,
+          "failBool": false
+        }
+      ],
+      "keys": [
+        {
+          "kind": "host",
+          "host": 0
+        },
+        {
+          "kind": "host",
+          "host": 1
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "set",
+            "key": 0,
+            "value": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 0,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [
+            {
+              "kind": "hash",
+              "slot": 0,
+              "raw": "7"
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "flag",
+            "host": 0,
+            "field": "failEq",
+            "value": true
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 0,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 1,
+            "value": 1
+          },
+          "outcome": {
+            "status": "error",
+            "operation": "compare"
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 0,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [
+            {
+              "kind": "hash",
+              "slot": 1,
+              "raw": "7"
+            },
+            {
+              "kind": "eq",
+              "slot": 0,
+              "other": {
+                "kind": "host",
+                "slot": 1
+              }
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "flag",
+            "host": 0,
+            "field": "failEq",
+            "value": false
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 0,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "flag",
+            "host": 1,
+            "field": "failHash",
+            "value": true
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 0,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 1
+          },
+          "outcome": {
+            "status": "error",
+            "operation": "hash"
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 0,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [
+            {
+              "kind": "hash",
+              "slot": 1,
+              "raw": "7"
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "flag",
+            "host": 1,
+            "field": "failHash",
+            "value": false
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 0,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "flag",
+            "host": 0,
+            "field": "failBool",
+            "value": true
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 0,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        },
+        {
+          "operation": {
+            "kind": "append",
+            "key": 0,
+            "member": 0
+          },
+          "outcome": {
+            "status": "error",
+            "operation": "bool"
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "slot": 0,
+              "presentation": {
+                "kind": "host",
+                "slot": 0,
+                "token": "same"
+              }
+            }
+          ],
+          "lists": [[], [], [], []],
+          "trace": [
+            {
+              "kind": "bool",
+              "slot": 0,
+              "result": true
+            }
+          ],
+          "priorPresentation": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          }
+        }
+      ]
+    }
+  ],
+  "callbacks": [
+    {
+      "name": "truthy",
+      "host": {
+        "hashRaw": "1986750081022884797",
+        "mode": "token",
+        "token": "same",
+        "truth": true,
+        "truthAfterHash": null,
+        "failHash": false,
+        "failEq": false,
+        "failBool": false
+      },
+      "trace": [
+        {
+          "kind": "bool",
+          "slot": 0,
+          "result": true
+        },
+        {
+          "kind": "hash",
+          "slot": 0,
+          "raw": "1986750081022884797"
+        },
+        {
+          "kind": "hash",
+          "slot": 0,
+          "raw": "1986750081022884797"
+        },
+        {
+          "kind": "bool",
+          "slot": 0,
+          "result": true
+        },
+        {
+          "kind": "hash",
+          "slot": 0,
+          "raw": "1986750081022884797"
+        },
+        {
+          "kind": "bool",
+          "slot": 0,
+          "result": true
+        },
+        {
+          "kind": "hash",
+          "slot": 0,
+          "raw": "1986750081022884797"
+        }
+      ],
+      "groups": [[0, 1]]
+    },
+    {
+      "name": "falsy",
+      "host": {
+        "hashRaw": "1986750081022884797",
+        "mode": "token",
+        "token": "same",
+        "truth": false,
+        "truthAfterHash": null,
+        "failHash": false,
+        "failEq": false,
+        "failBool": false
+      },
+      "trace": [
+        {
+          "kind": "bool",
+          "slot": 0,
+          "result": false
+        },
+        {
+          "kind": "bool",
+          "slot": 0,
+          "result": false
+        }
+      ],
+      "groups": []
+    },
+    {
+      "name": "truth-changes-in-hash",
+      "host": {
+        "hashRaw": "1986750081022884797",
+        "mode": "token",
+        "token": "same",
+        "truth": true,
+        "truthAfterHash": false,
+        "failHash": false,
+        "failEq": false,
+        "failBool": false
+      },
+      "trace": [
+        {
+          "kind": "bool",
+          "slot": 0,
+          "result": true
+        },
+        {
+          "kind": "hash",
+          "slot": 0,
+          "raw": "1986750081022884797"
+        },
+        {
+          "kind": "hash",
+          "slot": 0,
+          "raw": "1986750081022884797"
+        },
+        {
+          "kind": "bool",
+          "slot": 0,
+          "result": false
+        }
+      ],
+      "groups": [[0]]
+    }
+  ]
+}

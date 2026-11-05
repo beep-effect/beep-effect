@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "claim-performance-coverage-replay/v1",
+  "implementationDigest": "731ef6da4562a3af5ea4278e3fe56a8de5788db0364ca00d8c29d49aaa57b097",
+  "resultSha256": "23d6c4af15c91d813cd540e8750bafb6e4d6f56cea586a9daea79ef2902fd081",
+  "claims": 538,
+  "strict": 39,
+  "parsed": 537,
+  "abstained": 455,
+  "all538RowsEqualPriorParent": true,
+  "all60ServiceReportsByteIdentical": true,
+  "preservation": {
+    "filesChecked": 1213,
+    "originalPathFilesChecked": 1210,
+    "historicalRunnerArtifactsChecked": 3,
+    "activeRunners": [
+      {
+        "path": "packages/law-practice/server/test/evaluation/allowed.main.ts",
+        "sha256": "d774701ac7e444ce165d79d28535a9a556388c515f5859809abf2359fa1b0094"
+      },
+      {
+        "path": "packages/law-practice/server/test/evaluation/iprally-smoke.main.ts",
+        "sha256": "041e4c9ed71c372cc91951d6707c61640958ab490672efbf7d02c3e96bec0813"
+      },
+      {
+        "path": "packages/law-practice/server/test/evaluation/positive.main.ts",
+        "sha256": "061c8a578fca133ca7da71595271568906b2ff474664f6c2e31b60920a607d03"
+      }
+    ],
+    "changed": [],
+    "passingClaimsProtected": 37,
+    "lost": [],
+    "strictMatches": 39,
+    "retentionEvaluated": true,
+    "preserved": true
+  },
+  "privateOutput": "product-coverage-001",
+  "scope": "Parent39 candidate after CI repair; nominal41/policy41 are separate downstream candidates.",
+  "delivery": "PR2706 created after PR2685 merged before positive readiness; previous red and absence of readiness preserved."
+}

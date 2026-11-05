@@ -13,7 +13,7 @@ import { constTrue } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { PosInt } from "../../internal/PosInt.ts";
-import { TextQuote } from "../DurableLocator/index.ts";
+import { TextQuote } from "./TextQuote.model.ts";
 
 const $I = $LawPracticeDomainId.create("values/SourceRef/SourceRef.model");
 
@@ -198,8 +198,8 @@ const SourceRefCropPageCheck = S.makeFilter(
  *
  * **Details**
  *
- * `quote` is the W3C TextQuoteSelector shape shared with
- * `DurableLocator` ({@link TextQuote}). `page` and `crop` decode from optional
+ * `quote` retains the review-source TextQuoteSelector shape
+ * ({@link TextQuote}); it is unverified selector data. `page` and `crop` decode from optional
  * keys into `Option` values and default to `Option.none()` on construction.
  * When both are present, `crop.page` must equal `page`; decoding and `make`
  * reject a crop taken from another page.

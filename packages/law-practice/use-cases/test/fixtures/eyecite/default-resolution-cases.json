@@ -1,0 +1,3603 @@
+{
+  "schemaVersion": "citation-default-resolution-cases/v1",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "producerSha256": "32b2550a76a2ef5341e198b83197eb1c80c809c5dfa75a47b7eda62a8ebfacaf",
+  "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
+  "lockSha256": "864cf7a1ef7ebafe8159b9691a42a2dfe980cf0e609b5fd1899bcc5703b91e9a",
+  "scope": "Default resolution over decoded semantic mentions; no target extraction, custom callbacks or complete parity proof.",
+  "cases": [
+    {
+      "name": "repeat-and-id",
+      "mode": "extracted",
+      "text": "1 U.S. 1. 1 U.S. 1. Id. at 2.",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            }
+          },
+          "start": 0,
+          "end": 8,
+          "quote": "1 U.S. 1"
+        },
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            }
+          },
+          "start": 10,
+          "end": 18,
+          "quote": "1 U.S. 1"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": "at 2",
+              "parenthetical": null
+            }
+          },
+          "start": 20,
+          "end": 28,
+          "quote": "Id. at 2"
+        }
+      ],
+      "editions": [
+        {
+          "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+          "shortName": "U.S."
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1, 2]]
+      }
+    },
+    {
+      "name": "distinct-and-id",
+      "mode": "extracted",
+      "text": "1 U.S. 1; 2 U.S. 2; Id. at 3.",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            }
+          },
+          "start": 0,
+          "end": 8,
+          "quote": "1 U.S. 1"
+        },
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "2",
+              "reporter": "U.S.",
+              "page": "2"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            }
+          },
+          "start": 10,
+          "end": 18,
+          "quote": "2 U.S. 2"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": "at 3",
+              "parenthetical": null
+            }
+          },
+          "start": 20,
+          "end": 28,
+          "quote": "Id. at 3"
+        }
+      ],
+      "editions": [
+        {
+          "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+          "shortName": "U.S."
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0], [1, 2]]
+      }
+    },
+    {
+      "name": "invalid-id-resets",
+      "mode": "extracted",
+      "text": "1 U.S. 1. Id. at 152. Id. at 2.",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            }
+          },
+          "start": 0,
+          "end": 8,
+          "quote": "1 U.S. 1"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": "at 152",
+              "parenthetical": null
+            }
+          },
+          "start": 10,
+          "end": 20,
+          "quote": "Id. at 152"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": "at 2",
+              "parenthetical": null
+            }
+          },
+          "start": 22,
+          "end": 30,
+          "quote": "Id. at 2"
+        }
+      ],
+      "editions": [
+        {
+          "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+          "shortName": "U.S."
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0]]
+      }
+    },
+    {
+      "name": "id-before-full",
+      "mode": "extracted",
+      "text": "Id. at 1. 1 U.S. 1.",
+      "mentions": [
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": "at 1",
+              "parenthetical": null
+            }
+          },
+          "start": 0,
+          "end": 8,
+          "quote": "Id. at 1"
+        },
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            }
+          },
+          "start": 10,
+          "end": 18,
+          "quote": "1 U.S. 1"
+        }
+      ],
+      "editions": [
+        {
+          "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+          "shortName": "U.S."
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[1]]
+      }
+    },
+    {
+      "name": "unknown-resets",
+      "mode": "extracted",
+      "text": "1 U.S. 1. \u00a7 2. Id.",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            }
+          },
+          "start": 0,
+          "end": 8,
+          "quote": "1 U.S. 1"
+        },
+        {
+          "citation": {
+            "type": "unknown",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null
+            }
+          },
+          "start": 10,
+          "end": 11,
+          "quote": "\u00a7"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null
+            }
+          },
+          "start": 15,
+          "end": 18,
+          "quote": "Id."
+        }
+      ],
+      "editions": [
+        {
+          "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+          "shortName": "U.S."
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0]]
+      }
+    },
+    {
+      "name": "missing-page",
+      "mode": "extracted",
+      "text": "1 U.S. ___. Id.",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": null
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            }
+          },
+          "start": 0,
+          "end": 10,
+          "quote": "1 U.S. ___"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null
+            }
+          },
+          "start": 12,
+          "end": 15,
+          "quote": "Id."
+        }
+      ],
+      "editions": [
+        {
+          "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+          "shortName": "U.S."
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0]]
+      }
+    },
+    {
+      "name": "law-and-id",
+      "mode": "extracted",
+      "text": "35 U.S.C. \u00a7 101. Id. at 99999.",
+      "mentions": [
+        {
+          "citation": {
+            "type": "law",
+            "components": {
+              "title": "35",
+              "reporter": "U.S.C.",
+              "section": "101"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "publisher": null
+            },
+            "publication": {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            }
+          },
+          "start": 0,
+          "end": 15,
+          "quote": "35 U.S.C. \u00a7 101"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": "at 99999",
+              "parenthetical": null
+            }
+          },
+          "start": 17,
+          "end": 29,
+          "quote": "Id. at 99999"
+        }
+      ],
+      "editions": [
+        {
+          "edition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f",
+          "shortName": "U.S.C."
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1]]
+      }
+    },
+    {
+      "name": "journal-and-id",
+      "mode": "extracted",
+      "text": "93 Harv. L. Rev. 518 (1980). Id. at 520.",
+      "mentions": [
+        {
+          "citation": {
+            "type": "journal",
+            "components": {
+              "volume": "93",
+              "reporter": "Harv. L. Rev.",
+              "page": "518"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "year": "1980",
+              "month": null,
+              "day": null
+            },
+            "publication": {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          },
+          "start": 0,
+          "end": 20,
+          "quote": "93 Harv. L. Rev. 518"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": "at 520",
+              "parenthetical": null
+            }
+          },
+          "start": 29,
+          "end": 39,
+          "quote": "Id. at 520"
+        }
+      ],
+      "editions": [
+        {
+          "edition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636",
+          "shortName": "Harv. L. Rev."
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1]]
+      }
+    },
+    {
+      "name": "short-unique",
+      "mode": "extracted",
+      "text": "Smith v. Jones, 1 U.S. 1 (1900). Smith, 1 U.S. at 2. Id. at 3.",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "year": "1900",
+              "month": null,
+              "day": null,
+              "plaintiff": "Smith",
+              "defendant": "Jones",
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            }
+          },
+          "start": 16,
+          "end": 24,
+          "quote": "1 U.S. 1"
+        },
+        {
+          "citation": {
+            "type": "shortFormCase",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "2"
+            },
+            "metadata": {
+              "pinCite": "2",
+              "parenthetical": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "year": "1900",
+              "month": null,
+              "day": null,
+              "antecedentGuess": "Jones"
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            }
+          },
+          "start": 40,
+          "end": 51,
+          "quote": "1 U.S. at 2"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": "at 3",
+              "parenthetical": null
+            }
+          },
+          "start": 53,
+          "end": 61,
+          "quote": "Id. at 3"
+        }
+      ],
+      "editions": [
+        {
+          "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+          "shortName": "U.S."
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1, 2]]
+      }
+    },
+    {
+      "name": "short-no-match",
+      "mode": "extracted",
+      "text": "1 U.S. 1. 2 U.S. at 3. Id.",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            }
+          },
+          "start": 0,
+          "end": 8,
+          "quote": "1 U.S. 1"
+        },
+        {
+          "citation": {
+            "type": "shortFormCase",
+            "components": {
+              "volume": "2",
+              "reporter": "U.S.",
+              "page": "3"
+            },
+            "metadata": {
+              "pinCite": "3",
+              "parenthetical": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "year": null,
+              "month": null,
+              "day": null,
+              "antecedentGuess": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            }
+          },
+          "start": 10,
+          "end": 21,
+          "quote": "2 U.S. at 3"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null
+            }
+          },
+          "start": 23,
+          "end": 26,
+          "quote": "Id."
+        }
+      ],
+      "editions": [
+        {
+          "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+          "shortName": "U.S."
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0]]
+      }
+    },
+    {
+      "name": "short-ambiguous",
+      "mode": "extracted",
+      "text": "Smith v. Jones, 1 U.S. 1 (1900). Adams v. Doe, 1 U.S. 9 (1901). 1 U.S. at 10. Id.",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "year": "1900",
+              "month": null,
+              "day": null,
+              "plaintiff": "Smith",
+              "defendant": "Jones",
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            }
+          },
+          "start": 16,
+          "end": 24,
+          "quote": "1 U.S. 1"
+        },
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "9"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "year": "1900",
+              "month": null,
+              "day": null,
+              "plaintiff": "",
+              "defendant": "Jones",
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            }
+          },
+          "start": 47,
+          "end": 55,
+          "quote": "1 U.S. 9"
+        },
+        {
+          "citation": {
+            "type": "shortFormCase",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "10"
+            },
+            "metadata": {
+              "pinCite": "10",
+              "parenthetical": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "year": "1900",
+              "month": null,
+              "day": null,
+              "antecedentGuess": "Jones"
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            }
+          },
+          "start": 64,
+          "end": 76,
+          "quote": "1 U.S. at 10"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null
+            }
+          },
+          "start": 78,
+          "end": 81,
+          "quote": "Id."
+        }
+      ],
+      "editions": [
+        {
+          "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+          "shortName": "U.S."
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0], [1]]
+      }
+    },
+    {
+      "name": "short-refined",
+      "mode": "extracted",
+      "text": "Smith v. Jones, 1 U.S. 1 (1900). Adams v. Doe, 1 U.S. 9 (1901). Smith, 1 U.S. at 2.",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "year": "1900",
+              "month": null,
+              "day": null,
+              "plaintiff": "Smith",
+              "defendant": "Jones",
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            }
+          },
+          "start": 16,
+          "end": 24,
+          "quote": "1 U.S. 1"
+        },
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "9"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "year": "1900",
+              "month": null,
+              "day": null,
+              "plaintiff": "",
+              "defendant": "Jones",
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            }
+          },
+          "start": 47,
+          "end": 55,
+          "quote": "1 U.S. 9"
+        },
+        {
+          "citation": {
+            "type": "shortFormCase",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "2"
+            },
+            "metadata": {
+              "pinCite": "2",
+              "parenthetical": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "year": "1900",
+              "month": null,
+              "day": null,
+              "antecedentGuess": "Jones"
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            }
+          },
+          "start": 71,
+          "end": 82,
+          "quote": "1 U.S. at 2"
+        }
+      ],
+      "editions": [
+        {
+          "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+          "shortName": "U.S."
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0], [1]]
+      }
+    },
+    {
+      "name": "supra-unique",
+      "mode": "extracted",
+      "text": "Smith v. Jones, 1 U.S. 1 (1900). Smith, supra, at 2.",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "year": "1900",
+              "month": null,
+              "day": null,
+              "plaintiff": "Smith",
+              "defendant": "Jones",
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            }
+          },
+          "start": 16,
+          "end": 24,
+          "quote": "1 U.S. 1"
+        },
+        {
+          "citation": {
+            "type": "supra",
+            "components": {},
+            "metadata": {
+              "pinCite": "at 2",
+              "parenthetical": null,
+              "antecedentGuess": "Smith",
+              "volume": null
+            }
+          },
+          "start": 40,
+          "end": 51,
+          "quote": "supra, at 2"
+        }
+      ],
+      "editions": [
+        {
+          "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+          "shortName": "U.S."
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1]]
+      }
+    },
+    {
+      "name": "supra-ambiguous",
+      "mode": "extracted",
+      "text": "Smith v. Jones, 1 U.S. 1 (1900). Smith v. Doe, 2 U.S. 9 (1901). Smith, supra, at 2. Id.",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "year": "1900",
+              "month": null,
+              "day": null,
+              "plaintiff": "Smith",
+              "defendant": "Jones",
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            }
+          },
+          "start": 16,
+          "end": 24,
+          "quote": "1 U.S. 1"
+        },
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "2",
+              "reporter": "U.S.",
+              "page": "9"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "year": "1900",
+              "month": null,
+              "day": null,
+              "plaintiff": "",
+              "defendant": "Jones",
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            }
+          },
+          "start": 47,
+          "end": 55,
+          "quote": "2 U.S. 9"
+        },
+        {
+          "citation": {
+            "type": "supra",
+            "components": {},
+            "metadata": {
+              "pinCite": "at 2",
+              "parenthetical": null,
+              "antecedentGuess": "Smith",
+              "volume": null
+            }
+          },
+          "start": 71,
+          "end": 82,
+          "quote": "supra, at 2"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null
+            }
+          },
+          "start": 84,
+          "end": 87,
+          "quote": "Id."
+        }
+      ],
+      "editions": [
+        {
+          "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+          "shortName": "U.S."
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 2, 3], [1]]
+      }
+    },
+    {
+      "name": "reference",
+      "mode": "extracted",
+      "text": "Roe v. Wade, 410 U.S. 113 (1973). Roe at 120. Id. at 121.",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "410",
+              "reporter": "U.S.",
+              "page": "113"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "year": "1973",
+              "month": null,
+              "day": null,
+              "plaintiff": "Roe",
+              "defendant": "Wade",
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            }
+          },
+          "start": 13,
+          "end": 25,
+          "quote": "410 U.S. 113"
+        },
+        {
+          "citation": {
+            "type": "reference",
+            "components": {},
+            "metadata": {
+              "pinCite": "at 120",
+              "parenthetical": null,
+              "plaintiff": "Roe",
+              "defendant": null,
+              "shortCaseName": null,
+              "caseName": null
+            }
+          },
+          "start": 34,
+          "end": 44,
+          "quote": "Roe at 120"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": "at 121",
+              "parenthetical": null
+            }
+          },
+          "start": 46,
+          "end": 56,
+          "quote": "Id. at 121"
+        }
+      ],
+      "editions": [
+        {
+          "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+          "shortName": "U.S."
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1, 2]]
+      }
+    },
+    {
+      "name": "cit-vintage",
+      "mode": "extracted",
+      "text": "1 C.I.T. 1. 1 Ct. Int'l Trade 1. Id. at 2.",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "C.I.T.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "994078229124e40665adee77d89b061f2b7b4b3c42fa88caa168a35c679ac123",
+              "editions": [
+                {
+                  "edition": "994078229124e40665adee77d89b061f2b7b4b3c42fa88caa168a35c679ac123",
+                  "reporterId": "reporter:ec9ba165d777489bf3ceb824"
+                }
+              ]
+            }
+          },
+          "start": 0,
+          "end": 10,
+          "quote": "1 C.I.T. 1"
+        },
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "Ct. Int'l Trade",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "cf888f2a4fabbed7d2682f537276ae4ff90d09b9eb0e58a792b912e06ede85ce",
+              "editions": [
+                {
+                  "edition": "cf888f2a4fabbed7d2682f537276ae4ff90d09b9eb0e58a792b912e06ede85ce",
+                  "reporterId": "reporter:ec9ba165d777489bf3ceb824"
+                }
+              ]
+            }
+          },
+          "start": 12,
+          "end": 31,
+          "quote": "1 Ct. Int'l Trade 1"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": "at 2",
+              "parenthetical": null
+            }
+          },
+          "start": 33,
+          "end": 41,
+          "quote": "Id. at 2"
+        }
+      ],
+      "editions": [
+        {
+          "edition": "994078229124e40665adee77d89b061f2b7b4b3c42fa88caa168a35c679ac123",
+          "shortName": "C.I.T."
+        },
+        {
+          "edition": "cf888f2a4fabbed7d2682f537276ae4ff90d09b9eb0e58a792b912e06ede85ce",
+          "shortName": "Ct. Int'l Trade"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0], [1, 2]]
+      }
+    },
+    {
+      "name": "same-resource-names",
+      "mode": "extracted",
+      "text": "Smith v. Jones, 1 U.S. 1 (1900). Adams v. Smith, 1 U.S. 1 (1901). Smith, supra, at 2.",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "year": "1900",
+              "month": null,
+              "day": null,
+              "plaintiff": "Smith",
+              "defendant": "Jones",
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            }
+          },
+          "start": 16,
+          "end": 24,
+          "quote": "1 U.S. 1"
+        },
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "year": "1900",
+              "month": null,
+              "day": null,
+              "plaintiff": "",
+              "defendant": "Jones",
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            }
+          },
+          "start": 49,
+          "end": 57,
+          "quote": "1 U.S. 1"
+        },
+        {
+          "citation": {
+            "type": "supra",
+            "components": {},
+            "metadata": {
+              "pinCite": "at 2",
+              "parenthetical": null,
+              "antecedentGuess": "Smith",
+              "volume": null
+            }
+          },
+          "start": 73,
+          "end": 84,
+          "quote": "supra, at 2"
+        }
+      ],
+      "editions": [
+        {
+          "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+          "shortName": "U.S."
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1, 2]]
+      }
+    },
+    {
+      "name": "unicode-prefix",
+      "mode": "extracted",
+      "text": "\ud83d\ude00 Roe v. Wade, 410 U.S. 113 (1973). Roe at 120.",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "410",
+              "reporter": "U.S.",
+              "page": "113"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "year": "1973",
+              "month": null,
+              "day": null,
+              "plaintiff": "Roe",
+              "defendant": "Wade",
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            }
+          },
+          "start": 16,
+          "end": 28,
+          "quote": "410 U.S. 113"
+        },
+        {
+          "citation": {
+            "type": "reference",
+            "components": {},
+            "metadata": {
+              "pinCite": "at 120",
+              "parenthetical": null,
+              "plaintiff": "Roe",
+              "defendant": null,
+              "shortCaseName": null,
+              "caseName": null
+            }
+          },
+          "start": 37,
+          "end": 47,
+          "quote": "Roe at 120"
+        }
+      ],
+      "editions": [
+        {
+          "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+          "shortName": "U.S."
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1]]
+      }
+    },
+    {
+      "name": "supra-no-name",
+      "mode": "synthetic-semantic",
+      "text": "witness-0; witness-1; witness-2; ",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": "Smith",
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 0,
+          "end": 9,
+          "quote": "witness-0"
+        },
+        {
+          "citation": {
+            "type": "supra",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "antecedentGuess": null,
+              "volume": null
+            }
+          },
+          "start": 11,
+          "end": 20,
+          "quote": "witness-1"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null
+            }
+          },
+          "start": 22,
+          "end": 31,
+          "quote": "witness-2"
+        }
+      ],
+      "editions": [],
+      "outcome": {
+        "status": "value",
+        "groups": [[0]]
+      }
+    },
+    {
+      "name": "supra-punctuation-only",
+      "mode": "synthetic-semantic",
+      "text": "witness-0; witness-1; ",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": "Smith",
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 0,
+          "end": 9,
+          "quote": "witness-0"
+        },
+        {
+          "citation": {
+            "type": "supra",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "antecedentGuess": "!!!",
+              "volume": null
+            }
+          },
+          "start": 11,
+          "end": 20,
+          "quote": "witness-1"
+        }
+      ],
+      "editions": [],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1]]
+      }
+    },
+    {
+      "name": "supra-case-sensitive",
+      "mode": "synthetic-semantic",
+      "text": "witness-0; witness-1; ",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": "Smith",
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 0,
+          "end": 9,
+          "quote": "witness-0"
+        },
+        {
+          "citation": {
+            "type": "supra",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "antecedentGuess": "smith",
+              "volume": null
+            }
+          },
+          "start": 11,
+          "end": 20,
+          "quote": "witness-1"
+        }
+      ],
+      "editions": [],
+      "outcome": {
+        "status": "value",
+        "groups": [[0]]
+      }
+    },
+    {
+      "name": "supra-ignores-volume",
+      "mode": "synthetic-semantic",
+      "text": "witness-0; witness-1; ",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": "Smith",
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 0,
+          "end": 9,
+          "quote": "witness-0"
+        },
+        {
+          "citation": {
+            "type": "supra",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "antecedentGuess": "Smith",
+              "volume": "999"
+            }
+          },
+          "start": 11,
+          "end": 20,
+          "quote": "witness-1"
+        }
+      ],
+      "editions": [],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1]]
+      }
+    },
+    {
+      "name": "short-unique-ignores-wrong-name",
+      "mode": "synthetic-semantic",
+      "text": "witness-0; witness-1; ",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": "Smith",
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 0,
+          "end": 9,
+          "quote": "witness-0"
+        },
+        {
+          "citation": {
+            "type": "shortFormCase",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S."
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "antecedentGuess": "Wrong"
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 11,
+          "end": 20,
+          "quote": "witness-1"
+        }
+      ],
+      "editions": [],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1]]
+      }
+    },
+    {
+      "name": "reference-exact-not-substring",
+      "mode": "synthetic-semantic",
+      "text": "witness-0; witness-1; ",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": "Smithson",
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 0,
+          "end": 9,
+          "quote": "witness-0"
+        },
+        {
+          "citation": {
+            "type": "reference",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "plaintiff": "Smith",
+              "defendant": null,
+              "shortCaseName": null,
+              "caseName": null
+            }
+          },
+          "start": 11,
+          "end": 20,
+          "quote": "witness-1"
+        }
+      ],
+      "editions": [],
+      "outcome": {
+        "status": "value",
+        "groups": [[0]]
+      }
+    },
+    {
+      "name": "reference-uses-all-metadata",
+      "mode": "synthetic-semantic",
+      "text": "witness-0; witness-1; ",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": "Special",
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 0,
+          "end": 9,
+          "quote": "witness-0"
+        },
+        {
+          "citation": {
+            "type": "reference",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "plaintiff": "Special",
+              "defendant": null,
+              "shortCaseName": null,
+              "caseName": null
+            }
+          },
+          "start": 11,
+          "end": 20,
+          "quote": "witness-1"
+        }
+      ],
+      "editions": [],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1]]
+      }
+    },
+    {
+      "name": "reference-law-publisher",
+      "mode": "synthetic-semantic",
+      "text": "witness-0; witness-1; ",
+      "mentions": [
+        {
+          "citation": {
+            "type": "law",
+            "components": {
+              "title": "35",
+              "reporter": "U.S.C.",
+              "section": "101"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "publisher": "West"
+            },
+            "publication": {
+              "editions": [],
+              "selectedEdition": null
+            }
+          },
+          "start": 0,
+          "end": 9,
+          "quote": "witness-0"
+        },
+        {
+          "citation": {
+            "type": "reference",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "plaintiff": "West",
+              "defendant": null,
+              "shortCaseName": null,
+              "caseName": null
+            }
+          },
+          "start": 11,
+          "end": 20,
+          "quote": "witness-1"
+        }
+      ],
+      "editions": [],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1]]
+      }
+    },
+    {
+      "name": "reference-empty",
+      "mode": "synthetic-semantic",
+      "text": "witness-0; witness-1; witness-2; ",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": "Smith",
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 0,
+          "end": 9,
+          "quote": "witness-0"
+        },
+        {
+          "citation": {
+            "type": "reference",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "plaintiff": null,
+              "defendant": null,
+              "shortCaseName": null,
+              "caseName": null
+            }
+          },
+          "start": 11,
+          "end": 20,
+          "quote": "witness-1"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null
+            }
+          },
+          "start": 22,
+          "end": 31,
+          "quote": "witness-2"
+        }
+      ],
+      "editions": [],
+      "outcome": {
+        "status": "value",
+        "groups": [[0]]
+      }
+    },
+    {
+      "name": "id-after-non-numeric-page",
+      "mode": "synthetic-semantic",
+      "text": "witness-0; witness-1; ",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "*10"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 0,
+          "end": 9,
+          "quote": "witness-0"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": "nonsense",
+              "parenthetical": null
+            }
+          },
+          "start": 11,
+          "end": 20,
+          "quote": "witness-1"
+        }
+      ],
+      "editions": [],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1]]
+      }
+    },
+    {
+      "name": "id-inclusive-boundary",
+      "mode": "synthetic-semantic",
+      "text": "witness-0; witness-1; witness-2; witness-3; ",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 0,
+          "end": 9,
+          "quote": "witness-0"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": "151",
+              "parenthetical": null
+            }
+          },
+          "start": 11,
+          "end": 20,
+          "quote": "witness-1"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": "152",
+              "parenthetical": null
+            }
+          },
+          "start": 22,
+          "end": 31,
+          "quote": "witness-2"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": "1",
+              "parenthetical": null
+            }
+          },
+          "start": 33,
+          "end": 42,
+          "quote": "witness-3"
+        }
+      ],
+      "editions": [],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1]]
+      }
+    },
+    {
+      "name": "full-page-null-no-reporter",
+      "mode": "synthetic-semantic",
+      "text": "witness-0; witness-1; ",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "page": null
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 0,
+          "end": 9,
+          "quote": "witness-0"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null
+            }
+          },
+          "start": 11,
+          "end": 20,
+          "quote": "witness-1"
+        }
+      ],
+      "editions": [],
+      "outcome": {
+        "status": "value",
+        "groups": [[0]]
+      }
+    },
+    {
+      "name": "full-page-null-lazy-reporter-error",
+      "mode": "synthetic-semantic",
+      "text": "witness-0; witness-1; ",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "page": null
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 0,
+          "end": 9,
+          "quote": "witness-0"
+        },
+        {
+          "citation": {
+            "type": "shortFormCase",
+            "components": {
+              "reporter": "U.S.",
+              "volume": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "antecedentGuess": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 11,
+          "end": 20,
+          "quote": "witness-1"
+        }
+      ],
+      "editions": [],
+      "outcome": {
+        "status": "error",
+        "kind": "KeyError"
+      }
+    },
+    {
+      "name": "full-missing-page-key",
+      "mode": "synthetic-semantic",
+      "text": "witness-0; ",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "reporter": "U.S."
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 0,
+          "end": 9,
+          "quote": "witness-0"
+        }
+      ],
+      "editions": [],
+      "outcome": {
+        "status": "error",
+        "kind": "KeyError"
+      }
+    },
+    {
+      "name": "full-missing-reporter-key",
+      "mode": "synthetic-semantic",
+      "text": "witness-0; ",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 0,
+          "end": 9,
+          "quote": "witness-0"
+        }
+      ],
+      "editions": [],
+      "outcome": {
+        "status": "error",
+        "kind": "KeyError"
+      }
+    },
+    {
+      "name": "short-no-full-lazy-reporter",
+      "mode": "synthetic-semantic",
+      "text": "witness-0; ",
+      "mentions": [
+        {
+          "citation": {
+            "type": "shortFormCase",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "antecedentGuess": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 0,
+          "end": 9,
+          "quote": "witness-0"
+        }
+      ],
+      "editions": [],
+      "outcome": {
+        "status": "value",
+        "groups": []
+      }
+    },
+    {
+      "name": "law-null-page-exception",
+      "mode": "synthetic-semantic",
+      "text": "witness-0; witness-1; ",
+      "mentions": [
+        {
+          "citation": {
+            "type": "law",
+            "components": {
+              "reporter": "X",
+              "page": null
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "publisher": null
+            },
+            "publication": {
+              "editions": [],
+              "selectedEdition": null
+            }
+          },
+          "start": 0,
+          "end": 9,
+          "quote": "witness-0"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": "2",
+              "parenthetical": null
+            }
+          },
+          "start": 11,
+          "end": 20,
+          "quote": "witness-1"
+        }
+      ],
+      "editions": [],
+      "outcome": {
+        "status": "error",
+        "kind": "AttributeError"
+      }
+    },
+    {
+      "name": "integer-conversion-exception",
+      "mode": "synthetic-semantic",
+      "text": "witness-0; witness-1; ",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "\u00b2"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 0,
+          "end": 9,
+          "quote": "witness-0"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": "2",
+              "parenthetical": null
+            }
+          },
+          "start": 11,
+          "end": 20,
+          "quote": "witness-1"
+        }
+      ],
+      "editions": [],
+      "outcome": {
+        "status": "error",
+        "kind": "ValueError"
+      }
+    },
+    {
+      "name": "supra-resource-dedup",
+      "mode": "synthetic-semantic",
+      "text": "witness-0; witness-1; witness-2; ",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": "Smith",
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 0,
+          "end": 9,
+          "quote": "witness-0"
+        },
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": null,
+              "defendant": "Smith",
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 11,
+          "end": 20,
+          "quote": "witness-1"
+        },
+        {
+          "citation": {
+            "type": "supra",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "antecedentGuess": "Smith",
+              "volume": null
+            }
+          },
+          "start": 22,
+          "end": 31,
+          "quote": "witness-2"
+        }
+      ],
+      "editions": [],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1, 2]]
+      }
+    },
+    {
+      "name": "short-multiple-resets-id",
+      "mode": "synthetic-semantic",
+      "text": "witness-0; witness-1; witness-2; witness-3; ",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": "Smith",
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 0,
+          "end": 9,
+          "quote": "witness-0"
+        },
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "2"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": "Adams",
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 11,
+          "end": 20,
+          "quote": "witness-1"
+        },
+        {
+          "citation": {
+            "type": "shortFormCase",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S."
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "antecedentGuess": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 22,
+          "end": 31,
+          "quote": "witness-2"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null
+            }
+          },
+          "start": 33,
+          "end": 42,
+          "quote": "witness-3"
+        }
+      ],
+      "editions": [],
+      "outcome": {
+        "status": "value",
+        "groups": [[0], [1]]
+      }
+    },
+    {
+      "name": "short-name-refinement",
+      "mode": "synthetic-semantic",
+      "text": "witness-0; witness-1; witness-2; witness-3; ",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": "Smith",
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 0,
+          "end": 9,
+          "quote": "witness-0"
+        },
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "2"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": "Adams",
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 11,
+          "end": 20,
+          "quote": "witness-1"
+        },
+        {
+          "citation": {
+            "type": "shortFormCase",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S."
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "antecedentGuess": "Smith"
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 22,
+          "end": 31,
+          "quote": "witness-2"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": "2",
+              "parenthetical": null
+            }
+          },
+          "start": 33,
+          "end": 42,
+          "quote": "witness-3"
+        }
+      ],
+      "editions": [],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 2, 3], [1]]
+      }
+    },
+    {
+      "name": "supra-multiple-resets-id",
+      "mode": "synthetic-semantic",
+      "text": "witness-0; witness-1; witness-2; witness-3; ",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": "Smith",
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 0,
+          "end": 9,
+          "quote": "witness-0"
+        },
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "2"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": "Smith",
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 11,
+          "end": 20,
+          "quote": "witness-1"
+        },
+        {
+          "citation": {
+            "type": "supra",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "antecedentGuess": "Smith",
+              "volume": null
+            }
+          },
+          "start": 22,
+          "end": 31,
+          "quote": "witness-2"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null
+            }
+          },
+          "start": 33,
+          "end": 42,
+          "quote": "witness-3"
+        }
+      ],
+      "editions": [],
+      "outcome": {
+        "status": "value",
+        "groups": [[0], [1]]
+      }
+    },
+    {
+      "name": "reference-multiple-resets-id",
+      "mode": "synthetic-semantic",
+      "text": "witness-0; witness-1; witness-2; witness-3; ",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": "Smith",
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 0,
+          "end": 9,
+          "quote": "witness-0"
+        },
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "2"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": "Smith",
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 11,
+          "end": 20,
+          "quote": "witness-1"
+        },
+        {
+          "citation": {
+            "type": "reference",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "plaintiff": "Smith",
+              "defendant": null,
+              "shortCaseName": null,
+              "caseName": null
+            }
+          },
+          "start": 22,
+          "end": 31,
+          "quote": "witness-2"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null
+            }
+          },
+          "start": 33,
+          "end": 42,
+          "quote": "witness-3"
+        }
+      ],
+      "editions": [],
+      "outcome": {
+        "status": "value",
+        "groups": [[0], [1]]
+      }
+    },
+    {
+      "name": "reference-court-metadata",
+      "mode": "synthetic-semantic",
+      "text": "witness-0; witness-1; ",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 0,
+          "end": 9,
+          "quote": "witness-0"
+        },
+        {
+          "citation": {
+            "type": "reference",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "plaintiff": "scotus",
+              "defendant": null,
+              "shortCaseName": null,
+              "caseName": null
+            }
+          },
+          "start": 11,
+          "end": 20,
+          "quote": "witness-1"
+        }
+      ],
+      "editions": [],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1]]
+      }
+    },
+    {
+      "name": "unknown-between-id",
+      "mode": "synthetic-semantic",
+      "text": "witness-0; witness-1; witness-2; ",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 0,
+          "end": 9,
+          "quote": "witness-0"
+        },
+        {
+          "citation": {
+            "type": "unknown",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null
+            }
+          },
+          "start": 11,
+          "end": 20,
+          "quote": "witness-1"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null
+            }
+          },
+          "start": 22,
+          "end": 31,
+          "quote": "witness-2"
+        }
+      ],
+      "editions": [],
+      "outcome": {
+        "status": "value",
+        "groups": [[0]]
+      }
+    },
+    {
+      "name": "short-only-noncase-predecessor",
+      "mode": "synthetic-semantic",
+      "text": "witness-0; witness-1; witness-2; ",
+      "mentions": [
+        {
+          "citation": {
+            "type": "law",
+            "components": {
+              "reporter": "X"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "publisher": null
+            },
+            "publication": {
+              "editions": [],
+              "selectedEdition": null
+            }
+          },
+          "start": 0,
+          "end": 9,
+          "quote": "witness-0"
+        },
+        {
+          "citation": {
+            "type": "shortFormCase",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "antecedentGuess": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": null,
+              "editions": []
+            }
+          },
+          "start": 11,
+          "end": 20,
+          "quote": "witness-1"
+        },
+        {
+          "citation": {
+            "type": "id",
+            "components": {},
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null
+            }
+          },
+          "start": 22,
+          "end": 31,
+          "quote": "witness-2"
+        }
+      ],
+      "editions": [],
+      "outcome": {
+        "status": "value",
+        "groups": [[0]]
+      }
+    },
+    {
+      "name": "empty",
+      "mode": "synthetic-semantic",
+      "text": "",
+      "mentions": [],
+      "editions": [],
+      "outcome": {
+        "status": "value",
+        "groups": []
+      }
+    },
+    {
+      "name": "selected-reporter-without-raw-field",
+      "mode": "synthetic-semantic",
+      "text": "witness-0; witness-1",
+      "mentions": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "page": "1"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            }
+          },
+          "start": 0,
+          "end": 9,
+          "quote": "witness-0"
+        },
+        {
+          "citation": {
+            "type": "shortFormCase",
+            "components": {
+              "volume": "1",
+              "page": "2"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "court": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "antecedentGuess": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            }
+          },
+          "start": 11,
+          "end": 20,
+          "quote": "witness-1"
+        }
+      ],
+      "editions": [
+        {
+          "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+          "shortName": "U.S."
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1]]
+      }
+    }
+  ]
+}
