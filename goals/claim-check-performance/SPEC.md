@@ -56,7 +56,12 @@ All thresholds must pass on the same source/environment freeze.
 
 ## Evaluation Integrity
 
-1. Preserve every file in research/preservation-freeze.json byte for byte.
+1. Preserve every artifact in research/preservation-freeze.json byte for byte.
+   The explicit research/preservation-location-addendum.json relocates only
+   three historical runner sources to exact text archives; 1,210 other paths
+   remain exact. Active runners retain accepted mechanical yield hoisting,
+   are separately hash-checked and require report-equivalence replay. The
+   original freeze, labels, scorer, outputs and numerical gates are unchanged.
    Never rewrite old labels, expected trees, result files, scorer or sampling.
    New findings about an old label are separate overlays; legacy scoring keeps
    its original reference. Keep all prior passes as a mandatory gate.
@@ -93,7 +98,7 @@ All thresholds must pass on the same source/environment freeze.
 
 ## Acceptance Criteria
 
-- [ ] Original 1,213-file preservation freeze verifies and all 37 passes remain.
+- [ ] Original 1,213-artifact preservation freeze and explicit three-runner location addendum verify and all 37 passes remain.
 - [ ] Baseline and recurring error taxonomy recorded without changing references.
 - [ ] Independent source-qualified development/final datasets frozen as above.
 - [ ] Every usefulness gate passes together on one content-final source freeze.

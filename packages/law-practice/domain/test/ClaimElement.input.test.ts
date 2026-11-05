@@ -42,7 +42,7 @@ describe("claim inspection source identity", () => {
         const decoded = yield* S.decodeEffect(claimRecordJson)(encoded);
         assert.isTrue(claimRecordEquivalence(decoded, record));
       }),
-    { arbitrary: fcRuns(100) }
+    { arbitrary: { ...fcRuns(100), seed: "claim-input-preservation-v1" } }
   );
 
   it.effect("preserves duplicate and missing literal numbers through the actual JSON codec", () =>

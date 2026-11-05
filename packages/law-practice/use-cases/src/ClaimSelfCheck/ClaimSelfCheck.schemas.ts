@@ -14,11 +14,13 @@ import {
   AntecedentFinding,
   ClaimDecompositionError,
   ClaimElementTree,
+  ClaimInputCollection,
 } from "@beep/law-practice-domain/values/ClaimElement";
 import { PatentApplicationDocument, PatentClaims } from "@beep/law-practice-domain/values/PatentDocument";
 import { PatentNumber } from "@beep/law-practice-domain/values/PatentNumber";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { PosInt } from "../internal/PosInt.ts";
 
 const $I = $LawPracticeUseCasesId.create("ClaimSelfCheck/ClaimSelfCheck.schemas");
@@ -138,6 +140,55 @@ export class UsptoClaimSet extends S.Opaque<UsptoClaimSet, { readonly brand: uni
       description: "Full-text public USPTO claims normalized into validated patent claims, with their source document.",
     })
   )
+) {}
+
+/**
+ * Complete source records from one immutable public document version.
+ *
+ * **Details**
+ * This acquisition result retains all failed extraction records. It does not
+ * imply any claim normalized or received a check. Its record identity binds
+ * the exact document identifier and byte digest, including all-unusable input.
+ *
+ * **Example** (Inspect acquired source fields)
+ *
+ * ```ts
+ * import { UsptoClaimInputSet } from "@beep/law-practice-use-cases/ClaimSelfCheck"
+ * console.log(UsptoClaimInputSet.fields.documentIdentifier !== undefined) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class UsptoClaimInputSet extends S.Opaque<UsptoClaimInputSet, { readonly brand: unique symbol }>()(
+  S.Struct({
+    // Keep the nominal collection schema itself: annotateKey rebuilds an Opaque as its structural base.
+    input: ClaimInputCollection,
+    documentIdentifier: S.NonEmptyString.annotateKey({
+      description: "Exact public USPTO document whose bytes were inspected.",
+    }),
+    sourceDocumentDigest: ContentDigest.annotateKey({
+      description: "SHA-256 of the acquired document bytes, before text extraction.",
+    }),
+    source: UsptoClaimSource.annotateKey({ description: "Public record requested for this acquisition." }),
+  })
+    .check(
+      S.makeFilter(
+        ({ input, documentIdentifier, sourceDocumentDigest }) =>
+          Str.Equivalence(input.sourceKey, `${documentIdentifier}:${sourceDocumentDigest}`),
+        $I.annote("UsptoClaimInputSetIdentityCheck", {
+          title: "Document-version source identity",
+          description: "Every source record is scoped to the acquired document identifier and exact byte digest.",
+          message: "The input source key must be documentIdentifier:sourceDocumentDigest.",
+        })
+      )
+    )
+    .pipe(
+      $I.annoteSchema("UsptoClaimInputSet", {
+        description:
+          "Failure-preserving public source acquisition with content-bound document/version identity; no check success implied.",
+      })
+    )
 ) {}
 
 /**

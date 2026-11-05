@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "claim-performance-inspection-contract/v1",
+  "implementationFreeze": "research/implementation-inspection-contract-001.json",
+  "resultSha256": "d6c5f29207a36a766b5466cbcbad84cae24bbf1031e5d1befe34dff533208b74",
+  "legacyStrictMatches": 37,
+  "selectedClaims": 538,
+  "lost": [],
+  "previousPredictionReportsByteIdentical": 56,
+  "protectedFilesExact": 1213,
+  "focusedTests": 2,
+  "packageAudit": "passed",
+  "packageDocgen": "passed",
+  "implemented": "Separate acquisition port and content-bound complete source input contract",
+  "pending": [
+    "source adapter",
+    "conservative substantive policy",
+    "inspection service/tool",
+    "product-path evaluation"
+  ],
+  "usefulnessEstablished": false,
+  "goalComplete": false
+}
