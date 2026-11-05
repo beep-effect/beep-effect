@@ -732,6 +732,11 @@
           "sha256": "f566af0c9acd7ce4b32d891a9adccd2cfdee481e0882917bb844f903e7d26c65",
           "termObserved": true
         }
+      },
+      "currentRootCatalogueObservation": {
+        "report": "nested-entrypoint-inventory-2026-11-03.json",
+        "scope": "Both exact clients agree on all 6,327 catalogue nodes and 4,235 literal manifest scripts; the configured graph of 4,528 nodes and 2,436 commands is a strict subset. No task body executed.",
+        "remaining": "Actual execution reconciliation and final feature acceptance remain pending."
       }
     },
     {

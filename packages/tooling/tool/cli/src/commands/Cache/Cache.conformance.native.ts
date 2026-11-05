@@ -120,11 +120,10 @@ const verifyExecutable = Effect.fn("CacheConformance.verifyExecutable")(function
   pin: CacheConformanceClientPin
 ) {
   const digest = yield* hashCacheExperimentExecutable(executable);
-  if (digest !== pin.executableSha256) {
+  if (digest !== pin.executableSha256)
     return yield* CacheCommandError.new(
       `Client ${pin.version} at ${executable} has SHA-256 ${digest}, not the pinned ${pin.executableSha256}.`
     );
-  }
   return executable;
 });
 
@@ -145,19 +144,15 @@ const fetchClient = Effect.fn("CacheConformance.fetchClient")(function* (
   const client = yield* HttpClient.HttpClient;
   const url = registryUrl(pin);
   const response = yield* client.get(url).pipe(CacheCommandError.mapError(`Cannot fetch ${url}.`));
-  if (response.status !== 200) {
-    return yield* CacheCommandError.new(`Registry answered ${response.status} for ${url}.`);
-  }
+  if (response.status !== 200) return yield* CacheCommandError.new(`Registry answered ${response.status} for ${url}.`);
   const tarball: Uint8Array = yield* response.arrayBuffer.pipe(
     Effect.map((buffer) => new Uint8Array(buffer)),
     Effect.timeout(Duration.minutes(5)),
     CacheCommandError.mapError(`Cannot read ${url}.`)
   );
-  const digest1 = yield* crypto.digest(Digest.sha512, tarball);
-  const integrity = `sha512-${Base64.encode(digest1)}`;
-  if (integrity !== pin.platformIntegrity) {
+  const integrity = `sha512-${yield* crypto.digest(Digest.sha512, tarball).pipe(Effect.map(Base64.encode))}`;
+  if (integrity !== pin.platformIntegrity)
     return yield* CacheCommandError.new(`Tarball ${url} does not match the pinned registry integrity.`);
-  }
   yield* fs.makeDirectory(directory, { recursive: true });
   const staging = yield* fs.makeTempDirectoryScoped({ directory, prefix: "fetch-" });
   yield* fs.writeFile(path.join(staging, "package.tgz"), tarball);
@@ -169,9 +164,8 @@ const fetchClient = Effect.fn("CacheConformance.fetchClient")(function* (
     env: { PATH: "/usr/bin:/bin" },
     bound,
   });
-  if (extracted.exitCode !== 0) {
+  if (extracted.exitCode !== 0)
     return yield* CacheCommandError.new(`Cannot extract turbo-linux-x64/bin/turbo from ${url}.`);
-  }
   const candidate = yield* verifyExecutable(path.join(staging, "turbo-linux-x64/bin/turbo"), pin);
   const final = path.join(directory, "turbo");
   yield* fs.rename(candidate, final);
@@ -215,9 +209,7 @@ export const resolveCacheConformanceClient = Effect.fn("CacheConformance.resolve
   );
   const directory = yield* clientDirectory(pin.version);
   const cached = path.join(directory, "turbo");
-  if (yield* fs.exists(cached)) {
-    return { pin, executable: yield* verifyExecutable(cached, pin) };
-  }
+  if (yield* fs.exists(cached)) return { pin, executable: yield* verifyExecutable(cached, pin) };
   const installed = path.join(root, "node_modules/@turbo/linux-64/bin/turbo");
   const installedMatches =
     (yield* fs.exists(installed)) && (yield* hashCacheExperimentExecutable(installed)) === pin.executableSha256;
@@ -227,11 +219,10 @@ export const resolveCacheConformanceClient = Effect.fn("CacheConformance.resolve
     yield* fs.chmod(cached, 0o755);
     return { pin, executable: yield* verifyExecutable(cached, pin) };
   }
-  if (!fetch) {
+  if (!fetch)
     return yield* CacheCommandError.new(
       `Client ${pin.version} is not cached at ${cached}; rerun with --fetch-client to download ${registryUrl(pin)} and verify it against the pins.`
     );
-  }
   return { pin, executable: yield* Effect.scoped(fetchClient(root, directory, pin)) };
 }, CacheCommandError.mapError("Cannot resolve the pinned native client."));
 
@@ -381,12 +372,9 @@ const runNative = Effect.fn("CacheConformance.runNative")(function* (
     },
     bound,
   }).pipe(Effect.timeout(Duration.seconds(120)));
-  if (captured.truncated) {
-    return yield* CacheCommandError.new("Native capture exceeded its bound.");
-  }
-  if (A.some(secrets, (secret) => Str.includes(secret)(captured.stdout) || Str.includes(secret)(captured.stderr))) {
+  if (captured.truncated) return yield* CacheCommandError.new("Native capture exceeded its bound.");
+  if (A.some(secrets, (secret) => Str.includes(secret)(captured.stdout) || Str.includes(secret)(captured.stderr)))
     return yield* CacheCommandError.new(`Native ${plan.name} output contains a bearer or signing key.`);
-  }
   const names = yield* fs.readDirectory(path.join(work, ".turbo/runs"));
   const summaryName = yield* A.match(names, {
     onEmpty: () => CacheCommandError.new(`Native ${plan.name} wrote no run summary.`),
@@ -402,9 +390,8 @@ const runNative = Effect.fn("CacheConformance.runNative")(function* (
   const task = yield* A.head(summary.tasks).pipe(
     Effect.fromOption(() => CacheCommandError.new(`Native ${plan.name} summary has no task.`))
   );
-  if (summary.turboVersion !== pin.version || task.execution.exitCode !== captured.exitCode) {
+  if (summary.turboVersion !== pin.version || task.execution.exitCode !== captured.exitCode)
     return yield* CacheCommandError.new(`Native ${plan.name} summary disagrees with its process or client pin.`);
-  }
   const output = path.join(work, "dist/result.txt");
   const restoredOutput = yield* fs.exists(path.join(work, "dist"));
   const outputSha256 = (yield* fs.exists(output))
@@ -688,16 +675,13 @@ export const runCacheConformanceNative = Effect.fn("CacheConformance.runNativeMa
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const crypto = yield* SecureRandom.SecureRandom;
-    const now2 = yield* DateTime.now;
-    const startedAt = DateTime.formatIso(now2);
+    const startedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
     const executable = yield* verifyExecutable(client.executable, client.pin);
     const random = (bytes: number) => crypto.randomBytes(bytes).pipe(Effect.map(Hex.encode));
     const epoch = yield* random(4);
     const rotated = yield* random(4);
-    const random3 = yield* random(32);
-    const key = Redacted.make(random3);
-    const random4 = yield* random(32);
-    const rotatedKey = Redacted.make(random4);
+    const key = yield* random(32).pipe(Effect.map(Redacted.make));
+    const rotatedKey = yield* random(32).pipe(Effect.map(Redacted.make));
     const channel = client.pin.channel;
     const team = `${target.namespace.teamId}_${channel}_${epoch}`;
     const foreignTeam = `${target.namespace.foreignTeamId}_${channel}_${epoch}`;
@@ -744,9 +728,8 @@ export const runCacheConformanceNative = Effect.fn("CacheConformance.runNativeMa
     const events = yield* proxy.events;
     const byScenario = HashMap.fromIterable(outcomes);
     const cases = A.map(corpus.cases, (entry) => scoreNativeCase(entry, channel, byScenario, events));
-    if ((yield* hashCacheExperimentExecutable(executable)) !== client.pin.executableSha256) {
+    if ((yield* hashCacheExperimentExecutable(executable)) !== client.pin.executableSha256)
       return yield* CacheCommandError.new("The native client changed during the run.");
-    }
     return assembleCacheConformanceRun({
       corpus,
       target,

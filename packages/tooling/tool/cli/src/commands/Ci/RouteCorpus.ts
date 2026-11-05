@@ -382,8 +382,7 @@ const decodeCorpus = Effect.fnUntraced(function* (
   bytes: Uint8Array,
   file: string
 ): Effect.fn.Return<ReadonlyArray<HostedRun>, RouteError> {
-  const gunzipText1 = yield* gunzipText(bytes, file);
-  const lines = yield* corpusLines(gunzipText1, file);
+  const lines = yield* gunzipText(bytes, file).pipe(Effect.flatMap((text) => corpusLines(text, file)));
   return yield* Effect.forEach(lines, (line, index) =>
     decodeHostedRunLine(line).pipe(
       Effect.mapError(RouteError.mapError("corpus-pin", `${file} line ${index + 1} is not a HostedRun.`))
@@ -514,11 +513,9 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
   const readExisting = Effect.fnUntraced(function* (corpusPath: string): Effect.fn.Return<CaptureState, RouteError> {
     const bytes = yield* readCorpusBytes(corpusPath);
     const runs = yield* decodeCorpus(bytes, corpusPath);
-    const argument1 = HashMap.fromIterable(A.map(runs, (run): readonly [number, HostedRun] => [run.runId, run]));
-    const digest1 = yield* digest(bytes, corpusPath);
     return {
-      runs: argument1,
-      pinned: O.some(digest1),
+      runs: HashMap.fromIterable(A.map(runs, (run): readonly [number, HostedRun] => [run.runId, run])),
+      pinned: yield* Effect.asSome(digest(bytes, corpusPath)),
       covered: "",
       open: true,
     };

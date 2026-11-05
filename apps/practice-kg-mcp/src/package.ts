@@ -29,6 +29,8 @@ import { PRACTICE_KG_EXTENSION_VERSION } from "./Version.ts";
  * without a description entry a compile error.
  */
 const ManifestToolDescriptions: Readonly<Record<keyof typeof PracticeKgToolkit.tools, string>> = {
+  claim_inspect_input:
+    "Inspect every supplied claim record and page through possible antecedent-basis and dependency issues.",
   claim_self_check: "Check supplied claims for possible antecedent-basis and dependency issues.",
   corpus_get_document: "Read a digest-addressed document.",
   corpus_search_text: "Search extracted corpus text.",

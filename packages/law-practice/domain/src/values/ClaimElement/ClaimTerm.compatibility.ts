@@ -80,3 +80,35 @@ export const isDesignatedHead = matchesCapturedHead(/^(.+)\s+[a-z]{1,4}\d+[a-z0-
  * @since 0.0.0
  */
 export const isCountedHead = matchesCapturedHead(/^(?:(?:specified|predetermined|selected|fixed)\s+)?number of (.+)$/u);
+
+/**
+ * Match only the exact contents of an explicit plurality reference.
+ *
+ * **Example** (Preserve a collective reference head)
+ * ```ts
+ * import { isPluralityReferenceHead } from "../../src/values/ClaimElement/ClaimTerm.compatibility.ts"
+ * console.log(isPluralityReferenceHead("plurality of pins")("pins")) // true
+ * console.log(isPluralityReferenceHead("plurality of pins")("pin")) // false
+ * ```
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isPluralityReferenceHead =
+  (head: string) =>
+  (candidate: string): boolean =>
+    O.contains(pluralityReferenceContent(head), candidate);
+
+/**
+ * Exact nominal contents of an explicitly named plurality, when present.
+ *
+ * **Example** (Read collective contents)
+ * ```ts
+ * import { pluralityReferenceContent } from "../../src/values/ClaimElement/ClaimTerm.compatibility.ts"
+ * import * as O from "effect/Option"
+ * console.log(O.getOrElse(pluralityReferenceContent("plurality of pins"), () => "")) // pins
+ * ```
+ * @category parsers
+ * @since 0.0.0
+ */
+export const pluralityReferenceContent = (head: string): O.Option<string> =>
+  O.flatMap(Str.match(/^plurality of (.+)$/u)(head), (match) => A.get(match, 1));

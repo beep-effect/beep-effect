@@ -10,6 +10,7 @@ import {
   qualifyClaimInput,
 } from "@beep/law-practice-domain/values/PatentDocument";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { assert, describe } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -32,20 +33,16 @@ const textRecord = (sourceOrdinal: number, numberText: O.Option<string>) =>
   });
 
 describe("claim inspection source identity", () => {
-  it.effect("roundtrips arbitrary source records without changing literal numbers or source fragments", () =>
-    Effect.gen(function* () {
-      const result = yield* Arbitrary.checkEffect(
-        Arbitrary.schema(ClaimInputRecord),
-        (record) =>
-          Effect.gen(function* () {
-            const encoded = yield* S.encodeEffect(claimRecordJson)(record);
-            const decoded = yield* S.decodeEffect(claimRecordJson)(encoded);
-            return claimRecordEquivalence(decoded, record);
-          }),
-        { seed: "claim-input-preservation-v1", runs: 100 }
-      );
-      assert.deepStrictEqual(result, { _tag: "Passed", runs: 100, discards: 0 });
-    })
+  it.effect.prop(
+    "roundtrips arbitrary source records without changing literal numbers or source fragments",
+    { record: Arbitrary.schema(ClaimInputRecord) },
+    ({ record }) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(claimRecordJson)(record);
+        const decoded = yield* S.decodeEffect(claimRecordJson)(encoded);
+        assert.isTrue(claimRecordEquivalence(decoded, record));
+      }),
+    { arbitrary: { ...fcRuns(100), seed: "claim-input-preservation-v1" } }
   );
 
   it.effect("preserves duplicate and missing literal numbers through the actual JSON codec", () =>

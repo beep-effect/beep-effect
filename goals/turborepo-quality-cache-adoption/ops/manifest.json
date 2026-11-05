@@ -150,6 +150,14 @@
     "research/source-capture-permission-mode-2026-11-03.json",
     "research/source-capture-prefix-controls-2026-11-03.json",
     "research/permission-mode-hash-before-source-capture-fix-2026-11-03.json",
+    "research/population-before-accepted31e-refresh-2026-11-03.json",
+    "research/accepted31e-fresh-disposition-review-2026-11-03.json",
+    "research/accepted31e-population-checkpoint-2026-11-03.json",
+    "research/ci-economics-consumer-checkpoint-2026-11-03.json",
+    "research/explicit-fresh-boundaries-review-2026-11-03.json",
+    "research/installed-fleet-scanner-refresh-2026-11-03.json",
+    "research/nested-entrypoint-inventory-2026-11-03.json",
+    "research/nested-source-fixer-review-2026-11-03.json",
     "research/native-selector-flag-isolation-controls-2026-11-04.json",
     "research/selector-flag-isolation-checkpoint-2026-11-04.json"
   ],
@@ -214,5 +222,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Active. The source-bound native census at fae5b2098c has 191 workspaces, 4,459 graph nodes, 2,400 executable computations and 1,646 configured cache-enabled computations; those flags grant no qualification. Current literal-source reviews keep 198 whole-task boundaries fresh, with 2,202 native reviews pending and five original qualification exclusions unchanged. Retired entries remain in preserved history. Two entrypoint obligations and non-Turbo/nested coverage remain open. Eleven of 36 feature decisions have scoped reviews and 25 remain pending. Qualification, supported adoption, measured value, real observation windows and every whole-goal criterion remain incomplete. The published current canary adds the canary-only permission-hash flag; 64 configuration dry runs executed no task bodies. A separate 132-case Linux hash observation asserts regular-file mode/content controls and records alias differences; it executes no tasks and leaves the permission feature pending. Review repair binds parsed inputs to their captured bytes; 196 fresh dry plans and six source-change prefix controls execute no tasks. Original observations remain historical."
+  "statusNote": "Active. Accepted main 31e2ac20f3 has 194 workspaces, 4,528 graph nodes and 2,436 executable computations, with all 458 census source bindings verified. Configured cache flags grant no qualification. Literal-source reviews now keep 204 whole-task boundaries fresh; 2,232 computations still need final review. The three additional reviews cover the website development service, its source-writing fixer and the live Bun vulnerability audit. Each named pure prerequisite remains independently pending. Five original qualification exclusions and the qualification ledger are unchanged. Two entrypoint obligations and non-Turbo/nested coverage remain open. Eleven of 36 feature decisions have scoped reviews and 25 remain pending. The CI economics preview covers the old layout before the repairs and measures no Turbo or repair gain; the final window-4 verdict is missing. Qualification, supported adoption, measured value, real observation windows and every whole-goal criterion remain incomplete. Historical source/client observations keep their original scope and pins. No runtime configuration changed. A bounded workstation refresh applied the already-accepted fleet scanner compatibility fix: four current checkouts are now recognized in a read-only discovery plan. No enrollment or runtime cache policy changed; remote refresh remains unverified after SSH authentication refusals. Both pinned native query catalogues now reconcile all 4,235 manifest script entrypoints. The 2,436 configured executable computations remain distinct from 1,799 script-only entrypoints; their explicit role/caller review is still pending. No task execution or qualification is inferred. Literal-source review now keeps 190 nested Biome --write entrypoints fresh, matching 190 already-reviewed disabled-cache fixer wrappers. The remaining 1,609 script-only reviews and all 190 separate read-only counterpart qualifications remain open; these are entrypoint boundaries, not new distinct-computation or reuse counts."
 }

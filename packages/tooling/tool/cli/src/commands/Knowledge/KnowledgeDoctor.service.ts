@@ -16,6 +16,7 @@ import { runCapturedStreams } from "@beep/repo-cli-kit/process/StepExec";
 import { findRepoRoot } from "@beep/repo-utils";
 import { Str } from "@beep/utils";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -1281,8 +1282,7 @@ const evaluateSpan = Effect.fn("KnowledgeDoctor.evaluateSpan")(function* (
 // Every goals-doctor finding the tree's bytes determine, listed as delegated: the goals doctor keeps
 // the gate, and each one is a causal root for the claims beneath it.
 const delegatedFindings = Effect.fn("KnowledgeDoctor.delegatedFindings")(function* (tree: KnowledgeDoctorTree) {
-  const goalsDoctorFindings1 = yield* tree.domain.goalsDoctorFindings;
-  const delegatedRows = A.map(goalsDoctorFindings1, knowledgeDelegatedRow);
+  const delegatedRows = yield* tree.domain.goalsDoctorFindings.pipe(Effect.map(A.map(knowledgeDelegatedRow)));
   const severities = HashMap.fromIterable(
     A.map(delegatedRows, (row) => [row.candidate.subject, row.severity] as const)
   );
@@ -1856,21 +1856,35 @@ const mintAcceptance = Effect.fn("KnowledgeDoctor.mintAcceptance")(function* (
 });
 
 const checkLive = Effect.fn("KnowledgeDoctor.checkLive")(function* (options: KnowledgeDoctorCheckOptions) {
+  const ci = yield* isCi;
+  const progress = Effect.fn("KnowledgeDoctor.checkProgress")((phase: string) =>
+    ci ? Console.error(`[knowledge-doctor] phase: ${phase}`) : Effect.void
+  );
+  yield* progress("resolve-refs");
   const refs = yield* resolveDoctorRefs(options.baseRef);
-  return yield* Effect.scoped(
+  const checked = yield* Effect.scoped(
     Effect.gen(function* () {
+      yield* progress("materialize-head");
       const tree = yield* makeKnowledgeDoctorTree(refs.head);
+      yield* progress("read-head-seal");
       const head = yield* readKnowledgeSealFiles(tree);
+      yield* progress("materialize-base");
       const baseTree = yield* materializeKnowledgeTree(refs.mergeBase);
+      yield* progress("read-base-seal");
       const base = yield* readKnowledgeSealFiles(baseTree.oracle);
       const baseline = yield* Effect.fromOption(O.orElse(head.baseline, () => base.baseline)).pipe(
         Effect.mapError(missingBaseline)
       );
+      yield* progress("read-removals");
+      const removals = yield* tree.pathRemovals;
+      yield* progress("scan-tree");
       const report = yield* scanKnowledgeDoctorTree(tree);
       const adapter = doctorGitAdapter(`mintedAt ${baseline.mintedAt}`);
+      yield* progress("read-renames");
       const renames = yield* readGitRenames(refs.repoRoot, baseline.mintedAt, refs.head, [], adapter, () =>
         KnowledgeOperationalError.make({ message: "Malformed NUL-delimited rename output since mintedAt." })
       );
+      yield* progress("read-minted-paths");
       const mintedAtPaths = O.isSome(head.identity)
         ? yield* Effect.map(
             Effect.map(
@@ -1882,18 +1896,21 @@ const checkLive = Effect.fn("KnowledgeDoctor.checkLive")(function* (options: Kno
             HashSet.fromIterable
           )
         : HashSet.empty<string>();
+      yield* progress("read-changes");
       const changedPaths = yield* runGitPathList(
         refs.repoRoot,
         ["diff", "--name-only", "-z", refs.mergeBase, refs.head],
         doctorGitAdapter(refs.mergeBase)
       );
+      yield* progress("accept-mint");
       const acceptMint = options.acceptMint
         ? yield* O.match(head.baseline, {
             onNone: () => Effect.succeedNone,
             onSome: (headBaseline) => Effect.asSome(mintAcceptance(refs, headBaseline, head.baselineText)),
           })
         : O.none<KnowledgeMintAcceptance>();
-      return yield* checkKnowledgeDoctorReport(
+      yield* progress("compare-baseline");
+      const checked = yield* checkKnowledgeDoctorReport(
         KnowledgeDoctorCheckInput.make({
           acceptMint,
           base,
@@ -1906,11 +1923,15 @@ const checkLive = Effect.fn("KnowledgeDoctor.checkLive")(function* (options: Kno
           now: options.now,
           renames: A.map(renames, (rename) => [rename.sourcePath, rename.targetPath] as const),
           report,
-          removals: yield* tree.pathRemovals,
+          removals,
         })
       );
+      yield* progress("release-archives");
+      return checked;
     })
   );
+  yield* progress("complete");
+  return checked;
 });
 
 const verifyMintLive = Effect.scoped(
@@ -1996,8 +2017,9 @@ const mintLive = Effect.fn("KnowledgeDoctor.mintLive")(function* (options: Knowl
   );
   const commit = yield* resolveGitCommit(repoRoot, options.at, doctorGitAdapter(options.at));
   if (options.write) {
-    const mintWriteContext2 = yield* mintWriteContext(repoRoot, commit, options.baseRef);
-    const reasons = knowledgeMintWriteRefusals(mintWriteContext2);
+    const reasons = yield* mintWriteContext(repoRoot, commit, options.baseRef).pipe(
+      Effect.map(knowledgeMintWriteRefusals)
+    );
     if (A.isReadonlyArrayNonEmpty(reasons)) {
       return yield* KnowledgeMintContextRefusal.make({
         message: `knowledge doctor mint --write: ${A.length(reasons)} condition(s) unmet at ${commit}.`,

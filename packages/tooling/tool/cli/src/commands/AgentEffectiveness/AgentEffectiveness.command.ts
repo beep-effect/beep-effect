@@ -191,8 +191,7 @@ const renderDoctorReport: {
   2,
   Effect.fn("AgentEffectiveness.renderDoctorReport")(function* (report: AgentEffectivenessDoctorReport, json: boolean) {
     if (json) {
-      const agentEffectivenessDoctorReportToJson1 = yield* agentEffectivenessDoctorReportToJson(report);
-      yield* Console.log(agentEffectivenessDoctorReportToJson1);
+      yield* agentEffectivenessDoctorReportToJson(report).pipe(Effect.flatMap(Console.log));
       return;
     }
     yield* printLines([
@@ -214,8 +213,7 @@ const renderAnnotationPlan: {
     json: boolean
   ) {
     if (json) {
-      const agentEffectivenessAnnotationPlanToJson2 = yield* agentEffectivenessAnnotationPlanToJson(plan);
-      yield* Console.log(agentEffectivenessAnnotationPlanToJson2);
+      yield* agentEffectivenessAnnotationPlanToJson(plan).pipe(Effect.flatMap(Console.log));
       return;
     }
 

@@ -60,12 +60,8 @@ const validateUndo = Effect.fn("ContactSeeding.validateUndo")(function* (
   dryRun: boolean,
   yes: boolean
 ) {
-  if (byCategory === O.isSome(run)) {
-    return yield* ContactsError.make({ reason: "input" });
-  }
-  if (!dryRun && !yes) {
-    return yield* ContactsError.make({ reason: "confirmation" });
-  }
+  if (byCategory === O.isSome(run)) return yield* ContactsError.make({ reason: "input" });
+  if (!dryRun && !yes) return yield* ContactsError.make({ reason: "confirmation" });
 });
 
 const selectUndoJournals = Effect.fn("ContactSeeding.selectUndoJournals")(function* (
@@ -74,9 +70,7 @@ const selectUndoJournals = Effect.fn("ContactSeeding.selectUndoJournals")(functi
   byCategory: boolean
 ) {
   const selected = byCategory ? journals : A.filter(journals, (journal) => O.contains(journal.runId)(run));
-  if (!byCategory && A.isReadonlyArrayEmpty(selected)) {
-    return yield* ContactsError.make({ reason: "missing-journal" });
-  }
+  if (!byCategory && A.isReadonlyArrayEmpty(selected)) return yield* ContactsError.make({ reason: "missing-journal" });
   if (
     !byCategory &&
     A.some(
@@ -84,9 +78,8 @@ const selectUndoJournals = Effect.fn("ContactSeeding.selectUndoJournals")(functi
       (journal) =>
         O.isSome(journal.pendingSourceKey) || (A.isReadonlyArrayEmpty(journal.contacts) && O.isNone(journal.receipt))
     )
-  ) {
+  )
     return yield* ContactsError.make({ reason: "ambiguous-write" });
-  }
   return selected;
 });
 
@@ -146,9 +139,7 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
         offline: boolean,
         census: boolean
       ) {
-        if (census && !offline) {
-          return yield* ContactsError.make({ reason: "input" });
-        }
+        if (census && !offline) return yield* ContactsError.make({ reason: "input" });
         const source = yield* loadContacts(inputs, census).pipe(
           Effect.provideService(FileSystem.FileSystem, fs),
           Effect.provideService(Digest.Digest, digest)
@@ -207,9 +198,7 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
         apply: Effect.fn("ContactSeeding.apply")((inputs, yes) =>
           Effect.scoped(
             Effect.gen(function* () {
-              if (!yes) {
-                return yield* ContactsError.make({ reason: "confirmation" });
-              }
+              if (!yes) return yield* ContactsError.make({ reason: "confirmation" });
               yield* state.lock;
               const port = yield* online();
               const planned = yield* plan(inputs, false, false);
@@ -221,9 +210,7 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
                 O.exists(folder.displayName, (name) => name === seedFolderName)
               );
               const choices = A.isReadonlyArrayNonEmpty(recorded) ? recorded : named;
-              if (A.length(choices) > 1) {
-                return yield* ContactsError.make({ reason: "folder-ambiguous" });
-              }
+              if (A.length(choices) > 1) return yield* ContactsError.make({ reason: "folder-ambiguous" });
               let journal = RunJournal.make({ runId: planned.report.runId, folderCreated: false, contacts: [] });
               yield* state.save(journal);
               if (A.isReadonlyArrayEmpty(creates)) {
@@ -263,7 +250,7 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
                           );
                           if (A.length(candidates) === 1) {
                             const found = O.getOrThrow(A.head(candidates)).contact;
-                            if (O.isSome(found.changeKey)) {
+                            if (O.isSome(found.changeKey))
                               yield* state.save(
                                 RunJournal.make({
                                   ...journal,
@@ -278,7 +265,6 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
                                   ),
                                 })
                               );
-                            }
                           }
                           yield* Effect.logError("Contact seeding stopped after ambiguous create", {
                             reconciled: A.length(candidates),
@@ -287,9 +273,7 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
                         })
                       )
                     );
-                    if (O.isNone(contact.changeKey)) {
-                      return yield* ContactsError.make({ reason: "missing-version" });
-                    }
+                    if (O.isNone(contact.changeKey)) return yield* ContactsError.make({ reason: "missing-version" });
                     const next = RunJournal.make({
                       ...journal,
                       pendingSourceKey: O.none(),
@@ -319,9 +303,7 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
           Effect.scoped(
             Effect.gen(function* () {
               yield* validateUndo(run, byCategory, dryRun, yes);
-              if (!dryRun) {
-                yield* state.lock;
-              }
+              if (!dryRun) yield* state.lock;
               const port = yield* online();
               const inventory = yield* port.inventory;
               const journals = yield* state.journals;
@@ -391,9 +373,8 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
               (!Str.startsWith(`..${path.sep}`)(relative) && relative !== ".." && !path.isAbsolute(relative))
             );
           };
-          if (inside(target) || (yield* fs.exists(target))) {
+          if (inside(target) || (yield* fs.exists(target)))
             return yield* ContactsError.make({ reason: "unsafe-export" });
-          }
           let ancestor = path.dirname(target);
           while (!(yield* fs.exists(ancestor))) ancestor = path.dirname(ancestor);
           const realPath1 = yield* fs.realPath(ancestor);

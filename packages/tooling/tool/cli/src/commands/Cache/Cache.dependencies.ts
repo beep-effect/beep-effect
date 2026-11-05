@@ -34,6 +34,7 @@ import { CacheExecutablePin } from "./Cache.schemas.ts";
 import type { CacheEvidenceReference } from "@beep/repo-configs/cache";
 import type { CacheCensusWorkspace } from "./Cache.schemas.ts";
 
+const equivalentToolPins = S.toEquivalence(CacheDependencyMaterialization.fields.tools);
 const tools = ["bash", "cp", "find", "tar", "sha256sum", "awk"];
 const countFields = S.Tuple([S.Natural, S.Natural, S.Natural, S.Natural, S.Natural]);
 const decodeCountFields = S.decodeUnknownEffect(countFields);
@@ -91,15 +92,14 @@ const capture = Effect.fn("CacheDependencies.capture")(function* (
     env: { PATH: "/usr/bin", HOME: "/nonexistent", LANG: "C", LC_ALL: "C" },
     bound,
   }).pipe(Effect.timeout(Duration.minutes(15)));
-  if (result.exitCode !== 0 || result.truncated || Str.trim(result.stderr) !== "") {
+  if (result.exitCode !== 0 || result.truncated || Str.trim(result.stderr) !== "")
     return yield* CacheCommandError.new(`Dependency inspection subprocess failed: ${command}.`);
-  }
   return result.stdout;
 });
 const hash = (file: string) =>
   hashFileSha256(file, (cause) => CacheCommandError.new("Cannot hash dependency evidence.", cause));
 const toolPins = Effect.fn("CacheDependencies.toolPins")(function* () {
-  const forEach1 = yield* Effect.forEach(
+  return yield* Effect.forEach(
     tools,
     Effect.fn("CacheDependencies.toolPin")(function* (name) {
       const binary = `/usr/bin/${name}`;
@@ -113,16 +113,14 @@ const toolPins = Effect.fn("CacheDependencies.toolPins")(function* () {
       return Tuple.make(name, CacheExecutablePin.make({ version, sha256: yield* hash(binary) }));
     }),
     { concurrency: 1 }
-  );
-  return R.fromEntries(forEach1);
+  ).pipe(Effect.map(R.fromEntries));
 });
 const physicalTree = Effect.fn("CacheDependencies.physicalTree")(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const target = path.join(path.resolve(root), "node_modules");
-  if ((yield* fs.realPath(target)) !== target || (yield* fs.stat(target)).type !== "Directory") {
+  if ((yield* fs.realPath(target)) !== target || (yield* fs.stat(target)).type !== "Directory")
     return yield* CacheCommandError.new("Dependency node_modules must be a physical directory in its owning root.");
-  }
 });
 
 const inspectDependencyLink = Effect.fn("CacheDependencies.inspectLink")(function* (
@@ -137,9 +135,8 @@ const inspectDependencyLink = Effect.fn("CacheDependencies.inspectLink")(functio
     path.normalize(relative) !== relative ||
     Str.startsWith("../")(relative) ||
     path.isAbsolute(target)
-  ) {
+  )
     return yield* CacheCommandError.new("Dependency tree contains an absolute or escaping symlink.");
-  }
   const resolved = path.relative(
     path.resolve(root),
     path.resolve(root, "node_modules", path.dirname(relative), target)
@@ -148,9 +145,8 @@ const inspectDependencyLink = Effect.fn("CacheDependencies.inspectLink")(functio
     return CacheDependencyLink.cases.Internal.make({ path: relative, target });
 
   const workspace = A.findFirst(workspaces, (row) => row.directory === resolved && row.name === relative);
-  if (O.isNone(workspace)) {
+  if (O.isNone(workspace))
     return yield* CacheCommandError.new("Dependency symlink does not target its declared workspace.");
-  }
   return CacheDependencyLink.cases.Workspace.make({ path: relative, target, workspace: workspace.value.directory });
 });
 const decodeDependencyCounts = S.decodeUnknownEffect(S.Array(S.FiniteFromString));
@@ -186,23 +182,15 @@ export const inspectCacheDependencyTree = Effect.fn("CacheDependencies.inspect")
     Effect.flatMap(decodeCountFields)
   );
   const [bytes, regularFiles, linkCount, entries, special] = counts;
-  if (
-    bytes > 16 * 1024 * 1024 * 1024 ||
-    regularFiles > 400000 ||
-    entries > 600000 ||
-    linkCount > 4096 ||
-    special !== 0
-  ) {
+  if (bytes > 16 * 1024 * 1024 * 1024 || regularFiles > 400000 || entries > 600000 || linkCount > 4096 || special !== 0)
     return yield* CacheCommandError.new(
       "Dependency tree exceeded its byte/entry/link bound or contains a special file."
     );
-  }
   const encoded = yield* capture(root, "/usr/bin/find", ["node_modules", "-type", "l", "-printf", "%P\\0%l\\0"]);
   const rows = encoded === "" ? [] : A.chunksOf(A.dropRight(Str.split("\0")(encoded), 1), 2);
   const pairs = yield* decodeDependencyLinkPairs(rows);
-  if (pairs.length !== linkCount || Str.includes("\ufffd")(encoded)) {
+  if (pairs.length !== linkCount || Str.includes("\ufffd")(encoded))
     return yield* CacheCommandError.new("Dependency link inventory is incomplete or not valid text.");
-  }
   const links = yield* Effect.forEach(
     A.sort(pairs, Order.Tuple([Order.String, Order.String])),
     ([relative, target]) => inspectDependencyLink(root, workspaces, relative, target),
@@ -252,19 +240,14 @@ export const verifyCacheDependencies = Effect.fn("CacheDependencies.verify")(fun
   if (
     (yield* hash(path.join(root, "bun.lock"))) !== receipt.lockfileSha256 ||
     (yield* hash(path.join(root, "package.json"))) !== receipt.rootManifestSha256
-  ) {
+  )
     return yield* CacheCommandError.new("Dependency materialization has a stale lockfile or root manifest.");
-  }
-  const argument = S.toEquivalence(CacheDependencyMaterialization.fields.tools);
-  const toolPins1 = yield* toolPins();
-  if (!argument(toolPins1, receipt.tools)) {
+  if (!(yield* Effect.zipWith(toolPins(), Effect.succeed(receipt.tools), equivalentToolPins)))
     return yield* CacheCommandError.new("Dependency integrity tools differ from the retained pins.");
-  }
   const census = yield* collectCacheCensus(root);
   const observed = yield* inspectCacheDependencyTree(receipt.directory, census.workspaces);
-  if (!S.toEquivalence(CacheDependencyTree)(observed, receipt.tree)) {
+  if (!S.toEquivalence(CacheDependencyTree)(observed, receipt.tree))
     return yield* CacheCommandError.new("Retained dependency materialization changed or is incomplete.");
-  }
 }, CacheCommandError.mapError("Cannot verify dependency materialization."));
 const decodeNonEmptyString = S.decodeUnknownEffect(S.NonEmptyString);
 
@@ -314,9 +297,8 @@ export const materializeCacheDependencies = Effect.fn("CacheDependencies.materia
       yield* Effect.logInfo("Verifying dependency copy and source parity.");
       const copied = yield* inspectCacheDependencyTree(directory, census.workspaces);
       const after = yield* inspectCacheDependencyTree(root, census.workspaces);
-      if (!S.toEquivalence(CacheDependencyTree)(tree, copied) || !S.toEquivalence(CacheDependencyTree)(tree, after)) {
+      if (!S.toEquivalence(CacheDependencyTree)(tree, copied) || !S.toEquivalence(CacheDependencyTree)(tree, after))
         return yield* CacheCommandError.new("Source installation changed or dependency copy differs from its source.");
-      }
       const receipt = CacheDependencyMaterialization.make({
         schemaVersion: "cache-dependency-materialization/v1",
         authority: "local-installed-tree-snapshot",
