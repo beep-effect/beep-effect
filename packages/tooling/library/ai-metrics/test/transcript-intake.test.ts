@@ -4,6 +4,7 @@ import { readTranscriptPage, TranscriptPageInput } from "@beep/repo-ai-metrics/t
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { makeSqlTestLayer, NodeSqliteTestDriver } from "@beep/test-utils/SqlTest";
+import * as SqliteClient from "@effect/sql-sqlite-node/SqliteClient";
 import { expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
@@ -11,6 +12,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
+import * as Reactivity from "effect/reactivity/Reactivity";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
@@ -44,6 +46,23 @@ const fixture = Effect.fn("TranscriptIntakeTest.fixture")(function* (maxPages = 
   return { fs, path, config, input, page, journal };
 });
 const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
+  it.effect("refuses an in-memory database that cannot provide durable journal ownership", () =>
+    Effect.gen(function* () {
+      const { config } = yield* fixture();
+      const reactivity = yield* Reactivity.make;
+      const memory = yield* SqliteClient.make({ filename: ":memory:" }).pipe(
+        Effect.provideService(Reactivity.Reactivity, reactivity)
+      );
+      const error = yield* makeTranscriptIntakeJournal(config).pipe(
+        Effect.provideService(SqlClient.SqlClient, memory),
+        Effect.flip
+      );
+      expect(error.reason).toBe("configuration");
+    })
+  )
+);
 
 it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("commits a sanitized page and its cursor together, then returns the original receipt on replay", () =>

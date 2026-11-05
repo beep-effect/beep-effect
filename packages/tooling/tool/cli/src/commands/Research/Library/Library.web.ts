@@ -65,12 +65,11 @@ const readBoundedPaperBody = Effect.fn("Library.paper.readBoundedBody")(function
         signature.set(prefix, signatureBytes);
         signatureBytes += prefix.byteLength;
         const limit = pdfAllowed && isPdf(signature) ? 50_000_000 : 5_000_000;
-        if (chunk.byteLength > limit - total) {
+        if (chunk.byteLength > limit - total)
           return yield* LibraryError.make({
             cause: "body-bound",
             message: `Paper HTTP body exceeded the ${limit}-byte observed stream limit.`,
           });
-        }
         const required = total + chunk.byteLength;
         if (required > bytes.byteLength) {
           const grown = new Uint8Array(Num.min(limit, Num.max(required, Num.max(1024, bytes.byteLength * 2))));
@@ -229,9 +228,7 @@ export const acquireLibraryPaper = Effect.fn("Library.acquirePaper")(function* (
         reason: `Full-paper target returned HTTP ${response.status} without a supported-size PDF signature; response retained.`,
       });
     });
-    if (!successfulPdf(response.status, bytes)) {
-      return yield* retainFailedPdf();
-    }
+    if (!successfulPdf(response.status, bytes)) return yield* retainFailedPdf();
     const saved = yield* saveImmutable(root, `${prefix}/source.pdf`, bytes);
     const pdf = LibraryArtifact.make({ ...saved, mediaType: "application/pdf", role: "raw-full-text" });
     artifacts.push(pdf);
@@ -327,9 +324,7 @@ export const acquireLibraryPaper = Effect.fn("Library.acquirePaper")(function* (
         );
       }
     });
-    if (O.isSome(arxiv) && O.isNone(actual)) {
-      yield* observeHeaderlessVersion(arxiv.value[1] ?? "");
-    }
+    if (O.isSome(arxiv) && O.isNone(actual)) yield* observeHeaderlessVersion(arxiv.value[1] ?? "");
     const finishPaperReceipt = Effect.fn("Library.paper.finishReceipt")(function* () {
       const versionMatches = Str.isEmpty(source.revision) || source.revision === capturedRevision;
       const argument4 = `${prefix}/target.json`;

@@ -10,6 +10,7 @@ import {
   qualifyClaimInput,
 } from "@beep/law-practice-domain/values/PatentDocument";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { assert, describe } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -38,9 +39,9 @@ describe("claim inspection source identity", () => {
       Effect.gen(function* () {
         const encoded = yield* S.encodeEffect(claimRecordJson)(record);
         const decoded = yield* S.decodeEffect(claimRecordJson)(encoded);
-        assert.strictEqual(claimRecordEquivalence(decoded, record), true);
+        assert.isTrue(claimRecordEquivalence(decoded, record));
       }),
-    { arbitrary: { seed: "claim-input-preservation-v1", runs: 100 } }
+    { arbitrary: fcRuns(100) }
   );
 
   it.effect("preserves duplicate and missing literal numbers through the actual JSON codec", () =>

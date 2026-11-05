@@ -101,9 +101,8 @@ export const readCacheSignatureRequired = Effect.fn("CacheFingerprint.readSignat
     const path = yield* Path.Path;
     const json = yield* fs.exists(path.join(root, "turbo.json"));
     const jsonc = yield* fs.exists(path.join(root, "turbo.jsonc"));
-    if (json === jsonc) {
+    if (json === jsonc)
       return yield* CacheCommandError.new("Signing posture requires exactly one checkout root Turbo configuration.");
-    }
     const read = yield* readContainedFileBytesNoFollow(root, json ? "turbo.json" : "turbo.jsonc", 1024 * 1024);
     const bytes = yield* read.contents.pipe(
       Effect.fromOption(() => CacheCommandError.new("Root Turbo configuration is unavailable."))
@@ -140,9 +139,8 @@ const captureVersion = Effect.fn("CacheFingerprint.captureVersion")(function* (
     extendEnv: false,
     env: { PATH: searchPath, LANG: "C", LC_ALL: "C", TURBO_TELEMETRY_DISABLED: "1" },
   });
-  if (result.exitCode !== 0 || result.truncated) {
+  if (result.exitCode !== 0 || result.truncated)
     return yield* CacheCommandError.new("Tool fingerprint subprocess failed or exceeded its capture bound.");
-  }
   return yield* decodeNonEmptyString(Str.trim(result.output));
 }, CacheCommandError.mapError("Cannot observe tool version."));
 
@@ -194,9 +192,8 @@ export const collectCacheGitExclusions = Effect.fn("CacheFingerprint.gitExclusio
     "--git-common-dir",
   ]);
   const file = yield* readContainedFileBytesNoFollow(commonDirectory, "info/exclude", S.Natural.make(1048576));
-  if (file.exists && O.isNone(file.contents)) {
+  if (file.exists && O.isNone(file.contents))
     return yield* CacheCommandError.new("Git local exclusions must be a bounded regular file or absent.");
-  }
   const contents = O.getOrElse(file.contents, () => new Uint8Array(0));
   return CacheCensusSource.make({ path: ".git/info/exclude", sha256: yield* hashBytes(contents) });
 }, CacheCommandError.mapError("Cannot fingerprint Git local exclusions."));
@@ -216,9 +213,8 @@ export const collectCacheGitExclusions = Effect.fn("CacheFingerprint.gitExclusio
  * @since 0.0.0
  */
 export const collectCacheToolchain = Effect.fn("CacheFingerprint.toolchain")(function* (root: string) {
-  if ((yield* HostProcessPlatform) !== "linux" || (yield* HostProcessArchitecture) !== "x64") {
+  if ((yield* HostProcessPlatform) !== "linux" || (yield* HostProcessArchitecture) !== "x64")
     return yield* CacheCommandError.new("The initial qualification profile requires Linux x64.");
-  }
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const libc = yield* captureVersion(root, "getconf", ["GNU_LIBC_VERSION"]);
@@ -227,17 +223,14 @@ export const collectCacheToolchain = Effect.fn("CacheFingerprint.toolchain")(fun
   const bunPath = yield* captureVersion(root, "bun", ["-p", "process.execPath"]);
   const turboPath = yield* resolveCacheTurboBinary(root);
   const biomePath = path.join(root, "node_modules/@biomejs/cli-linux-x64/biome");
-  if (!(yield* fs.exists(biomePath))) {
-    return yield* CacheCommandError.new("The glibc Biome binary is not installed.");
-  }
+  if (!(yield* fs.exists(biomePath))) return yield* CacheCommandError.new("The glibc Biome binary is not installed.");
   const bun = yield* fingerprintExecutable(root, bunPath);
   const declared = yield* readContainedFileBytesNoFollow(root, ".bun-version", S.Natural.make(128));
   const declaration = yield* declared.contents.pipe(
     Effect.fromOption(() => CacheCommandError.new("A regular bounded .bun-version file is required."))
   );
-  if (bun.version !== Str.trim(new TextDecoder().decode(declaration))) {
+  if (bun.version !== Str.trim(new TextDecoder().decode(declaration)))
     return yield* CacheCommandError.new("The observed Bun runtime differs from the repository .bun-version pin.");
-  }
   const profile = yield* decodeToolchainProfile(`local-linux-x64-bun${bun.version}`);
   const sources = yield* Effect.forEach(
     [
@@ -258,32 +251,27 @@ export const collectCacheToolchain = Effect.fn("CacheFingerprint.toolchain")(fun
       });
     })
   );
-  const argument = yield* fingerprintExecutable(root, nodePath);
-  const argument1 = yield* fingerprintExecutable(root, turboPath);
-  const argument2 = yield* fingerprintExecutable(root, biomePath);
-  const collectCacheRuntimeLinker1 = yield* collectCacheRuntimeLinker(root, {
-    bun: bunPath,
-    node: nodePath,
-    turbo: turboPath,
-    biome: biomePath,
-    bash: "/usr/bin/bash",
-    sh: "/usr/bin/sh",
-  });
-  const argument3 = O.some(collectCacheRuntimeLinker1);
-  const inspectCacheDependencyTree2 = yield* inspectCacheDependencyTree(
-    root,
-    (yield* collectCacheCensus(root)).workspaces
-  );
   return CacheToolchainSnapshot.make({
     profile,
     kernel,
     libc,
     bun,
-    node: argument,
-    turbo: argument1,
-    biome: argument2,
-    runtimeLinker: argument3,
-    installedDependencies: O.some(inspectCacheDependencyTree2),
+    node: yield* fingerprintExecutable(root, nodePath),
+    turbo: yield* fingerprintExecutable(root, turboPath),
+    biome: yield* fingerprintExecutable(root, biomePath),
+    runtimeLinker: yield* Effect.asSome(
+      collectCacheRuntimeLinker(root, {
+        bun: bunPath,
+        node: nodePath,
+        turbo: turboPath,
+        biome: biomePath,
+        bash: "/usr/bin/bash",
+        sh: "/usr/bin/sh",
+      })
+    ),
+    installedDependencies: yield* Effect.asSome(
+      inspectCacheDependencyTree(root, (yield* collectCacheCensus(root)).workspaces)
+    ),
     sources: [
       CacheCensusSource.make({ path: ".bun-version", sha256: yield* hashBytes(declaration) }),
       yield* collectCacheGitExclusions(root),
@@ -349,12 +337,10 @@ export const fingerprintCacheComputation = Effect.fn("CacheFingerprint.computati
   census: CacheCensusReport,
   toolchain: CacheToolchainSnapshot
 ) {
-  if (key.profile !== toolchain.profile) {
+  if (key.profile !== toolchain.profile)
     return yield* CacheCommandError.new("Computation and observed toolchain use different profiles.");
-  }
-  if (toolchain.profile !== `local-linux-x64-bun${toolchain.bun.version}`) {
+  if (toolchain.profile !== `local-linux-x64-bun${toolchain.bun.version}`)
     return yield* CacheCommandError.new("The observed Bun version differs from its named profile.");
-  }
   const target = yield* A.findFirst(census.nodes, (node) => node.id === key.computation && O.isSome(node.command)).pipe(
     Effect.fromOption(() => CacheCommandError.new("A missing or graph-only computation has no executable fingerprint."))
   );
@@ -398,17 +384,14 @@ const validateActivationArtifacts = Effect.fn("CacheFingerprint.validateActivati
     activation.before.path === activation.after.path ||
     activation.before.path === activation.path ||
     activation.after.path === activation.path
-  ) {
+  )
     return yield* CacheCommandError.new("Activation requires separate immutable before/after artifacts.");
-  }
   const sources = A.filter(census.sources, (entry) => entry.path === activation.path);
-  if (A.length(sources) !== 1 || !A.every(sources, (entry) => entry.sha256 === activation.before.sha256)) {
+  if (A.length(sources) !== 1 || !A.every(sources, (entry) => entry.sha256 === activation.before.sha256))
     return yield* CacheCommandError.new("The observed activation source file differs from its reviewed bytes.");
-  }
   for (const [text, expected] of A.zip([before, after], [activation.before.sha256, activation.after.sha256])) {
-    if ((yield* hashBytes(new TextEncoder().encode(text))) !== expected) {
+    if ((yield* hashBytes(new TextEncoder().encode(text))) !== expected)
       return yield* CacheCommandError.new("Activation artifact bytes differ from their digests.");
-    }
   }
 });
 const decodeComputationParts = S.decodeUnknownEffect(S.Tuple([S.NonEmptyString, S.NonEmptyString]));
@@ -486,35 +469,30 @@ export const projectCacheActivation = Effect.fn("CacheFingerprint.projectActivat
   after: string
 ) {
   const source = yield* fingerprintCacheComputation(key, census, toolchain);
-  if (source.configurationDigest !== activation.sourceConfiguration) {
+  if (source.configurationDigest !== activation.sourceConfiguration)
     return yield* CacheCommandError.new("The disabled computation configuration has drifted.");
-  }
   const [workspaceName, taskName] = yield* decodeComputationParts(Str.split("#")(key.computation));
   const workspace = yield* A.findFirst(census.workspaces, (entry) => entry.name === workspaceName).pipe(
     Effect.fromOption(() => CacheCommandError.new("The activation workspace is missing."))
   );
-  if (!A.contains([`${workspace.directory}/turbo.json`, `${workspace.directory}/turbo.jsonc`], activation.path)) {
+  if (!A.contains([`${workspace.directory}/turbo.json`, `${workspace.directory}/turbo.jsonc`], activation.path))
     return yield* CacheCommandError.new(
       "Activation must target the selected workspace's inheriting Turbo configuration."
     );
-  }
   yield* validateActivationArtifacts(census, activation, before, after);
   const disabled = yield* decodeJsonObjectText(before);
   const enabled = yield* decodeJsonObjectText(after);
   yield* decodeRootInheritance(disabled.extends);
   const tasks = yield* decodeJsonObject(disabled.tasks);
   const definition = yield* decodeJsonObject(tasks[taskName]);
-  if (definition.cache !== false) {
+  if (definition.cache !== false)
     return yield* CacheCommandError.new("Activation requires an explicitly disabled source task.");
-  }
   const expected = R.set(disabled, "tasks", R.set(tasks, taskName, R.set(definition, "cache", true)));
-  if (!S.toEquivalence(S.JsonObject)(expected, enabled)) {
+  if (!S.toEquivalence(S.JsonObject)(expected, enabled))
     return yield* CacheCommandError.new("Activation may change only the selected task's cache flag.");
-  }
   const selected = A.filter(census.nodes, (node) => node.id === key.computation);
-  if (A.length(selected) !== 1 || A.some(selected, (node) => node.configuration.cache)) {
+  if (A.length(selected) !== 1 || A.some(selected, (node) => node.configuration.cache))
     return yield* CacheCommandError.new("Activation requires one disabled executable computation.");
-  }
   return yield* fingerprintCacheComputation(
     key,
     CacheCensusReport.make({
@@ -571,12 +549,10 @@ export const projectCacheSignedActivation = Effect.fn("CacheFingerprint.projectS
     roots.length !== 1 ||
     !A.every(roots, (source) => source.sha256 === rootDigest) ||
     !S.toEquivalence(S.Json)(globalConfiguration, census.globalConfiguration)
-  ) {
+  )
     return yield* CacheCommandError.new("Signed projection source root differs from the observed census.");
-  }
-  if ((yield* projectCacheSignedRoot(rootBefore)) !== rootSigned) {
+  if ((yield* projectCacheSignedRoot(rootBefore)) !== rootSigned)
     return yield* CacheCommandError.new("Signed root bytes differ from the exact reviewed projection.");
-  }
   const activated = yield* projectCacheActivation(key, census, toolchain, activation, before, after);
   const signed = yield* decodeJsonObjectText(rootSigned);
   const signedDigest = yield* hashBytes(new TextEncoder().encode(rootSigned));

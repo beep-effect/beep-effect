@@ -1710,7 +1710,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     })
   );
 
-  it.effect("keeps protected source inspection credential-free and retains only its bounded report", () =>
+  it.effect("keeps source inspection credential-free with bounded dependency diagnostics", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* findRepoRoot();
@@ -1785,11 +1785,36 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const inspect = stepByName(steps, "Write bounded source inspection");
       expect(inspect.env).toEqual({ BEEP_TURBO_HOST_CACHE_DISABLED: "true" });
       expect(inspect.run).toContain("bun --no-env-file run beep cache producer-inspect");
+      expect(inspect.run).toContain("set -euo pipefail");
+      const diagnosticName = "Diagnose installed dependency drift without capabilities";
+      const diagnostic = stepByName(steps, diagnosticName);
+      expect(diagnostic.env).toEqual({ SOURCE_REPORT: "${{ steps.inspection.outputs.report }}" });
+      expect(diagnostic.run).toContain('test "$(git rev-parse HEAD)" = "$GITHUB_SHA"');
+      expect(diagnostic.run).toContain(
+        "/usr/bin/python3 -I -S goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py"
+      );
+      expect(diagnostic.run).toContain('--source-report "$SOURCE_REPORT" --output "$diagnostic"');
+      expect(diagnostic.run).toContain('--revision "$GITHUB_SHA"');
+      expect(stepIndexByName(steps, "Write bounded source inspection")).toBeLessThan(
+        stepIndexByName(steps, diagnosticName)
+      );
+      expect(stepIndexByName(steps, diagnosticName)).toBeLessThan(
+        stepIndexByName(steps, "Retain inspection for at most one day")
+      );
       const retain = stepByName(steps, "Retain inspection for at most one day");
       expect(retain.with).toEqual({
         name: "cache-producer-inspection-${{ github.run_id }}-${{ github.run_attempt }}",
         path: "${{ steps.inspection.outputs.report }}",
         "if-no-files-found": "error",
+        "retention-days": 1,
+        "compression-level": 0,
+      });
+      const dependencyRetain = stepByName(steps, "Retain dependency diagnostic for at most one day");
+      expect(dependencyRetain.if).toBe("always() && steps.dependency-diagnostics.outputs.report != ''");
+      expect(dependencyRetain.with).toEqual({
+        name: "cache-producer-dependencies-${{ github.run_id }}-${{ github.run_attempt }}",
+        path: "${{ steps.dependency-diagnostics.outputs.report }}",
+        "if-no-files-found": "warn",
         "retention-days": 1,
         "compression-level": 0,
       });

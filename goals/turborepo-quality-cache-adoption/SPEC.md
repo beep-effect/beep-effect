@@ -221,6 +221,7 @@ do not purge a shared cache or relax inputs to conceal a regression.
 
 | Date | Decision and reason | Reversal |
 | --- | --- | --- |
+| 2026-11-03 | Preserve at most 2,000 trailing output characters when a captured quality command times out. The policy job on #2686 lost all captured doctor output at its unchanged 15-minute deadline, preventing phase attribution. Keep the timeout, failure status, bounded cleanup and existing capture prefix unchanged; this diagnostic repair does not qualify a cache or resolve the underlying doctor timeout. | Revert the focused capture-tail repair; no persisted state, cache policy or runtime budget changes. |
 | 2026-10-28 | Resume in the dedicated `codex/turborepo-goals-completion` lane. Refresh current source, client pins and population before promoting anything; older qualification remains bound to its original tuple. | Retain the previous approved configuration and remove only this lane's changes through a reviewed revert. |
 | 2026-10-28 | Treat the already approved R2 fleet as the current consumer path and retain AWS as its rollback. The user approved named trusted workstation writers; this grants upload capability, not protected-workflow producer identity. Refresh both boundaries before claiming production trust. | Disable affected remote reuse, stop mixed writes and restore the prior approved endpoint and epoch through a rehearsed path. |
 | 2026-10-28 | Pin native experiment execution with `--skip-infer --single-package`; a zero-task fixture is a failure. Keep supervisor failures bounded to exit code or capture truncation without attaching private worker streams. | Revert the runner change through Yeet; keep promotion closed when exact native execution is unproven. |
@@ -741,3 +742,34 @@ results. Six controlled source changes must refuse before client selection; the
 legacy prefixes lack that refusal. No task body executes, feature/tuple is
 qualified or runtime setting changes. Reverse the driver/registration wave
 through Git while retaining both source envelopes and their observations.
+
+
+### CI doctor timeout phase diagnostics, 2026-11-03
+
+The actual second policy attempt on #2688 failed both the inherited
+ClaimElement effect-vitest policy and a 900-second knowledge-doctor timeout.
+The first attempt's runner-loss attribution applies only to that attempt.
+The new capture tail correctly retained the normal non-mint gate-selection
+output; it did not identify the stalled doctor phase or a permission failure.
+
+Use fourteen fixed phase messages on CI stderr in the live doctor check. Keep
+ordinary local output, report stdout, the command deadline, ordered operations,
+error propagation and all seal/mint gate rules. No file contents, paths, refs,
+identifiers, tokens, environment values or per-document messages are logged.
+This prepares the next hosted execution to identify a phase; it does not claim
+the timeout is repaired. Reverse by removing these phase emissions while
+retaining the actual timeout evidence and its unresolved hold. No local quality
+suite, generator, new runner capacity or paid service is authorized by this
+diagnostic change.
+
+
+### First cached history read diagnostic, 2026-11-03
+
+Review of #2688 showed that the scan consumes cached path-removal history
+inside its report grouping. Move the `read-removals` phase and first read ahead
+of the scan, and keep the later baseline consumer on that same value. This
+supersedes the earlier operation-order statement only for this optional cached
+read. Keep its query arguments, fallback, cache, report and gate rules. All
+fourteen fixed labels and their 564-byte bound remain; no per-document output
+or new quality operation is introduced. Reverse by moving this cached read
+back while retaining the review finding and unresolved timeout evidence.

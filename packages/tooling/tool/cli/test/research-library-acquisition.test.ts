@@ -21,6 +21,7 @@ import {
   acquireLibraryGithub,
   acquireLibraryPaper,
   acquireLibrarySource,
+  acquireLibraryYoutube,
   correctLibraryCaptures,
   LibraryCaptureCorrection,
   libraryCaptionProvenance,
@@ -363,7 +364,9 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
         fixture.path.join(clone, "large.txt"),
         Str.repeat(360_000)("actual cited patch content ")
       );
-      yield* runLibraryCommand(fixture.root, "git", ["-C", clone, "add", "large.txt"]);
+      yield* fixture.fs.writeFileString(fixture.path.join(clone, "README.md"), "# Synthetic fixture repository\n");
+      yield* fixture.fs.writeFileString(fixture.path.join(clone, "LICENSE"), "Synthetic MIT license fixture\n");
+      yield* runLibraryCommand(fixture.root, "git", ["-C", clone, "add", "large.txt", "README.md", "LICENSE"]);
       yield* runLibraryCommand(fixture.root, "git", [
         "-C",
         clone,
@@ -394,6 +397,16 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
       expect(patch.bytes).toBeGreaterThan(8_000_000);
       const readFileString7 = yield* fixture.fs.readFileString(fixture.path.join(fixture.root, patch.path));
       expect(readFileString7).toContain("actual cited patch content");
+      const readme = O.getOrThrow(
+        A.findFirst(capture.artifacts, (artifact) => artifact.role === "extracted-full-text")
+      );
+      const license = O.getOrThrow(
+        A.findFirst(capture.artifacts, (artifact) => artifact.role === "repository-license")
+      );
+      const readmeText = yield* fixture.fs.readFileString(fixture.path.join(fixture.root, readme.path));
+      const licenseText = yield* fixture.fs.readFileString(fixture.path.join(fixture.root, license.path));
+      expect(readmeText).toBe("# Synthetic fixture repository\n");
+      expect(licenseText).toBe("Synthetic MIT license fixture\n");
     })
   );
 
@@ -583,6 +596,27 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
         ["en", "creator", "source.en.vtt"],
         ["en-orig", "automatic", "source.en-orig.vtt"],
       ]);
+    })
+  );
+
+  it.effect("refuses a completed video extraction that omitted its identity metadata", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepare();
+      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      const video = LibrarySource.make({
+        ...source,
+        kind: "youtube",
+        canonicalUrl: "https://www.youtube.com/watch?v=video",
+        identity: "youtube:video",
+      });
+      const error = yield* acquireLibraryYoutube(fixture.root, video, "captures/no-metadata").pipe(
+        Effect.provideService(
+          ChildProcessSpawner.ChildProcessSpawner,
+          ChildProcessSpawner.make(() => spawner.spawn(ChildProcess.make("/usr/bin/true")))
+        ),
+        Effect.flip
+      );
+      expect(error).toMatchObject({ _tag: "LibraryError", message: "YouTube extractor omitted metadata." });
     })
   );
 
