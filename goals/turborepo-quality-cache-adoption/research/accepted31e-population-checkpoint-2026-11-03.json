@@ -1,0 +1,105 @@
+{
+  "schemaVersion": "cache-population-current-source-checkpoint/v1",
+  "recordedAt": "2026-11-03T13:24:29.596170+00:00",
+  "authority": "Accepted-source census and literal review queue. No qualification, runtime change, cache activation or whole-goal acceptance.",
+  "sourceBaseRevision": "31e2ac20f34a1c699a35be55f67881dbf0d8ffd0",
+  "priorSourceBaseRevision": "fae5b2098c8a08b77df6f9e33e370e0e01f2ea68",
+  "census": {
+    "sha256": "1ace258b07a1fa04216a40ed9730d9ab8163055b9444b8ff2e5ad3724380c77c",
+    "sourceBindingsVerified": 458,
+    "nativeElapsedSeconds": 4.833,
+    "taskBodiesExecuted": 0,
+    "privateLocation": "~/.local/state/beep/r2-pilot/completion-2026-10-29/continuation-20261102/accepted31e-census-20261103.json",
+    "retention": "Retain through both whole-goal closeouts; no configured local expiry. No offsite backup claim."
+  },
+  "priorPopulation": {
+    "path": "research/population-before-accepted31e-refresh-2026-11-03.json",
+    "sha256": "eb4bdd41f040e53dafc0c085f92a95ba6db044a9475f05b99cf7435eab75fd66",
+    "preservedByteIdentically": true
+  },
+  "population": {
+    "path": "research/current-population.json",
+    "counts": {
+      "workspaces": 194,
+      "rootScripts": 115,
+      "configuredGraphNodes": 4528,
+      "executableComputations": 2436,
+      "graphOnlyNodes": 2092,
+      "cacheEnabledExecutableComputations": 1670,
+      "newSinceRetainedHandoff": 640,
+      "retainedCommandTextUnchanged": 1785,
+      "retainedQualificationRecordStates": {
+        "excluded": 5
+      },
+      "priorReviewedDispositionsRetained": 200,
+      "priorReviewedComputationsStillPresent": 199
+    }
+  },
+  "delta": {
+    "addedComputations": [
+      "@beep/party-server#build",
+      "@beep/party-server#check",
+      "@beep/party-server#coverage",
+      "@beep/party-server#docgen",
+      "@beep/party-server#lint",
+      "@beep/party-server#lint:deprecated-apis",
+      "@beep/party-server#lint:fix",
+      "@beep/party-server#lint:jsdoc",
+      "@beep/party-server#lint:laws",
+      "@beep/party-server#package-test-typecheck",
+      "@beep/party-server#test",
+      "@beep/party-server#test:integration",
+      "@beep/party-use-cases#build",
+      "@beep/party-use-cases#check",
+      "@beep/party-use-cases#coverage",
+      "@beep/party-use-cases#docgen",
+      "@beep/party-use-cases#lint",
+      "@beep/party-use-cases#lint:deprecated-apis",
+      "@beep/party-use-cases#lint:fix",
+      "@beep/party-use-cases#lint:jsdoc",
+      "@beep/party-use-cases#lint:laws",
+      "@beep/party-use-cases#package-test-typecheck",
+      "@beep/party-use-cases#test",
+      "@beep/party-use-cases#test:integration",
+      "@beep/repo-cli-kit#build",
+      "@beep/repo-cli-kit#check",
+      "@beep/repo-cli-kit#coverage",
+      "@beep/repo-cli-kit#docgen",
+      "@beep/repo-cli-kit#lint",
+      "@beep/repo-cli-kit#lint:deprecated-apis",
+      "@beep/repo-cli-kit#lint:fix",
+      "@beep/repo-cli-kit#lint:jsdoc",
+      "@beep/repo-cli-kit#lint:laws",
+      "@beep/repo-cli-kit#package-test-typecheck",
+      "@beep/repo-cli-kit#test",
+      "@beep/repo-cli-kit#test:integration"
+    ],
+    "removedComputations": [],
+    "changedFieldCounts": {
+      "commandDigest": 12,
+      "dependencies": 29,
+      "configurationId": 1,
+      "observedInputCount": 486,
+      "observedInputsDigest": 2400
+    },
+    "commandDigestMeaning": "Workspace-wide script-map binding; a changed digest alone is not a changed literal task command."
+  },
+  "freshReview": {
+    "path": "research/accepted31e-fresh-disposition-review-2026-11-03.json",
+    "sha256": "79ce88220db3c017d278c87f9248e95e25f733d15d99fbb3c4aa0d644eed8f5e",
+    "counts": {
+      "sourceMutatingFixers": 189,
+      "persistentServices": 12,
+      "reviewedWholeTaskFreshDispositions": 201,
+      "remainingCurrentSourceReviews": 2235,
+      "newExplicitWholeTaskReviews": 3
+    }
+  },
+  "unresolvedCensusObligations": [
+    "Classify nested workspace and root command semantics.",
+    "Review dynamic Cache/CI/Quality/Yeet entrypoint branches and their external verdicts."
+  ],
+  "qualificationLedgerChanged": false,
+  "featureDecisionsChanged": false,
+  "wholeGoalAcceptanceChanged": false
+}

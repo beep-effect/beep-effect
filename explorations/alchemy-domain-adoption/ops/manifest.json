@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "alchemy-domain-adoption",
+    "title": "Alchemy Domain Adoption",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": ["goals/alchemy-vault-sync-slice"],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-11-03",
+    "updated": "2026-11-05"
+  }
+}
