@@ -17,6 +17,7 @@ import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -145,6 +146,12 @@ describe("goals decisions projection", () => {
       expect(appended).toBe(
         "# Plan\n\n## Phases\n\nrows\n\n## Checkpoints\n\n<!-- beep:decisions:begin -->\n<!-- beep:decisions:end -->\n"
       );
+      const absent = Result.getOrThrow(spliceGoalDecisionBlock(O.none(), SPEC_TARGET, "<!-- block -->"));
+      expect(absent).toBe("## Decision log\n\n<!-- block -->\n");
+      const lastSection = Result.getOrThrow(
+        spliceGoalDecisionBlock(O.some("# Spec\n\n## Decision log\n\nrow\n\n\n"), SPEC_TARGET, "<!-- block -->")
+      );
+      expect(lastSection).toBe("# Spec\n\n## Decision log\n\nrow\n\n<!-- block -->\n");
       const unbalanced = spliceGoalDecisionBlock(
         O.some("## Decision log\n\n<!-- beep:decisions:begin -->\n"),
         SPEC_TARGET,
@@ -278,6 +285,46 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         expectReportedExit(invalid);
         const withInvalid = yield* goalPacketFindings(record, reader);
         expect(A.some(withInvalid.findings, (item) => item.key === "demo decision-file-invalid scratch.md")).toBe(true);
+      })
+    );
+
+    it.effect("rejects bad inputs, reports JSON, and refuses a packet with an unbalanced marker pair", () =>
+      Effect.gen(function* () {
+        yield* temporaryWorkingDirectory;
+        yield* writeProjectFile("goals/demo/SPEC.md", "# Demo\n\n## Decision log\n\nlegacy\n");
+        yield* writeProjectFile("goals/demo/README.md", "# Demo\n\nLifecycle: `active`\n");
+        const expectFails = Effect.fnUntraced(function* <A, E, R>(effect: Effect.Effect<A, E, R>) {
+          const exit = yield* Effect.exit(effect);
+          exit.pipe(Exit.isFailure, assertTrue);
+        });
+        const add = (...args: ReadonlyArray<string>) =>
+          expectFails(runGoalsCommand(["decisions", "add", ...args, "--date", "2026-11-05"]));
+        const base = ["--title", "Valid title", "--reversal", "Revert."] as const;
+        yield* add("Bad_Slug", ...base);
+        yield* add("missing", ...base);
+        yield* add("demo", ...base, "--kind", "bogus");
+        yield* add("demo", ...base, "--topic", "!!!");
+        yield* add("demo", ...base, "--pr", "abc");
+        yield* add("demo", "--title", "   ", "--reversal", "Revert.");
+        yield* expectFails(runGoalsCommand(["decisions", "check", "--slug", "Bad_Slug"]));
+        yield* expectFails(runGoalsCommand(["decisions", "check", "--slug", "missing"]));
+
+        yield* runGoalsCommand(["decisions", "check", "--json"]);
+
+        // A lone marker makes the document ambiguous: the add writes the file but refuses to project.
+        yield* writeProjectFile("goals/demo/SPEC.md", "# Demo\n\n## Decision log\n\n<!-- beep:decisions:begin -->\n");
+        yield* add("demo", ...base);
+        yield* expectFails(runGoalsCommand(["decisions", "check", "--slug", "demo"]));
+        const report = yield* goalDecisionLogReport(
+          GoalPacketRecord.make({
+            slug: "demo",
+            packetPath: "goals/demo",
+            manifestPath: "goals/demo/ops/manifest.json",
+            readmePath: "goals/demo/README.md",
+          }),
+          makeGoalPacketFilesystemReader()
+        );
+        expect(A.map(report.invalid, (item) => item.file)).toEqual(["SPEC.md"]);
       })
     );
   }
