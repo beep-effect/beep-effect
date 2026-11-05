@@ -144,41 +144,31 @@ export const acquireLibraryYoutube = Effect.fn("Library.acquireYoutube")(functio
   );
   const names = yield* fs.readDirectory(stage);
   const infoName = A.findFirst(names, Str.endsWith(".info.json"));
-  if (infoName._tag === "None") {
+  if (infoName._tag === "None")
     return yield* LibraryError.make({ message: "YouTube extractor omitted metadata.", cause: "identity" });
-  }
   const raw = yield* fs.readFileString(path.join(stage, infoName.value));
   const metadata = yield* decodeLibraryJson(VideoMetadata)(raw);
-  if (source.identity !== `youtube:${metadata.id}`) {
+  if (source.identity !== `youtube:${metadata.id}`)
     return yield* LibraryError.make({ message: "YouTube metadata identity mismatch.", cause: "identity" });
-  }
-  const artifacts = [
-    yield* saveLibraryText(root, `${prefix}/metadata.json`, raw, "application/json", "target-metadata"),
-  ];
+  let artifacts = [yield* saveLibraryText(root, `${prefix}/metadata.json`, raw, "application/json", "target-metadata")];
   const captions = A.filter(names, Str.endsWith(".vtt"));
   const provenance = libraryCaptionProvenance(metadata, captions);
-  const argument = `${prefix}/caption-provenance.json`;
   const encodedLibraryJson = yield* encodeLibraryJson(provenance);
-  const saveLibraryText1 = yield* saveLibraryText(
+  artifacts = yield* saveLibraryText(
     root,
-    argument,
+    `${prefix}/caption-provenance.json`,
     encodedLibraryJson,
     "application/json",
     "transcript-provenance"
-  );
-  artifacts.push(saveLibraryText1);
+  ).pipe(Effect.map(A.of), Effect.map(A.prependAll(artifacts)));
   let usable = 0;
   const retainCaptionTrack = Effect.fn("Library.youtube.retainCaptionTrack")(function* (name: string) {
     const text = yield* fs.readFileString(path.join(stage, name));
     if (!Str.includes("WEBVTT")(text) || !Str.includes("-->")(text)) return;
-    const saveLibraryText2 = yield* saveLibraryText(
-      root,
-      `${prefix}/${name}`,
-      text,
-      "text/vtt",
-      "transcript-full-text"
+    artifacts = yield* saveLibraryText(root, `${prefix}/${name}`, text, "text/vtt", "transcript-full-text").pipe(
+      Effect.map(A.of),
+      Effect.map(A.prependAll(artifacts))
     );
-    artifacts.push(saveLibraryText2);
     const transcript = A.join(
       A.filter(
         Str.split(text, "\n"),
@@ -193,19 +183,16 @@ export const acquireLibraryYoutube = Effect.fn("Library.acquireYoutube")(functio
       (line) => !Str.includes("-->")(line) && Str.isNonEmpty(Str.trim(Str.replaceAll(/<[^>]+>/g, "")(line)))
     );
     if (!spoken) return;
-    const saveLibraryText3 = yield* saveLibraryText(
+    artifacts = yield* saveLibraryText(
       root,
       `${prefix}/${name}.txt`,
       transcript,
       "text/plain",
       "transcript-full-text"
-    );
-    artifacts.push(saveLibraryText3);
+    ).pipe(Effect.map(A.of), Effect.map(A.prependAll(artifacts)));
     usable++;
   });
-  for (const name of captions) {
-    yield* retainCaptionTrack(name);
-  }
+  for (const name of captions) yield* retainCaptionTrack(name);
   const complete =
     usable > 0 && A.every(captions, (filename) => A.some(provenance, (track) => track.downloadedFilename === filename));
   return LibraryAdapterResult.make({

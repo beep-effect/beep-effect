@@ -206,6 +206,23 @@ const probeSpawner = (stdout: Stream.Stream<Uint8Array>, released: Ref.Ref<numbe
 it.layer(Layer.mergeAll(NodeServices.layer, TestClock.layer()), { timeout: "30 seconds" })(
   "bounded Git probes",
   (it) => {
+    it.effect("rejects invalid UTF-8 probe bytes and releases the process scope", () =>
+      Effect.gen(function* () {
+        const root = yield* temporaryDirectory;
+        const released = yield* Ref.make(0);
+        const started = yield* Deferred.make<void>();
+        const result = yield* observeAiMetricsGitRoot(input(root)).pipe(
+          Effect.provideService(
+            ChildProcessSpawner.ChildProcessSpawner,
+            probeSpawner(Stream.make(new Uint8Array([0xff])), released, started)
+          )
+        );
+        expect(result).toEqual({ _tag: "Unknown", reason: "probe-failed" });
+        const releaseCount = yield* Ref.get(released);
+        expect(releaseCount).toBe(1);
+      })
+    );
+
     it.effect("refuses oversized Git output and releases the process scope", () =>
       Effect.gen(function* () {
         const root = yield* temporaryDirectory;
