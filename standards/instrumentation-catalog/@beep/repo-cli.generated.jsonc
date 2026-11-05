@@ -1911,6 +1911,7 @@
     {"name":"KnowledgeCommand.verifyMint","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"KnowledgeDoctor.check","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"KnowledgeDoctor.checkLive","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"KnowledgeDoctor.checkProgress","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"KnowledgeDoctor.ciMode","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"KnowledgeDoctor.ciModeLive","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"KnowledgeDoctor.citationAncestry","owner":"@beep/repo-cli","family":"tooling","conforms":true},

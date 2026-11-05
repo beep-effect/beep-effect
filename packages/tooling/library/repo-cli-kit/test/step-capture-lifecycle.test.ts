@@ -269,6 +269,53 @@ describe("StepExec capture pipe lifecycle", () => {
     );
   });
 
+  it.layer(gitPlatform, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+    it.effect("retains the bounded stdout tail beyond the normal capture limit on timeout", () =>
+      Effect.gen(function* () {
+        const error = yield* Effect.flip(
+          runCaptured({
+            command: process.execPath,
+            args: [
+              "-e",
+              "process.stdout.write('old-phase:' + 'x'.repeat(5000) + '\\nlatest-stdout-phase\\n'); setInterval(() => {}, 50)",
+            ],
+            bound: OutputBound.make({ maxChars: 16, truncatedNotice: "[clipped]" }),
+            timeout: "2 seconds",
+          })
+        );
+        expect(error).toBeInstanceOf(CaptureCommandTimedOutError);
+        if (isCaptureCommandTimedOutError(error)) {
+          const parts = Str.split("; tail: ")(error.message);
+          expect(A.length(parts)).toBe(2);
+          const tail = O.getOrElse(A.last(parts), () => "");
+          expect(Str.length(tail)).toBe(2_000);
+          expect(tail).toContain("latest-stdout-phase\n");
+          expect(tail).not.toContain("old-phase:");
+          expect(tail).not.toContain("[clipped]");
+          expect(error.message).toContain("2000ms");
+        }
+      })
+    );
+
+    it.effect("retains stderr already captured before a command times out", () =>
+      Effect.gen(function* () {
+        const error = yield* Effect.flip(
+          runCaptured({
+            command: process.execPath,
+            args: ["-e", "process.stderr.write('latest-stderr-phase\\n'); setInterval(() => {}, 50)"],
+            timeout: "2 seconds",
+          })
+        );
+        expect(error).toBeInstanceOf(CaptureCommandTimedOutError);
+        if (isCaptureCommandTimedOutError(error)) {
+          const parts = Str.split("; tail: ")(error.message);
+          expect(A.length(parts)).toBe(2);
+          expect(O.getOrElse(A.last(parts), () => "")).toBe("latest-stderr-phase\n");
+        }
+      })
+    );
+  });
+
   it.effect("collects decoded text and distinguishes zero from nonzero exits", () =>
     Effect.gen(function* () {
       const collectText1 = yield* collectText(Stream.make(encoder.encode("a"), encoder.encode("b")));

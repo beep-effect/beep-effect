@@ -141,9 +141,8 @@ const retainImportedArtifact = Effect.fn("Library.retainImportedArtifact")(funct
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const bytes = yield* fs.readFile(path.resolve(path.dirname(resultPath), original.path));
-  if (bytes.byteLength !== original.bytes || (yield* hashBytes(bytes)) !== original.sha256) {
+  if (bytes.byteLength !== original.bytes || (yield* hashBytes(bytes)) !== original.sha256)
     return yield* LibraryError.make({ message: failureMessage, cause: "integrity" });
-  }
   const saved = yield* saveImmutable(root, `${namespace}/${index}-${path.basename(original.path)}`, bytes);
   return { bytes, artifact: LibraryArtifact.make({ ...saved, mediaType: original.mediaType, role }) };
 });
@@ -207,7 +206,7 @@ const importDisposition = Effect.fn("Library.importDisposition")(function* (
   }
   yield* validateDispositionTarget(source.value, payload);
   const id = yield* hashBytes(new TextEncoder().encode(raw));
-  const artifacts: Array<LibraryArtifact> = [];
+  let artifacts: Array<LibraryArtifact> = [];
   for (const original of payload.artifacts) {
     const retained = yield* retainImportedArtifact(
       root,
@@ -220,14 +219,13 @@ const importDisposition = Effect.fn("Library.importDisposition")(function* (
     );
     artifacts.push(retained.artifact);
   }
-  const saveLibraryText1 = yield* saveLibraryText(
+  artifacts = yield* saveLibraryText(
     root,
     `dispositions/${id}/review.json`,
     raw,
     "application/json",
     "reviewed-disposition"
-  );
-  artifacts.push(saveLibraryText1);
+  ).pipe(Effect.map(A.of), Effect.map(A.prependAll(artifacts)));
   const status = dispositionStatus(payload.disposition);
   const capture = LibraryCapture.make({
     id,
@@ -250,12 +248,11 @@ const importDisposition = Effect.fn("Library.importDisposition")(function* (
   if (
     payload.disposition === "non-reference" &&
     !(yield* libraryNonReferenceContextValid(root, catalog, source.value, capture, payload))
-  ) {
+  )
     return yield* LibraryError.make({
       message: "Non-reference review must bind every inventoried occurrence to preserved report context.",
       cause: "provenance",
     });
-  }
   return yield* withCatalog(root, (current) =>
     Effect.succeed(
       LibraryCatalog.make({
@@ -275,7 +272,7 @@ const importQualification = Effect.fn("Library.importQualification")(function* (
     return yield* LibraryError.make({ message: "Qualification provider mismatch.", cause: "provenance" });
   }
   const id = yield* hashBytes(new TextEncoder().encode(raw));
-  const evidence: Array<LibraryArtifact> = [];
+  let evidence: Array<LibraryArtifact> = [];
   const events: Array<unknown> = [];
   for (const original of payload.artifacts) {
     const retained = yield* retainImportedArtifact(
@@ -291,21 +288,19 @@ const importQualification = Effect.fn("Library.importQualification")(function* (
     events.push(...(yield* decodeProviderEvents(new TextDecoder("utf-8", { ignoreBOM: true }).decode(retained.bytes))));
   }
   yield* validateProviderQualification(payload.adapter, events);
-  const saveLibraryText2 = yield* saveLibraryText(
+  evidence = yield* saveLibraryText(
     root,
     `qualifications/${id}/import.json`,
     raw,
     "application/json",
     "qualification-import"
-  );
-  evidence.push(saveLibraryText2);
-  const now3 = yield* DateTime.now;
+  ).pipe(Effect.map(A.of), Effect.map(A.prependAll(evidence)));
   const qualification = LibraryQualification.make({
     id,
     adapter: payload.adapter,
     status: "verified",
     required: true,
-    recordedAt: DateTime.formatIso(now3),
+    recordedAt: yield* DateTime.now.pipe(Effect.map(DateTime.formatIso)),
     evidence,
     reason: "Authentic provider events validated independently of installed-version claims.",
   });
@@ -353,10 +348,9 @@ const importCapture = Effect.fn("Library.importCapture")(function* (
       cause: "identity",
     });
   }
-  const now4 = yield* DateTime.now;
-  const recordedAt = DateTime.formatIso(now4);
+  const recordedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   const id = yield* hashBytes(new TextEncoder().encode(raw));
-  const artifacts: Array<LibraryArtifact> = [];
+  let artifacts: Array<LibraryArtifact> = [];
   let xReturnedBody = source.value.kind !== "x";
   let alphaFullText = payload.provider !== "alphaxiv";
   const retainCaptureOriginals = Effect.fn("Library.retainCaptureOriginals")(function* () {
@@ -397,18 +391,17 @@ const importCapture = Effect.fn("Library.importCapture")(function* (
     const validateNamedX = Effect.fn("Library.validateNamedX")(function* () {
       const callArtifact = A.findFirst(artifacts, (a) => a.role === "raw-tool-call");
       const resultArtifact = A.findFirst(artifacts, (a) => a.role === "raw-tool-result");
-      if (O.isNone(callArtifact) || O.isNone(resultArtifact)) {
+      if (O.isNone(callArtifact) || O.isNone(resultArtifact))
         return yield* LibraryError.make({
           message: "X import requires raw tool call and result originals.",
           cause: "provenance",
         });
-      }
-      const argument = decodeLibraryJson(ToolCall);
-      const readFileString1 = yield* fs.readFileString(path.join(root, callArtifact.value.path));
-      const call = yield* argument(readFileString1);
-      const argument1 = decodeLibraryJson(ToolResult);
-      const readFileString2 = yield* fs.readFileString(path.join(root, resultArtifact.value.path));
-      const result = yield* argument1(readFileString2);
+      const call = yield* fs
+        .readFileString(path.join(root, callArtifact.value.path))
+        .pipe(Effect.flatMap(decodeLibraryJson(ToolCall)));
+      const result = yield* fs
+        .readFileString(path.join(root, resultArtifact.value.path))
+        .pipe(Effect.flatMap(decodeLibraryJson(ToolResult)));
       if (call.name !== payload.toolName || call.id !== payload.toolCallId || result.tool_use_id !== call.id) {
         return yield* LibraryError.make({ message: "X tool call/result provenance mismatch.", cause: "provenance" });
       }
@@ -426,9 +419,7 @@ const importCapture = Effect.fn("Library.importCapture")(function* (
       yield* validateNamedX();
     }
   });
-  if (source.value.kind === "x") {
-    yield* validateXImport();
-  }
+  if (source.value.kind === "x") yield* validateXImport();
   const retainAlphaFullText = Effect.fn("Library.retainAlphaFullText")(function* () {
     const originals = A.filter(artifacts, (artifact) => artifact.role === "raw-provider-events");
     const events = yield* readLibraryProviderEvents(root, originals);
@@ -440,7 +431,7 @@ const importCapture = Effect.fn("Library.importCapture")(function* (
         A.some(event.result.content, (block) => Str.length(Str.trim(block.text)) > 1000)
     );
     if (O.isSome(matching)) {
-      const saveLibraryText5 = yield* saveLibraryText(
+      artifacts = yield* saveLibraryText(
         root,
         `imports/${id}/alphaxiv-full-text.txt`,
         A.join(
@@ -449,24 +440,20 @@ const importCapture = Effect.fn("Library.importCapture")(function* (
         ),
         "text/plain",
         "extracted-full-text"
-      );
-      artifacts.push(saveLibraryText5);
+      ).pipe(Effect.map(A.of), Effect.map(A.prependAll(artifacts)));
       alphaFullText = true;
     }
   });
-  if (payload.provider === "alphaxiv") {
-    yield* retainAlphaFullText();
-  }
+  if (payload.provider === "alphaxiv") yield* retainAlphaFullText();
   const finishCaptureImport = Effect.fn("Library.finishCaptureImport")(function* () {
     const readable = captureHasFullText(payload, artifacts, xReturnedBody, alphaFullText);
-    const saveLibraryText6 = yield* saveLibraryText(
+    artifacts = yield* saveLibraryText(
       root,
       `imports/${id}/provenance.json`,
       raw,
       "application/json",
       "import-provenance"
-    );
-    artifacts.push(saveLibraryText6);
+    ).pipe(Effect.map(A.of), Effect.map(A.prependAll(artifacts)));
     const capture = LibraryCapture.make({
       id,
       sourceId: source.value.id,
@@ -514,27 +501,24 @@ export const importLibraryResult = Effect.fn("Library.importResult")(function* (
   const fs = yield* FileSystem.FileSystem;
   const raw = yield* fs.readFileString(resultPath);
   const resolution = yield* decodeLibraryJson(LibraryReferenceResolutionPayload)(raw).pipe(Effect.option);
-  if (O.isSome(resolution)) {
+  if (O.isSome(resolution))
     return yield* importReferenceResolution(
       root,
       resultPath,
       raw,
       LibraryReferenceResolutionPayload.make(resolution.value)
     );
-  }
   const disposition = yield* decodeLibraryJson(LibraryDispositionImportPayload)(raw).pipe(Effect.option);
-  if (O.isSome(disposition)) {
+  if (O.isSome(disposition))
     return yield* importDisposition(root, resultPath, raw, LibraryDispositionImportPayload.make(disposition.value));
-  }
   const qualification = yield* decodeLibraryJson(LibraryQualificationImportPayload)(raw).pipe(Effect.option);
-  if (O.isSome(qualification)) {
+  if (O.isSome(qualification))
     return yield* importQualification(
       root,
       resultPath,
       raw,
       LibraryQualificationImportPayload.make(qualification.value)
     );
-  }
   const value7 = yield* decodeLibraryJson(LibraryImportPayload)(raw);
   return yield* importCapture(root, resultPath, raw, LibraryImportPayload.make(value7));
 });
@@ -631,25 +615,22 @@ const validateResolutionProof = Effect.fn("Library.validateResolutionProof")(fun
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const proofBytes = yield* fs.readFile(path.resolve(path.dirname(resultPath), payload.evidence.path));
-  if ((yield* hashBytes(proofBytes)) !== payload.evidence.sha256 || proofBytes.byteLength !== payload.evidence.bytes) {
+  if ((yield* hashBytes(proofBytes)) !== payload.evidence.sha256 || proofBytes.byteLength !== payload.evidence.bytes)
     return yield* LibraryError.make({ message: "Reference resolution API evidence hash differs.", cause: "hash" });
-  }
   const envelope = yield* decodeLibraryJson(GithubResolutionResponse)(new TextDecoder().decode(proofBytes));
   const proofObject = S.is(GithubResolutionObject)(envelope) ? O.some(envelope) : A.head(envelope);
-  if (O.isNone(proofObject)) {
+  if (O.isNone(proofObject))
     return yield* LibraryError.make({ message: "Reference resolution API object is missing.", cause: "identity" });
-  }
   const proof = proofObject.value;
   const repository = Str.toLowerCase(O.getOrElse(O.fromNullishOr(locator[1]), () => ""));
   const number = O.getOrElse(O.fromNullishOr(locator[2]), () => "");
   const route = proof.pull_request === undefined ? "issues" : "pull";
   const canonicalUrl = `https://github.com/${repository}/${route}/${number}`;
-  if (!resolutionProofMatches(proof, repository, number, canonicalUrl, payload.canonicalUrl)) {
+  if (!resolutionProofMatches(proof, repository, number, canonicalUrl, payload.canonicalUrl))
     return yield* LibraryError.make({
       message: "Reference resolution GitHub object differs from shorthand.",
       cause: "identity",
     });
-  }
   return { proofBytes, repository, canonicalUrl };
 });
 const resolutionCitations = Effect.fn("Library.resolutionCitations")(function* (
@@ -667,9 +648,8 @@ const resolutionCitations = Effect.fn("Library.resolutionCitations")(function* (
     );
     if (originalId === payload.sourceId) citations = A.append(citations, occurrence);
   }
-  if (A.isReadonlyArrayEmpty(citations) || citations.length !== payload.context.occurrences.length) {
+  if (A.isReadonlyArrayEmpty(citations) || citations.length !== payload.context.occurrences.length)
     return yield* LibraryError.make({ message: "Reference resolution citation census differs.", cause: "context" });
-  }
   return citations;
 });
 const readOriginalReportBytes = Effect.fn("Library.readOriginalReportBytes")(function* (
@@ -693,12 +673,11 @@ const validateResolutionReport = Effect.fn("Library.validateResolutionReport")(f
     line !== occurrence.context ||
     occurrence.line !== occurrence.endLine ||
     Str.slice(occurrence.column - 1, occurrence.endColumn - 1)(line) !== occurrence.citationText
-  ) {
+  )
     return yield* LibraryError.make({
       message: "Reference resolution preserved report bytes differ.",
       cause: "context",
     });
-  }
 });
 const validateResolutionCitation = Effect.fn("Library.validateResolutionCitation")(function* (
   root: string,
@@ -716,12 +695,11 @@ const validateResolutionCitation = Effect.fn("Library.validateResolutionCitation
     !citationContextMatches(entry.value, occurrence) ||
     !citationSnapshotMatches(entry.value, document.value) ||
     (yield* hashBytes(new TextEncoder().encode(entry.value.context))) !== entry.value.contextSha256
-  ) {
+  )
     return yield* LibraryError.make({
       message: "Reference resolution original context differs.",
       cause: "context",
     });
-  }
   yield* validateResolutionReport(root, document.value, occurrence);
 });
 const resolutionSourceMatches = (source: LibrarySource, payload: LibraryReferenceResolutionPayload) =>
@@ -743,17 +721,14 @@ const importReferenceResolution = Effect.fn("Library.importReferenceResolution")
         (s) => s.id === payload.sourceId || A.contains(s.aliasIds, payload.sourceId)
       );
       const locator = O.getOrNull(Str.match(/^([A-Za-z][A-Za-z0-9_.-]*\/[A-Za-z0-9_.-]+)#(\d+)$/)(payload.locator));
-      if (O.isNone(source) || locator === null || !resolutionSourceMatches(source.value, payload)) {
+      if (O.isNone(source) || locator === null || !resolutionSourceMatches(source.value, payload))
         return yield* LibraryError.make({
           message: "Reference resolution source or citation binding differs.",
           cause: "identity",
         });
-      }
       const { proofBytes, repository, canonicalUrl } = yield* validateResolutionProof(resultPath, payload, locator);
       const citations = yield* resolutionCitations(catalog, source.value, payload);
-      for (const occurrence of citations) {
-        yield* validateResolutionCitation(root, catalog, payload, occurrence);
-      }
+      for (const occurrence of citations) yield* validateResolutionCitation(root, catalog, payload, occurrence);
       const documentId = O.getOrElse(
         O.map(A.head(citations), (citation) => citation.documentId),
         () => ""
@@ -967,8 +942,7 @@ const readReviewedDisposition = Effect.fn("Library.readReviewedDisposition")(fun
   const path = yield* Path.Path;
   if (A.isReadonlyArrayEmpty(capture.artifacts)) return O.none();
   for (const artifact of capture.artifacts) {
-    const libraryArtifactIntegrity8 = yield* libraryArtifactIntegrity(root, artifact);
-    if (O.isSome(libraryArtifactIntegrity8)) return O.none();
+    if (yield* libraryArtifactIntegrity(root, artifact).pipe(Effect.map(O.isSome))) return O.none();
   }
   const reviews = A.filter(capture.artifacts, (artifact) => artifact.role === "reviewed-disposition");
   if (reviews.length !== 1) return O.none();

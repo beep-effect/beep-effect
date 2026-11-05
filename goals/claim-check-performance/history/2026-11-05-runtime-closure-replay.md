@@ -1,0 +1,13 @@
+# Fresh runtime closure and unchanged parent replay
+
+The previous hand-selected implementation lists omitted the runtime XML decoder and transitive installed dependencies. New captures now require the decoder and capture the installed Bun static module closure, dependency bytes, package/compiler resolution metadata and actual native Bun executable identity. The runner checks implementation bytes and native identity before predictions. Old freezes and results remain intact; this cannot retroactively establish historical live bytes.
+
+`implementation-runtime-parent-001.json` is the exact pre-prediction manifest, containing1445 runtime inputs and1576 total file pins. Private content-addressed archives retain the source bytes. Its digest is2143f74b56534433583b3d42c40167b8232a7a43a4b0dff834bc7fa5ec1fada1.
+
+The fresh full replay produced39/538 strict,537 parsed and455 abstained. Every one of538 claim rows agrees with product-colon-scope-002, and all60 service reports are byte-identical. Original label/source/scorer preservation and original37 retention pass. This is the parent hierarchy candidate, not the separately published41-pass nominal candidate; that candidate requires its own fresh closure. `runtime-parent-replay-001.json` records the result hash and preservation evidence.
+
+Scratch decoder mutation is rejected by the real runner before output creation after a valid binary input is checked. Wrong native hash is independently rejected with a canonical valid manifest. The actual decoder and executable were not modified. Computed unresolved imports fail capture in installed Bun1.4.4. Server test typecheck, focused Biome and Fallow checks pass. No alert correctness or attorney validation is inferred.
+
+Commands: capture with freeze-runtime-closure.py using implementation-colon-scope-002.json as baseline; --verify before replay; CLAIM_IMPLEMENTATION_FREEZE=<private runtime-parent-001 manifest> CLAIM_EVALUATION_OUTPUT=<fresh product-runtime-parent-001 directory> bun packages/law-practice/server/test/evaluation/inspection-tool.main.ts; verify-preservation.py --result <results.json>; evaluate-gates.py <output directory>. Evaluation used recorded XML and synthetic metadata aliases, with no live source fetch. The first gate-helper invocation mistakenly supplied results.json rather than its directory, failed without changing results, and was followed by the correct invocation; both logs/artifacts are retained. Usefulness remains unproved.
+
+Static bundle resolution can differ from unbundled module execution. Arbitrary runtime filesystem reads, process/environment choices, dynamic native assets and OS libraries are outside this closure. See RUNTIME-CLOSURE.md for the complete boundary. Historical evidence remains unchanged.
