@@ -23,7 +23,7 @@
         ".claude/skills/browser-qa-loop",
         ".agents/skills/browser-qa-loop"
       ],
-      "installedTreeHash": "52ef8d9fb36c05507e83aa549ddb941059a10682b104d11f71320dc520f42f3d"
+      "installedTreeHash": "eaf73250fb242099bf9cd91890576e13d52212d6ec292c682fb9fb0c784d8b5a"
     },
     "closeout": {
       "_tag": "local",
@@ -47,7 +47,7 @@
         ".claude/skills/crispen",
         ".agents/skills/crispen"
       ],
-      "installedTreeHash": "5b05048be9f11ee394a494a5043abc70046c137ac37ee011b9ad793ca6825834"
+      "installedTreeHash": "2d85da4f0dac22b1ce8dcfb0ee0cc935f2edabc8bec54dff9b76ca3ec8aa5a92"
     },
     "effect-first-development": {
       "_tag": "local",
@@ -155,7 +155,7 @@
         ".claude/skills/motion-evidence-review",
         ".agents/skills/motion-evidence-review"
       ],
-      "installedTreeHash": "fed3078781365445e48ef480df7f6e5a6c3a41d54c5ca9dd1cecbf6bac0023d7"
+      "installedTreeHash": "0efad7902ca25a67a5d0b1a4ca05078f915967b995cd264d943f1d2a6a79b39f"
     },
     "onepassword-secret-refs": {
       "_tag": "local",
@@ -320,7 +320,7 @@
         ".claude/skills/orchestrate",
         ".agents/skills/orchestrate"
       ],
-      "installedTreeHash": "26fc4a49936ea911d97a8fe56dcf5dcc2769d52f1de9264c5921bcd065747f4c"
+      "installedTreeHash": "16978d399ab515f6d52bd3496c687bf49f365e424182df8fa608532111c97f4d"
     },
     "plasma-sensitive-entry": {
       "_tag": "local",
@@ -423,7 +423,7 @@
         ".claude/skills/schema-first-development",
         ".agents/skills/schema-first-development"
       ],
-      "installedTreeHash": "a1e7f3b8ce52a59222b8fdffc71be52f92a7776f684fea0e67808f142f9d2644"
+      "installedTreeHash": "764f7288e66e323e0fa719b9eea8701cd3d6eb446ca68865b050cca3d8926289"
     },
     "shadcn": {
       "_tag": "vendored",
@@ -745,7 +745,7 @@
         ".claude/skills/yeet",
         ".agents/skills/yeet"
       ],
-      "installedTreeHash": "957f78f00b4297c19eb3d1f862e7f320e9856f7dab2d71c0a47cddbfcd0d6b87"
+      "installedTreeHash": "130c6604e73d16c4b8fa6c5b1dd37006d896d7bc7a20ef89ce71b3ae0c82e988"
     }
   }
 }

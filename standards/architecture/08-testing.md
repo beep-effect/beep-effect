@@ -240,7 +240,7 @@ import { revokeMembershipCommand } from "@beep/iam-use-cases/test";
 
 Cross-slice tests never import another slice's `/test` directly. If a fixture
 is genuinely cross-slice, promote it to the future `shared/use-cases/test`
-surface. Promotion creates that package only when it includes a record per
+surface. Add that subpath only when its promotion includes a record per
 `02-shared-kernel.md`.
 
 Foundation `test-kit` packages (under `packages/tooling/test-kit/`) provide
@@ -480,7 +480,7 @@ not see).
 
 | Smell                                                      | Diagnostic                                                                                                                |
 |------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|
-| Test imports `@beep/<other-slice>-server`                  | Cross-slice coupling. Refactor to stub the boundary; if the dependency is real, promote a contract to future `shared/use-cases`. |
+| Test imports `@beep/<other-slice>-server`                  | Cross-slice coupling. Refactor to stub the boundary; if the dependency is real, promote a contract to `shared/use-cases`. |
 | Test imports `apps/<app>/src/runtime/Layer.ts`             | The test is testing the app, not the slice. Move it under `apps/<app>`.                                                   |
 | Test mocks `Effect` itself or `effect/Schema`              | Testing the framework, not your code. Remove.                                                                             |
 | Test reads `process.env` directly                          | Test should provide a `ConfigProvider` test Layer from `tooling/test-kit/` or `@beep/<kernel>-config/test`.               |

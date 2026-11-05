@@ -389,7 +389,7 @@ export declare namespace InlineChildren {
  * @category models
  * @since 0.0.0
  */
-export class Text extends S.Opaque<Text, {}>()(
+export class Text extends S.Opaque<Text, { readonly brand: unique symbol }>()(
   S.TaggedStruct("text", {
     value: S.String.annotateKey({
       description: "Escaped plain text payload.",
@@ -425,7 +425,7 @@ export declare namespace Text {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<Text, "brand"> {
     readonly _tag: "text";
     readonly value: string;
   }
@@ -433,7 +433,7 @@ export declare namespace Text {
   /**
    * @since 0.0.0
    */
-  export interface Encoded extends Type {}
+  export interface Encoded extends Omit<Type, "brand"> {}
 }
 
 /**
@@ -451,7 +451,7 @@ export declare namespace Text {
  * @category models
  * @since 0.0.0
  */
-export class RawMarkdown extends S.Opaque<RawMarkdown, {}>()(
+export class RawMarkdown extends S.Opaque<RawMarkdown, { readonly brand: unique symbol }>()(
   S.TaggedStruct("rawMarkdown", {
     value: S.String.annotateKey({
       description: "Trusted Markdown source preserved without escaping.",
@@ -487,7 +487,7 @@ export declare namespace RawMarkdown {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<RawMarkdown, "brand"> {
     readonly _tag: "rawMarkdown";
     readonly value: string;
   }
@@ -495,7 +495,7 @@ export declare namespace RawMarkdown {
   /**
    * @since 0.0.0
    */
-  export interface Encoded extends Type {}
+  export interface Encoded extends Omit<Type, "brand"> {}
 }
 
 /**
@@ -517,7 +517,7 @@ export declare namespace RawMarkdown {
  * @category models
  * @since 0.0.0
  */
-export class RawHtml extends S.Opaque<RawHtml, {}>()(
+export class RawHtml extends S.Opaque<RawHtml, { readonly brand: unique symbol }>()(
   S.TaggedStruct("rawHtml", {
     value: S.String.annotateKey({
       description: "Trusted HTML source preserved for adapters that opt into raw HTML.",
@@ -554,7 +554,7 @@ export declare namespace RawHtml {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<RawHtml, "brand"> {
     readonly _tag: "rawHtml";
     readonly value: string;
   }
@@ -562,7 +562,7 @@ export declare namespace RawHtml {
   /**
    * @since 0.0.0
    */
-  export interface Encoded extends Type {}
+  export interface Encoded extends Omit<Type, "brand"> {}
 }
 
 /**
@@ -580,7 +580,7 @@ export declare namespace RawHtml {
  * @category models
  * @since 0.0.0
  */
-export class Strong extends S.Opaque<Strong, {}>()(
+export class Strong extends S.Opaque<Strong, { readonly brand: unique symbol }>()(
   S.TaggedStruct("strong", {
     children: InlineChildren.annotateKey({
       description: "Inline nodes rendered with strong emphasis.",
@@ -620,7 +620,7 @@ export declare namespace Strong {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<Strong, "brand"> {
     readonly _tag: "strong";
     readonly children: InlineChildren.Type;
   }
@@ -649,7 +649,7 @@ export declare namespace Strong {
  * @category models
  * @since 0.0.0
  */
-export class Em extends S.Opaque<Em, {}>()(
+export class Em extends S.Opaque<Em, { readonly brand: unique symbol }>()(
   S.TaggedStruct("em", {
     children: InlineChildren.annotateKey({
       description: "Inline nodes rendered with emphasis.",
@@ -689,7 +689,7 @@ export declare namespace Em {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<Em, "brand"> {
     readonly _tag: "em";
     readonly children: InlineChildren.Type;
   }
@@ -718,7 +718,7 @@ export declare namespace Em {
  * @category models
  * @since 0.0.0
  */
-export class Del extends S.Opaque<Del, {}>()(
+export class Del extends S.Opaque<Del, { readonly brand: unique symbol }>()(
   S.TaggedStruct("del", {
     children: InlineChildren.annotateKey({
       description: "Inline nodes rendered as deleted content.",
@@ -758,7 +758,7 @@ export declare namespace Del {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<Del, "brand"> {
     readonly _tag: "del";
     readonly children: InlineChildren.Type;
   }
@@ -787,7 +787,7 @@ export declare namespace Del {
  * @category models
  * @since 0.0.0
  */
-export class Code extends S.Opaque<Code, {}>()(
+export class Code extends S.Opaque<Code, { readonly brand: unique symbol }>()(
   S.TaggedStruct("code", {
     value: S.String.annotateKey({
       description: "Code span text rendered between inline code delimiters.",
@@ -824,7 +824,7 @@ export declare namespace Code {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<Code, "brand"> {
     readonly _tag: "code";
     readonly value: string;
   }
@@ -832,7 +832,7 @@ export declare namespace Code {
   /**
    * @since 0.0.0
    */
-  export interface Encoded extends Type {}
+  export interface Encoded extends Omit<Type, "brand"> {}
 }
 
 /**
@@ -850,7 +850,7 @@ export declare namespace Code {
  * @category models
  * @since 0.0.0
  */
-export class A extends S.Opaque<A, {}>()(
+export class A extends S.Opaque<A, { readonly brand: unique symbol }>()(
   S.TaggedStruct("a", {
     children: InlineChildren.annotateKey({
       description: "Inline nodes rendered as the link label.",
@@ -900,7 +900,7 @@ export declare namespace A {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<A, "brand"> {
     readonly _tag: "a";
     readonly children: InlineChildren.Type;
     readonly href: string;
@@ -933,7 +933,7 @@ export declare namespace A {
  * @category models
  * @since 0.0.0
  */
-export class Img extends S.Opaque<Img, {}>()(
+export class Img extends S.Opaque<Img, { readonly brand: unique symbol }>()(
   S.TaggedStruct("img", {
     alt: S.String.annotateKey({
       description: "Image alternate text.",
@@ -980,7 +980,7 @@ export declare namespace Img {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<Img, "brand"> {
     readonly _tag: "img";
     readonly alt: string;
     readonly src: string;
@@ -1013,7 +1013,7 @@ export declare namespace Img {
  * @category models
  * @since 0.0.0
  */
-export class Br extends S.Opaque<Br, {}>()(
+export class Br extends S.Opaque<Br, { readonly brand: unique symbol }>()(
   S.TaggedStruct("br", {}).pipe(
     $I.annoteSchema("Br", {
       po: "milestone",
@@ -1045,14 +1045,14 @@ export declare namespace Br {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<Br, "brand"> {
     readonly _tag: "br";
   }
 
   /**
    * @since 0.0.0
    */
-  export interface Encoded extends Type {}
+  export interface Encoded extends Omit<Type, "brand"> {}
 }
 
 /**
@@ -1070,7 +1070,7 @@ export declare namespace Br {
  * @category models
  * @since 0.0.0
  */
-export class InlineMath extends S.Opaque<InlineMath, {}>()(
+export class InlineMath extends S.Opaque<InlineMath, { readonly brand: unique symbol }>()(
   S.TaggedStruct("inlineMath", {
     value: S.String.annotateKey({
       description: "TeX math source rendered as inert inline math content.",
@@ -1107,7 +1107,7 @@ export declare namespace InlineMath {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<InlineMath, "brand"> {
     readonly _tag: "inlineMath";
     readonly value: string;
   }
@@ -1115,7 +1115,7 @@ export declare namespace InlineMath {
   /**
    * @since 0.0.0
    */
-  export interface Encoded extends Type {}
+  export interface Encoded extends Omit<Type, "brand"> {}
 }
 
 /**
@@ -1133,7 +1133,7 @@ export declare namespace InlineMath {
  * @category models
  * @since 0.0.0
  */
-export class FootnoteReference extends S.Opaque<FootnoteReference, {}>()(
+export class FootnoteReference extends S.Opaque<FootnoteReference, { readonly brand: unique symbol }>()(
   S.TaggedStruct("footnoteReference", {
     identifier: FootnoteIdentifier.annotateKey({
       description: "Footnote identifier referenced from inline content.",
@@ -1177,7 +1177,7 @@ export declare namespace FootnoteReference {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<FootnoteReference, "brand"> {
     readonly _tag: "footnoteReference";
     readonly identifier: FootnoteIdentifier;
   }
@@ -1601,7 +1601,7 @@ export declare namespace ListItemChildren {
  * @category models
  * @since 0.0.0
  */
-export class P extends S.Opaque<P, {}>()(
+export class P extends S.Opaque<P, { readonly brand: unique symbol }>()(
   S.TaggedStruct("p", {
     children: InlineChildren.annotateKey({
       description: "Inline children rendered as paragraph content.",
@@ -1637,7 +1637,7 @@ export declare namespace P {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<P, "brand"> {
     readonly _tag: "p";
     readonly children: InlineChildren.Type;
   }
@@ -1792,7 +1792,7 @@ export declare namespace HeadingValue {
  * @category models
  * @since 0.0.0
  */
-export class Heading extends S.Opaque<Heading, {}>()(
+export class Heading extends S.Opaque<Heading, { readonly brand: unique symbol }>()(
   S.TaggedStruct("heading", {
     level: HeadingLevel.annotateKey({
       description: "Heading level from one (largest) to six (smallest).",
@@ -1846,7 +1846,7 @@ export declare namespace Heading {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<Heading, "brand"> {
     readonly _tag: "heading";
     readonly children: InlineChildren.Type;
     readonly level: HeadingLevel;
@@ -1877,7 +1877,7 @@ export declare namespace Heading {
  * @category models
  * @since 0.0.0
  */
-export class Li extends S.Opaque<Li, {}>()(
+export class Li extends S.Opaque<Li, { readonly brand: unique symbol }>()(
   S.TaggedStruct("li", {
     children: ListItemChildren.annotateKey({
       description: "Inline and block children rendered inside the list item.",
@@ -1916,7 +1916,7 @@ export declare namespace Li {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<Li, "brand"> {
     readonly _tag: "li";
     readonly children: ListItemChildren.Type;
   }
@@ -2018,7 +2018,7 @@ export declare namespace ListChildren {
  * @category models
  * @since 0.0.0
  */
-export class Ul extends S.Opaque<Ul, {}>()(
+export class Ul extends S.Opaque<Ul, { readonly brand: unique symbol }>()(
   S.TaggedStruct("ul", {
     children: ListChildren.annotateKey({
       description: "List items rendered as an unordered list.",
@@ -2055,7 +2055,7 @@ export declare namespace Ul {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<Ul, "brand"> {
     readonly _tag: "ul";
     readonly children: ListChildren.Type;
   }
@@ -2126,7 +2126,7 @@ const olStartDefault = PosInt.make(1);
  * @category models
  * @since 0.0.0
  */
-export class Ol extends S.Opaque<Ol, {}>()(
+export class Ol extends S.Opaque<Ol, { readonly brand: unique symbol }>()(
   S.TaggedStruct("ol", {
     children: ListChildren.annotateKey({
       description: "List items rendered as an ordered list.",
@@ -2169,7 +2169,7 @@ export declare namespace Ol {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<Ol, "brand"> {
     readonly _tag: "ol";
     readonly children: ListChildren.Type;
     readonly start: OrderedListStart;
@@ -2200,7 +2200,7 @@ export declare namespace Ol {
  * @category models
  * @since 0.0.0
  */
-export class TaskItem extends S.Opaque<TaskItem, {}>()(
+export class TaskItem extends S.Opaque<TaskItem, { readonly brand: unique symbol }>()(
   S.TaggedStruct("taskItem", {
     checked: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
       description: "Whether the task list item is checked. Defaults to unchecked on construction and decode.",
@@ -2244,7 +2244,7 @@ export declare namespace TaskItem {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<TaskItem, "brand"> {
     readonly _tag: "taskItem";
     readonly checked: boolean;
     readonly children: ListItemChildren.Type;
@@ -2392,7 +2392,7 @@ export declare namespace TaskItemChildren {
  * @category models
  * @since 0.0.0
  */
-export class TaskList extends S.Opaque<TaskList, {}>()(
+export class TaskList extends S.Opaque<TaskList, { readonly brand: unique symbol }>()(
   S.TaggedStruct("taskList", {
     children: TaskItemChildren.annotateKey({
       description: "Task items rendered as a GitHub Flavored Markdown task list.",
@@ -2432,7 +2432,7 @@ export declare namespace TaskList {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<TaskList, "brand"> {
     readonly _tag: "taskList";
     readonly children: TaskItemChildren.Type;
   }
@@ -2461,7 +2461,7 @@ export declare namespace TaskList {
  * @category models
  * @since 0.0.0
  */
-export class BlockQuote extends S.Opaque<BlockQuote, {}>()(
+export class BlockQuote extends S.Opaque<BlockQuote, { readonly brand: unique symbol }>()(
   S.TaggedStruct("blockquote", {
     children: BlockChildren.annotateKey({
       description: "Block children rendered inside the block quote.",
@@ -2501,7 +2501,7 @@ export declare namespace BlockQuote {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<BlockQuote, "brand"> {
     readonly _tag: "blockquote";
     readonly children: BlockChildren.Type;
   }
@@ -2531,7 +2531,7 @@ export declare namespace BlockQuote {
  * @category models
  * @since 0.0.0
  */
-export class Pre extends S.Opaque<Pre, {}>()(
+export class Pre extends S.Opaque<Pre, { readonly brand: unique symbol }>()(
   S.TaggedStruct("pre", {
     // Encoded form must survive a JSON boundary (jsonb columns, rpc/ndjson
     // wire): S.Option(S.String) encodes to a real Option instance that does not
@@ -2587,7 +2587,7 @@ export declare namespace Pre {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<Pre, "brand"> {
     readonly _tag: "pre";
     readonly language: O.Option<CodeFenceLanguage>;
     readonly value: string;
@@ -2622,7 +2622,7 @@ export declare namespace Pre {
  * @category models
  * @since 0.0.0
  */
-export class TableCell extends S.Opaque<TableCell, {}>()(
+export class TableCell extends S.Opaque<TableCell, { readonly brand: unique symbol }>()(
   S.TaggedStruct("tableCell", {
     children: InlineChildren.annotateKey({
       description: "Inline nodes rendered inside this table cell.",
@@ -2663,7 +2663,7 @@ export declare namespace TableCell {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<TableCell, "brand"> {
     readonly _tag: "tableCell";
     readonly children: InlineChildren.Type;
   }
@@ -2692,7 +2692,7 @@ export declare namespace TableCell {
  * @category models
  * @since 0.0.0
  */
-export class TableRow extends S.Opaque<TableRow, {}>()(
+export class TableRow extends S.Opaque<TableRow, { readonly brand: unique symbol }>()(
   S.TaggedStruct("tableRow", {
     children: S.Array(TableCell).annotateKey({
       description: "Table cells in column order.",
@@ -2731,7 +2731,7 @@ export declare namespace TableRow {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<TableRow, "brand"> {
     readonly _tag: "tableRow";
     readonly children: ReadonlyArray<TableCell.Type>;
   }
@@ -2764,7 +2764,7 @@ const tableAlignDefault = Arr.empty<TableAlignment>();
  * @category models
  * @since 0.0.0
  */
-export class Table extends S.Opaque<Table, {}>()(
+export class Table extends S.Opaque<Table, { readonly brand: unique symbol }>()(
   S.TaggedStruct("table", {
     align: S.Array(TableAlignment)
       .pipe(
@@ -2825,7 +2825,7 @@ export declare namespace Table {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<Table, "brand"> {
     readonly _tag: "table";
     readonly align: ReadonlyArray<TableAlignment>;
     readonly children: ReadonlyArray<TableRow.Type>;
@@ -2858,7 +2858,7 @@ export declare namespace Table {
  * @category models
  * @since 0.0.0
  */
-export class YouTube extends S.Opaque<YouTube, {}>()(
+export class YouTube extends S.Opaque<YouTube, { readonly brand: unique symbol }>()(
   S.TaggedStruct("youtube", {
     videoId: YouTubeVideoId.annotateKey({
       description: "Bare YouTube video id rendered as an embedded video.",
@@ -2902,7 +2902,7 @@ export declare namespace YouTube {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<YouTube, "brand"> {
     readonly _tag: "youtube";
     readonly videoId: string;
   }
@@ -2910,7 +2910,7 @@ export declare namespace YouTube {
   /**
    * @since 0.0.0
    */
-  export interface Encoded extends Type {}
+  export interface Encoded extends Omit<Type, "brand"> {}
 }
 
 /**
@@ -2928,7 +2928,7 @@ export declare namespace YouTube {
  * @category models
  * @since 0.0.0
  */
-export class MathBlock extends S.Opaque<MathBlock, {}>()(
+export class MathBlock extends S.Opaque<MathBlock, { readonly brand: unique symbol }>()(
   S.TaggedStruct("mathBlock", {
     value: S.String.annotateKey({
       description: "TeX math source rendered as inert display math content.",
@@ -2967,7 +2967,7 @@ export declare namespace MathBlock {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<MathBlock, "brand"> {
     readonly _tag: "mathBlock";
     readonly value: string;
   }
@@ -2975,7 +2975,7 @@ export declare namespace MathBlock {
   /**
    * @since 0.0.0
    */
-  export interface Encoded extends Type {}
+  export interface Encoded extends Omit<Type, "brand"> {}
 }
 
 /**
@@ -2996,7 +2996,7 @@ export declare namespace MathBlock {
  * @category models
  * @since 0.0.0
  */
-export class FootnoteDefinition extends S.Opaque<FootnoteDefinition, {}>()(
+export class FootnoteDefinition extends S.Opaque<FootnoteDefinition, { readonly brand: unique symbol }>()(
   S.TaggedStruct("footnoteDefinition", {
     identifier: FootnoteIdentifier.annotateKey({
       description: "Footnote identifier defined by this block.",
@@ -3049,7 +3049,7 @@ export declare namespace FootnoteDefinition {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<FootnoteDefinition, "brand"> {
     readonly _tag: "footnoteDefinition";
     readonly children: BlockChildren.Type;
     readonly identifier: FootnoteIdentifier;
@@ -3085,7 +3085,7 @@ export declare namespace FootnoteDefinition {
  * @category models
  * @since 0.0.0
  */
-export class Admonition extends S.Opaque<Admonition, {}>()(
+export class Admonition extends S.Opaque<Admonition, { readonly brand: unique symbol }>()(
   S.TaggedStruct("admonition", {
     kind: AdmonitionKind.annotateKey({
       description: "Admonition kind.",
@@ -3139,7 +3139,7 @@ export declare namespace Admonition {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<Admonition, "brand"> {
     readonly _tag: "admonition";
     readonly children: BlockChildren.Type;
     readonly kind: AdmonitionKind;
@@ -3172,7 +3172,7 @@ export declare namespace Admonition {
  * @category models
  * @since 0.0.0
  */
-export class Embed extends S.Opaque<Embed, {}>()(
+export class Embed extends S.Opaque<Embed, { readonly brand: unique symbol }>()(
   S.TaggedStruct("embed", {
     kind: EmbedKind.annotateKey({
       description: "Generic embed kind.",
@@ -3241,7 +3241,7 @@ export declare namespace Embed {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<Embed, "brand"> {
     readonly _tag: "embed";
     readonly description: O.Option<string>;
     readonly kind: EmbedKind;
@@ -3276,7 +3276,7 @@ export declare namespace Embed {
  * @category models
  * @since 0.0.0
  */
-export class Hr extends S.Opaque<Hr, {}>()(
+export class Hr extends S.Opaque<Hr, { readonly brand: unique symbol }>()(
   S.TaggedStruct("hr", {}).pipe(
     $I.annoteSchema("Hr", {
       po: "meta",
@@ -3308,14 +3308,14 @@ export declare namespace Hr {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<Hr, "brand"> {
     readonly _tag: "hr";
   }
 
   /**
    * @since 0.0.0
    */
-  export interface Encoded extends Type {}
+  export interface Encoded extends Omit<Type, "brand"> {}
 }
 
 /**
@@ -3491,7 +3491,7 @@ export declare namespace Block {
  * @category models
  * @since 0.0.0
  */
-export class Document extends S.Opaque<Document, {}>()(
+export class Document extends S.Opaque<Document, { readonly brand: unique symbol }>()(
   S.TaggedStruct("document", {
     frontmatter: S.OptionFromOptionalKey(S.JsonObject).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Optional JSON-compatible document metadata rendered as deterministic frontmatter.",
@@ -3535,7 +3535,7 @@ export declare namespace Document {
   /**
    * @since 0.0.0
    */
-  export interface Type {
+  export interface Type extends Pick<Document, "brand"> {
     readonly _tag: "document";
     readonly children: BlockChildren.Type;
     readonly frontmatter: O.Option<S.JsonObject>;
