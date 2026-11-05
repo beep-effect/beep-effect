@@ -155,6 +155,9 @@
     "research/protected-producer-workflow-preparation-2026-11-03.md",
     "research/candidate-host-compiler-failure-2026-11-03.json",
     "research/caller-permission-startup-repair-2026-11-03.json",
+    "research/native-dependency-diagnostics.py",
+    "research/native-dependency-diagnostics.test.py",
+    "research/installed-dependency-diagnostic-preparation-2026-11-03.json",
     "research/readiness-unread-check-regression-2026-11-03.json"
   ],
   "agentLaunchers": [

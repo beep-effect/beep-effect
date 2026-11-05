@@ -1,5 +1,22 @@
 # Friction and opportunities
 
+## Captured output lost at timeout, 2026-11-03
+
+Heavy / Lint Policy on #2686 timed out in `knowledge doctor ci` after its
+unchanged 900,000 ms budget. The timeout branch discarded all accumulated
+output, unlike the late-exit branch that already prints a bounded tail. The
+completed log identifies neither the last doctor phase nor the cause; the
+runner's host-wide samples show no swapping and ample available memory, which
+does not establish a per-command cause. A comparable successful run completed
+the doctor step in about 380 seconds.
+
+Preserve at most 2,000 trailing characters before interruption, even after a
+normal capture prefix fills. Add real subprocess regressions for stdout past
+the capture limit and stderr at timeout. Keep deadline failure and cleanup
+semantics unchanged. The source omission is established by inspection; hosted
+proof of the repair and the underlying doctor timeout diagnosis remain pending.
+No local verify, publish or package suite was run, per the operator's instruction.
+
 ## Global-input exclusion control, 2026-11-02
 
 The first native configuration experiment expected a child task to reuse after
@@ -838,3 +855,55 @@ observed schema difference changed the matrix and next qualification work.
 - Keep the unchanged bounded collector AST and immutable original evidence.
   Fresh observations record the repaired driver bytes rather than re-hashing
   an older observation onto them. A new source binding requires its own replay.
+
+
+### 2026-11-03 — distinguish doctor timeout phases from mint context
+
+- Hosted policy retry job 126142873504 preserved the new timeout tail, but its
+  last output was the normal non-mint gate-selection message. It then exceeded
+  900,000 ms. That message does not establish an authentication failure, and
+  the timed-out operation remains unknown. The same command in successful
+  policy job 125996929042 took about 380.5 seconds; equivalent doctor code and
+  nearly equal tracked corpus sizes do not establish the cause of the spread.
+- Emit fourteen fixed phase labels to CI stderr from the live check. The bounded
+  timeout tail can then distinguish archive, scan and comparison work without
+  logging paths, refs, document contents, findings or credentials. Preserve
+  the deadline and fail-closed baseline/mint rules; instrumentation is not a
+  timeout fix or hosted-green proof. Local quality runs remain operator-skipped.
+
+
+### 2026-11-03 — assert warnings emitted by the current operation
+
+- Hosted repo-cli-2 job 126178598812 caught a console-isolation assumption
+  after the CI phase diagnostic change: the lease-warning case expected two
+  errors but read 35, including earlier live-doctor progress messages retained
+  by the shared test console. This is a newly triggered test failure, not an
+  infrastructure failure or a passing result.
+- Capture the preceding console length and assert only the lines emitted by
+  this case. Preserve the exact count of two, both failure-message checks and
+  process-capture restoration. Do not filter away unexpected new messages or
+  increase the expected count to match the diagnostic implementation. Push the
+  correction for fresh hosted proof; no local suite was started.
+
+
+### 2026-11-03 — label the first cached history read
+
+- Review discussion 4460122302 found that `scanKnowledgeDoctorTree` already
+  reads `tree.pathRemovals`; a later progress label described only a cached
+  second read. A history stall would incorrectly appear as `scan-tree`.
+- Resolve the same cached history effect under `read-removals` before calling
+  the scan, then reuse its value for baseline comparison. Preserve its Git
+  arguments, optional-evidence fallback, cache and gate semantics. This repairs
+  the diagnostic attribution; it does not establish the timeout root cause.
+
+
+### 2026-11-03 — map captured console output before the assertion helper
+
+- Hosted Check job 126192712570 found one introduced `yieldInCallArgument`
+  diagnostic in the warning-test correction. The behavioral shard passed,
+  but its helper call yielded the console effect directly as an argument.
+- Map `TestConsole.errorLines` through the existing curried `A.drop` helper.
+  Keep the preceding snapshot, exact two-warning count, message checks and
+  spy restoration. This fixes the Effect diagnostic without changing the
+  tested behavior. Push for fresh hosted Check; do not infer compile proof
+  from the earlier passing runtime tests or run a competing local suite.
