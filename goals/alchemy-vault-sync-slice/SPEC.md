@@ -36,10 +36,10 @@ Higher sources outrank lower sources when they conflict.
 - `packages/documents/domain/src/**`: states, events, commands, rejections, decide/evolve, Views as pure read contracts, Stories (D9).
 - `packages/documents/use-cases/src/**`: the assembled `Domain.Model` and `Api`, policies, projections, sagas, middleware contracts; command dispatch as the use-case boundary (D9).
 - `packages/documents/server/src/**` (`aggregates/Sync/*`): Postgres Platform + Cluster engine Layers, Box External System adapter, Projections into the legacy sync tables, genesis import and replay-and-diff (D1, D6, D15).
-- A new driver package created with `bun run beep create-package` for the Postgres `Platform` implementation and its conformance suite (location fixed in P0; candidate `packages/shared/alchemy-postgres` or an `_internal` integration package per `standards/ARCHITECTURE.md`).
+- A new driver package created with `bun run beep create-package` for the Postgres `Platform` implementation and its conformance suite (location fixed in P0; candidate name `alchemy-postgres` under the shared or `_internal` family per `standards/ARCHITECTURE.md`).
 - `packages/documents/tables/**`: drizzle tables retained as read models; write path removed.
 - Frontend package that hosts the vault-sync UI: optimistic prediction + persisted offline intent queue (D8).
-- `standards/ARCHITECTURE.md`, `standards/DECISIONS.md`, `standards/GLOSSARY.md` (and `standards/architecture/*.md` where the rows live): entries for Model, Command, Event, Aggregate, View, Projection, Saga, Platform, Session; declarative-vs-hosting note; entity-kit freeze (D16).
+- `standards/ARCHITECTURE.md`, `standards/architecture/DECISIONS.md`, `standards/architecture/GLOSSARY.md` (and the numbered `standards/architecture/` chapters where the rows live): entries for Model, Command, Event, Aggregate, View, Projection, Saga, Platform, Session; declarative-vs-hosting note; entity-kit freeze (D16).
 - `packages/shared/domain/src/entity/**`: freeze marker and lint guard forbidding new imports; no deletion.
 - This packet.
 
@@ -101,7 +101,7 @@ them and record each in the Decision Log.
 | Date | Decision | Reason | How to reverse |
 | --- | --- | --- | --- |
 | 2026-11-05 | Inherit D0–D17 from `explorations/alchemy-domain-adoption/DECISIONS.md` as binding | Grilled and locked with the operator over rounds 1–4 | Reopen the exploration at `align` and amend the entry there |
-| 2026-11-05 | Driver and doctrine ship inside this goal, not a separate goal | Operator shape check 2026-11-05: one vertical slice | Split the driver into `alchemy-postgres-platform` at P0 if the conformance suite outgrows the slice |
+| 2026-11-05 | Driver and doctrine ship inside this goal, not a separate goal | Operator shape check 2026-11-05: one vertical slice | Split the driver into a separate alchemy-postgres-platform goal at P0 if the conformance suite outgrows the slice |
 
 ## Exception Ledger
 
