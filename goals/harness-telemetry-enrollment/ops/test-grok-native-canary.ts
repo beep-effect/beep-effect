@@ -48,7 +48,7 @@ int main(int argc,char **argv) {
  snprintf(p,sizeof(p),"%s/fixture-mode",home);FILE *f=fopen(p,"r");if(f){fgets(mode,sizeof(mode),f);fclose(f);}
  if(argc>1&&!strcmp(argv[1],"inspect")) {
   record(home,"inspect-count");
-  printf("{\"grokVersion\":\"1.0.73\",\"cwd\":\"%s\",\"projectRoot\":\"%s/\",\"projectTrusted\":false,\"projectInstructions\":[],\"hooks\":[],\"skills\":[],\"plugins\":[],\"marketplaces\":[],\"mcpServers\":%s,\"lspServers\":[],\"configSources\":{\"layers\":[{\"role\":\"user\",\"path\":\"%s/config.toml\"}]},\"externalCompat\":{\"remoteSettingsLoaded\":false,\"cells\":[{\"enabled\":false}]}}\n",cwd,cwd,!strcmp(mode,"bad-inspect")?"[{}]":"[]",home);return 0;
+  printf("{\"grokVersion\":\"%s\",\"cwd\":\"%s\",\"projectRoot\":\"%s/\",\"projectTrusted\":false,\"projectInstructions\":[],\"hooks\":[],\"skills\":[],\"plugins\":[],\"marketplaces\":[],\"mcpServers\":%s,\"lspServers\":[],\"configSources\":{\"layers\":[{\"role\":\"user\",\"path\":\"%s/config.toml\"}]},\"externalCompat\":{\"remoteSettingsLoaded\":false,\"cells\":[{\"enabled\":false}]}}\n",!strcmp(mode,"wrong-version")?"1.0.73":"1.0.77",cwd,cwd,!strcmp(mode,"bad-inspect")?"[{}]":"[]",home);return 0;
  }
  record(home,"source-count");
  struct stat exe;stat("/proc/self/exe",&exe);char line[8192],tickcopy[128]="";FILE *self=fopen("/proc/self/stat","r");
@@ -63,6 +63,8 @@ int main(int argc,char **argv) {
  usleep(200000);
  fputs("PRIVATE_STDERR_SYNTHETIC_ONLY",stderr);
  if(!strcmp(mode,"source-fail"))return 7;
+ if(!strcmp(mode,"reported-not-signed-in")){puts("{\"type\":\"error\",\"message\":\"PRIVATE_PREFIX Not signed in PRIVATE_SUFFIX\",\"cwd\":\"PRIVATE_CWD\",\"spend\":\"PRIVATE_SPEND\"}");return 1;}
+ if(!strcmp(mode,"other-native-error")){puts("{\"type\":\"error\",\"message\":\"PRIVATE_OTHER_ERROR\"}");return 1;}
  puts("{\"type\":\"available_commands\",\"tools\":[],\"commands\":[]}");
  puts("{\"type\":\"thought\",\"data\":\"PRIVATE_REASONING_SYNTHETIC_ONLY\"}");
  if(!strcmp(mode,"tool"))puts("{\"type\":\"tool_call\",\"toolName\":\"read_file\",\"rawInput\":\"PRIVATE_INPUT\"}");
@@ -329,6 +331,44 @@ for (const mode of ["source-fail", "wrong-reply", "tool"]) {
   );
 }
 
+for (const mode of ["reported-not-signed-in", "other-native-error"]) {
+  it.live(`finite nonzero failure projection retains only a qualified report: ${mode}`, () =>
+    Effect.tryPromise(async () => {
+      const f = await fixture({ mode });
+      try {
+        expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+        const filename = Path.join(f.request.attemptDirectory, "diagnostic-090-outcome.json");
+        const raw = await Fs.readFile(filename, "utf8");
+        const codec = S.fromJsonString(GrokNativeCanaryDiagnostic);
+        const diagnostic = await Effect.runPromise(S.decodeEffect(codec, { onExcessProperty: "error" })(raw));
+        expect(diagnostic.nativeReportedNotSignedIn).toEqual(
+          mode === "reported-not-signed-in" ? O.some(true) : O.none()
+        );
+        expect(diagnostic.category).toBe("native-exit-refused");
+        expect(O.getOrThrow(diagnostic.nativeExitStatus)).toBe(1);
+        expect(O.getOrThrow(diagnostic.protocolTags).error).toBe(1);
+        expect(raw).not.toContain("PRIVATE_");
+        expect(raw).not.toContain("Not signed in");
+        expect(raw).not.toContain("message");
+        expect(raw).not.toContain("spend");
+        if (mode === "reported-not-signed-in") {
+          const wrongExit = raw.replace('"nativeExitStatus":1', '"nativeExitStatus":0');
+          expect((await Effect.runPromise(S.decodeEffect(codec)(wrongExit).pipe(Effect.result)))._tag).toBe("Failure");
+          const falseReport = raw.replace('"nativeReportedNotSignedIn":true', '"nativeReportedNotSignedIn":false');
+          expect((await Effect.runPromise(S.decodeEffect(codec)(falseReport).pipe(Effect.result)))._tag).toBe(
+            "Failure"
+          );
+        }
+        expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+        expect(await f.count("source-count")).toBe(1);
+        expect(await Fs.readFile(filename, "utf8")).toBe(raw);
+      } finally {
+        await f.close();
+      }
+    })
+  );
+}
+
 it.live("nonempty native inventory refuses before the main source and retains its fence", () =>
   Effect.tryPromise(async () => {
     const f = await fixture({ mode: "bad-inspect" });
@@ -458,6 +498,20 @@ it.live("a nonregular MCP FIFO refuses before any read can block", () =>
       const result = await Effect.runPromise(f.run.pipe(Effect.result, Effect.timeout("2 seconds")));
       expect(result._tag).toBe("Failure");
       expect(await f.count("inspect-count")).toBe(0);
+      expect(await f.count("source-count")).toBe(0);
+    } finally {
+      await f.close();
+    }
+  })
+);
+
+it.live("an older native version refuses before source and cannot replay inspection", () =>
+  Effect.tryPromise(async () => {
+    const f = await fixture({ mode: "wrong-version" });
+    try {
+      expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+      expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+      expect(await f.count("inspect-count")).toBe(1);
       expect(await f.count("source-count")).toBe(0);
     } finally {
       await f.close();

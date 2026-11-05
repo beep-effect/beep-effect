@@ -1,5 +1,5 @@
 /**
- * Bounded Grok Build1.0.73 native NDJSON for one fixed user turn.
+ * Bounded Grok Build1.0.77 native NDJSON for one fixed user turn.
  * The executable tool catalog must be empty. Native private session-title
  * operations and HTTP retries are separate from the single source invocation.
  * @packageDocumentation
@@ -56,6 +56,45 @@ const modelUsage = S.Record(S.String.check(S.isMaxLength(128)), modelRow)
     })
   );
 const identifier = S.NonEmptyString.check(S.isMaxLength(256));
+const reportedError = S.Struct({
+  type: S.tag("error"),
+  message: S.String.check(S.isMaxLength(65536)),
+}).pipe(
+  $I.annoteSchema("GrokTransientReportedError", {
+    description: "Transient native error envelope; message and every other native field are discarded.",
+  })
+);
+
+/** Observe only a qualified native error literal after a known nonzero exit.
+ * **Details** The 1.0.73 offline missing/empty-auth contract and current 1.0.77 bundled
+ * authentication guide qualify the exact case-sensitive literal `Not signed in`.
+ * Presence is a native report, never session validity, quota or historical cause.
+ * An unmatched or out-of-bounds envelope remains unknown rather than false.
+ * **Example** (Inspect the bounded observer)
+ * ```ts
+ * console.log(typeof observeGrokReportedNotSignedIn)
+ * ```
+ * @param stdout - Bounded transient native NDJSON, never persisted by this observer.
+ * @param exitStatus - Known native exit; success and unsupported statuses remain unknown.
+ * @returns Only the positive reported-literal boolean, or unknown.
+ * @category decoding
+ * @since 0.0.0
+ */
+export const observeGrokReportedNotSignedIn = Effect.fn("HarnessEnrollment.observeGrokReportedNotSignedIn")(function* (
+  stdout: string,
+  exitStatus: number
+) {
+  if (!Number.isInteger(exitStatus) || exitStatus === 0 || Math.abs(exitStatus) > 4096) return O.none<true>();
+  if (Buffer.byteLength(stdout) > 1048576) return O.none<true>();
+  const lines = A.filter(Str.split(stdout, "\n"), Str.isNonEmpty);
+  if (lines.length === 0 || lines.length > 2048 || A.some(lines, (line) => Buffer.byteLength(line) > 65536))
+    return O.none<true>();
+  for (const line of lines) {
+    const event = yield* S.decodeEffect(S.fromJsonString(reportedError))(line).pipe(Effect.option);
+    if (O.isSome(event) && Str.includes("Not signed in")(event.value.message)) return O.some<true>(true);
+  }
+  return O.none<true>();
+});
 const wire = S.Union([
   S.Struct({
     type: S.tag("available_commands"),
@@ -116,7 +155,7 @@ export class GrokCanarySource extends S.Opaque<GrokCanarySource, { readonly bran
     version: S.tag("grok-canary-source/v1"),
     sourceSessionId: Sha256Hex,
     sourceRequestId: Sha256Hex,
-    protocol: S.tag("grok-build-1.0.73/streaming-json"),
+    protocol: S.tag("grok-build-1.0.77/streaming-json"),
     response: S.tag("exact-constant-matched"),
     requestedModel: S.tag("grok-4.7"),
     requestedEffort: S.tag("medium"),

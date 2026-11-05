@@ -11,7 +11,7 @@ source invocation; their request count and combined usage remain Unknown. Only
 native private `session_title` metadata is permitted outside the main executable
 tool catalog. The adapter does not export the title or claim a title was observed.
 
-Grok 1.0.73's empty `--tools` argument alone leaves 23 executable tools available.
+Grok's empty `--tools` argument alone leaves 23 executable tools available.
 The fixed 23-tool denylist is mandatory. The wire boundary requires an empty
 executable catalog and rejects every executable tool call, including any
 `session_title` call appearing in the main turn's tool stream. The private profile
@@ -103,7 +103,7 @@ counted without conversion to text. No arbitrary error, body, argv, environment
 or identifier enters a diagnostic. Failure retains the same invocation fence;
 metadata replay never overwrites checkpoints or retries a source invocation.
 
-A network-isolated installed 1.0.73 contract fixture returned a synthetic
+A network-isolated installed 1.0.77 contract fixture returned a synthetic
 successful `session_title` result and one synthetic fixed main response. It
 observed two logical operations and two synthetic POST requests, with no live
 provider/auth. The stream order was catalog, catalog, text, catalog, usage, end;
@@ -117,3 +117,15 @@ lane and extends its finite harness union with `grok`. Private separate-runtime
 checks establish exact Codex/Claude output-byte parity with the prior builder
 and frozen8029 Grok configuration decoding/controller/projection/protobuf
 composition. These checks start no worker, service, provider or session.
+
+The error observer retains only optional `nativeReportedNotSignedIn: true` when
+a bounded native `error.message` contains the qualified documented literal
+`Not signed in` and the main process has a known nonzero exit. Missing, malformed,
+unmatched or oversized data remains unknown. The literal and all raw message,
+CWD, spending and other fields are discarded. This reports what the native
+error said; it does not attest session validity, quota, isolation correctness or
+the cause of an earlier failure. The historical failed attempt stays unchanged,
+and no native consumer, profile, login or retry behavior changes with this
+observation-only revision.
+
+The current candidate pins native 1.0.77 inspection and streaming protocol, matching the qualified current standalone CLI. Its no-network synthetic title/main contract uses the same exact production feature toggles, private profile, 23-tool denylist and zero source inventories. The saved native GROK_AUTH_PATH consumer, profile, native read-only sandbox, untrusted project and empty context/tool requirements remain unchanged; no separate grokv proxy/auth-provider route is inherited. A version correction does not retroactively diagnose the failed1.0.73 attempt.

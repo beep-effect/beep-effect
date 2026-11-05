@@ -5,7 +5,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
-import { decodeGrokCanaryOutput, GrokCanarySource } from "./grok-exec-wire.ts";
+import { decodeGrokCanaryOutput, GrokCanarySource, observeGrokReportedNotSignedIn } from "./grok-exec-wire.ts";
 
 const salt = Redacted.make("synthetic-namespace-only");
 const workspace = "/synthetic/owned-pilot";
@@ -23,6 +23,47 @@ const terminal = {
 };
 const stream = (rows: ReadonlyArray<unknown>) => rows.map((row) => JSON.stringify(row)).join("\n");
 
+it.effect("observes only the qualified error-message literal and discards every native value", () =>
+  Effect.gen(function* () {
+    const observation = yield* observeGrokReportedNotSignedIn(
+      stream([
+        {
+          type: "error",
+          message: "PRIVATE_PREFIX Not signed in PRIVATE_SUFFIX",
+          cwd: "/PRIVATE_WORKSPACE",
+          spend: "PRIVATE_SPEND",
+          code: "PRIVATE_CODE",
+        },
+      ]),
+      1
+    );
+    expect(observation).toEqual(O.some(true));
+    expect(JSON.stringify(observation)).not.toContain("PRIVATE_");
+  })
+);
+
+for (const [name, stdout, exitStatus] of [
+  ["successful exit", stream([{ type: "error", message: "Not signed in" }]), 0],
+  ["different error", stream([{ type: "error", message: "PRIVATE_OTHER_ERROR" }]), 1],
+  ["wrong case", stream([{ type: "error", message: "not signed in" }]), 1],
+  ["missing event type", stream([{ message: "Not signed in" }]), 1],
+  ["text event", stream([{ type: "text", message: "Not signed in" }]), 1],
+  ["nested message", stream([{ type: "error", error: { message: "Not signed in" } }]), 1],
+  ["nonstring message", stream([{ type: "error", message: { private: "Not signed in" } }]), 1],
+  ["malformed JSON", '{"type":"error","message":"Not signed in"', 1],
+  ["oversized row", stream([{ type: "error", message: "Not signed in", private: "x".repeat(65536) }]), 1],
+  ["too many rows", `${"{}\n".repeat(2048)}${stream([{ type: "error", message: "Not signed in" }])}`, 1],
+  ["oversized stream", "x".repeat(1048577), 1],
+  ["noninteger exit", stream([{ type: "error", message: "Not signed in" }]), 1.5],
+  ["unsupported exit", stream([{ type: "error", message: "Not signed in" }]), 4097],
+] as const) {
+  it.effect(`unqualified native report remains unknown: ${name}`, () =>
+    Effect.gen(function* () {
+      expect(yield* observeGrokReportedNotSignedIn(stdout, exitStatus)).toEqual(O.none());
+    })
+  );
+}
+
 it.layer(NodeCrypto.layer)((it) => {
   it.effect("retains reported retry counters without equating one source invocation with one HTTP request", () =>
     Effect.gen(function* () {
@@ -32,6 +73,7 @@ it.layer(NodeCrypto.layer)((it) => {
         workspace
       );
       const encoded = yield* S.encodeEffect(S.fromJsonString(GrokCanarySource))(source);
+      expect(source.protocol).toBe("grok-build-1.0.77/streaming-json");
       expect(source.sourceInvocations).toBe(1);
       expect(source.nativeHttpRequests).toBe("Unknown");
       expect(source.requestedTitleModel).toBe("grok-4.7");
@@ -45,7 +87,7 @@ it.layer(NodeCrypto.layer)((it) => {
   );
   it.effect("accepts exact installed native successful title/main event ordering with a trailing empty catalog", () =>
     Effect.gen(function* () {
-      // Network-isolated 1.0.73 fixture: one synthetic session_title result and one
+      // Network-isolated 1.0.77 fixture: one synthetic session_title result and one
       // synthetic main response; title metadata does not emit executable tool events.
       const source = yield* decodeGrokCanaryOutput(
         stream([
