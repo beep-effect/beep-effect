@@ -15,7 +15,7 @@
         ".claude/skills/atom-reactivity-specialist",
         ".agents/skills/atom-reactivity-specialist"
       ],
-      "installedTreeHash": "bc40a308da203587a69b6cd9c3e03e1f0a7b58741f64e48cd8eeab7a3e5d7081"
+      "installedTreeHash": "94f3e833145cfafbe688dc44af2e6e120000c5195a4f6d7c67b44d0d3560b0e1"
     },
     "browser-qa-loop": {
       "_tag": "local",
@@ -55,7 +55,7 @@
         ".claude/skills/effect-first-development",
         ".agents/skills/effect-first-development"
       ],
-      "installedTreeHash": "fbe20de1442d7e14315d8573a462e603a7f20ac30f1e38ff927b78b837a2df3c"
+      "installedTreeHash": "93ff35cb8145644ff84020f4a6efb7010b7abe56249f951b2457a809d607fa1e"
     },
     "explore": {
       "_tag": "local",
@@ -147,7 +147,7 @@
         ".claude/skills/jsdoc-annotation-specialist",
         ".agents/skills/jsdoc-annotation-specialist"
       ],
-      "installedTreeHash": "40d11cf1b35866996aa4ca6b99fb70761e99cb5013b0eef3f37a64f235da50f6"
+      "installedTreeHash": "9269cafffd179e71ca7041128ce7734174ebe4239b55fbc58b8551f3dfb7adf7"
     },
     "motion-evidence-review": {
       "_tag": "local",
@@ -399,7 +399,7 @@
         ".claude/skills/quality-review-fix-loop",
         ".agents/skills/quality-review-fix-loop"
       ],
-      "installedTreeHash": "bb62274f677d7cccdd46bf044750bc9e79b087b253322fec1654b823e5fcb7db"
+      "installedTreeHash": "b501a8de1c7f6c5c88d629d0fcfde526360c7dd13bc40190ed10a3b2a6ce39db"
     },
     "reflect": {
       "_tag": "local",
