@@ -154,6 +154,7 @@
     "research/proxy-node-runtime-checkpoint.json",
     "research/proxy-request-completion-checkpoint.json",
     "research/qualification-fixture-boundary.md",
+    "research/readiness-unread-check-regression-2026-11-03.json",
     "research/receipt-media-type-checkpoint.json",
     "research/reply-error-coverage-checkpoint.json",
     "research/reproduce-interrupted-upload-red-restore.patch",

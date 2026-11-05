@@ -357,6 +357,7 @@ const RecoveryFacts = S.Struct({
   remote: S.Struct({
     available: S.Boolean,
     checked: S.Boolean,
+    readFailure: YeetCommandError.pipe(S.OptionFromOptionalKey),
     number: S.Int,
     state: S.String,
     isDraft: S.Boolean,
