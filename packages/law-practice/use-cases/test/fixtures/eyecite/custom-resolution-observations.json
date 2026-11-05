@@ -1,0 +1,916 @@
+{
+  "schemaVersion": "citation-custom-resolution-observations/v1",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "pythonVersion": "3.11.15",
+  "pythonHashSeed": "0",
+  "versions": {
+    "eyecite": "2.7.6",
+    "reporters-db": "3.2.53",
+    "courts-db": "0.10.22"
+  },
+  "license": "BSD-2-Clause",
+  "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
+  "exporterSha256": "3c05a27149ad05492dd321402374b1c4d16ae67eec31d634aa281e670a149699",
+  "sources": {
+    "resolve.py": "651ede8c2a2d5df9ec9c9f1145530a6de7fca15304d1816b7f620a81ab3f2044",
+    "models.py": "2297f2f3a036a5674346e952fd6b03c8d4906c1130ef43157b7e2d79d5bdf38a"
+  },
+  "cases": [
+    {
+      "name": "all-five-dispatch",
+      "kinds": [
+        "case",
+        "short",
+        "supra",
+        "reference",
+        "id",
+        "unknown",
+        "law",
+        "journal"
+      ],
+      "pages": {},
+      "bindings": {
+        "full": "external",
+        "shortcase": "external",
+        "supra": "external",
+        "reference": "external",
+        "id": "external"
+      },
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0
+        },
+        {
+          "slot": "shortcase",
+          "mention": 1,
+          "fulls": [
+            {
+              "mention": 0,
+              "resource": {
+                "kind": "str",
+                "value": "external"
+              }
+            }
+          ]
+        },
+        {
+          "slot": "supra",
+          "mention": 2,
+          "fulls": [
+            {
+              "mention": 0,
+              "resource": {
+                "kind": "str",
+                "value": "external"
+              }
+            }
+          ]
+        },
+        {
+          "slot": "reference",
+          "mention": 3,
+          "fulls": [
+            {
+              "mention": 0,
+              "resource": {
+                "kind": "str",
+                "value": "external"
+              }
+            }
+          ]
+        },
+        {
+          "slot": "id",
+          "mention": 4,
+          "last": {
+            "kind": "str",
+            "value": "external"
+          },
+          "groups": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "external"
+              },
+              "members": [0, 1, 2, 3]
+            }
+          ]
+        },
+        {
+          "slot": "full",
+          "mention": 6
+        },
+        {
+          "slot": "full",
+          "mention": 7
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "external"
+            },
+            "members": [0, 1, 2, 3, 4, 6, 7]
+          }
+        ]
+      }
+    },
+    {
+      "name": "full-merge-first-page-controls-id",
+      "kinds": ["case", "case", "id"],
+      "pages": {
+        "0": 100,
+        "1": 1
+      },
+      "bindings": {
+        "full": "shared",
+        "id": "default"
+      },
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0
+        },
+        {
+          "slot": "full",
+          "mention": 1
+        },
+        {
+          "slot": "id",
+          "mention": 2,
+          "last": {
+            "kind": "str",
+            "value": "shared"
+          },
+          "groups": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "shared"
+              },
+              "members": [0, 1]
+            }
+          ]
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "shared"
+            },
+            "members": [0, 1]
+          }
+        ]
+      }
+    },
+    {
+      "name": "full-merge-reversed-pages",
+      "kinds": ["case", "case", "id"],
+      "pages": {
+        "0": 1,
+        "1": 100
+      },
+      "bindings": {
+        "full": "shared",
+        "id": "default"
+      },
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0
+        },
+        {
+          "slot": "full",
+          "mention": 1
+        },
+        {
+          "slot": "id",
+          "mention": 2,
+          "last": {
+            "kind": "str",
+            "value": "shared"
+          },
+          "groups": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "shared"
+              },
+              "members": [0, 1]
+            }
+          ]
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "shared"
+            },
+            "members": [0, 1, 2]
+          }
+        ]
+      }
+    },
+    {
+      "name": "falsy-full-none",
+      "kinds": ["case", "supra", "id"],
+      "pages": {},
+      "bindings": {
+        "full": null,
+        "supra": "default",
+        "id": "default"
+      },
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0
+        },
+        {
+          "slot": "supra",
+          "mention": 1,
+          "fulls": [
+            {
+              "mention": 0,
+              "resource": {
+                "kind": "NoneType",
+                "value": null
+              }
+            }
+          ]
+        },
+        {
+          "slot": "id",
+          "mention": 2,
+          "last": {
+            "kind": "NoneType",
+            "value": null
+          },
+          "groups": []
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": []
+      }
+    },
+    {
+      "name": "falsy-full-false",
+      "kinds": ["case", "supra", "id"],
+      "pages": {},
+      "bindings": {
+        "full": false,
+        "supra": "default",
+        "id": "default"
+      },
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0
+        },
+        {
+          "slot": "supra",
+          "mention": 1,
+          "fulls": [
+            {
+              "mention": 0,
+              "resource": {
+                "kind": "bool",
+                "value": false
+              }
+            }
+          ]
+        },
+        {
+          "slot": "id",
+          "mention": 2,
+          "last": {
+            "kind": "bool",
+            "value": false
+          },
+          "groups": []
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": []
+      }
+    },
+    {
+      "name": "falsy-full-zero",
+      "kinds": ["case", "supra", "id"],
+      "pages": {},
+      "bindings": {
+        "full": 0,
+        "supra": "default",
+        "id": "default"
+      },
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0
+        },
+        {
+          "slot": "supra",
+          "mention": 1,
+          "fulls": [
+            {
+              "mention": 0,
+              "resource": {
+                "kind": "int",
+                "value": 0
+              }
+            }
+          ]
+        },
+        {
+          "slot": "id",
+          "mention": 2,
+          "last": {
+            "kind": "int",
+            "value": 0
+          },
+          "groups": []
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": []
+      }
+    },
+    {
+      "name": "falsy-full-empty-string",
+      "kinds": ["case", "supra", "id"],
+      "pages": {},
+      "bindings": {
+        "full": "",
+        "supra": "default",
+        "id": "default"
+      },
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0
+        },
+        {
+          "slot": "supra",
+          "mention": 1,
+          "fulls": [
+            {
+              "mention": 0,
+              "resource": {
+                "kind": "str",
+                "value": ""
+              }
+            }
+          ]
+        },
+        {
+          "slot": "id",
+          "mention": 2,
+          "last": {
+            "kind": "str",
+            "value": ""
+          },
+          "groups": []
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": []
+      }
+    },
+    {
+      "name": "falsy-full-empty-tuple",
+      "kinds": ["case", "supra", "id"],
+      "pages": {},
+      "bindings": {
+        "full": [],
+        "supra": "default",
+        "id": "default"
+      },
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0
+        },
+        {
+          "slot": "supra",
+          "mention": 1,
+          "fulls": [
+            {
+              "mention": 0,
+              "resource": {
+                "kind": "tuple",
+                "value": []
+              }
+            }
+          ]
+        },
+        {
+          "slot": "id",
+          "mention": 2,
+          "last": {
+            "kind": "tuple",
+            "value": []
+          },
+          "groups": []
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": []
+      }
+    },
+    {
+      "name": "equal-keys-keep-first-key-object",
+      "kinds": ["case", "case", "id"],
+      "pages": {},
+      "bindings": {
+        "full": {
+          "0": 1,
+          "1": true
+        },
+        "id": "default"
+      },
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0
+        },
+        {
+          "slot": "full",
+          "mention": 1
+        },
+        {
+          "slot": "id",
+          "mention": 2,
+          "last": {
+            "kind": "bool",
+            "value": true
+          },
+          "groups": [
+            {
+              "resource": {
+                "kind": "int",
+                "value": 1
+              },
+              "members": [0, 1]
+            }
+          ]
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "int",
+              "value": 1
+            },
+            "members": [0, 1, 2]
+          }
+        ]
+      }
+    },
+    {
+      "name": "short-resource-without-full",
+      "kinds": ["short", "id"],
+      "pages": {},
+      "bindings": {
+        "shortcase": "external",
+        "id": "default"
+      },
+      "events": [
+        {
+          "slot": "shortcase",
+          "mention": 0,
+          "fulls": []
+        },
+        {
+          "slot": "id",
+          "mention": 1,
+          "last": {
+            "kind": "str",
+            "value": "external"
+          },
+          "groups": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "external"
+              },
+              "members": [0]
+            }
+          ]
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "external"
+            },
+            "members": [0, 1]
+          }
+        ]
+      }
+    },
+    {
+      "name": "supra-resource-without-full",
+      "kinds": ["supra", "id"],
+      "pages": {},
+      "bindings": {
+        "supra": "external",
+        "id": "default"
+      },
+      "events": [
+        {
+          "slot": "supra",
+          "mention": 0,
+          "fulls": []
+        },
+        {
+          "slot": "id",
+          "mention": 1,
+          "last": {
+            "kind": "str",
+            "value": "external"
+          },
+          "groups": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "external"
+              },
+              "members": [0]
+            }
+          ]
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "external"
+            },
+            "members": [0, 1]
+          }
+        ]
+      }
+    },
+    {
+      "name": "reference-resource-without-full",
+      "kinds": ["reference", "id"],
+      "pages": {},
+      "bindings": {
+        "reference": "external",
+        "id": "default"
+      },
+      "events": [
+        {
+          "slot": "reference",
+          "mention": 0,
+          "fulls": []
+        },
+        {
+          "slot": "id",
+          "mention": 1,
+          "last": {
+            "kind": "str",
+            "value": "external"
+          },
+          "groups": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "external"
+              },
+              "members": [0]
+            }
+          ]
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "external"
+            },
+            "members": [0, 1]
+          }
+        ]
+      }
+    },
+    {
+      "name": "id-resource-without-full",
+      "kinds": ["id", "id"],
+      "pages": {},
+      "bindings": {
+        "id": "external"
+      },
+      "events": [
+        {
+          "slot": "id",
+          "mention": 0,
+          "last": {
+            "kind": "NoneType",
+            "value": null
+          },
+          "groups": []
+        },
+        {
+          "slot": "id",
+          "mention": 1,
+          "last": {
+            "kind": "str",
+            "value": "external"
+          },
+          "groups": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "external"
+              },
+              "members": [0]
+            }
+          ]
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "external"
+            },
+            "members": [0, 1]
+          }
+        ]
+      }
+    },
+    {
+      "name": "false-short-resets-last",
+      "kinds": ["case", "short", "id"],
+      "pages": {},
+      "bindings": {
+        "full": "external",
+        "shortcase": "",
+        "id": "default"
+      },
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0
+        },
+        {
+          "slot": "shortcase",
+          "mention": 1,
+          "fulls": [
+            {
+              "mention": 0,
+              "resource": {
+                "kind": "str",
+                "value": "external"
+              }
+            }
+          ]
+        },
+        {
+          "slot": "id",
+          "mention": 2,
+          "last": {
+            "kind": "str",
+            "value": ""
+          },
+          "groups": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "external"
+              },
+              "members": [0]
+            }
+          ]
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "external"
+            },
+            "members": [0]
+          }
+        ]
+      }
+    },
+    {
+      "name": "custom-key-default-short-supra",
+      "kinds": ["case", "short", "supra", "id"],
+      "pages": {},
+      "bindings": {
+        "full": "external",
+        "shortcase": "default",
+        "supra": "default",
+        "id": "default"
+      },
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0
+        },
+        {
+          "slot": "shortcase",
+          "mention": 1,
+          "fulls": [
+            {
+              "mention": 0,
+              "resource": {
+                "kind": "str",
+                "value": "external"
+              }
+            }
+          ]
+        },
+        {
+          "slot": "supra",
+          "mention": 2,
+          "fulls": [
+            {
+              "mention": 0,
+              "resource": {
+                "kind": "str",
+                "value": "external"
+              }
+            }
+          ]
+        },
+        {
+          "slot": "id",
+          "mention": 3,
+          "last": {
+            "kind": "str",
+            "value": "external"
+          },
+          "groups": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "external"
+              },
+              "members": [0, 1, 2]
+            }
+          ]
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "external"
+            },
+            "members": [0, 1, 2, 3]
+          }
+        ]
+      }
+    },
+    {
+      "name": "mutable-prior-full-state",
+      "kinds": ["case", "supra", "short", "id"],
+      "pages": {},
+      "bindings": {
+        "full": "external",
+        "supra": "clear-fulls",
+        "shortcase": "default",
+        "id": "default"
+      },
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0
+        },
+        {
+          "slot": "supra",
+          "mention": 1,
+          "fulls": [
+            {
+              "mention": 0,
+              "resource": {
+                "kind": "str",
+                "value": "external"
+              }
+            }
+          ]
+        },
+        {
+          "slot": "shortcase",
+          "mention": 2,
+          "fulls": []
+        },
+        {
+          "slot": "id",
+          "mention": 3,
+          "last": {
+            "kind": "NoneType",
+            "value": null
+          },
+          "groups": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "external"
+              },
+              "members": [0]
+            }
+          ]
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "external"
+            },
+            "members": [0]
+          }
+        ]
+      }
+    },
+    {
+      "name": "unhashable-truthy-resource",
+      "kinds": ["case", "id"],
+      "pages": {},
+      "bindings": {
+        "full": ["unhashable"],
+        "id": "default"
+      },
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0
+        }
+      ],
+      "outcome": {
+        "status": "error",
+        "kind": "TypeError"
+      }
+    },
+    {
+      "name": "callback-exception-stops-dispatch",
+      "kinds": ["case", "short", "id"],
+      "pages": {},
+      "bindings": {
+        "full": "external",
+        "shortcase": "raise",
+        "id": "default"
+      },
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0
+        },
+        {
+          "slot": "shortcase",
+          "mention": 1,
+          "fulls": [
+            {
+              "mention": 0,
+              "resource": {
+                "kind": "str",
+                "value": "external"
+              }
+            }
+          ]
+        }
+      ],
+      "outcome": {
+        "status": "error",
+        "kind": "ValueError"
+      }
+    }
+  ]
+}

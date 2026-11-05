@@ -1,0 +1,20 @@
+{
+  "previous": "430624e6020d341200b59295cb67649bc1815574e6218d6424010042cfc132cc",
+  "review": {
+    "reviewer": "Codex GPT-6.1-Sol (PR 2511 hosted quality repair)",
+    "reason": "Route the existing native Unicode qualification into explicitly scoped hosted integration through the standard uncached parallel alias. Preserve other subjects and grant no qualification.",
+    "basis": {
+      "path": "goals/citation-extraction-engine/history/evidence/2026-11-02-hosted-quality-repair.md",
+      "sha256": "024e81189ec7ab5788c4ca658e85371261f4ed6e95ef379a54b5f2e7948b53c6"
+    }
+  },
+  "subjects": ["@beep/law-practice-server"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

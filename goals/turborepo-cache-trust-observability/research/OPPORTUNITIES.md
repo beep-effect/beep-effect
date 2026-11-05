@@ -2254,6 +2254,23 @@ RPM systems, `perl` on Debian), keep the existing bounds and retain an actual
 accepted-source build as the gate. Do not convert a source regression check into
 compiled-artifact proof.
 
+## 2026-11-04 UTC: signed overlays omitted native key-length enforcement
+
+While reviewing the pending feature matrix, source inspection of
+`projectCacheSignedRoot` found signatures enabled without the native
+`longerSignatureKey` safeguard. The already recorded 168-case native experiment
+shows short supplied keys still execute in that default configuration.
+Prepare the safeguard in the existing shared projector rather than another
+key-policy helper. Preserve independent missing-key roles and exact overlay
+verification. Owner: trust goal; hosted regressions and signed rollout remain
+pending. No credential was read and no live setting was changed.
+
+The first hosted Fallow run on PR #2692 found one introduced cognitive-complexity
+finding in the new four-row key-floor test: two nested Boolean loops plus two
+layout branches scored 9. The retained audit and health raw reports name the
+same test. Enumerate the same four input pairs in one loop instead, preserving
+every assertion and avoiding helper extraction or a raised threshold. Owner:
+this PR; current hosted Fallow proof remains required after the repair.
 
 ### 2026-11-03 — include directory metadata in pilot source guards
 
@@ -2324,3 +2341,7 @@ Accepted-main workflow run42126399874 / job127591603870 failed with `invalid-inp
 ### 2026-11-05: Treat review API exhaustion as unknown state
 
 PR #2707 closeout could not read review state because GitHub GraphQL reported its API limit exhausted. A minimal quota query confirmed zero remaining and reset at 23:31:05Z; the REST quota snapshot had shown a different GraphQL allowance, so it was insufficient evidence to resume reads. Preserve the failed receipt and hold review/merge readiness until an actual post-reset read succeeds. Share and respect the authenticated API reset across metadata consumers to prevent repeated failed polls; this is an environment wait, not an empty review inventory. No credential or subscription change.
+
+### 2026-11-05: Avoid repeated packet tail collisions
+
+PR #2707 conflicted at the SPEC and PLAN append points after sibling #2690 landed, then again with #2692 and its manifest report row. Preserve both independent histories, place this repair's checkpoint in the existing Status section and decision near the start of the existing Decision log, and insert its report row away from the manifest tail. This reduces shared append edits without a new merge policy or an unaccepted tooling dependency. Reverse the placement through Git; keep every evidence entry.

@@ -210,6 +210,26 @@ fault receipts. Remote fallback must never mean unsigned restore.
 
 ## Decision log
 
+### Retain source evidence when dependency diagnostics refuse, 2026-11-05
+
+Run42126399874 on accepted4975e29168 completed source inspection but refused
+dependency diagnostics with the generic `invalid-input-or-stream` code. The
+source artifact was skipped, preventing a bound comparison. Supersede the
+previous diagnostic decision's success-only source retention: upload an already
+successful source report whenever its output exists, even if the later
+diagnostic fails. Failed source inspection never qualifies for that upload.
+Retain the one-day limit and existing report-size bounds.
+
+Distinguish only fixed memory, subprocess deadline/failure, archive read,
+filesystem/process and invalid value/shape codes. Never retain exception
+messages, paths, command output or environment values. The old refusal does not
+identify the runtime cause; no package drift attribution or environment approval
+is inferred. Author redaction/retention controls for hosted CI and push directly,
+without local verify, publish or suites. After primary acceptance, obtain bound
+source and diagnostic reports before continuing producer approval. Reversal
+reverts this retention/classification delta and preserves the failed evidence.
+No fingerprint, credential, signing, capacity, qualification or goal-status change.
+
 ### Bound optional second-phase optimizer work, 2026-10-31 UTC
 
 - The expansion budget alone still permits quadratic pairwise processing below
@@ -1329,22 +1349,20 @@ This change grants no task/profile qualification or signing activation. Existing
 receipts remain historical under their original source. Reverse through Git;
 no public protocol/schema, persisted state or cloud resource migration is needed.
 
-### Retain source evidence when dependency diagnostics refuse, 2026-11-05
+### Enforce the native key floor in reviewed signed overlays, 2026-11-04 UTC
 
-Run42126399874 on accepted4975e29168 completed source inspection but refused
-dependency diagnostics with the generic `invalid-input-or-stream` code. The
-source artifact was skipped, preventing a bound comparison. Supersede the
-previous diagnostic decision's success-only source retention: upload an already
-successful source report whenever its output exists, even if the later
-diagnostic fails. Failed source inspection never qualifies for that upload.
-Retain the one-day limit and existing report-size bounds.
+The shared pilot/verifier signed-root projector must set
+`futureFlags.longerSignatureKey` to `true` with remote-cache enablement and
+signature verification. Preserve other flags, task definitions and remote
+options in both legacy and global layouts. Bind this flag into the exact
+projected root bytes and configuration identity; an omitted or disabled floor
+is a different, rejected projection. This does not activate the root setting.
 
-Distinguish only fixed memory, subprocess deadline/failure, archive read,
-filesystem/process and invalid value/shape codes. Never retain exception
-messages, paths, command output or environment values. The old refusal does not
-identify the runtime cause; no package drift attribution or environment approval
-is inferred. Author redaction/retention controls for hosted CI and push directly,
-without local verify, publish or suites. After primary acceptance, obtain bound
-source and diagnostic reports before continuing producer approval. Reversal
-reverts this retention/classification delta and preserves the failed evidence.
-No fingerprint, credential, signing, capacity, qualification or goal-status change.
+The recorded 168-case stable/current-canary experiment proves only native
+length behavior: short supplied UTF-8 keys fail with this safeguard enabled,
+but an absent key still needs Beep's separate reader/writer/canary posture.
+Key length does not establish entropy, upload authority or a protected producer.
+New source and assertion changes require hosted proof; prior signed artifacts
+are retained and receive no automatic new qualification. Reverse by suspending
+affected candidate tuples and reverting the projector delta, retaining both
+projection histories. Whole-goal acceptance and production gates remain open.

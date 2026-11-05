@@ -53,6 +53,7 @@
   "researchReports": [
     "research/SOURCES.md",
     "research/OPPORTUNITIES.md",
+    "research/installed-dependency-refusal-retention-2026-11-05.json",
     "research/qualification-fixture-boundary.md",
     "research/native-isolated-stable-probe.json",
     "research/native-isolated-canary-probe.json",
@@ -158,7 +159,7 @@
     "research/native-dependency-diagnostics.py",
     "research/native-dependency-diagnostics.test.py",
     "research/installed-dependency-diagnostic-preparation-2026-11-03.json",
-    "research/installed-dependency-refusal-retention-2026-11-05.json"
+    "research/signed-key-floor-review-2026-11-04.json"
   ],
   "agentLaunchers": [
     {
