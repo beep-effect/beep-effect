@@ -247,3 +247,78 @@ it.layer(NodeCrypto.layer)((it) => {
     })
   );
 });
+
+const rate = (status = "allowed") => ({
+  type: "rate_limit_event",
+  session_id: "PRIVATE_SESSION",
+  uuid: "PRIVATE_UUID",
+  rate_limit_info: { status, resetsAt: 1793917200, utilization: 1.25, arbitrary: "PRIVATE_ACCOUNT" },
+  message: "PRIVATE_WARNING",
+});
+
+it.layer(NodeCrypto.layer)((it) => {
+  for (const status of ["allowed", "allowed_warning", "rejected"]) {
+    it.effect(`accepts bounded ${status} notification only with the complete valid turn`, () =>
+      Effect.gen(function* () {
+        const source = yield* decode([initial, rate(status), response, final]);
+        const trailing = yield* decode([initial, response, final, rate(status)]);
+        expect(trailing.observedRateLimitNotifications).toEqual(source.observedRateLimitNotifications);
+        expect(source.observedRateLimitNotifications).toEqual({
+          allowed: status === "allowed" ? 1 : 0,
+          allowedWarning: status === "allowed_warning" ? 1 : 0,
+          rejected: status === "rejected" ? 1 : 0,
+        });
+        expect(source.actualApiRequestCount).toBe("unknown");
+        const text = yield* S.encodeEffect(S.fromJsonString(ClaudeCanarySource))(source);
+        expect(text).not.toContain("PRIVATE_");
+        expect(text).not.toContain("1793917200");
+        expect(text).not.toContain("1.25");
+      })
+    );
+  }
+  it.effect("retains repeated status counts without treating notifications as API calls", () =>
+    Effect.gen(function* () {
+      const source = yield* decode([initial, rate("rejected"), rate("rejected"), response, rate("allowed"), final]);
+      expect(source.observedRateLimitNotifications).toEqual({ allowed: 1, allowedWarning: 0, rejected: 2 });
+      expect(source.actualApiRequestCount).toBe("unknown");
+    })
+  );
+  it.effect("accepts the combined finite notification ceilings and omitted optional numeric metadata", () =>
+    Effect.gen(function* () {
+      const source = yield* decode([
+        initial,
+        ...Array.from({ length: 8 }, () => ({ type: "system", subtype: "api_retry" })),
+        ...Array.from({ length: 8 }, () => ({
+          type: "rate_limit_event",
+          session_id: "PRIVATE_SESSION",
+          rate_limit_info: { status: "allowed" },
+        })),
+        response,
+        final,
+        ...Array.from({ length: 4 }, () => ({ type: "system", subtype: "ui_invalidate" })),
+      ]);
+      expect(source.observedRetryNotifications).toBe(8);
+      expect(source.observedRateLimitNotifications.allowed).toBe(8);
+    })
+  );
+  for (const events of [
+    [rate(), initial, response, final],
+    [initial, { ...rate(), session_id: "OTHER" }, response, final],
+    [initial, rate("unknown"), response, final],
+    [initial, { ...rate(), rate_limit_info: { status: "allowed", resetsAt: -1 } }, response, final],
+    [initial, { ...rate(), rate_limit_info: { status: "allowed", utilization: -0.1 } }, response, final],
+    [initial, { ...rate(), rate_limit_info: { status: "allowed", utilization: "PRIVATE_INVALID" } }, response, final],
+    [initial, ...Array.from({ length: 9 }, () => rate()), response, final],
+    [initial, rate("rejected"), response],
+    [initial, rate("rejected"), response, { ...final, subtype: "error_during_execution", is_error: true }],
+    [initial, rate("rejected"), response, final, final],
+  ]) {
+    it.effect("refuses malformed/excessive rate metadata and rejected turns without one valid terminal", () =>
+      Effect.gen(function* () {
+        const result = yield* decode(events).pipe(Effect.result);
+        expect(result._tag).toBe("Failure");
+        expect(String(result)).not.toContain("PRIVATE_");
+      })
+    );
+  }
+});

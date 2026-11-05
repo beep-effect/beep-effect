@@ -29,6 +29,7 @@ const fixture = async (
     policyDrift?: boolean;
     nativeExit?: number;
     unknownEvent?: boolean;
+    rateLimitStatus?: "allowed" | "allowed_warning" | "rejected";
     outputOverflow?: boolean;
     postPolicyDrift?: boolean;
     rejectFinished?: boolean;
@@ -198,7 +199,9 @@ const fixture = async (
     const firstNewline = output.indexOf("\n");
     const reported = options.unknownEvent
       ? `${output.slice(0, firstNewline)}\n{"type":"rate_limit_event","privateBody":"PRIVATE_NATIVE_METADATA"}\n${output.slice(firstNewline + 1)}`
-      : output;
+      : options.rateLimitStatus
+        ? `${output.slice(0, firstNewline)}\n${JSON.stringify({ type: "rate_limit_event", session_id: "PRIVATE_SESSION", rate_limit_info: { status: options.rateLimitStatus }, message: "PRIVATE_WARNING" })}\n${output.slice(firstNewline + 1)}`
+        : output;
     return {
       stdout: options.outputOverflow ? "x".repeat(262145) : reported,
       stderr: "PRIVATE_STDERR",
@@ -237,7 +240,7 @@ const fixture = async (
 
 it.live("runs one fixed native consumer then replays immutable metadata without source/probe rerun", () =>
   Effect.tryPromise(async () => {
-    const f = await fixture({ rejectTraceOnce: true });
+    const f = await fixture({ rejectTraceOnce: true, rateLimitStatus: "allowed_warning" });
     try {
       expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
       const accepted = await Effect.runPromise(f.run);
@@ -248,6 +251,11 @@ it.live("runs one fixed native consumer then replays immutable metadata without 
       const source = await Fs.readFile(Path.join(f.request.attemptDirectory, "source.json"), "utf8");
       expect(source).not.toContain("PRIVATE_");
       expect(source).not.toContain("ENROLLMENT_CANARY_OK");
+      expect(JSON.parse(source).source.observedRateLimitNotifications).toEqual({
+        allowed: 0,
+        allowedWarning: 1,
+        rejected: 0,
+      });
       expect(f.traces[0]?.toString()).not.toContain("input_tokens");
       const actual = f.spawner.spawns[1];
       expect(actual?.extendEnv).toBe(false);
@@ -378,6 +386,13 @@ it.live("policy drift after preparation fences the attempt before the model proc
 
 for (const scenario of [
   { name: "known nonzero native exit", options: { nativeExit: 2 }, phase: "source-exit", exit: 2, outcome: "failed" },
+  {
+    name: "rejected rate notification with native nonzero",
+    options: { nativeExit: 2, rateLimitStatus: "rejected" as const },
+    phase: "source-exit",
+    exit: 2,
+    outcome: "failed",
+  },
   {
     name: "unsupported native metadata",
     options: { unknownEvent: true },

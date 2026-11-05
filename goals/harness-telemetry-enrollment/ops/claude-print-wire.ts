@@ -54,6 +54,26 @@ const apiRetry = S.Struct({
   max_retries: S.OptionFromOptionalKey(count.check(S.isLessThanOrEqualTo(32))),
   retry_delay_ms: S.OptionFromOptionalKey(count.check(S.isLessThanOrEqualTo(60000))),
 });
+// SDK 0.3.318 public SDKRateLimitEvent/SDKRateLimitInfo. Unknown fields
+// (including arbitrary warning text, UUID and account details) never survive decoding.
+const rateStatus = S.Literals(["allowed", "allowed_warning", "rejected"]);
+const rateLimitInfo = S.Struct({
+  status: rateStatus,
+  resetsAt: S.OptionFromOptionalKey(count),
+  utilization: S.OptionFromOptionalKey(
+    S.Finite.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(Number.MAX_SAFE_INTEGER))
+  ),
+});
+const rateLimit = S.Struct({
+  type: S.tag("rate_limit_event"),
+  session_id: session,
+  rate_limit_info: rateLimitInfo,
+});
+const rateCounts = S.Struct({
+  allowed: count.check(S.isLessThanOrEqualTo(8)),
+  allowedWarning: count.check(S.isLessThanOrEqualTo(8)),
+  rejected: count.check(S.isLessThanOrEqualTo(8)),
+});
 const init = S.Struct({
   type: S.tag("system"),
   subtype: S.tag("init"),
@@ -101,7 +121,7 @@ const terminal = S.Struct({
   usage: S.OptionFromOptionalKey(nativeUsage),
   modelUsage: S.OptionFromOptionalKey(S.Record(S.String, modelUsage)),
 });
-const envelope = S.Struct({ type: S.Literals(["system", "assistant", "result"]) });
+const envelope = S.Struct({ type: S.Literals(["system", "assistant", "result", "rate_limit_event"]) });
 
 /**
  * Fixed content-free protocol refusal.
@@ -145,6 +165,7 @@ export class ClaudeCanarySource extends S.Opaque<ClaudeCanarySource, { readonly 
     startupMcpServers: S.tag(0),
     builtinInventory: S.tag("claude-2.1.318/offline-qualified-builtins-v1"),
     observedRetryNotifications: count.check(S.isLessThanOrEqualTo(8)),
+    observedRateLimitNotifications: rateCounts,
     actualApiRequestCount: S.tag("unknown"),
     durationMillis: count,
     apiDurationMillis: count,
@@ -175,16 +196,28 @@ export const decodeClaudeCanaryOutput = Effect.fn("HarnessEnrollment.decodeClaud
   const refusal = (reason: ClaudeCanaryWireError["reason"] = "order") => ClaudeCanaryWireError.make({ reason });
   if (Buffer.byteLength(stdout) > 262144) return yield* refusal("bounds");
   const lines = A.filter(Str.split(stdout, "\n"), Str.isNonEmpty);
-  if (lines.length < 3 || lines.length > 16) return yield* refusal("bounds");
+  if (lines.length < 3 || lines.length > 24) return yield* refusal("bounds");
   const decode = <T extends S.Top>(schema: T, raw: string, reason: ClaudeCanaryWireError["reason"]) =>
     S.decodeEffect(S.fromJsonString(schema))(raw).pipe(Effect.mapError(() => refusal(reason)));
   let sourceSession = O.none<string>();
   let matched = false;
   let retries = 0;
   let uiMessages = 0;
+  const rateNotifications = { allowed: 0, allowedWarning: 0, rejected: 0 };
+  let rateMessages = 0;
   let completed = O.none<typeof terminal.Type>();
   for (const line of lines) {
     const kind = yield* decode(envelope, line, "envelope");
+    if (kind.type === "rate_limit_event") {
+      if (O.isNone(sourceSession) || rateMessages >= 8) return yield* refusal("order");
+      const event = yield* decode(rateLimit, line, "event-kind");
+      if (event.session_id !== sourceSession.value) return yield* refusal("order");
+      rateMessages += 1;
+      if (event.rate_limit_info.status === "allowed") rateNotifications.allowed += 1;
+      else if (event.rate_limit_info.status === "allowed_warning") rateNotifications.allowedWarning += 1;
+      else rateNotifications.rejected += 1;
+      continue;
+    }
     if (kind.type === "system") {
       const system = yield* decode(systemKind, line, "event-kind");
       if (system.subtype === "ui_invalidate") {
@@ -255,6 +288,7 @@ export const decodeClaudeCanaryOutput = Effect.fn("HarnessEnrollment.decodeClaud
   return ClaudeCanarySource.make({
     sourceSessionId,
     observedRetryNotifications: retries,
+    observedRateLimitNotifications: rateNotifications,
     durationMillis: final.duration_ms,
     apiDurationMillis: final.duration_api_ms,
     agentTurns: final.num_turns,
