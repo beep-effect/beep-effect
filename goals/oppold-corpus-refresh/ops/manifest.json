@@ -88,5 +88,6 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "mission": "Consolidate the post-June exports/downloads from the user's data-home boundary into the existing governed corpus home at `<CORPUS_ROOT>`, append them under a new run-scoped raw subtree, catalog and dedupe them against prior runs, then archive-move the verified originals."
+  "mission": "Consolidate the post-June exports/downloads from the user's data-home boundary into the existing governed corpus home at `<CORPUS_ROOT>`, append them under a new run-scoped raw subtree, catalog and dedupe them against prior runs, then archive-move the verified originals.",
+  "researchReports": ["research/README.md"]
 }

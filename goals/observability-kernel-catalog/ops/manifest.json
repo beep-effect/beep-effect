@@ -36,6 +36,8 @@
   ],
   "researchReports": [
     "research/SOURCES.md",
+    "research/cache-baseline-request-ai-metrics-catalog.json",
+    "research/cache-baseline-review-ai-metrics-catalog.md",
     "research/catalog-design.md",
     "research/p2b-design.md"
   ],

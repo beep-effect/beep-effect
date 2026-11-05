@@ -47,7 +47,14 @@
     "goals/party-slice/GOAL.md",
     "goals/party-slice/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md",
+    "research/cache-baseline-request-2026-11-03.json",
+    "research/cache-baseline-review-2026-11-03.md",
+    "research/cache-policy-fingerprint-request-2026-11-03.json",
+    "research/cache-policy-fingerprint-review-2026-11-03.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

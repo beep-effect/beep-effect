@@ -46,10 +46,12 @@
     "goals/court-reporter-vocabulary/SPEC.md"
   ],
   "researchReports": [
-    "research/EYECITE_BASELINE.md",
+    "research/2026-07-25-academia-corpus-mining-note.md",
+    "research/2026-08-17-academia-wave2-findings.md",
     "research/CAPABILITY_LEDGER.md",
-    "research/SCHEMA_DISPOSITION.md",
+    "research/EYECITE_BASELINE.md",
     "research/PARITY_METHOD.md",
+    "research/SCHEMA_DISPOSITION.md",
     "research/SOURCES.md"
   ],
   "agentLaunchers": [

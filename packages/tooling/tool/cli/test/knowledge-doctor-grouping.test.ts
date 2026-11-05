@@ -2,7 +2,7 @@ import { Git } from "@beep/git/Git";
 import {
   capabilityPacketFindings,
   goalPacketFindings,
-  makeGoalPacketFilesystemReader,
+  makeGoalPacketWorkingTreeReader,
 } from "@beep/repo-cli/commands/Goals/Doctor";
 import { listGoalPackets } from "@beep/repo-cli/commands/Goals/Inventory";
 import {
@@ -305,7 +305,7 @@ describe("goals packet core parity", () => {
       Effect.fnUntraced(function* () {
         const repoRoot = yield* findRepoRoot();
         const records = yield* listGoalPackets(repoRoot);
-        const reader = makeGoalPacketFilesystemReader();
+        const reader = yield* makeGoalPacketWorkingTreeReader(repoRoot);
         const results = yield* Effect.forEach(records, (record) => goalPacketFindings(record, reader));
         const filesystem = A.appendAll(
           A.flatMap(results, (result) => result.findings),

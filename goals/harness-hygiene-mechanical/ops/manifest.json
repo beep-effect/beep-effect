@@ -34,7 +34,10 @@
     "goals/harness-hygiene-mechanical/GOAL.md",
     "goals/harness-hygiene-mechanical/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/2026-07-14-eviction-and-laws.md",
+    "research/SOURCES.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

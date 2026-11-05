@@ -116,5 +116,6 @@
     "Stash restore semantics would ever auto-drop operator work.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "researchReports": ["research/grounding.md", "research/session-findings.md"]
 }

@@ -30,7 +30,29 @@
     "goals/claim-check-performance/GOAL.md",
     "goals/claim-check-performance/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/PARTIAL-INPUT-DESIGN.md",
+    "research/SOURCES.md",
+    "research/diagnose-structures.py",
+    "research/evaluate-gates.py",
+    "research/implementation-baseline.json",
+    "research/implementation-partial-input-001.json",
+    "research/implementation-reference-bounds-001.json",
+    "research/implementation-reference-bounds-002.json",
+    "research/implementation-reference-bounds-003.json",
+    "research/implementation-reference-bounds-004.json",
+    "research/implementation-reference-bounds-005.json",
+    "research/implementation-reference-bounds-006.json",
+    "research/implementation-reference-bounds-007.json",
+    "research/implementation-reference-bounds-008.json",
+    "research/implementation-reference-bounds-009.json",
+    "research/preservation-freeze.json",
+    "research/test_usefulness.py",
+    "research/usefulness-gates.json",
+    "research/usefulness.py",
+    "research/verify-preservation.py"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

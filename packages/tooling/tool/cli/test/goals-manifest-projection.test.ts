@@ -1,0 +1,257 @@
+import {
+  GoalExplorationPathState,
+  goalPacketFindings,
+  makeGoalPacketWorkingTreeReader,
+} from "@beep/repo-cli/commands/Goals/Doctor";
+import { GoalResearchReportPath } from "@beep/repo-cli/commands/Goals/Goals.schemas";
+import { GoalPacketRecord } from "@beep/repo-cli/commands/Goals/Inventory";
+import {
+  diffResearchReports,
+  listedManifestStrings,
+  planResearchProjection,
+  projectResearchReports,
+  ResearchReportsDrift,
+  renderResearchReportsDrift,
+} from "@beep/repo-cli/commands/Goals/ManifestProjection";
+import { it } from "@beep/test-runner";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
+import { assert, describe } from "@effect/vitest";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as R from "effect/Record";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import type { GoalPacketReader } from "@beep/repo-cli/commands/Goals/Doctor";
+
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
+const decodeJson = flow(S.decodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
+
+const COMPLETION_GATE = {
+  operator: "yeet",
+  requiresPullRequest: true,
+  requiresMergeable: true,
+  statement: "Ship via yeet.",
+  grandfathered: false,
+};
+
+const manifestText = (extra: Readonly<Record<string, unknown>>): string =>
+  encodeJson({
+    schemaVersion: "initiative-manifest/v2",
+    initiative: { id: "demo", status: "active" },
+    lifecycle: "active",
+    completionGate: COMPLETION_GATE,
+    ...extra,
+  });
+
+const record = (text: string): GoalPacketRecord =>
+  GoalPacketRecord.make({
+    slug: "demo",
+    packetPath: "goals/demo",
+    manifestPath: "goals/demo/ops/manifest.json",
+    readmePath: "goals/demo/README.md",
+    manifestText: text,
+  });
+
+const stubReader = (researchFiles: ReadonlyArray<string>): GoalPacketReader<never, never> => ({
+  explorationPath: () => Effect.succeed(GoalExplorationPathState.Enum.present),
+  opsFiles: () => Effect.succeed(A.empty<string>()),
+  researchFiles: () => Effect.succeed(researchFiles),
+  readReflection: () => Effect.succeed(""),
+  reflectionFiles: () => Effect.succeed(A.empty<string>()),
+});
+
+const driftKeys = (findings: ReadonlyArray<{ readonly key: string }>): ReadonlyArray<string> =>
+  A.filter(
+    A.map(findings, (finding) => finding.key),
+    (key) => Str.includes(" research-reports-drift")(key)
+  );
+
+describe("goal manifest researchReports projection", () => {
+  it("admits packet-relative paths under research/ and refuses escapes and dot segments", () => {
+    for (const path of ["research/SOURCES.md", "research/evidence/run-1.json", "research/a_b/c.d.e"]) {
+      assertTrue(S.is(GoalResearchReportPath)(path));
+    }
+    for (const path of [
+      "SOURCES.md",
+      "research/",
+      "research/.gitkeep",
+      "research/.scratch/x.md",
+      "research/../SPEC.md",
+      "../../explorations/x/RESEARCH.md",
+      "history/p1.md",
+      "ops/research/x.md",
+      "research//x.md",
+    ]) {
+      assertFalse(S.is(GoalResearchReportPath)(path));
+    }
+  });
+
+  it("projects a listing sorted, deduplicated, with hidden segments dropped", () => {
+    assert.deepStrictEqual(
+      projectResearchReports([
+        "research/b.md",
+        "research/.gitkeep",
+        "research/a/x.json",
+        "research/b.md",
+        "research/.scratch/probe.md",
+        "ops/manifest.json",
+      ]),
+      ["research/a/x.json", "research/b.md"]
+    );
+    assert.deepStrictEqual(projectResearchReports([]), []);
+  });
+
+  it("diffs an array against the projection", () => {
+    assertNone(diffResearchReports(["research/a.md", "research/b.md"], ["research/a.md", "research/b.md"]));
+    assertNone(diffResearchReports(undefined, []));
+    const drift = diffResearchReports(
+      ["research/b.md", "research/gone.md", "../../explorations/x/RESEARCH.md", "history/p1.md"],
+      ["research/a.md", "research/b.md"]
+    );
+    assertSome(
+      drift,
+      ResearchReportsDrift.make({
+        missing: ["research/gone.md"],
+        unlisted: ["research/a.md"],
+        references: ["../../explorations/x/RESEARCH.md", "history/p1.md"],
+        reordered: false,
+      })
+    );
+    const reordered = diffResearchReports(
+      ["research/b.md", "research/a.md", "research/a.md"],
+      ["research/a.md", "research/b.md"]
+    );
+    assertSome(reordered, ResearchReportsDrift.make({ missing: [], unlisted: [], references: [], reordered: true }));
+    const absentKey = diffResearchReports(undefined, ["research/a.md"]);
+    assertSome(
+      absentKey,
+      ResearchReportsDrift.make({ missing: [], unlisted: ["research/a.md"], references: [], reordered: false })
+    );
+    const staleKey = diffResearchReports(["research/a.md"], []);
+    assertSome(
+      staleKey,
+      ResearchReportsDrift.make({ missing: ["research/a.md"], unlisted: [], references: [], reordered: false })
+    );
+  });
+
+  it("renders a drift with capped samples", () => {
+    const drift = diffResearchReports(
+      ["research/z.md", "history/p1.md"],
+      ["research/a.md", "research/b.md", "research/c.md", "research/d.md"]
+    );
+    const line = drift.pipe(O.getOrThrow, renderResearchReportsDrift);
+    assert.strictEqual(
+      line,
+      "researchReports drifts from research/: +4 unlisted (research/a.md, research/b.md, research/c.md, +1 more); -1 missing (research/z.md); 1 outside research/ (history/p1.md)"
+    );
+  });
+
+  it("reads string arrays from a raw manifest", () => {
+    assert.deepStrictEqual(listedManifestStrings({ researchReports: ["research/a.md", 1, null] }, "researchReports"), [
+      "research/a.md",
+    ]);
+    assert.strictEqual(listedManifestStrings({ researchReports: "research/a.md" }, "researchReports"), undefined);
+    assert.strictEqual(listedManifestStrings({}, "researchReports"), undefined);
+  });
+
+  it("plans the rewrite: projection lands, references move, key order and other keys survive", () => {
+    const text = manifestText({
+      researchReports: ["research/SOURCES.md", "../../explorations/x/RESEARCH.md", "research/gone.md"],
+      agentLaunchers: [],
+      researchReferences: ["history/p0.md"],
+    });
+    const next = O.getOrThrow(planResearchProjection(text, ["research/SOURCES.md", "research/review.json"]));
+    const parsed = decodeJson(next) as Readonly<Record<string, unknown>>;
+    assert.deepStrictEqual(parsed.researchReports, ["research/SOURCES.md", "research/review.json"]);
+    assert.deepStrictEqual(parsed.researchReferences, ["../../explorations/x/RESEARCH.md", "history/p0.md"]);
+    assert.deepStrictEqual(parsed.agentLaunchers, []);
+    assert.deepStrictEqual(parsed.completionGate, COMPLETION_GATE);
+    assert.deepStrictEqual(R.keys(parsed), [
+      "schemaVersion",
+      "initiative",
+      "lifecycle",
+      "completionGate",
+      "researchReports",
+      "agentLaunchers",
+      "researchReferences",
+    ]);
+    assertTrue(Str.endsWith("\n")(next) === Str.endsWith("\n")(text));
+  });
+
+  it("plans nothing when the array already matches, and deletes the key for an empty projection", () => {
+    assertNone(planResearchProjection(manifestText({ researchReports: ["research/a.md"] }), ["research/a.md"]));
+    assertNone(planResearchProjection(manifestText({}), []));
+    assertNone(planResearchProjection("not json", ["research/a.md"]));
+    const next = O.getOrThrow(planResearchProjection(manifestText({ researchReports: ["research/a.md"] }), []));
+    const parsed = decodeJson(next) as Readonly<Record<string, unknown>>;
+    assertFalse("researchReports" in parsed);
+    assertFalse("researchReferences" in parsed);
+    const added = O.getOrThrow(planResearchProjection(manifestText({}), ["research/a.md"]));
+    const addedParsed = decodeJson(added) as Readonly<Record<string, unknown>>;
+    assert.deepStrictEqual(addedParsed.researchReports, ["research/a.md"]);
+  });
+
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })((it) => {
+    it.effect("the working-tree reader drops git-ignored files and keeps untracked ones", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-goals-worktree-reader-" });
+        const handle = yield* spawner.spawn(ChildProcess.make("git", ["init", "-q"], { cwd: root }));
+        const initExit = yield* handle.exitCode;
+        assert.strictEqual(initExit, 0);
+        const packet = path.join(root, "goals", "demo");
+        yield* fs.makeDirectory(path.join(packet, "research", "__pycache__"), { recursive: true });
+        yield* fs.makeDirectory(path.join(packet, "ops"), { recursive: true });
+        yield* fs.writeFileString(path.join(root, ".gitignore"), "__pycache__/\n*.log\n");
+        yield* fs.writeFileString(path.join(packet, "research", "SOURCES.md"), "");
+        yield* fs.writeFileString(path.join(packet, "research", "untracked.md"), "");
+        yield* fs.writeFileString(path.join(packet, "research", "__pycache__", "x.cpython-314.pyc"), "");
+        yield* fs.writeFileString(path.join(packet, "research", "run.log"), "");
+        yield* fs.writeFileString(path.join(packet, "ops", "probe.log"), "");
+        yield* fs.writeFileString(path.join(packet, "ops", "bench.ts"), "");
+        const reader = yield* makeGoalPacketWorkingTreeReader(root);
+        const researchFiles = yield* reader.researchFiles(packet);
+        assert.deepStrictEqual(researchFiles, ["research/SOURCES.md", "research/untracked.md"]);
+        const opsFiles = yield* reader.opsFiles(packet);
+        assert.deepStrictEqual(opsFiles, ["ops/bench.ts"]);
+      })
+    );
+  });
+
+  it.effect("goals doctor reports drift as one blocking finding per packet and is clean when in sync", () =>
+    Effect.gen(function* () {
+      const files = ["research/SOURCES.md", "research/review.json", "research/.gitkeep"];
+      const drifted = yield* goalPacketFindings(
+        record(manifestText({ researchReports: ["research/SOURCES.md"] })),
+        stubReader(files)
+      );
+      assert.deepStrictEqual(driftKeys(drifted.findings), ["demo research-reports-drift"]);
+      const [finding] = A.filter(drifted.findings, (item) => item.kind === "research-reports-drift");
+      assert.strictEqual(finding?.severity, "blocking");
+      assertTrue(Str.includes("bun run beep goals manifest --write")(finding?.message ?? ""));
+
+      const absent = yield* goalPacketFindings(record(manifestText({})), stubReader(files));
+      assert.deepStrictEqual(driftKeys(absent.findings), ["demo research-reports-drift"]);
+
+      const clean = yield* goalPacketFindings(
+        record(manifestText({ researchReports: ["research/SOURCES.md", "research/review.json"] })),
+        stubReader(files)
+      );
+      assert.deepStrictEqual(driftKeys(clean.findings), []);
+
+      const empty = yield* goalPacketFindings(record(manifestText({})), stubReader([]));
+      assert.deepStrictEqual(driftKeys(empty.findings), []);
+    })
+  );
+});

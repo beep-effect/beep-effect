@@ -30,7 +30,11 @@
     "goals/ts7-ts-native-api/GOAL.md",
     "goals/ts7-ts-native-api/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md",
+    "research/cache-baseline-review.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

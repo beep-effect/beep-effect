@@ -35,20 +35,26 @@
     "goals/ship-velocity/GOAL.md"
   ],
   "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/adhd-ideation.md",
+    "research/branch-protection-contexts.json",
+    "research/c1-raw-failures.txt",
     "research/c2-yeet-monitor-backpressure.md",
     "research/c3-local-remote-parity.md",
     "research/c4-turbo-cache.md",
     "research/c5-concurrency-policy.md",
     "research/c6-conflicts-queue.md",
     "research/c7-opportunities.md",
+    "research/cache-proof.md",
+    "research/d1-admission-scheduler.md",
     "research/g1-external-research.md",
     "research/g2-design-ideas.md",
-    "research/cache-proof.md",
-    "research/parity-ledger.md",
-    "research/branch-protection-contexts.json",
-    "research/stacked-pr-trial.md",
     "research/merge-queue-evaluation.md",
-    "research/metrics-closeout.md"
+    "research/metrics-baseline.md",
+    "research/metrics-closeout.md",
+    "research/metrics-observation-2026-08-30.md",
+    "research/parity-ledger.md",
+    "research/stacked-pr-trial.md"
   ],
   "agentLaunchers": [
     {

@@ -33,8 +33,10 @@
     "goals/m365-agent-outbox/research/RESEARCH-CORPUS-2026-10.md"
   ],
   "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/RESEARCH-CORPUS-2026-10.md",
     "research/SOURCES.md",
-    "research/RESEARCH-CORPUS-2026-10.md"
+    "research/cache-baseline-request.json"
   ],
   "agentLaunchers": [
     {
