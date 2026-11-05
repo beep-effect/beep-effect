@@ -136,6 +136,8 @@ attempts; report an actual external blocker without claiming usefulness.
 | 2026-11-03 | Conservative unknowns and nonempty output/recall minima | Prevent success through silence, omitted hard inputs or optimistic adjudication | Versioned protocol amendment with sensitivity analysis |
 | 2026-11-03 | Automated independent source review; attorney optional | User directs autonomous completion | Optional separate human overlay, no rewriting automated receipts |
 | 2026-11-03 | Add explicit source-record and sparse-context contracts for partial inspection | One malformed sibling currently rejects an entire source set; dropping rows would violate PatentClaims | Remove additive inspection APIs while retaining strict behavior and all results |
+| 2026-11-05 | Adopt independently reviewed prospective source-only annotation handbook v2; freeze all 24 families / 567 claims with 572 raw context nodes | Resolve representation/recording ambiguity before new independent annotations, retaining all six table gaps and every selected unknown; no old 71 admission or gate change | New prospective reviewed version/frame only; preserve both private activation overlays and all prior outcomes |
+| 2026-11-05 | Admit only the native-generated new ClaimInspection.tools file coverage identity after independent review; preserve every preexisting baseline row | Retain defensive encoding error handling while testing real source-acquisition refusal, substantive findings and stale cursor failure; native package comparison passes | Regenerate the new identity after stronger source tests/coverage; never lower old floors or alter structural labels/scorer |
 
 ## Exception Ledger
 

@@ -1443,6 +1443,21 @@ See `research/installed-dependency-diagnostic-preparation-2026-11-03.json`. This
 checkpoint does not complete a phase, qualify a task or prove any acceptance
 criterion.
 
+### Pilot directory and root mutation guard, 2026-11-03
+
+Source inspection found that the read-only snapshot omitted directories and its
+package root. A mode-only directory change or an added empty directory could
+therefore leave the comparison unchanged. The internal snapshot now includes
+those entries and complete regular-file modes, and enforces its entry limit
+for every visited child. Nine new orchestration fault cases exercise mode-only
+changes, empty directories, the bound, refusal without a receipt and cleanup.
+
+The isolated implementation is prepared for hosted CI; no local quality suite
+or pilot execution is used as proof. Current source-bound native permission
+counterexamples motivate the review but do not prove this supervisory change.
+Fresh hosted test/check/review results remain required. All whole-goal criteria
+and signed production, epoch, role and representative-window work remain open.
+
 ### Process creation-mask identity repair, 2026-11-03
 
 A supported runtime identity omitted umask despite its effect on file creation
