@@ -36,7 +36,9 @@ import {
   isCountedHead,
   isDesignatedHead,
   isExplicitAbbreviatedHead,
+  isPluralityReferenceHead,
   isSingleModifiedHead,
+  pluralityReferenceContent,
 } from "./ClaimTerm.compatibility.ts";
 import type { PatentClaims } from "../PatentDocument/PatentDocument.model.ts";
 import type { ClaimElementEdge, ClaimFunctionalPart } from "./ClaimElement.edge.model.ts";
@@ -172,6 +174,46 @@ export type ClaimElementDecomposer = (
 /** A run of claim text and its absolute offset into `claimText`. */
 type Span = { readonly start: number; readonly text: string };
 
+// Inspection-only construction state. Public tree and PatentClaim shapes stay unchanged.
+class ColonHeaderSpan extends S.Opaque<ColonHeaderSpan, { readonly brand: unique symbol }>()(
+  S.Struct({ start: S.Int.check(S.isGreaterThanOrEqualTo(0)), text: S.String }).pipe(
+    $I.annoteSchema("ColonHeaderSpan", {
+      description: "Original source span used only for a colon container's lexical ownership.",
+    })
+  )
+) {}
+class ColonScopeLabel extends S.Opaque<ColonScopeLabel, { readonly brand: unique symbol }>()(
+  S.Struct({ style: S.Literals(["parenthesized", "suffix", "step"]), value: S.NonEmptyString }).pipe(
+    $I.annoteSchema("ColonScopeLabel", {
+      description: "Explicit source enumeration label; only a consecutive peer label closes its matching colon scope.",
+    })
+  )
+) {}
+class ColonScopeNode extends S.Opaque<ColonScopeNode, { readonly brand: unique symbol }>()(
+  S.Struct({
+    path: S.NonEmptyString,
+    parent: S.NonEmptyString,
+    header: ColonHeaderSpan,
+    endChar: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+    group: S.Boolean,
+    label: S.Option(ColonScopeLabel),
+  }).pipe(
+    $I.annoteSchema("ColonScopeNode", {
+      description:
+        "Inspection node with distinct header lexical ownership and full group extent, plus its explicit source label.",
+    })
+  )
+) {}
+
+class ColonScopeState extends S.Opaque<ColonScopeState, { readonly brand: unique symbol }>()(
+  S.Struct({ nodes: S.Array(ColonScopeNode), stack: S.Array(S.Int.check(S.isGreaterThanOrEqualTo(0))) }).pipe(
+    $I.annoteSchema("ColonScopeState", {
+      description:
+        "Ordered inspection nodes and active ancestor container positions during source-only scope construction.",
+    })
+  )
+) {}
+
 type EncodedTerm = typeof ClaimTerm.Encoded;
 type EncodedElement = typeof ClaimElement.Encoded;
 type EncodedEdge = typeof ClaimElementEdge.Encoded;
@@ -256,26 +298,40 @@ const separatorPattern = /[,;()[\]]|:(?=\s|$)/gu;
 const clauseStartPattern =
   /^(?:and\s+|or\s+)?(?:wherein\b|(?:the|said|an?|at least one|one or more)\s+[^,;]*?\b(?:is|are|has|have|comprises|includes|forms|acts|passes|describes|generates)\b|(?:creating|encoding|generating|transmitting|receiving|flushing|placing|threading|stretching|turning)\b)/iu;
 
-const splitBody = (body: Span): ReadonlyArray<Span> => {
-  const split = A.reduce(
-    matchesIn(separatorPattern)(body),
-    { depth: 0, from: 0, segments: A.empty<Span>() },
-    (state, mark) =>
-      Match.value(mark.text).pipe(
-        Match.whenOr("(", "[", () => ({ ...state, depth: state.depth + 1 })),
-        Match.whenOr(")", "]", () => ({ ...state, depth: Num.max(0, state.depth - 1) })),
-        Match.orElse((separator) => {
-          const at = mark.start - body.start;
-          const end = separator === ":" ? at + 1 : at;
-          const isClauseComma =
-            separator !== "," || O.isSome(Str.match(clauseStartPattern)(Str.trimStart(Str.slice(at + 1)(body.text))));
-          return state.depth > 0 || !isClauseComma
-            ? state
-            : { depth: 0, from: at + 1, segments: A.append(state.segments, sliceSpan(body, state.from, end)) };
-        })
-      )
+const splitAtSeparators = (body: Span, separators: ReadonlyArray<Span>): ReadonlyArray<Span> => {
+  const split = A.reduce(separators, { depth: 0, from: 0, segments: A.empty<Span>() }, (state, mark) =>
+    Match.value(mark.text).pipe(
+      Match.whenOr("(", "[", () => ({ ...state, depth: state.depth + 1 })),
+      Match.whenOr(")", "]", () => ({ ...state, depth: Num.max(0, state.depth - 1) })),
+      Match.orElse((separator) => {
+        const at = mark.start - body.start;
+        const end = separator === ":" ? at + 1 : at;
+        const isClauseComma =
+          separator !== "," || O.isSome(Str.match(clauseStartPattern)(Str.trimStart(Str.slice(at + 1)(body.text))));
+        return state.depth > 0 || !isClauseComma
+          ? state
+          : { depth: 0, from: at + 1, segments: A.append(state.segments, sliceSpan(body, state.from, end)) };
+      })
+    )
   );
   return A.append(split.segments, sliceSpan(body, split.from));
+};
+
+const splitBody = (body: Span): ReadonlyArray<Span> => splitAtSeparators(body, matchesIn(separatorPattern)(body));
+const isStepLabelSeparator = (body: Span, mark: Span): boolean =>
+  (mark.text === "," || mark.text === ":") &&
+  O.isSome(
+    Str.match(/(?:^|[;:])\s*(?:(?:and|or)\s+)?step\s+[0-9]+$/iu)(Str.slice(0, mark.start - body.start)(body.text))
+  );
+const splitInspectionBody = (body: Span): ReadonlyArray<Span> => {
+  const quotations = matchesIn(quotedPhrasePattern)(body);
+  const separators = A.filter(
+    matchesIn(separatorPattern)(body),
+    (mark) =>
+      !isStepLabelSeparator(body, mark) &&
+      !A.some(quotations, (quote) => mark.start >= quote.start && mark.start < quote.start + Str.length(quote.text))
+  );
+  return splitAtSeparators(body, separators);
 };
 
 const cleanSegment = flow(
@@ -320,12 +376,15 @@ const romanSegment = (value: number): string =>
     roman: `${roman}${Str.repeat((rest - (rest % digit)) / digit)(symbol)}`,
   })).roman;
 
+// Only complete paired quotations shield lexical function words.
+// Unpaired marks retain ordinary scanning and never suppress the remaining source.
+const quotedPhrasePattern = /“[^”]*”|"(?:\\.|[^"\\])*"|‘(?:[^’]|’(?=[\p{L}\p{N}]))*’/gu;
 const tokenPattern = /[\p{L}\p{N}]+(?:[-’'/][\p{L}\p{N}]+)*|[“”"‘’]|[,;:.()[\]]/gu;
 const digitsPattern = /^[0-9]+$/u;
 const punctuation = HashSet.make(",", ";", ":", ".", "(", ")", "[", "]");
 const boundaryWords = HashSet.fromIterable(
   Str.split(
-    "that which wherein whereby where when configured adapted operable arranged having comprising comprises including includes containing contains being is are was were has have to for in on of at by with from into onto between through via and or such so than as each said the a an its their according claim claims they it we them can may shall must should will would be been not apart respectively further out along below above beyond across",
+    "that which wherein whereby where when whether configured adapted operable arranged having comprising comprises including includes containing contains being is are was were has have to for in on of at by with from into onto between through via and or such so than as each said the a an its their according claim claims they it we them can may shall must should will would be been not apart respectively further out along below above beyond across",
     " "
   )
 );
@@ -372,7 +431,10 @@ const isPredicateToken = (tokens: ReadonlyArray<Span>, index: number): boolean =
   );
   const finite = O.exists(current, (word) =>
     A.some([word, Str.replace(/s$/u, "")(word), Str.replace(/es$/u, "")(word)], (base) =>
-      HashSet.has(HashSet.make("display", "extend", "mesh", "embed", "include", "incorporate"), base)
+      HashSet.has(
+        HashSet.make("display", "extend", "mesh", "embed", "include", "incorporate", "rotate", "go", "generate"),
+        base
+      )
     )
   );
   const clauseVerb = O.exists(previous, (word) => HashSet.has(HashSet.make("to", "that", "which"), word));
@@ -503,10 +565,12 @@ const permitsAdverbHead = (tokens: ReadonlyArray<Span>, position: number, offset
     identity
   );
 
-const headAt = (tokens: ReadonlyArray<Span>, index: number): ReadonlyArray<Span> =>
-  A.takeWhile(A.drop(tokens, index), ({ text }, offset) => {
+const headAt = (tokens: ReadonlyArray<Span>, index: number, quotations: ReadonlyArray<Span>): ReadonlyArray<Span> =>
+  A.takeWhile(A.drop(tokens, index), ({ text, start }, offset) => {
     const word = Str.toLowerCase(text);
     const position = index + offset;
+    if (A.some(quotations, (quote) => start >= quote.start && start < quote.start + Str.length(quote.text)))
+      return true;
     if (A.some([position, position - 1, position - 2], (at) => abbreviationAt(tokens, at))) return true;
     if (isSelectorHead(tokens, index) && HashSet.has(HashSet.make(",", "or", "and"), word)) return true;
     return (
@@ -548,7 +612,7 @@ const scanStepOf = (term: O.Option<EncodedTerm>, resumeAt: number): ScanStep => 
 
 // One scan step from `index`: the term found there, if any, and where the scan resumes.
 const scanStep =
-  (claimText: string, tokens: ReadonlyArray<Span>) =>
+  (claimText: string, tokens: ReadonlyArray<Span>, quotations: ReadonlyArray<Span>) =>
   (index: number): ScanStep => {
     const idiom = A.findFirst(
       [
@@ -573,7 +637,7 @@ const scanStep =
       determinerAt(tokens, index),
       O.match({
         onNone: () => {
-          const head = headAt(tokens, index);
+          const head = headAt(tokens, index, quotations);
           const previous = O.map(A.get(tokens, index - 1), ({ text }) => text);
           const isReferenceNumber =
             O.exists(previous, (word) =>
@@ -589,10 +653,25 @@ const scanStep =
         onSome: ({ determiner, start, width }) => {
           const headStart =
             index + width + (isReferringDeterminer(determiner) ? quantifierWidthAt(tokens, index + width) : 0);
-          const head = headAt(tokens, headStart);
-          return A.isReadonlyArrayNonEmpty(head) && !isClaimReference(head)
-            ? scanStepOf(O.some(termOf(claimText, start, determiner, head)), headStart + A.length(head))
-            : scanStepOf(O.none(), index + width);
+          const head = headAt(tokens, headStart, quotations);
+          if (!A.isReadonlyArrayNonEmpty(head) || isClaimReference(head)) return scanStepOf(O.none(), index + width);
+          const term = termOf(claimText, start, determiner, head);
+          const lexicalStart = O.getOrThrow(A.get(tokens, index + width)).start;
+          // A referring determiner does not consume the collective noun plurality.
+          // Retain that explicit source phrase in the head, while scanning the
+          // nominal contents after the quantity's grammatical separators.
+          const lexical = surfaceAt(tokens, index + width)(["plurality", "of"])
+            ? {
+                ...term,
+                head: pipe(
+                  Str.slice(lexicalStart, term.anchor.endChar)(claimText),
+                  Str.toLowerCase,
+                  Str.replace(/\s+/gu, " "),
+                  Str.trim
+                ),
+              }
+            : term;
+          return scanStepOf(O.some(lexical), headStart + A.length(head));
         },
       })
     );
@@ -613,7 +692,7 @@ const termsIn =
       onSome: (match) => sliceSpan(span, 0, O.getOrElse(O.fromUndefinedOr(match.index), constant(span.text.length))),
     });
     const tokens = matchesIn(tokenPattern)(entitySpan);
-    const step = scanStep(claimText, tokens);
+    const step = scanStep(claimText, tokens, matchesIn(quotedPhrasePattern)(entitySpan));
     return A.getSomes(A.unfold(0, (index) => (index < A.length(tokens) ? O.some(step(index)) : O.none())));
   };
 
@@ -655,7 +734,11 @@ const antecedentEdges = (
   ancestors: ReadonlyArray<EncodedElement> = []
 ): ReadonlyArray<EncodedEdge> => {
   const located = A.flatMap(A.appendAll(elements, ancestors), (element: EncodedElement) =>
-    A.map(element.terms, (term) => ({ path: element.path, term }))
+    A.map(element.terms, (term) => ({
+      path: element.path,
+      // Edge resolution uses the entity contents; emitted trees retain lexical heads.
+      term: { ...term, head: O.getOrElse(pluralityReferenceContent(term.head), () => term.head) },
+    }))
   );
   const local = (path: string) => A.some(elements, (element) => element.path === path);
   const root = (path: string) => O.exists(A.head(elements), (element) => element.path === path);
@@ -801,14 +884,36 @@ const referencesOf = (claim: PatentClaim): ReadonlyArray<number> =>
     dependent: ({ claimReferences }) => claimReferences,
   });
 
-const treeInput = (
+const assembleTree = (
   claim: PatentClaim,
-  parts: { readonly preamble: Span; readonly body: Span }
-): typeof ClaimElementTree.Encoded => {
-  const root = `${claim.claimNumber}`;
-  const methodFrame = O.isSome(Str.match(/^(?::\s*)?(?:the\s+)?following steps\s*:/iu)(Str.trimStart(parts.body.text)));
-  const segments = A.filter(
-    A.map(splitBody(parts.body), (segment) => {
+  elements: A.NonEmptyReadonlyArray<EncodedElement>,
+  containment: ReadonlyArray<EncodedEdge>
+): typeof ClaimElementTree.Encoded => ({
+  claimNumber: claim.claimNumber,
+  producer: "rule",
+  elements,
+  edges: [
+    ...containment,
+    ...A.flatMap(referencesOf(claim), (ancestor) => {
+      const explicit = A.filter(elements, (element) => O.isSome(Str.match(/\bclaims?\s+\d/iu)(element.anchor.quote)));
+      return A.map(
+        A.isArrayNonEmpty(explicit) ? A.map(explicit, (element) => element.path) : [`${claim.claimNumber}`],
+        (dependent): EncodedEdge => ({ kind: "depends-on-element", dependent, ancestor: `${ancestor}` })
+      );
+    }),
+    ...antecedentEdges(elements),
+    ...functionalEdges(elements),
+  ],
+});
+
+const bodySegments = (
+  claim: PatentClaim,
+  body: Span,
+  split: (body: Span) => ReadonlyArray<Span>
+): ReadonlyArray<Span> => {
+  const methodFrame = O.isSome(Str.match(/^(?::\s*)?(?:the\s+)?following steps\s*:/iu)(Str.trimStart(body.text)));
+  return A.filter(
+    A.map(split(body), (segment) => {
       const cleaned = cleanSegment(segment);
       return claim.transition === "wherein" ||
         methodFrame ||
@@ -818,6 +923,14 @@ const treeInput = (
     }),
     (span) => isContentSegment(span) && !O.isSome(Str.match(/^(?:the\s+)?following steps\s*:$/iu)(span.text))
   );
+};
+
+const treeInput = (
+  claim: PatentClaim,
+  parts: { readonly preamble: Span; readonly body: Span }
+): typeof ClaimElementTree.Encoded => {
+  const root = `${claim.claimNumber}`;
+  const segments = bodySegments(claim, parts.body, splitBody);
   // Rule `colon-sublist`: the first limitation ending in ":" absorbs every later segment.
   const [beforeColon, fromColon] = A.span(segments, (segment) => !endsWithColon(segment));
   const limitations = A.map(A.appendAll(beforeColon, A.take(fromColon, 1)), (span, index) => ({
@@ -836,31 +949,163 @@ const treeInput = (
     ),
     elementOf(claim.claimText, "preamble-subject")(root, pipe(parts.preamble, trimSpan, dropSuffix([","]), trimSpan))
   );
-  return {
-    claimNumber: claim.claimNumber,
-    producer: "rule",
-    elements,
-    edges: [
-      ...A.map(limitations, ({ path }): EncodedEdge => ({ kind: "part-of", child: path, parent: root })),
-      ...A.map(subLimitations, ({ path }): EncodedEdge => ({ kind: "part-of", child: path, parent })),
-      ...A.flatMap(referencesOf(claim), (ancestor) => {
-        const explicit = A.filter(elements, (element) => O.isSome(Str.match(/\bclaims?\s+\d/iu)(element.anchor.quote)));
-        return A.map(
-          A.isArrayNonEmpty(explicit) ? A.map(explicit, (element) => element.path) : [root],
-          (dependent): EncodedEdge => ({ kind: "depends-on-element", dependent, ancestor: `${ancestor}` })
-        );
-      }),
-      ...antecedentEdges(elements),
-      ...functionalEdges(elements),
-    ],
+  return assembleTree(claim, elements, [
+    ...A.map(limitations, ({ path }): EncodedEdge => ({ kind: "part-of", child: path, parent: root })),
+    ...A.map(subLimitations, ({ path }): EncodedEdge => ({ kind: "part-of", child: path, parent })),
+  ]);
+};
+
+const colonLabelOf = ({ text }: Span): O.Option<ColonScopeLabel> => {
+  const parenthesized = Str.match(/^\(([a-z]+|[0-9]+)\)\s+/iu)(text);
+  if (O.isSome(parenthesized))
+    return O.map(A.get(parenthesized.value, 1), (value) =>
+      ColonScopeLabel.make({ style: "parenthesized", value: Str.toLowerCase(value) })
+    );
+  const suffix = Str.match(/^([a-z]+|[0-9]+)[).]\s+/iu)(text);
+  if (O.isSome(suffix))
+    return O.map(A.get(suffix.value, 1), (value) =>
+      ColonScopeLabel.make({ style: "suffix", value: Str.toLowerCase(value) })
+    );
+  return O.flatMap(Str.match(/^step\s+([0-9]+)[,:.]\s+/iu)(text), (match) =>
+    O.map(A.get(match, 1), (value) => ColonScopeLabel.make({ style: "step", value }))
+  );
+};
+const numericLabel = S.FiniteFromString.pipe(
+  S.decodeTo(S.Int.check(S.isGreaterThan(0))),
+  $I.annoteSchema("ColonNumericLabel", {
+    description: "Positive source enumeration number used only to recognize a consecutive explicit peer label.",
+  })
+);
+const decodeNumericLabel = S.decodeOption(numericLabel);
+const romanLabelValue = (value: string): O.Option<number> => {
+  const parsed = A.reduce(romanDigits, { rest: value, number: 0 }, (state, [digit, symbol]) => {
+    let rest = state.rest;
+    let number = state.number;
+    while (Str.startsWith(symbol)(rest)) {
+      rest = Str.slice(Str.length(symbol))(rest);
+      number += digit;
+    }
+    return { rest, number };
+  });
+  return O.filter(
+    O.some(parsed.number),
+    (number) => number > 0 && parsed.rest === "" && romanSegment(number) === value
+  );
+};
+const nextLabelValues = (value: string): ReadonlyArray<string> => {
+  const alpha = O.filter(Str.indexOf(value)(alphabet), () => Str.length(value) === 1);
+  return A.getSomes([
+    O.flatMap(alpha, (index) => O.filter(O.some(Str.slice(index + 1, index + 2)(alphabet)), Str.isNonEmpty)),
+    O.map(decodeNumericLabel(value), (index) => `${index + 1}`),
+    O.map(romanLabelValue(value), (index) => romanSegment(index + 1)),
+  ]);
+};
+const followsLabel = (previous: O.Option<ColonScopeLabel>, next: O.Option<ColonScopeLabel>): boolean =>
+  O.exists(
+    O.all([previous, next]),
+    ([left, right]) => left.style === right.style && A.contains(nextLabelValues(left.value), right.value)
+  );
+const transparentColonFrame = ({ text }: Span): boolean =>
+  O.isSome(
+    Str.match(
+      /^(?:(?:(?:it|(?:the|said) method)\s+(?:comprises|includes|has)\s+)?(?:the\s+)?following steps\s*:|(?:comprising|including|having)\s*:)$/iu
+    )(text)
+  );
+const activeColonScopes = (
+  nodes: ReadonlyArray<ColonScopeNode>,
+  stack: ReadonlyArray<number>,
+  label: O.Option<ColonScopeLabel>
+): ReadonlyArray<number> => {
+  const matches = A.filter(stack, (index) => O.exists(A.get(nodes, index), (node) => followsLabel(node.label, label)));
+  const peer = O.flatMap(
+    O.filter(A.head(matches), () => matches.length === 1),
+    (matched) =>
+      O.filter(
+        A.findFirstIndex(stack, (index) => index === matched),
+        () =>
+          O.exists(
+            A.get(nodes, matched),
+            (node) =>
+              !O.exists(
+                A.findFirst(nodes, (child) => child.parent === node.path && O.isSome(child.label)),
+                (child) => followsLabel(child.label, label)
+              )
+          )
+      )
+  );
+  return O.getOrElse(
+    O.map(peer, (index) => A.take(stack, index)),
+    () => stack
+  );
+};
+const appendColonNode = (
+  root: string,
+  nodes: ReadonlyArray<ColonScopeNode>,
+  stack: ReadonlyArray<number>,
+  header: Span,
+  label: O.Option<ColonScopeLabel>
+): ReadonlyArray<ColonScopeNode> => {
+  const parent = O.getOrElse(
+    O.flatMap(A.last(stack), (index) => O.map(A.get(nodes, index), (node) => node.path)),
+    () => root
+  );
+  const count = A.countBy(nodes, (node) => node.parent === parent);
+  const path = `${parent}.${parent === root ? letterSegment(count) : romanSegment(count + 1)}`;
+  const endChar = header.start + Str.length(header.text);
+  const extended = A.map(nodes, (node, index) =>
+    A.contains(stack, index) ? ColonScopeNode.make({ ...node, endChar, group: true }) : node
+  );
+  return A.append(
+    extended,
+    ColonScopeNode.make({ path, parent, header: ColonHeaderSpan.make(header), endChar, group: false, label })
+  );
+};
+const colonNodesOf = (root: string, segments: ReadonlyArray<Span>): ReadonlyArray<ColonScopeNode> =>
+  A.reduce(segments, ColonScopeState.make({ nodes: [], stack: [] }), (state, header) => {
+    const label = colonLabelOf(header);
+    const stack = activeColonScopes(state.nodes, state.stack, label);
+    const nodes = appendColonNode(root, state.nodes, stack, header, label);
+    return ColonScopeState.make({ nodes, stack: endsWithColon(header) ? A.append(stack, nodes.length - 1) : stack });
+  }).nodes;
+const scopedElementOf =
+  (claimText: string, root: string) =>
+  (node: ColonScopeNode): EncodedElement => {
+    const element = elementOf(claimText, node.parent === root ? "limitation" : "sub-limitation")(
+      node.path,
+      node.header
+    );
+    return node.group
+      ? {
+          ...element,
+          kind: "limitation",
+          anchor: anchorOf({ start: node.header.start, text: Str.slice(node.header.start, node.endChar)(claimText) }),
+        }
+      : element;
   };
+const inspectionTreeInput: typeof treeInput = (claim, parts) => {
+  const root = `${claim.claimNumber}`;
+  const segments = A.filter(
+    bodySegments(claim, parts.body, splitInspectionBody),
+    (span) => !transparentColonFrame(span)
+  );
+  const nodes = colonNodesOf(root, segments);
+  const elements = A.prepend(
+    A.map(nodes, scopedElementOf(claim.claimText, root)),
+    elementOf(claim.claimText, "preamble-subject")(root, pipe(parts.preamble, trimSpan, dropSuffix([","]), trimSpan))
+  );
+  return assembleTree(
+    claim,
+    elements,
+    A.map(nodes, ({ path, parent }): EncodedEdge => ({ kind: "part-of", child: path, parent }))
+  );
 };
 
 const decodeTree = S.decodeEffect(ClaimElementTree);
 
 const decomposeInContext = Effect.fn("ClaimElement.decomposeClaim")(function* (
   claim: PatentClaim,
-  claims: ReadonlyArray<PatentClaim>
+  claims: ReadonlyArray<PatentClaim>,
+  constructTree: typeof treeInput
 ): Effect.fn.Return<ClaimElementTree, ClaimDecompositionError> {
   const claimNumber = claim.claimNumber;
   const parts = yield* Effect.fromOption(locateParts(claim), () =>
@@ -882,7 +1127,7 @@ const decomposeInContext = Effect.fn("ClaimElement.decomposeClaim")(function* (
       reason: "claim-not-in-claims",
     });
   }
-  const input = treeInput(claim, parts);
+  const input = constructTree(claim, parts);
   // A term must resolve on every alternative dependency route. Intersect
   // branch ancestry instead of treating the union as one fictitious chain.
   let commonByClaim = HashMap.empty<number, HashSet.HashSet<number>>();
@@ -904,7 +1149,7 @@ const decomposeInContext = Effect.fn("ClaimElement.decomposeClaim")(function* (
     (candidate: PatentClaim) =>
       O.match(locateParts(candidate), {
         onNone: () => [],
-        onSome: (located) => treeInput(candidate, located).elements,
+        onSome: (located) => constructTree(candidate, located).elements,
       })
   );
   const antecedents = antecedentEdges(input.elements, ancestors);
@@ -936,7 +1181,7 @@ const decomposeInContext = Effect.fn("ClaimElement.decomposeClaim")(function* (
                 (introduced) =>
                   introduced.anchor.startChar === edge.introducing.anchor.startChar &&
                   isIntroducingDeterminer(introduced.determiner) &&
-                  (partOwner || introduced.head === term.head)
+                  (partOwner || introduced.head === term.head || isPluralityReferenceHead(term.head)(introduced.head))
               )
           );
         })
@@ -1087,7 +1332,12 @@ export const decomposeClaim: {
     claims: Parameters<ClaimElementDecomposer>[1]
   ): (claim: Parameters<ClaimElementDecomposer>[0]) => ReturnType<ClaimElementDecomposer>;
   (...args: Parameters<ClaimElementDecomposer>): ReturnType<ClaimElementDecomposer>;
-} = dual(2, decomposeInContext satisfies ClaimElementDecomposer);
+} = dual(
+  2,
+  Effect.fn("ClaimElement.strictDecomposition")((claim: PatentClaim, claims: PatentClaims) =>
+    decomposeInContext(claim, claims, treeInput)
+  ) satisfies ClaimElementDecomposer
+);
 
 /**
  * Decompose every eligible source record while retaining every unchecked record.
@@ -1095,7 +1345,9 @@ export const decomposeClaim: {
  * **Details**
  * The raw input is normalized and qualified here; callers cannot supply a
  * sparse array disguised as PatentClaims. Every alternative ancestor must be
- * available. This operation builds structures only; substantive findings and
+ * available. Its inspection tree strategy preserves full colon-group extents
+ * with header-only lexical ownership and explicit label scope, while the strict
+ * decomposer retains its original colon contract. This operation builds structures only; substantive findings and
  * global source-index coverage belong to the subsequent inspection policy.
  *
  * **Example** (Inspect the structural input operation)
@@ -1117,7 +1369,7 @@ export const decomposeClaimInput = Effect.fn("ClaimElement.decomposeClaimInput")
     if (!ClaimInputQualification.guards["context-ready"](qualification)) {
       return Effect.succeed(ClaimInputDecomposition.cases.unchecked.make({ qualification }));
     }
-    return decomposeInContext(qualification.claim, claims).pipe(
+    return decomposeInContext(qualification.claim, claims, inspectionTreeInput).pipe(
       Effect.map((tree) => ClaimInputDecomposition.cases.decomposed.make({ qualification, tree })),
       Effect.catchTag("ClaimDecompositionError", (cause) =>
         Effect.succeed(ClaimInputDecomposition.cases["decomposition-failed"].make({ qualification, cause }))
