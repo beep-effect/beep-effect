@@ -55,7 +55,7 @@
         ".claude/skills/effect-first-development",
         ".agents/skills/effect-first-development"
       ],
-      "installedTreeHash": "93ff35cb8145644ff84020f4a6efb7010b7abe56249f951b2457a809d607fa1e"
+      "installedTreeHash": "df37424db6538e30aa5d2d4cbc1956b82cabc5940eff603b15c0010adc47282a"
     },
     "explore": {
       "_tag": "local",

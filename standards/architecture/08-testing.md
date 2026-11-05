@@ -307,12 +307,13 @@ const activeMembership = Membership.make({ id: MembershipId.make("membership-1")
  * contract; both the live driver-backed adapter and the in-memory adapter
  * must pass identical cases.
  *
- * @category testing
- * @since 0.0.0
+ * **Details**
  *
- * @remarks
  * Drift between implementations indicates a port-or-adapter regression, not
  * a flaky test.
+ *
+ * @category testing
+ * @since 0.0.0
  */
 export const MembershipRepositoryContract = (
   RepoLayer: Layer.Layer<MembershipRepository>,
