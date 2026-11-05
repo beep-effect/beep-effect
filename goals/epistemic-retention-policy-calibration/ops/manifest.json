@@ -104,7 +104,7 @@
     "Evidence or authentication cannot be verified; hold the affected path and retain inert policy.",
     "New paid resources require explicit authorization."
   ],
-  "statusNote": "G2 insufficient-evidence accepted; G3 not-requested and G4 excluded. PR #2357 carries proposed completed-retained closeout and reflection. Operative lifecycle stays active until exact-head hosted readiness, review/window, merge and matching completion receipt verify; lane retirement follows.",
+  "statusNote": "G2 insufficient-evidence accepted; G3 not-requested and G4 excluded. PR #2357 carries proposed completed-retained closeout and reflection. Exact-head readiness, review/window, merge and the completion receipt verified; closeout adopted by goals set-status in #2703.",
   "dependencies": [
     "goals/epistemic-memory-retention-projections",
     "goals/epistemic-bitemporal-edge-core"

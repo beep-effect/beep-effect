@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `completed-retained` until the closeout PR's completion is verified; P0 through P8
+Lifecycle: `completed-retained` (closeout via #2618 verified, adopted as a committed `closeout` by `goals set-status` in [#2703](https://github.com/beep-effect/beep-effect/pull/2703)); P0 through P8
 complete (P8 on 2026-11-02, E1 accepted as a residual by the operator).
 
 Source: [`ops/manifest.json`](./ops/manifest.json)

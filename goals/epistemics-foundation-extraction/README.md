@@ -39,9 +39,8 @@ re-established readiness while open and merged as `c181da2326` on 2026-10-28
 with the until-ready verdict retained. `goals completion refresh` verified the
 `completed-retained` proposal in the closeout clone the same minute and in the
 primary clone on 2026-11-02 (`history/completion-verified-2026-11-02.md`).
-`initiative.status` stays `active` in the manifest because completion is
-derived from clone-scoped receipts; `goals explain` reports `completed-retained
-(verified via #2334)` in a clone that holds the receipt.
+The verified proposal was adopted as a committed `closeout` by `goals set-status` in [#2703](https://github.com/beep-effect/beep-effect/pull/2703),
+so the manifest now records `completed-retained`.
 
 The 2026-10-28 acceptance audit found the claim factory lacked the logical-key
 function required by `SPEC.md`. The #2315 implementation repair supplies it,

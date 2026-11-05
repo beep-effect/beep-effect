@@ -488,7 +488,8 @@ If you touch this, load or run this first. Do not hand-author around it.
 - Goal closeout is two PRs: the final PR lands the work, the reflection and
   `proposedCloseout` (status stays active or paused); after it merges,
   `goals completion refresh --slug <slug>` verifies it and
-  `goals set-status <slug> <status>` adopts it in a packet-state PR. A goal is
+  `goals set-status <slug> <status>` adopts it in a packet-state PR that also
+  rewrites the packet's status prose (README, `statusNote`). A goal is
   done only once that PR merges and `origin/main`'s manifest has
   `closeout.status == initiative.status`; `goals doctor` reports a verified,
   unadopted proposal as `closeout-adoption-pending`.
