@@ -28,6 +28,7 @@ import {
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { assert, describe } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Tool from "effect/ai/Tool";
@@ -231,7 +232,7 @@ describe("ClaimInspection service and local tool", () => {
         const page = yield* claimInspectInput(ClaimInspectionPageRequest.make({ input }));
         assert.strictEqual(page.deliveryStatus, "complete");
         assert.strictEqual(page.records.length, mixed.records.length);
-        assert.isTrue(O.isNone(page.nextCursor));
+        assertNone(page.nextCursor);
         const encoded = yield* encodePage(page);
         assert.isAtMost(encoder.encode(encoded).byteLength, limit);
       })
