@@ -46,5 +46,11 @@
     "gates.json": "63db05bbdc767bcde06222e4827e6305a2d9510d51a77f9c8c883c16cd7334e6",
     "preservation.json": "c86000fc56e140dacacb6f23544aaaaa2994e1bcd273ec1a160194676adc7bb0",
     "diagnostics.json": "c94a6615fb056edf9349fa179c5325a04bfcb25d6aaab1a7c56f67fe009339fd"
+  },
+  "acceptedParentIntegration": {
+    "unchangedFamilyRows": 538,
+    "byteIdenticalPredictionReports": 60,
+    "measurement": "product-nominal-003",
+    "sourceFreeze": "research/implementation-nominal-003.json"
   }
 }
