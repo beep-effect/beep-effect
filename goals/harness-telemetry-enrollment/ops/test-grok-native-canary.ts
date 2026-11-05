@@ -29,6 +29,7 @@ import {
   GrokNativeCanaryRequest,
   grokCanaryProfile,
   grokCanaryProjectMcp,
+  grokCanaryProjectMcpFormatted,
   runGrokNativeCanary,
 } from "./grok-native-canary.ts";
 
@@ -72,14 +73,21 @@ int main(int argc,char **argv) {
 
 // @effect-diagnostics-next-line asyncFunction:off -- Offline fixture: real owned C process/socket/filesystem, with no native provider binary or authentication reads.
 const fixture = async (
-  options: { readonly rejectTraceOnce?: boolean; readonly mode?: string; readonly driftAuthAtPrepared?: boolean } = {}
+  options: {
+    readonly rejectTraceOnce?: boolean;
+    readonly mode?: string;
+    readonly driftAuthAtPrepared?: boolean;
+    readonly projectMcp?: string;
+  } = {}
 ) => {
   const directory = await Fs.mkdtemp(Path.join(Os.tmpdir(), "grok-canary-"));
   await Fs.chmod(directory, 0o700);
   for (const name of ["attempt", "home", "native", "shared", "workspace"])
     await Fs.mkdir(Path.join(directory, name), { mode: 0o700 });
   await Fs.writeFile(Path.join(directory, "native/config.toml"), grokCanaryProfile, { mode: 0o600 });
-  await Fs.writeFile(Path.join(directory, "workspace/.mcp.json"), grokCanaryProjectMcp, { mode: 0o644 });
+  await Fs.writeFile(Path.join(directory, "workspace/.mcp.json"), options.projectMcp ?? grokCanaryProjectMcp, {
+    mode: 0o644,
+  });
   const auth = Path.join(directory, "shared/auth.json");
   await Fs.writeFile(auth, "SYNTHETIC_NOT_AUTH", { mode: 0o600 });
   const configText = "[cli]\nauto_update=true\n";
@@ -399,3 +407,41 @@ it.effect("salt JSON boundary rejects empty and non-string external values", () 
     expect((yield* decode(null).pipe(Effect.result))._tag).toBe("Failure");
   })
 );
+
+for (const projectMcp of [grokCanaryProjectMcp, grokCanaryProjectMcpFormatted]) {
+  it.live(`exact empty MCP serialization ${projectMcp.length} bytes binds its actual digest`, () =>
+    Effect.tryPromise(async () => {
+      const f = await fixture({ projectMcp });
+      try {
+        await Effect.runPromise(f.run);
+        const evidence = await Effect.runPromise(
+          S.decodeEffect(S.fromJsonString(GrokNativeCanaryEvidence))(
+            await Fs.readFile(Path.join(f.request.attemptDirectory, "source.json"), "utf8")
+          )
+        );
+        expect(evidence.qualification.projectMcpSha256).toBe(digest(projectMcp));
+        expect(await f.count("source-count")).toBe(1);
+      } finally {
+        await f.close();
+      }
+    })
+  );
+}
+for (const projectMcp of [
+  '{"mcpServers":{},"mcpServers":{}}\n',
+  '{"mcpServers":{"unexpected":{}}}\n',
+  '{ "mcpServers": {} }\n',
+]) {
+  it.live(`unadmitted MCP bytes ${digest(projectMcp).slice(0, 8)} refuse before inventory`, () =>
+    Effect.tryPromise(async () => {
+      const f = await fixture({ projectMcp });
+      try {
+        expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+        expect(await f.count("source-count")).toBe(0);
+        expect(await f.count("inspect-count")).toBe(0);
+      } finally {
+        await f.close();
+      }
+    })
+  );
+}

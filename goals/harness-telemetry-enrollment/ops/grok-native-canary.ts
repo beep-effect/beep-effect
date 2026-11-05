@@ -72,6 +72,15 @@ export const grokCanaryProfile =
  * @since 0.0.0
  */
 export const grokCanaryProjectMcp = '{"mcpServers":{}}\n';
+/** Exact Biome-formatted empty MCP fixture; no other JSON serialization is admitted.
+ * **Example** (Inspect canonical empty MCP content)
+ * ```ts
+ * console.log(grokCanaryProjectMcpFormatted.length > 0)
+ * ```
+ * @category configuration
+ * @since 0.0.0
+ */
+export const grokCanaryProjectMcpFormatted = '{\n  "mcpServers": {}\n}\n';
 const denyTools = [
   "run_terminal_command",
   "read_file",
@@ -559,7 +568,7 @@ const pinRuntime = Effect.fn("GrokCanary.pinRuntime")(function* (request: GrokNa
     request.isolatedHome === process.env.HOME
   )
     return yield* failed("admission");
-  yield* io(async () => {
+  const projectMcpBytes = yield* io(async () => {
     for (const directory of [request.nativeHome, request.isolatedHome]) await privateEntry(directory, "directory");
     if ((await Fs.realpath(request.workspace)) !== request.workspace) throw new Error("workspace-link");
     for (const filename of [
@@ -587,15 +596,17 @@ const pinRuntime = Effect.fn("GrokCanary.pinRuntime")(function* (request: GrokNa
       throw new Error("profile-drift");
     const mcp = `${request.workspace}/.mcp.json`;
     const info = await Fs.lstat(mcp);
+    const mcpBytes = await Fs.readFile(mcp, "utf8");
     if (
       !info.isFile() ||
       info.isSymbolicLink() ||
       info.uid !== process.getuid?.() ||
       (info.mode & 0o022) !== 0 ||
       info.size > 128 ||
-      (await Fs.readFile(mcp, "utf8")) !== grokCanaryProjectMcp
+      (mcpBytes !== grokCanaryProjectMcp && mcpBytes !== grokCanaryProjectMcpFormatted)
     )
       throw new Error("pilot-mcp-required");
+    return mcpBytes;
   });
   const nativeAuthIdentitySha256 = yield* hashPublicTextSha256(yield* io(() => authIdentity(request.nativeAuthFile)));
   if (
@@ -637,7 +648,7 @@ const pinRuntime = Effect.fn("GrokCanary.pinRuntime")(function* (request: GrokNa
   } else yield* io(() => requireAbsent(filename));
   return {
     profileSha256: yield* hashPublicTextSha256(grokCanaryProfile),
-    projectMcpSha256: yield* hashPublicTextSha256(grokCanaryProjectMcp),
+    projectMcpSha256: yield* hashPublicTextSha256(projectMcpBytes),
     originalPolicySha256: yield* hashPublicTextSha256(originalPolicy),
     authIdentitySha256: nativeAuthIdentitySha256,
   };
