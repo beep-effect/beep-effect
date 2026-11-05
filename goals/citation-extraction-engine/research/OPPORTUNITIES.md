@@ -327,3 +327,13 @@ history/evidence/2026-11-03-edition-inference.md.
   method names as independent dispatch contracts. Fallow also caught a replay
   function containing several nested products; extracting one mode's replay
   keeps the complete product while respecting the complexity ceiling.
+
+- 2026-11-05 pin extraction: the source computes its end from raw-pin right trim,
+  while the existing cleaner strips both ends. Exposing the already measured
+  right boundary avoids a second copy and preserves the different lengths.
+  Fallow found repeated source installation and fixture refusal/lifetime setup;
+  these now use existing metadata/runtime owners through shared typed helpers.
+  A generic fixture configuration bound initially erased its field types; the
+  shared installer now derives that bound from the existing schema's encoded
+  side. Strict boolean conditions use explicit comparisons, retaining formatter
+  rules without type assertions, suppressions or policy-floor changes.

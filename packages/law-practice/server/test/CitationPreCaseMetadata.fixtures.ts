@@ -1,32 +1,25 @@
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import {
-  CitationOperationAdmission,
-  makeCitationOperationAdmission,
-} from "@beep/law-practice-server/internal/Citation/Admission";
 import { CitationPublicationMetadataConfiguration } from "@beep/law-practice-server/internal/Citation/MetadataComposition";
 import {
   CitationPreCaseMetadataInput,
   CitationPreCaseMetadataPatch,
   makeCitationPreCaseMetadata,
 } from "@beep/law-practice-server/internal/Citation/PreCaseMetadata";
-import { CitationTextBudget, makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
-import * as Context from "effect/Context";
-import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Scope from "effect/Scope";
-import * as Str from "effect/String";
 import {
-  assertCitationWorkerCapturedDeadline,
-  assertCitationWorkerClosedLifetime,
+  assertCitationMetadataEnclosingRefusal,
+  assertCitationMetadataFixtureLifetime,
+  assertCitationMetadataRefusal,
   assertCitationWorkerCompositionReleased,
-  setupCitationRegexRuntime,
+  citationMetadataDeadlineText,
+  makeCitationMetadataFixtureInstaller,
 } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
@@ -76,25 +69,7 @@ const load = Effect.fn("PreCaseMetadataTest.load")(function* () {
   expect(hash).toBe("6cfd521369b960f677231e9e5c9ca2981c6dc0ca6c0f7e9edf551f01c3dda4bd");
   return yield* S.decodeEffect(Corpus)(new TextDecoder().decode(bytes));
 });
-const install = Effect.fn("PreCaseMetadataTest.install")(function* (
-  kind: CitationNativeRuntimeKind,
-  maximum?: number,
-  enclosing = false,
-  controlled = false
-) {
-  const corpus = yield* load();
-  const setup = yield* setupCitationRegexRuntime(kind, maximum);
-  const limits = controlled === true ? { ...setup.limits, extractDeadline: Duration.millis(997) } : setup.limits;
-  const operation = yield* makeCitationOperationAdmission(limits).pipe(Effect.provideContext(setup.context));
-  const budget = yield* makeCitationTextBudget(limits);
-  const context = Context.add(setup.context, CitationOperationAdmission, operation);
-  const provided = enclosing === true ? Context.add(context, CitationTextBudget, budget) : context;
-  const configuration = { ...corpus.configuration };
-  const metadata = yield* makeCitationPreCaseMetadata(limits, setup.runtime, configuration).pipe(
-    Effect.provideContext(provided)
-  );
-  return { ...setup, corpus, configuration, operation, budget, metadata };
-});
+const install = makeCitationMetadataFixtureInstaller(makeCitationPreCaseMetadata)(load());
 /** Compare every early skip locally plus actual backward matching through both runtimes. */
 export const replayCitationPreCaseMetadata = Effect.fn("PreCaseMetadataTest.replay")(function* (
   kind: CitationNativeRuntimeKind,
@@ -104,7 +79,7 @@ export const replayCitationPreCaseMetadata = Effect.fn("PreCaseMetadataTest.repl
   const rows = full ? setup.corpus.cases : A.filter(setup.corpus.cases, (row) => row.smoke || row.calls === 0);
   let calls = 0;
   for (const row of rows) {
-    const result = yield* setup.metadata.apply(row.request);
+    const result = yield* setup.stage.apply(row.request);
     expect(O.getOrNull(result.patch), `source pre-case ${row.id}`).toEqual(row.patch);
     if (row.calls === 0) expect(result.reservedUnits).toBe(0);
     calls += row.calls;
@@ -117,26 +92,26 @@ export const replayCitationPreCaseMetadata = Effect.fn("PreCaseMetadataTest.repl
 export const assertCitationPreCaseBudget = Effect.fn("PreCaseMetadataTest.budget")(function* () {
   const exact = yield* install("bun", 99);
   const row = A.getUnsafe(exact.corpus.cases, 23);
-  const first = yield* exact.metadata.apply(row.request);
+  const first = yield* exact.stage.apply(row.request);
   expect(O.getOrNull(first.patch)).toEqual(row.patch);
   expect(first.reservedUnits).toBe(99);
   exact.configuration.pattern.bytes.fill(0);
   exact.configuration.yearPattern.bytes.fill(0);
-  const again = yield* exact.metadata.apply(row.request);
+  const again = yield* exact.stage.apply(row.request);
   expect(O.getOrNull(again.patch)).toEqual(row.patch);
   expect(again.reservedUnits).toBe(99);
   const bounded = yield* install("bun", 98);
-  const failure = yield* bounded.metadata.apply(row.request).pipe(Effect.flip);
-  expect(failure).toMatchObject({ limit: "producedTextUtf16" });
-  yield* assertCitationWorkerCompositionReleased(bounded.operation, bounded.admission, bounded.observed.snapshot, 1);
+  yield* assertCitationMetadataRefusal(
+    bounded.stage.apply(row.request),
+    bounded.operation,
+    bounded.admission,
+    bounded.observed.snapshot,
+    1
+  );
   const enclosing = yield* install("bun", 102, true);
-  yield* enclosing.budget.reserve(4);
-  const exhausted = yield* enclosing.metadata.apply(row.request).pipe(Effect.flip);
-  expect(exhausted).toMatchObject({ limit: "producedTextUtf16" });
-  const reserved = yield* enclosing.budget.snapshot;
-  expect(reserved).toBe(97);
+  yield* assertCitationMetadataEnclosingRefusal(enclosing.stage.apply(row.request), enclosing.budget, 4, 97);
   const skipped = yield* install("bun", 1);
-  const result = yield* skipped.metadata.apply({
+  const result = yield* skipped.stage.apply({
     plaintiff: { width: 1, bytes: new TextEncoder().encode("KNOWN") },
     defendant: null,
     words: "unread",
@@ -150,21 +125,8 @@ export const assertCitationPreCaseBudget = Effect.fn("PreCaseMetadataTest.budget
 });
 /** Installation policy, closed operation and captured deadlines remain authoritative. */
 export const assertCitationPreCaseLifetime = Effect.fn("PreCaseMetadataTest.lifetime")(function* () {
-  const scope = yield* Scope.make();
-  const closed = yield* install("bun").pipe(Effect.provideService(Scope.Scope, scope));
-  const row = A.getUnsafe(closed.corpus.cases, 23);
-  yield* assertCitationWorkerClosedLifetime(scope, closed.metadata.apply(row.request), closed.observed.snapshot);
-  const timed = yield* install("bun", undefined, false, true);
-  yield* assertCitationWorkerCapturedDeadline(
-    timed.metadata.apply({
-      ...row.request,
-      words: [
-        { kind: "Text", data: { width: 1, bytes: new TextEncoder().encode(Str.repeat(65536)("x")) } },
-        { kind: "CitationToken", data: { width: 1, bytes: new TextEncoder().encode("1 X 1") } },
-      ],
-    }),
-    timed.timer.trigger
-  );
-  const observed = yield* timed.observed.snapshot;
-  expect(observed).toEqual({ spawned: 0, confirmed: 0 });
+  yield* assertCitationMetadataFixtureLifetime(install, 23, [
+    citationMetadataDeadlineText(),
+    { kind: "CitationToken", data: { width: 1, bytes: new TextEncoder().encode("1 X 1") } },
+  ]);
 });

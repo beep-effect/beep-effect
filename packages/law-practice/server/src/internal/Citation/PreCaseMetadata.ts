@@ -10,13 +10,11 @@ import * as S from "effect/Schema";
 import { CitationLawMetadataInput, CitationLawMetadataResult } from "./LawMetadata.ts";
 import {
   citationMetadataContext,
-  makeCitationMetadataOperation,
+  makeCitationPublicationMetadataOperation,
   matchCitationMetadataContext,
-  prepareCitationPublicationMetadata,
 } from "./MetadataComposition.ts";
 import { makeCitationPinCiteCleaner } from "./MetadataStrings.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
-import { decodeCitationRegexPolicy } from "./RegexPolicy.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationPublicationMetadataConfiguration } from "./MetadataComposition.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
@@ -151,17 +149,12 @@ export const makeCitationPreCaseMetadata = Effect.fn("Citation.makePreCaseMetada
   runtimeInput: unknown,
   configurationInput: unknown
 ) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-configuration"));
-  const { runtime, config } = yield* prepareCitationPublicationMetadata(
-    limits,
+  const installed = yield* makeCitationPublicationMetadataOperation(
+    policy,
     runtimeInput,
     configurationInput,
     "d151b7a02a061593bb44bd881eee2dc174fff7f1b5449512f25cc2b98fb315b0",
-    () => fail("invalid-configuration")
-  );
-  const installed = yield* makeCitationMetadataOperation(
-    limits,
-    (raw: unknown) => prepare(limits, runtime, config, raw),
+    prepare,
     () => fail("invalid-configuration")
   );
   const apply = Effect.fn("Citation.addPreCaseMetadata")(

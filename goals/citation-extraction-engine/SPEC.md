@@ -1480,3 +1480,13 @@ truthiness, punctuation and ordering remain source-specific. Existing native
 receiving/concatenation, captured edition/Clock owners and one fresh/enclosing
 invocation budget cover complete assembly. This private source adapter does not
 replace public semantic schemas or their separate transform laws.
+
+### Short-form pin extraction (2026-11-05)
+
+Private pin extraction resolves the source Python list index before matching,
+retains prefix point counts and computes span end from raw-pin right trim.
+Successful empty matches still produce a source end; negative values remain
+unverified model state. Source string-token errors follow parenthetical cleanup.
+Existing admitted metadata composition, native string processing, worker Scope,
+captured deadlines and invocation budgets own the operation. Full-case V0
+repeated-name patterns and final service integration remain separate duties.

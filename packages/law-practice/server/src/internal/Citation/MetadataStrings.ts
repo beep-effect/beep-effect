@@ -10,6 +10,7 @@ import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { makeCitationContextMatcher } from "./ContextMatcher.ts";
+import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { citationPythonPointAt } from "./PythonUnicode.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
@@ -71,21 +72,35 @@ const installStrings = Effect.fn("Citation.installMetadataStrings")(function* (p
   const input = yield* makeCitationRegexInput(limits, "source");
   return { limits, timing, input };
 });
+/** Cleaned pin and the original source length after right-only comma/space trim.
+ * @internal @category models @since 0.0.0
+ */
+export class CitationPinCiteDetails extends S.Opaque<CitationPinCiteDetails, { readonly brand: unique symbol }>()(
+  S.Struct({ pinCite: S.NullOr(CitationPythonUnicodeStorage), trailingEnd: S.Natural }).pipe(
+    $I.annoteSchema("CitationPinCiteDetails", {
+      description: "Shared native pin cleanup and source rstrip length without a second receiving copy.",
+    })
+  )
+) {}
 /** Capture the shared native pincite boundary cleaner without a year matcher.
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationPinCiteCleaner = Effect.fn("Citation.makePinCiteCleaner")(function* (policy: unknown) {
   const { limits, timing, input } = yield* installStrings(policy);
-  const cleanPinCite = Effect.fn("Citation.cleanPinCite")(function* (raw: unknown) {
-    if (raw === null) return null;
+  const inspectPinCite = Effect.fn("Citation.inspectPinCite")(function* (raw: unknown) {
+    if (raw === null) return CitationPinCiteDetails.make({ pinCite: null, trailingEnd: 0 });
     const source = yield* input.prepareUnicode(raw, () => Effect.void);
     const start = yield* trimPin(source.value, 0, source.value.pythonLength, 1);
     const last = yield* trimPin(source.value, source.value.pythonLength - 1, start - 1, -1);
-    return yield* source.slice({ start, end: last + 1 }, (layout) =>
+    const pinCite = yield* source.slice({ start, end: last + 1 }, (layout) =>
       source.value.utf16Units + layout.utf16Units > limits.producedTextUtf16 ? Effect.fail(exhausted()) : Effect.void
     );
+    return CitationPinCiteDetails.make({ pinCite, trailingEnd: start === source.value.pythonLength ? 0 : last + 1 });
   }, timing.timed);
-  return { cleanPinCite };
+  const cleanPinCite = Effect.fn("Citation.cleanPinCite")((raw: unknown) =>
+    inspectPinCite(raw).pipe(Effect.map((value) => value.pinCite))
+  );
+  return { cleanPinCite, inspectPinCite };
 });
 /** Capture the independently source-bound YEAR_REGEX and existing worker.
  * Raw requests contain only native text/null. Calls have R = never and preserve
@@ -101,7 +116,7 @@ export const makeCitationMetadataStrings = Effect.fn("Citation.makeMetadataStrin
 ) {
   const { limits, timing, input } = yield* installStrings(policy);
   const year = yield* makeCitationContextMatcher(limits, runtime, yearPattern, 64, bindings);
-  const { cleanPinCite } = yield* makeCitationPinCiteCleaner(limits);
+  const { cleanPinCite, inspectPinCite } = yield* makeCitationPinCiteCleaner(limits);
   const parenthetical = Effect.fn("Citation.processParenthetical")(function* (raw: unknown) {
     if (raw === null) return null;
     const source = yield* input.prepareUnicode(raw, () => Effect.void);
@@ -123,5 +138,5 @@ export const makeCitationMetadataStrings = Effect.fn("Citation.makeMetadataStrin
     });
     return matched.match !== null || source.value.pythonLength === 0 ? null : source.value.storage;
   }, timing.timed);
-  return { cleanPinCite, parenthetical, snapshot: year.snapshot };
+  return { cleanPinCite, inspectPinCite, parenthetical, snapshot: year.snapshot };
 });

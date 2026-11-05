@@ -863,3 +863,9 @@ base implementation and IdCitation/SupraCitation.formatted methods at the pinned
 revision above (Free Law Project, BSD-2-Clause). Canonical edition labels retain
 the existing reporters-db attribution. The native Unicode implementation and
 its existing full PSF notice remain unchanged by this assembly adapter.
+
+PinExtraction.ts, shared pin-detail processing and pin-extraction.json derive
+from eyecite 2.7.6 helpers.extract_pin_cite, clean_pin_cite and
+POST_SHORT_CITATION_REGEX at the pinned revision above (Free Law Project,
+BSD-2-Clause). Existing CPython/regex parsing and native Unicode attributions
+apply to the profile observations and string operations.

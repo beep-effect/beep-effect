@@ -24,7 +24,7 @@ import { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { CitationRegexPatternDescriptor, copyCitationRegexDescriptor } from "./RegexDescriptors.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
-import { makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { CitationTextBudget, makeCitationTextBudget } from "./TextBudget.ts";
 import { CitationTokenContextInput } from "./TokenContext.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
@@ -234,6 +234,41 @@ export const prepareCitationPublicationMetadata = Effect.fn("Citation.preparePub
     }),
   };
 });
+
+/** Authenticate shared publication patterns and capture one existing metadata
+ * operation. The stage callback is trusted server composition, never request
+ * data; all invocation ownership remains with makeCitationMetadataOperation.
+ * @internal @category operations @since 0.0.0
+ */
+export const makeCitationPublicationMetadataOperation = Effect.fn("Citation.makePublicationMetadataOperation")(
+  function* <Patch, E, Invalid>(
+    policy: unknown,
+    runtimeInput: unknown,
+    configurationInput: unknown,
+    expectedPatternSha256: string,
+    prepare: (
+      limits: CitationEngineLimits,
+      runtime: CitationNativeProcessRuntime,
+      config: CitationPublicationMetadataConfiguration,
+      raw: unknown
+    ) => Effect.Effect<Patch, E, Dependencies>,
+    invalid: () => Invalid
+  ) {
+    const limits = yield* decodeCitationRegexPolicy(policy, invalid);
+    const { runtime, config } = yield* prepareCitationPublicationMetadata(
+      limits,
+      runtimeInput,
+      configurationInput,
+      expectedPatternSha256,
+      invalid
+    );
+    return yield* makeCitationMetadataOperation(
+      limits,
+      (raw: unknown) => prepare(limits, runtime, config, raw),
+      invalid
+    );
+  }
+);
 
 const ContextOrigin = S.Struct({
   words: CitationTokenContextInput.fields.words,

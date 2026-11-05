@@ -956,3 +956,10 @@ accounting checker.
   14934 original observations compare through existing correction, Unicode,
   budget and Clock owners. Public transforms and engine acceptance remain open.
   See history/evidence/2026-11-05-built-in-rendering.md.
+
+- 2026-11-05: private short/Id./supra pin extraction preserves source list
+  lookup, prefix point subtraction, raw-pin right trim and error timing. Source
+  corpus has 432 observations; each actual runtime confirms 24 smoke exits.
+  Shared publication/string/test owners retain prior metadata behavior. Full
+  hosted replay and remaining case helpers stay open; see the pin-extraction
+  evidence receipt.
