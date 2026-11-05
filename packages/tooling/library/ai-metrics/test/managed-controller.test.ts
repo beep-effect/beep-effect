@@ -112,9 +112,8 @@ it.layer(NodeCrypto.layer)((it) => {
         const span = O.getOrThrow(A.head(batch.spans));
         expect(span.kind).toBe("AGENT");
         assertSome(span.sessionHash, observation.sourceSessionId);
-        assertFalse(
-          O.contains(span.sessionHash, yield* hashPrivateIdentifier(observation.sourceSessionId, O.some(salt)))
-        );
+        const doubleHashedSession = yield* hashPrivateIdentifier(observation.sourceSessionId, O.some(salt));
+        assertFalse(O.contains(span.sessionHash, doubleHashedSession));
         assertSome(span.managedController, observation);
         deepStrictEqual(span.usage, {
           convention: "unknown",
@@ -184,9 +183,9 @@ it.layer(NodeCrypto.layer)((it) => {
       );
       expect(batch.spans[0]?.eventId).toBe("187d56666add5c37ca70e7a31afed8dd622fe4531b8b74cdc89c2eb60765d0a7");
       expect(batch.requestId).toBe("cb3b993a865b8abd51649ecd00509d1c1a704af22d32d6a31cd37b01c66d88dd");
-      expect(yield* hashPublicTextSha256(yield* encodeBatch(batch))).toBe(
-        "08286b60b3777f70070d8412ca7e5b258f126c4780fe21da8efc0fdedc4201a4"
-      );
+      const batchJson = yield* encodeBatch(batch);
+      const batchHash = yield* hashPublicTextSha256(batchJson);
+      expect(batchHash).toBe("08286b60b3777f70070d8412ca7e5b258f126c4780fe21da8efc0fdedc4201a4");
       const encoded = yield* encodeNativeTraceBatch(
         NativeExportInput.make({
           project: "legacy-golden",
@@ -208,9 +207,11 @@ it.layer(NodeCrypto.layer)((it) => {
       const legacy = O.getOrThrow(A.head(native.spans));
       assertNone(legacy.managedController);
       assertNone(legacy.sessionHash);
-      expect(legacy.eventId).toBe(
-        yield* hashPrivateIdentifier(`native-span/v1:${id("e")}:${legacy.traceId}:${legacy.spanId}`, O.some(salt))
+      const legacyEventId = yield* hashPrivateIdentifier(
+        `native-span/v1:${id("e")}:${legacy.traceId}:${legacy.spanId}`,
+        O.some(salt)
       );
+      expect(legacy.eventId).toBe(legacyEventId);
       expect(legacy.eventId).not.toBe(managed.spans[0]?.eventId);
       const encoded = yield* encodeBatch(native);
       expect(encoded).not.toContain("managedController");
@@ -248,17 +249,16 @@ it.layer(NodeCrypto.layer)((it) => {
         NativeTraceRequest.make({ ...request(body), syntheticFixtureMetadata: O.some(true) })
       );
       expect(fixture.spans).toEqual([]);
-      expect(
-        yield* S.decodeEffect(ManagedControllerObservation)({
-          ...observation,
-          elapsedNanos: "120000000001",
-        }).pipe(Effect.isFailure)
-      ).toBe(true);
-      expect(
-        yield* S.decodeEffect(ManagedControllerObservation)({ ...observation, endTimeUnixNano: "1" }).pipe(
-          Effect.isFailure
-        )
-      ).toBe(true);
+      const oversizedInterval = yield* S.decodeEffect(ManagedControllerObservation)({
+        ...observation,
+        elapsedNanos: "120000000001",
+      }).pipe(Effect.isFailure);
+      expect(oversizedInterval).toBe(true);
+      const reversedInterval = yield* S.decodeEffect(ManagedControllerObservation)({
+        ...observation,
+        endTimeUnixNano: "1",
+      }).pipe(Effect.isFailure);
+      expect(reversedInterval).toBe(true);
     })
   );
   it.effect("refuses absent and malformed managed provenance without retaining private values", () =>
@@ -301,7 +301,8 @@ it.layer(NodeCrypto.layer)((it) => {
           const batch = yield* projectNativeTraceRequest(request(changed));
           expect(batch.spans).toEqual([]);
           expect(batch.rejections).toEqual([{ ordinal: 0, reason: "invalid-span" }]);
-          expect(yield* encodeBatch(batch)).not.toContain("PRIVATE_INVALID_BINDING");
+          const rejectedBatch = yield* encodeBatch(batch);
+          expect(rejectedBatch).not.toContain("PRIVATE_INVALID_BINDING");
         }
       }
     })

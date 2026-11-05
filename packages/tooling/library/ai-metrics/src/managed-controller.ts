@@ -124,9 +124,11 @@ export class ManagedControllerTraceIdentity extends S.Opaque<
 export const managedControllerTraceIdentity = Effect.fn("AiMetrics.managedControllerTraceIdentity")(function* (
   launchId: Sha256Hex
 ) {
+  const traceHash = yield* hashPublicTextSha256(`managed-controller-trace/v1:${launchId}`);
+  const spanHash = yield* hashPublicTextSha256(`managed-controller-canary/v1:${launchId}`);
   return ManagedControllerTraceIdentity.make({
-    traceId: Str.slice(0, 32)(yield* hashPublicTextSha256(`managed-controller-trace/v1:${launchId}`)),
-    spanId: Str.slice(0, 16)(yield* hashPublicTextSha256(`managed-controller-canary/v1:${launchId}`)),
+    traceId: Str.slice(0, 32)(traceHash),
+    spanId: Str.slice(0, 16)(spanHash),
   });
 });
 

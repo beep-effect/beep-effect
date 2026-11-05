@@ -548,9 +548,9 @@ const projectSpan = Effect.fnUntraced(function* (
     timing,
     managed,
   } = source;
-  const controller = managed
-    ? O.some(yield* readManagedController(attributes, timing))
-    : O.none<ManagedControllerObservation>();
+  const controller = yield* managed
+    ? readManagedController(attributes, timing).pipe(Effect.asSome)
+    : Effect.succeed(O.none<ManagedControllerObservation>());
   if (O.isSome(controller)) {
     const expectedIdentity = yield* managedControllerTraceIdentity(controller.value.launchId);
     if (traceId !== expectedIdentity.traceId || spanId !== expectedIdentity.spanId || O.isSome(parentSpanId))

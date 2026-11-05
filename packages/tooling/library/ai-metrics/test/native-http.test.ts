@@ -503,9 +503,9 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
         ObservationLaunchFact.cases.Finished.make({ launchId: foreign.launchId, outcome: "succeeded" }),
         0
       );
-      expect((yield* f.post(yield* encodeManagedControllerObservation(foreign), "application/x-protobuf")).status).toBe(
-        400
-      );
+      const foreignBody = yield* encodeManagedControllerObservation(foreign);
+      const foreignResponse = yield* f.post(foreignBody, "application/x-protobuf");
+      expect(foreignResponse.status).toBe(400);
       const accepted = yield* f.post(bytes, "application/x-protobuf");
       expect(accepted.status).toBe(200);
       expect(accepted.bytes).toHaveLength(0);
